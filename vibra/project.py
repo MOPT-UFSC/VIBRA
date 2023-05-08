@@ -1,5 +1,6 @@
-from vibra.engine.model import Model
 from pathlib import Path
+
+from vibra.engine.model import Model
 
 
 class Project:
@@ -12,4 +13,3 @@ class Project:
 
     def save(self):
         pass
-    

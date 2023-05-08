@@ -10,4 +10,3 @@ class Model:
     prescribed_degrees_of_freedom: list
     prescribed_loads: list
     status: ModelStatus
-    
