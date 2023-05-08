@@ -8,7 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
 numpy = "^1.24.2"
-pyside6 = "^6.5.0"
+pyqt5 = "^5.15.9"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"
