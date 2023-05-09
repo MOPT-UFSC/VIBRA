@@ -9,7 +9,7 @@ class Project:
     materials_list: list
 
     def load(cls):
-        pass
+        print("CARREGANDO")
 
     def save(self):
-        pass
+        print("SALVANDO")
