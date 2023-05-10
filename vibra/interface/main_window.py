@@ -34,12 +34,12 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Vibra")
 
     def create_actions(self):
-        self.vibra_icon = QAction(self.new_project_icon, "New Project", self)
-        self.file_import = QAction(self.file_import_icon, "Import Project", self)
-        self.exit_import_icon = QAction(self.exit_import_icon, "Exit", self)
-        self.save_icon = QAction(self.save_icon, "Save", self)
-        self.save_as_icon = QAction(self.save_as_icon, "Save as", self)
-        self.help_icon = QAction(self.help_icon, "About Vibra", self)
+        self.vibra_action = QAction(self.new_project_icon, "New Project", self)
+        self.file_import_action = QAction(self.file_import_icon, "Import Project", self)
+        self.exit_import_action = QAction(self.exit_import_icon, "Exit", self)
+        self.save_action = QAction(self.save_icon, "Save", self)
+        self.save_as_action = QAction(self.save_as_icon, "Save as", self)
+        self.help_action = QAction(self.help_icon, "About Vibra", self)
         self.view_up = QAction("Up View", self)
         self.view_down = QAction("Down View", self)
         self.view_left = QAction("Left View", self)
@@ -47,8 +47,8 @@ class MainWindow(QMainWindow):
         self.view_orthogonal = QAction("Orthogonal View", self)
         self.view_front = QAction("Front View", self)
         self.view_back = QAction("Back View", self)
-        self.save_icon.triggered.connect(self.project.save)
-        self.help_icon.triggered.connect(self.show_help_window)
+        self.save_action.triggered.connect(self.project.save)
+        self.help_action.triggered.connect(self.show_help_window)
 
     def create_basic_layout(self):
         self.viewer_3d = Viewer3D()
@@ -64,11 +64,11 @@ class MainWindow(QMainWindow):
 
     def load_project_menu(self):
         self.project_menu.clear()
-        self.project_menu.addAction(self.vibra_icon)
-        self.project_menu.addAction(self.file_import)
-        self.project_menu.addAction(self.save_icon)
-        self.project_menu.addAction(self.save_as_icon)
-        self.project_menu.addAction(self.exit_import_icon)
+        self.project_menu.addAction(self.vibra_action)
+        self.project_menu.addAction(self.file_import_action)
+        self.project_menu.addAction(self.save_action)
+        self.project_menu.addAction(self.save_as_action)
+        self.project_menu.addAction(self.exit_import_action)
 
     def load_views_menu(self):
         self.views_menu.addAction(self.view_up)
@@ -80,7 +80,7 @@ class MainWindow(QMainWindow):
         self.views_menu.addAction(self.view_orthogonal)
 
     def load_help_menu(self):
-        self.help_menu.addAction(self.help_icon)
+        self.help_menu.addAction(self.help_action)
 
     def show_help_window(self):
         help_window = HelpWindow()
