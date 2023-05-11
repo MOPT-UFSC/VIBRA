@@ -1,7 +1,9 @@
-from pathlib import Path
 import logging
+from pathlib import Path
+from time import sleep
 
 from vibra.engine.model import Model
+from vibra.utils import ProgressStatus
 
 
 class Project:
@@ -15,3 +17,10 @@ class Project:
     def save(self):
         logging.info(f"Saving project in my/save/path")
         print("SALVANDO")
+
+    def long_function(self):
+        for i in range(20):
+            logging.info("long_function" + ProgressStatus(i, 20))
+
+            print(i)
+            sleep(0.1)

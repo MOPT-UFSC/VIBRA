@@ -1,5 +1,5 @@
-import sys
 import logging
+import sys
 
 from PyQt5.QtWidgets import QApplication
 
@@ -7,21 +7,30 @@ from vibra.interface.main_window import MainWindow
 
 
 def configure_logs():
-    '''
+    """
     Configures the logging library.
     Format includes time, log level (info, debug, error and so on).
 
     The main level is set to NOSET, so every handler can select its
     own filters.
-    '''
-    formatter = logging.Formatter('%(asctime)s \t | %(levelname)s \t | %(message)s')
-    file_handler = logging.FileHandler('logs.log', 'w+')
+
+    All info logs are saved in the file, but only warnings or error
+    are shown to users.
+    """
+    file_formatter = logging.Formatter("%(asctime)s \t | %(levelname)s \t | %(message)s")
+    file_handler = logging.FileHandler("logs.log", "w+")
     file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(formatter)
+    file_handler.setFormatter(file_formatter)
+
+    stream_formatter = logging.Formatter(logging.BASIC_FORMAT)
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(logging.WARN)
+    stream_handler.setFormatter(stream_formatter)
 
     logger = logging.getLogger()
     logger.setLevel(logging.NOTSET)
     logger.addHandler(file_handler)
+    logger.addHandler(stream_handler)
 
 
 if __name__ == "__main__":

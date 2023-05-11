@@ -1,9 +1,12 @@
+import logging
 from pathlib import Path
+from time import sleep
 
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction, QMainWindow
+from PyQt5.QtWidgets import QAction, QApplication, QMainWindow
 
 from vibra.interface.help_window import HelpWindow
+from vibra.interface.loading_bar import LoadingWindow, ProgressBarLogUpdater
 from vibra.interface.viewer_3d.viewer_3d import Viewer3D
 from vibra.project import Project
 
@@ -31,14 +34,11 @@ class MainWindow(QMainWindow):
         self.view_right_icon = QIcon(str(Path("data/right.png")))
         self.view_left_icon = QIcon(str(Path("data/left.png")))
         self.view_back_icon = QIcon(str(Path("data/back.png")))
-        self.view_front_icon =QIcon(str(Path("data/front.png")))
+        self.view_front_icon = QIcon(str(Path("data/front.png")))
         self.view_orthogonal_icon = QIcon(str(Path("data/orthogonal.png")))
         self.view_mode_line_icon = QIcon(str(Path("data/lines.png")))
         self.view_mode_nodes_icon = QIcon(str(Path("data/nodes.png")))
         self.view_mode_face_icon = QIcon(str(Path("data/faces.png")))
-        
-
-        
 
     def config(self):
         self.setMinimumSize(800, 600)
@@ -63,11 +63,48 @@ class MainWindow(QMainWindow):
         self.view_mode_face_icon = QAction(self.view_mode_face_icon, "Face View", self)
         self.view_mode_line_icon = QAction(self.view_mode_line_icon, "Line View", self)
         self.view_mode_nodes_icon = QAction(self.view_mode_nodes_icon, "Node View", self)
-        self.save_action.triggered.connect(self.project.save)
-        self.help_action.triggered.connect(self.show_help_window)
+
+        self.save_action.triggered.connect(self.save_callback)
+        self.help_action.triggered.connect(self.help_callback)
+        self.exit_import_action.triggered.connect(self.exit_callback)
 
     def create_basic_layout(self):
         self.viewer_3d = Viewer3D()
+        self.create_progress_bar()
+
+    def create_progress_bar(self):
+        # Creates a loading bar window
+        self.loading_window = LoadingWindow(self)
+
+        # Updates the loading bar every a log is output
+        progress_handler = ProgressBarLogUpdater(progress_bar=self.loading_window.progress_bar)
+        progress_handler.setLevel(logging.INFO)
+        logging.getLogger().addHandler(progress_handler)
+
+    def long_exit_function(self):
+        loaded_function = self.load_function()
+        loaded_function()
+
+    def load_function(self, function, *, text=""):
+        def wrapper(*args, **kwargs):
+            try:
+                # Shows the empty progress bar
+                self.loading_window.show()
+                self.loading_window.text_label.setText(text)
+                sleep(0.1)  # Without sleeps pyqt breaks
+                QApplication.processEvents()
+
+                # Calls the actual function
+                function(*args, **kwargs)
+
+                # Shows the full progress bar and closes
+                self.loading_window.progress_bar.setValue(100)
+                sleep(0.1)  # A small delay so we can see the 100%
+                self.loading_window.hide()
+            except AttributeError:
+                logging.warn("No loading window found")
+
+        return wrapper
 
     def create_menu_bar(self):
         menu_bar = self.menuBar()
@@ -75,7 +112,7 @@ class MainWindow(QMainWindow):
         self.views_menu = menu_bar.addMenu("Views")
         self.views_mode_menu = menu_bar.addMenu("View Mode")
         self.help_menu = menu_bar.addMenu("Help")
-        
+
         self.load_project_menu()
         self.load_views_menu()
         self.load_help_menu()
@@ -106,6 +143,13 @@ class MainWindow(QMainWindow):
     def load_help_menu(self):
         self.help_menu.addAction(self.help_action)
 
-    def show_help_window(self):
+    def save_callback(self):
+        self.project.save()
+
+    def help_callback(self):
         help_window = HelpWindow()
         help_window.exec()
+
+    def exit_callback(self):
+        loaded_function = self.load_function(self.project.long_function, text="Loading...")
+        loaded_function()
