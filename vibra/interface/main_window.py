@@ -3,7 +3,7 @@ from pathlib import Path
 from time import sleep
 
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction, QApplication, QMainWindow
+from PyQt5.QtWidgets import QAction, QApplication, QMainWindow, QMessageBox
 
 from vibra.interface.help_window import HelpWindow
 from vibra.interface.loading_bar import LoadingWindow, ProgressBarLogUpdater
@@ -153,3 +153,12 @@ class MainWindow(QMainWindow):
     def exit_callback(self):
         loaded_function = self.load_function(self.project.long_function, text="Loading...")
         loaded_function()
+
+    def closeEvent(self, event):
+        close = QMessageBox.question(
+            self, "QUIT", "Are you sure want to stop process?", QMessageBox.Yes | QMessageBox.No
+        )
+        if close == QMessageBox.Yes:
+            event.accept()
+        else:
+            event.ignore()
