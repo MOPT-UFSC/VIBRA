@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction, QMainWindow
+from PyQt5.QtWidgets import QAction, QMainWindow, QMessageBox
 
 from vibra.interface.help_window import HelpWindow
 from vibra.interface.viewer_3d.viewer_3d import Viewer3D
@@ -31,14 +31,11 @@ class MainWindow(QMainWindow):
         self.view_right_icon = QIcon(str(Path("data/right.png")))
         self.view_left_icon = QIcon(str(Path("data/left.png")))
         self.view_back_icon = QIcon(str(Path("data/back.png")))
-        self.view_front_icon =QIcon(str(Path("data/front.png")))
+        self.view_front_icon = QIcon(str(Path("data/front.png")))
         self.view_orthogonal_icon = QIcon(str(Path("data/orthogonal.png")))
         self.view_mode_line_icon = QIcon(str(Path("data/lines.png")))
         self.view_mode_nodes_icon = QIcon(str(Path("data/nodes.png")))
         self.view_mode_face_icon = QIcon(str(Path("data/faces.png")))
-        
-
-        
 
     def config(self):
         self.setMinimumSize(800, 600)
@@ -75,7 +72,7 @@ class MainWindow(QMainWindow):
         self.views_menu = menu_bar.addMenu("Views")
         self.views_mode_menu = menu_bar.addMenu("View Mode")
         self.help_menu = menu_bar.addMenu("Help")
-        
+
         self.load_project_menu()
         self.load_views_menu()
         self.load_help_menu()
@@ -109,3 +106,12 @@ class MainWindow(QMainWindow):
     def show_help_window(self):
         help_window = HelpWindow()
         help_window.exec()
+
+    def closeEvent(self, event):
+        close = QMessageBox.question(
+            self, "QUIT", "Are you sure want to stop process?", QMessageBox.Yes | QMessageBox.No
+        )
+        if close == QMessageBox.Yes:
+            event.accept()
+        else:
+            event.ignore()
