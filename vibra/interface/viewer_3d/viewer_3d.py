@@ -2,6 +2,9 @@ import vtk
 from PyQt5.QtWidgets import QFrame, QVBoxLayout
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
+from vibra.interface.viewer_3d.arcball_camera import (
+    vtkInteractorStyleArcballCamera,
+)
 from vibra.interface.viewer_3d.model_renderer import ModelRenderer
 
 
@@ -14,7 +17,7 @@ class Viewer3D(QFrame):
 
         self.render_interactor.GetRenderWindow().AddRenderer(self.model_renderer)
         self.render_interactor.Initialize()
-        self.render_interactor.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
+        self.render_interactor.SetInteractorStyle(vtk.vtkInteractorStyleTrackball())
 
         layout = QVBoxLayout()
         layout.addWidget(self.render_interactor)

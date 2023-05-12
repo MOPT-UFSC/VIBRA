@@ -60,13 +60,16 @@ class MainWindow(QMainWindow):
         self.view_front_action = QAction(self.view_front_icon, "Front View", self)
         self.view_back_action = QAction(self.view_back_icon, "Back View", self)
         self.view_orthogonal_action = QAction(self.view_orthogonal_icon, "Orthogonal View", self)
-        self.view_mode_face_icon = QAction(self.view_mode_face_icon, "Face View", self)
-        self.view_mode_line_icon = QAction(self.view_mode_line_icon, "Line View", self)
-        self.view_mode_nodes_icon = QAction(self.view_mode_nodes_icon, "Node View", self)
+        self.view_mode_face_action = QAction(self.view_mode_face_icon, "Face View", self)
+        self.view_mode_line_action = QAction(self.view_mode_line_icon, "Line View", self)
+        self.view_mode_nodes_action = QAction(self.view_mode_nodes_icon, "Node View", self)
 
         self.save_action.triggered.connect(self.save_callback)
         self.help_action.triggered.connect(self.help_callback)
         self.exit_import_action.triggered.connect(self.exit_callback)
+        self.view_mode_face_action.triggered.connect(self.show_faces_callback)
+        self.view_mode_line_action.triggered.connect(self.show_edges_callback)
+        self.view_mode_nodes_action.triggered.connect(self.show_points_callback)
 
     def create_basic_layout(self):
         self.viewer_3d = Viewer3D(self)
@@ -137,9 +140,9 @@ class MainWindow(QMainWindow):
         self.views_menu.addAction(self.view_orthogonal_action)
 
     def load_views_mode_menu(self):
-        self.views_mode_menu.addAction(self.view_mode_nodes_icon)
-        self.views_mode_menu.addAction(self.view_mode_line_icon)
-        self.views_mode_menu.addAction(self.view_mode_face_icon)
+        self.views_mode_menu.addAction(self.view_mode_nodes_action)
+        self.views_mode_menu.addAction(self.view_mode_line_action)
+        self.views_mode_menu.addAction(self.view_mode_face_action)
 
     def load_help_menu(self):
         self.help_menu.addAction(self.help_action)
@@ -154,6 +157,15 @@ class MainWindow(QMainWindow):
     def exit_callback(self):
         loaded_function = self.load_function(self.project.long_function, text="Loading...")
         loaded_function()
+
+    def show_points_callback(self):
+        self.viewer_3d.model_renderer.show_points()
+
+    def show_edges_callback(self):
+        self.viewer_3d.model_renderer.show_edges()
+
+    def show_faces_callback(self):
+        self.viewer_3d.model_renderer.show_faces()
 
     def closeEvent(self, event):
         close = QMessageBox.question(
