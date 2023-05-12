@@ -17,7 +17,7 @@ class Viewer3D(QFrame):
 
         self.render_interactor.GetRenderWindow().AddRenderer(self.model_renderer)
         self.render_interactor.Initialize()
-        self.render_interactor.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
+        self.render_interactor.SetInteractorStyle(vtkInteractorStyleArcballCamera())
 
         layout = QVBoxLayout()
         layout.addWidget(self.render_interactor)
