@@ -12,7 +12,7 @@ class ModelRenderer(CommonRenderer):
         self.update_actors()
 
     def configure_renderer(self):
-        pass
+        self.SetBackground(0.05, 0.05, 0.07)
 
     def update_actors(self):
         self.example_actor = ExampleActor()
