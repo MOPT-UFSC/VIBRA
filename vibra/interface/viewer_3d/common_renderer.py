@@ -52,3 +52,40 @@ class CommonRenderer(vtk.vtkRenderer):
 
         if self.GetRenderWindow() is not None:
             self.GetRenderWindow().Render()
+
+    def create_axes(self):
+        axes_actor = vtk.vtkAxesActor()
+
+        x_property = axes_actor.GetXAxisCaptionActor2D().GetCaptionTextProperty()
+        y_property = axes_actor.GetYAxisCaptionActor2D().GetCaptionTextProperty()
+        z_property = axes_actor.GetZAxisCaptionActor2D().GetCaptionTextProperty()
+
+        for i in [x_property, y_property, z_property]:
+            i.ItalicOff()
+            i.BoldOff()
+        
+        self.axes = vtk.vtkOrientationMarkerWidget()
+        self.axes.SetOrientationMarker(axes_actor)
+        self.axes.SetInteractor(self.GetRenderWindow().GetInteractor())
+        self.axes.EnabledOn()
+        self.axes.InteractiveOff()
+
+    def create_scale_bar(self):
+        self.scale_bar = vtk.vtkLegendScaleActor()
+        self.scale_bar.AllAxesOff()
+
+        title_property = self.scale_bar.GetLegendTitleProperty()
+        title_property.SetFontSize(14)
+        title_property.ShadowOff()
+        title_property.ItalicOff()
+        title_property.SetLineOffset(-35)
+        title_property.SetVerticalJustificationToTop()
+
+        label_property = self.scale_bar.GetLegendLabelProperty()
+        label_property.SetFontSize(12)
+        label_property.ShadowOff()
+        label_property.ItalicOff()
+        label_property.BoldOff()
+        label_property.SetLineOffset(-25)
+
+        self.AddActor(self.scale_bar)
