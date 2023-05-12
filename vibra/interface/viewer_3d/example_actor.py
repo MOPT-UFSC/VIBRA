@@ -44,4 +44,3 @@ class ExampleActor(vtk.vtkActor):
     def configure_appearance(self):
         self.GetProperty().RenderPointsAsSpheresOn()
         self.GetProperty().SetPointSize(6)
-

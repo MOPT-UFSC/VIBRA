@@ -1,9 +1,10 @@
 import vtk
 
+from vibra.interface.viewer_3d.common_renderer import CommonRenderer
 from vibra.interface.viewer_3d.example_actor import ExampleActor
 
 
-class ModelRenderer(vtk.vtkRenderer):
+class ModelRenderer(CommonRenderer):
     def __init__(self):
         super().__init__()
 
