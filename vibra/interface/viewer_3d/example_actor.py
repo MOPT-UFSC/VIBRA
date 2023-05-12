@@ -42,4 +42,6 @@ class ExampleActor(vtk.vtkActor):
         self.SetMapper(mapper)
 
     def configure_appearance(self):
-        self.GetProperty()
+        self.GetProperty().RenderPointsAsSpheresOn()
+        self.GetProperty().SetPointSize(6)
+

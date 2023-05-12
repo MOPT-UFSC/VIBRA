@@ -14,14 +14,14 @@ class ModelRenderer(vtk.vtkRenderer):
         pass
 
     def update_actors(self):
-        example_actor = ExampleActor()
-        self.AddActor(example_actor)
+        self.example_actor = ExampleActor()
+        self.AddActor(self.example_actor)
 
-    def show_points(self, condition):
-        pass
+    def show_points(self):
+        self.example_actor.GetProperty().SetRepresentationToPoints()
 
-    def show_edges(self, condition):
-        pass
+    def show_edges(self):
+        self.example_actor.GetProperty().SetRepresentationToWireframe()
 
-    def show_faces(self, condition):
-        pass
+    def show_faces(self):
+        self.example_actor.GetProperty().SetRepresentationToSurface()
