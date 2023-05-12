@@ -69,7 +69,8 @@ class MainWindow(QMainWindow):
         self.exit_import_action.triggered.connect(self.exit_callback)
 
     def create_basic_layout(self):
-        self.viewer_3d = Viewer3D()
+        self.viewer_3d = Viewer3D(self)
+        self.setCentralWidget(self.viewer_3d)
         self.create_progress_bar()
 
     def create_progress_bar(self):
