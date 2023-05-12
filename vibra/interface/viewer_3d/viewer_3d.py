@@ -17,8 +17,19 @@ class Viewer3D(QFrame):
 
         self.render_interactor.GetRenderWindow().AddRenderer(self.model_renderer)
         self.render_interactor.Initialize()
-        self.render_interactor.SetInteractorStyle(vtk.vtkInteractorStyleTrackball())
+        self.render_interactor.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
 
         layout = QVBoxLayout()
         layout.addWidget(self.render_interactor)
         self.setLayout(layout)
+
+        self.model_renderer.create_axes()
+        self.model_renderer.create_scale_bar()
+
+    def save_png(self, path):
+        imageFilter = vtk.vtkWindowToImageFilter()
+        imageFilter.SetInput(self.render_interactor.GetRenderWindow())
+        writer = vtk.vtkPNGWriter()
+        writer.SetFileName(path)
+        writer.SetInputConnection(imageFilter.GetOutputPort())
+        writer.Write()
