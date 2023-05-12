@@ -5,13 +5,13 @@ class CommonRenderer(vtk.vtkRenderer):
     def set_view_up(self):
         x, y, z = self.GetActiveCamera().GetFocalPoint()
         position = (x, y + 1, z)
-        view_up = (0, 1, 0)
+        view_up = (0, 0, -1)
         self.set_custom_view(position, view_up)
 
     def set_view_down(self):
         x, y, z = self.GetActiveCamera().GetFocalPoint()
         position = (x, y - 1, z)
-        view_up = (0, 1, 0)
+        view_up = (0, 0, 1)
         self.set_custom_view(position, view_up)
 
     def set_view_left(self):
@@ -40,7 +40,7 @@ class CommonRenderer(vtk.vtkRenderer):
 
     def set_view_orthogonal(self):
         x, y, z = self.GetActiveCamera().GetFocalPoint()
-        position = (x, y + 1, z)
+        position = (x - 1 , y - 1, z - 1)
         view_up = (0, 1, 0)
         self.set_custom_view(position, view_up)
 
