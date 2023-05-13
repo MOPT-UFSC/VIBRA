@@ -27,13 +27,13 @@ class MainWindow(QMainWindow):
         self.set_theme(self.theme)
 
     def load_icons(self):
-        self.vibra_icon = QIcon(str(Path("data/vibra.ico")))  # logo do vibra
+        self.vibra_icon = QIcon(str(Path("data/logo_vibra.png")))  # logo do vibra
         self.help_icon = QIcon(str(Path("data/help.png")))
-        self.new_project_icon = QIcon(str(Path("data/new-file.png")))
-        self.file_import_icon = QIcon(str(Path("data/file-import.png")))
-        self.exit_import_icon = QIcon(str(Path("data/door-exit.png")))
-        self.save_icon = QIcon(str(Path("data/save-solid.png")))
-        self.save_as_icon = QIcon(str(Path("data/save_blue.png")))
+        self.new_project_icon = QIcon(str(Path("data/new_file.png")))
+        self.file_import_icon = QIcon(str(Path("data/import.png")))
+        self.exit_import_icon = QIcon(str(Path("data/exit.png")))
+        self.save_icon = QIcon(str(Path("data/save.png")))
+        self.save_as_icon = QIcon(str(Path("data/save_as.png")))
         self.view_up_icon = QIcon(str(Path("data/top.png")))
         self.view_down_icon = QIcon(str(Path("data/bottom.png")))
         self.view_right_icon = QIcon(str(Path("data/right.png")))
@@ -44,6 +44,7 @@ class MainWindow(QMainWindow):
         self.view_mode_line_icon = QIcon(str(Path("data/lines.png")))
         self.view_mode_nodes_icon = QIcon(str(Path("data/nodes.png")))
         self.view_mode_face_icon = QIcon(str(Path("data/faces.png")))
+        self.recent_icon = QIcon(str(Path("data/recent.png")))
 
     def config(self):
         self.setMinimumSize(800, 600)
@@ -68,6 +69,7 @@ class MainWindow(QMainWindow):
         self.view_mode_face_action = QAction(self.view_mode_face_icon, "Face View", self)
         self.view_mode_line_action = QAction(self.view_mode_line_icon, "Line View", self)
         self.view_mode_nodes_action = QAction(self.view_mode_nodes_icon, "Node View", self)
+        self.recent_action = QAction(self.recent_icon, "Recent", self)
 
         self.save_action.triggered.connect(self.save_callback)
         self.help_action.triggered.connect(self.help_callback)
@@ -147,6 +149,7 @@ class MainWindow(QMainWindow):
         self.project_menu.addAction(self.file_import_action)
         self.project_menu.addAction(self.save_action)
         self.project_menu.addAction(self.save_as_action)
+        self.project_menu.addAction(self.recent_action)
         self.project_menu.addAction(self.exit_import_action)
 
     def load_views_menu(self):
