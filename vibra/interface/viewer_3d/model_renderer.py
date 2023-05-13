@@ -2,6 +2,13 @@ import vtk
 
 from vibra.interface.viewer_3d.common_renderer import CommonRenderer
 from vibra.interface.viewer_3d.example_actor import ExampleActor
+from vibra.interface.viewer_3d.symbols_actors import (
+    ArrowSymbols,
+    ArrowSymbols2,
+    ArrowSymbols3,
+    ClampSymbols,
+    SpringSymbols,
+)
 
 
 class ModelRenderer(CommonRenderer):
@@ -17,6 +24,21 @@ class ModelRenderer(CommonRenderer):
     def update_actors(self):
         self.example_actor = ExampleActor()
         self.AddActor(self.example_actor)
+
+        self.symbols_actor = SpringSymbols(self)
+        self.AddActor(self.symbols_actor)
+
+        self.symbols_actor = ClampSymbols(self)
+        self.AddActor(self.symbols_actor)
+
+        self.symbols_actor = ArrowSymbols(self)
+        self.AddActor(self.symbols_actor)
+
+        self.symbols_actor = ArrowSymbols2(self)
+        self.AddActor(self.symbols_actor)
+
+        self.symbols_actor = ArrowSymbols3(self)
+        self.AddActor(self.symbols_actor)
 
     def show_points(self):
         self.example_actor.GetProperty().SetRepresentationToPoints()

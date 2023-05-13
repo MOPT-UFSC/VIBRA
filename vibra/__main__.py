@@ -1,8 +1,8 @@
 import logging
 import sys
 
-from PyQt5.QtWidgets import QApplication
 import vtk
+from PyQt5.QtWidgets import QApplication
 
 from vibra.interface.main_window import MainWindow
 
@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     # disables the terrible vtk error handler
     # you may want to enable them while debugging something
-    vtk.vtkObject.GlobalWarningDisplayOff() 
+    vtk.vtkObject.GlobalWarningDisplayOff()
 
     app = QApplication(sys.argv)
     window = MainWindow()

@@ -40,7 +40,7 @@ class CommonRenderer(vtk.vtkRenderer):
 
     def set_view_orthogonal(self):
         x, y, z = self.GetActiveCamera().GetFocalPoint()
-        position = (x + 1 , y + 1, z + 1)
+        position = (x + 1, y + 1, z + 1)
         view_up = (0, 1, 0)
         self.set_custom_view(position, view_up)
 
@@ -63,7 +63,7 @@ class CommonRenderer(vtk.vtkRenderer):
         for i in [x_property, y_property, z_property]:
             i.ItalicOff()
             i.BoldOff()
-        
+
         self.axes = vtk.vtkOrientationMarkerWidget()
         self.axes.SetOrientationMarker(axes_actor)
         self.axes.SetInteractor(self.GetRenderWindow().GetInteractor())

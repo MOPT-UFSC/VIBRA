@@ -40,7 +40,7 @@ class vtkInteractorStyleArcballCamera(vtk.vtkInteractorStyleTrackballCamera):
     def left_button_press_event(self, obj, event):
         # Implemented to stop the superclass movement
         pass
-    
+
     def left_button_release_event(self, obj, event):
         # Implemented to stop the superclass movement
         pass
@@ -55,7 +55,7 @@ class vtkInteractorStyleArcballCamera(vtk.vtkInteractorStyleTrackballCamera):
 
         if renderer is None:
             return
-        
+
         picker = vtk.vtkPropPicker()
         picker.Pick(self.clickPosition[0], self.clickPosition[1], 0, renderer)
         pos = picker.GetPickPosition()
