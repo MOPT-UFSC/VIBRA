@@ -9,6 +9,7 @@ from vibra.interface.help_window import HelpWindow
 from vibra.interface.loading_bar import LoadingWindow, ProgressBarLogUpdater
 from vibra.interface.viewer_3d.viewer_3d import Viewer3D
 from vibra.project import Project
+import qdarktheme
 
 
 class MainWindow(QMainWindow):
@@ -20,6 +21,7 @@ class MainWindow(QMainWindow):
         self.create_actions()
         self.create_basic_layout()
         self.create_menu_bar()
+        self.set_theme("dark")
 
     def load_icons(self):
         self.vibra_icon = QIcon(str(Path("data/vibra.ico")))  # logo do vibra
@@ -164,6 +166,11 @@ class MainWindow(QMainWindow):
     def exit_callback(self):
         loaded_function = self.load_function(self.project.long_function, text="Loading...")
         loaded_function()
+        self.set_theme("light")
+
+    def set_theme(self, theme):
+        qdarktheme.setup_theme(theme)
+        self.viewer_3d.set_theme(theme)
 
     def show_points_callback(self):
         self.viewer_3d.model_renderer.show_points()

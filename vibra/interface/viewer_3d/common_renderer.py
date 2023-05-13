@@ -2,6 +2,18 @@ import vtk
 
 
 class CommonRenderer(vtk.vtkRenderer):
+    def set_theme(self, theme):
+        if theme == "dark":
+            self.GradientBackgroundOn()
+            self.SetBackground(0.06, 0.08, 0.12)
+            self.SetBackground2(0, 0, 0)
+        elif theme == "light":
+            self.GradientBackgroundOn()
+            self.SetBackground(0.60, 0.63, 0.68)
+            self.SetBackground2(0.95, 0.95, 0.95)
+        else:
+            NotImplemented
+
     def set_view_up(self):
         x, y, z = self.GetActiveCamera().GetFocalPoint()
         position = (x, y + 1, z)

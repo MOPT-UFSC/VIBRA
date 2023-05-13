@@ -26,6 +26,9 @@ class Viewer3D(QFrame):
         self.model_renderer.create_axes()
         self.model_renderer.create_scale_bar()
 
+    def set_theme(self, theme):
+        self.model_renderer.set_theme(theme)
+
     def save_png(self, path):
         imageFilter = vtk.vtkWindowToImageFilter()
         imageFilter.SetInput(self.render_interactor.GetRenderWindow())
