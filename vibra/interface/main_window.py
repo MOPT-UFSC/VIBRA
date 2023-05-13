@@ -176,7 +176,6 @@ class MainWindow(QMainWindow):
     def exit_callback(self):
         loaded_function = self.load_function(self.project.long_function, text="Loading...")
         loaded_function()
-        self.set_theme("light")
 
     def set_theme(self, theme):
         qdarktheme.setup_theme(theme)
