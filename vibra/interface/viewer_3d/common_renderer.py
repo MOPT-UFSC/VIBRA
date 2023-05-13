@@ -9,8 +9,8 @@ class CommonRenderer(vtk.vtkRenderer):
             self.SetBackground2(0, 0, 0)
         elif theme == "light":
             self.GradientBackgroundOn()
-            self.SetBackground(0.50, 0.53, 0.58)
-            self.SetBackground2(0.8, 0.8, 0.8)
+            self.SetBackground(0.40, 0.43, 0.48)
+            self.SetBackground2(0.6, 0.6, 0.6)
         else:
             NotImplemented
 
