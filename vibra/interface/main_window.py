@@ -16,13 +16,15 @@ from vibra.project import Project
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
+        self.theme = "dark"
+
         self.project = Project()
         self.load_icons()
         self.config()
         self.create_actions()
         self.create_basic_layout()
         self.create_menu_bar()
-        self.set_theme("dark")
+        self.set_theme(self.theme)
 
     def load_icons(self):
         self.vibra_icon = QIcon(str(Path("data/vibra.ico")))  # logo do vibra
@@ -128,11 +130,11 @@ class MainWindow(QMainWindow):
         return wrapper
 
     def create_menu_bar(self):
-        menu_bar = self.menuBar()
-        self.project_menu = menu_bar.addMenu("Project")
-        self.views_menu = menu_bar.addMenu("Views")
-        self.views_mode_menu = menu_bar.addMenu("View Mode")
-        self.help_menu = menu_bar.addMenu("Help")
+        self.menu_bar = self.menuBar()
+        self.project_menu = self.menu_bar.addMenu("Project")
+        self.views_menu = self.menu_bar.addMenu("Views")
+        self.views_mode_menu = self.menu_bar.addMenu("View Mode")
+        self.help_menu = self.menu_bar.addMenu("Help")
 
         self.load_project_menu()
         self.load_views_menu()
@@ -179,6 +181,7 @@ class MainWindow(QMainWindow):
     def set_theme(self, theme):
         qdarktheme.setup_theme(theme)
         self.viewer_3d.set_theme(theme)
+        self.theme = theme
 
     def show_points_callback(self):
         self.viewer_3d.model_renderer.show_points()
