@@ -18,7 +18,7 @@ class SpringSymbols(SymbolActorCommon):
         return load_symbol("data/symbols/_spring.obj")
 
     def get_positions(self):
-        return [(i, 0, 0) for i in range(10)]
+        return [(5, i, 0) for i in range(10)]
 
     def configure_appearance(self):
         self.GetProperty().SetColor(0.38, 0.01, 0.27)
@@ -37,7 +37,7 @@ class ClampSymbols(SymbolActorCommon):
         return load_symbol("data/symbols/grampo.obj")
 
     def get_positions(self):
-        return [(0, i, 0) for i in range(10)]
+        return [(0, i, 5) for i in range(10)]
 
     def configure_appearance(self):
         self.GetProperty().SetColor(0.89, 0.70, 0.02)
@@ -56,7 +56,7 @@ class ArrowSymbols(SymbolActorCommon):
         return load_symbol("data/symbols/_arrow.obj")
 
     def get_positions(self):
-        return [(0, 0, i) for i in range(10)]
+        return [(5, i, 5) for i in range(10)]
 
     def configure_appearance(self):
         self.GetProperty().SetColor(0.58, 0.09, 0.05)
@@ -75,7 +75,7 @@ class ArrowSymbols2(SymbolActorCommon):
         return load_symbol("data/symbols/_arrow.obj")
 
     def get_positions(self):
-        return [(0, i, i) for i in range(10)]
+        return [(-5, i, 0) for i in range(10)]
 
     def configure_appearance(self):
         self.GetProperty().SetColor(0.06, 0.49, 0.49)
@@ -94,7 +94,7 @@ class ArrowSymbols3(SymbolActorCommon):
         return load_symbol("data/symbols/_arrow.obj")
 
     def get_positions(self):
-        return [(i, 0, i) for i in range(10)]
+        return [(0, i, -5) for i in range(10)]
 
     def configure_appearance(self):
         self.GetProperty().SetColor(0, 0.26, 0.66)
