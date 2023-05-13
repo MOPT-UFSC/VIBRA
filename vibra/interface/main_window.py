@@ -27,7 +27,7 @@ class MainWindow(QMainWindow):
         self.set_theme(self.theme)
 
     def load_icons(self):
-        self.vibra_icon = QIcon(str(Path("data/logo_vibra.png")))  # logo do vibra
+        self.vibra_icon = QIcon(str(Path("data/logo_vibra.png"))) 
         self.help_icon = QIcon(str(Path("data/help.png")))
         self.new_project_icon = QIcon(str(Path("data/new_file.png")))
         self.file_import_icon = QIcon(str(Path("data/import.png")))
@@ -45,6 +45,7 @@ class MainWindow(QMainWindow):
         self.view_mode_nodes_icon = QIcon(str(Path("data/nodes.png")))
         self.view_mode_face_icon = QIcon(str(Path("data/faces.png")))
         self.recent_icon = QIcon(str(Path("data/recent.png")))
+        self.theme_icon = QIcon(str(Path("data/recent.png")))
 
     def config(self):
         self.setMinimumSize(800, 600)
@@ -70,6 +71,7 @@ class MainWindow(QMainWindow):
         self.view_mode_line_action = QAction(self.view_mode_line_icon, "Line View", self)
         self.view_mode_nodes_action = QAction(self.view_mode_nodes_icon, "Node View", self)
         self.recent_action = QAction(self.recent_icon, "Recent", self)
+        self.theme_action = QAction(self.theme_icon, "Theme", self)
 
         self.save_action.triggered.connect(self.save_callback)
         self.help_action.triggered.connect(self.help_callback)
@@ -84,6 +86,7 @@ class MainWindow(QMainWindow):
         self.view_front_action.triggered.connect(self.show_view_front_callback)
         self.view_back_action.triggered.connect(self.show_view_back_callback)
         self.view_orthogonal_action.triggered.connect(self.show_view_orthogonal_callback)
+        self.theme_action.triggered.connect(self.theme_callback)
 
     def create_basic_layout(self):
         self.viewer_3d = Viewer3D(self)
@@ -150,7 +153,9 @@ class MainWindow(QMainWindow):
         self.project_menu.addAction(self.save_action)
         self.project_menu.addAction(self.save_as_action)
         self.project_menu.addAction(self.recent_action)
+        self.project_menu.addAction(self.theme_action)
         self.project_menu.addAction(self.exit_import_action)
+
 
     def load_views_menu(self):
         self.views_menu.addAction(self.view_up_action)
@@ -185,6 +190,9 @@ class MainWindow(QMainWindow):
         self.viewer_3d.set_theme(theme)
         self.theme = theme
 
+    def theme_callback(self):
+        pass
+        
     def show_points_callback(self):
         self.viewer_3d.model_renderer.show_points()
 
