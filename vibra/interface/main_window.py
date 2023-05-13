@@ -2,6 +2,8 @@ import logging
 from pathlib import Path
 from time import sleep
 
+import qdarktheme
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction, QApplication, QMainWindow, QMessageBox
 
@@ -9,7 +11,6 @@ from vibra.interface.help_window import HelpWindow
 from vibra.interface.loading_bar import LoadingWindow, ProgressBarLogUpdater
 from vibra.interface.viewer_3d.viewer_3d import Viewer3D
 from vibra.project import Project
-import qdarktheme
 
 
 class MainWindow(QMainWindow):
@@ -101,6 +102,9 @@ class MainWindow(QMainWindow):
     def load_function(self, function, *, text=""):
         def wrapper(*args, **kwargs):
             try:
+                # Changes the cursor to wait
+                QApplication.setOverrideCursor(Qt.WaitCursor)
+
                 # Shows the empty progress bar
                 self.loading_window.show()
                 self.loading_window.text_label.setText(text)
@@ -114,6 +118,10 @@ class MainWindow(QMainWindow):
                 self.loading_window.progress_bar.setValue(100)
                 sleep(0.1)  # A small delay so we can see the 100%
                 self.loading_window.hide()
+
+                # Restores the previous cursor
+                QApplication.restoreOverrideCursor()
+
             except AttributeError:
                 logging.warn("No loading window found")
 
