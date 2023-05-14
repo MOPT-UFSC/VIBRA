@@ -11,12 +11,13 @@ from vibra.interface.help_window import HelpWindow
 from vibra.interface.loading_bar import LoadingWindow, ProgressBarLogUpdater
 from vibra.interface.viewer_3d.viewer_3d import Viewer3D
 from vibra.project import Project
+from PyQt5.QtCore import pyqtSignal
 
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
-        self.theme = "dark"
+        self.theme = "light"
 
         self.project = Project()
         self.load_icons()
@@ -27,7 +28,7 @@ class MainWindow(QMainWindow):
         self.set_theme(self.theme)
 
     def load_icons(self):
-        self.vibra_icon = QIcon(str(Path("data/logo_vibra.png"))) 
+        self.vibra_icon = QIcon(str(Path("data/logo_vibra.png")))
         self.help_icon = QIcon(str(Path("data/help.png")))
         self.new_project_icon = QIcon(str(Path("data/new_file.png")))
         self.file_import_icon = QIcon(str(Path("data/import.png")))
@@ -156,7 +157,6 @@ class MainWindow(QMainWindow):
         self.project_menu.addAction(self.theme_action)
         self.project_menu.addAction(self.exit_import_action)
 
-
     def load_views_menu(self):
         self.views_menu.addAction(self.view_up_action)
         self.views_menu.addAction(self.view_down_action)
@@ -185,14 +185,22 @@ class MainWindow(QMainWindow):
         loaded_function = self.load_function(self.project.long_function, text="Loading...")
         loaded_function()
 
+    def theme_callback(self):
+        return True
+
     def set_theme(self, theme):
         qdarktheme.setup_theme(theme)
         self.viewer_3d.set_theme(theme)
         self.theme = theme
 
-    def theme_callback(self):
+    def actually_theme(self, theme):
         pass
-        
+        # if self.theme_callback == True and theme == "light":
+        #         theme == "dark"
+        # if self.theme_callback == True and theme == "dark":
+        #         theme == "light"
+        # self.theme = theme
+
     def show_points_callback(self):
         self.viewer_3d.model_renderer.show_points()
 
