@@ -3,7 +3,7 @@ from pathlib import Path
 from time import sleep
 
 import qdarktheme
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction, QApplication, QMainWindow, QMessageBox
 
@@ -11,13 +11,12 @@ from vibra.interface.help_window import HelpWindow
 from vibra.interface.loading_bar import LoadingWindow, ProgressBarLogUpdater
 from vibra.interface.viewer_3d.viewer_3d import Viewer3D
 from vibra.project import Project
-from PyQt5.QtCore import pyqtSignal
 
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
-        self.theme = "light"
+        self.theme = "dark"
 
         self.project = Project()
         self.load_icons()
@@ -46,7 +45,8 @@ class MainWindow(QMainWindow):
         self.view_mode_nodes_icon = QIcon(str(Path("data/nodes.png")))
         self.view_mode_face_icon = QIcon(str(Path("data/faces.png")))
         self.recent_icon = QIcon(str(Path("data/recent.png")))
-        self.theme_icon = QIcon(str(Path("data/recent.png")))
+        self.theme_sun_icon = QIcon(str(Path("data/recent.png")))
+        self.theme_moon_icon = QIcon(str(Path("data/nodes.png")))
 
     def config(self):
         self.setMinimumSize(800, 600)
@@ -72,7 +72,7 @@ class MainWindow(QMainWindow):
         self.view_mode_line_action = QAction(self.view_mode_line_icon, "Line View", self)
         self.view_mode_nodes_action = QAction(self.view_mode_nodes_icon, "Node View", self)
         self.recent_action = QAction(self.recent_icon, "Recent", self)
-        self.theme_action = QAction(self.theme_icon, "Theme", self)
+        self.theme_action = QAction(self.theme_sun_icon, "Theme", self)
 
         self.save_action.triggered.connect(self.save_callback)
         self.help_action.triggered.connect(self.help_callback)
@@ -88,6 +88,15 @@ class MainWindow(QMainWindow):
         self.view_back_action.triggered.connect(self.show_view_back_callback)
         self.view_orthogonal_action.triggered.connect(self.show_view_orthogonal_callback)
         self.theme_action.triggered.connect(self.theme_callback)
+
+        self.help_action.setShortcut("F1")
+        self.view_up_action.setShortcut("Ctrl+Shift+1")
+        self.view_down_action.setShortcut("Ctrl+Shift+2")
+        self.view_left_action.setShortcut("Ctrl+Shift+3")
+        self.view_right_action.setShortcut("Ctrl+Shift+4")
+        self.view_front_action.setShortcut("Ctrl+Shift+5")
+        self.view_back_action.setShortcut("Ctrl+Shift+6")
+        self.view_orthogonal_action.setShortcut("Ctrl+Shift+7")
 
     def create_basic_layout(self):
         self.viewer_3d = Viewer3D(self)
@@ -186,20 +195,19 @@ class MainWindow(QMainWindow):
         loaded_function()
 
     def theme_callback(self):
-        return True
+        if self.theme == "light":
+            self.set_theme("dark")
+            self.theme_action.setIcon(self.theme_sun_icon)
+
+        elif self.theme == "dark":
+            self.set_theme("light")
+            self.theme_action.setIcon(self.theme_moon_icon)
 
     def set_theme(self, theme):
         qdarktheme.setup_theme(theme)
         self.viewer_3d.set_theme(theme)
         self.theme = theme
-
-    def actually_theme(self, theme):
-        pass
-        # if self.theme_callback == True and theme == "light":
-        #         theme == "dark"
-        # if self.theme_callback == True and theme == "dark":
-        #         theme == "light"
-        # self.theme = theme
+        print(self.theme)
 
     def show_points_callback(self):
         self.viewer_3d.model_renderer.show_points()
