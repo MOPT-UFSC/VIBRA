@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 import vtk
 
 
@@ -8,8 +10,19 @@ def load_symbol(path):
     return reader.GetOutput()
 
 
+X_VECTOR = (1, 0, 0)
+Y_VECTOR = (0, 1, 0)
+Z_VECTOR = (0, 0, 1)
+
+
 class SymbolActorCommon(vtk.vtkActor):
-    def __init__(self, positions: list[tuple], source: vtk.vtkPolyData, renderer: vtk.vtkRenderer):
+    def __init__(
+        self,
+        positions: list[tuple],
+        orientations: list[tuple],
+        source: vtk.vtkPolyData,
+        renderer: vtk.vtkRenderer,
+    ):
         self.renderer = renderer
 
         points = vtk.vtkPoints()
@@ -17,6 +30,13 @@ class SymbolActorCommon(vtk.vtkActor):
         for x, y, z in positions:
             points.InsertNextPoint(x, y, z)
         polydata.SetPoints(points)
+
+        directions = vtk.vtkFloatArray()
+        directions.SetName("directions")
+        directions.SetNumberOfComponents(3)
+        for x, y, z in orientations:
+            directions.InsertNextTuple3(x, y, z)
+        polydata.GetPointData().AddArray(directions)
 
         distance_to_camera = vtk.vtkDistanceToCamera()
         distance_to_camera.SetInputData(polydata)
@@ -27,9 +47,11 @@ class SymbolActorCommon(vtk.vtkActor):
         glyph.SetInputConnection(distance_to_camera.GetOutputPort())
         glyph.SetSourceData(source)
         glyph.SetScaleModeToScaleByScalar()
-        glyph.SetColorModeToColorByVector()
+        glyph.SetVectorModeToUseVector()
         glyph.SetInputArrayToProcess(0, 0, 0, 0, "DistanceToCamera")
+        glyph.SetInputArrayToProcess(1, 0, 0, 0, "directions")
 
         mapper = vtk.vtkPolyDataMapper()
         mapper.SetInputConnection(glyph.GetOutputPort())
+        mapper.ScalarVisibilityOff()
         self.SetMapper(mapper)

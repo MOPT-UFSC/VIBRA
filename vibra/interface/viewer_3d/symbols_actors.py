@@ -1,43 +1,38 @@
+import numpy as np
 import vtk
 
 from vibra.interface.viewer_3d.symbols_common import (
+    X_VECTOR,
+    Y_VECTOR,
+    Z_VECTOR,
     SymbolActorCommon,
     load_symbol,
 )
 
 
-class SpringSymbols(SymbolActorCommon):
-    def __init__(self, renderer: vtk.vtkRenderer):
-        source = self.get_source()
-        positions = self.get_positions()
-        super().__init__(positions, source, renderer)
-
-        self.configure_appearance()
-
-    def get_source(self):
-        return load_symbol("data/symbols/_spring.obj")
-
-    def get_positions(self):
-        return [(5, i, 0) for i in range(10)]
-
-    def configure_appearance(self):
-        self.GetProperty().SetColor(0.38, 0.01, 0.27)
-        self.GetProperty().LightingOff()
-
-
 class ClampSymbols(SymbolActorCommon):
     def __init__(self, renderer: vtk.vtkRenderer):
         source = self.get_source()
-        positions = self.get_positions()
-        super().__init__(positions, source, renderer)
+        positions, orientations = self.get_positions_orientations()
+        super().__init__(positions, orientations, source, renderer)
 
         self.configure_appearance()
 
     def get_source(self):
         return load_symbol("data/symbols/grampo.obj")
 
-    def get_positions(self):
-        return [(0, i, 5) for i in range(10)]
+    def get_positions_orientations(self):
+        positions = []
+        orientations = []
+
+        for i in range(4):
+            positions.append((5, 5, i))
+            orientations.append((0, 0, 1))
+
+            positions.append((i, i, 5))
+            orientations.append((0, 1, 0))
+
+        return positions, orientations
 
     def configure_appearance(self):
         self.GetProperty().SetColor(0.89, 0.70, 0.02)
@@ -47,16 +42,26 @@ class ClampSymbols(SymbolActorCommon):
 class ArrowSymbols(SymbolActorCommon):
     def __init__(self, renderer: vtk.vtkRenderer):
         source = self.get_source()
-        positions = self.get_positions()
-        super().__init__(positions, source, renderer)
+        positions, orientations = self.get_positions_orientations()
+        super().__init__(positions, orientations, source, renderer)
 
         self.configure_appearance()
 
     def get_source(self):
         return load_symbol("data/symbols/_arrow.obj")
 
-    def get_positions(self):
-        return [(5, i, 5) for i in range(10)]
+    def get_positions_orientations(self):
+        positions = []
+        orientations = []
+
+        for i in np.arange(0, np.pi, 0.1):
+            positions.append((np.sin(i), 6, np.cos(i)))
+            orientations.append(X_VECTOR)
+
+            positions.append((np.sin(-i), 6, np.cos(-i)))
+            orientations.append(X_VECTOR)
+
+        return positions, orientations
 
     def configure_appearance(self):
         self.GetProperty().SetColor(0.58, 0.09, 0.05)
@@ -66,16 +71,31 @@ class ArrowSymbols(SymbolActorCommon):
 class ArrowSymbols2(SymbolActorCommon):
     def __init__(self, renderer: vtk.vtkRenderer):
         source = self.get_source()
-        positions = self.get_positions()
-        super().__init__(positions, source, renderer)
+        positions, orientations = self.get_positions_orientations()
+        super().__init__(positions, orientations, source, renderer)
 
         self.configure_appearance()
 
     def get_source(self):
-        return load_symbol("data/symbols/_arrow.obj")
+        source = vtk.vtkArrowSource()
+        source.Update()
+        return source.GetOutput()
 
-    def get_positions(self):
-        return [(-5, i, 0) for i in range(10)]
+    def get_positions_orientations(self):
+        positions = []
+        orientations = []
+
+        for i in range(7):
+            positions.append((i, 5, 5))
+            orientations.append(X_VECTOR)
+
+            positions.append((i, 5, 5))
+            orientations.append(Y_VECTOR)
+
+            positions.append((i, 5, 5))
+            orientations.append(Z_VECTOR)
+
+        return positions, orientations
 
     def configure_appearance(self):
         self.GetProperty().SetColor(0.06, 0.49, 0.49)
@@ -85,16 +105,23 @@ class ArrowSymbols2(SymbolActorCommon):
 class ArrowSymbols3(SymbolActorCommon):
     def __init__(self, renderer: vtk.vtkRenderer):
         source = self.get_source()
-        positions = self.get_positions()
-        super().__init__(positions, source, renderer)
+        positions, orientations = self.get_positions_orientations()
+        super().__init__(positions, orientations, source, renderer)
 
         self.configure_appearance()
 
     def get_source(self):
         return load_symbol("data/symbols/_arrow.obj")
 
-    def get_positions(self):
-        return [(0, i, -5) for i in range(10)]
+    def get_positions_orientations(self):
+        positions = []
+        orientations = []
+
+        for i in range(3):
+            positions.append((5, 5, i))
+            orientations.append(X_VECTOR)
+
+        return positions, orientations
 
     def configure_appearance(self):
         self.GetProperty().SetColor(0, 0.26, 0.66)

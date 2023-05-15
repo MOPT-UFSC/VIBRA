@@ -7,7 +7,6 @@ from vibra.interface.viewer_3d.symbols_actors import (
     ArrowSymbols2,
     ArrowSymbols3,
     ClampSymbols,
-    SpringSymbols,
 )
 
 
@@ -19,9 +18,6 @@ class ModelRenderer(CommonRenderer):
     def update_actors(self):
         self.example_actor = ExampleActor()
         self.AddActor(self.example_actor)
-
-        self.symbols_actor = SpringSymbols(self)
-        self.AddActor(self.symbols_actor)
 
         self.symbols_actor = ClampSymbols(self)
         self.AddActor(self.symbols_actor)
