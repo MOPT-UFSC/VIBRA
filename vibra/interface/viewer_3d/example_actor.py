@@ -21,6 +21,13 @@ class ExampleActor(vtk.vtkActor):
         legs.SetRadius(2)
         nose.SetRadius(0.3)
 
+        head.SetPhiResolution(20)
+        head.SetThetaResolution(20)
+        body.SetPhiResolution(20)
+        body.SetThetaResolution(20)
+        legs.SetPhiResolution(20)
+        legs.SetThetaResolution(20)
+
         head.Update()
         body.Update()
         legs.Update()

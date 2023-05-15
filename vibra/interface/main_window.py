@@ -45,8 +45,8 @@ class MainWindow(QMainWindow):
         self.view_mode_nodes_icon = QIcon(str(Path("data/icons/nodes.png")))
         self.view_mode_face_icon = QIcon(str(Path("data/icons/faces.png")))
         self.recent_icon = QIcon(str(Path("data/icons/recent.png")))
-        self.theme_sun_icon = QIcon(str(Path("data/icons/recent.png")))
-        self.theme_moon_icon = QIcon(str(Path("data/icons/nodes.png")))
+        self.theme_sun_icon = QIcon(str(Path("data/icons/sun_icon.png")))
+        self.theme_moon_icon = QIcon(str(Path("data/icons/moon_icon.png")))
 
     def config(self):
         self.setMinimumSize(800, 600)

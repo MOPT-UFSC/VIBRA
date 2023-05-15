@@ -14,12 +14,7 @@ from vibra.interface.viewer_3d.symbols_actors import (
 class ModelRenderer(CommonRenderer):
     def __init__(self):
         super().__init__()
-
-        self.configure_renderer()
         self.update_actors()
-
-    def configure_renderer(self):
-        self.set_theme("light")
 
     def update_actors(self):
         self.example_actor = ExampleActor()
