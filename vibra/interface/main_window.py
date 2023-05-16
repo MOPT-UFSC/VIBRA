@@ -3,9 +3,16 @@ from pathlib import Path
 from time import sleep
 
 import qdarktheme
-from PyQt5.QtCore import Qt, pyqtSignal, QSize
-from PyQt5.QtGui import QIcon, QPixmap, QColor, QPainter
-from PyQt5.QtWidgets import QAction, QApplication, QMainWindow, QMessageBox, QStyle, QToolBar
+from PyQt5.QtCore import QSize, Qt, pyqtSignal
+from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
+from PyQt5.QtWidgets import (
+    QAction,
+    QApplication,
+    QMainWindow,
+    QMessageBox,
+    QStyle,
+    QToolBar,
+)
 
 from vibra.interface.help_window import HelpWindow
 from vibra.interface.loading_bar import LoadingWindow, ProgressBarLogUpdater
@@ -26,7 +33,6 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
         self.theme = "dark"
-
         self.project = Project()
         self.load_icons()
         self.config()
@@ -169,16 +175,30 @@ class MainWindow(QMainWindow):
         self.load_views_mode_menu()
 
     def create_tool_bar(self):
-        
-        self.tool_bar = self.addToolBar("node")
-        self.tool_bar.setMovable(False)
+        self.tool_bar = self.addToolBar("Main Toolbar")
+        self.tool_bar.setIconSize(QSize(20, 20))
+        self.tool_bar.setMovable(True)
         self.tool_bar.setFloatable(True)
-        self.tool_bar.setIconSize(QSize(25,25))
-        # self.tool_bar.setStyleSheet("QLineEdit { background-color: yellow }")
-        self.tool_bar.addAction(self.view_mode_nodes_action)
+        self.tool_bar.setStyleSheet(
+            "border-style: solid;"
+            "border-width: 1px;"
+            "border-color: #3f4042;"
+            "border-radius: 3px"
+        )
+
+        self.tool_bar.addSeparator()
+        self.tool_bar.addAction(self.view_up_action)
+        self.tool_bar.addAction(self.view_down_action)
+        self.tool_bar.addAction(self.view_right_action)
+        self.tool_bar.addAction(self.view_left_action)
+        self.tool_bar.addAction(self.view_front_action)
+        self.tool_bar.addAction(self.view_back_action)
+        self.tool_bar.addAction(self.view_orthogonal_action)
+        self.tool_bar.addSeparator()
         self.tool_bar.addAction(self.view_mode_line_action)
         self.tool_bar.addAction(self.view_mode_face_action)
-    
+        self.tool_bar.addAction(self.view_mode_nodes_action)
+        self.tool_bar.addSeparator()
 
     def load_project_menu(self):
         self.project_menu.clear()
