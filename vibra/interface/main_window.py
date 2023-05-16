@@ -72,6 +72,13 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(self.vibra_icon)
         self.setWindowTitle("Vibra")
 
+        # for qdarktheme
+        self.custom_colors = {
+            "[dark]": {
+                "toolbar.background": "#202124",
+            }
+        }
+
     def create_actions(self):
         self.vibra_action = QAction(self.new_project_icon, "New Project", self)
         self.file_import_action = QAction(self.file_import_icon, "Import Project", self)
@@ -180,10 +187,14 @@ class MainWindow(QMainWindow):
         self.tool_bar.setMovable(True)
         self.tool_bar.setFloatable(True)
         self.tool_bar.setStyleSheet(
-            "border-style: solid;"
-            "border-width: 1px;"
-            "border-color: #3f4042;"
-            "border-radius: 3px"
+            """
+            QToolBar {
+                border-style: solid;
+                border-width: 1px;
+                border-color: #888888;
+                border-radius: 3px
+            }
+            """
         )
 
         self.tool_bar.addSeparator()
@@ -248,7 +259,7 @@ class MainWindow(QMainWindow):
             self.theme_action.setIcon(self.theme_moon_icon)
 
     def set_theme(self, theme):
-        qdarktheme.setup_theme(theme)
+        qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
         self.viewer_3d.set_theme(theme)
         self.theme = theme
 
