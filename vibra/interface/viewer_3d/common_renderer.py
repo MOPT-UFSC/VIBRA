@@ -66,6 +66,7 @@ class CommonRenderer(vtk.vtkRenderer):
             self.GetRenderWindow().Render()
 
     def create_axes(self):
+        return
         axes_actor = vtk.vtkAxesActor()
 
         x_property = axes_actor.GetXAxisCaptionActor2D().GetCaptionTextProperty()

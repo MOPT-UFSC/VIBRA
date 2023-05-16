@@ -3,9 +3,7 @@ import vtk
 from vibra.engine.mesh import Mesh
 from vibra.interface.viewer_3d.common_renderer import CommonRenderer
 from vibra.interface.viewer_3d.example_actor import ExampleActor
-from vibra.interface.viewer_3d.points_actor import PointsActor
 from vibra.interface.viewer_3d.lines_actor import LinesActor
-from vibra.interface.viewer_3d.faces_actor import FacesActor
 from vibra.interface.viewer_3d.symbols_actors import (
     ArrowSymbols,
     ArrowSymbols2,
@@ -14,23 +12,26 @@ from vibra.interface.viewer_3d.symbols_actors import (
 )
 
 
-class ModelRenderer(CommonRenderer):
+class ExampleRenderer(CommonRenderer):
     def __init__(self):
         super().__init__()
         self.update_actors()
 
     def update_actors(self):
-        mesh = Mesh()
-
-        self.example_actor = PointsActor(mesh)
+        self.example_actor = ExampleActor()
         self.AddActor(self.example_actor)
 
-        self.example_actor = LinesActor(mesh)
-        self.AddActor(self.example_actor)
+        self.symbols_actor = ClampSymbols(self)
+        self.AddActor(self.symbols_actor)
 
-        self.example_actor = FacesActor(mesh)
-        self.AddActor(self.example_actor)
+        self.symbols_actor = ArrowSymbols(self)
+        self.AddActor(self.symbols_actor)
 
+        self.symbols_actor = ArrowSymbols2(self)
+        self.AddActor(self.symbols_actor)
+
+        self.symbols_actor = ArrowSymbols3(self)
+        self.AddActor(self.symbols_actor)
 
     def show_points(self):
         self.example_actor.GetProperty().SetRepresentationToPoints()

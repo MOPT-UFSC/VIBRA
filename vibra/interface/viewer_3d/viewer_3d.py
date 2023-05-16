@@ -6,12 +6,14 @@ from vibra.interface.viewer_3d.arcball_camera import (
     vtkInteractorStyleArcballCamera,
 )
 from vibra.interface.viewer_3d.model_renderer import ModelRenderer
+from vibra.interface.viewer_3d.example_renderer import ExampleRenderer
 
 
 class Viewer3D(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        self.example_renderer = ExampleRenderer()
         self.model_renderer = ModelRenderer()
         self.render_interactor = QVTKRenderWindowInteractor(self)
 
