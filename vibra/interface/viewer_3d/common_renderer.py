@@ -65,24 +65,6 @@ class CommonRenderer(vtk.vtkRenderer):
         if self.GetRenderWindow() is not None:
             self.GetRenderWindow().Render()
 
-    def create_axes(self):
-        return
-        axes_actor = vtk.vtkAxesActor()
-
-        x_property = axes_actor.GetXAxisCaptionActor2D().GetCaptionTextProperty()
-        y_property = axes_actor.GetYAxisCaptionActor2D().GetCaptionTextProperty()
-        z_property = axes_actor.GetZAxisCaptionActor2D().GetCaptionTextProperty()
-
-        for i in [x_property, y_property, z_property]:
-            i.ItalicOff()
-            i.BoldOff()
-
-        self.axes = vtk.vtkOrientationMarkerWidget()
-        self.axes.SetOrientationMarker(axes_actor)
-        self.axes.SetInteractor(self.GetRenderWindow().GetInteractor())
-        self.axes.EnabledOn()
-        self.axes.InteractiveOff()
-
     def create_scale_bar(self):
         self.scale_bar = vtk.vtkLegendScaleActor()
         self.scale_bar.AllAxesOff()

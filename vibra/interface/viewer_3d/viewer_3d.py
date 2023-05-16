@@ -25,8 +25,7 @@ class Viewer3D(QFrame):
         layout.addWidget(self.render_interactor)
         self.setLayout(layout)
 
-        self.model_renderer.create_axes()
-        self.model_renderer.create_scale_bar()
+        self.create_axes()
 
     def set_theme(self, theme):
         self.model_renderer.set_theme(theme)
@@ -38,3 +37,20 @@ class Viewer3D(QFrame):
         writer.SetFileName(path)
         writer.SetInputConnection(imageFilter.GetOutputPort())
         writer.Write()
+
+    def create_axes(self):
+        axes_actor = vtk.vtkAxesActor()
+
+        x_property = axes_actor.GetXAxisCaptionActor2D().GetCaptionTextProperty()
+        y_property = axes_actor.GetYAxisCaptionActor2D().GetCaptionTextProperty()
+        z_property = axes_actor.GetZAxisCaptionActor2D().GetCaptionTextProperty()
+
+        for i in [x_property, y_property, z_property]:
+            i.ItalicOff()
+            i.BoldOff()
+
+        self.axes = vtk.vtkOrientationMarkerWidget()
+        self.axes.SetOrientationMarker(axes_actor)
+        self.axes.SetInteractor(self.render_interactor)
+        self.axes.EnabledOn()
+        self.axes.InteractiveOff()
