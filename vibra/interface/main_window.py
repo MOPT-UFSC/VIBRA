@@ -3,9 +3,9 @@ from pathlib import Path
 from time import sleep
 
 import qdarktheme
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import Qt, pyqtSignal, QSize
 from PyQt5.QtGui import QIcon, QPixmap, QColor, QPainter
-from PyQt5.QtWidgets import QAction, QApplication, QMainWindow, QMessageBox
+from PyQt5.QtWidgets import QAction, QApplication, QMainWindow, QMessageBox, QStyle, QToolBar
 
 from vibra.interface.help_window import HelpWindow
 from vibra.interface.loading_bar import LoadingWindow, ProgressBarLogUpdater
@@ -33,6 +33,7 @@ class MainWindow(QMainWindow):
         self.create_actions()
         self.create_basic_layout()
         self.create_menu_bar()
+        self.create_tool_bar()
         self.set_theme(self.theme)
 
     def load_icons(self):
@@ -167,6 +168,18 @@ class MainWindow(QMainWindow):
         self.load_help_menu()
         self.load_views_mode_menu()
 
+    def create_tool_bar(self):
+        
+        self.tool_bar = self.addToolBar("node")
+        self.tool_bar.setMovable(False)
+        self.tool_bar.setFloatable(True)
+        self.tool_bar.setIconSize(QSize(25,25))
+        # self.tool_bar.setStyleSheet("QLineEdit { background-color: yellow }")
+        self.tool_bar.addAction(self.view_mode_nodes_action)
+        self.tool_bar.addAction(self.view_mode_line_action)
+        self.tool_bar.addAction(self.view_mode_face_action)
+    
+
     def load_project_menu(self):
         self.project_menu.clear()
         self.project_menu.addAction(self.vibra_action)
@@ -218,7 +231,6 @@ class MainWindow(QMainWindow):
         qdarktheme.setup_theme(theme)
         self.viewer_3d.set_theme(theme)
         self.theme = theme
-        print(self.theme)
 
     def show_points_callback(self):
         self.viewer_3d.model_renderer.show_points()
