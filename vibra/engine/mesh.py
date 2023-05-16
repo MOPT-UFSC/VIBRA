@@ -1,7 +1,8 @@
-import numpy as np
-import gmsh
 from collections import defaultdict
 from pathlib import Path
+
+import gmsh
+import numpy as np
 
 # Meshing algorithms
 MESH_ADAPT = 1

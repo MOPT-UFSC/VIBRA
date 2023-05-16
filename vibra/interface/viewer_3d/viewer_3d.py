@@ -5,8 +5,8 @@ from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from vibra.interface.viewer_3d.arcball_camera import (
     vtkInteractorStyleArcballCamera,
 )
-from vibra.interface.viewer_3d.model_renderer import ModelRenderer
 from vibra.interface.viewer_3d.example_renderer import ExampleRenderer
+from vibra.interface.viewer_3d.model_renderer import ModelRenderer
 
 
 class Viewer3D(QFrame):
@@ -16,7 +16,7 @@ class Viewer3D(QFrame):
         self.example_renderer = ExampleRenderer()
         self.model_renderer = ModelRenderer()
 
-        # Use only to access the renderer easily 
+        # Use only to access the renderer easily
         self.current_renderer = None
 
         self.render_interactor = QVTKRenderWindowInteractor(self)
@@ -32,7 +32,7 @@ class Viewer3D(QFrame):
 
     def show_example_renderer(self):
         self.set_renderer(self.example_renderer)
-    
+
     def show_model_renderer(self):
         self.set_renderer(self.model_renderer)
 
@@ -42,7 +42,7 @@ class Viewer3D(QFrame):
 
         if self.current_renderer is not None:
             self.render_interactor.GetRenderWindow().RemoveRenderer(self.current_renderer)
-            
+
         self.render_interactor.GetRenderWindow().AddRenderer(renderer)
         renderer.ResetCamera()
         self.current_renderer = renderer

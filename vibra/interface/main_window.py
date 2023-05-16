@@ -3,9 +3,16 @@ from pathlib import Path
 from time import sleep
 
 import qdarktheme
-from PyQt5.QtCore import Qt, pyqtSignal, QSize
-from PyQt5.QtGui import QIcon, QPixmap, QColor, QPainter
-from PyQt5.QtWidgets import QAction, QApplication, QMainWindow, QMessageBox, QStyle, QToolBar
+from PyQt5.QtCore import QSize, Qt, pyqtSignal
+from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
+from PyQt5.QtWidgets import (
+    QAction,
+    QApplication,
+    QMainWindow,
+    QMessageBox,
+    QStyle,
+    QToolBar,
+)
 
 from vibra.interface.help_window import HelpWindow
 from vibra.interface.loading_bar import LoadingWindow, ProgressBarLogUpdater
@@ -169,16 +176,14 @@ class MainWindow(QMainWindow):
         self.load_views_mode_menu()
 
     def create_tool_bar(self):
-        
         self.tool_bar = self.addToolBar("node")
         self.tool_bar.setMovable(False)
         self.tool_bar.setFloatable(True)
-        self.tool_bar.setIconSize(QSize(25,25))
+        self.tool_bar.setIconSize(QSize(25, 25))
         # self.tool_bar.setStyleSheet("QLineEdit { background-color: yellow }")
         self.tool_bar.addAction(self.view_mode_nodes_action)
         self.tool_bar.addAction(self.view_mode_line_action)
         self.tool_bar.addAction(self.view_mode_face_action)
-    
 
     def load_project_menu(self):
         self.project_menu.clear()
