@@ -35,7 +35,7 @@ class ClampSymbols(SymbolActorCommon):
         return positions, orientations
 
     def configure_appearance(self):
-        self.GetProperty().SetColor(0.89, 0.70, 0.02)
+        self.GetProperty().SetColor(1, 0.78, 0.34)
         self.GetProperty().LightingOff()
 
 
@@ -64,7 +64,7 @@ class ArrowSymbols(SymbolActorCommon):
         return positions, orientations
 
     def configure_appearance(self):
-        self.GetProperty().SetColor(0.58, 0.09, 0.05)
+        self.GetProperty().SetColor(1, 0.38, 0.27)
         self.GetProperty().LightingOff()
 
 
@@ -98,7 +98,7 @@ class ArrowSymbols2(SymbolActorCommon):
         return positions, orientations
 
     def configure_appearance(self):
-        self.GetProperty().SetColor(0.06, 0.49, 0.49)
+        self.GetProperty().SetColor(0.15, 0.82, 0.74)
         self.GetProperty().LightingOff()
 
 
@@ -124,5 +124,5 @@ class ArrowSymbols3(SymbolActorCommon):
         return positions, orientations
 
     def configure_appearance(self):
-        self.GetProperty().SetColor(0, 0.26, 0.66)
+        self.GetProperty().SetColor(0, 0.53, 1)
         self.GetProperty().LightingOff()

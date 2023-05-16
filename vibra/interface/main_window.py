@@ -4,13 +4,22 @@ from time import sleep
 
 import qdarktheme
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QPixmap, QColor, QPainter
 from PyQt5.QtWidgets import QAction, QApplication, QMainWindow, QMessageBox
 
 from vibra.interface.help_window import HelpWindow
 from vibra.interface.loading_bar import LoadingWindow, ProgressBarLogUpdater
 from vibra.interface.viewer_3d.viewer_3d import Viewer3D
 from vibra.project import Project
+
+
+def load_icon(path, color):
+    pixmap = QPixmap(str(path))
+    painter = QPainter(pixmap)
+    painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
+    painter.fillRect(pixmap.rect(), color)
+    painter.end()
+    return QIcon(pixmap)
 
 
 class MainWindow(QMainWindow):
@@ -27,26 +36,28 @@ class MainWindow(QMainWindow):
         self.set_theme(self.theme)
 
     def load_icons(self):
-        self.vibra_icon = QIcon(str(Path("data/icons/logo_vibra.png")))
-        self.help_icon = QIcon(str(Path("data/icons/help.png")))
-        self.new_project_icon = QIcon(str(Path("data/icons/new_file.png")))
-        self.file_import_icon = QIcon(str(Path("data/icons/import.png")))
-        self.exit_import_icon = QIcon(str(Path("data/icons/exit.png")))
-        self.save_icon = QIcon(str(Path("data/icons/save.png")))
-        self.save_as_icon = QIcon(str(Path("data/icons/save_as.png")))
-        self.view_up_icon = QIcon(str(Path("data/icons/top.png")))
-        self.view_down_icon = QIcon(str(Path("data/icons/bottom.png")))
-        self.view_right_icon = QIcon(str(Path("data/icons/right.png")))
-        self.view_left_icon = QIcon(str(Path("data/icons/left.png")))
-        self.view_back_icon = QIcon(str(Path("data/icons/back.png")))
-        self.view_front_icon = QIcon(str(Path("data/icons/front.png")))
-        self.view_orthogonal_icon = QIcon(str(Path("data/icons/orthogonal.png")))
-        self.view_mode_line_icon = QIcon(str(Path("data/icons/lines.png")))
-        self.view_mode_nodes_icon = QIcon(str(Path("data/icons/nodes.png")))
-        self.view_mode_face_icon = QIcon(str(Path("data/icons/faces.png")))
-        self.recent_icon = QIcon(str(Path("data/icons/recent.png")))
-        self.theme_sun_icon = QIcon(str(Path("data/icons/sun_icon.png")))
-        self.theme_moon_icon = QIcon(str(Path("data/icons/moon_icon.png")))
+        color = QColor("#0055DD")
+
+        self.vibra_icon = load_icon(Path("data/icons/logo_vibra.png"), color)
+        self.help_icon = load_icon(Path("data/icons/help.png"), color)
+        self.new_project_icon = load_icon(Path("data/icons/new_file.png"), color)
+        self.file_import_icon = load_icon(Path("data/icons/import.png"), color)
+        self.exit_import_icon = load_icon(Path("data/icons/exit.png"), color)
+        self.save_icon = load_icon(Path("data/icons/save.png"), color)
+        self.save_as_icon = load_icon(Path("data/icons/save_as.png"), color)
+        self.view_up_icon = load_icon(Path("data/icons/top.png"), color)
+        self.view_down_icon = load_icon(Path("data/icons/bottom.png"), color)
+        self.view_right_icon = load_icon(Path("data/icons/right.png"), color)
+        self.view_left_icon = load_icon(Path("data/icons/left.png"), color)
+        self.view_back_icon = load_icon(Path("data/icons/back.png"), color)
+        self.view_front_icon = load_icon(Path("data/icons/front.png"), color)
+        self.view_orthogonal_icon = load_icon(Path("data/icons/orthogonal.png"), color)
+        self.view_mode_line_icon = load_icon(Path("data/icons/lines.png"), color)
+        self.view_mode_nodes_icon = load_icon(Path("data/icons/nodes.png"), color)
+        self.view_mode_face_icon = load_icon(Path("data/icons/faces.png"), color)
+        self.recent_icon = load_icon(Path("data/icons/recent.png"), color)
+        self.theme_sun_icon = load_icon(Path("data/icons/sun_icon.png"), color)
+        self.theme_moon_icon = load_icon(Path("data/icons/moon_icon.png"), color)
 
     def config(self):
         self.setMinimumSize(800, 600)

@@ -50,7 +50,7 @@ class LoadingWindow(QWidget):
                 color: white;
             }
             QProgressBar::chunk {
-                background-color: #0044aa;
+                background-color: #0055DD;
                 border-top-right-radius: 10px;
                 border-top-left-radius: 10px;
                 border-bottom-right-radius: 10px;
