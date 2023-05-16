@@ -13,8 +13,11 @@ class PointsActor(vtk.vtkActor):
         mapper = vtk.vtkPolyDataMapper()
         data.Allocate(len(self.mesh.lines))
 
-        for i, (x, y, z) in enumerate(self.mesh.points):
-            points.InsertPoint(i, x, y, z)
+        # I hope the indexes match
+        for pts in self.mesh.points_entities.values():
+            for i in pts:
+                x, y, z = self.mesh.points[i]
+                points.InsertPoint(i, x, y, z)
         data.SetPoints(points)
 
         vertexFilter = vtk.vtkVertexGlyphFilter()

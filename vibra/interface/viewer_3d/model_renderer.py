@@ -6,12 +6,6 @@ from vibra.interface.viewer_3d.example_actor import ExampleActor
 from vibra.interface.viewer_3d.points_actor import PointsActor
 from vibra.interface.viewer_3d.lines_actor import LinesActor
 from vibra.interface.viewer_3d.faces_actor import FacesActor
-from vibra.interface.viewer_3d.symbols_actors import (
-    ArrowSymbols,
-    ArrowSymbols2,
-    ArrowSymbols3,
-    ClampSymbols,
-)
 
 
 class ModelRenderer(CommonRenderer):
@@ -20,23 +14,33 @@ class ModelRenderer(CommonRenderer):
         self.update_actors()
 
     def update_actors(self):
-        mesh = Mesh()
+        mesh = Mesh.from_file("data/geometries/vessel.step")
 
-        self.example_actor = PointsActor(mesh)
-        self.AddActor(self.example_actor)
+        self.points_actor = PointsActor(mesh)
+        self.AddActor(self.points_actor)
 
-        self.example_actor = LinesActor(mesh)
-        self.AddActor(self.example_actor)
+        self.lines_actor = LinesActor(mesh)
+        self.AddActor(self.lines_actor)
 
-        self.example_actor = FacesActor(mesh)
-        self.AddActor(self.example_actor)
+        self.faces_actor = FacesActor(mesh)
+        self.AddActor(self.faces_actor)
 
+        self.show_faces()
 
     def show_points(self):
-        self.example_actor.GetProperty().SetRepresentationToPoints()
+        self.points_actor.VisibilityOn()
+        self.lines_actor.VisibilityOff()
+        self.faces_actor.GetProperty().SetOpacity(0.03)
+        self.rerender_window()
 
     def show_edges(self):
-        self.example_actor.GetProperty().SetRepresentationToWireframe()
+        self.points_actor.VisibilityOff()
+        self.lines_actor.VisibilityOn()
+        self.faces_actor.GetProperty().SetOpacity(0.03)
+        self.rerender_window()
 
     def show_faces(self):
-        self.example_actor.GetProperty().SetRepresentationToSurface()
+        self.points_actor.VisibilityOff()
+        self.lines_actor.VisibilityOff()
+        self.faces_actor.GetProperty().SetOpacity(1)
+        self.rerender_window()

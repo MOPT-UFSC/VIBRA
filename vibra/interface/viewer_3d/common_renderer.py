@@ -102,3 +102,8 @@ class CommonRenderer(vtk.vtkRenderer):
         label_property.SetLineOffset(-25)
 
         self.AddActor(self.scale_bar)
+
+    def rerender_window(self):
+        ren_win = self.GetRenderWindow()
+        if ren_win is not None:
+            ren_win.Render()
