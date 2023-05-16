@@ -15,11 +15,14 @@ class Viewer3D(QFrame):
 
         self.example_renderer = ExampleRenderer()
         self.model_renderer = ModelRenderer()
-        self.render_interactor = QVTKRenderWindowInteractor(self)
 
-        self.render_interactor.GetRenderWindow().AddRenderer(self.model_renderer)
+        # Use only to access the renderer easily 
+        self.current_renderer = None
+
+        self.render_interactor = QVTKRenderWindowInteractor(self)
         self.render_interactor.Initialize()
         self.render_interactor.SetInteractorStyle(vtkInteractorStyleArcballCamera())
+        self.set_renderer(self.example_renderer)
 
         layout = QVBoxLayout()
         layout.addWidget(self.render_interactor)
@@ -27,7 +30,25 @@ class Viewer3D(QFrame):
 
         self.create_axes()
 
+    def show_example_renderer(self):
+        self.set_renderer(self.example_renderer)
+    
+    def show_model_renderer(self):
+        self.set_renderer(self.model_renderer)
+
+    def set_renderer(self, renderer):
+        if renderer == self.current_renderer:
+            return
+
+        if self.current_renderer is not None:
+            self.render_interactor.GetRenderWindow().RemoveRenderer(self.current_renderer)
+            
+        self.render_interactor.GetRenderWindow().AddRenderer(renderer)
+        renderer.ResetCamera()
+        self.current_renderer = renderer
+
     def set_theme(self, theme):
+        self.example_renderer.set_theme(theme)
         self.model_renderer.set_theme(theme)
 
     def save_png(self, path):
