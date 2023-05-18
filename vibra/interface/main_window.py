@@ -3,14 +3,14 @@ from pathlib import Path
 from time import sleep
 
 import qdarktheme
-from PyQt5.QtCore import QSize, Qt, pyqtSignal
+from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
 from PyQt5.QtWidgets import (
     QAction,
     QApplication,
+    QFileDialog,
     QMainWindow,
     QMessageBox,
-    QFileDialog,
 )
 
 from vibra.interface.help_window import HelpWindow
@@ -75,8 +75,10 @@ class MainWindow(QMainWindow):
 
     def create_actions(self):
         self.new_project_action = QAction(self.new_project_icon, "New Project", self)
-        self.load_project_action = QAction(self.load_project_icon, "Import Project", self)
+        self.load_project_action = QAction(self.load_project_icon, "Load Project", self)
         self.exit_import_action = QAction(self.exit_import_icon, "Exit", self)
+        self.import_geometry_action = QAction("Import geometry", self)  # add icon
+        self.capture_image_action = QAction("Capture image", self)  # add icon
         self.save_action = QAction(self.save_icon, "Save", self)
         self.save_as_action = QAction(self.save_as_icon, "Save as", self)
         self.help_action = QAction(self.help_icon, "About Vibra", self)
@@ -93,7 +95,7 @@ class MainWindow(QMainWindow):
         self.recent_action = QAction(self.recent_icon, "Recent", self)
         self.theme_action = QAction(self.theme_sun_icon, "Theme", self)
 
-        self.new_project_action.triggered.connect(self.new_project_callback)
+        self.import_geometry_action.triggered.connect(self.import_geometry_callback)
         self.save_action.triggered.connect(self.save_callback)
         self.help_action.triggered.connect(self.help_callback)
         self.exit_import_action.triggered.connect(self.exit_callback)
@@ -127,7 +129,9 @@ class MainWindow(QMainWindow):
         self.loading_window = LoadingWindow(self)
 
         # Updates the loading bar every a log is output
-        progress_handler = ProgressBarLogUpdater(progress_bar=self.loading_window.progress_bar)
+        progress_handler = ProgressBarLogUpdater(
+            progress_bar=self.loading_window.progress_bar, label=self.loading_window.text_label
+        )
         progress_handler.setLevel(logging.INFO)
         logging.getLogger().addHandler(progress_handler)
 
@@ -138,13 +142,19 @@ class MainWindow(QMainWindow):
     def load_function(self, function, *, text=""):
         def wrapper(*args, **kwargs):
             try:
+                # Waits some previous pyqt window and update
+                sleep(0.1)
+                QApplication.processEvents()
+
                 # Changes the cursor to wait
                 QApplication.setOverrideCursor(Qt.WaitCursor)
 
                 # Shows the empty progress bar
                 self.loading_window.show()
                 self.loading_window.text_label.setText(text)
-                sleep(0.1)  # Without sleeps pyqt breaks
+
+                # Waits the loading bar to appear and uptates pyqt
+                sleep(0.1)
                 QApplication.processEvents()
 
                 # Calls the actual function
@@ -154,6 +164,9 @@ class MainWindow(QMainWindow):
                 self.loading_window.progress_bar.setValue(100)
                 sleep(0.1)  # A small delay so we can see the 100%
                 self.loading_window.hide()
+
+                # Returns the value to 0 for the next use
+                self.loading_window.progress_bar.setValue(0)
 
                 # Restores the previous cursor
                 QApplication.restoreOverrideCursor()
@@ -180,7 +193,6 @@ class MainWindow(QMainWindow):
         self.tool_bar.setMovable(False)
         self.tool_bar.setFloatable(True)
         self.tool_bar.setIconSize(QSize(25, 25))
-        # self.tool_bar.setStyleSheet("QLineEdit { background-color: yellow }")
         self.tool_bar.addAction(self.view_mode_nodes_action)
         self.tool_bar.addAction(self.view_mode_line_action)
         self.tool_bar.addAction(self.view_mode_face_action)
@@ -191,6 +203,8 @@ class MainWindow(QMainWindow):
         self.project_menu.addAction(self.load_project_action)
         self.project_menu.addAction(self.save_action)
         self.project_menu.addAction(self.save_as_action)
+        self.project_menu.addAction(self.import_geometry_action)
+        self.project_menu.addAction(self.capture_image_action)
         self.project_menu.addAction(self.recent_action)
         self.project_menu.addAction(self.theme_action)
         self.project_menu.addAction(self.exit_import_action)
@@ -237,17 +251,19 @@ class MainWindow(QMainWindow):
         self.viewer_3d.set_theme(theme)
         self.theme = theme
 
-    def new_project_callback(self):
-        file, check = QFileDialog.getOpenFileName(
-            self, 
+    def import_geometry_callback(self):
+        path, check = QFileDialog.getOpenFileName(
+            self,
             "Open File",
             filter="Geometry Files (*.stp *.step *.iges)",
         )
 
         if not check:
             return
-        
-        self.project.import_geometry(file)
+
+        # Slow function running with loading bar
+        loaded_import_geometry = self.load_function(self.project.import_geometry, text="Loading")
+        loaded_import_geometry(path)
         self.viewer_3d.set_project(self.project)
 
     def show_points_callback(self):

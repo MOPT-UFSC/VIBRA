@@ -20,7 +20,7 @@ class FacesActor(vtk.vtkActor):
             data.InsertNextCell(vtk.VTK_TRIANGLE, 3, [a, b, c])
 
         data.SetPoints(points)
-        
+
         normals_filter = vtk.vtkPolyDataNormals()
         normals_filter.AddInputData(data)
         normals_filter.Update()

@@ -2,13 +2,12 @@ import logging
 from pathlib import Path
 from time import sleep
 
-from vibra.engine.model import Model
 from vibra.engine.mesh import Mesh
+from vibra.engine.model import Model
 from vibra.utils import ProgressStatus
 
 
 class Project:
-
     def __init__(self):
         self.mesh = None
 
@@ -26,6 +25,8 @@ class Project:
         print("SALVANDO")
 
     def import_geometry(self, path):
+        logging.info(f"Importing geometry at {path}")
+
         path = Path(path)
         mesh = Mesh.from_file(path)
         self.mesh = mesh

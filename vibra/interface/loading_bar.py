@@ -1,25 +1,34 @@
 import logging
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QLabel, QProgressBar, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import (
+    QApplication,
+    QLabel,
+    QProgressBar,
+    QVBoxLayout,
+    QWidget,
+)
 
 from vibra.utils import ProgressStatus
 
 
 class ProgressBarLogUpdater(logging.Handler):
-    def __init__(self, level=0, *, progress_bar=None) -> None:
+    def __init__(self, level=0, *, progress_bar=None, label=None) -> None:
         super().__init__(level)
         self.progress_bar = progress_bar
+        self.label = label
 
     def emit(self, record):
         if not isinstance(record.msg, ProgressStatus):
             return
 
-        if self.progress_bar is None:
-            return
+        if self.label is not None:
+            self.label.setText(record.msg.message)
+            QApplication.processEvents()
 
-        percentage = 100 * record.msg.step // record.msg.max_steps
-        self.progress_bar.setValue(percentage)
+        if self.progress_bar is not None:
+            percentage = 100 * record.msg.step // record.msg.max_steps
+            self.progress_bar.setValue(percentage)
 
 
 class LoadingWindow(QWidget):

@@ -1,6 +1,6 @@
 import vtk
-from PyQt5.QtWidgets import QFrame, QVBoxLayout
 from PyQt5.QtCore import QCoreApplication
+from PyQt5.QtWidgets import QFrame, QVBoxLayout
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from vibra.interface.viewer_3d.arcball_camera import (

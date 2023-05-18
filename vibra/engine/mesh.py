@@ -1,8 +1,11 @@
+import logging
 from collections import defaultdict
 from pathlib import Path
 
 import gmsh
 import numpy as np
+
+from vibra.utils import ProgressStatus
 
 # Meshing algorithms
 MESH_ADAPT = 1
@@ -12,9 +15,9 @@ FRONTAL = 6
 
 class Mesh:
     def __init__(self):
-        self.points = [(0, 0, 0), (0, 1, 0), (0, 0, 1)]
-        self.lines = [(0, 1), (1, 2), (2, 0)]
-        self.faces = [(0, 1, 2)]
+        self.points = []
+        self.lines = []
+        self.faces = []
 
         self.points_entities = dict()
         self.line_entities = dict()
@@ -43,6 +46,7 @@ class Mesh:
     def from_file(cls, path, *, size=0, threads=1):
         path = Path(path)
 
+        logging.info("Importing geometry" + ProgressStatus(0, 10))
         gmsh.initialize("", False)
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
@@ -56,8 +60,11 @@ class Mesh:
 
         gmsh.option.setNumber("Mesh.Algorithm", DELAUNAY)
         gmsh.option.setNumber("General.NumThreads", threads)
+
+        logging.info("Creating visualization mesh" + ProgressStatus(1, 10))
         gmsh.model.mesh.generate(dim=2)
 
+        logging.info("Extracting mesh data" + ProgressStatus(8, 10))
         indexes, coords, _ = gmsh.model.mesh.getNodes(includeBoundary=True)
         total_nodes = int(np.max(indexes))
         points = np.zeros(total_nodes * 3).reshape(-1, 3)

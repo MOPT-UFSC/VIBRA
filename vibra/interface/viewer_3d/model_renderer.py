@@ -27,12 +27,12 @@ class ModelRenderer(CommonRenderer):
     def update_actors(self):
         if self.project is None:
             return
-        
+
         mesh = self.project.mesh
 
         if mesh is None:
             return
-        
+
         self.remove_actors()
 
         self.points_actor = PointsActor(mesh)
@@ -94,12 +94,12 @@ class ModelRenderer(CommonRenderer):
     def _actors_exists(self):
         if self.points_actor is None:
             return False
-        
+
         elif self.lines_actor is None:
             return False
-        
+
         elif self.faces_actor is None:
             return False
-        
+
         else:
             return True
