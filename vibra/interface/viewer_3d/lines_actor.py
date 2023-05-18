@@ -24,4 +24,4 @@ class LinesActor(vtk.vtkActor):
         self.SetMapper(mapper)
 
     def configure_appearance(self):
-        self.GetProperty().SetLineWidth(5)
+        self.GetProperty().SetLineWidth(2)

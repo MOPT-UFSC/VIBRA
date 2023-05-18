@@ -85,7 +85,7 @@ class CommonRenderer(vtk.vtkRenderer):
 
         self.AddActor(self.scale_bar)
 
-    def rerender_window(self):
+    def update(self):
         ren_win = self.GetRenderWindow()
         if ren_win is not None:
             ren_win.Render()

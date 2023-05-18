@@ -9,12 +9,26 @@ from vibra.interface.viewer_3d.points_actor import PointsActor
 
 
 class ModelRenderer(CommonRenderer):
-    def __init__(self):
+    def __init__(self, project=None):
         super().__init__()
+        self.project = project
         self.update_actors()
 
+    def set_project(self, project):
+        self.project = project
+        self.update_actors()
+
+    def set_theme(self, theme):
+        super().set_theme(theme)
+        if theme == "light":
+            self.points_actor.GetProperty().SetColor(0.2, 0.2, 0.2)
+            self.lines_actor.GetProperty().SetColor(0.2, 0.2, 0.2)
+        elif theme == "dark":
+            self.points_actor.GetProperty().SetColor(1, 1, 1)
+            self.lines_actor.GetProperty().SetColor(1, 1, 1)
+
     def update_actors(self):
-        mesh = Mesh.from_file("data/geometries/vessel.step")
+        mesh = Mesh.from_file("data/geometries/geom_akio.stp")
 
         self.points_actor = PointsActor(mesh)
         self.AddActor(self.points_actor)
@@ -30,17 +44,17 @@ class ModelRenderer(CommonRenderer):
     def show_points(self):
         self.points_actor.VisibilityOn()
         self.lines_actor.VisibilityOff()
-        self.faces_actor.GetProperty().SetOpacity(0.03)
-        self.rerender_window()
+        self.faces_actor.GetProperty().SetOpacity(0.1)
+        self.update()
 
     def show_edges(self):
         self.points_actor.VisibilityOff()
         self.lines_actor.VisibilityOn()
-        self.faces_actor.GetProperty().SetOpacity(0.03)
-        self.rerender_window()
+        self.faces_actor.GetProperty().SetOpacity(0.1)
+        self.update()
 
     def show_faces(self):
         self.points_actor.VisibilityOff()
         self.lines_actor.VisibilityOff()
         self.faces_actor.GetProperty().SetOpacity(1)
-        self.rerender_window()
+        self.update()
