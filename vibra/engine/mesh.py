@@ -52,7 +52,7 @@ class Mesh:
             gmsh.option.setNumber("Mesh.MeshSizeMin", size)
             gmsh.option.setNumber("Mesh.MeshSizeMax", size)
         else:
-            gmsh.option.setNumber("Mesh.MeshSizeFactor", 0.2)
+            gmsh.option.setNumber("Mesh.MeshSizeFactor", 0.05)
 
         gmsh.option.setNumber("Mesh.Algorithm", DELAUNAY)
         gmsh.option.setNumber("General.NumThreads", threads)
