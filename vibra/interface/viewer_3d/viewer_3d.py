@@ -1,5 +1,6 @@
 import vtk
 from PyQt5.QtWidgets import QFrame, QVBoxLayout
+from PyQt5.QtCore import QCoreApplication
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from vibra.interface.viewer_3d.arcball_camera import (
@@ -10,19 +11,20 @@ from vibra.interface.viewer_3d.model_renderer import ModelRenderer
 
 
 class Viewer3D(QFrame):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, project=None):
         super().__init__(parent)
 
+        self.project = project
         self.example_renderer = ExampleRenderer()
         self.model_renderer = ModelRenderer()
 
-        # Use only to access the renderer easily
+        # Use only to access the current renderer easily
         self.current_renderer = None
 
         self.render_interactor = QVTKRenderWindowInteractor(self)
         self.render_interactor.Initialize()
         self.render_interactor.SetInteractorStyle(vtkInteractorStyleArcballCamera())
-        self.set_renderer(self.example_renderer)
+        self.set_renderer(self.model_renderer)
 
         layout = QVBoxLayout()
         layout.addWidget(self.render_interactor)
@@ -35,6 +37,10 @@ class Viewer3D(QFrame):
 
     def show_model_renderer(self):
         self.set_renderer(self.model_renderer)
+
+    def set_project(self, project):
+        self.project = project
+        self.model_renderer.set_project(project)
 
     def set_renderer(self, renderer):
         if renderer == self.current_renderer:
@@ -75,3 +81,8 @@ class Viewer3D(QFrame):
         self.axes.SetInteractor(self.render_interactor)
         self.axes.EnabledOn()
         self.axes.InteractiveOff()
+
+    def update(self):
+        super().update()
+        self.model_renderer.update_actors()
+        self.example_renderer.update_actors()

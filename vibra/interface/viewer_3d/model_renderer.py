@@ -22,9 +22,18 @@ class ModelRenderer(CommonRenderer):
     def set_project(self, project):
         self.project = project
         self.update_actors()
+        self.ResetCamera()
 
     def update_actors(self):
-        mesh = Mesh.from_file("data/geometries/geom_akio.stp")
+        if self.project is None:
+            return
+        
+        mesh = self.project.mesh
+
+        if mesh is None:
+            return
+        
+        self.remove_actors()
 
         self.points_actor = PointsActor(mesh)
         self.AddActor(self.points_actor)
@@ -36,6 +45,11 @@ class ModelRenderer(CommonRenderer):
         self.AddActor(self.faces_actor)
 
         self.show_faces()
+
+    def remove_actors(self):
+        self.RemoveActor(self.points_actor)
+        self.RemoveActor(self.lines_actor)
+        self.RemoveActor(self.faces_actor)
 
     def show_points(self):
         if not self._actors_exists():

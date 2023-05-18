@@ -10,8 +10,7 @@ from PyQt5.QtWidgets import (
     QApplication,
     QMainWindow,
     QMessageBox,
-    QStyle,
-    QToolBar,
+    QFileDialog,
 )
 
 from vibra.interface.help_window import HelpWindow
@@ -33,8 +32,9 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
         self.theme = "dark"
-
         self.project = Project()
+        self.viewer_3d = Viewer3D(self)
+
         self.load_icons()
         self.config()
         self.create_actions()
@@ -49,7 +49,7 @@ class MainWindow(QMainWindow):
         self.vibra_icon = load_icon(Path("data/icons/logo_vibra.png"), color)
         self.help_icon = load_icon(Path("data/icons/help.png"), color)
         self.new_project_icon = load_icon(Path("data/icons/new_file.png"), color)
-        self.file_import_icon = load_icon(Path("data/icons/import.png"), color)
+        self.load_project_icon = load_icon(Path("data/icons/import.png"), color)
         self.exit_import_icon = load_icon(Path("data/icons/exit.png"), color)
         self.save_icon = load_icon(Path("data/icons/save.png"), color)
         self.save_as_icon = load_icon(Path("data/icons/save_as.png"), color)
@@ -74,8 +74,8 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Vibra")
 
     def create_actions(self):
-        self.vibra_action = QAction(self.new_project_icon, "New Project", self)
-        self.file_import_action = QAction(self.file_import_icon, "Import Project", self)
+        self.new_project_action = QAction(self.new_project_icon, "New Project", self)
+        self.load_project_action = QAction(self.load_project_icon, "Import Project", self)
         self.exit_import_action = QAction(self.exit_import_icon, "Exit", self)
         self.save_action = QAction(self.save_icon, "Save", self)
         self.save_as_action = QAction(self.save_as_icon, "Save as", self)
@@ -93,6 +93,7 @@ class MainWindow(QMainWindow):
         self.recent_action = QAction(self.recent_icon, "Recent", self)
         self.theme_action = QAction(self.theme_sun_icon, "Theme", self)
 
+        self.new_project_action.triggered.connect(self.new_project_callback)
         self.save_action.triggered.connect(self.save_callback)
         self.help_action.triggered.connect(self.help_callback)
         self.exit_import_action.triggered.connect(self.exit_callback)
@@ -118,7 +119,6 @@ class MainWindow(QMainWindow):
         self.view_orthogonal_action.setShortcut("Ctrl+Shift+7")
 
     def create_basic_layout(self):
-        self.viewer_3d = Viewer3D(self)
         self.setCentralWidget(self.viewer_3d)
         self.create_progress_bar()
 
@@ -187,8 +187,8 @@ class MainWindow(QMainWindow):
 
     def load_project_menu(self):
         self.project_menu.clear()
-        self.project_menu.addAction(self.vibra_action)
-        self.project_menu.addAction(self.file_import_action)
+        self.project_menu.addAction(self.new_project_action)
+        self.project_menu.addAction(self.load_project_action)
         self.project_menu.addAction(self.save_action)
         self.project_menu.addAction(self.save_as_action)
         self.project_menu.addAction(self.recent_action)
@@ -236,6 +236,19 @@ class MainWindow(QMainWindow):
         qdarktheme.setup_theme(theme)
         self.viewer_3d.set_theme(theme)
         self.theme = theme
+
+    def new_project_callback(self):
+        file, check = QFileDialog.getOpenFileName(
+            self, 
+            "Open File",
+            filter="Geometry Files (*.stp *.step *.iges)",
+        )
+
+        if not check:
+            return
+        
+        self.project.import_geometry(file)
+        self.viewer_3d.set_project(self.project)
 
     def show_points_callback(self):
         self.viewer_3d.model_renderer.show_points()
