@@ -11,7 +11,14 @@ class FacesActor(vtk.vtkActor):
         data = vtk.vtkPolyData()
         points = vtk.vtkPoints()
         mapper = vtk.vtkPolyDataMapper()
-        data.Allocate(len(self.mesh.lines))
+        point_colors = vtk.vtkUnsignedCharArray()
+        face_colors = vtk.vtkUnsignedCharArray()
+
+        data.Allocate(len(self.mesh.faces))
+        point_colors.SetNumberOfComponents(3)
+        point_colors.SetNumberOfTuples(len(self.mesh.points))
+        face_colors.SetNumberOfComponents(3)
+        face_colors.SetNumberOfTuples(len(self.mesh.faces))
 
         for i, (x, y, z) in enumerate(self.mesh.points):
             points.InsertPoint(i, x, y, z)
@@ -20,6 +27,8 @@ class FacesActor(vtk.vtkActor):
             data.InsertNextCell(vtk.VTK_TRIANGLE, 3, [a, b, c])
 
         data.SetPoints(points)
+        data.GetPointData().SetScalars(point_colors)
+        data.GetCellData().SetScalars(face_colors)
 
         normals_filter = vtk.vtkPolyDataNormals()
         normals_filter.AddInputData(data)
@@ -29,4 +38,48 @@ class FacesActor(vtk.vtkActor):
         self.SetMapper(mapper)
 
     def configure_appearance(self):
-        pass
+        self.clear_colors()
+
+    def clear_colors(self):
+        data = self.GetMapper().GetInput()
+        point_colors = data.GetPointData().GetScalars()
+        face_colors = data.GetCellData().GetScalars()
+        
+        r, g, b = self.GetProperty().GetColor()
+        r = int(r*255)
+        g = int(g*255)
+        b = int(b*255)
+
+        point_colors.FillComponent(0, r)
+        point_colors.FillComponent(1, g)
+        point_colors.FillComponent(2, b)
+
+        face_colors.FillComponent(0, r)
+        face_colors.FillComponent(1, g)
+        face_colors.FillComponent(2, b)
+
+        self.GetMapper().ScalarVisibilityOff()
+
+    def paint_points(self, color, points):
+        self.clear_colors()
+        
+        data = self.GetMapper().GetInput()
+        point_colors = data.GetPointData().GetScalars()
+        
+        for i in points:
+            point_colors.SetTuple(i, color)
+
+        self.GetMapper().SetScalarModeToUsePointData()
+        self.GetMapper().ScalarVisibilityOn()
+
+    def paint_faces(self, color: tuple[3], faces: tuple[int]):
+        self.clear_colors()
+
+        data = self.GetMapper().GetInput()
+        face_colors = data.GetCellData().GetScalars()
+        
+        for i in faces:
+            face_colors.SetTuple(i, color)
+    
+        self.GetMapper().SetScalarModeToUseCellData()
+        self.GetMapper().ScalarVisibilityOn()
