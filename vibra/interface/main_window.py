@@ -297,6 +297,7 @@ class MainWindow(QMainWindow):
         loaded_import_geometry = self.load_function(self.project.import_geometry, text="Loading")
         loaded_import_geometry(path)
         self.viewer_3d.set_project(self.project)
+        self.set_theme(self.user_config.theme)
 
     def show_points_callback(self):
         self.viewer_3d.model_renderer.show_points()
