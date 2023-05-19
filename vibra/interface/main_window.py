@@ -16,6 +16,7 @@ from PyQt5.QtWidgets import (
 from vibra.interface.help_window import HelpWindow
 from vibra.interface.loading_bar import LoadingWindow, ProgressBarLogUpdater
 from vibra.interface.viewer_3d.viewer_3d import Viewer3D
+from vibra.config import UserConfig
 from vibra.project import Project
 
 
@@ -31,17 +32,18 @@ def load_icon(path, color):
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
-        self.theme = "dark"
+
         self.project = Project()
         self.viewer_3d = Viewer3D(self)
+        self.user_config = UserConfig()
 
         self.load_icons()
-        self.config()
+        self.configure_window()
         self.create_actions()
         self.create_basic_layout()
         self.create_menu_bar()
         self.create_tool_bar()
-        self.set_theme(self.theme)
+        self.load_user_preferences()
 
     def load_icons(self):
         color = QColor("#0055DD")
@@ -67,7 +69,7 @@ class MainWindow(QMainWindow):
         self.theme_sun_icon = load_icon(Path("data/icons/sun_icon.png"), color)
         self.theme_moon_icon = load_icon(Path("data/icons/moon_icon.png"), color)
 
-    def config(self):
+    def configure_window(self):
         self.setMinimumSize(800, 600)
         self.showMaximized()
         self.setWindowIcon(self.vibra_icon)
@@ -123,6 +125,9 @@ class MainWindow(QMainWindow):
     def create_basic_layout(self):
         self.setCentralWidget(self.viewer_3d)
         self.create_progress_bar()
+    
+    def load_user_preferences(self):
+        self.set_theme(self.user_config.theme)
 
     def create_progress_bar(self):
         # Creates a loading bar window
@@ -238,18 +243,18 @@ class MainWindow(QMainWindow):
         loaded_function()
 
     def theme_callback(self):
-        if self.theme == "light":
+        if self.user_config.theme == "light":
             self.set_theme("dark")
             self.theme_action.setIcon(self.theme_sun_icon)
 
-        elif self.theme == "dark":
+        elif self.user_config.theme == "dark":
             self.set_theme("light")
             self.theme_action.setIcon(self.theme_moon_icon)
 
     def set_theme(self, theme):
         qdarktheme.setup_theme(theme)
         self.viewer_3d.set_theme(theme)
-        self.theme = theme
+        self.user_config.theme = theme
 
     def import_geometry_callback(self):
         path, check = QFileDialog.getOpenFileName(
@@ -301,6 +306,7 @@ class MainWindow(QMainWindow):
             self, "QUIT", "Are you sure want to stop process?", QMessageBox.Yes | QMessageBox.No
         )
         if close == QMessageBox.Yes:
+            self.user_config.save()
             event.accept()
         else:
             event.ignore()
