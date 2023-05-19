@@ -11,6 +11,7 @@ class vtkInteractorStyleArcballCamera(vtk.vtkInteractorStyleTrackballCamera):
         self._rotating = False
         self.picker = vtk.vtkPropPicker()
         self.is_panning = False
+        self.make_rotation_sphere()
         self.create_observers()
 
     def create_observers(self):
@@ -70,7 +71,13 @@ class vtkInteractorStyleArcballCamera(vtk.vtkInteractorStyleTrackballCamera):
             x0, x1, y0, y1, z0, z1 = renderer.ComputeVisiblePropBounds()
             self.center_of_rotation = [(x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2]
 
+        self.sphere_rotation_actor.SetPosition(self.center_of_rotation)
+        renderer.AddActor(self.sphere_rotation_actor)
+
     def right_button_release_event(self, obj, event):
+        renderer = self.GetDefaultRenderer() or self.GetCurrentRenderer()
+        renderer.RemoveActor(self.sphere_rotation_actor)
+        self.GetInteractor().Render()
         self._rightButtonClicked = False
         self._rotating = False
         self.EndDolly()
@@ -229,3 +236,17 @@ class vtkInteractorStyleArcballCamera(vtk.vtkInteractorStyleTrackballCamera):
 
         scale = view_height / renderer.GetSize()[1]
         return cursor_to_center * scale * (1 - 1 / factor)
+
+    def make_rotation_sphere(self):
+        colors = vtk.vtkNamedColors()
+        sphereSource = vtk.vtkSphereSource()
+        sphereSource.SetRadius(0.01)
+        sphereSource.Update()
+
+        mapper = vtk.vtkPolyDataMapper()
+        mapper.SetInputData(sphereSource.GetOutput())
+
+        self.sphere_rotation_actor = vtk.vtkActor()
+        self.sphere_rotation_actor.SetMapper(mapper)
+        self.sphere_rotation_actor.GetProperty().SetColor(colors.GetColor3d("red"))
+

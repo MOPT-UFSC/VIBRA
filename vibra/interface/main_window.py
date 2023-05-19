@@ -301,3 +301,5 @@ class MainWindow(QMainWindow):
             event.accept()
         else:
             event.ignore()
+
+    
