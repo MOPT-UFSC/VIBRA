@@ -53,6 +53,7 @@ class vtkInteractorStyleArcballCamera(vtk.vtkInteractorStyleTrackballCamera):
         self._rightButtonClicked = True
         self._rotating = True
         renderer = self.GetCurrentRenderer() or self.GetDefaultRenderer()
+        camera = renderer.GetActiveCamera()
 
         if renderer is None:
             return
@@ -71,7 +72,11 @@ class vtkInteractorStyleArcballCamera(vtk.vtkInteractorStyleTrackballCamera):
             x0, x1, y0, y1, z0, z1 = renderer.ComputeVisiblePropBounds()
             self.center_of_rotation = [(x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2]
 
+        dx,dy,dz = np.array(camera.GetPosition()) - np.array(camera.GetFocalPoint())
+        distance_factor = np.sqrt(dx**2 + dy**2 + dz**2)
+
         self.sphere_rotation_actor.SetPosition(self.center_of_rotation)
+        self.sphere_rotation_actor.SetScale((distance_factor/3.5,distance_factor/3.5,distance_factor/3.5))
         renderer.AddActor(self.sphere_rotation_actor)
 
     def right_button_release_event(self, obj, event):
