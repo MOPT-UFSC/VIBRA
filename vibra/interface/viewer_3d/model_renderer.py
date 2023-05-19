@@ -1,11 +1,11 @@
 import vtk
 
 from vibra.engine.mesh import Mesh
-from vibra.interface.viewer_3d.common_renderer import CommonRenderer
 from vibra.interface.viewer_3d.actors.example_actor import ExampleActor
 from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 from vibra.interface.viewer_3d.actors.lines_actor import LinesActor
 from vibra.interface.viewer_3d.actors.points_actor import PointsActor
+from vibra.interface.viewer_3d.common_renderer import CommonRenderer
 
 
 class ModelRenderer(CommonRenderer):

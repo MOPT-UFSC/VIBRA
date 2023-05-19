@@ -1,7 +1,6 @@
-from dataclasses import dataclass
 from configparser import ConfigParser
+from dataclasses import dataclass
 from pathlib import Path
-
 
 user_config_path = Path(".config.ini")
 

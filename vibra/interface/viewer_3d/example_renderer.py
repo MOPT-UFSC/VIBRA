@@ -1,7 +1,6 @@
 import vtk
 
 from vibra.engine.mesh import Mesh
-from vibra.interface.viewer_3d.common_renderer import CommonRenderer
 from vibra.interface.viewer_3d.actors.example_actor import ExampleActor
 from vibra.interface.viewer_3d.actors.lines_actor import LinesActor
 from vibra.interface.viewer_3d.actors.symbols_actors import (
@@ -10,6 +9,7 @@ from vibra.interface.viewer_3d.actors.symbols_actors import (
     ArrowSymbols3,
     ClampSymbols,
 )
+from vibra.interface.viewer_3d.common_renderer import CommonRenderer
 
 
 class ExampleRenderer(CommonRenderer):

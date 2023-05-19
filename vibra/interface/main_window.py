@@ -13,10 +13,10 @@ from PyQt5.QtWidgets import (
     QMessageBox,
 )
 
+from vibra.config import UserConfig
 from vibra.interface.help_window import HelpWindow
 from vibra.interface.loading_bar import LoadingWindow, ProgressBarLogUpdater
 from vibra.interface.viewer_3d.viewer_3d import Viewer3D
-from vibra.config import UserConfig
 from vibra.project import Project
 
 
@@ -125,7 +125,7 @@ class MainWindow(QMainWindow):
     def create_basic_layout(self):
         self.setCentralWidget(self.viewer_3d)
         self.create_progress_bar()
-    
+
     def load_user_preferences(self):
         self.set_theme(self.user_config.theme)
 
