@@ -1,7 +1,7 @@
 import numpy as np
 import vtk
 
-from vibra.interface.viewer_3d.symbols_common import (
+from vibra.interface.viewer_3d.actors.symbols_common import (
     X_VECTOR,
     Y_VECTOR,
     Z_VECTOR,

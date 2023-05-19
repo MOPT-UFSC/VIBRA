@@ -3,17 +3,17 @@ from pathlib import Path
 from time import sleep
 
 import qdarktheme
-from PyQt5.QtCore import QSize, Qt, pyqtSignal
+from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
 from PyQt5.QtWidgets import (
     QAction,
     QApplication,
     QMainWindow,
     QMessageBox,
-    QStyle,
-    QToolBar,
+    QFileDialog,
 )
 
+from vibra.config import UserConfig
 from vibra.interface.help_window import HelpWindow
 from vibra.interface.loading_bar import LoadingWindow, ProgressBarLogUpdater
 from vibra.interface.viewer_3d.viewer_3d import Viewer3D
@@ -32,15 +32,17 @@ def load_icon(path, color):
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
-        self.theme = "dark"
         self.project = Project()
+        self.viewer_3d = Viewer3D(self)
+        self.user_config = UserConfig()
+
         self.load_icons()
-        self.config()
+        self.configure_window()
         self.create_actions()
         self.create_basic_layout()
         self.create_menu_bar()
         self.create_tool_bar()
-        self.set_theme(self.theme)
+        self.load_user_preferences()
 
     def load_icons(self):
         color = QColor("#0055DD")
@@ -48,7 +50,7 @@ class MainWindow(QMainWindow):
         self.vibra_icon = load_icon(Path("data/icons/logo_vibra.png"), color)
         self.help_icon = load_icon(Path("data/icons/help.png"), color)
         self.new_project_icon = load_icon(Path("data/icons/new_file.png"), color)
-        self.file_import_icon = load_icon(Path("data/icons/import.png"), color)
+        self.load_project_icon = load_icon(Path("data/icons/import.png"), color)
         self.exit_import_icon = load_icon(Path("data/icons/exit.png"), color)
         self.save_icon = load_icon(Path("data/icons/save.png"), color)
         self.save_as_icon = load_icon(Path("data/icons/save_as.png"), color)
@@ -66,7 +68,7 @@ class MainWindow(QMainWindow):
         self.theme_sun_icon = load_icon(Path("data/icons/sun_icon.png"), color)
         self.theme_moon_icon = load_icon(Path("data/icons/moon_icon.png"), color)
 
-    def config(self):
+    def configure_window(self):
         self.setMinimumSize(800, 600)
         self.showMaximized()
         self.setWindowIcon(self.vibra_icon)
@@ -80,9 +82,11 @@ class MainWindow(QMainWindow):
         }
 
     def create_actions(self):
-        self.vibra_action = QAction(self.new_project_icon, "New Project", self)
-        self.file_import_action = QAction(self.file_import_icon, "Import Project", self)
+        self.new_project_action = QAction(self.new_project_icon, "New Project", self)
+        self.load_project_action = QAction(self.load_project_icon, "Load Project", self)
         self.exit_import_action = QAction(self.exit_import_icon, "Exit", self)
+        self.import_geometry_action = QAction("Import geometry", self)  # add icon
+        self.capture_image_action = QAction("Capture image", self)  # add icon
         self.save_action = QAction(self.save_icon, "Save", self)
         self.save_as_action = QAction(self.save_as_icon, "Save as", self)
         self.help_action = QAction(self.help_icon, "About Vibra", self)
@@ -99,6 +103,7 @@ class MainWindow(QMainWindow):
         self.recent_action = QAction(self.recent_icon, "Recent", self)
         self.theme_action = QAction(self.theme_sun_icon, "Theme", self)
 
+        self.import_geometry_action.triggered.connect(self.import_geometry_callback)
         self.save_action.triggered.connect(self.save_callback)
         self.help_action.triggered.connect(self.help_callback)
         self.exit_import_action.triggered.connect(self.exit_callback)
@@ -124,16 +129,20 @@ class MainWindow(QMainWindow):
         self.view_orthogonal_action.setShortcut("Ctrl+Shift+7")
 
     def create_basic_layout(self):
-        self.viewer_3d = Viewer3D(self)
         self.setCentralWidget(self.viewer_3d)
         self.create_progress_bar()
+
+    def load_user_preferences(self):
+        self.set_theme(self.user_config.theme)
 
     def create_progress_bar(self):
         # Creates a loading bar window
         self.loading_window = LoadingWindow(self)
 
         # Updates the loading bar every a log is output
-        progress_handler = ProgressBarLogUpdater(progress_bar=self.loading_window.progress_bar)
+        progress_handler = ProgressBarLogUpdater(
+            progress_bar=self.loading_window.progress_bar, label=self.loading_window.text_label
+        )
         progress_handler.setLevel(logging.INFO)
         logging.getLogger().addHandler(progress_handler)
 
@@ -144,13 +153,19 @@ class MainWindow(QMainWindow):
     def load_function(self, function, *, text=""):
         def wrapper(*args, **kwargs):
             try:
+                # Waits some previous pyqt window and update
+                sleep(0.1)
+                QApplication.processEvents()
+
                 # Changes the cursor to wait
                 QApplication.setOverrideCursor(Qt.WaitCursor)
 
                 # Shows the empty progress bar
                 self.loading_window.show()
                 self.loading_window.text_label.setText(text)
-                sleep(0.1)  # Without sleeps pyqt breaks
+
+                # Waits the loading bar to appear and uptates pyqt
+                sleep(0.1)
                 QApplication.processEvents()
 
                 # Calls the actual function
@@ -160,6 +175,9 @@ class MainWindow(QMainWindow):
                 self.loading_window.progress_bar.setValue(100)
                 sleep(0.1)  # A small delay so we can see the 100%
                 self.loading_window.hide()
+
+                # Returns the value to 0 for the next use
+                self.loading_window.progress_bar.setValue(0)
 
                 # Restores the previous cursor
                 QApplication.restoreOverrideCursor()
@@ -213,10 +231,12 @@ class MainWindow(QMainWindow):
 
     def load_project_menu(self):
         self.project_menu.clear()
-        self.project_menu.addAction(self.vibra_action)
-        self.project_menu.addAction(self.file_import_action)
+        self.project_menu.addAction(self.new_project_action)
+        self.project_menu.addAction(self.load_project_action)
         self.project_menu.addAction(self.save_action)
         self.project_menu.addAction(self.save_as_action)
+        self.project_menu.addAction(self.import_geometry_action)
+        self.project_menu.addAction(self.capture_image_action)
         self.project_menu.addAction(self.recent_action)
         self.project_menu.addAction(self.theme_action)
         self.project_menu.addAction(self.exit_import_action)
@@ -250,18 +270,33 @@ class MainWindow(QMainWindow):
         loaded_function()
 
     def theme_callback(self):
-        if self.theme == "light":
+        if self.user_config.theme == "light":
             self.set_theme("dark")
             self.theme_action.setIcon(self.theme_sun_icon)
 
-        elif self.theme == "dark":
+        elif self.user_config.theme == "dark":
             self.set_theme("light")
             self.theme_action.setIcon(self.theme_moon_icon)
 
     def set_theme(self, theme):
         qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
         self.viewer_3d.set_theme(theme)
-        self.theme = theme
+        self.user_config.theme = theme
+
+    def import_geometry_callback(self):
+        path, check = QFileDialog.getOpenFileName(
+            self,
+            "Open File",
+            filter="Geometry Files (*.stp *.step *.iges)",
+        )
+
+        if not check:
+            return
+
+        # Slow function running with loading bar
+        loaded_import_geometry = self.load_function(self.project.import_geometry, text="Loading")
+        loaded_import_geometry(path)
+        self.viewer_3d.set_project(self.project)
 
     def show_points_callback(self):
         self.viewer_3d.model_renderer.show_points()
@@ -298,6 +333,7 @@ class MainWindow(QMainWindow):
             self, "QUIT", "Are you sure want to stop process?", QMessageBox.Yes | QMessageBox.No
         )
         if close == QMessageBox.Yes:
+            self.user_config.save()
             event.accept()
         else:
             event.ignore()

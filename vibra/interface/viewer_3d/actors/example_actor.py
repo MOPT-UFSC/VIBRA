@@ -40,12 +40,12 @@ class ExampleActor(vtk.vtkActor):
         append_filter.AddInputData(nose.GetOutput())
         append_filter.Update()
 
-        source = vtk.vtkSphereSource()
-        source.SetRadius(5.0)
-        source.Update()
+        normals_filter = vtk.vtkPolyDataNormals()
+        normals_filter.AddInputData(append_filter.GetOutput())
+        normals_filter.Update()
 
         mapper = vtk.vtkPolyDataMapper()
-        mapper.SetInputData(append_filter.GetOutput())
+        mapper.SetInputData(normals_filter.GetOutput())
         self.SetMapper(mapper)
 
     def configure_appearance(self):
