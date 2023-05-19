@@ -47,9 +47,9 @@ class vtkInteractorStyleArcballCamera(vtk.vtkInteractorStyleTrackballCamera):
         pass
 
     def right_button_press_event(self, obj, event):
-        self.clickPosition = self.GetInteractor().GetEventPosition()
-        self.FindPokedRenderer(self.clickPosition[0], self.clickPosition[1])
-        self.mousePosition = self.clickPosition
+        cursor = self.GetInteractor().GetEventPosition()
+        self.FindPokedRenderer(cursor[0], cursor[1])
+
         self._rightButtonClicked = True
         self._rotating = True
         renderer = self.GetCurrentRenderer() or self.GetDefaultRenderer()
@@ -59,7 +59,7 @@ class vtkInteractorStyleArcballCamera(vtk.vtkInteractorStyleTrackballCamera):
             return
 
         picker = vtk.vtkPropPicker()
-        picker.Pick(self.clickPosition[0], self.clickPosition[1], 0, renderer)
+        picker.Pick(cursor[0], cursor[1], 0, renderer)
         pos = picker.GetPickPosition()
 
         if pos != (0, 0, 0):
