@@ -29,4 +29,8 @@ class FacesActor(vtk.vtkActor):
         self.SetMapper(mapper)
 
     def configure_appearance(self):
-        pass
+        self.GetProperty().SetInterpolationToPhong()
+        self.GetProperty().SetDiffuse(0.8)
+        self.GetProperty().SetSpecular(0.5)
+        self.GetProperty().SetSpecularPower(40)
+        self.GetProperty().SetSpecularColor(1, 1, 1)
