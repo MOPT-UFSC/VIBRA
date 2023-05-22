@@ -9,8 +9,8 @@ from vibra.interface.viewer_3d.common_renderer import CommonRenderer
 
 
 SHOW_POINTS = 0
-SHOW_EDGES = 1
-SHOW_FACES = 1
+SHOW_LINES = 1
+SHOW_FACES = 2
 
 
 class ModelRenderer(CommonRenderer):
@@ -74,7 +74,7 @@ class ModelRenderer(CommonRenderer):
         self.points_actor.VisibilityOff()
         self.lines_actor.VisibilityOn()
         self.faces_actor.GetProperty().SetOpacity(0.1)
-        self.view_mode = SHOW_EDGES
+        self.view_mode = SHOW_LINES
         self.update()
 
     def show_faces(self):
@@ -107,12 +107,18 @@ class ModelRenderer(CommonRenderer):
         clicked_cell = selection_interactor.selection_picker.GetCellId()
         clicked_actor = selection_interactor.selection_picker.GetActor()
 
+        selection_color = (20, 106, 245)
         self.faces_actor.clear_colors()
 
+        if (clicked_actor == self.points_actor) and (self.view_mode == SHOW_POINTS):
+            pass
+
+        if (clicked_actor == self.lines_actor) and (self.view_mode == SHOW_LINES):
+            pass
+
         if (clicked_actor == self.faces_actor) and (self.view_mode == SHOW_FACES):
-            color = (20, 106, 245)
             cells_to_highlight = self._find_subset(clicked_cell, self.project.mesh.face_entities.values())
-            self.faces_actor.paint_faces(color, cells_to_highlight)
+            self.faces_actor.paint_cells(selection_color, cells_to_highlight)
             
         self.update()
 

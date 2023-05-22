@@ -6,6 +6,7 @@ class FacesActor(vtk.vtkActor):
         self.mesh = mesh
         self.create_geometry()
         self.configure_appearance()
+        self.color_stack = []
 
     def create_geometry(self):
         data = vtk.vtkPolyData()
@@ -60,9 +61,32 @@ class FacesActor(vtk.vtkActor):
 
         self.GetMapper().ScalarVisibilityOff()
 
-    def paint_points(self, color, points):
-        self.clear_colors()
+    def push(self):
+        data = self.GetMapper().GetInput()
+        face_colors = data.GetCellData().GetScalars()
+
+        mode = self.GetMapper().GetScalarMode()
+        colors = vtk.vtkUnsignedCharArray()
+        colors.DeepCopy(face_colors)
+
+        self.color_stack.append((mode, colors))
+
+    def pop(self):
+        if not self.color_stack:
+            return None
         
+        mode, colors = self.color_stack.pop()
+        data = self.GetMapper().GetInput()
+        data.GetCellData().SetScalars(colors)
+
+        self.GetMapper().SetScalarMode(mode)
+        self.GetMapper().ScalarVisibilityOff() # Just to force color updates
+        self.GetMapper().ScalarVisibilityOn()
+
+        return colors
+
+    def paint_points(self, color, points):
+       
         data = self.GetMapper().GetInput()
         point_colors = data.GetPointData().GetScalars()
         
@@ -70,11 +94,10 @@ class FacesActor(vtk.vtkActor):
             point_colors.SetTuple(i, color)
 
         self.GetMapper().SetScalarModeToUsePointData()
+        self.GetMapper().ScalarVisibilityOff() # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
 
-    def paint_faces(self, color: tuple[3], faces: tuple[int]):
-        self.clear_colors()
-
+    def paint_cells(self, color: tuple[3], faces: tuple[int]):
         data = self.GetMapper().GetInput()
         face_colors = data.GetCellData().GetScalars()
         
@@ -82,4 +105,5 @@ class FacesActor(vtk.vtkActor):
             face_colors.SetTuple(i, color)
     
         self.GetMapper().SetScalarModeToUseCellData()
+        self.GetMapper().ScalarVisibilityOff() # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
