@@ -2,9 +2,10 @@ import logging
 from pathlib import Path
 from time import sleep
 
+
 import qdarktheme
 from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
+from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap,QCursor
 from PyQt5.QtWidgets import (
     QAction,
     QApplication,
@@ -42,6 +43,7 @@ class MainWindow(QMainWindow):
         self.create_basic_layout()
         self.create_menu_bar()
         self.create_tool_bar()
+        self.create_status_bar()
         self.load_user_preferences()
 
     def load_icons(self):
@@ -54,6 +56,7 @@ class MainWindow(QMainWindow):
         self.exit_import_icon = load_icon(Path("data/icons/exit.png"), color)
         self.save_icon = load_icon(Path("data/icons/save.png"), color)
         self.save_as_icon = load_icon(Path("data/icons/save_as.png"), color)
+        self.save_as_png_icon = load_icon(Path("data/icons/png.png"), color)
         self.view_up_icon = load_icon(Path("data/icons/top.png"), color)
         self.view_down_icon = load_icon(Path("data/icons/bottom.png"), color)
         self.view_right_icon = load_icon(Path("data/icons/right.png"), color)
@@ -89,6 +92,7 @@ class MainWindow(QMainWindow):
         self.capture_image_action = QAction("Capture image", self)  # add icon
         self.save_action = QAction(self.save_icon, "Save", self)
         self.save_as_action = QAction(self.save_as_icon, "Save as", self)
+        self.save_as_png_action = QAction(self.save_as_png_icon, "Save as PNG", self)
         self.help_action = QAction(self.help_icon, "About Vibra", self)
         self.view_up_action = QAction(self.view_up_icon, "Up View", self)
         self.view_down_action = QAction(self.view_down_icon, "Down View", self)
@@ -229,12 +233,16 @@ class MainWindow(QMainWindow):
         self.tool_bar.addAction(self.view_mode_nodes_action)
         self.tool_bar.addSeparator()
 
+    def create_status_bar(self):    
+        self.status_bar = self.statusBar()
+
     def load_project_menu(self):
         self.project_menu.clear()
         self.project_menu.addAction(self.new_project_action)
         self.project_menu.addAction(self.load_project_action)
         self.project_menu.addAction(self.save_action)
         self.project_menu.addAction(self.save_as_action)
+        self.project_menu.addAction(self.save_as_png_action)
         self.project_menu.addAction(self.import_geometry_action)
         self.project_menu.addAction(self.capture_image_action)
         self.project_menu.addAction(self.recent_action)
@@ -297,6 +305,7 @@ class MainWindow(QMainWindow):
         loaded_import_geometry = self.load_function(self.project.import_geometry, text="Loading")
         loaded_import_geometry(path)
         self.viewer_3d.set_project(self.project)
+        self.set_theme(self.user_config.theme)
 
     def show_points_callback(self):
         self.viewer_3d.current_renderer.show_points()
