@@ -299,34 +299,34 @@ class MainWindow(QMainWindow):
         self.viewer_3d.set_project(self.project)
 
     def show_points_callback(self):
-        self.viewer_3d.model_renderer.show_points()
+        self.viewer_3d.current_renderer.show_points()
 
     def show_edges_callback(self):
-        self.viewer_3d.model_renderer.show_edges()
+        self.viewer_3d.current_renderer.show_edges()
 
     def show_faces_callback(self):
-        self.viewer_3d.model_renderer.show_faces()
+        self.viewer_3d.current_renderer.show_faces()
 
     def show_view_up_callback(self):
-        self.viewer_3d.model_renderer.set_view_up()
+        self.viewer_3d.current_renderer.set_view_up()
 
     def show_view_down_callback(self):
-        self.viewer_3d.model_renderer.set_view_down()
+        self.viewer_3d.current_renderer.set_view_down()
 
     def show_view_left_callback(self):
-        self.viewer_3d.model_renderer.set_view_left()
+        self.viewer_3d.current_renderer.set_view_left()
 
     def show_view_right_callback(self):
-        self.viewer_3d.model_renderer.set_view_right()
+        self.viewer_3d.current_renderer.set_view_right()
 
     def show_view_front_callback(self):
-        self.viewer_3d.model_renderer.set_view_front()
+        self.viewer_3d.current_renderer.set_view_front()
 
     def show_view_back_callback(self):
-        self.viewer_3d.model_renderer.set_view_back()
+        self.viewer_3d.current_renderer.set_view_back()
 
     def show_view_orthogonal_callback(self):
-        self.viewer_3d.model_renderer.set_view_orthogonal()
+        self.viewer_3d.current_renderer.set_view_orthogonal()
 
     def closeEvent(self, event):
         close = QMessageBox.question(

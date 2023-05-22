@@ -56,6 +56,16 @@ class CommonRenderer(vtk.vtkRenderer):
         view_up = (0, 1, 0)
         self.set_custom_view(position, view_up)
 
+    # override it =)
+    def show_points(self):
+        pass
+
+    def show_edges(self):
+        pass
+
+    def show_faces(self):
+        pass
+
     def set_custom_view(self, position, view_up):
         self.GetActiveCamera().SetPosition(position)
         self.GetActiveCamera().SetViewUp(view_up)
