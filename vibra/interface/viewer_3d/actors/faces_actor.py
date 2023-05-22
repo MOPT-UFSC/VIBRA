@@ -39,9 +39,6 @@ class FacesActor(vtk.vtkActor):
         self.SetMapper(mapper)
 
     def configure_appearance(self):
-        self.GetMapper().SetScalarModeToUseCellData()
-        self.GetMapper().ScalarVisibilityOff() # Just to force color updates
-        self.GetMapper().ScalarVisibilityOn()
         self.GetProperty().SetInterpolationToPhong()
         self.GetProperty().SetDiffuse(0.8)
         self.GetProperty().SetSpecular(0.5)
@@ -112,3 +109,6 @@ class FacesActor(vtk.vtkActor):
         for i in faces:
             cell_colors.SetTuple(i, color)
     
+        self.GetMapper().SetScalarModeToUseCellData()
+        self.GetMapper().ScalarVisibilityOff() # Just to force color updates
+        self.GetMapper().ScalarVisibilityOn()
