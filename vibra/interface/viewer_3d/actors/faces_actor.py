@@ -13,13 +13,13 @@ class FacesActor(vtk.vtkActor):
         points = vtk.vtkPoints()
         mapper = vtk.vtkPolyDataMapper()
         point_colors = vtk.vtkUnsignedCharArray()
-        face_colors = vtk.vtkUnsignedCharArray()
+        cell_colors = vtk.vtkUnsignedCharArray()
 
         data.Allocate(len(self.mesh.faces))
         point_colors.SetNumberOfComponents(3)
         point_colors.SetNumberOfTuples(len(self.mesh.points))
-        face_colors.SetNumberOfComponents(3)
-        face_colors.SetNumberOfTuples(len(self.mesh.faces))
+        cell_colors.SetNumberOfComponents(3)
+        cell_colors.SetNumberOfTuples(len(self.mesh.faces))
 
         for i, (x, y, z) in enumerate(self.mesh.points):
             points.InsertPoint(i, x, y, z)
@@ -29,7 +29,7 @@ class FacesActor(vtk.vtkActor):
 
         data.SetPoints(points)
         data.GetPointData().SetScalars(point_colors)
-        data.GetCellData().SetScalars(face_colors)
+        data.GetCellData().SetScalars(cell_colors)
 
         normals_filter = vtk.vtkPolyDataNormals()
         normals_filter.AddInputData(data)
@@ -44,7 +44,7 @@ class FacesActor(vtk.vtkActor):
     def clear_colors(self):
         data = self.GetMapper().GetInput()
         point_colors = data.GetPointData().GetScalars()
-        face_colors = data.GetCellData().GetScalars()
+        cell_colors = data.GetCellData().GetScalars()
         
         r, g, b = self.GetProperty().GetColor()
         r = int(r*255)
@@ -55,19 +55,19 @@ class FacesActor(vtk.vtkActor):
         point_colors.FillComponent(1, g)
         point_colors.FillComponent(2, b)
 
-        face_colors.FillComponent(0, r)
-        face_colors.FillComponent(1, g)
-        face_colors.FillComponent(2, b)
+        cell_colors.FillComponent(0, r)
+        cell_colors.FillComponent(1, g)
+        cell_colors.FillComponent(2, b)
 
         self.GetMapper().ScalarVisibilityOff()
 
     def push(self):
         data = self.GetMapper().GetInput()
-        face_colors = data.GetCellData().GetScalars()
+        cell_colors = data.GetCellData().GetScalars()
 
         mode = self.GetMapper().GetScalarMode()
         colors = vtk.vtkUnsignedCharArray()
-        colors.DeepCopy(face_colors)
+        colors.DeepCopy(cell_colors)
 
         self.color_stack.append((mode, colors))
 
@@ -99,10 +99,10 @@ class FacesActor(vtk.vtkActor):
 
     def paint_cells(self, color: tuple[3], faces: tuple[int]):
         data = self.GetMapper().GetInput()
-        face_colors = data.GetCellData().GetScalars()
+        cell_colors = data.GetCellData().GetScalars()
         
         for i in faces:
-            face_colors.SetTuple(i, color)
+            cell_colors.SetTuple(i, color)
     
         self.GetMapper().SetScalarModeToUseCellData()
         self.GetMapper().ScalarVisibilityOff() # Just to force color updates

@@ -64,6 +64,11 @@ class ModelRenderer(CommonRenderer):
         self.points_actor.VisibilityOn()
         self.lines_actor.VisibilityOff()
         self.faces_actor.GetProperty().SetOpacity(0.1)
+
+        self.points_actor.PickableOn()
+        self.lines_actor.PickableOff()
+        self.faces_actor.PickableOff()
+
         self.view_mode = SHOW_POINTS
         self.update()
 
@@ -74,6 +79,11 @@ class ModelRenderer(CommonRenderer):
         self.points_actor.VisibilityOff()
         self.lines_actor.VisibilityOn()
         self.faces_actor.GetProperty().SetOpacity(0.1)
+
+        self.points_actor.PickableOff()
+        self.lines_actor.PickableOn()
+        self.faces_actor.PickableOff()
+        
         self.view_mode = SHOW_LINES
         self.update()
 
@@ -84,6 +94,11 @@ class ModelRenderer(CommonRenderer):
         self.points_actor.VisibilityOff()
         self.lines_actor.VisibilityOff()
         self.faces_actor.GetProperty().SetOpacity(1)
+
+        self.points_actor.PickableOff()
+        self.lines_actor.PickableOff()
+        self.faces_actor.PickableOn()
+
         self.view_mode = SHOW_FACES
         self.update()
 
@@ -108,13 +123,16 @@ class ModelRenderer(CommonRenderer):
         clicked_actor = selection_interactor.selection_picker.GetActor()
 
         selection_color = (20, 106, 245)
+        self.points_actor.clear_colors()
+        self.lines_actor.clear_colors()
         self.faces_actor.clear_colors()
 
         if (clicked_actor == self.points_actor) and (self.view_mode == SHOW_POINTS):
-            pass
+            self.points_actor.paint_cells(selection_color, [clicked_cell])
 
         if (clicked_actor == self.lines_actor) and (self.view_mode == SHOW_LINES):
-            pass
+            cells_to_highlight = self._find_subset(clicked_cell, self.project.mesh.line_entities.values())
+            self.lines_actor.paint_cells(selection_color, cells_to_highlight)
 
         if (clicked_actor == self.faces_actor) and (self.view_mode == SHOW_FACES):
             cells_to_highlight = self._find_subset(clicked_cell, self.project.mesh.face_entities.values())
