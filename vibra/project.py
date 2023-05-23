@@ -20,7 +20,7 @@ class Project:
     def load(cls, path):
         logging.info(f"Loading {path}")
 
-    def save(self):
+    def save(self, path):
         logging.info(f"Saving project in my/save/path")
         print("SALVANDO")
 
