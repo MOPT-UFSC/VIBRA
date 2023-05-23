@@ -156,6 +156,22 @@ class MainWindow(QMainWindow):
         loaded_function()
 
     def load_function(self, function, *, text=""):
+        '''
+        This function works just like a decorator.
+
+        The function passed is transformed so it will show a
+        progressbar while running.
+
+        The text and progress of the progressbar is given by 
+        logs containing ProgressStatus in it.
+
+        Example:
+        --------
+
+        loaded_func = self.load_function(func)
+        loaded_func(args, of, the, original, function)
+        '''
+
         def wrapper(*args, **kwargs):
             try:
                 # Waits some previous pyqt window and update
@@ -287,7 +303,13 @@ class MainWindow(QMainWindow):
             self.set_theme("light")
             self.theme_action.setIcon(self.theme_moon_icon)
 
-    def set_theme(self, theme):
+    def set_theme(self, theme: str):
+        '''
+        Changes Qt stylesheets using qdarktheme library and the
+        renderer background colors.
+
+        The input is a string "light" or "dark".
+        '''
         qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
         self.viewer_3d.set_theme(theme)
         self.user_config.theme = theme

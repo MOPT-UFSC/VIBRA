@@ -3,6 +3,9 @@ import vtk
 
 
 class vtkInteractorStyleArcballCamera(vtk.vtkInteractorStyleTrackballCamera):
+    '''
+    Interactor style that rotates and zooms around the cursor.
+    '''
     def __init__(self):
         self.center_of_rotation = None
         self.default_center_of_rotation = None

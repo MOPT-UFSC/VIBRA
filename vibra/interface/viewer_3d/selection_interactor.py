@@ -6,6 +6,13 @@ from vibra.interface.viewer_3d.arcball_camera import (
 
 
 class SelectionInteractor(vtkInteractorStyleArcballCamera):
+    '''
+    Interactor style that invoke SelectionEvent every time a
+    object is clicked.
+
+    The pick information can be extracted directly from 
+    selection picker.
+    '''
     def __init__(self):
         super().__init__()
         self.selection_picker = vtk.vtkCellPicker()
