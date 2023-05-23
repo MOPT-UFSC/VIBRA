@@ -87,7 +87,7 @@ class Viewer3D(QFrame):
 
     def selection_callback(self, obj, event):
         if self.current_renderer == self.model_renderer:
-            self.model_renderer.update_selection(obj)
+            self.model_renderer.selection_callback(obj, event)
 
     def update(self):
         super().update()
