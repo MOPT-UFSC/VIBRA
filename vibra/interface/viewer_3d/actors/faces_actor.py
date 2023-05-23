@@ -50,11 +50,11 @@ class FacesActor(vtk.vtkActor):
         data = self.GetMapper().GetInput()
         point_colors = data.GetPointData().GetScalars()
         cell_colors = data.GetCellData().GetScalars()
-        
+
         r, g, b = self.GetProperty().GetColor()
-        r = int(r*255)
-        g = int(g*255)
-        b = int(b*255)
+        r = int(r * 255)
+        g = int(g * 255)
+        b = int(b * 255)
 
         point_colors.FillComponent(0, r)
         point_colors.FillComponent(1, g)
@@ -79,36 +79,35 @@ class FacesActor(vtk.vtkActor):
     def pop(self):
         if not self.color_stack:
             return None
-        
+
         mode, colors = self.color_stack.pop()
         data = self.GetMapper().GetInput()
         data.GetCellData().SetScalars(colors)
 
         self.GetMapper().SetScalarMode(mode)
-        self.GetMapper().ScalarVisibilityOff() # Just to force color updates
+        self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
 
         return colors
 
     def paint_points(self, color, points):
-       
         data = self.GetMapper().GetInput()
         point_colors = data.GetPointData().GetScalars()
-        
+
         for i in points:
             point_colors.SetTuple(i, color)
 
         self.GetMapper().SetScalarModeToUsePointData()
-        self.GetMapper().ScalarVisibilityOff() # Just to force color updates
+        self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
 
     def paint_cells(self, color: tuple[3], faces: tuple[int]):
         data = self.GetMapper().GetInput()
         cell_colors = data.GetCellData().GetScalars()
-        
+
         for i in faces:
             cell_colors.SetTuple(i, color)
-    
+
         self.GetMapper().SetScalarModeToUseCellData()
-        self.GetMapper().ScalarVisibilityOff() # Just to force color updates
+        self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()

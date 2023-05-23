@@ -27,8 +27,6 @@ class PointsActor(vtk.vtkActor):
         data.SetPoints(points)
         data.GetCellData().SetScalars(cell_colors)
 
-
-
         mapper.SetInputData(data)
         self.SetMapper(mapper)
 
@@ -40,11 +38,11 @@ class PointsActor(vtk.vtkActor):
     def clear_colors(self):
         data = self.GetMapper().GetInput()
         cell_colors = data.GetCellData().GetScalars()
-        
+
         r, g, b = self.GetProperty().GetColor()
-        r = int(r*255)
-        g = int(g*255)
-        b = int(b*255)
+        r = int(r * 255)
+        g = int(g * 255)
+        b = int(b * 255)
 
         cell_colors.FillComponent(0, r)
         cell_colors.FillComponent(1, g)
@@ -55,10 +53,10 @@ class PointsActor(vtk.vtkActor):
     def paint_cells(self, color: tuple[3], cells: tuple[int]):
         data = self.GetMapper().GetInput()
         cell_colors = data.GetCellData().GetScalars()
-        
+
         for i in cells:
             cell_colors.SetTuple(i, color)
-    
+
         self.GetMapper().SetScalarModeToUseCellData()
-        self.GetMapper().ScalarVisibilityOff() # Just to force color updates
+        self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()

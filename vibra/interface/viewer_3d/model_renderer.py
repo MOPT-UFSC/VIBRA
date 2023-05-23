@@ -7,7 +7,6 @@ from vibra.interface.viewer_3d.actors.lines_actor import LinesActor
 from vibra.interface.viewer_3d.actors.points_actor import PointsActor
 from vibra.interface.viewer_3d.common_renderer import CommonRenderer
 
-
 SHOW_POINTS = 0
 SHOW_LINES = 1
 SHOW_FACES = 2
@@ -22,7 +21,7 @@ class ModelRenderer(CommonRenderer):
         self.points_actor = None
         self.lines_actor = None
         self.faces_actor = None
-        
+
         self.selection_color = (20, 106, 245)
         self.selected_points = []
         self.selected_lines = []
@@ -88,7 +87,7 @@ class ModelRenderer(CommonRenderer):
         self.points_actor.PickableOff()
         self.lines_actor.PickableOn()
         self.faces_actor.PickableOff()
-        
+
         self.view_mode = SHOW_LINES
         self.update()
 
@@ -132,20 +131,14 @@ class ModelRenderer(CommonRenderer):
             return
         self.selected_lines = [line]
         self.lines_actor.clear_colors()
-        self.lines_actor.paint_cells(
-            self.selection_color,
-            self.project.mesh.line_entities[line]
-        )
+        self.lines_actor.paint_cells(self.selection_color, self.project.mesh.line_entities[line])
 
     def select_face(self, face):
         if self.view_mode != SHOW_FACES:
             return
         self.selected_faces = [face]
         self.faces_actor.clear_colors()
-        self.faces_actor.paint_cells(
-            self.selection_color, 
-            self.project.mesh.face_entities[face]
-        )
+        self.faces_actor.paint_cells(self.selection_color, self.project.mesh.face_entities[face])
         self.update()
 
     def clear_selection(self):
@@ -158,24 +151,24 @@ class ModelRenderer(CommonRenderer):
 
     def selection_callback(self, obj, event):
         if not self._actors_exists():
-            return 
+            return
 
         clicked_cell = obj.selection_picker.GetCellId()
         clicked_actor = obj.selection_picker.GetActor()
 
         self.clear_selection()
 
-        if (clicked_actor == self.points_actor):
+        if clicked_actor == self.points_actor:
             self.select_point(clicked_cell)
 
-        if (clicked_actor == self.lines_actor):
+        if clicked_actor == self.lines_actor:
             line_entity = self._find_key(clicked_cell, self.project.mesh.line_entities)
             self.select_line(line_entity)
 
-        if (clicked_actor == self.faces_actor):
+        if clicked_actor == self.faces_actor:
             face_entity = self._find_key(clicked_cell, self.project.mesh.face_entities)
             self.select_face(face_entity)
-            
+
         self.update()
 
     def _find_key(self, value, dictionary):

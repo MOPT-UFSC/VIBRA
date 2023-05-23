@@ -1,17 +1,19 @@
 import vtk
-from PyQt5.QtCore import QCoreApplication
+from PyQt5.QtCore import QCoreApplication, pyqtSignal
 from PyQt5.QtWidgets import QFrame, QVBoxLayout
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from vibra.interface.viewer_3d.arcball_camera import (
     vtkInteractorStyleArcballCamera,
 )
-from vibra.interface.viewer_3d.selection_interactor import SelectionInteractor
 from vibra.interface.viewer_3d.example_renderer import ExampleRenderer
 from vibra.interface.viewer_3d.model_renderer import ModelRenderer
+from vibra.interface.viewer_3d.selection_interactor import SelectionInteractor
 
 
 class Viewer3D(QFrame):
+    object_selected = pyqtSignal()
+
     def __init__(self, parent=None, project=None):
         super().__init__(parent)
 
@@ -88,6 +90,7 @@ class Viewer3D(QFrame):
     def selection_callback(self, obj, event):
         if self.current_renderer == self.model_renderer:
             self.model_renderer.selection_callback(obj, event)
+        self.object_selected.emit()
 
     def update(self):
         super().update()

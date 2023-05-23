@@ -2,16 +2,15 @@ import logging
 from pathlib import Path
 from time import sleep
 
-
 import qdarktheme
 from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap,QCursor
+from PyQt5.QtGui import QColor, QCursor, QIcon, QPainter, QPixmap
 from PyQt5.QtWidgets import (
     QAction,
     QApplication,
+    QFileDialog,
     QMainWindow,
     QMessageBox,
-    QFileDialog,
 )
 
 from vibra.config import UserConfig
@@ -45,6 +44,8 @@ class MainWindow(QMainWindow):
         self.create_tool_bar()
         self.create_status_bar()
         self.load_user_preferences()
+
+        self.viewer_3d.object_selected.connect(self.viewer_selection_callback)
 
     def load_icons(self):
         color = QColor("#0055DD")
@@ -233,7 +234,7 @@ class MainWindow(QMainWindow):
         self.tool_bar.addAction(self.view_mode_nodes_action)
         self.tool_bar.addSeparator()
 
-    def create_status_bar(self):    
+    def create_status_bar(self):
         self.status_bar = self.statusBar()
 
     def load_project_menu(self):
@@ -337,6 +338,21 @@ class MainWindow(QMainWindow):
     def show_view_orthogonal_callback(self):
         self.viewer_3d.current_renderer.set_view_orthogonal()
 
+    def viewer_selection_callback(self):
+        if self.viewer_3d.current_renderer == self.viewer_3d.model_renderer:
+            points = self.viewer_3d.model_renderer.selected_points
+            lines = self.viewer_3d.model_renderer.selected_lines
+            faces = self.viewer_3d.model_renderer.selected_faces
+
+            if points:
+                print(f"Selected points: {points}")
+
+            if lines:
+                print(f"Selected lines: {lines}")
+
+            if faces:
+                print(f"Selected faces: {faces}")
+
     def closeEvent(self, event):
         close = QMessageBox.question(
             self, "QUIT", "Are you sure want to stop process?", QMessageBox.Yes | QMessageBox.No
@@ -346,5 +362,3 @@ class MainWindow(QMainWindow):
             event.accept()
         else:
             event.ignore()
-
-    
