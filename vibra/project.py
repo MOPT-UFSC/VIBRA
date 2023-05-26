@@ -9,6 +9,7 @@ from vibra.utils import ProgressStatus
 
 class Project:
     def __init__(self):
+        self.name = "Project"
         self.mesh = None
 
         # things that might be usefull
