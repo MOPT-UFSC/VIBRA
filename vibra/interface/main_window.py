@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QFileDialog,
+    QLabel,
 )
 
 from vibra.config import UserConfig
@@ -109,7 +110,7 @@ class MainWindow(QMainWindow):
         self.theme_action = QAction(self.theme_sun_icon, "Theme", self)
 
         self.import_geometry_action.triggered.connect(self.import_geometry_callback)
-        self.capture_image_action.triggered.connect(self.save_as_png_callback)
+        self.capture_image_action.triggered.connect(self.capture_image_callback)
         self.save_action.triggered.connect(self.save_callback)
         self.help_action.triggered.connect(self.help_callback)
         self.exit_import_action.triggered.connect(self.exit_callback)
@@ -231,13 +232,27 @@ class MainWindow(QMainWindow):
         self.tool_bar.addAction(self.view_orthogonal_action)
         self.tool_bar.addSeparator()
         self.tool_bar.addAction(self.view_mode_line_action)
-        self.tool_bar.addAction(self.view_mode_face_action)
         self.tool_bar.addAction(self.view_mode_nodes_action)
+        self.tool_bar.addAction(self.view_mode_face_action)
         self.tool_bar.addSeparator()
 
     def create_status_bar(self):    
         self.status_bar = self.statusBar()
-        self.status_bar.showMessage("teste",5000)
+        self.status_bar.showMessage("This is status bar")
+        self.label_1 = QLabel("Label 1")
+        self.label_1.move(100, 100)
+        self.status_bar.setStyleSheet("background-image : url(data/icons/png.png);")
+        self.label_2 = QLabel("Label 2")
+        self.label_1.setStyleSheet("""
+                border :2px solid;
+                border-width: 1px;
+                border-color: #888888;
+                border-radius: 3px""")
+        
+  
+        # adding label to status bar
+        self.status_bar.addPermanentWidget(self.label_1)
+        self.status_bar.addPermanentWidget(self.label_2)
 
     def load_project_menu(self):
         self.project_menu.clear()
@@ -293,7 +308,7 @@ class MainWindow(QMainWindow):
         self.viewer_3d.set_theme(theme)
         self.user_config.theme = theme
 
-    def save_as_png_callback(self):
+    def capture_image_callback(self):
         path, check = QFileDialog.getSaveFileName(
             self,
             "PNG",
