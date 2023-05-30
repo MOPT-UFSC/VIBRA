@@ -11,6 +11,8 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QMainWindow,
     QMessageBox,
+    QFileDialog,
+    QLabel,
 )
 
 from vibra.config import UserConfig
@@ -71,6 +73,8 @@ class MainWindow(QMainWindow):
         self.recent_icon = load_icon(Path("data/icons/recent.png"), color)
         self.theme_sun_icon = load_icon(Path("data/icons/sun_icon.png"), color)
         self.theme_moon_icon = load_icon(Path("data/icons/moon_icon.png"), color)
+        self.import_geometry_icon = load_icon(Path("data/icons/cube-scan.png"), color)
+        self.capture_image_icon = load_icon(Path("data/icons/image-plus.png"), color)
 
     def configure_window(self):
         self.setMinimumSize(800, 600)
@@ -89,11 +93,10 @@ class MainWindow(QMainWindow):
         self.new_project_action = QAction(self.new_project_icon, "New Project", self)
         self.load_project_action = QAction(self.load_project_icon, "Load Project", self)
         self.exit_import_action = QAction(self.exit_import_icon, "Exit", self)
-        self.import_geometry_action = QAction("Import geometry", self)  # add icon
-        self.capture_image_action = QAction("Capture image", self)  # add icon
+        self.import_geometry_action = QAction(self.capture_image_icon, "Import geometry", self)  
+        self.capture_image_action = QAction(self.import_geometry_icon, "Capture image", self) 
         self.save_action = QAction(self.save_icon, "Save", self)
         self.save_as_action = QAction(self.save_as_icon, "Save as", self)
-        self.save_as_png_action = QAction(self.save_as_png_icon, "Save as PNG", self)
         self.help_action = QAction(self.help_icon, "About Vibra", self)
         self.view_up_action = QAction(self.view_up_icon, "Up View", self)
         self.view_down_action = QAction(self.view_down_icon, "Down View", self)
@@ -109,6 +112,7 @@ class MainWindow(QMainWindow):
         self.theme_action = QAction(self.theme_sun_icon, "Theme", self)
 
         self.import_geometry_action.triggered.connect(self.import_geometry_callback)
+        self.capture_image_action.triggered.connect(self.capture_image_callback)
         self.save_action.triggered.connect(self.save_callback)
         self.help_action.triggered.connect(self.help_callback)
         self.exit_import_action.triggered.connect(self.exit_callback)
@@ -246,12 +250,27 @@ class MainWindow(QMainWindow):
         self.tool_bar.addAction(self.view_orthogonal_action)
         self.tool_bar.addSeparator()
         self.tool_bar.addAction(self.view_mode_line_action)
-        self.tool_bar.addAction(self.view_mode_face_action)
         self.tool_bar.addAction(self.view_mode_nodes_action)
+        self.tool_bar.addAction(self.view_mode_face_action)
         self.tool_bar.addSeparator()
 
     def create_status_bar(self):
         self.status_bar = self.statusBar()
+        self.status_bar.showMessage("This is status bar")
+        self.label_1 = QLabel("Label 1")
+        self.label_1.move(100, 100)
+        self.status_bar.setStyleSheet("background-image : url(data/icons/png.png);")
+        self.label_2 = QLabel("Label 2")
+        self.label_1.setStyleSheet("""
+                border :2px solid;
+                border-width: 1px;
+                border-color: #888888;
+                border-radius: 3px""")
+        
+  
+        # adding label to status bar
+        self.status_bar.addPermanentWidget(self.label_1)
+        self.status_bar.addPermanentWidget(self.label_2)
 
     def load_project_menu(self):
         self.project_menu.clear()
@@ -259,7 +278,6 @@ class MainWindow(QMainWindow):
         self.project_menu.addAction(self.load_project_action)
         self.project_menu.addAction(self.save_action)
         self.project_menu.addAction(self.save_as_action)
-        self.project_menu.addAction(self.save_as_png_action)
         self.project_menu.addAction(self.import_geometry_action)
         self.project_menu.addAction(self.capture_image_action)
         self.project_menu.addAction(self.recent_action)
@@ -313,6 +331,18 @@ class MainWindow(QMainWindow):
         qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
         self.viewer_3d.set_theme(theme)
         self.user_config.theme = theme
+
+    def capture_image_callback(self):
+        path, check = QFileDialog.getSaveFileName(
+            self,
+            "PNG",
+            filter = "PNG (*.png)",
+        )
+
+        if not check:
+           return
+        
+        self.viewer_3d.save_png(path)
 
     def import_geometry_callback(self):
         path, check = QFileDialog.getOpenFileName(
