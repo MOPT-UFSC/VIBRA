@@ -1,0 +1,2 @@
+class StatusBar(QStatusBar):
+    pass

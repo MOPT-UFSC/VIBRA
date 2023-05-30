@@ -253,5 +253,5 @@ class vtkInteractorStyleArcballCamera(vtk.vtkInteractorStyleTrackballCamera):
 
         self.sphere_rotation_actor = vtk.vtkActor()
         self.sphere_rotation_actor.SetMapper(mapper)
-        self.sphere_rotation_actor.GetProperty().SetColor(colors.GetColor3d("red"))
+        self.sphere_rotation_actor.GetProperty().SetColor(colors.GetColor3d("blue"))
 
