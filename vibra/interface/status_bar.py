@@ -3,24 +3,29 @@ from PyQt5.QtWidgets import QLabel, QStatusBar
 class StatusBar(QStatusBar):
     def __init__(self, parent):
         super().__init__(parent)
-        self.points_label = QLabel("Selected Point")
-        self.lines_label = QLabel("Selected Line")
-        self.faces_label = QLabel("Selected Face")
+        self.points_label = QLabel("Selected Point:\t")
+        self.lines_label = QLabel("Selected Line:\t")
+        self.faces_label = QLabel("Selected Face:\t")
+        self.points_label.move(200,100)
   
         # adding label to status bar
-        self.addPermanentWidget(self.points_label)
-        self.addPermanentWidget(self.lines_label)
-        self.addPermanentWidget(self.faces_label)
+        self.addWidget(self.points_label)
+        self.addWidget(self.lines_label)
+        self.addWidget(self.faces_label)
     
 
     def show_points(self, n_points):
-        self.points_label.setText(f"Selected Point:{n_points}")
-
-    def show_faces(self, n_faces):
-        self.faces_label.setText(f"Selected Face:{n_faces}")
+        self.points_label.setText(f"Selected Point:{n_points}\t")
 
     def show_lines(self, n_lines):
-        self.lines_label.setText(f"Selected Face:{n_lines}")
+        self.lines_label.setText(f"Selected Line:{n_lines}\t")
         
-        
+    def show_faces(self, n_faces):
+        self.faces_label.setText(f"Selected Face:{n_faces}\t")
+
+    def clear_selections(self):
+        self.points_label.setText(f"Selected Point:\t")
+        self.lines_label.setText(f"Selected Line:\t")
+        self.faces_label.setText(f"Selected Face:\t")
+
     

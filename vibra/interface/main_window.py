@@ -350,12 +350,15 @@ class MainWindow(QMainWindow):
 
     def show_points_callback(self):
         self.viewer_3d.current_renderer.show_points()
+        self.status_bar.clear_selections()
 
     def show_edges_callback(self):
         self.viewer_3d.current_renderer.show_edges()
+        self.status_bar.clear_selections()
 
     def show_faces_callback(self):
         self.viewer_3d.current_renderer.show_faces()
+        self.status_bar.clear_selections()
 
     def show_view_up_callback(self):
         self.viewer_3d.current_renderer.set_view_up()
@@ -387,11 +390,14 @@ class MainWindow(QMainWindow):
             if points:
                 self.status_bar.show_points(points)
 
-            if lines:
+            elif lines:
                 self.status_bar.show_lines(lines)
 
-            if faces:
+            elif faces:
                 self.status_bar.show_faces(faces)
+            
+            else:
+                self.status_bar.clear_selections()
 
     def closeEvent(self, event):
         close = QMessageBox.question(
