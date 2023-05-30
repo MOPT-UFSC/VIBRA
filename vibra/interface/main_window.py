@@ -290,10 +290,8 @@ class MainWindow(QMainWindow):
         self.help_menu.addAction(self.help_action)
 
     def save_callback(self):
-        # self.project.save()
-        num = random.randint(1,10)
-        self.status_bar.show_points(num)
-
+        self.project.save()
+        
     def help_callback(self):
         help_window = HelpWindow()
         help_window.exec()
@@ -387,13 +385,13 @@ class MainWindow(QMainWindow):
             faces = self.viewer_3d.model_renderer.selected_faces
 
             if points:
-                print(f"Selected points: {points}")
+                self.status_bar.show_points(points)
 
             if lines:
-                print(f"Selected lines: {lines}")
+                self.status_bar.show_lines(lines)
 
             if faces:
-                print(f"Selected faces: {faces}")
+                self.status_bar.show_faces(faces)
 
     def closeEvent(self, event):
         close = QMessageBox.question(
