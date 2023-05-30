@@ -1,5 +1,5 @@
 import vtk
-from PyQt5.QtCore import QCoreApplication
+from PyQt5.QtCore import QCoreApplication, pyqtSignal
 from PyQt5.QtWidgets import QFrame, QVBoxLayout
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
@@ -8,9 +8,12 @@ from vibra.interface.viewer_3d.arcball_camera import (
 )
 from vibra.interface.viewer_3d.example_renderer import ExampleRenderer
 from vibra.interface.viewer_3d.model_renderer import ModelRenderer
+from vibra.interface.viewer_3d.selection_interactor import SelectionInteractor
 
 
 class Viewer3D(QFrame):
+    object_selected = pyqtSignal()
+
     def __init__(self, parent=None, project=None):
         super().__init__(parent)
 
@@ -21,10 +24,12 @@ class Viewer3D(QFrame):
         # Use only to access the current renderer easily
         self.current_renderer = None
 
+        self.style = SelectionInteractor()
         self.render_interactor = QVTKRenderWindowInteractor(self)
         self.render_interactor.Initialize()
-        self.render_interactor.SetInteractorStyle(vtkInteractorStyleArcballCamera())
+        self.render_interactor.SetInteractorStyle(self.style)
         self.set_renderer(self.model_renderer)
+        self.style.AddObserver("SelectionEvent", self.selection_callback)
 
         layout = QVBoxLayout()
         layout.addWidget(self.render_interactor)
@@ -81,6 +86,11 @@ class Viewer3D(QFrame):
         self.axes.SetInteractor(self.render_interactor)
         self.axes.EnabledOn()
         self.axes.InteractiveOff()
+
+    def selection_callback(self, obj, event):
+        if self.current_renderer == self.model_renderer:
+            self.model_renderer.selection_callback(obj, event)
+        self.object_selected.emit()
 
     def update(self):
         super().update()

@@ -2,6 +2,13 @@ import vtk
 
 
 class CommonRenderer(vtk.vtkRenderer):
+    '''
+    Base class for all renderers.
+
+    All the common structures that obviously need to be the 
+    same in every interactor should be implemented here.
+    '''
+    
     def set_theme(self, theme):
         if theme == "dark":
             self.GradientBackgroundOn()
@@ -55,6 +62,16 @@ class CommonRenderer(vtk.vtkRenderer):
         position = (x + 1, y + 1, z + 1)
         view_up = (0, 1, 0)
         self.set_custom_view(position, view_up)
+
+    # override it =)
+    def show_points(self):
+        pass
+
+    def show_edges(self):
+        pass
+
+    def show_faces(self):
+        pass
 
     def set_custom_view(self, position, view_up):
         self.GetActiveCamera().SetPosition(position)
