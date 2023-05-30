@@ -1,6 +1,6 @@
 import vtk
 from PyQt5.QtCore import QCoreApplication, pyqtSignal
-from PyQt5.QtWidgets import QFrame, QVBoxLayout
+from PyQt5.QtWidgets import QFrame, QStackedLayout
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from vibra.interface.viewer_3d.arcball_camera import (
@@ -31,7 +31,7 @@ class Viewer3D(QFrame):
         self.set_renderer(self.model_renderer)
         self.style.AddObserver("SelectionEvent", self.selection_callback)
 
-        layout = QVBoxLayout()
+        layout = QStackedLayout()
         layout.addWidget(self.render_interactor)
         self.setLayout(layout)
 
