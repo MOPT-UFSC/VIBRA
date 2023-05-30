@@ -3,6 +3,9 @@ import vtk
 
 
 class vtkInteractorStyleArcballCamera(vtk.vtkInteractorStyleTrackballCamera):
+    '''
+    Interactor style that rotates and zooms around the cursor.
+    '''
     def __init__(self):
         self.center_of_rotation = None
         self.default_center_of_rotation = None
@@ -47,9 +50,9 @@ class vtkInteractorStyleArcballCamera(vtk.vtkInteractorStyleTrackballCamera):
         pass
 
     def right_button_press_event(self, obj, event):
-        self.clickPosition = self.GetInteractor().GetEventPosition()
-        self.FindPokedRenderer(self.clickPosition[0], self.clickPosition[1])
-        self.mousePosition = self.clickPosition
+        cursor = self.GetInteractor().GetEventPosition()
+        self.FindPokedRenderer(cursor[0], cursor[1])
+
         self._rightButtonClicked = True
         self._rotating = True
         renderer = self.GetCurrentRenderer() or self.GetDefaultRenderer()
@@ -59,7 +62,7 @@ class vtkInteractorStyleArcballCamera(vtk.vtkInteractorStyleTrackballCamera):
             return
 
         picker = vtk.vtkPropPicker()
-        picker.Pick(self.clickPosition[0], self.clickPosition[1], 0, renderer)
+        picker.Pick(cursor[0], cursor[1], 0, renderer)
         pos = picker.GetPickPosition()
 
         if pos != (0, 0, 0):
@@ -72,11 +75,13 @@ class vtkInteractorStyleArcballCamera(vtk.vtkInteractorStyleTrackballCamera):
             x0, x1, y0, y1, z0, z1 = renderer.ComputeVisiblePropBounds()
             self.center_of_rotation = [(x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2]
 
-        dx,dy,dz = np.array(camera.GetPosition()) - np.array(camera.GetFocalPoint())
+        dx, dy, dz = np.array(camera.GetPosition()) - np.array(camera.GetFocalPoint())
         distance_factor = np.sqrt(dx**2 + dy**2 + dz**2)
 
         self.sphere_rotation_actor.SetPosition(self.center_of_rotation)
-        self.sphere_rotation_actor.SetScale((distance_factor/3.5,distance_factor/3.5,distance_factor/3.5))
+        self.sphere_rotation_actor.SetScale(
+            (distance_factor / 3.5, distance_factor / 3.5, distance_factor / 3.5)
+        )
         renderer.AddActor(self.sphere_rotation_actor)
 
     def right_button_release_event(self, obj, event):
@@ -254,4 +259,3 @@ class vtkInteractorStyleArcballCamera(vtk.vtkInteractorStyleTrackballCamera):
         self.sphere_rotation_actor = vtk.vtkActor()
         self.sphere_rotation_actor.SetMapper(mapper)
         self.sphere_rotation_actor.GetProperty().SetColor(colors.GetColor3d("blue"))
-

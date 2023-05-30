@@ -2,13 +2,13 @@ import logging
 from pathlib import Path
 from time import sleep
 
-
 import qdarktheme
 from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap,QCursor
+from PyQt5.QtGui import QColor, QCursor, QIcon, QPainter, QPixmap
 from PyQt5.QtWidgets import (
     QAction,
     QApplication,
+    QFileDialog,
     QMainWindow,
     QMessageBox,
     QFileDialog,
@@ -46,6 +46,8 @@ class MainWindow(QMainWindow):
         self.create_tool_bar()
         self.create_status_bar()
         self.load_user_preferences()
+
+        self.viewer_3d.object_selected.connect(self.viewer_selection_callback)
 
     def load_icons(self):
         color = QColor("#0055DD")
@@ -158,6 +160,22 @@ class MainWindow(QMainWindow):
         loaded_function()
 
     def load_function(self, function, *, text=""):
+        '''
+        This function works just like a decorator.
+
+        The function passed is transformed so it will show a
+        progressbar while running.
+
+        The text and progress of the progressbar is given by 
+        logs containing ProgressStatus in it.
+
+        Example:
+        --------
+
+        loaded_func = self.load_function(func)
+        loaded_func(args, of, the, original, function)
+        '''
+
         def wrapper(*args, **kwargs):
             try:
                 # Waits some previous pyqt window and update
@@ -236,7 +254,7 @@ class MainWindow(QMainWindow):
         self.tool_bar.addAction(self.view_mode_face_action)
         self.tool_bar.addSeparator()
 
-    def create_status_bar(self):    
+    def create_status_bar(self):
         self.status_bar = self.statusBar()
         self.status_bar.showMessage("This is status bar")
         self.label_1 = QLabel("Label 1")
@@ -303,7 +321,13 @@ class MainWindow(QMainWindow):
             self.set_theme("light")
             self.theme_action.setIcon(self.theme_moon_icon)
 
-    def set_theme(self, theme):
+    def set_theme(self, theme: str):
+        '''
+        Changes Qt stylesheets using qdarktheme library and the
+        renderer background colors.
+
+        The input is a string "light" or "dark".
+        '''
         qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
         self.viewer_3d.set_theme(theme)
         self.user_config.theme = theme
@@ -337,34 +361,49 @@ class MainWindow(QMainWindow):
         self.set_theme(self.user_config.theme)
 
     def show_points_callback(self):
-        self.viewer_3d.model_renderer.show_points()
+        self.viewer_3d.current_renderer.show_points()
 
     def show_edges_callback(self):
-        self.viewer_3d.model_renderer.show_edges()
+        self.viewer_3d.current_renderer.show_edges()
 
     def show_faces_callback(self):
-        self.viewer_3d.model_renderer.show_faces()
+        self.viewer_3d.current_renderer.show_faces()
 
     def show_view_up_callback(self):
-        self.viewer_3d.model_renderer.set_view_up()
+        self.viewer_3d.current_renderer.set_view_up()
 
     def show_view_down_callback(self):
-        self.viewer_3d.model_renderer.set_view_down()
+        self.viewer_3d.current_renderer.set_view_down()
 
     def show_view_left_callback(self):
-        self.viewer_3d.model_renderer.set_view_left()
+        self.viewer_3d.current_renderer.set_view_left()
 
     def show_view_right_callback(self):
-        self.viewer_3d.model_renderer.set_view_right()
+        self.viewer_3d.current_renderer.set_view_right()
 
     def show_view_front_callback(self):
-        self.viewer_3d.model_renderer.set_view_front()
+        self.viewer_3d.current_renderer.set_view_front()
 
     def show_view_back_callback(self):
-        self.viewer_3d.model_renderer.set_view_back()
+        self.viewer_3d.current_renderer.set_view_back()
 
     def show_view_orthogonal_callback(self):
-        self.viewer_3d.model_renderer.set_view_orthogonal()
+        self.viewer_3d.current_renderer.set_view_orthogonal()
+
+    def viewer_selection_callback(self):
+        if self.viewer_3d.current_renderer == self.viewer_3d.model_renderer:
+            points = self.viewer_3d.model_renderer.selected_points
+            lines = self.viewer_3d.model_renderer.selected_lines
+            faces = self.viewer_3d.model_renderer.selected_faces
+
+            if points:
+                print(f"Selected points: {points}")
+
+            if lines:
+                print(f"Selected lines: {lines}")
+
+            if faces:
+                print(f"Selected faces: {faces}")
 
     def closeEvent(self, event):
         close = QMessageBox.question(
@@ -375,5 +414,3 @@ class MainWindow(QMainWindow):
             event.accept()
         else:
             event.ignore()
-
-    

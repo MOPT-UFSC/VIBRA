@@ -34,11 +34,11 @@ class Mesh:
 
     def set_entities(self, dim, tag, indexes):
         if dim == 0:
-            self.points_entities[tag] = list(indexes)
+            self.points_entities[tag] = set(indexes)
         elif dim == 1:
-            self.line_entities[tag] = list(indexes)
+            self.line_entities[tag] = set(indexes)
         elif dim == 2:
-            self.face_entities[tag] = list(indexes)
+            self.face_entities[tag] = set(indexes)
         else:
             NotImplemented
 
