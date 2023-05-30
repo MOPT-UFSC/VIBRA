@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 from time import sleep
+import random
 
 
 import qdarktheme
@@ -20,6 +21,7 @@ from vibra.interface.help_window import HelpWindow
 from vibra.interface.loading_bar import LoadingWindow, ProgressBarLogUpdater
 from vibra.interface.viewer_3d.viewer_3d import Viewer3D
 from vibra.project import Project
+from vibra.interface.status_bar import StatusBar
 
 
 def load_icon(path, color):
@@ -37,6 +39,7 @@ class MainWindow(QMainWindow):
         self.project = Project()
         self.viewer_3d = Viewer3D(self)
         self.user_config = UserConfig()
+        self.status_bar = StatusBar(self)
 
         self.load_icons()
         self.configure_window()
@@ -237,22 +240,7 @@ class MainWindow(QMainWindow):
         self.tool_bar.addSeparator()
 
     def create_status_bar(self):    
-        self.status_bar = self.statusBar()
-        self.status_bar.showMessage("This is status bar")
-        self.label_1 = QLabel("Label 1")
-        self.label_1.move(100, 100)
-        self.status_bar.setStyleSheet("background-image : url(data/icons/png.png);")
-        self.label_2 = QLabel("Label 2")
-        self.label_1.setStyleSheet("""
-                border :2px solid;
-                border-width: 1px;
-                border-color: #888888;
-                border-radius: 3px""")
-        
-  
-        # adding label to status bar
-        self.status_bar.addPermanentWidget(self.label_1)
-        self.status_bar.addPermanentWidget(self.label_2)
+       self.setStatusBar(self.status_bar)
 
     def load_project_menu(self):
         self.project_menu.clear()
@@ -284,7 +272,9 @@ class MainWindow(QMainWindow):
         self.help_menu.addAction(self.help_action)
 
     def save_callback(self):
-        self.project.save()
+        # self.project.save()
+        num = random.randint(1,10)
+        self.status_bar.show_points(num)
 
     def help_callback(self):
         help_window = HelpWindow()
