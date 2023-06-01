@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import (
 )
 
 from vibra.config import UserConfig
-from vibra.interface.loading_bar import LoadingWindow, ProgressBarLogUpdater
+from vibra.interface.loading_bar import load_function
 from vibra.interface.viewer_3d.viewer_3d import Viewer3D
 from vibra.project import Project
 from vibra.interface.viewer_tabs import ViewerTabs
@@ -134,79 +134,14 @@ class MainWindow(QMainWindow):
 
     def create_basic_layout(self):
         self.viewer_tabs = ViewerTabs(self, self.project, self.user_config)
-
         self.setCentralWidget(self.viewer_tabs)
-        self.create_progress_bar()
 
     def load_user_preferences(self):
         self.set_theme(self.user_config.theme)
 
-    def create_progress_bar(self):
-        # Creates a loading bar window
-        self.loading_window = LoadingWindow(self)
-
-        # Updates the loading bar every a log is output
-        progress_handler = ProgressBarLogUpdater(
-            progress_bar=self.loading_window.progress_bar, label=self.loading_window.text_label
-        )
-        progress_handler.setLevel(logging.INFO)
-        logging.getLogger().addHandler(progress_handler)
-
     def long_exit_function(self):
         loaded_function = self.load_function()
         loaded_function()
-
-    def load_function(self, function, *, text=""):
-        '''
-        This function works just like a decorator.
-
-        The function passed is transformed so it will show a
-        progressbar while running.
-
-        The text and progress of the progressbar is given by 
-        logs containing ProgressStatus in it.
-
-        Example:
-        --------
-
-        loaded_func = self.load_function(func)
-        loaded_func(args, of, the, original, function)
-        '''
-
-        def wrapper(*args, **kwargs):
-            try:
-                # Waits some previous pyqt window and update
-                sleep(0.1)
-                QApplication.processEvents()
-
-                # Changes the cursor to wait
-                QApplication.setOverrideCursor(Qt.WaitCursor)
-
-                # Shows the empty progress bar
-                self.loading_window.show()
-
-                # Waits the loading bar to appear and uptates pyqt
-                sleep(0.1)
-                QApplication.processEvents()
-
-                # Calls the actual function
-                function(*args, **kwargs)
-
-                # Shows the full progress bar and closes
-                self.loading_window.progress_bar.setValue(100)
-                sleep(0.1)  # A small delay so we can see the 100%
-                self.loading_window.hide()
-
-                # Returns the value to 0 for the next use
-                self.loading_window.progress_bar.setValue(0)
-
-                # Restores the previous cursor
-                QApplication.restoreOverrideCursor()
-
-            except AttributeError:
-                logging.warn("No loading window found")
-
-        return wrapper
 
     def create_menu_bar(self):
         self.menu_bar = self.menuBar()
@@ -278,7 +213,7 @@ class MainWindow(QMainWindow):
         self.viewer_tabs.show_help()
 
     def exit_callback(self):
-        loaded_function = self.load_function(self.project.long_function, text="Loading...")
+        loaded_function = load_function(self.project.long_function, self)
         loaded_function()
 
     def theme_callback(self):
@@ -324,7 +259,7 @@ class MainWindow(QMainWindow):
             return
 
         # Slow function running with loading bar
-        loaded_import_geometry = self.load_function(self.project.import_geometry, text="Loading")
+        loaded_import_geometry = load_function(self.project.import_geometry, self)
         loaded_import_geometry(path)
 
         self.viewer_tabs.show_model()
