@@ -22,6 +22,7 @@ from vibra.interface.loading_bar import LoadingWindow, ProgressBarLogUpdater
 from vibra.interface.viewer_3d.viewer_3d import Viewer3D
 from vibra.project import Project
 from vibra.interface.status_bar import StatusBar
+from vibra.interface.clip_plane_widget import ClipPlaneWidget
 
 
 def load_icon(path, color):
@@ -40,6 +41,7 @@ class MainWindow(QMainWindow):
         self.viewer_3d = Viewer3D(self)
         self.user_config = UserConfig()
         self.status_bar = StatusBar(self)
+        self.clip_plane = ClipPlaneWidget(self)
 
         self.load_icons()
         self.configure_window()
@@ -113,6 +115,7 @@ class MainWindow(QMainWindow):
         self.view_mode_nodes_action = QAction(self.view_mode_nodes_icon, "Node View", self)
         self.recent_action = QAction(self.recent_icon, "Recent", self)
         self.theme_action = QAction(self.theme_sun_icon, "Theme", self)
+        self.clip_plane_action = QAction(self.theme_sun_icon, "Clip Plane", self)
 
         self.import_geometry_action.triggered.connect(self.import_geometry_callback)
         self.capture_image_action.triggered.connect(self.capture_image_callback)
@@ -130,6 +133,7 @@ class MainWindow(QMainWindow):
         self.view_back_action.triggered.connect(self.show_view_back_callback)
         self.view_orthogonal_action.triggered.connect(self.show_view_orthogonal_callback)
         self.theme_action.triggered.connect(self.theme_callback)
+        self.clip_plane_action.triggered.connect(self.clip_plane_callback)
 
         self.help_action.setShortcut("F1")
         self.view_up_action.setShortcut("Ctrl+Shift+1")
@@ -256,6 +260,7 @@ class MainWindow(QMainWindow):
         self.tool_bar.addAction(self.view_mode_nodes_action)
         self.tool_bar.addAction(self.view_mode_face_action)
         self.tool_bar.addSeparator()
+        self.tool_bar.addAction(self.clip_plane_action)
 
     def create_status_bar(self):    
        self.setStatusBar(self.status_bar)
@@ -288,7 +293,10 @@ class MainWindow(QMainWindow):
 
     def load_help_menu(self):
         self.help_menu.addAction(self.help_action)
-
+    
+    def clip_plane_callback(self):
+        self.clip_plane.show()
+        
     def save_callback(self):
         self.project.save()
         
