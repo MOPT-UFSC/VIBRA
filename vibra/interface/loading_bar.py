@@ -13,10 +13,10 @@ from vibra.utils import ProgressStatus
 
 
 class ProgressBarLogUpdater(logging.Handler):
-    '''
-    This class is an log observer. It is meant to watch logs 
+    """
+    This class is an log observer. It is meant to watch logs
     and use it to update a progressbar and/or some labels.
-    '''
+    """
 
     def __init__(self, level=0, *, progress_bar=None, label=None) -> None:
         super().__init__(level)
@@ -83,19 +83,19 @@ class LoadingWindow(QWidget):
 
 
 def load_function(function, parent):
-    '''
+    """
     This function works just like a decorator.
 
     The function passed is transformed so it will show a
-    progressbar while running. The text and progress of the 
-    progressbar is given by logs containing ProgressStatus 
+    progressbar while running. The text and progress of the
+    progressbar is given by logs containing ProgressStatus
     class in it.
-    
+
     I know that this isn't an elegant solution, and I hope
     someone, someday can fix this. But I just can't figure
     out a better way to create a working loading bar.
     to redeem myself for this monstruosity I am explaining
-    every step, but I really hope no one ever need to 
+    every step, but I really hope no one ever need to
     modify this.
 
     Example:
@@ -103,21 +103,19 @@ def load_function(function, parent):
 
     loaded_func = self.load_function(func)
     loaded_func(args, of, the, original=0, function=1)
-    '''
-    
+    """
+
     # Creates the modified function that does the same
     # thing as the input function, but while updating
-    # a loading bar 
+    # a loading bar
     def wrapper(*args, **kwargs):
-
         # Creates a loading window
         loading_window = LoadingWindow(parent)
 
         # Creates a handler to update the loading bar
         # every time a progress log appears
         progress_handler = ProgressBarLogUpdater(
-            progress_bar=loading_window.progress_bar, 
-            label=loading_window.text_label
+            progress_bar=loading_window.progress_bar, label=loading_window.text_label
         )
         progress_handler.setLevel(logging.INFO)
         logging.getLogger().addHandler(progress_handler)

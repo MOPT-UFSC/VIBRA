@@ -95,8 +95,8 @@ class MainWindow(QMainWindow):
         self.new_project_action = QAction(self.new_project_icon, "New Project", self)
         self.load_project_action = QAction(self.load_project_icon, "Load Project", self)
         self.exit_import_action = QAction(self.exit_import_icon, "Exit", self)
-        self.import_geometry_action = QAction(self.capture_image_icon, "Import geometry", self)  
-        self.capture_image_action = QAction(self.import_geometry_icon, "Capture image", self) 
+        self.import_geometry_action = QAction(self.capture_image_icon, "Import geometry", self)
+        self.capture_image_action = QAction(self.import_geometry_icon, "Capture image", self)
         self.save_action = QAction(self.save_icon, "Save", self)
         self.save_as_action = QAction(self.save_as_icon, "Save as", self)
         self.help_action = QAction(self.help_icon, "About Vibra", self)
@@ -166,13 +166,14 @@ class MainWindow(QMainWindow):
         self.label_1.move(100, 100)
         self.status_bar.setStyleSheet("background-image : url(data/icons/png.png);")
         self.label_2 = QLabel("Label 2")
-        self.label_1.setStyleSheet("""
+        self.label_1.setStyleSheet(
+            """
                 border :2px solid;
                 border-width: 1px;
                 border-color: #888888;
-                border-radius: 3px""")
-        
-  
+                border-radius: 3px"""
+        )
+
         # adding label to status bar
         self.status_bar.addPermanentWidget(self.label_1)
         self.status_bar.addPermanentWidget(self.label_2)
@@ -226,12 +227,12 @@ class MainWindow(QMainWindow):
             self.theme_action.setIcon(self.theme_moon_icon)
 
     def set_theme(self, theme: str):
-        '''
+        """
         Changes Qt stylesheets using qdarktheme library and the
         renderer background colors.
 
         The input is a string "light" or "dark".
-        '''
+        """
         qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
         self.viewer_tabs.set_theme(theme)
         self.user_config.theme = theme
@@ -240,12 +241,12 @@ class MainWindow(QMainWindow):
         path, check = QFileDialog.getSaveFileName(
             self,
             "PNG",
-            filter = "PNG (*.png)",
+            filter="PNG (*.png)",
         )
 
         if not check:
-           return
-        
+            return
+
         self.viewer_3d.save_png(path)
 
     def import_geometry_callback(self):
@@ -321,7 +322,7 @@ class MainWindow(QMainWindow):
         self.viewer_tabs.show_model()
 
     def show_example_callback(self):
-        self.viewer_tabs.show_example() 
+        self.viewer_tabs.show_example()
 
     def viewer_selection_callback(self):
         if self.viewer_3d.current_renderer == self.viewer_3d.model_renderer:

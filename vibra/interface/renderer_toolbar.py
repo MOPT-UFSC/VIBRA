@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import (
 from pathlib import Path
 from vibra.interface.viewer_3d.vtk_widget import VTKWidget
 
+
 def load_icon(path, color):
     pixmap = QPixmap(str(path))
     painter = QPainter(pixmap)
@@ -20,9 +21,9 @@ def load_icon(path, color):
 class RendererToolbar(QToolBar):
     def __init__(self, parent, viewer_tabs):
         super().__init__(parent)
-        
+
         self.viewer_tabs = viewer_tabs
-        
+
         self.create_actions()
         self.configure_layout()
         self.configure_appearance()
@@ -44,7 +45,7 @@ class RendererToolbar(QToolBar):
     def create_actions(self):
         color = QColor("#0055DD")
 
-        # 
+        #
         view_up_icon = load_icon(Path("data/icons/top.png"), color)
         self.view_up_action = QAction(view_up_icon, "Up View", self)
         self.view_up_action.triggered.connect(self.view_up_callback)
@@ -59,38 +60,37 @@ class RendererToolbar(QToolBar):
         self.view_right_action = QAction(view_right_icon, "Right View", self)
         self.view_right_action.triggered.connect(self.view_right_callback)
         self.view_right_action.setShortcut("Ctrl+Shift+4")
-        
+
         view_left_icon = load_icon(Path("data/icons/left.png"), color)
         self.view_left_action = QAction(view_left_icon, "Left View", self)
         self.view_left_action.triggered.connect(self.view_left_callback)
         self.view_left_action.setShortcut("Ctrl+Shift+3")
-        
+
         view_back_icon = load_icon(Path("data/icons/back.png"), color)
         self.view_back_action = QAction(view_back_icon, "Back View", self)
         self.view_back_action.triggered.connect(self.view_back_callback)
         self.view_back_action.setShortcut("Ctrl+Shift+6")
-        
+
         view_front_icon = load_icon(Path("data/icons/front.png"), color)
         self.view_front_action = QAction(view_front_icon, "Front View", self)
         self.view_front_action.triggered.connect(self.view_front_callback)
         self.view_front_action.setShortcut("Ctrl+Shift+5")
-        
+
         view_orthogonal_icon = load_icon(Path("data/icons/orthogonal.png"), color)
         self.view_orthogonal_action = QAction(view_orthogonal_icon, "Orthogonal View", self)
         self.view_orthogonal_action.triggered.connect(self.view_orthogonal_callback)
         self.view_orthogonal_action.setShortcut("Ctrl+Shift+7")
 
-        # 
+        #
         view_mode_nodes_icon = load_icon(Path("data/icons/nodes.png"), color)
         self.view_mode_nodes_action = QAction(view_mode_nodes_icon, "Node View", self)
 
         view_mode_line_icon = load_icon(Path("data/icons/lines.png"), color)
         self.view_mode_line_action = QAction(view_mode_line_icon, "Line View", self)
-        
+
         view_mode_face_icon = load_icon(Path("data/icons/faces.png"), color)
         self.view_mode_face_action = QAction(view_mode_face_icon, "Face View", self)
 
-    
     def configure_layout(self):
         self.addSeparator()
         self.addAction(self.view_up_action)

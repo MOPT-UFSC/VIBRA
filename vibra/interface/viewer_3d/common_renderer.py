@@ -2,13 +2,13 @@ import vtk
 
 
 class CommonRenderer(vtk.vtkRenderer):
-    '''
+    """
     Base class for all renderers.
 
-    All the common structures that obviously need to be the 
+    All the common structures that obviously need to be the
     same in every interactor should be implemented here.
-    '''
-    
+    """
+
     def set_theme(self, theme):
         if theme == "dark":
             self.GradientBackgroundOn()

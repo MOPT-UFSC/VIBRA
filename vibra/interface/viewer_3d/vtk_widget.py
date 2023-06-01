@@ -12,11 +12,11 @@ from vibra.interface.viewer_3d.selection_interactor import SelectionInteractor
 
 
 class VTKWidget(QFrame):
-    '''
+    """
     This class is needed show vtk renderers in pyqt.
 
     A vtk widget must always have a renderer, even if it is empty.
-    '''
+    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -86,13 +86,13 @@ class VTKWidget(QFrame):
     def set_theme(self, theme):
         if self.renderer is None:
             return
-    
+
         try:
             self.renderer.set_theme(theme)
         except AttributeError:
             pass  # if renderer don't have this method just ignore
 
-    # 
+    #
     def show_points(self):
         try:
             self.renderer.show_points()
@@ -111,7 +111,7 @@ class VTKWidget(QFrame):
         except AttributeError:
             pass  # if renderer don't have this method just ignore
 
-    # 
+    #
     def set_custom_view(self, position, view_up):
         self.renderer.GetActiveCamera().SetPosition(position)
         self.renderer.GetActiveCamera().SetViewUp(view_up)
@@ -121,7 +121,7 @@ class VTKWidget(QFrame):
         if self.renderer.GetRenderWindow() is not None:
             self.renderer.GetRenderWindow().Render()
 
-    def set_view_up(self):        
+    def set_view_up(self):
         x, y, z = self.renderer.GetActiveCamera().GetFocalPoint()
         position = (x, y + 1, z)
         view_up = (0, 0, -1)
@@ -139,7 +139,7 @@ class VTKWidget(QFrame):
         view_up = (0, 1, 0)
         self.set_custom_view(position, view_up)
 
-    def set_view_right(self):        
+    def set_view_right(self):
         x, y, z = self.renderer.GetActiveCamera().GetFocalPoint()
         position = (x + 1, y, z)
         view_up = (0, 1, 0)

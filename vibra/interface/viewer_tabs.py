@@ -28,7 +28,7 @@ class ViewerTabs(QTabWidget):
     def show_wellcome(self):
         self.addTab(self.wellcome_widget, "Wellcome!")
         self.setCurrentWidget(self.wellcome_widget)
-    
+
     def show_model(self):
         if self.model_widget is None:
             self.model_widget = VTKWidget()
@@ -54,7 +54,7 @@ class ViewerTabs(QTabWidget):
         for tab in self.tabs():
             if isinstance(tab, VTKWidget):
                 tab.update_plot()
-    
+
     def set_theme(self, theme):
         for tab in self.tabs():
             if isinstance(tab, VTKWidget):
@@ -62,12 +62,12 @@ class ViewerTabs(QTabWidget):
 
     def configure_window(self):
         self.setStyleSheet(
-        '''
+            """
         QTabBar::tab {
             margin-left: 10px;
             margin-right: 10px;
         }
-        '''
+        """
         )
         self.setTabsClosable(True)
         self.setMovable(True)

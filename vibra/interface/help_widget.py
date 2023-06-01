@@ -7,6 +7,6 @@ class HelpWidget(QWidget):
 
         texto = QLabel()
         texto.setText("Texto de ajuda do vibra.")
-        
+
         layout = QVBoxLayout(self)
         layout.addWidget(texto)
