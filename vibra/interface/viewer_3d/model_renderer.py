@@ -54,6 +54,7 @@ class ModelRenderer(CommonRenderer):
         self.faces_actor = FacesActor(mesh)
         self.AddActor(self.faces_actor)
 
+        self.ResetCamera()
         self.show_faces()
 
     def remove_actors(self):
@@ -76,7 +77,7 @@ class ModelRenderer(CommonRenderer):
         self.view_mode = SHOW_POINTS
         self.update()
 
-    def show_edges(self):
+    def show_lines(self):
         if not self._actors_exists():
             return
 

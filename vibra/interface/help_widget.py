@@ -1,12 +1,12 @@
 from PyQt5.QtWidgets import QDialog, QLabel, QVBoxLayout, QWidget
 
 
-class HelpWindow(QDialog):
+class HelpWidget(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Vibra")
-        layout = QVBoxLayout(self)
         texto = QLabel()
-        texto.setText("texto do vibra")
+        texto.setText("Texto de ajuda do vibra.")
+        
+        layout = QVBoxLayout(self)
         layout.addWidget(texto)

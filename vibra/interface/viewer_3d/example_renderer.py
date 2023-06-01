@@ -35,9 +35,12 @@ class ExampleRenderer(CommonRenderer):
 
     def show_points(self):
         self.example_actor.GetProperty().SetRepresentationToPoints()
+        self.update()
 
-    def show_edges(self):
+    def show_lines(self):
         self.example_actor.GetProperty().SetRepresentationToWireframe()
+        self.update()
 
     def show_faces(self):
         self.example_actor.GetProperty().SetRepresentationToSurface()
+        self.update()

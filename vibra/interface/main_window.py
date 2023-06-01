@@ -16,10 +16,11 @@ from PyQt5.QtWidgets import (
 )
 
 from vibra.config import UserConfig
-from vibra.interface.help_window import HelpWindow
 from vibra.interface.loading_bar import LoadingWindow, ProgressBarLogUpdater
 from vibra.interface.viewer_3d.viewer_3d import Viewer3D
 from vibra.project import Project
+from vibra.interface.viewer_tabs import ViewerTabs
+from vibra.interface.viewer_3d.vtk_widget import VTKWidget
 
 
 def load_icon(path, color):
@@ -138,7 +139,9 @@ class MainWindow(QMainWindow):
         self.view_orthogonal_action.setShortcut("Ctrl+Shift+7")
 
     def create_basic_layout(self):
-        self.setCentralWidget(self.viewer_3d)
+        self.viewer_tabs = ViewerTabs(self, self.project, self.user_config)
+
+        self.setCentralWidget(self.viewer_tabs)
         self.create_progress_bar()
 
     def load_user_preferences(self):
@@ -305,8 +308,7 @@ class MainWindow(QMainWindow):
         self.project.save()
 
     def help_callback(self):
-        help_window = HelpWindow()
-        help_window.exec()
+        self.viewer_tabs.show_help()
 
     def exit_callback(self):
         loaded_function = self.load_function(self.project.long_function, text="Loading...")
@@ -329,7 +331,7 @@ class MainWindow(QMainWindow):
         The input is a string "light" or "dark".
         '''
         qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
-        self.viewer_3d.set_theme(theme)
+        self.viewer_tabs.set_theme(theme)
         self.user_config.theme = theme
 
     def capture_image_callback(self):
@@ -357,38 +359,67 @@ class MainWindow(QMainWindow):
         # Slow function running with loading bar
         loaded_import_geometry = self.load_function(self.project.import_geometry, text="Loading")
         loaded_import_geometry(path)
-        self.viewer_3d.set_project(self.project)
+
+        self.viewer_tabs.show_model()
+        self.viewer_tabs.update_plots()
         self.set_theme(self.user_config.theme)
 
     def show_points_callback(self):
-        self.viewer_3d.current_renderer.show_points()
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, VTKWidget):
+            widget.show_points()
 
     def show_edges_callback(self):
-        self.viewer_3d.current_renderer.show_edges()
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, VTKWidget):
+            widget.show_lines()
 
     def show_faces_callback(self):
-        self.viewer_3d.current_renderer.show_faces()
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, VTKWidget):
+            widget.show_faces()
 
     def show_view_up_callback(self):
-        self.viewer_3d.current_renderer.set_view_up()
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, VTKWidget):
+            widget.set_view_up()
 
     def show_view_down_callback(self):
-        self.viewer_3d.current_renderer.set_view_down()
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, VTKWidget):
+            widget.set_view_up()
 
     def show_view_left_callback(self):
-        self.viewer_3d.current_renderer.set_view_left()
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, VTKWidget):
+            widget.set_view_up()
 
     def show_view_right_callback(self):
-        self.viewer_3d.current_renderer.set_view_right()
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, VTKWidget):
+            widget.set_view_up()
 
     def show_view_front_callback(self):
-        self.viewer_3d.current_renderer.set_view_front()
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, VTKWidget):
+            widget.set_view_up()
 
     def show_view_back_callback(self):
-        self.viewer_3d.current_renderer.set_view_back()
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, VTKWidget):
+            widget.set_view_up()
 
     def show_view_orthogonal_callback(self):
-        self.viewer_3d.current_renderer.set_view_orthogonal()
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, VTKWidget):
+            widget.set_view_up()
+
+    # TODO: Create and connect actions for these
+    def show_model_callback(self):
+        self.viewer_tabs.show_model()
+
+    def show_example_callback(self):
+        self.viewer_tabs.show_example() 
 
     def viewer_selection_callback(self):
         if self.viewer_3d.current_renderer == self.viewer_3d.model_renderer:
