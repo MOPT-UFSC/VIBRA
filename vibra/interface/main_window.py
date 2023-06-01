@@ -21,6 +21,7 @@ from vibra.interface.viewer_3d.viewer_3d import Viewer3D
 from vibra.project import Project
 from vibra.interface.viewer_tabs import ViewerTabs
 from vibra.interface.viewer_3d.vtk_widget import VTKWidget
+from vibra.interface.renderer_toolbar import RendererToolbar
 
 
 def load_icon(path, color):
@@ -44,7 +45,7 @@ class MainWindow(QMainWindow):
         self.create_actions()
         self.create_basic_layout()
         self.create_menu_bar()
-        self.create_tool_bar()
+        self.create_tool_bars()
         self.create_status_bar()
         self.load_user_preferences()
 
@@ -130,13 +131,6 @@ class MainWindow(QMainWindow):
         self.theme_action.triggered.connect(self.theme_callback)
 
         self.help_action.setShortcut("F1")
-        self.view_up_action.setShortcut("Ctrl+Shift+1")
-        self.view_down_action.setShortcut("Ctrl+Shift+2")
-        self.view_left_action.setShortcut("Ctrl+Shift+3")
-        self.view_right_action.setShortcut("Ctrl+Shift+4")
-        self.view_front_action.setShortcut("Ctrl+Shift+5")
-        self.view_back_action.setShortcut("Ctrl+Shift+6")
-        self.view_orthogonal_action.setShortcut("Ctrl+Shift+7")
 
     def create_basic_layout(self):
         self.viewer_tabs = ViewerTabs(self, self.project, self.user_config)
@@ -190,7 +184,6 @@ class MainWindow(QMainWindow):
 
                 # Shows the empty progress bar
                 self.loading_window.show()
-                self.loading_window.text_label.setText(text)
 
                 # Waits the loading bar to appear and uptates pyqt
                 sleep(0.1)
@@ -227,35 +220,9 @@ class MainWindow(QMainWindow):
         self.load_help_menu()
         self.load_views_mode_menu()
 
-    def create_tool_bar(self):
-        self.tool_bar = self.addToolBar("Main Toolbar")
-        self.tool_bar.setIconSize(QSize(20, 20))
-        self.tool_bar.setMovable(True)
-        self.tool_bar.setFloatable(True)
-        self.tool_bar.setStyleSheet(
-            """
-            QToolBar {
-                border-style: solid;
-                border-width: 1px;
-                border-color: #888888;
-                border-radius: 3px
-            }
-            """
-        )
-
-        self.tool_bar.addSeparator()
-        self.tool_bar.addAction(self.view_up_action)
-        self.tool_bar.addAction(self.view_down_action)
-        self.tool_bar.addAction(self.view_right_action)
-        self.tool_bar.addAction(self.view_left_action)
-        self.tool_bar.addAction(self.view_front_action)
-        self.tool_bar.addAction(self.view_back_action)
-        self.tool_bar.addAction(self.view_orthogonal_action)
-        self.tool_bar.addSeparator()
-        self.tool_bar.addAction(self.view_mode_line_action)
-        self.tool_bar.addAction(self.view_mode_nodes_action)
-        self.tool_bar.addAction(self.view_mode_face_action)
-        self.tool_bar.addSeparator()
+    def create_tool_bars(self):
+        self.renderer_toolbar = RendererToolbar(self, self.viewer_tabs)
+        self.addToolBar(self.renderer_toolbar)
 
     def create_status_bar(self):
         self.status_bar = self.statusBar()
