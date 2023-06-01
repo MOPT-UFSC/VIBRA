@@ -5,7 +5,7 @@ from pathlib import Path
 import gmsh
 import numpy as np
 
-from vibra.utils import ProgressStatus
+from vibra.utils.progress_status import ProgressStatus
 
 # Meshing algorithms
 MESH_ADAPT = 1

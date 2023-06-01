@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from vibra.utils import ProgressStatus
+from vibra.utils.progress_status import ProgressStatus
 
 
 class ProgressBarLogUpdater(logging.Handler):

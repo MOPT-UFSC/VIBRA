@@ -19,15 +19,7 @@ from vibra.interface.viewer_3d.viewer_3d import Viewer3D
 from vibra.interface.viewer_3d.vtk_widget import VTKWidget
 from vibra.interface.viewer_tabs import ViewerTabs
 from vibra.project import Project
-
-
-def load_icon(path, color):
-    pixmap = QPixmap(str(path))
-    painter = QPainter(pixmap)
-    painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
-    painter.fillRect(pixmap.rect(), color)
-    painter.end()
-    return QIcon(pixmap)
+from vibra.utils.icons import load_icon
 
 
 class MainWindow(QMainWindow):

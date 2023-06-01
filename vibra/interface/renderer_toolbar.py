@@ -1,18 +1,10 @@
 from pathlib import Path
 
-from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
+from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QToolBar
 
 from vibra.interface.viewer_3d.vtk_widget import VTKWidget
-
-
-def load_icon(path, color):
-    pixmap = QPixmap(str(path))
-    painter = QPainter(pixmap)
-    painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
-    painter.fillRect(pixmap.rect(), color)
-    painter.end()
-    return QIcon(pixmap)
+from vibra.utils.icons import load_icon
 
 
 class RendererToolbar(QToolBar):
