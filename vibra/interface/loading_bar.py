@@ -1,4 +1,5 @@
 import logging
+from time import sleep
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
@@ -8,7 +9,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from time import sleep
+
 from vibra.utils import ProgressStatus
 
 

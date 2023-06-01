@@ -1,11 +1,8 @@
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
-
-from PyQt5.QtWidgets import (
-    QAction,
-    QToolBar,
-)
 from pathlib import Path
+
+from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
+from PyQt5.QtWidgets import QAction, QToolBar
+
 from vibra.interface.viewer_3d.vtk_widget import VTKWidget
 
 

@@ -3,25 +3,22 @@ from pathlib import Path
 from time import sleep
 
 import qdarktheme
-from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtGui import QColor, QCursor, QIcon, QPainter, QPixmap
+from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
 from PyQt5.QtWidgets import (
     QAction,
-    QApplication,
-    QFileDialog,
-    QMainWindow,
-    QMessageBox,
     QFileDialog,
     QLabel,
+    QMainWindow,
+    QMessageBox,
 )
 
 from vibra.config import UserConfig
 from vibra.interface.loading_bar import load_function
-from vibra.interface.viewer_3d.viewer_3d import Viewer3D
-from vibra.project import Project
-from vibra.interface.viewer_tabs import ViewerTabs
-from vibra.interface.viewer_3d.vtk_widget import VTKWidget
 from vibra.interface.renderer_toolbar import RendererToolbar
+from vibra.interface.viewer_3d.viewer_3d import Viewer3D
+from vibra.interface.viewer_3d.vtk_widget import VTKWidget
+from vibra.interface.viewer_tabs import ViewerTabs
+from vibra.project import Project
 
 
 def load_icon(path, color):

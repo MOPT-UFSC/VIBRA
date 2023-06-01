@@ -1,11 +1,17 @@
 from PyQt5.QtCore import QCoreApplication, pyqtSignal
-from PyQt5.QtWidgets import QWidget, QLabel, QTabWidget, QPushButton, QVBoxLayout
+from PyQt5.QtWidgets import (
+    QLabel,
+    QPushButton,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
-from vibra.interface.viewer_3d.viewer_3d import Viewer3D
-from vibra.interface.viewer_3d.vtk_widget import VTKWidget
+from vibra.interface.help_widget import HelpWidget
 from vibra.interface.viewer_3d.example_renderer import ExampleRenderer
 from vibra.interface.viewer_3d.model_renderer import ModelRenderer
-from vibra.interface.help_widget import HelpWidget
+from vibra.interface.viewer_3d.viewer_3d import Viewer3D
+from vibra.interface.viewer_3d.vtk_widget import VTKWidget
 
 
 class ViewerTabs(QTabWidget):
