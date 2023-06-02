@@ -29,26 +29,19 @@ from vibra.utils.icons import load_icon
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
+
         self.project = Project()
         self.viewer_3d = Viewer3D(self)
         self.user_config = UserConfig()
 
-        self.load_icons()
         self.configure_window()
         self.create_basic_layout()
-        self.create_menu_bar()
-        self.create_tool_bars()
-        self.create_status_bar()
         self.load_user_preferences()
-
-    def load_icons(self):
-        color = QColor("#0055DD")
-        self.vibra_icon = load_icon(Path("data/icons/logo_vibra.png"), color)
 
     def configure_window(self):
         self.setMinimumSize(800, 600)
         self.showMaximized()
-        self.setWindowIcon(self.vibra_icon)
+        self.setWindowIcon(load_icon(Path("data/icons/logo_vibra.png"), QColor("#0055DD")))
         self.setWindowTitle("Vibra")
 
         # for qdarktheme
@@ -62,24 +55,19 @@ class MainWindow(QMainWindow):
         self.viewer_tabs = ViewerTabs(self, self.project, self.user_config)
         self.setCentralWidget(self.viewer_tabs)
 
+        self.create_menu_bar()
+        self.create_tool_bars()
+        self.create_status_bar()
+
     def load_user_preferences(self):
         self.set_theme(self.user_config.theme)
 
-    def long_exit_function(self):
-        loaded_function = self.load_function()
-        loaded_function()
-
     def create_menu_bar(self):
         self.menu_bar = self.menuBar()
-
-        self.help_menu = HelpMenu(self)
-        self.view_mode_menu = ViewModeMenu(self)
-        self.views_menu = ViewsMenu(self)
-        self.project_menu = ProjectMenu(self)
-        self.menu_bar.addMenu(self.project_menu)
-        self.menu_bar.addMenu(self.views_menu)
-        self.menu_bar.addMenu(self.view_mode_menu)
-        self.menu_bar.addMenu(self.help_menu)
+        self.menu_bar.addMenu(ProjectMenu(self))
+        self.menu_bar.addMenu(ViewsMenu(self))
+        self.menu_bar.addMenu(ViewModeMenu(self))
+        self.menu_bar.addMenu(HelpMenu(self))
 
     def create_tool_bars(self):
         self.renderer_toolbar = RendererToolbar(self, self.viewer_tabs)
@@ -104,23 +92,11 @@ class MainWindow(QMainWindow):
         self.status_bar.addPermanentWidget(self.label_1)
         self.status_bar.addPermanentWidget(self.label_2)
 
-    def load_views_menu(self):
-        self.views_menu.addAction(self.view_up_action)
-        self.views_menu.addAction(self.view_down_action)
-        self.views_menu.addAction(self.view_left_action)
-        self.views_menu.addAction(self.view_right_action)
-        self.views_menu.addAction(self.view_front_action)
-        self.views_menu.addAction(self.view_back_action)
-        self.views_menu.addAction(self.view_orthogonal_action)
+    def closeEvent(self, event):
+        self.close_app()
+        event.ignore()
 
-    def load_views_mode_menu(self):
-        self.views_mode_menu.addAction(self.view_mode_nodes_action)
-        self.views_mode_menu.addAction(self.view_mode_line_action)
-        self.views_mode_menu.addAction(self.view_mode_face_action)
-
-    def load_help_menu(self):
-        self.help_menu.addAction(self.help_action)
-
+    # External functions that may be usefull
     def set_theme(self, theme: str):
         """
         Changes Qt stylesheets using qdarktheme library and the
@@ -132,12 +108,41 @@ class MainWindow(QMainWindow):
         self.viewer_tabs.set_theme(theme)
         self.user_config.theme = theme
 
-    def closeEvent(self, event):
-        close = QMessageBox.question(
-            self, "QUIT", "Are you sure want to stop process?", QMessageBox.Yes | QMessageBox.No
+    def capture_image(self):
+        path, check = QFileDialog.getSaveFileName(
+            self,
+            "PNG",
+            filter="PNG (*.png)",
         )
+
+        if not check:
+            return
+
+        self.viewer_3d.save_png(path)
+
+    def import_geometry(self):
+        path, check = QFileDialog.getOpenFileName(
+            self,
+            "Open File",
+            filter="Geometry Files (*.stp *.step *.iges)",
+        )
+
+        if not check:
+            return
+
+        # Slow function running with loading bar
+        import_geometry = load_function(self.project.import_geometry, self)
+        import_geometry(path)
+
+        self.viewer_tabs.show_model()
+        self.viewer_tabs.update_plots()
+        self.set_theme(self.user_config.theme)
+
+    def close_app(self):
+        close = QMessageBox.question(
+            self, "QUIT", "Are you sure want to close Vibra?", QMessageBox.Yes | QMessageBox.No
+        )
+
         if close == QMessageBox.Yes:
             self.user_config.save()
-            event.accept()
-        else:
-            event.ignore()
+            exit()
