@@ -3,7 +3,7 @@ from pathlib import Path
 from time import sleep
 
 import qdarktheme
-from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
+from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import (
     QAction,
     QFileDialog,
@@ -20,6 +20,7 @@ from vibra.interface.viewer_3d.vtk_widget import VTKWidget
 from vibra.interface.viewer_tabs import ViewerTabs
 from vibra.project import Project
 from vibra.utils.icons import load_icon
+from vibra.interface.menus.help_menu import HelpMenu
 
 
 class MainWindow(QMainWindow):
@@ -137,11 +138,14 @@ class MainWindow(QMainWindow):
         self.project_menu = self.menu_bar.addMenu("Project")
         self.views_menu = self.menu_bar.addMenu("Views")
         self.views_mode_menu = self.menu_bar.addMenu("View Mode")
-        self.help_menu = self.menu_bar.addMenu("Help")
+        # self.help_menu = self.menu_bar.addMenu("Help")
+
+        self.help_menu = HelpMenu(self)
+        self.menu_bar.addMenu(self.help_menu)
 
         self.load_project_menu()
         self.load_views_menu()
-        self.load_help_menu()
+        # self.load_help_menu()
         self.load_views_mode_menu()
 
     def create_tool_bars(self):
