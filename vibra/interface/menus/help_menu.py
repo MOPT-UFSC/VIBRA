@@ -1,8 +1,9 @@
+from pathlib import Path
+
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QMenu
 
 from vibra.utils.icons import load_icon
-from pathlib import Path
 
 
 class HelpMenu(QMenu):
