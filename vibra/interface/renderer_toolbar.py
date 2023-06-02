@@ -71,14 +71,17 @@ class RendererToolbar(QToolBar):
         self.view_orthogonal_action.setShortcut("Ctrl+Shift+7")
 
         #
-        view_mode_nodes_icon = load_icon(Path("data/icons/nodes.png"), color)
-        self.view_mode_nodes_action = QAction(view_mode_nodes_icon, "Node View", self)
+        show_points_icon = load_icon(Path("data/icons/nodes.png"), color)
+        self.show_points_action = QAction(show_points_icon, "Node View", self)
+        self.show_points_action.triggered.connect(self.show_points_callback)
 
-        view_mode_line_icon = load_icon(Path("data/icons/lines.png"), color)
-        self.view_mode_line_action = QAction(view_mode_line_icon, "Line View", self)
+        show_lines_icon = load_icon(Path("data/icons/lines.png"), color)
+        self.show_lines_action = QAction(show_lines_icon, "Line View", self)
+        self.show_lines_action.triggered.connect(self.show_lines_callback)
 
-        view_mode_face_icon = load_icon(Path("data/icons/faces.png"), color)
-        self.view_mode_face_action = QAction(view_mode_face_icon, "Face View", self)
+        show_faces_icon = load_icon(Path("data/icons/faces.png"), color)
+        self.show_faces_action = QAction(show_faces_icon, "Face View", self)
+        self.show_faces_action.triggered.connect(self.show_faces_callback)
 
     def configure_layout(self):
         self.addSeparator()
@@ -90,9 +93,9 @@ class RendererToolbar(QToolBar):
         self.addAction(self.view_back_action)
         self.addAction(self.view_orthogonal_action)
         self.addSeparator()
-        self.addAction(self.view_mode_line_action)
-        self.addAction(self.view_mode_nodes_action)
-        self.addAction(self.view_mode_face_action)
+        self.addAction(self.show_lines_action)
+        self.addAction(self.show_points_action)
+        self.addAction(self.show_faces_action)
         self.addSeparator()
 
     # Callbacks
@@ -130,3 +133,18 @@ class RendererToolbar(QToolBar):
         widget = self.viewer_tabs.currentWidget()
         if isinstance(widget, VTKWidget):
             widget.set_view_orthogonal()
+
+    def show_points_callback(self):
+        widget = self.parent().viewer_tabs.currentWidget()
+        if isinstance(widget, VTKWidget):
+            widget.show_points()
+
+    def show_lines_callback(self):
+        widget = self.parent().viewer_tabs.currentWidget()
+        if isinstance(widget, VTKWidget):
+            widget.show_lines()
+
+    def show_faces_callback(self):
+        widget = self.parent().viewer_tabs.currentWidget()
+        if isinstance(widget, VTKWidget):
+            widget.show_faces()
