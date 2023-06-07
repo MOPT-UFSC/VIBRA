@@ -8,16 +8,19 @@ class CuttingPlaneActor(vtk.vtkActor):
 
     def create_geometry(self):
         plane = vtk.vtkPlaneSource()
-        arrow = vtk.vtkArrowSource()
+        cone = vtk.vtkConeSource()
 
         plane.SetNormal(1, 0, 0)
+        cone.SetCenter(0.025, 0, 0)
+        cone.SetRadius(0.05)
+        cone.SetHeight(0.05)
 
         plane.Update()
-        arrow.Update()
+        cone.Update()
 
         append_filter = vtk.vtkAppendPolyData()
         append_filter.AddInputData(plane.GetOutput())
-        append_filter.AddInputData(arrow.GetOutput())
+        append_filter.AddInputData(cone.GetOutput())
         append_filter.Update()
 
         mapper = vtk.vtkPolyDataMapper()
@@ -25,10 +28,7 @@ class CuttingPlaneActor(vtk.vtkActor):
         self.SetMapper(mapper)
 
     def configure_appearance(self):
-        self.GetProperty().RenderPointsAsSpheresOn()
-        self.GetProperty().SetPointSize(9)
+        self.GetProperty().SetColor(0.15, 0.82, 0.74)
         self.GetProperty().SetLineWidth(2)
-        self.GetProperty().SetColor(1, 0, 0)
-        self.GetProperty().SetEdgeVisibility(True)
-        self.GetProperty().SetOpacity(0.6)
+        # self.GetProperty().SetOpacity(0.6)
         self.SetScale(3000, 3000, 3000)

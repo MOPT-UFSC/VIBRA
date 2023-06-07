@@ -43,20 +43,30 @@ class AnalisysRenderer(CommonRenderer):
         self.AddActor(self.model_actor)
 
         self.plane_actor = CuttingPlaneActor()
+        self.plane_actor.VisibilityOff()
         self.AddActor(self.plane_actor)
 
     def remove_actors(self):
         self.RemoveActor(self.model_actor)
         self.RemoveActor(self.plane_actor)
 
-    def configure_plane(self, position, normal):   
+    def configure_plane(self, position, normal):
+        self.disable_cut()
+        self.plane_actor.VisibilityOn()
+        self.model_actor.GetProperty().SetOpacity(0.2)
+
         self.plane_actor.SetPosition(position)
         self.plane_actor.SetOrientation(normal)
         self.update()
 
     def apply_cut(self, position, normal):
         self.model_actor.apply_cut(position, normal)
+        self.model_actor.GetProperty().SetOpacity(1)
         self.update()
+
+    def disable_cut(self):
+        self.plane_actor.VisibilityOff()
+        self.model_actor.disable_cut()
 
     def _actors_exists(self):
         if self.model_actor is None:

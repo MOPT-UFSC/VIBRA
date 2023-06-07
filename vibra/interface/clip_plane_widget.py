@@ -6,6 +6,7 @@ from PyQt5.QtCore import pyqtSignal
 class ClipPlaneWidget(QWidget):
     value_changed = pyqtSignal()
     slider_released = pyqtSignal()
+    closed = pyqtSignal()
 
     def __init__(self,parent):
         super().__init__(parent)
@@ -84,3 +85,6 @@ class ClipPlaneWidget(QWidget):
 
     def slider_release_callback(self):
         self.slider_released.emit()
+
+    def closeEvent(self, event):
+        self.closed.emit()

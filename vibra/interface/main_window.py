@@ -55,6 +55,7 @@ class MainWindow(QMainWindow):
         self.viewer_3d.object_selected.connect(self.viewer_selection_callback)
         self.clip_plane.value_changed.connect(self.move_clipping_plane)
         self.clip_plane.slider_released.connect(self.apply_cut)
+        self.clip_plane.closed.connect(self.disable_cut)
 
     def move_clipping_plane(self):
         pos = self.clip_plane.get_position()
@@ -65,6 +66,9 @@ class MainWindow(QMainWindow):
         pos = self.clip_plane.get_position()
         normal = self.clip_plane.get_normal()
         self.viewer_3d.analisys_renderer.apply_cut(pos, normal)
+
+    def disable_cut(self):
+        self.viewer_3d.analisys_renderer.disable_cut()
 
     def load_icons(self):
         color = QColor("#0055DD")

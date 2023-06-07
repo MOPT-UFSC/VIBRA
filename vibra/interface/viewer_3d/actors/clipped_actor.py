@@ -27,30 +27,45 @@ class ClippedActor(vtk.vtkActor):
         for a, b, c in self.mesh.faces:
             self.data.InsertNextCell(vtk.VTK_TRIANGLE, 3, [a, b, c])
 
-        self.plane = vtk.vtkPlane()
         self.data.SetPoints(points)
         self.data.GetPointData().SetScalars(point_colors)
         self.data.GetCellData().SetScalars(cell_colors)
 
-        self.plane.SetOrigin(15, -1000, 0)
-        self.plane.SetNormal(0, 1, 0)
-
-        clipper = vtk.vtkClipPolyData()
-        clipper.SetInputData(self.data)
-        clipper.SetClipFunction(self.plane)
-        clipper.GenerateClipScalarsOn()
-        clipper.SetOutputPointsPrecision(10)
-        clipper.SetValue(0)
-
         normals_filter = vtk.vtkPolyDataNormals()
-        normals_filter.AddInputConnection(clipper.GetOutputPort())
+        normals_filter.AddInputData(self.data)
+        normals_filter.Update()
 
         mapper.SetInputConnection(normals_filter.GetOutputPort())
         self.SetMapper(mapper)
 
     def apply_cut(self, origin, normal):
-        self.plane.SetOrigin(origin)
-        self.plane.SetNormal(normal)
+        plane = vtk.vtkPlane()
+        plane.SetOrigin(origin)
+        plane.SetNormal(normal)
+
+        clipper = vtk.vtkClipPolyData()
+        clipper.SetInputData(self.data)
+        clipper.SetClipFunction(plane)
+        clipper.SetOutputPointsPrecision(10)
+        clipper.SetValue(-1)
+        clipper.Update()
+
+        normals_filter = vtk.vtkPolyDataNormals()
+        normals_filter.AddInputData(clipper.GetOutput())
+        normals_filter.Update()
+
+        mapper = self.GetMapper()
+        mapper.SetInputData(normals_filter.GetOutput())
+        mapper.Modified()
+
+    def disable_cut(self):
+        normals_filter = vtk.vtkPolyDataNormals()
+        normals_filter.AddInputData(self.data)
+        normals_filter.Update()
+
+        mapper = self.GetMapper()
+        mapper.SetInputData(normals_filter.GetOutput())
+        mapper.Modified()
 
     def configure_appearance(self):
         self.GetProperty().SetInterpolationToPhong()
