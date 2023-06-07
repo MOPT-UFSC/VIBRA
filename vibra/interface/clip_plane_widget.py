@@ -64,8 +64,3 @@ class ClipPlaneWidget(QWidget):
         self.v_angle_value_label.setText(f"{self.v_angle_slider.value()} °")
         self.h_angle_value_label.setText(f"{self.h_angle_slider.value()} °")
         self.position_value_label.setText(f"{self.position_slider.value()} %")
-
-        # print(f"{self.angle_slider[2].value()}")
-
-        
-    

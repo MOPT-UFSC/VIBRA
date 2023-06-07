@@ -52,7 +52,16 @@ class MainWindow(QMainWindow):
         self.create_status_bar()
         self.load_user_preferences()
 
+        self.clip_plane.v_angle_slider.valueChanged.connect(self.bla)
+        self.clip_plane.h_angle_slider.valueChanged.connect(self.bla)
+        self.clip_plane.position_slider.valueChanged.connect(self.bla)
         self.viewer_3d.object_selected.connect(self.viewer_selection_callback)
+
+    def bla(self):
+        x = self.clip_plane.v_angle_slider.value()
+        y = self.clip_plane.h_angle_slider.value()
+        z = self.clip_plane.position_slider.value()
+        self.viewer_3d.analisys_renderer.move_plane(x, y, z)
 
     def load_icons(self):
         color = QColor("#0055DD")

@@ -1,7 +1,7 @@
 import vtk
 
 
-class ClippedMeshActor(vtk.vtkActor):
+class ClippedActor(vtk.vtkActor):
     def __init__(self, mesh):
         self.mesh = mesh
         self.create_geometry()
@@ -32,8 +32,8 @@ class ClippedMeshActor(vtk.vtkActor):
         self.data.GetPointData().SetScalars(point_colors)
         self.data.GetCellData().SetScalars(cell_colors)
 
-        self.plane.SetOrigin(15, 0, 0)
-        self.plane.SetNormal(0.7, 0.3, 0)
+        self.plane.SetOrigin(15, -1000, 0)
+        self.plane.SetNormal(0, 1, 0)
 
         self.clipper = vtk.vtkClipPolyData()
         self.clipper.SetInputData(self.data)
