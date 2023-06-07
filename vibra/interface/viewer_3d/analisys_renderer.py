@@ -49,8 +49,13 @@ class AnalisysRenderer(CommonRenderer):
         self.RemoveActor(self.model_actor)
         self.RemoveActor(self.plane_actor)
 
-    def move_plane(self, x, y, z):
-        self.plane_actor.SetPosition(x*10, y*10, z*10)
+    def configure_plane(self, position, normal):   
+        self.plane_actor.SetPosition(position)
+        self.plane_actor.SetOrientation(normal)
+        self.update()
+
+    def apply_cut(self, position, normal):
+        self.model_actor.apply_cut(position, normal)
         self.update()
 
     def _actors_exists(self):

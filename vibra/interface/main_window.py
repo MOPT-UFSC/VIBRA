@@ -52,16 +52,19 @@ class MainWindow(QMainWindow):
         self.create_status_bar()
         self.load_user_preferences()
 
-        self.clip_plane.v_angle_slider.valueChanged.connect(self.bla)
-        self.clip_plane.h_angle_slider.valueChanged.connect(self.bla)
-        self.clip_plane.position_slider.valueChanged.connect(self.bla)
         self.viewer_3d.object_selected.connect(self.viewer_selection_callback)
+        self.clip_plane.value_changed.connect(self.move_clipping_plane)
+        self.clip_plane.slider_released.connect(self.apply_cut)
 
-    def bla(self):
-        x = self.clip_plane.v_angle_slider.value()
-        y = self.clip_plane.h_angle_slider.value()
-        z = self.clip_plane.position_slider.value()
-        self.viewer_3d.analisys_renderer.move_plane(x, y, z)
+    def move_clipping_plane(self):
+        pos = self.clip_plane.get_position()
+        normal = self.clip_plane.get_normal()
+        self.viewer_3d.analisys_renderer.configure_plane(pos, normal)
+
+    def apply_cut(self):
+        pos = self.clip_plane.get_position()
+        normal = self.clip_plane.get_normal()
+        self.viewer_3d.analisys_renderer.apply_cut(pos, normal)
 
     def load_icons(self):
         color = QColor("#0055DD")

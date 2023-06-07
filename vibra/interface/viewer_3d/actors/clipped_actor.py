@@ -35,20 +35,20 @@ class ClippedActor(vtk.vtkActor):
         self.plane.SetOrigin(15, -1000, 0)
         self.plane.SetNormal(0, 1, 0)
 
-        self.clipper = vtk.vtkClipPolyData()
-        self.clipper.SetInputData(self.data)
-        self.clipper.SetClipFunction(self.plane)
-        self.clipper.GenerateClipScalarsOn()
-        self.clipper.SetOutputPointsPrecision(10)
-        self.clipper.SetValue(0)
+        clipper = vtk.vtkClipPolyData()
+        clipper.SetInputData(self.data)
+        clipper.SetClipFunction(self.plane)
+        clipper.GenerateClipScalarsOn()
+        clipper.SetOutputPointsPrecision(10)
+        clipper.SetValue(0)
 
         normals_filter = vtk.vtkPolyDataNormals()
-        normals_filter.AddInputConnection(self.clipper.GetOutputPort())
+        normals_filter.AddInputConnection(clipper.GetOutputPort())
 
         mapper.SetInputConnection(normals_filter.GetOutputPort())
         self.SetMapper(mapper)
 
-    def plane_position(self, origin, normal):
+    def apply_cut(self, origin, normal):
         self.plane.SetOrigin(origin)
         self.plane.SetNormal(normal)
 
