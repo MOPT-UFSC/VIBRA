@@ -9,13 +9,13 @@ class ClippedMeshActor(vtk.vtkActor):
         self.color_stack = []
 
     def create_geometry(self):
-        data = vtk.vtkPolyData()
+        self.data = vtk.vtkPolyData()
         points = vtk.vtkPoints()
         mapper = vtk.vtkPolyDataMapper()
         point_colors = vtk.vtkUnsignedCharArray()
         cell_colors = vtk.vtkUnsignedCharArray()
 
-        data.Allocate(len(self.mesh.faces))
+        self.data.Allocate(len(self.mesh.faces))
         point_colors.SetNumberOfComponents(3)
         point_colors.SetNumberOfTuples(len(self.mesh.points))
         cell_colors.SetNumberOfComponents(3)
@@ -25,18 +25,32 @@ class ClippedMeshActor(vtk.vtkActor):
             points.InsertPoint(i, x, y, z)
 
         for a, b, c in self.mesh.faces:
-            data.InsertNextCell(vtk.VTK_TRIANGLE, 3, [a, b, c])
+            self.data.InsertNextCell(vtk.VTK_TRIANGLE, 3, [a, b, c])
 
-        data.SetPoints(points)
-        data.GetPointData().SetScalars(point_colors)
-        data.GetCellData().SetScalars(cell_colors)
+        self.plane = vtk.vtkPlane()
+        self.data.SetPoints(points)
+        self.data.GetPointData().SetScalars(point_colors)
+        self.data.GetCellData().SetScalars(cell_colors)
+
+        self.plane.SetOrigin(15, 0, 0)
+        self.plane.SetNormal(0.7, 0.3, 0)
+
+        self.clipper = vtk.vtkClipPolyData()
+        self.clipper.SetInputData(self.data)
+        self.clipper.SetClipFunction(self.plane)
+        self.clipper.GenerateClipScalarsOn()
+        self.clipper.SetOutputPointsPrecision(10)
+        self.clipper.SetValue(0)
 
         normals_filter = vtk.vtkPolyDataNormals()
-        normals_filter.AddInputData(data)
-        normals_filter.Update()
+        normals_filter.AddInputConnection(self.clipper.GetOutputPort())
 
-        mapper.SetInputData(normals_filter.GetOutput())
+        mapper.SetInputConnection(normals_filter.GetOutputPort())
         self.SetMapper(mapper)
+
+    def plane_position(self, origin, normal):
+        self.plane.SetOrigin(origin)
+        self.plane.SetNormal(normal)
 
     def configure_appearance(self):
         self.GetProperty().SetInterpolationToPhong()
@@ -47,9 +61,8 @@ class ClippedMeshActor(vtk.vtkActor):
         self.clear_colors()
 
     def clear_colors(self):
-        data = self.GetMapper().GetInput()
-        point_colors = data.GetPointData().GetScalars()
-        cell_colors = data.GetCellData().GetScalars()
+        point_colors = self.data.GetPointData().GetScalars()
+        cell_colors = self.data.GetCellData().GetScalars()
 
         r, g, b = self.GetProperty().GetColor()
         r = int(r * 255)
@@ -67,8 +80,8 @@ class ClippedMeshActor(vtk.vtkActor):
         self.GetMapper().ScalarVisibilityOff()
 
     def push(self):
-        data = self.GetMapper().GetInput()
-        cell_colors = data.GetCellData().GetScalars()
+        self.data = self.GetMapper().GetInput()
+        cell_colors = self.data.GetCellData().GetScalars()
 
         mode = self.GetMapper().GetScalarMode()
         colors = vtk.vtkUnsignedCharArray()
@@ -81,8 +94,7 @@ class ClippedMeshActor(vtk.vtkActor):
             return None
 
         mode, colors = self.color_stack.pop()
-        data = self.GetMapper().GetInput()
-        data.GetCellData().SetScalars(colors)
+        self.data.GetCellData().SetScalars(colors)
 
         self.GetMapper().SetScalarMode(mode)
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
@@ -91,8 +103,7 @@ class ClippedMeshActor(vtk.vtkActor):
         return colors
 
     def paint_points(self, color, points):
-        data = self.GetMapper().GetInput()
-        point_colors = data.GetPointData().GetScalars()
+        point_colors = self.data.GetPointData().GetScalars()
 
         for i in points:
             point_colors.SetTuple(i, color)
@@ -102,8 +113,7 @@ class ClippedMeshActor(vtk.vtkActor):
         self.GetMapper().ScalarVisibilityOn()
 
     def paint_cells(self, color: tuple[3], faces: tuple[int]):
-        data = self.GetMapper().GetInput()
-        cell_colors = data.GetCellData().GetScalars()
+        cell_colors = self.data.GetCellData().GetScalars()
 
         for i in faces:
             cell_colors.SetTuple(i, color)
