@@ -96,6 +96,7 @@ class MainWindow(QMainWindow):
         self.theme_moon_icon = load_icon(Path("data/icons/moon_icon.png"), color)
         self.import_geometry_icon = load_icon(Path("data/icons/cube-scan.png"), color)
         self.capture_image_icon = load_icon(Path("data/icons/image-plus.png"), color)
+        self.tube_cut_icon = load_icon(Path("data/icons/tube_cut.png"), color)
 
     def configure_window(self):
         self.setMinimumSize(800, 600)
@@ -131,7 +132,7 @@ class MainWindow(QMainWindow):
         self.view_mode_nodes_action = QAction(self.view_mode_nodes_icon, "Node View", self)
         self.recent_action = QAction(self.recent_icon, "Recent", self)
         self.theme_action = QAction(self.theme_sun_icon, "Theme", self)
-        self.clip_plane_action = QAction(self.theme_sun_icon, "Clip Plane", self)
+        self.clip_plane_action = QAction(self.tube_cut_icon, "Clip Plane", self)
 
         self.import_geometry_action.triggered.connect(self.import_geometry_callback)
         self.capture_image_action.triggered.connect(self.capture_image_callback)
