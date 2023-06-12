@@ -1,29 +1,34 @@
-from PyQt5.QtWidgets import QWidget, QLabel, QSlider, QGridLayout, QProxyStyle
-from PyQt5.QtCore import  Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import QGridLayout, QLabel, QProxyStyle, QSlider, QWidget
+
 
 class ClipPlaneWidget(QWidget):
     value_changed = pyqtSignal()
     slider_released = pyqtSignal()
     closed = pyqtSignal()
 
-    def __init__(self,parent):
+    def __init__(self, parent):
         super().__init__(parent)
         self.configure_window()
         self.create_sliders()
-    
+
     def configure_window(self):
         self.setWindowTitle("Clip Plane")
         self.setGeometry(200, 200, 400, 350)
 
         self.setWindowFlags(
-            Qt.Window | Qt.CustomizeWindowHint | Qt.WindowTitleHint | Qt.WindowStaysOnTopHint
-            | Qt.WindowCloseButtonHint | Qt.FramelessWindowHint | Qt.WindowShadeButtonHint
+            Qt.Window
+            | Qt.CustomizeWindowHint
+            | Qt.WindowTitleHint
+            | Qt.WindowStaysOnTopHint
+            | Qt.WindowCloseButtonHint
+            | Qt.FramelessWindowHint
+            | Qt.WindowShadeButtonHint
         )
-    
+
     def create_sliders(self):
-        # 
+        #
         self.x_angle_title_label = QLabel("Rx")
         self.y_angle_title_label = QLabel("Ry")
         self.z_angle_title_label = QLabel("Rz")
@@ -32,8 +37,8 @@ class ClipPlaneWidget(QWidget):
         self.z_pos_tittle_label = QLabel("Pz")
         self.position_tittle_label = QLabel("Position")
         self.rotation_tittle_label = QLabel("Rotation")
-        self.position_tittle_label.setFont (QFont("",15))
-        self.rotation_tittle_label.setFont (QFont("",15))
+        self.position_tittle_label.setFont(QFont("", 15))
+        self.rotation_tittle_label.setFont(QFont("", 15))
 
         self.v_angle_value_label = QLabel("0 °")
         self.h_angle_value_label = QLabel("0 °")
@@ -42,7 +47,7 @@ class ClipPlaneWidget(QWidget):
         self.y_pos_tittle_value_label = QLabel("0 %")
         self.z_pos_tittle_value_label = QLabel("0 %")
 
-        # 
+        #
         self.y_angle_slider = QSlider(Qt.Orientation.Horizontal)
         self.y_angle_slider.setMaximum(360)
         self.y_angle_slider.setMinimum(0)
@@ -60,28 +65,28 @@ class ClipPlaneWidget(QWidget):
         self.z_angle_slider = QSlider(Qt.Orientation.Horizontal)
         self.z_angle_slider.setMaximum(360)
         self.z_angle_slider.setMinimum(0)
-        self.z_angle_slider.valueChanged.connect(self.value_change_callback) 
-        self.z_angle_slider.sliderReleased.connect(self.slider_release_callback) 
+        self.z_angle_slider.valueChanged.connect(self.value_change_callback)
+        self.z_angle_slider.sliderReleased.connect(self.slider_release_callback)
 
         self.x_pos_slider = QSlider(Qt.Orientation.Horizontal)
         self.x_pos_slider.setMaximum(100)
         self.x_pos_slider.setMinimum(0)
-        self.x_pos_slider.valueChanged.connect(self.value_change_callback) 
-        self.x_pos_slider.sliderReleased.connect(self.slider_release_callback) 
+        self.x_pos_slider.valueChanged.connect(self.value_change_callback)
+        self.x_pos_slider.sliderReleased.connect(self.slider_release_callback)
 
         self.y_pos_slider = QSlider(Qt.Orientation.Horizontal)
         self.y_pos_slider.setMaximum(100)
         self.y_pos_slider.setMinimum(0)
-        self.y_pos_slider.valueChanged.connect(self.value_change_callback) 
-        self.y_pos_slider.sliderReleased.connect(self.slider_release_callback) 
+        self.y_pos_slider.valueChanged.connect(self.value_change_callback)
+        self.y_pos_slider.sliderReleased.connect(self.slider_release_callback)
 
         self.z_pos_slider = QSlider(Qt.Orientation.Horizontal)
         self.z_pos_slider.setMaximum(100)
         self.z_pos_slider.setMinimum(0)
-        self.z_pos_slider.valueChanged.connect(self.value_change_callback) 
-        self.z_pos_slider.sliderReleased.connect(self.slider_release_callback) 
+        self.z_pos_slider.valueChanged.connect(self.value_change_callback)
+        self.z_pos_slider.sliderReleased.connect(self.slider_release_callback)
 
-        # 
+        #
         grid_layout = QGridLayout()
         grid_layout.addWidget(self.rotation_tittle_label, 4, 1)
         grid_layout.addWidget(self.y_angle_title_label, 6, 0)
@@ -91,7 +96,7 @@ class ClipPlaneWidget(QWidget):
         grid_layout.addWidget(self.x_angle_title_label, 5, 0)
         grid_layout.addWidget(self.x_angle_slider, 5, 1)
         grid_layout.addWidget(self.h_angle_value_label, 5, 2)
-        
+
         grid_layout.addWidget(self.z_angle_title_label, 7, 0)
         grid_layout.addWidget(self.z_angle_slider, 7, 1)
         grid_layout.addWidget(self.position_value_label, 7, 2)
@@ -120,8 +125,8 @@ class ClipPlaneWidget(QWidget):
         Py = self.y_pos_slider.value()
         Pz = self.z_pos_slider.value()
         return Px, Py, Pz
-    
-    def get_normal(self):
+
+    def get_rotation(self):
         Rx = self.y_angle_slider.value()
         Ry = self.x_angle_slider.value()
         Rz = self.z_angle_slider.value()
@@ -141,5 +146,3 @@ class ClipPlaneWidget(QWidget):
 
     def closeEvent(self, event):
         self.closed.emit()
-
-        

@@ -1,7 +1,7 @@
 import logging
+import random
 from pathlib import Path
 from time import sleep
-import random
 
 import qdarktheme
 from PyQt5.QtCore import QSize, Qt
@@ -10,19 +10,18 @@ from PyQt5.QtWidgets import (
     QAction,
     QApplication,
     QFileDialog,
+    QLabel,
     QMainWindow,
     QMessageBox,
-    QFileDialog,
-    QLabel,
 )
 
 from vibra.config import UserConfig
+from vibra.interface.clip_plane_widget import ClipPlaneWidget
 from vibra.interface.help_window import HelpWindow
 from vibra.interface.loading_bar import LoadingWindow, ProgressBarLogUpdater
+from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_3d.viewer_3d import Viewer3D
 from vibra.project import Project
-from vibra.interface.status_bar import StatusBar
-from vibra.interface.clip_plane_widget import ClipPlaneWidget
 
 
 def load_icon(path, color):
@@ -59,13 +58,13 @@ class MainWindow(QMainWindow):
 
     def move_clipping_plane(self):
         pos = self.clip_plane.get_position()
-        normal = self.clip_plane.get_normal()
-        self.viewer_3d.analisys_renderer.configure_plane(pos, normal)
+        orientation = self.clip_plane.get_rotation()
+        self.viewer_3d.analisys_renderer.configure_plane(pos, orientation)
 
     def apply_cut(self):
         pos = self.clip_plane.get_position()
-        normal = self.clip_plane.get_normal()
-        self.viewer_3d.analisys_renderer.apply_cut(pos, normal)
+        orientation = self.clip_plane.get_rotation()
+        self.viewer_3d.analisys_renderer.apply_cut(pos, orientation)
 
     def disable_cut(self):
         self.viewer_3d.analisys_renderer.disable_cut()
@@ -115,8 +114,8 @@ class MainWindow(QMainWindow):
         self.new_project_action = QAction(self.new_project_icon, "New Project", self)
         self.load_project_action = QAction(self.load_project_icon, "Load Project", self)
         self.exit_import_action = QAction(self.exit_import_icon, "Exit", self)
-        self.import_geometry_action = QAction(self.capture_image_icon, "Import geometry", self)  
-        self.capture_image_action = QAction(self.import_geometry_icon, "Capture image", self) 
+        self.import_geometry_action = QAction(self.capture_image_icon, "Import geometry", self)
+        self.capture_image_action = QAction(self.import_geometry_icon, "Capture image", self)
         self.save_action = QAction(self.save_icon, "Save", self)
         self.save_as_action = QAction(self.save_as_icon, "Save as", self)
         self.help_action = QAction(self.help_icon, "About Vibra", self)
@@ -184,13 +183,13 @@ class MainWindow(QMainWindow):
         loaded_function()
 
     def load_function(self, function, *, text=""):
-        '''
+        """
         This function works just like a decorator.
 
         The function passed is transformed so it will show a
         progressbar while running.
 
-        The text and progress of the progressbar is given by 
+        The text and progress of the progressbar is given by
         logs containing ProgressStatus in it.
 
         Example:
@@ -198,7 +197,7 @@ class MainWindow(QMainWindow):
 
         loaded_func = self.load_function(func)
         loaded_func(args, of, the, original, function)
-        '''
+        """
 
         def wrapper(*args, **kwargs):
             try:
@@ -279,8 +278,8 @@ class MainWindow(QMainWindow):
         self.tool_bar.addSeparator()
         self.tool_bar.addAction(self.clip_plane_action)
 
-    def create_status_bar(self):    
-       self.setStatusBar(self.status_bar)
+    def create_status_bar(self):
+        self.setStatusBar(self.status_bar)
 
     def load_project_menu(self):
         self.project_menu.clear()
@@ -310,13 +309,13 @@ class MainWindow(QMainWindow):
 
     def load_help_menu(self):
         self.help_menu.addAction(self.help_action)
-    
+
     def clip_plane_callback(self):
         self.clip_plane.show()
-        
+
     def save_callback(self):
         self.project.save()
-        
+
     def help_callback(self):
         help_window = HelpWindow()
         help_window.exec()
@@ -335,12 +334,12 @@ class MainWindow(QMainWindow):
             self.theme_action.setIcon(self.theme_moon_icon)
 
     def set_theme(self, theme: str):
-        '''
+        """
         Changes Qt stylesheets using qdarktheme library and the
         renderer background colors.
 
         The input is a string "light" or "dark".
-        '''
+        """
         qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
         self.viewer_3d.set_theme(theme)
         self.user_config.theme = theme
@@ -349,12 +348,12 @@ class MainWindow(QMainWindow):
         path, check = QFileDialog.getSaveFileName(
             self,
             "PNG",
-            filter = "PNG (*.png)",
+            filter="PNG (*.png)",
         )
 
         if not check:
-           return
-        
+            return
+
         self.viewer_3d.save_png(path)
 
     def import_geometry_callback(self):
@@ -420,7 +419,7 @@ class MainWindow(QMainWindow):
 
             elif faces:
                 self.status_bar.show_faces(faces)
-            
+
             else:
                 self.status_bar.clear_selections()
 
