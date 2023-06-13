@@ -52,22 +52,21 @@ class MainWindow(QMainWindow):
         self.load_user_preferences()
 
         self.viewer_3d.object_selected.connect(self.viewer_selection_callback)
-        self.clip_plane.value_changed.connect(self.move_clipping_plane)
-        self.clip_plane.slider_released.connect(self.apply_cut)
+        self.clip_plane.slider_pressed.connect(self.slider_pressed_callback)
+        self.clip_plane.value_changed.connect(self.slider_moved_callback)
+        self.clip_plane.slider_released.connect(self.slider_released_callback)
         self.clip_plane.closed.connect(self.disable_cut)
-        self.clip_plane.slider_pressed.connect(self.click_callback)
 
-
-    def click_callback(self):
+    def slider_pressed_callback(self):
         self.viewer_3d.analisys_renderer.show_plane()
         self.viewer_3d.analisys_renderer.disable_cut()
 
-    def move_clipping_plane(self):
+    def slider_moved_callback(self):
         pos = self.clip_plane.get_position()
         orientation = self.clip_plane.get_rotation()
         self.viewer_3d.analisys_renderer.configure_plane(pos, orientation)
 
-    def apply_cut(self):
+    def slider_released_callback(self):
         pos = self.clip_plane.get_position()
         orientation = self.clip_plane.get_rotation()
         self.viewer_3d.analisys_renderer.apply_cut(pos, orientation)
@@ -319,6 +318,8 @@ class MainWindow(QMainWindow):
 
     def clip_plane_callback(self):
         self.clip_plane.show()
+        self.slider_moved_callback()
+        self.slider_released_callback()
 
     def save_callback(self):
         self.project.save()

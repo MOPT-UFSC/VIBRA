@@ -32,5 +32,4 @@ class CuttingPlaneActor(vtk.vtkActor):
 
     def configure_appearance(self):
         self.GetProperty().SetColor(0, 0.333, 0.867)
-        self.GetProperty().SetLineWidth(2)
-        self.GetProperty().SetOpacity(0.5)
+        self.GetProperty().LightingOff()

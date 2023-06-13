@@ -49,21 +49,21 @@ class ClipPlaneWidget(QWidget):
 
         #
         self.y_angle_slider = QSlider(Qt.Orientation.Horizontal)
-        self.y_angle_slider.setMaximum(180)
+        self.y_angle_slider.setMaximum(360)
         self.y_angle_slider.setMinimum(0)
         self.y_angle_slider.valueChanged.connect(self.value_change_callback)
         self.y_angle_slider.sliderReleased.connect(self.slider_release_callback)
         self.y_angle_slider.sliderPressed.connect(self.slider_pressed_callback)
 
         self.x_angle_slider = QSlider(Qt.Orientation.Horizontal)
-        self.x_angle_slider.setMaximum(180)
+        self.x_angle_slider.setMaximum(360)
         self.x_angle_slider.setMinimum(0)
         self.x_angle_slider.valueChanged.connect(self.value_change_callback)
         self.x_angle_slider.sliderReleased.connect(self.slider_release_callback)
         self.x_angle_slider.sliderPressed.connect(self.slider_pressed_callback)
 
         self.z_angle_slider = QSlider(Qt.Orientation.Horizontal)
-        self.z_angle_slider.setMaximum(180)
+        self.z_angle_slider.setMaximum(360)
         self.z_angle_slider.setMinimum(0)
         self.z_angle_slider.valueChanged.connect(self.value_change_callback)
         self.z_angle_slider.sliderReleased.connect(self.slider_release_callback)

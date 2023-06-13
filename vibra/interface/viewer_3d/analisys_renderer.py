@@ -64,12 +64,12 @@ class AnalisysRenderer(CommonRenderer):
         if not self._actors_exists():
             return
 
-        self.plane_actor.VisibilityOn()
         x = lerp(self.bounds[0], self.bounds[1], position[0]/100)
         y = lerp(self.bounds[2], self.bounds[3], position[1]/100)
         z = lerp(self.bounds[4], self.bounds[5], position[2]/100)
         self.plane_actor.SetPosition(x,y,z)
         self.plane_actor.SetOrientation(orientation)
+        self.plane_actor.VisibilityOn()
         self.update()
 
     def apply_cut(self, position, orientation):
@@ -90,12 +90,16 @@ class AnalisysRenderer(CommonRenderer):
         self.update()
 
     def show_plane(self):
+        if not self._actors_exists():
+            return
         self.plane_actor.VisibilityOn()
         self.plane_actor.GetProperty().SetOpacity(0.8)
         self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
         self.update()
 
     def hide_plane(self):
+        if not self._actors_exists():
+            return
         self.plane_actor.GetProperty().SetOpacity(0.2)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.update()
