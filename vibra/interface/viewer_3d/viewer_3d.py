@@ -3,6 +3,7 @@ from PyQt5.QtCore import QCoreApplication, pyqtSignal
 from PyQt5.QtWidgets import QFrame, QVBoxLayout
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
+from vibra.interface.viewer_3d.analisys_renderer import AnalisysRenderer
 from vibra.interface.viewer_3d.arcball_camera import (
     vtkInteractorStyleArcballCamera,
 )
@@ -20,6 +21,7 @@ class Viewer3D(QFrame):
         self.project = project
         self.example_renderer = ExampleRenderer()
         self.model_renderer = ModelRenderer()
+        self.analisys_renderer = AnalisysRenderer()
 
         # Use only to access the current renderer easily
         self.current_renderer = None
@@ -28,7 +30,7 @@ class Viewer3D(QFrame):
         self.render_interactor = QVTKRenderWindowInteractor(self)
         self.render_interactor.Initialize()
         self.render_interactor.SetInteractorStyle(self.style)
-        self.set_renderer(self.model_renderer)
+        self.set_renderer(self.analisys_renderer)
         self.style.AddObserver("SelectionEvent", self.selection_callback)
 
         layout = QVBoxLayout()
@@ -46,6 +48,7 @@ class Viewer3D(QFrame):
     def set_project(self, project):
         self.project = project
         self.model_renderer.set_project(project)
+        self.analisys_renderer.set_project(project)
 
     def set_renderer(self, renderer):
         if renderer == self.current_renderer:
@@ -61,6 +64,7 @@ class Viewer3D(QFrame):
     def set_theme(self, theme):
         self.example_renderer.set_theme(theme)
         self.model_renderer.set_theme(theme)
+        self.analisys_renderer.set_theme(theme)
 
     def save_png(self, path):
         imageFilter = vtk.vtkWindowToImageFilter()
