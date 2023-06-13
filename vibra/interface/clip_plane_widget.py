@@ -37,8 +37,8 @@ class ClipPlaneWidget(QWidget):
         self.z_pos_tittle_label = QLabel("Pz")
         self.position_tittle_label = QLabel("Position")
         self.rotation_tittle_label = QLabel("Rotation")
-        self.position_tittle_label.setFont(QFont("", 15))
-        self.rotation_tittle_label.setFont(QFont("", 15))
+        self.position_tittle_label.setFont(QFont("Helvetica", 12, QFont.Bold))
+        self.rotation_tittle_label.setFont(QFont("Helvetica", 12, QFont.Bold))
 
         self.v_angle_value_label = QLabel("0 °")
         self.h_angle_value_label = QLabel("0 °")
@@ -49,21 +49,21 @@ class ClipPlaneWidget(QWidget):
 
         #
         self.y_angle_slider = QSlider(Qt.Orientation.Horizontal)
-        self.y_angle_slider.setMaximum(360)
+        self.y_angle_slider.setMaximum(180)
         self.y_angle_slider.setMinimum(0)
         self.y_angle_slider.valueChanged.connect(self.value_change_callback)
         self.y_angle_slider.sliderReleased.connect(self.slider_release_callback)
         self.y_angle_slider.sliderPressed.connect(self.slider_pressed_callback)
 
         self.x_angle_slider = QSlider(Qt.Orientation.Horizontal)
-        self.x_angle_slider.setMaximum(360)
+        self.x_angle_slider.setMaximum(180)
         self.x_angle_slider.setMinimum(0)
         self.x_angle_slider.valueChanged.connect(self.value_change_callback)
         self.x_angle_slider.sliderReleased.connect(self.slider_release_callback)
         self.x_angle_slider.sliderPressed.connect(self.slider_pressed_callback)
 
         self.z_angle_slider = QSlider(Qt.Orientation.Horizontal)
-        self.z_angle_slider.setMaximum(360)
+        self.z_angle_slider.setMaximum(180)
         self.z_angle_slider.setMinimum(0)
         self.z_angle_slider.valueChanged.connect(self.value_change_callback)
         self.z_angle_slider.sliderReleased.connect(self.slider_release_callback)
