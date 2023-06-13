@@ -3,13 +3,13 @@ from PyQt5.QtCore import QCoreApplication, pyqtSignal
 from PyQt5.QtWidgets import QFrame, QVBoxLayout
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
+from vibra.interface.viewer_3d.analisys_renderer import AnalisysRenderer
 from vibra.interface.viewer_3d.arcball_camera import (
     vtkInteractorStyleArcballCamera,
 )
 from vibra.interface.viewer_3d.example_renderer import ExampleRenderer
 from vibra.interface.viewer_3d.model_renderer import ModelRenderer
 from vibra.interface.viewer_3d.selection_interactor import SelectionInteractor
-from vibra.interface.viewer_3d.analisys_renderer import AnalisysRenderer
 
 
 class Viewer3D(QFrame):

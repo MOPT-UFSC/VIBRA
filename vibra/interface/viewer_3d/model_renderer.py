@@ -172,14 +172,14 @@ class ModelRenderer(CommonRenderer):
         self.update()
 
     def _find_key(self, value, dictionary):
-        '''
-        Given a dictionary finds the key that contains 
+        """
+        Given a dictionary finds the key that contains
         some value in it.
 
-        This function only make sense if the dict 
-        values are sets, because in sets it is a 
+        This function only make sense if the dict
+        values are sets, because in sets it is a
         very inexpensive operation.
-        '''
+        """
         for key, values in dictionary.items():
             if value in values:
                 return key

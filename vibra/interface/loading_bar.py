@@ -13,10 +13,10 @@ from vibra.utils import ProgressStatus
 
 
 class ProgressBarLogUpdater(logging.Handler):
-    '''
-    This class is an log observer. It is meant to watch logs 
+    """
+    This class is an log observer. It is meant to watch logs
     and use it to update a progressbar and/or some labels.
-    '''
+    """
 
     def __init__(self, level=0, *, progress_bar=None, label=None) -> None:
         super().__init__(level)
