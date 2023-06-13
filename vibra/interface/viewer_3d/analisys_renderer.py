@@ -49,7 +49,6 @@ class AnalisysRenderer(CommonRenderer):
         self.model_actor = ClippedActor(mesh)
         self.AddActor(self.model_actor)
         self.bounds = self.model_actor.GetBounds()
-        print(self.bounds)
 
         self.plane_actor = CuttingPlaneActor()
         self.plane_actor.VisibilityOff()
@@ -65,7 +64,6 @@ class AnalisysRenderer(CommonRenderer):
         if not self._actors_exists():
             return
 
-        self.disable_cut()
         self.plane_actor.VisibilityOn()
         x = lerp(self.bounds[0], self.bounds[1], position[0]/100)
         y = lerp(self.bounds[2], self.bounds[3], position[1]/100)
@@ -89,10 +87,11 @@ class AnalisysRenderer(CommonRenderer):
             return
         self.plane_actor.VisibilityOff()
         self.model_actor.disable_cut()
+        self.update()
 
     def show_plane(self):
         self.plane_actor.VisibilityOn()
-        self.plane_actor.GetProperty().SetOpacity(1)
+        self.plane_actor.GetProperty().SetOpacity(0.8)
         self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
         self.update()
 

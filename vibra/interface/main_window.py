@@ -60,6 +60,7 @@ class MainWindow(QMainWindow):
 
     def click_callback(self):
         self.viewer_3d.analisys_renderer.show_plane()
+        self.viewer_3d.analisys_renderer.disable_cut()
 
     def move_clipping_plane(self):
         pos = self.clip_plane.get_position()
