@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QLabel, QSlider, QGridLayout, QProxyStyle
+from PyQt5.QtWidgets import QWidget, QLabel, QSlider, QGridLayout
 from PyQt5.QtCore import  Qt
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import pyqtSignal
@@ -46,10 +46,9 @@ class ClipPlaneWidget(QWidget):
         self.y_angle_slider = QSlider(Qt.Orientation.Horizontal)
         self.y_angle_slider.setMaximum(360)
         self.y_angle_slider.setMinimum(0)
+        self.y_angle_slider.setSingleStep(50)
         self.y_angle_slider.valueChanged.connect(self.value_change_callback)
         self.y_angle_slider.sliderReleased.connect(self.slider_release_callback)
-        self.y_angle_slider.setSliderPosition(False)
-        self.y_angle_slider.setSliderDown(False)
 
         self.x_angle_slider = QSlider(Qt.Orientation.Horizontal)
         self.x_angle_slider.setMaximum(360)
@@ -80,6 +79,13 @@ class ClipPlaneWidget(QWidget):
         self.z_pos_slider.setMinimum(0)
         self.z_pos_slider.valueChanged.connect(self.value_change_callback) 
         self.z_pos_slider.sliderReleased.connect(self.slider_release_callback) 
+
+        self.v_angle_value_label.setFixedWidth(50)
+        self.h_angle_value_label.setFixedWidth(50)
+        self.position_value_label.setFixedWidth(50)
+        self.x_pos_tittle_value_label.setFixedWidth(50)
+        self.y_pos_tittle_value_label.setFixedWidth(50)
+        self.z_pos_tittle_value_label.setFixedWidth(50)
 
         # 
         grid_layout = QGridLayout()
@@ -128,12 +134,14 @@ class ClipPlaneWidget(QWidget):
         return Rx, Ry, Rz
 
     def value_change_callback(self):
+        self.setUpdatesEnabled(False)
         self.v_angle_value_label.setText(f"{self.y_angle_slider.value()} °")
         self.h_angle_value_label.setText(f"{self.x_angle_slider.value()} °")
         self.position_value_label.setText(f"{self.z_angle_slider.value()} °")
         self.x_pos_tittle_value_label.setText(f"{self.x_pos_slider.value()} %")
         self.y_pos_tittle_value_label.setText(f"{self.y_pos_slider.value()} %")
         self.z_pos_tittle_value_label.setText(f"{self.z_pos_slider.value()} %")
+        self.setUpdatesEnabled(True)
         self.value_changed.emit()
 
     def slider_release_callback(self):
