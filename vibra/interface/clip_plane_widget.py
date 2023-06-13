@@ -6,6 +6,7 @@ class ClipPlaneWidget(QWidget):
     value_changed = pyqtSignal()
     slider_released = pyqtSignal()
     closed = pyqtSignal()
+    slider_pressed = pyqtSignal()
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -50,39 +51,47 @@ class ClipPlaneWidget(QWidget):
         self.y_angle_slider = QSlider(Qt.Orientation.Horizontal)
         self.y_angle_slider.setMaximum(360)
         self.y_angle_slider.setMinimum(0)
-        self.y_angle_slider.setSingleStep(50)
         self.y_angle_slider.valueChanged.connect(self.value_change_callback)
         self.y_angle_slider.sliderReleased.connect(self.slider_release_callback)
+        self.y_angle_slider.sliderPressed.connect(self.slider_pressed_callback)
 
         self.x_angle_slider = QSlider(Qt.Orientation.Horizontal)
         self.x_angle_slider.setMaximum(360)
         self.x_angle_slider.setMinimum(0)
         self.x_angle_slider.valueChanged.connect(self.value_change_callback)
         self.x_angle_slider.sliderReleased.connect(self.slider_release_callback)
+        self.x_angle_slider.sliderPressed.connect(self.slider_pressed_callback)
 
         self.z_angle_slider = QSlider(Qt.Orientation.Horizontal)
         self.z_angle_slider.setMaximum(360)
         self.z_angle_slider.setMinimum(0)
         self.z_angle_slider.valueChanged.connect(self.value_change_callback)
         self.z_angle_slider.sliderReleased.connect(self.slider_release_callback)
+        self.z_angle_slider.sliderPressed.connect(self.slider_pressed_callback)
 
         self.x_pos_slider = QSlider(Qt.Orientation.Horizontal)
         self.x_pos_slider.setMaximum(100)
         self.x_pos_slider.setMinimum(0)
+        self.x_pos_slider.setValue(50)
         self.x_pos_slider.valueChanged.connect(self.value_change_callback)
         self.x_pos_slider.sliderReleased.connect(self.slider_release_callback)
+        self.x_pos_slider.sliderPressed.connect(self.slider_pressed_callback)
 
         self.y_pos_slider = QSlider(Qt.Orientation.Horizontal)
         self.y_pos_slider.setMaximum(100)
         self.y_pos_slider.setMinimum(0)
+        self.y_pos_slider.setValue(50)
         self.y_pos_slider.valueChanged.connect(self.value_change_callback)
         self.y_pos_slider.sliderReleased.connect(self.slider_release_callback)
+        self.y_pos_slider.sliderPressed.connect(self.slider_pressed_callback)
 
         self.z_pos_slider = QSlider(Qt.Orientation.Horizontal)
         self.z_pos_slider.setMaximum(100)
         self.z_pos_slider.setMinimum(0)
+        self.z_pos_slider.setValue(50)
         self.z_pos_slider.valueChanged.connect(self.value_change_callback)
         self.z_pos_slider.sliderReleased.connect(self.slider_release_callback)
+        self.z_pos_slider.sliderPressed.connect(self.slider_pressed_callback)
 
         self.v_angle_value_label.setFixedWidth(50)
         self.h_angle_value_label.setFixedWidth(50)
@@ -150,6 +159,9 @@ class ClipPlaneWidget(QWidget):
 
     def slider_release_callback(self):
         self.slider_released.emit()
+
+    def slider_pressed_callback(self):
+        self.slider_pressed.emit()
 
     def closeEvent(self, event):
         self.closed.emit()

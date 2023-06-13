@@ -1,6 +1,5 @@
 import vtk
 
-
 class CuttingPlaneActor(vtk.vtkActor):
     def __init__(self):
         self.create_geometry()
@@ -28,7 +27,6 @@ class CuttingPlaneActor(vtk.vtkActor):
         self.SetMapper(mapper)
 
     def configure_appearance(self):
-        self.GetProperty().SetColor(0.15, 0.82, 0.74)
+        self.GetProperty().SetColor(0, 0.333, 0.867)
         self.GetProperty().SetLineWidth(2)
-        # self.GetProperty().SetOpacity(0.6)
-        self.SetScale(3000, 3000, 3000)
+        self.GetProperty().SetOpacity(0.5)

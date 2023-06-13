@@ -1,6 +1,7 @@
 import numpy as np
 import vtk
 
+
 from vibra.engine.mesh import Mesh
 from vibra.interface.viewer_3d.actors.clipped_actor import ClippedActor
 from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
@@ -10,6 +11,8 @@ from vibra.interface.viewer_3d.actors.example_actor import ExampleActor
 from vibra.interface.viewer_3d.actors.lines_actor import LinesActor
 from vibra.interface.viewer_3d.actors.points_actor import PointsActor
 from vibra.interface.viewer_3d.common_renderer import CommonRenderer
+from vibra.utils import lerp
+from vibra.utils import distance_points
 
 SHOW_POINTS = 0
 SHOW_LINES = 1
@@ -23,6 +26,7 @@ class AnalisysRenderer(CommonRenderer):
 
         self.model_actor = None
         self.plane_actor = None
+        self.bounds = (0,0,0,0,0,0)
 
         self.update_actors()
 
@@ -44,9 +48,13 @@ class AnalisysRenderer(CommonRenderer):
 
         self.model_actor = ClippedActor(mesh)
         self.AddActor(self.model_actor)
+        self.bounds = self.model_actor.GetBounds()
+        print(self.bounds)
 
         self.plane_actor = CuttingPlaneActor()
         self.plane_actor.VisibilityOff()
+        scale = distance_points(self.bounds)
+        self.plane_actor.SetScale(scale, scale, scale)
         self.AddActor(self.plane_actor)
 
     def remove_actors(self):
@@ -59,19 +67,21 @@ class AnalisysRenderer(CommonRenderer):
 
         self.disable_cut()
         self.plane_actor.VisibilityOn()
-        self.model_actor.GetProperty().SetOpacity(0.2)
-
-        self.plane_actor.SetPosition(position)
+        x = lerp(self.bounds[0], self.bounds[1], position[0]/100)
+        y = lerp(self.bounds[2], self.bounds[3], position[1]/100)
+        z = lerp(self.bounds[4], self.bounds[5], position[2]/100)
+        self.plane_actor.SetPosition(x,y,z)
         self.plane_actor.SetOrientation(orientation)
         self.update()
 
     def apply_cut(self, position, orientation):
         if not self._actors_exists():
             return
-
+        x = lerp(self.bounds[0], self.bounds[1], position[0]/100)
+        y = lerp(self.bounds[2], self.bounds[3], position[1]/100)
+        z = lerp(self.bounds[4], self.bounds[5], position[2]/100)
         normal = self._calculate_normal_vector(orientation)
-        self.model_actor.apply_cut(position, normal)
-        self.model_actor.GetProperty().SetOpacity(1)
+        self.model_actor.apply_cut((x,y,z), normal)
         self.update()
 
     def disable_cut(self):
@@ -79,6 +89,17 @@ class AnalisysRenderer(CommonRenderer):
             return
         self.plane_actor.VisibilityOff()
         self.model_actor.disable_cut()
+
+    def show_plane(self):
+        self.plane_actor.VisibilityOn()
+        self.plane_actor.GetProperty().SetOpacity(1)
+        self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
+        self.update()
+
+    def hide_plane(self):
+        self.plane_actor.GetProperty().SetOpacity(0.2)
+        self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
+        self.update()
 
     def _actors_exists(self):
         if self.model_actor is None:

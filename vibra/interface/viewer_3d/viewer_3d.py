@@ -30,7 +30,7 @@ class Viewer3D(QFrame):
         self.render_interactor = QVTKRenderWindowInteractor(self)
         self.render_interactor.Initialize()
         self.render_interactor.SetInteractorStyle(self.style)
-        self.set_renderer(self.model_renderer)
+        self.set_renderer(self.analisys_renderer)
         self.style.AddObserver("SelectionEvent", self.selection_callback)
 
         layout = QVBoxLayout()

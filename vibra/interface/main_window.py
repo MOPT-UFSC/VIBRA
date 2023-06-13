@@ -55,6 +55,11 @@ class MainWindow(QMainWindow):
         self.clip_plane.value_changed.connect(self.move_clipping_plane)
         self.clip_plane.slider_released.connect(self.apply_cut)
         self.clip_plane.closed.connect(self.disable_cut)
+        self.clip_plane.slider_pressed.connect(self.click_callback)
+
+
+    def click_callback(self):
+        self.viewer_3d.analisys_renderer.show_plane()
 
     def move_clipping_plane(self):
         pos = self.clip_plane.get_position()
@@ -65,6 +70,7 @@ class MainWindow(QMainWindow):
         pos = self.clip_plane.get_position()
         orientation = self.clip_plane.get_rotation()
         self.viewer_3d.analisys_renderer.apply_cut(pos, orientation)
+        self.viewer_3d.analisys_renderer.hide_plane()
 
     def disable_cut(self):
         self.viewer_3d.analisys_renderer.disable_cut()
