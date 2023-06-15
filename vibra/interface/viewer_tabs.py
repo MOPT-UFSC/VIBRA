@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import (
 from vibra.interface.help_widget import HelpWidget
 from vibra.interface.viewer_3d.example_renderer import ExampleRenderer
 from vibra.interface.viewer_3d.model_renderer import ModelRenderer
+from vibra.interface.viewer_3d.analisys_renderer import AnalisysRenderer
 from vibra.interface.viewer_3d.viewer_3d import Viewer3D
 from vibra.interface.viewer_3d.vtk_widget import VTKWidget
 
@@ -25,15 +26,24 @@ class ViewerTabs(QTabWidget):
         self.user_config = user_config
 
         self.model_widget = None
+        self.modal_analisys_widget = None
         self.wellcome_widget = QLabel("Seja muito bem vindo!")
         self.help_widget = HelpWidget()
 
         self.show_wellcome()
         self.show_model()
+        self.show_analisys()
 
     def show_wellcome(self):
         self.addTab(self.wellcome_widget, "Wellcome!")
         self.setCurrentWidget(self.wellcome_widget)
+
+    def show_example(self):
+        example_widget = VTKWidget()
+        example_widget.set_renderer(ExampleRenderer())
+        example_widget.set_theme(self.user_config.theme)
+        self.addTab(example_widget, "Example")
+        self.setCurrentWidget(example_widget)
 
     def show_model(self):
         if self.model_widget is None:
@@ -45,12 +55,16 @@ class ViewerTabs(QTabWidget):
             self.addTab(self.model_widget, "Model")
         self.setCurrentWidget(self.model_widget)
 
-    def show_example(self):
-        example_widget = VTKWidget()
-        example_widget.set_renderer(ExampleRenderer())
-        example_widget.set_theme(self.user_config.theme)
-        self.addTab(example_widget, "Example")
-        self.setCurrentWidget(example_widget)
+    def show_analisys(self):
+        if self.modal_analisys_widget is None:
+            self.modal_analisys_widget = VTKWidget()
+            self.modal_analisys_widget.set_renderer(AnalisysRenderer(self.project))
+            self.modal_analisys_widget.set_theme(self.user_config.theme)
+            self.modal_analisys_widget.renderer.apply_cut((50, 50, 50), (180, 180, 180))
+
+        if self.modal_analisys_widget not in self.tabs():
+            self.addTab(self.modal_analisys_widget, "Modal Analisys")
+        self.setCurrentWidget(self.modal_analisys_widget)
 
     def show_help(self):
         self.addTab(self.help_widget, "Help")

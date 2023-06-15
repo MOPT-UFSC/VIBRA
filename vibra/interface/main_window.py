@@ -1,4 +1,5 @@
 import logging
+import random
 from pathlib import Path
 from time import sleep
 
@@ -6,6 +7,7 @@ import qdarktheme
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import (
     QAction,
+    QApplication,
     QFileDialog,
     QLabel,
     QMainWindow,
@@ -19,6 +21,10 @@ from vibra.interface.menus.project_menu import ProjectMenu
 from vibra.interface.menus.view_mode_menu import ViewModeMenu
 from vibra.interface.menus.views_menu import ViewsMenu
 from vibra.interface.renderer_toolbar import RendererToolbar
+from vibra.interface.clip_plane_widget import ClipPlaneWidget
+from vibra.interface.help_widget import HelpWidget
+from vibra.interface.loading_bar import LoadingWindow, ProgressBarLogUpdater
+from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_3d.viewer_3d import Viewer3D
 from vibra.interface.viewer_3d.vtk_widget import VTKWidget
 from vibra.interface.viewer_tabs import ViewerTabs
@@ -33,11 +39,46 @@ class MainWindow(QMainWindow):
         self.project = Project()
         self.viewer_3d = Viewer3D(self)
         self.user_config = UserConfig()
+        self.status_bar = StatusBar(self)
+        self.clip_plane = ClipPlaneWidget(self)
+        self.viewer_tabs = ViewerTabs(self, self.project, self.user_config)
 
         self.configure_window()
         self.create_basic_layout()
         self.load_user_preferences()
 
+        # self.viewer_3d.object_selected.connect(self.viewer_selection_callback)
+        self.clip_plane.slider_pressed.connect(self.slider_pressed_callback)
+        self.clip_plane.value_changed.connect(self.slider_moved_callback)
+        self.clip_plane.slider_released.connect(self.slider_released_callback)
+        self.clip_plane.closed.connect(self.disable_cut)
+
+    def slider_pressed_callback(self):
+        if self.viewer_tabs.modal_analisys_widget is None:
+            return
+        self.viewer_tabs.modal_analisys_widget.renderer.show_plane()
+        self.viewer_tabs.modal_analisys_widget.renderer.disable_cut()
+
+    def slider_moved_callback(self):
+        if self.viewer_tabs.modal_analisys_widget is None:
+            return
+        pos = self.clip_plane.get_position()
+        orientation = self.clip_plane.get_rotation()
+        self.viewer_tabs.modal_analisys_widget.renderer.configure_plane(pos, orientation)
+
+    def slider_released_callback(self):
+        if self.viewer_tabs.modal_analisys_widget is None:
+            return
+        pos = self.clip_plane.get_position()
+        orientation = self.clip_plane.get_rotation()
+        self.viewer_tabs.modal_analisys_widget.renderer.apply_cut(pos, orientation)
+        self.viewer_tabs.modal_analisys_widget.renderer.hide_plane()
+
+    def disable_cut(self):
+        if self.viewer_tabs.modal_analisys_widget is None:
+            return
+        self.viewer_tabs.modal_analisys_widget.renderer.disable_cut()
+        
     def configure_window(self):
         self.setMinimumSize(800, 600)
         self.showMaximized()
@@ -52,7 +93,6 @@ class MainWindow(QMainWindow):
         }
 
     def create_basic_layout(self):
-        self.viewer_tabs = ViewerTabs(self, self.project, self.user_config)
         self.setCentralWidget(self.viewer_tabs)
 
         self.create_menu_bar()

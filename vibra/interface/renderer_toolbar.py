@@ -83,6 +83,10 @@ class RendererToolbar(QToolBar):
         self.show_faces_action = QAction(show_faces_icon, "Face View", self)
         self.show_faces_action.triggered.connect(self.show_faces_callback)
 
+        clip_plane_icon = load_icon(Path("data/icons/tube_cut.png"), color)
+        self.clip_plane_action = QAction(clip_plane_icon, "Clip Plane", self)
+        self.clip_plane_action.triggered.connect(self.clip_plane_callback)
+        
     def configure_layout(self):
         self.addSeparator()
         self.addAction(self.view_up_action)
@@ -97,6 +101,7 @@ class RendererToolbar(QToolBar):
         self.addAction(self.show_points_action)
         self.addAction(self.show_faces_action)
         self.addSeparator()
+        self.addAction(self.clip_plane_action)
 
     # Callbacks
     def view_up_callback(self):
@@ -148,3 +153,8 @@ class RendererToolbar(QToolBar):
         widget = self.parent().viewer_tabs.currentWidget()
         if isinstance(widget, VTKWidget):
             widget.show_faces()
+
+    def clip_plane_callback(self):
+        self.parent().clip_plane.show()
+        self.parent().slider_moved_callback()
+        self.parent().slider_released_callback()
