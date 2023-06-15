@@ -2,6 +2,7 @@ from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
 from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 from vibra.interface.viewer_3d.actors.lines_actor import LinesActor
 from vibra.interface.viewer_3d.actors.points_actor import PointsActor
+from vibra.interface.viewer_3d.selection_interactor import SelectionInteractor
 
 
 SHOW_POINTS = 0
@@ -19,6 +20,15 @@ class ModelRenderWidget(CommonRenderWidget):
         self.points_actor = None
         self.lines_actor = None
         self.faces_actor = None
+
+        self.selection_color = (20, 106, 245)
+        self.selected_points = []
+        self.selected_lines = []
+        self.selected_faces = []
+
+        self.style = SelectionInteractor()
+        self.style.AddObserver("SelectionEvent", self.selection_callback)
+        self.render_interactor.SetInteractorStyle(self.style)
 
         self.update_plot()
 
@@ -58,6 +68,7 @@ class ModelRenderWidget(CommonRenderWidget):
             self.points_actor.GetProperty().SetColor(1, 1, 1)
             self.lines_actor.GetProperty().SetColor(1, 1, 1)
 
+    # 
     def show_points(self):
         if not self._actors_exists():
             return
@@ -103,6 +114,60 @@ class ModelRenderWidget(CommonRenderWidget):
         self.view_mode = SHOW_FACES
         self.update()
 
+    # 
+    def selection_callback(self, obj, event):
+        if not self._actors_exists():
+            return
+
+        clicked_cell = obj.selection_picker.GetCellId()
+        clicked_actor = obj.selection_picker.GetActor()
+
+        self.clear_selection()
+
+        if clicked_actor == self.points_actor:
+            self.select_point(clicked_cell)
+
+        if clicked_actor == self.lines_actor:
+            line_entity = self._find_key(clicked_cell, self.project.mesh.line_entities)
+            self.select_line(line_entity)
+
+        if clicked_actor == self.faces_actor:
+            face_entity = self._find_key(clicked_cell, self.project.mesh.face_entities)
+            self.select_face(face_entity)
+
+        self.update()
+
+    def select_point(self, point):
+        if self.view_mode != SHOW_POINTS:
+            return
+        self.selected_points = [point]
+        self.points_actor.clear_colors()
+        self.points_actor.paint_cells(self.selection_color, [point])
+
+    def select_line(self, line):
+        if self.view_mode != SHOW_LINES:
+            return
+        self.selected_lines = [line]
+        self.lines_actor.clear_colors()
+        self.lines_actor.paint_cells(self.selection_color, self.project.mesh.line_entities[line])
+
+    def select_face(self, face):
+        if self.view_mode != SHOW_FACES:
+            return
+        self.selected_faces = [face]
+        self.faces_actor.clear_colors()
+        self.faces_actor.paint_cells(self.selection_color, self.project.mesh.face_entities[face])
+        self.update()
+
+    def clear_selection(self):
+        self.points_actor.clear_colors()
+        self.lines_actor.clear_colors()
+        self.faces_actor.clear_colors()
+        self.selected_points = []
+        self.selected_lines = []
+        self.selected_faces = []
+
+    # 
     def remove_actors(self):
         self.renderer.RemoveActor(self.points_actor)
         self.renderer.RemoveActor(self.lines_actor)
@@ -111,6 +176,21 @@ class ModelRenderWidget(CommonRenderWidget):
         self.points_actor = None
         self.lines_actor = None
         self.faces_actor = None
+
+    def _find_key(self, value, dictionary):
+        """
+        Given a dictionary finds the key that contains
+        some value in it.
+
+        This function only make sense if the dict
+        values are sets, because in sets belonging is
+        an inexpensive operation.
+        """
+        for key, values in dictionary.items():
+            if value in values:
+                return key
+        else:
+            return None
 
     def _actors_exists(self):
         if self.points_actor is None:

@@ -1,7 +1,7 @@
 import vtk
 from PyQt5.QtWidgets import QFrame, QStackedLayout
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from vibra.interface.viewer_3d.selection_interactor import SelectionInteractor
+from vibra.interface.viewer_3d.arcball_camera import vtkInteractorStyleArcballCamera
 
 
 class CommonRenderWidget(QFrame):
@@ -15,7 +15,7 @@ class CommonRenderWidget(QFrame):
         super().__init__(parent)
 
         self.renderer = vtk.vtkRenderer()
-        self.style = SelectionInteractor()
+        self.style = vtkInteractorStyleArcballCamera()
         self.render_interactor = QVTKRenderWindowInteractor(self)
 
         self.render_interactor.Initialize()
@@ -29,6 +29,11 @@ class CommonRenderWidget(QFrame):
 
     def update_plot(self):
         pass
+
+    def update(self):
+        ren_win = self.render_interactor.GetRenderWindow()
+        if ren_win is not None:
+            ren_win.Render()
 
     def save_png(self, path):
         imageFilter = vtk.vtkWindowToImageFilter()

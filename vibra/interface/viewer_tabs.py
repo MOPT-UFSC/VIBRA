@@ -25,10 +25,12 @@ class ViewerTabs(QTabWidget):
         self.project = project
         self.user_config = user_config
 
-        self.model_widget = None
+        self.model_widget = ModelRenderWidget(self.project, self)
         self.modal_analisys_widget = None
         self.wellcome_widget = QLabel("Seja muito bem vindo!")
         self.help_widget = HelpWidget()
+
+        self.model_widget.set_theme(self.user_config.theme)
 
         self.show_wellcome()
         self.show_example()
@@ -47,10 +49,6 @@ class ViewerTabs(QTabWidget):
         self.setCurrentWidget(example_widget)
 
     def show_model(self):
-        if self.model_widget is None:
-            self.model_widget = ModelRenderWidget(self.project, self)
-            self.model_widget.set_theme(self.user_config.theme)
-
         if self.model_widget not in self.tabs():
             self.addTab(self.model_widget, "Model")
         self.setCurrentWidget(self.model_widget)
@@ -80,6 +78,9 @@ class ViewerTabs(QTabWidget):
 
     def set_theme(self, theme):
         for tab in self.tabs():
+            if isinstance(tab, CommonRenderWidget):
+                tab.set_theme(theme)
+
             if isinstance(tab, VTKWidget):
                 tab.set_theme(theme)
 

@@ -22,11 +22,7 @@ from vibra.interface.menus.view_mode_menu import ViewModeMenu
 from vibra.interface.menus.views_menu import ViewsMenu
 from vibra.interface.renderer_toolbar import RendererToolbar
 from vibra.interface.clip_plane_widget import ClipPlaneWidget
-from vibra.interface.help_widget import HelpWidget
-from vibra.interface.loading_bar import LoadingWindow, ProgressBarLogUpdater
 from vibra.interface.status_bar import StatusBar
-# from vibra.interface.viewer_3d.viewer_3d import Viewer3D
-# from vibra.interface.viewer_3d.vtk_widget import VTKWidget
 from vibra.interface.viewer_tabs import ViewerTabs
 from vibra.project import Project
 from vibra.utils.icons import load_icon
