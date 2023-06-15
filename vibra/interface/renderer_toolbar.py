@@ -3,7 +3,7 @@ from pathlib import Path
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QToolBar
 
-from vibra.interface.viewer_3d.vtk_widget import VTKWidget
+from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
 from vibra.utils.icons import load_icon
 
 
@@ -106,52 +106,52 @@ class RendererToolbar(QToolBar):
     # Callbacks
     def view_up_callback(self):
         widget = self.viewer_tabs.currentWidget()
-        if isinstance(widget, VTKWidget):
+        if isinstance(widget, CommonRenderWidget):
             widget.set_view_up()
 
     def view_down_callback(self):
         widget = self.viewer_tabs.currentWidget()
-        if isinstance(widget, VTKWidget):
+        if isinstance(widget, CommonRenderWidget):
             widget.set_view_down()
 
     def view_left_callback(self):
         widget = self.viewer_tabs.currentWidget()
-        if isinstance(widget, VTKWidget):
+        if isinstance(widget, CommonRenderWidget):
             widget.set_view_left()
 
     def view_right_callback(self):
         widget = self.viewer_tabs.currentWidget()
-        if isinstance(widget, VTKWidget):
+        if isinstance(widget, CommonRenderWidget):
             widget.set_view_right()
 
     def view_front_callback(self):
         widget = self.viewer_tabs.currentWidget()
-        if isinstance(widget, VTKWidget):
+        if isinstance(widget, CommonRenderWidget):
             widget.set_view_front()
 
     def view_back_callback(self):
         widget = self.viewer_tabs.currentWidget()
-        if isinstance(widget, VTKWidget):
+        if isinstance(widget, CommonRenderWidget):
             widget.set_view_back()
 
     def view_orthogonal_callback(self):
         widget = self.viewer_tabs.currentWidget()
-        if isinstance(widget, VTKWidget):
+        if isinstance(widget, CommonRenderWidget):
             widget.set_view_orthogonal()
 
     def show_points_callback(self):
         widget = self.parent().viewer_tabs.currentWidget()
-        if isinstance(widget, VTKWidget):
+        if isinstance(widget, CommonRenderWidget):
             widget.show_points()
 
     def show_lines_callback(self):
         widget = self.parent().viewer_tabs.currentWidget()
-        if isinstance(widget, VTKWidget):
+        if isinstance(widget, CommonRenderWidget):
             widget.show_lines()
 
     def show_faces_callback(self):
         widget = self.parent().viewer_tabs.currentWidget()
-        if isinstance(widget, VTKWidget):
+        if isinstance(widget, CommonRenderWidget):
             widget.show_faces()
 
     def clip_plane_callback(self):

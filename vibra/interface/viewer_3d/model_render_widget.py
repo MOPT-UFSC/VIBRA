@@ -2,7 +2,7 @@ from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
 from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 from vibra.interface.viewer_3d.actors.lines_actor import LinesActor
 from vibra.interface.viewer_3d.actors.points_actor import PointsActor
-from vibra.interface.viewer_3d.selection_interactor import SelectionInteractor
+from vibra.interface.viewer_3d.interactor_styles.selection_interactor import SelectionInteractor
 
 
 SHOW_POINTS = 0

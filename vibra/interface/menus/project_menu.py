@@ -1,10 +1,9 @@
 from pathlib import Path
 
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QAction, QFileDialog, QMenu
+from PyQt5.QtWidgets import QAction, QMenu
 
 from vibra.interface.loading_bar import load_function
-from vibra.interface.viewer_3d.vtk_widget import VTKWidget
 from vibra.utils.icons import load_icon
 
 

@@ -8,7 +8,6 @@ from PyQt5.QtWidgets import (
 )
 
 from vibra.interface.help_widget import HelpWidget
-from vibra.interface.viewer_3d.vtk_widget import VTKWidget
 from vibra.interface.viewer_3d.example_render_widget import ExampleRenderWidget
 from vibra.interface.viewer_3d.model_render_widget import ModelRenderWidget
 from vibra.interface.viewer_3d.example_analisys_render_widget import ExampleAnalisysRenderWidget
@@ -67,15 +66,9 @@ class ViewerTabs(QTabWidget):
             if isinstance(tab, CommonRenderWidget):
                 tab.update_plot()
 
-            if isinstance(tab, VTKWidget):
-                tab.update_plot()
-
     def set_theme(self, theme):
         for tab in self.tabs():
             if isinstance(tab, CommonRenderWidget):
-                tab.set_theme(theme)
-
-            if isinstance(tab, VTKWidget):
                 tab.set_theme(theme)
 
     def configure_window(self):

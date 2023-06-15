@@ -3,7 +3,7 @@ from pathlib import Path
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QMenu
 
-from vibra.interface.viewer_3d.vtk_widget import VTKWidget
+from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
 from vibra.utils.icons import load_icon
 
 
@@ -35,15 +35,15 @@ class ViewModeMenu(QMenu):
     #
     def show_points_callback(self):
         widget = self.parent().viewer_tabs.currentWidget()
-        if isinstance(widget, VTKWidget):
+        if isinstance(widget, CommonRenderWidget):
             widget.show_points()
 
     def show_edges_callback(self):
         widget = self.parent().viewer_tabs.currentWidget()
-        if isinstance(widget, VTKWidget):
+        if isinstance(widget, CommonRenderWidget):
             widget.show_lines()
 
     def show_faces_callback(self):
         widget = self.parent().viewer_tabs.currentWidget()
-        if isinstance(widget, VTKWidget):
+        if isinstance(widget, CommonRenderWidget):
             widget.show_faces()

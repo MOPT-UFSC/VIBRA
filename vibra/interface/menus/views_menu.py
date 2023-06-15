@@ -3,7 +3,7 @@ from pathlib import Path
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QMenu
 
-from vibra.interface.viewer_3d.vtk_widget import VTKWidget
+from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
 from vibra.utils.icons import load_icon
 
 
@@ -50,35 +50,35 @@ class ViewsMenu(QMenu):
 
     def show_view_up_callback(self):
         widget = self.parent().viewer_tabs.currentWidget()
-        if isinstance(widget, VTKWidget):
+        if isinstance(widget, CommonRenderWidget):
             widget.set_view_up()
 
     def show_view_down_callback(self):
         widget = self.parent().viewer_tabs.currentWidget()
-        if isinstance(widget, VTKWidget):
+        if isinstance(widget, CommonRenderWidget):
             widget.set_view_down()
 
     def show_view_left_callback(self):
         widget = self.parent().viewer_tabs.currentWidget()
-        if isinstance(widget, VTKWidget):
+        if isinstance(widget, CommonRenderWidget):
             widget.set_view_left()
 
     def show_view_right_callback(self):
         widget = self.parent().viewer_tabs.currentWidget()
-        if isinstance(widget, VTKWidget):
+        if isinstance(widget, CommonRenderWidget):
             widget.set_view_right()
 
     def show_view_front_callback(self):
         widget = self.parent().viewer_tabs.currentWidget()
-        if isinstance(widget, VTKWidget):
+        if isinstance(widget, CommonRenderWidget):
             widget.set_view_front()
 
     def show_view_back_callback(self):
         widget = self.parent().viewer_tabs.currentWidget()
-        if isinstance(widget, VTKWidget):
+        if isinstance(widget, CommonRenderWidget):
             widget.set_view_back()
 
     def show_view_orthogonal_callback(self):
         widget = self.parent().viewer_tabs.currentWidget()
-        if isinstance(widget, VTKWidget):
+        if isinstance(widget, CommonRenderWidget):
             widget.set_view_orthogonal()
