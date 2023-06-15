@@ -1,7 +1,7 @@
 import vtk
 
 
-class ClippedActor(vtk.vtkActor):
+class AnalisysActor(vtk.vtkActor):
     def __init__(self, mesh):
         self.mesh = mesh
         self.create_geometry()
@@ -68,6 +68,8 @@ class ClippedActor(vtk.vtkActor):
         mapper.Modified()
 
     def configure_appearance(self):
+        self.GetProperty().RenderPointsAsSpheresOn()
+        self.GetProperty().SetPointSize(4)
         self.GetProperty().SetInterpolationToPhong()
         self.GetProperty().SetDiffuse(0.8)
         self.GetProperty().SetSpecular(0.5)

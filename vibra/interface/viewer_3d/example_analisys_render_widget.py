@@ -1,5 +1,5 @@
 from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
-from vibra.interface.viewer_3d.actors.clipped_actor import ClippedActor
+from vibra.interface.viewer_3d.actors.analisys_actor import AnalisysActor
 from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
     CuttingPlaneActor,
 )
@@ -33,7 +33,7 @@ class ExampleAnalisysRenderWidget(CommonRenderWidget):
         
         self.remove_actors()
 
-        self.model_actor = ClippedActor(mesh)
+        self.model_actor = AnalisysActor(mesh)
         self.renderer.AddActor(self.model_actor)
 
         self.bounds = self.model_actor.GetBounds()
@@ -44,6 +44,18 @@ class ExampleAnalisysRenderWidget(CommonRenderWidget):
         self.renderer.AddActor(self.plane_actor)
 
         self.renderer.ResetCamera()
+
+    def show_points(self):
+        self.model_actor.GetProperty().SetRepresentationToPoints()
+        self.update()
+
+    def show_lines(self):
+        self.model_actor.GetProperty().SetRepresentationToWireframe()
+        self.update()
+
+    def show_faces(self):
+        self.model_actor.GetProperty().SetRepresentationToSurface()
+        self.update()
 
     def configure_plane(self, position, orientation):
         if not self._actors_exists():
