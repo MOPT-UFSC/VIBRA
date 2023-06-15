@@ -10,7 +10,7 @@ from vibra.interface.viewer_3d.model_renderer import ModelRenderer
 from vibra.interface.viewer_3d.selection_interactor import SelectionInteractor
 
 
-class VTKWidget(QFrame):
+class CommonRenderWidget(QFrame):
     """
     This class is needed show vtk renderers in pyqt.
 
@@ -22,31 +22,19 @@ class VTKWidget(QFrame):
 
         self.renderer = vtk.vtkRenderer()
         self.style = SelectionInteractor()
-
         self.render_interactor = QVTKRenderWindowInteractor(self)
+
         self.render_interactor.Initialize()
+        self.render_interactor.GetRenderWindow().AddRenderer(self.renderer)
         self.render_interactor.SetInteractorStyle(self.style)
+        self.renderer.ResetCamera()
 
         layout = QStackedLayout()
         layout.addWidget(self.render_interactor)
         self.setLayout(layout)
 
-        self.style.AddObserver("SelectionEvent", self.selection_callback)
-        self.create_axes()
-
-    def set_renderer(self, renderer):
-        if renderer == self.renderer:
-            return
-
-        self.render_interactor.GetRenderWindow().RemoveRenderer(self.renderer)
-        self.render_interactor.GetRenderWindow().AddRenderer(renderer)
-        renderer.ResetCamera()
-        self.renderer = renderer
-
     def update_plot(self):
-        if self.renderer is None:
-            return
-        self.renderer.update_actors()
+        pass
 
     def save_png(self, path):
         imageFilter = vtk.vtkWindowToImageFilter()
@@ -73,42 +61,47 @@ class VTKWidget(QFrame):
         self.axes.EnabledOn()
         self.axes.InteractiveOff()
 
-    def selection_callback(self, obj, event):
-        if self.renderer is None:
-            return
+    def create_scale_bar(self):
+        self.scale_bar = vtk.vtkLegendScaleActor()
+        self.scale_bar.AllAxesOff()
 
-        try:
-            self.renderer.selection_callback(obj, event)
-        except AttributeError:
-            pass  # if renderer don't have this method just ignore
+        title_property = self.scale_bar.GetLegendTitleProperty()
+        title_property.SetFontSize(14)
+        title_property.ShadowOff()
+        title_property.ItalicOff()
+        title_property.SetLineOffset(-35)
+        title_property.SetVerticalJustificationToTop()
 
-    def set_theme(self, theme):
-        if self.renderer is None:
-            return
+        label_property = self.scale_bar.GetLegendLabelProperty()
+        label_property.SetFontSize(12)
+        label_property.ShadowOff()
+        label_property.ItalicOff()
+        label_property.BoldOff()
+        label_property.SetLineOffset(-25)
 
-        try:
-            self.renderer.set_theme(theme)
-        except AttributeError:
-            pass  # if renderer don't have this method just ignore
+        self.renderer.AddActor(self.scale_bar)
 
     #
+    def set_theme(self, theme):
+        if theme == "dark":
+            self.renderer.GradientBackgroundOn()
+            self.renderer.SetBackground(0.06, 0.08, 0.12)
+            self.renderer.SetBackground2(0, 0, 0)
+        elif theme == "light":
+            self.renderer.GradientBackgroundOn()
+            self.renderer.SetBackground(0.5, 0.5, 0.65)
+            self.renderer.SetBackground2(1, 1, 1)
+        else:
+            NotImplemented
+
     def show_points(self):
-        try:
-            self.renderer.show_points()
-        except AttributeError:
-            pass  # if renderer don't have this method just ignore
+        pass
 
     def show_lines(self):
-        try:
-            self.renderer.show_lines()
-        except AttributeError:
-            pass  # if renderer don't have this method just ignore
+        pass
 
     def show_faces(self):
-        try:
-            self.renderer.show_faces()
-        except AttributeError:
-            pass  # if renderer don't have this method just ignore
+        pass
 
     #
     def set_custom_view(self, position, view_up):

@@ -25,8 +25,8 @@ from vibra.interface.clip_plane_widget import ClipPlaneWidget
 from vibra.interface.help_widget import HelpWidget
 from vibra.interface.loading_bar import LoadingWindow, ProgressBarLogUpdater
 from vibra.interface.status_bar import StatusBar
-from vibra.interface.viewer_3d.viewer_3d import Viewer3D
-from vibra.interface.viewer_3d.vtk_widget import VTKWidget
+# from vibra.interface.viewer_3d.viewer_3d import Viewer3D
+# from vibra.interface.viewer_3d.vtk_widget import VTKWidget
 from vibra.interface.viewer_tabs import ViewerTabs
 from vibra.project import Project
 from vibra.utils.icons import load_icon
@@ -37,7 +37,7 @@ class MainWindow(QMainWindow):
         QMainWindow.__init__(self, parent)
 
         self.project = Project()
-        self.viewer_3d = Viewer3D(self)
+        # self.viewer_3d = Viewer3D(self)
         self.user_config = UserConfig()
         self.status_bar = StatusBar(self)
         self.clip_plane = ClipPlaneWidget(self)
@@ -158,7 +158,7 @@ class MainWindow(QMainWindow):
         if not check:
             return
 
-        self.viewer_3d.save_png(path)
+        # self.viewer_3d.save_png(path)
 
     def import_geometry(self):
         path, check = QFileDialog.getOpenFileName(
