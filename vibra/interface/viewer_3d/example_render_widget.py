@@ -11,6 +11,7 @@ from vibra.interface.viewer_3d.actors.symbols_actors import (
 class ExampleRenderWidget(CommonRenderWidget):
     def __init__(self, parent):
         super().__init__(parent)
+        self.create_axes()
         self.update_plot()
 
     def update_plot(self):
@@ -28,6 +29,8 @@ class ExampleRenderWidget(CommonRenderWidget):
 
         self.symbols_actor = ArrowSymbols3(self.renderer)
         self.renderer.AddActor(self.symbols_actor)
+
+        self.renderer.ResetCamera()
 
     def show_points(self):
         self.example_actor.GetProperty().SetRepresentationToPoints()

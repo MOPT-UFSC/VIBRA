@@ -1,12 +1,6 @@
 import vtk
-from PyQt5.QtCore import QCoreApplication, pyqtSignal
 from PyQt5.QtWidgets import QFrame, QStackedLayout
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-
-from vibra.interface.viewer_3d.arcball_camera import (
-    vtkInteractorStyleArcballCamera,
-)
-from vibra.interface.viewer_3d.model_renderer import ModelRenderer
 from vibra.interface.viewer_3d.selection_interactor import SelectionInteractor
 
 
