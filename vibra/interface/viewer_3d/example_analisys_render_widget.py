@@ -1,41 +1,28 @@
-import numpy as np
-import vtk
-
-from vibra.engine.mesh import Mesh
+from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
 from vibra.interface.viewer_3d.actors.clipped_actor import ClippedActor
 from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
     CuttingPlaneActor,
 )
-from vibra.interface.viewer_3d.actors.example_actor import ExampleActor
-from vibra.interface.viewer_3d.actors.lines_actor import LinesActor
-from vibra.interface.viewer_3d.actors.points_actor import PointsActor
-from vibra.interface.viewer_3d.common_renderer import CommonRenderer
 from vibra.utils.math_functions import lerp
 from vibra.utils.math_functions import distance_points
 from vibra.utils.math_functions import rotation_matrices
-
-SHOW_POINTS = 0
-SHOW_LINES = 1
-SHOW_FACES = 2
+import numpy as np
 
 
-class AnalisysRenderer(CommonRenderer):
-    def __init__(self, project=None):
-        super().__init__()
+class ExampleAnalisysRenderWidget(CommonRenderWidget):
+    def __init__(self, project, parent):
+        super().__init__(parent)
+
         self.project = project
 
         self.model_actor = None
         self.plane_actor = None
         self.bounds = (0,0,0,0,0,0)
 
-        self.update_actors()
+        self.create_axes()
+        self.update_plot()
 
-    def set_project(self, project):
-        self.project = project
-        self.update_actors()
-        self.ResetCamera()
-
-    def update_actors(self):
+    def update_plot(self):
         if self.project is None:
             return
 
@@ -47,20 +34,16 @@ class AnalisysRenderer(CommonRenderer):
         self.remove_actors()
 
         self.model_actor = ClippedActor(mesh)
-        self.AddActor(self.model_actor)
-        self.bounds = self.model_actor.GetBounds()
+        self.renderer.AddActor(self.model_actor)
 
+        self.bounds = self.model_actor.GetBounds()
+        scale = distance_points(self.bounds)
         self.plane_actor = CuttingPlaneActor()
         self.plane_actor.VisibilityOff()
-        scale = distance_points(self.bounds)
         self.plane_actor.SetScale(scale, scale, scale)
-        self.AddActor(self.plane_actor)
+        self.renderer.AddActor(self.plane_actor)
 
-        self.ResetCamera()
-
-    def remove_actors(self):
-        self.RemoveActor(self.model_actor)
-        self.RemoveActor(self.plane_actor)
+        self.renderer.ResetCamera()
 
     def configure_plane(self, position, orientation):
         if not self._actors_exists():
@@ -77,6 +60,7 @@ class AnalisysRenderer(CommonRenderer):
     def apply_cut(self, position, orientation):
         if not self._actors_exists():
             return
+
         x = lerp(self.bounds[0], self.bounds[1], position[0]/100)
         y = lerp(self.bounds[2], self.bounds[3], position[1]/100)
         z = lerp(self.bounds[4], self.bounds[5], position[2]/100)
@@ -106,11 +90,19 @@ class AnalisysRenderer(CommonRenderer):
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.update()
 
+    def remove_actors(self):
+        self.renderer.RemoveActor(self.model_actor)
+        self.renderer.RemoveActor(self.plane_actor)
+        self.model_actor = None
+        self.plane_actor = None
+
     def _actors_exists(self):
-        if self.model_actor is None:
-            return False
-        else:
-            return True
+        actors = [
+            self.model_actor,
+            self.plane_actor,
+        ]
+
+        return all([actor is not None for actor in actors])
 
     def _calculate_normal_vector(self, orientation):
         # https://forum.gamemaker.io/index.php?threads/solved-3d-rotations-with-a-shader-matrix-or-a-matrix-glsl-es.61064/

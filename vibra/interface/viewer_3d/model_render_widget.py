@@ -30,6 +30,7 @@ class ModelRenderWidget(CommonRenderWidget):
         self.style.AddObserver("SelectionEvent", self.selection_callback)
         self.render_interactor.SetInteractorStyle(self.style)
 
+        self.create_axes()
         self.update_plot()
 
     def update_plot(self):
@@ -193,14 +194,9 @@ class ModelRenderWidget(CommonRenderWidget):
             return None
 
     def _actors_exists(self):
-        if self.points_actor is None:
-            return False
-
-        elif self.lines_actor is None:
-            return False
-
-        elif self.faces_actor is None:
-            return False
-
-        else:
-            return True
+        actors = [
+            self.points_actor,
+            self.lines_actor,
+            self.faces_actor,
+        ]
+        return all([actor is not None for actor in actors])

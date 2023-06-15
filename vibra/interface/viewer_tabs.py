@@ -8,10 +8,10 @@ from PyQt5.QtWidgets import (
 )
 
 from vibra.interface.help_widget import HelpWidget
-from vibra.interface.viewer_3d.analisys_renderer import AnalisysRenderer
 from vibra.interface.viewer_3d.vtk_widget import VTKWidget
 from vibra.interface.viewer_3d.example_render_widget import ExampleRenderWidget
 from vibra.interface.viewer_3d.model_render_widget import ModelRenderWidget
+from vibra.interface.viewer_3d.example_analisys_render_widget import ExampleAnalisysRenderWidget
 from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
 
 
@@ -26,8 +26,8 @@ class ViewerTabs(QTabWidget):
         self.user_config = user_config
 
         self.model_widget = ModelRenderWidget(self.project, self)
-        self.modal_analisys_widget = None
-        self.wellcome_widget = QLabel("Seja muito bem vindo!")
+        self.example_analisys_widget = ExampleAnalisysRenderWidget(self.project, self)
+        self.welcome = QLabel("Seja muito bem vindo!")
         self.help_widget = HelpWidget()
 
         self.model_widget.set_theme(self.user_config.theme)
@@ -38,8 +38,8 @@ class ViewerTabs(QTabWidget):
         self.show_analisys()
 
     def show_wellcome(self):
-        self.addTab(self.wellcome_widget, "Wellcome!")
-        self.setCurrentWidget(self.wellcome_widget)
+        self.addTab(self.welcome, "Wellcome!")
+        self.setCurrentWidget(self.welcome)
 
     def show_example(self):
         example_widget = ExampleRenderWidget(self)
@@ -54,15 +54,9 @@ class ViewerTabs(QTabWidget):
         self.setCurrentWidget(self.model_widget)
 
     def show_analisys(self):
-        if self.modal_analisys_widget is None:
-            self.modal_analisys_widget = VTKWidget()
-            self.modal_analisys_widget.set_renderer(AnalisysRenderer(self.project))
-            self.modal_analisys_widget.set_theme(self.user_config.theme)
-            self.modal_analisys_widget.renderer.apply_cut((50, 50, 50), (180, 180, 180))
-
-        if self.modal_analisys_widget not in self.tabs():
-            self.addTab(self.modal_analisys_widget, "Modal Analisys")
-        self.setCurrentWidget(self.modal_analisys_widget)
+        if self.example_analisys_widget not in self.tabs():
+            self.addTab(self.example_analisys_widget, "Example Analisys")
+        self.setCurrentWidget(self.example_analisys_widget)
 
     def show_help(self):
         self.addTab(self.help_widget, "Help")
