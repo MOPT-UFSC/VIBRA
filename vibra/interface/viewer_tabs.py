@@ -68,10 +68,10 @@ class ViewerTabs(QTabWidget):
 
     def configure_window(self):
         self.setStyleSheet(
-            """
+        """
         QTabBar::tab {
-            margin-left: 10px;
-            margin-right: 10px;
+            margin-left: 5px;
+            margin-right: 5px;
         }
         """
         )
