@@ -50,7 +50,14 @@ class MainWindow(QMainWindow):
         self.clip_plane.closed.connect(self.disable_cut)
 
     def selection_changed_callback(self, points, lines, faces):
-        pass
+        if points:
+            self.status_bar.show_points(points)
+        elif lines:
+            self.status_bar.show_lines(lines)
+        elif faces:
+            self.status_bar.show_faces(faces)
+        else:
+            self.status_bar.clear_selections()
 
     def slider_pressed_callback(self):
         if self.viewer_tabs.example_analisys_widget is None:
@@ -113,23 +120,7 @@ class MainWindow(QMainWindow):
         self.addToolBar(self.renderer_toolbar)
 
     def create_status_bar(self):
-        self.status_bar = self.statusBar()
-        self.status_bar.showMessage("This is status bar")
-        self.label_1 = QLabel("Label 1")
-        self.label_1.move(100, 100)
-        self.status_bar.setStyleSheet("background-image : url(data/icons/png.png);")
-        self.label_2 = QLabel("Label 2")
-        self.label_1.setStyleSheet(
-            """
-                border :2px solid;
-                border-width: 1px;
-                border-color: #888888;
-                border-radius: 3px"""
-        )
-
-        # adding label to status bar
-        self.status_bar.addPermanentWidget(self.label_1)
-        self.status_bar.addPermanentWidget(self.label_2)
+       self.setStatusBar(self.status_bar)
 
     def closeEvent(self, event):
         self.close_app()
