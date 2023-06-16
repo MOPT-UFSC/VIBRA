@@ -75,7 +75,9 @@ class AnalisysActor(vtk.vtkActor):
         self.GetProperty().SetSpecular(0.5)
         self.GetProperty().SetSpecularPower(40)
         self.GetProperty().SetSpecularColor(1, 1, 1)
-        self.clear_colors()
+        # I commmented this line to keep the 
+        # structure with beautifull random colors
+        # self.clear_colors()
 
     def clear_colors(self):
         point_colors = self.data.GetPointData().GetScalars()
