@@ -1,3 +1,4 @@
+from PyQt5.QtCore import  pyqtSignal
 from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
 from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 from vibra.interface.viewer_3d.actors.lines_actor import LinesActor
@@ -11,6 +12,8 @@ SHOW_FACES = 2
 
 
 class ModelRenderWidget(CommonRenderWidget):
+    selection_changed = pyqtSignal(list, list, list)
+
     def __init__(self, project, parent):
         super().__init__(parent)
         
@@ -144,6 +147,8 @@ class ModelRenderWidget(CommonRenderWidget):
         self.selected_points = [point]
         self.points_actor.clear_colors()
         self.points_actor.paint_cells(self.selection_color, [point])
+        self.update()
+        self.selection_changed.emit(self.selected_points, self.selected_lines, self.selected_faces)
 
     def select_line(self, line):
         if self.view_mode != SHOW_LINES:
@@ -151,6 +156,8 @@ class ModelRenderWidget(CommonRenderWidget):
         self.selected_lines = [line]
         self.lines_actor.clear_colors()
         self.lines_actor.paint_cells(self.selection_color, self.project.mesh.line_entities[line])
+        self.update()
+        self.selection_changed.emit(self.selected_points, self.selected_lines, self.selected_faces)
 
     def select_face(self, face):
         if self.view_mode != SHOW_FACES:
@@ -159,6 +166,7 @@ class ModelRenderWidget(CommonRenderWidget):
         self.faces_actor.clear_colors()
         self.faces_actor.paint_cells(self.selection_color, self.project.mesh.face_entities[face])
         self.update()
+        self.selection_changed.emit(self.selected_points, self.selected_lines, self.selected_faces)
 
     def clear_selection(self):
         self.points_actor.clear_colors()

@@ -43,11 +43,14 @@ class MainWindow(QMainWindow):
         self.create_basic_layout()
         self.load_user_preferences()
 
-        # self.viewer_3d.object_selected.connect(self.viewer_selection_callback)
+        self.viewer_tabs.model_widget.selection_changed.connect(self.selection_changed_callback)
         self.clip_plane.slider_pressed.connect(self.slider_pressed_callback)
         self.clip_plane.value_changed.connect(self.slider_moved_callback)
         self.clip_plane.slider_released.connect(self.slider_released_callback)
         self.clip_plane.closed.connect(self.disable_cut)
+
+    def selection_changed_callback(self, points, lines, faces):
+        pass
 
     def slider_pressed_callback(self):
         if self.viewer_tabs.example_analisys_widget is None:
