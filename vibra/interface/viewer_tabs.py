@@ -32,9 +32,9 @@ class ViewerTabs(QTabWidget):
         self.model_widget.set_theme(self.user_config.theme)
 
         self.show_wellcome()
-        self.show_example()
         self.show_model()
         self.show_analisys()
+        self.show_example()
 
     def show_wellcome(self):
         self.addTab(self.welcome, "Wellcome!")
