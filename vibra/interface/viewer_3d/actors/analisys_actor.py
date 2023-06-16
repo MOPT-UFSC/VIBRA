@@ -35,7 +35,9 @@ class AnalisysActor(vtk.vtkActor):
         normals_filter.AddInputData(self.data)
         normals_filter.Update()
 
-        mapper.SetInputConnection(normals_filter.GetOutputPort())
+        self.data = normals_filter.GetOutput()
+
+        mapper.SetInputData(self.data)
         self.SetMapper(mapper)
 
     def apply_cut(self, origin, normal):
@@ -59,12 +61,8 @@ class AnalisysActor(vtk.vtkActor):
         mapper.Modified()
 
     def disable_cut(self):
-        normals_filter = vtk.vtkPolyDataNormals()
-        normals_filter.AddInputData(self.data)
-        normals_filter.Update()
-
         mapper = self.GetMapper()
-        mapper.SetInputData(normals_filter.GetOutput())
+        mapper.SetInputData(self.data)
         mapper.Modified()
 
     def configure_appearance(self):
