@@ -15,13 +15,13 @@ from PyQt5.QtWidgets import (
 )
 
 from vibra.config import UserConfig
+from vibra.interface.clip_plane_widget import ClipPlaneWidget
 from vibra.interface.loading_bar import load_function
 from vibra.interface.menus.help_menu import HelpMenu
 from vibra.interface.menus.project_menu import ProjectMenu
 from vibra.interface.menus.view_mode_menu import ViewModeMenu
 from vibra.interface.menus.views_menu import ViewsMenu
 from vibra.interface.renderer_toolbar import RendererToolbar
-from vibra.interface.clip_plane_widget import ClipPlaneWidget
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_tabs import ViewerTabs
 from vibra.project import Project
@@ -77,7 +77,7 @@ class MainWindow(QMainWindow):
         if self.viewer_tabs.example_analisys_widget is None:
             return
         self.viewer_tabs.example_analisys_widget.disable_cut()
-        
+
     def configure_window(self):
         self.setMinimumSize(800, 600)
         self.showMaximized()

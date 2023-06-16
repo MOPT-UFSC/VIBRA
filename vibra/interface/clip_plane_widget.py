@@ -1,6 +1,7 @@
-from PyQt5.QtWidgets import QWidget, QLabel, QSlider, QGridLayout, QGridLayout, QLabel, QProxyStyle, QSlider, QWidget
-from PyQt5.QtCore import  Qt, pyqtSignal
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QGridLayout, QLabel, QProxyStyle, QSlider, QWidget
+
 
 class ClipPlaneWidget(QWidget):
     value_changed = pyqtSignal()
@@ -100,7 +101,7 @@ class ClipPlaneWidget(QWidget):
         self.y_pos_tittle_value_label.setFixedWidth(50)
         self.z_pos_tittle_value_label.setFixedWidth(50)
 
-        # 
+        #
         grid_layout = QGridLayout()
         grid_layout.addWidget(self.rotation_tittle_label, 4, 1)
         grid_layout.addWidget(self.y_angle_title_label, 6, 0)

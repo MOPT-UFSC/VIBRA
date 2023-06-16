@@ -8,10 +8,12 @@ from PyQt5.QtWidgets import (
 )
 
 from vibra.interface.help_widget import HelpWidget
+from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
+from vibra.interface.viewer_3d.example_analisys_render_widget import (
+    ExampleAnalisysRenderWidget,
+)
 from vibra.interface.viewer_3d.example_render_widget import ExampleRenderWidget
 from vibra.interface.viewer_3d.model_render_widget import ModelRenderWidget
-from vibra.interface.viewer_3d.example_analisys_render_widget import ExampleAnalisysRenderWidget
-from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
 
 
 class ViewerTabs(QTabWidget):
@@ -43,7 +45,7 @@ class ViewerTabs(QTabWidget):
     def show_example(self):
         example_widget = ExampleRenderWidget(self)
         example_widget.set_theme(self.user_config.theme)
-        
+
         self.addTab(example_widget, "Example")
         self.setCurrentWidget(example_widget)
 
@@ -73,7 +75,7 @@ class ViewerTabs(QTabWidget):
 
     def configure_window(self):
         self.setStyleSheet(
-        """
+            """
         QTabBar::tab {
             margin-left: 5px;
             margin-right: 5px;

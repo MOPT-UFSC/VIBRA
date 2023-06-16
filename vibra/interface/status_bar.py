@@ -29,4 +29,3 @@ class StatusBar(QStatusBar):
         self.points_label.setText(f"Selected Point:\t")
         self.lines_label.setText(f"Selected Line:\t")
         self.faces_label.setText(f"Selected Face:\t")
-

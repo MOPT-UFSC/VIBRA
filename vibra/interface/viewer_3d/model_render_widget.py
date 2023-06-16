@@ -1,10 +1,12 @@
-from PyQt5.QtCore import  pyqtSignal
-from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
+from PyQt5.QtCore import pyqtSignal
+
 from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 from vibra.interface.viewer_3d.actors.lines_actor import LinesActor
 from vibra.interface.viewer_3d.actors.points_actor import PointsActor
-from vibra.interface.viewer_3d.interactor_styles.selection_interactor import SelectionInteractor
-
+from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
+from vibra.interface.viewer_3d.interactor_styles.selection_interactor import (
+    SelectionInteractor,
+)
 
 SHOW_POINTS = 0
 SHOW_LINES = 1
@@ -16,7 +18,7 @@ class ModelRenderWidget(CommonRenderWidget):
 
     def __init__(self, project, parent):
         super().__init__(parent)
-        
+
         self.project = project
         self.view_mode = SHOW_FACES
 
@@ -39,7 +41,7 @@ class ModelRenderWidget(CommonRenderWidget):
     def update_plot(self):
         if self.project is None:
             return
-            
+
         mesh = self.project.mesh
 
         if mesh is None:
@@ -72,7 +74,7 @@ class ModelRenderWidget(CommonRenderWidget):
             self.points_actor.GetProperty().SetColor(1, 1, 1)
             self.lines_actor.GetProperty().SetColor(1, 1, 1)
 
-    # 
+    #
     def show_points(self):
         if not self._actors_exists():
             return
@@ -118,7 +120,7 @@ class ModelRenderWidget(CommonRenderWidget):
         self.view_mode = SHOW_FACES
         self.update()
 
-    # 
+    #
     def selection_callback(self, obj, event):
         if not self._actors_exists():
             return
@@ -176,7 +178,7 @@ class ModelRenderWidget(CommonRenderWidget):
         self.selected_lines = []
         self.selected_faces = []
 
-    # 
+    #
     def remove_actors(self):
         self.renderer.RemoveActor(self.points_actor)
         self.renderer.RemoveActor(self.lines_actor)

@@ -1,7 +1,10 @@
 import vtk
 from PyQt5.QtWidgets import QFrame, QStackedLayout
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from vibra.interface.viewer_3d.interactor_styles.arcball_camera import vtkInteractorStyleArcballCamera
+
+from vibra.interface.viewer_3d.interactor_styles.arcball_camera import (
+    vtkInteractorStyleArcballCamera,
+)
 
 
 class CommonRenderWidget(QFrame):

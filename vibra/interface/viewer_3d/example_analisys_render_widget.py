@@ -1,12 +1,11 @@
-from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
+import numpy as np
+
 from vibra.interface.viewer_3d.actors.analisys_actor import AnalisysActor
 from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
     CuttingPlaneActor,
 )
-from vibra.utils.math_functions import lerp
-from vibra.utils.math_functions import distance_points
-from vibra.utils.math_functions import rotation_matrices
-import numpy as np
+from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
+from vibra.utils.math_functions import distance_points, lerp, rotation_matrices
 
 
 class ExampleAnalisysRenderWidget(CommonRenderWidget):
@@ -17,7 +16,7 @@ class ExampleAnalisysRenderWidget(CommonRenderWidget):
 
         self.model_actor = None
         self.plane_actor = None
-        self.bounds = (0,0,0,0,0,0)
+        self.bounds = (0, 0, 0, 0, 0, 0)
 
         self.create_axes()
         self.update_plot()
@@ -30,7 +29,7 @@ class ExampleAnalisysRenderWidget(CommonRenderWidget):
 
         if mesh is None:
             return
-        
+
         self.remove_actors()
 
         self.model_actor = AnalisysActor(mesh)
@@ -61,10 +60,10 @@ class ExampleAnalisysRenderWidget(CommonRenderWidget):
         if not self._actors_exists():
             return
 
-        x = lerp(self.bounds[0], self.bounds[1], position[0]/100)
-        y = lerp(self.bounds[2], self.bounds[3], position[1]/100)
-        z = lerp(self.bounds[4], self.bounds[5], position[2]/100)
-        self.plane_actor.SetPosition(x,y,z)
+        x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
+        y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
+        z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
+        self.plane_actor.SetPosition(x, y, z)
         self.plane_actor.SetOrientation(orientation)
         self.plane_actor.VisibilityOn()
         self.update()
@@ -73,11 +72,11 @@ class ExampleAnalisysRenderWidget(CommonRenderWidget):
         if not self._actors_exists():
             return
 
-        x = lerp(self.bounds[0], self.bounds[1], position[0]/100)
-        y = lerp(self.bounds[2], self.bounds[3], position[1]/100)
-        z = lerp(self.bounds[4], self.bounds[5], position[2]/100)
+        x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
+        y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
+        z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
         normal = self._calculate_normal_vector(orientation)
-        self.model_actor.apply_cut((x,y,z), normal)
+        self.model_actor.apply_cut((x, y, z), normal)
         self.update()
 
     def disable_cut(self):

@@ -2,11 +2,13 @@ import numpy as np
 
 
 def lerp(a, b, t):
-    return (a +(b-a)*t)
+    return a + (b - a) * t
+
 
 def distance_points(bounds):
-    x0,x1,y0,y1,z0,z1 = bounds
-    return (np.sqrt((x1-x0)**2 + (y1-y0)**2 + (z1-z0)**2))
+    x0, x1, y0, y1, z0, z1 = bounds
+    return np.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2 + (z1 - z0) ** 2)
+
 
 def rotation_matrices(ax, ay, az):
     sin = np.sin([ax, ay, az])

@@ -1,4 +1,3 @@
-from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
 from vibra.interface.viewer_3d.actors.example_actor import ExampleActor
 from vibra.interface.viewer_3d.actors.symbols_actors import (
     ArrowSymbols,
@@ -6,6 +5,7 @@ from vibra.interface.viewer_3d.actors.symbols_actors import (
     ArrowSymbols3,
     ClampSymbols,
 )
+from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
 
 
 class ExampleRenderWidget(CommonRenderWidget):

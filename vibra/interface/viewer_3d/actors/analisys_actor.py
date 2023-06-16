@@ -75,7 +75,7 @@ class AnalisysActor(vtk.vtkActor):
         self.GetProperty().SetSpecular(0.5)
         self.GetProperty().SetSpecularPower(40)
         self.GetProperty().SetSpecularColor(1, 1, 1)
-        # I commmented this line to keep the 
+        # I commmented this line to keep the
         # structure with beautifull random colors
         # self.clear_colors()
 
