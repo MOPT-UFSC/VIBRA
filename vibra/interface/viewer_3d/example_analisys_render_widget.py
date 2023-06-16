@@ -45,14 +45,20 @@ class ExampleAnalisysRenderWidget(CommonRenderWidget):
         self.renderer.ResetCamera()
 
     def show_points(self):
+        if not self._actors_exists():
+            return
         self.model_actor.GetProperty().SetRepresentationToPoints()
         self.update()
 
     def show_lines(self):
+        if not self._actors_exists():
+            return
         self.model_actor.GetProperty().SetRepresentationToWireframe()
         self.update()
 
     def show_faces(self):
+        if not self._actors_exists():
+            return
         self.model_actor.GetProperty().SetRepresentationToSurface()
         self.update()
 
