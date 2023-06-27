@@ -1,6 +1,6 @@
 import vtk
 
-from vibra.interface.viewer_3d.arcball_camera import (
+from vibra.interface.viewer_3d.interactor_styles.arcball_camera import (
     vtkInteractorStyleArcballCamera,
 )
 

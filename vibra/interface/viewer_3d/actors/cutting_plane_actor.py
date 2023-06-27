@@ -1,5 +1,6 @@
 import vtk
 
+
 class CuttingPlaneActor(vtk.vtkActor):
     def __init__(self):
         self.create_geometry()
@@ -14,7 +15,7 @@ class CuttingPlaneActor(vtk.vtkActor):
         cone.SetCenter(0.025, 0, 0)
         cone.SetRadius(0.01)
         cone.SetHeight(0.04)
-        cone.SetResolution(10)    
+        cone.SetResolution(10)
 
         plane.Update()
         cone.Update()

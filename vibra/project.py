@@ -4,11 +4,12 @@ from time import sleep
 
 from vibra.engine.mesh import Mesh
 from vibra.engine.model import Model
-from vibra.utils import ProgressStatus
+from vibra.utils.progress_status import ProgressStatus
 
 
 class Project:
     def __init__(self):
+        self.name = "Project"
         self.mesh = None
 
         # things that might be usefull

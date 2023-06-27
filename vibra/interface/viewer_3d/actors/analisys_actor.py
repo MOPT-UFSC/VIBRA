@@ -1,7 +1,7 @@
 import vtk
 
 
-class ClippedActor(vtk.vtkActor):
+class AnalisysActor(vtk.vtkActor):
     def __init__(self, mesh):
         self.mesh = mesh
         self.create_geometry()
@@ -35,7 +35,9 @@ class ClippedActor(vtk.vtkActor):
         normals_filter.AddInputData(self.data)
         normals_filter.Update()
 
-        mapper.SetInputConnection(normals_filter.GetOutputPort())
+        self.data = normals_filter.GetOutput()
+
+        mapper.SetInputData(self.data)
         self.SetMapper(mapper)
 
     def apply_cut(self, origin, normal):
@@ -59,21 +61,21 @@ class ClippedActor(vtk.vtkActor):
         mapper.Modified()
 
     def disable_cut(self):
-        normals_filter = vtk.vtkPolyDataNormals()
-        normals_filter.AddInputData(self.data)
-        normals_filter.Update()
-
         mapper = self.GetMapper()
-        mapper.SetInputData(normals_filter.GetOutput())
+        mapper.SetInputData(self.data)
         mapper.Modified()
 
     def configure_appearance(self):
+        self.GetProperty().RenderPointsAsSpheresOn()
+        self.GetProperty().SetPointSize(4)
         self.GetProperty().SetInterpolationToPhong()
         self.GetProperty().SetDiffuse(0.8)
         self.GetProperty().SetSpecular(0.5)
         self.GetProperty().SetSpecularPower(40)
         self.GetProperty().SetSpecularColor(1, 1, 1)
-        self.clear_colors()
+        # I commmented this line to keep the
+        # structure with beautifull random colors
+        # self.clear_colors()
 
     def clear_colors(self):
         point_colors = self.data.GetPointData().GetScalars()

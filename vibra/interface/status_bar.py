@@ -12,9 +12,9 @@ class StatusBar(QStatusBar):
         self.addWidget(self.lines_label)
         self.addWidget(self.points_label)
         self.addWidget(self.faces_label)
-        self.faces_label.setFixedWidth(120)
-        self.points_label.setFixedWidth(120)
-        self.lines_label.setFixedWidth(120)
+        self.faces_label.setFixedWidth(160)
+        self.points_label.setFixedWidth(160)
+        self.lines_label.setFixedWidth(160)
 
     def show_points(self, n_points):
         self.points_label.setText(f"Selected Point:{n_points}\t")
@@ -29,4 +29,3 @@ class StatusBar(QStatusBar):
         self.points_label.setText(f"Selected Point:\t")
         self.lines_label.setText(f"Selected Line:\t")
         self.faces_label.setText(f"Selected Face:\t")
-
