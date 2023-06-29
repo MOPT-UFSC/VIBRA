@@ -120,7 +120,7 @@ class MainWindow(QMainWindow):
         self.addToolBar(self.renderer_toolbar)
 
     def create_status_bar(self):
-       self.setStatusBar(self.status_bar)
+        self.setStatusBar(self.status_bar)
 
     def closeEvent(self, event):
         self.close_app()

@@ -1,4 +1,5 @@
 import numpy as np
+
 from vibra.engine.solvers.solver import Solver
 
 

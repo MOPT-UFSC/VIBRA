@@ -4,8 +4,9 @@ from time import sleep
 
 from vibra.engine.mesh import Mesh
 from vibra.engine.model import Model
-from vibra.utils.progress_status import ProgressStatus
 from vibra.engine.solvers.example_solver import ExampleSolver
+from vibra.utils.progress_status import ProgressStatus
+
 
 class Project:
     def __init__(self):

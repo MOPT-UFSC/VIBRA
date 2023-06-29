@@ -1,11 +1,13 @@
-import numpy as np
 from dataclasses import dataclass
 
+import numpy as np
+
+
 class Element:
-    '''
+    """
     This determines the attributes and methods
     that need to exist in EVERY element.
-    '''
+    """
 
     # Constants of the element
     NODES_PER_ELEMENT: int = 0
