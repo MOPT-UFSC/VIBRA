@@ -16,7 +16,7 @@ SHOW_FACES = 2
 class ModelRenderWidget(CommonRenderWidget):
     selection_changed = pyqtSignal(list, list, list)
 
-    def __init__(self, project, parent):
+    def __init__(self, project, parent=None):
         super().__init__(parent)
 
         self.project = project

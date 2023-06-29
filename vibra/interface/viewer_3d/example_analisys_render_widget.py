@@ -9,7 +9,7 @@ from vibra.utils.math_functions import distance_points, lerp, rotation_matrices
 
 
 class ExampleAnalisysRenderWidget(CommonRenderWidget):
-    def __init__(self, project, parent):
+    def __init__(self, project, parent=None):
         super().__init__(parent)
 
         self.project = project

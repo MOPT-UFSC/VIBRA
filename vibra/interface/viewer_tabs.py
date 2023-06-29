@@ -26,17 +26,14 @@ class ViewerTabs(QTabWidget):
         self.project = project
         self.user_config = user_config
 
-        self.model_widget = ModelRenderWidget(self.project, self)
-        self.example_analisys_widget = ExampleAnalisysRenderWidget(self.project, self)
+        self.model_widget = ModelRenderWidget(self.project)
+        self.example_analisys_widget = ExampleAnalisysRenderWidget(self.project)
         self.welcome = QLabel("Seja muito bem vindo!")
         self.help_widget = HelpWidget()
 
         self.model_widget.set_theme(self.user_config.theme)
 
         self.show_wellcome()
-        self.show_model()
-        self.show_analisys()
-        self.show_example()
 
     def show_wellcome(self):
         self.addTab(self.welcome, "Wellcome!")
