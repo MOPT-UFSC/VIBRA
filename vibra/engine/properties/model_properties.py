@@ -1,5 +1,5 @@
-from vibra.engine.fluid import Fluid
-from vibra.engine.material import Material
+from vibra.engine.properties.fluid import Fluid
+from vibra.engine.properties.material import Material
 from dataclasses import dataclass
 
 

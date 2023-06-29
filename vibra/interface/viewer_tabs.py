@@ -59,6 +59,13 @@ class ViewerTabs(QTabWidget):
             self.addTab(self.example_analisys_widget, "Example Analisys")
         self.setCurrentWidget(self.example_analisys_widget)
 
+    def show_example_analisys(self):
+        if self.example_analisys_widget not in self.tabs():
+            self.addTab(self.example_analisys_widget, "Example Analisys")
+
+        self.example_analisys_widget.update_plot()
+        self.setCurrentWidget(self.example_analisys_widget)
+
     def show_help(self):
         self.addTab(self.help_widget, "Help")
         self.setCurrentWidget(self.help_widget)

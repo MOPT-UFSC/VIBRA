@@ -119,6 +119,23 @@ class AnalisysActor(vtk.vtkActor):
 
         return colors
 
+    def plot_colorbar(self, values, colorbar=None):
+        point_colors = self.data.GetPointData().GetScalars()
+
+        min_, max_ = min(values), max(values)
+
+        for i, val in enumerate(values):
+            color = (
+                int(255 * (val - min_) / (max_ - min_)),
+                int(255 * (val - min_) / (max_ - min_) / 3),
+                int(255 * (val - min_) / (max_ - min_) / 2),
+            )
+            point_colors.SetTuple(i, color)
+        
+        self.GetMapper().SetScalarModeToUsePointData()
+        self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
+        self.GetMapper().ScalarVisibilityOn()
+
     def paint_points(self, color, points):
         point_colors = self.data.GetPointData().GetScalars()
 

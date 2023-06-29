@@ -75,6 +75,7 @@ class ProjectMenu(QMenu):
     def exit_callback(self):
         loaded_function = load_function(self.parent().project.long_function, self)
         loaded_function()
+        self.solve_example_analisys_callback()
 
     def theme_callback(self):
         if self.parent().user_config.theme == "light":
@@ -97,3 +98,8 @@ class ProjectMenu(QMenu):
 
     def show_example_callback(self):
         self.parent().viewer_tabs.show_example()
+
+    #
+    def solve_example_analisys_callback(self):
+        self.parent().project.example_solver.solve()
+        self.parent().viewer_tabs.show_example_analisys()

@@ -1,3 +1,7 @@
+from pathlib import Path
+from vibra.engine.mesh import Mesh
+
+
 class ModelStatus:
     materials_setted: bool
     width_setted: bool
@@ -5,8 +9,8 @@ class ModelStatus:
 
 
 class Model:
-    nodes: list
-    elements: list
-    prescribed_degrees_of_freedom: list
-    prescribed_loads: list
-    status: ModelStatus
+    def __init__(self, geometry_path):
+        self.geometry_path = geometry_path
+
+        self.visualization_mesh = Mesh.from_file(Path(geometry_path))
+        self.simulation_mesh = self.visualization_mesh

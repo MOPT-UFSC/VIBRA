@@ -5,17 +5,14 @@ from time import sleep
 from vibra.engine.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.utils.progress_status import ProgressStatus
-
+from vibra.engine.solvers.example_solver import ExampleSolver
 
 class Project:
     def __init__(self):
         self.name = "Project"
-        self.mesh = None
+        self.model = None
 
-        # things that might be usefull
-        model: Model
-        save_path: Path | None
-        materials_list: list
+        self.example_solver = ExampleSolver()
 
     @classmethod
     def load(cls, path):
@@ -23,14 +20,18 @@ class Project:
 
     def save(self, path):
         logging.info(f"Saving project in my/save/path")
-        print("SALVANDO")
+
+    def set_model(self, model):
+        self.model = model
+        self.example_solver.set_model(model)
 
     def import_geometry(self, path):
         logging.info(f"Importing geometry at {path}")
+        self.set_model(Model(path))
 
-        path = Path(path)
-        mesh = Mesh.from_file(path)
-        self.mesh = mesh
+    def solve_example(self):
+        self.example_solver.set_model(self.model)
+        self.example_solver.solve()
 
     def long_function(self):
         for i in range(20):

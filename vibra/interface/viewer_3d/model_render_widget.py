@@ -42,8 +42,11 @@ class ModelRenderWidget(CommonRenderWidget):
         if self.project is None:
             return
 
-        mesh = self.project.mesh
+        model = self.project.model
+        if model is None:
+            return
 
+        mesh = model.visualization_mesh
         if mesh is None:
             return
 
@@ -134,11 +137,11 @@ class ModelRenderWidget(CommonRenderWidget):
             self.select_point(clicked_cell)
 
         if clicked_actor == self.lines_actor:
-            line_entity = self._find_key(clicked_cell, self.project.mesh.line_entities)
+            line_entity = self._find_key(clicked_cell, self.project.model.visualization_mesh.line_entities)
             self.select_line(line_entity)
 
         if clicked_actor == self.faces_actor:
-            face_entity = self._find_key(clicked_cell, self.project.mesh.face_entities)
+            face_entity = self._find_key(clicked_cell, self.project.model.visualization_mesh.face_entities)
             self.select_face(face_entity)
 
         self.update()
@@ -157,7 +160,7 @@ class ModelRenderWidget(CommonRenderWidget):
             return
         self.selected_lines = [line]
         self.lines_actor.clear_colors()
-        self.lines_actor.paint_cells(self.selection_color, self.project.mesh.line_entities[line])
+        self.lines_actor.paint_cells(self.selection_color, self.project.model.visualization_mesh.line_entities[line])
         self.update()
         self.selection_changed.emit(self.selected_points, self.selected_lines, self.selected_faces)
 
@@ -166,7 +169,7 @@ class ModelRenderWidget(CommonRenderWidget):
             return
         self.selected_faces = [face]
         self.faces_actor.clear_colors()
-        self.faces_actor.paint_cells(self.selection_color, self.project.mesh.face_entities[face])
+        self.faces_actor.paint_cells(self.selection_color, self.project.model.visualization_mesh.face_entities[face])
         self.update()
         self.selection_changed.emit(self.selected_points, self.selected_lines, self.selected_faces)
 
