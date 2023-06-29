@@ -35,20 +35,20 @@ class AnalisysActor(FacesActor):
         mapper.SetInputData(self.data)
         mapper.Modified()
 
-    def plot_colorbar(self, values, colorbar=None):
+    def plot_colorbar(self, values):
         if self.data is None:
             return
 
+        colorbar = vtk.vtkLookupTable()
+        colorbar.SetTableRange(min(values), max(values))
+        colorbar.SetHueRange(2 / 3, 0)
+
         point_colors = self.data.GetPointData().GetScalars()
-
-        min_, max_ = min(values), max(values)
-
         for i, val in enumerate(values):
-            color = (
-                int(255 * (val - min_) / (max_ - min_)),
-                int(255 * (val - min_) / (max_ - min_) / 3),
-                int(255 * (val - min_) / (max_ - min_) / 2),
-            )
+            color = [0, 0, 0]
+            # yes, vtk uses it as a fucking pointer instead of returning a tuple...
+            colorbar.GetColor(val, color)
+            color = [int(i * 255) for i in color]
             point_colors.SetTuple(i, color)
 
         self.GetMapper().SetScalarModeToUsePointData()
