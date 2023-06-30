@@ -5,7 +5,7 @@ from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
     CuttingPlaneActor,
 )
 from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
-from vibra.utils.math_functions import distance_points, lerp, rotation_matrices
+from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
 
 
 class ExampleAnalisysRenderWidget(CommonRenderWidget):
@@ -44,7 +44,7 @@ class ExampleAnalisysRenderWidget(CommonRenderWidget):
         self.renderer.AddActor(self.model_actor)
 
         self.bounds = self.model_actor.GetBounds()
-        scale = distance_points(self.bounds)
+        scale = bounds_distance(self.bounds)
         self.plane_actor = CuttingPlaneActor()
         self.plane_actor.VisibilityOff()
         self.plane_actor.SetScale(scale, scale, scale)

@@ -5,7 +5,7 @@ def lerp(a, b, t):
     return a + (b - a) * t
 
 
-def distance_points(bounds):
+def bounds_distance(bounds):
     x0, x1, y0, y1, z0, z1 = bounds
     return np.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2 + (z1 - z0) ** 2)
 
