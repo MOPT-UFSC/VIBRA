@@ -32,7 +32,6 @@ class ViewerTabs(QTabWidget):
         self.help_widget = HelpWidget()
 
         self.model_widget.set_theme(self.user_config.theme)
-
         self.show_wellcome()
 
     def show_wellcome(self):
@@ -59,6 +58,7 @@ class ViewerTabs(QTabWidget):
     def show_example_analisys(self):
         if self.example_analisys_widget not in self.tabs():
             self.addTab(self.example_analisys_widget, "Example Analisys")
+            self.example_analisys_widget.set_theme(self.user_config.theme)
 
         self.example_analisys_widget.update_plot()
         self.setCurrentWidget(self.example_analisys_widget)
