@@ -31,7 +31,7 @@ class CommonRenderWidget(QFrame):
         self.setLayout(layout)
 
     def update_plot(self):
-        pass
+        raise NotImplementedError("The function update_plot was not implemented")
 
     def update(self):
         ren_win = self.render_interactor.GetRenderWindow()
