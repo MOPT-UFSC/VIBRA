@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from vibra.engine.mesh import Mesh
+from vibra.engine.mesher.mesh import Mesh
 
 
 class ModelStatus:
@@ -13,5 +13,5 @@ class Model:
     def __init__(self, geometry_path):
         self.geometry_path = geometry_path
 
-        self.visualization_mesh = Mesh.from_file(Path(geometry_path))
+        self.visualization_mesh = Mesh.from_cad(Path(geometry_path), dimention=2, size_factor=0.05)
         self.simulation_mesh = self.visualization_mesh

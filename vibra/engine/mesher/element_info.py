@@ -54,3 +54,5 @@ HEXAHEDRON_20 = ElementInfo(
     second_order_incomplete=True,
     element_order=2,
 )
+
+DEFAULT = TETRAHEDRON_4

@@ -16,16 +16,16 @@ class FacesActor(vtk.vtkActor):
         point_colors = vtk.vtkUnsignedCharArray()
         cell_colors = vtk.vtkUnsignedCharArray()
 
-        data.Allocate(len(self.mesh.faces))
+        data.Allocate(3 * len(self.mesh.faces_connectivity))
         point_colors.SetNumberOfComponents(3)
-        point_colors.SetNumberOfTuples(len(self.mesh.points))
+        point_colors.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
         cell_colors.SetNumberOfComponents(3)
-        cell_colors.SetNumberOfTuples(len(self.mesh.faces))
+        cell_colors.SetNumberOfTuples(len(self.mesh.faces_connectivity))
 
-        for i, (x, y, z) in enumerate(self.mesh.points):
+        for i, (_, x, y, z) in enumerate(self.mesh.nodal_coordinates):
             points.InsertPoint(i, x, y, z)
 
-        for a, b, c in self.mesh.faces:
+        for a, b, c in self.mesh.faces_connectivity[:, 4:]:
             data.InsertNextCell(vtk.VTK_TRIANGLE, 3, [a, b, c])
 
         data.SetPoints(points)

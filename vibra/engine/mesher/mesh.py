@@ -10,6 +10,7 @@ from vibra.engine.mesher.element_info import (
     HEXAHEDRON_20,
     TETRAHEDRON_4,
     TETRAHEDRON_10,
+    DEFAULT,
     ElementInfo,
 )
 
@@ -20,17 +21,51 @@ class Mesh:
 
     def reset_variables(self):
         self.dimention = 0
-        self.nodal_coordinates_2 = np.array([])
-        self.lines_connectivity_2 = np.array([])
-        self.faces_connectivity_2 = np.array([])
-        self.solids_connectivity_2 = np.array([])
+        self.nodal_coordinates = np.array([])
+        self.lines_connectivity = np.array([])
+        self.faces_connectivity = np.array([])
+        self.solids_connectivity = np.array([])
+
+    @classmethod
+    def from_cad(
+        cls,
+        path: (str | Path),
+        *,
+        element_size: float = 0.0,
+        element_info: ElementInfo = DEFAULT,
+        tolerance: float = 1e-6,
+        size_factor: float = 1.0,
+        dimention: int = 3,
+        threads: int = 1
+    ):
+        '''
+        Custom constructor so you can create a mesh with this sintax:
+        mesh = Mesh.from_cad(...)
+
+        I am not puting it in the default constructor because maybe
+        we need to create a mesh from data that is not a CAD.
+
+        Then you can create other constructor like this and avoid a
+        lot of confusing if statements in the __init__ method.
+        '''
+        obj = Mesh()
+        obj.load_cad(
+            path,
+            element_size=element_size,
+            element_info=element_info,
+            tolerance=tolerance,
+            size_factor=size_factor,
+            dimention=dimention,
+            threads=threads,
+        )
+        return obj
 
     def load_cad(
         self,
         path: (str | Path),
-        element_info: ElementInfo,
-        element_size: float,
         *,
+        element_size: float = 0.0,
+        element_info: ElementInfo = DEFAULT,
         tolerance: float = 1e-6,
         size_factor: float = 1.0,
         dimention: int = 3,
@@ -51,7 +86,7 @@ class Mesh:
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
         np.savetxt(
             filename,
-            self.nodal_coordinates_2,
+            self.nodal_coordinates,
             delimiter=";",
             header=header,
             fmt=["%i", "%.16f", "%.16f", "%.16f"],
@@ -59,20 +94,21 @@ class Mesh:
 
     def export_faces_connectivity(self, filename):
         header = "Index || Element ID || Face ID || Element type ID || Connected Node IDs"
-        np.savetxt(filename, self.faces_connectivity_2, delimiter=";", header=header, fmt="%i")
+        np.savetxt(filename, self.faces_connectivity, delimiter=";", header=header, fmt="%i")
 
     def export_solids_connectivity(self, filename):
         header = "Index || Solid ID || Element type ID || Element ID || Connected Node IDs"
-        np.savetxt(filename, self.solids_connectivity_2, delimiter=";", header=header, fmt="%i")
+        np.savetxt(filename, self.solids_connectivity, delimiter=";", header=header, fmt="%i")
 
     def _configure_mesh(self, element_info, element_size, tolerance, size_factor, threads):
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
-        gmsh.option.setNumber("Mesh.MeshSizeMin", element_size)
-        gmsh.option.setNumber("Mesh.MeshSizeMax", element_size)
+        gmsh.option.setNumber("General.NumThreads", threads)
         gmsh.option.setNumber("Geometry.Tolerance", tolerance)
         gmsh.option.setNumber("Mesh.MeshSizeFactor", size_factor)
-        gmsh.option.setNumber("General.NumThreads", threads)
+        if element_size != 0:
+            gmsh.option.setNumber("Mesh.MeshSizeMin", element_size)
+            gmsh.option.setNumber("Mesh.MeshSizeMax", element_size)
 
         gmsh.option.setNumber("Mesh.Algorithm", element_info.algorithm_2d)
         gmsh.option.setNumber("Mesh.Algorithm3D", element_info.algorithm_3d)
@@ -88,9 +124,9 @@ class Mesh:
         """
         indexes, coords, _ = gmsh.model.mesh.getNodes(includeBoundary=True)
         total_nodes = int(np.max(indexes))
-        self.nodal_coordinates_2 = np.zeros((total_nodes, 4))
-        self.nodal_coordinates_2[indexes - 1, 1:] = coords.reshape(-1, 3) / 1000
-        self.nodal_coordinates_2[indexes - 1, :1] = indexes.reshape(-1, 1)
+        self.nodal_coordinates = np.zeros((total_nodes, 4))
+        self.nodal_coordinates[indexes - 1, 1:] = coords.reshape(-1, 3) / 1000
+        self.nodal_coordinates[indexes - 1, :1] = indexes.reshape(-1, 1)
 
         connectivity_dim2 = dict()
         connectivity_dim3 = dict()
@@ -108,6 +144,9 @@ class Mesh:
                 )
 
                 array_element_nodes = np.array(element_nodes[i]).reshape(-1, nodes_per_element)
+                # not sure if it should be done here, but that is an easy way to fix the
+                # connectivity to start from 0
+                array_element_nodes -= 1
 
                 elements_data[element_type] = {
                     "indexes": element_indexes[i],
@@ -124,8 +163,8 @@ class Mesh:
             elif dim == 3:  # Solids
                 connectivity_dim3[tag] = elements_data
 
-        self.faces_connectivity_2 = self._get_connectivity_array(connectivity_dim2)
-        self.solids_connectivity_2 = self._get_connectivity_array(connectivity_dim3)
+        self.faces_connectivity = self._get_connectivity_array(connectivity_dim2)
+        self.solids_connectivity = self._get_connectivity_array(connectivity_dim3)
 
     def _get_connectivity_array(self, input_dict):
         if not isinstance(input_dict, dict):
@@ -172,10 +211,10 @@ if __name__ == "__main__":
     # path = "C:\\Repositorios\\VibraEngine\\examples\\geometry_files\\Cilindro.STEP"
     # path = "C:\\Repositorios\\VibraEngine\\examples\\script_files\\script_hex_elements.txt"
 
-    path = "data/geometries/geom_akio.stp"
+    path = "data/geometries/vessel.step"
 
     if not os.path.exists(path):
         raise FileNotFoundError
 
     mesh = Mesh()
-    mesh.load_cad(path, TETRAHEDRON_4, 100)
+    mesh.load_cad(path, 100, element_info=TETRAHEDRON_4)

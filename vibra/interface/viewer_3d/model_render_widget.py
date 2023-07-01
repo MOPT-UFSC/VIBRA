@@ -52,11 +52,11 @@ class ModelRenderWidget(CommonRenderWidget):
 
         self.remove_actors()
 
-        self.points_actor = PointsActor(mesh)
-        self.renderer.AddActor(self.points_actor)
+        # self.points_actor = PointsActor(mesh)
+        # self.renderer.AddActor(self.points_actor)
 
-        self.lines_actor = LinesActor(mesh)
-        self.renderer.AddActor(self.lines_actor)
+        # self.lines_actor = LinesActor(mesh)
+        # self.renderer.AddActor(self.lines_actor)
 
         self.faces_actor = FacesActor(mesh)
         self.renderer.AddActor(self.faces_actor)
