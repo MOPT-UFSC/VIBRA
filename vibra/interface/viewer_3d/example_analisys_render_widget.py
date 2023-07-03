@@ -90,7 +90,11 @@ class ExampleAnalisysRenderWidget(CommonRenderWidget):
         y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
         z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
         normal = self._calculate_normal_vector(orientation)
-        self.model_actor.apply_cut((x, y, z), normal)
+
+        # actually I dont know why we need to sum the
+        # normal vector but it works perfectly
+        position = (x, y, z) + normal
+        self.model_actor.apply_cut(position, normal)
         self.update()
 
     def disable_cut(self):

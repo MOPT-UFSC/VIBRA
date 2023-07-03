@@ -13,4 +13,4 @@ class Model:
     def __init__(self, geometry_path):
         self.geometry_path = geometry_path
 
-        self.mesh = Mesh.from_cad(Path(geometry_path), dimention=2, size_factor=0.05)
+        self.mesh = Mesh.from_cad(Path(geometry_path), size_factor=0.1)

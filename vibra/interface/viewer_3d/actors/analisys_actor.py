@@ -1,9 +1,9 @@
 import vtk
 
-from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
+from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
 
 
-class AnalisysActor(FacesActor):
+class AnalisysActor(SolidsActor):
     def apply_cut(self, origin, normal):
         if self.data is None:
             return
@@ -12,19 +12,15 @@ class AnalisysActor(FacesActor):
         plane.SetOrigin(origin)
         plane.SetNormal(normal)
 
-        clipper = vtk.vtkClipPolyData()
+        clipper = vtk.vtkClipDataSet()
         clipper.SetInputData(self.data)
         clipper.SetClipFunction(plane)
         clipper.SetOutputPointsPrecision(10)
         clipper.SetValue(-1)
         clipper.Update()
 
-        normals_filter = vtk.vtkPolyDataNormals()
-        normals_filter.AddInputData(clipper.GetOutput())
-        normals_filter.Update()
-
         mapper = self.GetMapper()
-        mapper.SetInputData(normals_filter.GetOutput())
+        mapper.SetInputData(clipper.GetOutput())
         mapper.Modified()
 
     def disable_cut(self):

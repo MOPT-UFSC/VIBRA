@@ -22,6 +22,7 @@ class Mesh:
     def reset_variables(self):
         self.dimention = 0
         self.entity_ranges = dict()
+        self.element_info = DEFAULT
         self.nodal_coordinates = np.array([])
         self.lines_connectivity = np.array([])
         self.faces_connectivity = np.array([])
@@ -79,6 +80,8 @@ class Mesh:
         gmsh.merge(str(path))
 
         self.dimention = min(dimention, gmsh.model.getDimension())
+        self.element_info = element_info
+
         gmsh.model.mesh.generate(dim=self.dimention)
         self._process_mesh()
         gmsh.finalize()
