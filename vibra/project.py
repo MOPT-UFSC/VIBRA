@@ -2,7 +2,6 @@ import logging
 from pathlib import Path
 from time import sleep
 
-from vibra.engine.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.solvers.example_solver import ExampleSolver
 from vibra.utils.progress_status import ProgressStatus
