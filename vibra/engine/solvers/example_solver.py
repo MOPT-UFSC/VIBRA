@@ -15,7 +15,7 @@ class ExampleSolver(Solver):
         if not self.model_ready():
             raise Exception("Incomplete Model")
 
-        n_nodes = len(self._model.simulation_mesh.points)
+        n_nodes = len(self._model.mesh.points)
         self.tensions = np.random.normal(size=n_nodes)
 
     def model_ready(self) -> bool:

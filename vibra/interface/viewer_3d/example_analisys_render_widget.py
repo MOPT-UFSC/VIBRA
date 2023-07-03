@@ -33,7 +33,7 @@ class ExampleAnalisysRenderWidget(CommonRenderWidget):
         if model is None:
             return
 
-        mesh = model.simulation_mesh
+        mesh = model.mesh
         if mesh is None:
             return
 

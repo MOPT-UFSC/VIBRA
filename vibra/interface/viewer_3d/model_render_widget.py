@@ -46,7 +46,7 @@ class ModelRenderWidget(CommonRenderWidget):
         if model is None:
             return
 
-        mesh = model.visualization_mesh
+        mesh = model.mesh
         if mesh is None:
             return
 
@@ -137,11 +137,11 @@ class ModelRenderWidget(CommonRenderWidget):
             self.select_point(clicked_cell)
 
         if clicked_actor == self.lines_actor:
-            line_entity = self.project.model.visualization_mesh.lines_connectivity[clicked_cell][1]
+            line_entity = self.project.model.mesh.lines_connectivity[clicked_cell][1]
             self.select_line(line_entity)
 
         if clicked_actor == self.faces_actor:
-            face_entity = self.project.model.visualization_mesh.faces_connectivity[clicked_cell][1]
+            face_entity = self.project.model.mesh.faces_connectivity[clicked_cell][1]
             self.select_face(face_entity)
 
         self.update()
@@ -159,7 +159,7 @@ class ModelRenderWidget(CommonRenderWidget):
         if self.view_mode != SHOW_LINES:
             return
 
-        element_indexes = self.project.model.visualization_mesh.entity_ranges[1, line]
+        element_indexes = self.project.model.mesh.entity_ranges[1, line]
         self.selected_lines = [line]
         self.lines_actor.clear_colors()
         self.lines_actor.paint_cells(self.selection_color, element_indexes)
@@ -170,7 +170,7 @@ class ModelRenderWidget(CommonRenderWidget):
         if self.view_mode != SHOW_FACES:
             return
 
-        element_indexes = self.project.model.visualization_mesh.entity_ranges[2, face]
+        element_indexes = self.project.model.mesh.entity_ranges[2, face]
         self.selected_faces = [face]
         self.faces_actor.clear_colors()
         self.faces_actor.paint_cells(self.selection_color, element_indexes)

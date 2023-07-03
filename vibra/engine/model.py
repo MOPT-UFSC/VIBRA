@@ -13,5 +13,4 @@ class Model:
     def __init__(self, geometry_path):
         self.geometry_path = geometry_path
 
-        self.visualization_mesh = Mesh.from_cad(Path(geometry_path), dimention=2, size_factor=0.05)
-        self.simulation_mesh = self.visualization_mesh
+        self.mesh = Mesh.from_cad(Path(geometry_path), dimention=2, size_factor=0.05)
