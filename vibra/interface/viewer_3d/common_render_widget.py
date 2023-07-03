@@ -115,43 +115,43 @@ class CommonRenderWidget(QFrame):
         if self.renderer.GetRenderWindow() is not None:
             self.renderer.GetRenderWindow().Render()
 
-    def set_view_up(self):
+    def set_top_view(self):
         x, y, z = self.renderer.GetActiveCamera().GetFocalPoint()
         position = (x, y + 1, z)
         view_up = (0, 0, -1)
         self.set_custom_view(position, view_up)
 
-    def set_view_down(self):
+    def set_bottom_view(self):
         x, y, z = self.renderer.GetActiveCamera().GetFocalPoint()
         position = (x, y - 1, z)
         view_up = (0, 0, 1)
         self.set_custom_view(position, view_up)
 
-    def set_view_left(self):
+    def set_left_view(self):
         x, y, z = self.renderer.GetActiveCamera().GetFocalPoint()
         position = (x - 1, y, z)
         view_up = (0, 1, 0)
         self.set_custom_view(position, view_up)
 
-    def set_view_right(self):
+    def set_right_view(self):
         x, y, z = self.renderer.GetActiveCamera().GetFocalPoint()
         position = (x + 1, y, z)
         view_up = (0, 1, 0)
         self.set_custom_view(position, view_up)
 
-    def set_view_front(self):
+    def set_front_view(self):
         x, y, z = self.renderer.GetActiveCamera().GetFocalPoint()
         position = (x, y, z + 1)
         view_up = (0, 1, 0)
         self.set_custom_view(position, view_up)
 
-    def set_view_back(self):
+    def set_back_view(self):
         x, y, z = self.renderer.GetActiveCamera().GetFocalPoint()
         position = (x, y, z - 1)
         view_up = (0, 1, 0)
         self.set_custom_view(position, view_up)
 
-    def set_view_orthogonal(self):
+    def set_isometric_view(self):
         x, y, z = self.renderer.GetActiveCamera().GetFocalPoint()
         position = (x + 1, y + 1, z + 1)
         view_up = (0, 1, 0)

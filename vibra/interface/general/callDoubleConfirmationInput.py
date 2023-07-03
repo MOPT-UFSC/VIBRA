@@ -1,0 +1,120 @@
+from PyQt5.QtWidgets import QDialog, QPushButton, QLabel
+from PyQt5.QtGui import QIcon, QFont 
+from PyQt5.QtCore import Qt, QRect
+from PyQt5 import uic
+
+class CallDoubleConfirmationInput(QDialog):
+    def __init__(self, title, message, leftButton_label="Return", rightButton_label="Remove", rightButton_size=160, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        uic.loadUi('interface/ui_files/call_double_confirmation_input.ui', self)
+
+        icons_path = 'interface\\data\\icons\\'
+        self.icon = QIcon(icons_path + 'pipe.png')
+        self.setWindowIcon(self.icon)
+
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModal)
+
+        self.window_title = kwargs.get('window_title', f'PFVA Tool (alpha version)')
+
+        # self.rightButton_size = kwargs.get('rightButton_size', 160)
+        # self.leftButton_label = kwargs.get('leftButton_label', 'Return')
+        # self.rightButton_label = kwargs.get('rightButton_label', 'Remove')
+
+        self.leftButton_label = leftButton_label
+        self.rightButton_label = rightButton_label
+        self.right_button_size = rightButton_size
+
+        self.define_qt_variables()
+        self.create_actions()
+        self.configure_labels(title, message)
+        self.configure_buttons()
+        self.setWindowTitle(self.window_title)
+
+        self._continue = False
+        self._doNotRun = True
+        self._stop = True
+
+        if 0 < len(message) < 200:
+            height = 320
+            width = 520
+        elif 200 <= len(message) < 400:
+            height = 360
+            width = 600
+        elif 400 <= len(message) < 800:
+            height = 420
+            width = 620
+        elif len(message) >= 800:
+            height = 500
+            width = 640
+
+        self.setMinimumWidth(width)
+        self.setMinimumHeight(height)
+        self.setMaximumWidth(width)
+        self.setMaximumHeight(height)
+
+        self.exec_()
+
+    def define_qt_variables(self):
+        self.label_message = self.findChild(QLabel, 'label_message')
+        self.label_title = self.findChild(QLabel, 'label_title')
+        self.pushButton_rightButton = self.findChild(QPushButton, 'pushButton_rightButton')
+        self.pushButton_leftButton = self.findChild(QPushButton, 'pushButton_leftButton')
+    
+    def create_actions(self):
+        self.pushButton_rightButton.clicked.connect(self.confirm_action)
+        self.pushButton_leftButton.clicked.connect(self.force_to_close)
+
+    def configure_buttons(self):
+        self.pushButton_leftButton.setText(self.leftButton_label)
+        self.pushButton_rightButton.setText(self.rightButton_label)
+        self.pushButton_rightButton.setMinimumWidth(self.right_button_size)
+        self.pushButton_rightButton.setMaximumWidth(self.right_button_size)
+        
+        x = self.pushButton_rightButton.x()
+        y = self.pushButton_rightButton.y()
+        height = self.pushButton_rightButton.height()
+        width = self.pushButton_rightButton.width()
+        
+        if self.right_button_size>160:
+            dx = self.right_button_size-160   
+            self.pushButton_rightButton.setGeometry(QRect(int(x-dx), y, width, height))    
+
+    def configure_labels(self, title, message):
+        self.label_title.setText(title)
+        self.label_message.setText(message)
+        self.label_message.setWordWrap(True)
+        self.label_message.setMargin(10)
+        self.create_font_title()
+        self.create_font_message()
+        self.label_title.setFont(self.font_title)
+        self.label_message.setFont(self.font_message)
+
+    def confirm_action(self):
+        self._continue = True
+        self._stop = False
+        self._doNotRun = False
+        self.close()
+
+    def force_to_close(self):
+        self._continue = False
+        self._stop = True
+        self._doNotRun = False
+        self.close()   
+
+    def create_font_title(self):
+        self.font_title = QFont()
+        self.font_title.setFamily("Arial")
+        self.font_title.setPointSize(14)
+        self.font_title.setBold(True)
+        self.font_title.setItalic(False)
+        self.font_title.setWeight(75) 
+
+    def create_font_message(self):
+        self.font_message = QFont()
+        self.font_message.setFamily("Arial")
+        self.font_message.setPointSize(12)
+        self.font_message.setBold(True)
+        self.font_message.setItalic(False)
+        self.font_message.setWeight(75) 
+

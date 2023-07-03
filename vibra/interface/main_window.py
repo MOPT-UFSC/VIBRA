@@ -21,6 +21,7 @@ from vibra.interface.menus.help_menu import HelpMenu
 from vibra.interface.menus.project_menu import ProjectMenu
 from vibra.interface.menus.view_mode_menu import ViewModeMenu
 from vibra.interface.menus.views_menu import ViewsMenu
+from vibra.interface.menus.mesher_menu import MesherMenu
 from vibra.interface.renderer_toolbar import RendererToolbar
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_tabs import ViewerTabs
@@ -111,6 +112,7 @@ class MainWindow(QMainWindow):
     def create_menu_bar(self):
         self.menu_bar = self.menuBar()
         self.menu_bar.addMenu(ProjectMenu(self))
+        self.menu_bar.addMenu(MesherMenu(self))
         self.menu_bar.addMenu(ViewsMenu(self))
         self.menu_bar.addMenu(ViewModeMenu(self))
         self.menu_bar.addMenu(HelpMenu(self))
@@ -154,7 +156,7 @@ class MainWindow(QMainWindow):
         path, check = QFileDialog.getOpenFileName(
             self,
             "Open File",
-            filter="Geometry Files (*.stp *.step *.iges)",
+            filter="Geometry Files (*.stp; *.step; *.iges)",
         )
 
         if not check:
