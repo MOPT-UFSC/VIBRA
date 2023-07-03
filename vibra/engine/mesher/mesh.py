@@ -6,11 +6,11 @@ import gmsh
 import numpy as np
 
 from vibra.engine.mesher.element_info import (
+    DEFAULT,
     HEXAHEDRON_8,
     HEXAHEDRON_20,
     TETRAHEDRON_4,
     TETRAHEDRON_10,
-    DEFAULT,
     ElementInfo,
 )
 
@@ -21,6 +21,7 @@ class Mesh:
 
     def reset_variables(self):
         self.dimention = 0
+        self.entity_ranges = dict()
         self.nodal_coordinates = np.array([])
         self.lines_connectivity = np.array([])
         self.faces_connectivity = np.array([])
@@ -38,7 +39,7 @@ class Mesh:
         dimention: int = 3,
         threads: int = 1
     ):
-        '''
+        """
         Custom constructor so you can create a mesh with this sintax:
         mesh = Mesh.from_cad(...)
 
@@ -47,7 +48,7 @@ class Mesh:
 
         Then you can create other constructor like this and avoid a
         lot of confusing if statements in the __init__ method.
-        '''
+        """
         obj = Mesh()
         obj.load_cad(
             path,
@@ -128,8 +129,10 @@ class Mesh:
         self.nodal_coordinates[indexes - 1, 1:] = coords.reshape(-1, 3) / 1000
         self.nodal_coordinates[indexes - 1, :1] = indexes.reshape(-1, 1)
 
+        connectivity_dim1 = dict()
         connectivity_dim2 = dict()
         connectivity_dim3 = dict()
+        self.entity_ranges = dict()
 
         for dim, tag in gmsh.model.getEntities():
             elements_data = dict()
@@ -154,19 +157,32 @@ class Mesh:
                     "element_to_nodes": dict(zip(element_indexes[i], array_element_nodes)),
                 }
 
-            if dim == 1:  # Lines
-                pass
+            if dim == 0:  # Points
+                # The index of points is one less than the
+                # tag value, that is why this is the correct range.
+                self.entity_ranges[dim, tag] = range(tag - 1, tag)
+
+            elif dim == 1:  # Lines
+                connectivity_dim1[dim, tag] = elements_data
 
             elif dim == 2:  # Surfaces
-                connectivity_dim2[tag] = elements_data
+                connectivity_dim2[dim, tag] = elements_data
 
             elif dim == 3:  # Solids
-                connectivity_dim3[tag] = elements_data
+                connectivity_dim3[dim, tag] = elements_data
 
+        self.lines_connectivity = self._get_connectivity_array(connectivity_dim1)
         self.faces_connectivity = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity = self._get_connectivity_array(connectivity_dim3)
 
     def _get_connectivity_array(self, input_dict):
+        """
+        The returned value is an array where each line is a connectivity
+        and the collums follow this order:
+
+        Index || Element index || Solid ID || Element type ID || Node IDS
+        """
+
         if not isinstance(input_dict, dict):
             raise TypeError("get_connectivity_data only accepts dicts as input.")
 
@@ -184,7 +200,8 @@ class Mesh:
         output_data = np.zeros((n, max_cols + 4), dtype=int)
 
         start, end, ind = 0, 0, 0
-        for entity_tag, e_data in input_dict.items():
+        for (entity_dim, entity_tag), e_data in input_dict.items():
+            entity_start = start
             for etype_tag, data in e_data.items():
                 end += n_list[ind]
                 indexes = data["indexes"]
@@ -196,8 +213,11 @@ class Mesh:
                 output_data[start:end, 2] = np.ones(rows) * etype_tag
                 output_data[start:end, 3] = indexes
                 output_data[start:end, 4 : 4 + cols] = nodes
+
                 start = end
                 ind += 1
+            entity_end = end
+            self.entity_ranges[entity_dim, entity_tag] = range(entity_start, entity_end)
 
         output_data[:, 0] = np.arange(1, n + 1, 1)
 

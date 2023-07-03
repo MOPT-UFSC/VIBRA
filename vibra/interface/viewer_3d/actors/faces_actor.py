@@ -22,8 +22,8 @@ class FacesActor(vtk.vtkActor):
         cell_colors.SetNumberOfComponents(3)
         cell_colors.SetNumberOfTuples(len(self.mesh.faces_connectivity))
 
-        for i, (_, x, y, z) in enumerate(self.mesh.nodal_coordinates):
-            points.InsertPoint(i, x, y, z)
+        for _, x, y, z in self.mesh.nodal_coordinates:
+            points.InsertNextPoint(x, y, z)
 
         for a, b, c in self.mesh.faces_connectivity[:, 4:]:
             data.InsertNextCell(vtk.VTK_TRIANGLE, 3, [a, b, c])

@@ -13,16 +13,20 @@ class PointsActor(vtk.vtkActor):
         mapper = vtk.vtkPolyDataMapper()
         cell_colors = vtk.vtkUnsignedCharArray()
 
-        data.Allocate(len(self.mesh.points))
+        data.Allocate(len(self.mesh.nodal_coordinates))
         cell_colors.SetNumberOfComponents(3)
-        cell_colors.SetNumberOfTuples(len(self.mesh.points))
+        cell_colors.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
 
-        # I hope the indexes match
-        for pts in self.mesh.points_entities.values():
-            for i in pts:
-                x, y, z = self.mesh.points[i]
-                points.InsertPoint(i, x, y, z)
-                data.InsertNextCell(vtk.VTK_VERTEX, 1, [i])
+        # I it a bit dumb to run over all entities,
+        # but we must have very few entities so it is ok
+        for (dim, tag), elements in self.mesh.entity_ranges.items():
+            if dim != 0:
+                continue
+
+            for element in elements:
+                _, x, y, z = self.mesh.nodal_coordinates[element]
+                points.InsertNextPoint(x, y, z)
+                data.InsertNextCell(vtk.VTK_VERTEX, 1, [element])
 
         data.SetPoints(points)
         data.GetCellData().SetScalars(cell_colors)

@@ -52,11 +52,11 @@ class ModelRenderWidget(CommonRenderWidget):
 
         self.remove_actors()
 
-        # self.points_actor = PointsActor(mesh)
-        # self.renderer.AddActor(self.points_actor)
+        self.points_actor = PointsActor(mesh)
+        self.renderer.AddActor(self.points_actor)
 
-        # self.lines_actor = LinesActor(mesh)
-        # self.renderer.AddActor(self.lines_actor)
+        self.lines_actor = LinesActor(mesh)
+        self.renderer.AddActor(self.lines_actor)
 
         self.faces_actor = FacesActor(mesh)
         self.renderer.AddActor(self.faces_actor)
@@ -137,15 +137,11 @@ class ModelRenderWidget(CommonRenderWidget):
             self.select_point(clicked_cell)
 
         if clicked_actor == self.lines_actor:
-            line_entity = self._find_key(
-                clicked_cell, self.project.model.visualization_mesh.line_entities
-            )
+            line_entity = self.project.model.visualization_mesh.lines_connectivity[clicked_cell][1]
             self.select_line(line_entity)
 
         if clicked_actor == self.faces_actor:
-            face_entity = self._find_key(
-                clicked_cell, self.project.model.visualization_mesh.face_entities
-            )
+            face_entity = self.project.model.visualization_mesh.faces_connectivity[clicked_cell][1]
             self.select_face(face_entity)
 
         self.update()
@@ -162,22 +158,22 @@ class ModelRenderWidget(CommonRenderWidget):
     def select_line(self, line):
         if self.view_mode != SHOW_LINES:
             return
+
+        element_indexes = self.project.model.visualization_mesh.entity_ranges[1, line]
         self.selected_lines = [line]
         self.lines_actor.clear_colors()
-        self.lines_actor.paint_cells(
-            self.selection_color, self.project.model.visualization_mesh.line_entities[line]
-        )
+        self.lines_actor.paint_cells(self.selection_color, element_indexes)
         self.update()
         self.selection_changed.emit(self.selected_points, self.selected_lines, self.selected_faces)
 
     def select_face(self, face):
         if self.view_mode != SHOW_FACES:
             return
+
+        element_indexes = self.project.model.visualization_mesh.entity_ranges[2, face]
         self.selected_faces = [face]
         self.faces_actor.clear_colors()
-        self.faces_actor.paint_cells(
-            self.selection_color, self.project.model.visualization_mesh.face_entities[face]
-        )
+        self.faces_actor.paint_cells(self.selection_color, element_indexes)
         self.update()
         self.selection_changed.emit(self.selected_points, self.selected_lines, self.selected_faces)
 
@@ -198,21 +194,6 @@ class ModelRenderWidget(CommonRenderWidget):
         self.points_actor = None
         self.lines_actor = None
         self.faces_actor = None
-
-    def _find_key(self, value, dictionary):
-        """
-        Given a dictionary finds the key that contains
-        some value in it.
-
-        This function only make sense if the dict
-        values are sets, because in sets belonging is
-        an inexpensive operation.
-        """
-        for key, values in dictionary.items():
-            if value in values:
-                return key
-        else:
-            return None
 
     def _actors_exists(self):
         actors = [
