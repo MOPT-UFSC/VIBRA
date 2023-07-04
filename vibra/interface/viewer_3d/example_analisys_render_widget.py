@@ -93,7 +93,7 @@ class ExampleAnalisysRenderWidget(CommonRenderWidget):
 
         # actually I dont know why we need to sum the
         # normal vector but it works perfectly
-        position = (x, y, z) + normal
+        position = (x, y, z)
         self.model_actor.apply_cut(position, normal)
         self.update()
 

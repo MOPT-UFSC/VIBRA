@@ -12,11 +12,9 @@ class AnalisysActor(SolidsActor):
         plane.SetOrigin(origin)
         plane.SetNormal(normal)
 
-        clipper = vtk.vtkClipDataSet()
+        clipper = vtk.vtkExtractGeometry()
         clipper.SetInputData(self.data)
-        clipper.SetClipFunction(plane)
-        clipper.SetOutputPointsPrecision(10)
-        clipper.SetValue(-1)
+        clipper.SetImplicitFunction(plane)
         clipper.Update()
 
         mapper = self.GetMapper()
