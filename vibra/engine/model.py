@@ -12,5 +12,7 @@ class ModelStatus:
 class Model:
     def __init__(self, geometry_path):
         self.geometry_path = geometry_path
+        self.mesh = Mesh.from_cad(Path(geometry_path), dimention=2, size_factor=0.1)
 
-        self.mesh = Mesh.from_cad(Path(geometry_path), size_factor=0.1)
+    def load_mesh(self, *args, **kwargs):
+        self.mesh = Mesh.from_cad(*args, **kwargs)
