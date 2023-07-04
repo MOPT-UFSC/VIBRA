@@ -157,6 +157,7 @@ class MainWindow(QMainWindow):
         qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
         self.viewer_tabs.set_theme(theme)
         self.user_config.theme = theme
+        self.menu_widget._configItems()
 
     def capture_image(self):
         path, check = QFileDialog.getSaveFileName(

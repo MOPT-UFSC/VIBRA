@@ -37,9 +37,10 @@ class SettingsMenu(QMenu):
 
     def call_show_or_hide_menu_items(self):
         if self.bool_state:
-            self.show_or_hide_menu_items_action.setText("Show menu items")        
+            text = "Show menu items"
         else:
-            self.show_or_hide_menu_items_action.setText("Hide menu items")        
+            text = "Hide menu items"
+        self.show_or_hide_menu_items_action.setText(text)        
         self.bool_state = not self.bool_state
         self.main_window.menu_widget.setVisible(self.bool_state)
 

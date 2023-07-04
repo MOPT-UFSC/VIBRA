@@ -267,7 +267,11 @@ class MenuItems(QTreeWidget):
         borderPen = QPen(QColor(0,0,0))
         borderPen.setWidth(1)
 
-        textTopBrush = QBrush(QColor(0,0,0))
+        if self.mainWindow.user_config.theme == "light":
+            textTopBrush = QBrush(QColor(0,0,0))
+        elif self.mainWindow.user_config.theme == "dark":
+            textTopBrush = QBrush(QColor(255,255,255))
+
         configTopBrush = self.brush_upper_items
         plotTopBrush = self.brush_lower_items
 
@@ -294,6 +298,7 @@ class MenuItems(QTreeWidget):
 
         for child_item in self.list_child_items:
             child_item.setFont(0, self.font_child_Items)
+            child_item.setForeground(0, textTopBrush)
             # child_item.setSizeHint(0, self.top_items_size)
 
     def update_plot_mesh(self):
