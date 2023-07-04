@@ -1,10 +1,11 @@
 import os
-import sys
+import logging
 from pathlib import Path
 
 import gmsh
 import numpy as np
 
+from vibra.utils.progress_status import ProgressStatus
 from vibra.engine.mesher.element_info import (
     DEFAULT,
     HEXAHEDRON_8,
@@ -76,13 +77,19 @@ class Mesh:
         path = Path(path)
         gmsh.initialize("", False)
 
+        logging.info("Configuring Mesh" + ProgressStatus(5, 100))
         self._configure_mesh(element_info, element_size, tolerance, size_factor, threads)
+
+        logging.info("Loading Geometry" + ProgressStatus(10, 100))
         gmsh.merge(str(path))
 
         self.dimention = min(dimention, gmsh.model.getDimension())
         self.element_info = element_info
 
+        logging.info("Loading Geometry" + ProgressStatus(15, 100))
         gmsh.model.mesh.generate(dim=self.dimention)
+
+        logging.info("Processing Mesh" + ProgressStatus(70, 100))
         self._process_mesh()
         gmsh.finalize()
 
