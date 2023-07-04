@@ -73,22 +73,21 @@ class MesherInputs(QDialog):
             self.setMinimumSize(604, 500)
             self.setMaximumSize(604, 500)
         elif self.tabWidget_element_options.currentIndex() == 1:
-            self.setMinimumSize(604, 740)
-            self.setMaximumSize(604, 740)
+            self.setMinimumSize(604, 720)
+            self.setMaximumSize(604, 720)
 
 
     def _update_visibility(self):
         if self.tabWidget_element_options.currentIndex() == 0:
             _bool = self.checkBox_size_factor.isChecked()
-            
+            #
             if _bool:
                 self.checkBox_size_factor.setText("Enabled")
             else:
                 self.checkBox_size_factor.setText("Disabled")
-
+            #
             self.label_size_factor.setDisabled(not _bool)
             self.lineEdit_size_factor_gen.setDisabled(not _bool)
-            
             self.label_minimum_element_size_gen.setDisabled(_bool)
             self.label_maximum_element_size_gen.setDisabled(_bool)
             self.lineEdit_minimum_element_size_gen.setDisabled(_bool)
