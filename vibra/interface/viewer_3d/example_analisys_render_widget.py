@@ -18,8 +18,9 @@ class ExampleAnalisysRenderWidget(CommonRenderWidget):
         self.plane_actor = None
         self.bounds = (0, 0, 0, 0, 0, 0)
 
-        self.create_axes()
         self.update_plot()
+        self.create_color_bar()
+        self.create_axes()
 
     def update_plot(self):
         if self.project is None:
@@ -42,6 +43,7 @@ class ExampleAnalisysRenderWidget(CommonRenderWidget):
         self.model_actor = AnalisysActor(mesh)
         self.model_actor.plot_colorbar(solver.tensions)
         self.renderer.AddActor(self.model_actor)
+        self.colorbar.SetLookupTable(self.model_actor.lookup_table)
 
         self.bounds = self.model_actor.GetBounds()
         scale = bounds_distance(self.bounds)

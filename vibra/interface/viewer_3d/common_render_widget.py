@@ -83,6 +83,28 @@ class CommonRenderWidget(QFrame):
 
         self.renderer.AddActor(self.scale_bar)
 
+    def create_color_bar(self, lookup_table=None):
+        if lookup_table is None:
+            lookup_table = vtk.vtkLookupTable()
+            lookup_table.Build()
+
+        colorbar_label = vtk.vtkTextProperty()
+        colorbar_label.ShadowOff()
+        colorbar_label.ItalicOff()
+        colorbar_label.BoldOn()
+        colorbar_label.SetFontSize(12)
+        colorbar_label.SetJustificationToLeft()
+
+        self.colorbar = vtk.vtkScalarBarActor()
+        self.colorbar.SetLabelTextProperty(colorbar_label)
+        self.colorbar.SetLookupTable(lookup_table)
+        self.colorbar.SetWidth(0.02)
+        self.colorbar.SetPosition(0.94, 0.07)
+        self.colorbar.SetMaximumNumberOfColors(400)
+        self.colorbar.UnconstrainedFontSizeOn()
+        self.colorbar.SetTextPositionToPrecedeScalarBar()
+        self.renderer.AddActor(self.colorbar)
+
     #
     def set_theme(self, theme):
         if theme == "dark":

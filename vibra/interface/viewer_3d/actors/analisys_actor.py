@@ -4,6 +4,11 @@ from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
 
 
 class AnalisysActor(SolidsActor):
+    def __init__(self, mesh):
+        super().__init__(mesh)
+        self.lookup_table = vtk.vtkLookupTable()
+        self.lookup_table.SetHueRange(2/3, 0)
+
     def apply_cut(self, origin, normal):
         if self.data is None:
             return
@@ -18,6 +23,7 @@ class AnalisysActor(SolidsActor):
         clipper.Update()
 
         mapper = self.GetMapper()
+        mapper.InterpolateScalarsBeforeMappingOn()
         mapper.SetInputData(clipper.GetOutput())
         mapper.Modified()
 
@@ -33,15 +39,14 @@ class AnalisysActor(SolidsActor):
         if self.data is None:
             return
 
-        colorbar = vtk.vtkLookupTable()
-        colorbar.SetTableRange(min(values), max(values))
-        colorbar.SetHueRange(2 / 3, 0)
+        self.lookup_table.SetTableRange(min(values), max(values))
+        self.lookup_table.Build()
 
         point_colors = self.data.GetPointData().GetScalars()
         for i, val in enumerate(values):
             color = [0, 0, 0]
             # yes, vtk uses it as a fucking pointer instead of returning a tuple...
-            colorbar.GetColor(val, color)
+            self.lookup_table.GetColor(val, color)
             color = [int(i * 255) for i in color]
             point_colors.SetTuple(i, color)
 
