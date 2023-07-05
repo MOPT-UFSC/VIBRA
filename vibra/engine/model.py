@@ -1,6 +1,8 @@
 from pathlib import Path
 
 from vibra.engine.mesher.mesh import Mesh
+from vibra.engine.properties.model_properties import ModelProperties
+from vibra.engine.properties.fluid import Fluid
 
 
 class ModelStatus:
@@ -14,6 +16,9 @@ class Model:
         self.geometry_path = ""
         self.mesh_setup = None
         self.mesh = None
+
+        self.properties = ModelProperties()
+        self.properties.set_fluid(Fluid("Air?", density=1.2, speed_of_sound=343))
 
     def set_geometry_path(self, path):
         self.geometry_path = Path(path)
