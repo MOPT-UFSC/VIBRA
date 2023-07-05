@@ -21,10 +21,7 @@ class ModalSolver:
         # self.frequencies = None
         # self.harmonic_response = None
 
-        # def modal_analysis(self, K=[], M=[], modes=20, which='LM', sigma=0.01, normalize=True):
-        """
-        """
-
+    # def modal_analysis(self, K=[], M=[], modes=20, which='LM', sigma=0.01, normalize=True):
     def solve(self, K=[], M=[], modes=20, which="LM", sigma=0.01, normalize=True):
         if K != [] and M != []:
             KT = K
