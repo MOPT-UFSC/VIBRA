@@ -14,13 +14,14 @@ class MesherInputs(QDialog):
         
         self.complete = False
 
-        self._define_Qt_variables()
+        self._define_qt_variables()
         self._create_connections()
         self._config_window()
         self.exec()
 
 
-    def _define_Qt_variables(self):
+    def _define_qt_variables(self):
+        # Papai do céu está triste com tanto camelCase em vez de snake_case =(
 
         # QCheckBox objects
         self.checkBox_size_factor = self.findChild(QCheckBox, "checkBox_size_factor")
