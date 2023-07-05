@@ -34,8 +34,10 @@ class MesherMenu(QMenu):
 
 
     def call_mesher_inputs(self):
-        MesherInputs(self.parent())
+        mesher = MesherInputs(self.parent())
+        if mesher.complete:
+            self.parent().project.set_mesh_setup(mesher.mesh_setup)
 
 
     def call_generate_mesh(self):
-        pass
+        self.parent().project.generate_mesh()

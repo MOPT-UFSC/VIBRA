@@ -105,14 +105,14 @@ class MainWindow(QMainWindow):
 
     def create_basic_layout(self):
 
+        self.menu_widget = MenuItems(self)
+
         self.setCentralWidget(None)
         # self.setCentralWidget(self.viewer_tabs)
 
         self.create_menu_bar()
         self.create_tool_bars()
         self.create_status_bar()
-
-        self.menu_widget = MenuItems(self)
 
         working_area = QSplitter(Qt.Horizontal)
         self.setCentralWidget(working_area)
@@ -122,7 +122,6 @@ class MainWindow(QMainWindow):
         working_area.setSizes([100,400])
         # self.menu_widget.setVisible(False)
         
-
     def load_user_preferences(self):
         self.set_theme(self.user_config.theme)
 
@@ -146,6 +145,9 @@ class MainWindow(QMainWindow):
         self.close_app()
         event.ignore()
 
+    def get_user_config(self):
+        return self.user_config
+
     # External functions that may be usefull
     def set_theme(self, theme: str):
         """
@@ -158,6 +160,9 @@ class MainWindow(QMainWindow):
         self.viewer_tabs.set_theme(theme)
         self.user_config.theme = theme
         self.menu_widget._configItems()
+
+    def set_menu_items_visibility_state(self, state: str):
+        self.user_config.menu_items_visible = state
 
     def capture_image(self):
         path, check = QFileDialog.getSaveFileName(

@@ -331,7 +331,7 @@
                  </widget>
                 </item>
                 <item row="0" column="2">
-                 <widget class="QComboBox" name="comboBox">
+                 <widget class="QComboBox" name="comboBox_element_shape">
                   <property name="minimumSize">
                    <size>
                     <width>140</width>
@@ -410,7 +410,7 @@ QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-styl
                    <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                   </property>
                   <property name="text">
-                   <string>Shape funtion:</string>
+                   <string>Shape function:</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -418,7 +418,7 @@ QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-styl
                  </widget>
                 </item>
                 <item row="1" column="2">
-                 <widget class="QComboBox" name="comboBox_2">
+                 <widget class="QComboBox" name="comboBox_shape_function">
                   <property name="minimumSize">
                    <size>
                     <width>140</width>
