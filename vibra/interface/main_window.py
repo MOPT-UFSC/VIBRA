@@ -48,7 +48,7 @@ class MainWindow(QMainWindow):
         self.create_basic_layout()
         self.load_user_preferences()
 
-        self.viewer_tabs.model_widget.selection_changed.connect(self.selection_changed_callback)
+        self.viewer_tabs.geometry_widget.selection_changed.connect(self.selection_changed_callback)
         self.clip_plane.slider_pressed.connect(self.slider_pressed_callback)
         self.clip_plane.value_changed.connect(self.slider_moved_callback)
         self.clip_plane.slider_released.connect(self.slider_released_callback)
@@ -190,7 +190,7 @@ class MainWindow(QMainWindow):
         import_geometry = load_function(self.project.import_geometry, self)
         import_geometry(path)
 
-        self.viewer_tabs.show_model()
+        self.viewer_tabs.show_geometry()
         self.viewer_tabs.update_plots()
         self.set_theme(self.user_config.theme)
 

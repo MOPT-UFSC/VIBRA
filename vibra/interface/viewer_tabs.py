@@ -13,7 +13,7 @@ from vibra.interface.viewer_3d.example_analisys_render_widget import (
     ExampleAnalisysRenderWidget,
 )
 from vibra.interface.viewer_3d.example_render_widget import ExampleRenderWidget
-from vibra.interface.viewer_3d.model_render_widget import ModelRenderWidget
+from vibra.interface.viewer_3d.geometry_render_widget import GeometryRenderWidget
 
 
 class ViewerTabs(QTabWidget):
@@ -26,12 +26,12 @@ class ViewerTabs(QTabWidget):
         self.project = project
         self.user_config = user_config
 
-        self.model_widget = ModelRenderWidget(self.project)
+        self.geometry_widget = GeometryRenderWidget(self.project)
         self.example_analisys_widget = ExampleAnalisysRenderWidget(self.project)
         self.welcome = QLabel("Seja muito bem vindo!")
         self.help_widget = HelpWidget()
 
-        self.model_widget.set_theme(self.user_config.theme)
+        self.geometry_widget.set_theme(self.user_config.theme)
         self.show_wellcome()
 
     def show_wellcome(self):
@@ -45,10 +45,10 @@ class ViewerTabs(QTabWidget):
         self.addTab(example_widget, "Example")
         self.setCurrentWidget(example_widget)
 
-    def show_model(self):
-        if self.model_widget not in self.tabs():
-            self.addTab(self.model_widget, "Model")
-        self.setCurrentWidget(self.model_widget)
+    def show_geometry(self):
+        if self.geometry_widget not in self.tabs():
+            self.addTab(self.geometry_widget, "Model")
+        self.setCurrentWidget(self.geometry_widget)
 
     def show_analisys(self):
         if self.example_analisys_widget not in self.tabs():

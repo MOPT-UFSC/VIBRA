@@ -93,8 +93,8 @@ class ProjectMenu(QMenu):
         self.parent().import_geometry()
 
     # TODO: Create and connect actions for these
-    def show_model_callback(self):
-        self.parent().viewer_tabs.show_model()
+    def show_geometry_callback(self):
+        self.parent().viewer_tabs.show_geometry()
 
     def show_example_callback(self):
         self.parent().viewer_tabs.show_example()

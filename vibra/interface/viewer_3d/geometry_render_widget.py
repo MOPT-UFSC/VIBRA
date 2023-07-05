@@ -13,7 +13,7 @@ SHOW_LINES = 1
 SHOW_FACES = 2
 
 
-class ModelRenderWidget(CommonRenderWidget):
+class GeometryRenderWidget(CommonRenderWidget):
     selection_changed = pyqtSignal(list, list, list)
 
     def __init__(self, project, parent=None):
