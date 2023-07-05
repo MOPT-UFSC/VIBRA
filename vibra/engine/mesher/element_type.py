@@ -4,7 +4,7 @@ from vibra.engine.mesher import gmsh_constants
 
 
 @dataclass
-class ElementInfo:
+class ElementType:
     algorithm_2d: int
     algorithm_3d: int
     subdivision_algorithm: int
@@ -15,7 +15,7 @@ class ElementInfo:
     element_order: int
 
 
-TETRAHEDRON_4 = ElementInfo(
+TETRAHEDRON_4 = ElementType(
     algorithm_2d=gmsh_constants.DELAUNAY_2D,
     algorithm_3d=gmsh_constants.DELAUNAY_3D,
     subdivision_algorithm=gmsh_constants.NO_SUBDIVISION,
@@ -25,7 +25,7 @@ TETRAHEDRON_4 = ElementInfo(
     element_order=1,
 )
 
-TETRAHEDRON_10 = ElementInfo(
+TETRAHEDRON_10 = ElementType(
     algorithm_2d=gmsh_constants.DELAUNAY_2D,
     algorithm_3d=gmsh_constants.DELAUNAY_3D,
     subdivision_algorithm=gmsh_constants.NO_SUBDIVISION,
@@ -35,7 +35,7 @@ TETRAHEDRON_10 = ElementInfo(
     element_order=2,
 )
 
-HEXAHEDRON_8 = ElementInfo(
+HEXAHEDRON_8 = ElementType(
     algorithm_2d=gmsh_constants.QUASI_STRUCTURED_QUADS_2D,
     algorithm_3d=gmsh_constants.DELAUNAY_3D,
     subdivision_algorithm=gmsh_constants.ALL_HEXAHEDRA_SUBDIVISION,
@@ -45,7 +45,7 @@ HEXAHEDRON_8 = ElementInfo(
     element_order=1,
 )
 
-HEXAHEDRON_20 = ElementInfo(
+HEXAHEDRON_20 = ElementType(
     algorithm_2d=gmsh_constants.QUASI_STRUCTURED_QUADS_2D,
     algorithm_3d=gmsh_constants.DELAUNAY_3D,
     subdivision_algorithm=gmsh_constants.ALL_HEXAHEDRA_SUBDIVISION,

@@ -3,6 +3,7 @@ from PyQt5 import uic
 
 from interface.general.callDoubleConfirmationInput import CallDoubleConfirmationInput
 from interface.general.printMessageInput import PrintMessageInput
+from vibra.engine.mesher.element_type import *
 
 
 class MesherInputs(QDialog):
@@ -11,13 +12,16 @@ class MesherInputs(QDialog):
 
         uic.loadUi("data/ui_files/mesh/element_setup.ui", self)
         
-        self._define_Qt_variables()
+        self.complete = False
+
+        self._define_qt_variables()
         self._create_connections()
         self._config_window()
-        self.show()
+        self.exec()
 
 
-    def _define_Qt_variables(self):
+    def _define_qt_variables(self):
+        # Papai do céu está triste com tanto camelCase em vez de snake_case =(
 
         # QCheckBox objects
         self.checkBox_size_factor = self.findChild(QCheckBox, "checkBox_size_factor")
@@ -28,7 +32,7 @@ class MesherInputs(QDialog):
 
         # QComboBox objects
         self.comboBox_element_shape = self.findChild(QComboBox, "comboBox_element_shape")
-        self.comboBox_shape_functions = self.findChild(QComboBox, "comboBox_shape_functions")
+        self.comboBox_shape_function = self.findChild(QComboBox, "comboBox_shape_function")
         self.comboBox_2D_algorithm = self.findChild(QComboBox, "comboBox_2D_algorithm")
         self.comboBox_3D_algorithm = self.findChild(QComboBox, "comboBox_3D_algorithm")
         self.comboBox_2D_recomb_algorithm = self.findChild(QComboBox, "comboBox_2D_recomb_algorithm")
@@ -57,6 +61,7 @@ class MesherInputs(QDialog):
 
         # QTabWidget object
         self.tabWidget_element_options = self.findChild(QTabWidget, "tabWidget_element_options")
+        self.tabWidget_element_options.setTabEnabled(1, False)
 
     
     def _create_connections(self):
@@ -111,33 +116,56 @@ class MesherInputs(QDialog):
 
 
     def check_inputs_for_general_tab(self):
-
+        #
+        self.size_factor = 0.
+        self.minimum_element_size = 0.0
+        self.maximum_element_size = 0.0
+        self.mesh_setup = {}
+        #
         element_shape = self.comboBox_element_shape.currentText()
-        shape_function = self.comboBox_shape_functions.currentText()
-
+        shape_function = self.comboBox_shape_function.currentText()
+        #
+        if element_shape == "Tetrahedral" and shape_function == "Linear": 
+            self.element_type = TETRAHEDRON_4
+        elif element_shape == "Tetrahedral" and shape_function == "Quadratic":     
+            self.element_type = TETRAHEDRON_10
+        elif element_shape == "Hexahedral" and shape_function == "Linear":
+            self.element_type = HEXAHEDRON_8
+        elif element_shape == "Hexahedral" and shape_function == "Quadratic":
+            self.element_type = HEXAHEDRON_20
+        else:
+            raise NotImplementedError(f"Seu tanso! {element_shape} {shape_function}")
+        #
+        lineEdit = self.lineEdit_geometry_tolerance_gen
+        self.geometry_tolerance = self.check_inputs(lineEdit, "Geometry tolerance")
+        if self.geometry_tolerance is None:
+            return True
+        #
         if self.checkBox_size_factor.isChecked():
         
             lineEdit = self.lineEdit_size_factor_gen
-            size_factor = self.check_inputs(lineEdit, "Size factor")
-            if size_factor is None:
+            self.size_factor = self.check_inputs(lineEdit, "Size factor")
+            if self.size_factor is None:
                 return True
         
         else:
 
             lineEdit = self.lineEdit_minimum_element_size_gen
-            minimum_element_size = self.check_inputs(lineEdit, "Minimum element size")
-            if minimum_element_size is None:
+            self.minimum_element_size = self.check_inputs(lineEdit, "Minimum element size")
+            if self.minimum_element_size is None:
                 return True
             
             lineEdit = self.lineEdit_maximum_element_size_gen
-            maximum_element_size = self.check_inputs(lineEdit, "Maximum element size")
-            if maximum_element_size is None:
+            self.maximum_element_size = self.check_inputs(lineEdit, "Maximum element size")
+            if self.maximum_element_size is None:
                 return True
-        
-        lineEdit = self.lineEdit_geometry_tolerance_gen
-        geometry_tolerance = self.check_inputs(lineEdit, "Geometry tolerance")
-        if geometry_tolerance is None:
-            return True  
+
+        self.mesh_setup = { "element_type" : self.element_type,
+                            "geometry_tolerance" : self.geometry_tolerance,
+                            "size_factor" : self.size_factor,
+                            "minimum_element_size" : self.minimum_element_size,
+                            "maximum_element_size" : self.maximum_element_size
+                          }
 
 
     def check_inputs_for_advanced_tab(self):
@@ -184,6 +212,7 @@ class MesherInputs(QDialog):
         elif self.tabWidget_element_options.currentIndex() == 1:
             if self.check_inputs_for_advanced_tab():
                 return
+        self.complete = True
         self.close()
 
 

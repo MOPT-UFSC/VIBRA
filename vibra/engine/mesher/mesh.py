@@ -6,13 +6,13 @@ import gmsh
 import numpy as np
 
 from vibra.utils.progress_status import ProgressStatus
-from vibra.engine.mesher.element_info import (
+from vibra.engine.mesher.element_type import (
     DEFAULT,
     HEXAHEDRON_8,
     HEXAHEDRON_20,
     TETRAHEDRON_4,
     TETRAHEDRON_10,
-    ElementInfo,
+    ElementType,
 )
 
 
@@ -21,9 +21,9 @@ class Mesh:
         self.reset_variables()
 
     def reset_variables(self):
-        self.dimention = 0
+        self.dimension = 0
         self.entity_ranges = dict()
-        self.element_info = DEFAULT
+        self.element_type = DEFAULT
         self.nodal_coordinates = np.array([])
         self.lines_connectivity = np.array([])
         self.faces_connectivity = np.array([])
@@ -34,11 +34,12 @@ class Mesh:
         cls,
         path: (str | Path),
         *,
-        element_size: float = 0.0,
-        element_info: ElementInfo = DEFAULT,
-        tolerance: float = 1e-6,
+        minimum_element_size: float = 40.0,
+        maximum_element_size: float = 40.0,
+        element_type: ElementType = DEFAULT,
+        geometry_tolerance: float = 1e-6,
         size_factor: float = 1.0,
-        dimention: int = 3,
+        dimension: int = 3,
         threads: int = 1
     ):
         """
@@ -54,11 +55,12 @@ class Mesh:
         obj = Mesh()
         obj.load_cad(
             path,
-            element_size=element_size,
-            element_info=element_info,
-            tolerance=tolerance,
+            minimum_element_size=minimum_element_size,
+            maximum_element_size=maximum_element_size,
+            element_type=element_type,
+            geometry_tolerance=geometry_tolerance,
             size_factor=size_factor,
-            dimention=dimention,
+            dimension=dimension,
             threads=threads,
         )
         return obj
@@ -67,27 +69,28 @@ class Mesh:
         self,
         path: (str | Path),
         *,
-        element_size: float = 0.0,
-        element_info: ElementInfo = DEFAULT,
-        tolerance: float = 1e-6,
-        size_factor: float = 1.0,
-        dimention: int = 3,
+        minimum_element_size: float = 40.0,
+        maximum_element_size: float = 40.0,
+        element_type: ElementType = DEFAULT,
+        geometry_tolerance: float = 1e-6,
+        size_factor: float = 0.0,
+        dimension: int = 3,
         threads: int = 1
     ):
         path = Path(path)
         gmsh.initialize("", False)
 
         logging.info("Configuring Mesh" + ProgressStatus(5, 100))
-        self._configure_mesh(element_info, element_size, tolerance, size_factor, threads)
+        self._configure_mesh(element_type, minimum_element_size, maximum_element_size, geometry_tolerance, size_factor, threads)
 
         logging.info("Loading Geometry" + ProgressStatus(10, 100))
         gmsh.merge(str(path))
 
-        self.dimention = min(dimention, gmsh.model.getDimension())
-        self.element_info = element_info
+        self.dimension = min(dimension, gmsh.model.getDimension())
+        self.element_type = element_type
 
         logging.info("Loading Geometry" + ProgressStatus(15, 100))
-        gmsh.model.mesh.generate(dim=self.dimention)
+        gmsh.model.mesh.generate(dim=self.dimension)
 
         logging.info("Processing Mesh" + ProgressStatus(70, 100))
         self._process_mesh()
@@ -111,23 +114,24 @@ class Mesh:
         header = "Index || Solid ID || Element type ID || Element ID || Connected Node IDs"
         np.savetxt(filename, self.solids_connectivity, delimiter=";", header=header, fmt="%i")
 
-    def _configure_mesh(self, element_info, element_size, tolerance, size_factor, threads):
+    def _configure_mesh(self, element_type, minimum_element_size, maximum_element_size, tolerance, size_factor, threads):
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("General.NumThreads", threads)
         gmsh.option.setNumber("Geometry.Tolerance", tolerance)
-        gmsh.option.setNumber("Mesh.MeshSizeFactor", size_factor)
-        if element_size != 0:
-            gmsh.option.setNumber("Mesh.MeshSizeMin", element_size)
-            gmsh.option.setNumber("Mesh.MeshSizeMax", element_size)
+        if size_factor != 0:
+            gmsh.option.setNumber("Mesh.MeshSizeFactor", size_factor)
+        else:
+            gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
+            gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
 
-        gmsh.option.setNumber("Mesh.Algorithm", element_info.algorithm_2d)
-        gmsh.option.setNumber("Mesh.Algorithm3D", element_info.algorithm_3d)
-        gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_info.recombination_algorithm)
-        gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", element_info.subdivision_algorithm)
-        gmsh.option.setNumber("Mesh.RecombineAll", element_info.recombine_all)
-        gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_info.second_order_incomplete)
-        gmsh.option.setNumber("Mesh.ElementOrder", element_info.element_order)
+        gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
+        gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
+        gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_type.recombination_algorithm)
+        gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", element_type.subdivision_algorithm)
+        gmsh.option.setNumber("Mesh.RecombineAll", element_type.recombine_all)
+        gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_type.second_order_incomplete)
+        gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
 
     def _process_mesh(self):
         """
@@ -247,4 +251,4 @@ if __name__ == "__main__":
         raise FileNotFoundError
 
     mesh = Mesh()
-    mesh.load_cad(path, 100, element_info=TETRAHEDRON_4)
+    mesh.load_cad(path, 100, element_type=TETRAHEDRON_4)
