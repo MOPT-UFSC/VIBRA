@@ -6,7 +6,7 @@ import gmsh
 import numpy as np
 
 from vibra.engine.mesher.element_type import (
-    DEFAULT,
+    DEFAULT_ELEMENT_TYPE,
     HEXAHEDRON_8,
     HEXAHEDRON_20,
     TETRAHEDRON_4,
@@ -23,7 +23,7 @@ class Mesh:
     def reset_variables(self):
         self.dimension = 0
         self.entity_ranges = dict()
-        self.element_type = DEFAULT
+        self.element_type = DEFAULT_ELEMENT_TYPE
         self.nodal_coordinates = np.array([])
         self.lines_connectivity = np.array([])
         self.faces_connectivity = np.array([])
@@ -36,7 +36,7 @@ class Mesh:
         *,
         minimum_element_size: float = 40.0,
         maximum_element_size: float = 40.0,
-        element_type: ElementType = DEFAULT,
+        element_type: ElementType = DEFAULT_ELEMENT_TYPE,
         geometry_tolerance: float = 1e-6,
         size_factor: float = 1.0,
         dimension: int = 3,
@@ -71,7 +71,7 @@ class Mesh:
         *,
         minimum_element_size: float = 40.0,
         maximum_element_size: float = 40.0,
-        element_type: ElementType = DEFAULT,
+        element_type: ElementType = DEFAULT_ELEMENT_TYPE,
         geometry_tolerance: float = 1e-6,
         size_factor: float = 0.0,
         dimension: int = 3,
