@@ -101,5 +101,6 @@ class ProjectMenu(QMenu):
 
     #
     def solve_example_analisys_callback(self):
+        self.parent().project.modal_solver.solve()
         self.parent().project.example_solver.solve()
         self.parent().viewer_tabs.show_example_analisys()

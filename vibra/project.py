@@ -4,6 +4,8 @@ from time import sleep
 
 from vibra.engine.model import Model
 from vibra.engine.solvers.example_solver import ExampleSolver
+from vibra.engine.assemblers.modal_assembler import ModalAssembler
+from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.utils.progress_status import ProgressStatus
 
 
@@ -13,7 +15,10 @@ class Project:
         self.geometry_path = ""
         self.model = None
 
+        self.modal_assembler = ModalAssembler(self.model)
+
         self.example_solver = ExampleSolver()
+        self.modal_solver = ModalSolver(self.modal_assembler)
 
     @classmethod
     def load(cls, path):
@@ -24,6 +29,7 @@ class Project:
 
     def set_model(self, model):
         self.model = model
+        self.modal_assembler.set_model(model)
         self.example_solver.set_model(model)
 
     def import_geometry(self, path):
@@ -38,13 +44,16 @@ class Project:
         self.model.set_mesh_setup(mesh_setup)
 
     def generate_mesh(self):
-        logging.info(f"Generating mesh {self.geometry_path}")
+        logging.info(f"Generating mesh from {self.geometry_path}")
         self.model.load_mesh()
         self.set_model(self.model)
 
     def solve_example(self):
         self.example_solver.set_model(self.model)
         self.example_solver.solve()
+
+    def solve_modal_acoustic(self):
+        self.modal_solver.solve()
 
     def long_function(self):
         for i in range(20):

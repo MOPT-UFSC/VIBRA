@@ -98,14 +98,14 @@ class ACT_TETRAHEDRON_4C(Element):
 
         rho = fluid.density
         c_0 = fluid.speed_of_sound
-        ie = self.connect[el_index, 1:] - 1
+        ie = self.connectivity[el_index, 1:] - 1
         #
         JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
         detJAC, invJAC = get_detJAC_and_invJAC(JAC)
         dphi_t = invJAC @ self.dphi
         #
-        B = np.zeros((3, self.dofs_per_element), dtype=float)
-        N = np.zeros((self.nint, 1, self.dofs_per_element), dtype=float)
+        B = np.zeros((3, self.DOFS_PER_ELEMENT), dtype=float)
+        N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
         #
         B[0, :] = dphi_t[0, :]
         B[1, :] = dphi_t[1, :]
@@ -123,14 +123,14 @@ class ACT_TETRAHEDRON_4C(Element):
 
     def reorder_connect(self):
         """ """
-        self.connect = self.connect[:, [0, 6, 4, 5, 7]]
+        self.connectivity = self.connectivity[:, [0, 6, 4, 5, 7]]
 
     def generate_ind_rows_cols(self):
         """ """
         # processing the dofs indices (rows and columns) for assembly
         self.reorder_connect()
-        dofs, edofs = self.dof_per_node, self.dofs_per_element
-        ind_dofs = dofs * self.connect[:, 1:] - 1
+        dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
+        ind_dofs = dofs * self.connectivity[:, 1:]
 
         vect_indices = ind_dofs.flatten()
         self.ind_rows = ((np.tile(vect_indices, (edofs, 1))).T).flatten()

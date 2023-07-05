@@ -40,7 +40,7 @@ class Mesh:
         geometry_tolerance: float = 1e-6,
         size_factor: float = 1.0,
         dimension: int = 3,
-        threads: int = 1
+        threads: int = 1,
     ):
         """
         Custom constructor so you can create a mesh with this sintax:
@@ -75,7 +75,7 @@ class Mesh:
         geometry_tolerance: float = 1e-6,
         size_factor: float = 0.0,
         dimension: int = 3,
-        threads: int = 1
+        threads: int = 1,
     ):
         path = Path(path)
         gmsh.initialize("", False)
@@ -102,6 +102,14 @@ class Mesh:
         logging.info("Processing Mesh" + ProgressStatus(70, 100))
         self._process_mesh()
         gmsh.finalize()
+
+        logging.info(
+            f"Mesh created with {len(self.nodal_coordinates)} nodes"
+            f", {len(self.lines_connectivity)} dim 1"
+            f", {len(self.faces_connectivity)} dim 2"
+            f"and {len(self.solids_connectivity)} dim 3 elements"
+            + ProgressStatus(100, 100)
+        )
 
     def export_nodes_coordinates(self, filename):
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
