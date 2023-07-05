@@ -50,6 +50,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
+        self.update_theme()
         self.remove_actors()
 
         self.points_actor = PointsActor(mesh)

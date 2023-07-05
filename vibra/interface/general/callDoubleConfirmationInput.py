@@ -1,21 +1,31 @@
-from PyQt5.QtWidgets import QDialog, QPushButton, QLabel
-from PyQt5.QtGui import QIcon, QFont 
-from PyQt5.QtCore import Qt, QRect
 from PyQt5 import uic
+from PyQt5.QtCore import QRect, Qt
+from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtWidgets import QDialog, QLabel, QPushButton
+
 
 class CallDoubleConfirmationInput(QDialog):
-    def __init__(self, title, message, leftButton_label="Return", rightButton_label="Remove", rightButton_size=160, *args, **kwargs):
+    def __init__(
+        self,
+        title,
+        message,
+        leftButton_label="Return",
+        rightButton_label="Remove",
+        rightButton_size=160,
+        *args,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
-        uic.loadUi('interface/ui_files/call_double_confirmation_input.ui', self)
+        uic.loadUi("interface/ui_files/call_double_confirmation_input.ui", self)
 
-        icons_path = 'interface\\data\\icons\\'
-        self.icon = QIcon(icons_path + 'pipe.png')
+        icons_path = "interface\\data\\icons\\"
+        self.icon = QIcon(icons_path + "pipe.png")
         self.setWindowIcon(self.icon)
 
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
 
-        self.window_title = kwargs.get('window_title', f'PFVA Tool (alpha version)')
+        self.window_title = kwargs.get("window_title", f"PFVA Tool (alpha version)")
 
         # self.rightButton_size = kwargs.get('rightButton_size', 160)
         # self.leftButton_label = kwargs.get('leftButton_label', 'Return')
@@ -56,11 +66,11 @@ class CallDoubleConfirmationInput(QDialog):
         self.exec_()
 
     def define_qt_variables(self):
-        self.label_message = self.findChild(QLabel, 'label_message')
-        self.label_title = self.findChild(QLabel, 'label_title')
-        self.pushButton_rightButton = self.findChild(QPushButton, 'pushButton_rightButton')
-        self.pushButton_leftButton = self.findChild(QPushButton, 'pushButton_leftButton')
-    
+        self.label_message = self.findChild(QLabel, "label_message")
+        self.label_title = self.findChild(QLabel, "label_title")
+        self.pushButton_rightButton = self.findChild(QPushButton, "pushButton_rightButton")
+        self.pushButton_leftButton = self.findChild(QPushButton, "pushButton_leftButton")
+
     def create_actions(self):
         self.pushButton_rightButton.clicked.connect(self.confirm_action)
         self.pushButton_leftButton.clicked.connect(self.force_to_close)
@@ -70,15 +80,15 @@ class CallDoubleConfirmationInput(QDialog):
         self.pushButton_rightButton.setText(self.rightButton_label)
         self.pushButton_rightButton.setMinimumWidth(self.right_button_size)
         self.pushButton_rightButton.setMaximumWidth(self.right_button_size)
-        
+
         x = self.pushButton_rightButton.x()
         y = self.pushButton_rightButton.y()
         height = self.pushButton_rightButton.height()
         width = self.pushButton_rightButton.width()
-        
-        if self.right_button_size>160:
-            dx = self.right_button_size-160   
-            self.pushButton_rightButton.setGeometry(QRect(int(x-dx), y, width, height))    
+
+        if self.right_button_size > 160:
+            dx = self.right_button_size - 160
+            self.pushButton_rightButton.setGeometry(QRect(int(x - dx), y, width, height))
 
     def configure_labels(self, title, message):
         self.label_title.setText(title)
@@ -100,7 +110,7 @@ class CallDoubleConfirmationInput(QDialog):
         self._continue = False
         self._stop = True
         self._doNotRun = False
-        self.close()   
+        self.close()
 
     def create_font_title(self):
         self.font_title = QFont()
@@ -108,7 +118,7 @@ class CallDoubleConfirmationInput(QDialog):
         self.font_title.setPointSize(14)
         self.font_title.setBold(True)
         self.font_title.setItalic(False)
-        self.font_title.setWeight(75) 
+        self.font_title.setWeight(75)
 
     def create_font_message(self):
         self.font_message = QFont()
@@ -116,5 +126,4 @@ class CallDoubleConfirmationInput(QDialog):
         self.font_message.setPointSize(12)
         self.font_message.setBold(True)
         self.font_message.setItalic(False)
-        self.font_message.setWeight(75) 
-
+        self.font_message.setWeight(75)

@@ -4,8 +4,8 @@ from pathlib import Path
 from time import sleep
 
 import qdarktheme
-from PyQt5.QtGui import *#QColor
 from PyQt5.QtCore import *
+from PyQt5.QtGui import *  # QColor
 from PyQt5.QtWidgets import (
     QAction,
     QApplication,
@@ -13,19 +13,19 @@ from PyQt5.QtWidgets import (
     QLabel,
     QMainWindow,
     QMessageBox,
-    QSplitter
+    QSplitter,
 )
 
 from vibra.config import UserConfig
 from vibra.interface.clip_plane_widget import ClipPlaneWidget
 from vibra.interface.loading_bar import load_function
+from vibra.interface.menu_items import MenuItems
 from vibra.interface.menus.help_menu import HelpMenu
+from vibra.interface.menus.mesher_menu import MesherMenu
 from vibra.interface.menus.project_menu import ProjectMenu
 from vibra.interface.menus.settings_menu import SettingsMenu
 from vibra.interface.menus.view_mode_menu import ViewModeMenu
 from vibra.interface.menus.views_menu import ViewsMenu
-from vibra.interface.menus.mesher_menu import MesherMenu
-from vibra.interface.menu_items import MenuItems
 from vibra.interface.renderer_toolbar import RendererToolbar
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_tabs import ViewerTabs
@@ -104,7 +104,6 @@ class MainWindow(QMainWindow):
         }
 
     def create_basic_layout(self):
-
         self.menu_widget = MenuItems(self)
 
         self.setCentralWidget(None)
@@ -119,9 +118,9 @@ class MainWindow(QMainWindow):
 
         working_area.addWidget(self.menu_widget)
         working_area.addWidget(self.viewer_tabs)
-        working_area.setSizes([100,400])
+        working_area.setSizes([100, 400])
         # self.menu_widget.setVisible(False)
-        
+
     def load_user_preferences(self):
         self.set_theme(self.user_config.theme)
 
@@ -192,7 +191,6 @@ class MainWindow(QMainWindow):
 
         self.viewer_tabs.show_geometry()
         self.viewer_tabs.update_plots()
-        self.set_theme(self.user_config.theme)
 
     def close_app(self):
         close = QMessageBox.question(

@@ -7,7 +7,7 @@ class AnalisysActor(SolidsActor):
     def __init__(self, mesh):
         super().__init__(mesh)
         self.lookup_table = vtk.vtkLookupTable()
-        self.lookup_table.SetHueRange(2/3, 0)
+        self.lookup_table.SetHueRange(2 / 3, 0)
 
     def apply_cut(self, origin, normal):
         if self.data is None:

@@ -1,23 +1,25 @@
-from PyQt5.QtWidgets import QDialog, QPushButton, QLabel, QFrame
-from PyQt5.QtGui import QIcon, QFont
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
 from threading import Thread
 
-class PrintMessageInput(QDialog):
-    def __init__(self, text_info, justify=True, opv=None, fontsizes=[13,12], *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        uic.loadUi('interface/ui_files/printMessages.ui', self)
+from PyQt5 import uic
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtWidgets import QDialog, QFrame, QLabel, QPushButton
 
-        self.pushButton_close = self.findChild(QPushButton, 'pushButton_close')
+
+class PrintMessageInput(QDialog):
+    def __init__(self, text_info, justify=True, opv=None, fontsizes=[13, 12], *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        uic.loadUi("interface/ui_files/printMessages.ui", self)
+
+        self.pushButton_close = self.findChild(QPushButton, "pushButton_close")
         self.pushButton_close.clicked.connect(self.message_close)
 
-        self.frame_message = self.findChild(QFrame, 'frame_message')
+        self.frame_message = self.findChild(QFrame, "frame_message")
 
-        icons_path = 'interface\\data\\icons\\'
-        self.icon = QIcon(icons_path + 'pipe.png')
+        icons_path = "interface\\data\\icons\\"
+        self.icon = QIcon(icons_path + "pipe.png")
         self.setWindowIcon(self.icon)
-        
+
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         if opv is not None:
@@ -25,9 +27,9 @@ class PrintMessageInput(QDialog):
 
         self.title_fontsize, self.message_fontsize = fontsizes
 
-        self._label_title = self.findChild(QLabel, '_label_title')
-        self._label_message = self.findChild(QLabel, '_label_message')
-        
+        self._label_title = self.findChild(QLabel, "_label_title")
+        self._label_message = self.findChild(QLabel, "_label_message")
+
         self.pushButton_close.setVisible(True)
         self.create_font_title()
         self.create_font_message()
@@ -43,19 +45,17 @@ class PrintMessageInput(QDialog):
 
         self._label_title.setText(text_info[0])
         self._label_message.setText(message)
-        
-        if len(text_info)>2:
+
+        if len(text_info) > 2:
             self.setWindowTitle(text_info[2])
 
         if justify:
             self._label_message.setAlignment(Qt.AlignJustify | Qt.AlignVCenter)
-        
-        self.exec_()
 
+        self.exec_()
 
     def message_close(self):
         self.close()
-
 
     def create_font_title(self):
         self.font_title = QFont()
@@ -63,8 +63,7 @@ class PrintMessageInput(QDialog):
         self.font_title.setPointSize(self.title_fontsize)
         self.font_title.setBold(True)
         self.font_title.setItalic(False)
-        self.font_title.setWeight(75) 
-
+        self.font_title.setWeight(75)
 
     def create_font_message(self):
         self.font_message = QFont()
@@ -72,8 +71,7 @@ class PrintMessageInput(QDialog):
         self.font_message.setPointSize(self.message_fontsize)
         self.font_message.setBold(True)
         self.font_message.setItalic(False)
-        self.font_message.setWeight(75) 
-
+        self.font_message.setWeight(75)
 
     def config_message_font(self):
         font = QFont()
@@ -85,7 +83,6 @@ class PrintMessageInput(QDialog):
         self._label_message.setFont(font)
         self._label_message.setStyleSheet("color:blue")
 
-
     def config_title_font(self):
         font = QFont()
         font.setPointSize(19)
@@ -95,13 +92,11 @@ class PrintMessageInput(QDialog):
         # font.setWeight(60)
         self._label_title.setFont(font)
         self._label_title.setStyleSheet("color:black")
-    
 
     def preprocess_big_strings(self, text):
-
         message = ""
         list_words = text.split(" ")
-        for word in list_words: 
+        for word in list_words:
             if len(word) > 60:
                 while len(word) > 60:
                     message += word[0:60] + " "
@@ -111,9 +106,7 @@ class PrintMessageInput(QDialog):
                 message += word + " "
         return message
 
-
     def config_sizes(self, message):
-
         if 0 < len(message) < 200:
             height = 300
             width = 600
@@ -136,16 +129,16 @@ class PrintMessageInput(QDialog):
         self.setMaximumHeight(height)
 
         self.frame_message.setMinimumWidth(width)
-        self.frame_message.setMinimumHeight(height-52)
+        self.frame_message.setMinimumHeight(height - 52)
         self.frame_message.setMaximumWidth(width)
-        self.frame_message.setMaximumHeight(height-52)
+        self.frame_message.setMaximumHeight(height - 52)
 
-        self._label_message.setMinimumWidth(width-20)
-        self._label_message.setMinimumHeight(height-120)
-        self._label_message.setMaximumWidth(width-20)
-        self._label_message.setMaximumHeight(height-120)
+        self._label_message.setMinimumWidth(width - 20)
+        self._label_message.setMinimumHeight(height - 120)
+        self._label_message.setMaximumWidth(width - 20)
+        self._label_message.setMaximumHeight(height - 120)
 
-        self.pushButton_close.move(250,height-98)   
+        self.pushButton_close.move(250, height - 98)
 
-        self.frame_message.move(0,52)
-        self._label_message.move(10,12)
+        self.frame_message.move(0, 52)
+        self._label_message.move(10, 12)

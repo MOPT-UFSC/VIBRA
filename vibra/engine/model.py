@@ -27,5 +27,5 @@ class Model:
     def load_mesh(self):
         if self.mesh_setup is None:
             raise Exception("Mesh setup not defined!")
-        
+
         self.mesh = Mesh.from_cad(self.geometry_path, **self.mesh_setup)

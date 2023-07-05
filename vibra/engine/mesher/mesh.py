@@ -1,11 +1,10 @@
-import os
 import logging
+import os
 from pathlib import Path
 
 import gmsh
 import numpy as np
 
-from vibra.utils.progress_status import ProgressStatus
 from vibra.engine.mesher.element_type import (
     DEFAULT,
     HEXAHEDRON_8,
@@ -14,6 +13,7 @@ from vibra.engine.mesher.element_type import (
     TETRAHEDRON_10,
     ElementType,
 )
+from vibra.utils.progress_status import ProgressStatus
 
 
 class Mesh:
@@ -81,7 +81,14 @@ class Mesh:
         gmsh.initialize("", False)
 
         logging.info("Configuring Mesh" + ProgressStatus(5, 100))
-        self._configure_mesh(element_type, minimum_element_size, maximum_element_size, geometry_tolerance, size_factor, threads)
+        self._configure_mesh(
+            element_type,
+            minimum_element_size,
+            maximum_element_size,
+            geometry_tolerance,
+            size_factor,
+            threads,
+        )
 
         logging.info("Loading Geometry" + ProgressStatus(10, 100))
         gmsh.merge(str(path))
@@ -114,7 +121,15 @@ class Mesh:
         header = "Index || Solid ID || Element type ID || Element ID || Connected Node IDs"
         np.savetxt(filename, self.solids_connectivity, delimiter=";", header=header, fmt="%i")
 
-    def _configure_mesh(self, element_type, minimum_element_size, maximum_element_size, tolerance, size_factor, threads):
+    def _configure_mesh(
+        self,
+        element_type,
+        minimum_element_size,
+        maximum_element_size,
+        tolerance,
+        size_factor,
+        threads,
+    ):
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("General.NumThreads", threads)

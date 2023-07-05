@@ -1,3 +1,5 @@
+import logging
+
 import vtk
 from PyQt5.QtWidgets import QFrame, QStackedLayout
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -5,6 +7,7 @@ from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from vibra.interface.viewer_3d.interactor_styles.arcball_camera import (
     vtkInteractorStyleArcballCamera,
 )
+from vibra.utils.interface_functions import get_main_window
 
 
 class CommonRenderWidget(QFrame):
@@ -37,6 +40,14 @@ class CommonRenderWidget(QFrame):
         ren_win = self.render_interactor.GetRenderWindow()
         if ren_win is not None:
             ren_win.Render()
+
+    def update_theme(self):
+        try:
+            main_window = get_main_window()
+        except RuntimeError as e:
+            logging.warn(e)
+        else:
+            self.set_theme(main_window.user_config.theme)
 
     def save_png(self, path):
         imageFilter = vtk.vtkWindowToImageFilter()
