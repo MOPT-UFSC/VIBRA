@@ -2,20 +2,21 @@ from PyQt5.QtWidgets import QDialog, QPushButton, QLabel, QFrame
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
-from threading import Thread
+from pathlib import Path
 
 class PrintMessageInput(QDialog):
     def __init__(self, text_info, justify=True, opv=None, fontsizes=[13,12], *args, **kwargs):
         super().__init__(*args, **kwargs)
-        uic.loadUi('interface/ui_files/printMessages.ui', self)
+        uic.loadUi(Path('data/ui_files/general/print_messages.ui'), self)
 
         self.pushButton_close = self.findChild(QPushButton, 'pushButton_close')
         self.pushButton_close.clicked.connect(self.message_close)
 
         self.frame_message = self.findChild(QFrame, 'frame_message')
 
-        icons_path = 'interface\\data\\icons\\'
-        self.icon = QIcon(icons_path + 'pipe.png')
+        icons_path = 'data/icons/'
+        path = str(Path(icons_path + 'logo_vibra.png'))
+        self.icon = QIcon(path)
         self.setWindowIcon(self.icon)
         
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -25,30 +26,30 @@ class PrintMessageInput(QDialog):
 
         self.title_fontsize, self.message_fontsize = fontsizes
 
-        self._label_title = self.findChild(QLabel, '_label_title')
-        self._label_message = self.findChild(QLabel, '_label_message')
+        self.label_title = self.findChild(QLabel, 'label_title')
+        self.label_message = self.findChild(QLabel, 'label_message')
         
         self.pushButton_close.setVisible(True)
         self.create_font_title()
         self.create_font_message()
-        self._label_title.setFont(self.font_title)
-        self._label_message.setFont(self.font_message)
-        self._label_message.setWordWrap(True)
-        self._label_message.setMargin(20)
-        self._label_message.setAlignment(Qt.AlignCenter)
+        self.label_title.setFont(self.font_title)
+        self.label_message.setFont(self.font_message)
+        self.label_message.setWordWrap(True)
+        self.label_message.setMargin(20)
+        self.label_message.setAlignment(Qt.AlignCenter)
 
         self.text_info = text_info
         message = self.preprocess_big_strings(self.text_info[1])
         self.config_sizes(message)
 
-        self._label_title.setText(text_info[0])
-        self._label_message.setText(message)
+        self.label_title.setText(text_info[0])
+        self.label_message.setText(message)
         
         if len(text_info)>2:
             self.setWindowTitle(text_info[2])
 
         if justify:
-            self._label_message.setAlignment(Qt.AlignJustify | Qt.AlignVCenter)
+            self.label_message.setAlignment(Qt.AlignJustify | Qt.AlignVCenter)
         
         self.exec_()
 
@@ -82,8 +83,8 @@ class PrintMessageInput(QDialog):
         # font.setItalic(True)
         font.setFamily("Arial")
         # font.setWeight(60)
-        self._label_message.setFont(font)
-        self._label_message.setStyleSheet("color:blue")
+        self.label_message.setFont(font)
+        self.label_message.setStyleSheet("color:blue")
 
 
     def config_title_font(self):
@@ -93,8 +94,8 @@ class PrintMessageInput(QDialog):
         font.setItalic(True)
         font.setFamily("Arial")
         # font.setWeight(60)
-        self._label_title.setFont(font)
-        self._label_title.setStyleSheet("color:black")
+        self.label_title.setFont(font)
+        self.label_title.setStyleSheet("color:black")
     
 
     def preprocess_big_strings(self, text):
@@ -134,18 +135,3 @@ class PrintMessageInput(QDialog):
         self.setMinimumHeight(height)
         self.setMaximumWidth(width)
         self.setMaximumHeight(height)
-
-        self.frame_message.setMinimumWidth(width)
-        self.frame_message.setMinimumHeight(height-52)
-        self.frame_message.setMaximumWidth(width)
-        self.frame_message.setMaximumHeight(height-52)
-
-        self._label_message.setMinimumWidth(width-20)
-        self._label_message.setMinimumHeight(height-120)
-        self._label_message.setMaximumWidth(width-20)
-        self._label_message.setMaximumHeight(height-120)
-
-        self.pushButton_close.move(250,height-98)   
-
-        self.frame_message.move(0,52)
-        self._label_message.move(10,12)

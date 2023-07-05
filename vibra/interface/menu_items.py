@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem, QStyledItemDelegate, QFrame
 from PyQt5.QtGui import QBrush, QColor, QFont, QIcon, QPixmap, QPainter, QPen, QLinearGradient
 from PyQt5.QtCore import Qt, QSize, QRect
-from interface.general.printMessageInput import PrintMessageInput
+from interface.general.print_message_input import PrintMessageInput
 
 class BorderItemDelegate(QStyledItemDelegate):
     def __init__(self, parent, borderRole):
@@ -86,15 +86,15 @@ class MenuItems(QTreeWidget):
     def _createFonts(self):
         """Create Font objects that configure the font of the items."""
         self.font_top_Items = QFont()
-        self.font_top_Items.setFamily("Segoe UI")
-        self.font_top_Items.setPointSize(13)
+        # self.font_top_Items.setFamily("Segoe UI")
+        self.font_top_Items.setPointSize(12)
         self.font_top_Items.setBold(True)
         self.font_top_Items.setItalic(False)
         self.font_top_Items.setWeight(75)
 
         self.font_child_Items = QFont()
-        self.font_child_Items.setFamily("Segoe UI")
-        self.font_child_Items.setPointSize(12)
+        # self.font_child_Items.setFamily("Segoe UI")
+        self.font_child_Items.setPointSize(11)
         #self.font_child_Items.setBold(False)
         #self.font_child_Items.setItalic(True)
         self.font_child_Items.setWeight(60)
