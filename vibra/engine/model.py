@@ -19,6 +19,8 @@ class Model:
         self.mesh = None
         self.mesh_setup = None
         self.geometry_path = ""
+        self.mesh_setup = None
+        self.mesh = None
 
     def set_geometry_path(self, path):
         self.geometry_path = Path(path)

@@ -4,6 +4,7 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QMenu
 
 from vibra.interface.loading_bar import load_function
+from vibra.utils.interface_functions import get_main_window
 from vibra.utils.icons import load_icon
 from interface.model.mesh.mesher_inputs import MesherInputs
 from interface.model.structural.material_inputs import MaterialInput
@@ -59,4 +60,6 @@ class MesherMenu(QMenu):
 
 
     def call_generate_mesh(self):
-        self.parent().project.generate_mesh()
+        main_window = get_main_window()
+        generate_mesh = load_function(main_window.project.generate_mesh, main_window)
+        generate_mesh()
