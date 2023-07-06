@@ -26,10 +26,9 @@ class ExampleAnalisysRenderWidget(CommonRenderWidget):
         if self.project is None:
             return
 
-        modal_solver = self.project.modal_solver
-        # solver = self.project.example_solver
-        # if solver.tensions is None:
-        #     return
+        solver = self.project.example_solver
+        if solver.tensions is None:
+            return
 
         model = self.project.model
         if model is None:
@@ -42,7 +41,7 @@ class ExampleAnalisysRenderWidget(CommonRenderWidget):
         self.remove_actors()
 
         self.model_actor = AnalisysActor(mesh)
-        self.model_actor.plot_colorbar(modal_solver.modal_shape[:, 0])
+        self.model_actor.plot_colorbar(solver.tensions)
         self.renderer.AddActor(self.model_actor)
         self.colorbar.SetLookupTable(self.model_actor.lookup_table)
 

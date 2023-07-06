@@ -73,9 +73,10 @@ class ProjectMenu(QMenu):
         self.parent().viewer_tabs.show_help()
 
     def exit_callback(self):
-        loaded_function = load_function(self.parent().project.long_function, self)
-        loaded_function()
-        self.solve_example_analisys_callback()
+        # loaded_function = load_function(self.parent().project.long_function, self)
+        # loaded_function()
+        loaded_solve = load_function(self.solve_example_analisys_callback, self)
+        loaded_solve()
 
     def theme_callback(self):
         if self.parent().user_config.theme == "light":
@@ -102,4 +103,4 @@ class ProjectMenu(QMenu):
     #
     def solve_example_analisys_callback(self):
         self.parent().project.solve_modal_acoustic()
-        self.parent().viewer_tabs.show_example_analisys()
+        self.parent().viewer_tabs.show_acoustic_modal_analisys()

@@ -17,7 +17,7 @@ from vibra.interface.viewer_3d.geometry_render_widget import (
     GeometryRenderWidget,
 )
 from vibra.interface.viewer_3d.mesh_render_widget import MeshRenderWidget
-
+from vibra.interface.viewer_3d.acoustic_modal_analisys_render_widget import AcousticModalAnalisysRenderWidget
 
 class ViewerTabs(QTabWidget):
     def __init__(self, parent, project, user_config):
@@ -50,13 +50,13 @@ class ViewerTabs(QTabWidget):
 
     def show_geometry(self):
         if self.geometry_widget not in self.tabs():
-            self.addTab(self.geometry_widget, "Model")
+            self.addTab(self.geometry_widget, "Geometry")
         self.geometry_widget.update_plot()
         self.setCurrentWidget(self.geometry_widget)
 
     def show_mesh(self):
         if self.mesh_widget not in self.tabs():
-            self.addTab(self.mesh_widget, "Model")
+            self.addTab(self.mesh_widget, "Mesh")
         self.mesh_widget.update_plot()
         self.setCurrentWidget(self.mesh_widget)
 
@@ -72,6 +72,12 @@ class ViewerTabs(QTabWidget):
 
         self.example_analisys_widget.update_plot()
         self.setCurrentWidget(self.example_analisys_widget)
+
+    def show_acoustic_modal_analisys(self):
+        widget = AcousticModalAnalisysRenderWidget(self.project)
+        self.addTab(widget, "Acoustic Modal Analisys")
+        widget.update_plot()
+        self.setCurrentWidget(widget)
 
     def show_help(self):
         self.addTab(self.help_widget, "Help")
