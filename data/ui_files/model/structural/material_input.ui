@@ -2115,6 +2115,7 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
        <family>Arial</family>
        <pointsize>10</pointsize>
        <weight>75</weight>
+       <italic>true</italic>
        <bold>true</bold>
       </font>
      </property>
@@ -2131,6 +2132,7 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
        <family>Arial</family>
        <pointsize>10</pointsize>
        <weight>75</weight>
+       <italic>true</italic>
        <bold>true</bold>
       </font>
      </property>
@@ -2147,6 +2149,7 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
        <family>Arial</family>
        <pointsize>10</pointsize>
        <weight>75</weight>
+       <italic>true</italic>
        <bold>true</bold>
       </font>
      </property>
@@ -2163,6 +2166,7 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
        <family>Arial</family>
        <pointsize>10</pointsize>
        <weight>75</weight>
+       <italic>true</italic>
        <bold>true</bold>
       </font>
      </property>
@@ -2179,6 +2183,7 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
        <family>Arial</family>
        <pointsize>10</pointsize>
        <weight>75</weight>
+       <italic>true</italic>
        <bold>true</bold>
       </font>
      </property>
@@ -2195,6 +2200,7 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
        <family>Arial</family>
        <pointsize>10</pointsize>
        <weight>75</weight>
+       <italic>true</italic>
        <bold>true</bold>
       </font>
      </property>
@@ -2211,6 +2217,7 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
        <family>Arial</family>
        <pointsize>10</pointsize>
        <weight>75</weight>
+       <italic>true</italic>
        <bold>true</bold>
       </font>
      </property>

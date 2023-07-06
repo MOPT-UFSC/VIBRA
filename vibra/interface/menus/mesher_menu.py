@@ -13,6 +13,7 @@ from interface.model_inputs.structural.material_inputs import MaterialInput
 class MesherMenu(QMenu):
     def __init__(self, parent):
         super().__init__(parent)
+        self.main_window = get_main_window()
         self.setTitle("Model setup")
         self.setObjectName("model_setup_menu")
         self.create_and_connect_actions()
@@ -55,10 +56,11 @@ class MesherMenu(QMenu):
 
 
     def call_mesher_inputs(self):
-        mesher = MesherInputs(self.parent())
+        mesher = MesherInputs()
         if mesher.complete:
             self.parent().project.set_mesh_setup(mesher.mesh_setup)
             self.generate_mesh_action.setDisabled(False)
+            self.main_window.menu_widget.item_child_generate_mesh.setDisabled(False)
 
 
     def call_generate_mesh(self):

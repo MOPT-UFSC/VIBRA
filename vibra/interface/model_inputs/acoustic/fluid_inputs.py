@@ -246,7 +246,7 @@ class FluidInput(QDialog):
         # # fnt.setItalic(True)
         # fnt.setFamily("Arial")
 
-        for col_index, width in enumerate([140, 50, 80, 170, 180, 172]):
+        for col_index, width in enumerate([140, 50, 170, 180, 172, 80]):
             self.treeWidget_fluids.setColumnWidth(col_index, width)
             # header.setFont(col_index, fnt)
             # header.setBackground(col_index, QBrush(QColor(200, 200, 200)))
@@ -1163,11 +1163,11 @@ class FluidInput(QDialog):
                     self.fluid_name_to_REFPROP_data[name] = [name, temperature, pressure, key_mixture, molar_fractions]
 
                 load_fluid = QTreeWidgetItem([  name, 
-                                                identifier, 
-                                                color, 
+                                                identifier,
                                                 fluid_density, 
                                                 speed_of_sound, 
                                                 impedance,
+                                                color,
                                                 isentropic_exponent,
                                                 thermal_conductivity,
                                                 specific_heat_Cp,
@@ -1179,8 +1179,8 @@ class FluidInput(QDialog):
                 self.list_names.append(name)
                 self.list_ids.append(int(identifier))
                 self.list_colors.append(colorRGB)
-                load_fluid.setBackground(2, QBrush(QColor(colorRGB[0], colorRGB[1], colorRGB[2])))
-                load_fluid.setForeground(2, QBrush(QColor(colorRGB[0], colorRGB[1], colorRGB[2])))
+                load_fluid.setBackground(5, QBrush(QColor(colorRGB[0], colorRGB[1], colorRGB[2])))
+                load_fluid.setForeground(5, QBrush(QColor(colorRGB[0], colorRGB[1], colorRGB[2])))
                 for i in range(6):
                     load_fluid.setTextAlignment(i, Qt.AlignCenter)
                     # load_fluid.setForeground(i, QColor(0,0,0))

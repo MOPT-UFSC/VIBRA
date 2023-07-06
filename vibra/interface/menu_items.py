@@ -358,6 +358,8 @@ class MenuItems(QTreeWidget):
 
         if self.update_childItems_visibility(item):
             return
+        
+        self.generate_mesh_action = self.main_window.findChild(QAction, "generate_mesh_action")
 
         # if self.project.none_project_action:           
         #     self.empty_project_action_message()
@@ -368,10 +370,9 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_mesh_setup:
             if not self.item_child_mesh_setup.isDisabled():
-                mesher = MesherInputs(self.main_window)
+                mesher = MesherInputs()
                 if mesher.complete:
                     self.main_window.project.set_mesh_setup(mesher.mesh_setup)
-                    self.generate_mesh_action = self.main_window.findChild(QAction, "generate_mesh_action")
                     self.generate_mesh_action.setDisabled(False)
                     self.item_child_generate_mesh.setDisabled(False)
 

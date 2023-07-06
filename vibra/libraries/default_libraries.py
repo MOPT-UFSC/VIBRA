@@ -71,7 +71,7 @@ def default_fluid_library(path):
     config['Air @293.15'] = {
                             'Name': 'Air @293.15',
                             'Identifier': 1,
-                            'Color': '[0,0,255]', #Blue
+                            'Color': '[200,200,200]', #Light grey
                             'Fluid density': 1.215, 
                             'Speed of sound': 343.2021,
                             'Impedance': 416.9905,
