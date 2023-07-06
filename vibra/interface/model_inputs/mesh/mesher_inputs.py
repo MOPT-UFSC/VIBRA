@@ -1,4 +1,6 @@
 from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 from PyQt5 import uic
 
 from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
@@ -11,6 +13,10 @@ class MesherInputs(QDialog):
         super(QDialog, self).__init__(*args, **kwargs)
 
         uic.loadUi("data/ui_files/mesh/element_setup.ui", self)
+
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModal)
+        self.setWindowTitle("Mesher setup")
         
         self.complete = False
 

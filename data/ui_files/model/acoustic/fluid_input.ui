@@ -22,13 +22,13 @@
   <property name="minimumSize">
    <size>
     <width>690</width>
-    <height>777</height>
+    <height>802</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>800</width>
-    <height>900</height>
+    <height>802</height>
    </size>
   </property>
   <property name="contextMenuPolicy">
@@ -44,7 +44,7 @@
   <property name="whatsThis">
    <string/>
   </property>
-  <widget class="QFrame" name="frame_3">
+  <widget class="QFrame" name="frame_top">
    <property name="geometry">
     <rect>
      <x>0</x>
@@ -78,7 +78,7 @@
     <property name="geometry">
      <rect>
       <x>12</x>
-      <y>20</y>
+      <y>18</y>
       <width>777</width>
       <height>363</height>
      </rect>
@@ -87,9 +87,9 @@
      <font>
       <family>Arial</family>
       <pointsize>12</pointsize>
-      <weight>75</weight>
+      <weight>50</weight>
       <italic>true</italic>
-      <bold>true</bold>
+      <bold>false</bold>
      </font>
     </property>
     <property name="currentIndex">
@@ -110,7 +110,8 @@
       </property>
       <property name="font">
        <font>
-        <pointsize>11</pointsize>
+        <pointsize>12</pointsize>
+        <italic>true</italic>
        </font>
       </property>
       <property name="currentIndex">
@@ -243,6 +244,10 @@
           <bold>true</bold>
          </font>
         </property>
+        <property name="styleSheet">
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
+        </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
         </property>
@@ -329,6 +334,10 @@
           <italic>false</italic>
           <bold>true</bold>
          </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
         </property>
         <property name="text">
          <string/>
@@ -509,8 +518,8 @@
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">color: rgb(0, 0, 255);
-background-color: rgb(255, 255, 255);</string>
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
         </property>
         <property name="text">
          <string/>
@@ -596,11 +605,10 @@ background-color: rgb(255, 255, 255);</string>
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>14</pointsize>
+          <pointsize>12</pointsize>
           <weight>75</weight>
           <italic>true</italic>
           <bold>true</bold>
-          <stylestrategy>PreferDefault</stylestrategy>
          </font>
         </property>
         <property name="cursor">
@@ -613,7 +621,9 @@ background-color: rgb(255, 255, 255);</string>
          <bool>false</bool>
         </property>
         <property name="styleSheet">
-         <string notr="true">background-color: rgb(170, 255, 255);</string>
+         <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 12pt &quot;Arial&quot;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 12pt &quot;Arial&quot;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 12pt &quot;Arial&quot;}</string>
         </property>
         <property name="text">
          <string>Add new fluid</string>
@@ -668,7 +678,8 @@ background-color: rgb(255, 255, 255);</string>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">color: rgb(40, 40, 40);</string>
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -731,6 +742,10 @@ background-color: rgb(255, 255, 255);</string>
           <italic>false</italic>
           <bold>true</bold>
          </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
         </property>
         <property name="text">
          <string/>
@@ -795,8 +810,8 @@ background-color: rgb(255, 255, 255);</string>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">color: rgb(0, 0, 255);
-background-color: rgb(255, 255, 255);</string>
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
         </property>
         <property name="text">
          <string/>
@@ -860,6 +875,10 @@ background-color: rgb(255, 255, 255);</string>
           <bold>true</bold>
          </font>
         </property>
+        <property name="styleSheet">
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
+        </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
         </property>
@@ -922,6 +941,10 @@ background-color: rgb(255, 255, 255);</string>
           <bold>true</bold>
          </font>
         </property>
+        <property name="styleSheet">
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
+        </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
         </property>
@@ -953,11 +976,10 @@ background-color: rgb(255, 255, 255);</string>
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>12</pointsize>
+          <pointsize>11</pointsize>
           <weight>75</weight>
           <italic>true</italic>
           <bold>true</bold>
-          <stylestrategy>PreferDefault</stylestrategy>
          </font>
         </property>
         <property name="cursor">
@@ -970,7 +992,9 @@ background-color: rgb(255, 255, 255);</string>
          <bool>false</bool>
         </property>
         <property name="styleSheet">
-         <string notr="true">background-color: rgb(171, 255, 166);</string>
+         <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 11pt &quot;Arial&quot;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 11pt &quot;Arial&quot;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 11pt &quot;Arial&quot;}</string>
         </property>
         <property name="text">
          <string>Reset entries</string>
@@ -1020,6 +1044,10 @@ background-color: rgb(255, 255, 255);</string>
           <italic>false</italic>
           <bold>true</bold>
          </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -1102,15 +1130,16 @@ background-color: rgb(255, 255, 255);</string>
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>12</pointsize>
+          <pointsize>11</pointsize>
           <weight>75</weight>
           <italic>true</italic>
           <bold>true</bold>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">background-color: rgb(212, 208, 255);
-font: 75 italic bold 12pt &quot;Arial&quot;;</string>
+         <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 11pt &quot;Arial&quot;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 11pt &quot;Arial&quot;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 11pt &quot;Arial&quot;}</string>
         </property>
         <property name="text">
          <string>Pick color</string>
@@ -1211,7 +1240,8 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">color: rgb(30, 30, 30);</string>
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -1251,7 +1281,8 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">color: rgb(30, 30, 30);</string>
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
         </property>
         <property name="text">
          <string/>
@@ -1305,6 +1336,12 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
           <width>60</width>
           <height>26</height>
          </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+          <italic>false</italic>
+         </font>
         </property>
         <property name="text">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-style:normal;&quot;&gt;[Pa]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1396,11 +1433,10 @@ background-color: rgb(255, 255, 255);</string>
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>14</pointsize>
+          <pointsize>12</pointsize>
           <weight>75</weight>
           <italic>true</italic>
           <bold>true</bold>
-          <stylestrategy>PreferDefault</stylestrategy>
          </font>
         </property>
         <property name="cursor">
@@ -1413,7 +1449,9 @@ background-color: rgb(255, 255, 255);</string>
          <bool>false</bool>
         </property>
         <property name="styleSheet">
-         <string notr="true">background-color: rgb(170, 255, 255);</string>
+         <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 12pt &quot;Arial&quot;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 12pt &quot;Arial&quot;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 12pt &quot;Arial&quot;}</string>
         </property>
         <property name="text">
          <string>Set up a new fluid</string>
@@ -1446,7 +1484,7 @@ background-color: rgb(255, 255, 255);</string>
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>16</pointsize>
+          <pointsize>14</pointsize>
           <weight>75</weight>
           <italic>false</italic>
           <bold>true</bold>
@@ -1492,11 +1530,10 @@ background-color: rgb(255, 255, 255);</string>
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>14</pointsize>
+          <pointsize>12</pointsize>
           <weight>75</weight>
           <italic>true</italic>
           <bold>true</bold>
-          <stylestrategy>PreferDefault</stylestrategy>
          </font>
         </property>
         <property name="cursor">
@@ -1509,7 +1546,9 @@ background-color: rgb(255, 255, 255);</string>
          <bool>false</bool>
         </property>
         <property name="styleSheet">
-         <string notr="true">background-color: rgb(155, 255, 205);</string>
+         <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 12pt &quot;Arial&quot;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 12pt &quot;Arial&quot;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 12pt &quot;Arial&quot;}</string>
         </property>
         <property name="text">
          <string>Edit selected fluid</string>
@@ -1597,7 +1636,8 @@ background-color: rgb(255, 255, 255);</string>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">color: rgb(30, 30, 30);</string>
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -1637,7 +1677,8 @@ background-color: rgb(255, 255, 255);</string>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">color: rgb(30, 30, 30);</string>
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
         </property>
         <property name="text">
          <string/>
@@ -1680,7 +1721,8 @@ background-color: rgb(255, 255, 255);</string>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">color: rgb(30, 30, 30);</string>
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -1806,7 +1848,8 @@ background-color: rgb(255, 255, 255);</string>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">color: rgb(30, 30, 30);</string>
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -1896,8 +1939,8 @@ background-color: rgb(255, 255, 255);</string>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">color: rgb(0, 0, 255);
-background-color: rgb(255, 255, 255);</string>
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
         </property>
         <property name="text">
          <string/>
@@ -2011,11 +2054,10 @@ background-color: rgb(255, 255, 255);</string>
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>14</pointsize>
+          <pointsize>12</pointsize>
           <weight>75</weight>
           <italic>true</italic>
           <bold>true</bold>
-          <stylestrategy>PreferDefault</stylestrategy>
          </font>
         </property>
         <property name="cursor">
@@ -2028,7 +2070,9 @@ background-color: rgb(255, 255, 255);</string>
          <bool>false</bool>
         </property>
         <property name="styleSheet">
-         <string notr="true">background-color: rgb(170, 255, 255);</string>
+         <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 12pt &quot;Arial&quot;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 12pt &quot;Arial&quot;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 12pt &quot;Arial&quot;}</string>
         </property>
         <property name="text">
          <string>Add new fluid</string>
@@ -2080,7 +2124,8 @@ background-color: rgb(255, 255, 255);</string>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">color: rgb(0, 0, 255);</string>
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
         </property>
         <property name="text">
          <string/>
@@ -2153,7 +2198,8 @@ background-color: rgb(255, 255, 255);</string>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">color: rgb(30, 30, 30);</string>
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -2246,7 +2292,8 @@ background-color: rgb(255, 255, 255);</string>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">color: rgb(30, 30, 30);</string>
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
         </property>
         <property name="text">
          <string/>
@@ -2342,7 +2389,8 @@ background-color: rgb(255, 255, 255);</string>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">color: rgb(30, 30, 30);</string>
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -2611,7 +2659,8 @@ background-color: rgb(255, 255, 255);</string>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">color: rgb(30, 30, 30);</string>
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
         </property>
         <property name="text">
          <string/>
@@ -2654,7 +2703,8 @@ background-color: rgb(255, 255, 255);</string>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">color: rgb(30, 30, 30);</string>
+         <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -2684,15 +2734,16 @@ background-color: rgb(255, 255, 255);</string>
         <property name="font">
          <font>
           <family>Arial</family>
-          <pointsize>12</pointsize>
+          <pointsize>11</pointsize>
           <weight>75</weight>
           <italic>true</italic>
           <bold>true</bold>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">background-color: rgb(212, 208, 255);
-font: 75 italic bold 12pt &quot;Arial&quot;;</string>
+         <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 11pt &quot;Arial&quot;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 11pt &quot;Arial&quot;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 11pt &quot;Arial&quot;}</string>
         </property>
         <property name="text">
          <string>Pick color</string>
@@ -2786,11 +2837,10 @@ background-color: rgb(255, 255, 255);</string>
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>14</pointsize>
+        <pointsize>12</pointsize>
         <weight>75</weight>
         <italic>true</italic>
         <bold>true</bold>
-        <stylestrategy>PreferDefault</stylestrategy>
        </font>
       </property>
       <property name="cursor">
@@ -2803,7 +2853,9 @@ background-color: rgb(255, 255, 255);</string>
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color: rgb(170, 255, 255);</string>
+       <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 12pt &quot;Arial&quot;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 12pt &quot;Arial&quot;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 12pt &quot;Arial&quot;}</string>
       </property>
       <property name="text">
        <string>Confirm fluid edition</string>
@@ -2854,6 +2906,10 @@ background-color: rgb(255, 255, 255);</string>
         <bold>true</bold>
        </font>
       </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
+      </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
       </property>
@@ -2890,6 +2946,10 @@ background-color: rgb(255, 255, 255);</string>
         <italic>false</italic>
         <bold>true</bold>
        </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -3033,6 +3093,10 @@ background-color: rgb(255, 255, 255);</string>
         <italic>false</italic>
         <bold>true</bold>
        </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -3182,6 +3246,10 @@ background-color: rgb(255, 255, 255);</string>
         <bold>true</bold>
        </font>
       </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
+      </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
       </property>
@@ -3215,6 +3283,10 @@ background-color: rgb(255, 255, 255);</string>
         <italic>false</italic>
         <bold>true</bold>
        </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -3358,6 +3430,10 @@ background-color: rgb(255, 255, 255);</string>
         <bold>true</bold>
        </font>
       </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
+      </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
       </property>
@@ -3391,6 +3467,10 @@ background-color: rgb(255, 255, 255);</string>
         <italic>false</italic>
         <bold>true</bold>
        </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -3504,6 +3584,10 @@ background-color: rgb(255, 255, 255);</string>
         <bold>true</bold>
        </font>
       </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
+      </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
       </property>
@@ -3540,6 +3624,10 @@ background-color: rgb(255, 255, 255);</string>
         <italic>false</italic>
         <bold>true</bold>
        </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -3603,6 +3691,10 @@ background-color: rgb(255, 255, 255);</string>
         <bold>true</bold>
        </font>
       </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
+      </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
       </property>
@@ -3656,15 +3748,16 @@ background-color: rgb(255, 255, 255);</string>
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>12</pointsize>
+        <pointsize>11</pointsize>
         <weight>75</weight>
         <italic>true</italic>
         <bold>true</bold>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color: rgb(212, 208, 255);
-font: 75 italic bold 12pt &quot;Arial&quot;;</string>
+       <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 11pt &quot;Arial&quot;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 11pt &quot;Arial&quot;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 11pt &quot;Arial&quot;}</string>
       </property>
       <property name="text">
        <string>Pick color</string>
@@ -3737,7 +3830,8 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">color: rgb(30, 30, 30);</string>
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
       </property>
       <property name="text">
        <string/>
@@ -3780,7 +3874,8 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">color: rgb(30, 30, 30);</string>
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -3896,11 +3991,10 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>14</pointsize>
+        <pointsize>12</pointsize>
         <weight>75</weight>
         <italic>true</italic>
         <bold>true</bold>
-        <stylestrategy>PreferDefault</stylestrategy>
        </font>
       </property>
       <property name="cursor">
@@ -3913,7 +4007,9 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color: rgb(170, 255, 255);</string>
+       <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 12pt &quot;Arial&quot;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 12pt &quot;Arial&quot;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 12pt &quot;Arial&quot;}</string>
       </property>
       <property name="text">
        <string>Confirm fluid removal</string>
@@ -3967,6 +4063,10 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
         <bold>true</bold>
        </font>
       </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
+      </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
       </property>
@@ -4003,6 +4103,10 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
         <italic>false</italic>
         <bold>true</bold>
        </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -4149,6 +4253,10 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
         <italic>false</italic>
         <bold>true</bold>
        </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -4298,6 +4406,10 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
         <bold>true</bold>
        </font>
       </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
+      </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
       </property>
@@ -4334,6 +4446,10 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
         <italic>false</italic>
         <bold>true</bold>
        </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -4480,6 +4596,10 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
         <bold>true</bold>
        </font>
       </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
+      </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
       </property>
@@ -4516,6 +4636,10 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
         <italic>false</italic>
         <bold>true</bold>
        </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -4632,6 +4756,10 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
         <bold>true</bold>
        </font>
       </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
+      </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
       </property>
@@ -4668,6 +4796,10 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
         <italic>false</italic>
         <bold>true</bold>
        </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -4734,6 +4866,10 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
         <bold>true</bold>
        </font>
       </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
+      </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
       </property>
@@ -4797,7 +4933,8 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true"/>
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -4870,7 +5007,8 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true"/>
+       <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
       </property>
       <property name="text">
        <string/>
@@ -4989,11 +5127,10 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>14</pointsize>
+        <pointsize>12</pointsize>
         <weight>75</weight>
         <italic>true</italic>
         <bold>true</bold>
-        <stylestrategy>PreferDefault</stylestrategy>
        </font>
       </property>
       <property name="cursor">
@@ -5006,7 +5143,9 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color: rgb(255, 152, 154);</string>
+       <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 12pt &quot;Arial&quot;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 12pt &quot;Arial&quot;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 12pt &quot;Arial&quot;}</string>
       </property>
       <property name="text">
        <string>Reset fluid library</string>
@@ -5039,7 +5178,7 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>16</pointsize>
+        <pointsize>14</pointsize>
         <weight>75</weight>
         <italic>false</italic>
         <bold>true</bold>
@@ -5058,7 +5197,7 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
     </widget>
    </widget>
   </widget>
-  <widget class="QFrame" name="frame_2">
+  <widget class="QFrame" name="frame_bottom">
    <property name="geometry">
     <rect>
      <x>0</x>
@@ -5078,6 +5217,9 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
      <width>800</width>
      <height>406</height>
     </size>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"/>
    </property>
    <property name="frameShape">
     <enum>QFrame::Box</enum>
@@ -5115,10 +5257,14 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
     <property name="font">
      <font>
       <family>Arial</family>
-      <pointsize>11</pointsize>
+      <pointsize>10</pointsize>
       <weight>75</weight>
+      <italic>true</italic>
       <bold>true</bold>
      </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
     </property>
     <property name="frameShape">
      <enum>QFrame::Panel</enum>
@@ -5136,7 +5282,7 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
      <bool>true</bool>
     </property>
     <property name="alternatingRowColors">
-     <bool>true</bool>
+     <bool>false</bool>
     </property>
     <property name="indentation">
      <number>0</number>
@@ -5178,15 +5324,6 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
        <blue>255</blue>
       </color>
      </property>
-     <property name="foreground">
-      <brush brushstyle="SolidPattern">
-       <color alpha="255">
-        <red>0</red>
-        <green>0</green>
-        <blue>0</blue>
-       </color>
-      </brush>
-     </property>
     </column>
     <column>
      <property name="text">
@@ -5202,15 +5339,6 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
      </property>
      <property name="textAlignment">
       <set>AlignCenter</set>
-     </property>
-     <property name="foreground">
-      <brush brushstyle="SolidPattern">
-       <color alpha="255">
-        <red>0</red>
-        <green>0</green>
-        <blue>0</blue>
-       </color>
-      </brush>
      </property>
     </column>
     <column>
@@ -5228,15 +5356,6 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
      <property name="textAlignment">
       <set>AlignCenter</set>
      </property>
-     <property name="foreground">
-      <brush brushstyle="SolidPattern">
-       <color alpha="255">
-        <red>0</red>
-        <green>0</green>
-        <blue>0</blue>
-       </color>
-      </brush>
-     </property>
     </column>
     <column>
      <property name="text">
@@ -5252,15 +5371,6 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
      </property>
      <property name="textAlignment">
       <set>AlignCenter</set>
-     </property>
-     <property name="foreground">
-      <brush brushstyle="SolidPattern">
-       <color alpha="255">
-        <red>0</red>
-        <green>0</green>
-        <blue>0</blue>
-       </color>
-      </brush>
      </property>
     </column>
     <column>
@@ -5278,15 +5388,6 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
      <property name="textAlignment">
       <set>AlignCenter</set>
      </property>
-     <property name="foreground">
-      <brush brushstyle="SolidPattern">
-       <color alpha="255">
-        <red>0</red>
-        <green>0</green>
-        <blue>0</blue>
-       </color>
-      </brush>
-     </property>
     </column>
     <column>
      <property name="text">
@@ -5303,15 +5404,6 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
      <property name="textAlignment">
       <set>AlignCenter</set>
      </property>
-     <property name="foreground">
-      <brush brushstyle="SolidPattern">
-       <color alpha="255">
-        <red>0</red>
-        <green>0</green>
-        <blue>0</blue>
-       </color>
-      </brush>
-     </property>
     </column>
    </widget>
    <widget class="QPushButton" name="pushButton_confirm">
@@ -5326,7 +5418,7 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
     <property name="font">
      <font>
       <family>Arial</family>
-      <pointsize>14</pointsize>
+      <pointsize>12</pointsize>
       <weight>75</weight>
       <italic>true</italic>
       <bold>true</bold>
@@ -5336,8 +5428,9 @@ font: 75 italic bold 12pt &quot;Arial&quot;;</string>
      <bool>false</bool>
     </property>
     <property name="styleSheet">
-     <string notr="true">color: rgb(0, 0, 0);
-selection-background-color: rgb(62, 255, 62);</string>
+     <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 12pt &quot;Arial&quot;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 12pt &quot;Arial&quot;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 12pt &quot;Arial&quot;}</string>
     </property>
     <property name="text">
      <string>Confirm the fluid attribution</string>
@@ -5379,24 +5472,24 @@ selection-background-color: rgb(62, 255, 62);</string>
     <property name="lineWidth">
      <number>1</number>
     </property>
-    <widget class="QRadioButton" name="radioButton_selected_lines">
+    <widget class="QRadioButton" name="radioButton_selected_bodies">
      <property name="geometry">
       <rect>
-       <x>648</x>
+       <x>644</x>
        <y>12</y>
-       <width>135</width>
+       <width>152</width>
        <height>25</height>
       </rect>
      </property>
      <property name="minimumSize">
       <size>
-       <width>135</width>
+       <width>152</width>
        <height>25</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
-       <width>135</width>
+       <width>152</width>
        <height>25</height>
       </size>
      </property>
@@ -5407,11 +5500,10 @@ selection-background-color: rgb(62, 255, 62);</string>
        <weight>75</weight>
        <italic>true</italic>
        <bold>true</bold>
-       <stylestrategy>PreferAntialias</stylestrategy>
       </font>
      </property>
      <property name="text">
-      <string>Selected lines</string>
+      <string>Selected bodies</string>
      </property>
      <property name="checked">
       <bool>false</bool>
@@ -5420,11 +5512,23 @@ selection-background-color: rgb(62, 255, 62);</string>
     <widget class="QRadioButton" name="radioButton_all">
      <property name="geometry">
       <rect>
-       <x>540</x>
+       <x>532</x>
        <y>12</y>
-       <width>95</width>
+       <width>100</width>
        <height>25</height>
       </rect>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>100</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>100</width>
+       <height>25</height>
+      </size>
      </property>
      <property name="font">
       <font>
@@ -5433,11 +5537,10 @@ selection-background-color: rgb(62, 255, 62);</string>
        <weight>75</weight>
        <italic>true</italic>
        <bold>true</bold>
-       <stylestrategy>PreferAntialias</stylestrategy>
       </font>
      </property>
      <property name="text">
-      <string>All lines</string>
+      <string>All bodies</string>
      </property>
      <property name="checked">
       <bool>true</bool>
@@ -5446,7 +5549,7 @@ selection-background-color: rgb(62, 255, 62);</string>
     <widget class="QLabel" name="label">
      <property name="geometry">
       <rect>
-       <x>22</x>
+       <x>26</x>
        <y>12</y>
        <width>197</width>
        <height>28</height>
@@ -5455,7 +5558,7 @@ selection-background-color: rgb(62, 255, 62);</string>
      <property name="font">
       <font>
        <family>Arial</family>
-       <pointsize>14</pointsize>
+       <pointsize>12</pointsize>
        <weight>75</weight>
        <bold>true</bold>
       </font>
@@ -5507,8 +5610,8 @@ selection-background-color: rgb(62, 255, 62);</string>
       <enum>Qt::ClickFocus</enum>
      </property>
      <property name="styleSheet">
-      <string notr="true">background-color: rgb(255, 255, 255);
-color: rgb(0, 0, 255);</string>
+      <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
      </property>
      <property name="text">
       <string/>
@@ -5554,8 +5657,8 @@ color: rgb(0, 0, 255);</string>
       <enum>Qt::ClickFocus</enum>
      </property>
      <property name="styleSheet">
-      <string notr="true">background-color: rgb(255, 255, 255);
-color: rgb(0, 0, 255);</string>
+      <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
      </property>
      <property name="text">
       <string/>
@@ -5567,7 +5670,7 @@ color: rgb(0, 0, 255);</string>
     <widget class="QLabel" name="label_3">
      <property name="geometry">
       <rect>
-       <x>22</x>
+       <x>26</x>
        <y>50</y>
        <width>197</width>
        <height>28</height>
@@ -5576,7 +5679,7 @@ color: rgb(0, 0, 255);</string>
      <property name="font">
       <font>
        <family>Arial</family>
-       <pointsize>14</pointsize>
+       <pointsize>12</pointsize>
        <weight>75</weight>
        <bold>true</bold>
       </font>
@@ -5593,8 +5696,8 @@ color: rgb(0, 0, 255);</string>
     </widget>
    </widget>
   </widget>
-  <zorder>frame_2</zorder>
-  <zorder>frame_3</zorder>
+  <zorder>frame_bottom</zorder>
+  <zorder>frame_top</zorder>
  </widget>
  <tabstops>
   <tabstop>tabWidget_fluid</tabstop>
@@ -5621,7 +5724,7 @@ color: rgb(0, 0, 255);</string>
   <tabstop>lineEdit_dynamic_viscosity_remove</tabstop>
   <tabstop>pushButton_confirm_fluid_removal</tabstop>
   <tabstop>radioButton_all</tabstop>
-  <tabstop>radioButton_selected_lines</tabstop>
+  <tabstop>radioButton_selected_bodies</tabstop>
   <tabstop>treeWidget_fluids</tabstop>
   <tabstop>pushButton_confirm</tabstop>
   <tabstop>pushButton_reset_library</tabstop>

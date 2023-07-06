@@ -3,6 +3,7 @@ from pathlib import Path
 from time import sleep
 
 from vibra.engine.model import Model
+from vibra.engine.properties.model_properties import ModelProperty
 from vibra.engine.solvers.example_solver import ExampleSolver
 from vibra.utils.progress_status import ProgressStatus
 
@@ -11,6 +12,7 @@ class Project:
     def __init__(self):
         self.reset_variables()
         self.model = Model()
+        self.model_properties = ModelProperty()
         self.example_solver = ExampleSolver()
     
     def reset_variables(self):
@@ -26,6 +28,18 @@ class Project:
 
     def save(self, path):
         logging.info(f"Saving project in my/save/path")
+
+    def get_fluid_list_path(self):
+        return self.fluid_list_path
+
+    def get_material_list_path(self):
+        return self.material_list_path
+
+    def set_fluid_list_path(self, path):
+        self.fluid_list_path = path
+
+    def set_material_list_path(self, path):
+        self.material_list_path = path
 
     def import_geometry(self, path):
         self.geometry_path = Path(path)

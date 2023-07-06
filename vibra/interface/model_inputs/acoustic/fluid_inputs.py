@@ -1,21 +1,21 @@
-from PyQt5.QtWidgets import QLineEdit, QDialog, QTreeWidget, QRadioButton, QMessageBox, QTreeWidgetItem, QPushButton, QTabWidget, QHeaderView, QWidget, QComboBox, QFrame
-from PyQt5.QtGui import QIcon, QColor, QBrush, QFont
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 from PyQt5 import uic
+
+from pathlib import Path
 import configparser
-from time import time
-from matplotlib.style import available
 import numpy as np
+import os
 
-# from PyQt5.uic.uiparser import QtWidgets
+from vibra.libraries.default_libraries import default_fluid_library
+from vibra.utils.interface_functions import get_main_window
 
-from pulse.preprocessing.fluid import Fluid
-from pulse.default_libraries import default_fluid_library
-from data.user_input.model.setup.pickColorInput import PickColorInput
-from data.user_input.project.printMessageInput import PrintMessageInput
-from data.user_input.project.callDoubleConfirmationInput import CallDoubleConfirmationInput
-from data.user_input.model.setup.acoustic.setFluidCompositionInput import SetFluidCompositionInput
-from pulse.utils import *
+from vibra.engine.properties.fluid import Fluid
+from vibra.interface.general.pick_color_input import PickColorInput
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
+from vibra.interface.model_inputs.acoustic.set_fluid_composition_inputs import SetFluidCompositionInput
 
 window_title1 = "ERROR MESSAGE"
 window_title2 = "WARNING MESSAGE"
@@ -27,31 +27,71 @@ def getColorRGB(color):
     tokens = color.split(',')
     return list(map(int, tokens))
 
+def get_list_of_values_from_string(input_string, int_values=True):
+    """ 
+    This function returns a list of values for a given string of a list.
+
+    Parameters
+    ----------
+    input_string: string of a list
+    int_values: bool
+
+    Returns
+    ----------
+    list of int values if int_values is True or a list of float numbers if int_values is False
+    """
+    input_string = input_string[1:-1].split(',')
+    list_values = []
+    if int_values:
+        for value in input_string:
+            list_values.append(int(value))
+    else:
+        for value in input_string:
+            list_values.append(float(value))
+    return list_values
+
 class FluidInput(QDialog):
-    def __init__(self, project, opv, *args, **kwargs):
-        super().__init__()
-        uic.loadUi('data/user_input/ui/Model/Setup/Acoustic/fluidlnput.ui', self)
-        
-        icons_path = 'data\\icons\\'
-        self.icon = QIcon(icons_path + 'pulse.png')
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        uic.loadUi(Path('data/ui_files/model/acoustic/fluid_input.ui'), self)
+        self.main_window = get_main_window()
+
+        icon_path = str(Path('data/icons/logo_vibra.png'))
+        self.icon = QIcon(icon_path)
         self.setWindowIcon(self.icon)
 
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle("Set: fluid")
-
-        self.opv = opv
-        self.opv.setInputObject(self)
-        self.lines_ids = opv.getListPickedLines()
-
-        self.project = project
-        self.preprocessor = project.preprocessor
-        self.before_run = project.get_pre_solution_model_checks()
+        #
+        # self.opv = opv
+        # self.opv.setInputObject(self)
+        # self.bodies_ids = opv.getListPickedLines()
+        # self.preprocessor = project.preprocessor
+        # self.before_run = project.get_pre_solution_model_checks()
+        #
+        self.project = self.main_window.get_project()
         self.compressor_thermodynamic_state = kwargs.get("compressor_thermodynamic_state", {})
 
-        self.fluid_path = project.get_fluid_list_path()
+        self._reset_variables()
+        self._create_fluid_library_file()
+        self._define_and_configure_qt_variables()
+        self._create_connections()
+        self.update()
+        self.loadList()
+        
+        # if self.compressor_thermodynamic_state:
+        #     self.check_compressor_inputs()
+        
+        self.exec()
 
-        self.dict_tag_to_entity = self.project.preprocessor.dict_tag_to_entity
+    
+    def _reset_variables(self):
+
+        self.fluid_path = Path("vibra/fluid_library.dat")
+
+        self.dict_tag_to_entity = {}
         self.dict_inputs = {}
         self.REFPROP = None
         self.fluid_data_REFPROP = {}
@@ -83,25 +123,22 @@ class FluidInput(QDialog):
                                 "pressure",
                                 "molar mass"]
 
-        self.treeWidget_fluids = self.findChild(QTreeWidget, 'treeWidget_fluids')
-        header = self.treeWidget_fluids.headerItem()
-        
-        fnt = QFont()
-        fnt.setPointSize(11)
-        fnt.setBold(True)
-        # fnt.setItalic(True)
-        fnt.setFamily("Arial")
 
-        for col_index, width in enumerate([140, 50, 80, 170, 180, 172]):
-            self.treeWidget_fluids.setColumnWidth(col_index, width)
-            header.setFont(col_index, fnt)
-            # header.setBackground(col_index, QBrush(QColor(200, 200, 200)))
-            # header.setForeground(col_index, QBrush(QColor(200, 200, 200)))
-        for col_index in [6,7,8,9]:
-            self.treeWidget_fluids.hideColumn(col_index)
-        #
-        self.treeWidget_fluids.itemClicked.connect(self.on_click_item)
-        self.treeWidget_fluids.itemDoubleClicked.connect(self.on_doubleclick_item)
+    def _create_fluid_library_file(self):
+        self.project.set_fluid_list_path(self.fluid_path)
+        if not os.path.exists(self.fluid_path):
+            default_fluid_library(self.fluid_path)
+
+
+    def _define_and_configure_qt_variables(self):
+        
+        # QComboBox objects
+        self.comboBox_fluid_id = self.findChild(QComboBox, 'comboBox_fluid_id')
+        self.comboBox_fluid_id_rp = self.findChild(QComboBox, 'comboBox_fluid_id_rp')
+
+        # QLineEdit objects      
+        self.lineEdit_selected_ID = self.findChild(QLineEdit, 'lineEdit_selected_ID')
+        self.lineEdit_selected_fluid_name = self.findChild(QLineEdit, 'lineEdit_selected_fluid_name')
         #
         self.lineEdit_name = self.findChild(QLineEdit, 'lineEdit_name')
         self.lineEdit_color = self.findChild(QLineEdit, 'lineEdit_color')
@@ -159,105 +196,113 @@ class FluidInput(QDialog):
         self.lineEdit_color_edit.setDisabled(True)
         #
         self.create_lists_of_lineEdit()
+
+        #QPushButton objects
+        self.pushButton_pickColor_add_user_defined = self.findChild(QPushButton, 'pushButton_pickColor_add_user_defined')
+        self.pushButton_pickColor_add_refprop = self.findChild(QPushButton, 'pushButton_pickColor_add_refprop')       
+        self.pushButton_pickColor_edit = self.findChild(QPushButton, 'pushButton_pickColor_edit')
+        self.pushButton_confirm_add_fluid = self.findChild(QPushButton, 'pushButton_confirm_add_fluid')
+        self.pushButton_confirm_add_fluid_rp = self.findChild(QPushButton, 'pushButton_confirm_add_fluid_rp')
+        self.pushButton_reset_entries_add_fluid = self.findChild(QPushButton, 'pushButton_reset_entries_add_fluid')
+        # self.pushButton_reset_entries_add_fluid_rp = self.findChild(QPushButton, 'pushButton_reset_entries_add_fluid_rp')
+        # self.pushButton_reset_entries_add_fluid_rp.clicked.connect(self.reset_add_texts_rp)
+        self.pushButton_call_refprop = self.findChild(QPushButton, 'pushButton_call_refprop')
+        self.pushButton_confirm_fluid_edition = self.findChild(QPushButton, 'pushButton_confirm_fluid_edition')
+        self.pushButton_confirm_fluid_removal = self.findChild(QPushButton, 'pushButton_confirm_fluid_removal')
+        self.pushButton_confirm = self.findChild(QPushButton, 'pushButton_confirm')
+        self.pushButton_reset_library = self.findChild(QPushButton, 'pushButton_reset_library')
+        self.pushButton_edit_fluid_in_refprop = self.findChild(QPushButton, 'pushButton_edit_fluid_in_refprop')
+        self.pushButton_edit_fluid_in_refprop.setVisible(False)
+
+        # QRadioButton objects
+        self.radioButton_all = self.findChild(QRadioButton, 'radioButton_all')
+        self.radioButton_selected_bodies = self.findChild(QRadioButton, 'radioButton_selected_bodies')
+        self.flagAll = self.radioButton_all.isChecked()
+        self.flagSelection = self.radioButton_selected_bodies.isChecked()
+
+        # if self.bodies_ids != []:
+        #     self.write_ids(self.bodies_ids)
+        #     self.radioButton_selected_bodies.setChecked(True)
+        # else:
+        #     self.lineEdit_selected_ID.setText("All bodies")
+        #     self.lineEdit_selected_ID.setEnabled(False)
+        #     self.radioButton_all.setChecked(True)
+
+        # QTabWidget objects
+        self.tabWidget_fluid = self.findChild(QTabWidget, 'tabWidget_fluid')
+        self.tabWidget_add = self.findChild(QTabWidget, 'tabWidget_add')
+        self.tab_user_defined = self.tabWidget_add.findChild(QWidget, 'tab_user_defined')
+        self.tab_refprop_button = self.tabWidget_add.findChild(QWidget, 'tab_refprop_button')
+        self.tab_refprop_all_entries = self.tabWidget_add.findChild(QWidget, 'tab_refprop_all_entries')
+        self.tabWidget_add.removeTab(2)
+
+        # QTreeWidget objects
+        self.treeWidget_fluids = self.findChild(QTreeWidget, 'treeWidget_fluids')
+        # header = self.treeWidget_fluids.headerItem()
+        
+        # fnt = QFont()
+        # fnt.setPointSize(11)
+        # fnt.setBold(True)
+        # # fnt.setItalic(True)
+        # fnt.setFamily("Arial")
+
+        for col_index, width in enumerate([140, 50, 80, 170, 180, 172]):
+            self.treeWidget_fluids.setColumnWidth(col_index, width)
+            # header.setFont(col_index, fnt)
+            # header.setBackground(col_index, QBrush(QColor(200, 200, 200)))
+            # header.setForeground(col_index, QBrush(QColor(200, 200, 200)))
+
+        for col_index in [6, 7, 8, 9]:
+            self.treeWidget_fluids.hideColumn(col_index)
+
+
+    def _create_connections(self):
+        #
+        self.comboBox_fluid_id.currentIndexChanged.connect(self.get_comboBox_index)   
+        self.comboBox_fluid_id_rp.currentIndexChanged.connect(self.get_comboBox_index)
         #
         # self.lineEdit_name.editingFinished.connect(self.check_add_input_fluid_name)
         # self.lineEdit_id.editingFinished.connect(self.check_add_input_fluid_id)
         # self.lineEdit_color.editingFinished.connect(self.check_add_input_fluid_color)
         self.lineEdit_fluid_density.editingFinished.connect(self.check_add_input_fluid_density)
         self.lineEdit_speed_of_sound.editingFinished.connect(self.check_add_input_speed_of_sound)
-
         self.lineEdit_color_edit.editingFinished.connect(self.check_edit_input_fluid_color)
         self.lineEdit_fluid_density_edit.editingFinished.connect(self.check_edit_input_fluid_density)
         self.lineEdit_speed_of_sound_edit.editingFinished.connect(self.check_edit_input_speed_of_sound)
-
         # self.lineEdit_speed_of_sound.textEdited.connect(self.update_impedance_lineEdit)
         # self.lineEdit_fluid_density.textEdited.connect(self.update_impedance_lineEdit)
-
-        self.radioButton_all = self.findChild(QRadioButton, 'radioButton_all')
-        self.radioButton_selected_lines = self.findChild(QRadioButton, 'radioButton_selected_lines')
-        self.radioButton_all.toggled.connect(self.radioButtonEvent)
-        self.radioButton_selected_lines.toggled.connect(self.radioButtonEvent)
-
-        self.lineEdit_selected_ID = self.findChild(QLineEdit, 'lineEdit_selected_ID')
-        self.lineEdit_selected_fluid_name = self.findChild(QLineEdit, 'lineEdit_selected_fluid_name')
-
-        if self.lines_ids != []:
-            self.write_lines(self.lines_ids)
-            self.radioButton_selected_lines.setChecked(True)
-        else:
-            self.lineEdit_selected_ID.setText("All lines")
-            self.lineEdit_selected_ID.setEnabled(False)
-            self.radioButton_all.setChecked(True)
-
-        self.pushButton_pickColor_add_user_defined = self.findChild(QPushButton, 'pushButton_pickColor_add_user_defined')
+        #
         self.pushButton_pickColor_add_user_defined.clicked.connect(self.pick_color_add_user_defined)
-
-        self.pushButton_pickColor_add_refprop = self.findChild(QPushButton, 'pushButton_pickColor_add_refprop')
         self.pushButton_pickColor_add_refprop.clicked.connect(self.pick_color_add_refprop)
-        
-        self.pushButton_pickColor_edit = self.findChild(QPushButton, 'pushButton_pickColor_edit')
         self.pushButton_pickColor_edit.clicked.connect(self.pick_color_edit)
-
-        self.pushButton_confirm_add_fluid = self.findChild(QPushButton, 'pushButton_confirm_add_fluid')
         self.pushButton_confirm_add_fluid.clicked.connect(self.check_add_fluid)
-
-        self.pushButton_confirm_add_fluid_rp = self.findChild(QPushButton, 'pushButton_confirm_add_fluid_rp')
         self.pushButton_confirm_add_fluid_rp.clicked.connect(self.check_add_fluid_refprop)
-
-        self.pushButton_reset_entries_add_fluid = self.findChild(QPushButton, 'pushButton_reset_entries_add_fluid')
         self.pushButton_reset_entries_add_fluid.clicked.connect(self.reset_add_texts)
-
-        # self.pushButton_reset_entries_add_fluid_rp = self.findChild(QPushButton, 'pushButton_reset_entries_add_fluid_rp')
-        # self.pushButton_reset_entries_add_fluid_rp.clicked.connect(self.reset_add_texts_rp)
-
-        self.pushButton_call_refprop = self.findChild(QPushButton, 'pushButton_call_refprop')
         self.pushButton_call_refprop.clicked.connect(self.call_refprop_interface)
-
-        self.pushButton_confirm_fluid_edition = self.findChild(QPushButton, 'pushButton_confirm_fluid_edition')
         self.pushButton_confirm_fluid_edition.clicked.connect(self.check_edit_fluid)
-
-        self.pushButton_confirm_fluid_removal = self.findChild(QPushButton, 'pushButton_confirm_fluid_removal')
         self.pushButton_confirm_fluid_removal.clicked.connect(self.confirm_fluid_removal)
-
-        self.pushButton_confirm = self.findChild(QPushButton, 'pushButton_confirm')
         self.pushButton_confirm.clicked.connect(self.confirm_fluid_attribution)
-
-        self.pushButton_reset_library = self.findChild(QPushButton, 'pushButton_reset_library')
         self.pushButton_reset_library.clicked.connect(self.reset_library_to_default)
-
-        self.pushButton_edit_fluid_in_refprop = self.findChild(QPushButton, 'pushButton_edit_fluid_in_refprop')
         self.pushButton_edit_fluid_in_refprop.clicked.connect(self.edit_REFPROP_fluid)
-        self.pushButton_edit_fluid_in_refprop.setVisible(False)
-
-        self.tabWidget_fluid = self.findChild(QTabWidget, 'tabWidget_fluid')
+        #
+        self.radioButton_all.toggled.connect(self.radioButtonEvent)
+        self.radioButton_selected_bodies.toggled.connect(self.radioButtonEvent)
+        #
         # self.tabWidget_fluid.currentChanged.connect(self.tab_event_update)
+        #
+        self.treeWidget_fluids.itemClicked.connect(self.on_click_item)
+        self.treeWidget_fluids.itemDoubleClicked.connect(self.on_doubleclick_item)
 
-        self.tabWidget_add = self.findChild(QTabWidget, 'tabWidget_add')
-        self.tab_user_defined = self.tabWidget_add.findChild(QWidget, 'tab_user_defined')
-        self.tab_refprop_button = self.tabWidget_add.findChild(QWidget, 'tab_refprop_button')
-        self.tab_refprop_all_entries = self.tabWidget_add.findChild(QWidget, 'tab_refprop_all_entries')
-        self.tabWidget_add.removeTab(2)
-        
-        self.flagAll = self.radioButton_all.isChecked()
-        self.flagSelection = self.radioButton_selected_lines.isChecked()
-        
-        self.loadList()
-        self.comboBox_fluid_id = self.findChild(QComboBox, 'comboBox_fluid_id')    
-        self.comboBox_fluid_id_rp = self.findChild(QComboBox, 'comboBox_fluid_id_rp')  
-        self.comboBox_fluid_id.currentIndexChanged.connect(self.get_comboBox_index)   
-        self.comboBox_fluid_id_rp.currentIndexChanged.connect(self.get_comboBox_index)
-        
-        if self.compressor_thermodynamic_state:
-            self.check_compressor_inputs()
-        self.exec_()
 
     def edit_REFPROP_fluid(self):
-        self.REFPROP = SetFluidCompositionInput(self.project, self.opv, selected_fluid_to_edit=self.selected_REFPROP_fluid, compressor_info=self.compressor_thermodynamic_state)
+        self.REFPROP = SetFluidCompositionInput(selected_fluid_to_edit=self.selected_REFPROP_fluid, compressor_info=self.compressor_thermodynamic_state)
         self.after_get_fluid_properties_from_REFPROP()
 
+
     def call_refprop_interface(self):
-        self.REFPROP = SetFluidCompositionInput(self.project, self.opv, compressor_info=self.compressor_thermodynamic_state)
+        self.REFPROP = SetFluidCompositionInput(compressor_info=self.compressor_thermodynamic_state)
         self.after_get_fluid_properties_from_REFPROP()
+
 
     def after_get_fluid_properties_from_REFPROP(self):
         if self.REFPROP.complete:
@@ -305,6 +350,7 @@ class FluidInput(QDialog):
         if read.complete:
             str_color = str(read.color).replace(" ", "")#[1:-1]
             self.lineEdit_color.setText(str_color)
+            self.lineEdit_color.setStyleSheet(f"background-color: rgb({str_color[1:-1]})")
             if self.check_add_input_fluid_color():
                 self.lineEdit_color.setText("")
         return read.complete
@@ -314,6 +360,7 @@ class FluidInput(QDialog):
         if read.complete:
             str_color = str(read.color).replace(" ", "")#[1:-1]
             self.lineEdit_color_rp.setText(str_color)
+            self.lineEdit_color_rp.setStyleSheet(f"background-color: rgb({str_color[1:-1]})")
             self.refprop_fluid = True
             if self.check_add_input_fluid_color():
                 self.lineEdit_color_rp.setText("")
@@ -325,21 +372,22 @@ class FluidInput(QDialog):
         if read.complete:
             str_color = str(read.color).replace(" ", "")#[1:-1]
             self.lineEdit_color_edit.setText(str_color)
+            self.lineEdit_color_edit.setStyleSheet(f"background-color: rgb({str_color[1:-1]})")
             if self.check_edit_input_fluid_color():
                 self.lineEdit_color_edit.setText("")
 
     def update(self):
-        self.lines_ids = self.opv.getListPickedLines()
-        if self.lines_ids != []:
-            self.write_lines(self.lines_ids)
-            self.radioButton_selected_lines.setChecked(True)
+        self.bodies_ids = []#self.opv.getListPickedLines()
+        if self.bodies_ids != []:
+            self.write_ids(self.bodies_ids)
+            self.radioButton_selected_bodies.setChecked(True)
             self.lineEdit_selected_ID.setEnabled(True)
         else:
-            self.lineEdit_selected_ID.setText("All lines")
+            self.lineEdit_selected_ID.setText("All bodies")
             self.radioButton_all.setChecked(True)
             self.lineEdit_selected_ID.setEnabled(False)
 
-    def write_lines(self, list_ids):
+    def write_ids(self, list_ids):
         text = ""
         for _id in list_ids:
             text += "{}, ".format(_id)
@@ -427,8 +475,8 @@ class FluidInput(QDialog):
             # self.pushButton_confirm_add_fluid.clicked.connect(self.check_add_fluid)
             # self.pushButton_confirm.clicked.connect(self.confirm_fluid_attribution)
 
-            self.radioButton_selected_lines.setChecked(True)
-            self.radioButton_selected_lines.setDisabled(True)
+            self.radioButton_selected_bodies.setChecked(True)
+            self.radioButton_selected_bodies.setDisabled(True)
             self.radioButton_all.setDisabled(True)
 
             self.line_id_comp = self.compressor_thermodynamic_state['line_id']
@@ -442,7 +490,7 @@ class FluidInput(QDialog):
             
             self.setWindowTitle(f"Set a fluid thermodynamic state at the compressor {self.connection_label}")
 
-            self.write_lines([self.line_id_comp])
+            self.write_ids([self.line_id_comp])
             self.lineEdit_selected_ID.setDisabled(True)
 
             self.update_compressor_fluid_temperature_and_pressure()
@@ -459,32 +507,6 @@ class FluidInput(QDialog):
         for pressure_lineEdit in pressure_lineEdits:
             pressure_lineEdit.setText(str(round(self.pressure_comp,4)))
             pressure_lineEdit.setDisabled(True)
-
-    def check_element_type_of_lines(self):
-
-        self.flag_all_fluid_inputs = False
-
-        if self.flagSelection:
-            
-            lineEdit = self.lineEdit_selected_ID.text()
-            self.stop, self.lines_typed = self.before_run.check_input_LineID(lineEdit)
-            if self.stop:
-                return True
-
-            for line in self.lines_typed:
-                _line = self.dict_tag_to_entity[line]
-                if _line.acoustic_element_type in ['wide-duct', 'LRF fluid equivalent', 'LRF full']:
-                    self.flag_all_fluid_inputs = True
-                    break
-          
-        elif self.flagAll:
-            for line in self.project.preprocessor.all_lines:
-                _line = self.dict_tag_to_entity[line]
-                if _line.acoustic_element_type in ['wide-duct', 'LRF fluid equivalent', 'LRF full']:
-                    self.flag_all_fluid_inputs = True
-                    break
-        
-        return False
 
     def check_input_parameters(self, lineEdit, label, _float=True, _positive=False, allow_empty_entry=True):
         title = "INPUT ERROR"
@@ -987,9 +1009,6 @@ class FluidInput(QDialog):
             PrintMessageInput([title, message, window_title1])
             return
         
-        if self.check_element_type_of_lines():
-            return
-        
         try:
 
             isentropic_exponent = None
@@ -1011,22 +1030,22 @@ class FluidInput(QDialog):
 
             if self.clicked_item.text(6) != "":
                 isentropic_exponent = float(self.clicked_item.text(6))
-            elif self.flag_all_fluid_inputs:
+            else:
                 list_empty_inputs.append("isentropic exponent")    
  
             if self.clicked_item.text(7) != "":
                 thermal_conductivity = float(self.clicked_item.text(7))
-            elif self.flag_all_fluid_inputs:
+            else:
                 list_empty_inputs.append("thermal conductivity")
 
             if self.clicked_item.text(8) != "":
                 specific_heat_Cp = float(self.clicked_item.text(8))
-            elif self.flag_all_fluid_inputs:
+            else:
                 list_empty_inputs.append("specific heat Cp")
 
             if self.clicked_item.text(9) != "":
                 dynamic_viscosity = float(self.clicked_item.text(9))
-            elif self.flag_all_fluid_inputs:
+            else:
                 list_empty_inputs.append("dynamic viscosity")    
 
             if self.clicked_item.text(10) != "":
@@ -1041,11 +1060,11 @@ class FluidInput(QDialog):
                 PrintMessageInput([title, message, window_title1]) 
                 return                   
             
-            self.fluid = Fluid( name, 
-                                fluid_density, 
-                                speed_of_sound, 
-                                identifier = identifier, 
+            self.fluid = Fluid( name = name,
+                                identifier = identifier,
                                 color = color,
+                                fluid_density = fluid_density,
+                                speed_of_sound = speed_of_sound,
                                 isentropic_exponent = isentropic_exponent,
                                 thermal_conductivity = thermal_conductivity,
                                 specific_heat_Cp = specific_heat_Cp,
@@ -1054,26 +1073,22 @@ class FluidInput(QDialog):
                                 pressure = pressure )
 
             if self.flagSelection:
+                #TODO: check existing bodies to set fluid
+                return
                 if self.lineEdit_selected_ID.text() == "":
                     return
-                lines = self.lines_typed
-                if len(self.lines_typed) <= 20:
-                    print("[Set Fluid] - {} defined at lines: {}".format(self.fluid.name, self.lines_typed))
+                bodies = self.bodies_typed
+                if len(self.bodies_typed) <= 20:
+                    print("[Set Fluid] - {} defined at bodies: {}".format(self.fluid.name, self.bodies_typed))
                 else:
-                    print("[Set Fluid] - {} defined at {} lines".format(self.fluid.name, len(self.lines_typed)))
-                # self.opv.changeColorEntities(self.lines_ids, self.fluid.getNormalizedColorRGB())
+                    print("[Set Fluid] - {} defined at {} bodies".format(self.fluid.name, len(self.bodies_typed)))
 
             elif self.flagAll:
-                lines = self.project.preprocessor.all_lines
-                print("[Set Fluid] - {} defined at all lines.".format(self.fluid.name))
-                # self.opv.changeColorEntities(lines, self.fluid.getNormalizedColorRGB())
-            
-            self.project.set_fluid_by_lines(lines, self.fluid)
-            self.update_compressor_info()
-            self.project.set_compressor_info_by_lines(lines, compressor_info=self.compressor_thermodynamic_state)
+                self.main_window.project.model_properties.set_fluid(self.fluid)  
+                print("[Set Fluid] - {} defined at all bodies.".format(self.fluid.name))
+                # self.opv.changeColorEntities(bodies, self.fluid.getNormalizedColorRGB())
 
             self.complete = True
-            self.opv.updateRendererMesh()
             self.close()
 
         except Exception as log_error:
@@ -1117,10 +1132,13 @@ class FluidInput(QDialog):
 
                 if 'isentropic exponent' in keys:
                     isentropic_exponent = str(rFluid['isentropic exponent'])
+
                 if 'thermal conductivity' in keys:
                     thermal_conductivity = str(rFluid['thermal conductivity'])
+
                 if 'specific heat Cp' in keys:
                     specific_heat_Cp = str(rFluid['specific heat Cp'])
+
                 if 'dynamic viscosity' in keys:
                     dynamic_viscosity = str(rFluid['dynamic viscosity'])
                 
@@ -1285,12 +1303,12 @@ class FluidInput(QDialog):
 
     def radioButtonEvent(self):
         self.flagAll = self.radioButton_all.isChecked()
-        self.flagSelection = self.radioButton_selected_lines.isChecked()
+        self.flagSelection = self.radioButton_selected_bodies.isChecked()
         if self.flagSelection:
             self.lineEdit_selected_ID.setEnabled(True)
-            self.lines_ids = self.opv.getListPickedLines()
-            if self.lines_ids != []:
-                self.write_lines(self.lines_ids)
+            self.bodies_ids = []#self.opv.getListPickedLines()
+            if self.bodies_ids != []:
+                self.write_ids(self.bodies_ids)
             else:
                 self.lineEdit_selected_ID.setText("")
         elif self.flagAll:
@@ -1408,7 +1426,7 @@ class FluidInput(QDialog):
             self.reset_add_texts()
             self.reset_edit_texts() 
             self.reset_remove_texts()
-            self.opv.updateRendererMesh()
+            # self.opv.updateRendererMesh()
     
     def reset_add_texts(self):
         for lineEdit in self.list_add_lineEdit:

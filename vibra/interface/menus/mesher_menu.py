@@ -6,8 +6,8 @@ from PyQt5.QtWidgets import QAction, QMenu
 from vibra.interface.loading_bar import load_function
 from vibra.utils.interface_functions import get_main_window
 from vibra.utils.icons import load_icon
-from interface.model.mesh.mesher_inputs import MesherInputs
-from interface.model.structural.material_inputs import MaterialInput
+from interface.model_inputs.mesh.mesher_inputs import MesherInputs
+from interface.model_inputs.structural.material_inputs import MaterialInput
 
 
 class MesherMenu(QMenu):

@@ -1,46 +1,56 @@
-from operator import concat
-from PyQt5.QtWidgets import QTreeWidgetItem, QLineEdit, QDialog, QTabWidget, QLabel, QCheckBox, QSpinBox, QPushButton, QWidget, QFileDialog, QComboBox, QTreeWidget
-import os
-from os.path import basename
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5 import uic
 
-from numpy.lib.utils import lookfor
-from data.user_input.project.printMessageInput import PrintMessageInput
-from data.user_input.project.callDoubleConfirmationInput import CallDoubleConfirmationInput
-from pulse.utils import get_new_path
-from PyQt5.QtGui import QIcon, QFont
-from PyQt5 import uic
-from PyQt5.QtCore import Qt, QSize
-import numpy as np
-import sys
+from pathlib import Path
 import configparser
-from PyQt5 import uic
+import numpy as np
+import os
+
+from vibra.utils.interface_functions import get_main_window
+
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
 
 window_title_1 = "ERROR"
 
+def get_new_path(path, name):
+    if "\\" in path:
+        new_path = '{}\\{}'.format(path, name)
+    elif "/" in path:
+        new_path = '{}/{}'.format(path, name)
+    return new_path
+
 class SetFluidCompositionInput(QDialog):
-    def __init__(self, project, opv, selected_fluid_to_edit=None, *args, **kwargs):
+    def __init__(self, selected_fluid_to_edit=None, *args, **kwargs):
         super().__init__()
-        uic.loadUi('data/user_input/ui/model/setup/acoustic/setFluidCompositionInput.ui', self)
+
+        uic.loadUi(Path('data/ui_files/model/acoustic/set_fluid_composition_input.ui'), self)
+        self.main_window = get_main_window()
+        self.project = self.main_window.get_project()
         
+        icon_path = str(Path('data/icons/logo_vibra.png'))
+        self.icon = QIcon(icon_path)
+        self.setWindowIcon(self.icon)
+
+        play_pause_icon_path = str(Path('data/icons/play_pause.png'))
+        self.icon_animate = QIcon(play_pause_icon_path)
+
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
+        self.setWindowTitle("Set: fluid composition")
 
-        icons_path = 'data\\icons\\'
-        self.icon_pulse = QIcon(icons_path + 'pulse.png')
-        self.setWindowIcon(self.icon_pulse)
-
-        self.icon_animate = QIcon(icons_path + 'play_pause.png')
-
-        self.project = project
-        self.opv = opv
-        self.opv.setInputObject(self)
+        # self.project = project
+        # self.opv = opv
+        # self.opv.setInputObject(self)
         self.selected_fluid_to_edit = selected_fluid_to_edit
         self.compressor_info = kwargs.get("compressor_info", {})
 
         self.save_path = ""
         self.export_file_path = ""
         self.userPath = os.path.expanduser('~')
-        self.fluid_path = project.get_fluid_list_path()
+        self.fluid_path = self.project.get_fluid_list_path()
 
         self.map_properties = { "D" : "fluid density",
                                 "CP" : "specific heat Cp",
