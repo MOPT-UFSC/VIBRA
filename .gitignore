@@ -1,5 +1,6 @@
 # Local files
 .config.ini
+.vibra/material_library.dat
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -8,6 +9,7 @@ __pycache__/
 
 # C extensions
 *.so
+*.dat
 
 # Distribution / packaging
 .vscode/

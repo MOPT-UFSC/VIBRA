@@ -9,12 +9,16 @@ from vibra.utils.progress_status import ProgressStatus
 
 class Project:
     def __init__(self):
+        self.reset_variables()
+        self.model = Model()
+        self.example_solver = ExampleSolver()
+    
+    def reset_variables(self):
         self.name = "Project"
         self.geometry_path = ""
         self.fluid_list_path = ""
         self.material_list_path = ""
-        self.model = Model()
-        self.example_solver = ExampleSolver()
+        self.analysis_data = {}
 
     @classmethod
     def load(cls, path):
@@ -51,6 +55,7 @@ class Project:
         self.example_solver.set_model(model)
 
     def set_analysis_data(self, data):
+        self.analysis_data = data
         self.example_solver.set_analysis_data(data)
         
     def solve_example(self):

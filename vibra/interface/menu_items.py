@@ -2,7 +2,10 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 
+from pathlib import Path
+
 from interface.model.mesh.mesher_inputs import MesherInputs
+from interface.model.acoustic.fluid_inputs import FluidInput
 from interface.model.structural.material_inputs import MaterialInput
 from interface.analysis.analysis_type_input import AnalysisTypeInput
 
@@ -68,8 +71,8 @@ class MenuItems(QTreeWidget):
         super().__init__()
 
         self.main_window = get_main_window()
-        # self.project = main_window.getProject()
-        
+        self.project = self.main_window.get_project()
+
         # self._createIcons()
         # self._configItemSizes()
         self._createFonts()
@@ -91,7 +94,8 @@ class MenuItems(QTreeWidget):
             Currently isn't used.
         """
         self.icon_child_set_material = QIcon()
-        self.icon_child_set_material.addPixmap(QPixmap("data/icons/pulse.png"), QIcon.Active, QIcon.On)
+        icon_path = str(Path('data/icons/logo_vibra.png'))
+        self.icon_child_set_material.addPixmap(QPixmap(icon_path), QIcon.Active, QIcon.On)
 
     def _createFonts(self):
         """Create Font objects that configure the font of the items."""
@@ -287,13 +291,14 @@ class MenuItems(QTreeWidget):
         """Configure all items."""   
 
         borderRole = Qt.UserRole + 1
-        borderPen = QPen(QColor(0,0,0))
         borderPen.setWidth(1)
 
-        # if self.main_window.user_config.theme == "light":
-        #     textTopBrush = QBrush(QColor(0,0,0))
-        # elif self.main_window.user_config.theme == "dark":
-        #     textTopBrush = QBrush(QColor(255,255,255))
+        if self.main_window.user_config.theme == "light":
+            # textTopBrush = QBrush(QColor(0,0,0))
+            borderPen = QPen(QColor(0,0,0))
+        elif self.main_window.user_config.theme == "dark":
+            # textTopBrush = QBrush(QColor(255,255,255))
+            borderPen = QPen(QColor(255,255,255))
 
         configTopBrush = self.brush_upper_items
         plotTopBrush = self.brush_lower_items
@@ -382,7 +387,7 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_set_fluid:
             if not self.item_child_set_fluid.isDisabled(): 
-                pass
+                FluidInput()
 
         elif item == self.item_child_setStructuralElementType:
             if not self.item_child_setStructuralElementType.isDisabled():
