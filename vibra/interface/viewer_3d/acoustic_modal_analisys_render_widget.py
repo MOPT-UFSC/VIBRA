@@ -62,8 +62,9 @@ class AcousticModalAnalisysRenderWidget(CommonRenderWidget):
         if not (0 <= index < solver.modal_shape.shape[1]):
             return
 
-        print(f"plot {index}")
+        self.update_theme()
         self.remove_actors()
+
         current_modal_shape = solver.modal_shape[:, index]
         self.analisys_actor = AnalisysActor(mesh)
         self.analisys_actor.plot_colorbar(current_modal_shape)
