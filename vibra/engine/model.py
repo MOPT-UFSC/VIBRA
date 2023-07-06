@@ -1,9 +1,10 @@
-from pathlib import Path
 import os
+from pathlib import Path
 
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.properties.fluid import Fluid
+from vibra.engine.properties.model_properties import ModelProperties
+from vibra.errors import IncompleteSetupError
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 
@@ -37,22 +38,24 @@ class Model:
         self.mesh = Mesh.from_cad(self.geometry_path, dimension=2, size_factor=0.1)
 
     def process_mesh(self):
-        #
         if self.geometry_path == "" or not os.path.exists(self.geometry_path):
-            window_title = "ERROR"
-            title = "Geometry file not defined"
-            message = "The geometry file has not been defined yet. You should to import a supported CAD file format to proceed."
-            message += "\n\n Suported file formats: *.iges and *.step"
-            PrintMessageInput([title, message, window_title])
-            return
-        #
+            message = "Geometry file not defined"
+            context = (
+                "The geometry file has not been defined yet."
+                "You should to import a supported CAD file format to proceed."
+                "\n\n"
+                "Suported file formats: *.iges and *.step"
+            )
+            raise IncompleteSetupError(message, context=context)
+
         if self.mesh_setup is None:
-            window_title = "ERROR"
-            title = "Mesh setup not defined"
-            message = "The mesh setup has not been defined yet. You should to configure the mesher to proceed."
-            PrintMessageInput([title, message, window_title])
-            return
-        #
+            message = "Mesh setup not defined"
+            context = (
+                "The mesh setup has not been defined yet."
+                "You should to configure the mesher to proceed."
+            )
+            raise IncompleteSetupError(message, context=context)
+
         self.mesh = Mesh.from_cad(self.geometry_path, **self.mesh_setup)
 
     def set_material(self, material):
@@ -60,4 +63,3 @@ class Model:
 
     def set_fluid(self, fluid):
         self.fluid = fluid
-    

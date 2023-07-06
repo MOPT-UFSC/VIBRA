@@ -79,6 +79,7 @@ class Mesh:
     ):
         path = Path(path)
         gmsh.initialize("", False)
+        logging.info(f"Generating mesh from {path}" + ProgressStatus(0, 100))
 
         logging.info("Configuring Mesh" + ProgressStatus(5, 100))
         self._configure_mesh(
@@ -107,8 +108,7 @@ class Mesh:
             f"Mesh created with {len(self.nodal_coordinates)} nodes"
             f", {len(self.lines_connectivity)} dim 1"
             f", {len(self.faces_connectivity)} dim 2"
-            f"and {len(self.solids_connectivity)} dim 3 elements"
-            + ProgressStatus(100, 100)
+            f"and {len(self.solids_connectivity)} dim 3 elements" + ProgressStatus(100, 100)
         )
 
     def export_nodes_coordinates(self, filename):

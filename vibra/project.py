@@ -2,9 +2,9 @@ import logging
 from pathlib import Path
 from time import sleep
 
+from vibra.engine.assemblers.modal_assembler import ModalAssembler
 from vibra.engine.model import Model
 from vibra.engine.solvers.example_solver import ExampleSolver
-from vibra.engine.assemblers.modal_assembler import ModalAssembler
 from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.utils.progress_status import ProgressStatus
 
@@ -15,7 +15,7 @@ class Project:
         self.geometry_path = ""
         self.fluid_list_path = ""
         self.material_list_path = ""
-        
+
         self.model = Model()
         self.modal_assembler = ModalAssembler(self.model)
         self.example_solver = ExampleSolver()
@@ -44,14 +44,13 @@ class Project:
         self.model.set_mesh_setup(mesh_setup)
 
     def generate_mesh(self):
-        logging.info(f"Generating mesh from {self.geometry_path}")
         if self.model is None:
             return
         self.model.process_mesh()
 
     def set_analysis_data(self, data):
         self.example_solver.set_analysis_data(data)
-        
+
     def solve_example(self):
         pass
         # self.example_solver.solve()

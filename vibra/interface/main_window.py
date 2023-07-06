@@ -4,8 +4,8 @@ from pathlib import Path
 from time import sleep
 
 import qdarktheme
-from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 from vibra.config import UserConfig
@@ -108,8 +108,8 @@ class MainWindow(QMainWindow):
 
         working_area.addWidget(self.menu_widget)
         working_area.addWidget(self.viewer_tabs)
-        working_area.setSizes([50,400])
-        
+        working_area.setSizes([50, 400])
+
     def load_user_preferences(self):
         self.set_theme(self.user_config.theme)
 

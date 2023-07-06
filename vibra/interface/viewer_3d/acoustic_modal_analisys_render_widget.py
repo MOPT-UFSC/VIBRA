@@ -1,11 +1,20 @@
-from PyQt5.QtCore import QObjectCleanupHandler
-from PyQt5.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QComboBox, QAction, QWidget
-
-from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
-from vibra.interface.viewer_3d.actors.analisys_actor import AnalisysActor
-from vibra.interface.viewer_3d.actors.cutting_plane_actor import CuttingPlaneActor
-from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
 import numpy as np
+from PyQt5.QtCore import QObjectCleanupHandler
+from PyQt5.QtWidgets import (
+    QAction,
+    QComboBox,
+    QHBoxLayout,
+    QLabel,
+    QVBoxLayout,
+    QWidget,
+)
+
+from vibra.interface.viewer_3d.actors.analisys_actor import AnalisysActor
+from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
+    CuttingPlaneActor,
+)
+from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
+from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
 
 
 class AcousticModalAnalisysRenderWidget(CommonRenderWidget):
@@ -51,8 +60,8 @@ class AcousticModalAnalisysRenderWidget(CommonRenderWidget):
 
         index = self.current_shape_index()
         if not (0 <= index < solver.modal_shape.shape[1]):
-            return 
-        
+            return
+
         print(f"plot {index}")
         self.remove_actors()
         current_modal_shape = solver.modal_shape[:, index]
