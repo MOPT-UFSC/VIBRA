@@ -1,6 +1,7 @@
 # Local files
 .config.ini
-.vibra/material_library.dat
+.fluid_library.dat
+.material_library.dat
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
