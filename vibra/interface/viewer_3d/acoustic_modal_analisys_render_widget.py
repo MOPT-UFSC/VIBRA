@@ -14,7 +14,8 @@ from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
     CuttingPlaneActor,
 )
 from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
-from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
+from vibra.interface.modal_analisys_bar import ModalAnalisysBar
+from vibra.utils.math_functions import bounds_distance, rotation_matrices
 
 
 class AcousticModalAnalisysRenderWidget(CommonRenderWidget):
@@ -89,24 +90,24 @@ class AcousticModalAnalisysRenderWidget(CommonRenderWidget):
 
     def _create_control_bar(self):
         # TODO: Implement this in a isolated widget
-        if self.project is None:
-            return
+        # if self.project is None:
+        #     return
 
-        solver = self.project.modal_solver
-        if solver.natural_frequencies is None:
-            return
+        # solver = self.project.modal_solver
+        # if solver.natural_frequencies is None:
+        #     return
 
-        control_bar = QWidget()
-        layout = QHBoxLayout()
+        control_bar = ModalAnalisysBar()
+        layout = control_bar.layout()
         self.frequencies = QComboBox()
         self.frequencies.activated.connect(self.update_plot)
 
-        for i in solver.natural_frequencies:
+        for i in [1,2,3]:
             self.frequencies.addItem(f"{i} Hz")
 
-        layout.addWidget(QLabel("Hola que tal"))
-        layout.addWidget(self.frequencies)
-        control_bar.setLayout(layout)
+        # layout.addWidget(QLabel("Hola que tal"))
+        # layout.addWidget(self.frequencies)
+        # control_bar.setLayout(layout)
         return control_bar
 
     def _actors_exists(self):
