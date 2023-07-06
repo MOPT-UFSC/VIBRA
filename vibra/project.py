@@ -33,7 +33,6 @@ class Project:
         self.model.set_geometry_path(Path(path))
         logging.info(f"Importing geometry at {path}")
         self.model.process_visual_geometry_mesh()
-        self.set_model(self.model)
 
     def set_fluid(self, fluid):
         self.model.set_fluid(fluid)
@@ -49,20 +48,16 @@ class Project:
         if self.model is None:
             return
         self.model.process_mesh()
-        self.set_model(self.model)
-
-    def set_model(self, model):
-        # self.model = model
-        self.example_solver.set_model(model)
 
     def set_analysis_data(self, data):
         self.example_solver.set_analysis_data(data)
         
     def solve_example(self):
-        self.example_solver.set_model(self.model)
-        self.example_solver.solve()
+        pass
+        # self.example_solver.solve()
 
     def solve_modal_acoustic(self):
+        self.modal_assembler.assemble_global_matrices()
         self.modal_solver.solve()
 
     def long_function(self):

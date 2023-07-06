@@ -150,9 +150,6 @@ def load_function(function, parent):
             # Restores the previous cursor
             QApplication.restoreOverrideCursor()
 
-        except AttributeError:
-            logging.warn("No loading window found")
-
         finally:
             logging.getLogger().removeHandler(progress_handler)
 

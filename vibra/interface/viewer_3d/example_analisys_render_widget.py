@@ -27,9 +27,9 @@ class ExampleAnalisysRenderWidget(CommonRenderWidget):
             return
 
         modal_solver = self.project.modal_solver
-        solver = self.project.example_solver
-        if solver.tensions is None:
-            return
+        # solver = self.project.example_solver
+        # if solver.tensions is None:
+        #     return
 
         model = self.project.model
         if model is None:

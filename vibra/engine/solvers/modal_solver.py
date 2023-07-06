@@ -27,7 +27,6 @@ class ModalSolver:
             KT = K
             MT = M
         else:
-            self.assembler.assemble_global_matrices()
             KT = self.assembler.stiffness_matrix
             MT = self.assembler.mass_matrix
 

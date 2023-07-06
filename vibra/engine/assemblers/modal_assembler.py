@@ -6,12 +6,15 @@ from vibra.engine.elements.acoustic_tet4_element import ACT_TETRAHEDRON_4C
 
 
 class ModalAssembler:
-    def __init__(self, model=None):
+    def __init__(self, model):
         self.model = model
-        # self.assemble_global_matrices()
 
-    def set_model(self, model):
-        self.model = model
+        self.stiffness_matrix = None
+        self.mass_matrix = None
+
+    def is_assembled(self):
+        return (self.stiffness_matrix is not None
+            and self.mass_matrix is not None)    
 
     def assemble_global_matrices(self):
         """
