@@ -1,21 +1,15 @@
-from interface.general.printMessageInput import PrintMessageInput
-from PyQt5.QtCore import QRect, QSize, Qt
-from PyQt5.QtGui import (
-    QBrush,
-    QColor,
-    QFont,
-    QIcon,
-    QLinearGradient,
-    QPainter,
-    QPen,
-    QPixmap,
-)
-from PyQt5.QtWidgets import (
-    QFrame,
-    QStyledItemDelegate,
-    QTreeWidget,
-    QTreeWidgetItem,
-)
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+
+from interface.model.mesh.mesher_inputs import MesherInputs
+from interface.model.structural.material_inputs import MaterialInput
+from interface.analysis.analysis_type_input import AnalysisTypeInput
+
+from interface.general.print_message_input import PrintMessageInput
+
+from vibra.interface.loading_bar import load_function
+from vibra.utils.interface_functions import get_main_window
 
 
 class BorderItemDelegate(QStyledItemDelegate):
@@ -71,10 +65,10 @@ class MenuItems(QTreeWidget):
     in the items menu, located on the left side of the interface.
 
     """
-
-    def __init__(self, main_window):
+    def __init__(self):
         super().__init__()
-        self.mainWindow = main_window
+
+        self.main_window = get_main_window()
         # self.project = main_window.getProject()
 
         # self._createIcons()
@@ -90,7 +84,7 @@ class MenuItems(QTreeWidget):
     def keyPressEvent(self, event):
         """This deals with key events that are directly linked with the menu."""
         if event.key() == Qt.Key_F5:
-            self.mainWindow.getInputWidget().runAnalysis()
+            self.main_window.getInputWidget().runAnalysis()
             self._updateItems()
 
     def _createIcons(self):
@@ -105,17 +99,17 @@ class MenuItems(QTreeWidget):
     def _createFonts(self):
         """Create Font objects that configure the font of the items."""
         self.font_top_Items = QFont()
-        self.font_top_Items.setFamily("Segoe UI")
-        self.font_top_Items.setPointSize(13)
+        # self.font_top_Items.setFamily("Segoe UI")
+        self.font_top_Items.setPointSize(12)
         self.font_top_Items.setBold(True)
         self.font_top_Items.setItalic(False)
         self.font_top_Items.setWeight(75)
 
         self.font_child_Items = QFont()
-        self.font_child_Items.setFamily("Segoe UI")
-        self.font_child_Items.setPointSize(12)
-        # self.font_child_Items.setBold(False)
-        # self.font_child_Items.setItalic(True)
+        # self.font_child_Items.setFamily("Segoe UI")
+        self.font_child_Items.setPointSize(11)
+        #self.font_child_Items.setBold(False)
+        #self.font_child_Items.setItalic(True)
         self.font_child_Items.setWeight(60)
 
     def _createColorsBrush(self):
@@ -159,22 +153,24 @@ class MenuItems(QTreeWidget):
         """Creates all TreeWidgetItems."""
         self.list_top_items = []
         self.list_child_items = []
-        self.item_top_generalSettings = QTreeWidgetItem(["General Settings"])
-        self.item_child_setGeometryFile = QTreeWidgetItem(["Set Geometry File"])
-        self.item_child_meshSetup = QTreeWidgetItem(["Mesh Setup"])
-        self.item_child_set_material = QTreeWidgetItem(["Set Material"])
-        self.item_child_set_fluid = QTreeWidgetItem(["Set Fluid"])
+        self.item_top_generalSettings = QTreeWidgetItem(['General Settings'])
+        self.item_child_import_geometry = QTreeWidgetItem(['Import geometry'])
+        self.item_child_mesh_setup = QTreeWidgetItem(['Mesh Setup'])
+        self.item_child_generate_mesh = QTreeWidgetItem(['Generate Mesh'])
+        self.item_child_set_material = QTreeWidgetItem(['Set Material'])
+        self.item_child_set_fluid = QTreeWidgetItem(['Set Fluid'])
         #
         self.list_top_items.append(self.item_top_generalSettings)
-        self.list_child_items.append(self.item_child_setGeometryFile)
-        self.list_child_items.append(self.item_child_meshSetup)
+        self.list_child_items.append(self.item_child_import_geometry)
+        self.list_child_items.append(self.item_child_mesh_setup)
+        self.list_child_items.append(self.item_child_generate_mesh)
         self.list_child_items.append(self.item_child_set_material)
         self.list_child_items.append(self.item_child_set_fluid)
         #
-        self.item_top_structuralModelSetup = QTreeWidgetItem(["Structural Model Setup"])
-        self.item_child_setStructuralElementType = QTreeWidgetItem(["Set Structural Element Type"])
-        self.item_child_setPrescribedDofs = QTreeWidgetItem(["Set Prescribed DOFs"])
-        self.item_child_setNodalLoads = QTreeWidgetItem(["Set Nodal Loads"])
+        self.item_top_structuralModelSetup = QTreeWidgetItem(['Structural Model Setup'])
+        self.item_child_setStructuralElementType = QTreeWidgetItem(['Set Structural Element Type'])
+        self.item_child_setPrescribedDofs = QTreeWidgetItem(['Set Boundary Conditions'])
+        self.item_child_setNodalLoads = QTreeWidgetItem(['Set Loads'])
         #
         self.list_top_items.append(self.item_top_structuralModelSetup)
         self.list_child_items.append(self.item_child_setStructuralElementType)
@@ -188,6 +184,14 @@ class MenuItems(QTreeWidget):
         self.item_child_setSpecificImpedance = QTreeWidgetItem(["Set Specific Impedance"])
         self.item_child_set_radiation_impedance = QTreeWidgetItem(["Set Radiation Impedance"])
         self.item_child_add_compressor_excitation = QTreeWidgetItem(["Add Compressor Excitation"])
+        #
+        self.item_child_setAcousticElementType.setDisabled(True)
+        self.item_child_setAcousticPressure.setDisabled(True)
+        self.item_child_setVolumeVelocity.setDisabled(True)
+        self.item_child_setSpecificImpedance.setDisabled(True)
+        self.item_child_set_radiation_impedance.setDisabled(True)
+        self.item_child_add_compressor_excitation.setDisabled(True)
+
         #
         self.list_top_items.append(self.item_top_acousticModelSetup)
         self.list_child_items.append(self.item_child_setAcousticElementType)
@@ -253,11 +257,14 @@ class MenuItems(QTreeWidget):
     def _addItems(self):
         """Adds the Top Level Items and the Child Levels Items at the TreeWidget."""
         self.addTopLevelItem(self.item_top_generalSettings)
-        self.item_top_generalSettings.addChild(self.item_child_meshSetup)
-        self.item_top_generalSettings.addChild(self.item_child_setGeometryFile)
+        self.item_top_generalSettings.addChild(self.item_child_import_geometry)
         self.item_top_generalSettings.addChild(self.item_child_set_material)
         self.item_top_generalSettings.addChild(self.item_child_set_fluid)
-
+        self.item_top_generalSettings.addChild(self.item_child_mesh_setup)
+        self.item_top_generalSettings.addChild(self.item_child_generate_mesh)
+        
+        self.item_child_generate_mesh.setDisabled(True)
+        
         self.addTopLevelItem(self.item_top_structuralModelSetup)
         self.item_top_structuralModelSetup.addChild(self.item_child_setStructuralElementType)
         self.item_top_structuralModelSetup.addChild(self.item_child_setPrescribedDofs)
@@ -302,10 +309,10 @@ class MenuItems(QTreeWidget):
         borderPen = QPen(QColor(0, 0, 0))
         borderPen.setWidth(1)
 
-        if self.mainWindow.user_config.theme == "light":
-            textTopBrush = QBrush(QColor(0, 0, 0))
-        elif self.mainWindow.user_config.theme == "dark":
-            textTopBrush = QBrush(QColor(255, 255, 255))
+        # if self.main_window.user_config.theme == "light":
+        #     textTopBrush = QBrush(QColor(0,0,0))
+        # elif self.main_window.user_config.theme == "dark":
+        #     textTopBrush = QBrush(QColor(255,255,255))
 
         configTopBrush = self.brush_upper_items
         plotTopBrush = self.brush_lower_items
@@ -321,7 +328,7 @@ class MenuItems(QTreeWidget):
             top_item.setFont(0, self.font_top_Items)
             top_item.setData(0, borderRole, borderPen)
             top_item.setTextAlignment(0, Qt.AlignHCenter | Qt.AlignVCenter)
-            top_item.setForeground(0, textTopBrush)
+            # top_item.setForeground(0, textTopBrush)
             # top_item.setSizeHint(0, self.top_items_size)
 
             if top_item in configTopItems:
@@ -335,23 +342,20 @@ class MenuItems(QTreeWidget):
 
         for child_item in self.list_child_items:
             child_item.setFont(0, self.font_child_Items)
-            child_item.setForeground(0, textTopBrush)
+            # child_item.setForeground(0, textTopBrush)
             # child_item.setSizeHint(0, self.top_items_size)
 
     def update_plot_mesh(self):
-        if not self.mainWindow.opv_widget.change_plot_to_mesh:
-            self.mainWindow.plot_mesh()
+        if not self.main_window.opv_widget.change_plot_to_mesh:
+            self.main_window.plot_mesh()
 
     def update_plot_entities(self):
-        if not (
-            self.mainWindow.opv_widget.change_plot_to_entities
-            or self.mainWindow.opv_widget.change_plot_to_entities_with_cross_section
-        ):
-            self.mainWindow.plot_entities()
+        if not (self.main_window.opv_widget.change_plot_to_entities or self.main_window.opv_widget.change_plot_to_entities_with_cross_section):
+            self.main_window.plot_entities()  
 
     def update_plot_entities_with_cross_section(self):
-        if not self.mainWindow.opv_widget.change_plot_to_entities_with_cross_section:
-            self.mainWindow.plot_entities_with_cross_section()
+        if not self.main_window.opv_widget.change_plot_to_entities_with_cross_section:
+            self.main_window.plot_entities_with_cross_section()   
 
     # def create_plot_convergence_data(self):
     #     self.item_top_resultsViewer_acoustic.addChild(self.item_child_plot_perforated_plate_convergence_data)
@@ -365,263 +369,149 @@ class MenuItems(QTreeWidget):
 
     def on_click_item(self, item, column):
         """This event is raised every time an item is clicked on the menu."""
-        # self.mainWindow.getInputWidget().beforeInput()
+        # self.main_window.getInputWidget().beforeInput()
 
         if self.update_childItems_visibility(item):
             return
 
         # if self.project.none_project_action:
         #     self.empty_project_action_message()
+        
+        if item == self.item_child_import_geometry:
+            if not self.item_child_import_geometry.isDisabled():
+                self.main_window.import_geometry()
 
-        if item == self.item_child_setProjectAttributes:
-            if not self.item_child_setProjectAttributes.isDisabled():
-                self.mainWindow.getInputWidget().set_project_attributes()
+        elif item == self.item_child_mesh_setup:
+            if not self.item_child_mesh_setup.isDisabled():
+                mesher = MesherInputs(self.main_window)
+                if mesher.complete:
+                    self.main_window.project.set_mesh_setup(mesher.mesh_setup)
+                    self.generate_mesh_action = self.main_window.findChild(QAction, "generate_mesh_action")
+                    self.generate_mesh_action.setDisabled(False)
+                    self.item_child_generate_mesh.setDisabled(False)
 
-        elif item == self.item_child_createGeometry:
-            if not self.item_child_createGeometry.isDisabled():
-                read = self.mainWindow.getInputWidget().call_geometry_designer()
-                self.mainWindow._updateStatusBar()
-                if read is None:
-                    self.modify_general_settings_items_access(False)
-                elif read:
-                    self.modify_model_setup_items_access(False)
-                    self.mainWindow.set_enable_menuBar(True)
-
-        elif item == self.item_child_editGeometry:
-            if not self.item_child_editGeometry.isDisabled():
-                read = self.mainWindow.getInputWidget().edit_an_imported_geometry()
-
-        elif item == self.item_child_setGeometryFile:
-            if not self.item_child_setGeometryFile.isDisabled():
-                self.mainWindow.getInputWidget().set_geometry_file()
-
-        elif item == self.item_child_meshSetup:
-            if not self.item_child_meshSetup.isDisabled():
-                if self.mainWindow.getInputWidget().set_mesh_properties():
-                    self._updateItems()
-                    self.mainWindow.set_enable_menuBar(True)
-                    self.mainWindow._updateStatusBar()
+        elif item == self.item_child_generate_mesh:
+            if not self.item_child_generate_mesh.isDisabled():
+                generate_mesh = load_function(self.main_window.project.generate_mesh, self.main_window)
+                generate_mesh()
+                self.generate_mesh_action.setDisabled(True)
+                self.item_child_generate_mesh.setDisabled(True)
 
         elif item == self.item_child_set_material:
             if not self.item_child_set_material.isDisabled():
-                self.update_plot_entities()
-                self.mainWindow.getInputWidget().set_material()
-                self.mainWindow.plot_entities()
+                MaterialInput()
 
         elif item == self.item_child_set_fluid:
-            if not self.item_child_set_fluid.isDisabled():
-                self.update_plot_entities()
-                self.mainWindow.getInputWidget().set_fluid()
-                self.mainWindow.plot_entities()
-
-        elif item == self.item_child_set_crossSection:
-            if not self.item_child_set_crossSection.isDisabled():
-                if self.mainWindow.getInputWidget().set_cross_section():
-                    self.mainWindow.plot_entities_with_cross_section()
-
-        elif item == self.item_child_addFlanges:
-            if not self.item_child_addFlanges.isDisabled():
-                self.mainWindow.getInputWidget().add_flanges()
+            if not self.item_child_set_fluid.isDisabled(): 
+                pass
 
         elif item == self.item_child_setStructuralElementType:
             if not self.item_child_setStructuralElementType.isDisabled():
-                self.update_plot_entities()
-                self.mainWindow.getInputWidget().setStructuralElementType()
-
-        elif item == self.item_child_setBeamXaxisRotation:
-            if not self.item_child_setBeamXaxisRotation.isDisabled():
-                self.update_plot_entities_with_cross_section()
-                self.mainWindow.getInputWidget().set_beam_xaxis_rotation()
-
+                pass
+    
         elif item == self.item_child_setPrescribedDofs:
             if not self.item_child_setPrescribedDofs.isDisabled():
-                self.update_plot_mesh()
-                self.mainWindow.getInputWidget().setDOF()
-                self.mainWindow.plot_mesh()
-
-        elif item == self.item_child_setRotationDecoupling:
-            if not self.item_child_setRotationDecoupling.isDisabled():
-                self.update_plot_mesh()
-                self.mainWindow.getInputWidget().setRotationDecoupling()
-                self.mainWindow.plot_mesh()
+                pass
 
         elif item == self.item_child_setNodalLoads:
             if not self.item_child_setNodalLoads.isDisabled():
-                self.update_plot_mesh()
-                self.mainWindow.getInputWidget().setNodalLoads()
-                self.mainWindow.plot_mesh()
-
-        elif item == self.item_child_addMassSpringDamper:
-            if not self.item_child_addMassSpringDamper.isDisabled():
-                self.update_plot_mesh()
-                self.mainWindow.getInputWidget().addMassSpringDamper()
-                self.mainWindow.plot_mesh()
-
-        elif item == self.item_child_add_elastic_nodal_links:
-            if not self.item_child_add_elastic_nodal_links.isDisabled():
-                self.update_plot_mesh()
-                self.mainWindow.getInputWidget().add_elastic_nodal_links()
-                self.mainWindow.plot_mesh()
-
-        elif item == self.item_child_add_expansion_joint:
-            if not self.item_child_add_expansion_joint.isDisabled():
-                self.mainWindow.getInputWidget().add_expansion_joint()
-                # self.mainWindow.plot_entities_with_cross_section()
-
-        elif item == self.item_child_add_valve:
-            if not self.item_child_add_valve.isDisabled():
-                read = self.mainWindow.getInputWidget().add_valve()
-                if read.complete:
-                    self.mainWindow.plot_mesh()
-                # self.mainWindow.plot_entities_with_cross_section()
-
-        elif item == self.item_child_setcappedEnd:
-            if not self.item_child_setcappedEnd.isDisabled():
-                self.mainWindow.getInputWidget().setcappedEnd()
-                # self.mainWindow.plot_entities()
-
-        elif item == self.item_child_set_stress_stiffening:
-            if not self.item_child_set_stress_stiffening.isDisabled():
-                self.mainWindow.getInputWidget().set_stress_stress_stiffening()
-                # self.mainWindow.plot_entities()
-
-        elif item == self.item_child_setAcousticElementType:
-            if not self.item_child_setAcousticElementType.isDisabled():
-                self.update_plot_entities()
-                self.mainWindow.getInputWidget().set_acoustic_element_type()
-                self.mainWindow.plot_entities()
+                pass
 
         elif item == self.item_child_setAcousticPressure:
             if not self.item_child_setAcousticPressure.isDisabled():
-                self.update_plot_mesh()
-                self.mainWindow.getInputWidget().setAcousticPressure()
-                self.mainWindow.plot_mesh()
+                pass
 
         elif item == self.item_child_setVolumeVelocity:
-            if not self.item_child_setVolumeVelocity.isDisabled():
-                self.update_plot_mesh()
-                self.mainWindow.getInputWidget().setVolumeVelocity()
-                self.mainWindow.plot_mesh()
+            if not self.item_child_setVolumeVelocity.isDisabled(): 
+                pass
 
         elif item == self.item_child_setSpecificImpedance:
             if not self.item_child_setSpecificImpedance.isDisabled():
-                self.update_plot_mesh()
-                self.mainWindow.getInputWidget().setSpecificImpedance()
-                self.mainWindow.plot_mesh()
+                pass
 
         elif item == self.item_child_set_radiation_impedance:
             if not self.item_child_set_radiation_impedance.isDisabled():
-                self.update_plot_mesh()
-                self.mainWindow.getInputWidget().set_radiation_impedance()
-                self.mainWindow.plot_mesh()
-
-        elif item == self.item_child_add_perforated_plate:
-            if not self.item_child_add_perforated_plate.isDisabled():
-                self.update_plot_mesh()
-                self.mainWindow.getInputWidget().add_perforated_plate()
-                self.mainWindow.plot_mesh()
-
-        elif item == self.item_child_set_acoustic_element_length_correction:
-            if not self.item_child_set_acoustic_element_length_correction.isDisabled():
-                self.update_plot_mesh()
-                self.mainWindow.getInputWidget().set_acoustic_element_length_correction()
-                self.mainWindow.plot_mesh()
+                pass
 
         elif item == self.item_child_add_compressor_excitation:
             if not self.item_child_add_compressor_excitation.isDisabled():
-                self.update_plot_mesh()
-                self.mainWindow.getInputWidget().add_compressor_excitation()
-                self.mainWindow.plot_mesh()
+                pass
 
         elif item == self.item_child_selectAnalysisType:
             if not self.item_child_selectAnalysisType.isDisabled():
-                self.mainWindow.getInputWidget().analysisTypeInput()
-                self._updateItems()
-
+                AnalysisTypeInput()
+            
         elif item == self.item_child_analisysSetup:
             if not self.item_child_analisysSetup.isDisabled():
-                self.mainWindow.getInputWidget().analysisSetup()
+                self.main_window.getInputWidget().analysisSetup()
                 self._updateItems()
 
         elif item == self.item_child_runAnalysis:
             if not self.item_child_runAnalysis.isDisabled():
-                self.mainWindow.getInputWidget().runAnalysis()
+                self.main_window.getInputWidget().runAnalysis()
                 self._updateItems()
 
         elif item == self.item_child_plotStructuralModeShapes:
             if not self.item_child_plotStructuralModeShapes.isDisabled():
-                self.mainWindow.getInputWidget().plotStructuralModeShapes()
+                pass
 
         elif item == self.item_child_plotDisplacementField:
             if not self.item_child_plotDisplacementField.isDisabled():
-                self.mainWindow.getInputWidget().plotDisplacementField()
+                pass
 
         elif item == self.item_child_plotStructuralFrequencyResponse:
             if not self.item_child_plotStructuralFrequencyResponse.isDisabled():
-                self.update_plot_mesh()
-                self.mainWindow.getInputWidget().plotStructuralFrequencyResponse()
+                pass
 
         elif item == self.item_child_plotReactionsFrequencyResponse:
             if not self.item_child_plotReactionsFrequencyResponse.isDisabled():
-                self.update_plot_mesh()
-                self.mainWindow.getInputWidget().plotReactionsFrequencyResponse()
+                pass
 
         elif item == self.item_child_plotStressField:
             if not self.item_child_plotStressField.isDisabled():
-                self.mainWindow.getInputWidget().plotStressField()
+                pass
 
         elif item == self.item_child_plotStressFrequencyResponse:
             if not self.item_child_plotStressFrequencyResponse.isDisabled():
-                self.update_plot_mesh()
-                self.mainWindow.getInputWidget().plotStressFrequencyResponse()
+                pass
 
         elif item == self.item_child_plotAcousticModeShapes:
             if not self.item_child_plotAcousticModeShapes.isDisabled():
-                self.mainWindow.getInputWidget().plotAcousticModeShapes()
+                pass
 
         elif item == self.item_child_plotAcousticPressureField:
             if not self.item_child_plotAcousticPressureField.isDisabled():
-                self.mainWindow.getInputWidget().plotAcousticPressureField()
-
+                pass
+         
         elif item == self.item_child_plotAcousticFrequencyResponse:
             if not self.item_child_plotAcousticFrequencyResponse.isDisabled():
-                self.update_plot_mesh()
-                self.mainWindow.getInputWidget().plotAcousticFrequencyResponse()
+                pass
 
         elif item == self.item_child_plotAcousticDeltaPressures:
             if not self.item_child_plotAcousticDeltaPressures.isDisabled():
-                self.update_plot_mesh()
-                self.mainWindow.getInputWidget().plotAcousticDeltaPressures()
+                pass
 
         elif item == self.item_child_plot_TL_NR:
             if not self.item_child_plot_TL_NR.isDisabled():
-                self.update_plot_mesh()
-                self.mainWindow.getInputWidget().plot_TL_NR()
+                pass
 
-        elif item == self.item_child_plot_perforated_plate_convergence_data:
-            if not self.item_child_plot_perforated_plate_convergence_data.isDisabled():
-                self.mainWindow.getInputWidget().plotPerforatedPlateConvergenceDataLog()
 
     def modify_geometry_item_access(self, bool_key):
-        self.item_child_createGeometry.setDisabled(bool_key)
-        self.item_child_meshSetup.setDisabled(bool_key)
-        self.item_child_editGeometry.setHidden(True)
+        self.item_child_import_geometry.setDisabled(bool_key)
+        self.item_child_mesh_setup.setDisabled(bool_key)
 
     def modify_general_settings_items_access(self, bool_key):
         #
-        self.item_child_setProjectAttributes.setDisabled(bool_key)
-        self.item_child_createGeometry.setDisabled(bool_key)
-        self.item_child_setGeometryFile.setDisabled(bool_key)
-        self.item_child_meshSetup.setDisabled(bool_key)
-        self.item_child_editGeometry.setHidden(True)
+        self.item_child_import_geometry.setDisabled(bool_key)
+        self.item_child_mesh_setup.setDisabled(bool_key)
         # self.item_child_set_material.setDisabled(bool_key)
         # self.item_child_set_fluid.setDisabled(bool_key)
         # self.item_child_set_crossSection.setDisabled(bool_key)
 
     def modify_model_setup_items_access(self, bool_key):
         #
-        self.item_child_setGeometryFile.setDisabled(bool_key)
-        self.item_child_meshSetup.setDisabled(bool_key)
+        self.item_child_import_geometry.setDisabled(bool_key)
+        self.item_child_mesh_setup.setDisabled(bool_key)
         self.item_child_set_material.setDisabled(bool_key)
         self.item_child_set_fluid.setDisabled(bool_key)
         #
@@ -750,5 +640,5 @@ class MenuItems(QTreeWidget):
         title = "EMPTY PROJECT"
         message = "Please, you should create a new project or load an already existing one before start to set up the model."
         message += "\n\nIt is recommended to use the 'New Project' or the 'Import Project' \nbuttons to continue."
-        window_title = "ERROR"
-        PrintMessageInput([title, message, window_title], opv=self.mainWindow.getOPVWidget())
+        window_title = 'ERROR'
+        PrintMessageInput([title, message, window_title], opv=self.main_window.getOPVWidget())

@@ -10,7 +10,7 @@ from vibra.utils.icons import load_icon
 class ViewModeMenu(QMenu):
     def __init__(self, parent):
         super().__init__(parent)
-        self.setTitle("View Mode")
+        self.setTitle("View mode")
 
         self.create_actions()
         self.create_layout()

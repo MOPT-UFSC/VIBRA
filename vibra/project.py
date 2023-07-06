@@ -13,10 +13,11 @@ class Project:
     def __init__(self):
         self.name = "Project"
         self.geometry_path = ""
-        self.model = None
-
+        self.fluid_list_path = ""
+        self.material_list_path = ""
+        
+        self.model = Model()
         self.modal_assembler = ModalAssembler(self.model)
-
         self.example_solver = ExampleSolver()
         self.modal_solver = ModalSolver(self.modal_assembler)
 
@@ -27,27 +28,36 @@ class Project:
     def save(self, path):
         logging.info(f"Saving project in my/save/path")
 
-    def set_model(self, model):
-        self.model = model
-        self.modal_assembler.set_model(model)
-        self.example_solver.set_model(model)
-
     def import_geometry(self, path):
-        self.model = Model()
         self.geometry_path = Path(path)
         self.model.set_geometry_path(Path(path))
         logging.info(f"Importing geometry at {path}")
         self.model.process_visual_geometry_mesh()
         self.set_model(self.model)
 
+    def set_fluid(self, fluid):
+        self.model.set_fluid(fluid)
+
+    def set_material(self, material):
+        self.model.set_material(material)
+
     def set_mesh_setup(self, mesh_setup):
         self.model.set_mesh_setup(mesh_setup)
 
     def generate_mesh(self):
         logging.info(f"Generating mesh from {self.geometry_path}")
-        self.model.load_mesh()
+        if self.model is None:
+            return
+        self.model.process_mesh()
         self.set_model(self.model)
 
+    def set_model(self, model):
+        # self.model = model
+        self.example_solver.set_model(model)
+
+    def set_analysis_data(self, data):
+        self.example_solver.set_analysis_data(data)
+        
     def solve_example(self):
         self.example_solver.set_model(self.model)
         self.example_solver.solve()
