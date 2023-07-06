@@ -108,7 +108,7 @@ class MainWindow(QMainWindow):
 
         working_area.addWidget(self.menu_widget)
         working_area.addWidget(self.viewer_tabs)
-        working_area.setSizes([100,400])
+        working_area.setSizes([50,400])
         
     def load_user_preferences(self):
         self.set_theme(self.user_config.theme)
