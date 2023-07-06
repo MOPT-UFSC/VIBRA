@@ -14,6 +14,7 @@ class MesherMenu(QMenu):
     def __init__(self, parent):
         super().__init__(parent)
         self.setTitle("Model setup")
+        self.setObjectName("model_setup_menu")
         self.create_and_connect_actions()
         self.create_layout()
 
@@ -27,6 +28,7 @@ class MesherMenu(QMenu):
         self.set_material_action = QAction(self.new_project_icon, "Set material", self)
         self.mesher_setup_action = QAction(self.new_project_icon, "Mesher setup", self)
         self.generate_mesh_action = QAction(self.new_project_icon, "Generate mesh", self)
+        self.generate_mesh_action.setObjectName("generate_mesh_action")
         #
         self.set_fluid_action.triggered.connect(self.call_fluid_configurator)
         self.set_material_action.triggered.connect(self.call_material_configurator)

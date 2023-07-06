@@ -30,6 +30,12 @@ class Project:
         self.model.process_visual_geometry_mesh()
         self.set_model(self.model)
 
+    def set_fluid(self, fluid):
+        self.model.set_fluid(fluid)
+
+    def set_material(self, material):
+        self.model.set_material(material)
+
     def set_mesh_setup(self, mesh_setup):
         self.model.set_mesh_setup(mesh_setup)
 
@@ -43,6 +49,9 @@ class Project:
     def set_model(self, model):
         # self.model = model
         self.example_solver.set_model(model)
+
+    def set_analysis_data(self, data):
+        self.example_solver.set_analysis_data(data)
         
     def solve_example(self):
         self.example_solver.set_model(self.model)

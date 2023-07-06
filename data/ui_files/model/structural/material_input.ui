@@ -585,11 +585,10 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>12</pointsize>
+        <pointsize>11</pointsize>
         <weight>75</weight>
         <italic>true</italic>
         <bold>true</bold>
-        <stylestrategy>PreferDefault</stylestrategy>
        </font>
       </property>
       <property name="cursor">
@@ -602,9 +601,9 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 12pt &quot;Arial&quot;}
-QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 12pt &quot;Arial&quot;}
-QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 12pt &quot;Arial&quot;}</string>
+       <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 11pt &quot;Arial&quot;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 11pt &quot;Arial&quot;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 11pt &quot;Arial&quot;}</string>
       </property>
       <property name="text">
        <string>Reset entries</string>
@@ -649,16 +648,16 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>12</pointsize>
+        <pointsize>11</pointsize>
         <weight>75</weight>
         <italic>true</italic>
         <bold>true</bold>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 12pt &quot;Arial&quot;}
-QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 12pt &quot;Arial&quot;}
-QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 12pt &quot;Arial&quot;}</string>
+       <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 11pt &quot;Arial&quot;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 11pt &quot;Arial&quot;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 11pt &quot;Arial&quot;}</string>
       </property>
       <property name="text">
        <string>Pick color</string>
@@ -1163,35 +1162,35 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
        <rect>
         <x>474</x>
         <y>128</y>
-        <width>90</width>
+        <width>100</width>
         <height>26</height>
        </rect>
       </property>
       <property name="minimumSize">
        <size>
-        <width>90</width>
+        <width>100</width>
         <height>26</height>
        </size>
       </property>
       <property name="maximumSize">
        <size>
-        <width>90</width>
+        <width>100</width>
         <height>26</height>
        </size>
       </property>
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>12</pointsize>
+        <pointsize>11</pointsize>
         <weight>75</weight>
         <italic>true</italic>
         <bold>true</bold>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 12pt &quot;Arial&quot;}
-QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 12pt &quot;Arial&quot;}
-QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 12pt &quot;Arial&quot;}</string>
+       <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 11pt &quot;Arial&quot;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 11pt &quot;Arial&quot;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 11pt &quot;Arial&quot;}</string>
       </property>
       <property name="text">
        <string>Pick color</string>
@@ -1855,7 +1854,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
    <property name="lineWidth">
     <number>1</number>
    </property>
-   <widget class="QRadioButton" name="radioButton_selected_lines">
+   <widget class="QRadioButton" name="radioButton_selected_bodies">
     <property name="geometry">
      <rect>
       <x>634</x>
@@ -1895,7 +1894,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
      <bool>false</bool>
     </property>
    </widget>
-   <widget class="QRadioButton" name="radioButton_all">
+   <widget class="QRadioButton" name="radioButton_all_bodies">
     <property name="geometry">
      <rect>
       <x>512</x>
@@ -2273,8 +2272,8 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
   <tabstop>lineEdit_color_remove</tabstop>
   <tabstop>lineEdit_thermal_expansion_coefficient_remove</tabstop>
   <tabstop>pushButton_confirm_material_removal</tabstop>
-  <tabstop>radioButton_selected_lines</tabstop>
-  <tabstop>radioButton_all</tabstop>
+  <tabstop>radioButton_selected_bodies</tabstop>
+  <tabstop>radioButton_all_bodies</tabstop>
   <tabstop>treeWidget</tabstop>
   <tabstop>pushButton_reset_library</tabstop>
  </tabstops>

@@ -11,6 +11,10 @@ class ExampleSolver(Solver):
     def set_model(self, model):
         self._model = model
 
+    def set_analysis_data(self, data):
+        self.analysis_data = data
+        print(data)
+
     def solve(self):
         if not self.model_ready():
             raise Exception("Incomplete Model")

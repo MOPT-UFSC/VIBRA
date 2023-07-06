@@ -4,24 +4,16 @@ from pathlib import Path
 from time import sleep
 
 import qdarktheme
-from PyQt5.QtGui import *#QColor
+from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-from PyQt5.QtWidgets import (
-    QAction,
-    QApplication,
-    QFileDialog,
-    QLabel,
-    QMainWindow,
-    QMessageBox,
-    QSplitter
-)
+from PyQt5.QtWidgets import *
 
 from vibra.config import UserConfig
 from vibra.interface.clip_plane_widget import ClipPlaneWidget
 from vibra.interface.loading_bar import load_function
 from vibra.interface.menus.help_menu import HelpMenu
 from vibra.interface.menus.project_menu import ProjectMenu
-from vibra.interface.menus.settings_menu import SettingsMenu
+from vibra.interface.menus.settings_menu import VisibilitySettingsMenu
 from vibra.interface.menus.view_mode_menu import ViewModeMenu
 from vibra.interface.menus.views_menu import ViewsMenu
 from vibra.interface.menus.mesher_menu import MesherMenu
@@ -105,11 +97,9 @@ class MainWindow(QMainWindow):
 
     def create_basic_layout(self):
 
-        self.menu_widget = MenuItems(self)
+        self.menu_widget = MenuItems()
 
         self.setCentralWidget(None)
-        # self.setCentralWidget(self.viewer_tabs)
-
         self.create_menu_bar()
         self.create_tool_bars()
         self.create_status_bar()
@@ -120,7 +110,6 @@ class MainWindow(QMainWindow):
         working_area.addWidget(self.menu_widget)
         working_area.addWidget(self.viewer_tabs)
         working_area.setSizes([100,400])
-        # self.menu_widget.setVisible(False)
         
     def load_user_preferences(self):
         self.set_theme(self.user_config.theme)
@@ -128,9 +117,9 @@ class MainWindow(QMainWindow):
     def create_menu_bar(self):
         self.menu_bar = self.menuBar()
         self.menu_bar.addMenu(ProjectMenu(self))
-        self.menu_bar.addMenu(SettingsMenu(self))
+        self.menu_bar.addMenu(VisibilitySettingsMenu(self))
         self.menu_bar.addMenu(MesherMenu(self))
-        self.menu_bar.addMenu(ViewsMenu(self))
+        # self.menu_bar.addMenu(ViewsMenu(self))
         self.menu_bar.addMenu(ViewModeMenu(self))
         self.menu_bar.addMenu(HelpMenu(self))
 

@@ -8,8 +8,10 @@ import configparser
 import numpy as np
 import os
 
-from vibra.engine.properties.material import Material
 from vibra.libraries.default_libraries import default_material_library
+from vibra.utils.interface_functions import get_main_window
+
+from vibra.engine.properties.material import Material
 from vibra.interface.general.pick_color_input import PickColorInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
@@ -28,6 +30,7 @@ class MaterialInput(QDialog):
         super().__init__(*args, **kwargs)
 
         uic.loadUi(Path('data/ui_files/model/structural/material_input.ui'), self)
+        self.main_window = get_main_window()
 
         icon_path = str(Path('data/icons/logo_vibra.png'))
         self.icon = QIcon(icon_path)
@@ -35,22 +38,32 @@ class MaterialInput(QDialog):
         
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-
+        #
         # self.opv = opv
         # self.opv.setInputObject(self)
         # self.lines_ids = self.opv.getListPickedLines()
-
         # self.project = project
         # self.preprocessor = project.preprocessor
         # self.before_run = project.get_pre_solution_model_checks()
+        #
+        self._reset_variables()
+        self._create_material_library_file()
+        self._define_Qt_variables()  
+        self._create_connections()
+        self.update()
+        self.loadList()
+        self.exec()
 
+
+    def _reset_variables(self):
+        #
         self.material_path = Path("vibra/material_library.dat")
-        
+        #
         self.clicked_item = None
         self.material = None
         self.flagAll = False
-        self.flagSelectedLines = False
-
+        self.flagSelectedBodies = False
+        #
         self.adding = False
         self.editing = False
         self.list_names = []
@@ -60,16 +73,12 @@ class MaterialInput(QDialog):
         self.temp_material_id = ""
         self.temp_material_color = ""
         self.dict_inputs = {}
-        # self.dict_tag_to_entity = self.project.preprocessor.dict_tag_to_entity
-        self.create_material_library_file()
-        self._define_Qt_variables()  
-        self._create_connections()
-        self.loadList()
-        self.exec_()
 
-    def create_material_library_file(self):
+
+    def _create_material_library_file(self):
         if not os.path.exists(self.material_path):
             default_material_library(self.material_path)
+
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
@@ -77,22 +86,25 @@ class MaterialInput(QDialog):
         elif event.key() == Qt.Key_Escape:
             self.close()
 
+
     def write_ids(self, list_ids):
         text = ""
         for _id in list_ids:
             text += "{}, ".format(_id)
         self.lineEdit_selected_ID.setText(text)
 
-    # def update(self):
-    #     self.lines_ids = self.opv.getListPickedLines()
-    #     if self.lines_ids != []:
-    #         self.write_ids(self.lines_ids)
-    #         self.radioButton_selected_lines.setChecked(True)
-    #         self.lineEdit_selected_ID.setEnabled(True)
-    #     else:
-    #         self.lineEdit_selected_ID.setText("All lines")
-    #         self.radioButton_all.setChecked(True)
-    #         self.lineEdit_selected_ID.setEnabled(False)
+
+    def update(self):
+        self.lines_ids = []#self.opv.getListPickedLines()
+        if self.lines_ids != []:
+            self.write_ids(self.lines_ids)
+            self.radioButton_selected_bodies.setChecked(True)
+            self.lineEdit_selected_ID.setEnabled(True)
+        else:
+            self.lineEdit_selected_ID.setText("All bodies")
+            self.radioButton_all_bodies.setChecked(True)
+            self.lineEdit_selected_ID.setEnabled(False)
+
 
     def _define_Qt_variables(self):
 
@@ -144,12 +156,12 @@ class MaterialInput(QDialog):
 
         # if self.lines_ids != []:
         #     self.write_ids(self.lines_ids)
-        #     self.radioButton_selected_lines.setChecked(True)
+        #     self.radioButton_selected_bodies.setChecked(True)
 
         # else:
-        #     self.lineEdit_selected_ID.setText("All lines")
+        #     self.lineEdit_selected_ID.setText("All bodies")
         #     self.lineEdit_selected_ID.setEnabled(False)
-        #     self.radioButton_all.setChecked(True)
+        #     self.radioButton_all_bodies.setChecked(True)
 
         # QPushButton objects
         self.pushButton_pickColor_add = self.findChild(QPushButton, 'pushButton_pickColor_add') 
@@ -162,10 +174,10 @@ class MaterialInput(QDialog):
         self.pushButton_reset_library = self.findChild(QPushButton, 'pushButton_reset_library') 
 
         # QRadioButton objects
-        self.radioButton_all = self.findChild(QRadioButton, 'radioButton_all')
-        self.radioButton_selected_lines = self.findChild(QRadioButton, 'radioButton_selected_lines')
-        self.flagAll = self.radioButton_all.isChecked()
-        self.flagSelectedLines = self.radioButton_selected_lines.isChecked()
+        self.radioButton_all_bodies = self.findChild(QRadioButton, 'radioButton_all_bodies')
+        self.radioButton_selected_bodies = self.findChild(QRadioButton, 'radioButton_selected_bodies')
+        self.flagAll = self.radioButton_all_bodies.isChecked()
+        self.flagSelectedBodies = self.radioButton_selected_bodies.isChecked()
 
         # QTabWidget objects
         self.tabWidget_material = self.findChild(QTabWidget, 'tabWidget_material')
@@ -181,9 +193,9 @@ class MaterialInput(QDialog):
 
 
     def _create_connections(self):
-
+        #
         self.comboBox_material_id.currentIndexChanged.connect(self.get_comboBox_index)
-        
+        #
         self.pushButton_reset_library.clicked.connect(self.reset_library_to_default)
         self.pushButton_confirm_material_removal.clicked.connect(self.confirm_material_removal)
         self.pushButton_confirm_material_edition.clicked.connect(self.check_edit_material)
@@ -192,10 +204,10 @@ class MaterialInput(QDialog):
         self.pushButton_confirm.clicked.connect(self.confirm_material_attribution)
         self.pushButton_pickColor_edit.clicked.connect(self.pick_color_edit)
         self.pushButton_pickColor_add.clicked.connect(self.pick_color_add)
-
-        self.radioButton_all.toggled.connect(self.radioButtonEvent)
-        self.radioButton_selected_lines.toggled.connect(self.radioButtonEvent)
-
+        #
+        self.radioButton_all_bodies.toggled.connect(self.radioButtonEvent)
+        self.radioButton_selected_bodies.toggled.connect(self.radioButtonEvent)
+        #
         self.tabWidget_material.currentChanged.connect(self.tabEvent_)
         self.treeWidget.itemClicked.connect(self.on_click_item)
         self.treeWidget.itemDoubleClicked.connect(self.on_doubleclick_item)
@@ -257,8 +269,9 @@ class MaterialInput(QDialog):
         self.adding = False
         self.editing = True
         if read.complete:
-            str_color = str(read.color).replace(" ", "")#[1:-1]
+            str_color = str(read.color).replace(" ", "")
             self.lineEdit_color_edit.setText(str_color)
+            self.lineEdit_color_edit.setStyleSheet(f"background-color: rgb({str_color[1:-1]})")
             if self.check_color_input(self.lineEdit_color_edit):
                 self.lineEdit_color_edit.setText("")
                 PrintMessageInput([self.title, self.message, window_title])
@@ -281,35 +294,36 @@ class MaterialInput(QDialog):
             thermal_expansion_coefficient = float(self.clicked_item.text(5))
             color = self.clicked_item.text(6)
             
-            new_material = Material(name, 
-                                    density,
-                                    poisson_ratio=poisson, 
-                                    young_modulus=young, 
-                                    identifier=identifier, 
-                                    thermal_expansion_coefficient=thermal_expansion_coefficient, 
+            new_material = Material(name=name,
+                                    identifier=identifier,
+                                    density=density,
+                                    poisson_ratio=poisson,
+                                    young_modulus=young,
+                                    thermal_expansion_coefficient=thermal_expansion_coefficient,
                                     color=color)
             
             self.material = new_material
             
-            if self.flagSelectedLines:
-
+            if self.flagSelectedBodies:
+                #TODO: check existing bodies to set material
+                return
                 lineEdit = self.lineEdit_selected_ID.text()
                 self.stop, self.lines_typed = self.before_run.check_input_LineID(lineEdit)
                 if self.stop:
                     return True 
                                
-                self.project.set_material_by_lines(self.lines_typed, self.material)
-                print("[Set Material] - {} defined in the entities {}".format(self.material.name, self.lines_typed))
+                self.main_window.project.set_material(self.lines_typed, self.material)
+                print("[Set Material] - {} has been defined at the bodies {}.".format(self.material.name, self.lines_typed))
             
             else:
 
-                self.project.set_material_to_all_lines(self.material)       
-                print("[Set Material] - {} defined in all entities".format(self.material.name))
+                self.main_window.project.set_material(self.material)       
+                print("[Set Material] - {} has been defined to all bodies.".format(self.material.name))
 
             self.close()
 
         except Exception as error_log:
-            self.title = "ERROR WITH THE MATERIAL LIST DATA"
+            self.title = "MATERIAL LIST DATA ERROR"
             self.message = str(error_log)
             PrintMessageInput([self.title, self.message, window_title])
             return
@@ -662,17 +676,16 @@ class MaterialInput(QDialog):
         self.confirm_material_attribution()
     
     def radioButtonEvent(self):
-        return
-        self.flagAll = self.radioButton_all.isChecked()
-        self.flagSelectedLines = self.radioButton_selected_lines.isChecked()
-        if self.flagSelectedLines:
+        self.flagAll = self.radioButton_all_bodies.isChecked()
+        self.flagSelectedBodies = self.radioButton_selected_bodies.isChecked()
+        if self.flagSelectedBodies:
             self.lineEdit_selected_ID.setEnabled(True)
             if self.lines_ids != []:
                 self.write_ids(self.lines_ids)
             else:
                 self.lineEdit_selected_ID.setText("")
         elif self.flagAll:
-            self.lineEdit_selected_ID.setText("All lines")
+            self.lineEdit_selected_ID.setText("All bodies")
             self.lineEdit_selected_ID.setEnabled(False)
 
     def selected_material_to_remove(self):
