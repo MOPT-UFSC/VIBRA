@@ -168,7 +168,7 @@ class MainWindow(QMainWindow):
         path, check = QFileDialog.getOpenFileName(
             self,
             "Open File",
-            filter="Geometry Files (*.stp; *.step; *.iges)",
+            filter="Geometry Files (*.stp *.step *.iges)",
         )
 
         if not check:
