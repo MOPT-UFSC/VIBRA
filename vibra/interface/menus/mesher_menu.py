@@ -64,3 +64,4 @@ class MesherMenu(QMenu):
         generate_mesh = load_function(main_window.project.generate_mesh, main_window)
         generate_mesh()
         main_window.viewer_tabs.show_mesh()
+        main_window.viewer_tabs.update_plots()
