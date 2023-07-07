@@ -1,20 +1,24 @@
 import logging
 from pathlib import Path
 from time import sleep
-
+#
 from vibra.engine.model import Model
-from vibra.engine.properties.model_properties import ModelProperty
+from vibra.engine.assemblers.modal_assembler import ModalAssembler
+from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.engine.solvers.example_solver import ExampleSolver
+#
 from vibra.utils.progress_status import ProgressStatus
+
 
 
 class Project:
     def __init__(self):
         self.reset_variables()
         self.model = Model()
-        self.model_properties = ModelProperty()
         self.example_solver = ExampleSolver()
-    
+        self.modal_assembler = ModalAssembler(self.model)
+        self.modal_solver = ModalSolver(self.modal_assembler)
+
     def reset_variables(self):
         self.name = "Project"
         self.geometry_path = ""
@@ -65,16 +69,19 @@ class Project:
         self.set_model(self.model)
 
     def set_model(self, model):
-        # self.model = model
         self.example_solver.set_model(model)
 
     def set_analysis_data(self, data):
         self.analysis_data = data
         self.example_solver.set_analysis_data(data)
-        
+
     def solve_example(self):
-        self.example_solver.set_model(self.model)
-        self.example_solver.solve()
+        pass
+        # self.example_solver.solve()
+
+    def solve_modal_acoustic(self):
+        self.modal_assembler.assemble_global_matrices()
+        self.modal_solver.solve()
 
     def long_function(self):
         for i in range(20):

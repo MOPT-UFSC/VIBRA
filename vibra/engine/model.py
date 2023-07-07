@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 
 from vibra.engine.mesher.mesh import Mesh
+from vibra.engine.properties.model_properties import ModelProperty
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 
@@ -13,7 +14,9 @@ class ModelStatus:
 
 class Model:
     def __init__(self):
-        #
+        self.reset_variables()
+        
+    def reset_variables(self):
         self.material = None
         self.fluid = None
         self.mesh = None
@@ -21,9 +24,13 @@ class Model:
         self.geometry_path = ""
         self.mesh_setup = None
         self.mesh = None
+        self.properties = ModelProperty()
 
     def set_geometry_path(self, path):
         self.geometry_path = Path(path)
+    
+    def set_properties(self, properties):
+        self.properties = properties
 
     def set_mesh_setup(self, mesh_setup):
         self.mesh_setup = mesh_setup
@@ -48,11 +55,11 @@ class Model:
             PrintMessageInput([title, message, window_title])
             return
         #
-        self.mesh = Mesh.from_cad(self.geometry_path, **self.mesh_setup)
+        self.mesh = Mesh.from_cad(self.geometry_path, **self.mesh_setup)    
 
     def set_material(self, material):
-        self.material = material
+        self.properties.set_material(material)
 
     def set_fluid(self, fluid):
-        self.fluid = fluid
-    
+        self.properties.set_fluid(fluid)
+        print(fluid)

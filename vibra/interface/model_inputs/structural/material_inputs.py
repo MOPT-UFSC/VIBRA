@@ -321,7 +321,7 @@ class MaterialInput(QDialog):
             
             else:
 
-                self.main_window.project.model_properties.set_material(self.material)       
+                self.main_window.project.set_material(self.material)       
                 print("[Set Material] - {} has been defined to all bodies.".format(self.material.name))
 
             self.close()

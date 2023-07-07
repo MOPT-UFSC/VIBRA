@@ -5,7 +5,7 @@ from dataclasses import dataclass
 class Fluid:
     name: str
     identifier: int
-    color: list
+    color: str
     fluid_density: float
     speed_of_sound: float
     isentropic_exponent: float = 0.0
@@ -14,3 +14,7 @@ class Fluid:
     dynamic_viscosity: float = 0.0
     temperature: float = 0.0
     pressure: float = 0.0
+
+    @property
+    def impedance(self):
+        return self.fluid_density*self.speed_of_sound

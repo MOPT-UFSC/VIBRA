@@ -1019,9 +1019,9 @@ class FluidInput(QDialog):
 
             name = self.clicked_item.text(0)
             identifier = int(self.clicked_item.text(1))
-            color = self.clicked_item.text(2)
-            fluid_density = float(self.clicked_item.text(3))
-            speed_of_sound = float(self.clicked_item.text(4))
+            fluid_density = float(self.clicked_item.text(2))
+            speed_of_sound = float(self.clicked_item.text(3))
+            color = self.clicked_item.text(5)
             
             title = "Empty entries in fluid properties"
             message = "Please, it is necessary update the fluid properties or select another fluid in the list " 
@@ -1084,7 +1084,7 @@ class FluidInput(QDialog):
                     print("[Set Fluid] - {} defined at {} bodies".format(self.fluid.name, len(self.bodies_typed)))
 
             elif self.flagAll:
-                self.main_window.project.model_properties.set_fluid(self.fluid)  
+                self.main_window.project.set_fluid(self.fluid)  
                 print("[Set Fluid] - {} defined at all bodies.".format(self.fluid.name))
                 # self.opv.changeColorEntities(bodies, self.fluid.getNormalizedColorRGB())
 
