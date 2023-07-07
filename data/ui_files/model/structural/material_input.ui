@@ -86,16 +86,19 @@
     <property name="font">
      <font>
       <family>Arial</family>
-      <pointsize>11</pointsize>
-      <weight>75</weight>
+      <pointsize>12</pointsize>
+      <weight>50</weight>
       <italic>true</italic>
-      <bold>true</bold>
+      <bold>false</bold>
      </font>
     </property>
     <property name="currentIndex">
      <number>0</number>
     </property>
     <widget class="QWidget" name="tab_add_material">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt; font-style:normal;&quot;&gt;Add a new material to the list&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <attribute name="title">
       <string>Add</string>
      </attribute>
@@ -103,7 +106,7 @@
       <property name="geometry">
        <rect>
         <x>356</x>
-        <y>128</y>
+        <y>120</y>
         <width>113</width>
         <height>26</height>
        </rect>
@@ -140,7 +143,7 @@
       <property name="geometry">
        <rect>
         <x>162</x>
-        <y>108</y>
+        <y>100</y>
         <width>173</width>
         <height>20</height>
        </rect>
@@ -151,7 +154,7 @@
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Young Modulus [GPa]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -161,7 +164,7 @@
       <property name="geometry">
        <rect>
         <x>356</x>
-        <y>68</y>
+        <y>60</y>
         <width>113</width>
         <height>26</height>
        </rect>
@@ -199,13 +202,13 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
       <property name="geometry">
        <rect>
         <x>24</x>
-        <y>48</y>
+        <y>40</y>
         <width>120</width>
         <height>20</height>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-style:normal;&quot;&gt;Material name&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -215,7 +218,7 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
       <property name="geometry">
        <rect>
         <x>192</x>
-        <y>68</y>
+        <y>60</y>
         <width>113</width>
         <height>26</height>
        </rect>
@@ -253,7 +256,7 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
       <property name="geometry">
        <rect>
         <x>28</x>
-        <y>68</y>
+        <y>60</y>
         <width>113</width>
         <height>26</height>
        </rect>
@@ -291,7 +294,7 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
       <property name="geometry">
        <rect>
         <x>24</x>
-        <y>108</y>
+        <y>100</y>
         <width>120</width>
         <height>20</height>
        </rect>
@@ -300,13 +303,13 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
        <font>
         <family>Arial</family>
         <pointsize>11</pointsize>
-        <weight>75</weight>
+        <weight>50</weight>
         <italic>false</italic>
-        <bold>true</bold>
+        <bold>false</bold>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-style:normal;&quot;&gt;Material ID&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -316,13 +319,13 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
       <property name="geometry">
        <rect>
         <x>378</x>
-        <y>48</y>
+        <y>40</y>
         <width>69</width>
         <height>20</height>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-style:normal;&quot;&gt;Poisson&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -332,7 +335,7 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
       <property name="geometry">
        <rect>
         <x>192</x>
-        <y>128</y>
+        <y>120</y>
         <width>113</width>
         <height>26</height>
        </rect>
@@ -370,13 +373,13 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
       <property name="geometry">
        <rect>
         <x>174</x>
-        <y>48</y>
+        <y>40</y>
         <width>149</width>
         <height>20</height>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-style:normal;&quot;&gt;Density [kg/m³]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -389,7 +392,7 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
       <property name="geometry">
        <rect>
         <x>202</x>
-        <y>172</y>
+        <y>166</y>
         <width>260</width>
         <height>35</height>
        </rect>
@@ -448,35 +451,11 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
        <bool>false</bool>
       </property>
      </widget>
-     <widget class="QLabel" name="Add_new_mat_label">
-      <property name="geometry">
-       <rect>
-        <x>176</x>
-        <y>10</y>
-        <width>309</width>
-        <height>25</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>11</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:14pt; font-style:normal;&quot;&gt;Add a new Material to the list:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-      </property>
-      <property name="textFormat">
-       <enum>Qt::AutoText</enum>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-     </widget>
      <widget class="QLineEdit" name="lineEdit_thermal_expansion_coefficient">
       <property name="geometry">
        <rect>
         <x>520</x>
-        <y>68</y>
+        <y>60</y>
         <width>113</width>
         <height>26</height>
        </rect>
@@ -514,13 +493,13 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
       <property name="geometry">
        <rect>
         <x>356</x>
-        <y>108</y>
+        <y>100</y>
         <width>113</width>
         <height>20</height>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Color&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -530,13 +509,13 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
       <property name="geometry">
        <rect>
         <x>500</x>
-        <y>48</y>
+        <y>40</y>
         <width>152</width>
         <height>20</height>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-style:normal;&quot;&gt;coefficient [m/K]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -546,13 +525,13 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
       <property name="geometry">
        <rect>
         <x>500</x>
-        <y>28</y>
+        <y>20</y>
         <width>152</width>
         <height>20</height>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-style:normal;&quot;&gt;Thermal expansion&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -564,8 +543,8 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
       </property>
       <property name="geometry">
        <rect>
-        <x>8</x>
-        <y>178</y>
+        <x>16</x>
+        <y>170</y>
         <width>120</width>
         <height>30</height>
        </rect>
@@ -628,7 +607,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <property name="geometry">
        <rect>
         <x>474</x>
-        <y>128</y>
+        <y>120</y>
         <width>100</width>
         <height>26</height>
        </rect>
@@ -667,7 +646,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <property name="geometry">
        <rect>
         <x>28</x>
-        <y>128</y>
+        <y>120</y>
         <width>113</width>
         <height>26</height>
        </rect>
@@ -719,6 +698,9 @@ background-color: rgb(255, 255, 255);</string>
      </widget>
     </widget>
     <widget class="QWidget" name="tab_edit_material">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt; font-style:normal;&quot;&gt;Edit a selected material from list&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <attribute name="title">
       <string>Edit</string>
      </attribute>
@@ -726,7 +708,7 @@ background-color: rgb(255, 255, 255);</string>
       <property name="geometry">
        <rect>
         <x>192</x>
-        <y>68</y>
+        <y>60</y>
         <width>113</width>
         <height>26</height>
        </rect>
@@ -760,13 +742,13 @@ background-color: rgb(255, 255, 255);</string>
       <property name="geometry">
        <rect>
         <x>500</x>
-        <y>28</y>
+        <y>20</y>
         <width>152</width>
         <height>20</height>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-style:normal;&quot;&gt;Thermal expansion&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -776,7 +758,7 @@ background-color: rgb(255, 255, 255);</string>
       <property name="geometry">
        <rect>
         <x>520</x>
-        <y>68</y>
+        <y>60</y>
         <width>113</width>
         <height>26</height>
        </rect>
@@ -810,13 +792,13 @@ background-color: rgb(255, 255, 255);</string>
       <property name="geometry">
        <rect>
         <x>174</x>
-        <y>48</y>
+        <y>40</y>
         <width>149</width>
         <height>20</height>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-style:normal;&quot;&gt;Density [kg/m³]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -826,7 +808,7 @@ background-color: rgb(255, 255, 255);</string>
       <property name="geometry">
        <rect>
         <x>192</x>
-        <y>128</y>
+        <y>120</y>
         <width>113</width>
         <height>26</height>
        </rect>
@@ -860,7 +842,7 @@ background-color: rgb(255, 255, 255);</string>
       <property name="geometry">
        <rect>
         <x>162</x>
-        <y>108</y>
+        <y>100</y>
         <width>173</width>
         <height>20</height>
        </rect>
@@ -871,7 +853,7 @@ background-color: rgb(255, 255, 255);</string>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Young Modulus [GPa]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -884,7 +866,7 @@ background-color: rgb(255, 255, 255);</string>
       <property name="geometry">
        <rect>
         <x>28</x>
-        <y>68</y>
+        <y>60</y>
         <width>113</width>
         <height>26</height>
        </rect>
@@ -918,7 +900,7 @@ background-color: rgb(255, 255, 255);</string>
       <property name="geometry">
        <rect>
         <x>356</x>
-        <y>68</y>
+        <y>60</y>
         <width>113</width>
         <height>26</height>
        </rect>
@@ -952,13 +934,13 @@ background-color: rgb(255, 255, 255);</string>
       <property name="geometry">
        <rect>
         <x>500</x>
-        <y>48</y>
+        <y>40</y>
         <width>152</width>
         <height>20</height>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-style:normal;&quot;&gt;coefficient [m/K]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -968,7 +950,7 @@ background-color: rgb(255, 255, 255);</string>
       <property name="geometry">
        <rect>
         <x>356</x>
-        <y>128</y>
+        <y>120</y>
         <width>113</width>
         <height>26</height>
        </rect>
@@ -1005,7 +987,7 @@ background-color: rgb(255, 255, 255);</string>
       <property name="geometry">
        <rect>
         <x>28</x>
-        <y>128</y>
+        <y>120</y>
         <width>113</width>
         <height>26</height>
        </rect>
@@ -1039,13 +1021,13 @@ background-color: rgb(255, 255, 255);</string>
       <property name="geometry">
        <rect>
         <x>378</x>
-        <y>48</y>
+        <y>40</y>
         <width>69</width>
         <height>20</height>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-style:normal;&quot;&gt;Poisson&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1055,13 +1037,13 @@ background-color: rgb(255, 255, 255);</string>
       <property name="geometry">
        <rect>
         <x>356</x>
-        <y>108</y>
+        <y>100</y>
         <width>113</width>
         <height>20</height>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Color&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1074,7 +1056,7 @@ background-color: rgb(255, 255, 255);</string>
       <property name="geometry">
        <rect>
         <x>202</x>
-        <y>172</y>
+        <y>166</y>
         <width>260</width>
         <height>35</height>
        </rect>
@@ -1133,35 +1115,11 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
        <bool>false</bool>
       </property>
      </widget>
-     <widget class="QLabel" name="Add_new_mat_label_2">
-      <property name="geometry">
-       <rect>
-        <x>164</x>
-        <y>6</y>
-        <width>329</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>11</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:14pt; font-style:normal;&quot;&gt;Edit a selected Material from list:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-      </property>
-      <property name="textFormat">
-       <enum>Qt::AutoText</enum>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-     </widget>
      <widget class="QPushButton" name="pushButton_pickColor_edit">
       <property name="geometry">
        <rect>
         <x>474</x>
-        <y>128</y>
+        <y>120</y>
         <width>100</width>
         <height>26</height>
        </rect>
@@ -1200,13 +1158,13 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <property name="geometry">
        <rect>
         <x>24</x>
-        <y>48</y>
+        <y>40</y>
         <width>120</width>
         <height>20</height>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-style:normal;&quot;&gt;Material name&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1216,13 +1174,13 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <property name="geometry">
        <rect>
         <x>24</x>
-        <y>108</y>
+        <y>100</y>
         <width>120</width>
         <height>20</height>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-style:normal;&quot;&gt;Material ID&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1233,30 +1191,6 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
      <attribute name="title">
       <string>Delete</string>
      </attribute>
-     <widget class="QLabel" name="Edit_mat_label_2">
-      <property name="geometry">
-       <rect>
-        <x>146</x>
-        <y>8</y>
-        <width>369</width>
-        <height>29</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>11</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:14pt; font-style:normal;&quot;&gt;Remove a selected Material from list:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-      </property>
-      <property name="textFormat">
-       <enum>Qt::AutoText</enum>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-     </widget>
      <widget class="QPushButton" name="pushButton_confirm_material_removal">
       <property name="enabled">
        <bool>true</bool>
@@ -1264,7 +1198,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <property name="geometry">
        <rect>
         <x>202</x>
-        <y>172</y>
+        <y>166</y>
         <width>260</width>
         <height>35</height>
        </rect>
@@ -1327,13 +1261,13 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <property name="geometry">
        <rect>
         <x>500</x>
-        <y>28</y>
+        <y>20</y>
         <width>152</width>
         <height>20</height>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-style:normal;&quot;&gt;Thermal expansion&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1346,7 +1280,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <property name="geometry">
        <rect>
         <x>356</x>
-        <y>128</y>
+        <y>120</y>
         <width>113</width>
         <height>26</height>
        </rect>
@@ -1383,7 +1317,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <property name="geometry">
        <rect>
         <x>356</x>
-        <y>68</y>
+        <y>60</y>
         <width>113</width>
         <height>26</height>
        </rect>
@@ -1417,13 +1351,13 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <property name="geometry">
        <rect>
         <x>500</x>
-        <y>48</y>
+        <y>40</y>
         <width>152</width>
         <height>20</height>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-style:normal;&quot;&gt;coefficient [m/K]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1436,7 +1370,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <property name="geometry">
        <rect>
         <x>28</x>
-        <y>128</y>
+        <y>120</y>
         <width>113</width>
         <height>26</height>
        </rect>
@@ -1473,7 +1407,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <property name="geometry">
        <rect>
         <x>28</x>
-        <y>68</y>
+        <y>60</y>
         <width>113</width>
         <height>26</height>
        </rect>
@@ -1507,13 +1441,13 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <property name="geometry">
        <rect>
         <x>174</x>
-        <y>48</y>
+        <y>40</y>
         <width>149</width>
         <height>20</height>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-style:normal;&quot;&gt;Density [kg/m³]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1526,7 +1460,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <property name="geometry">
        <rect>
         <x>192</x>
-        <y>68</y>
+        <y>60</y>
         <width>113</width>
         <height>26</height>
        </rect>
@@ -1563,7 +1497,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <property name="geometry">
        <rect>
         <x>192</x>
-        <y>128</y>
+        <y>120</y>
         <width>113</width>
         <height>26</height>
        </rect>
@@ -1600,7 +1534,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <property name="geometry">
        <rect>
         <x>520</x>
-        <y>68</y>
+        <y>60</y>
         <width>113</width>
         <height>26</height>
        </rect>
@@ -1634,7 +1568,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <property name="geometry">
        <rect>
         <x>162</x>
-        <y>108</y>
+        <y>100</y>
         <width>173</width>
         <height>20</height>
        </rect>
@@ -1643,13 +1577,13 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
        <font>
         <family>Arial</family>
         <pointsize>11</pointsize>
-        <weight>75</weight>
+        <weight>50</weight>
         <italic>false</italic>
-        <bold>true</bold>
+        <bold>false</bold>
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Young Modulus [GPa]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1659,13 +1593,13 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <property name="geometry">
        <rect>
         <x>356</x>
-        <y>108</y>
+        <y>100</y>
         <width>113</width>
         <height>20</height>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Color&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1675,13 +1609,13 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <property name="geometry">
        <rect>
         <x>378</x>
-        <y>48</y>
+        <y>40</y>
         <width>69</width>
         <height>20</height>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-style:normal;&quot;&gt;Poisson&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1691,13 +1625,13 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <property name="geometry">
        <rect>
         <x>24</x>
-        <y>108</y>
+        <y>100</y>
         <width>120</width>
         <height>20</height>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-style:normal;&quot;&gt;Material ID&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1707,13 +1641,13 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <property name="geometry">
        <rect>
         <x>24</x>
-        <y>48</y>
+        <y>40</y>
         <width>120</width>
         <height>20</height>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-style:normal;&quot;&gt;Material name&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1946,14 +1880,14 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
     <property name="font">
      <font>
       <family>Arial</family>
-      <pointsize>11</pointsize>
+      <pointsize>12</pointsize>
       <weight>75</weight>
       <italic>false</italic>
       <bold>true</bold>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+     <string notr="true"/>
     </property>
     <property name="text">
      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Attribute material to:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -2152,7 +2086,7 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">font: 75 italic bold 10pt &quot;Arial&quot;;</string>
+     <string notr="true"/>
     </property>
     <property name="frameShape">
      <enum>QFrame::Panel</enum>
@@ -2167,7 +2101,7 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
      <bool>true</bool>
     </property>
     <property name="alternatingRowColors">
-     <bool>true</bool>
+     <bool>false</bool>
     </property>
     <property name="indentation">
      <number>0</number>
@@ -2176,35 +2110,119 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
      <property name="text">
       <string>Name</string>
      </property>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <italic>true</italic>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="textAlignment">
+      <set>AlignCenter</set>
+     </property>
     </column>
     <column>
      <property name="text">
       <string>ID</string>
+     </property>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <italic>true</italic>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="textAlignment">
+      <set>AlignCenter</set>
      </property>
     </column>
     <column>
      <property name="text">
       <string>Density [kg/m³]</string>
      </property>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <italic>true</italic>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="textAlignment">
+      <set>AlignCenter</set>
+     </property>
     </column>
     <column>
      <property name="text">
       <string>Young Modulus [GPa]</string>
+     </property>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <italic>true</italic>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="textAlignment">
+      <set>AlignCenter</set>
      </property>
     </column>
     <column>
      <property name="text">
       <string>Poisson</string>
      </property>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <italic>true</italic>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="textAlignment">
+      <set>AlignCenter</set>
+     </property>
     </column>
     <column>
      <property name="text">
       <string>Expansion coefficient [m/K]</string>
      </property>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <italic>true</italic>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="textAlignment">
+      <set>AlignCenter</set>
+     </property>
     </column>
     <column>
      <property name="text">
       <string>Color</string>
+     </property>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <italic>true</italic>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="textAlignment">
+      <set>AlignCenter</set>
      </property>
     </column>
    </widget>

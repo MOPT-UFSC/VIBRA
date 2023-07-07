@@ -31,6 +31,7 @@ class MaterialInput(QDialog):
 
         uic.loadUi(Path('data/ui_files/model/structural/material_input.ui'), self)
         self.main_window = get_main_window()
+        self.project = self.main_window.get_project()
 
         icon_path = str(Path('data/icons/logo_vibra.png'))
         self.icon = QIcon(icon_path)
@@ -38,10 +39,11 @@ class MaterialInput(QDialog):
         
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
+        self.setWindowTitle("Set: material")
         #
         # self.opv = opv
         # self.opv.setInputObject(self)
-        # self.lines_ids = self.opv.getListPickedLines()
+        # self.bodies_ids = self.opv.getListPickedLines()
         # self.project = project
         # self.preprocessor = project.preprocessor
         # self.before_run = project.get_pre_solution_model_checks()
@@ -73,9 +75,11 @@ class MaterialInput(QDialog):
         self.temp_material_id = ""
         self.temp_material_color = ""
         self.dict_inputs = {}
+        self.dict_tag_to_entity = {}
 
 
     def _create_material_library_file(self):
+        self.project.set_material_list_path(self.material_path)
         if not os.path.exists(self.material_path):
             default_material_library(self.material_path)
 
@@ -95,9 +99,9 @@ class MaterialInput(QDialog):
 
 
     def update(self):
-        self.lines_ids = []#self.opv.getListPickedLines()
-        if self.lines_ids != []:
-            self.write_ids(self.lines_ids)
+        self.bodies_ids = []#self.opv.getListPickedLines()
+        if self.bodies_ids != []:
+            self.write_ids(self.bodies_ids)
             self.radioButton_selected_bodies.setChecked(True)
             self.lineEdit_selected_ID.setEnabled(True)
         else:
@@ -154,15 +158,6 @@ class MaterialInput(QDialog):
         #
         self.create_lists_of_lineEdit()
 
-        # if self.lines_ids != []:
-        #     self.write_ids(self.lines_ids)
-        #     self.radioButton_selected_bodies.setChecked(True)
-
-        # else:
-        #     self.lineEdit_selected_ID.setText("All bodies")
-        #     self.lineEdit_selected_ID.setEnabled(False)
-        #     self.radioButton_all_bodies.setChecked(True)
-
         # QPushButton objects
         self.pushButton_pickColor_add = self.findChild(QPushButton, 'pushButton_pickColor_add') 
         self.pushButton_pickColor_edit = self.findChild(QPushButton, 'pushButton_pickColor_edit')
@@ -178,6 +173,15 @@ class MaterialInput(QDialog):
         self.radioButton_selected_bodies = self.findChild(QRadioButton, 'radioButton_selected_bodies')
         self.flagAll = self.radioButton_all_bodies.isChecked()
         self.flagSelectedBodies = self.radioButton_selected_bodies.isChecked()
+        
+        # if self.bodies_ids != []:
+        #     self.write_ids(self.bodies_ids)
+        #     self.radioButton_selected_bodies.setChecked(True)
+
+        # else:
+        #     self.lineEdit_selected_ID.setText("All bodies")
+        #     self.lineEdit_selected_ID.setEnabled(False)
+        #     self.radioButton_all_bodies.setChecked(True)
 
         # QTabWidget objects
         self.tabWidget_material = self.findChild(QTabWidget, 'tabWidget_material')
@@ -680,8 +684,8 @@ class MaterialInput(QDialog):
         self.flagSelectedBodies = self.radioButton_selected_bodies.isChecked()
         if self.flagSelectedBodies:
             self.lineEdit_selected_ID.setEnabled(True)
-            if self.lines_ids != []:
-                self.write_ids(self.lines_ids)
+            if self.bodies_ids != []:
+                self.write_ids(self.bodies_ids)
             else:
                 self.lineEdit_selected_ID.setText("")
         elif self.flagAll:

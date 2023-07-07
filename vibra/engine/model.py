@@ -16,9 +16,11 @@ class ModelStatus:
 
 class Model:
     def __init__(self):
-        #
-        self.material = None
-        self.fluid = None
+        self.reset_variables()
+        
+    def reset_variables(self):
+        # self.material = None
+        # self.fluid = None
         self.mesh = None
         self.mesh_setup = None
         self.geometry_path = ""
@@ -26,10 +28,13 @@ class Model:
         self.mesh = None
 
         self.properties = ModelProperties()
-        self.properties.set_fluid(Fluid("Air?", density=1.2, speed_of_sound=343))
+        # self.properties.set_fluid(Fluid("Air", density=1.2, speed_of_sound=343))
 
     def set_geometry_path(self, path):
         self.geometry_path = Path(path)
+    
+    def set_properties(self, properties):
+        self.properties = properties
 
     def set_mesh_setup(self, mesh_setup):
         self.mesh_setup = mesh_setup
@@ -59,7 +64,7 @@ class Model:
         self.mesh = Mesh.from_cad(self.geometry_path, **self.mesh_setup)
 
     def set_material(self, material):
-        self.material = material
+        self.properties.set_material(material)
 
     def set_fluid(self, fluid):
-        self.fluid = fluid
+        self.properties.set_fluid(fluid)

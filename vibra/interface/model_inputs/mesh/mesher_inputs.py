@@ -1,5 +1,10 @@
 from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 from PyQt5 import uic
+
+from pathlib import Path
+from vibra.utils.interface_functions import get_main_window
 
 from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -8,12 +13,20 @@ from vibra.engine.mesher.element_type import *
 
 class MesherInputs(QDialog):
     def __init__(self, *args, **kwargs):
-        super(QDialog, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
-        uic.loadUi("data/ui_files/mesh/element_setup.ui", self)
+        uic.loadUi(Path("data/ui_files/mesh/element_setup.ui"), self)
+        self.main_window = get_main_window()
 
+        icon_path = str(Path('data/icons/logo_vibra.png'))
+        self.icon = QIcon(icon_path)
+        self.setWindowIcon(self.icon)
+
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModal)
+        self.setWindowTitle("Mesher setup")
+        
         self.complete = False
-
         self._define_qt_variables()
         self._create_connections()
         self._config_window()

@@ -4,13 +4,23 @@ from time import sleep
 
 from vibra.engine.assemblers.modal_assembler import ModalAssembler
 from vibra.engine.model import Model
+from vibra.engine.assemblers.modal_assembler import ModalAssembler
+from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.engine.solvers.example_solver import ExampleSolver
 from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.utils.progress_status import ProgressStatus
 
 
+
 class Project:
     def __init__(self):
+        self.reset_variables()
+        self.model = Model()
+        self.example_solver = ExampleSolver()
+        self.modal_assembler = ModalAssembler(self.model)
+        self.modal_solver = ModalSolver(self.modal_assembler)
+
+    def reset_variables(self):
         self.name = "Project"
         self.geometry_path = ""
         self.fluid_list_path = ""
@@ -20,6 +30,7 @@ class Project:
         self.modal_assembler = ModalAssembler(self.model)
         self.example_solver = ExampleSolver()
         self.modal_solver = ModalSolver(self.modal_assembler)
+        self.analysis_data = {}
 
     @classmethod
     def load(cls, path):
@@ -27,6 +38,18 @@ class Project:
 
     def save(self, path):
         logging.info(f"Saving project in my/save/path")
+
+    def get_fluid_list_path(self):
+        return self.fluid_list_path
+
+    def get_material_list_path(self):
+        return self.material_list_path
+
+    def set_fluid_list_path(self, path):
+        self.fluid_list_path = path
+
+    def set_material_list_path(self, path):
+        self.material_list_path = path
 
     def import_geometry(self, path):
         self.geometry_path = Path(path)
@@ -49,6 +72,7 @@ class Project:
         self.model.process_mesh()
 
     def set_analysis_data(self, data):
+        self.analysis_data = data
         self.example_solver.set_analysis_data(data)
 
     def solve_example(self):

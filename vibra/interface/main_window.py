@@ -8,7 +8,6 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from vibra.config import UserConfig
 from vibra.interface.clip_plane_widget import ClipPlaneWidget
 from vibra.interface.loading_bar import load_function
 from vibra.interface.menu_items import MenuItems
@@ -21,6 +20,8 @@ from vibra.interface.menus.views_menu import ViewsMenu
 from vibra.interface.renderer_toolbar import RendererToolbar
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_tabs import ViewerTabs
+
+from vibra.config import UserConfig
 from vibra.project import Project
 from vibra.utils.icons import load_icon
 
@@ -135,6 +136,9 @@ class MainWindow(QMainWindow):
 
     def get_user_config(self):
         return self.user_config
+    
+    def get_project(self):
+        return self.project
 
     # External functions that may be usefull
     def set_theme(self, theme: str):

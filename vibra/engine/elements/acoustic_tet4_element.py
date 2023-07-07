@@ -96,7 +96,7 @@ class ACT_TETRAHEDRON_4C(Element):
 
         fluid = self.model.properties.get_fluid(element=el_index)
 
-        rho = fluid.density
+        rho = fluid.fluid_density
         c_0 = fluid.speed_of_sound
         ie = self.connectivity[el_index, 1:] - 1
         #
