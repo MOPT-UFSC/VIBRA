@@ -1,18 +1,19 @@
-import logging
+
 import os
+import sys
+import gmsh
+import logging
+import numpy as np
 from pathlib import Path
 
-import gmsh
-import numpy as np
-
-from vibra.engine.mesher.element_type import (
-    DEFAULT_ELEMENT_TYPE,
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-    ElementType,
-)
+from vibra.engine.mesher.element_type import *#(
+#     DEFAULT_ELEMENT_TYPE,
+#     HEXAHEDRON_8,
+#     HEXAHEDRON_20,
+#     TETRAHEDRON_4,
+#     TETRAHEDRON_10,
+#     ElementType,
+# )
 from vibra.utils.progress_status import ProgressStatus
 
 
@@ -52,6 +53,7 @@ class Mesh:
         Then you can create other constructor like this and avoid a
         lot of confusing if statements in the __init__ method.
         """
+        print(element_type)
         obj = Mesh()
         obj.load_cad(
             path,
@@ -76,7 +78,10 @@ class Mesh:
         size_factor: float = 0.0,
         dimension: int = 3,
         threads: int = 1,
+        gmsh_gui: bool = True
     ):
+        _path = "C:\Repositorios\VIBRA\data\examples\script_files\script_hex_elements.txt"
+        self.basename = os.path.basename(_path)
         path = Path(path)
         gmsh.initialize("", False)
         logging.info(f"Generating mesh from {path}" + ProgressStatus(0, 100))
@@ -102,10 +107,13 @@ class Mesh:
 
         logging.info("Processing Mesh" + ProgressStatus(70, 100))
         self._process_mesh()
+        if gmsh_gui:
+            if '-nopopup' not in sys.argv:
+                gmsh.fltk.run()
         gmsh.finalize()
 
         logging.info(
-            f"Mesh created with {len(self.nodal_coordinates)} nodes"
+            f"Mesh generated with {len(self.nodal_coordinates)} nodes"
             f", {len(self.lines_connectivity)} dim 1"
             f", {len(self.faces_connectivity)} dim 2"
             f"and {len(self.solids_connectivity)} dim 3 elements" + ProgressStatus(100, 100)
@@ -142,19 +150,23 @@ class Mesh:
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("General.NumThreads", threads)
         gmsh.option.setNumber("Geometry.Tolerance", tolerance)
+        
         if size_factor != 0:
             gmsh.option.setNumber("Mesh.MeshSizeFactor", size_factor)
         else:
             gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
             gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
 
-        gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
-        gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
-        gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_type.recombination_algorithm)
-        gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", element_type.subdivision_algorithm)
-        gmsh.option.setNumber("Mesh.RecombineAll", element_type.recombine_all)
+        if "script" not in self.basename or True:
+            gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
+            gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
+            gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_type.recombination_algorithm)
+            gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", element_type.subdivision_algorithm)
+            gmsh.option.setNumber("Mesh.RecombineAll", element_type.recombine_all)
+            gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
+
         gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_type.second_order_incomplete)
-        gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
+
 
     def _process_mesh(self):
         """

@@ -10,23 +10,36 @@ class FacesActor(vtk.vtkActor):
         self.configure_appearance()
 
     def create_geometry(self):
+        #
         data = vtk.vtkPolyData()
         points = vtk.vtkPoints()
         mapper = vtk.vtkPolyDataMapper()
         point_colors = vtk.vtkUnsignedCharArray()
         cell_colors = vtk.vtkUnsignedCharArray()
-
-        data.Allocate(3 * len(self.mesh.faces_connectivity))
+        #
+        #TODO: checar as estruturas abaixo para cobrirmos todos os elementos
+        # Os elementos de superfícies terão 3 nós (linear), 6 nós (quadrático) no caso de elementos triangulares
+        # e 4 nós (linear) e 8 nós (quadrático) no caso dos elementos quadrangulares
+        #
+        nel = len(self.mesh.faces_connectivity[0, 4:])
+        face_nodes = [3, 6, 4, 8]
+        types = [vtk.VTK_TRIANGLE, vtk.VTK_QUADRATIC_TRIANGLE, vtk.VTK_QUAD, vtk.VTK_QUADRATIC_QUAD]
+        aux = dict(zip(face_nodes, types))
+        #
+        data.Allocate(nel * len(self.mesh.faces_connectivity))
         point_colors.SetNumberOfComponents(3)
         point_colors.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
-        cell_colors.SetNumberOfComponents(3)
+        cell_colors.SetNumberOfComponents(nel)
         cell_colors.SetNumberOfTuples(len(self.mesh.faces_connectivity))
 
         for _, x, y, z in self.mesh.nodal_coordinates:
             points.InsertNextPoint(x, y, z)
-
-        for a, b, c in self.mesh.faces_connectivity[:, 4:]:
-            data.InsertNextCell(vtk.VTK_TRIANGLE, 3, [a, b, c])
+        #
+        for values in list(self.mesh.faces_connectivity[:, 4:]):
+            try:
+                data.InsertNextCell(aux[nel], nel, list(values))
+            except:
+                raise NotImplementedError
 
         data.SetPoints(points)
         data.GetPointData().SetScalars(point_colors)

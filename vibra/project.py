@@ -79,6 +79,9 @@ class Project:
         pass
         # self.example_solver.solve()
 
+    def set_element_formulation(self, element):
+        self.modal_assembler.set_element_formulation(element)
+
     def solve_modal_acoustic(self):
         self.modal_assembler.assemble_global_matrices()
         self.modal_solver.solve()

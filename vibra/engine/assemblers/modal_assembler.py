@@ -5,13 +5,22 @@ from scipy.sparse import coo_matrix
 
 from vibra.engine.elements.acoustic_tet4_element import ACT_TETRAHEDRON_4C
 
+#TODO: implementar todos os elementos acústicos, para validação preciso ter todos operacionais!!!
+# o tipo de elemento pode ser acessado em self.project.model.mesh_setup["element_type"]
+
+# from vibra.engine.elements.acoustic_tet10_element import ACT_TETRAHEDRON_10C
+# from vibra.engine.elements.acoustic_hex8_element import ACT_HEXAHEDRON_8C
+# from vibra.engine.elements.acoustic_hex20_element import ACT_HEXAHEDRON_20C
 
 class ModalAssembler:
     def __init__(self, model):
+        #
         self.model = model
-
         self.stiffness_matrix = None
         self.mass_matrix = None
+
+    def set_element_formulation(self, element):
+        self.element = element
 
     def is_assembled(self):
         return (self.stiffness_matrix is not None) and (self.mass_matrix is not None)
