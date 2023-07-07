@@ -6,14 +6,7 @@ import logging
 import numpy as np
 from pathlib import Path
 
-from vibra.engine.mesher.element_type import *#(
-#     DEFAULT_ELEMENT_TYPE,
-#     HEXAHEDRON_8,
-#     HEXAHEDRON_20,
-#     TETRAHEDRON_4,
-#     TETRAHEDRON_10,
-#     ElementType,
-# )
+from vibra.engine.mesher.element_type import *
 from vibra.utils.progress_status import ProgressStatus
 
 
@@ -107,10 +100,15 @@ class Mesh:
 
         logging.info("Processing Mesh" + ProgressStatus(70, 100))
         self._process_mesh()
+        
         if gmsh_gui:
             if '-nopopup' not in sys.argv:
                 gmsh.fltk.run()
+        
         gmsh.finalize()
+
+        # self.export_nodes_coordinates("output_data/nodal_coordinates.dat")
+        # self.export_solids_connectivity("output_data/mesh_connectivitiy.dat")
 
         logging.info(
             f"Mesh generated with {len(self.nodal_coordinates)} nodes"
