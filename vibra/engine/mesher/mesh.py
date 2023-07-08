@@ -46,7 +46,6 @@ class Mesh:
         Then you can create other constructor like this and avoid a
         lot of confusing if statements in the __init__ method.
         """
-        print(element_type)
         obj = Mesh()
         obj.load_cad(
             path,
@@ -71,10 +70,11 @@ class Mesh:
         size_factor: float = 0.0,
         dimension: int = 3,
         threads: int = 1,
-        gmsh_gui: bool = True
+        gmsh_gui: bool = False
     ):
         _path = "C:\Repositorios\VIBRA\data\examples\script_files\script_hex_elements.txt"
         self.basename = os.path.basename(_path)
+
         path = Path(path)
         gmsh.initialize("", False)
         logging.info(f"Generating mesh from {path}" + ProgressStatus(0, 100))
@@ -107,8 +107,12 @@ class Mesh:
         
         gmsh.finalize()
 
-        # self.export_nodes_coordinates("output_data/nodal_coordinates.dat")
-        # self.export_solids_connectivity("output_data/mesh_connectivitiy.dat")
+        # if not os.path.exists("vibra/output_data"):
+        #     os.mkdir("vibra/output_data")
+
+        # self.export_nodes_coordinates("vibra/output_data/nodal_coordinates.dat")
+        # self.export_faces_connectivity("vibra/output_data/faces_connectivitiy.dat")
+        # self.export_solids_connectivity("vibra/output_data/solids_connectivitiy.dat")
 
         logging.info(
             f"Mesh generated with {len(self.nodal_coordinates)} nodes"

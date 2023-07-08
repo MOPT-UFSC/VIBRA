@@ -45,6 +45,6 @@ class ModalSolver:
         self.natural_frequencies = natural_frequencies
         self.modal_shape = modal_shape
 
-        print(f"Natural frequencies:{natural_frequencies}")
+        # print(f"Natural frequencies:{natural_frequencies}")
 
         return natural_frequencies, modal_shape

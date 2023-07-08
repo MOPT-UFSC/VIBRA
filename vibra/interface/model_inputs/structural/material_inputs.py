@@ -740,7 +740,6 @@ class MaterialInput(QDialog):
                 for line_id, entity in self.dict_tag_to_entity.items():
                     if entity.material is not None:
                         if entity.material.name == self.lineEdit_name_remove.text():
-                            print(entity.material.identifier, entity.tag)
                             self.project.set_material_by_lines(line_id, None)
 
                 self.treeWidget.clear()

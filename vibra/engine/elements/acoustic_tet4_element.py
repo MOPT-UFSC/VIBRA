@@ -1,8 +1,5 @@
 import numpy as np
-from scipy.sparse import csr_matrix
 
-# from scipy.sparse.linalg import eigs
-# from time import time
 from vibra.engine.elements.element import Element
 
 
@@ -11,48 +8,46 @@ def shape4TC(ssx, ttx, rrx):
     # shape functions
     phi = np.array([1 - ssx - ttx - rrx, ttx, rrx, ssx], dtype=float)
     # derivatives
-    dphi = np.array([[-1, 0, 0, 1], [-1, 1, 0, 0], [-1, 0, 1, 0]], dtype=float)
-
+    dphi = np.array([[-1, 0, 0, 1 ],
+                     [-1, 1, 0, 0 ],
+                     [-1, 0, 1, 0 ]], dtype=float)
     return phi, dphi
 
 
 def get_detJAC_and_invJAC(JAC):
     """ """
 
-    detJAC = (
-        JAC[0, 0] * JAC[1, 1] * JAC[2, 2]
-        + JAC[0, 1] * JAC[1, 2] * JAC[2, 0]
-        + JAC[0, 2] * JAC[1, 0] * JAC[2, 1]
-    ) - (
-        JAC[2, 0] * JAC[1, 1] * JAC[0, 2]
-        + JAC[2, 1] * JAC[1, 2] * JAC[0, 0]
-        + JAC[2, 2] * JAC[1, 0] * JAC[0, 1]
-    )
-
+    detJAC = (  JAC[0,0] * JAC[1,1] * JAC[2,2] + 
+                JAC[0,1] * JAC[1,2] * JAC[2,0] + 
+                JAC[0,2] * JAC[1,0] * JAC[2,1]  ) - \
+             (  JAC[2,0] * JAC[1,1] * JAC[0,2] + 
+                JAC[2,1] * JAC[1,2] * JAC[0,0] + 
+                JAC[2,2] * JAC[1,0] * JAC[0,1]  )
+    
     # adj(JAC)
-    AUJJ = np.zeros((3, 3), dtype=float)
-    AUJJ[0, 0] = 1 * ((JAC[1, 1] * JAC[2, 2]) - (JAC[2, 1] * JAC[1, 2]))
-    AUJJ[1, 0] = -1 * ((JAC[1, 0] * JAC[2, 2]) - (JAC[1, 2] * JAC[2, 0]))
-    AUJJ[2, 0] = 1 * ((JAC[1, 0] * JAC[2, 1]) - (JAC[1, 1] * JAC[2, 0]))
-    AUJJ[0, 1] = -1 * ((JAC[0, 1] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 1]))
-    AUJJ[1, 1] = 1 * ((JAC[0, 0] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 0]))
-    AUJJ[2, 1] = -1 * ((JAC[0, 0] * JAC[2, 1]) - (JAC[0, 1] * JAC[2, 0]))
-    AUJJ[0, 2] = 1 * ((JAC[0, 1] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 1]))
-    AUJJ[1, 2] = -1 * ((JAC[0, 0] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 0]))
-    AUJJ[2, 2] = 1 * ((JAC[0, 0] * JAC[1, 1]) - (JAC[0, 1] * JAC[1, 0]))
+    AUJJ = np.zeros((3,3), dtype=float)
+    AUJJ[0,0] =  1 * ((JAC[1,1] * JAC[2,2]) - (JAC[2,1] * JAC[1,2]))
+    AUJJ[1,0] = -1 * ((JAC[1,0] * JAC[2,2]) - (JAC[1,2] * JAC[2,0]))
+    AUJJ[2,0] =  1 * ((JAC[1,0] * JAC[2,1]) - (JAC[1,1] * JAC[2,0]))
+    AUJJ[0,1] = -1 * ((JAC[0,1] * JAC[2,2]) - (JAC[0,2] * JAC[2,1]))
+    AUJJ[1,1] =  1 * ((JAC[0,0] * JAC[2,2]) - (JAC[0,2] * JAC[2,0]))
+    AUJJ[2,1] = -1 * ((JAC[0,0] * JAC[2,1]) - (JAC[0,1] * JAC[2,0]))
+    AUJJ[0,2] =  1 * ((JAC[0,1] * JAC[1,2]) - (JAC[0,2] * JAC[1,1]))
+    AUJJ[1,2] = -1 * ((JAC[0,0] * JAC[1,2]) - (JAC[0,2] * JAC[1,0]))
+    AUJJ[2,2] =  1 * ((JAC[0,0] * JAC[1,1]) - (JAC[0,1] * JAC[1,0]))
 
     return detJAC, (1 / detJAC) * AUJJ
 
 
 class ACT_TETRAHEDRON_4C(Element):
-    # Element Constants
+    #
     NODES_PER_ELEMENT = 4
     DOF_PER_NODE = 1
     DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
 
     def __init__(self, model):
+        #
         self.model = model
-
         self.initialize_variables()
         self.define_integration_points()
         self.process_shape_functions_and_derivatives()
@@ -74,9 +69,10 @@ class ACT_TETRAHEDRON_4C(Element):
         con2 = (5 + 3 * np.sqrt(5)) / 20
         self.wps = 1 / 4
 
-        self.pint = np.array(
-            [[con1, con1, con1], [con1, con1, con2], [con1, con2, con1], [con2, con1, con1]]
-        )
+        self.pint = np.array([  [ con1, con1, con1 ],
+                                [ con1, con1, con2 ],
+                                [ con1, con2, con1 ],
+                                [ con2, con1, con1 ]  ])
 
     def process_shape_functions_and_derivatives(self):
         """
@@ -98,7 +94,9 @@ class ACT_TETRAHEDRON_4C(Element):
 
         rho = fluid.fluid_density
         c_0 = fluid.speed_of_sound
-        ie = self.connectivity[el_index, 1:] - 1
+        # TODO: não há necessidade de corrigir o índice zero
+        # afinal esta operação já foi realizada na classe Mesh
+        ie = self.connectivity[el_index, 1:]# - 1
         #
         JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
         detJAC, invJAC = get_detJAC_and_invJAC(JAC)

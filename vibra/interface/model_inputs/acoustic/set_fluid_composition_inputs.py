@@ -433,7 +433,6 @@ class SetFluidCompositionInput(QDialog):
                             criteria = abs(cache_temperatures[-1]-cache_temperatures[-2])/((cache_temperatures[-1]+cache_temperatures[-2])/2)
                             temperature_K = temperature_K_iter
                             self.fluid_properties["temperature"] = temperature_K
-                            # print(count, k_iter, cache_temperatures[-1], cache_temperatures[-2], criteria)
                     
                     elif self.connection_label == "suction":
                         for key_prop in ["D", "CV", "CP", "CP/CV", "W", "VIS", "TCX", "M"]:#, "PRANDTL", "TD", "KV"]:

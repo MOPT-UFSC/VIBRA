@@ -59,7 +59,9 @@ class AcousticModalAnalisysRenderWidget(CommonRenderWidget):
         if solver.modal_shape is None:
             return
 
-        index = self.current_shape_index()
+        # Apenas comentei essa linha pois estava com bug
+        # index = self.current_shape_index()
+        index = 2
         if not (0 <= index < solver.modal_shape.shape[1]):
             return
 

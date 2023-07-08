@@ -84,11 +84,11 @@ class Project:
 
     def solve_modal_acoustic(self):
         self.modal_assembler.assemble_global_matrices()
-        self.modal_solver.solve()
+        self.modal_solver.solve(modes=10)
 
     def long_function(self):
         for i in range(20):
             logging.info("long_function" + ProgressStatus(i, 20))
 
-            print(i)
+            # print(i)
             sleep(0.1)
