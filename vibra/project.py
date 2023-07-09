@@ -15,22 +15,19 @@ from vibra.utils.progress_status import ProgressStatus
 class Project:
     def __init__(self):
         self.reset_variables()
-        self.model = Model()
-        self.example_solver = ExampleSolver()
-        self.modal_assembler = ModalAssembler(self.model)
-        self.modal_solver = ModalSolver(self.modal_assembler)
 
     def reset_variables(self):
+        #
         self.name = "Project"
         self.geometry_path = ""
         self.fluid_list_path = ""
         self.material_list_path = ""
-
+        self.analysis_data = None
+        #
         self.model = Model()
-        self.modal_assembler = ModalAssembler(self.model)
-        self.example_solver = ExampleSolver()
-        self.modal_solver = ModalSolver(self.modal_assembler)
-        self.analysis_data = {}
+        self.acoustic_modal_assembler = ModalAssembler(self.model)
+        self.structural_modal_assembler = ModalAssembler(self.model)
+        self.acoustic_modal_solver = ModalSolver(self.acoustic_modal_assembler)
 
     @classmethod
     def load(cls, path):
@@ -73,18 +70,19 @@ class Project:
 
     def set_analysis_data(self, data):
         self.analysis_data = data
-        self.example_solver.set_analysis_data(data)
-
-    def solve_example(self):
-        pass
-        # self.example_solver.solve()
+        if data["analysis_id"] == 2:
+            self.structural_modal_solver = ModalSolver(self.structural_modal_assembler, analysis_data=data)
+        elif data["analysis_id"] == 4:
+            self.acoustic_modal_solver = ModalSolver(self.acoustic_modal_assembler, analysis_data=data)
+        else:
+            raise NotImplementedError("Not implemented solver")
 
     def set_element_formulation(self, element):
-        self.modal_assembler.set_element_formulation(element)
+        self.acoustic_modal_assembler.set_element_formulation(element)
 
     def solve_modal_acoustic(self):
-        self.modal_assembler.assemble_global_matrices()
-        self.modal_solver.solve(modes=10)
+        self.acoustic_modal_assembler.assemble_global_matrices()
+        self.acoustic_modal_solver.solve()
 
     def long_function(self):
         for i in range(20):

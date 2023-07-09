@@ -95,7 +95,7 @@ class MaterialInput(QDialog):
         text = ""
         for _id in list_ids:
             text += "{}, ".format(_id)
-        self.lineEdit_selected_ID.setText(text)
+        self.lineEdit_selected_id.setText(text)
 
 
     def update(self):
@@ -103,11 +103,11 @@ class MaterialInput(QDialog):
         if self.bodies_ids != []:
             self.write_ids(self.bodies_ids)
             self.radioButton_selected_bodies.setChecked(True)
-            self.lineEdit_selected_ID.setEnabled(True)
+            self.lineEdit_selected_id.setEnabled(True)
         else:
-            self.lineEdit_selected_ID.setText("All bodies")
+            self.lineEdit_selected_id.setText("All bodies")
             self.radioButton_all_bodies.setChecked(True)
-            self.lineEdit_selected_ID.setEnabled(False)
+            self.lineEdit_selected_id.setEnabled(False)
 
 
     def _define_Qt_variables(self):
@@ -116,7 +116,7 @@ class MaterialInput(QDialog):
         self.comboBox_material_id = self.findChild(QComboBox, 'comboBox_material_id')
 
         # QLineEdit objects
-        self.lineEdit_selected_ID = self.findChild(QLineEdit, 'lineEdit_selected_ID')
+        self.lineEdit_selected_id = self.findChild(QLineEdit, 'lineEdit_selected_id')
         self.lineEdit_selected_material_name = self.findChild(QLineEdit, 'lineEdit_selected_material_name')
         #
         self.lineEdit_name = self.findChild(QLineEdit, 'lineEdit_name')
@@ -179,8 +179,8 @@ class MaterialInput(QDialog):
         #     self.radioButton_selected_bodies.setChecked(True)
 
         # else:
-        #     self.lineEdit_selected_ID.setText("All bodies")
-        #     self.lineEdit_selected_ID.setEnabled(False)
+        #     self.lineEdit_selected_id.setText("All bodies")
+        #     self.lineEdit_selected_id.setEnabled(False)
         #     self.radioButton_all_bodies.setChecked(True)
 
         # QTabWidget objects
@@ -311,7 +311,7 @@ class MaterialInput(QDialog):
             if self.flagSelectedBodies:
                 #TODO: check existing bodies to set material
                 return
-                lineEdit = self.lineEdit_selected_ID.text()
+                lineEdit = self.lineEdit_selected_id.text()
                 self.stop, self.lines_typed = self.before_run.check_input_LineID(lineEdit)
                 if self.stop:
                     return True 
@@ -683,14 +683,14 @@ class MaterialInput(QDialog):
         self.flagAll = self.radioButton_all_bodies.isChecked()
         self.flagSelectedBodies = self.radioButton_selected_bodies.isChecked()
         if self.flagSelectedBodies:
-            self.lineEdit_selected_ID.setEnabled(True)
+            self.lineEdit_selected_id.setEnabled(True)
             if self.bodies_ids != []:
                 self.write_ids(self.bodies_ids)
             else:
-                self.lineEdit_selected_ID.setText("")
+                self.lineEdit_selected_id.setText("")
         elif self.flagAll:
-            self.lineEdit_selected_ID.setText("All bodies")
-            self.lineEdit_selected_ID.setEnabled(False)
+            self.lineEdit_selected_id.setText("All bodies")
+            self.lineEdit_selected_id.setEnabled(False)
 
     def selected_material_to_remove(self):
         try:

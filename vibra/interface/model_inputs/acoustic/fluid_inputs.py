@@ -137,7 +137,7 @@ class FluidInput(QDialog):
         self.comboBox_fluid_id_rp = self.findChild(QComboBox, 'comboBox_fluid_id_rp')
 
         # QLineEdit objects      
-        self.lineEdit_selected_ID = self.findChild(QLineEdit, 'lineEdit_selected_ID')
+        self.lineEdit_selected_id = self.findChild(QLineEdit, 'lineEdit_selected_id')
         self.lineEdit_selected_fluid_name = self.findChild(QLineEdit, 'lineEdit_selected_fluid_name')
         #
         self.lineEdit_name = self.findChild(QLineEdit, 'lineEdit_name')
@@ -224,8 +224,8 @@ class FluidInput(QDialog):
         #     self.write_ids(self.bodies_ids)
         #     self.radioButton_selected_bodies.setChecked(True)
         # else:
-        #     self.lineEdit_selected_ID.setText("All bodies")
-        #     self.lineEdit_selected_ID.setEnabled(False)
+        #     self.lineEdit_selected_id.setText("All bodies")
+        #     self.lineEdit_selected_id.setEnabled(False)
         #     self.radioButton_all.setChecked(True)
 
         # QTabWidget objects
@@ -381,17 +381,17 @@ class FluidInput(QDialog):
         if self.bodies_ids != []:
             self.write_ids(self.bodies_ids)
             self.radioButton_selected_bodies.setChecked(True)
-            self.lineEdit_selected_ID.setEnabled(True)
+            self.lineEdit_selected_id.setEnabled(True)
         else:
-            self.lineEdit_selected_ID.setText("All bodies")
+            self.lineEdit_selected_id.setText("All bodies")
             self.radioButton_all.setChecked(True)
-            self.lineEdit_selected_ID.setEnabled(False)
+            self.lineEdit_selected_id.setEnabled(False)
 
     def write_ids(self, list_ids):
         text = ""
         for _id in list_ids:
             text += "{}, ".format(_id)
-        self.lineEdit_selected_ID.setText(text)
+        self.lineEdit_selected_id.setText(text)
     
     def create_lists_of_lineEdit(self):
         self.list_add_lineEdit = [  self.lineEdit_name,
@@ -491,7 +491,7 @@ class FluidInput(QDialog):
             self.setWindowTitle(f"Set a fluid thermodynamic state at the compressor {self.connection_label}")
 
             self.write_ids([self.line_id_comp])
-            self.lineEdit_selected_ID.setDisabled(True)
+            self.lineEdit_selected_id.setDisabled(True)
 
             self.update_compressor_fluid_temperature_and_pressure()
 
@@ -1075,7 +1075,7 @@ class FluidInput(QDialog):
             if self.flagSelection:
                 #TODO: check existing bodies to set fluid
                 return
-                if self.lineEdit_selected_ID.text() == "":
+                if self.lineEdit_selected_id.text() == "":
                     return
                 bodies = self.bodies_typed
                 if len(self.bodies_typed) <= 20:
@@ -1305,15 +1305,15 @@ class FluidInput(QDialog):
         self.flagAll = self.radioButton_all.isChecked()
         self.flagSelection = self.radioButton_selected_bodies.isChecked()
         if self.flagSelection:
-            self.lineEdit_selected_ID.setEnabled(True)
+            self.lineEdit_selected_id.setEnabled(True)
             self.bodies_ids = []#self.opv.getListPickedLines()
             if self.bodies_ids != []:
                 self.write_ids(self.bodies_ids)
             else:
-                self.lineEdit_selected_ID.setText("")
+                self.lineEdit_selected_id.setText("")
         elif self.flagAll:
-            self.lineEdit_selected_ID.setEnabled(False)
-            self.lineEdit_selected_ID.setText("All lines")
+            self.lineEdit_selected_id.setEnabled(False)
+            self.lineEdit_selected_id.setText("All lines")
 
     def on_click_item(self, item):
         self.lineEdit_selected_fluid_name.setText("")

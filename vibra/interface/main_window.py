@@ -58,30 +58,30 @@ class MainWindow(QMainWindow):
             self.status_bar.clear_selections()
 
     def slider_pressed_callback(self):
-        if self.viewer_tabs.example_analisys_widget is None:
+        if self.viewer_tabs.example_analysis_widget is None:
             return
-        self.viewer_tabs.example_analisys_widget.show_plane()
-        self.viewer_tabs.example_analisys_widget.disable_cut()
+        self.viewer_tabs.example_analysis_widget.show_plane()
+        self.viewer_tabs.example_analysis_widget.disable_cut()
 
     def slider_moved_callback(self):
-        if self.viewer_tabs.example_analisys_widget is None:
+        if self.viewer_tabs.example_analysis_widget is None:
             return
         pos = self.clip_plane.get_position()
         orientation = self.clip_plane.get_rotation()
-        self.viewer_tabs.example_analisys_widget.configure_plane(pos, orientation)
+        self.viewer_tabs.example_analysis_widget.configure_plane(pos, orientation)
 
     def slider_released_callback(self):
-        if self.viewer_tabs.example_analisys_widget is None:
+        if self.viewer_tabs.example_analysis_widget is None:
             return
         pos = self.clip_plane.get_position()
         orientation = self.clip_plane.get_rotation()
-        self.viewer_tabs.example_analisys_widget.apply_cut(pos, orientation)
-        self.viewer_tabs.example_analisys_widget.hide_plane()
+        self.viewer_tabs.example_analysis_widget.apply_cut(pos, orientation)
+        self.viewer_tabs.example_analysis_widget.hide_plane()
 
     def disable_cut(self):
-        if self.viewer_tabs.example_analisys_widget is None:
+        if self.viewer_tabs.example_analysis_widget is None:
             return
-        self.viewer_tabs.example_analisys_widget.disable_cut()
+        self.viewer_tabs.example_analysis_widget.disable_cut()
 
     def configure_window(self):
         self.setMinimumSize(800, 600)
@@ -193,3 +193,7 @@ class MainWindow(QMainWindow):
         if close == QMessageBox.Yes:
             self.user_config.save()
             exit()
+
+    def process_acoustic_modal_analysis(self):
+        self.project.solve_modal_acoustic()
+        self.viewer_tabs.show_acoustic_modal_analysis()

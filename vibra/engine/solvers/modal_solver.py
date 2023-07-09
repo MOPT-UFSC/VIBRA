@@ -7,8 +7,17 @@ from vibra.engine.assemblers.modal_assembler import ModalAssembler
 
 
 class ModalSolver:
-    def __init__(self, assembler):
+    def __init__(self, assembler, analysis_data=None):
+        #
         self.assembler = assembler
+        self.reset_variables()
+        #
+        if analysis_data is not None:
+            if analysis_data["analysis_id"] in [2, 4]:
+                if "modes" in analysis_data.keys():
+                    self.modes = analysis_data["modes"]
+                if "sigma_factor" in analysis_data.keys():
+                    self.sigma_factor = analysis_data["sigma_factor"]
 
         self.natural_frequencies = None
         self.modal_shape = None
@@ -20,8 +29,12 @@ class ModalSolver:
         # self.frequencies = None
         # self.harmonic_response = None
 
+    def reset_variables(self):
+        self.modes = 20
+        self.sigma_factor = 0.01
+
     # def modal_analysis(self, K=[], M=[], modes=20, which='LM', sigma=0.01, normalize=True):
-    def solve(self, K=[], M=[], modes=20, which="LM", sigma=0.01, normalize=True):
+    def solve(self, K=[], M=[], which="LM", normalize=True):
         if K != [] and M != []:
             KT = K
             MT = M
@@ -29,7 +42,7 @@ class ModalSolver:
             KT = self.assembler.stiffness_matrix
             MT = self.assembler.mass_matrix
 
-        self.eigen_values, self.eigen_vectors = eigs(KT, M=MT, k=modes, which=which, sigma=sigma)
+        self.eigen_values, self.eigen_vectors = eigs(KT, M=MT, k=self.modes, which=which, sigma=self.sigma_factor)
 
         positive_real = np.absolute(np.real(self.eigen_values))
         natural_frequencies = np.sqrt(positive_real) / (2 * np.pi)

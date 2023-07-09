@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QDialog, QColorDialog, QVBoxLayout, QWidget, QPushButton
-from PyQt5.QtCore import Qt, QSize, QRect, QPoint, QObject, QThread, pyqtSignal
-from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput

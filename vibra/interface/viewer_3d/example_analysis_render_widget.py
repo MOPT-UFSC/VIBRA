@@ -1,6 +1,6 @@
 import numpy as np
 
-from vibra.interface.viewer_3d.actors.analisys_actor import AnalisysActor
+from vibra.interface.viewer_3d.actors.analysis_actor import AnalysisActor
 from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
     CuttingPlaneActor,
 )
@@ -8,7 +8,7 @@ from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
 from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
 
 
-class ExampleAnalisysRenderWidget(CommonRenderWidget):
+class ExampleAnalysisRenderWidget(CommonRenderWidget):
     def __init__(self, project, parent=None):
         super().__init__(parent)
 
@@ -26,9 +26,9 @@ class ExampleAnalisysRenderWidget(CommonRenderWidget):
         if self.project is None:
             return
 
-        solver = self.project.example_solver
-        if solver.tensions is None:
-            return
+        solver = self.project.acoustic_modal_solver
+        # if solver.tensions is None:
+        #     return
 
         model = self.project.model
         if model is None:
@@ -40,7 +40,7 @@ class ExampleAnalisysRenderWidget(CommonRenderWidget):
 
         self.remove_actors()
 
-        self.model_actor = AnalisysActor(mesh)
+        self.model_actor = AnalysisActor(mesh)
         self.model_actor.plot_colorbar(solver.tensions)
         self.renderer.AddActor(self.model_actor)
         self.colorbar.SetLookupTable(self.model_actor.lookup_table)

@@ -39,7 +39,7 @@ class FacesActor(vtk.vtkActor):
             try:
                 data.InsertNextCell(aux[nel], nel, list(values))
             except:
-                raise NotImplementedError
+                raise NotImplementedError("Not implemented plane element")
 
         data.SetPoints(points)
         data.GetPointData().SetScalars(point_colors)
