@@ -4,6 +4,7 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QMenu
 
 from vibra.interface.loading_bar import load_function
+from vibra.interface.exception_message import ErrorMessage
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_functions import get_main_window
 
@@ -106,5 +107,9 @@ class ProjectMenu(QMenu):
 
     #
     def solve_example_analysis_callback(self):
-        self.main_window.project.solve_modal_acoustic()
-        self.main_window.viewer_tabs.show_acoustic_modal_analysis()
+        try:
+            self.main_window.project.solve_modal_acoustic()
+        except NotImplementedError as e:
+            ErrorMessage(e)
+        else:
+            self.main_window.viewer_tabs.show_acoustic_modal_analysis()

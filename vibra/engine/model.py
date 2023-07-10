@@ -23,8 +23,6 @@ class Model:
         self.geometry_path = ""
         self.mesh = None
         self.mesh_setup = None
-        self.mesh_setup = None
-        self.mesh = None
 
         self.properties = ModelProperties()
         # self.properties.set_fluid(Fluid("Air", density=1.2, speed_of_sound=343))

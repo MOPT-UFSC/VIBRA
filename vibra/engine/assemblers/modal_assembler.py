@@ -3,7 +3,8 @@ from time import time
 import numpy as np
 from scipy.sparse import coo_matrix
 
-from vibra.engine.elements.acoustic_tet4_element import ACT_TETRAHEDRON_4C
+# from vibra.engine.elements.acoustic_tet4_element import ACT_TETRAHEDRON_4C
+from vibra.engine.elements.element_factory import new_element
 
 #TODO: implementar todos os elementos acústicos, para validação preciso ter todos operacionais!!!
 # o tipo de elemento pode ser acessado em self.project.model.mesh_setup["element_type"]
@@ -29,7 +30,8 @@ class ModalAssembler:
         """
         Calculates global matrices.
         """
-        element = ACT_TETRAHEDRON_4C(self.model)
+
+        element = new_element(self.model)
         ind_rows, ind_cols = element.generate_ind_rows_cols()
 
         dofs = element.DOFS_PER_ELEMENT

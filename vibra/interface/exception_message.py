@@ -5,6 +5,7 @@ from vibra.errors import VibraException
 
 class CommonExceptionMessage(QMessageBox):
     def __init__(self, exception):
+        super().__init__()
         self.setText(str(exception))
         if isinstance(exception, VibraException):
             self.setInformativeText(exception.context)

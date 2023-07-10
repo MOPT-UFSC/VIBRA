@@ -8,6 +8,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+from vibra.interface.exception_message import ErrorMessage
 from vibra.interface.clip_plane_widget import ClipPlaneWidget
 from vibra.interface.loading_bar import load_function
 from vibra.interface.menu_items import MenuItems
@@ -189,5 +190,9 @@ class MainWindow(QMainWindow):
             exit()
 
     def process_acoustic_modal_analysis(self):
-        self.project.solve_modal_acoustic()
-        self.viewer_tabs.show_acoustic_modal_analysis()
+        try:
+            self.project.solve_modal_acoustic()
+        except NotImplementedError as e:
+            ErrorMessage(e)
+        else:
+            self.viewer_tabs.show_acoustic_modal_analysis()
