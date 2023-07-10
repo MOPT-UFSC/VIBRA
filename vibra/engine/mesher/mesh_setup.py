@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from vibra.engine.mesher.element_type import ElementType, DEFAULT_ELEMENT_TYPE
+
+from vibra.engine.mesher.element_type import DEFAULT_ELEMENT_TYPE, ElementType
 
 
 @dataclass

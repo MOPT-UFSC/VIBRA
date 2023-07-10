@@ -2,11 +2,14 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 
-from interface.model.mesh.mesher_inputs import MesherInputs
-from interface.model.structural.material_inputs import MaterialInput
-from interface.analysis.analysis_type_input import AnalysisTypeInput
+from pathlib import Path
 
-from interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.mesh.mesher_inputs import MesherInputs
+from vibra.interface.model_inputs.acoustic.fluid_inputs import FluidInput
+from vibra.interface.model_inputs.structural.material_inputs import MaterialInput
+from vibra.interface.analysis.analysis_type_input import AnalysisTypeInput
+
+from vibra.interface.general.print_message_input import PrintMessageInput
 
 from vibra.interface.loading_bar import load_function
 from vibra.utils.interface_functions import get_main_window
@@ -69,7 +72,7 @@ class MenuItems(QTreeWidget):
         super().__init__()
 
         self.main_window = get_main_window()
-        # self.project = main_window.getProject()
+        self.project = self.main_window.get_project()
 
         # self._createIcons()
         # self._configItemSizes()
@@ -92,9 +95,8 @@ class MenuItems(QTreeWidget):
         Currently isn't used.
         """
         self.icon_child_set_material = QIcon()
-        self.icon_child_set_material.addPixmap(
-            QPixmap("data/icons/pulse.png"), QIcon.Active, QIcon.On
-        )
+        icon_path = str(Path('data/icons/logo_vibra.png'))
+        self.icon_child_set_material.addPixmap(QPixmap(icon_path), QIcon.Active, QIcon.On)
 
     def _createFonts(self):
         """Create Font objects that configure the font of the items."""
@@ -305,14 +307,16 @@ class MenuItems(QTreeWidget):
     def _configItems(self):
         """Configure all items."""
 
-        borderRole = Qt.UserRole + 1
-        borderPen = QPen(QColor(0, 0, 0))
-        borderPen.setWidth(1)
+        borderRole = Qt.UserRole + 1       
 
-        # if self.main_window.user_config.theme == "light":
-        #     textTopBrush = QBrush(QColor(0,0,0))
-        # elif self.main_window.user_config.theme == "dark":
-        #     textTopBrush = QBrush(QColor(255,255,255))
+        if self.main_window.user_config.theme == "light":
+            # textTopBrush = QBrush(QColor(0,0,0))
+            borderPen = QPen(QColor(0,0,0))
+        elif self.main_window.user_config.theme == "dark":
+            # textTopBrush = QBrush(QColor(255,255,255))
+            borderPen = QPen(QColor(255,255,255))
+
+        borderPen.setWidth(1)
 
         configTopBrush = self.brush_upper_items
         plotTopBrush = self.brush_lower_items
@@ -373,6 +377,8 @@ class MenuItems(QTreeWidget):
 
         if self.update_childItems_visibility(item):
             return
+        
+        self.generate_mesh_action = self.main_window.findChild(QAction, "generate_mesh_action")
 
         # if self.project.none_project_action:
         #     self.empty_project_action_message()
@@ -383,10 +389,9 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_mesh_setup:
             if not self.item_child_mesh_setup.isDisabled():
-                mesher = MesherInputs(self.main_window)
+                mesher = MesherInputs()
                 if mesher.complete:
                     self.main_window.project.set_mesh_setup(mesher.mesh_setup)
-                    self.generate_mesh_action = self.main_window.findChild(QAction, "generate_mesh_action")
                     self.generate_mesh_action.setDisabled(False)
                     self.item_child_generate_mesh.setDisabled(False)
 
@@ -402,8 +407,9 @@ class MenuItems(QTreeWidget):
                 MaterialInput()
 
         elif item == self.item_child_set_fluid:
-            if not self.item_child_set_fluid.isDisabled(): 
+            if not self.item_child_set_fluid.isDisabled():
                 pass
+                FluidInput()
 
         elif item == self.item_child_setStructuralElementType:
             if not self.item_child_setStructuralElementType.isDisabled():

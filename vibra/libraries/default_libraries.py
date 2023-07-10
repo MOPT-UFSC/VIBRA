@@ -68,9 +68,23 @@ def default_fluid_library(path):
 
     config = configparser.ConfigParser()
 
+    config['Air @293.15'] = {
+                            'Name': 'Air @293.15',
+                            'Identifier': 1,
+                            'Color': '[200,200,200]', #Light grey
+                            'Fluid density': 1.215, 
+                            'Speed of sound': 343.2021,
+                            'Impedance': 416.9905,
+                            'Isentropic exponent': 1.400, 
+                            'Thermal conductivity': 0.0263,
+                            'Specific heat Cp': 1007,
+                            'Dynamic viscosity': float(184.6e-7),
+                            'Temperature' : 293.15,
+                            'Pressure' : 102222.9 }
+
     config['Air @300K'] = {
                             'Name': 'Air @300K',
-                            'Identifier': 1,
+                            'Identifier': 2,
                             'Color': '[0,0,255]', #Blue
                             'Fluid density': 1.1614, 
                             'Speed of sound': 347.21,
@@ -84,7 +98,7 @@ def default_fluid_library(path):
 
     config['Air @400K'] = {
                             'Name': 'Air @400K',
-                            'Identifier': 2,
+                            'Identifier': 3,
                             'Color': '[0,255,255]', #light Blue
                             'Fluid density': 0.8711, 
                             'Speed of sound': 400.21,
@@ -98,7 +112,7 @@ def default_fluid_library(path):
 
     config['Hydrogen @300K'] = {
                             'Name': 'Hydrogen @300K',
-                            'Identifier': 3,
+                            'Identifier': 4,
                             'Color': '[150,0,150]', #Magenta
                             'Fluid density': 0.08078,
                             'Speed of sound': 1318.43,
@@ -112,7 +126,7 @@ def default_fluid_library(path):
     
     config['Hydrogen @400K'] = {
                             'Name': 'Hydrogen @400K',
-                            'Identifier': 4,
+                            'Identifier': 5,
                             'Color': '[200,125,255]', #Magenta
                             'Fluid density': 0.06059,
                             'Speed of sound': 1518.598,
@@ -126,7 +140,7 @@ def default_fluid_library(path):
     
     config['Methane @300K'] = {
                             'Name': 'Methane @300K',
-                            'Identifier': 5,
+                            'Identifier': 6,
                             'Color': '[200,150,50]', #Cyan
                             'Fluid density': 0.657,
                             'Speed of sound': 449.2,

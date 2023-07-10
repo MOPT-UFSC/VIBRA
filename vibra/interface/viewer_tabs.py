@@ -36,6 +36,7 @@ class ViewerTabs(QTabWidget):
         self.help_widget = HelpWidget()
 
         self.show_wellcome()
+        self.show_acoustic_modal_analisys()
 
     def show_wellcome(self):
         self.addTab(self.welcome, "Wellcome!")

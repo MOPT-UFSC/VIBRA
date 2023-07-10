@@ -5,13 +5,17 @@ from PyQt5.QtWidgets import QAction, QMenu
 
 from vibra.interface.loading_bar import load_function
 from vibra.utils.icons import load_icon
+from vibra.utils.interface_functions import get_main_window
+
 
 
 class ProjectMenu(QMenu):
     def __init__(self, parent):
         super().__init__(parent)
+        #
+        self.main_window = get_main_window()
+        #
         self.setTitle("Project")
-
         self.create_actions()
         self.create_layout()
 
@@ -67,10 +71,10 @@ class ProjectMenu(QMenu):
         self.addAction(self.exit_action)
 
     def save_callback(self):
-        self.parent().project.save()
+        self.main_window.project.save()
 
     def help_callback(self):
-        self.parent().viewer_tabs.show_help()
+        self.main_window.viewer_tabs.show_help()
 
     def exit_callback(self):
         # loaded_function = load_function(self.parent().project.long_function, self)
@@ -79,28 +83,28 @@ class ProjectMenu(QMenu):
         loaded_solve()
 
     def theme_callback(self):
-        if self.parent().user_config.theme == "light":
-            self.parent().set_theme("dark")
+        if self.main_window.user_config.theme == "light":
+            self.main_window.set_theme("dark")
             self.theme_action.setIcon(self.theme_sun_icon)
 
-        elif self.parent().user_config.theme == "dark":
-            self.parent().set_theme("light")
+        elif self.main_window.user_config.theme == "dark":
+            self.main_window.set_theme("light")
             self.theme_action.setIcon(self.theme_moon_icon)
 
     def capture_image_callback(self):
-        self.parent().capture_image()
+        self.main_window.capture_image()
 
     def import_geometry_callback(self):
-        self.parent().import_geometry()
+        self.main_window.import_geometry()
 
     # TODO: Create and connect actions for these
     def show_geometry_callback(self):
         self.parent().viewer_tabs.show_geometry()
 
     def show_example_callback(self):
-        self.parent().viewer_tabs.show_example()
+        self.main_window.viewer_tabs.show_example()
 
     #
     def solve_example_analisys_callback(self):
-        self.parent().project.solve_modal_acoustic()
-        self.parent().viewer_tabs.show_acoustic_modal_analisys()
+        self.main_window.project.solve_modal_acoustic()
+        self.main_window.viewer_tabs.show_acoustic_modal_analisys()

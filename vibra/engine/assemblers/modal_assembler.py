@@ -1,7 +1,8 @@
-import numpy as np
-from scipy.sparse import csr_matrix, coo_matrix
 from time import time
-import matplotlib.pyplot as plt
+
+import numpy as np
+from scipy.sparse import coo_matrix
+
 from vibra.engine.elements.acoustic_tet4_element import ACT_TETRAHEDRON_4C
 
 
@@ -13,8 +14,7 @@ class ModalAssembler:
         self.mass_matrix = None
 
     def is_assembled(self):
-        return (self.stiffness_matrix is not None
-            and self.mass_matrix is not None)    
+        return (self.stiffness_matrix is not None) and (self.mass_matrix is not None)
 
     def assemble_global_matrices(self):
         """

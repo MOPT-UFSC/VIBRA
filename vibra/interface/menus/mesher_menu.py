@@ -1,19 +1,19 @@
 from pathlib import Path
 
-from interface.model.mesh.mesher_inputs import MesherInputs
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QMenu
 
 from vibra.interface.loading_bar import load_function
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_functions import get_main_window
-from interface.model.mesh.mesher_inputs import MesherInputs
-from interface.model.structural.material_inputs import MaterialInput
+from vibra.interface.model_inputs.mesh.mesher_inputs import MesherInputs
+from vibra.interface.model_inputs.structural.material_inputs import MaterialInput
 
 
 class MesherMenu(QMenu):
     def __init__(self, parent):
         super().__init__(parent)
+        self.main_window = get_main_window()
         self.setTitle("Model setup")
         self.setObjectName("model_setup_menu")
         self.create_and_connect_actions()
@@ -53,13 +53,15 @@ class MesherMenu(QMenu):
         pass
 
     def call_mesher_inputs(self):
-        mesher = MesherInputs(self.parent())
+        mesher = MesherInputs()
         if mesher.complete:
             self.parent().project.set_mesh_setup(mesher.mesh_setup)
             self.generate_mesh_action.setDisabled(False)
+            self.main_window.menu_widget.item_child_generate_mesh.setDisabled(False)
 
     def call_generate_mesh(self):
         main_window = get_main_window()
         generate_mesh = load_function(main_window.project.generate_mesh, main_window)
         generate_mesh()
         main_window.viewer_tabs.show_mesh()
+        main_window.viewer_tabs.update_plots()

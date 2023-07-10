@@ -1,8 +1,7 @@
 import numpy as np
-from scipy.sparse import csr_matrix
-from scipy.sparse.linalg import eigs, eigsh, inv
-from scipy.sparse.linalg import lobpcg, LinearOperator
 from scipy.linalg import eig
+from scipy.sparse import csr_matrix
+from scipy.sparse.linalg import LinearOperator, eigs, eigsh, inv, lobpcg
 
 from vibra.engine.assemblers.modal_assembler import ModalAssembler
 
@@ -13,7 +12,7 @@ class ModalSolver:
 
         self.natural_frequencies = None
         self.modal_shape = None
-        
+
         self.eigen_values = None
         self.eigen_vectors = None
 
@@ -43,9 +42,9 @@ class ModalSolver:
         if normalize:
             modal_shape /= np.max(np.abs(modal_shape), axis=0)
 
-        # self.eigen_vectors = modal_shape
-        
         self.natural_frequencies = natural_frequencies
         self.modal_shape = modal_shape
+
+        print(f"Natural frequencies:{natural_frequencies}")
 
         return natural_frequencies, modal_shape
