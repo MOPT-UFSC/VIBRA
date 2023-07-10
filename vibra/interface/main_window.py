@@ -31,7 +31,6 @@ class MainWindow(QMainWindow):
         QMainWindow.__init__(self, parent)
 
         self.project = Project()
-        # self.viewer_3d = Viewer3D(self)
         self.user_config = UserConfig()
         self.status_bar = StatusBar(self)
         self.clip_plane = ClipPlaneWidget(self)

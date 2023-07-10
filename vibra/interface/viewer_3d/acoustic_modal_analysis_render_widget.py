@@ -23,10 +23,8 @@ class AcousticModalanalysisRenderWidget(CommonRenderWidget):
         super().__init__(parent)
 
         self.project = project        
-        self.control_bar = self._create_control_bar()
-
-        if self.control_bar is None:
-            return
+        self.control_bar = ModalAnalysisBar()
+        self.control_bar.plot_changed.connect(self.update_plot)
 
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
@@ -42,10 +40,17 @@ class AcousticModalanalysisRenderWidget(CommonRenderWidget):
 
         self.create_axes()
         self.create_color_bar()
+        self.update_frequencies()
         self.update_plot()
 
     def current_shape_index(self):
         return self.control_bar.frequency_box.currentIndex()
+    
+    def update_frequencies(self):
+        solver = self.project.acoustic_modal_solver
+        if solver is None:
+            return
+        self.control_bar.set_frequencies(solver.natural_frequencies)
 
     def update_plot(self):
         if self.project is None:
@@ -63,8 +68,6 @@ class AcousticModalanalysisRenderWidget(CommonRenderWidget):
         if solver.modal_shape is None:
             return
 
-        # Apenas comentei essa linha pois estava com bug
-        # index = 2
         index = self.current_shape_index()
         if not (0 <= index < solver.modal_shape.shape[1]):
             return
@@ -96,34 +99,6 @@ class AcousticModalanalysisRenderWidget(CommonRenderWidget):
         self.renderer.RemoveActor(self.plane_actor)
         self.analysis_actor = None
         self.plane_actor = None
-
-    def _create_control_bar(self):
-        # TODO: Implement this in a isolated widget
-        # if self.project is None:
-        #     return
-
-        solver = self.project.acoustic_modal_solver
-        self.natural_frequencies = solver.natural_frequencies
-
-        if self.natural_frequencies is None:
-            return None
-
-        control_bar = ModalAnalysisBar()
-        # layout = control_bar.layout()
-        # self.frequencies = QComboBox()
-        control_bar.mode_box.activated.connect(self.update_plot)
-        control_bar.frequency_box.activated.connect(self.update_plot)
-        control_bar.real_part_button.clicked.connect(self.update_plot)
-        control_bar.absolute_button.clicked.connect(self.update_plot)
-
-        for i, freq in enumerate(self.natural_frequencies):
-            # control_bar.mode_box.addItem(f"Mode: {i}")
-            control_bar.frequency_box.addItem(f" Mode {i + 1}: {round(freq, 6)} Hz")
-
-        # layout.addWidget(QLabel("Hola que tal"))
-        # layout.addWidget(self.frequencies)
-        # control_bar.setLayout(layout)
-        return control_bar
 
     def _actors_exists(self):
         actors = [
