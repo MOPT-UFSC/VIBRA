@@ -25,30 +25,26 @@ class WelcomeWidget(QWidget):
         labels_layout = QGridLayout()
         layout.addLayout(labels_layout)
 
-        new_project_label = QLabel("New Project")
-        labels_layout.addWidget(new_project_label, 1, 0)
+        new_project_label = QLabel("New")
+        labels_layout.addWidget(new_project_label, 0, 0)
 
-        open_project_label = QLabel("Open Project")
-        labels_layout.addWidget(open_project_label, 1, 1)
+        open_project_label = QLabel("Open")
+        labels_layout.addWidget(open_project_label, 0, 1)
         labels_layout.setAlignment(Qt.AlignLeft)
-
-        buttons_layout2 = QGridLayout()
-        layout.addLayout(buttons_layout2)
-        buttons_layout2.setAlignment(Qt.AlignLeft)
 
         new_button = QPushButton(self)
         new_button.setIcon(QIcon(""))
         new_button.setIconSize(QSize(100, 100))
         new_button.setFixedSize(70, 70)
         new_button.clicked.connect(self.new_project)
-        buttons_layout2.addWidget(new_button, 1, 0)
+        labels_layout.addWidget(new_button, 1, 0)
 
         open_button = QPushButton(self)
         open_button.setIcon(QIcon(""))
         open_button.setIconSize(QSize(100, 100))
         open_button.setFixedSize(70, 70)
         open_button.clicked.connect(self.new_project)
-        buttons_layout2.addWidget(open_button, 1, 1)
+        labels_layout.addWidget(open_button, 1, 1)
 
 
         recent_label = QLabel("Recent Projects", self)
