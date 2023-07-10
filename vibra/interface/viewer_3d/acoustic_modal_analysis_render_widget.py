@@ -25,6 +25,7 @@ class AcousticModalanalysisRenderWidget(CommonRenderWidget):
         self.project = project        
         self.control_bar = ModalAnalysisBar()
         self.control_bar.plot_changed.connect(self.update_plot)
+        self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
 
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
@@ -80,6 +81,8 @@ class AcousticModalanalysisRenderWidget(CommonRenderWidget):
             current_modal_shape = np.abs(current_modal_shape)
 
         self.analysis_actor = AnalysisActor(mesh)
+        self.analysis_actor.GetProperty().SetPointSize(3)
+        self.analysis_actor.GetProperty().SetLineWidth(2)
         self.analysis_actor.plot_colorbar(current_modal_shape)
         self.renderer.AddActor(self.analysis_actor)
         self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
@@ -92,6 +95,41 @@ class AcousticModalanalysisRenderWidget(CommonRenderWidget):
         self.renderer.AddActor(self.plane_actor)
 
         self.renderer.ResetCamera()
+        self.update()
+
+    def set_mesh_visibility(self, condition):
+        if not self._actors_exists():
+            return
+
+        if condition:
+            self.show_lines()
+        else:
+            self.show_faces()
+
+    def show_points(self):
+        if not self._actors_exists():
+            return
+        
+        self.control_bar.show_mesh_button.setChecked(False)
+        self.analysis_actor.GetProperty().SetRepresentationToPoints()
+        self.update()
+
+    def show_lines(self):
+        if not self._actors_exists():
+            return
+        
+        self.control_bar.show_mesh_button.setChecked(True)
+        self.analysis_actor.GetProperty().SetRepresentationToSurface()
+        self.analysis_actor.GetProperty().EdgeVisibilityOn()
+        self.update()
+
+    def show_faces(self):
+        if not self._actors_exists():
+            return
+        
+        self.control_bar.show_mesh_button.setChecked(False)
+        self.analysis_actor.GetProperty().SetRepresentationToSurface()
+        self.analysis_actor.GetProperty().EdgeVisibilityOff()
         self.update()
 
     def remove_actors(self):

@@ -15,6 +15,7 @@ class ModalAnalysisBar(QWidget):
         self.frequency_box = QComboBox()
         self.real_part_button = QRadioButton("Real Part")
         self.absolute_button = QRadioButton("Absolute")
+        self.show_mesh_button = QCheckBox("Show mesh")
 
         button_group = QButtonGroup()
         button_group.addButton(self.real_part_button)
@@ -27,6 +28,8 @@ class ModalAnalysisBar(QWidget):
         layout.addWidget(QLabel("Color Scale:"))
         layout.addWidget(self.real_part_button)
         layout.addWidget(self.absolute_button)
+        layout.addSpacing(100)
+        layout.addWidget(self.show_mesh_button)
         layout.addSpacing(100)
         layout.addWidget(QLabel("Mode Selector:"))
         layout.addWidget(self.frequency_box)
