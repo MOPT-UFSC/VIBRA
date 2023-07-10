@@ -15,7 +15,7 @@ from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
 )
 from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
 from vibra.interface.modal_analysis_bar import ModalAnalysisBar
-from vibra.utils.math_functions import bounds_distance, rotation_matrices
+from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
 
 
 class AcousticModalanalysisRenderWidget(CommonRenderWidget):
@@ -99,6 +99,46 @@ class AcousticModalanalysisRenderWidget(CommonRenderWidget):
         self.renderer.RemoveActor(self.plane_actor)
         self.analysis_actor = None
         self.plane_actor = None
+
+    def start_cutting_mode(self):
+        if not self._actors_exists():
+            return
+        self.plane_actor.VisibilityOn()
+
+    def stop_cutting_mode(self):
+        if not self._actors_exists():
+            return
+        self.plane_actor.VisibilityOff()
+        self.analysis_actor.disable_cut()
+
+    def configure_cutting_plane(self, position, orientation):
+        if not self._actors_exists():
+            return
+
+        x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
+        y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
+        z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
+        self.plane_actor.SetPosition(x, y, z)
+        self.plane_actor.SetOrientation(orientation)
+
+        self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
+        self.plane_actor.GetProperty().SetOpacity(0.8)
+        self.update()
+
+    def apply_cutting_plane(self, position, orientation):
+        if not self._actors_exists():
+            return
+        
+        x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
+        y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
+        z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
+        normal = self._calculate_normal_vector(orientation)
+        self.analysis_actor.apply_cut((x, y, z), normal)
+
+        self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
+        self.plane_actor.GetProperty().SetOpacity(0.2)
+
+        self.update()
 
     def _actors_exists(self):
         actors = [

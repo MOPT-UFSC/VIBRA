@@ -57,30 +57,20 @@ class MainWindow(QMainWindow):
             self.status_bar.clear_selections()
 
     def slider_pressed_callback(self):
-        if self.viewer_tabs.example_analysis_widget is None:
-            return
-        self.viewer_tabs.example_analysis_widget.show_plane()
-        self.viewer_tabs.example_analysis_widget.disable_cut()
+        self.viewer_tabs.start_cutting_mode()
 
     def slider_moved_callback(self):
-        if self.viewer_tabs.example_analysis_widget is None:
-            return
-        pos = self.clip_plane.get_position()
+        position = self.clip_plane.get_position()
         orientation = self.clip_plane.get_rotation()
-        self.viewer_tabs.example_analysis_widget.configure_plane(pos, orientation)
+        self.viewer_tabs.configure_cutting_plane(position, orientation)
 
     def slider_released_callback(self):
-        if self.viewer_tabs.example_analysis_widget is None:
-            return
-        pos = self.clip_plane.get_position()
+        position = self.clip_plane.get_position()
         orientation = self.clip_plane.get_rotation()
-        self.viewer_tabs.example_analysis_widget.apply_cut(pos, orientation)
-        self.viewer_tabs.example_analysis_widget.hide_plane()
+        self.viewer_tabs.apply_cutting_plane(position, orientation)
 
     def disable_cut(self):
-        if self.viewer_tabs.example_analysis_widget is None:
-            return
-        self.viewer_tabs.example_analysis_widget.disable_cut()
+        self.viewer_tabs.stop_cutting_mode()
 
     def configure_window(self):
         self.setMinimumSize(800, 600)

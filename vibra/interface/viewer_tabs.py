@@ -36,7 +36,6 @@ class ViewerTabs(QTabWidget):
         self.help_widget = HelpWidget()
 
         self.show_wellcome()
-        self.show_acoustic_modal_analysis()
 
     def show_wellcome(self):
         self.addTab(self.welcome, "Wellcome!")
@@ -61,15 +60,9 @@ class ViewerTabs(QTabWidget):
         self.mesh_widget.update_plot()
         self.setCurrentWidget(self.mesh_widget)
 
-    def show_analysis(self):
-        if self.example_analysis_widget not in self.tabs():
-            self.addTab(self.example_analysis_widget, "Example analysis")
-        self.setCurrentWidget(self.example_analysis_widget)
-
     def show_example_analysis(self):
         if self.example_analysis_widget not in self.tabs():
             self.addTab(self.example_analysis_widget, "Example analysis")
-            self.example_analysis_widget.set_theme(self.user_config.theme)
 
         self.example_analysis_widget.update_plot()
         self.setCurrentWidget(self.example_analysis_widget)
@@ -88,6 +81,30 @@ class ViewerTabs(QTabWidget):
         for tab in self.tabs():
             if isinstance(tab, CommonRenderWidget):
                 tab.update_plot()
+
+    def start_cutting_mode(self):
+        for tab in self.tabs():
+            if not hasattr(tab, "start_cutting_mode"):
+                continue
+            tab.start_cutting_mode()
+
+    def stop_cutting_mode(self):
+        for tab in self.tabs():
+            if not hasattr(tab, "stop_cutting_mode"):
+                continue
+            tab.stop_cutting_mode()
+
+    def configure_cutting_plane(self, position, orientation):
+        for tab in self.tabs():
+            if not hasattr(tab, "configure_cutting_plane"):
+                continue
+            tab.configure_cutting_plane(position, orientation)
+
+    def apply_cutting_plane(self, position, orientation):
+        for tab in self.tabs():
+            if not hasattr(tab, "apply_cutting_plane"):
+                continue
+            tab.apply_cutting_plane(position, orientation)
 
     def set_theme(self, theme):
         for tab in self.tabs():
