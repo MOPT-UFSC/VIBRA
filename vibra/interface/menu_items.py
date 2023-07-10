@@ -8,6 +8,7 @@ from vibra.interface.model_inputs.mesh.mesher_inputs import MesherInputs
 from vibra.interface.model_inputs.acoustic.fluid_inputs import FluidInput
 from vibra.interface.model_inputs.structural.material_inputs import MaterialInput
 from vibra.interface.analysis.analysis_type_input import AnalysisTypeInput
+from vibra.interface.analysis.analysis_setup_input import AnalysisSetupInput
 
 from vibra.interface.general.print_message_input import PrintMessageInput
 
@@ -99,17 +100,18 @@ class MenuItems(QTreeWidget):
         self.icon_child_set_material.addPixmap(QPixmap(icon_path), QIcon.Active, QIcon.On)
 
     def _createFonts(self):
+
         """Create Font objects that configure the font of the items."""
         self.font_top_Items = QFont()
         # self.font_top_Items.setFamily("Segoe UI")
-        self.font_top_Items.setPointSize(12)
+        self.font_top_Items.setPointSize(11)
         self.font_top_Items.setBold(True)
         self.font_top_Items.setItalic(False)
         self.font_top_Items.setWeight(75)
 
         self.font_child_Items = QFont()
         # self.font_child_Items.setFamily("Segoe UI")
-        self.font_child_Items.setPointSize(11)
+        self.font_child_Items.setPointSize(10)
         #self.font_child_Items.setBold(False)
         #self.font_child_Items.setItalic(True)
         self.font_child_Items.setWeight(60)
@@ -161,6 +163,11 @@ class MenuItems(QTreeWidget):
         self.item_child_generate_mesh = QTreeWidgetItem(['Generate Mesh'])
         self.item_child_set_material = QTreeWidgetItem(['Set Material'])
         self.item_child_set_fluid = QTreeWidgetItem(['Set Fluid'])
+        #
+        material_tool_tip = "Attribute material to selected bodies. \ndefault material: steel (E = 210 GPa; poisson = 0.30; density = 7860 kg/m³)"
+        fluid_tool_tip = "Attribute fluid to selected bodies. \ndefault fluid: air (speed of sound 343.2021 m/s; fluid density = 1.215 kg/m³)"
+        self.item_child_set_material.setToolTip(0, material_tool_tip)
+        self.item_child_set_fluid.setToolTip(0, fluid_tool_tip)
         #
         self.list_top_items.append(self.item_top_generalSettings)
         self.list_child_items.append(self.item_child_import_geometry)
@@ -433,11 +440,11 @@ class MenuItems(QTreeWidget):
                         self.run_analysis()    
                         self.item_child_runAnalysis.setDisabled(False)
                     else:
-                        self.item_child_runAnalysis.setDisabled(True)
+                        self.item_child_analysisSetup.setDisabled(False)
             
         elif item == self.item_child_analysisSetup:
             if not self.item_child_analysisSetup.isDisabled():
-                pass
+                obj = AnalysisSetupInput()
 
         elif item == self.item_child_runAnalysis:
             if not self.item_child_runAnalysis.isDisabled():

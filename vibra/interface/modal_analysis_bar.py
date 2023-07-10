@@ -19,14 +19,12 @@ class ModalanalysisBar(QWidget):
 
     def _define_qt_variables(self):
         #
-        color_scaling_layout = QButtonGroup()
-        #
+        self.show_mesh_button = QCheckBox("Show mesh")
         self.mode_box = QComboBox()
         self.frequency_box = QComboBox()
         #
         self.frame_spacer = QFrame()
         #
-        self.label_mode = QLabel("Mode")
         self.label_mode_selector = QLabel("Mode selector:")
         self.label_color_scale = QLabel("Color scale:")
         #
@@ -35,8 +33,6 @@ class ModalanalysisBar(QWidget):
         #
         self.absolute_button = QRadioButton("Absolute")
         self.real_part_button = QRadioButton("Real part")
-        # self.imaginary_part_button = QRadioButton("Imaginary part")
-        self.real_part_button.setChecked(True)
         #
         self._config_widgets() 
         #
@@ -49,8 +45,9 @@ class ModalanalysisBar(QWidget):
         analysis_info_layout.addWidget(self.label_color_scale, 0, 1)
         analysis_info_layout.addWidget(self.real_part_button, 0, 2)
         analysis_info_layout.addWidget(self.absolute_button, 0, 3)
-        analysis_info_layout.addWidget(self.label_mode_selector, 0, 4)
-        analysis_info_layout.addWidget(self.frequency_box, 0, 5)
+        analysis_info_layout.addWidget(self.show_mesh_button, 0, 4)
+        analysis_info_layout.addWidget(self.label_mode_selector, 0, 5)
+        analysis_info_layout.addWidget(self.frequency_box, 0, 6)
         
         #
         # layout.addWidget(self.real_part_button)
@@ -71,12 +68,15 @@ class ModalanalysisBar(QWidget):
         self.real_part_button.setMaximumSize(90, height)
         self.absolute_button.setMinimumSize(90, height)
         self.absolute_button.setMaximumSize(90, height)
+        self.real_part_button.setChecked(True)
+
+        self.show_mesh_button.setMinimumSize(100, height)
+        self.show_mesh_button.setMaximumSize(100, height)
         
         # self.label_color_scale.setAlignment(Qt.AlignRight)
         self.label_color_scale.setMinimumSize(70, height)
         self.label_color_scale.setMaximumSize(70, height)
-        self.label_mode.setMinimumSize(100, height)
-        self.label_mode.setMaximumSize(100, height)
+
         # self.label_mode_selector.setAlignment(Qt.AlignRight)
         self.label_mode_selector.setMinimumSize(100, height)
         self.label_mode_selector.setMaximumSize(100, height)

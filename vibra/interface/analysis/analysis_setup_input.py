@@ -2,16 +2,24 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5 import uic
+
+from pathlib import Path
 import numpy as np
 
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.utils.interface_functions import get_main_window
 
 window_title = "ERROR"
 
 class AnalysisSetupInput(QDialog):
-    def __init__(self, project):
-        super().__init__()
-       
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.main_window = get_main_window()
+        self.project = self.main_window.project
+        self.analysis_data = self.project.analysis_data
+        self.analysis_id = self.analysis_data["analysis_id"]
+
         """
         |--------------------------------------------------------------------|
         |                    Analysis ID codification                        |
@@ -26,35 +34,39 @@ class AnalysisSetupInput(QDialog):
         |--------------------------------------------------------------------|
         """
 
-        self.project = project
-        self.analysis_id = project.analysis_id
-
         if self.analysis_id in [1,6]:
-            uic.loadUi('data/ui_files/analysis/structural/analysis_setup_input_harmonic_analysis_mode_superposition_method.ui', self)
+            path = Path('data/ui_files/analysis/structural/analysis_setup_input_harmonic_analysis_mode_superposition_method.ui')
         elif self.analysis_id in [0,5]:
-            uic.loadUi('data/ui_files/analysis/structural/analysis_setup_input_harmonic_analysis_direct_method.ui', self)
+            path = Path('data/ui_files/analysis/structural/analysis_setup_input_harmonic_analysis_direct_method.ui')
         elif self.analysis_id in [3]:
-            uic.loadUi('data/ui_files/analysis/acoustic/analysis_setup_input_harmonic_analysis_direct_method.ui', self)
+            path = Path('data/ui_files/analysis/acoustic/analysis_setup_input_harmonic_analysis_direct_method.ui')
         else:
             return
-
-        icons_path = 'data\\icons\\'
-        self.icon = QIcon(icons_path + 'pulse.png')
-        self.setWindowIcon(self.icon)
-
-        title = project.analysis_type_label
-        subtitle = project.analysis_method_label
         
+        uic.loadUi(path, self)
+        #
+        icon_path = str(Path('data/icons/logo_vibra.png'))
+        self.icon = QIcon(icon_path)
+        self.setWindowIcon(self.icon)
+        #
+        self.load_analysis_data()
+        self._define_qt_variables()
+        self._create_connections()
+        self.update_frequency_setup_input_texts()
+        self.update_damping_input_texts()
+        #
+        self.exec_()
+
+
+    def _reset_variables(self):
         self.complete = False
         self.flag_run = False
         self.frequencies = []
+        self.global_damping != [0, 0, 0, 0]
+        self.f_step = 0
 
-        self.f_min = project.f_min
-        self.f_max = project.f_max
-        self.f_step = project.f_step
 
-        self.global_damping = project.global_damping
-        self.modes = 0
+    def _define_qt_variables(self):
 
         self.label_title = self.findChild(QLabel, 'label_title')
         self.label_subtitle = self.findChild(QLabel, 'label_subtitle')
@@ -74,20 +86,44 @@ class AnalysisSetupInput(QDialog):
         self.pushButton_confirm_close = self.findChild(QPushButton, 'pushButton_confirm_close')
         self.pushButton_confirm_run_analysis = self.findChild(QPushButton, 'pushButton_confirm_run_analysis')
         
+        self.tabWidget = self.findChild(QTabWidget, 'tabWidget')
+        self.currentTab = self.tabWidget.currentIndex()
+
+
+    def _create_connections(self):
+                
         self.pushButton_confirm_close.clicked.connect(self.check_exit)
         self.pushButton_confirm_run_analysis.clicked.connect(self.check_run)
-
-        self.tabWidget = self.findChild(QTabWidget, 'tabWidget')
         self.tabWidget.currentChanged.connect(self.tabEvent)
-        self.currentTab = self.tabWidget.currentIndex()
+
+
+    def load_analysis_data(self):
+
+        data = self.project.analysis_data
+        
+        if "analysis_type_label" in data.keys():
+            title = data["analysis_type_label"]
+        if "analysis_method_label" in data.keys():
+            subtitle = data["analysis_method_label"]
         
         self.label_title.setText(title)
         self.label_subtitle.setText(subtitle)
 
-        self.update_frequency_setup_input_texts()
-        self.update_damping_input_texts()
+        if "f_min" in data.keys():
+            self.f_min = data["f_min"]
         
-        self.exec_()
+        if "f_max" in data.keys():
+            self.f_max = data["f_max"]
+        
+        if "f_step" in data.keys():
+            self.f_step = data["f_step"]
+
+        if "global_damping" in data.keys():
+            self.global_damping = data["global_damping"]
+
+        if "modes" in data.keys():
+            self.modes = data["modes"]
+
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
@@ -95,16 +131,19 @@ class AnalysisSetupInput(QDialog):
         elif event.key() == Qt.Key_Escape:
             self.close()
 
+
     def tabEvent(self):
         self.currentTab = self.tabWidget.currentIndex()
 
+
     def update_damping_input_texts(self):
-        if self.analysis_id not in [2,3,4]:
-            if self.global_damping != [0,0,0,0]:
+        if self.analysis_id not in [2, 3, 4]:
+            if self.global_damping != [0, 0, 0, 0]:
                 self.lineEdit_av.setText(str(self.global_damping[0]))
                 self.lineEdit_bv.setText(str(self.global_damping[1]))
                 self.lineEdit_ah.setText(str(self.global_damping[2]))
                 self.lineEdit_bh.setText(str(self.global_damping[3]))
+
 
     def update_frequency_setup_input_texts(self):
         if self.f_step != 0:
@@ -115,6 +154,7 @@ class AnalysisSetupInput(QDialog):
                 self.lineEdit_fmin.setDisabled(True)
                 self.lineEdit_fmax.setDisabled(True)
                 self.lineEdit_fstep.setDisabled(True)
+
 
     def check_exit(self):
         input_fmin = input_fmax = input_fstep = 0
@@ -174,22 +214,25 @@ class AnalysisSetupInput(QDialog):
                 return True
 
         self.global_damping = [alpha_v, beta_v, alpha_h, beta_h]
-        self.project.set_damping(self.global_damping)
 
-        if self.project.file.check_if_there_are_tables_at_the_model():
-            self.frequencies = self.project.frequencies
-        else:
-            self.frequencies = np.arange(input_fmin, input_fmax+input_fstep, input_fstep)
-            self.project.set_frequencies(self.frequencies, input_fmin, input_fmax, input_fstep)
+        # TODO: in the future it will be necessary check all existing tables to avoid frequencies "misalignments"
+        self.frequencies = np.arange(input_fmin, input_fmax+input_fstep, input_fstep)
+
+        self.analysis_data["f_min"] = input_fmin
+        self.analysis_data["f_max"] = input_fmax
+        self.analysis_data["f_step"] = input_fstep
+        self.analysis_data["frequencies"] = self.frequencies
+        self.analysis_data["global_damping"] = self.global_damping
         
-        if not self.analysis_id in [3,4]:
+        if not self.analysis_id in [3, 4]:
             self.project.set_modes_sigma(self.modes)
 
-        self.project.update_project_analysis_setup_state(True)
+        self.project.set_analysis_data(self.analysis_data)
         self.complete = True
         self.close()
         return False
-    
+
+
     def check_inputs(self, lineEdit, label, only_positive=True, zero_included=False, _float=False):
         self.stop = False
         message = ""
@@ -229,6 +272,7 @@ class AnalysisSetupInput(QDialog):
             self.stop = True
             return None
         return out
+
 
     def check_run(self):
         if self.check_exit():

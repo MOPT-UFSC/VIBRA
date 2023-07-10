@@ -40,6 +40,7 @@ class MainWindow(QMainWindow):
         self.configure_window()
         self.create_basic_layout()
         self.load_user_preferences()
+        self.config_tool_tip_appearance()
 
         self.viewer_tabs.geometry_widget.selection_changed.connect(self.selection_changed_callback)
         self.clip_plane.slider_pressed.connect(self.slider_pressed_callback)
@@ -111,9 +112,6 @@ class MainWindow(QMainWindow):
         working_area.addWidget(self.viewer_tabs)
         working_area.setSizes([50, 400])
 
-    def load_user_preferences(self):
-        self.set_theme(self.user_config.theme)
-
     def create_menu_bar(self):
         self.menu_bar = self.menuBar()
         self.menu_bar.addMenu(ProjectMenu(self))
@@ -123,12 +121,19 @@ class MainWindow(QMainWindow):
         self.menu_bar.addMenu(ViewModeMenu(self))
         self.menu_bar.addMenu(HelpMenu(self))
 
+    def create_status_bar(self):
+        self.setStatusBar(self.status_bar)
+
     def create_tool_bars(self):
         self.renderer_toolbar = RendererToolbar(self, self.viewer_tabs)
         self.addToolBar(self.renderer_toolbar)
 
-    def create_status_bar(self):
-        self.setStatusBar(self.status_bar)
+    def config_tool_tip_appearance(self):
+        tool_tip_style = "QToolTip { color: rgb(0, 0, 0); background-color: rgb(255, 255, 255) }"
+        self.setStyleSheet(tool_tip_style)
+
+    def load_user_preferences(self):
+        self.set_theme(self.user_config.theme)
 
     def closeEvent(self, event):
         self.close_app()
