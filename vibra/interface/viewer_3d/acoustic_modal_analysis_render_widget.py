@@ -25,6 +25,9 @@ class AcousticModalanalysisRenderWidget(CommonRenderWidget):
         self.project = project        
         self.control_bar = self._create_control_bar()
 
+        if self.control_bar is None:
+            return
+
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
         layout = QVBoxLayout()
@@ -101,8 +104,9 @@ class AcousticModalanalysisRenderWidget(CommonRenderWidget):
 
         solver = self.project.acoustic_modal_solver
         self.natural_frequencies = solver.natural_frequencies
+
         if self.natural_frequencies is None:
-            return
+            return None
 
         control_bar = ModalanalysisBar()
         # layout = control_bar.layout()

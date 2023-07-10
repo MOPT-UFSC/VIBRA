@@ -430,6 +430,7 @@ class MenuItems(QTreeWidget):
                 obj = AnalysisTypeInput()
                 if obj.complete:
                     if obj.analysis_id in [2, 4]:
+                        self.run_analysis()    
                         self.item_child_runAnalysis.setDisabled(False)
                     else:
                         self.item_child_runAnalysis.setDisabled(True)
@@ -440,13 +441,7 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_runAnalysis:
             if not self.item_child_runAnalysis.isDisabled():
-                if self.main_window.project.analysis_data is None:
-                    return
-                if self.main_window.project.analysis_data["analysis_id"] == 4:
-                    solve_modal = load_function(self.main_window.process_acoustic_modal_analysis, self.main_window)
-                    solve_modal()
-                else:
-                    raise NotImplementedError("Not implemented analysis")
+                self.run_analysis()
 
         elif item == self.item_child_plotStructuralModeShapes:
             if not self.item_child_plotStructuralModeShapes.isDisabled():
@@ -491,7 +486,16 @@ class MenuItems(QTreeWidget):
         elif item == self.item_child_plot_TL_NR:
             if not self.item_child_plot_TL_NR.isDisabled():
                 pass
-
+    
+    def run_analysis(self):
+        if self.main_window.project.analysis_data is None:
+            return
+        if self.main_window.project.analysis_data["analysis_id"] == 4:
+            solve_modal = load_function(self.main_window.process_acoustic_modal_analysis, self.main_window)
+            solve_modal()
+        else:
+            raise NotImplementedError("Not implemented analysis")
+            
 
     def modify_geometry_item_access(self, bool_key):
         self.item_child_import_geometry.setDisabled(bool_key)
