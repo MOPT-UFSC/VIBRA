@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QSpacerItem, QSizePolicy
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QSpacerItem, QSizePolicy, QGridLayout
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import QSize, Qt
 
@@ -8,50 +8,47 @@ class WelcomeWidget(QWidget):
 
         layout = QVBoxLayout(self)
 
-        image_message_layout = QVBoxLayout()
+        image_message_layout = QGridLayout()
 
         pixmap = QPixmap("data/icons/logo_vibra.png")
         pixmap = pixmap.scaled(180, 180)
         image_label = QLabel(self)
         image_label.setPixmap(pixmap)
         image_label.setAlignment(Qt.AlignHCenter)
-        image_label.setFixedHeight(145)
-        image_message_layout.addWidget(image_label)
+        layout.addWidget(image_label)
 
         message_label = QLabel("OpenPulse: Open Source Software for Pulsation Analysis of Pipeline Systems", self)
         message_label.setAlignment(Qt.AlignHCenter)
         image_message_layout.addWidget(message_label)
         layout.addLayout(image_message_layout)
 
-        labels_layout = QHBoxLayout()
+        labels_layout = QGridLayout()
         layout.addLayout(labels_layout)
 
-        new_project_label = QLabel("New Project", self)
-        labels_layout.addWidget(new_project_label)
-        spacer = QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Minimum)
-        labels_layout.addItem(spacer)
-        open_project_label = QLabel("Open Project", self)
-        labels_layout.addWidget(open_project_label)
+        new_project_label = QLabel("New Project")
+        labels_layout.addWidget(new_project_label, 1, 0)
 
+        open_project_label = QLabel("Open Project")
+        labels_layout.addWidget(open_project_label, 1, 1)
         labels_layout.setAlignment(Qt.AlignLeft)
 
-        buttons_layout2 = QHBoxLayout()
+        buttons_layout2 = QGridLayout()
         layout.addLayout(buttons_layout2)
         buttons_layout2.setAlignment(Qt.AlignLeft)
 
         new_button = QPushButton(self)
         new_button.setIcon(QIcon(""))
         new_button.setIconSize(QSize(100, 100))
-        new_button.setFixedSize(80, 80)
+        new_button.setFixedSize(70, 70)
         new_button.clicked.connect(self.new_project)
-        buttons_layout2.addWidget(new_button)
+        buttons_layout2.addWidget(new_button, 1, 0)
 
         open_button = QPushButton(self)
         open_button.setIcon(QIcon(""))
         open_button.setIconSize(QSize(100, 100))
-        open_button.setFixedSize(80, 80)
+        open_button.setFixedSize(70, 70)
         open_button.clicked.connect(self.new_project)
-        buttons_layout2.addWidget(open_button)
+        buttons_layout2.addWidget(open_button, 1, 1)
 
 
         recent_label = QLabel("Recent Projects", self)
@@ -100,7 +97,6 @@ class WelcomeWidget(QWidget):
         example_label = QLabel("Example Projects", self)
         example_label.setAlignment(Qt.AlignLeft)
         layout.addWidget(example_label)
-
 
         buttons_layout2 = QHBoxLayout()
         layout.addLayout(buttons_layout2)
