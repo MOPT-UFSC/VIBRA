@@ -1,3 +1,7 @@
+<p align="center">
+   <img src="https://github.com/MOPT-UFSC/VIBRA/blob/main/pics/VIBRA.png?raw=true" alt="VIBRA logo" width="600"/>
+
+
 # Vibra
 Por favor, coloquem rascunhos no diretório sketchs =D
 
