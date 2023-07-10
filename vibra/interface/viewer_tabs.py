@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
+from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.interface.help_widget import HelpWidget
 from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
 from vibra.interface.viewer_3d.example_analisys_render_widget import (
@@ -32,7 +32,7 @@ class ViewerTabs(QTabWidget):
         self.geometry_widget = GeometryRenderWidget(self.project)
         self.mesh_widget = MeshRenderWidget(self.project)
         self.example_analisys_widget = ExampleAnalisysRenderWidget(self.project)
-        self.welcome = QLabel("Seja muito bem vindo!")
+        self.welcome = WelcomeWidget()
         self.help_widget = HelpWidget()
 
         self.show_wellcome()

@@ -39,7 +39,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../../../../../../Downloads/load - Copia.png</normaloff>../../../../../../Downloads/load - Copia.png</iconset>
+    <normaloff>../../../../Downloads/load - Copia.png</normaloff>../../../../Downloads/load - Copia.png</iconset>
   </property>
   <property name="whatsThis">
    <string/>
@@ -78,7 +78,6 @@
       <font>
        <family>Arial</family>
        <pointsize>12</pointsize>
-       <weight>75</weight>
        <bold>true</bold>
       </font>
      </property>
@@ -111,15 +110,15 @@
        <widget class="QLabel" name="label_main_title">
         <property name="font">
          <font>
-          <family>Arial</family>
-          <pointsize>14</pointsize>
-          <weight>75</weight>
+          <family>Segoe UI</family>
+          <pointsize>12</pointsize>
           <italic>false</italic>
-          <bold>true</bold>
+          <bold>false</bold>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">font: 75 bold 14pt &quot;Arial&quot;;</string>
+         <string notr="true">font: 75 bold 14pt &quot;Arial&quot;;
+font: 12pt &quot;Segoe UI&quot;;</string>
         </property>
         <property name="text">
          <string>Acoustic modal analysis</string>
@@ -153,7 +152,6 @@
       <font>
        <family>Arial</family>
        <pointsize>12</pointsize>
-       <weight>75</weight>
        <bold>true</bold>
       </font>
      </property>
@@ -183,12 +181,14 @@
        <widget class="QTabWidget" name="tabWidget_main">
         <property name="font">
          <font>
-          <family>Arial</family>
-          <pointsize>12</pointsize>
-          <weight>75</weight>
-          <italic>true</italic>
-          <bold>true</bold>
+          <family>Segoe UI</family>
+          <pointsize>11</pointsize>
+          <italic>false</italic>
+          <bold>false</bold>
          </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Segoe UI&quot;;</string>
         </property>
         <property name="currentIndex">
          <number>0</number>
@@ -220,11 +220,10 @@
           </property>
           <property name="font">
            <font>
-            <family>Arial</family>
-            <pointsize>12</pointsize>
-            <weight>75</weight>
-            <italic>true</italic>
-            <bold>true</bold>
+            <family>Segoe UI</family>
+            <pointsize>11</pointsize>
+            <italic>false</italic>
+            <bold>false</bold>
            </font>
           </property>
           <property name="text">
@@ -257,10 +256,10 @@
           </property>
           <property name="font">
            <font>
-            <family>Arial</family>
-            <pointsize>12</pointsize>
-            <weight>75</weight>
-            <bold>true</bold>
+            <family>Segoe UI</family>
+            <pointsize>11</pointsize>
+            <italic>false</italic>
+            <bold>false</bold>
            </font>
           </property>
           <property name="text">
@@ -293,17 +292,16 @@
           </property>
           <property name="font">
            <font>
-            <family>Arial</family>
-            <pointsize>12</pointsize>
-            <weight>75</weight>
-            <italic>true</italic>
-            <bold>true</bold>
+            <family>Segoe UI</family>
+            <pointsize>11</pointsize>
+            <italic>false</italic>
+            <bold>false</bold>
            </font>
           </property>
           <property name="styleSheet">
-           <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 12pt &quot;Arial&quot;}
-QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 12pt &quot;Arial&quot;}
-QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 12pt &quot;Arial&quot;}</string>
+           <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 11pt &quot;Segoe UI&quot;;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 11pt &quot;Segoe UI&quot;;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 11pt &quot;Segoe UI&quot;;}</string>
           </property>
           <property name="text">
            <string>Run Analysis</string>
@@ -332,15 +330,16 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
           </property>
           <property name="font">
            <font>
-            <family>Arial</family>
-            <pointsize>11</pointsize>
-            <weight>75</weight>
+            <family>Segoe UI</family>
+            <pointsize>10</pointsize>
             <italic>false</italic>
-            <bold>true</bold>
+            <bold>false</bold>
            </font>
           </property>
           <property name="styleSheet">
-           <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+           <string notr="true">font: 10pt &quot;Segoe UI&quot;;
+
+</string>
           </property>
           <property name="text">
            <string>in acoustic modal analysis</string>
@@ -375,15 +374,15 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
           </property>
           <property name="font">
            <font>
-            <family>Arial</family>
-            <pointsize>11</pointsize>
-            <weight>75</weight>
+            <family>Segoe UI</family>
+            <pointsize>10</pointsize>
             <italic>false</italic>
-            <bold>true</bold>
+            <bold>false</bold>
            </font>
           </property>
           <property name="styleSheet">
-           <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+           <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;
+font: 10pt &quot;Segoe UI&quot;;</string>
           </property>
           <property name="text">
            <string>Select the number of modes to solve</string>
@@ -423,10 +422,10 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
           </property>
           <property name="font">
            <font>
-            <family>Arial</family>
-            <pointsize>12</pointsize>
-            <weight>75</weight>
-            <bold>true</bold>
+            <family>Segoe UI</family>
+            <pointsize>11</pointsize>
+            <italic>false</italic>
+            <bold>false</bold>
            </font>
           </property>
           <property name="text">
@@ -459,10 +458,10 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
           </property>
           <property name="font">
            <font>
-            <family>Arial</family>
-            <pointsize>12</pointsize>
-            <weight>75</weight>
-            <bold>true</bold>
+            <family>Segoe UI</family>
+            <pointsize>11</pointsize>
+            <italic>false</italic>
+            <bold>false</bold>
            </font>
           </property>
           <property name="text">
@@ -495,11 +494,10 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
           </property>
           <property name="font">
            <font>
-            <family>Arial</family>
-            <pointsize>12</pointsize>
-            <weight>75</weight>
-            <italic>true</italic>
-            <bold>true</bold>
+            <family>Segoe UI</family>
+            <pointsize>11</pointsize>
+            <italic>false</italic>
+            <bold>false</bold>
            </font>
           </property>
           <property name="text">
@@ -532,17 +530,16 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
           </property>
           <property name="font">
            <font>
-            <family>Arial</family>
-            <pointsize>12</pointsize>
-            <weight>75</weight>
-            <italic>true</italic>
-            <bold>true</bold>
+            <family>Segoe UI</family>
+            <pointsize>11</pointsize>
+            <italic>false</italic>
+            <bold>false</bold>
            </font>
           </property>
           <property name="styleSheet">
-           <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 12pt &quot;Arial&quot;}
-QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 12pt &quot;Arial&quot;}
-QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 12pt &quot;Arial&quot;}</string>
+           <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 11pt &quot;Segoe UI&quot;;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 9pt &quot;Segoe UI&quot;;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 11pt &quot;Segoe UI&quot;;}</string>
           </property>
           <property name="text">
            <string>Run Analysis</string>
@@ -571,15 +568,15 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
           </property>
           <property name="font">
            <font>
-            <family>Arial</family>
-            <pointsize>11</pointsize>
-            <weight>75</weight>
+            <family>Segoe UI</family>
+            <pointsize>10</pointsize>
             <italic>false</italic>
-            <bold>true</bold>
+            <bold>false</bold>
            </font>
           </property>
           <property name="styleSheet">
-           <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+           <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;
+font: 10pt &quot;Segoe UI&quot;;</string>
           </property>
           <property name="text">
            <string>The Sigma allows to find eigenvalues</string>
@@ -614,15 +611,15 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
           </property>
           <property name="font">
            <font>
-            <family>Arial</family>
-            <pointsize>11</pointsize>
-            <weight>75</weight>
+            <family>Segoe UI</family>
+            <pointsize>10</pointsize>
             <italic>false</italic>
-            <bold>true</bold>
+            <bold>false</bold>
            </font>
           </property>
           <property name="styleSheet">
-           <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+           <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;
+font: 10pt &quot;Segoe UI&quot;;</string>
           </property>
           <property name="text">
            <string>near sigma using shift-invert mode</string>
@@ -657,12 +654,15 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
           </property>
           <property name="font">
            <font>
-            <family>Arial</family>
+            <family>Segoe UI</family>
             <pointsize>9</pointsize>
-            <weight>75</weight>
             <italic>false</italic>
-            <bold>true</bold>
+            <bold>false</bold>
            </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">font: 9pt &quot;Segoe UI&quot;;
+font: 9pt &quot;Segoe UI&quot;;</string>
           </property>
           <property name="text">
            <string>Note: see scipy.sparse.linalg.eigs for more details.</string>
