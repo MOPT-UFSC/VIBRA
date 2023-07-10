@@ -14,8 +14,8 @@ from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
     CuttingPlaneActor,
 )
 from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
-from vibra.interface.modal_analysis_bar import ModalanalysisBar
-from vibra.utils.math_functions import bounds_distance, rotation_matrices
+from vibra.interface.modal_analysis_bar import ModalAnalysisBar
+from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
 
 
 class AcousticModalanalysisRenderWidget(CommonRenderWidget):
@@ -23,10 +23,9 @@ class AcousticModalanalysisRenderWidget(CommonRenderWidget):
         super().__init__(parent)
 
         self.project = project        
-        self.control_bar = self._create_control_bar()
-
-        if self.control_bar is None:
-            return
+        self.control_bar = ModalAnalysisBar()
+        self.control_bar.plot_changed.connect(self.update_plot)
+        self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
 
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
@@ -42,10 +41,17 @@ class AcousticModalanalysisRenderWidget(CommonRenderWidget):
 
         self.create_axes()
         self.create_color_bar()
+        self.update_frequencies()
         self.update_plot()
 
     def current_shape_index(self):
         return self.control_bar.frequency_box.currentIndex()
+    
+    def update_frequencies(self):
+        solver = self.project.acoustic_modal_solver
+        if solver is None:
+            return
+        self.control_bar.set_frequencies(solver.natural_frequencies)
 
     def update_plot(self):
         if self.project is None:
@@ -75,6 +81,8 @@ class AcousticModalanalysisRenderWidget(CommonRenderWidget):
             current_modal_shape = np.abs(current_modal_shape)
 
         self.analysis_actor = AnalysisActor(mesh)
+        self.analysis_actor.GetProperty().SetPointSize(3)
+        self.analysis_actor.GetProperty().SetLineWidth(2)
         self.analysis_actor.plot_colorbar(current_modal_shape)
         self.renderer.AddActor(self.analysis_actor)
         self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
@@ -89,39 +97,86 @@ class AcousticModalanalysisRenderWidget(CommonRenderWidget):
         self.renderer.ResetCamera()
         self.update()
 
+    def set_mesh_visibility(self, condition):
+        if not self._actors_exists():
+            return
+
+        if condition:
+            self.show_lines()
+        else:
+            self.show_faces()
+
+    def show_points(self):
+        if not self._actors_exists():
+            return
+        
+        self.control_bar.show_mesh_button.setChecked(False)
+        self.analysis_actor.GetProperty().SetRepresentationToPoints()
+        self.update()
+
+    def show_lines(self):
+        if not self._actors_exists():
+            return
+        
+        self.control_bar.show_mesh_button.setChecked(True)
+        self.analysis_actor.GetProperty().SetRepresentationToSurface()
+        self.analysis_actor.GetProperty().EdgeVisibilityOn()
+        self.update()
+
+    def show_faces(self):
+        if not self._actors_exists():
+            return
+        
+        self.control_bar.show_mesh_button.setChecked(False)
+        self.analysis_actor.GetProperty().SetRepresentationToSurface()
+        self.analysis_actor.GetProperty().EdgeVisibilityOff()
+        self.update()
+
     def remove_actors(self):
         self.renderer.RemoveActor(self.analysis_actor)
         self.renderer.RemoveActor(self.plane_actor)
         self.analysis_actor = None
         self.plane_actor = None
 
-    def _create_control_bar(self):
-        # TODO: Implement this in a isolated widget
-        # if self.project is None:
-        #     return
+    def start_cutting_mode(self):
+        if not self._actors_exists():
+            return
+        self.plane_actor.VisibilityOn()
 
-        solver = self.project.acoustic_modal_solver
-        self.natural_frequencies = solver.natural_frequencies
+    def stop_cutting_mode(self):
+        if not self._actors_exists():
+            return
+        self.plane_actor.VisibilityOff()
+        self.analysis_actor.disable_cut()
 
-        if self.natural_frequencies is None:
-            return None
+    def configure_cutting_plane(self, position, orientation):
+        if not self._actors_exists():
+            return
 
-        control_bar = ModalanalysisBar()
-        # layout = control_bar.layout()
-        # self.frequencies = QComboBox()
-        control_bar.mode_box.activated.connect(self.update_plot)
-        control_bar.frequency_box.activated.connect(self.update_plot)
-        control_bar.real_part_button.clicked.connect(self.update_plot)
-        control_bar.absolute_button.clicked.connect(self.update_plot)
+        x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
+        y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
+        z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
+        self.plane_actor.SetPosition(x, y, z)
+        self.plane_actor.SetOrientation(orientation)
 
-        for i, freq in enumerate(self.natural_frequencies):
-            # control_bar.mode_box.addItem(f"Mode: {i}")
-            control_bar.frequency_box.addItem(f" Mode {i + 1}: {round(freq, 6)} Hz")
+        self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
+        self.plane_actor.GetProperty().SetOpacity(0.8)
+        self.update()
 
-        # layout.addWidget(QLabel("Hola que tal"))
-        # layout.addWidget(self.frequencies)
-        # control_bar.setLayout(layout)
-        return control_bar
+    def apply_cutting_plane(self, position, orientation):
+        if not self._actors_exists():
+            return
+        
+        x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
+        y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
+        z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
+        normal = self._calculate_normal_vector(orientation)
+        self.analysis_actor.apply_cut((x, y, z), normal)
+
+        self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
+        self.plane_actor.GetProperty().SetOpacity(0.2)
+
+        self.update()
 
     def _actors_exists(self):
         actors = [

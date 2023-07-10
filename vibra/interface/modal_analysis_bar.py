@@ -5,83 +5,45 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 
-class ModalanalysisBar(QWidget):
+class ModalAnalysisBar(QWidget):
+    plot_changed = pyqtSignal()
+
     def __init__(self):
         super().__init__()
+        # Avoid using fixed sizes for all widgets!!
 
-        self._define_qt_variables()      
-
-        # color_scaling_layout = QGridLayout()
-        # color_scaling_layout.addWidget(QLabel("Color Scaling Setup"), 0, 0)
-        # color_scaling_layout.addWidget(QLabel("Real Part"), 1, 0)
-        # color_scaling_layout.addWidget(QLabel("Absolute"), 1, 1)
-        
-
-    def _define_qt_variables(self):
-        #
-        self.show_mesh_button = QCheckBox("Show mesh")
-        self.mode_box = QComboBox()
         self.frequency_box = QComboBox()
-        #
-        self.frame_spacer = QFrame()
-        #
-        self.label_mode_selector = QLabel("Mode selector:")
-        self.label_color_scale = QLabel("Color scale:")
-        #
-        analysis_info_layout = QGridLayout()
-        layout = QHBoxLayout()
-        #
+        self.real_part_button = QRadioButton("Real Part")
         self.absolute_button = QRadioButton("Absolute")
-        self.real_part_button = QRadioButton("Real part")
-        #
-        self._config_widgets() 
-        #
-        # color_scaling_layout.addButton(self.absolute_button)
-        # color_scaling_layout.addButton(self.real_part_button)
-        #
-        # analysis_info_layout.addWidget(self.label_mode, 0, 0)
-        # analysis_info_layout.addWidget(self.mode_box, 1, 0)
-        analysis_info_layout.addWidget(self.frame_spacer, 0, 0)
-        analysis_info_layout.addWidget(self.label_color_scale, 0, 1)
-        analysis_info_layout.addWidget(self.real_part_button, 0, 2)
-        analysis_info_layout.addWidget(self.absolute_button, 0, 3)
-        analysis_info_layout.addWidget(self.show_mesh_button, 0, 4)
-        analysis_info_layout.addWidget(self.label_mode_selector, 0, 5)
-        analysis_info_layout.addWidget(self.frequency_box, 0, 6)
-        
-        #
-        # layout.addWidget(self.real_part_button)
-        # layout.addWidget(self.absolute_button)
-        layout.addLayout(analysis_info_layout)
-        self.setLayout(layout)
-        self.setContentsMargins(2, 2, 2, 2)
+        self.show_mesh_button = QCheckBox("Show mesh")
 
-
-    def _config_widgets(self):
-
-        height = 28
-
-        self.frame_spacer.setMinimumHeight(height)
-        self.frame_spacer.setMaximumHeight(height)
-        
-        self.real_part_button.setMinimumSize(90, height)
-        self.real_part_button.setMaximumSize(90, height)
-        self.absolute_button.setMinimumSize(90, height)
-        self.absolute_button.setMaximumSize(90, height)
+        button_group = QButtonGroup()
+        button_group.addButton(self.real_part_button)
+        button_group.addButton(self.absolute_button)
+        self.frequency_box.setMinimumWidth(300)
         self.real_part_button.setChecked(True)
 
-        self.show_mesh_button.setMinimumSize(100, height)
-        self.show_mesh_button.setMaximumSize(100, height)
-        
-        # self.label_color_scale.setAlignment(Qt.AlignRight)
-        self.label_color_scale.setMinimumSize(70, height)
-        self.label_color_scale.setMaximumSize(70, height)
+        layout = QHBoxLayout()
+        layout.addStretch()
+        layout.addWidget(QLabel("Color Scale:"))
+        layout.addWidget(self.real_part_button)
+        layout.addWidget(self.absolute_button)
+        layout.addSpacing(100)
+        layout.addWidget(self.show_mesh_button)
+        layout.addSpacing(100)
+        layout.addWidget(QLabel("Mode Selector:"))
+        layout.addWidget(self.frequency_box)
+        self.setLayout(layout)
 
-        # self.label_mode_selector.setAlignment(Qt.AlignRight)
-        self.label_mode_selector.setMinimumSize(100, height)
-        self.label_mode_selector.setMaximumSize(100, height)
-        
-        self.mode_box.setMinimumSize(160, height)
-        self.mode_box.setMaximumSize(160, height)
-        self.frequency_box.setMinimumSize(180, height)
-        self.frequency_box.setMaximumSize(180, height)
+        self.frequency_box.activated.connect(self.plot_changed.emit)
+        self.real_part_button.clicked.connect(self.plot_changed.emit)
+        self.absolute_button.clicked.connect(self.plot_changed.emit)
+
+    def set_frequencies(self, frequencies):
+        self.frequency_box.clear()
+
+        if frequencies is None:
+            return
+
+        for i, freq in enumerate(frequencies):
+            self.frequency_box.addItem(f"Mode {i + 1}: {round(freq, 6)} Hz")
