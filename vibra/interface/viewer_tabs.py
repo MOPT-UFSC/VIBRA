@@ -9,15 +9,15 @@ from PyQt5.QtWidgets import (
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.interface.help_widget import HelpWidget
 from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
-from vibra.interface.viewer_3d.example_analisys_render_widget import (
-    ExampleAnalisysRenderWidget,
+from vibra.interface.viewer_3d.example_analysis_render_widget import (
+    ExampleAnalysisRenderWidget,
 )
 from vibra.interface.viewer_3d.example_render_widget import ExampleRenderWidget
 from vibra.interface.viewer_3d.geometry_render_widget import (
     GeometryRenderWidget,
 )
 from vibra.interface.viewer_3d.mesh_render_widget import MeshRenderWidget
-from vibra.interface.viewer_3d.acoustic_modal_analisys_render_widget import AcousticModalAnalisysRenderWidget
+from vibra.interface.viewer_3d.acoustic_modal_analysis_render_widget import AcousticModalanalysisRenderWidget
 
 class ViewerTabs(QTabWidget):
     def __init__(self, parent, project, user_config):
@@ -31,12 +31,12 @@ class ViewerTabs(QTabWidget):
 
         self.geometry_widget = GeometryRenderWidget(self.project)
         self.mesh_widget = MeshRenderWidget(self.project)
-        self.example_analisys_widget = ExampleAnalisysRenderWidget(self.project)
+        self.example_analysis_widget = ExampleAnalysisRenderWidget(self.project)
         self.welcome = WelcomeWidget()
         self.help_widget = HelpWidget()
 
         self.show_wellcome()
-        self.show_acoustic_modal_analisys()
+        self.show_acoustic_modal_analysis()
 
     def show_wellcome(self):
         self.addTab(self.welcome, "Wellcome!")
@@ -61,22 +61,24 @@ class ViewerTabs(QTabWidget):
         self.mesh_widget.update_plot()
         self.setCurrentWidget(self.mesh_widget)
 
-    def show_analisys(self):
-        if self.example_analisys_widget not in self.tabs():
-            self.addTab(self.example_analisys_widget, "Example Analisys")
-        self.setCurrentWidget(self.example_analisys_widget)
+    def show_analysis(self):
+        if self.example_analysis_widget not in self.tabs():
+            self.addTab(self.example_analysis_widget, "Example analysis")
+        self.setCurrentWidget(self.example_analysis_widget)
 
-    def show_example_analisys(self):
-        if self.example_analisys_widget not in self.tabs():
-            self.addTab(self.example_analisys_widget, "Example Analisys")
-            self.example_analisys_widget.set_theme(self.user_config.theme)
+    def show_example_analysis(self):
+        if self.example_analysis_widget not in self.tabs():
+            self.addTab(self.example_analysis_widget, "Example analysis")
+            self.example_analysis_widget.set_theme(self.user_config.theme)
 
-        self.example_analisys_widget.update_plot()
-        self.setCurrentWidget(self.example_analisys_widget)
+        self.example_analysis_widget.update_plot()
+        self.setCurrentWidget(self.example_analysis_widget)
 
-    def show_acoustic_modal_analisys(self):
-        widget = AcousticModalAnalisysRenderWidget(self.project)
-        self.addTab(widget, "Acoustic Modal Analisys")
+    def show_acoustic_modal_analysis(self):
+        widget = AcousticModalanalysisRenderWidget(self.project)
+        if self.project.acoustic_modal_solver.natural_frequencies is None:
+            return
+        self.addTab(widget, "Acoustic Modal analysis")
         widget.update_plot()
         self.setCurrentWidget(widget)
 

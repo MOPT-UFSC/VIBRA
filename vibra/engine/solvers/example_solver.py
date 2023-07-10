@@ -13,7 +13,6 @@ class ExampleSolver(Solver):
 
     def set_analysis_data(self, data):
         self.analysis_data = data
-        print(data)
 
     def solve(self):
         if not self.model_ready():

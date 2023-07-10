@@ -19,11 +19,10 @@ class Model:
         self.reset_variables()
         
     def reset_variables(self):
-        # self.material = None
-        # self.fluid = None
+        #
+        self.geometry_path = ""
         self.mesh = None
         self.mesh_setup = None
-        self.geometry_path = ""
         self.mesh_setup = None
         self.mesh = None
 

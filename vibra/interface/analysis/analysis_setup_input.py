@@ -27,13 +27,13 @@ class AnalysisSetupInput(QDialog):
         """
 
         self.project = project
-        self.analysis_ID = project.analysis_ID
+        self.analysis_id = project.analysis_id
 
-        if self.analysis_ID in [1,6]:
+        if self.analysis_id in [1,6]:
             uic.loadUi('data/ui_files/analysis/structural/analysis_setup_input_harmonic_analysis_mode_superposition_method.ui', self)
-        elif self.analysis_ID in [0,5]:
+        elif self.analysis_id in [0,5]:
             uic.loadUi('data/ui_files/analysis/structural/analysis_setup_input_harmonic_analysis_direct_method.ui', self)
-        elif self.analysis_ID in [3]:
+        elif self.analysis_id in [3]:
             uic.loadUi('data/ui_files/analysis/acoustic/analysis_setup_input_harmonic_analysis_direct_method.ui', self)
         else:
             return
@@ -59,7 +59,7 @@ class AnalysisSetupInput(QDialog):
         self.label_title = self.findChild(QLabel, 'label_title')
         self.label_subtitle = self.findChild(QLabel, 'label_subtitle')
 
-        if self.analysis_ID == 1:
+        if self.analysis_id == 1:
             self.lineEdit_modes = self.findChild(QLineEdit, 'lineEdit_modes')
 
         self.lineEdit_av = self.findChild(QLineEdit, 'lineEdit_av')
@@ -99,7 +99,7 @@ class AnalysisSetupInput(QDialog):
         self.currentTab = self.tabWidget.currentIndex()
 
     def update_damping_input_texts(self):
-        if self.analysis_ID not in [2,3,4]:
+        if self.analysis_id not in [2,3,4]:
             if self.global_damping != [0,0,0,0]:
                 self.lineEdit_av.setText(str(self.global_damping[0]))
                 self.lineEdit_bv.setText(str(self.global_damping[1]))
@@ -118,9 +118,9 @@ class AnalysisSetupInput(QDialog):
 
     def check_exit(self):
         input_fmin = input_fmax = input_fstep = 0
-        if self.analysis_ID not in [2,4]:
+        if self.analysis_id not in [2,4]:
             
-            if self.analysis_ID == 1:
+            if self.analysis_id == 1:
                 self.modes = self.check_inputs(self.lineEdit_modes, "'number of modes'")
                 if self.stop:
                     self.lineEdit_modes.setFocus()
@@ -151,7 +151,7 @@ class AnalysisSetupInput(QDialog):
 
         alpha_v = beta_v = alpha_h = beta_h = 0.0
         
-        if self.analysis_ID in [0, 1, 5, 6]:    
+        if self.analysis_id in [0, 1, 5, 6]:    
 
             alpha_v = self.check_inputs(self.lineEdit_av, "'proportional viscous damping (alpha_v)'", zero_included=True, _float=True)
             if self.stop:
@@ -182,7 +182,7 @@ class AnalysisSetupInput(QDialog):
             self.frequencies = np.arange(input_fmin, input_fmax+input_fstep, input_fstep)
             self.project.set_frequencies(self.frequencies, input_fmin, input_fmax, input_fstep)
         
-        if not self.analysis_ID in [3,4]:
+        if not self.analysis_id in [3,4]:
             self.project.set_modes_sigma(self.modes)
 
         self.project.update_project_analysis_setup_state(True)

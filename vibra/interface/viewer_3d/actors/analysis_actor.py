@@ -3,7 +3,7 @@ import vtk
 from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
 
 
-class AnalisysActor(SolidsActor):
+class AnalysisActor(SolidsActor):
     def __init__(self, mesh):
         super().__init__(mesh)
         self.lookup_table = vtk.vtkLookupTable()
@@ -39,7 +39,7 @@ class AnalisysActor(SolidsActor):
         if self.data is None:
             return
 
-        self.lookup_table.SetTableRange(min(values), max(values))
+        self.lookup_table.SetTableRange(round(min(values), 1), round(max(values), 1))
         self.lookup_table.Build()
 
         point_colors = self.data.GetPointData().GetScalars()

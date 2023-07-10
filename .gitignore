@@ -3,6 +3,9 @@
 .fluid_library.dat
 .material_library.dat
 
+# Local directory
+output_data/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
