@@ -4,7 +4,8 @@ from time import sleep
 
 from vibra.engine.assemblers.modal_assembler import ModalAssembler
 from vibra.engine.model import Model
-from vibra.engine.assemblers.modal_assembler import ModalAssembler
+from vibra.engine.assemblers.acoustic_modal_assembler import AcousticModalAssembler
+from vibra.engine.assemblers.structural_modal_assembler import StructuralModalAssembler
 from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.engine.solvers.example_solver import ExampleSolver
 from vibra.engine.solvers.modal_solver import ModalSolver
@@ -25,9 +26,10 @@ class Project:
         self.analysis_data = None
         #
         self.model = Model()
-        self.acoustic_modal_assembler = ModalAssembler(self.model)
-        self.structural_modal_assembler = ModalAssembler(self.model)
+        self.acoustic_modal_assembler = AcousticModalAssembler(self.model)
+        self.structural_modal_assembler = StructuralModalAssembler(self.model)
         self.acoustic_modal_solver = ModalSolver(self.acoustic_modal_assembler)
+        self.structural_modal_solver = ModalSolver(self.structural_modal_assembler)
 
     @classmethod
     def load(cls, path):

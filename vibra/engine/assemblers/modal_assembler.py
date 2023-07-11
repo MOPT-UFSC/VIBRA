@@ -3,15 +3,9 @@ from time import time
 import numpy as np
 from scipy.sparse import coo_matrix
 
-# from vibra.engine.elements.acoustic_tet4_element import ACT_TETRAHEDRON_4C
-from vibra.engine.elements.element_factory import new_element
-
 #TODO: implementar todos os elementos acústicos, para validação preciso ter todos operacionais!!!
 # o tipo de elemento pode ser acessado em self.project.model.mesh_setup["element_type"]
 
-# from vibra.engine.elements.acoustic_tet10_element import ACT_TETRAHEDRON_10C
-# from vibra.engine.elements.acoustic_hex8_element import ACT_HEXAHEDRON_8C
-# from vibra.engine.elements.acoustic_hex20_element import ACT_HEXAHEDRON_20C
 
 class ModalAssembler:
     def __init__(self, model):
@@ -31,7 +25,7 @@ class ModalAssembler:
         Calculates global matrices.
         """
 
-        element = new_element(self.model)
+        element = self.new_element()
         ind_rows, ind_cols = element.generate_ind_rows_cols()
 
         dofs = element.DOFS_PER_ELEMENT
@@ -55,3 +49,10 @@ class ModalAssembler:
         self.mass_matrix = coo_matrix(
             (self.data_M, (ind_rows, ind_cols)), shape=(total_dofs, total_dofs)
         )
+
+    def new_element(self):
+        '''
+        Returns the correct element according to the
+        model mesh configuration.
+        '''
+        raise NotImplementedError("new_element function not implemented")
