@@ -71,9 +71,15 @@ class ViewerTabs(QTabWidget):
         widget = AcousticModalAnalysisRenderWidget(self.project)
         if self.project.acoustic_modal_solver.natural_frequencies is None:
             return
-        self.addTab(widget, "Acoustic Modal Analysis")
+        self.create_a_new_tab_if_it_does_not_exist(widget, "Acoustic Modal Analysis")
         widget.update_plot()
         self.setCurrentWidget(widget)
+
+    def create_a_new_tab_if_it_does_not_exist(self, widget, tab_text):
+        for i in range(self.count()):
+            if self.tabText(i) == tab_text:
+                return
+        self.addTab(widget, tab_text)
 
     def show_help(self):
         self.addTab(self.help_widget, "Help")
