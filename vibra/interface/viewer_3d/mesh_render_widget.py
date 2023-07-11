@@ -1,7 +1,9 @@
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
 
 from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
 from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
+from vibra.interface.tabs.mesh_info_bar import MeshInfoBar
 
 SHOW_POINTS = 0
 SHOW_LINES = 1
@@ -16,6 +18,16 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.project = project
         self.view_mode = SHOW_FACES
+
+        self.mesh_info = MeshInfoBar()
+
+        # replace the layout to add other usefull widgets
+        QObjectCleanupHandler().add(self.layout())
+        layout = QVBoxLayout()
+        layout.addWidget(self.mesh_info)
+        layout.addWidget(self.render_interactor)
+        self.setLayout(layout)
+        self.setContentsMargins(0, 0, 0, 0)
 
         self.solids_actor = None
 
@@ -67,3 +79,6 @@ class MeshRenderWidget(CommonRenderWidget):
             self.solids_actor,
         ]
         return all([actor is not None for actor in actors])
+    
+    def _get_info_tab(self):
+        pass

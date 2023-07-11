@@ -4,6 +4,8 @@ from PyQt5.QtCore import *
 from PyQt5 import uic
 from pathlib import Path
 
+from vibra.utils.interface_functions import get_main_window
+
 from vibra.interface.general.print_message_input import PrintMessageInput
 from math import pi
 
@@ -15,6 +17,8 @@ class AcousticModalAnalysisInput(QDialog):
         super().__init__(*args, **kwargs)
 
         uic.loadUi(Path('data/ui_files/analysis/acoustic/acoustic_modal_analysis_input.ui'), self)
+        self.main_window = get_main_window()
+        self.project = self.main_window.project
 
         icon_path = str(Path('data/icons/logo_vibra.png'))
         self.icon = QIcon(icon_path)
@@ -29,6 +33,11 @@ class AcousticModalAnalysisInput(QDialog):
 
         self.pushButton_run_analysis_setup = self.findChild(QPushButton, 'pushButton_run_analysis_setup')
         self.pushButton_run_analysis_advanced = self.findChild(QPushButton, 'pushButton_run_analysis_advanced')
+
+        if self.project.model.mesh_setup is None:
+            self.pushButton_run_analysis_setup.setDisabled(True)
+            self.pushButton_run_analysis_advanced.setDisabled(True)
+
         self.pushButton_run_analysis_setup.clicked.connect(self.confirm)
         self.pushButton_run_analysis_advanced.clicked.connect(self.confirm)
 

@@ -1,4 +1,5 @@
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
 
 from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 from vibra.interface.viewer_3d.actors.lines_actor import LinesActor
@@ -7,6 +8,7 @@ from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
 from vibra.interface.viewer_3d.interactor_styles.selection_interactor import (
     SelectionInteractor,
 )
+from vibra.interface.tabs.geometry_info_bar import GeometryInfoBar
 
 SHOW_POINTS = 0
 SHOW_LINES = 1
@@ -21,6 +23,16 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.project = project
         self.view_mode = SHOW_FACES
+        
+        self.geometry_info = GeometryInfoBar()
+
+        # replace the layout to add other usefull widgets
+        QObjectCleanupHandler().add(self.layout())
+        layout = QVBoxLayout()
+        layout.addWidget(self.geometry_info)
+        layout.addWidget(self.render_interactor)
+        self.setLayout(layout)
+        self.setContentsMargins(0, 0, 0, 0)
 
         self.points_actor = None
         self.lines_actor = None

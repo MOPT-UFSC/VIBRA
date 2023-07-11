@@ -94,6 +94,10 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
         self.plane_actor.SetScale(scale, scale, scale)
         self.renderer.AddActor(self.plane_actor)
 
+        if self.control_bar.show_mesh_button.isChecked():
+            self.analysis_actor.GetProperty().SetRepresentationToSurface()
+            self.analysis_actor.GetProperty().EdgeVisibilityOn()
+
         self.renderer.ResetCamera()
         self.update()
 

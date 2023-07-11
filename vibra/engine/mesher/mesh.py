@@ -28,11 +28,11 @@ class Mesh:
         cls,
         path: (str | Path),
         *,
-        minimum_element_size: float = 40.0,
-        maximum_element_size: float = 40.0,
+        minimum_element_size: float = 30.0,
+        maximum_element_size: float = 30.0,
         element_type: ElementType = DEFAULT_ELEMENT_TYPE,
         geometry_tolerance: float = 1e-6,
-        size_factor: float = 1.0,
+        size_factor: float = 0.5,
         dimension: int = 3,
         threads: int = 1,
     ):
@@ -63,13 +63,13 @@ class Mesh:
         self,
         path: (str | Path),
         *,
-        minimum_element_size: float = 40.0,
-        maximum_element_size: float = 40.0,
+        minimum_element_size: float = 30.0,
+        maximum_element_size: float = 30.0,
         element_type: ElementType = DEFAULT_ELEMENT_TYPE,
         geometry_tolerance: float = 1e-6,
-        size_factor: float = 0.0,
+        size_factor: float = 0.50,
         dimension: int = 3,
-        threads: int = 1,
+        threads: int = 2,
         gmsh_gui: bool = False
     ):
         _path = "C:\Repositorios\VIBRA\data\examples\script_files\script_hex_elements.txt"
@@ -148,6 +148,7 @@ class Mesh:
         size_factor,
         threads,
     ):
+
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("General.NumThreads", threads)

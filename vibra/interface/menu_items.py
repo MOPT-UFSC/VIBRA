@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+import os
 
 from pathlib import Path
 
@@ -84,12 +85,14 @@ class MenuItems(QTreeWidget):
         self._addItems()
         self._configItems()
         self._updateItems()
+        self._initial_items_acces_config()
 
     def keyPressEvent(self, event):
         """This deals with key events that are directly linked with the menu."""
         if event.key() == Qt.Key_F5:
-            self.main_window.getInputWidget().runAnalysis()
-            self._updateItems()
+            if not self.item_child_runAnalysis.isDisabled():
+                self.run_analysis()
+                
 
     def _createIcons(self):
         """Create Icons objects that are placed on the right side of the item.
@@ -107,14 +110,14 @@ class MenuItems(QTreeWidget):
         self.font_top_Items.setPointSize(11)
         self.font_top_Items.setBold(True)
         self.font_top_Items.setItalic(False)
-        self.font_top_Items.setWeight(75)
+        self.font_top_Items.setWeight(60)
 
         self.font_child_Items = QFont()
         # self.font_child_Items.setFamily("Segoe UI")
         self.font_child_Items.setPointSize(10)
         #self.font_child_Items.setBold(False)
         #self.font_child_Items.setItalic(True)
-        self.font_child_Items.setWeight(60)
+        self.font_child_Items.setWeight(50)
 
     def _createColorsBrush(self):
         """Create Color objects that define the color of the text and/or background of the items."""
@@ -148,7 +151,6 @@ class MenuItems(QTreeWidget):
         self.setFrameShape(1)
         # self.setFrameShadow(3)
         self.setLineWidth(2)
-        # self.setStyleSheet("QTreeWidget{alternate-background-color: red; background: black;}")
         # self.setIndentation(20)
         # self.setColumnWidth(0, 50)
         self.itemClicked.connect(self.on_click_item)
@@ -188,23 +190,17 @@ class MenuItems(QTreeWidget):
         #
         self.item_top_acousticModelSetup = QTreeWidgetItem(["Acoustic Model Setup"])
         self.item_child_setAcousticElementType = QTreeWidgetItem(["Set Acoustic Element Type"])
+        self.item_child_set_dissipation_model = QTreeWidgetItem(["Set Dissipation Model"])
         self.item_child_setAcousticPressure = QTreeWidgetItem(["Set Acoustic Pressure"])
         self.item_child_setVolumeVelocity = QTreeWidgetItem(["Set Volume Velocity"])
         self.item_child_setSpecificImpedance = QTreeWidgetItem(["Set Specific Impedance"])
         self.item_child_set_radiation_impedance = QTreeWidgetItem(["Set Radiation Impedance"])
         self.item_child_add_compressor_excitation = QTreeWidgetItem(["Add Compressor Excitation"])
         #
-        self.item_child_setAcousticElementType.setDisabled(True)
-        self.item_child_setAcousticPressure.setDisabled(True)
-        self.item_child_setVolumeVelocity.setDisabled(True)
-        self.item_child_setSpecificImpedance.setDisabled(True)
-        self.item_child_set_radiation_impedance.setDisabled(True)
-        self.item_child_add_compressor_excitation.setDisabled(True)
-
-        #
         self.list_top_items.append(self.item_top_acousticModelSetup)
         self.list_child_items.append(self.item_child_setAcousticElementType)
         self.list_child_items.append(self.item_child_setAcousticPressure)
+        self.list_child_items.append(self.item_child_set_dissipation_model)
         self.list_child_items.append(self.item_child_setVolumeVelocity)
         self.list_child_items.append(self.item_child_setSpecificImpedance)
         self.list_child_items.append(self.item_child_set_radiation_impedance)
@@ -272,8 +268,6 @@ class MenuItems(QTreeWidget):
         self.item_top_generalSettings.addChild(self.item_child_mesh_setup)
         self.item_top_generalSettings.addChild(self.item_child_generate_mesh)
         
-        self.item_child_generate_mesh.setDisabled(True)
-        
         self.addTopLevelItem(self.item_top_structuralModelSetup)
         self.item_top_structuralModelSetup.addChild(self.item_child_setStructuralElementType)
         self.item_top_structuralModelSetup.addChild(self.item_child_setPrescribedDofs)
@@ -282,6 +276,7 @@ class MenuItems(QTreeWidget):
         self.addTopLevelItem(self.item_top_acousticModelSetup)
         self.item_top_acousticModelSetup.addChild(self.item_child_setAcousticElementType)
         self.item_top_acousticModelSetup.addChild(self.item_child_setAcousticPressure)
+        self.item_top_acousticModelSetup.addChild(self.item_child_set_dissipation_model)
         self.item_top_acousticModelSetup.addChild(self.item_child_setVolumeVelocity)
         self.item_top_acousticModelSetup.addChild(self.item_child_setSpecificImpedance)
         self.item_top_acousticModelSetup.addChild(self.item_child_set_radiation_impedance)
@@ -374,6 +369,11 @@ class MenuItems(QTreeWidget):
         if item == self.item_child_import_geometry:
             if not self.item_child_import_geometry.isDisabled():
                 self.main_window.import_geometry()
+                if os.path.exists(self.main_window.project.geometry_path):
+                    self.main_window.renderer_toolbar.setDisabled(False)
+                    self.modify_acoustic_model_setup_items_acces(False)
+                    self.modify_structural_model_setup_items_acces(True)
+                    self.modify_analysis_items_acces(False)
 
         elif item == self.item_child_mesh_setup:
             if not self.item_child_mesh_setup.isDisabled():
@@ -414,6 +414,10 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_setAcousticPressure:
             if not self.item_child_setAcousticPressure.isDisabled():
+                pass
+
+        elif item == self.item_child_set_dissipation_model:
+            if not self.item_child_set_dissipation_model.isDisabled():
                 pass
 
         elif item == self.item_child_setVolumeVelocity:
@@ -476,7 +480,7 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_plotAcousticModeShapes:
             if not self.item_child_plotAcousticModeShapes.isDisabled():
-                pass
+                self.main_window.viewer_tabs.show_acoustic_modal_analysis()
 
         elif item == self.item_child_plotAcousticPressureField:
             if not self.item_child_plotAcousticPressureField.isDisabled():
@@ -495,142 +499,135 @@ class MenuItems(QTreeWidget):
                 pass
     
     def run_analysis(self):
-        if self.main_window.project.analysis_data is None:
+        if self.project.model.mesh is None:
+            return
+        if self.project.analysis_data is None:
             return
         if self.main_window.project.analysis_data["analysis_id"] == 4:
             solve_modal = load_function(self.main_window.process_acoustic_modal_analysis, self.main_window)
             solve_modal()
         else:
             raise NotImplementedError("Not implemented analysis")
-            
+        self._updateItems()
+
+    def _initial_items_acces_config(self): 
+        for child_item in self.list_child_items:
+            child_item.setDisabled(True)
+        self.modify_general_settings_items_access(False)
 
     def modify_geometry_item_access(self, bool_key):
         self.item_child_import_geometry.setDisabled(bool_key)
         self.item_child_mesh_setup.setDisabled(bool_key)
 
     def modify_general_settings_items_access(self, bool_key):
-        #
-        self.item_child_import_geometry.setDisabled(bool_key)
-        self.item_child_mesh_setup.setDisabled(bool_key)
-        # self.item_child_set_material.setDisabled(bool_key)
-        # self.item_child_set_fluid.setDisabled(bool_key)
-        # self.item_child_set_crossSection.setDisabled(bool_key)
-
-    def modify_model_setup_items_access(self, bool_key):
-        #
         self.item_child_import_geometry.setDisabled(bool_key)
         self.item_child_mesh_setup.setDisabled(bool_key)
         self.item_child_set_material.setDisabled(bool_key)
         self.item_child_set_fluid.setDisabled(bool_key)
-        #
+        self.item_child_generate_mesh.setDisabled(True)
+
+    def modify_structural_model_setup_items_acces(self, bool_key):
         self.item_child_setStructuralElementType.setDisabled(bool_key)
         self.item_child_setPrescribedDofs.setDisabled(bool_key)
         self.item_child_setNodalLoads.setDisabled(bool_key)
-        #
+
+    def modify_acoustic_model_setup_items_acces(self, bool_key):
         self.item_child_setAcousticElementType.setDisabled(bool_key)
+        self.item_child_set_dissipation_model.setDisabled(bool_key)
         self.item_child_setAcousticPressure.setDisabled(bool_key)
         self.item_child_setVolumeVelocity.setDisabled(bool_key)
         self.item_child_setSpecificImpedance.setDisabled(bool_key)
         self.item_child_set_radiation_impedance.setDisabled(bool_key)
         self.item_child_add_compressor_excitation.setDisabled(bool_key)
-        #
+
+    def modify_analysis_items_acces(self, bool_key):
         self.item_child_selectAnalysisType.setDisabled(bool_key)
 
     def _updateItems(self):
         """Enables and disables the Child Items on the menu after the solution is done."""
-        self.modify_model_setup_items_access(False)
 
-        if True:
-            self.item_child_plotStructuralModeShapes.setDisabled(True)
-            self.item_child_plotDisplacementField.setDisabled(True)
-            self.item_child_plotStructuralFrequencyResponse.setDisabled(True)
-            self.item_child_plotStressField.setDisabled(True)
-            self.item_child_plotStressFrequencyResponse.setDisabled(True)
-            self.item_child_plotAcousticModeShapes.setDisabled(True)
-            self.item_child_plotAcousticFrequencyResponse.setDisabled(True)
-            self.item_child_plotAcousticPressureField.setDisabled(True)
-            self.item_child_plotAcousticDeltaPressures.setDisabled(True)
-            self.item_child_plot_TL_NR.setDisabled(True)
-            self.item_child_plotReactionsFrequencyResponse.setDisabled(True)
-            self.item_child_analysisSetup.setDisabled(True)
-            self.item_child_runAnalysis.setDisabled(True)
-            # self.item_top_analysis.setHidden(True)
-            self.item_top_resultsViewer_structural.setHidden(True)
-            self.item_top_resultsViewer_acoustic.setHidden(True)
+        self.item_top_resultsViewer_structural.setHidden(True)
+        self.item_top_resultsViewer_acoustic.setHidden(True)
 
-            # if self.project.analysis_id in [None, 2,4]:
-            #     self.item_child_analysisSetup.setDisabled(True)
-            # else:
-            #     self.item_child_analysisSetup.setDisabled(False)
+        if self.project.analysis_data is None:
+            return
+        
+        analysis_id = self.project.analysis_data["analysis_id"]
 
-            # if self.project.analysis_id is not None and self.project.setup_analysis_complete:
-            #     self.item_child_runAnalysis.setDisabled(False)
+        # if self.project.analysis_id in [None, 2,4]:
+        #     self.item_child_analysisSetup.setDisabled(True)
+        # else:
+        #     self.item_child_analysisSetup.setDisabled(False)
 
-            # if self.project.get_structural_solution() is not None or self.project.get_acoustic_solution() is not None:
+        # if self.project.analysis_id is not None and self.project.setup_analysis_complete:
+        #     self.item_child_runAnalysis.setDisabled(False)
 
-            #     if self.project.analysis_id in [0, 1, 2]:
-            #         self.item_top_resultsViewer_structural.setHidden(False)
-            #     elif self.project.analysis_id in [3, 4]:
-            #         self.item_top_resultsViewer_acoustic.setHidden(False)
-            #     elif self.project.analysis_id in [5, 6]:
-            #         self.item_top_resultsViewer_acoustic.setHidden(False)
-            #         self.item_top_resultsViewer_structural.setHidden(False)
+        # if self.project.get_structural_solution() is not None or self.project.get_acoustic_solution() is not None:
 
-            #     if self.project.analysis_id == 0 or self.project.analysis_id == 1:
-            #         self.item_child_plotStructuralFrequencyResponse.setDisabled(False)
-            #         self.item_child_plotDisplacementField.setDisabled(False)
-            #         self.item_child_plotReactionsFrequencyResponse.setDisabled(False)
-            #         self.item_child_plotStressField.setDisabled(False)
-            #         self.item_child_plotStressFrequencyResponse.setDisabled(False)
-            #     elif self.project.analysis_id == 2:
-            #         self.item_child_plotStructuralModeShapes.setDisabled(False)
-            #         if self.project.get_acoustic_solution() is not None:
-            #             self.item_child_plotAcousticModeShapes.setDisabled(False)
-            #     elif self.project.analysis_id == 4:
-            #         self.item_child_plotAcousticModeShapes.setDisabled(False)
-            #         if self.project.get_structural_solution() is not None:
-            #             self.item_child_plotStructuralModeShapes.setDisabled(False)
-            #     elif self.project.analysis_id == 3:
-            #         if self.project.perforated_plate_dataLog:
-            #             self.item_child_plot_perforated_plate_convergence_data.setDisabled(False)
-            #         self.item_child_plotAcousticFrequencyResponse.setDisabled(False)
-            #         self.item_child_plotAcousticPressureField.setDisabled(False)
-            #         self.item_child_plotAcousticDeltaPressures.setDisabled(False)
-            #         self.item_child_plot_TL_NR.setDisabled(False)
-            #     elif self.project.analysis_id in [5,6]:
-            #         if self.project.perforated_plate_dataLog:
-            #             self.item_child_plot_perforated_plate_convergence_data.setDisabled(False)
-            #         self.item_child_plotStructuralFrequencyResponse.setDisabled(False)
-            #         self.item_child_plotAcousticFrequencyResponse.setDisabled(False)
-            #         self.item_child_plotStressField.setDisabled(False)
-            #         self.item_child_plotStressFrequencyResponse.setDisabled(False)
-            #         self.item_child_plotDisplacementField.setDisabled(False)
-            #         self.item_child_plotAcousticPressureField.setDisabled(False)
-            #         self.item_child_plotAcousticDeltaPressures.setDisabled(False)
-            #         self.item_child_plot_TL_NR.setDisabled(False)
-            #         self.item_child_plotReactionsFrequencyResponse.setDisabled(False)
+        if analysis_id in [0, 1, 2]:
+            self.item_top_resultsViewer_structural.setHidden(False)
+        elif analysis_id in [3, 4]:
+            self.item_top_resultsViewer_acoustic.setHidden(False)
+        elif analysis_id in [5, 6]:
+            self.item_top_resultsViewer_acoustic.setHidden(False)
+            self.item_top_resultsViewer_structural.setHidden(False)
 
-            self.update_TreeVisibility_after_solution()
+        if analysis_id == 0 or analysis_id == 1:
+            self.item_child_plotStructuralFrequencyResponse.setDisabled(False)
+            self.item_child_plotDisplacementField.setDisabled(False)
+            self.item_child_plotReactionsFrequencyResponse.setDisabled(False)
+            self.item_child_plotStressField.setDisabled(False)
+            self.item_child_plotStressFrequencyResponse.setDisabled(False)
+        
+        elif analysis_id == 2:
+            self.item_child_plotStructuralModeShapes.setDisabled(False)
+            # if get_acoustic_solution() is not None:
+            #     self.item_child_plotAcousticModeShapes.setDisabled(False)
+        
+        elif analysis_id == 4:
+            self.item_child_plotAcousticModeShapes.setDisabled(False)
+            # if get_structural_solution() is not None:
+            #     self.item_child_plotStructuralModeShapes.setDisabled(False)
+        
+        elif analysis_id == 3:
+            self.item_child_plotAcousticFrequencyResponse.setDisabled(False)
+            self.item_child_plotAcousticPressureField.setDisabled(False)
+            self.item_child_plotAcousticDeltaPressures.setDisabled(False)
+            self.item_child_plot_TL_NR.setDisabled(False)
+        
+        elif analysis_id in [5,6]:
+            self.item_child_plotStructuralFrequencyResponse.setDisabled(False)
+            self.item_child_plotAcousticFrequencyResponse.setDisabled(False)
+            self.item_child_plotStressField.setDisabled(False)
+            self.item_child_plotStressFrequencyResponse.setDisabled(False)
+            self.item_child_plotDisplacementField.setDisabled(False)
+            self.item_child_plotAcousticPressureField.setDisabled(False)
+            self.item_child_plotAcousticDeltaPressures.setDisabled(False)
+            self.item_child_plot_TL_NR.setDisabled(False)
+            self.item_child_plotReactionsFrequencyResponse.setDisabled(False)
+
+        self.update_TreeVisibility_after_solution()
 
     def update_TreeVisibility_after_solution(self):
         """Expands and collapses the Top Level Items ont the menu after the solution is done."""
         self.collapseItem(self.item_top_generalSettings)
         self.collapseItem(self.item_top_structuralModelSetup)
         self.collapseItem(self.item_top_acousticModelSetup)
+        analysis_id = self.project.analysis_data["analysis_id"]
 
-        # if self.project.analysis_id in [0,1,2]:
-        #     self.item_top_resultsViewer_structural.setHidden(False)
-        #     self.expandItem(self.item_top_resultsViewer_structural)
-        #     # self.expandItem(self.item_top_structuralModelSetup)
-        # elif self.project.analysis_id in [3,4]:
-        #     self.item_top_resultsViewer_acoustic.setHidden(False)
-        #     self.expandItem(self.item_top_resultsViewer_acoustic)
-        #     # self.expandItem(self.item_top_acousticModelSetup)
-        # elif self.project.analysis_id in [5,6]:
-        #     self.item_top_resultsViewer_structural.setHidden(False)
-        #     self.item_top_resultsViewer_acoustic.setHidden(False)
-        #     self.expandItem(self.item_top_resultsViewer_structural)
-        #     self.expandItem(self.item_top_resultsViewer_acoustic)
+        if analysis_id in [0,1,2]:
+            self.item_top_resultsViewer_structural.setHidden(False)
+            self.expandItem(self.item_top_resultsViewer_structural)
+            # self.expandItem(self.item_top_structuralModelSetup)
+        elif analysis_id in [3,4]:
+            self.item_top_resultsViewer_acoustic.setHidden(False)
+            self.expandItem(self.item_top_resultsViewer_acoustic)
+            # self.expandItem(self.item_top_acousticModelSetup)
+        elif analysis_id in [5,6]:
+            self.item_top_resultsViewer_structural.setHidden(False)
+            self.item_top_resultsViewer_acoustic.setHidden(False)
+            self.expandItem(self.item_top_resultsViewer_structural)
+            self.expandItem(self.item_top_resultsViewer_acoustic)
 
     def update_structural_analysis_visibility_items(self):
         self.item_top_structuralModelSetup.setHidden(False)

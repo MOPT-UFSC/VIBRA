@@ -117,6 +117,7 @@ class MainWindow(QMainWindow):
     def create_tool_bars(self):
         self.renderer_toolbar = RendererToolbar(self, self.viewer_tabs)
         self.addToolBar(self.renderer_toolbar)
+        self.renderer_toolbar.setDisabled(True)
 
     def config_tool_tip_appearance(self):
         tool_tip_style = "QToolTip { color: rgb(0, 0, 0); background-color: rgb(255, 255, 255) }"
@@ -179,6 +180,7 @@ class MainWindow(QMainWindow):
 
         self.viewer_tabs.show_geometry()
         self.viewer_tabs.update_plots()
+        self.renderer_toolbar.setDisabled(False)
 
     def close_app(self):
         close = QMessageBox.question(
