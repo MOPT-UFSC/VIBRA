@@ -94,9 +94,7 @@ class ACT_TETRAHEDRON_4C(Element):
 
         rho = fluid.fluid_density
         c_0 = fluid.speed_of_sound
-        # TODO: não há necessidade de corrigir o índice zero
-        # afinal esta operação já foi realizada na classe Mesh
-        ie = self.connectivity[el_index, 1:]# - 1
+        ie = self.connectivity[el_index, 1:]
         #
         JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
         detJAC, invJAC = get_detJAC_and_invJAC(JAC)
