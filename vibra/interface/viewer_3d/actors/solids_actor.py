@@ -64,6 +64,8 @@ class SolidsActor(vtk.vtkActor):
 
     def configure_appearance(self):
         self.GetProperty().SetInterpolationToPhong()
+        self.GetProperty().SetPointSize(3)
+        self.GetProperty().SetLineWidth(0.5)
         self.clear_colors()
 
     def clear_colors(self):

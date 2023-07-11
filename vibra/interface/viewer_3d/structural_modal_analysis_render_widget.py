@@ -85,8 +85,6 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
             current_modal_shape = np.abs(current_modal_shape)
 
         self.analysis_actor = AnalysisActor(mesh)
-        self.analysis_actor.GetProperty().SetPointSize(3)
-        self.analysis_actor.GetProperty().SetLineWidth(2)
         self.analysis_actor.plot_colorbar(current_modal_shape)
         self.renderer.AddActor(self.analysis_actor)
         self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
