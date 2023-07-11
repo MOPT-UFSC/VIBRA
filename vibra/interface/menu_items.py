@@ -370,10 +370,7 @@ class MenuItems(QTreeWidget):
             if not self.item_child_import_geometry.isDisabled():
                 self.main_window.import_geometry()
                 if os.path.exists(self.main_window.project.geometry_path):
-                    self.main_window.renderer_toolbar.setDisabled(False)
-                    self.modify_acoustic_model_setup_items_acces(False)
-                    self.modify_structural_model_setup_items_acces(True)
-                    self.modify_analysis_items_acces(False)
+                    self.modify_items_access_after_geometry_importing()
 
         elif item == self.item_child_mesh_setup:
             if not self.item_child_mesh_setup.isDisabled():
@@ -542,6 +539,12 @@ class MenuItems(QTreeWidget):
 
     def modify_analysis_items_acces(self, bool_key):
         self.item_child_selectAnalysisType.setDisabled(bool_key)
+
+    def modify_items_access_after_geometry_importing(self):
+        self.main_window.renderer_toolbar.setDisabled(False)
+        self.modify_acoustic_model_setup_items_acces(False)
+        self.modify_structural_model_setup_items_acces(True)
+        self.modify_analysis_items_acces(False)
 
     def _updateItems(self):
         """Enables and disables the Child Items on the menu after the solution is done."""

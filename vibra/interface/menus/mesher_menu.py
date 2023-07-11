@@ -60,8 +60,7 @@ class MesherMenu(QMenu):
             self.main_window.menu_widget.item_child_generate_mesh.setDisabled(False)
 
     def call_generate_mesh(self):
-        main_window = get_main_window()
-        generate_mesh = load_function(main_window.project.generate_mesh, main_window)
+        generate_mesh = load_function(self.main_window.project.generate_mesh, self.main_window)
         generate_mesh()
-        main_window.viewer_tabs.show_mesh()
-        main_window.viewer_tabs.update_plots()
+        self.main_window.viewer_tabs.show_mesh()
+        self.main_window.viewer_tabs.update_plots()
