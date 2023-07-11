@@ -46,4 +46,4 @@ class ModalAnalysisBar(QWidget):
             return
 
         for i, freq in enumerate(frequencies):
-            self.frequency_box.addItem(f"Mode {i + 1}: {round(freq, 6)} Hz")
+            self.frequency_box.addItem(f" Mode {i + 1}: {round(freq, 6)} Hz")
