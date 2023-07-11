@@ -18,7 +18,11 @@ from vibra.interface.modal_analysis_bar import ModalAnalysisBar
 from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
 
 
-class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
+class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
+    # many parts of this class is shared by AcousticModalAnalysisRenderWidget
+    # and probably with other analysis classes, so it may be a good idea to
+    # make a superclass that controls all the common stuff.
+
     def __init__(self, project, parent=None):
         super().__init__(parent)
 
@@ -48,7 +52,7 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
         return self.control_bar.frequency_box.currentIndex()
     
     def update_frequencies(self):
-        solver = self.project.acoustic_modal_solver
+        solver = self.project.structural_modal_solver
         if solver is None:
             return
         self.control_bar.set_frequencies(solver.natural_frequencies)
@@ -65,7 +69,7 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
-        solver = self.project.acoustic_modal_solver
+        solver = self.project.structural_modal_solver
         if solver.modal_shape is None:
             return
 

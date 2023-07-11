@@ -1,9 +1,6 @@
 import numpy as np
 from scipy.linalg import eig
-from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh, inv, lobpcg
-
-from vibra.engine.assemblers.modal_assembler import ModalAssembler
 
 
 class ModalSolver:
@@ -25,15 +22,10 @@ class ModalSolver:
         self.eigen_values = None
         self.eigen_vectors = None
 
-        # Variables to store harmonic analysis results
-        # self.frequencies = None
-        # self.harmonic_response = None
-
     def reset_variables(self):
         self.modes = 20
         self.sigma_factor = 0.01
 
-    # def modal_analysis(self, K=[], M=[], modes=20, which='LM', sigma=0.01, normalize=True):
     def solve(self, K=[], M=[], which="LM", normalize=True):
         if K != [] and M != []:
             KT = K
@@ -57,7 +49,5 @@ class ModalSolver:
 
         self.natural_frequencies = natural_frequencies
         self.modal_shape = modal_shape
-
-        # print(f"Natural frequencies:{natural_frequencies}")
 
         return natural_frequencies, modal_shape
