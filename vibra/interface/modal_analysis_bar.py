@@ -11,11 +11,6 @@ class ModalanalysisBar(QWidget):
 
         self._define_qt_variables()      
 
-        # color_scaling_layout = QGridLayout()
-        # color_scaling_layout.addWidget(QLabel("Color Scaling Setup"), 0, 0)
-        # color_scaling_layout.addWidget(QLabel("Real Part"), 1, 0)
-        # color_scaling_layout.addWidget(QLabel("Absolute"), 1, 1)
-        
 
     def _define_qt_variables(self):
         #
@@ -36,11 +31,6 @@ class ModalanalysisBar(QWidget):
         #
         self._config_widgets() 
         #
-        # color_scaling_layout.addButton(self.absolute_button)
-        # color_scaling_layout.addButton(self.real_part_button)
-        #
-        # analysis_info_layout.addWidget(self.label_mode, 0, 0)
-        # analysis_info_layout.addWidget(self.mode_box, 1, 0)
         analysis_info_layout.addWidget(self.frame_spacer, 0, 0)
         analysis_info_layout.addWidget(self.label_color_scale, 0, 1)
         analysis_info_layout.addWidget(self.real_part_button, 0, 2)
@@ -48,13 +38,13 @@ class ModalanalysisBar(QWidget):
         analysis_info_layout.addWidget(self.show_mesh_button, 0, 4)
         analysis_info_layout.addWidget(self.label_mode_selector, 0, 5)
         analysis_info_layout.addWidget(self.frequency_box, 0, 6)
-        
         #
-        # layout.addWidget(self.real_part_button)
-        # layout.addWidget(self.absolute_button)
         layout.addLayout(analysis_info_layout)
         self.setLayout(layout)
-        self.setContentsMargins(2, 2, 2, 2)
+        self.setContentsMargins(2, 0, 2, 0)
+        self.setStyleSheet("border: 1px solid")
+        layout.setContentsMargins(0, 0, 0, 0)
+        analysis_info_layout.setContentsMargins(0, 0, 0, 0)
 
 
     def _config_widgets(self):

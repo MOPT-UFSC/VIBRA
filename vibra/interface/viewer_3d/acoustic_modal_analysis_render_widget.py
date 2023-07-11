@@ -18,7 +18,7 @@ from vibra.interface.modal_analysis_bar import ModalanalysisBar
 from vibra.utils.math_functions import bounds_distance, rotation_matrices
 
 
-class AcousticModalanalysisRenderWidget(CommonRenderWidget):
+class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
     def __init__(self, project, parent=None):
         super().__init__(parent)
 
