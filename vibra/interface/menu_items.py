@@ -74,7 +74,7 @@ class MenuItems(QTreeWidget):
         super().__init__()
 
         self.main_window = get_main_window()
-        self.project = self.main_window.get_project()
+        self.project = self.main_window.project
 
         # self._createIcons()
         # self._configItemSizes()
@@ -87,12 +87,14 @@ class MenuItems(QTreeWidget):
         self._updateItems()
         self._initial_items_acces_config()
 
+        self.setMinimumWidth(320)
+        self.setMaximumWidth(420)
+
     def keyPressEvent(self, event):
         """This deals with key events that are directly linked with the menu."""
         if event.key() == Qt.Key_F5:
             if not self.item_child_runAnalysis.isDisabled():
                 self.run_analysis()
-                
 
     def _createIcons(self):
         """Create Icons objects that are placed on the right side of the item.
@@ -511,6 +513,9 @@ class MenuItems(QTreeWidget):
         for child_item in self.list_child_items:
             child_item.setDisabled(True)
         self.modify_general_settings_items_access(False)
+        self.item_top_structuralModelSetup.setHidden(True)
+        # self.item_top_acousticModelSetup.setHidden(True)
+        self.item_top_analysis.setHidden(True)
 
     def modify_geometry_item_access(self, bool_key):
         self.item_child_import_geometry.setDisabled(bool_key)
@@ -545,6 +550,18 @@ class MenuItems(QTreeWidget):
         self.modify_acoustic_model_setup_items_acces(False)
         self.modify_structural_model_setup_items_acces(True)
         self.modify_analysis_items_acces(False)
+        self.item_top_analysis.setHidden(False)
+        
+    def filter_analysis_type(self):
+        self.item_top_acousticModelSetup.setHidden(True)
+        self.item_top_structuralModelSetup.setHidden(True)
+        if self.main_window.analysis_filter.radio_button_acoustic.isChecked():
+            self.item_top_acousticModelSetup.setHidden(False)
+        elif self.main_window.analysis_filter.radio_button_structural.isChecked():
+            self.item_top_structuralModelSetup.setHidden(False)
+        else:
+            self.item_top_acousticModelSetup.setHidden(False)
+            self.item_top_structuralModelSetup.setHidden(False)
 
     def _updateItems(self):
         """Enables and disables the Child Items on the menu after the solution is done."""

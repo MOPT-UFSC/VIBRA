@@ -22,6 +22,8 @@ from vibra.interface.renderer_toolbar import RendererToolbar
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_tabs import ViewerTabs
 
+from vibra.interface.analysis_filter_menu import AnalysisFilter
+
 from vibra.config import UserConfig
 from vibra.project import Project
 from vibra.utils.icons import load_icon
@@ -88,7 +90,17 @@ class MainWindow(QMainWindow):
         }
 
     def create_basic_layout(self):
+
         self.menu_widget = MenuItems()
+        self.analysis_filter = AnalysisFilter()
+
+        grid_layout = QGridLayout()
+        grid_layout.addWidget(self.analysis_filter, 0, 0)
+        grid_layout.addWidget(self.menu_widget, 1, 0)
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+
+        left_widget = QWidget()
+        left_widget.setLayout(grid_layout)
 
         self.setCentralWidget(None)
         self.create_menu_bar()
@@ -98,9 +110,15 @@ class MainWindow(QMainWindow):
         working_area = QSplitter(Qt.Horizontal)
         self.setCentralWidget(working_area)
 
-        working_area.addWidget(self.menu_widget)
+        # working_area.addWidget(_menus)
+        working_area.addWidget(left_widget)
+        # working_area.addWidget(self.menu_widget)
         working_area.addWidget(self.viewer_tabs)
-        working_area.setSizes([50, 400])
+        working_area.widget(0).setMinimumWidth(320)
+        working_area.widget(0).setMaximumWidth(400)
+        working_area.widget(0).setContentsMargins(0,0,0,0)
+
+        # working_area.setSizes([200, 400])
 
     def create_menu_bar(self):
         self.menu_bar = self.menuBar()
