@@ -77,7 +77,7 @@ class MainWindow(QMainWindow):
         self.viewer_tabs.stop_cutting_mode()
 
     def configure_window(self):
-        self.setMinimumSize(800, 600)
+        self.setMinimumSize(1300, 700)
         self.showMaximized()
         self.setWindowIcon(load_icon(Path("data/icons/logo_vibra.png"), QColor("#0055DD")))
         self.setWindowTitle("Vibra")
@@ -94,29 +94,49 @@ class MainWindow(QMainWindow):
         self.menu_widget = MenuItems()
         self.analysis_filter = AnalysisFilter()
 
-        grid_layout = QGridLayout()
-        grid_layout.addWidget(self.analysis_filter, 0, 0)
-        grid_layout.addWidget(self.menu_widget, 1, 0)
-        grid_layout.setContentsMargins(0, 0, 0, 0)
+        grid_layout_left = QGridLayout()
+        grid_layout_left.addWidget(self.analysis_filter, 0, 0)
+        grid_layout_left.addWidget(self.menu_widget, 1, 0)
+        grid_layout_left.setContentsMargins(0, 0, 0, 0)
 
         left_widget = QWidget()
-        left_widget.setLayout(grid_layout)
+        left_widget.setLayout(grid_layout_left)
+        # left_widget.setMinimumWidth(290)
+        left_widget.setMaximumWidth(290)
+
+        self.vertical_line = QFrame()
+        self.vertical_line.setLineWidth(4)
+        self.vertical_line.setFrameShape(QFrame.VLine)
+        self.vertical_line.setFrameShadow(QFrame.Sunken)
 
         self.setCentralWidget(None)
         self.create_menu_bar()
         self.create_tool_bars()
         self.create_status_bar()
 
-        working_area = QSplitter(Qt.Horizontal)
-        self.setCentralWidget(working_area)
+        grid_layout_central = QGridLayout()
+        grid_layout_central.addWidget(left_widget, 0, 0)
+        grid_layout_central.addWidget(self.vertical_line, 0, 1)
+        grid_layout_central.addWidget(self.viewer_tabs, 0, 2)
+        grid_layout_central.setContentsMargins(0, 0, 0, 0)
+        grid_layout_central.setHorizontalSpacing(0)
 
-        # working_area.addWidget(_menus)
-        working_area.addWidget(left_widget)
-        # working_area.addWidget(self.menu_widget)
-        working_area.addWidget(self.viewer_tabs)
-        working_area.widget(0).setMinimumWidth(320)
-        working_area.widget(0).setMaximumWidth(400)
-        working_area.widget(0).setContentsMargins(0,0,0,0)
+        central_widget = QWidget()
+        central_widget.setLayout(grid_layout_central)
+        self.setCentralWidget(central_widget)
+        
+
+        # working_area = QSplitter(Qt.Horizontal)
+        # self.setCentralWidget(working_area)
+
+        # # working_area.addWidget(_menus)
+        # working_area.addWidget(left_widget)
+        # # working_area.addWidget(self.menu_widget)
+        # working_area.addWidget(self.viewer_tabs)
+        
+        # working_area.widget(0).setMinimumWidth(280)
+        # working_area.widget(0).setMaximumWidth(320)
+        # working_area.widget(0).setContentsMargins(0,0,0,0)
 
         # working_area.setSizes([200, 400])
 

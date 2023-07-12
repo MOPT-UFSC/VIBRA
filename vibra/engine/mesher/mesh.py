@@ -35,6 +35,7 @@ class Mesh:
         size_factor: float = 0.5,
         dimension: int = 3,
         threads: int = 1,
+        gmsh_gui: bool = False,
     ):
         """
         Custom constructor so you can create a mesh with this sintax:
@@ -49,13 +50,14 @@ class Mesh:
         obj = Mesh()
         obj.load_cad(
             path,
-            minimum_element_size=minimum_element_size,
-            maximum_element_size=maximum_element_size,
-            element_type=element_type,
-            geometry_tolerance=geometry_tolerance,
-            size_factor=size_factor,
-            dimension=dimension,
-            threads=threads,
+            minimum_element_size = minimum_element_size,
+            maximum_element_size = maximum_element_size,
+            element_type = element_type,
+            geometry_tolerance = geometry_tolerance,
+            size_factor = size_factor,
+            dimension = dimension,
+            threads = threads,
+            gmsh_gui = gmsh_gui,
         )
         return obj
 
@@ -72,8 +74,8 @@ class Mesh:
         threads: int = 2,
         gmsh_gui: bool = False
     ):
-        _path = "C:\Repositorios\VIBRA\data\examples\script_files\script_hex_elements.txt"
-        self.basename = os.path.basename(_path)
+        # path = "C:\Repositorios\VIBRA\data\examples\script_files\script_hex_elements.txt"
+        self.basename = os.path.basename(path)
 
         path = Path(path)
         gmsh.initialize("", False)
@@ -107,12 +109,12 @@ class Mesh:
         
         gmsh.finalize()
 
-        # if not os.path.exists("vibra/output_data"):
-        #     os.mkdir("vibra/output_data")
+        if not os.path.exists("vibra/output_data"):
+            os.mkdir("vibra/output_data")
 
-        # self.export_nodes_coordinates("vibra/output_data/nodal_coordinates.dat")
-        # self.export_faces_connectivity("vibra/output_data/faces_connectivitiy.dat")
-        # self.export_solids_connectivity("vibra/output_data/solids_connectivitiy.dat")
+        self.export_nodes_coordinates("vibra/output_data/nodal_coordinates.dat")
+        self.export_faces_connectivity("vibra/output_data/faces_connectivitiy.dat")
+        self.export_solids_connectivity("vibra/output_data/solids_connectivitiy.dat")
 
         logging.info(
             f"Mesh generated with {len(self.nodal_coordinates)} nodes"
@@ -160,14 +162,14 @@ class Mesh:
             gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
             gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
 
-        if "script" not in self.basename or True:
+        if "script" not in self.basename:
             gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
             gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
             gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_type.recombination_algorithm)
             gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", element_type.subdivision_algorithm)
             gmsh.option.setNumber("Mesh.RecombineAll", element_type.recombine_all)
-            gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
 
+        gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
         gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_type.second_order_incomplete)
 
 

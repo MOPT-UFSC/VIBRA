@@ -48,7 +48,8 @@ class VisibilitySettingsMenu(QMenu):
         self.show_or_hide_menu_items_action.setText(text)
         self.bool_state = not self.bool_state
         self.main_window.menu_widget.setVisible(self.bool_state)
-
+        self.main_window.vertical_line.setVisible(self.bool_state)
+        self.main_window.analysis_filter.setVisible(self.bool_state)
 
     def theme_callback(self):
         if self.parent().user_config.theme == "light":

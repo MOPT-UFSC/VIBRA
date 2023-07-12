@@ -1,5 +1,4 @@
 import numpy as np
-
 from vibra.engine.elements.element import Element
 
 
@@ -91,7 +90,6 @@ class ACT_TETRAHEDRON_4C(Element):
         """
 
         fluid = self.model.properties.get_fluid(element=el_index)
-
         rho = fluid.fluid_density
         c_0 = fluid.speed_of_sound
         ie = self.connectivity[el_index, 1:]
@@ -118,12 +116,12 @@ class ACT_TETRAHEDRON_4C(Element):
         return Ke, Me
 
     def reorder_connect(self):
-        """ """
+        """ Reordering connectivity matrix to adequate the GMSH connectivity to the FE model """
         self.connectivity = self.connectivity[:, [0, 6, 4, 5, 7]]
 
     def generate_ind_rows_cols(self):
-        """ """
-        # processing the dofs indices (rows and columns) for assembly
+        """ This method processess the dofs indices (rows and columns) for assembly """
+
         self.reorder_connect()
         dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
         ind_dofs = dofs * self.connectivity[:, 1:]

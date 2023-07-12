@@ -17,14 +17,10 @@ class FacesActor(vtk.vtkActor):
         point_colors = vtk.vtkUnsignedCharArray()
         cell_colors = vtk.vtkUnsignedCharArray()
         #
-        #TODO: checar as estruturas abaixo para cobrirmos todos os elementos
-        # Os elementos de superfícies terão 3 nós (linear), 6 nós (quadrático) no caso de elementos triangulares
-        # e 4 nós (linear) e 8 nós (quadrático) no caso dos elementos quadrangulares
-        #
         nel = len(self.mesh.faces_connectivity[0, 4:])
-        face_nodes = [3, 6, 4, 8]
-        types = [vtk.VTK_TRIANGLE, vtk.VTK_QUADRATIC_TRIANGLE, vtk.VTK_QUAD, vtk.VTK_QUADRATIC_QUAD]
-        aux = dict(zip(face_nodes, types))
+        # face_nodes = [3, 6, 4, 8]
+        # types = [vtk.VTK_TRIANGLE, vtk.VTK_QUADRATIC_TRIANGLE, vtk.VTK_QUAD, vtk.VTK_QUADRATIC_QUAD]
+        # aux = dict(zip(face_nodes, types))
         #
         data.Allocate(nel * len(self.mesh.faces_connectivity))
         point_colors.SetNumberOfComponents(3)
@@ -37,7 +33,7 @@ class FacesActor(vtk.vtkActor):
         #
         for values in list(self.mesh.faces_connectivity[:, 4:]):
             try:
-                data.InsertNextCell(aux[nel], nel, list(values))
+                data.InsertNextCell(vtk.VTK_TRIANGLE, nel, list(values))
             except:
                 raise NotImplementedError("Not implemented plane element")
 

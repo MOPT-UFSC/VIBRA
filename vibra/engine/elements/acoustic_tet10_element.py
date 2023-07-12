@@ -1,5 +1,4 @@
 import numpy as np
-
 from vibra.engine.elements.element import Element
 
 
@@ -270,12 +269,12 @@ class ACT_TETRAHEDRON_10C(Element):
         return Ke, Me
 
     def reorder_connect(self):
+        """ Reordering connectivity matrix to adequate the GMSH connectivity to the FE model """
         self.connectivity = self.connectivity[:, [0, 6, 4, 5, 7, 10, 8, 9, 12, 11, 13]]
 
     def generate_ind_rows_cols(self):
-        """
-        """
-        # processing the dofs indices (rows and columns) for assembly
+        """ This method processess the dofs indices (rows and columns) for assembly """
+
         self.reorder_connect()
         dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
         ind_dofs = dofs*self.connectivity[:,1:]
@@ -283,4 +282,5 @@ class ACT_TETRAHEDRON_10C(Element):
         vect_indices = ind_dofs.flatten()
         self.ind_rows = ((np.tile(vect_indices, (edofs,1))).T).flatten()
         self.ind_cols = (np.tile(ind_dofs, edofs)).flatten()
+
         return self.ind_rows, self.ind_cols

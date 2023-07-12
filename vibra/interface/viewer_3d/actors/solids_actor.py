@@ -1,11 +1,6 @@
 import vtk
 
-from vibra.engine.mesher.element_type import (
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-)
+from vibra.engine.mesher.element_type import *
 
 
 class SolidsActor(vtk.vtkActor):
@@ -66,6 +61,7 @@ class SolidsActor(vtk.vtkActor):
         self.GetProperty().SetInterpolationToPhong()
         self.GetProperty().SetPointSize(3)
         self.GetProperty().SetLineWidth(0.1)
+        # self.GetProperty().SetEdgeVisibility(0)
         self.clear_colors()
 
     def clear_colors(self):

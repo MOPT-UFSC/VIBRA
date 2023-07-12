@@ -20,7 +20,8 @@ class ModalAnalysisBar(QWidget):
         button_group = QButtonGroup()
         button_group.addButton(self.real_part_button)
         button_group.addButton(self.absolute_button)
-        self.frequency_box.setMinimumWidth(300)
+        self.frequency_box.setMinimumWidth(180)
+        self.frequency_box.setMaximumWidth(300)
         self.real_part_button.setChecked(True)
 
         layout = QHBoxLayout()

@@ -87,8 +87,8 @@ class MenuItems(QTreeWidget):
         self._updateItems()
         self._initial_items_acces_config()
 
-        self.setMinimumWidth(320)
-        self.setMaximumWidth(420)
+        self.setMinimumWidth(220)
+        self.setMaximumWidth(280)
 
     def keyPressEvent(self, event):
         """This deals with key events that are directly linked with the menu."""

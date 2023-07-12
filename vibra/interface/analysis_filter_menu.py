@@ -22,9 +22,9 @@ class AnalysisFilter(QWidget):
         self.line.setFrameShadow(QFrame.Sunken)
 
         self.label_main = QLabel("Analysis type selector", self)
-        self.label_main.setMinimumSize(QSize(280, 30))
-        self.label_main.setMaximumSize(QSize(280, 30))
-        self.label_main.setStyleSheet("font: 11pt")
+        self.label_main.setMinimumSize(QSize(270, 30))
+        self.label_main.setMaximumSize(QSize(270, 30))
+        self.label_main.setStyleSheet("font: 50 bold 11pt")
         self.label_main.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
 
         grid_main = QGridLayout()
@@ -79,5 +79,5 @@ class AnalysisFilter(QWidget):
         self.setLayout(grid_layout2)
         grid_layout2.setContentsMargins(4, 2, 4, 2)
         
-        self.setMinimumSize(QSize(320, 100))
-        self.setMaximumSize(QSize(420, 100))
+        self.setMinimumSize(QSize(280, 80))
+        self.setMaximumSize(QSize(280, 80))
