@@ -57,7 +57,8 @@ class Model:
                 "You should to configure the mesher to proceed."
             )
             raise IncompleteSetupError(message, context=context)
-        self.geometry_path = "C:\Repositorios\VIBRA\data\examples\script_files\script_hex_elements.txt"
+                
+        self.geometry_path = Path("data/examples/script_files/script_hex_elements.txt")
         self.mesh = Mesh.from_cad(self.geometry_path, gmsh_gui=True, **self.mesh_setup)
 
     def set_material(self, material):
