@@ -18,7 +18,8 @@ class WelcomeWidget(QWidget):
         image_label.setFixedHeight(145)
         image_message_layout.addWidget(image_label)
 
-        message_label = QLabel("OpenPulse: Open Source Software for Pulsation Analysis of Pipeline Systems", self)
+        message_label = QLabel("Vibra: Finite Element Software for Acoustic and Structural Analysis", self)
+        message_label.setStyleSheet("font: 11pt")
         message_label.setAlignment(Qt.AlignHCenter)
         image_message_layout.addWidget(message_label)
         layout.addLayout(image_message_layout)
