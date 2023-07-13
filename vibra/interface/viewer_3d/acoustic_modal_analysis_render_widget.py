@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import (
 )
 
 from vibra.interface.viewer_3d.actors.analysis_actor import AnalysisActor
+from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
 from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
     CuttingPlaneActor,
 )
@@ -36,6 +37,7 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
         self.setContentsMargins(0, 0, 0, 0)
 
         self.analysis_actor = None
+        self.edges_actor = None
         self.plane_actor = None
         self.bounds = (0, 0, 0, 0, 0, 0)
 
@@ -82,8 +84,12 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
 
         self.analysis_actor = AnalysisActor(mesh)
         self.analysis_actor.plot_colorbar(current_modal_shape)
-        self.renderer.AddActor(self.analysis_actor)
         self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
+        self.renderer.AddActor(self.analysis_actor)
+
+        self.edges_actor = EdgesActor(self.analysis_actor.data)
+        self.edges_actor.GetProperty().SetColor(0, 0, 0)
+        self.renderer.AddActor(self.edges_actor)
 
         self.bounds = self.analysis_actor.GetBounds()
         scale = bounds_distance(self.bounds)
@@ -91,10 +97,9 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
         self.plane_actor.VisibilityOff()
         self.plane_actor.SetScale(scale, scale, scale)
         self.renderer.AddActor(self.plane_actor)
-
-        if self.control_bar.show_mesh_button.isChecked():
-            self.analysis_actor.GetProperty().SetRepresentationToSurface()
-            self.analysis_actor.GetProperty().EdgeVisibilityOn()
+    
+        mesh_visibility = self.control_bar.show_mesh_button.isChecked()
+        self.set_mesh_visibility(mesh_visibility)
 
         self.renderer.ResetCamera()
         self.update()
@@ -113,7 +118,9 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
             return
         
         self.control_bar.show_mesh_button.setChecked(False)
+        self.analysis_actor.VisibilityOn()
         self.analysis_actor.GetProperty().SetRepresentationToPoints()
+        self.edges_actor.VisibilityOff()
         self.update()
 
     def show_lines(self):
@@ -121,8 +128,9 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
             return
         
         self.control_bar.show_mesh_button.setChecked(True)
+        self.analysis_actor.VisibilityOn()
         self.analysis_actor.GetProperty().SetRepresentationToSurface()
-        self.analysis_actor.GetProperty().EdgeVisibilityOn()
+        self.edges_actor.VisibilityOn()
         self.update()
 
     def show_faces(self):
@@ -130,15 +138,10 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
             return
         
         self.control_bar.show_mesh_button.setChecked(False)
+        self.analysis_actor.VisibilityOn()
         self.analysis_actor.GetProperty().SetRepresentationToSurface()
-        self.analysis_actor.GetProperty().EdgeVisibilityOff()
+        self.edges_actor.VisibilityOff()
         self.update()
-
-    def remove_actors(self):
-        self.renderer.RemoveActor(self.analysis_actor)
-        self.renderer.RemoveActor(self.plane_actor)
-        self.analysis_actor = None
-        self.plane_actor = None
 
     def start_cutting_mode(self):
         if not self._actors_exists():
@@ -180,9 +183,18 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
 
         self.update()
 
+    def remove_actors(self):
+        self.renderer.RemoveActor(self.analysis_actor)
+        self.renderer.RemoveActor(self.edges_actor)
+        self.renderer.RemoveActor(self.plane_actor)
+        self.analysis_actor = None
+        self.edges_actor = None
+        self.plane_actor = None
+
     def _actors_exists(self):
         actors = [
             self.analysis_actor,
+            self.edges_actor,
             self.plane_actor,
         ]
 
