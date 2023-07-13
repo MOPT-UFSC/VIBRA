@@ -9,12 +9,12 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from vibra.interface.viewer_3d.actors.analysis_actor import AnalysisActor
+from vibra.interface.viewer_3d.actors.deformed_analysis_actor import DeformedAnalysisActor
 from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
     CuttingPlaneActor,
 )
 from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
-from vibra.interface.modal_analysis_bar import ModalAnalysisBar
+from vibra.interface.modal_analysis_bar import StructuralModalAnalysisBar
 from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
 
 
@@ -27,7 +27,7 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         super().__init__(parent)
 
         self.project = project        
-        self.control_bar = ModalAnalysisBar()
+        self.control_bar = StructuralModalAnalysisBar()
         self.control_bar.plot_changed.connect(self.update_plot)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
 
@@ -80,12 +80,21 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self.update_theme()
         self.remove_actors()
 
-        current_modal_shape = solver.modal_shape[:, index]
+        current_modal_shape = solver.modal_shape[:, index].reshape(-1, 3)
         if self.control_bar.absolute_button.isChecked():
-            current_modal_shape = np.abs(current_modal_shape)
+            color_scalling_values = np.linalg.norm(current_modal_shape, axis=1)
+        elif self.control_bar.response_ux_button.isChecked():
+            color_scalling_values = current_modal_shape[:, 0]
+        elif self.control_bar.response_uy_button.isChecked():
+            color_scalling_values = current_modal_shape[:, 1]
+        elif self.control_bar.response_uz_button.isChecked():
+            color_scalling_values = current_modal_shape[:, 2]
 
-        self.analysis_actor = AnalysisActor(mesh)
-        self.analysis_actor.plot_colorbar(current_modal_shape)
+        max_abs = np.max(np.abs(color_scalling_values))
+        color_scalling_values /= max_abs
+        
+        self.analysis_actor = DeformedAnalysisActor(mesh, current_modal_shape)
+        self.analysis_actor.plot_colorbar(color_scalling_values)
         self.renderer.AddActor(self.analysis_actor)
         self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
 
@@ -95,6 +104,14 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self.plane_actor.VisibilityOff()
         self.plane_actor.SetScale(scale, scale, scale)
         self.renderer.AddActor(self.plane_actor)
+
+        mesh_visibility = self.control_bar.show_mesh_button.isChecked()
+        self.set_mesh_visibility(mesh_visibility)
+
+        if self.control_bar.show_mesh_button.isChecked():
+            self.analysis_actor.VisibilityOn()
+            self.analysis_actor.GetProperty().SetRepresentationToSurface()
+            # self.edges_actor.VisibilityOn()
 
         self.renderer.ResetCamera()
         self.update()

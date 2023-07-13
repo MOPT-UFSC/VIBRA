@@ -48,22 +48,21 @@ class STRUCT_TETRAHEDRON_4S(Element):
     DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
     
     def __init__(self, model):
-        
+        #
         self.model = model
         self.initialize_variables()
         self.define_integration_points()
         self.process_shape_functions_and_derivatives()
-
 
     def initialize_variables(self):
         """
         """
         self.element_label = "structural_tetrahedron_4"
         self.nodal_coordinates = self.model.mesh.nodal_coordinates
-        self.connect= self.model.mesh.solids_connectivity
+        self.connectivity = self.model.mesh.solids_connectivity
         #
         self.number_of_nodes = len(self.nodal_coordinates)
-        self.number_of_elements = len(self.connect)
+        self.number_of_elements = len(self.connectivity)
 
     def define_integration_points(self):
         """
@@ -97,13 +96,13 @@ class STRUCT_TETRAHEDRON_4S(Element):
                                 [-1, 1, 0, 0],
                                 [-1, 0, 1, 0]  ], dtype=float)
 
-
     def get_constitutive_model(self, el_index, model_type="linear-isotropic"):
-        """
+        """ This methdo returns the material constitutive model.
         """
         self.material = self.model.properties.get_material(element=el_index)
-        vv = self.material.poisson
-        E = self.material.elasticity_modulus
+        vv = self.material.poisson_ratio
+        E = self.material.young_modulus
+        # print(self.material.density, self.material.young_modulus, self.material.poisson_ratio)
 
         if model_type == "linear-isotropic":
             # Constititive model - Linear isotropic material
@@ -126,7 +125,7 @@ class STRUCT_TETRAHEDRON_4S(Element):
             This is not a p-u mixed fomulation. Do not compare with SOLID285.
         """  
         #
-        ie = self.connect[el_index, 1:]
+        ie = self.connectivity[el_index, 1:]
 
         const_mat= self.get_constitutive_model(ie, model_type="linear-isotropic")
         rho = self.material.density
@@ -163,20 +162,21 @@ class STRUCT_TETRAHEDRON_4S(Element):
      
     def reorder_connect(self):
         """ Reordering connectivity matrix to adequate the GMSH connectivity to the FE model """
-        self.connect = self.connect[:, [0, 6, 4, 5, 7]]
+        self.connectivity = self.connectivity[:, [0, 6, 4, 5, 7]]
 
     def generate_ind_rows_cols(self):
         """ This method processess the dofs indices (rows and columns) for assembly """
 
         self.reorder_connect()
         dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
-        ind_dofs = (np.array([  dofs*self.connect[:,1]-1, dofs*self.connect[:,1], dofs*self.connect[:,1]+1,
-                                dofs*self.connect[:,2]-1, dofs*self.connect[:,2], dofs*self.connect[:,2]+1,
-                                dofs*self.connect[:,3]-1, dofs*self.connect[:,3], dofs*self.connect[:,3]+1,
-                                dofs*self.connect[:,4]-1, dofs*self.connect[:,4], dofs*self.connect[:,4]+1  ], dtype=int)-2).T
+        ind_dofs = (np.array([  dofs*self.connectivity[:,1]-1, dofs*self.connectivity[:,1], dofs*self.connectivity[:,1]+1,
+                                dofs*self.connectivity[:,2]-1, dofs*self.connectivity[:,2], dofs*self.connectivity[:,2]+1,
+                                dofs*self.connectivity[:,3]-1, dofs*self.connectivity[:,3], dofs*self.connectivity[:,3]+1,
+                                dofs*self.connectivity[:,4]-1, dofs*self.connectivity[:,4], dofs*self.connectivity[:,4]+1  ], dtype=int) + 1).T
 
         vect_indices = ind_dofs.flatten()
         self.ind_rows = ((np.tile(vect_indices, (edofs,1))).T).flatten()
         self.ind_cols = (np.tile(ind_dofs, edofs)).flatten()
-
+        # print(self.ind_rows)
+        # print(self.ind_cols)
         return self.ind_rows, self.ind_cols

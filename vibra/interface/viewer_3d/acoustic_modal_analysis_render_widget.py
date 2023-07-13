@@ -15,7 +15,7 @@ from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
     CuttingPlaneActor,
 )
 from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
-from vibra.interface.modal_analysis_bar import ModalAnalysisBar
+from vibra.interface.modal_analysis_bar import AcousticModalAnalysisBar
 from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
 
 
@@ -24,7 +24,7 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
         super().__init__(parent)
 
         self.project = project        
-        self.control_bar = ModalAnalysisBar()
+        self.control_bar = AcousticModalAnalysisBar()
         self.control_bar.plot_changed.connect(self.update_plot)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
 
@@ -81,6 +81,7 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
         current_modal_shape = solver.modal_shape[:, index]
         if self.control_bar.absolute_button.isChecked():
             current_modal_shape = np.abs(current_modal_shape)
+        current_modal_shape /= np.max(np.abs(current_modal_shape))
 
         self.analysis_actor = AnalysisActor(mesh)
         self.analysis_actor.plot_colorbar(current_modal_shape)
@@ -100,6 +101,11 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
     
         mesh_visibility = self.control_bar.show_mesh_button.isChecked()
         self.set_mesh_visibility(mesh_visibility)
+
+        if self.control_bar.show_mesh_button.isChecked():
+            self.analysis_actor.VisibilityOn()
+            self.analysis_actor.GetProperty().SetRepresentationToSurface()
+            self.edges_actor.VisibilityOn()
 
         self.renderer.ResetCamera()
         self.update()

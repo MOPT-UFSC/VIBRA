@@ -1,6 +1,6 @@
 import numpy as np
-from scipy.sparse import csr_matrix
-from scipy.sparse.linalg import eigs
+from vibra.engine.elements.element import Element
+
 
 def shapeT10C(l1, l2, l3):
     """ Shape Functions and Derivatives.
@@ -113,29 +113,28 @@ def get_detJAC_and_invJAC_3D(JAC):
     return detJAC, (1/detJAC) * AUJJ
 
 
-class STRUCT_TETRAHEDRON_10S:
-    def __init__(self, structural_element):
+class STRUCT_TETRAHEDRON_10S(Element):
+    #
+    NODES_PER_ELEMENT = 10
+    DOF_PER_NODE = 3
+    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
+    
+    def __init__(self, model):
         
-        self.structural_element = structural_element
+        self.model = model
         self.initialize_variables()
         self.define_integration_points()
         self.process_shape_functions_and_derivatives()
-
 
     def initialize_variables(self):
         """
         """
         self.element_label = "structural_tetrahedron_10"
-        self.nodal_coordinates = self.structural_element.mesher.nodal_coordinates.copy()
-        self.connect = self.structural_element.mesher.connectivity_matrix.copy()
+        self.nodal_coordinates = self.model.mesh.nodal_coordinates
+        self.connectivity = self.model.mesh.solids_connectivity
         #
-        self.number_of_nodes = self.structural_element.mesher.number_of_nodes
-        self.number_of_elements = self.structural_element.mesher.number_of_elements
-        #
-        self.nodes_per_element = 10
-        self.dof_per_node = 3
-        self.dofs_per_element = int(self.dof_per_node*self.nodes_per_element)
-
+        self.number_of_nodes = len(self.nodal_coordinates)
+        self.number_of_elements = len(self.connectivity)
 
     def define_integration_points(self):
         """
@@ -150,7 +149,6 @@ class STRUCT_TETRAHEDRON_10S:
                                 [ con2, con1, con1]  ])
         self.wps = np.array([ 1/4, 1/4, 1/4, 1/4])
         
-
     def process_shape_functions_and_derivatives(self):
         """ This method processes the shape functions and their
             derivatives for all integration points.
@@ -160,7 +158,7 @@ class STRUCT_TETRAHEDRON_10S:
         l3 = self.pint[:, 2]
         #
         # shape functions 
-        phi = np.zeros((self.nint, self.nodes_per_element), dtype=float)
+        phi = np.zeros((self.nint, self.NODES_PER_ELEMENT), dtype=float)
         #
         l4 = 1-l1-l2-l3
         phi[:, 0] = (2*l2-1)*l2
@@ -175,7 +173,7 @@ class STRUCT_TETRAHEDRON_10S:
         phi[:, 9] = 4*l3*l4
         #
         # derivatives
-        dphi = np.zeros((self.nint, self.dof_per_node, self.nodes_per_element), dtype=float)
+        dphi = np.zeros((self.nint, self.DOF_PER_NODE, self.NODES_PER_ELEMENT), dtype=float)
         #
         dphi[:, 0, 0] = 0
         dphi[:, 0, 1] = 4*l1 - 1
@@ -213,12 +211,14 @@ class STRUCT_TETRAHEDRON_10S:
         self.phi = phi
         self.dphi = dphi
 
+    def get_constitutive_model(self, el_index, model_type="linear-isotropic"):
+        """ This methdo returns the material constitutive model.
+        """
+        self.material = self.model.properties.get_material(element=el_index)
+        vv = self.material.poisson_ratio
+        E = self.material.young_modulus
+        # print(self.material.density, self.material.young_modulus, self.material.poisson_ratio)
 
-    def process_constitutive_model(self, model_type="linear-isotropic"):
-        """
-        """
-        vv = self.structural_element.poisson
-        E = self.structural_element.elasticity_modulus
         if model_type == "linear-isotropic":
             # Constititive model - Linear isotropic material
             #
@@ -232,24 +232,25 @@ class STRUCT_TETRAHEDRON_10S:
                                     [    0,     0,     0, tempn,     0,     0],
                                     [    0,     0,     0,     0, tempn,     0],
                                     [    0,     0,     0,     0,     0, tempn]  ])
-            #
-            self.const_mat = tempc*const_law
-
+            
+            return tempc*const_law
 
     def elementary_matrices(self, el_index):
         """ T10S stiffness and mass matrices.
             Solid187 not mixed (pure displacement)
         """
         #
-        rho = self.structural_element.material_density
-        ie = self.connect[el_index, 1:] - 1
+        ie = self.connectivity[el_index, 1:]
+
+        const_mat= self.get_constitutive_model(ie, model_type="linear-isotropic")
+        rho = self.material.density
         #
         JAC = self.dphi@self.nodal_coordinates[ie, 1:4]
         detJAC, invJAC = get_detJAC_and_invJAC_3D(JAC)
         dphi_t = invJAC @ self.dphi
         #
-        B = np.zeros((self.nint, 6, self.dofs_per_element), dtype=float)
-        N = np.zeros((self.nint, 3, self.dofs_per_element), dtype=float)
+        B = np.zeros((self.nint, 6, self.DOFS_PER_ELEMENT), dtype=float)
+        N = np.zeros((self.nint, 3, self.DOFS_PER_ELEMENT), dtype=float)
         #
         B[:, 0, 0::3] = dphi_t[:, 0, :]
         B[:, 1, 1::3] = dphi_t[:, 1, :]
@@ -269,117 +270,34 @@ class STRUCT_TETRAHEDRON_10S:
         Ke, Me = 0, 0
         for i in range(self.nint):
 
-            Ke += (1/6)*B[i,:,:].T@self.const_mat@B[i,:,:]*(detJAC[i,:,:]*self.wps[i])
+            Ke += (1/6)*B[i,:,:].T@const_mat@B[i,:,:]*(detJAC[i,:,:]*self.wps[i])
             Me += (1/6)*rho*N[i,:,:].T@N[i,:,:]*(detJAC[i,:,:]*self.wps[i])
         
         return Ke, Me
 
-
-    def elementary_matrices_base(self, el_index):
-        """"
-        """
-        #
-        ie = self.connect[el_index, 1:] - 1
-        rho = self.structural_element.material_density
-        #
-        B = np.zeros((6, self.dofs_per_element), dtype=float)
-        N = np.zeros((3, self.dofs_per_element), dtype=float)
-        #
-        # integration loop
-        Ke, Me = 0, 0
-        for i in range(self.nint):
-
-            phi, dphi = shapeT10C(self.pint[i, 0], self.pint[i, 1], self.pint[i, 2])
-            
-            JAC = dphi@self.nodal_coordinates[ie, 1:4]
-            detJAC, iJAC = get_detJAC_and_invJAC(JAC)
-            dphi_t = iJAC @ dphi
-            
-            for iii in range(10):
-                B[0,3*(iii)+0]=dphi_t[0,iii]
-                B[1,3*(iii)+1]=dphi_t[1,iii]
-                B[2,3*(iii)+2]=dphi_t[2,iii]
-                B[3,3*(iii)+0]=dphi_t[1,iii]
-                B[3,3*(iii)+1]=dphi_t[0,iii]            
-                B[4,3*(iii)+0]=dphi_t[2,iii]
-                B[4,3*(iii)+2]=dphi_t[0,iii]
-                B[5,3*(iii)+1]=dphi_t[2,iii]
-                B[5,3*(iii)+2]=dphi_t[1,iii]
-
-            for iii in range(10): 
-                N[0,3*iii+0]=phi[iii]
-                N[1,3*iii+1]=phi[iii]
-                N[2,3*iii+2]=phi[iii]
-        
-            Ke += (1/6)*B.T@self.const_mat@B*(detJAC*self.wps[i])
-            Me += (1/6)*rho*N.T@N*(detJAC*self.wps[i])
-            
-        return Ke, Me
-
-
     def reorder_connect(self):
-        self.connect = self.connect[:, [0, 6, 4, 5, 7, 10, 8, 9, 12, 11, 13]]
-
-        #Connect -- Ansys ---> Gmsh
-        # connect_t  = connect.copy()
-        # connect_t[el_index,1] = connect[el_index,3]
-        # connect_t[el_index,2] = connect[el_index,1]
-        # connect_t[el_index,3] = connect[el_index,2]
-        # connect_t[el_index,4] = connect[el_index,4]
-        # connect_t[el_index,5] = connect[el_index,7]
-        # connect_t[el_index,6] = connect[el_index,5]
-        # connect_t[el_index,7] = connect[el_index,6]
-        # connect_t[el_index,8] = connect[el_index,9]
-        # connect_t[el_index,9] = connect[el_index,8]
-        # connect_t[el_index,10] = connect[el_index,10]
-        # connect = connect_t.copy()
-        #sugestao: mudar ordenação das funções de forma e derivadas
-
+        """ Reordering connectivity matrix to adequate the GMSH connectivity to the FE model """
+        self.connectivity = self.connectivity[:, [0, 6, 4, 5, 7, 10, 8, 9, 12, 11, 13]]
 
     def generate_ind_rows_cols(self):
-        """
-        """
-        # processing the dofs indices (rows and columns) for assembly
-        self.process_constitutive_model()
+        """ This method processess the dofs indices (rows and columns) for assembly """
+        
         self.reorder_connect()
-        dofs, edofs = self.dof_per_node, self.dofs_per_element
+        dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
 
-        ind_dofs = (np.array([  dofs*self.connect[:,1]-1 , dofs*self.connect[:,1] , dofs*self.connect[:,1]+1,
-                                dofs*self.connect[:,2]-1 , dofs*self.connect[:,2] , dofs*self.connect[:,2]+1,
-                                dofs*self.connect[:,3]-1 , dofs*self.connect[:,3] , dofs*self.connect[:,3]+1,
-                                dofs*self.connect[:,4]-1 , dofs*self.connect[:,4] , dofs*self.connect[:,4]+1,
-                                dofs*self.connect[:,5]-1 , dofs*self.connect[:,5] , dofs*self.connect[:,5]+1,
-                                dofs*self.connect[:,6]-1 , dofs*self.connect[:,6] , dofs*self.connect[:,6]+1,
-                                dofs*self.connect[:,7]-1 , dofs*self.connect[:,7] , dofs*self.connect[:,7]+1,
-                                dofs*self.connect[:,8]-1 , dofs*self.connect[:,8] , dofs*self.connect[:,8]+1,
-                                dofs*self.connect[:,9]-1 , dofs*self.connect[:,9] , dofs*self.connect[:,9]+1,
-                                dofs*self.connect[:,10]-1, dofs*self.connect[:,10], dofs*self.connect[:,10]+1  ], dtype=int)-2).T
+        ind_dofs = (np.array([  dofs*self.connectivity[:,1]-1 , dofs*self.connectivity[:,1] , dofs*self.connectivity[:,1]+1,
+                                dofs*self.connectivity[:,2]-1 , dofs*self.connectivity[:,2] , dofs*self.connectivity[:,2]+1,
+                                dofs*self.connectivity[:,3]-1 , dofs*self.connectivity[:,3] , dofs*self.connectivity[:,3]+1,
+                                dofs*self.connectivity[:,4]-1 , dofs*self.connectivity[:,4] , dofs*self.connectivity[:,4]+1,
+                                dofs*self.connectivity[:,5]-1 , dofs*self.connectivity[:,5] , dofs*self.connectivity[:,5]+1,
+                                dofs*self.connectivity[:,6]-1 , dofs*self.connectivity[:,6] , dofs*self.connectivity[:,6]+1,
+                                dofs*self.connectivity[:,7]-1 , dofs*self.connectivity[:,7] , dofs*self.connectivity[:,7]+1,
+                                dofs*self.connectivity[:,8]-1 , dofs*self.connectivity[:,8] , dofs*self.connectivity[:,8]+1,
+                                dofs*self.connectivity[:,9]-1 , dofs*self.connectivity[:,9] , dofs*self.connectivity[:,9]+1,
+                                dofs*self.connectivity[:,10]-1, dofs*self.connectivity[:,10], dofs*self.connectivity[:,10]+1  ], dtype=int) + 1).T
+        
         vect_indices = ind_dofs.flatten()
         self.ind_rows = ((np.tile(vect_indices, (edofs,1))).T).flatten()
         self.ind_cols = (np.tile(ind_dofs, edofs)).flatten()
-        return self.ind_rows, self.ind_cols
-
-
-    def stif_mass_matrices(self):
-        """ Calculates global matrices.
-        """
-        dofs = self.dof_per_node * self.nodes_per_element
-        nel = self.number_of_elements
-        total_dofs = self.dof_per_node*self.number_of_nodes
-
-        data_k = np.zeros((nel, dofs**2), dtype=float)
-        data_m = np.zeros((nel, dofs**2), dtype=float) 
         
-        for el in range(nel):
-            Ke, Me = self.elementary_matrices(el)
-            # print(Ke)
-            # print(Me)
-            data_k[el,:] = Ke.flatten() 
-            data_m[el,:] = Me.flatten() 
-    
-        data_k = data_k.flatten()
-        data_m = data_m.flatten()
-        stif_matrix = csr_matrix((data_k, (self.ind_rows, self.ind_cols)), shape=(total_dofs, total_dofs))
-        mass_matrix = csr_matrix((data_m, (self.ind_rows, self.ind_cols)), shape=(total_dofs, total_dofs))
-
-        return stif_matrix, mass_matrix
+        return self.ind_rows, self.ind_cols

@@ -58,8 +58,8 @@ class Model:
             )
             raise IncompleteSetupError(message, context=context)
                 
-        self.geometry_path = Path("data/examples/script_files/script_hex_elements.txt")
-        self.mesh = Mesh.from_cad(self.geometry_path, gmsh_gui=True, **self.mesh_setup)
+        # self.geometry_path = Path("data/examples/script_files/script_hex_elements.txt")
+        self.mesh = Mesh.from_cad(self.geometry_path, gmsh_gui=False, **self.mesh_setup)
 
     def set_material(self, material):
         self.properties.set_material(material)

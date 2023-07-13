@@ -7,10 +7,7 @@ from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_modal_assembler import AcousticModalAssembler
 from vibra.engine.assemblers.structural_modal_assembler import StructuralModalAssembler
 from vibra.engine.solvers.modal_solver import ModalSolver
-from vibra.engine.solvers.example_solver import ExampleSolver
-from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.utils.progress_status import ProgressStatus
-
 
 
 class Project:

@@ -15,16 +15,19 @@ class ModalSolver:
                     self.modes = analysis_data["modes"]
                 if "sigma_factor" in analysis_data.keys():
                     self.sigma_factor = analysis_data["sigma_factor"]
-
-        self.natural_frequencies = None
-        self.modal_shape = None
-
-        self.eigen_values = None
-        self.eigen_vectors = None
+                if analysis_data["analysis_id"] == 2:
+                    self.analysis_type = "structural"
+                else:
+                    self.analysis_type = "acoustic"
 
     def reset_variables(self):
         self.modes = 20
         self.sigma_factor = 0.01
+        self.analysis_type = None
+        self.natural_frequencies = None
+        self.modal_shape = None
+        self.eigen_values = None
+        self.eigen_vectors = None
 
     def solve(self, K=[], M=[], which="LM", normalize=True):
         if K != [] and M != []:
@@ -44,8 +47,9 @@ class ModalSolver:
         natural_frequencies = natural_frequencies[index_order]
         modal_shape = modal_shape[:, index_order]
 
-        if normalize:
-            modal_shape /= np.max(np.abs(modal_shape), axis=0)
+        # if normalize:
+        #     if self.analysis_type == "acoustic":
+        #         modal_shape /= np.max(np.abs(modal_shape), axis=0)
 
         self.natural_frequencies = natural_frequencies
         self.modal_shape = modal_shape
