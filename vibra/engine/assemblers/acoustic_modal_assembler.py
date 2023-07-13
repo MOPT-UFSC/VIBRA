@@ -5,7 +5,7 @@ from vibra.engine.elements.acoustic_tet10_element import ACT_TETRAHEDRON_10C
 from vibra.engine.elements.acoustic_hex8_element import ACT_HEXAHEDRON_8C
 from vibra.engine.elements.acoustic_hex20_element import ACT_HEXAHEDRON_20C
 
-from vibra.engine.mesher.element_type import TETRAHEDRON_4, TETRAHEDRON_10, HEXAHEDRON_8, HEXAHEDRON_20
+from vibra.engine.mesher.element_type import *
 
 
 class AcousticModalAssembler(ModalAssembler):

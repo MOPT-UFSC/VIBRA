@@ -237,3 +237,12 @@ class MainWindow(QMainWindow):
             ErrorMessage(e)
         else:
             self.viewer_tabs.show_acoustic_modal_analysis()
+
+
+    def process_structural_modal_analysis(self):
+        try:
+            self.project.solve_modal_structural()
+        except NotImplementedError as e:
+            ErrorMessage(e)
+        else:
+            self.viewer_tabs.show_structural_modal_analysis()

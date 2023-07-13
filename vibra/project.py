@@ -86,6 +86,10 @@ class Project:
         self.acoustic_modal_assembler.assemble_global_matrices()
         self.acoustic_modal_solver.solve()
 
+    def solve_modal_structural(self):
+        self.structural_modal_assembler.assemble_global_matrices()
+        self.structural_modal_solver.solve()
+
     def long_function(self):
         for i in range(20):
             logging.info("long_function" + ProgressStatus(i, 20))

@@ -498,18 +498,27 @@ class MenuItems(QTreeWidget):
                 pass
     
     def run_analysis(self):
+        """ """
+
         if self.project.model.mesh is None:
             return
+        #
         if self.project.analysis_data is None:
             return
-        if self.main_window.project.analysis_data["analysis_id"] == 4:
-            solve_modal = load_function(self.main_window.process_acoustic_modal_analysis, self.main_window)
+        #
+        analysis_id = self.main_window.project.analysis_data["analysis_id"]
+        if analysis_id == 2:
+            solve_modal = load_function(self.main_window.process_structural_modal_analysis, self.main_window)
             solve_modal()
+        elif analysis_id == 4:
+            solve_modal = load_function(self.main_window.process_acoustic_modal_analysis, self.main_window)
+            solve_modal()    
         else:
             raise NotImplementedError("Not implemented analysis")
         self._updateItems()
 
-    def _initial_items_acces_config(self): 
+    def _initial_items_acces_config(self):
+        """ """
         for child_item in self.list_child_items:
             child_item.setDisabled(True)
         self.modify_general_settings_items_access(False)
