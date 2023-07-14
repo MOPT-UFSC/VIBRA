@@ -1,15 +1,30 @@
 import vtk
-
+import numpy as np
 from vibra.engine.mesher.element_type import *
 
 
 class SolidsActor(vtk.vtkActor):
-    def __init__(self, mesh):
+    def __init__(self, mesh, u_def=None):
+
         self.mesh = mesh
+        self.u_def = u_def
         self.data = None
+
+        if u_def is not None:
+            self.coordinates = self.get_deformed_coordinates()
+        else:
+            self.coordinates = self.mesh.nodal_coordinates[:, 1:]
 
         self.create_geometry()
         self.configure_appearance()
+
+    def get_deformed_coordinates(self):
+
+        factor = 2
+        max_abs = np.max(np.linalg.norm(self.u_def, axis=0))
+        def_coordinates = self.mesh.nodal_coordinates[:, 1:] + (factor/max_abs)*self.u_def
+
+        return def_coordinates
 
     def create_geometry(self):
         data = vtk.vtkUnstructuredGrid()
@@ -43,7 +58,7 @@ class SolidsActor(vtk.vtkActor):
         cell_colors.SetNumberOfComponents(3)
         cell_colors.SetNumberOfTuples(len(self.mesh.solids_connectivity))
 
-        for _, x, y, z in self.mesh.nodal_coordinates:
+        for x, y, z in self.coordinates:
             points.InsertNextPoint(x, y, z)
 
         for nodes in nodes_connectivity:

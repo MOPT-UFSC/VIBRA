@@ -56,9 +56,9 @@ class AnalysisTypeInput(QDialog):
         self.pushButton_harmonic_coupled = self.findChild(QPushButton, 'pushButton_harmonic_coupled')
         self.pushButton_modal_structural = self.findChild(QPushButton, 'pushButton_modal_structural')
         self.pushButton_modal_acoustic = self.findChild(QPushButton, 'pushButton_modal_acoustic')
-        # self.pushButton_harmonic_structural.setDisabled(True)
-        # self.pushButton_harmonic_acoustic.setDisabled(True)
-        # self.pushButton_harmonic_coupled.setDisabled(True)
+        self.pushButton_harmonic_structural.setDisabled(True)
+        self.pushButton_harmonic_acoustic.setDisabled(True)
+        self.pushButton_harmonic_coupled.setDisabled(True)
 
 
     def _create_connections(self):

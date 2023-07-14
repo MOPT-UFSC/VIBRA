@@ -242,7 +242,7 @@ class STRUCT_TETRAHEDRON_10S(Element):
         #
         ie = self.connectivity[el_index, 1:]
 
-        const_mat= self.get_constitutive_model(ie, model_type="linear-isotropic")
+        const_mat = self.get_constitutive_model(ie, model_type="linear-isotropic")
         rho = self.material.density
         #
         JAC = self.dphi@self.nodal_coordinates[ie, 1:4]

@@ -1,13 +1,6 @@
 import numpy as np
 from PyQt5.QtCore import QObjectCleanupHandler
-from PyQt5.QtWidgets import (
-    QAction,
-    QComboBox,
-    QHBoxLayout,
-    QLabel,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt5.QtWidgets import *
 
 from vibra.interface.viewer_3d.actors.analysis_actor import AnalysisActor
 from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
