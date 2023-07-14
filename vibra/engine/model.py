@@ -23,6 +23,7 @@ class Model:
         self.geometry_path = ""
         self.mesh = None
         self.mesh_setup = None
+        self.generated_mesh = False
 
         self.properties = ModelProperties()
         # self.properties.set_fluid(Fluid("Air", density=1.2, speed_of_sound=343))
@@ -38,6 +39,7 @@ class Model:
 
     def process_visual_geometry_mesh(self):
         self.mesh = Mesh.from_cad(self.geometry_path, dimension=2, size_factor=0.1)
+        self.generated_mesh = False
 
     def process_mesh(self):
         if self.geometry_path == "" or not os.path.exists(self.geometry_path):
@@ -58,8 +60,9 @@ class Model:
             )
             raise IncompleteSetupError(message, context=context)
                 
-        self.geometry_path = Path("data/examples/script_files/script_hex_elements.txt")
+        # self.geometry_path = Path("data/examples/script_files/script_hex_elements.txt")
         self.mesh = Mesh.from_cad(self.geometry_path, gmsh_gui=False, **self.mesh_setup)
+        self.generated_mesh = True
 
     def set_material(self, material):
         self.properties.set_material(material)

@@ -4,25 +4,26 @@ from vibra.engine.mesher.element_type import *
 
 
 class SolidsActor(vtk.vtkActor):
-    def __init__(self, mesh, u_def=None):
+    def __init__(self, mesh, u_def=None, phase=0, magnification_factor=0):
 
         self.mesh = mesh
         self.u_def = u_def
+        self.phase = phase
+        self.magnification_factor = magnification_factor
         self.data = None
 
-        if u_def is not None:
-            self.coordinates = self.get_deformed_coordinates()
-        else:
+        if u_def is None:
             self.coordinates = self.mesh.nodal_coordinates[:, 1:]
+        else:
+            self.coordinates = self.get_deformed_coordinates()
 
         self.create_geometry()
         self.configure_appearance()
 
     def get_deformed_coordinates(self):
 
-        factor = 2
         max_abs = np.max(np.linalg.norm(self.u_def, axis=0))
-        def_coordinates = self.mesh.nodal_coordinates[:, 1:] + (factor/max_abs)*self.u_def
+        def_coordinates = self.mesh.nodal_coordinates[:, 1:] + (self.magnification_factor/max_abs)*self.u_def*np.cos(self.phase*np.pi/180)
 
         return def_coordinates
 

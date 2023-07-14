@@ -4,8 +4,8 @@ from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
 
 
 class AnalysisActor(SolidsActor):
-    def __init__(self, mesh, u_def=None):
-        super().__init__(mesh, u_def=u_def)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.lookup_table = vtk.vtkLookupTable()
         self.lookup_table.SetHueRange(2 / 3, 0)
 

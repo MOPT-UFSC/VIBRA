@@ -57,32 +57,49 @@ class StructuralModalAnalysisBar(QWidget):
         super().__init__()
         # Avoid using fixed sizes for all widgets!!
 
+        self.create_sliders()
+
         self.frequency_box = QComboBox()
         self.response_ux_button = QRadioButton("Real Ux")
         self.response_uy_button = QRadioButton("Real Uy")
         self.response_uz_button = QRadioButton("Real Uz")
         self.absolute_button = QRadioButton("Absolute")
         self.show_mesh_button = QCheckBox("Show mesh")
+        self.absolute_button.setChecked(True)
+        self.show_mesh_button.setChecked(True)
 
         button_group = QButtonGroup()
         button_group.addButton(self.response_ux_button)
         button_group.addButton(self.response_uy_button)
         button_group.addButton(self.response_uz_button)
         button_group.addButton(self.absolute_button)
-        self.frequency_box.setMinimumWidth(180)
+        self.frequency_box.setMinimumWidth(120)
         self.frequency_box.setMaximumWidth(300)
-        self.absolute_button.setChecked(True)
-
+        
         layout = QHBoxLayout()
         layout.addStretch()
+        layout.addWidget(QLabel("Magnification factor:"))
+        layout.addWidget(self.magnification_factor_slider)
+        layout.addWidget(self.magnification_factor_label)
+
+        hspacing = 10
+
+        layout.addSpacing(hspacing)
+        layout.addWidget(QLabel("Phase controller [deg]:"))
+        layout.addWidget(self.phase_slider)
+        layout.addWidget(self.phase_label)
+
+        layout.addSpacing(hspacing)
         layout.addWidget(QLabel("Color Scale:"))
         layout.addWidget(self.absolute_button)
         layout.addWidget(self.response_ux_button)
         layout.addWidget(self.response_uy_button)
         layout.addWidget(self.response_uz_button)
-        layout.addSpacing(100)
+
+        layout.addSpacing(hspacing)
         layout.addWidget(self.show_mesh_button)
-        layout.addSpacing(100)
+
+        layout.addSpacing(hspacing)
         layout.addWidget(QLabel("Mode Selector:"))
         layout.addWidget(self.frequency_box)
         self.setLayout(layout)
@@ -101,3 +118,35 @@ class StructuralModalAnalysisBar(QWidget):
 
         for i, freq in enumerate(frequencies):
             self.frequency_box.addItem(f" Mode {i + 1}: {round(freq, 6)} Hz")
+
+    def create_sliders(self):
+        #
+        self.magnification_factor_label = QLabel("value")
+        self.magnification_factor_label.setMaximumWidth(60)
+        self.magnification_factor_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.magnification_factor_slider = QSlider(Qt.Orientation.Horizontal)
+        self.magnification_factor_slider.setMinimum(0)
+        self.magnification_factor_slider.setMaximum(4)
+        self.magnification_factor_slider.setValue(2)
+        self.magnification_factor_slider.setSingleStep(1)
+        self.magnification_factor_slider.setMaximumWidth(100)
+        self.magnification_factor_slider.valueChanged.connect(self.value_change_callback)
+        self.magnification_factor_label.setText(f"({self.magnification_factor_slider.value()}x)")
+        #
+        self.phase_label = QLabel("value")
+        self.phase_label.setMaximumWidth(60)
+        self.phase_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.phase_slider = QSlider(Qt.Orientation.Horizontal)
+        self.phase_slider.setMinimum(0)
+        self.phase_slider.setMaximum(360)
+        self.phase_slider.setValue(0)
+        self.phase_slider.setSingleStep(1)
+        self.phase_slider.setMaximumWidth(200)
+        self.phase_slider.valueChanged.connect(self.value_change_callback)
+        self.phase_label.setText(f"({self.phase_slider.value()}°)")
+        #
+
+    def value_change_callback(self):
+        self.magnification_factor_label.setText(f"({self.magnification_factor_slider.value()}x)")
+        self.phase_label.setText(f"({self.phase_slider.value()}°)")
+        self.plot_changed.emit()

@@ -76,19 +76,33 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self.remove_actors()
 
         current_modal_shape = solver.modal_shape[:, index].reshape(-1, 3)
+
         if self.control_bar.absolute_button.isChecked():
-            color_scalling_values = np.linalg.norm(current_modal_shape, axis=1)
+            color_scalling_values = np.linalg.norm(current_modal_shape, axis=1).copy()
+            u_def = current_modal_shape.copy()
+
         elif self.control_bar.response_ux_button.isChecked():
             color_scalling_values = current_modal_shape[:, 0]
+            u_def = current_modal_shape*np.array([1,0,0])
+
         elif self.control_bar.response_uy_button.isChecked():
             color_scalling_values = current_modal_shape[:, 1]
+            u_def = current_modal_shape*np.array([0,1,0])
+
         elif self.control_bar.response_uz_button.isChecked():
             color_scalling_values = current_modal_shape[:, 2]
+            u_def = current_modal_shape*np.array([0,0,1])
 
         max_abs = np.max(np.abs(color_scalling_values))
         color_scalling_values /= max_abs
-        
-        self.analysis_actor = AnalysisActor(mesh, u_def=current_modal_shape)
+        phase_value = self.control_bar.phase_slider.value()
+        magnification_factor_value = self.control_bar.magnification_factor_slider.value()
+        #
+        self.analysis_actor = AnalysisActor(mesh,
+                                            u_def = u_def,
+                                            phase = phase_value,
+                                            magnification_factor = magnification_factor_value)
+        #
         self.analysis_actor.plot_colorbar(color_scalling_values)
         self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
         self.renderer.AddActor(self.analysis_actor)

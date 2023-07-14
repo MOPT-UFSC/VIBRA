@@ -384,11 +384,7 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_generate_mesh:
             if not self.item_child_generate_mesh.isDisabled():
-                generate_mesh = load_function(self.main_window.project.generate_mesh, self.main_window)
-                generate_mesh()
-                self.main_window.viewer_tabs.show_mesh()
-                self.generate_mesh_action.setDisabled(True)
-                self.item_child_generate_mesh.setDisabled(True)
+                self.generate_mesh()
 
         elif item == self.item_child_set_material:
             if not self.item_child_set_material.isDisabled():
@@ -497,14 +493,25 @@ class MenuItems(QTreeWidget):
             if not self.item_child_plot_TL_NR.isDisabled():
                 pass
     
+    def generate_mesh(self):
+        """  """
+        generate_mesh = load_function(self.main_window.project.generate_mesh, self.main_window)
+        generate_mesh()
+        self.main_window.viewer_tabs.show_mesh()
+        self.generate_mesh_action.setDisabled(True)
+        self.item_child_generate_mesh.setDisabled(True)
+
     def run_analysis(self):
-        """ """
+        """  """
 
         if self.project.model.mesh is None:
             return
         #
         if self.project.analysis_data is None:
             return
+        #
+        if not self.project.model.generated_mesh:
+            self.generate_mesh()
         #
         analysis_id = self.main_window.project.analysis_data["analysis_id"]
         if analysis_id == 2:
