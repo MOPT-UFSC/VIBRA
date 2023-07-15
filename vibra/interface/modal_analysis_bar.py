@@ -63,16 +63,16 @@ class StructuralModalAnalysisBar(QWidget):
         self.response_ux_button = QRadioButton("Real Ux")
         self.response_uy_button = QRadioButton("Real Uy")
         self.response_uz_button = QRadioButton("Real Uz")
-        self.absolute_button = QRadioButton("Absolute")
+        self.sum_button = QRadioButton("Sum")
         self.show_mesh_button = QCheckBox("Show mesh")
-        self.absolute_button.setChecked(True)
+        self.sum_button.setChecked(True)
         self.show_mesh_button.setChecked(True)
 
         button_group = QButtonGroup()
         button_group.addButton(self.response_ux_button)
         button_group.addButton(self.response_uy_button)
         button_group.addButton(self.response_uz_button)
-        button_group.addButton(self.absolute_button)
+        button_group.addButton(self.sum_button)
         self.frequency_box.setMinimumWidth(120)
         self.frequency_box.setMaximumWidth(300)
         
@@ -85,13 +85,13 @@ class StructuralModalAnalysisBar(QWidget):
         hspacing = 10
 
         layout.addSpacing(hspacing)
-        layout.addWidget(QLabel("Phase controller [deg]:"))
+        layout.addWidget(QLabel("Phase [deg]:"))
         layout.addWidget(self.phase_slider)
         layout.addWidget(self.phase_label)
 
         layout.addSpacing(hspacing)
-        layout.addWidget(QLabel("Color Scale:"))
-        layout.addWidget(self.absolute_button)
+        layout.addWidget(QLabel("Data to plot:"))
+        layout.addWidget(self.sum_button)
         layout.addWidget(self.response_ux_button)
         layout.addWidget(self.response_uy_button)
         layout.addWidget(self.response_uz_button)
@@ -108,7 +108,7 @@ class StructuralModalAnalysisBar(QWidget):
         self.response_ux_button.clicked.connect(self.plot_changed.emit)
         self.response_uy_button.clicked.connect(self.plot_changed.emit)
         self.response_uz_button.clicked.connect(self.plot_changed.emit)
-        self.absolute_button.clicked.connect(self.plot_changed.emit)
+        self.sum_button.clicked.connect(self.plot_changed.emit)
 
     def set_frequencies(self, frequencies):
         self.frequency_box.clear()
