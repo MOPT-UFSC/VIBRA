@@ -60,6 +60,18 @@ class Mesh:
             gmsh_gui = gmsh_gui,
         )
         return obj
+    
+    @classmethod
+    def from_dat(cls, nodal_path, lines_path=None, faces_path=None, solids_path=None):
+        obj = Mesh()
+        obj.nodal_coordinates = obj.import_nodes_coordinates(nodal_path)
+        if lines_path is not None:
+            pass
+        if faces_path is not None:
+            obj.faces_connectivity = obj.import_faces_connectivity(faces_path)
+        if solids_path is not None:
+            obj.solids_connectivity = obj.import_solids_connectivity(solids_path)
+        return obj
 
     def load_cad(
         self,
@@ -79,7 +91,7 @@ class Mesh:
 
         path = Path(path)
         gmsh.initialize("", False)
-        logging.info(f"Generating mesh from {path}" + ProgressStatus(0, 100))
+        logging.info(f"Generating mesh from {path}")
 
         logging.info("Configuring Mesh" + ProgressStatus(5, 100))
         self._configure_mesh(
@@ -120,8 +132,25 @@ class Mesh:
             f"Mesh generated with {len(self.nodal_coordinates)} nodes"
             f", {len(self.lines_connectivity)} dim 1"
             f", {len(self.faces_connectivity)} dim 2"
-            f"and {len(self.solids_connectivity)} dim 3 elements" + ProgressStatus(100, 100)
+            f"and {len(self.solids_connectivity)} dim 3 elements"
         )
+
+    def import_nodes_coordinates(self, filename):
+        header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
+        return np.loadtxt(
+            filename,
+            delimiter=";",
+            header=header,
+            fmt=["%i", "%.16f", "%.16f", "%.16f"],
+        )
+
+    def import_faces_connectivity(self, filename):
+        header = "Index || Element ID || Face ID || Element type ID || Connected Node IDs"
+        return np.loadtxt(filename, delimiter=";", header=header, fmt="%i")
+
+    def import_solids_connectivity(self, filename):
+        header = "Index || Solid ID || Element type ID || Element ID || Connected Node IDs"
+        return np.loadtxt(filename, delimiter=";", header=header, fmt="%i")
 
     def export_nodes_coordinates(self, filename):
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
