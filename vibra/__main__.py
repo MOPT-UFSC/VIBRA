@@ -37,9 +37,10 @@ def configure_logs():
 if __name__ == "__main__":
     configure_logs()
 
-    # disables the terrible vtk error handler
+    # disables the terrible vtk error handler and its logs
     # you may want to enable them while debugging something
     vtk.vtkObject.GlobalWarningDisplayOff()
+    vtk.vtkLogger.SetStderrVerbosity(vtk.vtkLogger.VERBOSITY_OFF)
 
     app = QApplication(sys.argv)
     window = MainWindow()
