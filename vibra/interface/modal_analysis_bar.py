@@ -65,8 +65,10 @@ class StructuralModalAnalysisBar(QWidget):
         self.response_uz_button = QRadioButton("Real Uz")
         self.sum_button = QRadioButton("Sum")
         self.show_mesh_button = QCheckBox("Show mesh")
+        self.update_coloring = QCheckBox("Update coloring")
         self.sum_button.setChecked(True)
         self.show_mesh_button.setChecked(True)
+        self.update_coloring.setChecked(True)
 
         button_group = QButtonGroup()
         button_group.addButton(self.response_ux_button)
@@ -98,6 +100,7 @@ class StructuralModalAnalysisBar(QWidget):
 
         layout.addSpacing(hspacing)
         layout.addWidget(self.show_mesh_button)
+        layout.addWidget(self.update_coloring)
 
         layout.addSpacing(hspacing)
         layout.addWidget(QLabel("Mode Selector:"))

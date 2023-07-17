@@ -23,6 +23,7 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self.project = project        
         self.control_bar = StructuralModalAnalysisBar()
         self.control_bar.plot_changed.connect(self.update_plot)
+        self.control_bar.update_coloring.stateChanged.connect(self.update_plot)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
 
         # replace the layout to add other usefull widgets
@@ -75,35 +76,61 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self.update_theme()
         self.remove_actors()
 
-        current_modal_shape = solver.modal_shape[:, index].reshape(-1, 3)
-
-        if self.control_bar.sum_button.isChecked():
-            color_scalling_values = np.linalg.norm(current_modal_shape, axis=1).copy()
-            u_def = current_modal_shape.copy()
-
-        elif self.control_bar.response_ux_button.isChecked():
-            color_scalling_values = current_modal_shape[:, 0]
-            u_def = current_modal_shape*np.array([1.,0.,0.])
-
-        elif self.control_bar.response_uy_button.isChecked():
-            color_scalling_values = current_modal_shape[:, 1]
-            u_def = current_modal_shape*np.array([0.,1.,0.])
-
-        elif self.control_bar.response_uz_button.isChecked():
-            color_scalling_values = current_modal_shape[:, 2]
-            u_def = current_modal_shape*np.array([0.,0.,1.])
-
-        max_abs = np.max(np.abs(color_scalling_values))
-        color_scalling_values /= max_abs
         phase = self.control_bar.phase_slider.value()
         magnification_factor = self.control_bar.magnification_factor_slider.value()
+        current_modal_shape = solver.modal_shape[:, index].reshape(-1, 3).copy()
+
+        if self.control_bar.sum_button.isChecked():
+            values_1 = np.linalg.norm(current_modal_shape, axis=1).copy()
+            displacements = current_modal_shape.copy()
+
+        elif self.control_bar.response_ux_button.isChecked():
+            values_1 = current_modal_shape[:, 0]
+            displacements = current_modal_shape*np.array([1.,0.,0.])
+
+        elif self.control_bar.response_uy_button.isChecked():
+            values_1 = current_modal_shape[:, 1]
+            displacements = current_modal_shape*np.array([0.,1.,0.])
+
+        elif self.control_bar.response_uz_button.isChecked():
+            values_1 = current_modal_shape[:, 2]
+            displacements = current_modal_shape*np.array([0.,0.,1.])
+        #
+        max_abs = np.max(np.abs(values_1))
+        values_1 /= max_abs
+        #
+        min_value = round(min(values_1), 1)
+        max_value = round(max(values_1), 1)
         #
         self.analysis_actor = AnalysisActor(mesh,
-                                            u_def = u_def,
+                                            displacements = displacements,
                                             phase = phase,
                                             magnification_factor = magnification_factor)
-        #
-        self.analysis_actor.plot_colorbar(color_scalling_values)
+
+        if self.control_bar.update_coloring.isChecked():
+            mod_values = displacements*np.cos(phase*np.pi/180)
+            
+            if self.control_bar.sum_button.isChecked():
+                values_2 = np.linalg.norm(mod_values, axis=1).copy()
+                
+            elif self.control_bar.response_ux_button.isChecked():
+                values_2 = mod_values[:, 0]
+                
+            elif self.control_bar.response_uy_button.isChecked():
+                values_2 = mod_values[:, 1]
+                
+            elif self.control_bar.response_uz_button.isChecked():
+                values_2 = mod_values[:, 2]
+
+            values_2 /= max_abs
+            if not self.control_bar.sum_button.isChecked():
+                if np.abs(min_value) != np.abs(max_value):
+                    min_value = -np.max(np.abs([min_value, max_value]))
+                    max_value =  np.max(np.abs([min_value, max_value]))
+        else:
+            values_2 = values_1.copy()
+
+        self.analysis_actor.plot_colorbar(values_2, min_value, max_value)
         self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
         self.renderer.AddActor(self.analysis_actor)
 

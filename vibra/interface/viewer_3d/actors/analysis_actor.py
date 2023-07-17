@@ -35,11 +35,11 @@ class AnalysisActor(SolidsActor):
         mapper.SetInputData(self.data)
         mapper.Modified()
 
-    def plot_colorbar(self, values):
+    def plot_colorbar(self, values, min_value, max_value):
         if self.data is None:
             return
 
-        self.lookup_table.SetTableRange(round(min(values), 1), round(max(values), 1))
+        self.lookup_table.SetTableRange(min_value, max_value)
         self.lookup_table.Build()
 
         point_colors = self.data.GetPointData().GetScalars()
