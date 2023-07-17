@@ -40,6 +40,7 @@ class ViewerTabs(QTabWidget):
 
         self.show_wellcome()
 
+    # 
     def show_wellcome(self):
         self.addTab(self.welcome, "Wellcome!")
         self.setCurrentWidget(self.welcome)
@@ -87,21 +88,41 @@ class ViewerTabs(QTabWidget):
         self.structural_modal_analysis.update_plot()
         self.setCurrentWidget(self.structural_modal_analysis)
 
-    def create_a_new_tab_if_it_does_not_exist(self, widget, tab_text):
+    def show_help(self):
+        self.addTab(self.help_widget, "Help")
+        self.setCurrentWidget(self.help_widget)
+
+    def _create_a_new_tab_if_it_does_not_exist(self, widget, tab_text):
         for i in range(self.count()):
             if self.tabText(i) == tab_text:
                 return
         self.addTab(widget, tab_text)
-
-    def show_help(self):
-        self.addTab(self.help_widget, "Help")
-        self.setCurrentWidget(self.help_widget)
 
     def update_plots(self):
         for tab in self.tabs():
             if isinstance(tab, CommonRenderWidget):
                 tab.update_plot()
 
+    def close_analysis_tabs(self):
+        self._close_widgets(
+            self.acoustic_modal_analysis,
+            self.structural_modal_analysis,
+        )
+
+    def close_mesh_tabs(self):
+        self._close_widgets(
+            self.mesh_widget,
+            self.geometry_widget,
+            self.acoustic_modal_analysis,
+            self.structural_modal_analysis,
+        )
+    
+    def _close_widgets(self, *widgets_list):
+        for widget in widgets_list:
+            i = self.indexOf(widget)
+            self.removeTab(i)
+
+    # 
     def start_cutting_mode(self):
         for tab in self.tabs():
             if not hasattr(tab, "start_cutting_mode"):
@@ -126,6 +147,7 @@ class ViewerTabs(QTabWidget):
                 continue
             tab.apply_cutting_plane(position, orientation)
 
+    # 
     def set_theme(self, theme):
         for tab in self.tabs():
             if isinstance(tab, CommonRenderWidget):
