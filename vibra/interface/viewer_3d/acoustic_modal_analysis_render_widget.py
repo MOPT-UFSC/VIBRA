@@ -76,8 +76,11 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
             current_modal_shape = np.abs(current_modal_shape)
         current_modal_shape /= np.max(np.abs(current_modal_shape))
 
+        min_value = np.min(current_modal_shape)
+        max_value = np.max(current_modal_shape)
+
         self.analysis_actor = AnalysisActor(mesh)
-        self.analysis_actor.plot_colorbar(current_modal_shape)
+        self.analysis_actor.plot_colorbar(current_modal_shape, min_value, max_value)
         self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
         self.renderer.AddActor(self.analysis_actor)
 
