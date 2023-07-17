@@ -4,30 +4,19 @@ from vibra.engine.mesher.element_type import *
 
 
 class SolidsActor(vtk.vtkActor):
-    def __init__(self, mesh, displacements=None, phase=0, magnification_factor=0):
-
+    def __init__(self, mesh):
         self.mesh = mesh
-        self.displacements = displacements
-        self.phase = phase
-        self.magnification_factor = magnification_factor
         self.data = None
-
-        if displacements is None:
-            self.coordinates = self.mesh.nodal_coordinates[:, 1:]
-            self.u_def = np.zeros_like(self.coordinates)
-        else:
-            self.coordinates = self.get_deformed_coordinates()
 
         self.create_geometry()
         self.configure_appearance()
 
-    def get_deformed_coordinates(self):
-
-        max_abs = np.max(np.linalg.norm(self.displacements, axis=0))
-        self.u_def = self.displacements*np.cos(self.phase*np.pi/180)
-        def_coordinates = self.mesh.nodal_coordinates[:, 1:] + (self.magnification_factor/max_abs)*self.u_def
-
-        return def_coordinates
+    def get_coordinates(self):
+        # Default way of getting coordinates
+        # If it need to be changed a subclass does it
+        # A generic solid actor doesn't need to know
+        # anything about the simulation
+        return self.mesh.nodal_coordinates[:, 1:]
 
     def create_geometry(self):
         data = vtk.vtkUnstructuredGrid()
@@ -61,7 +50,7 @@ class SolidsActor(vtk.vtkActor):
         cell_colors.SetNumberOfComponents(3)
         cell_colors.SetNumberOfTuples(len(self.mesh.solids_connectivity))
 
-        for x, y, z in self.coordinates:
+        for x, y, z in self.get_coordinates():
             points.InsertNextPoint(x, y, z)
 
         for nodes in nodes_connectivity:
