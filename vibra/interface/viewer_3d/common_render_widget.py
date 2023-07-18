@@ -144,9 +144,7 @@ class CommonRenderWidget(QFrame):
         self.renderer.GetActiveCamera().SetViewUp(view_up)
         self.renderer.GetActiveCamera().SetParallelProjection(True)
         self.renderer.ResetCamera(*self.renderer.ComputeVisiblePropBounds())
-
-        if self.renderer.GetRenderWindow() is not None:
-            self.renderer.GetRenderWindow().Render()
+        self.update()
 
     def set_top_view(self):
         x, y, z = self.renderer.GetActiveCamera().GetFocalPoint()
