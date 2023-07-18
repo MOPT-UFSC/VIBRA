@@ -22,8 +22,8 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
 
         self.project = project        
         self.control_bar = StructuralModalAnalysisBar()
-        self.control_bar.plot_changed.connect(self.update_plot)
-        self.control_bar.update_coloring.stateChanged.connect(self.update_plot)
+        self.control_bar.plot_changed.connect(self.update_deformations)
+        self.control_bar.update_coloring.stateChanged.connect(self.update_deformations)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
 
         # replace the layout to add other usefull widgets
@@ -73,47 +73,52 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         if not (0 <= index < solver.modal_shape.shape[1]):
             return
 
-        s = time()
         self.update_theme()
         self.remove_actors()
 
-        phase = self.control_bar.phase_slider.value()
-        magnification_factor = self.control_bar.magnification_factor_slider.value()
-        displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
-
         self.analysis_actor = AnalysisActor(mesh)
-        self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
-
-        self.analysis_actor.plot_colorbar(color_scalars, min_value, max_value)
-        self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
-        self.renderer.AddActor(self.analysis_actor)
 
         self.edges_actor = EdgesActor(self.analysis_actor.data)
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
-        self.renderer.AddActor(self.edges_actor)
 
         self.bounds = self.analysis_actor.GetBounds()
         scale = bounds_distance(self.bounds)
         self.plane_actor = CuttingPlaneActor()
         self.plane_actor.VisibilityOff()
         self.plane_actor.SetScale(scale, scale, scale)
+
+        self.update_deformations()
+        self.renderer.AddActor(self.analysis_actor)
+        self.renderer.AddActor(self.edges_actor)
         self.renderer.AddActor(self.plane_actor)
 
         mesh_visibility = self.control_bar.show_mesh_button.isChecked()
         self.set_mesh_visibility(mesh_visibility)
-
-        if self.control_bar.show_mesh_button.isChecked():
-            self.analysis_actor.VisibilityOn()
-            self.analysis_actor.GetProperty().SetRepresentationToSurface()
-            self.edges_actor.VisibilityOn()
-
         self.renderer.ResetCamera()
         self.update()
-        e = time()
-        print("time to update the plot:", e-s)
 
     def update_deformations(self):
-        pass
+        if not self._actors_exists():
+            return
+        
+        solver = self.project.structural_modal_solver
+        if solver.modal_shape is None:
+            return
+
+        index = self.current_shape_index()
+        if not (0 <= index < solver.modal_shape.shape[1]):
+            return
+
+        phase = self.control_bar.phase_slider.value()
+        magnification_factor = self.control_bar.magnification_factor_slider.value()
+        displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
+
+        self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
+        self.analysis_actor.plot_colorbar(color_scalars, min_value, max_value)
+        self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
+
+        self.edges_actor.update()
+        self.update()
 
     def set_mesh_visibility(self, condition):
         if not self._actors_exists():
