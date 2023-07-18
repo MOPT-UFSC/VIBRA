@@ -113,11 +113,12 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         magnification_factor = self.control_bar.magnification_factor_slider.value()
         displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
 
+        self.analysis_actor.disable_cut()
         self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
         self.analysis_actor.plot_colorbar(color_scalars, min_value, max_value)
         self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
+        self.edges_actor.extract_data(self.analysis_actor.data)
 
-        self.edges_actor.update()
         self.update()
 
     def set_mesh_visibility(self, condition):
@@ -169,6 +170,8 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
             return
         self.plane_actor.VisibilityOff()
         self.analysis_actor.disable_cut()
+        self.edges_actor.extract_data(self.analysis_actor.data)
+        self.update()
 
     def configure_cutting_plane(self, position, orientation):
         if not self._actors_exists():
@@ -191,8 +194,10 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
         y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
         z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
+
         normal = self._calculate_normal_vector(orientation)
         self.analysis_actor.apply_cut((x, y, z), normal)
+        self.edges_actor.extract_data(self.analysis_actor.clipped_data)
 
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
