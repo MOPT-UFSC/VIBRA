@@ -10,7 +10,7 @@ from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
 from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
 from vibra.interface.modal_analysis_bar import StructuralModalAnalysisBar
 from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
-
+from time import time 
 
 class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
     # many parts of this class is shared by AcousticModalAnalysisRenderWidget
@@ -73,64 +73,18 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         if not (0 <= index < solver.modal_shape.shape[1]):
             return
 
+        s = time()
         self.update_theme()
         self.remove_actors()
 
         phase = self.control_bar.phase_slider.value()
         magnification_factor = self.control_bar.magnification_factor_slider.value()
-        current_modal_shape = solver.modal_shape[:, index].reshape(-1, 3).copy()
+        displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
 
-        if self.control_bar.sum_button.isChecked():
-            values_1 = np.linalg.norm(current_modal_shape, axis=1).copy()
-            displacements = current_modal_shape.copy()
+        self.analysis_actor = AnalysisActor(mesh)
+        self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
 
-        elif self.control_bar.response_ux_button.isChecked():
-            values_1 = current_modal_shape[:, 0]
-            displacements = current_modal_shape*np.array([1.,0.,0.])
-
-        elif self.control_bar.response_uy_button.isChecked():
-            values_1 = current_modal_shape[:, 1]
-            displacements = current_modal_shape*np.array([0.,1.,0.])
-
-        elif self.control_bar.response_uz_button.isChecked():
-            values_1 = current_modal_shape[:, 2]
-            displacements = current_modal_shape*np.array([0.,0.,1.])
-        #
-        max_abs = np.max(np.abs(values_1))
-        values_1 /= max_abs
-        #
-        min_value = round(min(values_1), 1)
-        max_value = round(max(values_1), 1)
-        #
-        self.analysis_actor = AnalysisActor(mesh,
-                                            displacements = displacements,
-                                            phase = phase,
-                                            magnification_factor = magnification_factor)
-
-        if self.control_bar.update_coloring.isChecked():
-            mod_values = displacements*np.cos(phase*np.pi/180)
-            
-            if self.control_bar.sum_button.isChecked():
-                values_2 = np.linalg.norm(mod_values, axis=1).copy()
-                
-            elif self.control_bar.response_ux_button.isChecked():
-                values_2 = mod_values[:, 0]
-                
-            elif self.control_bar.response_uy_button.isChecked():
-                values_2 = mod_values[:, 1]
-                
-            elif self.control_bar.response_uz_button.isChecked():
-                values_2 = mod_values[:, 2]
-
-            values_2 /= max_abs
-            if not self.control_bar.sum_button.isChecked():
-                if np.abs(min_value) != np.abs(max_value):
-                    min_value = -np.max(np.abs([min_value, max_value]))
-                    max_value =  np.max(np.abs([min_value, max_value]))
-        else:
-            values_2 = values_1.copy()
-
-        self.analysis_actor.plot_colorbar(values_2, min_value, max_value)
+        self.analysis_actor.plot_colorbar(color_scalars, min_value, max_value)
         self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
         self.renderer.AddActor(self.analysis_actor)
 
@@ -155,6 +109,11 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
 
         self.renderer.ResetCamera()
         self.update()
+        e = time()
+        print("time to update the plot:", e-s)
+
+    def update_deformations(self):
+        pass
 
     def set_mesh_visibility(self, condition):
         if not self._actors_exists():
@@ -260,3 +219,60 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
 
         normal = rz @ rx @ ry @ np.array([1, 0, 0, 1])
         return normal[:3]
+    
+    def _calculate_displacements(self, index, phase):
+        solver = self.project.structural_modal_solver
+        if solver.modal_shape is None:
+            return
+
+        current_modal_shape = solver.modal_shape[:, index].reshape(-1, 3).copy()
+
+        if self.control_bar.sum_button.isChecked():
+            values_1 = np.linalg.norm(current_modal_shape, axis=1).copy()
+            displacements = current_modal_shape.copy()
+
+        elif self.control_bar.response_ux_button.isChecked():
+            values_1 = current_modal_shape[:, 0]
+            displacements = current_modal_shape*np.array([1.,0.,0.])
+
+        elif self.control_bar.response_uy_button.isChecked():
+            values_1 = current_modal_shape[:, 1]
+            displacements = current_modal_shape*np.array([0.,1.,0.])
+
+        elif self.control_bar.response_uz_button.isChecked():
+            values_1 = current_modal_shape[:, 2]
+            displacements = current_modal_shape*np.array([0.,0.,1.])
+        #
+        max_abs = np.max(np.abs(values_1))
+        values_1 /= max_abs
+        #
+        min_value = round(min(values_1), 1)
+        max_value = round(max(values_1), 1)
+        #
+
+        if self.control_bar.update_coloring.isChecked():
+            mod_values = displacements*np.cos(phase*np.pi/180)
+            
+            if self.control_bar.sum_button.isChecked():
+                values_2 = np.linalg.norm(mod_values, axis=1).copy()
+                
+            elif self.control_bar.response_ux_button.isChecked():
+                values_2 = mod_values[:, 0]
+                
+            elif self.control_bar.response_uy_button.isChecked():
+                values_2 = mod_values[:, 1]
+                
+            elif self.control_bar.response_uz_button.isChecked():
+                values_2 = mod_values[:, 2]
+
+            values_2 /= max_abs
+            if not self.control_bar.sum_button.isChecked():
+                if np.abs(min_value) != np.abs(max_value):
+                    min_value = -np.max(np.abs([min_value, max_value]))
+                    max_value =  np.max(np.abs([min_value, max_value]))
+        else:
+            values_2 = values_1.copy()
+        
+        color_scalars = values_2
+
+        return displacements, color_scalars, min_value, max_value

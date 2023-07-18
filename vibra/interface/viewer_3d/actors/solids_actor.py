@@ -1,6 +1,7 @@
 import vtk
 import numpy as np
 from vibra.engine.mesher.element_type import *
+from time import time
 
 
 class SolidsActor(vtk.vtkActor):
@@ -50,8 +51,11 @@ class SolidsActor(vtk.vtkActor):
         cell_colors.SetNumberOfComponents(3)
         cell_colors.SetNumberOfTuples(len(self.mesh.solids_connectivity))
 
+        s = time()
         for x, y, z in self.get_coordinates():
             points.InsertNextPoint(x, y, z)
+        e = time()
+        print("time to plot nodes:", e-s)
 
         for nodes in nodes_connectivity:
             data.InsertNextCell(cell_type, len(nodes), nodes)
@@ -63,6 +67,14 @@ class SolidsActor(vtk.vtkActor):
         self.data = data
         mapper.SetInputData(self.data)
         self.SetMapper(mapper)
+
+    def update_coordinates(self, coordinates):
+        s = time()
+        points = self.data.GetPoints()
+        for i, xyz in enumerate(coordinates):
+            points.SetPoint(i, xyz)
+        e = time()
+        print("time to update coordinates:", e-s)
 
     def configure_appearance(self):
         self.GetProperty().SetInterpolationToPhong()

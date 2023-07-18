@@ -6,29 +6,31 @@ import numpy as np
 
 class AnalysisActor(SolidsActor):
     def __init__(self, mesh, displacements=None, phase=0, magnification_factor=0):
-        self.displacements = displacements
-        self.phase = phase
-        self.magnification_factor = magnification_factor
-
         super().__init__(mesh)
 
         self.lookup_table = vtk.vtkLookupTable()
         self.lookup_table.SetHueRange(2 / 3, 0)
 
-    def get_deformed_coordinates(self):
-        max_abs = np.max(np.linalg.norm(self.displacements, axis=0))
-        self.u_def = self.displacements*np.cos(self.phase*np.pi/180)
-        def_coordinates = self.mesh.nodal_coordinates[:, 1:] + (self.magnification_factor/max_abs)*self.u_def
-        return def_coordinates
+    def apply_deformation(self, displacements, phase, magnification_factor):
+        max_abs = np.max(np.linalg.norm(displacements, axis=0))
+        u_def = displacements * np.cos(phase * np.pi / 180)
+        deformed_coordinates = self.mesh.nodal_coordinates[:, 1:] + (magnification_factor/max_abs) * u_def
+        self.update_coordinates(deformed_coordinates)
 
-    def get_coordinates(self):
-        '''
-        Replaces the behaviour of the method in solids actor
-        '''
-        if self.displacements is None:
-            return super().get_coordinates()
-        else:
-            return self.get_deformed_coordinates()
+    # def get_deformed_coordinates(self):
+    #     max_abs = np.max(np.linalg.norm(self.displacements, axis=0))
+    #     self.u_def = self.displacements*np.cos(self.phase*np.pi/180)
+    #     def_coordinates = self.mesh.nodal_coordinates[:, 1:] + (self.magnification_factor/max_abs)*self.u_def
+    #     return def_coordinates
+
+    # def get_coordinates(self):
+    #     '''
+    #     Replaces the behaviour of the method in solids actor
+    #     '''
+    #     if self.displacements is None:
+    #         return super().get_coordinates()
+    #     else:
+    #         return self.get_deformed_coordinates()
 
     def apply_cut(self, origin, normal):
         if self.data is None:
