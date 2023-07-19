@@ -49,7 +49,8 @@ class MesherMenu(QMenu):
         pass
 
     def call_material_configurator(self):
-        MaterialWidget()
+        #MaterialWidget()
+        MaterialInput()
         pass
 
     def call_mesher_inputs(self):
