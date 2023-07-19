@@ -115,10 +115,10 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
 
         self.analysis_actor.disable_cut()
         self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
-        self.analysis_actor.plot_colorbar(color_scalars, min_value, max_value)
-        self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
         self.edges_actor.extract_data(self.analysis_actor.data)
 
+        self.analysis_actor.plot_colorbar(color_scalars, min_value, max_value)
+        self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
         self.update()
 
     def set_mesh_visibility(self, condition):
