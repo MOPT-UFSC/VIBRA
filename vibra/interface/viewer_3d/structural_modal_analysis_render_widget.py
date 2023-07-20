@@ -10,6 +10,9 @@ from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
 from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
 from vibra.interface.modal_analysis_bar import StructuralModalAnalysisBar
 from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
+
+import logging
+from threading import Lock
 from time import time 
 
 class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
@@ -38,6 +41,14 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self.edges_actor = None
         self.plane_actor = None
         self.bounds = (0, 0, 0, 0, 0, 0)
+
+        self.playing_animation = False
+        self._animation_lock = Lock()
+        self._animation_frame = 0
+        self._animation_last_time = 0
+        self._animation_timer = None
+        self.render_interactor.AddObserver("TimerEvent", self.update_animation)
+        self.start_animation()
 
         self.create_axes()
         self.create_color_bar()
@@ -129,7 +140,8 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
             self.show_lines()
         else:
             self.show_faces()
-
+    
+    # 
     def show_points(self):
         if not self._actors_exists():
             return
@@ -160,6 +172,7 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self.edges_actor.VisibilityOff()
         self.update()
 
+    # 
     def start_cutting_mode(self):
         if not self._actors_exists():
             return
@@ -211,6 +224,75 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self.analysis_actor = None
         self.edges_actor = None
         self.plane_actor = None
+
+    # 
+    def start_animation(self):
+        logging.debug("Start animation")
+
+        if self.playing_animation:
+            return
+        
+        self.playing_animation = True
+        self._animation_timer = self.render_interactor.CreateRepeatingTimer(500)
+        print(self.render_interactor.GetTimerDuration(self._animation_timer))
+    
+    def stop_animation(self):
+        logging.debug("Stop animation")
+
+        if not self.playing_animation:
+            return
+
+        if self._animation_timer is None:
+            return
+
+        self.playing_animation = False
+        self.render_interactor.DestroyTimer(self._animation_timer)
+
+    def update_animation(self, obj, event):
+        TOTAL_FRAMES = 20
+        MAX_FPS = 20
+        MIN_FACTOR = -4
+        MAX_FACTOR = +4
+
+        if not self.playing_animation:
+            return
+        
+        # If the time to update the frame takes
+        # longer than expected
+        if self._animation_lock.locked():
+            return
+
+        # Only needed because vtk CreateRepeatingTimer(500)
+        # does not work =/
+        if (time() - self._animation_last_time) < 1 / MAX_FPS:
+            return
+
+        if not self._actors_exists():
+            return
+        
+        solver = self.project.structural_modal_solver
+        if solver.modal_shape is None:
+            return
+        
+        index = self.current_shape_index()
+        if not (0 <= index < solver.modal_shape.shape[1]):
+            return
+
+        with self._animation_lock:
+            phase = self.control_bar.phase_slider.value()
+            displacements, *_ = self._calculate_displacements(index, phase)
+
+            # t is a value from 0 to 1 that forms a triangular function
+            # this makes the 
+            self._animation_frame = (self._animation_frame + 1) % TOTAL_FRAMES
+            t = -abs(2 * self._animation_frame / TOTAL_FRAMES - 1) + 1
+            magnification_factor = lerp(MIN_FACTOR, MAX_FACTOR, t)
+
+            self.analysis_actor.disable_cut()
+            self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
+            self.edges_actor.extract_data(self.analysis_actor.data)
+            self.update()
+            self._animation_last_time = time()
 
     def _actors_exists(self):
         actors = [
