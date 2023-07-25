@@ -46,14 +46,20 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self._animation_lock = Lock()
         self._animation_frame = 0
         self._animation_last_time = 0
-        self._animation_timer = None
+        self._animation_timer = self.render_interactor.CreateRepeatingTimer(500)
         self.render_interactor.AddObserver("TimerEvent", self.update_animation)
-        self.start_animation()
+        self.control_bar.play_pause.triggered.connect(self.toggle_animation)
 
         self.create_axes()
         self.create_color_bar()
         self.update_frequencies()
         self.update_plot()
+
+    def toggle_animation(self, *args, **kwargs):
+        if self.playing_animation:
+            self.stop_animation()
+        else:
+            self.start_animation()
 
     def current_shape_index(self):
         return self.control_bar.frequency_box.currentIndex()
@@ -233,8 +239,6 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
             return
         
         self.playing_animation = True
-        self._animation_timer = self.render_interactor.CreateRepeatingTimer(500)
-        print(self.render_interactor.GetTimerDuration(self._animation_timer))
     
     def stop_animation(self):
         logging.debug("Stop animation")
@@ -246,7 +250,6 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
             return
 
         self.playing_animation = False
-        self.render_interactor.DestroyTimer(self._animation_timer)
 
     def update_animation(self, obj, event):
         TOTAL_FRAMES = 20

@@ -89,6 +89,12 @@ class StructuralModalAnalysisBar(QWidget):
 
         self.create_sliders()
 
+        # TODO: This is a test, we should replace by a 
+        # button or something like this 
+        self.play_pause = QAction("Play Pause", self)
+        self.play_pause.setShortcut("Space")
+        self.addAction(self.play_pause)
+
         self.frequency_box = QComboBox()
         self.response_ux_button = QRadioButton("Real Ux")
         self.response_uy_button = QRadioButton("Real Uy")
