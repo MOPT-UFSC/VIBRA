@@ -12,6 +12,8 @@ class AcousticModalAnalysisBar(QWidget):
         super().__init__()
         # Avoid using fixed sizes for all widgets!!
 
+        self.create_sliders()
+
         self.frequency_box = QComboBox()
         self.absolute_button = QRadioButton("Absolute")
         self.real_part_button = QRadioButton("Real part")
@@ -23,15 +25,25 @@ class AcousticModalAnalysisBar(QWidget):
         self.frequency_box.setMinimumWidth(180)
         self.frequency_box.setMaximumWidth(300)
         self.real_part_button.setChecked(True)
+        self.show_mesh_button.setChecked(True)
+        
+        hspacing = 10
 
         layout = QHBoxLayout()
         layout.addStretch()
+        layout.addWidget(QLabel("Phase [deg]:"))
+        layout.addWidget(self.phase_slider)
+        layout.addWidget(self.phase_label)
+        layout.addSpacing(hspacing)
+        
         layout.addWidget(QLabel("Color Scale:"))
         layout.addWidget(self.absolute_button)
         layout.addWidget(self.real_part_button)
-        layout.addSpacing(100)
+        layout.addSpacing(hspacing)
+
         layout.addWidget(self.show_mesh_button)
-        layout.addSpacing(100)
+        layout.addSpacing(hspacing)
+        
         layout.addWidget(QLabel("Mode Selector:"))
         layout.addWidget(self.frequency_box)
         self.setLayout(layout)
@@ -48,6 +60,24 @@ class AcousticModalAnalysisBar(QWidget):
 
         for i, freq in enumerate(frequencies):
             self.frequency_box.addItem(f" Mode {i + 1}: {round(freq, 6)} Hz")
+
+    def create_sliders(self):
+        self.phase_label = QLabel("value")
+        self.phase_label.setMaximumWidth(60)
+        self.phase_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.phase_slider = QSlider(Qt.Orientation.Horizontal)
+        self.phase_slider.setMinimum(0)
+        self.phase_slider.setMaximum(360)
+        self.phase_slider.setValue(0)
+        self.phase_slider.setSingleStep(1)
+        self.phase_slider.setMaximumWidth(200)
+        self.phase_slider.valueChanged.connect(self.value_change_callback)
+        self.phase_label.setText(f"({self.phase_slider.value()}°)")
+        #
+
+    def value_change_callback(self):
+        self.phase_label.setText(f"({self.phase_slider.value()}°)")
+        self.plot_changed.emit()
 
 
 class StructuralModalAnalysisBar(QWidget):
