@@ -6,7 +6,12 @@ from PyQt5.QtWidgets import *
 
 
 class AcousticModalAnalysisBar(QWidget):
-    plot_changed = pyqtSignal()
+    slider_pressed = pyqtSignal()
+    slider_released = pyqtSignal()
+    value_changed = pyqtSignal()
+
+
+    # value_changed = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -48,9 +53,9 @@ class AcousticModalAnalysisBar(QWidget):
         layout.addWidget(self.frequency_box)
         self.setLayout(layout)
 
-        self.frequency_box.activated.connect(self.plot_changed.emit)
-        self.real_part_button.clicked.connect(self.plot_changed.emit)
-        self.absolute_button.clicked.connect(self.plot_changed.emit)
+        self.frequency_box.activated.connect(self.value_changed.emit)
+        self.real_part_button.clicked.connect(self.value_changed.emit)
+        self.absolute_button.clicked.connect(self.value_changed.emit)
 
     def set_frequencies(self, frequencies):
         self.frequency_box.clear()
@@ -71,17 +76,22 @@ class AcousticModalAnalysisBar(QWidget):
         self.phase_slider.setValue(0)
         self.phase_slider.setSingleStep(1)
         self.phase_slider.setMaximumWidth(200)
+
+        self.phase_slider.sliderPressed.connect(self.slider_pressed.emit)
+        self.phase_slider.sliderReleased.connect(self.slider_released.emit)
         self.phase_slider.valueChanged.connect(self.value_change_callback)
         self.phase_label.setText(f"({self.phase_slider.value()}°)")
         #
 
     def value_change_callback(self):
         self.phase_label.setText(f"({self.phase_slider.value()}°)")
-        self.plot_changed.emit()
+        self.value_changed.emit()
 
 
 class StructuralModalAnalysisBar(QWidget):
-    plot_changed = pyqtSignal()
+    slider_pressed = pyqtSignal()
+    slider_released = pyqtSignal()
+    value_changed = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -105,6 +115,7 @@ class StructuralModalAnalysisBar(QWidget):
         self.sum_button.setChecked(True)
         self.show_mesh_button.setChecked(True)
         self.update_coloring.setChecked(True)
+        self.update_coloring.stateChanged.connect(self.value_changed)
 
         button_group = QButtonGroup()
         button_group.addButton(self.response_ux_button)
@@ -143,11 +154,11 @@ class StructuralModalAnalysisBar(QWidget):
         layout.addWidget(self.frequency_box)
         self.setLayout(layout)
 
-        self.frequency_box.activated.connect(self.plot_changed.emit)
-        self.response_ux_button.clicked.connect(self.plot_changed.emit)
-        self.response_uy_button.clicked.connect(self.plot_changed.emit)
-        self.response_uz_button.clicked.connect(self.plot_changed.emit)
-        self.sum_button.clicked.connect(self.plot_changed.emit)
+        self.frequency_box.activated.connect(self.value_changed.emit)
+        self.response_ux_button.clicked.connect(self.value_changed.emit)
+        self.response_uy_button.clicked.connect(self.value_changed.emit)
+        self.response_uz_button.clicked.connect(self.value_changed.emit)
+        self.sum_button.clicked.connect(self.value_changed.emit)
 
     def set_frequencies(self, frequencies):
         self.frequency_box.clear()
@@ -170,6 +181,8 @@ class StructuralModalAnalysisBar(QWidget):
         self.magnification_factor_slider.setSingleStep(1)
         self.magnification_factor_slider.setMaximumWidth(100)
         self.magnification_factor_slider.valueChanged.connect(self.value_change_callback)
+        self.magnification_factor_slider.sliderPressed.connect(self.slider_pressed.emit)
+        self.magnification_factor_slider.sliderReleased.connect(self.slider_released.emit)
         self.magnification_factor_label.setText(f"({self.magnification_factor_slider.value()}x)")
         #
         self.phase_label = QLabel("value")
@@ -182,10 +195,12 @@ class StructuralModalAnalysisBar(QWidget):
         self.phase_slider.setSingleStep(1)
         self.phase_slider.setMaximumWidth(200)
         self.phase_slider.valueChanged.connect(self.value_change_callback)
+        self.phase_slider.sliderPressed.connect(self.slider_pressed.emit)
+        self.phase_slider.sliderReleased.connect(self.slider_released.emit)
         self.phase_label.setText(f"({self.phase_slider.value()}°)")
         #
 
     def value_change_callback(self):
         self.magnification_factor_label.setText(f"({self.magnification_factor_slider.value()}x)")
         self.phase_label.setText(f"({self.phase_slider.value()}°)")
-        self.plot_changed.emit()
+        self.value_changed.emit()

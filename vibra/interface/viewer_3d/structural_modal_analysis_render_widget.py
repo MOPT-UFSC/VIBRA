@@ -25,9 +25,9 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
 
         self.project = project        
         self.control_bar = StructuralModalAnalysisBar()
-        self.control_bar.plot_changed.connect(self.update_deformations)
-        self.control_bar.update_coloring.stateChanged.connect(self.update_deformations)
+        self.control_bar.value_changed.connect(self.update_deformations)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
+        self.control_bar.slider_pressed.connect(self.stop_animation)
 
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
@@ -252,10 +252,12 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self.playing_animation = False
 
     def update_animation(self, obj, event):
-        TOTAL_FRAMES = 20
-        MAX_FPS = 20
-        MIN_FACTOR = -4
-        MAX_FACTOR = +4
+        factor = self.control_bar.magnification_factor_slider.value()
+
+        total_frames = 20
+        max_fps = 20
+        min_factor = - abs(factor)
+        max_factor = + abs(factor)
 
         if not self.playing_animation:
             return
@@ -267,7 +269,7 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
 
         # Only needed because vtk CreateRepeatingTimer(500)
         # does not work =/
-        if (time() - self._animation_last_time) < 1 / MAX_FPS:
+        if (time() - self._animation_last_time) < 1 / max_fps:
             return
 
         if not self._actors_exists():
@@ -287,9 +289,9 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
 
             # t is a value from 0 to 1 that forms a triangular function
             # this makes the 
-            self._animation_frame = (self._animation_frame + 1) % TOTAL_FRAMES
-            t = -abs(2 * self._animation_frame / TOTAL_FRAMES - 1) + 1
-            magnification_factor = lerp(MIN_FACTOR, MAX_FACTOR, t)
+            self._animation_frame = (self._animation_frame + 1) % total_frames
+            t = -abs(2 * self._animation_frame / total_frames - 1) + 1
+            magnification_factor = lerp(min_factor, max_factor, t)
 
             self.analysis_actor.disable_cut()
             self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
