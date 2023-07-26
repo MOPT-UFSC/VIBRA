@@ -31,7 +31,7 @@ class ViewerTabs(QTabWidget):
         self.user_config = user_config
 
         self.geometry_widget = GeometryRenderWidget(self.project)
-        self.example_analysis_widget = ExampleAnalysisRenderWidget(self.project)
+        # self.example_analysis_widget = ExampleAnalysisRenderWidget(self.project)
         self.welcome = WelcomeWidget()
         self.help_widget = HelpWidget()
 

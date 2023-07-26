@@ -1,7 +1,7 @@
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_modal_assembler import AcousticModalAssembler
-from vibra.engine.solvers.modal_solver import ModalSolver
+from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 
 
 def test_modal_acoustic():

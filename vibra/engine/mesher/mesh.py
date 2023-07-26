@@ -22,6 +22,9 @@ class Mesh:
         self.lines_connectivity = np.array([])
         self.faces_connectivity = np.array([])
         self.solids_connectivity = np.array([])
+        self.nodes_from_lines = dict()
+        self.nodes_from_surfaces = dict()
+        self.nodes_from_volumes = dict()
 
     @classmethod
     def from_cad(
@@ -218,12 +221,15 @@ class Mesh:
 
             elif dim == 1:  # Lines
                 connectivity_dim1[dim, tag] = elements_data
+                self.nodes_from_lines[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
 
             elif dim == 2:  # Surfaces
                 connectivity_dim2[dim, tag] = elements_data
+                self.nodes_from_surfaces[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
 
             elif dim == 3:  # Solids
                 connectivity_dim3[dim, tag] = elements_data
+                self.nodes_from_volumes[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
 
         self.lines_connectivity = self._get_connectivity_array(connectivity_dim1)
         self.faces_connectivity = self._get_connectivity_array(connectivity_dim2)

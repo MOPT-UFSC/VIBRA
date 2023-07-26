@@ -8,6 +8,8 @@ from pathlib import Path
 from vibra.interface.model_inputs.mesh.mesher_inputs import MesherInputs
 from vibra.interface.model_inputs.acoustic.fluid_inputs import FluidInput
 from vibra.interface.model_inputs.structural.material_inputs import MaterialInput
+from vibra.interface.model_inputs.structural.boundary_condition_inputs import BoundaryConditionInputs
+
 from vibra.interface.analysis.analysis_type_input import AnalysisTypeInput
 from vibra.interface.analysis.analysis_setup_input import AnalysisSetupInput
 
@@ -182,12 +184,12 @@ class MenuItems(QTreeWidget):
         #
         self.item_top_structuralModelSetup = QTreeWidgetItem(['Structural Model Setup'])
         self.item_child_setStructuralElementType = QTreeWidgetItem(['Set Structural Element Type'])
-        self.item_child_setPrescribedDofs = QTreeWidgetItem(['Set Boundary Conditions'])
+        self.item_child_set_boundary_condition = QTreeWidgetItem(['Set Boundary Conditions'])
         self.item_child_setNodalLoads = QTreeWidgetItem(['Set Loads'])
         #
         self.list_top_items.append(self.item_top_structuralModelSetup)
         self.list_child_items.append(self.item_child_setStructuralElementType)
-        self.list_child_items.append(self.item_child_setPrescribedDofs)
+        self.list_child_items.append(self.item_child_set_boundary_condition)
         self.list_child_items.append(self.item_child_setNodalLoads)
         #
         self.item_top_acousticModelSetup = QTreeWidgetItem(["Acoustic Model Setup"])
@@ -272,7 +274,7 @@ class MenuItems(QTreeWidget):
         
         self.addTopLevelItem(self.item_top_structuralModelSetup)
         self.item_top_structuralModelSetup.addChild(self.item_child_setStructuralElementType)
-        self.item_top_structuralModelSetup.addChild(self.item_child_setPrescribedDofs)
+        self.item_top_structuralModelSetup.addChild(self.item_child_set_boundary_condition)
         self.item_top_structuralModelSetup.addChild(self.item_child_setNodalLoads)
 
         self.addTopLevelItem(self.item_top_acousticModelSetup)
@@ -392,16 +394,18 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_set_fluid:
             if not self.item_child_set_fluid.isDisabled():
-                pass
                 FluidInput()
 
         elif item == self.item_child_setStructuralElementType:
             if not self.item_child_setStructuralElementType.isDisabled():
                 pass
     
-        elif item == self.item_child_setPrescribedDofs:
-            if not self.item_child_setPrescribedDofs.isDisabled():
-                pass
+        elif item == self.item_child_set_boundary_condition:
+            if not self.item_child_set_boundary_condition.isDisabled():
+                read = BoundaryConditionInputs()
+                if read.complete:
+                    print("The boundary condition has been defined to...")
+                    # self.main_window.project.set_boundary_condition(_ids, value)
 
         elif item == self.item_child_setNodalLoads:
             if not self.item_child_setNodalLoads.isDisabled():
@@ -546,7 +550,7 @@ class MenuItems(QTreeWidget):
 
     def modify_structural_model_setup_items_acces(self, bool_key):
         self.item_child_setStructuralElementType.setDisabled(bool_key)
-        self.item_child_setPrescribedDofs.setDisabled(bool_key)
+        self.item_child_set_boundary_condition.setDisabled(bool_key)
         self.item_child_setNodalLoads.setDisabled(bool_key)
 
     def modify_acoustic_model_setup_items_acces(self, bool_key):
@@ -564,7 +568,7 @@ class MenuItems(QTreeWidget):
     def modify_items_access_after_geometry_importing(self):
         self.main_window.renderer_toolbar.setDisabled(False)
         self.modify_acoustic_model_setup_items_acces(False)
-        self.modify_structural_model_setup_items_acces(True)
+        self.modify_structural_model_setup_items_acces(False)
         self.modify_analysis_items_acces(False)
         self.item_top_analysis.setHidden(False)
         

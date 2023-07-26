@@ -24,6 +24,9 @@ class AnalysisTypeInput(QDialog):
         self.icon = QIcon(icon_path)
         self.setWindowIcon(self.icon)
 
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModal)
+
         self._reset_variables()
         self._define_qt_variables()
         self._create_connections()
@@ -77,6 +80,7 @@ class AnalysisTypeInput(QDialog):
 
 
     def harmonic_structural(self):
+        self.close()
         select = StructuralHarmonicAnalysisInput()
         self.method_id = select.index
         self.analysis_type_label = "Structural Harmonic Analysis"
@@ -95,6 +99,7 @@ class AnalysisTypeInput(QDialog):
 
 
     def harmonic_acoustic(self):
+        self.close()
         select = AcousticHarmonicAnalysisInput()
         self.method_id = select.index
         self.method_id = 0
@@ -113,6 +118,7 @@ class AnalysisTypeInput(QDialog):
 
 
     def harmonic_coupled(self):
+        self.close()
         select = CoupledHarmonicAnalysisInput()
         self.method_id = select.index
         self.analysis_type_label = "Coupled Harmonic Analysis"
@@ -131,6 +137,7 @@ class AnalysisTypeInput(QDialog):
 
 
     def modal_structural(self):
+        self.close()
         modal = StructuralModalAnalysisInput()
         if modal.modes is None:
             return
@@ -148,6 +155,7 @@ class AnalysisTypeInput(QDialog):
 
 
     def modal_acoustic(self):
+        self.close()
         modal = AcousticModalAnalysisInput()
         if modal.modes is None:
             return

@@ -1,4 +1,5 @@
 import os
+import numpy as np
 from pathlib import Path
 
 from vibra.engine.mesher.mesh import Mesh
@@ -6,6 +7,9 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.errors import IncompleteSetupError
 from vibra.interface.general.print_message_input import PrintMessageInput
+
+from vibra.engine.assemblers.acoustic_modal_assembler import AcousticModalAssembler
+from vibra.engine.assemblers.structural_modal_assembler import StructuralModalAssembler
 
 
 class ModelStatus:
@@ -24,6 +28,14 @@ class Model:
         self.mesh = None
         self.mesh_setup = None
         self.generated_mesh = False
+        
+        self.frequencies = None
+        self.acoustic_element = None
+        self.structural_element = None
+
+        self.lines_with_prescribed_dofs = {}
+        self.surfaces_with_prescribed_dofs = {}
+        self.volumes_with_prescribed_dofs = {}
 
         self.properties = ModelProperties()
         # self.properties.set_fluid(Fluid("Air", density=1.2, speed_of_sound=343))
@@ -69,3 +81,39 @@ class Model:
 
     def set_fluid(self, fluid):
         self.properties.set_fluid(fluid)
+
+    def set_acoustic_element(self, element):
+        self.acoustic_element = element
+
+    def set_structural_element(self, element):
+        self.structural_element = element
+
+    def get_acoustic_global_dofs_from_nodes(self, nodes):
+        if self.acoustic_element is None:
+            return []
+        _dofs_per_node = self.acoustic_element.DOF_PER_NODE
+        _nodes = nodes.reshape(-1, 1)
+        global_dofs = _dofs_per_node*_nodes + np.arange(_dofs_per_node)
+        return np.array(global_dofs.flatten(), dtype=int)
+            
+    def get_structural_global_dofs_from_nodes(self, nodes):
+        if self.structural_element is None:
+            return []
+        _dofs_per_node = self.structural_element.DOF_PER_NODE
+        _nodes = nodes.reshape(-1, 1)
+        global_dofs = _dofs_per_node*_nodes + np.arange(_dofs_per_node)
+        return np.array(global_dofs.flatten(), dtype=int)
+
+    def set_structural_boundary_condition(self, data):
+        try:
+            
+            if "line" in data["entity_type"]:
+                for _id in data["entity_ids"]:
+                    self.lines_with_prescribed_dofs[_id] = data["values"]
+
+            if "surface" in data["entity_type"]:
+                for _id in data["entity_ids"]:
+                    self.surfaces_with_prescribed_dofs[_id] = data["values"]
+
+        except Exception as error_log:
+            print(str(error_log))

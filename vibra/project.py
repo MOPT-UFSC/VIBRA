@@ -4,9 +4,11 @@ from time import sleep
 
 from vibra.engine.assemblers.modal_assembler import ModalAssembler
 from vibra.engine.model import Model
+from vibra.project_file import ProjectFile
 from vibra.engine.assemblers.acoustic_modal_assembler import AcousticModalAssembler
 from vibra.engine.assemblers.structural_modal_assembler import StructuralModalAssembler
-from vibra.engine.solvers.modal_solver import ModalSolver
+from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
+from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
 from vibra.utils.progress_status import ProgressStatus
 
 
@@ -23,10 +25,11 @@ class Project:
         self.analysis_data = None
         #
         self.model = Model()
+        self.file = ProjectFile()
         self.acoustic_modal_assembler = AcousticModalAssembler(self.model)
         self.structural_modal_assembler = StructuralModalAssembler(self.model)
-        self.acoustic_modal_solver = ModalSolver(self.acoustic_modal_assembler)
-        self.structural_modal_solver = ModalSolver(self.structural_modal_assembler)
+        # self.acoustic_modal_solver = AcousticModalSolver(self.acoustic_modal_assembler)
+        # self.structural_modal_solver = StructuralModalSolver(self.structural_modal_assembler)
 
     @classmethod
     def load(cls, path):
@@ -62,17 +65,34 @@ class Project:
     def set_mesh_setup(self, mesh_setup):
         self.model.set_mesh_setup(mesh_setup)
 
+    def set_acoustic_element_to_model(self):
+        self.model.set_acoustic_element(self.acoustic_modal_assembler.new_element())
+
+    def set_structural_element_to_model(self):
+        self.model.set_structural_element(self.structural_modal_assembler.new_element())
+
+    def set_structural_boundary_condition(self, data):
+        self.model.set_structural_boundary_condition(data)
+        self.file.add_structural_boundary_condition_to_file(data)
+
     def generate_mesh(self):
         if self.model is None:
             return
         self.model.process_mesh()
 
+    def set_frequencies(self, frequencies):
+        self.frequencies = frequencies
+        self.acoustic_modal_assembler.set_frequencies(frequencies)
+        self.structural_modal_assembler.set_frequencies(frequencies)
+
     def set_analysis_data(self, data):
         self.analysis_data = data
         if data["analysis_id"] == 2:
-            self.structural_modal_solver = ModalSolver(self.structural_modal_assembler, analysis_data=data)
+            self.set_structural_element_to_model()
+            self.structural_modal_solver = StructuralModalSolver(self.structural_modal_assembler, analysis_data=data)
         elif data["analysis_id"] == 4:
-            self.acoustic_modal_solver = ModalSolver(self.acoustic_modal_assembler, analysis_data=data)
+            self.set_acoustic_element_to_model()
+            self.acoustic_modal_solver = AcousticModalSolver(self.acoustic_modal_assembler, analysis_data=data)
         else:
             raise NotImplementedError("Not implemented solver")
 

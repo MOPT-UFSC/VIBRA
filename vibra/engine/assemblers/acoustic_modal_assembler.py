@@ -10,6 +10,7 @@ from vibra.engine.mesher.element_type import *
 
 class AcousticModalAssembler(ModalAssembler):
     def new_element(self):
+        
         element_type = self.model.mesh.element_type
 
         if element_type == TETRAHEDRON_4:
