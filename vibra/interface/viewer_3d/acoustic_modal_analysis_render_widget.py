@@ -18,7 +18,7 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
 
         self.project = project        
         self.control_bar = AcousticModalAnalysisBar()
-        self.control_bar.plot_changed.connect(self.update_plot)
+        self.control_bar.value_changed.connect(self.update_plot)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
 
         # replace the layout to add other usefull widgets
