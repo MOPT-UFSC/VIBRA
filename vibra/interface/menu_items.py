@@ -385,6 +385,9 @@ class MenuItems(QTreeWidget):
         elif item == self.item_child_generate_mesh:
             if not self.item_child_generate_mesh.isDisabled():
                 self.generate_mesh()
+                # we dont want any window showing wrong meshes
+                self.main_window.viewer_tabs.close_analysis_tabs()
+                self.main_window.viewer_tabs.update_plots()
 
         elif item == self.item_child_set_material:
             if not self.item_child_set_material.isDisabled():
