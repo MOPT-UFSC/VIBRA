@@ -27,7 +27,7 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self.control_bar = StructuralModalAnalysisBar()
         self.control_bar.value_changed.connect(self.update_deformations)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
-        self.control_bar.slider_pressed.connect(self.stop_animation)
+        self.control_bar.phase_slider.sliderPressed.connect(self.stop_animation)
 
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
@@ -124,6 +124,11 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
 
         index = self.current_shape_index()
         if not (0 <= index < solver.modal_shape.shape[1]):
+            return
+        
+        # Do not update the deformation directly if an animation is running.
+        # This makes the magnification factor work much smothly.
+        if self.playing_animation:
             return
 
         phase = self.control_bar.phase_slider.value()
@@ -284,17 +289,17 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
             return
 
         with self._animation_lock:
-            phase = self.control_bar.phase_slider.value()
-            displacements, *_ = self._calculate_displacements(index, phase)
-
-            # t is a value from 0 to 1 that forms a triangular function
-            # this makes the 
+            # t changes from 0 to 1
             self._animation_frame = (self._animation_frame + 1) % total_frames
-            t = -abs(2 * self._animation_frame / total_frames - 1) + 1
-            magnification_factor = lerp(min_factor, max_factor, t)
+            t = self._animation_frame / (total_frames - 1)
+            phase = lerp(0, 360, t)
+
+            displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
+            magnification_factor = self.control_bar.magnification_factor_slider.value()
 
             self.analysis_actor.disable_cut()
             self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
+            self.analysis_actor.plot_colorbar(color_scalars, min_value, max_value)
             self.edges_actor.extract_data(self.analysis_actor.data)
             self.update()
             self._animation_last_time = time()
