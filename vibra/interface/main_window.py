@@ -216,8 +216,10 @@ class MainWindow(QMainWindow):
         import_geometry = load_function(self.project.import_geometry, self)
         import_geometry(path)
 
+        self.viewer_tabs.close_mesh_tabs()
         self.viewer_tabs.show_geometry()
         self.viewer_tabs.update_plots()
+
         self.renderer_toolbar.setDisabled(False)
         self.menu_widget.modify_items_access_after_geometry_importing()
 
