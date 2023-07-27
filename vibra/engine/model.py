@@ -21,7 +21,7 @@ class ModelStatus:
 class Model:
     def __init__(self):
         self.reset_variables()
-        
+
     def reset_variables(self):
         #
         self.geometry_path = ""
@@ -33,12 +33,7 @@ class Model:
         self.acoustic_element = None
         self.structural_element = None
 
-        self.lines_with_prescribed_dofs = {}
-        self.surfaces_with_prescribed_dofs = {}
-        self.volumes_with_prescribed_dofs = {}
-
         self.properties = ModelProperties()
-        # self.properties.set_fluid(Fluid("Air", density=1.2, speed_of_sound=343))
 
     def set_geometry_path(self, path):
         self.geometry_path = Path(path)
@@ -95,7 +90,7 @@ class Model:
         _nodes = nodes.reshape(-1, 1)
         global_dofs = _dofs_per_node*_nodes + np.arange(_dofs_per_node)
         return np.array(global_dofs.flatten(), dtype=int)
-            
+
     def get_structural_global_dofs_from_nodes(self, nodes):
         if self.structural_element is None:
             return []
@@ -103,17 +98,21 @@ class Model:
         _nodes = nodes.reshape(-1, 1)
         global_dofs = _dofs_per_node*_nodes + np.arange(_dofs_per_node)
         return np.array(global_dofs.flatten(), dtype=int)
-
+    
     def set_structural_boundary_condition(self, data):
-        try:
-            
-            if "line" in data["entity_type"]:
-                for _id in data["entity_ids"]:
-                    self.lines_with_prescribed_dofs[_id] = data["values"]
+        self.properties.set_structural_boundary_condition(data)
+    
+    def set_structural_load(self, data):
+        self.properties.set_structural_load(data)
 
-            if "surface" in data["entity_type"]:
-                for _id in data["entity_ids"]:
-                    self.surfaces_with_prescribed_dofs[_id] = data["values"]
+    def set_acoustic_pressure(self, data):
+        self.properties.set_acoustic_pressure(data)
 
-        except Exception as error_log:
-            print(str(error_log))
+    def set_mass_flow_rate(self, data):
+        self.properties.set_mass_flow_rate(data)
+
+    def set_volume_velocity(self, data):
+        self.properties.set_volume_velocity(data)
+    
+    def set_particle_velocity(self, data):
+        self.properties.set_particle_velocity(data)

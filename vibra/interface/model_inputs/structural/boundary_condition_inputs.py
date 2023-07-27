@@ -36,7 +36,6 @@ class BoundaryConditionInputs(QDialog):
         self._define_qt_variables()
         self._create_connections()
         self.exec()
-        # return
 
         # self.opv = opv
         # self.opv.setInputObject(self)

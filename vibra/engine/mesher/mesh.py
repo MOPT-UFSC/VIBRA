@@ -25,6 +25,8 @@ class Mesh:
         self.nodes_from_lines = dict()
         self.nodes_from_surfaces = dict()
         self.nodes_from_volumes = dict()
+        self.entity_ranges = dict()
+        self.surfaces_from_volumes = dict()
 
     @classmethod
     def from_cad(
@@ -180,6 +182,7 @@ class Mesh:
         """
         Transform gmsh data in a more manageable format (aka nodal coords and connectivity).
         """
+        self.reset_variables()
         indexes, coords, _ = gmsh.model.mesh.getNodes(includeBoundary=True)
         total_nodes = int(np.max(indexes))
         self.nodal_coordinates = np.zeros((total_nodes, 4))
@@ -189,9 +192,13 @@ class Mesh:
         connectivity_dim1 = dict()
         connectivity_dim2 = dict()
         connectivity_dim3 = dict()
-        self.entity_ranges = dict()
 
         for dim, tag in gmsh.model.getEntities():
+
+            if dim == 3:
+                _, downwards = gmsh.model.getAdjacencies(dim, tag)
+                self.surfaces_from_volumes[tag] = list(downwards)
+
             elements_data = dict()
             element_types, element_indexes, element_nodes = gmsh.model.mesh.getElements(dim, tag)
 
@@ -234,6 +241,7 @@ class Mesh:
         self.lines_connectivity = self._get_connectivity_array(connectivity_dim1)
         self.faces_connectivity = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity = self._get_connectivity_array(connectivity_dim3)
+
 
     def _get_connectivity_array(self, input_dict):
         """

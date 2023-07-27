@@ -8,8 +8,8 @@ import configparser
 import numpy as np
 import os
 
-from vibra.libraries.default_libraries import default_fluid_library
 from vibra.utils.interface_functions import get_main_window
+from vibra.libraries.default_libraries import default_fluid_library
 
 from vibra.engine.properties.fluid import Fluid
 from vibra.interface.general.pick_color_input import PickColorInput

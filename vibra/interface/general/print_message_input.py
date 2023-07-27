@@ -54,8 +54,6 @@ class PrintMessageInput(QDialog):
         
         self.exec_()
 
-        self.exec_()
-
     def message_close(self):
         self.close()
 

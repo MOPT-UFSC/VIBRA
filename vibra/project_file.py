@@ -43,8 +43,8 @@ class ProjectFile:
         sections = config.sections()
 
         if "Contrained dofs" in sections:
-            config["Contrained dofs"][data["entity_type"]] = data["entity_ids"]
-            config["Contrained dofs"]["values"] = data["values"]
+            config["Constrained dofs"][data["entity_type"]] = data["entity_ids"]
+            config["Constrained dofs"]["values"] = data["values"]
         else:
             config["Constrained dofs"] = {  data["entity_type"] : data["entity_ids"],
                                             "values" : data["values"]  }
@@ -54,3 +54,36 @@ class ProjectFile:
     def write_data_in_file(self, path, config):
         with open(path, 'w') as config_file:
             config.write(config_file)
+
+    def add_acoustic_pressure_to_file(self, data):
+
+        file_path = os.path.join(self.project_path, self.structural_model_setup_filename)
+        config = configparser.ConfigParser()
+        config.read(file_path)
+        sections = config.sections()
+
+        if "Acoustic pressure" in sections:
+            config["Acoustic pressure"][data["entity_type"]] = data["entity_ids"]
+            config["Acoustic pressure"]["values"] = data["values"]
+        else:
+            config["Acoustic pressure"] = { data["entity_type"] : data["entity_ids"],
+                                            "values" : data["values"]  }
+
+        self.write_data_in_file(file_path, config)
+
+
+    def add_volume_velocity_to_file(self, data):
+
+        file_path = os.path.join(self.project_path, self.structural_model_setup_filename)
+        config = configparser.ConfigParser()
+        config.read(file_path)
+        sections = config.sections()
+
+        if "Volume velocity" in sections:
+            config["Volume velocity"][data["entity_type"]] = data["entity_ids"]
+            config["Volume velocity"]["values"] = data["values"]
+        else:
+            config["Volume velocity"] = { data["entity_type"] : data["entity_ids"],
+                                            "values" : data["values"]  }
+
+        self.write_data_in_file(file_path, config)

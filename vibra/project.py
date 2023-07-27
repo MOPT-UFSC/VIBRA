@@ -71,9 +71,17 @@ class Project:
     def set_structural_element_to_model(self):
         self.model.set_structural_element(self.structural_modal_assembler.new_element())
 
+    def set_acoustic_pressure(self, data):
+        self.model.set_acoustic_pressure(data)
+        self.file.add_acoustic_pressure_to_file(data)
+
     def set_structural_boundary_condition(self, data):
         self.model.set_structural_boundary_condition(data)
         self.file.add_structural_boundary_condition_to_file(data)
+
+    def set_volume_velocity(self, data):
+        self.model.set_volume_velocity(data)
+        self.file.add_volume_velocity_to_file(data)
 
     def generate_mesh(self):
         if self.model is None:
@@ -87,10 +95,11 @@ class Project:
 
     def set_analysis_data(self, data):
         self.analysis_data = data
+        # print(data)
         if data["analysis_id"] == 3:
             self.set_acoustic_element_to_model()
             self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_modal_assembler, analysis_data=data)
-        if data["analysis_id"] == 2:
+        elif data["analysis_id"] == 2:
             self.set_structural_element_to_model()
             self.structural_modal_solver = StructuralModalSolver(self.structural_modal_assembler, analysis_data=data)
         elif data["analysis_id"] == 4:
