@@ -49,6 +49,8 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
         self.control_bar.set_frequencies(solver.natural_frequencies)
 
     def update_plot(self):
+        # Remember of updating the frequencies before running this
+
         if self.project is None:
             return
 
