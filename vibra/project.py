@@ -2,13 +2,14 @@ import logging
 from pathlib import Path
 from time import sleep
 
-from vibra.engine.assemblers.modal_assembler import ModalAssembler
 from vibra.engine.model import Model
-from vibra.project_file import ProjectFile
 from vibra.engine.assemblers.acoustic_modal_assembler import AcousticModalAssembler
 from vibra.engine.assemblers.structural_modal_assembler import StructuralModalAssembler
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
+from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
+
+from vibra.project_file import ProjectFile
 from vibra.utils.progress_status import ProgressStatus
 
 
@@ -28,8 +29,7 @@ class Project:
         self.file = ProjectFile()
         self.acoustic_modal_assembler = AcousticModalAssembler(self.model)
         self.structural_modal_assembler = StructuralModalAssembler(self.model)
-        # self.acoustic_modal_solver = AcousticModalSolver(self.acoustic_modal_assembler)
-        # self.structural_modal_solver = StructuralModalSolver(self.structural_modal_assembler)
+
 
     @classmethod
     def load(cls, path):
@@ -87,6 +87,9 @@ class Project:
 
     def set_analysis_data(self, data):
         self.analysis_data = data
+        if data["analysis_id"] == 3:
+            self.set_acoustic_element_to_model()
+            self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_modal_assembler, analysis_data=data)
         if data["analysis_id"] == 2:
             self.set_structural_element_to_model()
             self.structural_modal_solver = StructuralModalSolver(self.structural_modal_assembler, analysis_data=data)
@@ -98,6 +101,7 @@ class Project:
 
     def set_element_formulation(self, element):
         self.acoustic_modal_assembler.set_element_formulation(element)
+        self.structural_modal_assembler.set_element_formulation(element)
 
     def solve_modal_acoustic(self):
         self.acoustic_modal_assembler.assemble_global_matrices()

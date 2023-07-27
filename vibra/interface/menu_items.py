@@ -532,9 +532,9 @@ class MenuItems(QTreeWidget):
         """ """
         for child_item in self.list_child_items:
             child_item.setDisabled(True)
-        self.modify_general_settings_items_access(False)
+        self.item_child_import_geometry.setDisabled(False)
         self.item_top_structuralModelSetup.setHidden(True)
-        # self.item_top_acousticModelSetup.setHidden(True)
+        self.item_top_acousticModelSetup.setHidden(True)
         self.item_top_analysis.setHidden(True)
 
     def modify_geometry_item_access(self, bool_key):
@@ -567,21 +567,24 @@ class MenuItems(QTreeWidget):
 
     def modify_items_access_after_geometry_importing(self):
         self.main_window.renderer_toolbar.setDisabled(False)
+        self.modify_general_settings_items_access(False)
         self.modify_acoustic_model_setup_items_acces(False)
         self.modify_structural_model_setup_items_acces(False)
         self.modify_analysis_items_acces(False)
         self.item_top_analysis.setHidden(False)
+        self.filter_analysis_type()
         
     def filter_analysis_type(self):
-        self.item_top_acousticModelSetup.setHidden(True)
-        self.item_top_structuralModelSetup.setHidden(True)
-        if self.main_window.analysis_filter.radio_button_acoustic.isChecked():
-            self.item_top_acousticModelSetup.setHidden(False)
-        elif self.main_window.analysis_filter.radio_button_structural.isChecked():
-            self.item_top_structuralModelSetup.setHidden(False)
-        else:
-            self.item_top_acousticModelSetup.setHidden(False)
-            self.item_top_structuralModelSetup.setHidden(False)
+        if not self.item_top_analysis.isHidden():
+            self.item_top_acousticModelSetup.setHidden(True)
+            self.item_top_structuralModelSetup.setHidden(True)
+            if self.main_window.analysis_filter.radio_button_acoustic.isChecked():
+                self.item_top_acousticModelSetup.setHidden(False)
+            elif self.main_window.analysis_filter.radio_button_structural.isChecked():
+                self.item_top_structuralModelSetup.setHidden(False)
+            else:
+                self.item_top_acousticModelSetup.setHidden(False)
+                self.item_top_structuralModelSetup.setHidden(False)
 
     def _updateItems(self):
         """Enables and disables the Child Items on the menu after the solution is done."""
