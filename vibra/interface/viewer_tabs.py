@@ -19,6 +19,8 @@ from vibra.interface.viewer_3d.geometry_render_widget import (
 from vibra.interface.viewer_3d.mesh_render_widget import MeshRenderWidget
 from vibra.interface.viewer_3d.acoustic_modal_analysis_render_widget import AcousticModalAnalysisRenderWidget
 from vibra.interface.viewer_3d.structural_modal_analysis_render_widget import StructuralModalAnalysisRenderWidget
+from vibra.interface.viewer_3d.acoustic_harmonic_analysis_render_widget import AcousticHarmonicAnalysisRenderWidget
+
 
 class ViewerTabs(QTabWidget):
     def __init__(self, parent, project, user_config):
@@ -84,6 +86,13 @@ class ViewerTabs(QTabWidget):
         widget.update_plot()
         self.setCurrentWidget(widget)
 
+    def show_acoustic_harmonic_analysis(self):
+        widget = AcousticHarmonicAnalysisRenderWidget(self.project)
+        if self.project.acoustic_harmonic_solver.solution is None:
+            return
+        self.create_a_new_tab_if_it_does_not_exist(widget, "Acoustic Harmonic Analysis")
+        widget.update_plot()
+        self.setCurrentWidget(widget)
 
     def create_a_new_tab_if_it_does_not_exist(self, widget, tab_text):
         for i in range(self.count()):

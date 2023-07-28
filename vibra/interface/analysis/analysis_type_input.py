@@ -140,7 +140,6 @@ class AnalysisTypeInput(QDialog):
         self.sigma_factor = modal.sigma_factor
         self.analysis_id = 2
         self.analysis_type_label = "Structural Modal Analysis"
-        self.complete = modal.complete
         if modal.complete:
             self.analysis_data = {  "analysis_id"   : self.analysis_id,
                                     "analysis_type" : self.analysis_type_label,
@@ -158,7 +157,6 @@ class AnalysisTypeInput(QDialog):
         self.sigma_factor = modal.sigma_factor
         self.analysis_id = 4
         self.analysis_type_label = "Acoustic Modal Analysis"
-        self.complete = modal.complete
         if modal.complete:
             self.analysis_data = {  "analysis_id"   : self.analysis_id,
                                     "analysis_type" : self.analysis_type_label,

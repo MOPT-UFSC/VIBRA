@@ -429,8 +429,7 @@ class MenuItems(QTreeWidget):
                 pass
 
         elif item == self.item_child_set_volume_velocity:
-            if not self.item_child_set_volume_velocity.isDisabled(): 
-                print("set_volume_velocity")
+            if not self.item_child_set_volume_velocity.isDisabled():
                 read = VolumeVelocityInput()
 
         elif item == self.item_child_set_mass_flow_rate:
@@ -438,7 +437,7 @@ class MenuItems(QTreeWidget):
                 print("set_mass_flow_rate")
 
         elif item == self.item_child_set_particle_velocity:
-            if not self.item_child_set_particle_velocity.isDisabled(): 
+            if not self.item_child_set_particle_velocity.isDisabled():
                 print("set_particle_velocity")
 
         elif item == self.item_child_set_specific_impedance:
@@ -463,6 +462,9 @@ class MenuItems(QTreeWidget):
                     else:
                         obj = AnalysisSetupInput()
                         self.item_child_analysisSetup.setDisabled(False)
+                        if obj.complete:
+                            self.run_analysis()
+                            self.item_child_runAnalysis.setDisabled(False)
             
         elif item == self.item_child_analysisSetup:
             if not self.item_child_analysisSetup.isDisabled():
@@ -537,9 +539,15 @@ class MenuItems(QTreeWidget):
             self.generate_mesh()
         #
         analysis_id = self.main_window.project.analysis_data["analysis_id"]
+        #
         if analysis_id == 2:
             solve_modal = load_function(self.main_window.process_structural_modal_analysis, self.main_window)
             solve_modal()
+
+        elif analysis_id == 3:
+            solve_harmonic = load_function(self.main_window.process_acoustic_harmonic_analysis, self.main_window)
+            solve_harmonic()
+        
         elif analysis_id == 4:
             solve_modal = load_function(self.main_window.process_acoustic_modal_analysis, self.main_window)
             solve_modal()    

@@ -57,7 +57,7 @@ class ProjectFile:
 
     def add_acoustic_pressure_to_file(self, data):
 
-        file_path = os.path.join(self.project_path, self.structural_model_setup_filename)
+        file_path = os.path.join(self.project_path, self.acoustic_model_setup_filename)
         config = configparser.ConfigParser()
         config.read(file_path)
         sections = config.sections()
@@ -72,18 +72,54 @@ class ProjectFile:
         self.write_data_in_file(file_path, config)
 
 
-    def add_volume_velocity_to_file(self, data):
+    def add_mass_flow_rate_to_file(self, data):
 
-        file_path = os.path.join(self.project_path, self.structural_model_setup_filename)
+        file_path = os.path.join(self.project_path, self.acoustic_model_setup_filename)
         config = configparser.ConfigParser()
         config.read(file_path)
         sections = config.sections()
 
-        if "Volume velocity" in sections:
-            config["Volume velocity"][data["entity_type"]] = data["entity_ids"]
-            config["Volume velocity"]["values"] = data["values"]
+        if "Mass flow rate" in sections:
+            config["Mass flow rate"][data["entity_type"]] = data["entity_ids"]
+            config["Mass flow rate"]["values"] = data["values"]
         else:
-            config["Volume velocity"] = { data["entity_type"] : data["entity_ids"],
+            config["Mass flow rate"] = { data["entity_type"] : data["entity_ids"],
+                                            "values" : data["values"]  }
+
+        self.write_data_in_file(file_path, config)
+
+
+    def add_volume_velocity_to_file(self, data):
+
+        file_path = os.path.join(self.project_path, self.acoustic_model_setup_filename)
+        config = configparser.ConfigParser()
+        config.read(file_path)
+        sections = config.sections()
+
+        for entity_id in data["entity_ids"]:
+            section = f"{data['entity_type']} - {entity_id}"
+            if section in sections:
+                config[section]["volume velocity"] = str(data["values"])
+                config[section]["averaged"] = str(data["averaged"])
+            else:
+                config[section] = {"volume velocity" : data["values"],
+                                    "averaged" : data["averaged"]}
+
+        self.write_data_in_file(file_path, config)
+
+
+    def add_particle_velocity_to_file(self, data):
+
+        file_path = os.path.join(self.project_path, self.acoustic_model_setup_filename)
+        config = configparser.ConfigParser()
+        config.read(file_path)
+        sections = config.sections()
+
+        if "Particle velocity" in sections:
+            config["Particle velocity"][data["entity_type"]] = data["entity_ids"]
+            config["Particle velocity"]["values"] = data["values"]
+        else:
+            config["Particle velocity"] = { data["entity_type"] : data["entity_ids"],
                                             "values" : data["values"]  }
 
         self.write_data_in_file(file_path, config)

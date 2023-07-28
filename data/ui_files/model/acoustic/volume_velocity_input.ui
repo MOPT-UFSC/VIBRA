@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>420</width>
-    <height>340</height>
+    <height>400</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -22,13 +22,13 @@
   <property name="minimumSize">
    <size>
     <width>420</width>
-    <height>340</height>
+    <height>400</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>420</width>
-    <height>500</height>
+    <height>400</height>
    </size>
   </property>
   <property name="font">
@@ -143,7 +143,7 @@
         </property>
         <property name="maximumSize">
          <size>
-          <width>360</width>
+          <width>380</width>
           <height>40</height>
          </size>
         </property>
@@ -237,7 +237,7 @@
             <enum>Qt::ClickFocus</enum>
            </property>
            <property name="styleSheet">
-            <string notr="true">color: rgb(0, 0, 255);</string>
+            <string notr="true"/>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -299,6 +299,46 @@
           <property name="spacing">
            <number>2</number>
           </property>
+          <item row="1" column="0">
+           <widget class="QFrame" name="frame_20">
+            <property name="frameShape">
+             <enum>QFrame::NoFrame</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Raised</enum>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_18">
+             <item row="0" column="0">
+              <widget class="QCheckBox" name="checkBox_averaged_constant_values">
+               <property name="minimumSize">
+                <size>
+                 <width>260</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>260</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>MS Shell Dlg 2</family>
+                 <pointsize>11</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>Average values over all nodes</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
           <item row="2" column="0">
            <widget class="QFrame" name="frame_7">
             <property name="minimumSize">
@@ -310,7 +350,7 @@
             <property name="maximumSize">
              <size>
               <width>400</width>
-              <height>40</height>
+              <height>100</height>
              </size>
             </property>
             <property name="frameShape">
@@ -340,13 +380,13 @@
                <property name="minimumSize">
                 <size>
                  <width>120</width>
-                 <height>28</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>120</width>
-                 <height>28</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="font">
@@ -371,7 +411,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
             </layout>
            </widget>
           </item>
-          <item row="1" column="0">
+          <item row="0" column="0">
            <widget class="QFrame" name="frame_8">
             <property name="minimumSize">
              <size>
@@ -629,88 +669,6 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
             </layout>
            </widget>
           </item>
-          <item row="0" column="0">
-           <widget class="QFrame" name="frame_17">
-            <property name="minimumSize">
-             <size>
-              <width>340</width>
-              <height>36</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>400</width>
-              <height>36</height>
-             </size>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_16">
-             <property name="leftMargin">
-              <number>2</number>
-             </property>
-             <property name="topMargin">
-              <number>2</number>
-             </property>
-             <property name="rightMargin">
-              <number>2</number>
-             </property>
-             <property name="bottomMargin">
-              <number>2</number>
-             </property>
-             <property name="spacing">
-              <number>2</number>
-             </property>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_22">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>30</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>320</width>
-                 <height>30</height>
-                </size>
-               </property>
-               <property name="sizeIncrement">
-                <size>
-                 <width>310</width>
-                 <height>30</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <family>MS Shell Dlg 2</family>
-                 <pointsize>11</pointsize>
-                 <weight>50</weight>
-                 <italic>false</italic>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="frameShape">
-                <enum>QFrame::Box</enum>
-               </property>
-               <property name="text">
-                <string>Insert a value for the volume velocity:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
          </layout>
         </widget>
         <widget class="QWidget" name="tab_load_tables">
@@ -734,182 +692,6 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
            <number>2</number>
           </property>
           <item row="0" column="0">
-           <widget class="QFrame" name="frame_16">
-            <property name="minimumSize">
-             <size>
-              <width>260</width>
-              <height>36</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>400</width>
-              <height>36</height>
-             </size>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_15">
-             <property name="leftMargin">
-              <number>2</number>
-             </property>
-             <property name="topMargin">
-              <number>2</number>
-             </property>
-             <property name="rightMargin">
-              <number>2</number>
-             </property>
-             <property name="bottomMargin">
-              <number>2</number>
-             </property>
-             <property name="spacing">
-              <number>2</number>
-             </property>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_19">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>30</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>320</width>
-                 <height>30</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <family>MS Shell Dlg 2</family>
-                 <pointsize>11</pointsize>
-                 <weight>50</weight>
-                 <italic>false</italic>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="frameShape">
-                <enum>QFrame::Box</enum>
-               </property>
-               <property name="text">
-                <string>Select a table of values to be imported:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QFrame" name="frame_11">
-            <property name="minimumSize">
-             <size>
-              <width>260</width>
-              <height>40</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>400</width>
-              <height>40</height>
-             </size>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_14">
-             <property name="leftMargin">
-              <number>2</number>
-             </property>
-             <property name="topMargin">
-              <number>2</number>
-             </property>
-             <property name="rightMargin">
-              <number>2</number>
-             </property>
-             <property name="bottomMargin">
-              <number>2</number>
-             </property>
-             <property name="spacing">
-              <number>2</number>
-             </property>
-             <item row="0" column="2">
-              <widget class="QSpinBox" name="spinBox">
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-               <property name="maximum">
-                <number>10</number>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QLabel" name="label_9">
-               <property name="minimumSize">
-                <size>
-                 <width>160</width>
-                 <height>25</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>160</width>
-                 <height>25</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <family>MS Shell Dlg 2</family>
-                 <pointsize>11</pointsize>
-                 <weight>50</weight>
-                 <italic>false</italic>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>Header rows to skip:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QFrame" name="frame_12">
-               <property name="frameShape">
-                <enum>QFrame::NoFrame</enum>
-               </property>
-               <property name="frameShadow">
-                <enum>QFrame::Raised</enum>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="3">
-              <widget class="QFrame" name="frame_13">
-               <property name="frameShape">
-                <enum>QFrame::NoFrame</enum>
-               </property>
-               <property name="frameShadow">
-                <enum>QFrame::Raised</enum>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item row="1" column="0">
            <widget class="QFrame" name="frame_9">
             <property name="minimumSize">
              <size>
@@ -1053,7 +835,7 @@ QPushButton:pressed{border-radius: 4px; border-color: rgb(0, 170, 255); border-s
             <property name="maximumSize">
              <size>
               <width>400</width>
-              <height>40</height>
+              <height>100</height>
              </size>
             </property>
             <property name="frameShape">
@@ -1083,13 +865,13 @@ QPushButton:pressed{border-radius: 4px; border-color: rgb(0, 170, 255); border-s
                <property name="minimumSize">
                 <size>
                  <width>120</width>
-                 <height>28</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>120</width>
-                 <height>28</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="font">
@@ -1108,6 +890,150 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
                </property>
                <property name="text">
                 <string>Confirm</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QFrame" name="frame_21">
+            <property name="frameShape">
+             <enum>QFrame::NoFrame</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Raised</enum>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_19">
+             <item row="0" column="0">
+              <widget class="QCheckBox" name="checkBox_averaged_table_values">
+               <property name="minimumSize">
+                <size>
+                 <width>260</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>260</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>11</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>Average value over all nodes</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QFrame" name="frame_11">
+            <property name="minimumSize">
+             <size>
+              <width>260</width>
+              <height>40</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>400</width>
+              <height>40</height>
+             </size>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::NoFrame</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Raised</enum>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_14">
+             <property name="leftMargin">
+              <number>2</number>
+             </property>
+             <property name="topMargin">
+              <number>2</number>
+             </property>
+             <property name="rightMargin">
+              <number>2</number>
+             </property>
+             <property name="bottomMargin">
+              <number>2</number>
+             </property>
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <item row="0" column="0">
+              <widget class="QFrame" name="frame_12">
+               <property name="frameShape">
+                <enum>QFrame::NoFrame</enum>
+               </property>
+               <property name="frameShadow">
+                <enum>QFrame::Raised</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QFrame" name="frame_13">
+               <property name="frameShape">
+                <enum>QFrame::NoFrame</enum>
+               </property>
+               <property name="frameShadow">
+                <enum>QFrame::Raised</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QSpinBox" name="spinBox">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="maximum">
+                <number>10</number>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLabel" name="label_9">
+               <property name="minimumSize">
+                <size>
+                 <width>160</width>
+                 <height>25</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>160</width>
+                 <height>25</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>MS Shell Dlg 2</family>
+                 <pointsize>11</pointsize>
+                 <weight>50</weight>
+                 <italic>false</italic>
+                 <bold>false</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Header rows to skip:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
                </property>
               </widget>
              </item>
@@ -1177,13 +1103,13 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
                <property name="minimumSize">
                 <size>
                  <width>100</width>
-                 <height>28</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>100</width>
-                 <height>28</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="font">
@@ -1210,13 +1136,13 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
                <property name="minimumSize">
                 <size>
                  <width>100</width>
-                 <height>28</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>100</width>
-                 <height>28</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="font">
@@ -1282,7 +1208,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
             </attribute>
             <column>
              <property name="text">
-              <string>Nodes</string>
+              <string>Entity id</string>
              </property>
              <property name="textAlignment">
               <set>AlignCenter</set>
@@ -1290,7 +1216,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
             </column>
             <column>
              <property name="text">
-              <string>DOFs</string>
+              <string>Volume velociy</string>
              </property>
              <property name="textAlignment">
               <set>AlignCenter</set>

@@ -30,10 +30,12 @@ class VolumeVelocityInput(QDialog):
 
         self.main_window = get_main_window()
         self.project = self.main_window.project
+        self.properties = self.project.model.properties
 
         self._reset_variables()
         self._define_qt_variables()
         self._create_connections()
+        self.load_info()
         self.exec()
 
         # self.opv = opv
@@ -58,6 +60,9 @@ class VolumeVelocityInput(QDialog):
 
 
     def _define_qt_variables(self):
+        # QCheckBox objects
+        self.checkBox_averaged_constant_values = self.findChild(QCheckBox, 'checkBox_averaged_constant_values')
+        self.checkBox_averaged_table_values = self.findChild(QCheckBox, 'checkBox_averaged_table_values')
         # QLineEdit objects
         self.lineEdit_selection_id = self.findChild(QLineEdit, 'lineEdit_selection_id')
         self.lineEdit_real_value = self.findChild(QLineEdit, 'lineEdit_real_value')
@@ -105,10 +110,10 @@ class VolumeVelocityInput(QDialog):
             self.lineEdit_selection_id.setDisabled(False)
 
 
-    def load_nodes_info(self):
+    def load_info(self):
         self.treeWidget_volume_velocity.clear()
-        for node in self.preprocessor.nodes_with_volume_velocity:
-            new = QTreeWidgetItem([str(node.external_index), str(self.text_label(node.volume_velocity))])
+        for _id, [value, _] in self.properties.surfaces_with_volume_velocity.items():
+            new = QTreeWidgetItem([str(_id), str(self.text_label(value))])
             new.setTextAlignment(0, Qt.AlignCenter)
             new.setTextAlignment(1, Qt.AlignCenter)
             self.treeWidget_volume_velocity.addTopLevelItem(new)
@@ -171,9 +176,11 @@ class VolumeVelocityInput(QDialog):
 
             self.volume_velocity = volume_velocity
 
+            key_avg = int(self.checkBox_averaged_constant_values.isChecked())
             data = {"entity_type" : "surface",
                     "entity_ids" : self.typed_ids,
-                    "values" : list(volume_velocity)}
+                    "values" : volume_velocity,
+                    "averaged" : key_avg}
 
             self.project.set_volume_velocity(data)
             print(f"[Set Volume Velocity] - defined at node(s) {self.typed_ids}")
@@ -441,7 +448,7 @@ class VolumeVelocityInput(QDialog):
 
 
     def update_tabs_visibility(self):
-        if len(self.preprocessor.nodes_with_volume_velocity) == 0:
+        if len(self.properties.surfaces_with_volume_velocity) == 0:
             self.tabWidget_volume_velocity.setCurrentWidget(self.tab_constant_values)
             self.tab_remove.setDisabled(True)
         else:

@@ -90,7 +90,7 @@ class ModelProperties:
             
             if "surface" in data["entity_type"]:
                 for _id in data["entity_ids"]:
-                    self.surfaces_with_volume_velocity[_id] = data["values"]
+                    self.surfaces_with_volume_velocity[_id] = [data["values"], data["averaged"]]
 
         except Exception as error_log:
             print(str(error_log))

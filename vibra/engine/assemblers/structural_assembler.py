@@ -2,14 +2,20 @@ from time import time
 
 import numpy as np
 from scipy.sparse import coo_matrix, csr_matrix
+from collections import defaultdict
 
-#TODO: implementar todos os elementos acústicos, para validação preciso ter todos operacionais!!!
-# o tipo de elemento pode ser acessado em self.project.model.mesh_setup["element_type"]
+# from vibra.engine.assemblers.modal_assembler import ModalAssembler
+from vibra.engine.elements.structural_tet4_element import STRUCT_TETRAHEDRON_4S
+from vibra.engine.elements.structural_tet10_element import STRUCT_TETRAHEDRON_10S
+from vibra.engine.elements.structural_hex8_element import STRUCT_HEXAHEDRON_8
+from vibra.engine.elements.structural_hex20_element import STRUCT_HEXAHEDRON_20
 
+from vibra.engine.mesher.element_type import *
 
-class ModalAssembler:
+class StructuralAssembler:
     def __init__(self, model):
         self.model = model
+        self.properties = model.properties
         self.reset()
 
     def reset(self):
@@ -19,6 +25,20 @@ class ModalAssembler:
         self.prescribed_values = []
         self.prescribed_indexes = []
         self.unprescribed_indexes = []
+
+    def get_element(self):
+        element_type = self.model.mesh.element_type
+
+        if element_type == TETRAHEDRON_4:
+            return STRUCT_TETRAHEDRON_4S(self.model)
+        elif element_type == TETRAHEDRON_10:
+            return STRUCT_TETRAHEDRON_10S(self.model)
+        elif element_type == HEXAHEDRON_8:
+            return STRUCT_HEXAHEDRON_8(self.model)
+        elif element_type == HEXAHEDRON_20:
+            return STRUCT_HEXAHEDRON_20(self.model)
+        else:
+            raise NotImplementedError(f"Element type is not supported yet.")
 
     def set_element_formulation(self, element):
         self.element = element
@@ -56,12 +76,12 @@ class ModalAssembler:
         else:
             number_frequencies = len(self.frequencies)
 
-        for _id, values in self.model.surfaces_with_prescribed_dofs.items():
+        for _id, values in self.properties.surfaces_with_prescribed_dofs.items():
             nodes = self.model.mesh.nodes_from_surfaces[_id]
             for _ in nodes:
                 global_prescribed.extend(values)
 
-        for _id, values in self.model.lines_with_prescribed_dofs.items():
+        for _id, values in self.properties.lines_with_prescribed_dofs.items():
             nodes = self.model.mesh.nodes_from_lines[_id]
             for _ in nodes:
                 global_prescribed.extend(values)
@@ -85,12 +105,12 @@ class ModalAssembler:
 
         _prescribed_indexes = []
 
-        for _id in self.model.lines_with_prescribed_dofs:
+        for _id in self.properties.lines_with_prescribed_dofs:
             nodes = self.model.mesh.nodes_from_surfaces[_id]
             for index in self.model.get_structural_global_dofs_from_nodes(nodes):
                 _prescribed_indexes.append(index)
 
-        for _id in self.model.surfaces_with_prescribed_dofs:
+        for _id in self.properties.surfaces_with_prescribed_dofs:
             nodes = self.model.mesh.nodes_from_surfaces[_id]
             for index in self.model.get_structural_global_dofs_from_nodes(nodes):
                 _prescribed_indexes.append(index)
@@ -102,7 +122,7 @@ class ModalAssembler:
 
     def get_unprescribed_indexes(self):
 
-        element = self.new_element()
+        element = self.get_element()
         total_dofs = element.DOF_PER_NODE * len(element.nodal_coordinates)
         all_indexes = np.arange(total_dofs, dtype=int)
         prescribed_indexes = self.get_prescribed_indexes()
@@ -117,7 +137,7 @@ class ModalAssembler:
         Calculates global matrices.
         """
 
-        element = self.new_element()
+        element = self.get_element()
         ind_rows, ind_cols = element.generate_ind_rows_cols()
 
         dofs = element.DOFS_PER_ELEMENT
@@ -151,9 +171,18 @@ class ModalAssembler:
             self.mass_matrix = _mass_matrix_full
 
 
-    def new_element(self):
-        '''
-        Returns the correct element according to the
-        model mesh configuration.
-        '''
-        raise NotImplementedError("new_element function not implemented")
+# class StructuralModalAssembler(ModalAssembler):
+#     pass
+#     def get_element(self):
+#         element_type = self.model.mesh.element_type
+
+#         if element_type == TETRAHEDRON_4:
+#             return STRUCT_TETRAHEDRON_4S(self.model)
+#         elif element_type == TETRAHEDRON_10:
+#             return STRUCT_TETRAHEDRON_10S(self.model)
+#         elif element_type == HEXAHEDRON_8:
+#             return STRUCT_HEXAHEDRON_8(self.model)
+#         elif element_type == HEXAHEDRON_20:
+#             return STRUCT_HEXAHEDRON_20(self.model)
+#         else:
+#             raise NotImplementedError(f"Element type is not supported yet.")

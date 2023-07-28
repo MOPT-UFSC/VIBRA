@@ -3,13 +3,9 @@ import numpy as np
 from pathlib import Path
 
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.errors import IncompleteSetupError
 from vibra.interface.general.print_message_input import PrintMessageInput
-
-from vibra.engine.assemblers.acoustic_modal_assembler import AcousticModalAssembler
-from vibra.engine.assemblers.structural_modal_assembler import StructuralModalAssembler
 
 
 class ModelStatus:

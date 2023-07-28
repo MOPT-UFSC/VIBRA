@@ -1,23 +1,22 @@
 import numpy as np
 from scipy.linalg import eig
-from scipy.sparse.linalg import LinearOperator, eigs, spsolve
+from scipy.sparse.linalg import spsolve
 
 
 class AcousticHarmonicSolver:
     def __init__(self, assembler, analysis_data=None):
         #
         self.assembler = assembler
+        #
         self.reset_variables()
         self.load_analysis_data(analysis_data)
-        
+
     def reset_variables(self):
         self.analysis_type = None
         self.frequencies = None
         self.modal_shape = None
         self.solution = None
         self.loads = None
-        self.M = self.assembler.mass_matrix
-        self.K = self.assembler.stiffness_matrix
 
     def load_analysis_data(self, analysis_data):
         if analysis_data is not None:
@@ -26,22 +25,33 @@ class AcousticHarmonicSolver:
                 if "frequencies" in analysis_data.keys():
                     self.frequencies = analysis_data["frequencies"]
 
+
     def solve(self):
-        # def harmonic_analysys(freq, rho_local, K, M, q, g):
-        # P = np.empty([len(q),len(freq)]).astype(complex)
-        rows = 1
+
+        self.M = self.assembler.mass_matrix
+        self.K = self.assembler.stiffness_matrix
+        print(self.K.shape)
+        print(self.M.shape)
+
+        self.mass_flow = self.assembler.get_acoustic_excitations()
+        
+        self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
+        self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_values()
+        
+        rows = len(self.prescribed_indexes) + len(self.unprescribed_indexes)
         cols = len(self.frequencies)
-        P = np.zeros((rows, cols), dtype=complex)
-        g = q = 1
-        rho_local = 1
+
+        solution = np.zeros((rows, cols), dtype=complex)
+        
         for i, freq in enumerate(self.frequencies):
             omega = 2 * np.pi * freq
             A = self.K - (omega**2) * self.M
-            F =  -1j * omega * (q + rho_local * g) 
-            P[:, i] = spsolve(A, F)  #fluid mass flow rate
+            F =  -1j * omega * self.mass_flow
+            solution[:, i] = spsolve(A, F)
 
-        return P
-
+        print(solution.shape)
+        self.solution = solution
+        return solution
 
     def _reinsert_prescribed_dofs(self, solution, modal_analysis=False):
         """
