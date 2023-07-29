@@ -454,21 +454,22 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_selectAnalysisType:
             if not self.item_child_selectAnalysisType.isDisabled():
-                obj = AnalysisTypeInput()
-                if obj.complete:
-                    if obj.analysis_id in [2, 4]:
+                analysis_type = AnalysisTypeInput()
+                if analysis_type.complete:
+                    if analysis_type.analysis_id in [2, 4]:
                         self.run_analysis()    
                         self.item_child_runAnalysis.setDisabled(False)
                     else:
-                        obj = AnalysisSetupInput()
+                        analysis_setup = AnalysisSetupInput()
                         self.item_child_analysisSetup.setDisabled(False)
-                        if obj.complete:
-                            self.run_analysis()
+                        if analysis_setup.complete:
                             self.item_child_runAnalysis.setDisabled(False)
+                        if analysis_setup.solve_analysis:
+                            self.run_analysis()
             
         elif item == self.item_child_analysisSetup:
             if not self.item_child_analysisSetup.isDisabled():
-                obj = AnalysisSetupInput()
+                analysis_setup = AnalysisSetupInput()
 
         elif item == self.item_child_runAnalysis:
             if not self.item_child_runAnalysis.isDisabled():

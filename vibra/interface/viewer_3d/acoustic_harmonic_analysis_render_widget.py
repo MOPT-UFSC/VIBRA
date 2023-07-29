@@ -61,37 +61,31 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
             return
 
         solver = self.project.acoustic_harmonic_solver
-        if solver.modal_shape is None:
+        if solver.solution is None:
             return
 
         index = self.current_shape_index()
-        if not (0 <= index < solver.modal_shape.shape[1]):
+        if not (0 <= index < solver.solution.shape[1]):
             return
 
         self.update_theme()
         self.remove_actors()
 
-        phase = self.control_bar.phase_slider.value()
+        phase_deg = self.control_bar.phase_slider.value()
+        phase = phase_deg*np.pi/180
 
-        current_modal_shape = solver.modal_shape[:, index].copy()
+        current_pressures = solver.solution[:, index].copy()
+        amplitudes = np.abs(current_pressures)
+        phi = np.angle(current_pressures)
+        output_pressures = amplitudes*np.cos(phi + phase)
+
+        min_value, max_value = solver.get_max_min_values_of_pressures(index)
         if self.control_bar.absolute_button.isChecked():
-            current_modal_shape = np.abs(current_modal_shape)
-        current_modal_shape /= np.max(np.abs(current_modal_shape))
-
-        min_value = np.min(current_modal_shape)
-        max_value = np.max(current_modal_shape)
-
+            min_value = 0
+            output_pressures = np.abs(output_pressures)
+        
         self.analysis_actor = AnalysisActor(mesh)
-        if self.control_bar.real_part_button.isChecked():
-            if np.abs(min_value) != np.abs(max_value):
-                min_value = -np.max(np.abs([min_value, max_value]))
-                max_value =  np.max(np.abs([min_value, max_value]))
-        
-        current_modal_shape *= np.cos(phase*np.pi/180)
-        if self.control_bar.absolute_button.isChecked():
-            current_modal_shape = np.abs(current_modal_shape)
-        
-        self.analysis_actor.plot_colorbar(current_modal_shape, min_value, max_value)
+        self.analysis_actor.plot_colorbar(output_pressures, min_value, max_value)
         self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
         self.renderer.AddActor(self.analysis_actor)
 

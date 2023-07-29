@@ -61,7 +61,7 @@ class AnalysisSetupInput(QDialog):
 
     def _reset_variables(self):
         self.complete = False
-        self.flag_run = False
+        self.solve_analysis = False
         self.frequencies = []
         self.global_damping = [0, 0, 0, 0]
         self.f_step = 0
@@ -151,10 +151,11 @@ class AnalysisSetupInput(QDialog):
             self.lineEdit_fmin.setText(str(self.f_min))
             self.lineEdit_fmax.setText(str(self.f_max))
             self.lineEdit_fstep.setText(str(self.f_step))
-            if self.project.file.check_if_there_are_tables_at_the_model():
-                self.lineEdit_fmin.setDisabled(True)
-                self.lineEdit_fmax.setDisabled(True)
-                self.lineEdit_fstep.setDisabled(True)
+            #TODO: as soon as possible
+            # if self.project.file.check_if_there_are_tables_at_the_model():
+            #     self.lineEdit_fmin.setDisabled(True)
+            #     self.lineEdit_fmax.setDisabled(True)
+            #     self.lineEdit_fstep.setDisabled(True)
 
 
     def check_exit(self):
@@ -278,5 +279,5 @@ class AnalysisSetupInput(QDialog):
     def check_run(self):
         if self.check_exit():
             return
-        self.flag_run = True
+        self.solve_analysis = True
         

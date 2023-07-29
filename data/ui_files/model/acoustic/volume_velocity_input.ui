@@ -1051,7 +1051,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
            <number>2</number>
           </property>
           <property name="topMargin">
-           <number>8</number>
+           <number>10</number>
           </property>
           <property name="rightMargin">
            <number>2</number>
@@ -1067,13 +1067,13 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
             <property name="minimumSize">
              <size>
               <width>320</width>
-              <height>40</height>
+              <height>48</height>
              </size>
             </property>
             <property name="maximumSize">
              <size>
               <width>320</width>
-              <height>40</height>
+              <height>48</height>
              </size>
             </property>
             <property name="frameShape">
@@ -1210,13 +1210,25 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
              <property name="text">
               <string>Entity id</string>
              </property>
+             <property name="font">
+              <font>
+               <family>MS Shell Dlg 2</family>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
              <property name="textAlignment">
               <set>AlignCenter</set>
              </property>
             </column>
             <column>
              <property name="text">
-              <string>Volume velociy</string>
+              <string>Volume velocity</string>
+             </property>
+             <property name="font">
+              <font>
+               <family>MS Shell Dlg 2</family>
+               <pointsize>10</pointsize>
+              </font>
              </property>
              <property name="textAlignment">
               <set>AlignCenter</set>

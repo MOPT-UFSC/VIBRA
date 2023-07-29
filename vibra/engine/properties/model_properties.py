@@ -105,3 +105,27 @@ class ModelProperties:
 
         except Exception as error_log:
             print(str(error_log))
+
+    def remove_volume_velocity(self, entity_id):
+        if entity_id in self.surfaces_with_volume_velocity.keys():
+            self.surfaces_with_volume_velocity.pop(entity_id)
+
+    def reset_surfaces_with_prescribed_dofs(self):
+        self.lines_with_prescribed_dofs = dict()
+        self.surfaces_with_prescribed_dofs = dict()
+
+    def reset_surfaces_with_loads(self):
+        self.lines_with_loads = dict()
+        self.surfaces_with_loads = dict()
+
+    def reset_acoustic_pressure(self):
+        self.surfaces_with_acoustic_pressure = dict()
+
+    def reset_mass_flow_rate(self):
+        self.surfaces_with_mass_flow_rate = dict()
+        
+    def reset_volume_velocity(self):
+        self.surfaces_with_volume_velocity = dict()
+                
+    def reset_particle_velocity(self):
+        self.surfaces_with_particle_velocity = dict()

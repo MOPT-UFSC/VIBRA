@@ -30,8 +30,8 @@ class AcousticHarmonicSolver:
 
         self.M = self.assembler.mass_matrix
         self.K = self.assembler.stiffness_matrix
-        print(self.K.shape)
-        print(self.M.shape)
+        # print(self.K.shape)
+        # print(self.M.shape)
 
         self.mass_flow = self.assembler.get_acoustic_excitations()
         
@@ -49,7 +49,7 @@ class AcousticHarmonicSolver:
             F =  -1j * omega * self.mass_flow
             solution[:, i] = spsolve(A, F)
 
-        print(solution.shape)
+        # print(solution.shape)
         self.solution = solution
         return solution
 
@@ -82,3 +82,28 @@ class AcousticHarmonicSolver:
             else:
                 full_solution[self.prescribed_indexes, :] = self.array_prescribed_values[:, 0:cols]
         return np.real(full_solution)
+    
+        
+    def get_max_min_values_of_pressures(self, column):
+
+        data = self.solution[:, column]
+        
+        _pressures = np.abs(data)
+        _phases = np.angle(data)
+        
+        p_min = 1
+        p_max = 0
+        thetas = np.arange(0, 360, 2)*(np.pi/180)
+
+        for theta in thetas:
+            pressures = _pressures*np.cos(theta + _phases)
+
+            p_min_i = min(pressures)
+            p_max_i = max(pressures)
+
+            if p_min_i < p_min:
+                p_min = p_min_i
+            if p_max_i > p_max:
+                p_max = p_max_i
+    
+        return p_min, p_max

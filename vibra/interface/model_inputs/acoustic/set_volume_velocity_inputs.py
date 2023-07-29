@@ -5,6 +5,7 @@ from PyQt5 import uic
 from pathlib import Path
 
 import os
+import configparser
 import numpy as np
 
 from vibra.utils.interface_functions import get_main_window
@@ -38,25 +39,17 @@ class VolumeVelocityInput(QDialog):
         self.load_info()
         self.exec()
 
-        # self.opv = opv
-        # self.opv.setInputObject(self)
-        # self.preprocessor = project.preprocessor
-        # self.before_run = project.get_pre_solution_model_checks()
-        # self.update()
-        # self.load_nodes_info()
-
 
     def _reset_variables(self):
         self.typed_ids = []
-        self.inputs_from_node = False
         self.remove_volume_velocity = False
         self.volume_velocity = None
         self.list_Nones = [None, None, None, None, None, None]
         self.userPath = os.path.expanduser('~')
         self.new_load_path_table = ""
-        # self.acoustic_bc_info_path = project.file._node_acoustic_path
-        # self.acoustic_folder_path = self.project.file._acoustic_imported_data_folder_path
-        # self.volume_velocity_tables_folder_path = os.path.join(self.acoustic_folder_path, "volume_velocity_files") 
+        self.project_path = self.project.file.project_path
+        self.acoustic_bc_filename = self.project.file.acoustic_model_setup_filename
+        self.acoustic_bc_info_path = os.path.join(self.project_path, self.acoustic_bc_filename)
 
 
     def _define_qt_variables(self):
@@ -257,7 +250,7 @@ class VolumeVelocityInput(QDialog):
             abs_values = np.abs(values)
             data = np.array([self.frequencies, real_values, imag_values, abs_values]).T
 
-            header = f"OpenPulse - imported table for volume velocity @ node {node_id} \n"
+            header = f"Vibra - imported table for volume velocity @ node {node_id} \n"
             header += f"\nSource filename: {filename}\n"
             header += "\nFrequency [Hz], real[m³/s], imaginary[m³/s], absolute[m³/s]"
             basename = f"volume_velocity_node_{node_id}.dat"
@@ -278,14 +271,15 @@ class VolumeVelocityInput(QDialog):
 
 
     def check_table_values(self):
+
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.before_run.check_input_NodeID(lineEdit_selection_id)
+        self.stop, self.typed_ids = self.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return
 
-        self.project.remove_acoustic_pressure_table_files(self.typed_ids)
-        self.project.reset_compressor_info_by_node(self.typed_ids)
+        # self.project.remove_acoustic_pressure_table_files(self.typed_ids)
+        # self.project.reset_compressor_info_by_node(self.typed_ids)
 
         list_table_names = self.get_list_table_names_from_selected_nodes(self.typed_ids)
         if self.lineEdit_load_table_path != "":
@@ -301,11 +295,17 @@ class VolumeVelocityInput(QDialog):
                                                                                                 self.filename_volume_velocity )
                     if self.basename_volume_velocity in list_table_names:
                         list_table_names.remove(self.basename_volume_velocity)
-                    data = [self.volume_velocity, self.basename_volume_velocity]
-                    self.project.set_volume_velocity_bc_by_node([node_id], data, True)
 
-            self.process_table_file_removal(list_table_names)
-            self.opv.updateRendererMesh()
+                    key_avg = int(self.checkBox_averaged_constant_values.isChecked())
+                    data = {"entity_type" : "surface",
+                            "entity_ids" : self.typed_ids,
+                            "values" : self.volume_velocity,
+                            "averaged" : key_avg,
+                            "table_name" : self.basename_volume_velocity}
+
+            self.project.set_volume_velocity(data)
+
+            # self.process_table_file_removal(list_table_names)
             print(f"[Set Volume Velocity] - defined at node(s) {self.typed_ids}")   
             self.close()
         else:    
@@ -348,17 +348,18 @@ class VolumeVelocityInput(QDialog):
 
     def check_remove_bc_from_node(self):
         if self.lineEdit_selection_id.text() != "":
-            picked_node_id = int(self.lineEdit_selection_id.text())
-            node = self.preprocessor.nodes[picked_node_id]          
-            if node in self.preprocessor.nodes_with_volume_velocity:            
-                key_strings = ["volume velocity"]
-                message = f"The volume velocity attributed to the {picked_node_id} node \nhas been removed."
-                # remove_bc_from_file([picked_node_id], sself.acoustic_bc_info_path, key_strings, message)
-                list_table_names = self.get_list_table_names_from_selected_nodes([picked_node_id])
-                self.process_table_file_removal(list_table_names)
-                self.preprocessor.set_volume_velocity_bc_by_node(picked_node_id, [None, None])
-                self.opv.updateRendererMesh()
-                self.load_nodes_info()
+            picked_id = int(self.lineEdit_selection_id.text())       
+            if picked_id in self.properties.surfaces_with_volume_velocity.keys():
+                section_key = f"surface - {picked_id}"           
+                key_strings = ["volume velocity", "averaged", "table name"]
+                message = f"The volume velocity attributed to the {picked_id} surface has been removed."
+                self.project.file.remove_bc_from_file(section_key, self.acoustic_bc_info_path, key_strings, message)
+                #TODO: remove imported volume velocity tables
+                # list_table_names = self.get_list_table_names_from_selected_nodes([picked_id])
+                # self.process_table_file_removal(list_table_names)
+                self.properties.remove_volume_velocity(picked_id)
+                self.load_info()
+                self.lineEdit_selection_id.setText("")
                 # self.close()
 
 
@@ -369,14 +370,14 @@ class VolumeVelocityInput(QDialog):
 
 
     def check_reset(self):
-        if len(self.preprocessor.nodes_with_volume_velocity)>0:
+        if len(self.properties.surfaces_with_volume_velocity) > 0:
  
             title = f"Resetting of all applied volume velocities"
-            message = "Do you really want to remove the volume velocity(ies) \napplied to the following node(s)?\n\n"
-            for node in self.preprocessor.nodes_with_volume_velocity:
-                message += f"{node.external_index}\n"
+            message = "Do you really want to remove the volume velocity applied to the following surface(s)?\n\n"
+            entity_ids = list(self.properties.surfaces_with_volume_velocity.keys())
+            message += f"{entity_ids}"
             message += "\n\nPress the Continue button to proceed with the resetting or press Cancel or "
-            message += "\nClose buttons to abort the current operation."
+            message += "Close buttons to abort the current operation."
             buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
             read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
 
@@ -384,65 +385,45 @@ class VolumeVelocityInput(QDialog):
                 return
 
             _list_table_names = []
-            _nodes_with_volume_velocity = self.preprocessor.nodes_with_volume_velocity.copy()
+            sections = []
             if read._continue:
-                for node in _nodes_with_volume_velocity:
-                    node_id = node.external_index
-                    key_strings = ["volume velocity"]
-                    table_name = node.volume_velocity_table_name
+                surfaces_ids = self.properties.surfaces_with_volume_velocity.keys()
+                for _id in surfaces_ids:
+                    key_strings = ["volume velocity", "averaged", "table name"]
+                    sections.append(f"surface - {_id}")
+                    table_name = None
                     if table_name is not None:
                         if table_name not in _list_table_names:
                             _list_table_names.append(table_name)
-                    # remove_bc_from_file([node_id], self.acoustic_bc_info_path, key_strings, None)
-                    self.preprocessor.set_volume_velocity_bc_by_node(node_id, [None, None])
-                self.process_table_file_removal(_list_table_names)
+                self.project.file.remove_bc_from_file(sections, self.acoustic_bc_info_path, key_strings, None)
+                self.properties.reset_volume_velocity()
+
+                #TODO: remove imported tables
+                # self.process_table_file_removal(_list_table_names)
 
                 title = "Volume velocity resetting process complete"
-                message = "All volume velocity applied to the acoustic\n" 
+                message = "All volume velocity applied to the acoustic " 
                 message += "model have been removed from the model."
                 PrintMessageInput([title, message, window_title_2])
 
-                self.opv.updateRendererMesh()
                 self.close()
 
 
-    def reset_input_fields(self, force_reset=False):
-        if self.inputs_from_node or force_reset:
-            self.lineEdit_real_value.setText("")
-            self.lineEdit_imag_value.setText("")
-            self.lineEdit_load_table_path.setText("")
-            self.inputs_from_node = False
+    def reset_input_fields(self):
+        self.lineEdit_real_value.setText("")
+        self.lineEdit_imag_value.setText("")
+        self.lineEdit_load_table_path.setText("")
 
 
     def update(self):
+        # This method should be called to update qt widgets whenever some entity has been clicked 
         return
-        list_picked_nodes = self.opv.getListPickedPoints()
-        if list_picked_nodes != []:
-            picked_node = list_picked_nodes[0]
-            node = self.preprocessor.nodes[picked_node]
-            if node.volume_velocity is not None:
-                self.reset_input_fields(force_reset=True)
-                if node.compressor_excitation_table_names == []:
-                    if node.volume_velocity_table_name is not None:
-                        table_name = node.volume_velocity_table_name
-                        self.tabWidget_volume_velocity.setCurrentWidget(self.tab_table_values)
-                        table_name = os.path.join(self.volume_velocity_tables_folder_path, table_name)
-                        self.lineEdit_load_table_path.setText(table_name)
-                    else:
-                        volume_velocity = node.volume_velocity
-                        self.tabWidget_volume_velocity.setCurrentWidget(self.tab_constant_values)
-                        self.lineEdit_real_value.setText(str(np.real(volume_velocity)))
-                        self.lineEdit_imag_value.setText(str(np.imag(volume_velocity)))
-                    self.inputs_from_node = True
-            else:
-                self.reset_input_fields()
-            self.writeNodes(self.opv.getListPickedPoints())
 
 
-    def writeNodes(self, list_node_ids):
+    def writeNodes(self, list_ids):
         text = ""
-        for node in list_node_ids:
-            text += "{}, ".format(node)
+        for _id in list_ids:
+            text += "{}, ".format(_id)
         if self.current_tab != 2:
             self.lineEdit_selection_id.setText(text[:-2])
 
@@ -466,6 +447,8 @@ class VolumeVelocityInput(QDialog):
                 self.check_remove_bc_from_node()
         elif event.key() == Qt.Key_Escape:
             self.close()
+        else:
+            return
 
     
     def check_input_surface_id(self, lineEdit, single_ID=False):
