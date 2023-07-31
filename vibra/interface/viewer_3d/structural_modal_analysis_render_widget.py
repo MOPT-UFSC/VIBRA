@@ -42,12 +42,6 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self.plane_actor = None
         self.bounds = (0, 0, 0, 0, 0, 0)
 
-        self.playing_animation = False
-        self._animation_lock = Lock()
-        self._animation_frame = 0
-        self._animation_last_time = 0
-        self._animation_timer = self.render_interactor.CreateRepeatingTimer(500)
-        self.render_interactor.AddObserver("TimerEvent", self.update_animation)
         self.control_bar.play_pause.triggered.connect(self.toggle_animation)
 
         self.create_axes()
@@ -256,53 +250,29 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
 
         self.playing_animation = False
 
-    def update_animation(self, obj, event):
-        factor = self.control_bar.magnification_factor_slider.value()
-
-        total_frames = 20
-        max_fps = 20
-        min_factor = - abs(factor)
-        max_factor = + abs(factor)
-
-        if not self.playing_animation:
-            return
-        
-        # If the time to update the frame takes
-        # longer than expected
-        if self._animation_lock.locked():
-            return
-
-        # Only needed because vtk CreateRepeatingTimer(500)
-        # does not work =/
-        if (time() - self._animation_last_time) < 1 / max_fps:
-            return
-
+    def update_animation(self, frame):
         if not self._actors_exists():
             return
         
         solver = self.project.structural_modal_solver
         if solver.modal_shape is None:
             return
-        
+
         index = self.current_shape_index()
         if not (0 <= index < solver.modal_shape.shape[1]):
             return
 
-        with self._animation_lock:
-            # t changes from 0 to 1
-            self._animation_frame = (self._animation_frame + 1) % total_frames
-            t = self._animation_frame / (total_frames - 1)
-            phase = lerp(0, 360, t)
+        # Map the frames from 0 to 1
+        t = frame / (self._animation_total_frames - 1)
+        phase = lerp(0, 360, t)
+        displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
+        magnification_factor = self.control_bar.magnification_factor_slider.value()
 
-            displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
-            magnification_factor = self.control_bar.magnification_factor_slider.value()
-
-            self.analysis_actor.disable_cut()
-            self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
-            self.analysis_actor.plot_colorbar(color_scalars, min_value, max_value)
-            self.edges_actor.extract_data(self.analysis_actor.data)
-            self.update()
-            self._animation_last_time = time()
+        self.analysis_actor.disable_cut()
+        self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
+        self.analysis_actor.plot_colorbar(color_scalars, min_value, max_value)
+        self.edges_actor.extract_data(self.analysis_actor.data)
+        self.update()
 
     def _actors_exists(self):
         actors = [
