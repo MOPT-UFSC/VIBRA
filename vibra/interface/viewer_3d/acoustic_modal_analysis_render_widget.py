@@ -20,7 +20,7 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
         self.control_bar = AcousticModalAnalysisBar()
         self.control_bar.value_changed.connect(self.update_deformation)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
-        self.control_bar.play_pause.triggered.connect(self.toggle_animation)
+        self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
         
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
