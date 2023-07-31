@@ -28,6 +28,7 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self.control_bar.value_changed.connect(self.update_deformations)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
         self.control_bar.phase_slider.sliderPressed.connect(self.stop_animation)
+        self.control_bar.play_pause.triggered.connect(self.toggle_animation)
 
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
@@ -41,8 +42,6 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self.edges_actor = None
         self.plane_actor = None
         self.bounds = (0, 0, 0, 0, 0, 0)
-
-        self.control_bar.play_pause.triggered.connect(self.toggle_animation)
 
         self.create_axes()
         self.create_color_bar()
@@ -230,25 +229,6 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self.edges_actor = None
         self.plane_actor = None
 
-    # 
-    def start_animation(self):
-        logging.debug("Start animation")
-
-        if self.playing_animation:
-            return
-        
-        self.playing_animation = True
-    
-    def stop_animation(self):
-        logging.debug("Stop animation")
-
-        if not self.playing_animation:
-            return
-
-        if self._animation_timer is None:
-            return
-
-        self.playing_animation = False
 
     def update_animation(self, frame):
         if not self._actors_exists():

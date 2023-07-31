@@ -60,6 +60,7 @@ class AnalysisActor(SolidsActor):
             color = [int(i * 255) for i in color]
             point_colors.SetTuple(i, color)
 
+        self.data.Modified()
         self.GetMapper().SetScalarModeToUsePointData()
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
