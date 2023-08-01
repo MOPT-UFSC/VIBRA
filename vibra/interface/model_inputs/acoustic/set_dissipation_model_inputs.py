@@ -69,7 +69,7 @@ class DissipationModelInput(QDialog):
         self.stop, self.typed_ids = self.check_input_volume_id(lineEdit_selection_id)
         if self.stop:
             self.lineEdit_selection_id.setFocus()
-            return
+            return True
         
         tab_index = self.tabWidget_dissipation_model.currentIndex()
         if tab_index == 0:

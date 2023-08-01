@@ -201,7 +201,22 @@ class AcousticAssembler:
                     acoustic_excitation[index] += (values*rho)/N
                 else:
                     acoustic_excitation[index] += values*rho
-        
+
+        for _id, data in self.properties.surfaces_with_particle_velocity.items():
+            values = data["values"]
+            avg = data["averaged"]
+            nodes = self.model.mesh.nodes_from_surfaces[_id]
+            #TODO: get the surface fluid property
+            fluid = self.model.properties.get_fluid()
+            rho = fluid.fluid_density
+            area = self.model.surfaces_areas[_id]
+            N = len(nodes)
+            for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
+                if bool(avg):
+                    acoustic_excitation[index] += (rho*area*values)/N
+                else:
+                    acoustic_excitation[index] += rho*area*values
+
         indexes = list(acoustic_excitation.keys())
         excitation = list(acoustic_excitation.values())
         

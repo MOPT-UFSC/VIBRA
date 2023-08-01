@@ -102,21 +102,51 @@ class Project:
         self.file.add_dissipation_model_data_to_file(data)
 
     def set_analysis_data(self, data):
+
         self.analysis_data = data
 
-        if data["analysis_id"] == 2:
+        # structural harmonic analysis - direct method
+        if data["analysis_id"] == 0:
+            print("Structural harmonic analysis (direct method) not implemented")
+            raise NotImplementedError("Not implemented solver")
+
+        # structural harmonic analysis - mode superposition method
+        elif data["analysis_id"] == 1:
+            print("Structural harmonic analysis (mode superposition method) not implemented")
+            raise NotImplementedError("Not implemented solver")
+
+        # structural modal analysis
+        elif data["analysis_id"] == 2:
             self.set_structural_element_to_model()
-            self.structural_modal_solver = StructuralModalSolver(self.structural_assembler, analysis_data=data)
-        
+            self.structural_modal_solver = StructuralModalSolver(self.structural_assembler, 
+                                                                 analysis_data=data)
+        # acoustic harmonic analysis        
         elif data["analysis_id"] == 3:
             self.set_acoustic_element_to_model()
-            self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_assembler, analysis_data=data)
-        
+            self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_assembler, 
+                                                                   analysis_data=data)
+        # acoustic modal analysis
         elif data["analysis_id"] == 4:
             self.set_acoustic_element_to_model()
-            self.acoustic_modal_solver = AcousticModalSolver(self.acoustic_assembler, analysis_data=data)
+            self.acoustic_modal_solver = AcousticModalSolver(self.acoustic_assembler, 
+                                                             analysis_data=data)
+        # couled harmonic analysis (direct method)
+        elif data["analysis_id"] == 5:
+            print("Coupled harmonic analysis (direct method) not implemented")
+            raise NotImplementedError("Not implemented solver")
+
+        # couled harmonic analysis (mode superposition method)
+        elif data["analysis_id"] == 6:
+            print("Coupled harmonic analysis (mode superposition method) not implemented")
+            raise NotImplementedError("Not implemented solver")
         
+        # static analysis
+        elif data["analysis_id"] == 7:
+            print("Static analysis not implemented")
+            raise NotImplementedError("Not implemented solver")
+
         else:
+
             raise NotImplementedError("Not implemented solver")
 
     def set_frequencies(self, frequencies, f_min, f_max, f_step):

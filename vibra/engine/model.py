@@ -24,6 +24,7 @@ class Model:
         self.mesh = None
         self.mesh_setup = None
         self.generated_mesh = False
+        self.surfaces_areas = dict()
         
         self.frequencies = None
         self.acoustic_element = None
@@ -42,6 +43,7 @@ class Model:
 
     def process_visual_geometry_mesh(self):
         self.mesh = Mesh.from_cad(self.geometry_path, dimension=2, size_factor=0.1)
+        self.surfaces_areas = self.mesh.get_model_areas(self.geometry_path)
         self.generated_mesh = False
 
     def process_mesh(self):

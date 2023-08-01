@@ -52,17 +52,14 @@ class AcousticHarmonicSolver:
         self.solution = solution
         return solution
 
-    def _reinsert_prescribed_dofs(self, solution, modal_analysis=False):
+    def _reinsert_prescribed_dofs(self, solution):
         """
-        This method reinsert the value of the prescribed degree of freedom in the solution. If modal analysis is performed, the values are zeros.
+        This method reinsert the value of the prescribed degree of freedom in the solution.
 
         Parameters
         ----------
         solution : array
             Solution data from the direct method, modal superposition or modal shapes from modal analysis.
-
-        modal_analysis : boll, optional
-            True if the modal analysis was evaluated.
 
         Returns
         ----------
@@ -76,10 +73,7 @@ class AcousticHarmonicSolver:
         full_solution[self.unprescribed_indexes, :] = solution
 
         if len(self.prescribed_indexes) > 0:
-            if modal_analysis:
-                full_solution[self.prescribed_indexes, :] = np.zeros((len(self.prescribed_values),cols))
-            else:
-                full_solution[self.prescribed_indexes, :] = self.array_prescribed_values[:, 0:cols]
+            full_solution[self.prescribed_indexes, :] = self.array_prescribed_values[:, 0:cols]
         return np.real(full_solution)
     
         
