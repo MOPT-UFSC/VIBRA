@@ -1,6 +1,6 @@
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QLineEdit, QColorDialog, QLabel, QVBoxLayout, QWidget, QGridLayout, QScrollArea, QPushButton, QDialog, QHBoxLayout, QTableWidget, QTableWidgetItem, QHeaderView
+from PyQt5.QtWidgets import QLineEdit, QColorDialog, QLabel, QVBoxLayout, QGridLayout, QPushButton, QDialog, QHBoxLayout, QTableWidget, QTableWidgetItem
 from pathlib import Path
 from vibra.utils.icons import load_icon
 
@@ -10,7 +10,7 @@ class MaterialWidget(QDialog):
 
         self.setWindowTitle("Set Material")
         color = QColor("#0055DD")
-
+        self.instance = None
 
         toolbar_layout = QHBoxLayout()
         add_material_button = QPushButton()
@@ -19,7 +19,6 @@ class MaterialWidget(QDialog):
         add_material_button.setIconSize(QSize(25, 25))
         add_material_button.setIcon(add_material_icon)
     
-        
         add_material_button.setFixedSize(25, 25)  
         add_material_button.clicked.connect(self.add_material)
         toolbar_layout.addWidget(add_material_button)
@@ -42,40 +41,87 @@ class MaterialWidget(QDialog):
 
         toolbar_layout.setAlignment(Qt.AlignTop)
 
-        self.no_list = ["Name", "Density[kg/m3]", "Young Modulus[GPa]", "Poisson", "Expansion cofficient[m/K]", "Color"]
+        self.no_list = ["             Name             ", "Density\n[kg/m3]", "Young Modulus\n[GPa]", "Poisson", "Expansion cofficient\n[m/K]", "Color"]
         self.table = QTableWidget()
         self.table.setColumnCount(len(self.no_list)) 
-        self.table.setRowCount(1) 
         self.table.setHorizontalHeaderLabels(self.no_list)
-        self.table.setItem(0,0,QTableWidgetItem(1))
         self.table.setSelectionBehavior(1)
         self.table.resizeColumnsToContents()
+
+        final_layout = QGridLayout()
+        final_layout.setAlignment(Qt.AlignRight)
+
         main_layout = QVBoxLayout()
         main_layout.addLayout(toolbar_layout)
         main_layout.addWidget(self.table)
+
+        apply_to_all_button = QPushButton("Apply to all")
+        apply_to_selection_button = QPushButton("Apply to selection")
+        apply_to_all_button.setFixedSize(120,40)
+        apply_to_selection_button.setFixedSize(120,40)
+
+        apply_to_all_button.clicked.connect(self.apply_to_all_button_callback)
+        apply_to_selection_button.clicked.connect(self.apply_to_selection_button_callback)
+        apply_to_all_button.setFocusPolicy(Qt.NoFocus)
+        apply_to_selection_button.setFocusPolicy(Qt.NoFocus)
+
+        final_layout.addWidget(apply_to_all_button, 0, 1)
+        final_layout.addWidget(apply_to_selection_button, 0, 0)
+
+        main_layout.addLayout(final_layout)
+
         self.setLayout(main_layout)
-        self.setMinimumSize(571,500)
+        self.setMinimumSize(526,500)
+
+
 
         self.exec_()
-
 
     def add_material(self):
         instance = MaterialAdd()
 
+        if instance.completed:
+
+            name_material = instance.line_edit_material_name.text()
+            density = instance.line_edit_density.text()
+            young = instance.line_edit_young_modulus.text()
+            poisson = instance.line_edit_poisson.text()
+            expansion = instance.line_edit_expansion_cofficient.text()
+
+            self.table.verticalHeader().setVisible(False)
+
+            row_count = self.table.rowCount()
+            self.table.insertRow(row_count)  
+            self.table.setItem(row_count, 0, QTableWidgetItem(name_material))
+            self.table.setItem(row_count, 1, QTableWidgetItem(density))
+            self.table.setItem(row_count, 2, QTableWidgetItem(young))
+            self.table.setItem(row_count, 3, QTableWidgetItem(poisson))
+            self.table.setItem(row_count, 4, QTableWidgetItem(expansion))
+
+            item = QTableWidgetItem()
+            item.setBackground(instance.color)
+            self.table.setItem(row_count, 5, item)
+
     def open_widget2(self):
-        self.table.setRowCount(3)
+        current_row = self.table.currentRow()
+        self.table.removeRow(current_row)
 
     def reset_widgets(self):
-        for widget in self.findChildren(QWidget):
-            if isinstance(widget, QDialog):
-                widget.reject()
+        self.table.setRowCount(0)
 
+    def apply_to_all_button_callback(self):
+        pass
+
+    def apply_to_selection_button_callback(self):
+        pass
 
 class MaterialAdd(QDialog):
 
     def __init__(self):
         super().__init__()
-    
+
+        self.color = QColor("#0055DD")
+
         self.setWindowTitle("New Material")
         layout1 = QGridLayout()
         layout1.setAlignment(Qt.AlignTop)
@@ -83,23 +129,25 @@ class MaterialAdd(QDialog):
         material_name_label = QLabel("Material Name")
         self.line_edit_material_name =  QLineEdit()
         density_label = QLabel("Density[kg/m3]")
-        line_edit_density =  QLineEdit()
+        self.line_edit_density =  QLineEdit()
         poisson_label = QLabel("Poisson")
-        line_edit_poisson =  QLineEdit()
+        self.line_edit_poisson =  QLineEdit()
         expansion_label = QLabel("Expansion cofficient[m/K]")
-        line_edit_expansion_cofficient =  QLineEdit()
+        self.line_edit_expansion_cofficient =  QLineEdit()
         young_label = QLabel("Young Modulus[GPa]")
-        line_edit_young_modulus =  QLineEdit()
+        self.line_edit_young_modulus =  QLineEdit()
         color_label = QLabel("Color")
         self.color_button =  QPushButton("")
-        add_new_material_button = QPushButton("Add New Material")
-        cancel_button = QPushButton("Cancel")
-        add_new_material_button.setMinimumSize(40,40)
-        cancel_button.setMinimumSize(40,40)
+        self.add_new_material_button = QPushButton("Add New Material")
+        self.cancel_button = QPushButton("Cancel")
 
+        self.add_new_material_button.setMinimumSize(40,40)
+        self.add_new_material_button.clicked.connect(self.confirm_button_callback)
+        
+        self.cancel_button.setMinimumSize(40,40)
+        self.cancel_button.clicked.connect(self.cancel_button_callback)
 
         self.color_button.clicked.connect(self.color_button_callback)
-        
 
         self.setLayout(layout1)
         self.setMinimumSize(500,100)
@@ -107,24 +155,32 @@ class MaterialAdd(QDialog):
         layout1.addWidget(material_name_label, 0, 0)
         layout1.addWidget(self.line_edit_material_name, 1, 0)
         layout1.addWidget(density_label, 0, 1)
-        layout1.addWidget(line_edit_density, 1, 1)
-        layout1.addWidget(poisson_label, 0, 2)
-        layout1.addWidget(line_edit_poisson, 1, 2)
-        layout1.addWidget(young_label, 2, 1)
-        layout1.addWidget(line_edit_young_modulus, 3, 1)
-        layout1.addWidget(expansion_label, 2, 0)
-        layout1.addWidget(line_edit_expansion_cofficient, 3, 0)
+        layout1.addWidget(self.line_edit_density, 1, 1)
+        layout1.addWidget(poisson_label, 2, 0)
+        layout1.addWidget(self.line_edit_poisson, 3, 0)
+        layout1.addWidget(young_label, 0, 2)
+        layout1.addWidget(self.line_edit_young_modulus, 1, 2)
+        layout1.addWidget(expansion_label, 2, 1)
+        layout1.addWidget(self.line_edit_expansion_cofficient, 3, 1)
         layout1.addWidget(color_label, 2, 2)
         layout1.addWidget(self.color_button, 3, 2)
-        layout1.addWidget(add_new_material_button, 6, 2)
-        layout1.addWidget(cancel_button, 6, 0)
-        
+        layout1.addWidget(self.add_new_material_button, 6, 2)
+        layout1.addWidget(self.cancel_button, 6, 0)
 
+        self.completed = False
+        
         self.exec_()
 
+    def confirm_button_callback(self):
+        self.completed = True
+        self.close()
+
+    def cancel_button_callback(self):
+        self.close()
+
     def color_button_callback(self):
-        color = QColorDialog.getColor()
-        pick_color = color.name()
+        self.color = QColorDialog.getColor()
+        pick_color = self.color.name()
         self.color_button.setStyleSheet(f"background-color: {pick_color};")
 
         
