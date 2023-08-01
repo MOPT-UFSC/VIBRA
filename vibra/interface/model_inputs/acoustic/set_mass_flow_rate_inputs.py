@@ -16,18 +16,18 @@ from vibra.interface.general.call_double_confirmation_input import CallDoubleCon
 window_title_1 = "ERROR"
 window_title_2 = "WARNING"
 
-class VolumeVelocityInput(QDialog):
+class MassFlowRateInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        uic.loadUi(Path('data/ui_files/model/acoustic/volume_velocity_input.ui'), self)
+        uic.loadUi(Path('data/ui_files/model/acoustic/mass_flow_rate_input.ui'), self)
 
         icon_path = str(Path('data/icons/logo_vibra.png'))
         self.icon = QIcon(icon_path)
         self.setWindowIcon(self.icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Set volume velocity acoustic excitation")
+        self.setWindowTitle("Set mass flow rate acoustic excitation")
 
         self.main_window = get_main_window()
         self.project = self.main_window.project
@@ -42,16 +42,15 @@ class VolumeVelocityInput(QDialog):
 
     def _reset_variables(self):
         self.typed_ids = []
-        self.remove_volume_velocity = False
-        self.volume_velocity = None
-        self.list_Nones = [None, None, None, None, None, None]
+        self.remove_mass_flow_rate = False
+        self.mass_flow_rate = None
         self.userPath = os.path.expanduser('~')
         self.new_load_path_table = ""
         self.project_path = self.project.file.project_path
         self.acoustic_bc_filename = self.project.file.acoustic_model_setup_filename
         self.acoustic_bc_info_path = os.path.join(self.project_path, self.acoustic_bc_filename)
         self.acoustic_folder_path = self.project.file.acoustic_imported_data_folder_path
-        self.volume_velocity_tables_folder_path = os.path.join(self.acoustic_folder_path, "volume_velocity_files") 
+        self.mass_flow_rate_tables_folder_path = os.path.join(self.acoustic_folder_path, "mass_flow_rate_files") 
 
 
     def _define_qt_variables(self):
@@ -72,15 +71,15 @@ class VolumeVelocityInput(QDialog):
         # QSpinBox object
         self.spinBox_skiprows = self.findChild(QSpinBox, 'spinBox')
         # QTabWidget objects
-        self.tabWidget_volume_velocity = self.findChild(QTabWidget, "tabWidget_volume_velocity")
-        self.tab_constant_values = self.tabWidget_volume_velocity.findChild(QWidget, "tab_constant_values")
-        self.tab_table_values = self.tabWidget_volume_velocity.findChild(QWidget, "tab_table_values")
-        self.tab_remove = self.tabWidget_volume_velocity.findChild(QWidget, "tab_remove")
-        self.current_tab =  self.tabWidget_volume_velocity.currentIndex()
+        self.tabWidget_mass_flow_rate = self.findChild(QTabWidget, "tabWidget_mass_flow_rate")
+        self.tab_constant_values = self.tabWidget_mass_flow_rate.findChild(QWidget, "tab_constant_values")
+        self.tab_table_values = self.tabWidget_mass_flow_rate.findChild(QWidget, "tab_table_values")
+        self.tab_remove = self.tabWidget_mass_flow_rate.findChild(QWidget, "tab_remove")
+        self.current_tab =  self.tabWidget_mass_flow_rate.currentIndex()
         # QTreeWidget objects
-        self.treeWidget_volume_velocity = self.findChild(QTreeWidget, 'treeWidget_volume_velocity')
-        self.treeWidget_volume_velocity.setColumnWidth(1, 20)
-        self.treeWidget_volume_velocity.setColumnWidth(2, 80)
+        self.treeWidget_mass_flow_rate = self.findChild(QTreeWidget, 'treeWidget_mass_flow_rate')
+        self.treeWidget_mass_flow_rate.setColumnWidth(1, 20)
+        self.treeWidget_mass_flow_rate.setColumnWidth(2, 80)
 
 
     def _create_connections(self):
@@ -88,16 +87,16 @@ class VolumeVelocityInput(QDialog):
         self.pushButton_constant_value_confirm.clicked.connect(self.check_constant_values)
         self.pushButton_remove_bc_confirm.clicked.connect(self.remove_bc_from_selection)
         self.pushButton_table_values_confirm.clicked.connect(self.check_table_values)
-        self.pushButton_load_table.clicked.connect(self.load_volume_velocity_table)
+        self.pushButton_load_table.clicked.connect(self.load_mass_flow_rate_table)
         self.pushButton_reset.clicked.connect(self.check_reset)
         #
-        self.tabWidget_volume_velocity.currentChanged.connect(self.tabEvent_volume_velocity)
-        self.treeWidget_volume_velocity.itemClicked.connect(self.on_click_item)
-        self.treeWidget_volume_velocity.itemDoubleClicked.connect(self.on_doubleclick_item)
+        self.tabWidget_mass_flow_rate.currentChanged.connect(self.tabEvent_mass_flow_rate)
+        self.treeWidget_mass_flow_rate.itemClicked.connect(self.on_click_item)
+        self.treeWidget_mass_flow_rate.itemDoubleClicked.connect(self.on_doubleclick_item)
 
 
-    def tabEvent_volume_velocity(self):
-        self.current_tab =  self.tabWidget_volume_velocity.currentIndex()
+    def tabEvent_mass_flow_rate(self):
+        self.current_tab =  self.tabWidget_mass_flow_rate.currentIndex()
         if self.current_tab == 2:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
@@ -115,13 +114,14 @@ class VolumeVelocityInput(QDialog):
 
 
     def load_info(self):
-        self.treeWidget_volume_velocity.clear()
-        for _id, data in self.properties.surfaces_with_volume_velocity.items():
+        print(self.properties.surfaces_with_mass_flow_rate)
+        self.treeWidget_mass_flow_rate.clear()
+        for _id, data in self.properties.surfaces_with_mass_flow_rate.items():
             value = data["values"]
             new = QTreeWidgetItem([str(_id), str(self.text_label(value))])
             new.setTextAlignment(0, Qt.AlignCenter)
             new.setTextAlignment(1, Qt.AlignCenter)
-            self.treeWidget_volume_velocity.addTopLevelItem(new)
+            self.treeWidget_mass_flow_rate.addTopLevelItem(new)
         self.update_tabs_visibility()
 
 
@@ -172,23 +172,23 @@ class VolumeVelocityInput(QDialog):
         # self.project.remove_compressor_excitation_table_files(self.typed_ids)
         # self.project.reset_compressor_info_by_node(self.typed_ids)
 
-        volume_velocity = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
+        mass_flow_rate = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
  
         if self.stop:
             return
 
-        if volume_velocity is not None:
+        if mass_flow_rate is not None:
 
-            self.volume_velocity = volume_velocity
+            self.mass_flow_rate = mass_flow_rate
 
             key_avg = int(self.checkBox_averaged_constant_values.isChecked())
             data = {"entity_type" : "surface",
                     "entity_ids" : self.typed_ids,
-                    "values" : volume_velocity,
+                    "values" : mass_flow_rate,
                     "averaged" : key_avg}
 
-            self.project.set_volume_velocity(data)
-            print(f"[Set Volume Velocity] - defined at surface(s) {self.typed_ids}")
+            self.project.set_mass_flow_rate(data)
+            print(f"[Set Mass Flow Rate] - defined at surface(s) {self.typed_ids}")
             #TODO: remove existing tables and update the render            
             self.close()
 
@@ -257,7 +257,7 @@ class VolumeVelocityInput(QDialog):
     def save_table_file(self, entity_id, values, filename):
         try:
 
-            self.project.create_folders_acoustic("volume_velocity_files")
+            self.project.create_folders_acoustic("mass_flow_rate_files")
         
             real_values = np.real(values)
             imag_values = np.imag(values)
@@ -267,9 +267,9 @@ class VolumeVelocityInput(QDialog):
             header = f"Vibra - imported table for volume velocity @ surface {entity_id} \n"
             header += f"\nSource filename: {filename}\n"
             header += "\nFrequency [Hz], real[m³/s], imaginary[m³/s], absolute[m³/s]"
-            basename = f"volume_velocity_surface_{entity_id}.dat"
+            basename = f"mass_flow_rate_surface_{entity_id}.dat"
             
-            new_path_table = os.path.join(self.volume_velocity_tables_folder_path, basename)
+            new_path_table = os.path.join(self.mass_flow_rate_tables_folder_path, basename)
             np.savetxt(new_path_table, data, delimiter=",", header=header)
             return values, basename
 
@@ -280,8 +280,8 @@ class VolumeVelocityInput(QDialog):
             return None, None
 
 
-    def load_volume_velocity_table(self):
-        self.imported_values, self.filename_volume_velocity = self.load_table(self.lineEdit_load_table_path)
+    def load_mass_flow_rate_table(self):
+        self.imported_values, self.filename_mass_flow_rate = self.load_table(self.lineEdit_load_table_path)
 
 
     def check_table_values(self):
@@ -298,26 +298,26 @@ class VolumeVelocityInput(QDialog):
         list_table_names = self.get_list_table_names_from_selected_surfaces(self.typed_ids)
         if self.lineEdit_load_table_path != "":
             for _id in self.typed_ids:
-                if self.filename_volume_velocity is None:
-                    self.imported_values, self.filename_volume_velocity = self.load_table(  self.lineEdit_load_table_path, 
+                if self.filename_mass_flow_rate is None:
+                    self.imported_values, self.filename_mass_flow_rate = self.load_table(  self.lineEdit_load_table_path, 
                                                                                             direct_load=True  )
                 if self.imported_values is None:
                     return
                 else:
-                    self.volume_velocity, self.basename_volume_velocity = self.save_table_file( _id, 
+                    self.mass_flow_rate, self.basename_mass_flow_rate = self.save_table_file( _id, 
                                                                                                 self.imported_values, 
-                                                                                                self.filename_volume_velocity )
-                    if self.basename_volume_velocity in list_table_names:
-                        list_table_names.remove(self.basename_volume_velocity)
+                                                                                                self.filename_mass_flow_rate )
+                    if self.basename_mass_flow_rate in list_table_names:
+                        list_table_names.remove(self.basename_mass_flow_rate)
 
                     key_avg = int(self.checkBox_averaged_constant_values.isChecked())
                     data = {"entity_type" : "surface",
                             "entity_ids" : self.typed_ids,
-                            "values" : self.volume_velocity,
+                            "values" : self.mass_flow_rate,
                             "averaged" : key_avg,
-                            "table_name" : self.basename_volume_velocity}
+                            "table_name" : self.basename_mass_flow_rate}
 
-            self.project.set_volume_velocity(data)
+            self.project.set_mass_flow_rate(data)
 
             self.process_table_file_removal(list_table_names)
             print(f"[Set Volume Velocity] - defined at surface(s) {self.typed_ids}")   
@@ -332,7 +332,7 @@ class VolumeVelocityInput(QDialog):
 
     def get_list_table_names_from_selected_surfaces(self, list_ids):
         list_table_names = []
-        for surface_id, data in self.properties.surfaces_with_volume_velocity.items():
+        for surface_id, data in self.properties.surfaces_with_mass_flow_rate.items():
             if surface_id in list_ids:
                 if "table_name" in data.keys():
                     list_table_names.append(data["table_name"])
@@ -353,7 +353,7 @@ class VolumeVelocityInput(QDialog):
     def remove_bc_from_selection(self):
         if self.lineEdit_selection_id.text() != "":
             picked_id = int(self.lineEdit_selection_id.text())       
-            if picked_id in self.properties.surfaces_with_volume_velocity.keys():
+            if picked_id in self.properties.surfaces_with_mass_flow_rate.keys():
                 section_key = f"surface - {picked_id}"           
                 key_strings = ["volume velocity", "averaged", "table name"]
                 message = f"The volume velocity attributed to the {picked_id} surface has been removed."
@@ -361,7 +361,7 @@ class VolumeVelocityInput(QDialog):
                 #TODO: remove imported volume velocity tables
                 list_table_names = self.get_list_table_names_from_selected_surfaces([picked_id])
                 self.process_table_file_removal(list_table_names)
-                self.properties.remove_volume_velocity(picked_id)
+                self.properties.remove_mass_flow_rate(picked_id)
                 self.load_info()
                 self.lineEdit_selection_id.setText("")
                 # self.close()
@@ -370,15 +370,15 @@ class VolumeVelocityInput(QDialog):
     def process_table_file_removal(self, list_table_names):
         if list_table_names != []:
             for table_name in list_table_names:
-                self.project.remove_acoustic_table_files_from_folder(table_name, "volume_velocity_files")    
+                self.project.remove_acoustic_table_files_from_folder(table_name, "mass_flow_rate_files")    
 
 
     def check_reset(self):
-        if len(self.properties.surfaces_with_volume_velocity) > 0:
+        if len(self.properties.surfaces_with_mass_flow_rate) > 0:
  
             title = f"Resetting of all applied volume velocities"
             message = "Do you really want to remove the volume velocity applied to the following surface(s)?\n\n"
-            entity_ids = list(self.properties.surfaces_with_volume_velocity.keys())
+            entity_ids = list(self.properties.surfaces_with_mass_flow_rate.keys())
             message += f"{entity_ids}"
             message += "\n\nPress the Continue button to proceed with the resetting or press Cancel or "
             message += "Close buttons to abort the current operation."
@@ -391,11 +391,11 @@ class VolumeVelocityInput(QDialog):
             _list_table_names = []
             sections = []
             if read._continue:
-                surfaces_ids = self.properties.surfaces_with_volume_velocity.keys()
+                surfaces_ids = self.properties.surfaces_with_mass_flow_rate.keys()
                 for _id in surfaces_ids:
                     key_strings = ["volume velocity", "averaged", "table name"]
                     sections.append(f"surface - {_id}")
-                    data = self.properties.surfaces_with_volume_velocity[_id]
+                    data = self.properties.surfaces_with_mass_flow_rate[_id]
                     if "table_name" in data.keys():
                         table_name = data[table_name]
                     else:
@@ -404,7 +404,7 @@ class VolumeVelocityInput(QDialog):
                         if table_name not in _list_table_names:
                             _list_table_names.append(table_name)
                 self.project.file.remove_bc_from_file(sections, self.acoustic_bc_info_path, key_strings, None)
-                self.properties.reset_volume_velocity()
+                self.properties.reset_mass_flow_rate()
 
                 #TODO: remove imported tables
                 self.process_table_file_removal(_list_table_names)
@@ -437,8 +437,8 @@ class VolumeVelocityInput(QDialog):
 
 
     def update_tabs_visibility(self):
-        if len(self.properties.surfaces_with_volume_velocity) == 0:
-            self.tabWidget_volume_velocity.setCurrentWidget(self.tab_constant_values)
+        if len(self.properties.surfaces_with_mass_flow_rate) == 0:
+            self.tabWidget_mass_flow_rate.setCurrentWidget(self.tab_constant_values)
             self.tab_remove.setDisabled(True)
         else:
             self.tab_remove.setDisabled(False)
@@ -495,12 +495,12 @@ class VolumeVelocityInput(QDialog):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            if self.tabWidget_volume_velocity.currentIndex()==0:
+            if self.tabWidget_mass_flow_rate.currentIndex()==0:
                 self.check_constant_values()
-            if self.tabWidget_volume_velocity.currentIndex()==1:
+            if self.tabWidget_mass_flow_rate.currentIndex()==1:
                 self.check_table_values()
         elif event.key() == Qt.Key_Delete:
-            if self.tabWidget_volume_velocity.currentIndex()==2:
+            if self.tabWidget_mass_flow_rate.currentIndex()==2:
                 self.remove_bc_from_selection()
         elif event.key() == Qt.Key_Escape:
             self.close()

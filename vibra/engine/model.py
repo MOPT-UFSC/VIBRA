@@ -95,6 +95,9 @@ class Model:
         global_dofs = _dofs_per_node*_nodes + np.arange(_dofs_per_node)
         return np.array(global_dofs.flatten(), dtype=int)
     
+    def set_dissipation_model_data(self, data):
+        self.properties.set_dissipation_model(data)
+    
     def set_structural_boundary_condition(self, data):
         self.properties.set_structural_boundary_condition(data)
     

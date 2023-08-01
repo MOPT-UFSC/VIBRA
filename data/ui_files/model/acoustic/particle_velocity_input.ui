@@ -258,7 +258,7 @@
        </widget>
       </item>
       <item row="1" column="0">
-       <widget class="QTabWidget" name="tabWidget_volume_velocity">
+       <widget class="QTabWidget" name="tabWidget_particle_velocity">
         <property name="minimumSize">
          <size>
           <width>360</width>
@@ -666,6 +666,11 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
                  <width>260</width>
                  <height>16777215</height>
                 </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>11</pointsize>
+                </font>
                </property>
                <property name="text">
                 <string>Averaged value over all nodes</string>
@@ -1182,7 +1187,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
            </widget>
           </item>
           <item row="0" column="0">
-           <widget class="QTreeWidget" name="treeWidget_volume_velocity">
+           <widget class="QTreeWidget" name="treeWidget_particle_velocity">
             <property name="minimumSize">
              <size>
               <width>320</width>

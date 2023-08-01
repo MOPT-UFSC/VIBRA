@@ -11,7 +11,10 @@ from vibra.interface.model_inputs.structural.material_inputs import MaterialInpu
 #
 from vibra.interface.model_inputs.structural.boundary_condition_inputs import BoundaryConditionInputs
 #
+from vibra.interface.model_inputs.acoustic.set_mass_flow_rate_inputs import MassFlowRateInput
 from vibra.interface.model_inputs.acoustic.set_volume_velocity_inputs import VolumeVelocityInput
+from vibra.interface.model_inputs.acoustic.set_particle_velocity_inputs import ParticleVelocityInput
+from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import DissipationModelInput
 
 from vibra.interface.analysis.analysis_type_input import AnalysisTypeInput
 from vibra.interface.analysis.analysis_setup_input import AnalysisSetupInput
@@ -426,7 +429,7 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_set_dissipation_model:
             if not self.item_child_set_dissipation_model.isDisabled():
-                pass
+                read = DissipationModelInput()
 
         elif item == self.item_child_set_volume_velocity:
             if not self.item_child_set_volume_velocity.isDisabled():
@@ -434,11 +437,11 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_set_mass_flow_rate:
             if not self.item_child_set_mass_flow_rate.isDisabled():
-                print("set_mass_flow_rate")
+                read = MassFlowRateInput()
 
         elif item == self.item_child_set_particle_velocity:
             if not self.item_child_set_particle_velocity.isDisabled():
-                print("set_particle_velocity")
+                read = ParticleVelocityInput()
 
         elif item == self.item_child_set_specific_impedance:
             if not self.item_child_set_specific_impedance.isDisabled():

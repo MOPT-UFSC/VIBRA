@@ -110,7 +110,7 @@ class AcousticAssembler:
 
         for _id in self.properties.surfaces_with_acoustic_pressure:
             nodes = self.model.mesh.nodes_from_surfaces[_id]
-            # print(_id, nodes)
+
             for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
                 _prescribed_indexes.append(index)
         
@@ -147,8 +147,8 @@ class AcousticAssembler:
         nel = len(element.connectivity)
         total_dofs = element.DOF_PER_NODE * len(element.nodal_coordinates)
 
-        self.data_K = np.zeros((nel, dofs, dofs), dtype=float)
-        self.data_M = np.zeros((nel, dofs, dofs), dtype=float)
+        self.data_K = np.zeros((nel, dofs, dofs), dtype=complex)
+        self.data_M = np.zeros((nel, dofs, dofs), dtype=complex)
 
         for el in range(nel):
             Ke, Me = element.elementary_matrices(el)
@@ -177,7 +177,9 @@ class AcousticAssembler:
 
         acoustic_excitation = defaultdict(float)
         
-        for _id, [values, avg] in self.properties.surfaces_with_mass_flow_rate.items():
+        for _id, data in self.properties.surfaces_with_mass_flow_rate.items():
+            values = data["values"]
+            avg = data["averaged"]
             nodes = self.model.mesh.nodes_from_surfaces[_id]
             N = len(nodes)
             for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
@@ -186,7 +188,9 @@ class AcousticAssembler:
                 else:
                     acoustic_excitation[index] += values
 
-        for _id, [values, avg] in self.properties.surfaces_with_volume_velocity.items():
+        for _id, data in self.properties.surfaces_with_volume_velocity.items():
+            values = data["values"]
+            avg = data["averaged"]
             nodes = self.model.mesh.nodes_from_surfaces[_id]
             #TODO: get the surface fluid property
             fluid = self.model.properties.get_fluid()

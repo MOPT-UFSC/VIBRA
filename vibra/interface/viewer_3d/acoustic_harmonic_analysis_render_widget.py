@@ -72,12 +72,12 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
         self.remove_actors()
 
         phase_deg = self.control_bar.phase_slider.value()
-        phase = phase_deg*np.pi/180
+        phi_sld = phase_deg*np.pi/180
 
         current_pressures = solver.solution[:, index].copy()
         amplitudes = np.abs(current_pressures)
-        phi = np.angle(current_pressures)
-        output_pressures = amplitudes*np.cos(phi + phase)
+        phase = np.angle(current_pressures)
+        output_pressures = amplitudes*np.cos(phase + phi_sld)
 
         min_value, max_value = solver.get_max_min_values_of_pressures(index)
         if self.control_bar.absolute_button.isChecked():

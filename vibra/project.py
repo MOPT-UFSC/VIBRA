@@ -24,6 +24,7 @@ class Project:
         self.fluid_list_path = ""
         self.material_list_path = ""
         self.analysis_data = None
+        self.dissipation_model = None
         #
         self.model = Model()
         self.file = ProjectFile()
@@ -96,14 +97,12 @@ class Project:
         self.model.set_particle_velocity(data)
         self.file.add_particle_velocity_to_file(data)
 
-    def set_frequencies(self, frequencies):
-        self.frequencies = frequencies
-        self.acoustic_assembler.set_frequencies(frequencies)
-        self.structural_assembler.set_frequencies(frequencies)
+    def set_dissipation_model(self, data):
+        self.model.set_dissipation_model_data(data)
+        self.file.add_dissipation_model_data_to_file(data)
 
     def set_analysis_data(self, data):
         self.analysis_data = data
-        # print(data)
 
         if data["analysis_id"] == 2:
             self.set_structural_element_to_model()
@@ -119,6 +118,18 @@ class Project:
         
         else:
             raise NotImplementedError("Not implemented solver")
+
+    def set_frequencies(self, frequencies, f_min, f_max, f_step):
+        analysis_data = self.analysis_data
+        if analysis_data is not None:
+            analysis_data["frequencies"] = frequencies
+            analysis_data["f_min"] = f_min
+            analysis_data["f_max"] = f_max
+            analysis_data["f_step"] = f_step
+            self.set_analysis_data(analysis_data)
+            # self.frequencies = frequencies
+            # self.acoustic_assembler.set_frequencies(frequencies)
+            # self.structural_assembler.set_frequencies(frequencies)
 
     def set_element_formulation(self, element):
         self.acoustic_assembler.set_element_formulation(element)

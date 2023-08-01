@@ -14,6 +14,7 @@ class AcousticHarmonicSolver:
     def reset_variables(self):
         self.analysis_type = None
         self.frequencies = None
+        self.dissipation_model = None
         self.modal_shape = None
         self.solution = None
         self.loads = None
@@ -25,16 +26,15 @@ class AcousticHarmonicSolver:
                 if "frequencies" in analysis_data.keys():
                     self.frequencies = analysis_data["frequencies"]
 
+    def load_dissipation_model(self, data):
+        self.dissipation_model = data
 
     def solve(self):
 
         self.M = self.assembler.mass_matrix
         self.K = self.assembler.stiffness_matrix
-        # print(self.K.shape)
-        # print(self.M.shape)
 
         self.mass_flow = self.assembler.get_acoustic_excitations()
-        
         self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
         self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_values()
         
@@ -49,7 +49,6 @@ class AcousticHarmonicSolver:
             F =  -1j * omega * self.mass_flow
             solution[:, i] = spsolve(A, F)
 
-        # print(solution.shape)
         self.solution = solution
         return solution
 
@@ -88,15 +87,15 @@ class AcousticHarmonicSolver:
 
         data = self.solution[:, column]
         
-        _pressures = np.abs(data)
-        _phases = np.angle(data)
+        amplitudes = np.abs(data)
+        phases = np.angle(data)
         
         p_min = 1
         p_max = 0
         thetas = np.arange(0, 360, 2)*(np.pi/180)
 
         for theta in thetas:
-            pressures = _pressures*np.cos(theta + _phases)
+            pressures = amplitudes*np.cos(phases + theta)
 
             p_min_i = min(pressures)
             p_max_i = max(pressures)
