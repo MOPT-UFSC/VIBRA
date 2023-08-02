@@ -189,17 +189,14 @@ class MenuItems(QTreeWidget):
         self.list_child_items.append(self.item_child_set_fluid)
         #
         self.item_top_structuralModelSetup = QTreeWidgetItem(['Structural Model Setup'])
-        self.item_child_setStructuralElementType = QTreeWidgetItem(['Set Structural Element Type'])
         self.item_child_set_boundary_condition = QTreeWidgetItem(['Set Boundary Conditions'])
         self.item_child_setNodalLoads = QTreeWidgetItem(['Set Loads'])
         #set_specific_impedance
         self.list_top_items.append(self.item_top_structuralModelSetup)
-        self.list_child_items.append(self.item_child_setStructuralElementType)
         self.list_child_items.append(self.item_child_set_boundary_condition)
         self.list_child_items.append(self.item_child_setNodalLoads)
         #
         self.item_top_acoustic_model_setup = QTreeWidgetItem(["Acoustic Model Setup"])
-        self.item_child_set_acoustic_element_type = QTreeWidgetItem(["Set Acoustic Element Type"])
         self.item_child_set_dissipation_model = QTreeWidgetItem(["Set Dissipation Model"])
         self.item_child_set_acoustic_pressure = QTreeWidgetItem(["Set Acoustic Pressure"])
         self.item_child_set_mass_flow_rate = QTreeWidgetItem(["Set Mass Flow Rate"])
@@ -210,7 +207,6 @@ class MenuItems(QTreeWidget):
         self.item_child_add_compressor_excitation = QTreeWidgetItem(["Add Compressor Excitation"])
         #
         self.list_top_items.append(self.item_top_acoustic_model_setup)
-        self.list_child_items.append(self.item_child_set_acoustic_element_type)
         self.list_child_items.append(self.item_child_set_acoustic_pressure)
         self.list_child_items.append(self.item_child_set_dissipation_model)
         self.list_child_items.append(self.item_child_set_mass_flow_rate)
@@ -283,12 +279,10 @@ class MenuItems(QTreeWidget):
         self.item_top_generalSettings.addChild(self.item_child_generate_mesh)
         
         self.addTopLevelItem(self.item_top_structuralModelSetup)
-        self.item_top_structuralModelSetup.addChild(self.item_child_setStructuralElementType)
         self.item_top_structuralModelSetup.addChild(self.item_child_set_boundary_condition)
         self.item_top_structuralModelSetup.addChild(self.item_child_setNodalLoads)
 
         self.addTopLevelItem(self.item_top_acoustic_model_setup)
-        self.item_top_acoustic_model_setup.addChild(self.item_child_set_acoustic_element_type)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_acoustic_pressure)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_dissipation_model)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_mass_flow_rate)
@@ -407,10 +401,6 @@ class MenuItems(QTreeWidget):
         elif item == self.item_child_set_fluid:
             if not self.item_child_set_fluid.isDisabled():
                 FluidInput()
-
-        elif item == self.item_child_setStructuralElementType:
-            if not self.item_child_setStructuralElementType.isDisabled():
-                pass
     
         elif item == self.item_child_set_boundary_condition:
             if not self.item_child_set_boundary_condition.isDisabled():
@@ -580,12 +570,10 @@ class MenuItems(QTreeWidget):
         self.item_child_generate_mesh.setDisabled(True)
 
     def modify_structural_model_setup_items_acces(self, bool_key):
-        self.item_child_setStructuralElementType.setDisabled(bool_key)
         self.item_child_set_boundary_condition.setDisabled(bool_key)
         self.item_child_setNodalLoads.setDisabled(bool_key)
 
     def modify_acoustic_model_setup_items_acces(self, bool_key):
-        self.item_child_set_acoustic_element_type.setDisabled(bool_key)
         self.item_child_set_dissipation_model.setDisabled(bool_key)
         self.item_child_set_acoustic_pressure.setDisabled(bool_key)
         self.item_child_set_mass_flow_rate.setDisabled(bool_key)

@@ -244,11 +244,15 @@ class Mesh:
         self.solids_connectivity = self._get_connectivity_array(connectivity_dim3)
 
     def get_model_areas(self, path):
+        """ This method returns returns the all surface area processed using 
+            gmsh internal functions.
+
+        """
 
         surfaces_areas = dict()
         bodies_volumes = dict()
 
-        # The adoption of quadratic elements ensures better results for areas calculations.
+        # The adoption of quadratic elements ensures better results for area calculations.
         element_type = TETRAHEDRON_10
         gmsh.initialize("", False)
 

@@ -104,6 +104,7 @@ class Project:
     def set_analysis_data(self, data):
 
         self.analysis_data = data
+        self.file.add_frequency_in_file(data)
 
         # structural harmonic analysis - direct method
         if data["analysis_id"] == 0:

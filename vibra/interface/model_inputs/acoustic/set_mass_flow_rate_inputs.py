@@ -68,6 +68,11 @@ class MassFlowRateInput(QDialog):
         self.pushButton_table_values_confirm = self.findChild(QPushButton, 'pushButton_table_values_confirm')
         self.pushButton_remove_bc_confirm = self.findChild(QPushButton, 'pushButton_remove_bc_confirm')
         self.pushButton_reset = self.findChild(QPushButton, 'pushButton_reset')
+        # QRadioButton objects
+        self.radioButton_nodal_attribution_constant = self.findChild(QRadioButton, 'radioButton_nodal_attribution_constant')
+        self.radioButton_element_intetgration_constant = self.findChild(QRadioButton, 'radioButton_element_intetgration_constant')
+        self.radioButton_element_integration_table = self.findChild(QRadioButton, 'radioButton_element_integration_table')
+        self.radioButton_nodal_attribution_table = self.findChild(QRadioButton, 'radioButton_nodal_attribution_table')
         # QSpinBox object
         self.spinBox_skiprows = self.findChild(QSpinBox, 'spinBox')
         # QTabWidget objects

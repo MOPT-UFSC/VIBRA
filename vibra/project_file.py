@@ -30,16 +30,19 @@ class ProjectFile:
         self.acoustic_imported_data_folder_path = os.path.join(self.imported_data_folder_path, "acoustic")
         self.structural_imported_data_folder_path = os.path.join(self.imported_data_folder_path, "structural")
 
-    def add_frequency_in_file(self, f_min, f_max, f_step):
+    def add_frequency_in_file(self, data):
         
         temp_project_base_file_path =  os.path.join(self.project_path, self.project_basename)
         config = configparser.ConfigParser()
         config.read(temp_project_base_file_path)
 
         config["Frequency setup"] = {}
-        config['Frequency setup']['frequency min'] = str(f_min)
-        config['Frequency setup']['frequency max'] = str(f_max)
-        config['Frequency setup']['frequency step'] = str(f_step)
+        if "f_min" in data.keys():
+            config['Frequency setup']['frequency min'] = str(data["f_min"])
+        if "f_max" in data.keys():
+            config['Frequency setup']['frequency max'] = str(data["f_max"])
+        if "f_step" in data.keys():
+            config['Frequency setup']['frequency step'] = str(data["f_step"])
 
         self.write_data_in_file(temp_project_base_file_path, config)
 
