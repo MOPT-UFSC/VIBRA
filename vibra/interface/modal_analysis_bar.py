@@ -26,6 +26,7 @@ class AcousticModalAnalysisBar(QWidget):
         self.pause_icon = load_icon(Path("data/icons/pause.png"), QColor("#0055DD"))
         self.play_pause_button = QPushButton(self.play_icon, "")
         self.play_pause_button.setShortcut("Space")
+        self.play_pause_button.setMinimumWidth(80)
 
         self.frequency_box = QComboBox()
         self.absolute_button = QRadioButton("Absolute")
@@ -40,10 +41,9 @@ class AcousticModalAnalysisBar(QWidget):
         self.real_part_button.setChecked(True)
         self.show_mesh_button.setChecked(True)
         
-        hspacing = 10
+        hspacing = 20
 
         layout = QHBoxLayout()
-        layout.addStretch()
         layout.addWidget(QLabel("Phase [deg]:"))
         layout.addWidget(self.phase_slider)
         layout.addWidget(self.phase_label)
@@ -54,9 +54,11 @@ class AcousticModalAnalysisBar(QWidget):
         layout.addWidget(self.real_part_button)
         layout.addSpacing(hspacing)
 
-        layout.addWidget(self.play_pause_button)
         layout.addWidget(self.show_mesh_button)
         layout.addSpacing(hspacing)
+
+        layout.addWidget(self.play_pause_button)
+        layout.addStretch()
         
         layout.addWidget(QLabel("Mode Selector:"))
         layout.addWidget(self.frequency_box)
@@ -117,6 +119,7 @@ class StructuralModalAnalysisBar(QWidget):
         self.pause_icon = load_icon(Path("data/icons/pause.png"), QColor("#0055DD"))
         self.play_pause_button = QPushButton(self.play_icon, "")
         self.play_pause_button.setShortcut("Space")
+        self.play_pause_button.setMinimumWidth(80)
 
         self.frequency_box = QComboBox()
         self.response_ux_button = QRadioButton("Real Ux")
@@ -139,33 +142,37 @@ class StructuralModalAnalysisBar(QWidget):
         self.frequency_box.setMaximumWidth(300)
 
 
-        sliders_layout = QHBoxLayout()
-        sliders_layout.addWidget(QLabel("Magnification factor:"))
-        sliders_layout.addWidget(self.magnification_factor_slider)
-        sliders_layout.addWidget(self.magnification_factor_label)
-        sliders_layout.addStretch()
-        sliders_layout.addWidget(QLabel("Phase [deg]:"))
-        sliders_layout.addWidget(self.phase_slider)
-        sliders_layout.addWidget(self.phase_label)
+        sliders_layout = QGridLayout()
+        sliders_layout.addWidget(QLabel("Magnification factor:"), 0, 0)
+        sliders_layout.addWidget(self.magnification_factor_slider, 0, 1)
+        sliders_layout.addWidget(self.magnification_factor_label, 0, 2)
+        sliders_layout.addWidget(QLabel("Phase [deg]:"), 1, 0)
+        sliders_layout.addWidget(self.phase_slider, 1, 1)
+        sliders_layout.addWidget(self.phase_label, 1, 2)
 
-        buttons_layout = QHBoxLayout()
-        buttons_layout.addWidget(QLabel("Data to plot:"))
-        buttons_layout.addWidget(self.sum_button)
-        buttons_layout.addWidget(self.response_ux_button)
-        buttons_layout.addWidget(self.response_uy_button)
-        buttons_layout.addWidget(self.response_uz_button)
-        buttons_layout.addStretch()
-        buttons_layout.addWidget(self.play_pause_button)
-        buttons_layout.addStretch()
-        buttons_layout.addWidget(self.show_mesh_button)
-        buttons_layout.addWidget(self.update_coloring)
+        plot_layout = QHBoxLayout()
+        # plot_layout.addWidget(QLabel("Data to plot:"))
+        plot_layout.addWidget(self.sum_button)
+        plot_layout.addWidget(self.response_ux_button)
+        plot_layout.addWidget(self.response_uy_button)
+        plot_layout.addWidget(self.response_uz_button)
+        plot_layout.setSpacing(20)
 
-        left_layout = QVBoxLayout()
-        left_layout.addLayout(sliders_layout)
-        left_layout.addLayout(buttons_layout)
+        config_layout = QHBoxLayout()
+        config_layout.addWidget(self.show_mesh_button)
+        config_layout.addWidget(self.update_coloring)
+        config_layout.addStretch()
+        config_layout.addWidget(self.play_pause_button)
+
+        buttons_layout = QVBoxLayout()
+        buttons_layout.addLayout(plot_layout)
+        buttons_layout.addLayout(config_layout)
+
 
         layout = QHBoxLayout()
-        layout.addLayout(left_layout)
+        layout.addLayout(sliders_layout)
+        # layout.addStretch()
+        layout.addLayout(buttons_layout)
         layout.addStretch()
         layout.addWidget(QLabel("Mode Selector:"))
         layout.addWidget(self.frequency_box)
@@ -202,7 +209,7 @@ class StructuralModalAnalysisBar(QWidget):
         self.magnification_factor_slider.setMaximum(4)
         self.magnification_factor_slider.setValue(2)
         self.magnification_factor_slider.setSingleStep(1)
-        self.magnification_factor_slider.setMaximumWidth(100)
+        self.magnification_factor_slider.setMaximumWidth(200)
         self.magnification_factor_slider.valueChanged.connect(self.value_change_callback)
         self.magnification_factor_slider.sliderPressed.connect(self.slider_pressed.emit)
         self.magnification_factor_slider.sliderReleased.connect(self.slider_released.emit)
