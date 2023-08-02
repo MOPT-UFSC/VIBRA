@@ -54,6 +54,15 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         else:
             self.start_animation()
 
+    def start_animation(self):
+        super().start_animation()
+        self.control_bar.use_pause_icon()
+    
+    def stop_animation(self):
+        super().stop_animation()
+        self.control_bar.use_play_icon()
+
+
     def current_shape_index(self):
         return self.control_bar.frequency_box.currentIndex()
     

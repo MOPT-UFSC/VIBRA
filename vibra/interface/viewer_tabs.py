@@ -39,6 +39,7 @@ class ViewerTabs(QTabWidget):
         self.help_widget = HelpWidget()
 
         self.show_wellcome()
+        self.show_structural_modal_analysis()
 
     # 
     def show_wellcome(self):

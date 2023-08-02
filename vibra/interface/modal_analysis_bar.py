@@ -4,6 +4,9 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+from pathlib import Path
+from vibra.utils.icons import load_icon
+
 
 class AcousticModalAnalysisBar(QWidget):
     slider_pressed = pyqtSignal()
@@ -19,7 +22,9 @@ class AcousticModalAnalysisBar(QWidget):
 
         self.create_sliders()
 
-        self.play_pause_button = QPushButton("Play / Pause")
+        self.play_icon = load_icon(Path("data/icons/play.png"), QColor("#0055DD"))
+        self.pause_icon = load_icon(Path("data/icons/pause.png"), QColor("#0055DD"))
+        self.play_pause_button = QPushButton(self.play_icon, "")
         self.play_pause_button.setShortcut("Space")
 
         self.frequency_box = QComboBox()
@@ -60,6 +65,12 @@ class AcousticModalAnalysisBar(QWidget):
         self.frequency_box.activated.connect(self.value_changed.emit)
         self.real_part_button.clicked.connect(self.value_changed.emit)
         self.absolute_button.clicked.connect(self.value_changed.emit)
+
+    def use_play_icon(self):
+        self.play_pause_button.setIcon(self.play_icon)
+
+    def use_pause_icon(self):
+        self.play_pause_button.setIcon(self.pause_icon)
 
     def set_frequencies(self, frequencies):
         self.frequency_box.clear()
@@ -102,7 +113,9 @@ class StructuralModalAnalysisBar(QWidget):
 
         self.create_sliders()
 
-        self.play_pause_button = QPushButton("Play / Pause")
+        self.play_icon = load_icon(Path("data/icons/play.png"), QColor("#0055DD"))
+        self.pause_icon = load_icon(Path("data/icons/pause.png"), QColor("#0055DD"))
+        self.play_pause_button = QPushButton(self.play_icon, "")
         self.play_pause_button.setShortcut("Space")
 
         self.frequency_box = QComboBox()
@@ -172,6 +185,12 @@ class StructuralModalAnalysisBar(QWidget):
 
         for i, freq in enumerate(frequencies):
             self.frequency_box.addItem(f" Mode {i + 1}: {round(freq, 6)} Hz")
+
+    def use_play_icon(self):
+        self.play_pause_button.setIcon(self.play_icon)
+
+    def use_pause_icon(self):
+        self.play_pause_button.setIcon(self.pause_icon)
 
     def create_sliders(self):
         #
