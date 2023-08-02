@@ -152,11 +152,14 @@ class MaterialAdd(QDialog):
         self.setLayout(layout1)
         self.setMinimumSize(500,100)
 
+        self.error_label = QLabel("")
+
         layout1.addWidget(material_name_label, 0, 0)
         layout1.addWidget(self.line_edit_material_name, 1, 0)
+        
         layout1.addWidget(density_label, 0, 1)
         layout1.addWidget(self.line_edit_density, 1, 1)
-        layout1.addWidget(poisson_label, 2, 0)
+        layout1.addWidget(self.error_label, 2, 0)
         layout1.addWidget(self.line_edit_poisson, 3, 0)
         layout1.addWidget(young_label, 0, 2)
         layout1.addWidget(self.line_edit_young_modulus, 1, 2)
@@ -172,8 +175,22 @@ class MaterialAdd(QDialog):
         self.exec_()
 
     def confirm_button_callback(self):
-        self.completed = True
-        self.close()
+        if not self.verify_error():
+            self.completed = True
+            self.close()
+
+    def verify_error(self):
+        error = False
+
+        if self.line_edit_material_name.text():
+            self.error_label.setText("")
+
+        else:
+            error = True
+            self.error_label.setText("deu erro andre")
+        return error
+
+            
 
     def cancel_button_callback(self):
         self.close()

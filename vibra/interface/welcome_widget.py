@@ -23,7 +23,7 @@ class WelcomeWidget(QWidget):
 
         layout.setSpacing(15) 
 
-        message_label = QLabel("Vibroacoustic Analysis using the Finite Element Method", self)
+        message_label = QLabel("Vibra: Finite Element Software for Acoustic and Structural Analysis", self)
         message_label.setAlignment(Qt.AlignCenter)
         message_label.setContentsMargins(0, 0, 0, 0)
         
