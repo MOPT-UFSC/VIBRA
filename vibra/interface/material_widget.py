@@ -136,6 +136,7 @@ class MaterialAdd(QDialog):
         self.line_edit_young_modulus =  QLineEdit()
         color_label = QLabel("Color")
         self.color_button =  QPushButton("")
+        self.color_button.setFocusPolicy(Qt.NoFocus)
         self.add_new_material_button = QPushButton("Add New Material")
         self.cancel_button = QPushButton("Cancel")
 
