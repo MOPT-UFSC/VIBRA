@@ -76,7 +76,6 @@ class MaterialWidget(QDialog):
 
         self.exec_()
 
-
     def add_material(self):
         instance = MaterialAdd()
 
@@ -103,16 +102,16 @@ class MaterialWidget(QDialog):
             self.table.setItem(self.row_count, 5, self.item)
 
     def on_table_clicked(self, row, column):
-        if column ==5:
-            self.put_color_after_edit_callback()
+        if column == 5:
+            color = QColorDialog.getColor()
+
+            if color.isValid():
+                item = self.table.item(row, column)
+                if item is not None:
+                    item.setBackground(color)
         else:
             pass
-
-
-    def put_color_after_edit_callback(self):
-        self.color2 = QColorDialog.getColor()
-        self.item.setBackground(self.color2)
-
+        
     def open_widget2(self):
         current_row = self.table.currentRow()
         self.table.removeRow(current_row)
