@@ -1,6 +1,6 @@
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QLineEdit, QColorDialog, QLabel, QVBoxLayout, QGridLayout, QPushButton, QDialog, QHBoxLayout, QTableWidget, QTableWidgetItem
+from PyQt5.QtWidgets import QLineEdit, QTableWidgetItem, QColorDialog, QLabel, QVBoxLayout, QGridLayout, QPushButton, QDialog, QHBoxLayout, QTableWidget, QTableWidgetItem
 from pathlib import Path
 from vibra.utils.icons import load_icon
 
@@ -47,6 +47,7 @@ class MaterialWidget(QDialog):
         self.table.setHorizontalHeaderLabels(self.no_list)
         self.table.setSelectionBehavior(1)
         self.table.resizeColumnsToContents()
+        self.table.cellClicked.connect(self.on_table_clicked)
 
         final_layout = QGridLayout()
         final_layout.setAlignment(Qt.AlignRight)
@@ -75,6 +76,7 @@ class MaterialWidget(QDialog):
 
         self.exec_()
 
+
     def add_material(self):
         instance = MaterialAdd()
 
@@ -88,17 +90,28 @@ class MaterialWidget(QDialog):
 
             self.table.verticalHeader().setVisible(False)
 
-            row_count = self.table.rowCount()
-            self.table.insertRow(row_count)  
-            self.table.setItem(row_count, 0, QTableWidgetItem(name_material))
-            self.table.setItem(row_count, 1, QTableWidgetItem(density))
-            self.table.setItem(row_count, 2, QTableWidgetItem(young))
-            self.table.setItem(row_count, 3, QTableWidgetItem(poisson))
-            self.table.setItem(row_count, 4, QTableWidgetItem(expansion))
+            self.row_count = self.table.rowCount()
+            self.table.insertRow(self.row_count)  
+            self.table.setItem(self.row_count, 0, QTableWidgetItem(name_material))
+            self.table.setItem(self.row_count, 1, QTableWidgetItem(density))
+            self.table.setItem(self.row_count, 2, QTableWidgetItem(young))
+            self.table.setItem(self.row_count, 3, QTableWidgetItem(poisson))
+            self.table.setItem(self.row_count, 4, QTableWidgetItem(expansion))
 
-            item = QTableWidgetItem()
-            item.setBackground(instance.color)
-            self.table.setItem(row_count, 5, item)
+            self.item = QTableWidgetItem()
+            self.item.setBackground(instance.color)
+            self.table.setItem(self.row_count, 5, self.item)
+
+    def on_table_clicked(self, row, column):
+        if column ==5:
+            self.put_color_after_edit_callback()
+        else:
+            pass
+
+
+    def put_color_after_edit_callback(self):
+        self.color2 = QColorDialog.getColor()
+        self.item.setBackground(self.color2)
 
     def open_widget2(self):
         current_row = self.table.currentRow()
