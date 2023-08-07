@@ -9,6 +9,7 @@ from vibra.utils.interface_functions import get_main_window
 from vibra.interface.model_inputs.mesh.mesher_inputs import MesherInputs
 from vibra.interface.model_inputs.structural.material_inputs import MaterialInput
 from vibra.interface.material_widget import MaterialWidget
+from vibra.interface.set_fluid_widget import FluidWidget
 
 
 class MesherMenu(QMenu):
@@ -46,12 +47,10 @@ class MesherMenu(QMenu):
         
 
     def call_fluid_configurator(self):
-        pass
+        FluidWidget()
 
     def call_material_configurator(self):
-        MaterialWidget()
-        # MaterialInput()
-        pass
+        MaterialWidget()  
 
     def call_mesher_inputs(self):
         mesher = MesherInputs()
