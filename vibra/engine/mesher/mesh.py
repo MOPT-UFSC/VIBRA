@@ -7,6 +7,7 @@ import gmsh
 import numpy as np
 
 from vibra.engine.mesher.element_type import *
+from vibra.engine.mesher.geometry_setup import GeometrySetup
 from vibra.utils.progress_status import ProgressStatus
 
 # FieldsList=[]
@@ -17,6 +18,9 @@ class Mesh:
         self.reset_variables()
 
     def reset_variables(self):
+        self.geometry_setup = None
+        self.mesh_setup = None
+
         self.dimension = 0
         self.entity_ranges = dict()
         self.element_type = DEFAULT_ELEMENT_TYPE
@@ -66,6 +70,14 @@ class Mesh:
             threads=threads,
             gmsh_gui=gmsh_gui,
         )
+
+        # saves the data to edit mesh parameters later
+        with open(path, "r", encoding="iso-8859-1") as file:
+            obj.geometry_setup = GeometrySetup(
+                file.read(),
+                suffix=path.suffix,
+            )
+
         return obj
 
     @classmethod
@@ -79,6 +91,27 @@ class Mesh:
         if solids_path is not None:
             obj.solids_connectivity = obj.import_solids_connectivity(solids_path)
         return obj
+    
+    def update_parameters(self, *args, **kwargs):
+        self.load_cad_string(
+            self.geometry_setup.data,
+            self.geometry_setup.suffix,
+            *args,
+            **kwargs,
+        )
+
+    def load_cad_string(
+        self,
+        string: str,
+        suffix: str,
+        *args,
+        **kwargs
+    ):
+        self.geometry_setup = GeometrySetup(string, suffix)
+
+        with NamedTemporaryFile(suffix=suffix) as tmp:
+            tmp.write(string.encode("iso-8859-1"))
+            self.load_cad(tmp.name, *args, **kwargs)
 
     def load_cad(
         self,
