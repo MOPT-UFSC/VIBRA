@@ -16,37 +16,49 @@ class MaterialWidget(QDialog):
         add_material_button = QPushButton()
         add_material_button.setFocusPolicy(Qt.NoFocus)
         add_material_icon = load_icon(Path("data/icons/plus-thick.png"), self.color)
-        add_material_button.setIconSize(QSize(25, 25))
+        add_material_button.setIconSize(QSize(30, 30))
         add_material_button.setIcon(add_material_icon)
     
-        add_material_button.setFixedSize(25, 25)  
+        add_material_button.setFixedSize(30, 30)
         add_material_button.clicked.connect(self.add_material)
         toolbar_layout.addWidget(add_material_button)
 
         trash_button = QPushButton()
         trash_button.setFocusPolicy(Qt.NoFocus)
         trash_icon = load_icon(Path("data/icons/delete.png"), self.color)
-        trash_button.setIconSize(QSize(25, 25))
+        trash_button.setIconSize(QSize(30, 30))
         trash_button.setIcon(trash_icon)
-        trash_button.setFixedSize(25, 25)  
+        trash_button.setFixedSize(30, 30)
         trash_button.clicked.connect(self.open_widget2)
         toolbar_layout.addWidget(trash_button)
 
         toolbar_layout.addStretch(1)
         reset_button = QPushButton("Reset")
         reset_button.setFocusPolicy(Qt.NoFocus)
-        reset_button.setFixedSize(50, 25)
         reset_button.clicked.connect(self.reset_widgets)
         toolbar_layout.addWidget(reset_button)
 
         toolbar_layout.setAlignment(Qt.AlignTop)
-
-        self.no_list = ["             Name             ", "Density\n[kg/m3]", "Young Modulus\n[GPa]", "Poisson", "Expansion cofficient\n[m/K]", "Color"]
+        
+        # AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Name AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        header = [
+            "Name",
+            "Density\n[kg/m3]",
+            "Young Modulus\n[GPa]",
+            "Poisson",
+            "Expansion cofficient\n[m/K]",
+            "Color"
+        ]
         self.table = QTableWidget()
-        self.table.setColumnCount(len(self.no_list)) 
-        self.table.setHorizontalHeaderLabels(self.no_list)
+        self.table.setColumnCount(len(header)) 
+        self.table.setHorizontalHeaderLabels(header)
         self.table.setSelectionBehavior(1)
         self.table.resizeColumnsToContents()
+
+        self.table.horizontalHeader().setSectionResizeMode(0)
+        self.table.horizontalHeader().setStretchLastSection(True)
+        self.table.horizontalHeader().resizeSection(0, 150)  #  spacing for Name
+
         self.table.cellClicked.connect(self.on_table_clicked)
 
         final_layout = QGridLayout()
@@ -58,8 +70,6 @@ class MaterialWidget(QDialog):
 
         apply_to_all_button = QPushButton("Apply to all")
         apply_to_selection_button = QPushButton("Apply to selection")
-        apply_to_all_button.setFixedSize(120,40)
-        apply_to_selection_button.setFixedSize(120,40)
 
         apply_to_all_button.clicked.connect(self.apply_to_all_button_callback)
         apply_to_selection_button.clicked.connect(self.apply_to_selection_button_callback)
@@ -72,7 +82,7 @@ class MaterialWidget(QDialog):
         main_layout.addLayout(final_layout)
 
         self.setLayout(main_layout)
-        self.setMinimumSize(526,500)
+        self.setMinimumSize(650,500)
 
         self.exec_()
 
@@ -109,8 +119,6 @@ class MaterialWidget(QDialog):
                 item = self.table.item(row, column)
                 if item is not None:
                     item.setBackground(color)
-        else:
-            pass
         
     def open_widget2(self):
         current_row = self.table.currentRow()
