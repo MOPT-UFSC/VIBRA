@@ -41,7 +41,7 @@ class FluidWidget(QDialog):
 
         toolbar_layout.setAlignment(Qt.AlignTop)
 
-        header = ["             Name             ", 
+        header = [      "Name",
                         "Fluid Density\n[kg/m3]", 
                         "Speed of sound\n[m/s]",
                         "Specific heat Cp\n[J/kgK]",
@@ -83,7 +83,7 @@ class FluidWidget(QDialog):
         main_layout.addLayout(final_layout)
 
         self.setLayout(main_layout)
-        self.setMinimumSize(526,500)
+        self.setMinimumSize(1160,500)
 
         self.exec_()
 
