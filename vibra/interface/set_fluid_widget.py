@@ -58,10 +58,7 @@ class FluidWidget(QDialog):
         self.table.setSelectionBehavior(1)
         self.table.resizeColumnsToContents()
         self.table.cellClicked.connect(self.on_table_clicked)
-        self.table.horizontalHeader().setSectionResizeMode(0)
-        self.table.horizontalHeader().setStretchLastSection(True)
-        self.table.horizontalHeader().resizeSection(0, 150)
-
+        
         final_layout = QGridLayout()
         final_layout.setAlignment(Qt.AlignRight)
 
@@ -83,7 +80,7 @@ class FluidWidget(QDialog):
         main_layout.addLayout(final_layout)
 
         self.setLayout(main_layout)
-        self.setMinimumSize(1160,500)
+        self.setMinimumSize(700,500)
 
         self.exec_()
 
