@@ -3,6 +3,7 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QLineEdit, QTableWidgetItem, QColorDialog, QLabel, QVBoxLayout, QGridLayout, QPushButton, QDialog, QHBoxLayout, QTableWidget, QTableWidgetItem
 from pathlib import Path
 from vibra.utils.icons import load_icon
+import random
 
 class MaterialWidget(QDialog):
     def __init__(self):
@@ -130,7 +131,12 @@ class MaterialAdd(QDialog):
     def __init__(self):
         super().__init__()
 
-        self.color = QColor("#0055DD")
+        r = random.randint(0,255)
+        g = random.randint(0,255)
+        b = random.randint(0,255)
+
+
+        self.color = QColor(r,g,b)
 
         self.setWindowTitle("New Material")
         layout1 = QGridLayout()
@@ -188,6 +194,9 @@ class MaterialAdd(QDialog):
         layout1.addWidget(self.color_button, 4, 2)  
         layout1.addWidget(self.add_new_material_button, 8, 2)
         layout1.addWidget(self.cancel_button, 8, 0)
+
+        pick_color = self.color.name()
+        self.color_button.setStyleSheet(f"background-color: {pick_color};")
     
         self.completed = False
         
