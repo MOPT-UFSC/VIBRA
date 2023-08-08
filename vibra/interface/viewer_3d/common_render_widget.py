@@ -8,6 +8,8 @@ from vibra.interface.viewer_3d.interactor_styles.arcball_camera import (
     vtkInteractorStyleArcballCamera,
 )
 from vibra.utils.interface_functions import get_main_window
+from threading import Lock
+from time import time 
 
 
 class CommonRenderWidget(QFrame):
@@ -28,6 +30,15 @@ class CommonRenderWidget(QFrame):
         self.render_interactor.GetRenderWindow().AddRenderer(self.renderer)
         self.render_interactor.SetInteractorStyle(self.style)
         self.renderer.ResetCamera()
+
+        self.playing_animation = False
+        self._animation_lock = Lock()
+        self._animation_frame = 0
+        self._animation_last_time = 0
+        self._animation_total_frames = 30
+        self._animation_fps = 30
+        self._animation_timer = self.render_interactor.CreateRepeatingTimer(500)
+        self.render_interactor.AddObserver("TimerEvent", self._animation_callback)
 
         layout = QStackedLayout()
         layout.addWidget(self.render_interactor)
@@ -144,9 +155,7 @@ class CommonRenderWidget(QFrame):
         self.renderer.GetActiveCamera().SetViewUp(view_up)
         self.renderer.GetActiveCamera().SetParallelProjection(True)
         self.renderer.ResetCamera(*self.renderer.ComputeVisiblePropBounds())
-
-        if self.renderer.GetRenderWindow() is not None:
-            self.renderer.GetRenderWindow().Render()
+        self.update()
 
     def set_top_view(self):
         x, y, z = self.renderer.GetActiveCamera().GetFocalPoint()
@@ -189,3 +198,47 @@ class CommonRenderWidget(QFrame):
         position = (x + 1, y + 1, z + 1)
         view_up = (0, 1, 0)
         self.set_custom_view(position, view_up)
+
+    # 
+    def start_animation(self):
+        if self.playing_animation:
+            return
+        
+        self.playing_animation = True
+
+    def stop_animation(self):
+        if not self.playing_animation:
+            return
+
+        if self._animation_timer is None:
+            return
+
+        self.playing_animation = False
+
+    def _animation_callback(self, obj, event):
+        '''
+        Common function with controls that are meaningfull to
+        all kinds of animations.
+        '''
+        
+        if not self.playing_animation:
+            return
+        
+        # If the time to update the frame takes
+        # longer than expected
+        if self._animation_lock.locked():
+            return
+
+        # Only needed because vtk CreateRepeatingTimer(n)
+        # does not work =/
+        dt = time() - self._animation_last_time
+        if (dt) < 1 / self._animation_fps:
+            return
+
+        with self._animation_lock:
+            self._animation_frame = (self._animation_frame + 1) % self._animation_total_frames
+            self.update_animation(self._animation_frame)
+            self._animation_last_time = time()
+
+    def update_animation(self, frame):
+        raise NotImplementedError('The function "update_animation" was not implemented!')

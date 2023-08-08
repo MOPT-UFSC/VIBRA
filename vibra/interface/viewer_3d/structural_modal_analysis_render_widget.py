@@ -11,6 +11,9 @@ from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
 from vibra.interface.modal_analysis_bar import StructuralModalAnalysisBar
 from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
 
+import logging
+from threading import Lock
+from time import time 
 
 class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
     # many parts of this class is shared by AcousticModalAnalysisRenderWidget
@@ -22,9 +25,10 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
 
         self.project = project        
         self.control_bar = StructuralModalAnalysisBar()
-        self.control_bar.plot_changed.connect(self.update_plot)
-        self.control_bar.update_coloring.stateChanged.connect(self.update_plot)
+        self.control_bar.value_changed.connect(self.update_deformations)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
+        self.control_bar.phase_slider.sliderPressed.connect(self.stop_animation)
+        self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
 
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
@@ -43,6 +47,21 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self.create_color_bar()
         self.update_frequencies()
         self.update_plot()
+
+    def toggle_animation(self, *args, **kwargs):
+        if self.playing_animation:
+            self.stop_animation()
+        else:
+            self.start_animation()
+
+    def start_animation(self):
+        super().start_animation()
+        self.control_bar.use_pause_icon()
+    
+    def stop_animation(self):
+        super().stop_animation()
+        self.control_bar.use_play_icon()
+
 
     def current_shape_index(self):
         return self.control_bar.frequency_box.currentIndex()
@@ -76,84 +95,54 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self.update_theme()
         self.remove_actors()
 
-        phase = self.control_bar.phase_slider.value()
-        magnification_factor = self.control_bar.magnification_factor_slider.value()
-        current_modal_shape = solver.modal_shape[:, index].reshape(-1, 3).copy()
-
-        if self.control_bar.sum_button.isChecked():
-            values_1 = np.linalg.norm(current_modal_shape, axis=1).copy()
-            displacements = current_modal_shape.copy()
-
-        elif self.control_bar.response_ux_button.isChecked():
-            values_1 = current_modal_shape[:, 0]
-            displacements = current_modal_shape*np.array([1.,0.,0.])
-
-        elif self.control_bar.response_uy_button.isChecked():
-            values_1 = current_modal_shape[:, 1]
-            displacements = current_modal_shape*np.array([0.,1.,0.])
-
-        elif self.control_bar.response_uz_button.isChecked():
-            values_1 = current_modal_shape[:, 2]
-            displacements = current_modal_shape*np.array([0.,0.,1.])
-        #
-        max_abs = np.max(np.abs(values_1))
-        values_1 /= max_abs
-        #
-        min_value = round(min(values_1), 1)
-        max_value = round(max(values_1), 1)
-        #
-        self.analysis_actor = AnalysisActor(mesh,
-                                            displacements = displacements,
-                                            phase = phase,
-                                            magnification_factor = magnification_factor)
-
-        if self.control_bar.update_coloring.isChecked():
-            mod_values = displacements*np.cos(phase*np.pi/180)
-            
-            if self.control_bar.sum_button.isChecked():
-                values_2 = np.linalg.norm(mod_values, axis=1).copy()
-                
-            elif self.control_bar.response_ux_button.isChecked():
-                values_2 = mod_values[:, 0]
-                
-            elif self.control_bar.response_uy_button.isChecked():
-                values_2 = mod_values[:, 1]
-                
-            elif self.control_bar.response_uz_button.isChecked():
-                values_2 = mod_values[:, 2]
-
-            values_2 /= max_abs
-            if not self.control_bar.sum_button.isChecked():
-                if np.abs(min_value) != np.abs(max_value):
-                    min_value = -np.max(np.abs([min_value, max_value]))
-                    max_value =  np.max(np.abs([min_value, max_value]))
-        else:
-            values_2 = values_1.copy()
-
-        self.analysis_actor.plot_colorbar(values_2, min_value, max_value)
-        self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
-        self.renderer.AddActor(self.analysis_actor)
+        self.analysis_actor = AnalysisActor(mesh)
 
         self.edges_actor = EdgesActor(self.analysis_actor.data)
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
-        self.renderer.AddActor(self.edges_actor)
 
         self.bounds = self.analysis_actor.GetBounds()
         scale = bounds_distance(self.bounds)
         self.plane_actor = CuttingPlaneActor()
         self.plane_actor.VisibilityOff()
         self.plane_actor.SetScale(scale, scale, scale)
+
+        self.update_deformations()
+        self.renderer.AddActor(self.analysis_actor)
+        self.renderer.AddActor(self.edges_actor)
         self.renderer.AddActor(self.plane_actor)
 
         mesh_visibility = self.control_bar.show_mesh_button.isChecked()
         self.set_mesh_visibility(mesh_visibility)
-
-        if self.control_bar.show_mesh_button.isChecked():
-            self.analysis_actor.VisibilityOn()
-            self.analysis_actor.GetProperty().SetRepresentationToSurface()
-            self.edges_actor.VisibilityOn()
-
         self.renderer.ResetCamera()
+        self.update()
+
+    def update_deformations(self):
+        if not self._actors_exists():
+            return
+        
+        solver = self.project.structural_modal_solver
+        if solver.modal_shape is None:
+            return
+
+        index = self.current_shape_index()
+        if not (0 <= index < solver.modal_shape.shape[1]):
+            return
+        
+        # Do not update the deformation directly if an animation is running.
+        # This makes the magnification factor work much smothly.
+        if self.playing_animation:
+            return
+
+        phase = self.control_bar.phase_slider.value()
+        magnification_factor = self.control_bar.magnification_factor_slider.value()
+        displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
+
+        self.analysis_actor.disable_cut()
+        self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
+        self.edges_actor.extract_data(self.analysis_actor.data)
+
+        self.analysis_actor.plot_colorbar(color_scalars, min_value, max_value)
+        self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
         self.update()
 
     def set_mesh_visibility(self, condition):
@@ -164,7 +153,8 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
             self.show_lines()
         else:
             self.show_faces()
-
+    
+    # 
     def show_points(self):
         if not self._actors_exists():
             return
@@ -195,6 +185,7 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self.edges_actor.VisibilityOff()
         self.update()
 
+    # 
     def start_cutting_mode(self):
         if not self._actors_exists():
             return
@@ -205,6 +196,8 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
             return
         self.plane_actor.VisibilityOff()
         self.analysis_actor.disable_cut()
+        self.edges_actor.extract_data(self.analysis_actor.data)
+        self.update()
 
     def configure_cutting_plane(self, position, orientation):
         if not self._actors_exists():
@@ -227,8 +220,10 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
         y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
         z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
+
         normal = self._calculate_normal_vector(orientation)
         self.analysis_actor.apply_cut((x, y, z), normal)
+        self.edges_actor.extract_data(self.analysis_actor.clipped_data)
 
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
@@ -242,6 +237,31 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self.analysis_actor = None
         self.edges_actor = None
         self.plane_actor = None
+
+
+    def update_animation(self, frame):
+        if not self._actors_exists():
+            return
+        
+        solver = self.project.structural_modal_solver
+        if solver.modal_shape is None:
+            return
+
+        index = self.current_shape_index()
+        if not (0 <= index < solver.modal_shape.shape[1]):
+            return
+
+        # Map the frames from 0 to 1
+        t = frame / (self._animation_total_frames - 1)
+        phase = lerp(0, 360, t)
+        displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
+        magnification_factor = self.control_bar.magnification_factor_slider.value()
+
+        self.analysis_actor.disable_cut()
+        self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
+        self.analysis_actor.plot_colorbar(color_scalars, min_value, max_value)
+        self.edges_actor.extract_data(self.analysis_actor.data)
+        self.update()
 
     def _actors_exists(self):
         actors = [
@@ -260,3 +280,60 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
 
         normal = rz @ rx @ ry @ np.array([1, 0, 0, 1])
         return normal[:3]
+    
+    def _calculate_displacements(self, index, phase):
+        solver = self.project.structural_modal_solver
+        if solver.modal_shape is None:
+            return
+
+        current_modal_shape = solver.modal_shape[:, index].reshape(-1, 3).copy()
+
+        if self.control_bar.sum_button.isChecked():
+            values_1 = np.linalg.norm(current_modal_shape, axis=1).copy()
+            displacements = current_modal_shape.copy()
+
+        elif self.control_bar.response_ux_button.isChecked():
+            values_1 = current_modal_shape[:, 0]
+            displacements = current_modal_shape*np.array([1.,0.,0.])
+
+        elif self.control_bar.response_uy_button.isChecked():
+            values_1 = current_modal_shape[:, 1]
+            displacements = current_modal_shape*np.array([0.,1.,0.])
+
+        elif self.control_bar.response_uz_button.isChecked():
+            values_1 = current_modal_shape[:, 2]
+            displacements = current_modal_shape*np.array([0.,0.,1.])
+        #
+        max_abs = np.max(np.abs(values_1))
+        values_1 /= max_abs
+        #
+        min_value = round(min(values_1), 1)
+        max_value = round(max(values_1), 1)
+        #
+
+        if self.control_bar.update_coloring.isChecked():
+            mod_values = displacements*np.cos(phase*np.pi/180)
+            
+            if self.control_bar.sum_button.isChecked():
+                values_2 = np.linalg.norm(mod_values, axis=1).copy()
+                
+            elif self.control_bar.response_ux_button.isChecked():
+                values_2 = mod_values[:, 0]
+                
+            elif self.control_bar.response_uy_button.isChecked():
+                values_2 = mod_values[:, 1]
+                
+            elif self.control_bar.response_uz_button.isChecked():
+                values_2 = mod_values[:, 2]
+
+            values_2 /= max_abs
+            if not self.control_bar.sum_button.isChecked():
+                if np.abs(min_value) != np.abs(max_value):
+                    min_value = -np.max(np.abs([min_value, max_value]))
+                    max_value =  np.max(np.abs([min_value, max_value]))
+        else:
+            values_2 = values_1.copy()
+        
+        color_scalars = values_2
+
+        return displacements, color_scalars, min_value, max_value
