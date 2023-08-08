@@ -42,7 +42,7 @@ class FluidWidget(QDialog):
 
         toolbar_layout.setAlignment(Qt.AlignTop)
 
-        header = ["             Name             ", 
+        header = [      "Name",
                         "Fluid Density\n[kg/m3]", 
                         "Speed of sound\n[m/s]",
                         "Specific heat Cp\n[J/kgK]",
@@ -59,10 +59,7 @@ class FluidWidget(QDialog):
         self.table.setSelectionBehavior(1)
         self.table.resizeColumnsToContents()
         self.table.cellClicked.connect(self.on_table_clicked)
-        self.table.horizontalHeader().setSectionResizeMode(0)
-        self.table.horizontalHeader().setStretchLastSection(True)
-        self.table.horizontalHeader().resizeSection(0, 150)
-
+        
         final_layout = QGridLayout()
         final_layout.setAlignment(Qt.AlignRight)
 
@@ -84,7 +81,7 @@ class FluidWidget(QDialog):
         main_layout.addLayout(final_layout)
 
         self.setLayout(main_layout)
-        self.setMinimumSize(526,500)
+        self.setMinimumSize(700,500)
 
         self.exec_()
 
