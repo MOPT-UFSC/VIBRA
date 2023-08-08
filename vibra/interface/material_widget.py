@@ -10,7 +10,7 @@ class MaterialWidget(QDialog):
         super().__init__()
 
         self.setWindowTitle("Set Material")
-        self.color = QColor("#0055DD")
+        self.color = QColor("#448cff")
         self.instance = None
 
         toolbar_layout = QHBoxLayout()

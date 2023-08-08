@@ -19,7 +19,7 @@ class VisibilitySettingsMenu(QMenu):
         self.load_user_preference_state()
 
     def create_and_connect_actions(self):
-        color = QColor("#0055DD")
+        color = QColor("#448cff")
         #
         self.new_project_icon = load_icon(Path("data/icons/new_file.png"), color)
         self.theme_sun_icon = load_icon(Path("data/icons/sun_icon.png"), color)
