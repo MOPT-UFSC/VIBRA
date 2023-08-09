@@ -188,8 +188,30 @@ class Mesh:
         if size_factor != 0:
             gmsh.option.setNumber("Mesh.MeshSizeFactor", size_factor)
         else:
-            gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
-            gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
+            # gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
+            # gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
+            gmsh.model.mesh.field.add("Constant")
+            gmsh.model.mesh.field.setNumbers(1, "SurfacesList", [])
+            gmsh.model.mesh.field.setNumber(1, "VOut", minimum_element_size)
+
+            lc_size_field_2 = maximum_element_size
+            surface_tags_2 = [7]  
+            gmsh.model.mesh.field.add("Constant")
+            gmsh.model.mesh.field.setNumbers(2,"SurfacesList",surface_tags_2)
+            gmsh.model.mesh.field.setNumber(2, "VIn", lc_size_field_2)
+
+            FieldsList=[1,2]
+            Minimum_field=gmsh.model.mesh.field.add("Min")
+            gmsh.model.mesh.field.setNumbers(Minimum_field,"FieldsList",FieldsList)
+            gmsh.model.mesh.field.setAsBackgroundMesh(Minimum_field)
+
+
+
+
+
+
+
+
 
         if "script" not in self.basename:
             gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
