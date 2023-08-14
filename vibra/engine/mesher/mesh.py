@@ -9,6 +9,7 @@ from pathlib import Path
 from vibra.engine.mesher.element_type import *
 from vibra.utils.progress_status import ProgressStatus
 
+FieldsList=[]
 
 class Mesh:
     def __init__(self):
@@ -205,6 +206,19 @@ class Mesh:
             gmsh.model.mesh.field.setNumbers(Minimum_field,"FieldsList",FieldsList)
             gmsh.model.mesh.field.setAsBackgroundMesh(Minimum_field)
 
+#================================================================================
+    def size_fields_merge(FieldsList):
+        Minimum_field=gmsh.model.mesh.field.add("Min")
+        gmsh.model.mesh.field.setNumbers(Minimum_field,"FieldsList",FieldsList)
+        gmsh.model.mesh.field.setAsBackgroundMesh(Minimum_field)
+
+
+    def threshold_type_refine(lc_threshold,surface_tags):
+        threshold_type=gmsh.model.mesh.field.add("Constant")
+        gmsh.model.mesh.field.setNumbers(threshold_type,"SurfacesList",surface_tags)
+        gmsh.model.mesh.field.setNumber(threshold_type, "VIn", lc_threshold)
+        FieldsList.append(threshold_type)
+    
 
 
 
@@ -212,16 +226,16 @@ class Mesh:
 
 
 
+#==================================================================================
+    if "script" not in self.basename:
+        gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
+        gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
+        gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_type.recombination_algorithm)
+        gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", element_type.subdivision_algorithm)
+        gmsh.option.setNumber("Mesh.RecombineAll", element_type.recombine_all)
 
-        if "script" not in self.basename:
-            gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
-            gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
-            gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_type.recombination_algorithm)
-            gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", element_type.subdivision_algorithm)
-            gmsh.option.setNumber("Mesh.RecombineAll", element_type.recombine_all)
-
-        gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
-        gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_type.second_order_incomplete)
+    gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
+    gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_type.second_order_incomplete)
 
 
     def _process_mesh(self):
