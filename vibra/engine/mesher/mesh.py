@@ -171,6 +171,18 @@ class Mesh:
         header = "Index || Solid ID || Element type ID || Element ID || Connected Node IDs"
         np.savetxt(filename, self.solids_connectivity, delimiter=";", header=header, fmt="%i")
 
+    def size_fields_merge(FieldsList):
+        Minimum_field=gmsh.model.mesh.field.add("Min")
+        gmsh.model.mesh.field.setNumbers(Minimum_field,"FieldsList",FieldsList)
+        gmsh.model.mesh.field.setAsBackgroundMesh(Minimum_field)
+
+
+    def threshold_type_refine(lc_threshold,surface_tags):
+        threshold_type=gmsh.model.mesh.field.add("Constant")
+        gmsh.model.mesh.field.setNumbers(threshold_type,"SurfacesList",surface_tags)
+        gmsh.model.mesh.field.setNumber(threshold_type, "VIn", lc_threshold)
+        FieldsList.append(threshold_type)
+
     def _configure_mesh(
         self,
         element_type,
@@ -217,18 +229,7 @@ class Mesh:
         gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_type.second_order_incomplete)
 
     #=================================================================================================
-    def size_fields_merge(FieldsList):
-        Minimum_field=gmsh.model.mesh.field.add("Min")
-        gmsh.model.mesh.field.setNumbers(Minimum_field,"FieldsList",FieldsList)
-        gmsh.model.mesh.field.setAsBackgroundMesh(Minimum_field)
 
-
-    def threshold_type_refine(lc_threshold,surface_tags):
-        threshold_type=gmsh.model.mesh.field.add("Constant")
-        gmsh.model.mesh.field.setNumbers(threshold_type,"SurfacesList",surface_tags)
-        gmsh.model.mesh.field.setNumber(threshold_type, "VIn", lc_threshold)
-        FieldsList.append(threshold_type)
-    
     def _process_mesh(self):
         """
         Transform gmsh data in a more manageable format (aka nodal coords and connectivity).
