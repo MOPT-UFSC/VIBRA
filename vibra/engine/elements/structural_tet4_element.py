@@ -177,6 +177,5 @@ class STRUCT_TETRAHEDRON_4S(Element):
         vect_indices = ind_dofs.flatten()
         self.ind_rows = ((np.tile(vect_indices, (edofs,1))).T).flatten()
         self.ind_cols = (np.tile(ind_dofs, edofs)).flatten()
-        # print(self.ind_rows)
-        # print(self.ind_cols)
+
         return self.ind_rows, self.ind_cols

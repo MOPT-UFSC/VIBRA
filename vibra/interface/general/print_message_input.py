@@ -4,16 +4,11 @@ from PyQt5.QtCore import Qt
 from PyQt5 import uic
 from pathlib import Path
 
-class PrintMessageInput(QDialog):
-    def __init__(self, text_info, justify=True, opv=None, fontsizes=[13,12], *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        uic.loadUi(Path('data/ui_files/general/print_messages.ui'), self)
-
 
 class PrintMessageInput(QDialog):
     def __init__(self, text_info, justify=True, opv=None, fontsizes=[13, 12], *args, **kwargs):
         super().__init__(*args, **kwargs)
-        uic.loadUi("interface/ui_files/printMessages.ui", self)
+        uic.loadUi("data/ui_files/general/print_messages.ui", self)
 
         self.pushButton_close = self.findChild(QPushButton, "pushButton_close")
         self.pushButton_close.clicked.connect(self.message_close)
@@ -57,8 +52,6 @@ class PrintMessageInput(QDialog):
         if justify:
             self.label_message.setAlignment(Qt.AlignJustify | Qt.AlignVCenter)
         
-        self.exec_()
-
         self.exec_()
 
     def message_close(self):

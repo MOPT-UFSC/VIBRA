@@ -1,8 +1,8 @@
 import os
+import numpy as np
 from pathlib import Path
 
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.errors import IncompleteSetupError
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -17,16 +17,20 @@ class ModelStatus:
 class Model:
     def __init__(self):
         self.reset_variables()
-        
+
     def reset_variables(self):
         #
         self.geometry_path = ""
         self.mesh = None
         self.mesh_setup = None
         self.generated_mesh = False
+        self.surfaces_areas = dict()
+        
+        self.frequencies = None
+        self.acoustic_element = None
+        self.structural_element = None
 
         self.properties = ModelProperties()
-        # self.properties.set_fluid(Fluid("Air", density=1.2, speed_of_sound=343))
 
     def set_geometry_path(self, path):
         self.geometry_path = Path(path)
@@ -39,6 +43,7 @@ class Model:
 
     def process_visual_geometry_mesh(self):
         self.mesh = Mesh.from_cad(self.geometry_path, dimension=2, size_factor=0.1)
+        self.surfaces_areas = self.mesh.get_model_areas(self.geometry_path)
         self.generated_mesh = False
 
     def process_mesh(self):
@@ -69,3 +74,46 @@ class Model:
 
     def set_fluid(self, fluid):
         self.properties.set_fluid(fluid)
+
+    def set_acoustic_element(self, element):
+        self.acoustic_element = element
+
+    def set_structural_element(self, element):
+        self.structural_element = element
+
+    def get_acoustic_global_dofs_from_nodes(self, nodes):
+        if self.acoustic_element is None:
+            return []
+        _dofs_per_node = self.acoustic_element.DOF_PER_NODE
+        _nodes = nodes.reshape(-1, 1)
+        global_dofs = _dofs_per_node*_nodes + np.arange(_dofs_per_node)
+        return np.array(global_dofs.flatten(), dtype=int)
+
+    def get_structural_global_dofs_from_nodes(self, nodes):
+        if self.structural_element is None:
+            return []
+        _dofs_per_node = self.structural_element.DOF_PER_NODE
+        _nodes = nodes.reshape(-1, 1)
+        global_dofs = _dofs_per_node*_nodes + np.arange(_dofs_per_node)
+        return np.array(global_dofs.flatten(), dtype=int)
+    
+    def set_dissipation_model_data(self, data):
+        self.properties.set_dissipation_model(data)
+    
+    def set_structural_boundary_condition(self, data):
+        self.properties.set_structural_boundary_condition(data)
+    
+    def set_structural_load(self, data):
+        self.properties.set_structural_load(data)
+
+    def set_acoustic_pressure(self, data):
+        self.properties.set_acoustic_pressure(data)
+
+    def set_mass_flow_rate(self, data):
+        self.properties.set_mass_flow_rate(data)
+
+    def set_volume_velocity(self, data):
+        self.properties.set_volume_velocity(data)
+    
+    def set_particle_velocity(self, data):
+        self.properties.set_particle_velocity(data)

@@ -240,10 +240,11 @@ class ACT_TETRAHEDRON_10C(Element):
             Solid187 not mixed (pure displacement)
         """
         #
-        fluid = self.model.properties.get_fluid(element=el_index)
+        # fluid = self.model.properties.get_fluid(element=el_index)
+        # rho = fluid.fluid_density
+        # c_0 = fluid.speed_of_sound
 
-        rho = fluid.fluid_density
-        c_0 = fluid.speed_of_sound
+        c_0 = self.model.properties.get_speed_of_sound(element=el_index)
         ie = self.connectivity[el_index, 1:]
         #
         JAC = self.dphi@self.nodal_coordinates[ie, 1:4]

@@ -408,7 +408,7 @@
 QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
                 </property>
                 <property name="text">
-                 <string>50</string>
+                 <string>100</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
@@ -676,7 +676,7 @@ QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-styl
 QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
                 </property>
                 <property name="text">
-                 <string>50</string>
+                 <string>100</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
@@ -1075,7 +1075,7 @@ background-color: rgba(255, 255, 255, 200);</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>507</width>
+                <width>488</width>
                 <height>592</height>
                </rect>
               </property>

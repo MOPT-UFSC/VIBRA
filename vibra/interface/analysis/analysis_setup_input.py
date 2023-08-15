@@ -34,12 +34,12 @@ class AnalysisSetupInput(QDialog):
         |--------------------------------------------------------------------|
         """
 
-        if self.analysis_id in [1,6]:
-            path = Path('data/ui_files/analysis/structural/analysis_setup_input_harmonic_analysis_mode_superposition_method.ui')
-        elif self.analysis_id in [0,5]:
-            path = Path('data/ui_files/analysis/structural/analysis_setup_input_harmonic_analysis_direct_method.ui')
+        if self.analysis_id in [1, 6]:
+            path = Path('data/ui_files/analysis/structural/harmonic_analysis_mode_superposition_method.ui')
+        elif self.analysis_id in [0, 5]:
+            path = Path('data/ui_files/analysis/structural/harmonic_analysis_direct_method.ui')
         elif self.analysis_id in [3]:
-            path = Path('data/ui_files/analysis/acoustic/analysis_setup_input_harmonic_analysis_direct_method.ui')
+            path = Path('data/ui_files/analysis/acoustic/harmonic_analysis_direct_method.ui')
         else:
             return
         
@@ -49,7 +49,8 @@ class AnalysisSetupInput(QDialog):
         self.icon = QIcon(icon_path)
         self.setWindowIcon(self.icon)
         #
-        self.load_analysis_data()
+        self._reset_variables()
+        self._load_analysis_data()
         self._define_qt_variables()
         self._create_connections()
         self.update_frequency_setup_input_texts()
@@ -60,9 +61,9 @@ class AnalysisSetupInput(QDialog):
 
     def _reset_variables(self):
         self.complete = False
-        self.flag_run = False
+        self.solve_analysis = False
         self.frequencies = []
-        self.global_damping != [0, 0, 0, 0]
+        self.global_damping = [0, 0, 0, 0]
         self.f_step = 0
 
 
@@ -97,12 +98,12 @@ class AnalysisSetupInput(QDialog):
         self.tabWidget.currentChanged.connect(self.tabEvent)
 
 
-    def load_analysis_data(self):
+    def _load_analysis_data(self):
 
         data = self.project.analysis_data
         
-        if "analysis_type_label" in data.keys():
-            title = data["analysis_type_label"]
+        if "analysis_type" in data.keys():
+            title = data["analysis_type"] + " Setup"
         if "analysis_method_label" in data.keys():
             subtitle = data["analysis_method_label"]
         
@@ -150,15 +151,16 @@ class AnalysisSetupInput(QDialog):
             self.lineEdit_fmin.setText(str(self.f_min))
             self.lineEdit_fmax.setText(str(self.f_max))
             self.lineEdit_fstep.setText(str(self.f_step))
-            if self.project.file.check_if_there_are_tables_at_the_model():
-                self.lineEdit_fmin.setDisabled(True)
-                self.lineEdit_fmax.setDisabled(True)
-                self.lineEdit_fstep.setDisabled(True)
+            #TODO: as soon as possible
+            # if self.project.file.check_if_there_are_tables_at_the_model():
+            #     self.lineEdit_fmin.setDisabled(True)
+            #     self.lineEdit_fmax.setDisabled(True)
+            #     self.lineEdit_fstep.setDisabled(True)
 
 
     def check_exit(self):
         input_fmin = input_fmax = input_fstep = 0
-        if self.analysis_id not in [2,4]:
+        if self.analysis_id not in [2, 4]:
             
             if self.analysis_id == 1:
                 self.modes = self.check_inputs(self.lineEdit_modes, "'number of modes'")
@@ -224,8 +226,8 @@ class AnalysisSetupInput(QDialog):
         self.analysis_data["frequencies"] = self.frequencies
         self.analysis_data["global_damping"] = self.global_damping
         
-        if not self.analysis_id in [3, 4]:
-            self.project.set_modes_sigma(self.modes)
+        # if not self.analysis_id in [3, 4]:
+        #     self.project.set_modes_sigma(self.modes)
 
         self.project.set_analysis_data(self.analysis_data)
         self.complete = True
@@ -277,5 +279,5 @@ class AnalysisSetupInput(QDialog):
     def check_run(self):
         if self.check_exit():
             return
-        self.flag_run = True
+        self.solve_analysis = True
         
