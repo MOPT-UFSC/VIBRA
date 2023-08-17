@@ -9,7 +9,7 @@ from pathlib import Path
 from vibra.engine.mesher.element_type import *
 from vibra.utils.progress_status import ProgressStatus
 
-FieldsList=[]
+# FieldsList=[]
 
 class Mesh:
     def __init__(self):
@@ -171,17 +171,22 @@ class Mesh:
         header = "Index || Solid ID || Element type ID || Element ID || Connected Node IDs"
         np.savetxt(filename, self.solids_connectivity, delimiter=";", header=header, fmt="%i")
 
-    def size_fields_merge(FieldsList):
-        Minimum_field=gmsh.model.mesh.field.add("Min")
-        gmsh.model.mesh.field.setNumbers(Minimum_field,"FieldsList",FieldsList)
-        gmsh.model.mesh.field.setAsBackgroundMesh(Minimum_field)
+    def local_mesh_refine(self, lc_geral, mesh_refinement_parameters):
+        fields_list=[]
+        gmsh.model.mesh.field.add("Constant")
+        gmsh.model.mesh.field.setNumbers(1, "SurfacesList", [])
+        gmsh.model.mesh.field.setNumber(1, "VOut", lc_geral)
+        fields_list.append(1)
 
+        for size, faces in mesh_refinement_parameters:
+            threshold_type=gmsh.model.mesh.field.add("Constant")
+            gmsh.model.mesh.field.setNumbers(threshold_type,"SurfacesList",faces)
+            gmsh.model.mesh.field.setNumber(threshold_type, "VIn", size)
+            fields_list.append(threshold_type)
 
-    def threshold_type_refine(lc_threshold,surface_tags):
-        threshold_type=gmsh.model.mesh.field.add("Constant")
-        gmsh.model.mesh.field.setNumbers(threshold_type,"SurfacesList",surface_tags)
-        gmsh.model.mesh.field.setNumber(threshold_type, "VIn", lc_threshold)
-        FieldsList.append(threshold_type)
+        minimum_field=gmsh.model.mesh.field.add("Min")
+        gmsh.model.mesh.field.setNumbers(minimum_field,"FieldsList",fields_list)
+        gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
 
     def _configure_mesh(
         self,
@@ -192,7 +197,10 @@ class Mesh:
         size_factor,
         threads,
     ):
-
+        mesh_refinement_parameters = [
+            (20,[7]),
+            (20,[28, 32, 50])
+        ]
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("General.NumThreads", threads)
@@ -203,20 +211,8 @@ class Mesh:
         else:
             # gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
             # gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
-            gmsh.model.mesh.field.add("Constant")
-            gmsh.model.mesh.field.setNumbers(1, "SurfacesList", [])
-            gmsh.model.mesh.field.setNumber(1, "VOut", minimum_element_size)
+            self.local_mesh_refine(minimum_element_size,mesh_refinement_parameters)
 
-            lc_size_field_2 = maximum_element_size
-            surface_tags_2 = [7]  
-            gmsh.model.mesh.field.add("Constant")
-            gmsh.model.mesh.field.setNumbers(2,"SurfacesList",surface_tags_2)
-            gmsh.model.mesh.field.setNumber(2, "VIn", lc_size_field_2)
-
-            FieldsList=[1,2]
-            Minimum_field=gmsh.model.mesh.field.add("Min")
-            gmsh.model.mesh.field.setNumbers(Minimum_field,"FieldsList",FieldsList)
-            gmsh.model.mesh.field.setAsBackgroundMesh(Minimum_field)
 
         if "script" not in self.basename:
             gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
