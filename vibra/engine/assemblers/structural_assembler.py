@@ -169,20 +169,3 @@ class StructuralAssembler:
         else:
             self.stiffness_matrix = _stiffness_matrix_full
             self.mass_matrix = _mass_matrix_full
-
-
-# class StructuralModalAssembler(ModalAssembler):
-#     pass
-#     def get_element(self):
-#         element_type = self.model.mesh.element_type
-
-#         if element_type == TETRAHEDRON_4:
-#             return STRUCT_TETRAHEDRON_4S(self.model)
-#         elif element_type == TETRAHEDRON_10:
-#             return STRUCT_TETRAHEDRON_10S(self.model)
-#         elif element_type == HEXAHEDRON_8:
-#             return STRUCT_HEXAHEDRON_8(self.model)
-#         elif element_type == HEXAHEDRON_20:
-#             return STRUCT_HEXAHEDRON_20(self.model)
-#         else:
-#             raise NotImplementedError(f"Element type is not supported yet.")

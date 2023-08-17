@@ -2,6 +2,9 @@ import numpy as np
 from scipy.linalg import eig
 from scipy.sparse.linalg import spsolve
 
+import logging
+from vibra.utils.progress_status import ProgressStatus
+
 
 class AcousticHarmonicSolver:
     def __init__(self, assembler, analysis_data=None):
@@ -44,6 +47,7 @@ class AcousticHarmonicSolver:
         solution = np.zeros((rows, cols), dtype=complex)
         
         for i, freq in enumerate(self.frequencies):
+            logging.info(f"Solving for frequency {freq}" + ProgressStatus(i, len(self.frequencies)))
             omega = 2 * np.pi * freq
             A = self.K - (omega**2) * self.M
             F =  -1j * omega * self.mass_flow

@@ -103,11 +103,6 @@ class AcousticAssembler:
 
         _prescribed_indexes = []
 
-        # for _id in self.properties.lines_with_acoustic_pressure:
-        #     nodes = self.model.mesh.nodes_from_surfaces[_id]
-        #     for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
-        #         _prescribed_indexes.append(index)
-
         for _id in self.properties.surfaces_with_acoustic_pressure:
             nodes = self.model.mesh.nodes_from_surfaces[_id]
 
@@ -226,24 +221,3 @@ class AcousticAssembler:
         output[indexes, 0] = excitation
 
         return output[self.unprescribed_indexes, :]
-
-
-
-# class AcousticAssembler(AcousticAssembler):
-#     def new_element(self):
-        
-#         element_type = self.model.mesh.element_type
-
-#         if element_type == TETRAHEDRON_4:
-#             return ACT_TETRAHEDRON_4C(self.model)
-#         elif element_type == TETRAHEDRON_10:
-#             return ACT_TETRAHEDRON_10C(self.model)
-#         elif element_type == HEXAHEDRON_8:
-#             return ACT_HEXAHEDRON_8C(self.model)
-#         elif element_type == HEXAHEDRON_20:
-#             return ACT_HEXAHEDRON_20C(self.model)
-#         else:
-#             raise NotImplementedError(f"Element type is not supported yet.")
-
-
-

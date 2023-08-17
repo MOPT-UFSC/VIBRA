@@ -1,6 +1,9 @@
 import numpy as np
 from scipy.linalg import eig
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh, inv, lobpcg
+import logging
+from vibra.utils.progress_status import ProgressStatus
+
 
 
 class StructuralModalSolver:
@@ -40,8 +43,10 @@ class StructuralModalSolver:
             KT = self.assembler.stiffness_matrix
             MT = self.assembler.mass_matrix
 
+        logging.info("Finding eigen values and eigen vectors" + ProgressStatus(7, 100))
         self.eigen_values, self.eigen_vectors = eigs(KT, M=MT, k=self.modes, which=which, sigma=self.sigma_factor)
 
+        logging.info("Extracting information from solution" + ProgressStatus(95, 100))
         positive_real = np.absolute(np.real(self.eigen_values))
         natural_frequencies = np.sqrt(positive_real) / (2 * np.pi)
         modal_shape = np.real(self.eigen_vectors)
@@ -60,10 +65,6 @@ class StructuralModalSolver:
                     if (isinstance(value, complex) and value != complex(0)) or (isinstance(value, np.ndarray) and sum(value) != complex(0)):
                         self.warning_modal = ["The Prescribed DOFs of non-zero values have been ignored in the modal analysis.\n"+
                                                 "The null value has been attributed to those DOFs with non-zero values."]
-
-        # if normalize:
-        #     if self.analysis_type == "acoustic":
-        #         modal_shape /= np.max(np.abs(modal_shape), axis=0)
 
         self.natural_frequencies = natural_frequencies
         self.modal_shape = modal_shape
