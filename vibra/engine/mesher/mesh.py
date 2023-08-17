@@ -92,9 +92,6 @@ class Mesh:
         threads: int = 2,
         gmsh_gui: bool = False
     ):
-        # path = "C:\Repositorios\VIBRA\data\examples\script_files\script_hex_elements.txt"
-        self.basename = os.path.basename(path)
-
         path = Path(path)
         gmsh.initialize("", False)
         logging.info(f"Generating mesh from {path}")
@@ -126,13 +123,6 @@ class Mesh:
                 gmsh.fltk.run()
         
         gmsh.finalize()
-
-        if not os.path.exists("vibra/output_data"):
-            os.mkdir("vibra/output_data")
-
-        self.export_nodes_coordinates("vibra/output_data/nodal_coordinates.dat")
-        self.export_faces_connectivity("vibra/output_data/faces_connectivitiy.dat")
-        self.export_solids_connectivity("vibra/output_data/solids_connectivitiy.dat")
 
         logging.info(
             f"Mesh generated with {len(self.nodal_coordinates)} nodes"
@@ -197,12 +187,11 @@ class Mesh:
             gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
             gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
 
-        if "script" not in self.basename:
-            gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
-            gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
-            gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_type.recombination_algorithm)
-            gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", element_type.subdivision_algorithm)
-            gmsh.option.setNumber("Mesh.RecombineAll", element_type.recombine_all)
+        gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
+        gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
+        gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_type.recombination_algorithm)
+        gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", element_type.subdivision_algorithm)
+        gmsh.option.setNumber("Mesh.RecombineAll", element_type.recombine_all)
 
         gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
         gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_type.second_order_incomplete)
@@ -284,15 +273,13 @@ class Mesh:
         # The adoption of quadratic elements ensures better results for area calculations.
         element_type = TETRAHEDRON_10
         gmsh.initialize("", False)
-
-        gmsh.merge(str(path))
-
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("General.NumThreads", 4)
+        gmsh.merge(str(path))
+
         gmsh.option.setNumber("Geometry.Tolerance", 1e-8)
         gmsh.option.setNumber("Mesh.MeshSizeFactor", 0.1)
-
         gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
         gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
         gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_type.recombination_algorithm)
