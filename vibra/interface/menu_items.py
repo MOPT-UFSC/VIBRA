@@ -11,6 +11,7 @@ from vibra.interface.model_inputs.structural.material_inputs import MaterialInpu
 #
 from vibra.interface.model_inputs.structural.boundary_condition_inputs import BoundaryConditionInputs
 #
+from vibra.interface.model_inputs.acoustic.set_acoustic_pressure import AcousticPressureInput
 from vibra.interface.model_inputs.acoustic.set_mass_flow_rate_inputs import MassFlowRateInput
 from vibra.interface.model_inputs.acoustic.set_volume_velocity_inputs import VolumeVelocityInput
 from vibra.interface.model_inputs.acoustic.set_particle_velocity_inputs import ParticleVelocityInput
@@ -415,7 +416,7 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_set_acoustic_pressure:
             if not self.item_child_set_acoustic_pressure.isDisabled():
-                pass
+                read = AcousticPressureInput()
 
         elif item == self.item_child_set_dissipation_model:
             if not self.item_child_set_dissipation_model.isDisabled():

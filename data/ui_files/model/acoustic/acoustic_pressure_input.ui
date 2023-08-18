@@ -302,32 +302,78 @@
           <item row="2" column="0">
            <widget class="QFrame" name="frame_20">
             <property name="frameShape">
-             <enum>QFrame::StyledPanel</enum>
+             <enum>QFrame::NoFrame</enum>
             </property>
             <property name="frameShadow">
              <enum>QFrame::Raised</enum>
             </property>
             <layout class="QGridLayout" name="gridLayout_18">
-             <item row="0" column="0">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <property name="spacing">
+              <number>0</number>
+             </property>
+             <item row="0" column="1">
               <widget class="QCheckBox" name="checkBox_averaged_constant_values">
                <property name="minimumSize">
                 <size>
-                 <width>260</width>
+                 <width>0</width>
                  <height>0</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>260</width>
+                 <width>240</width>
                  <height>16777215</height>
                 </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>11</pointsize>
+                </font>
                </property>
                <property name="text">
                 <string>Average values over all nodes</string>
                </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QFrame" name="frame_17">
+               <property name="frameShape">
+                <enum>QFrame::NoFrame</enum>
+               </property>
+               <property name="frameShadow">
+                <enum>QFrame::Raised</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QFrame" name="frame_22">
+               <property name="frameShape">
+                <enum>QFrame::NoFrame</enum>
+               </property>
+               <property name="frameShadow">
+                <enum>QFrame::Raised</enum>
+               </property>
               </widget>
              </item>
             </layout>
+            <zorder>frame_17</zorder>
+            <zorder>checkBox_averaged_constant_values</zorder>
+            <zorder>frame_22</zorder>
            </widget>
           </item>
           <item row="3" column="0">
@@ -663,7 +709,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
           <item row="1" column="0">
            <widget class="QFrame" name="frame_24">
             <property name="frameShape">
-             <enum>QFrame::StyledPanel</enum>
+             <enum>QFrame::NoFrame</enum>
             </property>
             <property name="frameShadow">
              <enum>QFrame::Raised</enum>
@@ -699,6 +745,13 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
                  <height>16777215</height>
                 </size>
                </property>
+               <property name="font">
+                <font>
+                 <pointsize>11</pointsize>
+                 <weight>50</weight>
+                 <bold>false</bold>
+                </font>
+               </property>
                <property name="text">
                 <string>Nodal attribution</string>
                </property>
@@ -718,12 +771,17 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
               </widget>
              </item>
              <item row="0" column="3">
-              <widget class="QRadioButton" name="radioButton_element_intetgration_constant">
+              <widget class="QRadioButton" name="radioButton_element_integration_constant">
                <property name="maximumSize">
                 <size>
                  <width>16777215</width>
                  <height>16777215</height>
                 </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>11</pointsize>
+                </font>
                </property>
                <property name="text">
                 <string>Element integration</string>
@@ -747,7 +805,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
         </widget>
         <widget class="QWidget" name="tab_load_tables">
          <attribute name="title">
-          <string>Load tables</string>
+          <string>Load table</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_3">
           <property name="leftMargin">
@@ -1073,25 +1131,45 @@ QPushButton:pressed{border-radius: 4px; border-color: rgb(0, 170, 255); border-s
           <item row="3" column="0">
            <widget class="QFrame" name="frame_21">
             <property name="frameShape">
-             <enum>QFrame::StyledPanel</enum>
+             <enum>QFrame::NoFrame</enum>
             </property>
             <property name="frameShadow">
              <enum>QFrame::Raised</enum>
             </property>
             <layout class="QGridLayout" name="gridLayout_19">
-             <item row="0" column="0">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <property name="spacing">
+              <number>0</number>
+             </property>
+             <item row="0" column="1">
               <widget class="QCheckBox" name="checkBox_averaged_table_values">
                <property name="minimumSize">
                 <size>
-                 <width>260</width>
+                 <width>0</width>
                  <height>0</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>260</width>
+                 <width>240</width>
                  <height>16777215</height>
                 </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>11</pointsize>
+                </font>
                </property>
                <property name="text">
                 <string>Average value over all nodes</string>
@@ -1101,13 +1179,33 @@ QPushButton:pressed{border-radius: 4px; border-color: rgb(0, 170, 255); border-s
                </property>
               </widget>
              </item>
+             <item row="0" column="0">
+              <widget class="QFrame" name="frame_23">
+               <property name="frameShape">
+                <enum>QFrame::NoFrame</enum>
+               </property>
+               <property name="frameShadow">
+                <enum>QFrame::Raised</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QFrame" name="frame_25">
+               <property name="frameShape">
+                <enum>QFrame::NoFrame</enum>
+               </property>
+               <property name="frameShadow">
+                <enum>QFrame::Raised</enum>
+               </property>
+              </widget>
+             </item>
             </layout>
            </widget>
           </item>
           <item row="2" column="0">
            <widget class="QFrame" name="frame_16">
             <property name="frameShape">
-             <enum>QFrame::StyledPanel</enum>
+             <enum>QFrame::NoFrame</enum>
             </property>
             <property name="frameShadow">
              <enum>QFrame::Raised</enum>
@@ -1136,15 +1234,23 @@ QPushButton:pressed{border-radius: 4px; border-color: rgb(0, 170, 255); border-s
               </widget>
              </item>
              <item row="0" column="1">
-              <widget class="QRadioButton" name="radioButton_element_integration_table">
+              <widget class="QRadioButton" name="radioButton_nodal_attribution_table">
                <property name="maximumSize">
                 <size>
                  <width>16777215</width>
                  <height>16777215</height>
                 </size>
                </property>
+               <property name="font">
+                <font>
+                 <pointsize>11</pointsize>
+                </font>
+               </property>
                <property name="text">
-                <string>Element integration</string>
+                <string>Nodal attribution</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
@@ -1159,18 +1265,23 @@ QPushButton:pressed{border-radius: 4px; border-color: rgb(0, 170, 255); border-s
               </widget>
              </item>
              <item row="0" column="3">
-              <widget class="QRadioButton" name="radioButton_nodal_attribution_table">
+              <widget class="QRadioButton" name="radioButton_element_integration_table">
                <property name="maximumSize">
                 <size>
                  <width>16777215</width>
                  <height>16777215</height>
                 </size>
                </property>
+               <property name="font">
+                <font>
+                 <pointsize>11</pointsize>
+                </font>
+               </property>
                <property name="text">
-                <string>Nodal attribution</string>
+                <string>Element integration</string>
                </property>
                <property name="checked">
-                <bool>true</bool>
+                <bool>false</bool>
                </property>
               </widget>
              </item>
