@@ -16,18 +16,18 @@ from vibra.interface.general.call_double_confirmation_input import CallDoubleCon
 window_title_1 = "ERROR"
 window_title_2 = "WARNING"
 
-class VolumeVelocityInput(QDialog):
+class AcousticPressureInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        uic.loadUi(Path('data/ui_files/model/acoustic/volume_velocity_input.ui'), self)
+        uic.loadUi(Path('data/ui_files/model/acoustic/acoustic_pressure_input.ui'), self)
 
         icon_path = str(Path('data/icons/logo_vibra.png'))
         self.icon = QIcon(icon_path)
         self.setWindowIcon(self.icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Set volume velocity acoustic excitation")
+        self.setWindowTitle("Prescribe an acoustic pressure")
 
         self.main_window = get_main_window()
         self.project = self.main_window.project
@@ -42,8 +42,8 @@ class VolumeVelocityInput(QDialog):
 
     def _reset_variables(self):
         self.typed_ids = []
-        self.remove_volume_velocity = False
-        self.volume_velocity = None
+        self.remove_acoustic_pressure = False
+        self.acoustic_pressure = None
         self.list_Nones = [None, None, None, None, None, None]
         self.userPath = os.path.expanduser('~')
         self.new_load_path_table = ""
@@ -51,7 +51,7 @@ class VolumeVelocityInput(QDialog):
         self.acoustic_bc_filename = self.project.file.acoustic_model_setup_filename
         self.acoustic_bc_info_path = os.path.join(self.project_path, self.acoustic_bc_filename)
         self.acoustic_folder_path = self.project.file.acoustic_imported_data_folder_path
-        self.volume_velocity_tables_folder_path = os.path.join(self.acoustic_folder_path, "volume_velocity_files") 
+        self.acoustic_pressure_tables_folder_path = os.path.join(self.acoustic_folder_path, "acoustic_pressure_files") 
 
 
     def _define_qt_variables(self):
@@ -77,15 +77,15 @@ class VolumeVelocityInput(QDialog):
         # QSpinBox object
         self.spinBox_skiprows = self.findChild(QSpinBox, 'spinBox')
         # QTabWidget objects
-        self.tabWidget_volume_velocity = self.findChild(QTabWidget, "tabWidget_volume_velocity")
-        self.tab_constant_values = self.tabWidget_volume_velocity.findChild(QWidget, "tab_constant_values")
-        self.tab_table_values = self.tabWidget_volume_velocity.findChild(QWidget, "tab_table_values")
-        self.tab_remove = self.tabWidget_volume_velocity.findChild(QWidget, "tab_remove")
-        self.current_tab =  self.tabWidget_volume_velocity.currentIndex()
+        self.tabWidget_acoustic_pressure = self.findChild(QTabWidget, "tabWidget_acoustic_pressure")
+        self.tab_constant_values = self.tabWidget_acoustic_pressure.findChild(QWidget, "tab_constant_values")
+        self.tab_table_values = self.tabWidget_acoustic_pressure.findChild(QWidget, "tab_table_values")
+        self.tab_remove = self.tabWidget_acoustic_pressure.findChild(QWidget, "tab_remove")
+        self.current_tab =  self.tabWidget_acoustic_pressure.currentIndex()
         # QTreeWidget objects
-        self.treeWidget_volume_velocity = self.findChild(QTreeWidget, 'treeWidget_volume_velocity')
-        self.treeWidget_volume_velocity.setColumnWidth(1, 20)
-        self.treeWidget_volume_velocity.setColumnWidth(2, 80)
+        self.treeWidget_acoustic_pressure = self.findChild(QTreeWidget, 'treeWidget_acoustic_pressure')
+        self.treeWidget_acoustic_pressure.setColumnWidth(1, 20)
+        self.treeWidget_acoustic_pressure.setColumnWidth(2, 80)
 
 
     def _create_connections(self):
@@ -93,7 +93,7 @@ class VolumeVelocityInput(QDialog):
         self.pushButton_constant_value_confirm.clicked.connect(self.check_constant_values)
         self.pushButton_remove_bc_confirm.clicked.connect(self.remove_bc_from_selection)
         self.pushButton_table_values_confirm.clicked.connect(self.check_table_values)
-        self.pushButton_load_table.clicked.connect(self.load_volume_velocity_table)
+        self.pushButton_load_table.clicked.connect(self.load_acoustic_pressure_table)
         self.pushButton_reset.clicked.connect(self.check_reset)
         #
         self.radioButton_nodal_attribution_constant.clicked.connect(self.update_controls_for_constant_value)
@@ -101,13 +101,13 @@ class VolumeVelocityInput(QDialog):
         self.radioButton_nodal_attribution_table.clicked.connect(self.update_controls_for_table_of_values)
         self.radioButton_element_integration_table.clicked.connect(self.update_controls_for_table_of_values)
         #
-        self.tabWidget_volume_velocity.currentChanged.connect(self.tabEvent_volume_velocity)
-        self.treeWidget_volume_velocity.itemClicked.connect(self.on_click_item)
-        self.treeWidget_volume_velocity.itemDoubleClicked.connect(self.on_doubleclick_item)
+        self.tabWidget_acoustic_pressure.currentChanged.connect(self.tabEvent_acoustic_pressure)
+        self.treeWidget_acoustic_pressure.itemClicked.connect(self.on_click_item)
+        self.treeWidget_acoustic_pressure.itemDoubleClicked.connect(self.on_doubleclick_item)
 
 
-    def tabEvent_volume_velocity(self):
-        self.current_tab =  self.tabWidget_volume_velocity.currentIndex()
+    def tabEvent_acoustic_pressure(self):
+        self.current_tab =  self.tabWidget_acoustic_pressure.currentIndex()
         if self.current_tab == 2:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
@@ -125,25 +125,25 @@ class VolumeVelocityInput(QDialog):
 
 
     def load_info(self):
-        self.treeWidget_volume_velocity.clear()
-        for _id, data in self.properties.surfaces_with_volume_velocity.items():
+        self.treeWidget_acoustic_pressure.clear()
+        for _id, data in self.properties.surfaces_with_acoustic_pressure.items():
             value = data["values"]
             new = QTreeWidgetItem([str(_id), str(self.text_label(value))])
             new.setTextAlignment(0, Qt.AlignCenter)
             new.setTextAlignment(1, Qt.AlignCenter)
-            self.treeWidget_volume_velocity.addTopLevelItem(new)
+            self.treeWidget_acoustic_pressure.addTopLevelItem(new)
         self.update_tabs_visibility()
 
 
     def check_complex_entries(self, lineEdit_real, lineEdit_imag):
 
         self.stop = False
-        title = "Invalid entry to the volume velocity"
+        title = "Invalid entry to the acoustic pressure"
         if lineEdit_real.text() != "":
             try:
                 real_F = float(lineEdit_real.text())
             except Exception:
-                message = "Wrong input for real part of volume velocity."
+                message = "Wrong input for real part of acoustic pressure."
                 PrintMessageInput([title, message, window_title_1])
                 self.lineEdit_real_value.setFocus()
                 self.stop = True
@@ -155,7 +155,7 @@ class VolumeVelocityInput(QDialog):
             try:
                 imag_F = float(lineEdit_imag.text())
             except Exception:
-                message = "Wrong input for imaginary part of volume velocity."
+                message = "Wrong input for imaginary part of acoustic pressure."
                 PrintMessageInput([title, message, window_title_1])
                 self.lineEdit_imag_value.setFocus()
                 self.stop = True
@@ -182,41 +182,41 @@ class VolumeVelocityInput(QDialog):
         # self.project.remove_compressor_excitation_table_files(self.typed_ids)
         # self.project.reset_compressor_info_by_node(self.typed_ids)
 
-        volume_velocity = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
+        acoustic_pressure = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
  
         if self.stop:
             return
 
-        if volume_velocity is not None:
+        if acoustic_pressure is not None:
 
-            self.volume_velocity = volume_velocity
+            self.acoustic_pressure = acoustic_pressure
 
             key_avg = int(self.checkBox_averaged_constant_values.isChecked())
             data = {"entity_type" : "surface",
                     "entity_ids" : self.typed_ids,
-                    "values" : volume_velocity,
+                    "values" : acoustic_pressure,
                     "averaged" : key_avg}
 
-            self.project.set_volume_velocity(data)
-            print(f"[Set Volume Velocity] - defined at surface(s) {self.typed_ids}")
+            self.project.set_acoustic_pressure(data)
+            print(f"[Set acoustic pressure] - defined at surface(s) {self.typed_ids}")
             #TODO: remove existing tables and update the render            
             self.close()
 
         else:    
             title = "Additional inputs required"
-            message = "You must inform at least one volume velocity\n" 
+            message = "You must inform at least one acoustic pressure\n" 
             message += "before confirming the input!"
             PrintMessageInput([title, message, window_title_1])
             self.lineEdit_real_value.setFocus()
 
       
     def load_table(self, lineEdit, direct_load=False):
-        title = "Error reached while loading 'volume velocity' table"
+        title = "Error reached while loading 'acoustic pressure' table"
         try:
             if direct_load:
                 self.path_imported_table = lineEdit.text()
             else:
-                window_label = 'Choose a table to import the volume velocity'
+                window_label = 'Choose a table to import the acoustic pressure'
                 self.path_imported_table, _ = QFileDialog.getOpenFileName(None, window_label, self.userPath, 'Files (*.csv; *.dat; *.txt)')
 
             if self.path_imported_table == "":
@@ -267,19 +267,19 @@ class VolumeVelocityInput(QDialog):
     def save_table_file(self, entity_id, values, filename):
         try:
 
-            self.project.create_folders_acoustic("volume_velocity_files")
+            self.project.create_folders_acoustic("acoustic_pressure_files")
         
             real_values = np.real(values)
             imag_values = np.imag(values)
             abs_values = np.abs(values)
             data = np.array([self.frequencies, real_values, imag_values, abs_values]).T
 
-            header = f"Vibra - imported table for volume velocity @ surface {entity_id} \n"
+            header = f"Vibra - imported table for acoustic pressure @ surface {entity_id} \n"
             header += f"\nSource filename: {filename}\n"
             header += "\nFrequency [Hz], real[m³/s], imaginary[m³/s], absolute[m³/s]"
-            basename = f"volume_velocity_surface_{entity_id}.dat"
+            basename = f"acoustic_pressure_surface_{entity_id}.dat"
             
-            new_path_table = os.path.join(self.volume_velocity_tables_folder_path, basename)
+            new_path_table = os.path.join(self.acoustic_pressure_tables_folder_path, basename)
             np.savetxt(new_path_table, data, delimiter=",", header=header)
             return values, basename
 
@@ -290,8 +290,8 @@ class VolumeVelocityInput(QDialog):
             return None, None
 
 
-    def load_volume_velocity_table(self):
-        self.imported_values, self.filename_volume_velocity = self.load_table(self.lineEdit_load_table_path)
+    def load_acoustic_pressure_table(self):
+        self.imported_values, self.filename_acoustic_pressure = self.load_table(self.lineEdit_load_table_path)
 
 
     def check_table_values(self):
@@ -308,33 +308,33 @@ class VolumeVelocityInput(QDialog):
         list_table_names = self.get_list_table_names_from_selected_surfaces(self.typed_ids)
         if self.lineEdit_load_table_path != "":
             for _id in self.typed_ids:
-                if self.filename_volume_velocity is None:
-                    self.imported_values, self.filename_volume_velocity = self.load_table(  self.lineEdit_load_table_path, 
+                if self.filename_acoustic_pressure is None:
+                    self.imported_values, self.filename_acoustic_pressure = self.load_table(  self.lineEdit_load_table_path, 
                                                                                             direct_load=True  )
                 if self.imported_values is None:
                     return
                 else:
-                    self.volume_velocity, self.basename_volume_velocity = self.save_table_file( _id, 
+                    self.acoustic_pressure, self.basename_acoustic_pressure = self.save_table_file( _id, 
                                                                                                 self.imported_values, 
-                                                                                                self.filename_volume_velocity )
-                    if self.basename_volume_velocity in list_table_names:
-                        list_table_names.remove(self.basename_volume_velocity)
+                                                                                                self.filename_acoustic_pressure )
+                    if self.basename_acoustic_pressure in list_table_names:
+                        list_table_names.remove(self.basename_acoustic_pressure)
 
                     key_avg = int(self.checkBox_averaged_constant_values.isChecked())
                     data = {"entity_type" : "surface",
                             "entity_ids" : self.typed_ids,
-                            "values" : self.volume_velocity,
+                            "values" : self.acoustic_pressure,
                             "averaged" : key_avg,
-                            "table_name" : self.basename_volume_velocity}
+                            "table_name" : self.basename_acoustic_pressure}
 
-            self.project.set_volume_velocity(data)
+            self.project.set_acoustic_pressure(data)
 
             self.process_table_file_removal(list_table_names)
-            print(f"[Set Volume Velocity] - defined at surface(s) {self.typed_ids}")   
+            print(f"[Set acoustic pressure] - defined at surface(s) {self.typed_ids}")   
             self.close()
         else:    
             title = "Additional inputs required"
-            message = "You must inform at least one volume velocity\n" 
+            message = "You must inform at least one acoustic pressure\n" 
             message += "table path before confirming the input!"
             PrintMessageInput([title, message, window_title_1])
             self.lineEdit_load_table_path.setFocus()
@@ -342,7 +342,7 @@ class VolumeVelocityInput(QDialog):
 
     def get_list_table_names_from_selected_surfaces(self, list_ids):
         list_table_names = []
-        for surface_id, data in self.properties.surfaces_with_volume_velocity.items():
+        for surface_id, data in self.properties.surfaces_with_acoustic_pressure.items():
             if surface_id in list_ids:
                 if "table_name" in data.keys():
                     list_table_names.append(data["table_name"])
@@ -363,15 +363,15 @@ class VolumeVelocityInput(QDialog):
     def remove_bc_from_selection(self):
         if self.lineEdit_selection_id.text() != "":
             picked_id = int(self.lineEdit_selection_id.text())       
-            if picked_id in self.properties.surfaces_with_volume_velocity.keys():
+            if picked_id in self.properties.surfaces_with_acoustic_pressure.keys():
                 section_key = f"surface - {picked_id}"           
-                key_strings = ["volume velocity", "averaged", "table name"]
-                message = f"The volume velocity attributed to the {picked_id} surface has been removed."
+                key_strings = ["acoustic pressure", "averaged", "table name"]
+                message = f"The acoustic pressure attributed to the {picked_id} surface has been removed."
                 self.project.file.remove_bc_from_file(section_key, self.acoustic_bc_info_path, key_strings, message)
-                #TODO: remove imported volume velocity tables
+                #TODO: remove imported acoustic pressure tables
                 list_table_names = self.get_list_table_names_from_selected_surfaces([picked_id])
                 self.process_table_file_removal(list_table_names)
-                self.properties.remove_volume_velocity(picked_id)
+                self.properties.remove_acoustic_pressure(picked_id)
                 self.load_info()
                 self.lineEdit_selection_id.setText("")
                 # self.close()
@@ -380,15 +380,15 @@ class VolumeVelocityInput(QDialog):
     def process_table_file_removal(self, list_table_names):
         if list_table_names != []:
             for table_name in list_table_names:
-                self.project.remove_acoustic_table_files_from_folder(table_name, "volume_velocity_files")    
+                self.project.remove_acoustic_table_files_from_folder(table_name, "acoustic_pressure_files")    
 
 
     def check_reset(self):
-        if len(self.properties.surfaces_with_volume_velocity) > 0:
+        if len(self.properties.surfaces_with_acoustic_pressure) > 0:
  
-            title = f"Resetting of all applied volume velocities"
-            message = "Do you really want to remove the volume velocity applied to the following surface(s)?\n\n"
-            entity_ids = list(self.properties.surfaces_with_volume_velocity.keys())
+            title = f"Resetting of all applied acoustic pressures"
+            message = "Do you really want to remove the acoustic pressure applied to the following surface(s)?\n\n"
+            entity_ids = list(self.properties.surfaces_with_acoustic_pressure.keys())
             message += f"{entity_ids}"
             message += "\n\nPress the Continue button to proceed with the resetting or press Cancel or "
             message += "Close buttons to abort the current operation."
@@ -401,11 +401,11 @@ class VolumeVelocityInput(QDialog):
             _list_table_names = []
             sections = []
             if read._continue:
-                surfaces_ids = self.properties.surfaces_with_volume_velocity.keys()
+                surfaces_ids = self.properties.surfaces_with_acoustic_pressure.keys()
                 for _id in surfaces_ids:
-                    key_strings = ["volume velocity", "averaged", "table name"]
+                    key_strings = ["acoustic pressure", "averaged", "table name"]
                     sections.append(f"surface - {_id}")
-                    data = self.properties.surfaces_with_volume_velocity[_id]
+                    data = self.properties.surfaces_with_acoustic_pressure[_id]
                     if "table_name" in data.keys():
                         table_name = data[table_name]
                     else:
@@ -414,13 +414,13 @@ class VolumeVelocityInput(QDialog):
                         if table_name not in _list_table_names:
                             _list_table_names.append(table_name)
                 self.project.file.remove_bc_from_file(sections, self.acoustic_bc_info_path, key_strings, None)
-                self.properties.reset_volume_velocity()
+                self.properties.reset_acoustic_pressure()
 
                 #TODO: remove imported tables
                 self.process_table_file_removal(_list_table_names)
 
-                title = "Volume velocity resetting process complete"
-                message = "All volume velocity applied to the acoustic " 
+                title = "acoustic pressure resetting process complete"
+                message = "All acoustic pressure applied to the acoustic " 
                 message += "model have been removed from the model."
                 PrintMessageInput([title, message, window_title_2])
 
@@ -459,8 +459,8 @@ class VolumeVelocityInput(QDialog):
 
 
     def update_tabs_visibility(self):
-        if len(self.properties.surfaces_with_volume_velocity) == 0:
-            self.tabWidget_volume_velocity.setCurrentWidget(self.tab_constant_values)
+        if len(self.properties.surfaces_with_acoustic_pressure) == 0:
+            self.tabWidget_acoustic_pressure.setCurrentWidget(self.tab_constant_values)
             self.tab_remove.setDisabled(True)
         else:
             self.tab_remove.setDisabled(False)
@@ -517,12 +517,12 @@ class VolumeVelocityInput(QDialog):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            if self.tabWidget_volume_velocity.currentIndex()==0:
+            if self.tabWidget_acoustic_pressure.currentIndex()==0:
                 self.check_constant_values()
-            if self.tabWidget_volume_velocity.currentIndex()==1:
+            if self.tabWidget_acoustic_pressure.currentIndex()==1:
                 self.check_table_values()
         elif event.key() == Qt.Key_Delete:
-            if self.tabWidget_volume_velocity.currentIndex()==2:
+            if self.tabWidget_acoustic_pressure.currentIndex()==2:
                 self.remove_bc_from_selection()
         elif event.key() == Qt.Key_Escape:
             self.close()

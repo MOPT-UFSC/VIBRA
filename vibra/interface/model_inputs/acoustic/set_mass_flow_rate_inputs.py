@@ -70,7 +70,7 @@ class MassFlowRateInput(QDialog):
         self.pushButton_reset = self.findChild(QPushButton, 'pushButton_reset')
         # QRadioButton objects
         self.radioButton_nodal_attribution_constant = self.findChild(QRadioButton, 'radioButton_nodal_attribution_constant')
-        self.radioButton_element_intetgration_constant = self.findChild(QRadioButton, 'radioButton_element_intetgration_constant')
+        self.radioButton_element_integration_constant = self.findChild(QRadioButton, 'radioButton_element_integration_constant')
         self.radioButton_element_integration_table = self.findChild(QRadioButton, 'radioButton_element_integration_table')
         self.radioButton_nodal_attribution_table = self.findChild(QRadioButton, 'radioButton_nodal_attribution_table')
         # QSpinBox object
@@ -94,6 +94,11 @@ class MassFlowRateInput(QDialog):
         self.pushButton_table_values_confirm.clicked.connect(self.check_table_values)
         self.pushButton_load_table.clicked.connect(self.load_mass_flow_rate_table)
         self.pushButton_reset.clicked.connect(self.check_reset)
+        #
+        self.radioButton_nodal_attribution_constant.clicked.connect(self.update_controls_for_constant_value)
+        self.radioButton_element_integration_constant.clicked.connect(self.update_controls_for_constant_value)
+        self.radioButton_nodal_attribution_table.clicked.connect(self.update_controls_for_table_of_values)
+        self.radioButton_element_integration_table.clicked.connect(self.update_controls_for_table_of_values)
         #
         self.tabWidget_mass_flow_rate.currentChanged.connect(self.tabEvent_mass_flow_rate)
         self.treeWidget_mass_flow_rate.itemClicked.connect(self.on_click_item)
@@ -119,7 +124,6 @@ class MassFlowRateInput(QDialog):
 
 
     def load_info(self):
-        print(self.properties.surfaces_with_mass_flow_rate)
         self.treeWidget_mass_flow_rate.clear()
         for _id, data in self.properties.surfaces_with_mass_flow_rate.items():
             value = data["values"]
@@ -426,6 +430,18 @@ class MassFlowRateInput(QDialog):
         self.lineEdit_real_value.setText("")
         self.lineEdit_imag_value.setText("")
         self.lineEdit_load_table_path.setText("")
+
+
+    def update_controls_for_constant_value(self):
+        _bool = self.radioButton_element_integration_constant.isChecked()
+        self.checkBox_averaged_constant_values.setChecked(not _bool)
+        self.checkBox_averaged_constant_values.setDisabled(_bool)
+
+
+    def update_controls_for_table_of_values(self):
+        _bool = self.radioButton_element_integration_table.isChecked()
+        self.checkBox_averaged_table_values.setChecked(not _bool)
+        self.checkBox_averaged_table_values.setDisabled(_bool)
 
 
     def update(self):
