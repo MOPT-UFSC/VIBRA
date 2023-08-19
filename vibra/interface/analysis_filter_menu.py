@@ -14,7 +14,6 @@ class AnalysisFilter(QWidget):
         self.frame = QFrame()
         self.frame_main = QFrame()
         self.frame_buttons = QFrame()
-        # self.frame.setStyleSheet("border-radius: 2px; border-style: solid; border-width: 1px")
 
         self.line = QFrame()
         self.line.setLineWidth(2)

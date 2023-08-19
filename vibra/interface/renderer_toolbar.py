@@ -26,7 +26,6 @@ class RendererToolbar(QToolBar):
                 border-style: solid;
                 border-width: 1px;
                 border-color: #888888;
-                border-radius: 3px
             }
             """
         )
