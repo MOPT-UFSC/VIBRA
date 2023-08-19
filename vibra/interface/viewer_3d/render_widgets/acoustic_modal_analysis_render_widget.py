@@ -8,7 +8,8 @@ from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
     CuttingPlaneActor,
 )
 from vibra.interface.viewer_3d.render_widgets.common_render_widget import CommonRenderWidget
-from vibra.interface.modal_analysis_bar import AcousticModalAnalysisBar
+# from vibra.interface.modal_analysis_bar import AcousticModalAnalysisBar
+from vibra.interface.analysis_bars.acoustic_analysis_bar import AcousticModalAnalysisBar
 from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
 
 
@@ -18,9 +19,11 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
 
         self.project = project        
         self.control_bar = AcousticModalAnalysisBar()
-        self.control_bar.plot_changed.connect(self.update_plot)
+        self.control_bar.value_changed.connect(self.update_deformation)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
-
+        self.control_bar.phase_slider.valueChanged.connect(self.stop_animation)
+        self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
+        
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
         layout = QVBoxLayout()
@@ -38,6 +41,20 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
         self.create_color_bar()
         self.update_frequencies()
         self.update_plot()
+
+    def toggle_animation(self, *args, **kwargs):
+        if self.playing_animation:
+            self.stop_animation()
+        else:
+            self.start_animation()
+
+    def start_animation(self):
+        super().start_animation()
+        self.control_bar.use_pause_icon()
+    
+    def stop_animation(self):
+        super().stop_animation()
+        self.control_bar.use_play_icon()
 
     def current_shape_index(self):
         return self.control_bar.frequency_box.currentIndex()
@@ -83,7 +100,6 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
         min_value = np.min(current_modal_shape)
         max_value = np.max(current_modal_shape)
 
-        self.analysis_actor = AnalysisActor(mesh)
         if self.control_bar.real_part_button.isChecked():
             if np.abs(min_value) != np.abs(max_value):
                 min_value = -np.max(np.abs([min_value, max_value]))
@@ -93,6 +109,7 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
         if self.control_bar.absolute_button.isChecked():
             current_modal_shape = np.abs(current_modal_shape)
         
+        self.analysis_actor = AnalysisActor(mesh)
         self.analysis_actor.plot_colorbar(current_modal_shape, min_value, max_value)
         self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
         self.renderer.AddActor(self.analysis_actor)
@@ -117,6 +134,76 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
             self.edges_actor.VisibilityOn()
 
         self.renderer.ResetCamera()
+        self.update()
+
+    def update_deformation(self):
+        if not self._actors_exists():
+            return
+
+        solver = self.project.acoustic_modal_solver
+        if solver.modal_shape is None:
+            return
+        
+        index = self.current_shape_index()
+        if not (0 <= index < solver.modal_shape.shape[1]):
+            return
+
+        phase = self.control_bar.phase_slider.value()
+        current_modal_shape = solver.modal_shape[:, index].copy()
+        if self.control_bar.absolute_button.isChecked():
+            current_modal_shape = np.abs(current_modal_shape)
+        current_modal_shape /= np.max(np.abs(current_modal_shape))
+
+        min_value = np.min(current_modal_shape)
+        max_value = np.max(current_modal_shape)
+
+        if self.control_bar.real_part_button.isChecked():
+            if np.abs(min_value) != np.abs(max_value):
+                min_value = -np.max(np.abs([min_value, max_value]))
+                max_value =  np.max(np.abs([min_value, max_value]))
+        
+        current_modal_shape *= np.cos(phase*np.pi/180)
+        if self.control_bar.absolute_button.isChecked():
+            current_modal_shape = np.abs(current_modal_shape)
+        
+        self.analysis_actor.plot_colorbar(current_modal_shape, min_value, max_value)
+        self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
+        self.update()
+
+    def update_animation(self, frame):
+        if not self._actors_exists():
+            return
+        
+        solver = self.project.acoustic_modal_solver
+        if solver.modal_shape is None:
+            return
+
+        index = self.current_shape_index()
+        if not (0 <= index < solver.modal_shape.shape[1]):
+            return
+        
+        t = frame / (self._animation_total_frames - 1)
+        phase = lerp(0, 360, t)
+
+        current_modal_shape = solver.modal_shape[:, index].copy()
+        if self.control_bar.absolute_button.isChecked():
+            current_modal_shape = np.abs(current_modal_shape)
+        current_modal_shape /= np.max(np.abs(current_modal_shape))
+
+        min_value = np.min(current_modal_shape)
+        max_value = np.max(current_modal_shape)
+
+        if self.control_bar.real_part_button.isChecked():
+            if np.abs(min_value) != np.abs(max_value):
+                min_value = -np.max(np.abs([min_value, max_value]))
+                max_value =  np.max(np.abs([min_value, max_value]))
+        
+        current_modal_shape *= np.cos(phase*np.pi/180)
+        if self.control_bar.absolute_button.isChecked():
+            current_modal_shape = np.abs(current_modal_shape)
+        
+        self.analysis_actor.plot_colorbar(current_modal_shape, min_value, max_value)
+        self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
         self.update()
 
     def set_mesh_visibility(self, condition):
