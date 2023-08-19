@@ -1,6 +1,7 @@
 import vtk
 import numpy as np
 from vibra.engine.mesher.element_type import *
+from time import time
 
 
 class SolidsActor(vtk.vtkActor):
@@ -63,6 +64,12 @@ class SolidsActor(vtk.vtkActor):
         self.data = data
         mapper.SetInputData(self.data)
         self.SetMapper(mapper)
+
+    def update_coordinates(self, coordinates):
+        points = self.data.GetPoints()
+        for i, xyz in enumerate(coordinates):
+            points.SetPoint(i, xyz)
+        points.Modified()
 
     def configure_appearance(self):
         self.GetProperty().SetInterpolationToPhong()

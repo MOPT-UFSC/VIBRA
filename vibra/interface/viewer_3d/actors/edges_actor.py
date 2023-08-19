@@ -3,11 +3,20 @@ import vtk
 
 class EdgesActor(vtk.vtkActor):
     def __init__(self, data):
-        edges_extractor = vtk.vtkExtractEdges()
-        edges_extractor.SetInputData(data)
-        edges_extractor.Update()
+        self.mapper = vtk.vtkPolyDataMapper()
+        self.edges_extractor = vtk.vtkExtractEdges()
+        self.edges_extractor.UseAllPointsOn()
+        
+        self.mapper.ScalarVisibilityOff()
+        self.GetProperty().SetRepresentationToWireframe()
 
-        mapper = vtk.vtkDataSetMapper()
-        mapper.SetInputData(edges_extractor.GetOutput())
-        mapper.ScalarVisibilityOff()
-        self.SetMapper(mapper)
+        self.SetMapper(self.mapper)
+        self.extract_data(data)
+    
+    def extract_data(self, data):
+        if data == self.edges_extractor.GetInput():
+            return
+
+        self.edges_extractor.SetInputData(data)
+        self.edges_extractor.Update()
+        self.mapper.SetInputData(self.edges_extractor.GetOutput())
