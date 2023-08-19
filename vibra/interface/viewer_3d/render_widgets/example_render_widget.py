@@ -5,7 +5,7 @@ from vibra.interface.viewer_3d.actors.symbols_actors import (
     ArrowSymbols3,
     ClampSymbols,
 )
-from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
+from vibra.interface.viewer_3d.render_widgets.common_render_widget import CommonRenderWidget
 
 
 class ExampleRenderWidget(CommonRenderWidget):

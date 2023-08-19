@@ -3,7 +3,7 @@ from PyQt5.QtCore import *
 
 from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
 from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
-from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
+from vibra.interface.viewer_3d.render_widgets.common_render_widget import CommonRenderWidget
 from vibra.interface.tabs.mesh_info_bar import MeshInfoBar
 from vibra.utils.interface_functions import get_main_window
 

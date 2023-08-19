@@ -8,18 +8,18 @@ from PyQt5.QtWidgets import (
 )
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.interface.help_widget import HelpWidget
-from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
-from vibra.interface.viewer_3d.example_analysis_render_widget import (
+from vibra.interface.viewer_3d.render_widgets.common_render_widget import CommonRenderWidget
+from vibra.interface.viewer_3d.render_widgets.example_analysis_render_widget import (
     ExampleAnalysisRenderWidget,
 )
-from vibra.interface.viewer_3d.example_render_widget import ExampleRenderWidget
-from vibra.interface.viewer_3d.geometry_render_widget import (
+from vibra.interface.viewer_3d.render_widgets.example_render_widget import ExampleRenderWidget
+from vibra.interface.viewer_3d.render_widgets.geometry_render_widget import (
     GeometryRenderWidget,
 )
-from vibra.interface.viewer_3d.mesh_render_widget import MeshRenderWidget
-from vibra.interface.viewer_3d.acoustic_modal_analysis_render_widget import AcousticModalAnalysisRenderWidget
-from vibra.interface.viewer_3d.structural_modal_analysis_render_widget import StructuralModalAnalysisRenderWidget
-from vibra.interface.viewer_3d.acoustic_harmonic_analysis_render_widget import AcousticHarmonicAnalysisRenderWidget
+from vibra.interface.viewer_3d.render_widgets.mesh_render_widget import MeshRenderWidget
+from vibra.interface.viewer_3d.render_widgets.acoustic_modal_analysis_render_widget import AcousticModalAnalysisRenderWidget
+from vibra.interface.viewer_3d.render_widgets.structural_modal_analysis_render_widget import StructuralModalAnalysisRenderWidget
+from vibra.interface.viewer_3d.render_widgets.acoustic_harmonic_analysis_render_widget import AcousticHarmonicAnalysisRenderWidget
 
 
 class ViewerTabs(QTabWidget):

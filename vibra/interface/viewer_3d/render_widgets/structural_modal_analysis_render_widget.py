@@ -7,18 +7,23 @@ from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
 from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
     CuttingPlaneActor,
 )
-from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
-from vibra.interface.modal_analysis_bar import AcousticModalAnalysisBar
+from vibra.interface.viewer_3d.render_widgets.common_render_widget import CommonRenderWidget
+from vibra.interface.modal_analysis_bar import StructuralModalAnalysisBar
 from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
 
 
-class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
+class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
+    # many parts of this class is shared by AcousticModalAnalysisRenderWidget
+    # and probably with other analysis classes, so it may be a good idea to
+    # make a superclass that controls all the common stuff.
+
     def __init__(self, project, parent=None):
         super().__init__(parent)
 
         self.project = project        
-        self.control_bar = AcousticModalAnalysisBar()
+        self.control_bar = StructuralModalAnalysisBar()
         self.control_bar.plot_changed.connect(self.update_plot)
+        self.control_bar.update_coloring.stateChanged.connect(self.update_plot)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
 
         # replace the layout to add other usefull widgets
@@ -43,10 +48,10 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
         return self.control_bar.frequency_box.currentIndex()
     
     def update_frequencies(self):
-        solver = self.project.acoustic_harmonic_solver
+        solver = self.project.structural_modal_solver
         if solver is None:
             return
-        self.control_bar.set_frequencies(solver.frequencies)
+        self.control_bar.set_frequencies(solver.natural_frequencies)
 
     def update_plot(self):
         if self.project is None:
@@ -60,32 +65,72 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
-        solver = self.project.acoustic_harmonic_solver
-        if solver.solution is None:
+        solver = self.project.structural_modal_solver
+        if solver.modal_shape is None:
             return
 
         index = self.current_shape_index()
-        if not (0 <= index < solver.solution.shape[1]):
+        if not (0 <= index < solver.modal_shape.shape[1]):
             return
 
         self.update_theme()
         self.remove_actors()
 
-        phase_deg = self.control_bar.phase_slider.value()
-        phi_sld = phase_deg*np.pi/180
+        phase = self.control_bar.phase_slider.value()
+        magnification_factor = self.control_bar.magnification_factor_slider.value()
+        current_modal_shape = solver.modal_shape[:, index].reshape(-1, 3).copy()
 
-        current_pressures = solver.solution[:, index].copy()
-        amplitudes = np.abs(current_pressures)
-        phase = np.angle(current_pressures)
-        output_pressures = amplitudes*np.cos(phase + phi_sld)
+        if self.control_bar.sum_button.isChecked():
+            values_1 = np.linalg.norm(current_modal_shape, axis=1).copy()
+            displacements = current_modal_shape.copy()
 
-        min_value, max_value = solver.get_max_min_values_of_pressures(index)
-        if self.control_bar.absolute_button.isChecked():
-            min_value = 0
-            output_pressures = np.abs(output_pressures)
-        
-        self.analysis_actor = AnalysisActor(mesh)
-        self.analysis_actor.plot_colorbar(output_pressures, min_value, max_value)
+        elif self.control_bar.response_ux_button.isChecked():
+            values_1 = current_modal_shape[:, 0]
+            displacements = current_modal_shape*np.array([1.,0.,0.])
+
+        elif self.control_bar.response_uy_button.isChecked():
+            values_1 = current_modal_shape[:, 1]
+            displacements = current_modal_shape*np.array([0.,1.,0.])
+
+        elif self.control_bar.response_uz_button.isChecked():
+            values_1 = current_modal_shape[:, 2]
+            displacements = current_modal_shape*np.array([0.,0.,1.])
+        #
+        max_abs = np.max(np.abs(values_1))
+        values_1 /= max_abs
+        #
+        min_value = round(min(values_1), 1)
+        max_value = round(max(values_1), 1)
+        #
+        self.analysis_actor = AnalysisActor(mesh,
+                                            displacements = displacements,
+                                            phase = phase,
+                                            magnification_factor = magnification_factor)
+
+        if self.control_bar.update_coloring.isChecked():
+            mod_values = displacements*np.cos(phase*np.pi/180)
+            
+            if self.control_bar.sum_button.isChecked():
+                values_2 = np.linalg.norm(mod_values, axis=1).copy()
+                
+            elif self.control_bar.response_ux_button.isChecked():
+                values_2 = mod_values[:, 0]
+                
+            elif self.control_bar.response_uy_button.isChecked():
+                values_2 = mod_values[:, 1]
+                
+            elif self.control_bar.response_uz_button.isChecked():
+                values_2 = mod_values[:, 2]
+
+            values_2 /= max_abs
+            if not self.control_bar.sum_button.isChecked():
+                if np.abs(min_value) != np.abs(max_value):
+                    min_value = -np.max(np.abs([min_value, max_value]))
+                    max_value =  np.max(np.abs([min_value, max_value]))
+        else:
+            values_2 = values_1.copy()
+
+        self.analysis_actor.plot_colorbar(values_2, min_value, max_value)
         self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
         self.renderer.AddActor(self.analysis_actor)
 
@@ -99,7 +144,7 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
         self.plane_actor.VisibilityOff()
         self.plane_actor.SetScale(scale, scale, scale)
         self.renderer.AddActor(self.plane_actor)
-    
+
         mesh_visibility = self.control_bar.show_mesh_button.isChecked()
         self.set_mesh_visibility(mesh_visibility)
 
