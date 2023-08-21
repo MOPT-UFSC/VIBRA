@@ -36,7 +36,6 @@ class VolumeVelocityInput(QDialog):
         self._reset_variables()
         self._define_qt_variables()
         self._create_connections()
-        self._add_selection_observers()
         self.load_info()
         self.exec()
 
@@ -53,10 +52,6 @@ class VolumeVelocityInput(QDialog):
         self.acoustic_bc_info_path = os.path.join(self.project_path, self.acoustic_bc_filename)
         self.acoustic_folder_path = self.project.file.acoustic_imported_data_folder_path
         self.volume_velocity_tables_folder_path = os.path.join(self.acoustic_folder_path, "volume_velocity_files") 
-
-    def _add_selection_observers(self):
-        geometry_widget = self.main_window.viewer_tabs.geometry_widget
-        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
 
     def geometry_selection_callback(self, points, lines, faces):
         if faces:
@@ -116,7 +111,9 @@ class VolumeVelocityInput(QDialog):
         self.tabWidget_volume_velocity.currentChanged.connect(self.tabEvent_volume_velocity)
         self.treeWidget_volume_velocity.itemClicked.connect(self.on_click_item)
         self.treeWidget_volume_velocity.itemDoubleClicked.connect(self.on_doubleclick_item)
-
+        #
+        geometry_widget = self.main_window.viewer_tabs.geometry_widget
+        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
 
     def tabEvent_volume_velocity(self):
         self.current_tab =  self.tabWidget_volume_velocity.currentIndex()
