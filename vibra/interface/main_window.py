@@ -50,15 +50,8 @@ class MainWindow(QMainWindow):
         self.clip_plane.slider_released.connect(self.slider_released_callback)
         self.clip_plane.closed.connect(self.disable_cut)
 
-    def selection_changed_callback(self, points, lines, faces):
-        if points:
-            self.status_bar.show_points(points)
-        elif lines:
-            self.status_bar.show_lines(lines)
-        elif faces:
-            self.status_bar.show_faces(faces)
-        else:
-            self.status_bar.clear_selections()
+    def selection_changed_callback(self, points, lines, faces, volumes):
+        self.status_bar.set_selection(points, lines, faces, volumes)
 
     def slider_pressed_callback(self):
         self.viewer_tabs.start_cutting_mode()
