@@ -16,7 +16,7 @@ SHOW_FACES = 2
 
 
 class GeometryRenderWidget(CommonRenderWidget):
-    selection_changed = pyqtSignal(list, list, list)
+    selection_changed = pyqtSignal(set, set, set, set)
 
     def __init__(self, project, parent=None):
         super().__init__(parent)
@@ -39,9 +39,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.faces_actor = None
 
         self.selection_color = (20, 106, 245)
-        self.selected_points = []
-        self.selected_lines = []
-        self.selected_faces = []
+        self.selected_points = set()
+        self.selected_lines = set()
+        self.selected_faces = set()
+        self.selected_volumes = set()
 
         self.style = SelectionInteractor()
         self.style.AddObserver("SelectionEvent", self.selection_callback)
@@ -143,60 +144,139 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         clicked_cell = obj.selection_picker.GetCellId()
         clicked_actor = obj.selection_picker.GetActor()
-
-        self.clear_selection()
+        
+        modifiers = QApplication.keyboardModifiers()
+        ctrl_pressed = (modifiers & Qt.ControlModifier)
+        shift_pressed = (modifiers & Qt.ShiftModifier)
+        alt_pressed = (modifiers & Qt.AltModifier)
 
         if clicked_actor == self.points_actor:
-            self.select_point(clicked_cell)
+            self.select_point(clicked_cell, join=ctrl_pressed, remove=alt_pressed)
 
-        if clicked_actor == self.lines_actor:
+        elif clicked_actor == self.lines_actor:
             line_entity = self.project.model.mesh.lines_connectivity[clicked_cell][1]
-            self.select_line(line_entity)
+            self.select_line(line_entity, join=ctrl_pressed, remove=alt_pressed)
 
-        if clicked_actor == self.faces_actor:
+        elif (clicked_actor == self.faces_actor) and not shift_pressed:
             face_entity = self.project.model.mesh.faces_connectivity[clicked_cell][1]
-            self.select_face(face_entity)
+            self.select_face(face_entity, join=ctrl_pressed, remove=alt_pressed)
+
+        elif (clicked_actor == self.faces_actor) and shift_pressed:
+            face_entity = self.project.model.mesh.faces_connectivity[clicked_cell][1]
+            for volume, surfaces in self.project.model.mesh.surfaces_from_volumes.items():
+                if face_entity in surfaces:
+                    self.select_volume(volume, join=ctrl_pressed, remove=alt_pressed)
+                    break
+
+        else:
+            self.clear_selection()
+            self.selection_changed.emit(self.selected_points, self.selected_lines, self.selected_faces, self.selected_volumes)
 
         self.update()
 
-    def select_point(self, point):
+    def select_point(self, new_point, *, join=False, remove=False):
+        self.select_multiple_points([new_point], join=join, remove=remove)
+
+    def select_line(self, new_line, *, join=False, remove=False):
+        self.select_multiple_lines([new_line], join=join, remove=remove)
+
+    def select_face(self, new_face, *, join=False, remove=False):
+        self.select_multiple_faces([new_face], join=join, remove=remove)
+
+    def select_volume(self, new_volume, *, join=False, remove=False):
+        self.select_multiple_volumes([new_volume], join=join, remove=remove)
+
+    def select_multiple_points(self, new_points, *, join=False, remove=False):
         if self.view_mode != SHOW_POINTS:
             return
-        self.selected_points = [point]
-        self.points_actor.clear_colors()
-        self.points_actor.paint_cells(self.selection_color, [point])
-        self.update()
-        self.selection_changed.emit(self.selected_points, self.selected_lines, self.selected_faces)
+        
+        if join:
+            self.selected_points |= set(new_points)
+        elif remove:
+            self.selected_points -= set(new_points)
+        else:
+            self.selected_points = set(new_points)
 
-    def select_line(self, line):
+        self.points_actor.clear_colors()
+        self.points_actor.paint_cells(self.selection_color, self.selected_points)
+        self.update()
+        self.selection_changed.emit(self.selected_points, self.selected_lines, self.selected_faces, self.selected_volumes)
+
+    def select_multiple_lines(self, new_lines, *, join=False, remove=False):
         if self.view_mode != SHOW_LINES:
             return
 
-        element_indexes = self.project.model.mesh.entity_ranges[1, line]
-        self.selected_lines = [line]
-        self.lines_actor.clear_colors()
-        self.lines_actor.paint_cells(self.selection_color, element_indexes)
-        self.update()
-        self.selection_changed.emit(self.selected_points, self.selected_lines, self.selected_faces)
+        if join:
+            self.selected_lines |= set(new_lines)
+        elif remove:
+            self.selected_lines -= set(new_lines)
+        else:
+            self.selected_lines = set(new_lines)
 
-    def select_face(self, face):
+        all_element_indexes = []
+        for line in self.selected_lines:
+            element_indexes = self.project.model.mesh.entity_ranges[1, line]
+            all_element_indexes.extend(element_indexes)
+
+        self.lines_actor.clear_colors()
+        self.lines_actor.paint_cells(self.selection_color, all_element_indexes)
+        self.update()
+        self.selection_changed.emit(self.selected_points, self.selected_lines, self.selected_faces, self.selected_volumes)
+
+    def select_multiple_faces(self, new_faces, *, join=False, remove=False):
         if self.view_mode != SHOW_FACES:
             return
 
-        element_indexes = self.project.model.mesh.entity_ranges[2, face]
-        self.selected_faces = [face]
+        if join:
+            self.selected_faces |= set(new_faces)
+        elif remove:
+            self.selected_faces -= set(new_faces)
+        else:
+            self.selected_faces = set(new_faces)
+        self.selected_volumes.clear()
+
+        all_element_indexes = []
+        for face in self.selected_faces:
+            element_indexes = self.project.model.mesh.entity_ranges[2, face]
+            all_element_indexes.extend(element_indexes)
+
         self.faces_actor.clear_colors()
-        self.faces_actor.paint_cells(self.selection_color, element_indexes)
+        self.faces_actor.paint_cells(self.selection_color, all_element_indexes)
         self.update()
-        self.selection_changed.emit(self.selected_points, self.selected_lines, self.selected_faces)
+        self.selection_changed.emit(self.selected_points, self.selected_lines, self.selected_faces, self.selected_volumes)
+
+    def select_multiple_volumes(self, new_volumes, *, join=False, remove=False):
+        if self.view_mode != SHOW_FACES:
+            return
+
+        if join:
+            self.selected_volumes |= set(new_volumes)
+        elif remove:
+            self.selected_volumes -= set(new_volumes)
+        else:
+            self.selected_volumes = set(new_volumes)
+        self.selected_faces.clear()
+
+        all_element_indexes = []
+        for volume in self.selected_volumes:
+            surfaces = self.project.model.mesh.surfaces_from_volumes[volume]
+            for face in surfaces:
+                element_indexes = self.project.model.mesh.entity_ranges[2, face]
+                all_element_indexes.extend(element_indexes)
+
+        self.faces_actor.clear_colors()
+        self.faces_actor.paint_cells(self.selection_color, all_element_indexes)
+        self.update()
+        self.selection_changed.emit(self.selected_points, self.selected_lines, self.selected_faces, self.selected_volumes)
 
     def clear_selection(self):
         self.points_actor.clear_colors()
         self.lines_actor.clear_colors()
         self.faces_actor.clear_colors()
-        self.selected_points = []
-        self.selected_lines = []
-        self.selected_faces = []
+        self.selected_points = set()
+        self.selected_lines = set()
+        self.selected_faces = set()
+        self.selected_volumes = set()
 
     #
     def remove_actors(self):
