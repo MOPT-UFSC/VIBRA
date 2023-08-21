@@ -151,21 +151,21 @@ class GeometryRenderWidget(CommonRenderWidget):
         alt_pressed = (modifiers & Qt.AltModifier)
 
         if clicked_actor == self.points_actor:
-            self.select_point(clicked_cell, join=shift_pressed, remove=alt_pressed)
+            self.select_point(clicked_cell, join=ctrl_pressed, remove=alt_pressed)
 
         elif clicked_actor == self.lines_actor:
             line_entity = self.project.model.mesh.lines_connectivity[clicked_cell][1]
-            self.select_line(line_entity, join=shift_pressed, remove=alt_pressed)
+            self.select_line(line_entity, join=ctrl_pressed, remove=alt_pressed)
 
-        elif (clicked_actor == self.faces_actor) and not ctrl_pressed:
+        elif (clicked_actor == self.faces_actor) and not shift_pressed:
             face_entity = self.project.model.mesh.faces_connectivity[clicked_cell][1]
-            self.select_face(face_entity, join=shift_pressed, remove=alt_pressed)
+            self.select_face(face_entity, join=ctrl_pressed, remove=alt_pressed)
 
-        elif (clicked_actor == self.faces_actor) and ctrl_pressed:
+        elif (clicked_actor == self.faces_actor) and shift_pressed:
             face_entity = self.project.model.mesh.faces_connectivity[clicked_cell][1]
             for volume, surfaces in self.project.model.mesh.surfaces_from_volumes.items():
                 if face_entity in surfaces:
-                    self.select_volume(volume, join=shift_pressed, remove=alt_pressed)
+                    self.select_volume(volume, join=ctrl_pressed, remove=alt_pressed)
                     break
 
         else:
