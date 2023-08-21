@@ -149,13 +149,15 @@ class GeometryRenderWidget(CommonRenderWidget):
         if clicked_actor == self.points_actor:
             self.select_point(clicked_cell)
 
-        if clicked_actor == self.lines_actor:
+        elif clicked_actor == self.lines_actor:
             line_entity = self.project.model.mesh.lines_connectivity[clicked_cell][1]
             self.select_line(line_entity)
 
-        if clicked_actor == self.faces_actor:
+        elif clicked_actor == self.faces_actor:
             face_entity = self.project.model.mesh.faces_connectivity[clicked_cell][1]
             self.select_face(face_entity)
+        else:
+            self.selection_changed.emit(self.selected_points, self.selected_lines, self.selected_faces)
 
         self.update()
 

@@ -36,6 +36,7 @@ class VolumeVelocityInput(QDialog):
         self._reset_variables()
         self._define_qt_variables()
         self._create_connections()
+        self._add_selection_observers()
         self.load_info()
         self.exec()
 
@@ -53,6 +54,17 @@ class VolumeVelocityInput(QDialog):
         self.acoustic_folder_path = self.project.file.acoustic_imported_data_folder_path
         self.volume_velocity_tables_folder_path = os.path.join(self.acoustic_folder_path, "volume_velocity_files") 
 
+    def _add_selection_observers(self):
+        geometry_widget = self.main_window.viewer_tabs.geometry_widget
+        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
+
+    def geometry_selection_callback(self, points, lines, faces):
+        if faces:
+            text = ", ".join([str(i) for i in faces])
+            self.lineEdit_selection_id.setText(text)
+        
+        elif not any([points, lines, faces]):
+            self.lineEdit_selection_id.setText("")
 
     def _define_qt_variables(self):
         # QCheckBox objects
