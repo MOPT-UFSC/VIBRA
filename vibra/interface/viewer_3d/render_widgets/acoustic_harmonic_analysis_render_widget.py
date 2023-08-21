@@ -21,6 +21,8 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
         self.control_bar = AcousticModalAnalysisBar()
         self.control_bar.value_changed.connect(self.update_plot)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
+        self.control_bar.phase_slider.valueChanged.connect(self.stop_animation)
+        self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
 
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
@@ -39,6 +41,20 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
         self.create_color_bar()
         self.update_frequencies()
         self.update_plot()
+
+    def toggle_animation(self, *args, **kwargs):
+        if self.playing_animation:
+            self.stop_animation()
+        else:
+            self.start_animation()
+
+    def start_animation(self):
+        super().start_animation()
+        self.control_bar.use_pause_icon()
+    
+    def stop_animation(self):
+        super().stop_animation()
+        self.control_bar.use_play_icon()
 
     def current_shape_index(self):
         return self.control_bar.frequency_box.currentIndex()
@@ -110,6 +126,36 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
             self.edges_actor.VisibilityOn()
 
         self.renderer.ResetCamera()
+        self.update()
+    
+    def update_animation(self, frame):
+        if not self._actors_exists():
+            return
+        
+        solver = self.project.acoustic_harmonic_solver
+        if solver.solution is None:
+            return
+        
+        index = self.current_shape_index()
+        if not (0 <= index < solver.solution.shape[1]):
+            return
+        
+        t = frame / (self._animation_total_frames - 1)
+        phase_deg = lerp(0, 360, t)
+
+        phi_sld = phase_deg * np.pi/180
+        current_pressures = solver.solution[:, index].copy()
+        amplitudes = np.abs(current_pressures)
+        phase = np.angle(current_pressures)
+        output_pressures = amplitudes*np.cos(phase + phi_sld)
+
+        min_value, max_value = solver.get_max_min_values_of_pressures(index)
+        if self.control_bar.absolute_button.isChecked():
+            min_value = 0
+            output_pressures = np.abs(output_pressures)
+        
+        self.analysis_actor.plot_colorbar(output_pressures, min_value, max_value)
+        self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
         self.update()
 
     def set_mesh_visibility(self, condition):
