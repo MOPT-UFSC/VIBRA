@@ -45,6 +45,11 @@ class StructuralAssembler:
     def set_element_formulation(self, element):
         self.element = element
 
+    def set_analysis_data(self, data):
+        self.analysis_data = data
+        if "frequencies" in data.keys():
+            self.frequencies = data["frequencies"]
+
     def set_frequencies(self, frequencies):
         self.frequencies = frequencies
 

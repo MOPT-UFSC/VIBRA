@@ -205,12 +205,16 @@ class SpecificImpedanceInput(QDialog):
         if specific_impedance is not None:
 
             self.specific_impedance = specific_impedance
+            real_values = [np.real(specific_impedance)]
+            imag_values = [np.imag(specific_impedance)]
 
+            nodal_attribution = self.radioButton_nodal_attribution_constant.isChecked()
             key_avg =self.checkBox_averaged_constant_values.isChecked()
-            data = {"values" : specific_impedance,
-                    "averaged" : key_avg,
-                    "nodal_attribution" : True,
-                    "element_integration" : False}
+            
+            data = {"real_values" : real_values,
+                    "imag_values" : imag_values,
+                    "nodal_attribution" : nodal_attribution,
+                    "averaged" : key_avg}
 
             for _id in self.typed_ids:
                 self.project.set_specific_impedance(data, _id)
@@ -345,7 +349,9 @@ class SpecificImpedanceInput(QDialog):
                             "nodal_attribution" : True,
                             "element_integration" : False}
 
-            self.project.set_specific_impedance(data)
+            for _id in self.typed_ids:
+                self.project.set_specific_impedance(data, _id)
+            self.properties.export_model_properties()
 
             self.process_table_file_removal(list_table_names)
             print(f"[Set specific impedance] - defined at surface(s) {self.typed_ids}")   
@@ -434,6 +440,7 @@ class SpecificImpedanceInput(QDialog):
                                 _list_table_names.append(table_name)
 
                 self.properties._reset_property("specific_impedance")
+                self.properties.export_model_properties()
 
                 #TODO: remove imported tables
                 self.process_table_file_removal(_list_table_names)

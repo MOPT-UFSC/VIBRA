@@ -227,16 +227,22 @@ class MassFlowRateInput(QDialog):
             return
 
         if mass_flow_rate is not None:
-            self.mass_flow_rate = mass_flow_rate
 
-            key_avg = int(self.checkBox_averaged_constant_values.isChecked())
-            data = {"values" : mass_flow_rate,
-                    "averaged" : key_avg,
-                    "nodal_attribution" : True,
-                    "element_integration" : False}
+            self.mass_flow_rate = mass_flow_rate
+            real_values = [np.real(mass_flow_rate)]
+            imag_values = [np.imag(mass_flow_rate)]
+
+            nodal_attribution = self.radioButton_nodal_attribution_constant.isChecked()
+            key_avg =self.checkBox_averaged_constant_values.isChecked()
+            
+            data = {"real_values" : real_values,
+                    "imag_values" : imag_values,
+                    "nodal_attribution" : nodal_attribution,
+                    "averaged" : key_avg}
 
             for _id in self.typed_ids:
                 self.project.set_mass_flow_rate(data, _id)
+            self.properties.export_model_properties()
 
             print(f"[Set Mass Flow Rate] - defined at surface(s) {self.typed_ids}")
             # TODO: remove existing tables and update the render
@@ -365,7 +371,9 @@ class MassFlowRateInput(QDialog):
                             "nodal_attribution" : True,
                             "element_integration" : False}
 
-            self.project.set_mass_flow_rate(data)
+            for _id in self.typed_ids:
+                self.project.set_mass_flow_rate(data, _id)
+            self.properties.export_model_properties()
 
             self.process_table_file_removal(list_table_names)
             print(f"[Set Volume Velocity] - defined at surface(s) {self.typed_ids}")
@@ -451,6 +459,7 @@ class MassFlowRateInput(QDialog):
                                     _list_table_names.append(table_name)
 
                     self.properties._reset_property("mass_flow_rate")
+                    self.properties.export_model_properties()
 
                     #TODO: remove imported tables
                     self.process_table_file_removal(_list_table_names)

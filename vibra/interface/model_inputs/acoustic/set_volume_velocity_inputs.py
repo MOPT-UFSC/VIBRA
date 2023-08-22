@@ -161,8 +161,10 @@ class VolumeVelocityInput(QDialog):
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "volume_velocity":
-                value = data["values"]
-                new = QTreeWidgetItem([str(surface_id), str(self.text_label(value))])
+                real_values = np.array(data["real_values"])
+                imag_values = np.array(data["imag_values"])
+                complex_values = real_values + 1j*imag_values
+                new = QTreeWidgetItem([str(surface_id), str(self.text_label(complex_values))])
                 new.setTextAlignment(0, Qt.AlignCenter)
                 new.setTextAlignment(1, Qt.AlignCenter)
                 self.treeWidget_volume_velocity.addTopLevelItem(new)
@@ -231,16 +233,23 @@ class VolumeVelocityInput(QDialog):
             return
 
         if volume_velocity is not None:
-            self.volume_velocity = volume_velocity
 
+            self.volume_velocity = volume_velocity
+            real_values = [np.real(volume_velocity)]
+            imag_values = [np.imag(volume_velocity)]
+
+            nodal_attribution = self.radioButton_nodal_attribution_constant.isChecked()
             key_avg =self.checkBox_averaged_constant_values.isChecked()
-            data = {"values" : volume_velocity,
-                    "averaged" : key_avg,
-                    "nodal_attribution" : True,
-                    "element_integration" : False}
+            
+            data = {"real_values" : real_values,
+                    "imag_values" : imag_values,
+                    "nodal_attribution" : nodal_attribution,
+                    "averaged" : key_avg}
 
             for _id in self.typed_ids:
                 self.project.set_volume_velocity(data, _id)
+
+            self.properties.export_model_properties()
 
             print(f"[Set Volume Velocity] - defined at surface(s) {self.typed_ids}")
             # TODO: remove existing tables and update the render
@@ -308,7 +317,7 @@ class VolumeVelocityInput(QDialog):
 
     def save_table_file(self, entity_id, values, filename):
         try:
-            self.project.create_folders_acoustic("volume_velocity_files")
+            self.project.file.create_folders_acoustic("volume_velocity_files")
 
             real_values = np.real(values)
             imag_values = np.imag(values)
@@ -361,15 +370,21 @@ class VolumeVelocityInput(QDialog):
                     if self.basename_volume_velocity in list_table_names:
                         list_table_names.remove(self.basename_volume_velocity)
 
-                    key_avg = int(self.checkBox_averaged_constant_values.isChecked())
+                    real_values = list(np.real(self.volume_velocity))
+                    imag_values = list(np.imag(self.volume_velocity))
 
-                    data = {"values" : self.volume_velocity,
+                    nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
+                    key_avg = self.checkBox_averaged_constant_values.isChecked()
+
+                    data = {"real_values" : real_values,
+                            "imag_values" : imag_values,
+                            "nodal_attribution" : nodal_attribution,
                             "averaged" : key_avg,
-                            "table_name" : self.basename_volume_velocity,
-                            "nodal_attribution" : True,
-                            "element_integration" : False}
+                            "table_name" : self.basename_volume_velocity}
 
-            self.project.set_volume_velocity(data)
+                self.project.set_volume_velocity(data, _id)
+
+            self.properties.export_model_properties()
 
             self.process_table_file_removal(list_table_names)
             print(f"[Set Volume Velocity] - defined at surface(s) {self.typed_ids}")
@@ -392,13 +407,12 @@ class VolumeVelocityInput(QDialog):
         return list_table_names
 
     def text_label(self, value):
-        text = ""
-        if isinstance(value, complex):
+        if value.shape[0] == 1:
+        # if isinstance(value, complex):
             value_label = str(value)
-        elif isinstance(value, np.ndarray):
+        else:# isinstance(value, np.ndarray):
             value_label = "Table"
-        text = "{}".format(value_label)
-        return text
+        return "{}".format(value_label)
 
     def remove_bc_from_selection(self):
         if self.lineEdit_selection_id.text() != "":
@@ -455,6 +469,7 @@ class VolumeVelocityInput(QDialog):
                                 _list_table_names.append(table_name)
 
                 self.properties._reset_property("volume_velocity")
+                self.properties.export_model_properties()
 
                 # TODO: remove imported tables
                 self.process_table_file_removal(_list_table_names)
@@ -480,10 +495,6 @@ class VolumeVelocityInput(QDialog):
         _bool = self.radioButton_element_integration_table.isChecked()
         self.checkBox_averaged_table_values.setChecked(not _bool)
         self.checkBox_averaged_table_values.setDisabled(_bool)
-
-    def update(self):
-        # This method should be called to update qt widgets whenever some entity has been clicked
-        return
 
     def write_ids(self, list_ids):
         text = ""

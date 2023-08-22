@@ -27,7 +27,7 @@ class Model:
         self.generated_mesh = False
         self.surfaces_areas = dict()
 
-        self.frequencies = None
+        self.analysis_data = None
         self.acoustic_element = None
         self.structural_element = None
 
@@ -121,3 +121,6 @@ class Model:
             
     def set_specific_impedance(self, data, surface):
         self.properties.set_specific_impedance(data, surface)
+
+    def set_analysis_data(self, data):
+        self.analysis_data = data

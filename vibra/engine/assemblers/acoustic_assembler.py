@@ -6,7 +6,6 @@ from scipy.sparse import coo_matrix, csr_matrix
 
 from vibra.engine.elements.acoustic_hex8_element import ACT_HEXAHEDRON_8C
 from vibra.engine.elements.acoustic_hex20_element import ACT_HEXAHEDRON_20C
-# from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.elements.acoustic_tet4_element import ACT_TETRAHEDRON_4C
 from vibra.engine.elements.acoustic_tet10_element import ACT_TETRAHEDRON_10C
 from vibra.engine.mesher.element_type import *
@@ -42,6 +41,11 @@ class AcousticAssembler:
 
     def set_element_formulation(self, element):
         self.element = element
+
+    def set_analysis_data(self, data):
+        self.analysis_data = data
+        if "frequencies" in data.keys():
+            self.frequencies = data["frequencies"]
 
     def set_frequencies(self, frequencies):
         self.frequencies = frequencies
@@ -168,23 +172,45 @@ class AcousticAssembler:
             self.mass_matrix = _mass_matrix_full
 
     def get_acoustic_excitations(self):
+        """ This method processes the acoustic model excitations and
+            returns the output data in the form of mass flow rate. 
+        """
+
+        if self.frequencies is None:
+            number_frequencies = 1
+        else:
+            number_frequencies = len(self.frequencies)
+
+        aux_ones = np.ones(number_frequencies, dtype=complex)
         acoustic_excitation = defaultdict(float)
 
         for (property, _id), data in self.properties.surface_properties.items():
             
             if property == "mass_flow_rate":
-                values = data["values"]
+
+                real_values = np.array(data["real_values"])
+                imag_values = np.array(data["imag_values"])
+                complex_values = real_values + 1j*imag_values
+                if complex_values.shape[0] == 1:
+                    complex_values = complex_values*aux_ones
+
                 if data["nodal_attribution"]:
                     nodes = self.model.mesh.nodes_from_surfaces[_id]
                     N = len(nodes)
                     for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
                         if data["averaged"]:
-                            acoustic_excitation[index] += values/N
+                            acoustic_excitation[index] += complex_values/N
                         else:
-                            acoustic_excitation[index] += values
+                            acoustic_excitation[index] += complex_values
 
             elif property == "volume_velocity":
-                values = data["values"]
+
+                real_values = np.array(data["real_values"])
+                imag_values = np.array(data["imag_values"])
+                complex_values = real_values + 1j*imag_values
+                if complex_values.shape[0] == 1:
+                    complex_values = complex_values*aux_ones
+
                 if data["nodal_attribution"]:
                     nodes = self.model.mesh.nodes_from_surfaces[_id]
                     N = len(nodes)
@@ -193,12 +219,18 @@ class AcousticAssembler:
                     rho = fluid.fluid_density
                     for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
                         if data["averaged"]:
-                            acoustic_excitation[index] += (values*rho)/N
+                            acoustic_excitation[index] += (complex_values*rho)/N
                         else:
-                            acoustic_excitation[index] += values*rho
+                            acoustic_excitation[index] += complex_values*rho
 
             elif property == "particle_velocity":
-                values = data["values"]
+
+                real_values = np.array(data["real_values"])
+                imag_values = np.array(data["imag_values"])
+                complex_values = real_values + 1j*imag_values
+                if complex_values.shape[0] == 1:
+                    complex_values = complex_values*aux_ones
+
                 if data["nodal_attribution"]:
                     nodes = self.model.mesh.nodes_from_surfaces[_id]
                     N = len(nodes)
@@ -208,16 +240,16 @@ class AcousticAssembler:
                     area = self.model.surfaces_areas[_id]
                     for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
                         if data["averaged"]:
-                            acoustic_excitation[index] += (rho*area*values)/N
+                            acoustic_excitation[index] += (rho*area*complex_values)/N
                         else:
-                            acoustic_excitation[index] += rho*area*values
+                            acoustic_excitation[index] += rho*area*complex_values
 
         indexes = list(acoustic_excitation.keys())
         excitation = list(acoustic_excitation.values())
 
         element = self.get_element()
         total_dofs = element.DOF_PER_NODE * len(element.nodal_coordinates)
-        output = np.zeros((total_dofs, 1), dtype=complex)
-        output[indexes, 0] = excitation
+        output = np.zeros((total_dofs, number_frequencies), dtype=complex)
+        output[indexes, :] = np.array(excitation)
 
         return output[self.unprescribed_indexes, :]

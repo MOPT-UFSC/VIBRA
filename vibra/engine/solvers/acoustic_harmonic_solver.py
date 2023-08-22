@@ -36,7 +36,6 @@ class AcousticHarmonicSolver:
     def solve(self):
         self.M = self.assembler.mass_matrix
         self.K = self.assembler.stiffness_matrix
-
         self.mass_flow = self.assembler.get_acoustic_excitations()
         (
             self.unprescribed_indexes,
@@ -56,7 +55,7 @@ class AcousticHarmonicSolver:
             logging.info(f"Solving for frequency {freq}" + ProgressStatus(i, len(self.frequencies)))
             omega = 2 * np.pi * freq
             A = self.K - (omega**2) * self.M
-            F = -1j * omega * self.mass_flow
+            F = -1j * omega * self.mass_flow[:, i]
             solution[:, i] = spsolve(A, F)
 
         self.solution = solution

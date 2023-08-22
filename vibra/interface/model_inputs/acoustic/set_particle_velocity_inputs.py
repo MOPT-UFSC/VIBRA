@@ -231,16 +231,22 @@ class ParticleVelocityInput(QDialog):
             return
 
         if particle_velocity is not None:
-            self.particle_velocity = particle_velocity
 
-            key_avg = int(self.checkBox_averaged_constant_values.isChecked())
-            data = {"values" : particle_velocity,
-                    "averaged" : key_avg,
-                    "nodal_attribution" : True,
-                    "element_integration" : False}
+            self.particle_velocity = particle_velocity
+            real_values = [np.real(particle_velocity)]
+            imag_values = [np.imag(particle_velocity)]
+
+            nodal_attribution = self.radioButton_nodal_attribution_constant.isChecked()
+            key_avg =self.checkBox_averaged_constant_values.isChecked()
+            
+            data = {"real_values" : real_values,
+                    "imag_values" : imag_values,
+                    "nodal_attribution" : nodal_attribution,
+                    "averaged" : key_avg}
 
             for _id in self.typed_ids:
                 self.project.set_particle_velocity(data, _id)
+            self.properties.export_model_properties()
 
             print(f"[Set particle Velocity] - defined at surface(s) {self.typed_ids}")
             # TODO: remove existing tables and update the render
@@ -369,7 +375,9 @@ class ParticleVelocityInput(QDialog):
                             "nodal_attribution" : True,
                             "element_integration" : False}
 
-            self.project.set_particle_velocity(data)
+            for _id in self.typed_ids:
+                self.project.set_particle_velocity(data, _id)
+            self.properties.export_model_properties()
 
             self.process_table_file_removal(list_table_names)
             print(f"[Set particle Velocity] - defined at surface(s) {self.typed_ids}")
@@ -455,6 +463,7 @@ class ParticleVelocityInput(QDialog):
                                     _list_table_names.append(table_name)
 
                     self.properties._reset_property("particle_velocity")
+                    self.properties.export_model_properties()
 
                     #TODO: remove imported tables
                     self.process_table_file_removal(_list_table_names)
