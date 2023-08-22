@@ -117,3 +117,6 @@ class Model:
     
     def set_particle_velocity(self, data, surface):
         self.properties.set_particle_velocity(data, surface)
+            
+    def set_specific_impedance(self, data, surface):
+        self.properties.set_specific_impedance(data, surface)

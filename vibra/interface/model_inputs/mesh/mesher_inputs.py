@@ -16,16 +16,17 @@ class MesherInputs(QDialog):
         super().__init__(*args, **kwargs)
 
         uic.loadUi(Path("data/ui_files/mesh/element_setup.ui"), self)
-        self.main_window = get_main_window()
-
+        
         icon_path = str(Path('data/icons/logo_vibra.png'))
         self.icon = QIcon(icon_path)
         self.setWindowIcon(self.icon)
-
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle("Mesher setup")
         
+        self.main_window = get_main_window()
+        self.main_window.set_input_widget(self)
+
         self.complete = False
         self._define_qt_variables()
         self._create_connections()

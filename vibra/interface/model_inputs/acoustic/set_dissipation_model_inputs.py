@@ -30,6 +30,7 @@ class DissipationModelInput(QDialog):
         self.setWindowTitle("Set the dissipation model")
 
         self.main_window = get_main_window()
+        self.main_window.set_input_widget(self)
         self.project = self.main_window.project
 
         self._reset_variables()

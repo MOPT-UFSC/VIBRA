@@ -30,8 +30,6 @@ class MaterialInput(QDialog):
         super().__init__(*args, **kwargs)
 
         uic.loadUi(Path('data/ui_files/model/structural/material_input.ui'), self)
-        self.main_window = get_main_window()
-        self.project = self.main_window.get_project()
 
         icon_path = str(Path('data/icons/logo_vibra.png'))
         self.icon = QIcon(icon_path)
@@ -40,6 +38,10 @@ class MaterialInput(QDialog):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle("Set: material")
+
+        self.main_window = get_main_window()
+        self.main_window.set_input_widget(self)
+        self.project = self.main_window.get_project()
         #
         # self.opv = opv
         # self.opv.setInputObject(self)

@@ -30,6 +30,7 @@ class ParticleVelocityInput(QDialog):
         self.setWindowTitle("Set particle velocity acoustic excitation")
 
         self.main_window = get_main_window()
+        self.main_window.set_input_widget(self)
         self.project = self.main_window.project
         self.properties = self.project.model.properties
 
@@ -385,14 +386,10 @@ class ParticleVelocityInput(QDialog):
             for key in surface_properties.keys():
                 property, surface_id = key
                 if property == "particle_velocity" and picked_id == surface_id:
-                    # section_key = f"surface - {picked_id}"           
-                    # key_strings = ["particle velocity", "averaged", "table name"]
-                    # message = f"The particle velocity attributed to the {picked_id} surface has been removed."
-                    # self.project.file.remove_bc_from_file(section_key, self.acoustic_bc_info_path, key_strings, message)
-                    # #TODO: remove imported particle velocity tables
+                    #TODO: remove imported particle velocity tables
                     list_table_names = self.get_list_table_names_from_selected_surfaces([picked_id])
                     self.process_table_file_removal(list_table_names)
-                    self.properties.remove_particle_velocity(picked_id)
+                    self.properties._remove_surface_property("particle_velocity", picked_id)
                     self.load_info()
                     self.lineEdit_selection_id.setText("")
                     return

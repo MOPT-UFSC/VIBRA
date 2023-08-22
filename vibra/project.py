@@ -101,6 +101,10 @@ class Project:
         self.model.set_particle_velocity(data, surface)
         # self.file.add_particle_velocity_to_file(data)
 
+    def set_specific_impedance(self, data, surface):
+        self.model.set_specific_impedance(data, surface)
+        # self.file.add_particle_velocity_to_file(data)
+
     def set_dissipation_model(self, data):
         self.model.set_dissipation_model_data(data)
         # self.file.add_dissipation_model_data_to_file(data)

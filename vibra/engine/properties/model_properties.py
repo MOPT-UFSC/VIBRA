@@ -110,6 +110,9 @@ class ModelProperties:
     def get_particle_velocity(self, surface):
         return self._get_property("particle_velocity", surface=surface)
 
+    def get_specific_impedance(self, surface):
+        return self._get_property("specific_impedance", surface=surface)
+
     def set_acoustic_pressure(self, data, surface):
         self._set_property("acoustic_pressure", data, surface=surface)
 
@@ -121,6 +124,9 @@ class ModelProperties:
 
     def set_particle_velocity(self, data, surface):
         self._set_property("particle_velocity", data, surface=surface)
+
+    def set_specific_impedance(self, data, surface):
+        self._set_property("specific_impedance", data, surface=surface)
 
     def _set_property(self, property: str, value, node=None, element=None, line=None, surface=None, volume=None):
         '''

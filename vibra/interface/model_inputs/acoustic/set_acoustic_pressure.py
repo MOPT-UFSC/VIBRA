@@ -30,6 +30,7 @@ class AcousticPressureInput(QDialog):
         self.setWindowTitle("Prescribe an acoustic pressure")
 
         self.main_window = get_main_window()
+        self.main_window.set_input_widget(self)
         self.project = self.main_window.project
         self.properties = self.project.model.properties
 
@@ -385,14 +386,10 @@ class AcousticPressureInput(QDialog):
             for key in surface_properties.keys():
                 property, surface_id = key
                 if property == "acoustic_pressure" and picked_id == surface_id:
-                    # section_key = f"surface - {picked_id}"           
-                    # key_strings = ["acoustic pressure", "averaged", "table name"]
-                    # message = f"The acoustic pressure attributed to the {picked_id} surface has been removed."
-                    # self.project.file.remove_bc_from_file(section_key, self.acoustic_bc_info_path, key_strings, message)
-                    # #TODO: remove imported acoustic pressure tables
+                    #TODO: remove imported acoustic pressure tables
                     list_table_names = self.get_list_table_names_from_selected_surfaces([picked_id])
                     self.process_table_file_removal(list_table_names)
-                    self.properties.remove_acoustic_pressure(picked_id)
+                    self.properties._remove_surface_property("acoustic_pressure", picked_id)
                     self.load_info()
                     self.lineEdit_selection_id.setText("")
                     return

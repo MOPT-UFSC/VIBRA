@@ -15,6 +15,7 @@ from vibra.interface.model_inputs.acoustic.set_acoustic_pressure import Acoustic
 from vibra.interface.model_inputs.acoustic.set_mass_flow_rate_inputs import MassFlowRateInput
 from vibra.interface.model_inputs.acoustic.set_volume_velocity_inputs import VolumeVelocityInput
 from vibra.interface.model_inputs.acoustic.set_particle_velocity_inputs import ParticleVelocityInput
+from vibra.interface.model_inputs.acoustic.set_specific_impedance_inputs import SpecificImpedanceInput
 from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import DissipationModelInput
 
 from vibra.interface.analysis.analysis_type_input import AnalysisTypeInput
@@ -84,6 +85,7 @@ class MenuItems(QTreeWidget):
 
         self.main_window = get_main_window()
         self.project = self.main_window.project
+        self.obj = None
 
         # self._createIcons()
         # self._configItemSizes()
@@ -371,7 +373,8 @@ class MenuItems(QTreeWidget):
 
     def on_click_item(self, item, column):
         """This event is raised every time an item is clicked on the menu."""
-    
+
+        self.before_initilize()
         if self.update_childItems_visibility(item):
             return
         
@@ -385,9 +388,9 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_mesh_setup:
             if not self.item_child_mesh_setup.isDisabled():
-                mesher = MesherInputs()
-                if mesher.complete:
-                    self.main_window.project.set_mesh_setup(mesher.mesh_setup)
+                self.obj = MesherInputs()
+                if self.obj.complete:
+                    self.main_window.project.set_mesh_setup(self.obj.mesh_setup)
                     self.generate_mesh_action.setDisabled(False)
                     self.item_child_generate_mesh.setDisabled(False)
 
@@ -400,18 +403,15 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_set_material:
             if not self.item_child_set_material.isDisabled():
-                MaterialInput()
+                self.obj = MaterialInput()
 
         elif item == self.item_child_set_fluid:
             if not self.item_child_set_fluid.isDisabled():
-                FluidInput()
+                self.obj = FluidInput()
     
         elif item == self.item_child_set_boundary_condition:
             if not self.item_child_set_boundary_condition.isDisabled():
-                read = BoundaryConditionInputs()
-                if read.complete:
-                    print("The boundary condition has been defined to...")
-                    # self.main_window.project.set_boundary_condition(_ids, value)
+                self.obj = BoundaryConditionInputs()
 
         elif item == self.item_child_setNodalLoads:
             if not self.item_child_setNodalLoads.isDisabled():
@@ -419,27 +419,27 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_set_acoustic_pressure:
             if not self.item_child_set_acoustic_pressure.isDisabled():
-                read = AcousticPressureInput()
+                self.obj = AcousticPressureInput()
 
         elif item == self.item_child_set_dissipation_model:
             if not self.item_child_set_dissipation_model.isDisabled():
-                read = DissipationModelInput()
+                self.obj = DissipationModelInput()
 
         elif item == self.item_child_set_volume_velocity:
             if not self.item_child_set_volume_velocity.isDisabled():
-                read = VolumeVelocityInput()
+                self.obj = VolumeVelocityInput()
 
         elif item == self.item_child_set_mass_flow_rate:
             if not self.item_child_set_mass_flow_rate.isDisabled():
-                read = MassFlowRateInput()
+                self.obj = MassFlowRateInput()
 
         elif item == self.item_child_set_particle_velocity:
             if not self.item_child_set_particle_velocity.isDisabled():
-                read = ParticleVelocityInput()
+                self.obj = ParticleVelocityInput()
 
         elif item == self.item_child_set_specific_impedance:
             if not self.item_child_set_specific_impedance.isDisabled():
-                pass
+                self.obj = SpecificImpedanceInput()
 
         elif item == self.item_child_set_radiation_impedance:
             if not self.item_child_set_radiation_impedance.isDisabled():
@@ -715,3 +715,8 @@ class MenuItems(QTreeWidget):
         message += "\n\nIt is recommended to use the 'New Project' or the 'Import Project' \nbuttons to continue."
         window_title = 'ERROR'
         PrintMessageInput([title, message, window_title], opv=self.main_window.getOPVWidget())
+
+    def before_initilize(self):
+        if self.main_window.dialog is not None:
+            self.main_window.dialog.close()
+            self.main_window.set_input_widget(None)

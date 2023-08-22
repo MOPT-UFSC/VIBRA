@@ -33,6 +33,7 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
 
+        self.dialog = None
         self.project = Project()
         self.user_config = UserConfig()
         self.status_bar = StatusBar(self)
@@ -248,3 +249,6 @@ class MainWindow(QMainWindow):
             ErrorMessage(e)
         else:
             self.viewer_tabs.show_acoustic_harmonic_analysis()
+
+    def set_input_widget(self, dialog):
+        self.dialog = dialog

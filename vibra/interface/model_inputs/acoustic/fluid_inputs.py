@@ -55,15 +55,16 @@ class FluidInput(QDialog):
         super().__init__(*args, **kwargs)
 
         uic.loadUi(Path('data/ui_files/model/acoustic/fluid_input.ui'), self)
-        self.main_window = get_main_window()
 
         icon_path = str(Path('data/icons/logo_vibra.png'))
         self.icon = QIcon(icon_path)
         self.setWindowIcon(self.icon)
-
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle("Set: fluid")
+
+        self.main_window = get_main_window()
+        self.main_window.set_input_widget(self)
         #
         # self.opv = opv
         # self.opv.setInputObject(self)

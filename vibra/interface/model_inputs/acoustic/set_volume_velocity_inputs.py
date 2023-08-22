@@ -30,6 +30,7 @@ class VolumeVelocityInput(QDialog):
         self.setWindowTitle("Set volume velocity acoustic excitation")
 
         self.main_window = get_main_window()
+        self.main_window.set_input_widget(self)
         self.project = self.main_window.project
         self.properties = self.project.model.properties
 
@@ -385,11 +386,7 @@ class VolumeVelocityInput(QDialog):
             for key in surface_properties.keys():
                 property, surface_id = key
                 if property == "volume_velocity" and picked_id == surface_id:
-                    # section_key = f"surface - {picked_id}"           
-                    # key_strings = ["volume velocity", "averaged", "table name"]
-                    # message = f"The volume velocity attributed to the {picked_id} surface has been removed."
-                    # self.project.file.remove_bc_from_file(section_key, self.acoustic_bc_info_path, key_strings, message)
-                    # #TODO: remove imported volume velocity tables
+                    #TODO: remove imported volume velocity tables
                     list_table_names = self.get_list_table_names_from_selected_surfaces([picked_id])
                     self.process_table_file_removal(list_table_names)
                     self.properties._remove_surface_property("volume_velocity", picked_id)
