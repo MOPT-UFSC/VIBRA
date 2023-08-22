@@ -76,15 +76,21 @@ class StructuralAssembler:
         else:
             number_frequencies = len(self.frequencies)
 
-        for _id, values in self.properties.surfaces_with_prescribed_dofs.items():
-            nodes = self.model.mesh.nodes_from_surfaces[_id]
-            for _ in nodes:
-                global_prescribed.extend(values)
+        for key, data in self.properties.lines_with_prescribed_dofs.items():
+            property, line_id = key
+            if property == "prescribed_dofs":
+                values = data["values"]
+                nodes = self.model.mesh.nodes_from_lines[line_id]
+                for _ in nodes:
+                    global_prescribed.extend(values)
 
-        for _id, values in self.properties.lines_with_prescribed_dofs.items():
-            nodes = self.model.mesh.nodes_from_lines[_id]
-            for _ in nodes:
-                global_prescribed.extend(values)
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "prescribed_dofs":
+                values = data["values"]
+                nodes = self.model.mesh.nodes_from_surfaces[surface_id]
+                for _ in nodes:
+                    global_prescribed.extend(values)
 
         try:    
             
@@ -105,15 +111,17 @@ class StructuralAssembler:
 
         _prescribed_indexes = []
 
-        for _id in self.properties.lines_with_prescribed_dofs:
-            nodes = self.model.mesh.nodes_from_surfaces[_id]
-            for index in self.model.get_structural_global_dofs_from_nodes(nodes):
-                _prescribed_indexes.append(index)
+        for (property, line_id) in self.properties.line_properties.keys():
+            if property == "prescribed_dofs":
+                nodes = self.model.mesh.nodes_from_lines[line_id]
+                for index in self.model.get_structural_global_dofs_from_nodes(nodes):
+                    _prescribed_indexes.append(index)
 
-        for _id in self.properties.surfaces_with_prescribed_dofs:
-            nodes = self.model.mesh.nodes_from_surfaces[_id]
-            for index in self.model.get_structural_global_dofs_from_nodes(nodes):
-                _prescribed_indexes.append(index)
+        for (property, surface_id) in self.properties.surface_properties.keys():
+            if property == "prescribed_dofs":    
+                nodes = self.model.mesh.nodes_from_surfaces[surface_id]
+                for index in self.model.get_structural_global_dofs_from_nodes(nodes):
+                    _prescribed_indexes.append(index)
         
         if len(_prescribed_indexes) == 0:
             return _prescribed_indexes

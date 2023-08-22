@@ -41,23 +41,14 @@ class ModelProperties:
     def _reset_variables(self):
         self.global_properties = dict()
         self.volume_properties = dict()
-        self.entity_properties = dict()
+        self.surface_properties = dict()
+        self.line_properties = dict()
         self.element_properties = dict()
         self.nodal_properties = dict()
 
         self.global_properties["material"] = DEFAULT_MATERIAL
         self.global_properties["fluid"] = DEFAULT_FLUID
 
-        # Remove this when no more needed
-        self.lines_with_loads = dict()
-        self.lines_with_prescribed_dofs = dict()
-        self.surfaces_with_prescribed_dofs = dict()
-        self.volumes_with_prescribed_dofs = dict()
-
-        self.surfaces_with_acoustic_pressure = dict()
-        self.surfaces_with_volume_velocity = dict()
-        self.surfaces_with_mass_flow_rate = dict()
-        self.surfaces_with_particle_velocity = dict()
 
     def get_material(self, element=None) -> Material:
         return self._get_property("material")
@@ -88,89 +79,52 @@ class ModelProperties:
         elif dissipation_model["model"] == "proportional damping":
             factor = dissipation_model["speed of sound factor"]
             return (1 + factor*1j)*c_0
-
-    # Update the following functions to use the structure
-    # with less dicts 
-    def set_structural_boundary_condition(self, data):
-        #
-        if "line" in data["entity_type"]:
-            for _id in data["entity_ids"]:
-                self.lines_with_prescribed_dofs[_id] = data["values"]
-        #
-        if "surface" in data["entity_type"]:
-            for _id in data["entity_ids"]:
-                self.surfaces_with_prescribed_dofs[_id] = data["values"]
-
-    def set_structural_load(self, data):
-        #    
-        if "line" in data["entity_type"]:
-            for _id in data["entity_ids"]:
-                self.lines_with_loads[_id] = data["values"]
-        #
-        if "surface" in data["entity_type"]:
-            for _id in data["entity_ids"]:
-                self.surfaces_with_loads[_id] = data["values"]
-
-    def set_acoustic_pressure(self, data):
-        #
-        _data = data.copy()    
-        if "surface" in data["entity_type"]:
-            for _id in data["entity_ids"]:
-                _data.pop("entity_ids")
-                self.surfaces_with_acoustic_pressure[_id] = _data
-
-    def set_mass_flow_rate(self, data):
-        #
-        _data = data.copy()
-        if "surface" in _data["entity_type"]:
-            for _id in _data["entity_ids"]:
-                _data.pop("entity_ids")
-                self.surfaces_with_mass_flow_rate[_id] = _data
-
-    def set_volume_velocity(self, data):
-        #
-        _data = data.copy()
-        if "surface" in _data["entity_type"]:
-            for _id in _data["entity_ids"]:
-                _data.pop("entity_ids")
-                self.surfaces_with_volume_velocity[_id] = _data
-
-    def set_particle_velocity(self, data):
-        #
-        _data = data.copy()           
-        if "surface" in data["entity_type"]:
-            for _id in data["entity_ids"]:
-                _data.pop("entity_ids")
-                self.surfaces_with_particle_velocity[_id] = _data
-
-    def remove_volume_velocity(self, entity_id):
-        if entity_id in self.surfaces_with_volume_velocity.keys():
-            self.surfaces_with_volume_velocity.pop(entity_id)
-
-    def reset_surfaces_with_prescribed_dofs(self):
-        self.lines_with_prescribed_dofs = dict()
-        self.surfaces_with_prescribed_dofs = dict()
-
-    def reset_surfaces_with_loads(self):
-        self.lines_with_loads = dict()
-        self.surfaces_with_loads = dict()
-
-    def reset_acoustic_pressure(self):
-        self.surfaces_with_acoustic_pressure = dict()
-
-    def reset_mass_flow_rate(self):
-        self.surfaces_with_mass_flow_rate = dict()
         
-    def reset_volume_velocity(self):
-        self.surfaces_with_volume_velocity = dict()
-                
-    def reset_particle_velocity(self):
-        self.surfaces_with_particle_velocity = dict()
+    def get_structural_boundary_condition(self, surface):
+        return self._get_property("prescribed_dofs", surface=surface)
 
-    # 
-    def _set_property(self, property: str, value, node=None, element=None, entity=None, volume=None):
+    def get_structural_load(self, surface):
+        return self._get_property("structural_load", surface=surface)
+
+    def set_structural_boundary_condition(self, data, line_id, surface_id):
+        if line_id is not None:
+            self._set_property("prescribed_dofs", data, line_id)
+        if surface_id is not None:
+            self._set_property("prescribed_dofs", data, surface_id)
+
+    def set_structural_load(self, data, line_id, surface_id):
+        if line_id is not None:
+            self._set_property("structural_load", data, line_id)
+        if surface_id is not None:
+            self._set_property("structural_load", data, surface_id)
+
+    def get_acoustic_pressure(self, surface):
+        return self._get_property("acoustic_pressure", surface=surface)
+
+    def get_mass_flow_rate(self, surface):
+        return self._get_property("mass_flow_rate", surface=surface)
+
+    def get_volume_velocity(self, surface):
+        return self._get_property("volume_velocity", surface=surface)
+
+    def get_particle_velocity(self, surface):
+        return self._get_property("particle_velocity", surface=surface)
+
+    def set_acoustic_pressure(self, data, surface):
+        self._set_property("acoustic_pressure", data, surface=surface)
+
+    def set_mass_flow_rate(self, data, surface):
+        self._set_property("mass_flow_rate", data, surface=surface)
+
+    def set_volume_velocity(self, data, surface):
+        self._set_property("volume_velocity", data, surface=surface)
+
+    def set_particle_velocity(self, data, surface):
+        self._set_property("particle_velocity", data, surface=surface)
+
+    def _set_property(self, property: str, value, node=None, element=None, line=None, surface=None, volume=None):
         '''
-        Sets a value to a property by node, element, entity or volume
+        Sets a value to a property by node, element, line, surface or volume
         if any of these exists. Otherwise sets the property as global.
 
         '''
@@ -178,14 +132,16 @@ class ModelProperties:
             self.nodal_properties[property, node] = node
         elif volume is not None:
             self.volume_properties[property, volume] = value
-        elif entity is not None:
-            self.entity_properties[property, entity] = value
+        elif surface is not None:
+            self.surface_properties[property, surface] = value
+        elif line is not None:
+            self.line_properties[property, line] = value
         elif element is not None:
             self.element_properties[property, element] = value
         else:
             self.global_properties[property] = value
 
-    def _get_property(self, property: str, node=None, element=None, entity=None, volume=None):
+    def _get_property(self, property: str, node=None, element=None, line=None, surface=None, volume=None):
         '''
         Finds the value that corresponds to the property needed.
         Checks node, element, entity, volume and global data by
@@ -198,9 +154,12 @@ class ModelProperties:
         if (property, element) in self.element_properties:
             return self.element_properties[property, element]
 
-        if (property, entity) in self.entity_properties:
-            return self.entity_properties[property, entity]
-        
+        if (property, line) in self.line_properties:
+            return self.line_properties[property, line]
+
+        if (property, surface) in self.surface_properties:
+            return self.surface_properties[property, surface]
+
         if (property, volume) in self.volume_properties:
             return self.volume_properties[property, volume]
         
@@ -216,7 +175,8 @@ class ModelProperties:
         data_dicts = [
             self.nodal_properties,
             self.element_properties,
-            self.entity_properties,
+            self.line_properties,
+            self.surface_properties,
             self.volume_properties,
             self.global_properties,
         ]
@@ -224,10 +184,50 @@ class ModelProperties:
         for data in data_dicts:
             keys_to_remove = []
 
-            for key, val in data.items():
-                existing_property, _ = key
+            for key in data.keys():
+                
+                if len(key) == 2:
+                    existing_property, _ = key
+                else:
+                    existing_property = key
+                
                 if property == existing_property:
-                    keys_to_remove.append(property)
+                    keys_to_remove.append(key)
 
-            for key in keys_to_remove:
-                data.pop(key)
+            for _key in keys_to_remove:
+                data.pop(_key)
+
+    def _remove_nodal_property(self, property: str, nodal_id : int):
+        """ Remove a nodal property at specific nodal_id.
+        """
+        key = (property, nodal_id)
+        if key in self.nodal_properties.keys():
+            self.nodal_properties.pop(key)
+
+    def _remove_element_property(self, property: str, element_id : int):
+        """ Remove a element property at specific element_id.
+        """
+        key = (property, element_id)
+        if key in self.element_properties.keys():
+            self.element_properties.pop(key)
+
+    def _remove_line_property(self, property: str, line_id : int):
+        """ Remove a line property at specific line_id.
+        """
+        key = (property, line_id)
+        if key in self.line_properties.keys():
+            self.line_properties.pop(key)
+
+    def _remove_surface_property(self, property: str, surface_id : int):
+        """ Remove a surface property at specific surface_id.
+        """
+        key = (property, surface_id)
+        if key in self.surface_properties.keys():
+            self.surface_properties.pop(key)
+
+    def _remove_volume_property(self, property: str, volume_id : int):
+        """ Remove a volume property at specific volume_id.
+        """
+        key = (property, volume_id)
+        if key in self.volume_properties.keys():
+            self.volume_properties.pop(key)

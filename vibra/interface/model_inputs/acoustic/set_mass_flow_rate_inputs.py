@@ -413,7 +413,7 @@ class MassFlowRateInput(QDialog):
                         if table_name not in _list_table_names:
                             _list_table_names.append(table_name)
                 self.project.file.remove_bc_from_file(sections, self.acoustic_bc_info_path, key_strings, None)
-                self.properties.reset_mass_flow_rate()
+                self.properties._reset_property("mass_flow_rate")
 
                 #TODO: remove imported tables
                 self.process_table_file_removal(_list_table_names)

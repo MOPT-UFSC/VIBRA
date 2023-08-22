@@ -74,15 +74,15 @@ class AcousticAssembler:
         else:
             number_frequencies = len(self.frequencies)
 
-        for _id, values in self.properties.surfaces_with_acoustic_pressure.items():
-            nodes = self.model.mesh.nodes_from_surfaces[_id]
-            for _ in nodes:
-                global_prescribed.extend(values)
-
-        # for _id, values in self.properties.lines_with_acoustic_pressure.items():
-        #     nodes = self.model.mesh.nodes_from_lines[_id]
-        #     for _ in nodes:
-        #         global_prescribed.extend(values)
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "acoustic_pressure":
+                values = data["values"]
+                nodes = self.model.mesh.nodes_from_surfaces[surface_id]
+                for _ in nodes:
+                    global_prescribed.extend(values)
+        
+        #TODO: implement same structure for lines
 
         try:    
             
@@ -102,12 +102,12 @@ class AcousticAssembler:
     def get_prescribed_indexes(self):
 
         _prescribed_indexes = []
-
-        for _id in self.properties.surfaces_with_acoustic_pressure:
-            nodes = self.model.mesh.nodes_from_surfaces[_id]
-
-            for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
-                _prescribed_indexes.append(index)
+        for key, _ in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "acoustic_pressure":
+                nodes = self.model.mesh.nodes_from_surfaces[surface_id]
+                for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
+                    _prescribed_indexes.append(index)
         
         if len(_prescribed_indexes) == 0:
             return _prescribed_indexes
@@ -171,46 +171,48 @@ class AcousticAssembler:
     def get_acoustic_excitations(self):
 
         acoustic_excitation = defaultdict(float)
-        
-        for _id, data in self.properties.surfaces_with_mass_flow_rate.items():
-            values = data["values"]
-            avg = data["averaged"]
-            nodes = self.model.mesh.nodes_from_surfaces[_id]
-            N = len(nodes)
-            for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
-                if bool(avg):
-                    acoustic_excitation[index] += values/N
-                else:
-                    acoustic_excitation[index] += values
 
-        for _id, data in self.properties.surfaces_with_volume_velocity.items():
-            values = data["values"]
-            avg = data["averaged"]
-            nodes = self.model.mesh.nodes_from_surfaces[_id]
-            #TODO: get the surface fluid property
-            fluid = self.model.properties.get_fluid()
-            rho = fluid.fluid_density
-            N = len(nodes)
-            for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
-                if bool(avg):
-                    acoustic_excitation[index] += (values*rho)/N
-                else:
-                    acoustic_excitation[index] += values*rho
+        for (property, _id), data in self.properties.surface_properties.items():
+            
+            if property == "mass_flow_rate":
+                values = data["values"]
+                if data["nodal_attribution"]:
+                    nodes = self.model.mesh.nodes_from_surfaces[_id]
+                    N = len(nodes)
+                    for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
+                        if data["averaged"]:
+                            acoustic_excitation[index] += values/N
+                        else:
+                            acoustic_excitation[index] += values
 
-        for _id, data in self.properties.surfaces_with_particle_velocity.items():
-            values = data["values"]
-            avg = data["averaged"]
-            nodes = self.model.mesh.nodes_from_surfaces[_id]
-            #TODO: get the surface fluid property
-            fluid = self.model.properties.get_fluid()
-            rho = fluid.fluid_density
-            area = self.model.surfaces_areas[_id]
-            N = len(nodes)
-            for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
-                if bool(avg):
-                    acoustic_excitation[index] += (rho*area*values)/N
-                else:
-                    acoustic_excitation[index] += rho*area*values
+            elif property == "volume_velocity":
+                values = data["values"]
+                if data["nodal_attribution"]:
+                    nodes = self.model.mesh.nodes_from_surfaces[_id]
+                    N = len(nodes)
+                    #TODO: get the surface fluid property
+                    fluid = self.model.properties.get_fluid()
+                    rho = fluid.fluid_density
+                    for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
+                        if data["averaged"]:
+                            acoustic_excitation[index] += (values*rho)/N
+                        else:
+                            acoustic_excitation[index] += values*rho
+
+            elif property == "particle_velocity":
+                values = data["values"]
+                if data["nodal_attribution"]:
+                    nodes = self.model.mesh.nodes_from_surfaces[_id]
+                    N = len(nodes)
+                    #TODO: get the surface fluid property
+                    fluid = self.model.properties.get_fluid()
+                    rho = fluid.fluid_density
+                    area = self.model.surfaces_areas[_id]
+                    for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
+                        if data["averaged"]:
+                            acoustic_excitation[index] += (rho*area*values)/N
+                        else:
+                            acoustic_excitation[index] += rho*area*values
 
         indexes = list(acoustic_excitation.keys())
         excitation = list(acoustic_excitation.values())

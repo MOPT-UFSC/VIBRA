@@ -414,7 +414,7 @@ class AcousticPressureInput(QDialog):
                         if table_name not in _list_table_names:
                             _list_table_names.append(table_name)
                 self.project.file.remove_bc_from_file(sections, self.acoustic_bc_info_path, key_strings, None)
-                self.properties.reset_acoustic_pressure()
+                self.properties._reset_property("acoustic_pressure")
 
                 #TODO: remove imported tables
                 self.process_table_file_removal(_list_table_names)

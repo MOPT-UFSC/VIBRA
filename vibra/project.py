@@ -93,9 +93,9 @@ class Project:
         self.model.set_mass_flow_rate(data)
         self.file.add_mass_flow_rate_to_file(data)
 
-    def set_volume_velocity(self, data):
-        self.model.set_volume_velocity(data)
-        self.file.add_volume_velocity_to_file(data)
+    def set_volume_velocity(self, data, surface):
+        self.model.set_volume_velocity(data, surface)
+        # self.file.add_volume_velocity_to_file(data)
 
     def set_particle_velocity(self, data):
         self.model.set_particle_velocity(data)
