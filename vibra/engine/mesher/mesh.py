@@ -112,6 +112,7 @@ class Mesh:
 
         logging.info("Loading Geometry" + ProgressStatus(15, 100))
         gmsh.model.mesh.generate(dim=self.dimension)
+        gmsh.model.mesh.removeDuplicateNodes()
 
         logging.info("Processing Mesh" + ProgressStatus(70, 100))
         self._process_mesh()
