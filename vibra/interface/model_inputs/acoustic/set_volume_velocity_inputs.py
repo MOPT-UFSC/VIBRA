@@ -220,10 +220,10 @@ class VolumeVelocityInput(QDialog):
             self.lineEdit_selection_id.setFocus()
             return
 
-        # TODO: remove the conflicting acoustic excitations and boundary conditions
-        # self.project.remove_acoustic_pressure_table_files(self.typed_ids)
-        # self.project.remove_compressor_excitation_table_files(self.typed_ids)
-        # self.project.reset_compressor_info_by_node(self.typed_ids)
+        for _id in self.typed_ids:
+            self.properties._remove_surface_property("acoustic_pressure", _id)
+            self.properties._remove_surface_property("specific_impedance", _id)
+            self.properties._remove_surface_property("compressor_excitation", _id)
 
         volume_velocity = self.check_complex_entries(
             self.lineEdit_real_value, self.lineEdit_imag_value
@@ -289,6 +289,7 @@ class VolumeVelocityInput(QDialog):
 
             imported_values = imported_file[:, 1]
 
+            print(imported_file.shape[1] >= 3)
             if imported_file.shape[1] >= 3:
                 self.frequencies = imported_file[:, 0]
                 self.f_min = self.frequencies[0]
@@ -345,14 +346,17 @@ class VolumeVelocityInput(QDialog):
         )
 
     def check_table_values(self):
+
         lineEdit_selection_id = self.lineEdit_selection_id.text()
         self.stop, self.typed_ids = self.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return
 
-        # self.project.remove_acoustic_pressure_table_files(self.typed_ids)
-        # self.project.reset_compressor_info_by_node(self.typed_ids)
+        for _id in self.typed_ids:
+            self.properties._remove_surface_property("acoustic_pressure", _id)
+            self.properties._remove_surface_property("specific_impedance", _id)
+            self.properties._remove_surface_property("compressor_excitation", _id)
 
         list_table_names = self.get_list_table_names_from_selected_surfaces(self.typed_ids)
         if self.lineEdit_load_table_path != "":
@@ -408,9 +412,8 @@ class VolumeVelocityInput(QDialog):
 
     def text_label(self, value):
         if value.shape[0] == 1:
-        # if isinstance(value, complex):
             value_label = str(value)
-        else:# isinstance(value, np.ndarray):
+        else:
             value_label = "Table"
         return "{}".format(value_label)
 

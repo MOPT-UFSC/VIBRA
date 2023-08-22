@@ -191,11 +191,13 @@ class SpecificImpedanceInput(QDialog):
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return
-        
-        #TODO: remove the conflicting acoustic excitations and boundary conditions
-        # self.project.remove_acoustic_pressure_table_files(self.typed_ids)
-        # self.project.remove_compressor_excitation_table_files(self.typed_ids)
-        # self.project.reset_compressor_info_by_node(self.typed_ids)
+
+        for _id in self.typed_ids:
+            self.properties._remove_surface_property("acoustic_pressure", _id)
+            self.properties._remove_surface_property("mass_flow_rate", _id)
+            self.properties._remove_surface_property("volume_velocity", _id)
+            self.properties._remove_surface_property("particle_velocity", _id)
+            self.properties._remove_surface_property("compressor_excitation", _id)
 
         specific_impedance = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
  
@@ -218,6 +220,8 @@ class SpecificImpedanceInput(QDialog):
 
             for _id in self.typed_ids:
                 self.project.set_specific_impedance(data, _id)
+
+            self.properties.export_model_properties()
 
             print(f"[Set specific impedance] - defined at surface(s) {self.typed_ids}")
             #TODO: remove existing tables and update the render            
@@ -310,10 +314,8 @@ class SpecificImpedanceInput(QDialog):
             PrintMessageInput([title, message, window_title_1])
             return None, None
 
-
     def load_specific_impedance_table(self):
         self.imported_values, self.filename_specific_impedance = self.load_table(self.lineEdit_load_table_path)
-
 
     def check_table_values(self):
 
@@ -323,8 +325,12 @@ class SpecificImpedanceInput(QDialog):
             self.lineEdit_selection_id.setFocus()
             return
 
-        # self.project.remove_acoustic_pressure_table_files(self.typed_ids)
-        # self.project.reset_compressor_info_by_node(self.typed_ids)
+        for _id in self.typed_ids:
+            self.properties._remove_surface_property("acoustic_pressure", _id)
+            self.properties._remove_surface_property("mass_flow_rate", _id)
+            self.properties._remove_surface_property("volume_velocity", _id)
+            self.properties._remove_surface_property("particle_velocity", _id)
+            self.properties._remove_surface_property("compressor_excitation", _id)
 
         list_table_names = self.get_list_table_names_from_selected_surfaces(self.typed_ids)
         if self.lineEdit_load_table_path != "":
@@ -363,7 +369,6 @@ class SpecificImpedanceInput(QDialog):
             PrintMessageInput([title, message, window_title_1])
             self.lineEdit_load_table_path.setFocus()
 
-
     def get_list_table_names_from_selected_surfaces(self, list_ids):
         list_table_names = []
         for key, data in self.properties.surface_properties.items():
@@ -374,16 +379,12 @@ class SpecificImpedanceInput(QDialog):
                         list_table_names.append(data["table_name"])
         return list_table_names
 
-
     def text_label(self, value):
-        text = ""
-        if isinstance(value, complex):
+        if value.shape[0] == 1:
             value_label = str(value)
-        elif isinstance(value, np.ndarray):
-            value_label = 'Table'
-        text = "{}".format(value_label)
-        return text
-
+        else:
+            value_label = "Table"
+        return "{}".format(value_label)
 
     def remove_bc_from_selection(self):
         if self.lineEdit_selection_id.text() != "":
@@ -400,12 +401,10 @@ class SpecificImpedanceInput(QDialog):
                     self.lineEdit_selection_id.setText("")
                     return
 
-
     def process_table_file_removal(self, list_table_names):
         if list_table_names != []:
             for table_name in list_table_names:
                 self.project.remove_acoustic_table_files_from_folder(table_name, "specific_impedance_files")    
-
 
     def check_reset(self):
         surface_ids = []
