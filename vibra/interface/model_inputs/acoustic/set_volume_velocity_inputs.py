@@ -44,7 +44,6 @@ class VolumeVelocityInput(QDialog):
         self.typed_ids = []
         self.remove_volume_velocity = False
         self.volume_velocity = None
-        self.list_Nones = [None, None, None, None, None, None]
         self.userPath = os.path.expanduser('~')
         self.new_load_path_table = ""
         self.project_path = self.project.file.project_path
@@ -425,7 +424,6 @@ class VolumeVelocityInput(QDialog):
                 return
 
             _list_table_names = []
-            # sections = []
             if read._continue:
                 for key, data in self.properties.surface_properties.items():
                     property, surface_id = key
@@ -437,7 +435,7 @@ class VolumeVelocityInput(QDialog):
                         if table_name is not None:
                             if table_name not in _list_table_names:
                                 _list_table_names.append(table_name)
-                # self.project.file.remove_bc_from_file(sections, self.acoustic_bc_info_path, key_strings, None)
+
                 self.properties._reset_property("volume_velocity")
 
                 #TODO: remove imported tables

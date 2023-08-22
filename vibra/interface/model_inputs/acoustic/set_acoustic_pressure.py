@@ -44,7 +44,6 @@ class AcousticPressureInput(QDialog):
         self.typed_ids = []
         self.remove_acoustic_pressure = False
         self.acoustic_pressure = None
-        self.list_Nones = [None, None, None, None, None, None]
         self.userPath = os.path.expanduser('~')
         self.new_load_path_table = ""
         self.project_path = self.project.file.project_path
@@ -104,6 +103,9 @@ class AcousticPressureInput(QDialog):
         self.tabWidget_acoustic_pressure.currentChanged.connect(self.tabEvent_acoustic_pressure)
         self.treeWidget_acoustic_pressure.itemClicked.connect(self.on_click_item)
         self.treeWidget_acoustic_pressure.itemDoubleClicked.connect(self.on_doubleclick_item)
+        #
+        geometry_widget = self.main_window.viewer_tabs.geometry_widget
+        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
 
 
     def tabEvent_acoustic_pressure(self):
@@ -126,13 +128,25 @@ class AcousticPressureInput(QDialog):
 
     def load_info(self):
         self.treeWidget_acoustic_pressure.clear()
-        for _id, data in self.properties.surfaces_with_acoustic_pressure.items():
-            value = data["values"]
-            new = QTreeWidgetItem([str(_id), str(self.text_label(value))])
-            new.setTextAlignment(0, Qt.AlignCenter)
-            new.setTextAlignment(1, Qt.AlignCenter)
-            self.treeWidget_acoustic_pressure.addTopLevelItem(new)
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "particle_velocity":
+                value = data["values"]
+                new = QTreeWidgetItem([str(surface_id), str(self.text_label(value))])
+                new.setTextAlignment(0, Qt.AlignCenter)
+                new.setTextAlignment(1, Qt.AlignCenter)
+                self.treeWidget_acoustic_pressure.addTopLevelItem(new)
         self.update_tabs_visibility()
+
+
+    def geometry_selection_callback(self, points, lines, faces):
+        
+        if faces:
+            text = ", ".join([str(i) for i in faces])
+            self.lineEdit_selection_id.setText(text)
+        
+        elif not any([points, lines, faces]):
+            self.lineEdit_selection_id.setText("")
 
 
     def check_complex_entries(self, lineEdit_real, lineEdit_imag):
@@ -192,12 +206,14 @@ class AcousticPressureInput(QDialog):
             self.acoustic_pressure = acoustic_pressure
 
             key_avg = int(self.checkBox_averaged_constant_values.isChecked())
-            data = {"entity_type" : "surface",
-                    "entity_ids" : self.typed_ids,
-                    "values" : acoustic_pressure,
-                    "averaged" : key_avg}
+            data = {"values" : acoustic_pressure,
+                    "averaged" : key_avg,
+                    "nodal_attribution" : True,
+                    "element_integration" : False}
 
-            self.project.set_acoustic_pressure(data)
+            for _id in self.typed_ids:
+                self.project.set_acoustic_pressure(data, _id)
+
             print(f"[Set acoustic pressure] - defined at surface(s) {self.typed_ids}")
             #TODO: remove existing tables and update the render            
             self.close()
@@ -321,11 +337,12 @@ class AcousticPressureInput(QDialog):
                         list_table_names.remove(self.basename_acoustic_pressure)
 
                     key_avg = int(self.checkBox_averaged_constant_values.isChecked())
-                    data = {"entity_type" : "surface",
-                            "entity_ids" : self.typed_ids,
-                            "values" : self.acoustic_pressure,
+
+                    data = {"values" : self.acoustic_pressure,
                             "averaged" : key_avg,
-                            "table_name" : self.basename_acoustic_pressure}
+                            "table_name" : self.basename_acoustic_pressure,
+                            "nodal_attribution" : True,
+                            "element_integration" : False}
 
             self.project.set_acoustic_pressure(data)
 
@@ -342,11 +359,12 @@ class AcousticPressureInput(QDialog):
 
     def get_list_table_names_from_selected_surfaces(self, list_ids):
         list_table_names = []
-        for surface_id, data in self.properties.surfaces_with_acoustic_pressure.items():
-            if surface_id in list_ids:
-                if "table_name" in data.keys():
-                    list_table_names.append(data["table_name"])
-
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "acoustic_pressure":
+                if surface_id in list_ids:
+                    if "table_name" in data.keys():
+                        list_table_names.append(data["table_name"])
         return list_table_names
 
 
@@ -362,19 +380,22 @@ class AcousticPressureInput(QDialog):
 
     def remove_bc_from_selection(self):
         if self.lineEdit_selection_id.text() != "":
-            picked_id = int(self.lineEdit_selection_id.text())       
-            if picked_id in self.properties.surfaces_with_acoustic_pressure.keys():
-                section_key = f"surface - {picked_id}"           
-                key_strings = ["acoustic pressure", "averaged", "table name"]
-                message = f"The acoustic pressure attributed to the {picked_id} surface has been removed."
-                self.project.file.remove_bc_from_file(section_key, self.acoustic_bc_info_path, key_strings, message)
-                #TODO: remove imported acoustic pressure tables
-                list_table_names = self.get_list_table_names_from_selected_surfaces([picked_id])
-                self.process_table_file_removal(list_table_names)
-                self.properties.remove_acoustic_pressure(picked_id)
-                self.load_info()
-                self.lineEdit_selection_id.setText("")
-                # self.close()
+            surface_properties = self.properties.surface_properties.copy()
+            picked_id = int(self.lineEdit_selection_id.text())
+            for key in surface_properties.keys():
+                property, surface_id = key
+                if property == "acoustic_pressure" and picked_id == surface_id:
+                    # section_key = f"surface - {picked_id}"           
+                    # key_strings = ["acoustic pressure", "averaged", "table name"]
+                    # message = f"The acoustic pressure attributed to the {picked_id} surface has been removed."
+                    # self.project.file.remove_bc_from_file(section_key, self.acoustic_bc_info_path, key_strings, message)
+                    # #TODO: remove imported acoustic pressure tables
+                    list_table_names = self.get_list_table_names_from_selected_surfaces([picked_id])
+                    self.process_table_file_removal(list_table_names)
+                    self.properties.remove_acoustic_pressure(picked_id)
+                    self.load_info()
+                    self.lineEdit_selection_id.setText("")
+                    return
 
 
     def process_table_file_removal(self, list_table_names):
@@ -384,47 +405,48 @@ class AcousticPressureInput(QDialog):
 
 
     def check_reset(self):
-        if len(self.properties.surfaces_with_acoustic_pressure) > 0:
+        surface_ids = []
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "acoustic_pressure":
+                surface_ids.append(surface_id)
  
-            title = f"Resetting of all applied acoustic pressures"
-            message = "Do you really want to remove the acoustic pressure applied to the following surface(s)?\n\n"
-            entity_ids = list(self.properties.surfaces_with_acoustic_pressure.keys())
-            message += f"{entity_ids}"
-            message += "\n\nPress the Continue button to proceed with the resetting or press Cancel or "
-            message += "Close buttons to abort the current operation."
-            buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
-            read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
+            if len(surface_ids) > 0:
+                title = f"Resetting of all applied acoustic pressures"
+                message = "Do you really want to remove the acoustic pressure applied to the following surface(s)?\n\n"
+                message += f"{surface_ids}"
+                message += "\n\nPress the Continue button to proceed with the resetting or press Cancel or "
+                message += "Close buttons to abort the current operation."
+                buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+                read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
 
-            if read._doNotRun:
-                return
+                if read._doNotRun:
+                    return
 
-            _list_table_names = []
-            sections = []
-            if read._continue:
-                surfaces_ids = self.properties.surfaces_with_acoustic_pressure.keys()
-                for _id in surfaces_ids:
-                    key_strings = ["acoustic pressure", "averaged", "table name"]
-                    sections.append(f"surface - {_id}")
-                    data = self.properties.surfaces_with_acoustic_pressure[_id]
-                    if "table_name" in data.keys():
-                        table_name = data[table_name]
-                    else:
-                        table_name = None
-                    if table_name is not None:
-                        if table_name not in _list_table_names:
-                            _list_table_names.append(table_name)
-                self.project.file.remove_bc_from_file(sections, self.acoustic_bc_info_path, key_strings, None)
-                self.properties._reset_property("acoustic_pressure")
+                _list_table_names = []
+                if read._continue:
+                    for key, data in self.properties.surface_properties.items():
+                        property, surface_id = key
+                        if property == "acoustic_pressure":
+                            if "table_name" in data.keys():
+                                table_name = data[table_name]
+                            else:
+                                table_name = None
+                            if table_name is not None:
+                                if table_name not in _list_table_names:
+                                    _list_table_names.append(table_name)
 
-                #TODO: remove imported tables
-                self.process_table_file_removal(_list_table_names)
+                    self.properties._reset_property("acoustic_pressure")
 
-                title = "acoustic pressure resetting process complete"
-                message = "All acoustic pressure applied to the acoustic " 
-                message += "model have been removed from the model."
-                PrintMessageInput([title, message, window_title_2])
+                    #TODO: remove imported tables
+                    self.process_table_file_removal(_list_table_names)
 
-                self.close()
+                    title = "acoustic pressure resetting process complete"
+                    message = "All acoustic pressure applied to the acoustic " 
+                    message += "model have been removed from the model."
+                    PrintMessageInput([title, message, window_title_2])
+
+                    self.close()
 
 
     def reset_input_fields(self):
@@ -459,7 +481,13 @@ class AcousticPressureInput(QDialog):
 
 
     def update_tabs_visibility(self):
-        if len(self.properties.surfaces_with_acoustic_pressure) == 0:
+        surface_ids = []
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "acoustic_pressure":
+                surface_ids.append(surface_id)
+    
+        if len(surface_ids) == 0:
             self.tabWidget_acoustic_pressure.setCurrentWidget(self.tab_constant_values)
             self.tab_remove.setDisabled(True)
         else:

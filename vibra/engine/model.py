@@ -100,20 +100,20 @@ class Model:
     def set_dissipation_model_data(self, data):
         self.properties.set_dissipation_model(data)
     
-    def set_structural_boundary_condition(self, data):
-        self.properties.set_structural_boundary_condition(data)
+    def set_structural_boundary_condition(self, data, line, surface):
+        self.properties.set_structural_boundary_condition(data, line, surface)
     
-    def set_structural_load(self, data):
-        self.properties.set_structural_load(data)
+    def set_structural_load(self, data, line, surface):
+        self.properties.set_structural_load(data, line, surface)
 
-    def set_acoustic_pressure(self, data):
-        self.properties.set_acoustic_pressure(data)
+    def set_acoustic_pressure(self, data, surface):
+        self.properties.set_acoustic_pressure(data, surface)
 
-    def set_mass_flow_rate(self, data):
-        self.properties.set_mass_flow_rate(data)
+    def set_mass_flow_rate(self, data, surface):
+        self.properties.set_mass_flow_rate(data, surface)
 
     def set_volume_velocity(self, data, surface):
         self.properties.set_volume_velocity(data, surface)
     
-    def set_particle_velocity(self, data):
-        self.properties.set_particle_velocity(data)
+    def set_particle_velocity(self, data, surface):
+        self.properties.set_particle_velocity(data, surface)

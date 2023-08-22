@@ -81,29 +81,29 @@ class Project:
             return
         self.model.process_mesh()
 
-    def set_structural_boundary_condition(self, data):
-        self.model.set_structural_boundary_condition(data)
-        self.file.add_structural_boundary_condition_to_file(data)
+    def set_structural_boundary_condition(self, data, line, surface):
+        self.model.set_structural_boundary_condition(data, line, surface)
+        # self.file.add_structural_boundary_condition_to_file(data)
 
-    def set_acoustic_pressure(self, data):
-        self.model.set_acoustic_pressure(data)
-        self.file.add_acoustic_pressure_to_file(data)
+    def set_acoustic_pressure(self, data, surface):
+        self.model.set_acoustic_pressure(data, surface)
+        # self.file.add_acoustic_pressure_to_file(data)
 
-    def set_mass_flow_rate(self, data):
-        self.model.set_mass_flow_rate(data)
-        self.file.add_mass_flow_rate_to_file(data)
+    def set_mass_flow_rate(self, data, surface):
+        self.model.set_mass_flow_rate(data, surface)
+        # self.file.add_mass_flow_rate_to_file(data)
 
     def set_volume_velocity(self, data, surface):
         self.model.set_volume_velocity(data, surface)
         # self.file.add_volume_velocity_to_file(data)
 
-    def set_particle_velocity(self, data):
-        self.model.set_particle_velocity(data)
-        self.file.add_particle_velocity_to_file(data)
+    def set_particle_velocity(self, data, surface):
+        self.model.set_particle_velocity(data, surface)
+        # self.file.add_particle_velocity_to_file(data)
 
     def set_dissipation_model(self, data):
         self.model.set_dissipation_model_data(data)
-        self.file.add_dissipation_model_data_to_file(data)
+        # self.file.add_dissipation_model_data_to_file(data)
 
     def set_analysis_data(self, data):
 

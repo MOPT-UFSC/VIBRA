@@ -103,6 +103,9 @@ class MassFlowRateInput(QDialog):
         self.tabWidget_mass_flow_rate.currentChanged.connect(self.tabEvent_mass_flow_rate)
         self.treeWidget_mass_flow_rate.itemClicked.connect(self.on_click_item)
         self.treeWidget_mass_flow_rate.itemDoubleClicked.connect(self.on_doubleclick_item)
+        #
+        geometry_widget = self.main_window.viewer_tabs.geometry_widget
+        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
 
 
     def tabEvent_mass_flow_rate(self):
@@ -125,13 +128,25 @@ class MassFlowRateInput(QDialog):
 
     def load_info(self):
         self.treeWidget_mass_flow_rate.clear()
-        for _id, data in self.properties.surfaces_with_mass_flow_rate.items():
-            value = data["values"]
-            new = QTreeWidgetItem([str(_id), str(self.text_label(value))])
-            new.setTextAlignment(0, Qt.AlignCenter)
-            new.setTextAlignment(1, Qt.AlignCenter)
-            self.treeWidget_mass_flow_rate.addTopLevelItem(new)
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "mass_flow_rate":
+                value = data["values"]
+                new = QTreeWidgetItem([str(surface_id), str(self.text_label(value))])
+                new.setTextAlignment(0, Qt.AlignCenter)
+                new.setTextAlignment(1, Qt.AlignCenter)
+                self.treeWidget_mass_flow_rate.addTopLevelItem(new)
         self.update_tabs_visibility()
+
+
+    def geometry_selection_callback(self, points, lines, faces):
+        
+        if faces:
+            text = ", ".join([str(i) for i in faces])
+            self.lineEdit_selection_id.setText(text)
+        
+        elif not any([points, lines, faces]):
+            self.lineEdit_selection_id.setText("")
 
 
     def check_complex_entries(self, lineEdit_real, lineEdit_imag):
@@ -191,12 +206,14 @@ class MassFlowRateInput(QDialog):
             self.mass_flow_rate = mass_flow_rate
 
             key_avg = int(self.checkBox_averaged_constant_values.isChecked())
-            data = {"entity_type" : "surface",
-                    "entity_ids" : self.typed_ids,
-                    "values" : mass_flow_rate,
-                    "averaged" : key_avg}
+            data = {"values" : mass_flow_rate,
+                    "averaged" : key_avg,
+                    "nodal_attribution" : True,
+                    "element_integration" : False}
 
-            self.project.set_mass_flow_rate(data)
+            for _id in self.typed_ids:
+                self.project.set_mass_flow_rate(data, _id)
+
             print(f"[Set Mass Flow Rate] - defined at surface(s) {self.typed_ids}")
             #TODO: remove existing tables and update the render            
             self.close()
@@ -320,11 +337,12 @@ class MassFlowRateInput(QDialog):
                         list_table_names.remove(self.basename_mass_flow_rate)
 
                     key_avg = int(self.checkBox_averaged_constant_values.isChecked())
-                    data = {"entity_type" : "surface",
-                            "entity_ids" : self.typed_ids,
-                            "values" : self.mass_flow_rate,
+
+                    data = {"values" : self.mass_flow_rate,
                             "averaged" : key_avg,
-                            "table_name" : self.basename_mass_flow_rate}
+                            "table_name" : self.basename_mass_flow_rate,
+                            "nodal_attribution" : True,
+                            "element_integration" : False}
 
             self.project.set_mass_flow_rate(data)
 
@@ -341,11 +359,12 @@ class MassFlowRateInput(QDialog):
 
     def get_list_table_names_from_selected_surfaces(self, list_ids):
         list_table_names = []
-        for surface_id, data in self.properties.surfaces_with_mass_flow_rate.items():
-            if surface_id in list_ids:
-                if "table_name" in data.keys():
-                    list_table_names.append(data["table_name"])
-
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "mass_flow_rate":
+                if surface_id in list_ids:
+                    if "table_name" in data.keys():
+                        list_table_names.append(data["table_name"])
         return list_table_names
 
 
@@ -361,19 +380,22 @@ class MassFlowRateInput(QDialog):
 
     def remove_bc_from_selection(self):
         if self.lineEdit_selection_id.text() != "":
-            picked_id = int(self.lineEdit_selection_id.text())       
-            if picked_id in self.properties.surfaces_with_mass_flow_rate.keys():
-                section_key = f"surface - {picked_id}"           
-                key_strings = ["volume velocity", "averaged", "table name"]
-                message = f"The volume velocity attributed to the {picked_id} surface has been removed."
-                self.project.file.remove_bc_from_file(section_key, self.acoustic_bc_info_path, key_strings, message)
-                #TODO: remove imported volume velocity tables
-                list_table_names = self.get_list_table_names_from_selected_surfaces([picked_id])
-                self.process_table_file_removal(list_table_names)
-                self.properties.remove_mass_flow_rate(picked_id)
-                self.load_info()
-                self.lineEdit_selection_id.setText("")
-                # self.close()
+            surface_properties = self.properties.surface_properties.copy()
+            picked_id = int(self.lineEdit_selection_id.text())
+            for key in surface_properties.keys():
+                property, surface_id = key
+                if property == "mass_flow_rate" and picked_id == surface_id:
+                    # section_key = f"surface - {picked_id}"           
+                    # key_strings = ["volume velocity", "averaged", "table name"]
+                    # message = f"The volume velocity attributed to the {picked_id} surface has been removed."
+                    # self.project.file.remove_bc_from_file(section_key, self.acoustic_bc_info_path, key_strings, message)
+                    # #TODO: remove imported volume velocity tables
+                    list_table_names = self.get_list_table_names_from_selected_surfaces([picked_id])
+                    self.process_table_file_removal(list_table_names)
+                    self.properties.remove_mass_flow_rate(picked_id)
+                    self.load_info()
+                    self.lineEdit_selection_id.setText("")
+                    return
 
 
     def process_table_file_removal(self, list_table_names):
@@ -383,47 +405,48 @@ class MassFlowRateInput(QDialog):
 
 
     def check_reset(self):
-        if len(self.properties.surfaces_with_mass_flow_rate) > 0:
+        surface_ids = []
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "mass_flow_rate":
+                surface_ids.append(surface_id)
  
-            title = f"Resetting of all applied volume velocities"
-            message = "Do you really want to remove the volume velocity applied to the following surface(s)?\n\n"
-            entity_ids = list(self.properties.surfaces_with_mass_flow_rate.keys())
-            message += f"{entity_ids}"
-            message += "\n\nPress the Continue button to proceed with the resetting or press Cancel or "
-            message += "Close buttons to abort the current operation."
-            buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
-            read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
+            if len(surface_ids) > 0:
+                title = f"Resetting of all applied volume velocities"
+                message = "Do you really want to remove the volume velocity applied to the following surface(s)?\n\n"
+                message += f"{surface_ids}"
+                message += "\n\nPress the Continue button to proceed with the resetting or press Cancel or "
+                message += "Close buttons to abort the current operation."
+                buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+                read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
 
-            if read._doNotRun:
-                return
+                if read._doNotRun:
+                    return
 
-            _list_table_names = []
-            sections = []
-            if read._continue:
-                surfaces_ids = self.properties.surfaces_with_mass_flow_rate.keys()
-                for _id in surfaces_ids:
-                    key_strings = ["volume velocity", "averaged", "table name"]
-                    sections.append(f"surface - {_id}")
-                    data = self.properties.surfaces_with_mass_flow_rate[_id]
-                    if "table_name" in data.keys():
-                        table_name = data[table_name]
-                    else:
-                        table_name = None
-                    if table_name is not None:
-                        if table_name not in _list_table_names:
-                            _list_table_names.append(table_name)
-                self.project.file.remove_bc_from_file(sections, self.acoustic_bc_info_path, key_strings, None)
-                self.properties._reset_property("mass_flow_rate")
+                _list_table_names = []
+                if read._continue:
+                    for key, data in self.properties.surface_properties.items():
+                        property, surface_id = key
+                        if property == "mass_flow_rate":
+                            if "table_name" in data.keys():
+                                table_name = data[table_name]
+                            else:
+                                table_name = None
+                            if table_name is not None:
+                                if table_name not in _list_table_names:
+                                    _list_table_names.append(table_name)
 
-                #TODO: remove imported tables
-                self.process_table_file_removal(_list_table_names)
+                    self.properties._reset_property("mass_flow_rate")
 
-                title = "Volume velocity resetting process complete"
-                message = "All volume velocity applied to the acoustic " 
-                message += "model have been removed from the model."
-                PrintMessageInput([title, message, window_title_2])
+                    #TODO: remove imported tables
+                    self.process_table_file_removal(_list_table_names)
 
-                self.close()
+                    title = "Volume velocity resetting process complete"
+                    message = "All volume velocity applied to the acoustic " 
+                    message += "model have been removed from the model."
+                    PrintMessageInput([title, message, window_title_2])
+
+                    self.close()
 
 
     def reset_input_fields(self):
@@ -458,7 +481,13 @@ class MassFlowRateInput(QDialog):
 
 
     def update_tabs_visibility(self):
-        if len(self.properties.surfaces_with_mass_flow_rate) == 0:
+        surface_ids = []
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "mass_flow_rate":
+                surface_ids.append(surface_id)
+
+        if len(surface_ids) == 0:
             self.tabWidget_mass_flow_rate.setCurrentWidget(self.tab_constant_values)
             self.tab_remove.setDisabled(True)
         else:
