@@ -2,13 +2,14 @@ import logging
 from pathlib import Path
 from time import sleep
 
-from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.model import Model
+from vibra.engine.solvers.acoustic_harmonic_solver import (
+    AcousticHarmonicSolver,
+)
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
-from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
-
 from vibra.project_file import ProjectFile
 from vibra.utils.progress_status import ProgressStatus
 
@@ -106,7 +107,6 @@ class Project:
         self.file.add_dissipation_model_data_to_file(data)
 
     def set_analysis_data(self, data):
-
         self.analysis_data = data
         self.file.add_frequency_in_file(data)
 
@@ -123,18 +123,21 @@ class Project:
         # structural modal analysis
         elif data["analysis_id"] == 2:
             self.set_structural_element_to_model()
-            self.structural_modal_solver = StructuralModalSolver(self.structural_assembler, 
-                                                                 analysis_data=data)
-        # acoustic harmonic analysis        
+            self.structural_modal_solver = StructuralModalSolver(
+                self.structural_assembler, analysis_data=data
+            )
+        # acoustic harmonic analysis
         elif data["analysis_id"] == 3:
             self.set_acoustic_element_to_model()
-            self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_assembler, 
-                                                                   analysis_data=data)
+            self.acoustic_harmonic_solver = AcousticHarmonicSolver(
+                self.acoustic_assembler, analysis_data=data
+            )
         # acoustic modal analysis
         elif data["analysis_id"] == 4:
             self.set_acoustic_element_to_model()
-            self.acoustic_modal_solver = AcousticModalSolver(self.acoustic_assembler, 
-                                                             analysis_data=data)
+            self.acoustic_modal_solver = AcousticModalSolver(
+                self.acoustic_assembler, analysis_data=data
+            )
         # couled harmonic analysis (direct method)
         elif data["analysis_id"] == 5:
             print("Coupled harmonic analysis (direct method) not implemented")
@@ -144,14 +147,13 @@ class Project:
         elif data["analysis_id"] == 6:
             print("Coupled harmonic analysis (mode superposition method) not implemented")
             raise NotImplementedError("Not implemented solver")
-        
+
         # static analysis
         elif data["analysis_id"] == 7:
             print("Static analysis not implemented")
             raise NotImplementedError("Not implemented solver")
 
         else:
-
             raise NotImplementedError("Not implemented solver")
 
     def set_frequencies(self, frequencies, f_min, f_max, f_step):

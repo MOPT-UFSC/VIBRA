@@ -1,9 +1,10 @@
+from pathlib import Path
+
 from PyQt5 import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from pathlib import Path
 from vibra.utils.icons import load_icon
 
 
@@ -44,7 +45,6 @@ class StructuralModalAnalysisBar(QWidget):
         self.frequency_box.setMinimumWidth(180)
         self.frequency_box.setMaximumWidth(300)
 
-
         sliders_layout = QGridLayout()
         sliders_layout.addWidget(QLabel("Magnification factor:"), 0, 0)
         sliders_layout.addWidget(self.magnification_factor_slider, 0, 1)
@@ -70,7 +70,6 @@ class StructuralModalAnalysisBar(QWidget):
         buttons_layout = QVBoxLayout()
         buttons_layout.addLayout(plot_layout)
         buttons_layout.addLayout(config_layout)
-
 
         layout = QHBoxLayout()
         layout.addLayout(sliders_layout)

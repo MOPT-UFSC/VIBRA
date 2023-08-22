@@ -45,7 +45,7 @@ class StatusBar(QStatusBar):
             self.faces_label.setText(f"Selected Faces: {str_faces}")
         else:
             self.faces_label.setText(f"Selected Face: {str_faces}")
-    
+
     def show_volumes(self, n_volumes):
         str_volumes = ", ".join([str(i) for i in n_volumes])
         if len(n_volumes) > 1:

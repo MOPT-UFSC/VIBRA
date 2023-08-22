@@ -1,14 +1,16 @@
-from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 
+from vibra.interface.tabs.geometry_info_bar import GeometryInfoBar
 from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 from vibra.interface.viewer_3d.actors.lines_actor import LinesActor
 from vibra.interface.viewer_3d.actors.points_actor import PointsActor
-from vibra.interface.viewer_3d.render_widgets.common_render_widget import CommonRenderWidget
 from vibra.interface.viewer_3d.interactor_styles.selection_interactor import (
     SelectionInteractor,
 )
-from vibra.interface.tabs.geometry_info_bar import GeometryInfoBar
+from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
+    CommonRenderWidget,
+)
 
 SHOW_POINTS = 0
 SHOW_LINES = 1
@@ -23,7 +25,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.project = project
         self.view_mode = SHOW_FACES
-        
+
         self.geometry_info = GeometryInfoBar()
 
         # replace the layout to add other usefull widgets
@@ -144,11 +146,11 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         clicked_cell = obj.selection_picker.GetCellId()
         clicked_actor = obj.selection_picker.GetActor()
-        
+
         modifiers = QApplication.keyboardModifiers()
-        ctrl_pressed = (modifiers & Qt.ControlModifier)
-        shift_pressed = (modifiers & Qt.ShiftModifier)
-        alt_pressed = (modifiers & Qt.AltModifier)
+        ctrl_pressed = modifiers & Qt.ControlModifier
+        shift_pressed = modifiers & Qt.ShiftModifier
+        alt_pressed = modifiers & Qt.AltModifier
 
         if clicked_actor == self.points_actor:
             self.select_point(clicked_cell, join=ctrl_pressed, remove=alt_pressed)
@@ -170,7 +172,12 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         else:
             self.clear_selection()
-            self.selection_changed.emit(self.selected_points, self.selected_lines, self.selected_faces, self.selected_volumes)
+            self.selection_changed.emit(
+                self.selected_points,
+                self.selected_lines,
+                self.selected_faces,
+                self.selected_volumes,
+            )
 
         self.update()
 
@@ -189,7 +196,7 @@ class GeometryRenderWidget(CommonRenderWidget):
     def select_multiple_points(self, new_points, *, join=False, remove=False):
         if self.view_mode != SHOW_POINTS:
             return
-        
+
         if join:
             self.selected_points |= set(new_points)
         elif remove:
@@ -200,7 +207,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.points_actor.clear_colors()
         self.points_actor.paint_cells(self.selection_color, self.selected_points)
         self.update()
-        self.selection_changed.emit(self.selected_points, self.selected_lines, self.selected_faces, self.selected_volumes)
+        self.selection_changed.emit(
+            self.selected_points, self.selected_lines, self.selected_faces, self.selected_volumes
+        )
 
     def select_multiple_lines(self, new_lines, *, join=False, remove=False):
         if self.view_mode != SHOW_LINES:
@@ -221,7 +230,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.lines_actor.clear_colors()
         self.lines_actor.paint_cells(self.selection_color, all_element_indexes)
         self.update()
-        self.selection_changed.emit(self.selected_points, self.selected_lines, self.selected_faces, self.selected_volumes)
+        self.selection_changed.emit(
+            self.selected_points, self.selected_lines, self.selected_faces, self.selected_volumes
+        )
 
     def select_multiple_faces(self, new_faces, *, join=False, remove=False):
         if self.view_mode != SHOW_FACES:
@@ -243,7 +254,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.faces_actor.clear_colors()
         self.faces_actor.paint_cells(self.selection_color, all_element_indexes)
         self.update()
-        self.selection_changed.emit(self.selected_points, self.selected_lines, self.selected_faces, self.selected_volumes)
+        self.selection_changed.emit(
+            self.selected_points, self.selected_lines, self.selected_faces, self.selected_volumes
+        )
 
     def select_multiple_volumes(self, new_volumes, *, join=False, remove=False):
         if self.view_mode != SHOW_FACES:
@@ -267,7 +280,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.faces_actor.clear_colors()
         self.faces_actor.paint_cells(self.selection_color, all_element_indexes)
         self.update()
-        self.selection_changed.emit(self.selected_points, self.selected_lines, self.selected_faces, self.selected_volumes)
+        self.selection_changed.emit(
+            self.selected_points, self.selected_lines, self.selected_faces, self.selected_volumes
+        )
 
     def clear_selection(self):
         self.points_actor.clear_colors()

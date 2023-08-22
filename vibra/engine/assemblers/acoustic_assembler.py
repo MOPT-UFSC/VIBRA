@@ -1,15 +1,14 @@
+from collections import defaultdict
 from time import time
 
 import numpy as np
-from collections import defaultdict
 from scipy.sparse import coo_matrix, csr_matrix
 
+from vibra.engine.elements.acoustic_hex8_element import ACT_HEXAHEDRON_8C
+from vibra.engine.elements.acoustic_hex20_element import ACT_HEXAHEDRON_20C
 # from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.elements.acoustic_tet4_element import ACT_TETRAHEDRON_4C
 from vibra.engine.elements.acoustic_tet10_element import ACT_TETRAHEDRON_10C
-from vibra.engine.elements.acoustic_hex8_element import ACT_HEXAHEDRON_8C
-from vibra.engine.elements.acoustic_hex20_element import ACT_HEXAHEDRON_20C
-
 from vibra.engine.mesher.element_type import *
 
 
@@ -28,7 +27,6 @@ class AcousticAssembler:
         self.unprescribed_indexes = []
 
     def get_element(self):
-        
         element_type = self.model.mesh.element_type
 
         if element_type == TETRAHEDRON_4:
@@ -66,7 +64,7 @@ class AcousticAssembler:
 
         get_unprescribed_indexes : Indexes of the structural free degrees of freedom.
         """
-    
+
         global_prescribed = []
         list_prescribed_dofs = []
         if self.frequencies is None:
@@ -84,23 +82,21 @@ class AcousticAssembler:
         #     for _ in nodes:
         #         global_prescribed.extend(values)
 
-        try:    
-            
+        try:
             aux_ones = np.ones(number_frequencies, dtype=complex)
             for value in global_prescribed:
                 if isinstance(value, complex):
-                    list_prescribed_dofs.append(aux_ones*value)
+                    list_prescribed_dofs.append(aux_ones * value)
                 elif isinstance(value, np.ndarray):
                     list_prescribed_dofs.append(value[0:number_frequencies])
             array_prescribed_values = np.array(list_prescribed_dofs)
-        
+
         except Exception as _error_log:
             print(str(_error_log))
 
         return global_prescribed, array_prescribed_values
 
     def get_prescribed_indexes(self):
-
         _prescribed_indexes = []
 
         for _id in self.properties.surfaces_with_acoustic_pressure:
@@ -108,14 +104,13 @@ class AcousticAssembler:
 
             for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
                 _prescribed_indexes.append(index)
-        
+
         if len(_prescribed_indexes) == 0:
             return _prescribed_indexes
         else:
             return _prescribed_indexes
 
     def get_unprescribed_indexes(self):
-
         element = self.get_element()
         total_dofs = element.DOF_PER_NODE * len(element.nodal_coordinates)
         all_indexes = np.arange(total_dofs, dtype=int)
@@ -162,16 +157,19 @@ class AcousticAssembler:
 
         self.process_indexes()
         if len(self.prescribed_indexes) > 0:
-            self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-            self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+            self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][
+                :, self.unprescribed_indexes
+            ]
+            self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][
+                :, self.unprescribed_indexes
+            ]
         else:
             self.stiffness_matrix = _stiffness_matrix_full
             self.mass_matrix = _mass_matrix_full
 
     def get_acoustic_excitations(self):
-
         acoustic_excitation = defaultdict(float)
-        
+
         for _id, data in self.properties.surfaces_with_mass_flow_rate.items():
             values = data["values"]
             avg = data["averaged"]
@@ -179,7 +177,7 @@ class AcousticAssembler:
             N = len(nodes)
             for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
                 if bool(avg):
-                    acoustic_excitation[index] += values/N
+                    acoustic_excitation[index] += values / N
                 else:
                     acoustic_excitation[index] += values
 
@@ -187,37 +185,37 @@ class AcousticAssembler:
             values = data["values"]
             avg = data["averaged"]
             nodes = self.model.mesh.nodes_from_surfaces[_id]
-            #TODO: get the surface fluid property
+            # TODO: get the surface fluid property
             fluid = self.model.properties.get_fluid()
             rho = fluid.fluid_density
             N = len(nodes)
             for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
                 if bool(avg):
-                    acoustic_excitation[index] += (values*rho)/N
+                    acoustic_excitation[index] += (values * rho) / N
                 else:
-                    acoustic_excitation[index] += values*rho
+                    acoustic_excitation[index] += values * rho
 
         for _id, data in self.properties.surfaces_with_particle_velocity.items():
             values = data["values"]
             avg = data["averaged"]
             nodes = self.model.mesh.nodes_from_surfaces[_id]
-            #TODO: get the surface fluid property
+            # TODO: get the surface fluid property
             fluid = self.model.properties.get_fluid()
             rho = fluid.fluid_density
             area = self.model.surfaces_areas[_id]
             N = len(nodes)
             for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
                 if bool(avg):
-                    acoustic_excitation[index] += (rho*area*values)/N
+                    acoustic_excitation[index] += (rho * area * values) / N
                 else:
-                    acoustic_excitation[index] += rho*area*values
+                    acoustic_excitation[index] += rho * area * values
 
         indexes = list(acoustic_excitation.keys())
         excitation = list(acoustic_excitation.values())
-        
+
         element = self.get_element()
         total_dofs = element.DOF_PER_NODE * len(element.nodal_coordinates)
-        output = np.zeros((total_dofs,1), dtype=complex)
+        output = np.zeros((total_dofs, 1), dtype=complex)
         output[indexes, 0] = excitation
 
         return output[self.unprescribed_indexes, :]

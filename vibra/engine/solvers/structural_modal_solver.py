@@ -1,9 +1,10 @@
+import logging
+
 import numpy as np
 from scipy.linalg import eig
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh, inv, lobpcg
-import logging
-from vibra.utils.progress_status import ProgressStatus
 
+from vibra.utils.progress_status import ProgressStatus
 
 
 class StructuralModalSolver:
@@ -12,7 +13,7 @@ class StructuralModalSolver:
         self.assembler = assembler
         self.reset_variables()
         self.load_analysis_data(analysis_data)
-        
+
     def reset_variables(self):
         self.modes = 20
         self.sigma_factor = 0.01
@@ -35,7 +36,6 @@ class StructuralModalSolver:
                     self.analysis_type = "acoustic"
 
     def solve(self, K=[], M=[], which="LM", normalize=True, harmonic_analysis=False):
-
         if K != [] and M != []:
             KT = K
             MT = M
@@ -44,7 +44,9 @@ class StructuralModalSolver:
             MT = self.assembler.mass_matrix
 
         logging.info("Finding eigen values and eigen vectors" + ProgressStatus(7, 100))
-        self.eigen_values, self.eigen_vectors = eigs(KT, M=MT, k=self.modes, which=which, sigma=self.sigma_factor)
+        self.eigen_values, self.eigen_vectors = eigs(
+            KT, M=MT, k=self.modes, which=which, sigma=self.sigma_factor
+        )
 
         logging.info("Extracting information from solution" + ProgressStatus(95, 100))
         positive_real = np.absolute(np.real(self.eigen_values))
@@ -55,22 +57,31 @@ class StructuralModalSolver:
         natural_frequencies = natural_frequencies[index_order]
         modal_shape = modal_shape[:, index_order]
 
-        self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
-        self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_values()
+        (
+            self.unprescribed_indexes,
+            self.prescribed_indexes,
+        ) = self.assembler.get_matrices_dropping_indexes()
+        (
+            self.prescribed_values,
+            self.array_prescribed_values,
+        ) = self.assembler.get_prescribed_values()
 
         if not harmonic_analysis:
             modal_shape = self._reinsert_prescribed_dofs(modal_shape, modal_analysis=True)
             for value in self.prescribed_values:
                 if value is not None:
-                    if (isinstance(value, complex) and value != complex(0)) or (isinstance(value, np.ndarray) and sum(value) != complex(0)):
-                        self.warning_modal = ["The Prescribed DOFs of non-zero values have been ignored in the modal analysis.\n"+
-                                                "The null value has been attributed to those DOFs with non-zero values."]
+                    if (isinstance(value, complex) and value != complex(0)) or (
+                        isinstance(value, np.ndarray) and sum(value) != complex(0)
+                    ):
+                        self.warning_modal = [
+                            "The Prescribed DOFs of non-zero values have been ignored in the modal analysis.\n"
+                            + "The null value has been attributed to those DOFs with non-zero values."
+                        ]
 
         self.natural_frequencies = natural_frequencies
         self.modal_shape = modal_shape
 
         return natural_frequencies, modal_shape
-
 
     def _reinsert_prescribed_dofs(self, solution, modal_analysis=False):
         """
@@ -97,7 +108,9 @@ class StructuralModalSolver:
 
         if len(self.prescribed_indexes) > 0:
             if modal_analysis:
-                full_solution[self.prescribed_indexes, :] = np.zeros((len(self.prescribed_values),cols))
+                full_solution[self.prescribed_indexes, :] = np.zeros(
+                    (len(self.prescribed_values), cols)
+                )
             else:
                 full_solution[self.prescribed_indexes, :] = self.array_prescribed_values[:, 0:cols]
         return np.real(full_solution)

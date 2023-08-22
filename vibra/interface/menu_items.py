@@ -1,28 +1,39 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
 import os
-
 from pathlib import Path
 
-from vibra.interface.model_inputs.mesh.mesher_inputs import MesherInputs
-from vibra.interface.model_inputs.acoustic.fluid_inputs import FluidInput
-from vibra.interface.model_inputs.structural.material_inputs import MaterialInput
-#
-from vibra.interface.model_inputs.structural.boundary_condition_inputs import BoundaryConditionInputs
-#
-from vibra.interface.model_inputs.acoustic.set_acoustic_pressure import AcousticPressureInput
-from vibra.interface.model_inputs.acoustic.set_mass_flow_rate_inputs import MassFlowRateInput
-from vibra.interface.model_inputs.acoustic.set_volume_velocity_inputs import VolumeVelocityInput
-from vibra.interface.model_inputs.acoustic.set_particle_velocity_inputs import ParticleVelocityInput
-from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import DissipationModelInput
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 
-from vibra.interface.analysis.analysis_type_input import AnalysisTypeInput
 from vibra.interface.analysis.analysis_setup_input import AnalysisSetupInput
-
+from vibra.interface.analysis.analysis_type_input import AnalysisTypeInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-
 from vibra.interface.loading_bar import load_function
+from vibra.interface.model_inputs.acoustic.fluid_inputs import FluidInput
+#
+from vibra.interface.model_inputs.acoustic.set_acoustic_pressure import (
+    AcousticPressureInput,
+)
+from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import (
+    DissipationModelInput,
+)
+from vibra.interface.model_inputs.acoustic.set_mass_flow_rate_inputs import (
+    MassFlowRateInput,
+)
+from vibra.interface.model_inputs.acoustic.set_particle_velocity_inputs import (
+    ParticleVelocityInput,
+)
+from vibra.interface.model_inputs.acoustic.set_volume_velocity_inputs import (
+    VolumeVelocityInput,
+)
+from vibra.interface.model_inputs.mesh.mesher_inputs import MesherInputs
+#
+from vibra.interface.model_inputs.structural.boundary_condition_inputs import (
+    BoundaryConditionInputs,
+)
+from vibra.interface.model_inputs.structural.material_inputs import (
+    MaterialInput,
+)
 from vibra.utils.interface_functions import get_main_window
 
 
@@ -79,6 +90,7 @@ class MenuItems(QTreeWidget):
     in the items menu, located on the left side of the interface.
 
     """
+
     def __init__(self):
         super().__init__()
 
@@ -110,11 +122,10 @@ class MenuItems(QTreeWidget):
         Currently isn't used.
         """
         self.icon_child_set_material = QIcon()
-        icon_path = str(Path('data/icons/logo_vibra.png'))
+        icon_path = str(Path("data/icons/logo_vibra.png"))
         self.icon_child_set_material.addPixmap(QPixmap(icon_path), QIcon.Active, QIcon.On)
 
     def _createFonts(self):
-
         """Create Font objects that configure the font of the items."""
         self.font_top_Items = QFont()
         # self.font_top_Items.setFamily("Segoe UI")
@@ -126,8 +137,8 @@ class MenuItems(QTreeWidget):
         self.font_child_Items = QFont()
         # self.font_child_Items.setFamily("Segoe UI")
         self.font_child_Items.setPointSize(10)
-        #self.font_child_Items.setBold(False)
-        #self.font_child_Items.setItalic(True)
+        # self.font_child_Items.setBold(False)
+        # self.font_child_Items.setItalic(True)
         self.font_child_Items.setWeight(50)
 
     def _createColorsBrush(self):
@@ -170,12 +181,12 @@ class MenuItems(QTreeWidget):
         """Creates all TreeWidgetItems."""
         self.list_top_items = []
         self.list_child_items = []
-        self.item_top_generalSettings = QTreeWidgetItem(['General Settings'])
-        self.item_child_import_geometry = QTreeWidgetItem(['Import geometry'])
-        self.item_child_mesh_setup = QTreeWidgetItem(['Mesh Setup'])
-        self.item_child_generate_mesh = QTreeWidgetItem(['Generate Mesh'])
-        self.item_child_set_material = QTreeWidgetItem(['Set Material'])
-        self.item_child_set_fluid = QTreeWidgetItem(['Set Fluid'])
+        self.item_top_generalSettings = QTreeWidgetItem(["General Settings"])
+        self.item_child_import_geometry = QTreeWidgetItem(["Import geometry"])
+        self.item_child_mesh_setup = QTreeWidgetItem(["Mesh Setup"])
+        self.item_child_generate_mesh = QTreeWidgetItem(["Generate Mesh"])
+        self.item_child_set_material = QTreeWidgetItem(["Set Material"])
+        self.item_child_set_fluid = QTreeWidgetItem(["Set Fluid"])
         #
         material_tool_tip = "Attribute material to selected bodies. \ndefault material: steel (E = 210 GPa; poisson = 0.30; density = 7860 kg/m³)"
         fluid_tool_tip = "Attribute fluid to selected bodies. \ndefault fluid: air (speed of sound 343.2021 m/s; fluid density = 1.215 kg/m³)"
@@ -189,10 +200,10 @@ class MenuItems(QTreeWidget):
         self.list_child_items.append(self.item_child_set_material)
         self.list_child_items.append(self.item_child_set_fluid)
         #
-        self.item_top_structuralModelSetup = QTreeWidgetItem(['Structural Model Setup'])
-        self.item_child_set_boundary_condition = QTreeWidgetItem(['Set Boundary Conditions'])
-        self.item_child_setNodalLoads = QTreeWidgetItem(['Set Loads'])
-        #set_specific_impedance
+        self.item_top_structuralModelSetup = QTreeWidgetItem(["Structural Model Setup"])
+        self.item_child_set_boundary_condition = QTreeWidgetItem(["Set Boundary Conditions"])
+        self.item_child_setNodalLoads = QTreeWidgetItem(["Set Loads"])
+        # set_specific_impedance
         self.list_top_items.append(self.item_top_structuralModelSetup)
         self.list_child_items.append(self.item_child_set_boundary_condition)
         self.list_child_items.append(self.item_child_setNodalLoads)
@@ -278,7 +289,7 @@ class MenuItems(QTreeWidget):
         self.item_top_generalSettings.addChild(self.item_child_set_fluid)
         self.item_top_generalSettings.addChild(self.item_child_mesh_setup)
         self.item_top_generalSettings.addChild(self.item_child_generate_mesh)
-        
+
         self.addTopLevelItem(self.item_top_structuralModelSetup)
         self.item_top_structuralModelSetup.addChild(self.item_child_set_boundary_condition)
         self.item_top_structuralModelSetup.addChild(self.item_child_setNodalLoads)
@@ -320,14 +331,14 @@ class MenuItems(QTreeWidget):
     def _configItems(self):
         """Configure all items."""
 
-        borderRole = Qt.UserRole + 1       
+        borderRole = Qt.UserRole + 1
 
         if self.main_window.user_config.theme == "light":
             # textTopBrush = QBrush(QColor(0,0,0))
-            borderPen = QPen(QColor(0,0,0))
+            borderPen = QPen(QColor(0, 0, 0))
         elif self.main_window.user_config.theme == "dark":
             # textTopBrush = QBrush(QColor(255,255,255))
-            borderPen = QPen(QColor(255,255,255))
+            borderPen = QPen(QColor(255, 255, 255))
 
         borderPen.setWidth(1)
 
@@ -371,12 +382,12 @@ class MenuItems(QTreeWidget):
 
     def on_click_item(self, item, column):
         """This event is raised every time an item is clicked on the menu."""
-    
+
         if self.update_childItems_visibility(item):
             return
-        
+
         self.generate_mesh_action = self.main_window.findChild(QAction, "generate_mesh_action")
-        
+
         if item == self.item_child_import_geometry:
             if not self.item_child_import_geometry.isDisabled():
                 self.main_window.import_geometry()
@@ -405,7 +416,7 @@ class MenuItems(QTreeWidget):
         elif item == self.item_child_set_fluid:
             if not self.item_child_set_fluid.isDisabled():
                 FluidInput()
-    
+
         elif item == self.item_child_set_boundary_condition:
             if not self.item_child_set_boundary_condition.isDisabled():
                 read = BoundaryConditionInputs()
@@ -454,7 +465,7 @@ class MenuItems(QTreeWidget):
                 analysis_type = AnalysisTypeInput()
                 if analysis_type.complete:
                     if analysis_type.analysis_id in [2, 4]:
-                        self.run_analysis()    
+                        self.run_analysis()
                         self.item_child_runAnalysis.setDisabled(False)
                     else:
                         analysis_setup = AnalysisSetupInput()
@@ -463,7 +474,7 @@ class MenuItems(QTreeWidget):
                             self.item_child_runAnalysis.setDisabled(False)
                         if analysis_setup.solve_analysis:
                             self.run_analysis()
-            
+
         elif item == self.item_child_analysisSetup:
             if not self.item_child_analysisSetup.isDisabled():
                 analysis_setup = AnalysisSetupInput()
@@ -503,7 +514,7 @@ class MenuItems(QTreeWidget):
         elif item == self.item_child_plotAcousticPressureField:
             if not self.item_child_plotAcousticPressureField.isDisabled():
                 pass
-         
+
         elif item == self.item_child_plotAcousticFrequencyResponse:
             if not self.item_child_plotAcousticFrequencyResponse.isDisabled():
                 pass
@@ -515,9 +526,9 @@ class MenuItems(QTreeWidget):
         elif item == self.item_child_plot_TL_NR:
             if not self.item_child_plot_TL_NR.isDisabled():
                 pass
-    
+
     def generate_mesh(self):
-        """  """
+        """ """
         generate_mesh = load_function(self.main_window.project.generate_mesh, self.main_window)
         generate_mesh()
         self.main_window.viewer_tabs.show_mesh()
@@ -525,7 +536,7 @@ class MenuItems(QTreeWidget):
         self.item_child_generate_mesh.setDisabled(True)
 
     def run_analysis(self):
-        """  """
+        """ """
 
         if self.project.model.mesh is None:
             return
@@ -539,16 +550,22 @@ class MenuItems(QTreeWidget):
         analysis_id = self.main_window.project.analysis_data["analysis_id"]
         #
         if analysis_id == 2:
-            solve_modal = load_function(self.main_window.process_structural_modal_analysis, self.main_window)
+            solve_modal = load_function(
+                self.main_window.process_structural_modal_analysis, self.main_window
+            )
             solve_modal()
 
         elif analysis_id == 3:
-            solve_harmonic = load_function(self.main_window.process_acoustic_harmonic_analysis, self.main_window)
+            solve_harmonic = load_function(
+                self.main_window.process_acoustic_harmonic_analysis, self.main_window
+            )
             solve_harmonic()
-        
+
         elif analysis_id == 4:
-            solve_modal = load_function(self.main_window.process_acoustic_modal_analysis, self.main_window)
-            solve_modal()    
+            solve_modal = load_function(
+                self.main_window.process_acoustic_modal_analysis, self.main_window
+            )
+            solve_modal()
         else:
             raise NotImplementedError("Not implemented analysis")
         self._updateItems()
@@ -598,7 +615,7 @@ class MenuItems(QTreeWidget):
         self.modify_analysis_items_acces(False)
         self.item_top_analysis.setHidden(False)
         self.filter_analysis_type()
-        
+
     def filter_analysis_type(self):
         if not self.item_top_analysis.isHidden():
             self.item_top_acoustic_model_setup.setHidden(True)
@@ -619,7 +636,7 @@ class MenuItems(QTreeWidget):
 
         if self.project.analysis_data is None:
             return
-        
+
         analysis_id = self.project.analysis_data["analysis_id"]
 
         # if self.project.analysis_id in [None, 2,4]:
@@ -646,24 +663,24 @@ class MenuItems(QTreeWidget):
             self.item_child_plotReactionsFrequencyResponse.setDisabled(False)
             self.item_child_plotStressField.setDisabled(False)
             self.item_child_plotStressFrequencyResponse.setDisabled(False)
-        
+
         elif analysis_id == 2:
             self.item_child_plotStructuralModeShapes.setDisabled(False)
             # if get_acoustic_solution() is not None:
             #     self.item_child_plotAcousticModeShapes.setDisabled(False)
-        
+
         elif analysis_id == 4:
             self.item_child_plotAcousticModeShapes.setDisabled(False)
             # if get_structural_solution() is not None:
             #     self.item_child_plotStructuralModeShapes.setDisabled(False)
-        
+
         elif analysis_id == 3:
             self.item_child_plotAcousticFrequencyResponse.setDisabled(False)
             self.item_child_plotAcousticPressureField.setDisabled(False)
             self.item_child_plotAcousticDeltaPressures.setDisabled(False)
             self.item_child_plot_TL_NR.setDisabled(False)
-        
-        elif analysis_id in [5,6]:
+
+        elif analysis_id in [5, 6]:
             self.item_child_plotStructuralFrequencyResponse.setDisabled(False)
             self.item_child_plotAcousticFrequencyResponse.setDisabled(False)
             self.item_child_plotStressField.setDisabled(False)
@@ -683,15 +700,15 @@ class MenuItems(QTreeWidget):
         self.collapseItem(self.item_top_acoustic_model_setup)
         analysis_id = self.project.analysis_data["analysis_id"]
 
-        if analysis_id in [0,1,2]:
+        if analysis_id in [0, 1, 2]:
             self.item_top_resultsViewer_structural.setHidden(False)
             self.expandItem(self.item_top_resultsViewer_structural)
             # self.expandItem(self.item_top_structuralModelSetup)
-        elif analysis_id in [3,4]:
+        elif analysis_id in [3, 4]:
             self.item_top_resultsViewer_acoustic.setHidden(False)
             self.expandItem(self.item_top_resultsViewer_acoustic)
             # self.expandItem(self.item_top_acoustic_model_setup)
-        elif analysis_id in [5,6]:
+        elif analysis_id in [5, 6]:
             self.item_top_resultsViewer_structural.setHidden(False)
             self.item_top_resultsViewer_acoustic.setHidden(False)
             self.expandItem(self.item_top_resultsViewer_structural)
@@ -713,5 +730,5 @@ class MenuItems(QTreeWidget):
         title = "EMPTY PROJECT"
         message = "Please, you should create a new project or load an already existing one before start to set up the model."
         message += "\n\nIt is recommended to use the 'New Project' or the 'Import Project' \nbuttons to continue."
-        window_title = 'ERROR'
+        window_title = "ERROR"
         PrintMessageInput([title, message, window_title], opv=self.main_window.getOPVWidget())

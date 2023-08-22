@@ -1,6 +1,6 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QLabel, QVBoxLayout, QWidget, QScrollArea
+from PyQt5.QtWidgets import QLabel, QScrollArea, QVBoxLayout, QWidget
 
 
 class HelpWidget(QWidget):
@@ -16,12 +16,12 @@ class HelpWidget(QWidget):
 
         info_label = QLabel()
         info_label.setWordWrap(True)
-        info_label.setText("Here are some information about our software and how to contact us on GitHub:")
-        
+        info_label.setText(
+            "Here are some information about our software and how to contact us on GitHub:"
+        )
 
         contact_label = QLabel()
         contact_label.setText("GitHub: github.com/blabla")
-
 
         layout = QVBoxLayout()
         layout.addWidget(title_label)

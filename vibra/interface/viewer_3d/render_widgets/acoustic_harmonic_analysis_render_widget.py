@@ -2,14 +2,18 @@ import numpy as np
 from PyQt5.QtCore import QObjectCleanupHandler
 from PyQt5.QtWidgets import *
 
+# from vibra.interface.modal_analysis_bar import AcousticModalAnalysisBar
+from vibra.interface.analysis_bars.acoustic_analysis_bar import (
+    AcousticModalAnalysisBar,
+)
 from vibra.interface.viewer_3d.actors.analysis_actor import AnalysisActor
-from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
 from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
     CuttingPlaneActor,
 )
-from vibra.interface.viewer_3d.render_widgets.common_render_widget import CommonRenderWidget
-# from vibra.interface.modal_analysis_bar import AcousticModalAnalysisBar
-from vibra.interface.analysis_bars.acoustic_analysis_bar import AcousticModalAnalysisBar
+from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
+from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
+    CommonRenderWidget,
+)
 from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
 
 
@@ -17,7 +21,7 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
     def __init__(self, project, parent=None):
         super().__init__(parent)
 
-        self.project = project        
+        self.project = project
         self.control_bar = AcousticModalAnalysisBar()
         self.control_bar.value_changed.connect(self.update_plot)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
@@ -51,14 +55,14 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
     def start_animation(self):
         super().start_animation()
         self.control_bar.use_pause_icon()
-    
+
     def stop_animation(self):
         super().stop_animation()
         self.control_bar.use_play_icon()
 
     def current_shape_index(self):
         return self.control_bar.frequency_box.currentIndex()
-    
+
     def update_frequencies(self):
         solver = self.project.acoustic_harmonic_solver
         if solver is None:
@@ -89,18 +93,18 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
         self.remove_actors()
 
         phase_deg = self.control_bar.phase_slider.value()
-        phi_sld = phase_deg*np.pi/180
+        phi_sld = phase_deg * np.pi / 180
 
         current_pressures = solver.solution[:, index].copy()
         amplitudes = np.abs(current_pressures)
         phase = np.angle(current_pressures)
-        output_pressures = amplitudes*np.cos(phase + phi_sld)
+        output_pressures = amplitudes * np.cos(phase + phi_sld)
 
         min_value, max_value = solver.get_max_min_values_of_pressures(index)
         if self.control_bar.absolute_button.isChecked():
             min_value = 0
             output_pressures = np.abs(output_pressures)
-        
+
         self.analysis_actor = AnalysisActor(mesh)
         self.analysis_actor.plot_colorbar(output_pressures, min_value, max_value)
         self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
@@ -116,7 +120,7 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
         self.plane_actor.VisibilityOff()
         self.plane_actor.SetScale(scale, scale, scale)
         self.renderer.AddActor(self.plane_actor)
-    
+
         mesh_visibility = self.control_bar.show_mesh_button.isChecked()
         self.set_mesh_visibility(mesh_visibility)
 
@@ -127,33 +131,33 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
 
         self.renderer.ResetCamera()
         self.update()
-    
+
     def update_animation(self, frame):
         if not self._actors_exists():
             return
-        
+
         solver = self.project.acoustic_harmonic_solver
         if solver.solution is None:
             return
-        
+
         index = self.current_shape_index()
         if not (0 <= index < solver.solution.shape[1]):
             return
-        
+
         t = frame / (self._animation_total_frames - 1)
         phase_deg = lerp(0, 360, t)
 
-        phi_sld = phase_deg * np.pi/180
+        phi_sld = phase_deg * np.pi / 180
         current_pressures = solver.solution[:, index].copy()
         amplitudes = np.abs(current_pressures)
         phase = np.angle(current_pressures)
-        output_pressures = amplitudes*np.cos(phase + phi_sld)
+        output_pressures = amplitudes * np.cos(phase + phi_sld)
 
         min_value, max_value = solver.get_max_min_values_of_pressures(index)
         if self.control_bar.absolute_button.isChecked():
             min_value = 0
             output_pressures = np.abs(output_pressures)
-        
+
         self.analysis_actor.plot_colorbar(output_pressures, min_value, max_value)
         self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
         self.update()
@@ -170,7 +174,7 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
     def show_points(self):
         if not self._actors_exists():
             return
-        
+
         self.control_bar.show_mesh_button.setChecked(False)
         self.analysis_actor.VisibilityOn()
         self.analysis_actor.GetProperty().SetRepresentationToPoints()
@@ -180,7 +184,7 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
     def show_lines(self):
         if not self._actors_exists():
             return
-        
+
         self.control_bar.show_mesh_button.setChecked(True)
         self.analysis_actor.VisibilityOn()
         self.analysis_actor.GetProperty().SetRepresentationToSurface()
@@ -190,7 +194,7 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
     def show_faces(self):
         if not self._actors_exists():
             return
-        
+
         self.control_bar.show_mesh_button.setChecked(False)
         self.analysis_actor.VisibilityOn()
         self.analysis_actor.GetProperty().SetRepresentationToSurface()
@@ -225,7 +229,7 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
     def apply_cutting_plane(self, position, orientation):
         if not self._actors_exists():
             return
-        
+
         x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
         y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
         z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
