@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-
+import json
 
 DEFAULT_MATERIAL = Material(name="Steel", identifier=1, color=(200,200,200), density=7860, young_modulus=210e9, poisson_ratio=0.3)
 DEFAULT_FLUID = Fluid(name="Air", identifier=1, color=(200,200,200), fluid_density=1.215, speed_of_sound=343.2021)
@@ -237,3 +237,51 @@ class ModelProperties:
         key = (property, volume_id)
         if key in self.volume_properties.keys():
             self.volume_properties.pop(key)
+
+    def as_json(self):
+        def normalize(prop: dict):
+            '''
+            Sadly json doesn't accepts tuple keys, 
+            so we need to convert it to a string like:
+            "property id" = value
+            '''
+            return {f"{p} {i}":v for (p,i), v in prop.items()}
+
+        data = dict(
+            global_properties = normalize(self.global_properties),
+            volume_properties = normalize(self.volume_properties),
+            surface_properties = normalize(self.surface_properties),
+            line_properties = normalize(self.line_properties),
+            element_properties = normalize(self.element_properties),
+            nodal_properties = normalize(self.nodal_properties),
+        )
+    
+        return json.dumps(data, indent=2)
+
+    def load_json(self, data: dict):
+        def denormalize(prop: dict):
+            new_prop = dict()
+            for key, val in prop.items():
+                p, i = key.split()
+                p = p.strip()
+                i = int(i)
+                new_prop[p, i] = val
+            return new_prop
+
+        self.global_properties = denormalize(data["global_properties"])
+        self.volume_properties = denormalize(data["volume_properties"])
+        self.surface_properties = denormalize(data["surface_properties"])
+        self.line_properties = denormalize(data["line_properties"])
+        self.element_properties = denormalize(data["element_properties"])
+        self.nodal_properties = denormalize(data["nodal_properties"])
+
+
+if __name__ == "__main__":
+    p = ModelProperties()
+    with open("teste.json", "w") as file:
+        file.write(p.as_json)
+    
+    q = ModelProperties()
+    with open("teste.json", "r") as file:
+        data = json.load(file)
+        q.load_json(data)
