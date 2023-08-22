@@ -279,7 +279,7 @@ class ModelProperties:
 if __name__ == "__main__":
     p = ModelProperties()
     with open("teste.json", "w") as file:
-        file.write(p.as_json)
+        file.write(p.as_json())
     
     q = ModelProperties()
     with open("teste.json", "r") as file:
