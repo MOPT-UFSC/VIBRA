@@ -1,9 +1,10 @@
+from pathlib import Path
+
 from PyQt5 import uic
 from PyQt5.QtCore import QRect, Qt
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtWidgets import QDialog, QLabel, QPushButton
 
-from pathlib import Path
 
 class CallDoubleConfirmationInput(QDialog):
     def __init__(
@@ -17,13 +18,13 @@ class CallDoubleConfirmationInput(QDialog):
         super().__init__(*args, **kwargs)
         uic.loadUi(Path("data/ui_files/general/call_double_confirmation_input.ui"), self)
 
-        icons_path = str(Path('data/icons/pulse.png'))
+        icons_path = str(Path("data/icons/pulse.png"))
         self.icon = QIcon(icons_path)
         self.setWindowIcon(self.icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle("Vibra")
-        
+
         self.title = title
         self.message = message
         self.buttons_config = buttons_config
@@ -85,20 +86,22 @@ class CallDoubleConfirmationInput(QDialog):
             if "right_toolTip" in self.buttons_config.keys():
                 self.pushButton_rightButton.setToolTip(self.buttons_config["right_toolTip"])
             if "right_button_size" in self.buttons_config.keys():
-                self.pushButton_rightButton.setMinimumWidth(self.buttons_config["right_button_size"])
+                self.pushButton_rightButton.setMinimumWidth(
+                    self.buttons_config["right_button_size"]
+                )
                 self.right_button_size = self.buttons_config["right_button_size"]
             if "left_button_size" in self.buttons_config.keys():
                 self.pushButton_leftButton.setMinimumWidth(self.buttons_config["left_button_size"])
-            
+
         x = self.pushButton_rightButton.x()
         y = self.pushButton_rightButton.y()
         height = self.pushButton_rightButton.height()
         width = self.pushButton_rightButton.width()
-        
+
         if self.right_button_size > 160:
-            dx = self.right_button_size-160   
-            self.pushButton_rightButton.setGeometry(QRect(int(x-dx), y, width, height))    
-    
+            dx = self.right_button_size - 160
+            self.pushButton_rightButton.setGeometry(QRect(int(x - dx), y, width, height))
+
     def _configure_labels(self):
         self.label_title.setText(self.title)
         self.label_message.setText(self.message)
@@ -118,7 +121,7 @@ class CallDoubleConfirmationInput(QDialog):
         self._continue = False
         self._stop = True
         self._doNotRun = False
-        self.close()   
+        self.close()
 
     def create_font_title(self):
         self.font_title = QFont()

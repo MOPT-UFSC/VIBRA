@@ -1,19 +1,24 @@
+import logging
+from threading import Lock
+from time import time
+
 import numpy as np
 from PyQt5.QtCore import QObjectCleanupHandler
 from PyQt5.QtWidgets import *
 
+from vibra.interface.analysis_bars.structural_analysis_bar import (
+    StructuralModalAnalysisBar,
+)
 from vibra.interface.viewer_3d.actors.analysis_actor import AnalysisActor
-from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
 from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
     CuttingPlaneActor,
 )
-from vibra.interface.viewer_3d.render_widgets.common_render_widget import CommonRenderWidget
-from vibra.interface.analysis_bars.structural_analysis_bar import StructuralModalAnalysisBar
+from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
+from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
+    CommonRenderWidget,
+)
 from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
 
-import logging
-from threading import Lock
-from time import time 
 
 class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
     # many parts of this class is shared by AcousticModalAnalysisRenderWidget
@@ -23,7 +28,7 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
     def __init__(self, project, parent=None):
         super().__init__(parent)
 
-        self.project = project        
+        self.project = project
         self.control_bar = StructuralModalAnalysisBar()
         self.control_bar.value_changed.connect(self.update_deformations)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
@@ -57,15 +62,14 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
     def start_animation(self):
         super().start_animation()
         self.control_bar.use_pause_icon()
-    
+
     def stop_animation(self):
         super().stop_animation()
         self.control_bar.use_play_icon()
 
-
     def current_shape_index(self):
         return self.control_bar.frequency_box.currentIndex()
-    
+
     def update_frequencies(self):
         solver = self.project.structural_modal_solver
         if solver is None:
@@ -119,7 +123,7 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
     def update_deformations(self):
         if not self._actors_exists():
             return
-        
+
         solver = self.project.structural_modal_solver
         if solver.modal_shape is None:
             return
@@ -127,7 +131,7 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         index = self.current_shape_index()
         if not (0 <= index < solver.modal_shape.shape[1]):
             return
-        
+
         # Do not update the deformation directly if an animation is running.
         # This makes the magnification factor work much smothly.
         if self.playing_animation:
@@ -135,7 +139,9 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
 
         phase = self.control_bar.phase_slider.value()
         magnification_factor = self.control_bar.magnification_factor_slider.value()
-        displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
+        displacements, color_scalars, min_value, max_value = self._calculate_displacements(
+            index, phase
+        )
 
         self.analysis_actor.disable_cut()
         self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
@@ -153,12 +159,12 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
             self.show_lines()
         else:
             self.show_faces()
-    
-    # 
+
+    #
     def show_points(self):
         if not self._actors_exists():
             return
-        
+
         self.control_bar.show_mesh_button.setChecked(False)
         self.analysis_actor.VisibilityOn()
         self.analysis_actor.GetProperty().SetRepresentationToPoints()
@@ -168,7 +174,7 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
     def show_lines(self):
         if not self._actors_exists():
             return
-        
+
         self.control_bar.show_mesh_button.setChecked(True)
         self.analysis_actor.VisibilityOn()
         self.analysis_actor.GetProperty().SetRepresentationToSurface()
@@ -178,14 +184,14 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
     def show_faces(self):
         if not self._actors_exists():
             return
-        
+
         self.control_bar.show_mesh_button.setChecked(False)
         self.analysis_actor.VisibilityOn()
         self.analysis_actor.GetProperty().SetRepresentationToSurface()
         self.edges_actor.VisibilityOff()
         self.update()
 
-    # 
+    #
     def start_cutting_mode(self):
         if not self._actors_exists():
             return
@@ -216,7 +222,7 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
     def apply_cutting_plane(self, position, orientation):
         if not self._actors_exists():
             return
-        
+
         x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
         y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
         z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
@@ -238,11 +244,10 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self.edges_actor = None
         self.plane_actor = None
 
-
     def update_animation(self, frame):
         if not self._actors_exists():
             return
-        
+
         solver = self.project.structural_modal_solver
         if solver.modal_shape is None:
             return
@@ -254,7 +259,9 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         # Map the frames from 0 to 1
         t = frame / (self._animation_total_frames - 1)
         phase = lerp(0, 360, t)
-        displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
+        displacements, color_scalars, min_value, max_value = self._calculate_displacements(
+            index, phase
+        )
         magnification_factor = self.control_bar.magnification_factor_slider.value()
 
         self.analysis_actor.disable_cut()
@@ -280,7 +287,7 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
 
         normal = rz @ rx @ ry @ np.array([1, 0, 0, 1])
         return normal[:3]
-    
+
     def _calculate_displacements(self, index, phase):
         solver = self.project.structural_modal_solver
         if solver.modal_shape is None:
@@ -294,15 +301,15 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
 
         elif self.control_bar.response_ux_button.isChecked():
             values_1 = current_modal_shape[:, 0]
-            displacements = current_modal_shape*np.array([1.,0.,0.])
+            displacements = current_modal_shape * np.array([1.0, 0.0, 0.0])
 
         elif self.control_bar.response_uy_button.isChecked():
             values_1 = current_modal_shape[:, 1]
-            displacements = current_modal_shape*np.array([0.,1.,0.])
+            displacements = current_modal_shape * np.array([0.0, 1.0, 0.0])
 
         elif self.control_bar.response_uz_button.isChecked():
             values_1 = current_modal_shape[:, 2]
-            displacements = current_modal_shape*np.array([0.,0.,1.])
+            displacements = current_modal_shape * np.array([0.0, 0.0, 1.0])
         #
         max_abs = np.max(np.abs(values_1))
         values_1 /= max_abs
@@ -312,17 +319,17 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         #
 
         if self.control_bar.update_coloring.isChecked():
-            mod_values = displacements*np.cos(phase*np.pi/180)
-            
+            mod_values = displacements * np.cos(phase * np.pi / 180)
+
             if self.control_bar.sum_button.isChecked():
                 values_2 = np.linalg.norm(mod_values, axis=1).copy()
-                
+
             elif self.control_bar.response_ux_button.isChecked():
                 values_2 = mod_values[:, 0]
-                
+
             elif self.control_bar.response_uy_button.isChecked():
                 values_2 = mod_values[:, 1]
-                
+
             elif self.control_bar.response_uz_button.isChecked():
                 values_2 = mod_values[:, 2]
 
@@ -330,10 +337,10 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
             if not self.control_bar.sum_button.isChecked():
                 if np.abs(min_value) != np.abs(max_value):
                     min_value = -np.max(np.abs([min_value, max_value]))
-                    max_value =  np.max(np.abs([min_value, max_value]))
+                    max_value = np.max(np.abs([min_value, max_value]))
         else:
             values_2 = values_1.copy()
-        
+
         color_scalars = values_2
 
         return displacements, color_scalars, min_value, max_value

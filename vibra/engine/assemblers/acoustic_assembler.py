@@ -1,15 +1,14 @@
+from collections import defaultdict
 from time import time
 
 import numpy as np
-from collections import defaultdict
 from scipy.sparse import coo_matrix, csr_matrix
 
+from vibra.engine.elements.acoustic_hex8_element import ACT_HEXAHEDRON_8C
+from vibra.engine.elements.acoustic_hex20_element import ACT_HEXAHEDRON_20C
 # from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.elements.acoustic_tet4_element import ACT_TETRAHEDRON_4C
 from vibra.engine.elements.acoustic_tet10_element import ACT_TETRAHEDRON_10C
-from vibra.engine.elements.acoustic_hex8_element import ACT_HEXAHEDRON_8C
-from vibra.engine.elements.acoustic_hex20_element import ACT_HEXAHEDRON_20C
-
 from vibra.engine.mesher.element_type import *
 
 
@@ -28,7 +27,6 @@ class AcousticAssembler:
         self.unprescribed_indexes = []
 
     def get_element(self):
-        
         element_type = self.model.mesh.element_type
 
         if element_type == TETRAHEDRON_4:
@@ -66,7 +64,7 @@ class AcousticAssembler:
 
         get_unprescribed_indexes : Indexes of the structural free degrees of freedom.
         """
-    
+
         global_prescribed = []
         list_prescribed_dofs = []
         if self.frequencies is None:
@@ -84,23 +82,21 @@ class AcousticAssembler:
         
         #TODO: implement same structure for lines
 
-        try:    
-            
+        try:
             aux_ones = np.ones(number_frequencies, dtype=complex)
             for value in global_prescribed:
                 if isinstance(value, complex):
-                    list_prescribed_dofs.append(aux_ones*value)
+                    list_prescribed_dofs.append(aux_ones * value)
                 elif isinstance(value, np.ndarray):
                     list_prescribed_dofs.append(value[0:number_frequencies])
             array_prescribed_values = np.array(list_prescribed_dofs)
-        
+
         except Exception as _error_log:
             print(str(_error_log))
 
         return global_prescribed, array_prescribed_values
 
     def get_prescribed_indexes(self):
-
         _prescribed_indexes = []
         for key, _ in self.properties.surface_properties.items():
             property, surface_id = key
@@ -115,7 +111,6 @@ class AcousticAssembler:
             return _prescribed_indexes
 
     def get_unprescribed_indexes(self):
-
         element = self.get_element()
         total_dofs = element.DOF_PER_NODE * len(element.nodal_coordinates)
         all_indexes = np.arange(total_dofs, dtype=int)
@@ -162,14 +157,17 @@ class AcousticAssembler:
 
         self.process_indexes()
         if len(self.prescribed_indexes) > 0:
-            self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-            self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+            self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][
+                :, self.unprescribed_indexes
+            ]
+            self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][
+                :, self.unprescribed_indexes
+            ]
         else:
             self.stiffness_matrix = _stiffness_matrix_full
             self.mass_matrix = _mass_matrix_full
 
     def get_acoustic_excitations(self):
-
         acoustic_excitation = defaultdict(float)
 
         for (property, _id), data in self.properties.surface_properties.items():
@@ -216,10 +214,10 @@ class AcousticAssembler:
 
         indexes = list(acoustic_excitation.keys())
         excitation = list(acoustic_excitation.values())
-        
+
         element = self.get_element()
         total_dofs = element.DOF_PER_NODE * len(element.nodal_coordinates)
-        output = np.zeros((total_dofs,1), dtype=complex)
+        output = np.zeros((total_dofs, 1), dtype=complex)
         output[indexes, 0] = excitation
 
         return output[self.unprescribed_indexes, :]

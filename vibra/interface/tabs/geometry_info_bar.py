@@ -1,4 +1,5 @@
 import typing
+
 from PyQt5 import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -14,14 +15,13 @@ class GeometryInfoBar(QWidget):
         self.main_window = get_main_window()
         self.project = self.main_window.project
         self.mesh = self.project.model.mesh
-        
+
         self.number_of_points = None
         self.number_of_curves = None
         self.number_of_surfaces = None
         self.number_of_volumes = None
 
         self._define_qt_variables()
-        
 
     def _define_qt_variables(self):
         #
@@ -35,7 +35,7 @@ class GeometryInfoBar(QWidget):
         analysis_info_layout = QGridLayout()
         layout = QHBoxLayout()
         #
-        self._config_widgets() 
+        self._config_widgets()
         #
         analysis_info_layout.addWidget(self.frame_spacer, 0, 0)
         analysis_info_layout.addWidget(self.label_number_of_points, 0, 1)
@@ -49,21 +49,19 @@ class GeometryInfoBar(QWidget):
         self.setStyleSheet("border: 1px solid")
         layout.setContentsMargins(0, 0, 0, 0)
 
-
     def _config_widgets(self):
-
         height = 28
 
-        self.setMinimumHeight(height+0)
-        self.setMaximumHeight(height+0)
+        self.setMinimumHeight(height + 0)
+        self.setMaximumHeight(height + 0)
 
         self.frame_spacer.setMinimumHeight(height)
         self.frame_spacer.setMaximumHeight(height)
-        
+
         # self.label_number_of_points.setAlignment(Qt.AlignRight)
         self.label_number_of_points.setMinimumSize(100, height)
         self.label_number_of_points.setMaximumSize(200, height)
-        
+
         self.label_number_of_curves.setMinimumSize(100, height)
         self.label_number_of_curves.setMaximumSize(200, height)
 

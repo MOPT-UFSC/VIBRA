@@ -3,11 +3,10 @@ from pathlib import Path
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QMenu
 
-from vibra.interface.loading_bar import load_function
 from vibra.interface.exception_message import ErrorMessage
+from vibra.interface.loading_bar import load_function
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_functions import get_main_window
-
 
 
 class ProjectMenu(QMenu):

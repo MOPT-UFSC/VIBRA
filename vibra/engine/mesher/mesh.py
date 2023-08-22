@@ -1,10 +1,10 @@
-
+import logging
 import os
 import sys
-import gmsh
-import logging
-import numpy as np
 from pathlib import Path
+
+import gmsh
+import numpy as np
 
 from vibra.engine.mesher.element_type import *
 from vibra.utils.progress_status import ProgressStatus
@@ -27,7 +27,6 @@ class Mesh:
         self.nodes_from_volumes = dict()
         self.entity_ranges = dict()
         self.surfaces_from_volumes = dict()
-
 
     @classmethod
     def from_cad(
@@ -56,17 +55,17 @@ class Mesh:
         obj = Mesh()
         obj.load_cad(
             path,
-            minimum_element_size = minimum_element_size,
-            maximum_element_size = maximum_element_size,
-            element_type = element_type,
-            geometry_tolerance = geometry_tolerance,
-            size_factor = size_factor,
-            dimension = dimension,
-            threads = threads,
-            gmsh_gui = gmsh_gui,
+            minimum_element_size=minimum_element_size,
+            maximum_element_size=maximum_element_size,
+            element_type=element_type,
+            geometry_tolerance=geometry_tolerance,
+            size_factor=size_factor,
+            dimension=dimension,
+            threads=threads,
+            gmsh_gui=gmsh_gui,
         )
         return obj
-    
+
     @classmethod
     def from_dat(cls, nodal_path, lines_path=None, faces_path=None, solids_path=None):
         obj = Mesh()
@@ -90,7 +89,7 @@ class Mesh:
         size_factor: float = 0.50,
         dimension: int = 3,
         threads: int = 2,
-        gmsh_gui: bool = False
+        gmsh_gui: bool = False,
     ):
         path = Path(path)
         gmsh.initialize("", False)
@@ -117,11 +116,11 @@ class Mesh:
 
         logging.info("Processing Mesh" + ProgressStatus(70, 100))
         self._process_mesh()
-        
+
         if gmsh_gui:
-            if '-nopopup' not in sys.argv:
+            if "-nopopup" not in sys.argv:
                 gmsh.fltk.run()
-        
+
         gmsh.finalize()
 
         logging.info(
@@ -175,12 +174,11 @@ class Mesh:
         size_factor,
         threads,
     ):
-
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("General.NumThreads", threads)
         gmsh.option.setNumber("Geometry.Tolerance", tolerance)
-        
+
         if size_factor != 0:
             gmsh.option.setNumber("Mesh.MeshSizeFactor", size_factor)
         else:
@@ -195,7 +193,6 @@ class Mesh:
 
         gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
         gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_type.second_order_incomplete)
-
 
     def _process_mesh(self):
         """
@@ -213,7 +210,6 @@ class Mesh:
         connectivity_dim3 = dict()
 
         for dim, tag in gmsh.model.getEntities():
-
             if dim == 3:
                 _, downwards = gmsh.model.getAdjacencies(dim, tag)
                 self.surfaces_from_volumes[tag] = list(downwards)
@@ -262,8 +258,8 @@ class Mesh:
         self.solids_connectivity = self._get_connectivity_array(connectivity_dim3)
 
     def get_model_areas(self, path):
-        """ This method returns returns the all surface area processed using 
-            gmsh internal functions.
+        """This method returns returns the all surface area processed using
+        gmsh internal functions.
 
         """
 
@@ -292,9 +288,7 @@ class Mesh:
         gmsh.model.mesh.generate(dim=2)
 
         for dim, tag in gmsh.model.getEntities():
-    
             if dim == 2:  # Surfaces
-
                 p = gmsh.model.addPhysicalGroup(2, [tag])
                 gmsh.plugin.setNumber("MeshVolume", "Dimension", 2)
                 gmsh.plugin.setNumber("MeshVolume", "PhysicalGroup", p)
@@ -302,11 +296,11 @@ class Mesh:
                 views = gmsh.view.getTags()
                 _, _, data = gmsh.view.getListData(views[-1])
 
-                surfaces_areas[tag] = data[-1][-1]/(1e6)
+                surfaces_areas[tag] = data[-1][-1] / (1e6)
 
             # maybe it is going to be necessary evaluate the bodies volumes too
             # elif dim == 3:  # Solids
-    
+
             #     p = gmsh.model.addPhysicalGroup(3, [tag])
             #     gmsh.plugin.setNumber("MeshVolume", "Dimension", 3)
             #     gmsh.plugin.setNumber("MeshVolume", "PhysicalGroup", p)
@@ -315,10 +309,10 @@ class Mesh:
             #     _, _, data = gmsh.view.getListData(views[-1])
 
             #     bodies_volumes[tag] = data[-1][-1]
-        
+
         gmsh.finalize()
 
-        return surfaces_areas#, bodies_volumes
+        return surfaces_areas  # , bodies_volumes
 
     def _get_connectivity_array(self, input_dict):
         """

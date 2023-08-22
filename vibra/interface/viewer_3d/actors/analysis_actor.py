@@ -1,7 +1,7 @@
+import numpy as np
 import vtk
 
 from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
-import numpy as np
 
 
 class AnalysisActor(SolidsActor):
@@ -15,7 +15,9 @@ class AnalysisActor(SolidsActor):
     def apply_deformation(self, displacements, phase, magnification_factor):
         max_abs = np.max(np.linalg.norm(displacements, axis=0))
         u_def = displacements * np.cos(phase * np.pi / 180)
-        deformed_coordinates = self.mesh.nodal_coordinates[:, 1:] + (magnification_factor/max_abs) * u_def
+        deformed_coordinates = (
+            self.mesh.nodal_coordinates[:, 1:] + (magnification_factor / max_abs) * u_def
+        )
         self.update_coordinates(deformed_coordinates)
 
     def apply_cut(self, origin, normal):

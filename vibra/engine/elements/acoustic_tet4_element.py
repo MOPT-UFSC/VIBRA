@@ -1,4 +1,5 @@
 import numpy as np
+
 from vibra.engine.elements.element import Element
 
 
@@ -7,33 +8,34 @@ def shape4TC(ssx, ttx, rrx):
     # shape functions
     phi = np.array([1 - ssx - ttx - rrx, ttx, rrx, ssx], dtype=float)
     # derivatives
-    dphi = np.array([[-1, 0, 0, 1 ],
-                     [-1, 1, 0, 0 ],
-                     [-1, 0, 1, 0 ]], dtype=float)
+    dphi = np.array([[-1, 0, 0, 1], [-1, 1, 0, 0], [-1, 0, 1, 0]], dtype=float)
     return phi, dphi
 
 
 def get_detJAC_and_invJAC(JAC):
     """ """
 
-    detJAC = (  JAC[0,0] * JAC[1,1] * JAC[2,2] + 
-                JAC[0,1] * JAC[1,2] * JAC[2,0] + 
-                JAC[0,2] * JAC[1,0] * JAC[2,1]  ) - \
-             (  JAC[2,0] * JAC[1,1] * JAC[0,2] + 
-                JAC[2,1] * JAC[1,2] * JAC[0,0] + 
-                JAC[2,2] * JAC[1,0] * JAC[0,1]  )
-    
+    detJAC = (
+        JAC[0, 0] * JAC[1, 1] * JAC[2, 2]
+        + JAC[0, 1] * JAC[1, 2] * JAC[2, 0]
+        + JAC[0, 2] * JAC[1, 0] * JAC[2, 1]
+    ) - (
+        JAC[2, 0] * JAC[1, 1] * JAC[0, 2]
+        + JAC[2, 1] * JAC[1, 2] * JAC[0, 0]
+        + JAC[2, 2] * JAC[1, 0] * JAC[0, 1]
+    )
+
     # adj(JAC)
-    AUJJ = np.zeros((3,3), dtype=float)
-    AUJJ[0,0] =  1 * ((JAC[1,1] * JAC[2,2]) - (JAC[2,1] * JAC[1,2]))
-    AUJJ[1,0] = -1 * ((JAC[1,0] * JAC[2,2]) - (JAC[1,2] * JAC[2,0]))
-    AUJJ[2,0] =  1 * ((JAC[1,0] * JAC[2,1]) - (JAC[1,1] * JAC[2,0]))
-    AUJJ[0,1] = -1 * ((JAC[0,1] * JAC[2,2]) - (JAC[0,2] * JAC[2,1]))
-    AUJJ[1,1] =  1 * ((JAC[0,0] * JAC[2,2]) - (JAC[0,2] * JAC[2,0]))
-    AUJJ[2,1] = -1 * ((JAC[0,0] * JAC[2,1]) - (JAC[0,1] * JAC[2,0]))
-    AUJJ[0,2] =  1 * ((JAC[0,1] * JAC[1,2]) - (JAC[0,2] * JAC[1,1]))
-    AUJJ[1,2] = -1 * ((JAC[0,0] * JAC[1,2]) - (JAC[0,2] * JAC[1,0]))
-    AUJJ[2,2] =  1 * ((JAC[0,0] * JAC[1,1]) - (JAC[0,1] * JAC[1,0]))
+    AUJJ = np.zeros((3, 3), dtype=float)
+    AUJJ[0, 0] = 1 * ((JAC[1, 1] * JAC[2, 2]) - (JAC[2, 1] * JAC[1, 2]))
+    AUJJ[1, 0] = -1 * ((JAC[1, 0] * JAC[2, 2]) - (JAC[1, 2] * JAC[2, 0]))
+    AUJJ[2, 0] = 1 * ((JAC[1, 0] * JAC[2, 1]) - (JAC[1, 1] * JAC[2, 0]))
+    AUJJ[0, 1] = -1 * ((JAC[0, 1] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 1]))
+    AUJJ[1, 1] = 1 * ((JAC[0, 0] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 0]))
+    AUJJ[2, 1] = -1 * ((JAC[0, 0] * JAC[2, 1]) - (JAC[0, 1] * JAC[2, 0]))
+    AUJJ[0, 2] = 1 * ((JAC[0, 1] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 1]))
+    AUJJ[1, 2] = -1 * ((JAC[0, 0] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 0]))
+    AUJJ[2, 2] = 1 * ((JAC[0, 0] * JAC[1, 1]) - (JAC[0, 1] * JAC[1, 0]))
 
     return detJAC, (1 / detJAC) * AUJJ
 
@@ -68,10 +70,9 @@ class ACT_TETRAHEDRON_4C(Element):
         con2 = (5 + 3 * np.sqrt(5)) / 20
         self.wps = 1 / 4
 
-        self.pint = np.array([  [ con1, con1, con1 ],
-                                [ con1, con1, con2 ],
-                                [ con1, con2, con1 ],
-                                [ con2, con1, con1 ]  ])
+        self.pint = np.array(
+            [[con1, con1, con1], [con1, con1, con2], [con1, con2, con1], [con2, con1, con1]]
+        )
 
     def process_shape_functions_and_derivatives(self):
         """
@@ -118,11 +119,11 @@ class ACT_TETRAHEDRON_4C(Element):
         return Ke, Me
 
     def reorder_connect(self):
-        """ Reordering connectivity matrix to adequate the GMSH connectivity to the FE model """
+        """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
         self.connectivity = self.connectivity[:, [0, 6, 4, 5, 7]]
 
     def generate_ind_rows_cols(self):
-        """ This method processess the dofs indices (rows and columns) for assembly """
+        """This method processess the dofs indices (rows and columns) for assembly"""
 
         self.reorder_connect()
         dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT

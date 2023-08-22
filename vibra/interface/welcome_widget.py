@@ -1,6 +1,14 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QGridLayout
-from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtWidgets import (
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
+
 
 class WelcomeWidget(QWidget):
     def __init__(self):
@@ -20,7 +28,9 @@ class WelcomeWidget(QWidget):
         image_label.setPixmap(pixmap)
         layout.addWidget(image_label)
 
-        message_label = QLabel("Vibra: Finite Element Software for Acoustic and Structural Analysis", self)
+        message_label = QLabel(
+            "Vibra: Finite Element Software for Acoustic and Structural Analysis", self
+        )
         message_label.setStyleSheet("font: 11pt")
         message_label.setAlignment(Qt.AlignHCenter)
         layout.addWidget(message_label)
@@ -54,7 +64,13 @@ class WelcomeWidget(QWidget):
         buttons_layout.setAlignment(Qt.AlignCenter)
         layout.addLayout(buttons_layout)
 
-        recent_button_handlers = [self.open_recent_project1, self.open_recent_project2, self.open_recent_project3, self.open_recent_project4, self.open_recent_project5]
+        recent_button_handlers = [
+            self.open_recent_project1,
+            self.open_recent_project2,
+            self.open_recent_project3,
+            self.open_recent_project4,
+            self.open_recent_project5,
+        ]
 
         for handler in recent_button_handlers:
             button = QPushButton(self)
@@ -73,7 +89,13 @@ class WelcomeWidget(QWidget):
         buttons_layout2.setAlignment(Qt.AlignCenter)
         layout.addLayout(buttons_layout2)
 
-        example_button_handlers = [self.open_example_project1, self.open_example_project2, self.open_example_project3, self.open_example_project4, self.open_example_project5]
+        example_button_handlers = [
+            self.open_example_project1,
+            self.open_example_project2,
+            self.open_example_project3,
+            self.open_example_project4,
+            self.open_example_project5,
+        ]
 
         for handler in example_button_handlers:
             button = QPushButton(self)

@@ -1,7 +1,9 @@
-import vtk
-import numpy as np
-from vibra.engine.mesher.element_type import *
 from time import time
+
+import numpy as np
+import vtk
+
+from vibra.engine.mesher.element_type import *
 
 
 class SolidsActor(vtk.vtkActor):

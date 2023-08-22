@@ -1,16 +1,18 @@
+from collections import defaultdict
 from time import time
 
 import numpy as np
 from scipy.sparse import coo_matrix, csr_matrix
-from collections import defaultdict
 
-# from vibra.engine.assemblers.modal_assembler import ModalAssembler
-from vibra.engine.elements.structural_tet4_element import STRUCT_TETRAHEDRON_4S
-from vibra.engine.elements.structural_tet10_element import STRUCT_TETRAHEDRON_10S
 from vibra.engine.elements.structural_hex8_element import STRUCT_HEXAHEDRON_8
 from vibra.engine.elements.structural_hex20_element import STRUCT_HEXAHEDRON_20
-
+# from vibra.engine.assemblers.modal_assembler import ModalAssembler
+from vibra.engine.elements.structural_tet4_element import STRUCT_TETRAHEDRON_4S
+from vibra.engine.elements.structural_tet10_element import (
+    STRUCT_TETRAHEDRON_10S,
+)
 from vibra.engine.mesher.element_type import *
+
 
 class StructuralAssembler:
     def __init__(self, model):
@@ -48,7 +50,7 @@ class StructuralAssembler:
 
     def is_assembled(self):
         return (self.stiffness_matrix is not None) and (self.mass_matrix is not None)
-    
+
     def process_indexes(self):
         self.prescribed_indexes = self.get_prescribed_indexes()
         self.unprescribed_indexes = self.get_unprescribed_indexes()
@@ -68,7 +70,7 @@ class StructuralAssembler:
 
         get_unprescribed_indexes : Indexes of the structural free degrees of freedom.
         """
-    
+
         global_prescribed = []
         list_prescribed_dofs = []
         if self.frequencies is None:
@@ -92,23 +94,21 @@ class StructuralAssembler:
                 for _ in nodes:
                     global_prescribed.extend(values)
 
-        try:    
-            
+        try:
             aux_ones = np.ones(number_frequencies, dtype=complex)
             for value in global_prescribed:
                 if isinstance(value, complex):
-                    list_prescribed_dofs.append(aux_ones*value)
+                    list_prescribed_dofs.append(aux_ones * value)
                 elif isinstance(value, np.ndarray):
                     list_prescribed_dofs.append(value[0:number_frequencies])
             array_prescribed_values = np.array(list_prescribed_dofs)
-        
+
         except Exception as _error_log:
             print(str(_error_log))
 
         return global_prescribed, array_prescribed_values
 
     def get_prescribed_indexes(self):
-
         _prescribed_indexes = []
 
         for (property, line_id) in self.properties.line_properties.keys():
@@ -129,7 +129,6 @@ class StructuralAssembler:
             return _prescribed_indexes
 
     def get_unprescribed_indexes(self):
-
         element = self.get_element()
         total_dofs = element.DOF_PER_NODE * len(element.nodal_coordinates)
         all_indexes = np.arange(total_dofs, dtype=int)
@@ -172,8 +171,12 @@ class StructuralAssembler:
 
         self.process_indexes()
         if len(self.prescribed_indexes) > 0:
-            self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-            self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+            self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][
+                :, self.unprescribed_indexes
+            ]
+            self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][
+                :, self.unprescribed_indexes
+            ]
         else:
             self.stiffness_matrix = _stiffness_matrix_full
             self.mass_matrix = _mass_matrix_full

@@ -18,10 +18,10 @@ class Element:
         raise NotImplementedError("The function elementary_matrices was not implemented")
 
     def generate_ind_rows_cols(self):
-        '''
+        """
         Processes the indexes (rows and columns) of the element
         that will be used in the assembler.
-        '''
+        """
         self.reorder_connect()
         dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
         ind_dofs = dofs * self.connectivity[:, 1:]

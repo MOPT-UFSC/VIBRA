@@ -1,6 +1,7 @@
 import os
-import numpy as np
 from pathlib import Path
+
+import numpy as np
 
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.model_properties import ModelProperties
@@ -25,7 +26,7 @@ class Model:
         self.mesh_setup = None
         self.generated_mesh = False
         self.surfaces_areas = dict()
-        
+
         self.frequencies = None
         self.acoustic_element = None
         self.structural_element = None
@@ -34,7 +35,7 @@ class Model:
 
     def set_geometry_path(self, path):
         self.geometry_path = Path(path)
-    
+
     def set_properties(self, properties):
         self.properties = properties
 
@@ -64,7 +65,7 @@ class Model:
                 "You should to configure the mesher to proceed."
             )
             raise IncompleteSetupError(message, context=context)
-                
+
         # self.geometry_path = Path("data/examples/script_files/script_hex_elements.txt")
         self.mesh = Mesh.from_cad(self.geometry_path, gmsh_gui=False, **self.mesh_setup)
         self.generated_mesh = True
@@ -86,7 +87,7 @@ class Model:
             return []
         _dofs_per_node = self.acoustic_element.DOF_PER_NODE
         _nodes = nodes.reshape(-1, 1)
-        global_dofs = _dofs_per_node*_nodes + np.arange(_dofs_per_node)
+        global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
         return np.array(global_dofs.flatten(), dtype=int)
 
     def get_structural_global_dofs_from_nodes(self, nodes):
@@ -94,9 +95,9 @@ class Model:
             return []
         _dofs_per_node = self.structural_element.DOF_PER_NODE
         _nodes = nodes.reshape(-1, 1)
-        global_dofs = _dofs_per_node*_nodes + np.arange(_dofs_per_node)
+        global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
         return np.array(global_dofs.flatten(), dtype=int)
-    
+
     def set_dissipation_model_data(self, data):
         self.properties.set_dissipation_model(data)
     

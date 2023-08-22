@@ -6,20 +6,33 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from vibra.interface.welcome_widget import WelcomeWidget
+
 from vibra.interface.help_widget import HelpWidget
-from vibra.interface.viewer_3d.render_widgets.common_render_widget import CommonRenderWidget
+from vibra.interface.viewer_3d.render_widgets.acoustic_harmonic_analysis_render_widget import (
+    AcousticHarmonicAnalysisRenderWidget,
+)
+from vibra.interface.viewer_3d.render_widgets.acoustic_modal_analysis_render_widget import (
+    AcousticModalAnalysisRenderWidget,
+)
+from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
+    CommonRenderWidget,
+)
 from vibra.interface.viewer_3d.render_widgets.example_analysis_render_widget import (
     ExampleAnalysisRenderWidget,
 )
-from vibra.interface.viewer_3d.render_widgets.example_render_widget import ExampleRenderWidget
+from vibra.interface.viewer_3d.render_widgets.example_render_widget import (
+    ExampleRenderWidget,
+)
 from vibra.interface.viewer_3d.render_widgets.geometry_render_widget import (
     GeometryRenderWidget,
 )
-from vibra.interface.viewer_3d.render_widgets.mesh_render_widget import MeshRenderWidget
-from vibra.interface.viewer_3d.render_widgets.acoustic_modal_analysis_render_widget import AcousticModalAnalysisRenderWidget
-from vibra.interface.viewer_3d.render_widgets.structural_modal_analysis_render_widget import StructuralModalAnalysisRenderWidget
-from vibra.interface.viewer_3d.render_widgets.acoustic_harmonic_analysis_render_widget import AcousticHarmonicAnalysisRenderWidget
+from vibra.interface.viewer_3d.render_widgets.mesh_render_widget import (
+    MeshRenderWidget,
+)
+from vibra.interface.viewer_3d.render_widgets.structural_modal_analysis_render_widget import (
+    StructuralModalAnalysisRenderWidget,
+)
+from vibra.interface.welcome_widget import WelcomeWidget
 
 
 class ViewerTabs(QTabWidget):
@@ -42,7 +55,7 @@ class ViewerTabs(QTabWidget):
 
         self.show_wellcome()
 
-    # 
+    #
     def show_wellcome(self):
         self.addTab(self.welcome, "Wellcome!")
         self.setCurrentWidget(self.welcome)
@@ -73,7 +86,7 @@ class ViewerTabs(QTabWidget):
         self.example_analysis_widget.update_plot()
         self.setCurrentWidget(self.example_analysis_widget)
 
-    def show_acoustic_modal_analysis(self):        
+    def show_acoustic_modal_analysis(self):
         if self.acoustic_modal_analysis not in self.tabs():
             self.addTab(self.acoustic_modal_analysis, "Acoustic Modal Analysis")
 
@@ -81,7 +94,6 @@ class ViewerTabs(QTabWidget):
         self.acoustic_modal_analysis.update_plot()
         self.setCurrentWidget(self.acoustic_modal_analysis)
 
-    
     def show_structural_modal_analysis(self):
         if self.structural_modal_analysis not in self.tabs():
             self.addTab(self.structural_modal_analysis, "Acoustic Modal Analysis")
@@ -132,13 +144,13 @@ class ViewerTabs(QTabWidget):
             self.acoustic_modal_analysis,
             self.structural_modal_analysis,
         )
-    
+
     def _close_widgets(self, *widgets_list):
         for widget in widgets_list:
             i = self.indexOf(widget)
             self.removeTab(i)
 
-    # 
+    #
     def start_cutting_mode(self):
         for tab in self.tabs():
             if not hasattr(tab, "start_cutting_mode"):
@@ -163,7 +175,7 @@ class ViewerTabs(QTabWidget):
                 continue
             tab.apply_cutting_plane(position, orientation)
 
-    # 
+    #
     def set_theme(self, theme):
         for tab in self.tabs():
             if isinstance(tab, CommonRenderWidget):

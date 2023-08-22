@@ -1,9 +1,10 @@
+from pathlib import Path
+
 from PyQt5 import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from pathlib import Path
 from vibra.utils.icons import load_icon
 
 
@@ -11,7 +12,6 @@ class AcousticModalAnalysisBar(QWidget):
     slider_pressed = pyqtSignal()
     slider_released = pyqtSignal()
     value_changed = pyqtSignal()
-
 
     def __init__(self):
         super().__init__()
@@ -37,7 +37,7 @@ class AcousticModalAnalysisBar(QWidget):
         self.frequency_box.setMaximumWidth(300)
         self.real_part_button.setChecked(True)
         self.show_mesh_button.setChecked(True)
-        
+
         hspacing = 20
 
         layout = QHBoxLayout()
@@ -45,7 +45,7 @@ class AcousticModalAnalysisBar(QWidget):
         layout.addWidget(self.phase_slider)
         layout.addWidget(self.phase_label)
         layout.addSpacing(hspacing)
-        
+
         layout.addWidget(QLabel("Color Scale:"))
         layout.addWidget(self.absolute_button)
         layout.addWidget(self.real_part_button)
@@ -56,7 +56,7 @@ class AcousticModalAnalysisBar(QWidget):
 
         layout.addWidget(self.play_pause_button)
         layout.addStretch()
-        
+
         layout.addWidget(QLabel("Mode Selector:"))
         layout.addWidget(self.frequency_box)
         self.setLayout(layout)

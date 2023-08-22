@@ -4,19 +4,33 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 import json
 
-DEFAULT_MATERIAL = Material(name="Steel", identifier=1, color=(200,200,200), density=7860, young_modulus=210e9, poisson_ratio=0.3)
-DEFAULT_FLUID = Fluid(name="Air", identifier=1, color=(200,200,200), fluid_density=1.215, speed_of_sound=343.2021)
+DEFAULT_MATERIAL = Material(
+    name="Steel",
+    identifier=1,
+    color=(200, 200, 200),
+    density=7860,
+    young_modulus=210e9,
+    poisson_ratio=0.3,
+)
+
+DEFAULT_FLUID = Fluid(
+    name="Air",
+    identifier=1,
+    color=(200, 200, 200),
+    fluid_density=1.215,
+    speed_of_sound=343.2021,
+)
 
 
 class ModelProperties:
-    '''
+    """
     Class that stores all properties of a model.
 
     All properties can be setted per node, element, entity,
     volume or globally.
 
-    The only functions that deals with data are _set_property, 
-    _get_property and _reset_property. All the others are just 
+    The only functions that deals with data are _set_property,
+    _get_property and _reset_property. All the others are just
     wrappers that call these ones.
 
     I know it may seem a little weird to structure the data this
@@ -28,13 +42,14 @@ class ModelProperties:
     handles it, reducing the points of failure.
 
     Also, the speed is only a requirement on the retrieval of
-    data (because it is done multiple times by every element), 
+    data (because it is done multiple times by every element),
     and it is pretty fast. The other operations are proportional
     to things that a human can put here manually (and by the real
     world requirements of the model), so of course a computer can
-    handle it in fractions of a second.   
+    handle it in fractions of a second.
 
-    '''
+    """
+
     def __init__(self, model=None):
         self._reset_variables()
 
@@ -129,11 +144,11 @@ class ModelProperties:
         self._set_property("specific_impedance", data, surface=surface)
 
     def _set_property(self, property: str, value, node=None, element=None, line=None, surface=None, volume=None):
-        '''
+        """
         Sets a value to a property by node, element, line, surface or volume
         if any of these exists. Otherwise sets the property as global.
 
-        '''
+        """
         if node is not None:
             self.nodal_properties[property, node] = node
         elif volume is not None:
@@ -148,12 +163,12 @@ class ModelProperties:
             self.global_properties[property] = value
 
     def _get_property(self, property: str, node=None, element=None, line=None, surface=None, volume=None):
-        '''
+        """
         Finds the value that corresponds to the property needed.
         Checks node, element, entity, volume and global data by
-        this respective order of priority. 
+        this respective order of priority.
         If the any of this is defined returns None.
-        '''
+        """
         if (property, node) in self.nodal_properties:
             return self.nodal_properties[property, node]
 
@@ -168,16 +183,16 @@ class ModelProperties:
 
         if (property, volume) in self.volume_properties:
             return self.volume_properties[property, volume]
-        
+
         if property in self.global_properties:
             return self.global_properties[property]
-        
+
         return None
 
     def _reset_property(self, property: str):
-        '''
+        """
         Clears all instances of a specific property from the structure.
-        '''
+        """
         data_dicts = [
             self.nodal_properties,
             self.element_properties,

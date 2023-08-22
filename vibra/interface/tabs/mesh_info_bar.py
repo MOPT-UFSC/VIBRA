@@ -1,4 +1,5 @@
 import typing
+
 from PyQt5 import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -17,12 +18,11 @@ class MeshInfoBar(QWidget):
 
         if self.mesh is None:
             return
-        
+
         self.number_of_nodes = len(self.mesh.nodal_coordinates)
         self.number_of_elements = len(self.mesh.solids_connectivity)
 
         self._define_qt_variables()
-        
 
     def _define_qt_variables(self):
         #
@@ -34,7 +34,7 @@ class MeshInfoBar(QWidget):
         analysis_info_layout = QGridLayout()
         layout = QHBoxLayout()
         #
-        self._config_widgets() 
+        self._config_widgets()
         #
         analysis_info_layout.addWidget(self.frame_spacer, 0, 0)
         analysis_info_layout.addWidget(self.label_number_of_nodes, 0, 1)
@@ -47,14 +47,12 @@ class MeshInfoBar(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         analysis_info_layout.setContentsMargins(0, 0, 0, 0)
 
-
     def _config_widgets(self):
-
         height = 28
 
         self.frame_spacer.setMinimumHeight(height)
         self.frame_spacer.setMaximumHeight(height)
-        
+
         # self.label_number_of_nodes.setAlignment(Qt.AlignRight)
         self.label_number_of_nodes.setMinimumSize(100, height)
         self.label_number_of_nodes.setMaximumSize(200, height)

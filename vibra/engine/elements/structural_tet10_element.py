@@ -1,116 +1,120 @@
 import numpy as np
+
 from vibra.engine.elements.element import Element
 
 
 def shapeT10C(l1, l2, l3):
-    """ Shape Functions and Derivatives.
-    """
-    #shape functions 
+    """Shape Functions and Derivatives."""
+    # shape functions
     phi = np.zeros(10)
-    
-    l4 = 1-l1-l2-l3
-    phi[0] = (2*l2-1)*l2
-    phi[1] = (2*l1-1)*l1
-    phi[2] = (2*l3-1)*l3
-    phi[3] = (2*l4-1)*l4
-    phi[4] = 4*l1*l2
-    phi[5] = 4*l1*l3
-    phi[6] = 4*l2*l3
-    phi[7] = 4*l2*l4
-    phi[8] = 4*l1*l4
-    phi[9] = 4*l3*l4
+
+    l4 = 1 - l1 - l2 - l3
+    phi[0] = (2 * l2 - 1) * l2
+    phi[1] = (2 * l1 - 1) * l1
+    phi[2] = (2 * l3 - 1) * l3
+    phi[3] = (2 * l4 - 1) * l4
+    phi[4] = 4 * l1 * l2
+    phi[5] = 4 * l1 * l3
+    phi[6] = 4 * l2 * l3
+    phi[7] = 4 * l2 * l4
+    phi[8] = 4 * l1 * l4
+    phi[9] = 4 * l3 * l4
     #
-    
-    #derivatives
-    dphi = np.zeros((3,10))
+
+    # derivatives
+    dphi = np.zeros((3, 10))
     #
     #########################################################
-    dphi[0,0] = 0
-    dphi[0,1] = 4*l1 - 1
-    dphi[0,2] = 0
-    dphi[0,3] = (-2)*l4 + (2*l4-1)*(-1)
-    dphi[0,4] = 4*l2
-    dphi[0,5] = 4*l3
-    dphi[0,6] = 0
-    dphi[0,7] = -4*l2
-    dphi[0,8] = 4*((+1)*l4 + l1*(-1))
-    dphi[0,9] = -4*l3
+    dphi[0, 0] = 0
+    dphi[0, 1] = 4 * l1 - 1
+    dphi[0, 2] = 0
+    dphi[0, 3] = (-2) * l4 + (2 * l4 - 1) * (-1)
+    dphi[0, 4] = 4 * l2
+    dphi[0, 5] = 4 * l3
+    dphi[0, 6] = 0
+    dphi[0, 7] = -4 * l2
+    dphi[0, 8] = 4 * ((+1) * l4 + l1 * (-1))
+    dphi[0, 9] = -4 * l3
     #
-    dphi[1,0] = (+2)*l2 + (2*l2 - 1)*(+1)
-    dphi[1,1] = 0
-    dphi[1,2] = 0
-    dphi[1,3] = (-2)*l4 + (2*l4-1)*(-1)
-    dphi[1,4] = 4*l1
-    dphi[1,5] = 0
-    dphi[1,6] = 4*l3
-    dphi[1,8] = -4*l1
-    dphi[1,7] = 4*((+1)*l4 + l2*(-1))
-    dphi[1,9] = -4*l3
+    dphi[1, 0] = (+2) * l2 + (2 * l2 - 1) * (+1)
+    dphi[1, 1] = 0
+    dphi[1, 2] = 0
+    dphi[1, 3] = (-2) * l4 + (2 * l4 - 1) * (-1)
+    dphi[1, 4] = 4 * l1
+    dphi[1, 5] = 0
+    dphi[1, 6] = 4 * l3
+    dphi[1, 8] = -4 * l1
+    dphi[1, 7] = 4 * ((+1) * l4 + l2 * (-1))
+    dphi[1, 9] = -4 * l3
     #
-    dphi[2,0] = 0
-    dphi[2,1] = 0
-    dphi[2,2] = (+2)*l3 + (2*l3 - 1)*(+1)
-    dphi[2,3] = (-2)*l4 + (2*l4-1)*(-1)
-    dphi[2,4] = 0
-    dphi[2,5] = 4*l1
-    dphi[2,6] = 4*l2
-    dphi[2,7] = -4*l2
-    dphi[2,8] = -4*l1
-    dphi[2,9] = 4*((+1)*l4 + l3*(-1))
-   
+    dphi[2, 0] = 0
+    dphi[2, 1] = 0
+    dphi[2, 2] = (+2) * l3 + (2 * l3 - 1) * (+1)
+    dphi[2, 3] = (-2) * l4 + (2 * l4 - 1) * (-1)
+    dphi[2, 4] = 0
+    dphi[2, 5] = 4 * l1
+    dphi[2, 6] = 4 * l2
+    dphi[2, 7] = -4 * l2
+    dphi[2, 8] = -4 * l1
+    dphi[2, 9] = 4 * ((+1) * l4 + l3 * (-1))
+
     return phi, dphi
 
 
 def get_detJAC_and_invJAC(JAC):
-    """
-    """
-    
-    detJAC = (  JAC[0,0] * JAC[1,1] * JAC[2,2] + 
-                JAC[0,1] * JAC[1,2] * JAC[2,0] + 
-                JAC[0,2] * JAC[1,0] * JAC[2,1]  ) - \
-             (  JAC[2,0] * JAC[1,1] * JAC[0,2] + 
-                JAC[2,1] * JAC[1,2] * JAC[0,0] + 
-                JAC[2,2] * JAC[1,0] * JAC[0,1]  )
-    
-    # adj(JAC)
-    AUJJ = np.zeros((3,3), dtype=float)
-    AUJJ[0,0] =  1 * ((JAC[1,1] * JAC[2,2]) - (JAC[2,1] * JAC[1,2]))
-    AUJJ[1,0] = -1 * ((JAC[1,0] * JAC[2,2]) - (JAC[1,2] * JAC[2,0]))
-    AUJJ[2,0] =  1 * ((JAC[1,0] * JAC[2,1]) - (JAC[1,1] * JAC[2,0]))
-    AUJJ[0,1] = -1 * ((JAC[0,1] * JAC[2,2]) - (JAC[0,2] * JAC[2,1]))
-    AUJJ[1,1] =  1 * ((JAC[0,0] * JAC[2,2]) - (JAC[0,2] * JAC[2,0]))
-    AUJJ[2,1] = -1 * ((JAC[0,0] * JAC[2,1]) - (JAC[0,1] * JAC[2,0]))
-    AUJJ[0,2] =  1 * ((JAC[0,1] * JAC[1,2]) - (JAC[0,2] * JAC[1,1]))
-    AUJJ[1,2] = -1 * ((JAC[0,0] * JAC[1,2]) - (JAC[0,2] * JAC[1,0]))
-    AUJJ[2,2] =  1 * ((JAC[0,0] * JAC[1,1]) - (JAC[0,1] * JAC[1,0]))
+    """ """
 
-    return detJAC, (1/detJAC) * AUJJ
+    detJAC = (
+        JAC[0, 0] * JAC[1, 1] * JAC[2, 2]
+        + JAC[0, 1] * JAC[1, 2] * JAC[2, 0]
+        + JAC[0, 2] * JAC[1, 0] * JAC[2, 1]
+    ) - (
+        JAC[2, 0] * JAC[1, 1] * JAC[0, 2]
+        + JAC[2, 1] * JAC[1, 2] * JAC[0, 0]
+        + JAC[2, 2] * JAC[1, 0] * JAC[0, 1]
+    )
+
+    # adj(JAC)
+    AUJJ = np.zeros((3, 3), dtype=float)
+    AUJJ[0, 0] = 1 * ((JAC[1, 1] * JAC[2, 2]) - (JAC[2, 1] * JAC[1, 2]))
+    AUJJ[1, 0] = -1 * ((JAC[1, 0] * JAC[2, 2]) - (JAC[1, 2] * JAC[2, 0]))
+    AUJJ[2, 0] = 1 * ((JAC[1, 0] * JAC[2, 1]) - (JAC[1, 1] * JAC[2, 0]))
+    AUJJ[0, 1] = -1 * ((JAC[0, 1] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 1]))
+    AUJJ[1, 1] = 1 * ((JAC[0, 0] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 0]))
+    AUJJ[2, 1] = -1 * ((JAC[0, 0] * JAC[2, 1]) - (JAC[0, 1] * JAC[2, 0]))
+    AUJJ[0, 2] = 1 * ((JAC[0, 1] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 1]))
+    AUJJ[1, 2] = -1 * ((JAC[0, 0] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 0]))
+    AUJJ[2, 2] = 1 * ((JAC[0, 0] * JAC[1, 1]) - (JAC[0, 1] * JAC[1, 0]))
+
+    return detJAC, (1 / detJAC) * AUJJ
 
 
 def get_detJAC_and_invJAC_3D(JAC):
-    """
-    """
-    
-    detJAC = (  JAC[:,0,0] * JAC[:,1,1] * JAC[:,2,2] + 
-                JAC[:,0,1] * JAC[:,1,2] * JAC[:,2,0] + 
-                JAC[:,0,2] * JAC[:,1,0] * JAC[:,2,1]  ) - \
-             (  JAC[:,2,0] * JAC[:,1,1] * JAC[:,0,2] + 
-                JAC[:,2,1] * JAC[:,1,2] * JAC[:,0,0] + 
-                JAC[:,2,2] * JAC[:,1,0] * JAC[:,0,1]  )
+    """ """
+
+    detJAC = (
+        JAC[:, 0, 0] * JAC[:, 1, 1] * JAC[:, 2, 2]
+        + JAC[:, 0, 1] * JAC[:, 1, 2] * JAC[:, 2, 0]
+        + JAC[:, 0, 2] * JAC[:, 1, 0] * JAC[:, 2, 1]
+    ) - (
+        JAC[:, 2, 0] * JAC[:, 1, 1] * JAC[:, 0, 2]
+        + JAC[:, 2, 1] * JAC[:, 1, 2] * JAC[:, 0, 0]
+        + JAC[:, 2, 2] * JAC[:, 1, 0] * JAC[:, 0, 1]
+    )
     detJAC = detJAC.reshape(-1, 1, 1)
     # adj(JAC)
     AUJJ = np.zeros((detJAC.shape[0], 3, 3), dtype=float)
-    AUJJ[:,0,0] =  1 * ((JAC[:,1,1] * JAC[:,2,2]) - (JAC[:,2,1] * JAC[:,1,2]))
-    AUJJ[:,1,0] = -1 * ((JAC[:,1,0] * JAC[:,2,2]) - (JAC[:,1,2] * JAC[:,2,0]))
-    AUJJ[:,2,0] =  1 * ((JAC[:,1,0] * JAC[:,2,1]) - (JAC[:,1,1] * JAC[:,2,0]))
-    AUJJ[:,0,1] = -1 * ((JAC[:,0,1] * JAC[:,2,2]) - (JAC[:,0,2] * JAC[:,2,1]))
-    AUJJ[:,1,1] =  1 * ((JAC[:,0,0] * JAC[:,2,2]) - (JAC[:,0,2] * JAC[:,2,0]))
-    AUJJ[:,2,1] = -1 * ((JAC[:,0,0] * JAC[:,2,1]) - (JAC[:,0,1] * JAC[:,2,0]))
-    AUJJ[:,0,2] =  1 * ((JAC[:,0,1] * JAC[:,1,2]) - (JAC[:,0,2] * JAC[:,1,1]))
-    AUJJ[:,1,2] = -1 * ((JAC[:,0,0] * JAC[:,1,2]) - (JAC[:,0,2] * JAC[:,1,0]))
-    AUJJ[:,2,2] =  1 * ((JAC[:,0,0] * JAC[:,1,1]) - (JAC[:,0,1] * JAC[:,1,0]))
+    AUJJ[:, 0, 0] = 1 * ((JAC[:, 1, 1] * JAC[:, 2, 2]) - (JAC[:, 2, 1] * JAC[:, 1, 2]))
+    AUJJ[:, 1, 0] = -1 * ((JAC[:, 1, 0] * JAC[:, 2, 2]) - (JAC[:, 1, 2] * JAC[:, 2, 0]))
+    AUJJ[:, 2, 0] = 1 * ((JAC[:, 1, 0] * JAC[:, 2, 1]) - (JAC[:, 1, 1] * JAC[:, 2, 0]))
+    AUJJ[:, 0, 1] = -1 * ((JAC[:, 0, 1] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 1]))
+    AUJJ[:, 1, 1] = 1 * ((JAC[:, 0, 0] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 0]))
+    AUJJ[:, 2, 1] = -1 * ((JAC[:, 0, 0] * JAC[:, 2, 1]) - (JAC[:, 0, 1] * JAC[:, 2, 0]))
+    AUJJ[:, 0, 2] = 1 * ((JAC[:, 0, 1] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 1]))
+    AUJJ[:, 1, 2] = -1 * ((JAC[:, 0, 0] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 0]))
+    AUJJ[:, 2, 2] = 1 * ((JAC[:, 0, 0] * JAC[:, 1, 1]) - (JAC[:, 0, 1] * JAC[:, 1, 0]))
 
-    return detJAC, (1/detJAC) * AUJJ
+    return detJAC, (1 / detJAC) * AUJJ
 
 
 class STRUCT_TETRAHEDRON_10S(Element):
@@ -118,17 +122,15 @@ class STRUCT_TETRAHEDRON_10S(Element):
     NODES_PER_ELEMENT = 10
     DOF_PER_NODE = 3
     DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
-    
+
     def __init__(self, model):
-        
         self.model = model
         self.initialize_variables()
         self.define_integration_points()
         self.process_shape_functions_and_derivatives()
 
     def initialize_variables(self):
-        """
-        """
+        """ """
         self.element_label = "structural_tetrahedron_10"
         self.nodal_coordinates = self.model.mesh.nodal_coordinates
         self.connectivity = self.model.mesh.solids_connectivity
@@ -137,83 +139,80 @@ class STRUCT_TETRAHEDRON_10S(Element):
         self.number_of_elements = len(self.connectivity)
 
     def define_integration_points(self):
-        """
-        """
+        """ """
         # integration points
         self.nint = 4
-        con1 = (5 - np.sqrt(5))/20
-        con2 = (5 + 3*np.sqrt(5))/20
-        self.pint = np.array([  [ con1, con1, con1],
-                                [ con1, con1, con2],
-                                [ con1, con2, con1],
-                                [ con2, con1, con1]  ])
-        self.wps = np.array([ 1/4, 1/4, 1/4, 1/4])
-        
+        con1 = (5 - np.sqrt(5)) / 20
+        con2 = (5 + 3 * np.sqrt(5)) / 20
+        self.pint = np.array(
+            [[con1, con1, con1], [con1, con1, con2], [con1, con2, con1], [con2, con1, con1]]
+        )
+        self.wps = np.array([1 / 4, 1 / 4, 1 / 4, 1 / 4])
+
     def process_shape_functions_and_derivatives(self):
-        """ This method processes the shape functions and their
-            derivatives for all integration points.
+        """This method processes the shape functions and their
+        derivatives for all integration points.
         """
         l1 = self.pint[:, 0]
-        l2 = self.pint[:, 1] 
+        l2 = self.pint[:, 1]
         l3 = self.pint[:, 2]
         #
-        # shape functions 
+        # shape functions
         phi = np.zeros((self.nint, self.NODES_PER_ELEMENT), dtype=float)
         #
-        l4 = 1-l1-l2-l3
-        phi[:, 0] = (2*l2-1)*l2
-        phi[:, 1] = (2*l1-1)*l1
-        phi[:, 2] = (2*l3-1)*l3
-        phi[:, 3] = (2*l4-1)*l4
-        phi[:, 4] = 4*l1*l2
-        phi[:, 5] = 4*l1*l3
-        phi[:, 6] = 4*l2*l3
-        phi[:, 7] = 4*l2*l4
-        phi[:, 8] = 4*l1*l4
-        phi[:, 9] = 4*l3*l4
+        l4 = 1 - l1 - l2 - l3
+        phi[:, 0] = (2 * l2 - 1) * l2
+        phi[:, 1] = (2 * l1 - 1) * l1
+        phi[:, 2] = (2 * l3 - 1) * l3
+        phi[:, 3] = (2 * l4 - 1) * l4
+        phi[:, 4] = 4 * l1 * l2
+        phi[:, 5] = 4 * l1 * l3
+        phi[:, 6] = 4 * l2 * l3
+        phi[:, 7] = 4 * l2 * l4
+        phi[:, 8] = 4 * l1 * l4
+        phi[:, 9] = 4 * l3 * l4
         #
         # derivatives
         dphi = np.zeros((self.nint, self.DOF_PER_NODE, self.NODES_PER_ELEMENT), dtype=float)
         #
         dphi[:, 0, 0] = 0
-        dphi[:, 0, 1] = 4*l1 - 1
+        dphi[:, 0, 1] = 4 * l1 - 1
         dphi[:, 0, 2] = 0
-        dphi[:, 0, 3] = (-2)*l4 + (2*l4-1)*(-1)
-        dphi[:, 0, 4] = 4*l2
-        dphi[:, 0, 5] = 4*l3
+        dphi[:, 0, 3] = (-2) * l4 + (2 * l4 - 1) * (-1)
+        dphi[:, 0, 4] = 4 * l2
+        dphi[:, 0, 5] = 4 * l3
         dphi[:, 0, 6] = 0
-        dphi[:, 0, 7] = -4*l2
-        dphi[:, 0, 8] = 4*((+1)*l4 + l1*(-1))
-        dphi[:, 0, 9] = -4*l3
+        dphi[:, 0, 7] = -4 * l2
+        dphi[:, 0, 8] = 4 * ((+1) * l4 + l1 * (-1))
+        dphi[:, 0, 9] = -4 * l3
         #
-        dphi[:, 1, 0] = (+2)*l2 + (2*l2 - 1)*(+1)
+        dphi[:, 1, 0] = (+2) * l2 + (2 * l2 - 1) * (+1)
         dphi[:, 1, 1] = 0
         dphi[:, 1, 2] = 0
-        dphi[:, 1, 3] = (-2)*l4 + (2*l4-1)*(-1)
-        dphi[:, 1, 4] = 4*l1
+        dphi[:, 1, 3] = (-2) * l4 + (2 * l4 - 1) * (-1)
+        dphi[:, 1, 4] = 4 * l1
         dphi[:, 1, 5] = 0
-        dphi[:, 1, 6] = 4*l3
-        dphi[:, 1, 8] = -4*l1
-        dphi[:, 1, 7] = 4*((+1)*l4 + l2*(-1))
-        dphi[:, 1, 9] = -4*l3
+        dphi[:, 1, 6] = 4 * l3
+        dphi[:, 1, 8] = -4 * l1
+        dphi[:, 1, 7] = 4 * ((+1) * l4 + l2 * (-1))
+        dphi[:, 1, 9] = -4 * l3
         #
         dphi[:, 2, 0] = 0
         dphi[:, 2, 1] = 0
-        dphi[:, 2, 2] = (+2)*l3 + (2*l3 - 1)*(+1)
-        dphi[:, 2, 3] = (-2)*l4 + (2*l4-1)*(-1)
+        dphi[:, 2, 2] = (+2) * l3 + (2 * l3 - 1) * (+1)
+        dphi[:, 2, 3] = (-2) * l4 + (2 * l4 - 1) * (-1)
         dphi[:, 2, 4] = 0
-        dphi[:, 2, 5] = 4*l1
-        dphi[:, 2, 6] = 4*l2
-        dphi[:, 2, 7] = -4*l2
-        dphi[:, 2, 8] = -4*l1
-        dphi[:, 2, 9] = 4*((+1)*l4 + l3*(-1))
+        dphi[:, 2, 5] = 4 * l1
+        dphi[:, 2, 6] = 4 * l2
+        dphi[:, 2, 7] = -4 * l2
+        dphi[:, 2, 8] = -4 * l1
+        dphi[:, 2, 9] = 4 * ((+1) * l4 + l3 * (-1))
         #
         self.phi = phi
         self.dphi = dphi
 
     def get_constitutive_model(self, el_index, model_type="linear-isotropic"):
-        """ This methdo returns the material constitutive model.
-        """
+        """This methdo returns the material constitutive model."""
         self.material = self.model.properties.get_material(element=el_index)
         vv = self.material.poisson_ratio
         E = self.material.young_modulus
@@ -222,22 +221,26 @@ class STRUCT_TETRAHEDRON_10S(Element):
         if model_type == "linear-isotropic":
             # Constititive model - Linear isotropic material
             #
-            tempc = E/((1+vv)*(1-2*vv))
-            tempn = (1-2*vv)/2
-            tempt = 1-vv
+            tempc = E / ((1 + vv) * (1 - 2 * vv))
+            tempn = (1 - 2 * vv) / 2
+            tempt = 1 - vv
             #
-            const_law = np.array([  [tempt,    vv,    vv,     0,     0,     0],
-                                    [   vv, tempt,    vv,     0,     0,     0],
-                                    [   vv,    vv, tempt,     0,     0,     0],
-                                    [    0,     0,     0, tempn,     0,     0],
-                                    [    0,     0,     0,     0, tempn,     0],
-                                    [    0,     0,     0,     0,     0, tempn]  ])
-            
-            return tempc*const_law
+            const_law = np.array(
+                [
+                    [tempt, vv, vv, 0, 0, 0],
+                    [vv, tempt, vv, 0, 0, 0],
+                    [vv, vv, tempt, 0, 0, 0],
+                    [0, 0, 0, tempn, 0, 0],
+                    [0, 0, 0, 0, tempn, 0],
+                    [0, 0, 0, 0, 0, tempn],
+                ]
+            )
+
+            return tempc * const_law
 
     def elementary_matrices(self, el_index):
-        """ T10S stiffness and mass matrices.
-            Solid187 not mixed (pure displacement)
+        """T10S stiffness and mass matrices.
+        Solid187 not mixed (pure displacement)
         """
         #
         ie = self.connectivity[el_index, 1:]
@@ -245,7 +248,7 @@ class STRUCT_TETRAHEDRON_10S(Element):
         const_mat = self.get_constitutive_model(ie, model_type="linear-isotropic")
         rho = self.material.density
         #
-        JAC = self.dphi@self.nodal_coordinates[ie, 1:4]
+        JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
         detJAC, invJAC = get_detJAC_and_invJAC_3D(JAC)
         dphi_t = invJAC @ self.dphi
         #
@@ -269,35 +272,62 @@ class STRUCT_TETRAHEDRON_10S(Element):
         # integration loop
         Ke, Me = 0, 0
         for i in range(self.nint):
+            Ke += (1 / 6) * B[i, :, :].T @ const_mat @ B[i, :, :] * (detJAC[i, :, :] * self.wps[i])
+            Me += (1 / 6) * rho * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps[i])
 
-            Ke += (1/6)*B[i,:,:].T@const_mat@B[i,:,:]*(detJAC[i,:,:]*self.wps[i])
-            Me += (1/6)*rho*N[i,:,:].T@N[i,:,:]*(detJAC[i,:,:]*self.wps[i])
-        
         return Ke, Me
 
     def reorder_connect(self):
-        """ Reordering connectivity matrix to adequate the GMSH connectivity to the FE model """
+        """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
         self.connectivity = self.connectivity[:, [0, 6, 4, 5, 7, 10, 8, 9, 12, 11, 13]]
 
     def generate_ind_rows_cols(self):
-        """ This method processess the dofs indices (rows and columns) for assembly """
-        
+        """This method processess the dofs indices (rows and columns) for assembly"""
+
         self.reorder_connect()
         dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
 
-        ind_dofs = (np.array([  dofs*self.connectivity[:,1]-1 , dofs*self.connectivity[:,1] , dofs*self.connectivity[:,1]+1,
-                                dofs*self.connectivity[:,2]-1 , dofs*self.connectivity[:,2] , dofs*self.connectivity[:,2]+1,
-                                dofs*self.connectivity[:,3]-1 , dofs*self.connectivity[:,3] , dofs*self.connectivity[:,3]+1,
-                                dofs*self.connectivity[:,4]-1 , dofs*self.connectivity[:,4] , dofs*self.connectivity[:,4]+1,
-                                dofs*self.connectivity[:,5]-1 , dofs*self.connectivity[:,5] , dofs*self.connectivity[:,5]+1,
-                                dofs*self.connectivity[:,6]-1 , dofs*self.connectivity[:,6] , dofs*self.connectivity[:,6]+1,
-                                dofs*self.connectivity[:,7]-1 , dofs*self.connectivity[:,7] , dofs*self.connectivity[:,7]+1,
-                                dofs*self.connectivity[:,8]-1 , dofs*self.connectivity[:,8] , dofs*self.connectivity[:,8]+1,
-                                dofs*self.connectivity[:,9]-1 , dofs*self.connectivity[:,9] , dofs*self.connectivity[:,9]+1,
-                                dofs*self.connectivity[:,10]-1, dofs*self.connectivity[:,10], dofs*self.connectivity[:,10]+1  ], dtype=int) + 1).T
-        
+        ind_dofs = (
+            np.array(
+                [
+                    dofs * self.connectivity[:, 1] - 1,
+                    dofs * self.connectivity[:, 1],
+                    dofs * self.connectivity[:, 1] + 1,
+                    dofs * self.connectivity[:, 2] - 1,
+                    dofs * self.connectivity[:, 2],
+                    dofs * self.connectivity[:, 2] + 1,
+                    dofs * self.connectivity[:, 3] - 1,
+                    dofs * self.connectivity[:, 3],
+                    dofs * self.connectivity[:, 3] + 1,
+                    dofs * self.connectivity[:, 4] - 1,
+                    dofs * self.connectivity[:, 4],
+                    dofs * self.connectivity[:, 4] + 1,
+                    dofs * self.connectivity[:, 5] - 1,
+                    dofs * self.connectivity[:, 5],
+                    dofs * self.connectivity[:, 5] + 1,
+                    dofs * self.connectivity[:, 6] - 1,
+                    dofs * self.connectivity[:, 6],
+                    dofs * self.connectivity[:, 6] + 1,
+                    dofs * self.connectivity[:, 7] - 1,
+                    dofs * self.connectivity[:, 7],
+                    dofs * self.connectivity[:, 7] + 1,
+                    dofs * self.connectivity[:, 8] - 1,
+                    dofs * self.connectivity[:, 8],
+                    dofs * self.connectivity[:, 8] + 1,
+                    dofs * self.connectivity[:, 9] - 1,
+                    dofs * self.connectivity[:, 9],
+                    dofs * self.connectivity[:, 9] + 1,
+                    dofs * self.connectivity[:, 10] - 1,
+                    dofs * self.connectivity[:, 10],
+                    dofs * self.connectivity[:, 10] + 1,
+                ],
+                dtype=int,
+            )
+            + 1
+        ).T
+
         vect_indices = ind_dofs.flatten()
-        self.ind_rows = ((np.tile(vect_indices, (edofs,1))).T).flatten()
+        self.ind_rows = ((np.tile(vect_indices, (edofs, 1))).T).flatten()
         self.ind_cols = (np.tile(ind_dofs, edofs)).flatten()
-        
+
         return self.ind_rows, self.ind_cols

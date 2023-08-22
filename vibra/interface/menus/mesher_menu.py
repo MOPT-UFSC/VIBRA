@@ -4,10 +4,12 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QMenu
 
 from vibra.interface.loading_bar import load_function
+from vibra.interface.model_inputs.mesh.mesher_inputs import MesherInputs
+from vibra.interface.model_inputs.structural.material_inputs import (
+    MaterialInput,
+)
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_functions import get_main_window
-from vibra.interface.model_inputs.mesh.mesher_inputs import MesherInputs
-from vibra.interface.model_inputs.structural.material_inputs import MaterialInput
 
 
 class MesherMenu(QMenu):
@@ -42,11 +44,9 @@ class MesherMenu(QMenu):
         self.addAction(self.set_material_action)
         self.addAction(self.mesher_setup_action)
         self.addAction(self.generate_mesh_action)
-        
 
     def call_fluid_configurator(self):
         pass
-
 
     def call_material_configurator(self):
         MaterialInput()

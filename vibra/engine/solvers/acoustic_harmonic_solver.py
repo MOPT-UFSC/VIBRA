@@ -1,8 +1,9 @@
+import logging
+
 import numpy as np
 from scipy.linalg import eig
 from scipy.sparse.linalg import spsolve
 
-import logging
 from vibra.utils.progress_status import ProgressStatus
 
 
@@ -33,24 +34,29 @@ class AcousticHarmonicSolver:
         self.dissipation_model = data
 
     def solve(self):
-
         self.M = self.assembler.mass_matrix
         self.K = self.assembler.stiffness_matrix
 
         self.mass_flow = self.assembler.get_acoustic_excitations()
-        self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
-        self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_values()
-        
+        (
+            self.unprescribed_indexes,
+            self.prescribed_indexes,
+        ) = self.assembler.get_matrices_dropping_indexes()
+        (
+            self.prescribed_values,
+            self.array_prescribed_values,
+        ) = self.assembler.get_prescribed_values()
+
         rows = len(self.prescribed_indexes) + len(self.unprescribed_indexes)
         cols = len(self.frequencies)
 
         solution = np.zeros((rows, cols), dtype=complex)
-        
+
         for i, freq in enumerate(self.frequencies):
             logging.info(f"Solving for frequency {freq}" + ProgressStatus(i, len(self.frequencies)))
             omega = 2 * np.pi * freq
             A = self.K - (omega**2) * self.M
-            F =  -1j * omega * self.mass_flow
+            F = -1j * omega * self.mass_flow
             solution[:, i] = spsolve(A, F)
 
         self.solution = solution
@@ -79,21 +85,19 @@ class AcousticHarmonicSolver:
         if len(self.prescribed_indexes) > 0:
             full_solution[self.prescribed_indexes, :] = self.array_prescribed_values[:, 0:cols]
         return np.real(full_solution)
-    
-        
-    def get_max_min_values_of_pressures(self, column):
 
+    def get_max_min_values_of_pressures(self, column):
         data = self.solution[:, column]
-        
+
         amplitudes = np.abs(data)
         phases = np.angle(data)
-        
+
         p_min = 1
         p_max = 0
-        thetas = np.arange(0, 360, 2)*(np.pi/180)
+        thetas = np.arange(0, 360, 2) * (np.pi / 180)
 
         for theta in thetas:
-            pressures = amplitudes*np.cos(phases + theta)
+            pressures = amplitudes * np.cos(phases + theta)
 
             p_min_i = min(pressures)
             p_max_i = max(pressures)
@@ -102,5 +106,5 @@ class AcousticHarmonicSolver:
                 p_min = p_min_i
             if p_max_i > p_max:
                 p_max = p_max_i
-    
+
         return p_min, p_max
