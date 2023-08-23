@@ -83,7 +83,7 @@ class StructuralAssembler:
         else:
             number_frequencies = len(self.frequencies)
 
-        for key, data in self.properties.lines_with_prescribed_dofs.items():
+        for key, data in self.properties.line_properties.items():
             property, line_id = key
             if property == "prescribed_dofs":
                 values = data["values"]

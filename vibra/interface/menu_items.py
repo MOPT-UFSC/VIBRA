@@ -497,7 +497,7 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_plotStructuralModeShapes:
             if not self.item_child_plotStructuralModeShapes.isDisabled():
-                pass
+                self.main_window.viewer_tabs.show_structural_modal_analysis()
 
         elif item == self.item_child_plotDisplacementField:
             if not self.item_child_plotDisplacementField.isDisabled():
@@ -525,7 +525,7 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_plotAcousticPressureField:
             if not self.item_child_plotAcousticPressureField.isDisabled():
-                pass
+                self.main_window.viewer_tabs.show_acoustic_harmonic_analysis()
 
         elif item == self.item_child_plotAcousticFrequencyResponse:
             if not self.item_child_plotAcousticFrequencyResponse.isDisabled():

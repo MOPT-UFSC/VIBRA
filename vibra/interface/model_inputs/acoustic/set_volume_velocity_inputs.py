@@ -289,7 +289,6 @@ class VolumeVelocityInput(QDialog):
 
             imported_values = imported_file[:, 1]
 
-            print(imported_file.shape[1] >= 3)
             if imported_file.shape[1] >= 3:
                 self.frequencies = imported_file[:, 0]
                 self.f_min = self.frequencies[0]

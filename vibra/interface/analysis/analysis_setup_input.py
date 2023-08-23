@@ -245,6 +245,7 @@ class AnalysisSetupInput(QDialog):
         #     self.project.set_modes_sigma(self.modes)
 
         self.project.set_analysis_data(self.analysis_data)
+        self.project.create_solver()
         self.complete = True
         self.close()
         return False

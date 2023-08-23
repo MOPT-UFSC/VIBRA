@@ -121,6 +121,3 @@ class Model:
             
     def set_specific_impedance(self, data, surface):
         self.properties.set_specific_impedance(data, surface)
-
-    def set_analysis_data(self, data):
-        self.analysis_data = data
