@@ -161,8 +161,10 @@ class ParticleVelocityInput(QDialog):
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "particle_velocity":
-                value = data["values"]
-                new = QTreeWidgetItem([str(surface_id), str(self.text_label(value))])
+                real_values = np.array(data["real_values"])
+                imag_values = np.array(data["imag_values"])
+                complex_values = real_values + 1j*imag_values
+                new = QTreeWidgetItem([str(surface_id), str(self.text_label(complex_values))])
                 new.setTextAlignment(0, Qt.AlignCenter)
                 new.setTextAlignment(1, Qt.AlignCenter)
                 self.treeWidget_particle_velocity.addTopLevelItem(new)
@@ -371,16 +373,19 @@ class ParticleVelocityInput(QDialog):
                     if self.basename_particle_velocity in list_table_names:
                         list_table_names.remove(self.basename_particle_velocity)
 
-                    key_avg = int(self.checkBox_averaged_constant_values.isChecked())
-                    
-                    data = {"values" : self.particle_velocity,
-                            "averaged" : key_avg,
-                            "table_name" : self.basename_particle_velocity,
-                            "nodal_attribution" : True,
-                            "element_integration" : False}
+                    real_values = list(np.real(self.particle_velocity))
+                    imag_values = list(np.imag(self.particle_velocity))
 
-            for _id in self.typed_ids:
-                self.project.set_particle_velocity(data, _id)
+                    nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
+                    key_avg = self.checkBox_averaged_constant_values.isChecked()
+
+                    data = {"real_values" : real_values,
+                            "imag_values" : imag_values,
+                            "nodal_attribution" : nodal_attribution,
+                            "averaged" : key_avg,
+                            "table_name" : self.basename_particle_velocity}
+
+                    self.project.set_particle_velocity(data, _id)
 
             self.properties.export_model_properties()
 
@@ -440,43 +445,43 @@ class ParticleVelocityInput(QDialog):
             if property == "particle_velocity":
                 surface_ids.append(surface_id)
 
-            if len(surface_ids) > 0:
-                title = f"Resetting of all applied particle velocities"
-                message = "Do you really want to remove the particle velocity applied to the following surface(s)?\n\n"
-                message += f"{surface_ids}"
-                message += "\n\nPress the Continue button to proceed with the resetting or press Cancel or "
-                message += "Close buttons to abort the current operation."
-                buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
-                read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
+        if len(surface_ids) > 0:
+            title = f"Resetting of all applied particle velocities"
+            message = "Do you really want to remove the particle velocity applied to the following surface(s)?\n\n"
+            message += f"{surface_ids}"
+            message += "\n\nPress the Continue button to proceed with the resetting or press Cancel or "
+            message += "Close buttons to abort the current operation."
+            buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+            read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
 
-                if read._doNotRun:
-                    return
+            if read._doNotRun:
+                return
 
-                _list_table_names = []
-                if read._continue:
-                    for key, data in self.properties.surface_properties.items():
-                        property, surface_id = key
-                        if property == "particle_velocity":
-                            if "table_name" in data.keys():
-                                table_name = data[table_name]
-                            else:
-                                table_name = None
-                            if table_name is not None:
-                                if table_name not in _list_table_names:
-                                    _list_table_names.append(table_name)
+            _list_table_names = []
+            if read._continue:
+                for key, data in self.properties.surface_properties.items():
+                    property, surface_id = key
+                    if property == "particle_velocity":
+                        if "table_name" in data.keys():
+                            table_name = data[table_name]
+                        else:
+                            table_name = None
+                        if table_name is not None:
+                            if table_name not in _list_table_names:
+                                _list_table_names.append(table_name)
 
-                    self.properties._reset_property("particle_velocity")
-                    self.properties.export_model_properties()
+                self.properties._reset_property("particle_velocity")
+                self.properties.export_model_properties()
 
-                    #TODO: remove imported tables
-                    self.process_table_file_removal(_list_table_names)
+                #TODO: remove imported tables
+                self.process_table_file_removal(_list_table_names)
 
-                    title = "particle velocity resetting process complete"
-                    message = "All particle velocity applied to the acoustic " 
-                    message += "model have been removed from the model."
-                    PrintMessageInput([title, message, window_title_2])
+                title = "particle velocity resetting process complete"
+                message = "All particle velocity applied to the acoustic " 
+                message += "model have been removed from the model."
+                PrintMessageInput([title, message, window_title_2])
 
-                    self.close()
+                self.close()
 
     def reset_input_fields(self):
         self.lineEdit_real_value.setText("")

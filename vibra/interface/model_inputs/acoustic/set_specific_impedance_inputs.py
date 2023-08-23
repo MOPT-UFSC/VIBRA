@@ -132,8 +132,10 @@ class SpecificImpedanceInput(QDialog):
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "specific_impedance":
-                value = data["values"]
-                new = QTreeWidgetItem([str(surface_id), str(self.text_label(value))])
+                real_values = np.array(data["real_values"])
+                imag_values = np.array(data["imag_values"])
+                complex_values = real_values + 1j*imag_values
+                new = QTreeWidgetItem([str(surface_id), str(self.text_label(complex_values))])
                 new.setTextAlignment(0, Qt.AlignCenter)
                 new.setTextAlignment(1, Qt.AlignCenter)
                 self.treeWidget_specific_impedance.addTopLevelItem(new)
@@ -347,16 +349,20 @@ class SpecificImpedanceInput(QDialog):
                     if self.basename_specific_impedance in list_table_names:
                         list_table_names.remove(self.basename_specific_impedance)
 
-                    key_avg = int(self.checkBox_averaged_constant_values.isChecked())
+                    real_values = list(np.real(self.specific_impedance))
+                    imag_values = list(np.imag(self.specific_impedance))
 
-                    data = {"values" : self.specific_impedance,
+                    nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
+                    key_avg = self.checkBox_averaged_constant_values.isChecked()
+
+                    data = {"real_values" : real_values,
+                            "imag_values" : imag_values,
+                            "nodal_attribution" : nodal_attribution,
                             "averaged" : key_avg,
-                            "table_name" : self.basename_specific_impedance,
-                            "nodal_attribution" : True,
-                            "element_integration" : False}
+                            "table_name" : self.basename_specific_impedance}
 
-            for _id in self.typed_ids:
-                self.project.set_specific_impedance(data, _id)
+                    self.project.set_specific_impedance(data, _id)
+                
             self.properties.export_model_properties()
 
             self.process_table_file_removal(list_table_names)
