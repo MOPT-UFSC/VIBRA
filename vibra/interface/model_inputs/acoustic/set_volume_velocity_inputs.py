@@ -297,11 +297,11 @@ class VolumeVelocityInput(QDialog):
                 self.project.set_frequencies(self.frequencies, self.f_min, self.f_max, self.f_step)
 
                 # TODO: ensure that the table frequency setup governing the model setup
-                # if self.project.change_project_frequency_setup(imported_filename, list(self.frequencies)):
-                #     self.lineEdit_reset(self.lineEdit_load_table_path)
-                #     return None, None
-                # else:
-                #     self.project.set_frequencies(self.frequencies, self.f_min, self.f_max, self.f_step)
+                if self.change_project_frequency_setup(imported_filename, list(self.frequencies)):
+                    self.lineEdit_reset(self.lineEdit_load_table_path)
+                    return None, None
+                else:
+                    self.project.set_frequencies(self.frequencies, self.f_min, self.f_max, self.f_step)
 
             return imported_values, imported_filename
 
@@ -577,3 +577,41 @@ class VolumeVelocityInput(QDialog):
             self.close()
         else:
             return
+        
+    def change_project_frequency_setup(self, table_name, frequencies):
+
+        self.list_frequencies = []
+        analysis_data = self.main_window.project.analysis_data
+        if analysis_data is not None:
+            if "frequencies" in analysis_data.keys():
+                if isinstance(analysis_data["frequencies"], np.ndarray):
+                    self.list_frequencies = list(analysis_data["frequencies"])
+
+        if frequencies is None:
+            return False
+        if isinstance(frequencies, np.ndarray):
+            frequencies = list(frequencies)
+        update_freqs = False
+        if self.list_frequencies == [] or not self.properties.check_if_there_are_tables_at_the_model():
+            update_freqs = True
+            self.list_frequencies = frequencies
+        #
+        self.main_window.project.update_import_table_state(update_freqs)
+        if self.list_frequencies == frequencies:
+            if update_freqs:
+                self.frequencies = np.array(frequencies)
+                self.f_min = self.frequencies[0]
+                self.f_max = self.frequencies[-1]
+                self.f_step = self.frequencies[1] - self.frequencies[0] 
+                # self.file.add_frequency_in_file(self.f_min, self.f_max, self.f_step)
+                self.imported_table_frequency_setup = True
+            return False
+        else:
+            window_title = "Warning"
+            title = "Project frequency setup cannot be modified"
+            message = f"The following imported table of values has a frequency setup\n"
+            message += "different from the others already imported ones. The current\n"
+            message += "project frequency setup is not going to be modified."
+            message += f"\n\n{table_name}"
+            PrintMessageInput([title, message, window_title])
+            return True

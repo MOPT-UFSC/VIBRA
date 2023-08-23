@@ -20,6 +20,7 @@ class AnalysisSetupInput(QDialog):
         self.project = self.main_window.project
         self.analysis_data = self.project.analysis_data
         self.analysis_id = self.analysis_data["analysis_id"]
+        self.imported_table_state = self.main_window.project.imported_table_state
 
         """
         |--------------------------------------------------------------------|
@@ -145,11 +146,10 @@ class AnalysisSetupInput(QDialog):
             self.lineEdit_fmin.setText(str(self.f_min))
             self.lineEdit_fmax.setText(str(self.f_max))
             self.lineEdit_fstep.setText(str(self.f_step))
-            # TODO: as soon as possible
-            # if self.project.file.check_if_there_are_tables_at_the_model():
-            #     self.lineEdit_fmin.setDisabled(True)
-            #     self.lineEdit_fmax.setDisabled(True)
-            #     self.lineEdit_fstep.setDisabled(True)
+            if self.project.imported_table_state:
+                self.lineEdit_fmin.setDisabled(True)
+                self.lineEdit_fmax.setDisabled(True)
+                self.lineEdit_fstep.setDisabled(True)
 
     def check_exit(self):
         input_fmin = input_fmax = input_fstep = 0

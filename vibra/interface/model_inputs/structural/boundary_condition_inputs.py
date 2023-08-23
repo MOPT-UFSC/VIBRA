@@ -302,7 +302,7 @@ class BoundaryConditionInputs(QDialog):
             lineEdit.setText(self.path_imported_table)
             imported_file = np.loadtxt(self.path_imported_table, delimiter=",")
 
-            if imported_file.shape[1] < 2:
+            if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum \n"
                 message += "data must have frequencies, real and imaginary columns."
                 PrintMessageInput([title, message, window_title])

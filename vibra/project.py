@@ -24,6 +24,7 @@ class Project:
         self.geometry_path = ""
         self.fluid_list_path = ""
         self.material_list_path = ""
+        self.imported_table_state = False
         self.analysis_data = None
         self.dissipation_model = None
         self.static_solver = None
@@ -122,6 +123,9 @@ class Project:
                              "f_max" : f_max,
                              "f_step" : f_step}
         self.set_analysis_data(analysis_data)
+
+    def update_import_table_state(self, state):
+        self.imported_table_state = state
 
     def create_solver(self):
         """

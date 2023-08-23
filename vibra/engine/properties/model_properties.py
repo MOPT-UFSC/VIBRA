@@ -191,6 +191,27 @@ class ModelProperties:
 
         return None
 
+    def check_if_there_are_tables_at_the_model(self):
+        """ This method checks if there are imported table of values in
+            the model. It returns True if exists or False elsewhere. 
+        """
+        data_dicts = [
+            self.nodal_properties,
+            self.element_properties,
+            self.line_properties,
+            self.surface_properties,
+            self.volume_properties,
+            self.global_properties,
+        ]
+
+        for data_dict in data_dicts:
+            for data in data_dict.values():
+                if isinstance(data, dict):
+                    if "table_name" in data.keys():
+                        return True
+        else:
+            return False
+
     def _reset_property(self, property: str):
         """
         Clears all instances of a specific property from the structure.
