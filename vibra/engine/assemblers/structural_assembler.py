@@ -45,6 +45,11 @@ class StructuralAssembler:
     def set_element_formulation(self, element):
         self.element = element
 
+    def set_analysis_data(self, data):
+        self.analysis_data = data
+        if "frequencies" in data.keys():
+            self.frequencies = data["frequencies"]
+
     def set_frequencies(self, frequencies):
         self.frequencies = frequencies
 
@@ -78,7 +83,7 @@ class StructuralAssembler:
         else:
             number_frequencies = len(self.frequencies)
 
-        for key, data in self.properties.lines_with_prescribed_dofs.items():
+        for key, data in self.properties.line_properties.items():
             property, line_id = key
             if property == "prescribed_dofs":
                 values = data["values"]

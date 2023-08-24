@@ -7,9 +7,6 @@ import numpy as np
 
 from vibra.interface.general.print_message_input import PrintMessageInput
 
-# Essa classe se destina a controlar todos os arquivos do projeto
-
-
 class ProjectFile:
     def __init__(self):
         self._reset()
@@ -253,7 +250,7 @@ class ProjectFile:
 
 
 def create_new_folder(path, folder_name):
-    folder_path = os.path.joint(path, folder_name)
+    folder_path = os.path.join(path, folder_name)
     if not os.path.exists(folder_path):
         os.mkdir(folder_path)
     return folder_path

@@ -2,7 +2,8 @@ from dataclasses import dataclass
 
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-import json
+from vibra.project_file import ProjectFile
+import json, os
 
 DEFAULT_MATERIAL = Material(
     name="Steel",
@@ -51,6 +52,7 @@ class ModelProperties:
     """
 
     def __init__(self, model=None):
+        self.file = ProjectFile()
         self._reset_variables()
 
     def _reset_variables(self):
@@ -61,8 +63,8 @@ class ModelProperties:
         self.element_properties = dict()
         self.nodal_properties = dict()
 
-        self.global_properties["material"] = DEFAULT_MATERIAL
-        self.global_properties["fluid"] = DEFAULT_FLUID
+        self.global_properties["material", "global"] = DEFAULT_MATERIAL
+        self.global_properties["fluid", "global"] = DEFAULT_FLUID
 
 
     def get_material(self, element=None) -> Material:
@@ -160,7 +162,7 @@ class ModelProperties:
         elif element is not None:
             self.element_properties[property, element] = value
         else:
-            self.global_properties[property] = value
+            self.global_properties[property, "global"] = value
 
     def _get_property(self, property: str, node=None, element=None, line=None, surface=None, volume=None):
         """
@@ -184,10 +186,31 @@ class ModelProperties:
         if (property, volume) in self.volume_properties:
             return self.volume_properties[property, volume]
 
-        if property in self.global_properties:
-            return self.global_properties[property]
+        if (property, "global") in self.global_properties:
+            return self.global_properties[property, "global"]
 
         return None
+
+    def check_if_there_are_tables_at_the_model(self):
+        """ This method checks if there are imported table of values in
+            the model. It returns True if exists or False elsewhere. 
+        """
+        data_dicts = [
+            self.nodal_properties,
+            self.element_properties,
+            self.line_properties,
+            self.surface_properties,
+            self.volume_properties,
+            self.global_properties,
+        ]
+
+        for data_dict in data_dicts:
+            for data in data_dict.values():
+                if isinstance(data, dict):
+                    if "table_name" in data.keys():
+                        return True
+        else:
+            return False
 
     def _reset_property(self, property: str):
         """
@@ -263,14 +286,13 @@ class ModelProperties:
             return {f"{p} {i}":v for (p,i), v in prop.items()}
 
         data = dict(
-            global_properties = normalize(self.global_properties),
+            # global_properties = normalize(self.global_properties),
             volume_properties = normalize(self.volume_properties),
             surface_properties = normalize(self.surface_properties),
             line_properties = normalize(self.line_properties),
             element_properties = normalize(self.element_properties),
             nodal_properties = normalize(self.nodal_properties),
         )
-    
         return json.dumps(data, indent=2)
 
     def load_json(self, data: dict):
@@ -290,6 +312,14 @@ class ModelProperties:
         self.element_properties = denormalize(data["element_properties"])
         self.nodal_properties = denormalize(data["nodal_properties"])
 
+
+    def export_model_properties(self):
+        try:
+            path = os.path.join(self.file.project_path, "model_properties.json")
+            with open(path, "w") as file:
+                file.write(self.as_json())
+        except Exception as error:
+            print(str(error))
 
 if __name__ == "__main__":
     p = ModelProperties()

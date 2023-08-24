@@ -182,5 +182,10 @@ class AnalysisTypeInput(QDialog):
 
     def finalize(self):
         self.complete = True
+        if self.main_window.project.analysis_data is not None:
+            for key, value in self.main_window.project.analysis_data.items():
+                if key in ["f_min", "f_max", "f_step", "frequencies"]:
+                    self.analysis_data[key] = value
         self.main_window.project.set_analysis_data(self.analysis_data)
+        self.main_window.project.create_solver()
         self.close()

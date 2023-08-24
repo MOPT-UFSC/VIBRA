@@ -161,8 +161,10 @@ class ParticleVelocityInput(QDialog):
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "particle_velocity":
-                value = data["values"]
-                new = QTreeWidgetItem([str(surface_id), str(self.text_label(value))])
+                real_values = np.array(data["real_values"])
+                imag_values = np.array(data["imag_values"])
+                complex_values = real_values + 1j*imag_values
+                new = QTreeWidgetItem([str(surface_id), str(self.text_label(complex_values))])
                 new.setTextAlignment(0, Qt.AlignCenter)
                 new.setTextAlignment(1, Qt.AlignCenter)
                 self.treeWidget_particle_velocity.addTopLevelItem(new)
@@ -218,10 +220,10 @@ class ParticleVelocityInput(QDialog):
             self.lineEdit_selection_id.setFocus()
             return
 
-        # TODO: remove the conflicting acoustic excitations and boundary conditions
-        # self.project.remove_acoustic_pressure_table_files(self.typed_ids)
-        # self.project.remove_compressor_excitation_table_files(self.typed_ids)
-        # self.project.reset_compressor_info_by_node(self.typed_ids)
+        for _id in self.typed_ids:
+            self.properties._remove_surface_property("acoustic_pressure", _id)
+            self.properties._remove_surface_property("specific_impedance", _id)
+            self.properties._remove_surface_property("compressor_excitation", _id)
 
         particle_velocity = self.check_complex_entries(
             self.lineEdit_real_value, self.lineEdit_imag_value
@@ -231,16 +233,23 @@ class ParticleVelocityInput(QDialog):
             return
 
         if particle_velocity is not None:
-            self.particle_velocity = particle_velocity
 
-            key_avg = int(self.checkBox_averaged_constant_values.isChecked())
-            data = {"values" : particle_velocity,
-                    "averaged" : key_avg,
-                    "nodal_attribution" : True,
-                    "element_integration" : False}
+            self.particle_velocity = particle_velocity
+            real_values = [np.real(particle_velocity)]
+            imag_values = [np.imag(particle_velocity)]
+
+            nodal_attribution = self.radioButton_nodal_attribution_constant.isChecked()
+            key_avg =self.checkBox_averaged_constant_values.isChecked()
+            
+            data = {"real_values" : real_values,
+                    "imag_values" : imag_values,
+                    "nodal_attribution" : nodal_attribution,
+                    "averaged" : key_avg}
 
             for _id in self.typed_ids:
                 self.project.set_particle_velocity(data, _id)
+
+            self.properties.export_model_properties()
 
             print(f"[Set particle Velocity] - defined at surface(s) {self.typed_ids}")
             # TODO: remove existing tables and update the render
@@ -336,14 +345,17 @@ class ParticleVelocityInput(QDialog):
         )
 
     def check_table_values(self):
+
         lineEdit_selection_id = self.lineEdit_selection_id.text()
         self.stop, self.typed_ids = self.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return
 
-        # self.project.remove_acoustic_pressure_table_files(self.typed_ids)
-        # self.project.reset_compressor_info_by_node(self.typed_ids)
+        for _id in self.typed_ids:
+            self.properties._remove_surface_property("acoustic_pressure", _id)
+            self.properties._remove_surface_property("specific_impedance", _id)
+            self.properties._remove_surface_property("compressor_excitation", _id)
 
         list_table_names = self.get_list_table_names_from_selected_surfaces(self.typed_ids)
         if self.lineEdit_load_table_path != "":
@@ -361,15 +373,21 @@ class ParticleVelocityInput(QDialog):
                     if self.basename_particle_velocity in list_table_names:
                         list_table_names.remove(self.basename_particle_velocity)
 
-                    key_avg = int(self.checkBox_averaged_constant_values.isChecked())
-                    
-                    data = {"values" : self.particle_velocity,
-                            "averaged" : key_avg,
-                            "table_name" : self.basename_particle_velocity,
-                            "nodal_attribution" : True,
-                            "element_integration" : False}
+                    real_values = list(np.real(self.particle_velocity))
+                    imag_values = list(np.imag(self.particle_velocity))
 
-            self.project.set_particle_velocity(data)
+                    nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
+                    key_avg = self.checkBox_averaged_constant_values.isChecked()
+
+                    data = {"real_values" : real_values,
+                            "imag_values" : imag_values,
+                            "nodal_attribution" : nodal_attribution,
+                            "averaged" : key_avg,
+                            "table_name" : self.basename_particle_velocity}
+
+                    self.project.set_particle_velocity(data, _id)
+
+            self.properties.export_model_properties()
 
             self.process_table_file_removal(list_table_names)
             print(f"[Set particle Velocity] - defined at surface(s) {self.typed_ids}")
@@ -392,13 +410,11 @@ class ParticleVelocityInput(QDialog):
         return list_table_names
 
     def text_label(self, value):
-        text = ""
-        if isinstance(value, complex):
+        if value.shape[0] == 1:
             value_label = str(value)
-        elif isinstance(value, np.ndarray):
+        else:
             value_label = "Table"
-        text = "{}".format(value_label)
-        return text
+        return "{}".format(value_label)
 
     def remove_bc_from_selection(self):
         if self.lineEdit_selection_id.text() != "":
@@ -429,42 +445,43 @@ class ParticleVelocityInput(QDialog):
             if property == "particle_velocity":
                 surface_ids.append(surface_id)
 
-            if len(surface_ids) > 0:
-                title = f"Resetting of all applied particle velocities"
-                message = "Do you really want to remove the particle velocity applied to the following surface(s)?\n\n"
-                message += f"{surface_ids}"
-                message += "\n\nPress the Continue button to proceed with the resetting or press Cancel or "
-                message += "Close buttons to abort the current operation."
-                buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
-                read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
+        if len(surface_ids) > 0:
+            title = f"Resetting of all applied particle velocities"
+            message = "Do you really want to remove the particle velocity applied to the following surface(s)?\n\n"
+            message += f"{surface_ids}"
+            message += "\n\nPress the Continue button to proceed with the resetting or press Cancel or "
+            message += "Close buttons to abort the current operation."
+            buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+            read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
 
-                if read._doNotRun:
-                    return
+            if read._doNotRun:
+                return
 
-                _list_table_names = []
-                if read._continue:
-                    for key, data in self.properties.surface_properties.items():
-                        property, surface_id = key
-                        if property == "particle_velocity":
-                            if "table_name" in data.keys():
-                                table_name = data[table_name]
-                            else:
-                                table_name = None
-                            if table_name is not None:
-                                if table_name not in _list_table_names:
-                                    _list_table_names.append(table_name)
+            _list_table_names = []
+            if read._continue:
+                for key, data in self.properties.surface_properties.items():
+                    property, surface_id = key
+                    if property == "particle_velocity":
+                        if "table_name" in data.keys():
+                            table_name = data[table_name]
+                        else:
+                            table_name = None
+                        if table_name is not None:
+                            if table_name not in _list_table_names:
+                                _list_table_names.append(table_name)
 
-                    self.properties._reset_property("particle_velocity")
+                self.properties._reset_property("particle_velocity")
+                self.properties.export_model_properties()
 
-                    #TODO: remove imported tables
-                    self.process_table_file_removal(_list_table_names)
+                #TODO: remove imported tables
+                self.process_table_file_removal(_list_table_names)
 
-                    title = "particle velocity resetting process complete"
-                    message = "All particle velocity applied to the acoustic " 
-                    message += "model have been removed from the model."
-                    PrintMessageInput([title, message, window_title_2])
+                title = "particle velocity resetting process complete"
+                message = "All particle velocity applied to the acoustic " 
+                message += "model have been removed from the model."
+                PrintMessageInput([title, message, window_title_2])
 
-                    self.close()
+                self.close()
 
     def reset_input_fields(self):
         self.lineEdit_real_value.setText("")

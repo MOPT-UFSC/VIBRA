@@ -27,7 +27,7 @@ class Model:
         self.generated_mesh = False
         self.surfaces_areas = dict()
 
-        self.frequencies = None
+        self.analysis_data = None
         self.acoustic_element = None
         self.structural_element = None
 

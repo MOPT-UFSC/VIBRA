@@ -24,18 +24,20 @@ class Project:
         self.geometry_path = ""
         self.fluid_list_path = ""
         self.material_list_path = ""
+        self.imported_table_state = False
         self.analysis_data = None
         self.dissipation_model = None
+        self.static_solver = None
+        self.acoustic_modal_solver = None
+        self.structural_modal_solver = None
+        self.acoustic_harmonic_solver = None
+        self.structural_harmonic_solver = None
         #
         self.model = Model()
         self.file = ProjectFile()
         self.acoustic_assembler = AcousticAssembler(self.model)
         self.structural_assembler = StructuralAssembler(self.model)
 
-        # default stuff to make the merge work
-        self.acoustic_modal_solver = StructuralModalSolver(self.acoustic_assembler)
-        self.structural_modal_solver = StructuralModalSolver(self.structural_assembler)
-        self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_assembler)
 
     @classmethod
     def load(cls, path):
@@ -84,81 +86,29 @@ class Project:
 
     def set_structural_boundary_condition(self, data, line, surface):
         self.model.set_structural_boundary_condition(data, line, surface)
-        # self.file.add_structural_boundary_condition_to_file(data)
 
     def set_acoustic_pressure(self, data, surface):
         self.model.set_acoustic_pressure(data, surface)
-        # self.file.add_acoustic_pressure_to_file(data)
 
     def set_mass_flow_rate(self, data, surface):
         self.model.set_mass_flow_rate(data, surface)
-        # self.file.add_mass_flow_rate_to_file(data)
 
     def set_volume_velocity(self, data, surface):
         self.model.set_volume_velocity(data, surface)
-        # self.file.add_volume_velocity_to_file(data)
 
     def set_particle_velocity(self, data, surface):
         self.model.set_particle_velocity(data, surface)
-        # self.file.add_particle_velocity_to_file(data)
 
     def set_specific_impedance(self, data, surface):
         self.model.set_specific_impedance(data, surface)
-        # self.file.add_particle_velocity_to_file(data)
 
     def set_dissipation_model(self, data):
         self.model.set_dissipation_model_data(data)
-        # self.file.add_dissipation_model_data_to_file(data)
 
     def set_analysis_data(self, data):
         self.analysis_data = data
-        self.file.add_frequency_in_file(data)
-
-        # structural harmonic analysis - direct method
-        if data["analysis_id"] == 0:
-            print("Structural harmonic analysis (direct method) not implemented")
-            raise NotImplementedError("Not implemented solver")
-
-        # structural harmonic analysis - mode superposition method
-        elif data["analysis_id"] == 1:
-            print("Structural harmonic analysis (mode superposition method) not implemented")
-            raise NotImplementedError("Not implemented solver")
-
-        # structural modal analysis
-        elif data["analysis_id"] == 2:
-            self.set_structural_element_to_model()
-            self.structural_modal_solver = StructuralModalSolver(
-                self.structural_assembler, analysis_data=data
-            )
-        # acoustic harmonic analysis
-        elif data["analysis_id"] == 3:
-            self.set_acoustic_element_to_model()
-            self.acoustic_harmonic_solver = AcousticHarmonicSolver(
-                self.acoustic_assembler, analysis_data=data
-            )
-        # acoustic modal analysis
-        elif data["analysis_id"] == 4:
-            self.set_acoustic_element_to_model()
-            self.acoustic_modal_solver = AcousticModalSolver(
-                self.acoustic_assembler, analysis_data=data
-            )
-        # couled harmonic analysis (direct method)
-        elif data["analysis_id"] == 5:
-            print("Coupled harmonic analysis (direct method) not implemented")
-            raise NotImplementedError("Not implemented solver")
-
-        # couled harmonic analysis (mode superposition method)
-        elif data["analysis_id"] == 6:
-            print("Coupled harmonic analysis (mode superposition method) not implemented")
-            raise NotImplementedError("Not implemented solver")
-
-        # static analysis
-        elif data["analysis_id"] == 7:
-            print("Static analysis not implemented")
-            raise NotImplementedError("Not implemented solver")
-
-        else:
-            raise NotImplementedError("Not implemented solver")
+        self.acoustic_assembler.set_analysis_data(data)
+        self.structural_assembler.set_analysis_data(data)
 
     def set_frequencies(self, frequencies, f_min, f_max, f_step):
         analysis_data = self.analysis_data
@@ -167,10 +117,67 @@ class Project:
             analysis_data["f_min"] = f_min
             analysis_data["f_max"] = f_max
             analysis_data["f_step"] = f_step
-            self.set_analysis_data(analysis_data)
-            # self.frequencies = frequencies
-            # self.acoustic_assembler.set_frequencies(frequencies)
-            # self.structural_assembler.set_frequencies(frequencies)
+        else:
+            analysis_data = {"frequencies" : frequencies,
+                             "f_min" : f_min,
+                             "f_max" : f_max,
+                             "f_step" : f_step}
+        self.set_analysis_data(analysis_data)
+
+    def update_import_table_state(self, state):
+        self.imported_table_state = state
+
+    def create_solver(self):
+        """
+        """
+        data = self.analysis_data
+        if "analysis_id" in data.keys():
+            # structural harmonic analysis - direct method
+            if data["analysis_id"] == 0:
+                print("Structural harmonic analysis (direct method) not implemented")
+                raise NotImplementedError("Not implemented solver")
+
+            # structural harmonic analysis - mode superposition method
+            elif data["analysis_id"] == 1:
+                print("Structural harmonic analysis (mode superposition method) not implemented")
+                raise NotImplementedError("Not implemented solver")
+
+            # structural modal analysis
+            elif data["analysis_id"] == 2:
+                self.set_structural_element_to_model()
+                self.structural_modal_solver = StructuralModalSolver(
+                    self.structural_assembler, analysis_data=data
+                )
+            # acoustic harmonic analysis
+            elif data["analysis_id"] == 3:
+                self.set_acoustic_element_to_model()
+                self.acoustic_harmonic_solver = AcousticHarmonicSolver(
+                    self.acoustic_assembler, analysis_data=data
+                )
+            # acoustic modal analysis
+            elif data["analysis_id"] == 4:
+                self.set_acoustic_element_to_model()
+                self.acoustic_modal_solver = AcousticModalSolver(
+                    self.acoustic_assembler, analysis_data=data
+                )
+            # couled harmonic analysis (direct method)
+            elif data["analysis_id"] == 5:
+                print("Coupled harmonic analysis (direct method) not implemented")
+                raise NotImplementedError("Not implemented solver")
+
+            # couled harmonic analysis (mode superposition method)
+            elif data["analysis_id"] == 6:
+                print("Coupled harmonic analysis (mode superposition method) not implemented")
+                raise NotImplementedError("Not implemented solver")
+
+            # static analysis
+            elif data["analysis_id"] == 7:
+                print("Static analysis not implemented")
+                raise NotImplementedError("Not implemented solver")
+
+            else:
+
+                raise NotImplementedError("Not implemented solver")
 
     def set_element_formulation(self, element):
         self.acoustic_assembler.set_element_formulation(element)

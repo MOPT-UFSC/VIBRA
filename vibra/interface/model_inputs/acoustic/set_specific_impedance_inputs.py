@@ -132,8 +132,10 @@ class SpecificImpedanceInput(QDialog):
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "specific_impedance":
-                value = data["values"]
-                new = QTreeWidgetItem([str(surface_id), str(self.text_label(value))])
+                real_values = np.array(data["real_values"])
+                imag_values = np.array(data["imag_values"])
+                complex_values = real_values + 1j*imag_values
+                new = QTreeWidgetItem([str(surface_id), str(self.text_label(complex_values))])
                 new.setTextAlignment(0, Qt.AlignCenter)
                 new.setTextAlignment(1, Qt.AlignCenter)
                 self.treeWidget_specific_impedance.addTopLevelItem(new)
@@ -191,11 +193,13 @@ class SpecificImpedanceInput(QDialog):
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return
-        
-        #TODO: remove the conflicting acoustic excitations and boundary conditions
-        # self.project.remove_acoustic_pressure_table_files(self.typed_ids)
-        # self.project.remove_compressor_excitation_table_files(self.typed_ids)
-        # self.project.reset_compressor_info_by_node(self.typed_ids)
+
+        for _id in self.typed_ids:
+            self.properties._remove_surface_property("acoustic_pressure", _id)
+            self.properties._remove_surface_property("mass_flow_rate", _id)
+            self.properties._remove_surface_property("volume_velocity", _id)
+            self.properties._remove_surface_property("particle_velocity", _id)
+            self.properties._remove_surface_property("compressor_excitation", _id)
 
         specific_impedance = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
  
@@ -205,15 +209,21 @@ class SpecificImpedanceInput(QDialog):
         if specific_impedance is not None:
 
             self.specific_impedance = specific_impedance
+            real_values = [np.real(specific_impedance)]
+            imag_values = [np.imag(specific_impedance)]
 
+            nodal_attribution = self.radioButton_nodal_attribution_constant.isChecked()
             key_avg =self.checkBox_averaged_constant_values.isChecked()
-            data = {"values" : specific_impedance,
-                    "averaged" : key_avg,
-                    "nodal_attribution" : True,
-                    "element_integration" : False}
+            
+            data = {"real_values" : real_values,
+                    "imag_values" : imag_values,
+                    "nodal_attribution" : nodal_attribution,
+                    "averaged" : key_avg}
 
             for _id in self.typed_ids:
                 self.project.set_specific_impedance(data, _id)
+
+            self.properties.export_model_properties()
 
             print(f"[Set specific impedance] - defined at surface(s) {self.typed_ids}")
             #TODO: remove existing tables and update the render            
@@ -306,10 +316,8 @@ class SpecificImpedanceInput(QDialog):
             PrintMessageInput([title, message, window_title_1])
             return None, None
 
-
     def load_specific_impedance_table(self):
         self.imported_values, self.filename_specific_impedance = self.load_table(self.lineEdit_load_table_path)
-
 
     def check_table_values(self):
 
@@ -319,8 +327,12 @@ class SpecificImpedanceInput(QDialog):
             self.lineEdit_selection_id.setFocus()
             return
 
-        # self.project.remove_acoustic_pressure_table_files(self.typed_ids)
-        # self.project.reset_compressor_info_by_node(self.typed_ids)
+        for _id in self.typed_ids:
+            self.properties._remove_surface_property("acoustic_pressure", _id)
+            self.properties._remove_surface_property("mass_flow_rate", _id)
+            self.properties._remove_surface_property("volume_velocity", _id)
+            self.properties._remove_surface_property("particle_velocity", _id)
+            self.properties._remove_surface_property("compressor_excitation", _id)
 
         list_table_names = self.get_list_table_names_from_selected_surfaces(self.typed_ids)
         if self.lineEdit_load_table_path != "":
@@ -337,15 +349,21 @@ class SpecificImpedanceInput(QDialog):
                     if self.basename_specific_impedance in list_table_names:
                         list_table_names.remove(self.basename_specific_impedance)
 
-                    key_avg = int(self.checkBox_averaged_constant_values.isChecked())
+                    real_values = list(np.real(self.specific_impedance))
+                    imag_values = list(np.imag(self.specific_impedance))
 
-                    data = {"values" : self.specific_impedance,
+                    nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
+                    key_avg = self.checkBox_averaged_constant_values.isChecked()
+
+                    data = {"real_values" : real_values,
+                            "imag_values" : imag_values,
+                            "nodal_attribution" : nodal_attribution,
                             "averaged" : key_avg,
-                            "table_name" : self.basename_specific_impedance,
-                            "nodal_attribution" : True,
-                            "element_integration" : False}
+                            "table_name" : self.basename_specific_impedance}
 
-            self.project.set_specific_impedance(data)
+                    self.project.set_specific_impedance(data, _id)
+                
+            self.properties.export_model_properties()
 
             self.process_table_file_removal(list_table_names)
             print(f"[Set specific impedance] - defined at surface(s) {self.typed_ids}")   
@@ -357,7 +375,6 @@ class SpecificImpedanceInput(QDialog):
             PrintMessageInput([title, message, window_title_1])
             self.lineEdit_load_table_path.setFocus()
 
-
     def get_list_table_names_from_selected_surfaces(self, list_ids):
         list_table_names = []
         for key, data in self.properties.surface_properties.items():
@@ -368,16 +385,12 @@ class SpecificImpedanceInput(QDialog):
                         list_table_names.append(data["table_name"])
         return list_table_names
 
-
     def text_label(self, value):
-        text = ""
-        if isinstance(value, complex):
+        if value.shape[0] == 1:
             value_label = str(value)
-        elif isinstance(value, np.ndarray):
-            value_label = 'Table'
-        text = "{}".format(value_label)
-        return text
-
+        else:
+            value_label = "Table"
+        return "{}".format(value_label)
 
     def remove_bc_from_selection(self):
         if self.lineEdit_selection_id.text() != "":
@@ -394,12 +407,10 @@ class SpecificImpedanceInput(QDialog):
                     self.lineEdit_selection_id.setText("")
                     return
 
-
     def process_table_file_removal(self, list_table_names):
         if list_table_names != []:
             for table_name in list_table_names:
                 self.project.remove_acoustic_table_files_from_folder(table_name, "specific_impedance_files")    
-
 
     def check_reset(self):
         surface_ids = []
@@ -434,6 +445,7 @@ class SpecificImpedanceInput(QDialog):
                                 _list_table_names.append(table_name)
 
                 self.properties._reset_property("specific_impedance")
+                self.properties.export_model_properties()
 
                 #TODO: remove imported tables
                 self.process_table_file_removal(_list_table_names)
