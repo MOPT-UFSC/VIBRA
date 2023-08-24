@@ -61,7 +61,7 @@ class Model:
         if self.mesh_setup is None:
             message = "Mesh setup not defined"
             context = (
-                "The mesh setup has not been defined yet."
+                "The mesh setup has not been defined yet.\n"
                 "You should to configure the mesher to proceed."
             )
             raise IncompleteSetupError(message, context=context)
@@ -98,6 +98,7 @@ class Model:
         global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
         return np.array(global_dofs.flatten(), dtype=int)
 
+    # Properties can be accessed from outside, so this "indirection layer" is not needed
     def set_dissipation_model_data(self, data):
         self.properties.set_dissipation_model(data)
     
