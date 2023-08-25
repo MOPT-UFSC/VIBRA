@@ -4,10 +4,10 @@ from dataclasses import dataclass
 @dataclass
 class Fluid:
     name: str
-    identifier: int
     fluid_density: float
     speed_of_sound: float
     color: tuple = (0, 0, 0)
+    identifier: int = 0
     isentropic_exponent: float = 0.0
     thermal_conductivity: float = 0.0
     specific_heat_Cp: float = 0.0

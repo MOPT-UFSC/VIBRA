@@ -3,6 +3,27 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QLineEdit, QTableWidgetItem, QColorDialog, QLabel, QVBoxLayout, QGridLayout, QPushButton, QDialog, QHBoxLayout, QTableWidget, QTableWidgetItem
 from pathlib import Path
 from vibra.utils.icons import load_icon
+from vibra.engine.properties.material import Material
+import random
+
+
+material_list = [
+    Material(
+        name="Steel",
+        color=(200, 200, 200),
+        density=7860,
+        young_modulus=210e9,
+        poisson_ratio=0.3,
+    ),
+
+    Material(
+        name="Brass",
+        color=(181, 166, 66),
+        density=8150,
+        young_modulus=96e9,
+        poisson_ratio=0.345,
+    )
+]
 
 class MaterialWidget(QDialog):
     def __init__(self):
@@ -29,7 +50,7 @@ class MaterialWidget(QDialog):
         trash_button.setIconSize(QSize(30, 30))
         trash_button.setIcon(trash_icon)
         trash_button.setFixedSize(30, 30)
-        trash_button.clicked.connect(self.open_widget2)
+        trash_button.clicked.connect(self.trash_button_callback)
         toolbar_layout.addWidget(trash_button)
 
         toolbar_layout.addStretch(1)
@@ -37,10 +58,8 @@ class MaterialWidget(QDialog):
         reset_button.setFocusPolicy(Qt.NoFocus)
         reset_button.clicked.connect(self.reset_widgets)
         toolbar_layout.addWidget(reset_button)
-
         toolbar_layout.setAlignment(Qt.AlignTop)
         
-        # AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Name AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
         header = [
             "Name",
             "Density\n[kg/m3]",
@@ -84,32 +103,39 @@ class MaterialWidget(QDialog):
         self.setLayout(main_layout)
         self.setMinimumSize(650,500)
 
+        self.update_table()
         self.exec_()
+
+    def update_table(self):
+        self.table.setRowCount(len(material_list))
+        for i, material in enumerate(material_list):
+            self.table.setItem(i, 0, QTableWidgetItem(str(material.name)))
+            self.table.setItem(i, 1, QTableWidgetItem(str(material.density)))
+            self.table.setItem(i, 2, QTableWidgetItem(str(material.young_modulus)))
+            self.table.setItem(i, 3, QTableWidgetItem(str(material.poisson_ratio)))
+            self.table.setItem(i, 4, QTableWidgetItem(str(material.thermal_expansion_coefficient)))
+
+            item = QTableWidgetItem()
+            item.setBackground(QColor(*material.color))
+            self.table.setItem(i, 5, item)
 
     def add_material(self):
         instance = MaterialAdd()
 
-        if instance.completed:
+        if not instance.completed:
+            return
+        
+        r, g, b, _ = instance.color.getRgb()
+        new_material = Material(
+            name = str(instance.line_edit_material_name.text()),
+            color = (r, g, b),
+            density = float(instance.line_edit_density.text()),
+            young_modulus = float(instance.line_edit_young_modulus.text()) * 1e9,
+            poisson_ratio = float(instance.line_edit_poisson.text()),
+        )
 
-            name_material = instance.line_edit_material_name.text()
-            density = instance.line_edit_density.text()
-            young = instance.line_edit_young_modulus.text()
-            poisson = instance.line_edit_poisson.text()
-            expansion = instance.line_edit_expansion_cofficient.text()
-
-            self.table.verticalHeader().setVisible(False)
-
-            self.row_count = self.table.rowCount()
-            self.table.insertRow(self.row_count)  
-            self.table.setItem(self.row_count, 0, QTableWidgetItem(name_material))
-            self.table.setItem(self.row_count, 1, QTableWidgetItem(density))
-            self.table.setItem(self.row_count, 2, QTableWidgetItem(young))
-            self.table.setItem(self.row_count, 3, QTableWidgetItem(poisson))
-            self.table.setItem(self.row_count, 4, QTableWidgetItem(expansion))
-
-            self.item = QTableWidgetItem()
-            self.item.setBackground(instance.color)
-            self.table.setItem(self.row_count, 5, self.item)
+        material_list.append(new_material)
+        self.update_table()
 
     def on_table_clicked(self, row, column):
         if column == 5:
@@ -119,10 +145,11 @@ class MaterialWidget(QDialog):
                 item = self.table.item(row, column)
                 if item is not None:
                     item.setBackground(color)
-        
-    def open_widget2(self):
+
+    def trash_button_callback(self):
         current_row = self.table.currentRow()
-        self.table.removeRow(current_row)
+        material_list.pop(current_row)
+        self.update_table()
 
     def reset_widgets(self):
         self.table.setRowCount(0)
@@ -132,6 +159,7 @@ class MaterialWidget(QDialog):
 
     def apply_to_selection_button_callback(self):
         pass
+
 
 class MaterialAdd(QDialog):
 

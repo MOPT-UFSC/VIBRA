@@ -4,10 +4,10 @@ from dataclasses import dataclass
 @dataclass
 class Material:
     name: str
-    identifier: int
     density: float
     young_modulus: float
     poisson_ratio: float
+    identifier: int = 0
     thermal_expansion_coefficient: float = 0.0
     color: tuple = (0, 0, 0)
 
