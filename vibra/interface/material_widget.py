@@ -3,29 +3,12 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QLineEdit, QTableWidgetItem, QColorDialog, QLabel, QVBoxLayout, QGridLayout, QPushButton, QDialog, QHBoxLayout, QTableWidget, QTableWidgetItem
 from pathlib import Path
 from vibra.utils.icons import load_icon
-from vibra.engine.properties.material import Material
+from vibra.engine.properties.material import Material, load_material_list, save_material_list
 import random
 
-
-material_list = [
-    Material(
-        name="Steel",
-        color=(200, 200, 200),
-        density=7860,
-        young_modulus=210e9,
-        poisson_ratio=0.3,
-    ),
-
-    Material(
-        name="Brass",
-        color=(181, 166, 66),
-        density=8150,
-        young_modulus=96e9,
-        poisson_ratio=0.345,
-    )
-]
-
 class MaterialWidget(QDialog):
+    material_list = []
+
     def __init__(self):
         super().__init__()
 
@@ -103,12 +86,19 @@ class MaterialWidget(QDialog):
         self.setLayout(main_layout)
         self.setMinimumSize(650,500)
 
+        self.load_material_list()
         self.update_table()
         self.exec_()
+    
+    def load_material_list(self):
+        path = Path("material_library.json")
+        if not path.exists():
+            return
+        self.material_list = load_material_list(path)
 
     def update_table(self):
-        self.table.setRowCount(len(material_list))
-        for i, material in enumerate(material_list):
+        self.table.setRowCount(len(self.material_list))
+        for i, material in enumerate(self.material_list):
             self.table.setItem(i, 0, QTableWidgetItem(str(material.name)))
             self.table.setItem(i, 1, QTableWidgetItem(str(material.density)))
             self.table.setItem(i, 2, QTableWidgetItem(str(material.young_modulus)))
@@ -134,7 +124,8 @@ class MaterialWidget(QDialog):
             poisson_ratio = float(instance.line_edit_poisson.text()),
         )
 
-        material_list.append(new_material)
+        self.material_list.append(new_material)
+        save_material_list("material_library.json", self.material_list)
         self.update_table()
 
     def on_table_clicked(self, row, column):
@@ -148,7 +139,7 @@ class MaterialWidget(QDialog):
 
     def trash_button_callback(self):
         current_row = self.table.currentRow()
-        material_list.pop(current_row)
+        self.material_list.pop(current_row)
         self.update_table()
 
     def reset_widgets(self):
