@@ -3,10 +3,10 @@ from pathlib import Path
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QMenu
 
+from vibra.interface.exception_message import ErrorMessage
 from vibra.interface.loading_bar import load_function
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_functions import get_main_window
-
 
 
 class ProjectMenu(QMenu):
@@ -79,7 +79,7 @@ class ProjectMenu(QMenu):
     def exit_callback(self):
         # loaded_function = load_function(self.parent().project.long_function, self)
         # loaded_function()
-        loaded_solve = load_function(self.solve_example_analisys_callback, self)
+        loaded_solve = load_function(self.solve_example_analysis_callback, self)
         loaded_solve()
 
     def theme_callback(self):
@@ -105,6 +105,10 @@ class ProjectMenu(QMenu):
         self.main_window.viewer_tabs.show_example()
 
     #
-    def solve_example_analisys_callback(self):
-        self.main_window.project.solve_modal_acoustic()
-        self.main_window.viewer_tabs.show_acoustic_modal_analisys()
+    def solve_example_analysis_callback(self):
+        try:
+            self.main_window.project.solve_modal_acoustic()
+        except NotImplementedError as e:
+            ErrorMessage(e)
+        else:
+            self.main_window.viewer_tabs.show_acoustic_modal_analysis()

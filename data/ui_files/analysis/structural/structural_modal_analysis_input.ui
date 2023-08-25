@@ -39,7 +39,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../../../../Downloads/load - Copia.png</normaloff>../../../../Downloads/load - Copia.png</iconset>
+    <normaloff>../../../../../../Downloads/load - Copia.png</normaloff>../../../../../../Downloads/load - Copia.png</iconset>
   </property>
   <property name="whatsThis">
    <string/>
@@ -111,15 +111,14 @@
        <widget class="QLabel" name="label_main_title">
         <property name="font">
          <font>
-          <family>Segoe UI</family>
-          <pointsize>14</pointsize>
+          <family>MS Shell Dlg 2</family>
+          <pointsize>12</pointsize>
           <weight>50</weight>
-          <italic>false</italic>
           <bold>false</bold>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">font: 14pt &quot;Segoe UI&quot;;</string>
+         <string notr="true"/>
         </property>
         <property name="text">
          <string>Structural modal analysis</string>
@@ -183,18 +182,17 @@
        <widget class="QTabWidget" name="tabWidget_main">
         <property name="font">
          <font>
-          <family>Segoe UI</family>
-          <pointsize>12</pointsize>
+          <family>MS Shell Dlg 2</family>
+          <pointsize>11</pointsize>
           <weight>50</weight>
-          <italic>false</italic>
           <bold>false</bold>
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+         <string notr="true"/>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="tab_setup">
          <attribute name="title">
@@ -223,8 +221,8 @@
           </property>
           <property name="font">
            <font>
-            <family>Segoe UI</family>
-            <pointsize>12</pointsize>
+            <family>MS Shell Dlg 2</family>
+            <pointsize>11</pointsize>
             <weight>50</weight>
             <italic>false</italic>
             <bold>false</bold>
@@ -260,11 +258,8 @@
           </property>
           <property name="font">
            <font>
-            <family>Segoe UI</family>
-            <pointsize>12</pointsize>
-            <weight>50</weight>
-            <italic>false</italic>
-            <bold>false</bold>
+            <family>MS Shell Dlg 2</family>
+            <pointsize>11</pointsize>
            </font>
           </property>
           <property name="text">
@@ -297,15 +292,17 @@
           </property>
           <property name="font">
            <font>
-            <family>Segoe UI</family>
-            <pointsize>13</pointsize>
+            <family>MS Shell Dlg 2</family>
+            <pointsize>11</pointsize>
             <weight>50</weight>
             <italic>false</italic>
             <bold>false</bold>
            </font>
           </property>
           <property name="styleSheet">
-           <string notr="true">font: 13pt &quot;Segoe UI&quot;;</string>
+           <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 11pt &quot;MS Shell Dlg 2&quot;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 11pt &quot;MS Shell Dlg 2&quot;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 11pt &quot;MS Shell Dlg 2&quot;}</string>
           </property>
           <property name="text">
            <string>Run Analysis</string>
@@ -334,18 +331,17 @@
           </property>
           <property name="font">
            <font>
-            <family>Segoe UI</family>
-            <pointsize>12</pointsize>
+            <family>MS Shell Dlg 2</family>
+            <pointsize>11</pointsize>
             <weight>50</weight>
-            <italic>false</italic>
             <bold>false</bold>
            </font>
           </property>
           <property name="styleSheet">
-           <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+           <string notr="true"/>
           </property>
           <property name="text">
-           <string>in acoustic modal analysis</string>
+           <string>in structural modal analysis</string>
           </property>
           <property name="textFormat">
            <enum>Qt::AutoText</enum>
@@ -377,15 +373,14 @@
           </property>
           <property name="font">
            <font>
-            <family>Segoe UI</family>
-            <pointsize>12</pointsize>
+            <family>MS Shell Dlg 2</family>
+            <pointsize>11</pointsize>
             <weight>50</weight>
-            <italic>false</italic>
             <bold>false</bold>
            </font>
           </property>
           <property name="styleSheet">
-           <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+           <string notr="true"/>
           </property>
           <property name="text">
            <string>Select the number of modes to solve</string>
@@ -425,11 +420,7 @@
           </property>
           <property name="font">
            <font>
-            <family>Segoe UI</family>
-            <pointsize>12</pointsize>
-            <weight>50</weight>
-            <italic>false</italic>
-            <bold>false</bold>
+            <pointsize>11</pointsize>
            </font>
           </property>
           <property name="text">
@@ -462,10 +453,9 @@
           </property>
           <property name="font">
            <font>
-            <family>Segoe UI</family>
-            <pointsize>12</pointsize>
+            <family>MS Shell Dlg 2</family>
+            <pointsize>11</pointsize>
             <weight>50</weight>
-            <italic>false</italic>
             <bold>false</bold>
            </font>
           </property>
@@ -499,8 +489,8 @@
           </property>
           <property name="font">
            <font>
-            <family>Segoe UI</family>
-            <pointsize>12</pointsize>
+            <family>MS Shell Dlg 2</family>
+            <pointsize>11</pointsize>
             <weight>50</weight>
             <italic>false</italic>
             <bold>false</bold>
@@ -536,15 +526,20 @@
           </property>
           <property name="font">
            <font>
-            <family>Segoe UI</family>
-            <pointsize>13</pointsize>
+            <family>MS Shell Dlg 2</family>
+            <pointsize>11</pointsize>
             <weight>50</weight>
             <italic>false</italic>
             <bold>false</bold>
            </font>
           </property>
+          <property name="toolTip">
+           <string>See scipy.sparse.linalg.eigs for more details.</string>
+          </property>
           <property name="styleSheet">
-           <string notr="true">font: 13pt &quot;Segoe UI&quot;;</string>
+           <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 11pt &quot;MS Shell Dlg 2&quot;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 11pt &quot;MS Shell Dlg 2&quot;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 11pt &quot;MS Shell Dlg 2&quot;}</string>
           </property>
           <property name="text">
            <string>Run Analysis</string>
@@ -573,15 +568,15 @@
           </property>
           <property name="font">
            <font>
-            <family>Segoe UI</family>
-            <pointsize>12</pointsize>
+            <family>MS Shell Dlg 2</family>
+            <pointsize>11</pointsize>
             <weight>50</weight>
             <italic>false</italic>
             <bold>false</bold>
            </font>
           </property>
           <property name="styleSheet">
-           <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+           <string notr="true"/>
           </property>
           <property name="text">
            <string>The Sigma allows to find eigenvalues</string>
@@ -616,61 +611,18 @@
           </property>
           <property name="font">
            <font>
-            <family>Segoe UI</family>
-            <pointsize>12</pointsize>
+            <family>MS Shell Dlg 2</family>
+            <pointsize>11</pointsize>
             <weight>50</weight>
             <italic>false</italic>
             <bold>false</bold>
            </font>
           </property>
           <property name="styleSheet">
-           <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+           <string notr="true"/>
           </property>
           <property name="text">
            <string>near sigma using shift-invert mode</string>
-          </property>
-          <property name="textFormat">
-           <enum>Qt::AutoText</enum>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-         <widget class="QLabel" name="label_note">
-          <property name="geometry">
-           <rect>
-            <x>36</x>
-            <y>178</y>
-            <width>320</width>
-            <height>20</height>
-           </rect>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>320</width>
-            <height>20</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>320</width>
-            <height>20</height>
-           </size>
-          </property>
-          <property name="font">
-           <font>
-            <family>Segoe UI</family>
-            <pointsize>10</pointsize>
-            <weight>50</weight>
-            <italic>false</italic>
-            <bold>false</bold>
-           </font>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">font: 10pt &quot;Segoe UI&quot;;</string>
-          </property>
-          <property name="text">
-           <string>Note: see scipy.sparse.linalg.eigs for more details.</string>
           </property>
           <property name="textFormat">
            <enum>Qt::AutoText</enum>

@@ -1,11 +1,9 @@
+from time import time
+
+import numpy as np
 import vtk
 
-from vibra.engine.mesher.element_type import (
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-)
+from vibra.engine.mesher.element_type import *
 
 
 class SolidsActor(vtk.vtkActor):
@@ -15,6 +13,13 @@ class SolidsActor(vtk.vtkActor):
 
         self.create_geometry()
         self.configure_appearance()
+
+    def get_coordinates(self):
+        # Default way of getting coordinates
+        # If it need to be changed a subclass does it
+        # A generic solid actor doesn't need to know
+        # anything about the simulation
+        return self.mesh.nodal_coordinates[:, 1:]
 
     def create_geometry(self):
         data = vtk.vtkUnstructuredGrid()
@@ -48,7 +53,7 @@ class SolidsActor(vtk.vtkActor):
         cell_colors.SetNumberOfComponents(3)
         cell_colors.SetNumberOfTuples(len(self.mesh.solids_connectivity))
 
-        for _, x, y, z in self.mesh.nodal_coordinates:
+        for x, y, z in self.get_coordinates():
             points.InsertNextPoint(x, y, z)
 
         for nodes in nodes_connectivity:
@@ -62,8 +67,16 @@ class SolidsActor(vtk.vtkActor):
         mapper.SetInputData(self.data)
         self.SetMapper(mapper)
 
+    def update_coordinates(self, coordinates):
+        points = self.data.GetPoints()
+        for i, xyz in enumerate(coordinates):
+            points.SetPoint(i, xyz)
+        points.Modified()
+
     def configure_appearance(self):
         self.GetProperty().SetInterpolationToPhong()
+        self.GetProperty().SetPointSize(3)
+        self.GetProperty().SetLineWidth(0.1)
         self.clear_colors()
 
     def clear_colors(self):

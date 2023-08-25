@@ -6,18 +6,34 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from vibra.interface.welcome_widget import WelcomeWidget
+
 from vibra.interface.help_widget import HelpWidget
-from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
-from vibra.interface.viewer_3d.example_analisys_render_widget import (
-    ExampleAnalisysRenderWidget,
+from vibra.interface.viewer_3d.render_widgets.acoustic_harmonic_analysis_render_widget import (
+    AcousticHarmonicAnalysisRenderWidget,
 )
-from vibra.interface.viewer_3d.example_render_widget import ExampleRenderWidget
-from vibra.interface.viewer_3d.geometry_render_widget import (
+from vibra.interface.viewer_3d.render_widgets.acoustic_modal_analysis_render_widget import (
+    AcousticModalAnalysisRenderWidget,
+)
+from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
+    CommonRenderWidget,
+)
+from vibra.interface.viewer_3d.render_widgets.example_analysis_render_widget import (
+    ExampleAnalysisRenderWidget,
+)
+from vibra.interface.viewer_3d.render_widgets.example_render_widget import (
+    ExampleRenderWidget,
+)
+from vibra.interface.viewer_3d.render_widgets.geometry_render_widget import (
     GeometryRenderWidget,
 )
-from vibra.interface.viewer_3d.mesh_render_widget import MeshRenderWidget
-from vibra.interface.viewer_3d.acoustic_modal_analisys_render_widget import AcousticModalAnalisysRenderWidget
+from vibra.interface.viewer_3d.render_widgets.mesh_render_widget import (
+    MeshRenderWidget,
+)
+from vibra.interface.viewer_3d.render_widgets.structural_modal_analysis_render_widget import (
+    StructuralModalAnalysisRenderWidget,
+)
+from vibra.interface.welcome_widget import WelcomeWidget
+
 
 class ViewerTabs(QTabWidget):
     def __init__(self, parent, project, user_config):
@@ -31,13 +47,15 @@ class ViewerTabs(QTabWidget):
 
         self.geometry_widget = GeometryRenderWidget(self.project)
         self.mesh_widget = MeshRenderWidget(self.project)
-        self.example_analisys_widget = ExampleAnalisysRenderWidget(self.project)
+        self.acoustic_modal_analysis = AcousticModalAnalysisRenderWidget(self.project)
+        self.structural_modal_analysis = StructuralModalAnalysisRenderWidget(self.project)
+
         self.welcome = WelcomeWidget()
         self.help_widget = HelpWidget()
 
         self.show_wellcome()
-        self.show_acoustic_modal_analisys()
 
+    #
     def show_wellcome(self):
         self.addTab(self.welcome, "Wellcome!")
         self.setCurrentWidget(self.welcome)
@@ -61,34 +79,103 @@ class ViewerTabs(QTabWidget):
         self.mesh_widget.update_plot()
         self.setCurrentWidget(self.mesh_widget)
 
-    def show_analisys(self):
-        if self.example_analisys_widget not in self.tabs():
-            self.addTab(self.example_analisys_widget, "Example Analisys")
-        self.setCurrentWidget(self.example_analisys_widget)
+    def show_example_analysis(self):
+        if self.example_analysis_widget not in self.tabs():
+            self.addTab(self.example_analysis_widget, "Example analysis")
 
-    def show_example_analisys(self):
-        if self.example_analisys_widget not in self.tabs():
-            self.addTab(self.example_analisys_widget, "Example Analisys")
-            self.example_analisys_widget.set_theme(self.user_config.theme)
+        self.example_analysis_widget.update_plot()
+        self.setCurrentWidget(self.example_analysis_widget)
 
-        self.example_analisys_widget.update_plot()
-        self.setCurrentWidget(self.example_analisys_widget)
+    def show_acoustic_modal_analysis(self):
+        if self.acoustic_modal_analysis not in self.tabs():
+            self.addTab(self.acoustic_modal_analysis, "Acoustic Modal Analysis")
 
-    def show_acoustic_modal_analisys(self):
-        widget = AcousticModalAnalisysRenderWidget(self.project)
-        self.addTab(widget, "Acoustic Modal Analisys")
+        self.acoustic_modal_analysis.update_frequencies()
+        self.acoustic_modal_analysis.update_plot()
+        self.setCurrentWidget(self.acoustic_modal_analysis)
+
+    def show_structural_modal_analysis(self):
+        if self.structural_modal_analysis not in self.tabs():
+            self.addTab(self.structural_modal_analysis, "Acoustic Modal Analysis")
+
+        self.structural_modal_analysis.update_frequencies()
+        self.structural_modal_analysis.update_plot()
+        self.setCurrentWidget(self.structural_modal_analysis)
+
+    def show_acoustic_harmonic_analysis(self):
+        widget = AcousticHarmonicAnalysisRenderWidget(self.project)
+        if self.project.acoustic_harmonic_solver.solution is None:
+            return
+        self.create_a_new_tab_if_it_does_not_exist(widget, "Acoustic Harmonic Analysis")
         widget.update_plot()
         self.setCurrentWidget(widget)
+
+    def create_a_new_tab_if_it_does_not_exist(self, widget, tab_text):
+        for i in range(self.count()):
+            if self.tabText(i) == tab_text:
+                return
+        self.addTab(widget, tab_text)
 
     def show_help(self):
         self.addTab(self.help_widget, "Help")
         self.setCurrentWidget(self.help_widget)
+
+    def _create_a_new_tab_if_it_does_not_exist(self, widget, tab_text):
+        for i in range(self.count()):
+            if self.tabText(i) == tab_text:
+                return
+        self.addTab(widget, tab_text)
 
     def update_plots(self):
         for tab in self.tabs():
             if isinstance(tab, CommonRenderWidget):
                 tab.update_plot()
 
+    def close_analysis_tabs(self):
+        self._close_widgets(
+            self.acoustic_modal_analysis,
+            self.structural_modal_analysis,
+        )
+
+    def close_mesh_tabs(self):
+        self._close_widgets(
+            self.mesh_widget,
+            self.geometry_widget,
+            self.acoustic_modal_analysis,
+            self.structural_modal_analysis,
+        )
+
+    def _close_widgets(self, *widgets_list):
+        for widget in widgets_list:
+            i = self.indexOf(widget)
+            self.removeTab(i)
+
+    #
+    def start_cutting_mode(self):
+        for tab in self.tabs():
+            if not hasattr(tab, "start_cutting_mode"):
+                continue
+            tab.start_cutting_mode()
+
+    def stop_cutting_mode(self):
+        for tab in self.tabs():
+            if not hasattr(tab, "stop_cutting_mode"):
+                continue
+            tab.stop_cutting_mode()
+
+    def configure_cutting_plane(self, position, orientation):
+        for tab in self.tabs():
+            if not hasattr(tab, "configure_cutting_plane"):
+                continue
+            tab.configure_cutting_plane(position, orientation)
+
+    def apply_cutting_plane(self, position, orientation):
+        for tab in self.tabs():
+            if not hasattr(tab, "apply_cutting_plane"):
+                continue
+            tab.apply_cutting_plane(position, orientation)
+
+    #
     def set_theme(self, theme):
         for tab in self.tabs():
             if isinstance(tab, CommonRenderWidget):

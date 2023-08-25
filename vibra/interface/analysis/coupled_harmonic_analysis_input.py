@@ -1,27 +1,28 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5 import uic
-
 from pathlib import Path
+
+from PyQt5 import uic
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+
 
 class CoupledHarmonicAnalysisInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
-        uic.loadUi(Path('data/ui_files/analysis/coupled/coupled_harmonic_analysis_input.ui'), self)
 
-        icon_path = str(Path('data/icons/logo_vibra.png'))
+        uic.loadUi(Path("data/ui_files/analysis/coupled/coupled_harmonic_analysis_input.ui"), self)
+
+        icon_path = str(Path("data/icons/logo_vibra.png"))
         self.icon = QIcon(icon_path)
         self.setWindowIcon(self.icon)
 
         self.index = 0
 
-        self.comboBox = self.findChild(QComboBox, 'comboBox')
+        self.comboBox = self.findChild(QComboBox, "comboBox")
         self.comboBox.currentIndexChanged.connect(self.selectionChange)
         self.index = self.comboBox.currentIndex()
 
-        self.pushButton_2 = self.findChild(QPushButton, 'pushButton_2')
+        self.pushButton_2 = self.findChild(QPushButton, "pushButton_2")
         self.pushButton_2.clicked.connect(self.button_clicked)
 
         self.exec_()

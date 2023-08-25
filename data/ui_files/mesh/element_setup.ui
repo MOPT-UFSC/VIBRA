@@ -146,7 +146,7 @@
              </size>
             </property>
             <property name="styleSheet">
-             <string notr="true">font: 13pt &quot;Segoe UI&quot;;</string>
+             <string notr="true">font: 75 bold 12pt &quot;Arial&quot;;</string>
             </property>
             <property name="text">
              <string>Mesher setup</string>
@@ -213,7 +213,7 @@
           </size>
          </property>
          <property name="styleSheet">
-          <string notr="true">font: 11pt &quot;Segoe UI&quot;;</string>
+          <string notr="true">font: 75 italic bold 11pt &quot;Arial&quot;;</string>
          </property>
          <property name="currentIndex">
           <number>0</number>
@@ -328,7 +328,7 @@
                     </size>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">font: 13pt &quot;Segoe UI&quot;;</string>
+                    <string notr="true">font: 75 bold 12pt &quot;Arial&quot;;</string>
                    </property>
                    <property name="text">
                     <string>Simplified element options</string>
@@ -396,18 +396,19 @@
                 </property>
                 <property name="font">
                  <font>
-                  <family>Segoe UI</family>
-                  <pointsize>12</pointsize>
-                  <weight>50</weight>
-                  <italic>false</italic>
-                  <bold>false</bold>
+                  <family>Arial</family>
+                  <pointsize>11</pointsize>
+                  <weight>75</weight>
+                  <italic>true</italic>
+                  <bold>true</bold>
                  </font>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                 <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
                 </property>
                 <property name="text">
-                 <string>30</string>
+                 <string>100</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
@@ -429,7 +430,7 @@
                  </size>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                 <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                 </property>
                 <property name="text">
                  <string>Size factor:</string>
@@ -458,15 +459,16 @@
                 </property>
                 <property name="font">
                  <font>
-                  <family>Segoe UI</family>
-                  <pointsize>12</pointsize>
-                  <weight>50</weight>
-                  <italic>false</italic>
-                  <bold>false</bold>
+                  <family>Arial</family>
+                  <pointsize>11</pointsize>
+                  <weight>75</weight>
+                  <italic>true</italic>
+                  <bold>true</bold>
                  </font>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                 <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
                 </property>
                 <property name="text">
                  <string>1</string>
@@ -491,7 +493,7 @@
                  </size>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                 <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                 </property>
                 <property name="text">
                  <string>Minimum element size:</string>
@@ -516,7 +518,7 @@
                  </size>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                 <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                 </property>
                 <property name="text">
                  <string>Shape function:</string>
@@ -541,7 +543,8 @@
                  </size>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                 <string notr="true">QComboBox{font: 75 italic bold 11pt &quot;Arial&quot;}
+QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; font: 75 italic bold 11pt &quot;Arial&quot;}</string>
                 </property>
                 <item>
                  <property name="text">
@@ -570,7 +573,7 @@
                  </size>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                 <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                 </property>
                 <property name="text">
                  <string>Element shape:</string>
@@ -595,7 +598,8 @@
                  </size>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                 <string notr="true">QComboBox{font: 75 italic bold 11pt &quot;Arial&quot;}
+QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; font: 75 italic bold 11pt &quot;Arial&quot;}</string>
                 </property>
                 <item>
                  <property name="text">
@@ -634,7 +638,7 @@
                  </size>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                 <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                 </property>
                 <property name="text">
                  <string>Maximum element size:</string>
@@ -660,18 +664,19 @@
                 </property>
                 <property name="font">
                  <font>
-                  <family>Segoe UI</family>
-                  <pointsize>12</pointsize>
-                  <weight>50</weight>
-                  <italic>false</italic>
-                  <bold>false</bold>
+                  <family>Arial</family>
+                  <pointsize>11</pointsize>
+                  <weight>75</weight>
+                  <italic>true</italic>
+                  <bold>true</bold>
                  </font>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                 <string notr="true">QLineEdit{color: rgb(0,0,255); background-color: rgba(255, 255, 255, 200)}
+QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}</string>
                 </property>
                 <property name="text">
-                 <string>30</string>
+                 <string>100</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
@@ -796,15 +801,16 @@
                 </property>
                 <property name="font">
                  <font>
-                  <family>Segoe UI</family>
-                  <pointsize>12</pointsize>
-                  <weight>50</weight>
-                  <italic>false</italic>
-                  <bold>false</bold>
+                  <family>Arial</family>
+                  <pointsize>11</pointsize>
+                  <weight>75</weight>
+                  <italic>true</italic>
+                  <bold>true</bold>
                  </font>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                 <string notr="true">color: rgb(0, 0, 255);
+background-color: rgba(255, 255, 255, 200);</string>
                 </property>
                 <property name="text">
                  <string>1e-6</string>
@@ -829,7 +835,7 @@
                  </size>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                 <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                 </property>
                 <property name="text">
                  <string>Geometry tolerance:</string>
@@ -890,7 +896,7 @@
                     </size>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                    <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                    </property>
                    <property name="text">
                     <string>[mm]</string>
@@ -954,7 +960,7 @@
                     </size>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                    <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                    </property>
                    <property name="text">
                     <string>[mm]</string>
@@ -1018,7 +1024,7 @@
                     </size>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                    <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                    </property>
                    <property name="text">
                     <string>[mm]</string>
@@ -1069,7 +1075,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>507</width>
+                <width>488</width>
                 <height>592</height>
                </rect>
               </property>
@@ -1179,7 +1185,7 @@
                         </size>
                        </property>
                        <property name="styleSheet">
-                        <string notr="true">font: 13pt &quot;Segoe UI&quot;;</string>
+                        <string notr="true">font: 75 bold 12pt &quot;Arial&quot;;</string>
                        </property>
                        <property name="text">
                         <string>GMSH general options</string>
@@ -1231,7 +1237,7 @@
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                     </property>
                     <property name="text">
                      <string>2D algorithm:</string>
@@ -1256,7 +1262,8 @@
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                     <string notr="true">QComboBox{font: 75 italic bold 11pt &quot;Arial&quot;}
+QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; font: 75 italic bold 11pt &quot;Arial&quot;}</string>
                     </property>
                     <item>
                      <property name="text">
@@ -1315,7 +1322,7 @@
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                     </property>
                     <property name="text">
                      <string>3D algorithm:</string>
@@ -1340,7 +1347,8 @@
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                     <string notr="true">QComboBox{font: 75 italic bold 11pt &quot;Arial&quot;}
+QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; font: 75 italic bold 11pt &quot;Arial&quot;}</string>
                     </property>
                     <item>
                      <property name="text">
@@ -1384,7 +1392,7 @@
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                     </property>
                     <property name="text">
                      <string>2D recombination algorithm:</string>
@@ -1409,7 +1417,8 @@
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                     <string notr="true">QComboBox{font: 75 italic bold 11pt &quot;Arial&quot;}
+QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; font: 75 italic bold 11pt &quot;Arial&quot;}</string>
                     </property>
                     <item>
                      <property name="text">
@@ -1448,7 +1457,7 @@
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                     </property>
                     <property name="text">
                      <string>Recombine all triangular mesh:</string>
@@ -1531,7 +1540,7 @@
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                     </property>
                     <property name="text">
                      <string>Subdivision algorithm</string>
@@ -1556,7 +1565,8 @@
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                     <string notr="true">QComboBox{font: 75 italic bold 11pt &quot;Arial&quot;}
+QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; font: 75 italic bold 11pt &quot;Arial&quot;}</string>
                     </property>
                     <item>
                      <property name="text">
@@ -1590,7 +1600,7 @@
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                     </property>
                     <property name="text">
                      <string>Smoothing steps:</string>
@@ -1616,15 +1626,16 @@
                     </property>
                     <property name="font">
                      <font>
-                      <family>Segoe UI</family>
-                      <pointsize>12</pointsize>
-                      <weight>50</weight>
-                      <italic>false</italic>
-                      <bold>false</bold>
+                      <family>Arial</family>
+                      <pointsize>11</pointsize>
+                      <weight>75</weight>
+                      <italic>true</italic>
+                      <bold>true</bold>
                      </font>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                     <string notr="true">color: rgb(0, 0, 255);
+background-color: rgba(255, 255, 255, 200);</string>
                     </property>
                     <property name="text">
                      <string>1</string>
@@ -1649,7 +1660,7 @@
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                     </property>
                     <property name="text">
                      <string>Element size factor:</string>
@@ -1675,15 +1686,16 @@
                     </property>
                     <property name="font">
                      <font>
-                      <family>Segoe UI</family>
-                      <pointsize>12</pointsize>
-                      <weight>50</weight>
-                      <italic>false</italic>
-                      <bold>false</bold>
+                      <family>Arial</family>
+                      <pointsize>11</pointsize>
+                      <weight>75</weight>
+                      <italic>true</italic>
+                      <bold>true</bold>
                      </font>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                     <string notr="true">color: rgb(0, 0, 255);
+background-color: rgba(255, 255, 255, 200);</string>
                     </property>
                     <property name="text">
                      <string>1</string>
@@ -1708,7 +1720,7 @@
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                     </property>
                     <property name="text">
                      <string>Minimum element size:</string>
@@ -1734,19 +1746,19 @@
                     </property>
                     <property name="font">
                      <font>
-                      <family>Segoe UI</family>
-                      <pointsize>12</pointsize>
-                      <weight>50</weight>
-                      <italic>false</italic>
-                      <bold>false</bold>
+                      <family>Arial</family>
+                      <pointsize>11</pointsize>
+                      <weight>75</weight>
+                      <italic>true</italic>
+                      <bold>true</bold>
                      </font>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;
-</string>
+                     <string notr="true">color: rgb(0, 0, 255);
+background-color: rgba(255, 255, 255, 200);</string>
                     </property>
                     <property name="text">
-                     <string>0.01</string>
+                     <string>50</string>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignCenter</set>
@@ -1768,7 +1780,7 @@
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                     </property>
                     <property name="text">
                      <string>Maximum element size:</string>
@@ -1794,18 +1806,19 @@
                     </property>
                     <property name="font">
                      <font>
-                      <family>Segoe UI</family>
-                      <pointsize>12</pointsize>
-                      <weight>50</weight>
-                      <italic>false</italic>
-                      <bold>false</bold>
+                      <family>Arial</family>
+                      <pointsize>11</pointsize>
+                      <weight>75</weight>
+                      <italic>true</italic>
+                      <bold>true</bold>
                      </font>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                     <string notr="true">color: rgb(0, 0, 255);
+background-color: rgba(255, 255, 255, 200);</string>
                     </property>
                     <property name="text">
-                     <string>0.01</string>
+                     <string>50</string>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignCenter</set>
@@ -1827,7 +1840,7 @@
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                     </property>
                     <property name="text">
                      <string>Geometry tolerance:</string>
@@ -1853,15 +1866,16 @@
                     </property>
                     <property name="font">
                      <font>
-                      <family>Segoe UI</family>
-                      <pointsize>12</pointsize>
-                      <weight>50</weight>
-                      <italic>false</italic>
-                      <bold>false</bold>
+                      <family>Arial</family>
+                      <pointsize>11</pointsize>
+                      <weight>75</weight>
+                      <italic>true</italic>
+                      <bold>true</bold>
                      </font>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                     <string notr="true">color: rgb(0, 0, 255);
+background-color: rgba(255, 255, 255, 200);</string>
                     </property>
                     <property name="text">
                      <string>1e-6</string>
@@ -1886,7 +1900,7 @@
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                     </property>
                     <property name="text">
                      <string>Element order:</string>
@@ -1911,7 +1925,8 @@
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                     <string notr="true">QComboBox{font: 75 italic bold 11pt &quot;Arial&quot;}
+QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; font: 75 italic bold 11pt &quot;Arial&quot;}</string>
                     </property>
                     <item>
                      <property name="text">
@@ -1945,7 +1960,7 @@
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
                     </property>
                     <property name="text">
                      <string>Use incomplete elements:</string>
@@ -2041,9 +2056,6 @@
         <height>52</height>
        </size>
       </property>
-      <property name="styleSheet">
-       <string notr="true">font: 13pt &quot;Segoe UI&quot;;</string>
-      </property>
       <property name="frameShape">
        <enum>QFrame::NoFrame</enum>
       </property>
@@ -2082,15 +2094,17 @@
          </property>
          <property name="font">
           <font>
-           <family>Segoe UI</family>
+           <family>Arial</family>
            <pointsize>12</pointsize>
-           <weight>50</weight>
-           <italic>false</italic>
-           <bold>false</bold>
+           <weight>75</weight>
+           <italic>true</italic>
+           <bold>true</bold>
           </font>
          </property>
          <property name="styleSheet">
-          <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+          <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 12pt &quot;Arial&quot;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 12pt &quot;Arial&quot;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 12pt &quot;Arial&quot;}</string>
          </property>
          <property name="text">
           <string>Confirm mesh setup</string>

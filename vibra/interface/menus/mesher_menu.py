@@ -4,6 +4,10 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QMenu
 
 from vibra.interface.loading_bar import load_function
+from vibra.interface.model_inputs.mesh.mesher_inputs import MesherInputs
+from vibra.interface.model_inputs.structural.material_inputs import (
+    MaterialInput,
+)
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_functions import get_main_window
 from vibra.interface.model_inputs.mesh.mesher_inputs import MesherInputs
@@ -44,7 +48,6 @@ class MesherMenu(QMenu):
         self.addAction(self.set_material_action)
         self.addAction(self.mesher_setup_action)
         self.addAction(self.generate_mesh_action)
-        
 
     def call_fluid_configurator(self):
         FluidWidget()
@@ -60,8 +63,7 @@ class MesherMenu(QMenu):
             self.main_window.menu_widget.item_child_generate_mesh.setDisabled(False)
 
     def call_generate_mesh(self):
-        main_window = get_main_window()
-        generate_mesh = load_function(main_window.project.generate_mesh, main_window)
+        generate_mesh = load_function(self.main_window.project.generate_mesh, self.main_window)
         generate_mesh()
-        main_window.viewer_tabs.show_mesh()
-        main_window.viewer_tabs.update_plots()
+        self.main_window.viewer_tabs.show_mesh()
+        self.main_window.viewer_tabs.update_plots()

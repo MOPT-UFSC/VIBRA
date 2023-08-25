@@ -1,8 +1,5 @@
 import numpy as np
-from scipy.sparse import csr_matrix
 
-# from scipy.sparse.linalg import eigs
-# from time import time
 from vibra.engine.elements.element import Element
 
 
@@ -12,7 +9,6 @@ def shape4TC(ssx, ttx, rrx):
     phi = np.array([1 - ssx - ttx - rrx, ttx, rrx, ssx], dtype=float)
     # derivatives
     dphi = np.array([[-1, 0, 0, 1], [-1, 1, 0, 0], [-1, 0, 1, 0]], dtype=float)
-
     return phi, dphi
 
 
@@ -45,14 +41,14 @@ def get_detJAC_and_invJAC(JAC):
 
 
 class ACT_TETRAHEDRON_4C(Element):
-    # Element Constants
+    #
     NODES_PER_ELEMENT = 4
     DOF_PER_NODE = 1
     DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
 
     def __init__(self, model):
+        #
         self.model = model
-
         self.initialize_variables()
         self.define_integration_points()
         self.process_shape_functions_and_derivatives()
@@ -94,11 +90,12 @@ class ACT_TETRAHEDRON_4C(Element):
         Stiffness and mass matrices.
         """
 
-        fluid = self.model.properties.get_fluid(element=el_index)
+        # fluid = self.model.properties.get_fluid(element=el_index)
+        # rho = fluid.fluid_density
+        # c_0 = fluid.speed_of_sound
 
-        rho = fluid.fluid_density
-        c_0 = fluid.speed_of_sound
-        ie = self.connectivity[el_index, 1:] - 1
+        c_0 = self.model.properties.get_speed_of_sound(element=el_index)
+        ie = self.connectivity[el_index, 1:]
         #
         JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
         detJAC, invJAC = get_detJAC_and_invJAC(JAC)
@@ -122,12 +119,12 @@ class ACT_TETRAHEDRON_4C(Element):
         return Ke, Me
 
     def reorder_connect(self):
-        """ """
+        """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
         self.connectivity = self.connectivity[:, [0, 6, 4, 5, 7]]
 
     def generate_ind_rows_cols(self):
-        """ """
-        # processing the dofs indices (rows and columns) for assembly
+        """This method processess the dofs indices (rows and columns) for assembly"""
+
         self.reorder_connect()
         dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
         ind_dofs = dofs * self.connectivity[:, 1:]
