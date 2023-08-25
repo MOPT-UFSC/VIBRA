@@ -23,6 +23,8 @@ from vibra.interface.analysis.analysis_type_input import AnalysisTypeInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_bar import load_function
 from vibra.interface.model_inputs.acoustic.fluid_inputs import FluidInput
+from vibra.errors import IncompleteMeshSetup, IncompleteSetupError
+from vibra.interface.exception_message import ErrorMessage
 #
 from vibra.interface.model_inputs.acoustic.set_acoustic_pressure import AcousticPressureInput
 from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import DissipationModelInput
@@ -527,7 +529,13 @@ class MenuItems(QTreeWidget):
             return
         #
         if not self.project.model.generated_mesh:
-            self.generate_mesh()
+            try:
+                self.generate_mesh()
+            except (IncompleteSetupError or IncompleteMeshSetup) as error:
+                # Please use this error message. It is easy to use,
+                # is very clean and follows the operational system standard.
+                ErrorMessage(error)
+                return
         #
         analysis_id = self.main_window.project.analysis_data["analysis_id"]
         #
