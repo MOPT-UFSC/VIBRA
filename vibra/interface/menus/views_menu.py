@@ -3,7 +3,9 @@ from pathlib import Path
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QMenu
 
-from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
+from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
+    CommonRenderWidget,
+)
 from vibra.utils.icons import load_icon
 
 
@@ -16,7 +18,7 @@ class ViewsMenu(QMenu):
         self.create_layout()
 
     def create_actions(self):
-        color = QColor("#0055DD")
+        color = QColor("#448cff")
         self.top_view_icon = load_icon(Path("data/icons/top.png"), color)
         self.bottom_view_icon = load_icon(Path("data/icons/bottom.png"), color)
         self.right_view_icon = load_icon(Path("data/icons/right.png"), color)

@@ -5579,7 +5579,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
     </widget>
-    <widget class="QLineEdit" name="lineEdit_selected_ID">
+    <widget class="QLineEdit" name="lineEdit_selected_id">
      <property name="enabled">
       <bool>false</bool>
      </property>

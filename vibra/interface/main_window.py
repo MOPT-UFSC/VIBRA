@@ -8,7 +8,10 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+from vibra.config import UserConfig
+from vibra.interface.analysis_filter_menu import AnalysisFilter
 from vibra.interface.clip_plane_widget import ClipPlaneWidget
+from vibra.interface.exception_message import ErrorMessage
 from vibra.interface.loading_bar import load_function
 from vibra.interface.menu_items import MenuItems
 from vibra.interface.menus.help_menu import HelpMenu
@@ -20,8 +23,6 @@ from vibra.interface.menus.views_menu import ViewsMenu
 from vibra.interface.renderer_toolbar import RendererToolbar
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_tabs import ViewerTabs
-
-from vibra.config import UserConfig
 from vibra.project import Project
 from vibra.utils.icons import load_icon
 
@@ -30,8 +31,8 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
 
+        self.dialog = None
         self.project = Project()
-        # self.viewer_3d = Viewer3D(self)
         self.user_config = UserConfig()
         self.status_bar = StatusBar(self)
         self.clip_plane = ClipPlaneWidget(self)
@@ -40,6 +41,7 @@ class MainWindow(QMainWindow):
         self.configure_window()
         self.create_basic_layout()
         self.load_user_preferences()
+        self.config_tool_tip_appearance()
 
         self.viewer_tabs.geometry_widget.selection_changed.connect(self.selection_changed_callback)
         self.clip_plane.slider_pressed.connect(self.slider_pressed_callback)
@@ -47,46 +49,29 @@ class MainWindow(QMainWindow):
         self.clip_plane.slider_released.connect(self.slider_released_callback)
         self.clip_plane.closed.connect(self.disable_cut)
 
-    def selection_changed_callback(self, points, lines, faces):
-        if points:
-            self.status_bar.show_points(points)
-        elif lines:
-            self.status_bar.show_lines(lines)
-        elif faces:
-            self.status_bar.show_faces(faces)
-        else:
-            self.status_bar.clear_selections()
+    def selection_changed_callback(self, points, lines, faces, volumes):
+        self.status_bar.set_selection(points, lines, faces, volumes)
 
     def slider_pressed_callback(self):
-        if self.viewer_tabs.example_analisys_widget is None:
-            return
-        self.viewer_tabs.example_analisys_widget.show_plane()
-        self.viewer_tabs.example_analisys_widget.disable_cut()
+        self.viewer_tabs.start_cutting_mode()
 
     def slider_moved_callback(self):
-        if self.viewer_tabs.example_analisys_widget is None:
-            return
-        pos = self.clip_plane.get_position()
+        position = self.clip_plane.get_position()
         orientation = self.clip_plane.get_rotation()
-        self.viewer_tabs.example_analisys_widget.configure_plane(pos, orientation)
+        self.viewer_tabs.configure_cutting_plane(position, orientation)
 
     def slider_released_callback(self):
-        if self.viewer_tabs.example_analisys_widget is None:
-            return
-        pos = self.clip_plane.get_position()
+        position = self.clip_plane.get_position()
         orientation = self.clip_plane.get_rotation()
-        self.viewer_tabs.example_analisys_widget.apply_cut(pos, orientation)
-        self.viewer_tabs.example_analisys_widget.hide_plane()
+        self.viewer_tabs.apply_cutting_plane(position, orientation)
 
     def disable_cut(self):
-        if self.viewer_tabs.example_analisys_widget is None:
-            return
-        self.viewer_tabs.example_analisys_widget.disable_cut()
+        self.viewer_tabs.stop_cutting_mode()
 
     def configure_window(self):
-        self.setMinimumSize(800, 600)
+        self.setMinimumSize(1300, 700)
         self.showMaximized()
-        self.setWindowIcon(load_icon(Path("data/icons/logo_vibra.png"), QColor("#0055DD")))
+        self.setWindowIcon(load_icon(Path("data/icons/logo_vibra.png"), QColor("#448cff")))
         self.setWindowTitle("Vibra")
 
         # for qdarktheme
@@ -98,21 +83,52 @@ class MainWindow(QMainWindow):
 
     def create_basic_layout(self):
         self.menu_widget = MenuItems()
+        self.analysis_filter = AnalysisFilter()
+
+        grid_layout_left = QGridLayout()
+        grid_layout_left.addWidget(self.analysis_filter, 0, 0)
+        grid_layout_left.addWidget(self.menu_widget, 1, 0)
+        grid_layout_left.setContentsMargins(0, 0, 0, 0)
+
+        left_widget = QWidget()
+        left_widget.setLayout(grid_layout_left)
+        # left_widget.setMinimumWidth(290)
+        left_widget.setMaximumWidth(290)
+
+        self.vertical_line = QFrame()
+        self.vertical_line.setLineWidth(4)
+        self.vertical_line.setFrameShape(QFrame.VLine)
+        self.vertical_line.setFrameShadow(QFrame.Sunken)
 
         self.setCentralWidget(None)
         self.create_menu_bar()
         self.create_tool_bars()
         self.create_status_bar()
 
-        working_area = QSplitter(Qt.Horizontal)
-        self.setCentralWidget(working_area)
+        grid_layout_central = QGridLayout()
+        grid_layout_central.addWidget(left_widget, 0, 0)
+        grid_layout_central.addWidget(self.vertical_line, 0, 1)
+        grid_layout_central.addWidget(self.viewer_tabs, 0, 2)
+        grid_layout_central.setContentsMargins(0, 0, 0, 0)
+        grid_layout_central.setHorizontalSpacing(0)
 
-        working_area.addWidget(self.menu_widget)
-        working_area.addWidget(self.viewer_tabs)
-        working_area.setSizes([50, 400])
+        central_widget = QWidget()
+        central_widget.setLayout(grid_layout_central)
+        self.setCentralWidget(central_widget)
 
-    def load_user_preferences(self):
-        self.set_theme(self.user_config.theme)
+        # working_area = QSplitter(Qt.Horizontal)
+        # self.setCentralWidget(working_area)
+
+        # # working_area.addWidget(_menus)
+        # working_area.addWidget(left_widget)
+        # # working_area.addWidget(self.menu_widget)
+        # working_area.addWidget(self.viewer_tabs)
+
+        # working_area.widget(0).setMinimumWidth(280)
+        # working_area.widget(0).setMaximumWidth(320)
+        # working_area.widget(0).setContentsMargins(0,0,0,0)
+
+        # working_area.setSizes([200, 400])
 
     def create_menu_bar(self):
         self.menu_bar = self.menuBar()
@@ -123,12 +139,20 @@ class MainWindow(QMainWindow):
         self.menu_bar.addMenu(ViewModeMenu(self))
         self.menu_bar.addMenu(HelpMenu(self))
 
+    def create_status_bar(self):
+        self.setStatusBar(self.status_bar)
+
     def create_tool_bars(self):
         self.renderer_toolbar = RendererToolbar(self, self.viewer_tabs)
         self.addToolBar(self.renderer_toolbar)
+        self.renderer_toolbar.setDisabled(True)
 
-    def create_status_bar(self):
-        self.setStatusBar(self.status_bar)
+    def config_tool_tip_appearance(self):
+        tool_tip_style = "QToolTip { color: rgb(0, 0, 0); background-color: rgb(255, 255, 255) }"
+        self.setStyleSheet(tool_tip_style)
+
+    def load_user_preferences(self):
+        self.set_theme(self.user_config.theme)
 
     def closeEvent(self, event):
         self.close_app()
@@ -136,7 +160,7 @@ class MainWindow(QMainWindow):
 
     def get_user_config(self):
         return self.user_config
-    
+
     def get_project(self):
         return self.project
 
@@ -182,8 +206,12 @@ class MainWindow(QMainWindow):
         import_geometry = load_function(self.project.import_geometry, self)
         import_geometry(path)
 
+        self.viewer_tabs.close_mesh_tabs()
         self.viewer_tabs.show_geometry()
         self.viewer_tabs.update_plots()
+
+        self.renderer_toolbar.setDisabled(False)
+        self.menu_widget.modify_items_access_after_geometry_importing()
 
     def close_app(self):
         close = QMessageBox.question(
@@ -193,3 +221,30 @@ class MainWindow(QMainWindow):
         if close == QMessageBox.Yes:
             self.user_config.save()
             exit()
+
+    def process_acoustic_modal_analysis(self):
+        try:
+            self.project.solve_acoustic_modal_analysis()
+        except NotImplementedError as e:
+            ErrorMessage(e)
+        else:
+            self.viewer_tabs.show_acoustic_modal_analysis()
+
+    def process_structural_modal_analysis(self):
+        try:
+            self.project.solve_structural_modal_analysis()
+        except NotImplementedError as e:
+            ErrorMessage(e)
+        else:
+            self.viewer_tabs.show_structural_modal_analysis()
+
+    def process_acoustic_harmonic_analysis(self):
+        try:
+            self.project.solve_acoustic_harmonic_analysis()
+        except NotImplementedError as e:
+            ErrorMessage(e)
+        else:
+            self.viewer_tabs.show_acoustic_harmonic_analysis()
+
+    def set_input_widget(self, dialog):
+        self.dialog = dialog

@@ -3,7 +3,9 @@ from pathlib import Path
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QToolBar
 
-from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
+from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
+    CommonRenderWidget,
+)
 from vibra.utils.icons import load_icon
 
 
@@ -26,13 +28,12 @@ class RendererToolbar(QToolBar):
                 border-style: solid;
                 border-width: 1px;
                 border-color: #888888;
-                border-radius: 3px
             }
             """
         )
 
     def create_actions(self):
-        color = QColor("#0055DD")
+        color = QColor("#448cff")
 
         #
         top_view_icon = load_icon(Path("data/icons/top.png"), color)
@@ -97,8 +98,8 @@ class RendererToolbar(QToolBar):
         self.addAction(self.back_view_action)
         self.addAction(self.isometric_view_action)
         self.addSeparator()
-        self.addAction(self.show_lines_action)
         self.addAction(self.show_points_action)
+        self.addAction(self.show_lines_action)
         self.addAction(self.show_faces_action)
         self.addSeparator()
         self.addAction(self.clip_plane_action)

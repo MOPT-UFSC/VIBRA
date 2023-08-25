@@ -1,27 +1,23 @@
-from PyQt5.QtWidgets import QDialog, QPushButton, QLabel, QFrame
-from PyQt5.QtGui import QIcon, QFont
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
 from pathlib import Path
 
-class PrintMessageInput(QDialog):
-    def __init__(self, text_info, justify=True, opv=None, fontsizes=[13,12], *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        uic.loadUi(Path('data/ui_files/general/print_messages.ui'), self)
+from PyQt5 import uic
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtWidgets import QDialog, QFrame, QLabel, QPushButton
 
 
 class PrintMessageInput(QDialog):
     def __init__(self, text_info, justify=True, opv=None, fontsizes=[13, 12], *args, **kwargs):
         super().__init__(*args, **kwargs)
-        uic.loadUi("interface/ui_files/printMessages.ui", self)
+        uic.loadUi("data/ui_files/general/print_messages.ui", self)
 
         self.pushButton_close = self.findChild(QPushButton, "pushButton_close")
         self.pushButton_close.clicked.connect(self.message_close)
 
         self.frame_message = self.findChild(QFrame, "frame_message")
 
-        icons_path = 'data/icons/'
-        path = str(Path(icons_path + 'logo_vibra.png'))
+        icons_path = "data/icons/"
+        path = str(Path(icons_path + "logo_vibra.png"))
         self.icon = QIcon(path)
         self.setWindowIcon(self.icon)
 
@@ -32,9 +28,9 @@ class PrintMessageInput(QDialog):
 
         self.title_fontsize, self.message_fontsize = fontsizes
 
-        self.label_title = self.findChild(QLabel, 'label_title')
-        self.label_message = self.findChild(QLabel, 'label_message')
-        
+        self.label_title = self.findChild(QLabel, "label_title")
+        self.label_message = self.findChild(QLabel, "label_message")
+
         self.pushButton_close.setVisible(True)
         self.create_font_title()
         self.create_font_message()
@@ -50,14 +46,12 @@ class PrintMessageInput(QDialog):
 
         self.label_title.setText(text_info[0])
         self.label_message.setText(message)
-        
-        if len(text_info)>2:
+
+        if len(text_info) > 2:
             self.setWindowTitle(text_info[2])
 
         if justify:
             self.label_message.setAlignment(Qt.AlignJustify | Qt.AlignVCenter)
-        
-        self.exec_()
 
         self.exec_()
 
@@ -99,7 +93,6 @@ class PrintMessageInput(QDialog):
         # font.setWeight(60)
         self.label_title.setFont(font)
         self.label_title.setStyleSheet("color:black")
-    
 
     def preprocess_big_strings(self, text):
         message = ""

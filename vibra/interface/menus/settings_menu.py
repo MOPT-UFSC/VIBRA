@@ -19,13 +19,15 @@ class VisibilitySettingsMenu(QMenu):
         self.load_user_preference_state()
 
     def create_and_connect_actions(self):
-        color = QColor("#0055DD")
+        color = QColor("#448cff")
         #
         self.new_project_icon = load_icon(Path("data/icons/new_file.png"), color)
         self.theme_sun_icon = load_icon(Path("data/icons/sun_icon.png"), color)
         self.theme_moon_icon = load_icon(Path("data/icons/moon_icon.png"), color)
         #
-        self.show_or_hide_menu_items_action = QAction(self.new_project_icon, "Hide menu items", self)
+        self.show_or_hide_menu_items_action = QAction(
+            self.new_project_icon, "Hide menu items", self
+        )
         self.theme_action = QAction(self.theme_sun_icon, "Theme", self)
         #
         self.show_or_hide_menu_items_action.triggered.connect(self.call_show_or_hide_menu_items)
@@ -48,7 +50,8 @@ class VisibilitySettingsMenu(QMenu):
         self.show_or_hide_menu_items_action.setText(text)
         self.bool_state = not self.bool_state
         self.main_window.menu_widget.setVisible(self.bool_state)
-
+        self.main_window.vertical_line.setVisible(self.bool_state)
+        self.main_window.analysis_filter.setVisible(self.bool_state)
 
     def theme_callback(self):
         if self.parent().user_config.theme == "light":
@@ -58,7 +61,6 @@ class VisibilitySettingsMenu(QMenu):
         elif self.parent().user_config.theme == "dark":
             self.parent().set_theme("light")
             self.theme_action.setIcon(self.theme_moon_icon)
-
 
     def load_user_preference_state(self):
         if self.main_window.user_config.menu_items_visible == "0":

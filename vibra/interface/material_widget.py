@@ -13,7 +13,7 @@ class MaterialWidget(QDialog):
         super().__init__()
 
         self.setWindowTitle("Set Material")
-        self.color = QColor("#0055DD")
+        self.color = QColor("#448cff")
         self.instance = None
 
         toolbar_layout = QHBoxLayout()
@@ -157,7 +157,12 @@ class MaterialAdd(QDialog):
     def __init__(self):
         super().__init__()
 
-        self.color = QColor("#0055DD")
+        r = random.randint(0,255)
+        g = random.randint(0,255)
+        b = random.randint(0,255)
+
+
+        self.color = QColor(r,g,b)
 
         self.setWindowTitle("New Material")
         layout1 = QGridLayout()
@@ -215,6 +220,9 @@ class MaterialAdd(QDialog):
         layout1.addWidget(self.color_button, 4, 2)  
         layout1.addWidget(self.add_new_material_button, 8, 2)
         layout1.addWidget(self.cancel_button, 8, 0)
+
+        pick_color = self.color.name()
+        self.color_button.setStyleSheet(f"background-color: {pick_color};")
     
         self.completed = False
         
