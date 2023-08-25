@@ -21,7 +21,6 @@ class BoundaryConditionInputs(QDialog):
         super().__init__(*args, **kwargs)
 
         uic.loadUi(Path("data/ui_files/model/structural/boundary_condition_input.ui"), self)
-        self.main_window = get_main_window()
 
         icon_path = str(Path("data/icons/logo_vibra.png"))
         self.icon = QIcon(icon_path)
@@ -30,6 +29,9 @@ class BoundaryConditionInputs(QDialog):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
 
+        self.main_window = get_main_window()
+        self.main_window.set_input_widget(self)
+        self.main_window.viewer_tabs.show_geometry()
         self.project = self.main_window.project
         self.model = self.project.model
 

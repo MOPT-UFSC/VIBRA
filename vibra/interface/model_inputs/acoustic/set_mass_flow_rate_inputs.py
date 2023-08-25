@@ -33,6 +33,7 @@ class MassFlowRateInput(QDialog):
 
         self.main_window = get_main_window()
         self.main_window.set_input_widget(self)
+        self.main_window.viewer_tabs.show_geometry()
         self.project = self.main_window.project
         self.properties = self.project.model.properties
 

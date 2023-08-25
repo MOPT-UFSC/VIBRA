@@ -24,29 +24,15 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_bar import load_function
 from vibra.interface.model_inputs.acoustic.fluid_inputs import FluidInput
 #
-from vibra.interface.model_inputs.acoustic.set_acoustic_pressure import (
-    AcousticPressureInput,
-)
-from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import (
-    DissipationModelInput,
-)
-from vibra.interface.model_inputs.acoustic.set_mass_flow_rate_inputs import (
-    MassFlowRateInput,
-)
-from vibra.interface.model_inputs.acoustic.set_particle_velocity_inputs import (
-    ParticleVelocityInput,
-)
-from vibra.interface.model_inputs.acoustic.set_volume_velocity_inputs import (
-    VolumeVelocityInput,
-)
+from vibra.interface.model_inputs.acoustic.set_acoustic_pressure import AcousticPressureInput
+from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import DissipationModelInput
+from vibra.interface.model_inputs.acoustic.set_mass_flow_rate_inputs import MassFlowRateInput
+from vibra.interface.model_inputs.acoustic.set_particle_velocity_inputs import ParticleVelocityInput
+from vibra.interface.model_inputs.acoustic.set_volume_velocity_inputs import VolumeVelocityInput
 from vibra.interface.model_inputs.mesh.mesher_inputs import MesherInputs
 #
-from vibra.interface.model_inputs.structural.boundary_condition_inputs import (
-    BoundaryConditionInputs,
-)
-from vibra.interface.model_inputs.structural.material_inputs import (
-    MaterialInput,
-)
+from vibra.interface.model_inputs.structural.boundary_condition_inputs import BoundaryConditionInputs
+from vibra.interface.model_inputs.structural.material_inputs import MaterialInput
 from vibra.utils.interface_functions import get_main_window
 
 
@@ -239,8 +225,8 @@ class MenuItems(QTreeWidget):
         self.list_child_items.append(self.item_child_set_volume_velocity)
         self.list_child_items.append(self.item_child_set_particle_velocity)
         self.list_child_items.append(self.item_child_set_specific_impedance)
-        self.list_child_items.append(self.item_child_set_radiation_impedance)
-        self.list_child_items.append(self.item_child_add_compressor_excitation)
+        # self.list_child_items.append(self.item_child_set_radiation_impedance)
+        # self.list_child_items.append(self.item_child_add_compressor_excitation)
         #
         self.item_top_analysis = QTreeWidgetItem(["Analysis"])
         self.item_child_selectAnalysisType = QTreeWidgetItem(["Select Analysis Type"])
@@ -255,16 +241,10 @@ class MenuItems(QTreeWidget):
         self.item_top_resultsViewer_structural = QTreeWidgetItem(["Results Viewer - Structural"])
         self.item_child_plotStructuralModeShapes = QTreeWidgetItem(["Plot Structural Mode Shapes"])
         self.item_child_plotDisplacementField = QTreeWidgetItem(["Plot Displacement Field"])
-        self.item_child_plotStructuralFrequencyResponse = QTreeWidgetItem(
-            ["Plot Structural Frequency Response"]
-        )
-        self.item_child_plotReactionsFrequencyResponse = QTreeWidgetItem(
-            ["Plot Reactions Frequency Response"]
-        )
+        self.item_child_plotStructuralFrequencyResponse = QTreeWidgetItem(["Plot Structural Frequency Response"])
+        self.item_child_plotReactionsFrequencyResponse = QTreeWidgetItem(["Plot Reactions Frequency Response"])
         self.item_child_plotStressField = QTreeWidgetItem(["Plot Stress Field"])
-        self.item_child_plotStressFrequencyResponse = QTreeWidgetItem(
-            ["Plot Stress Frequency Response"]
-        )
+        self.item_child_plotStressFrequencyResponse = QTreeWidgetItem(["Plot Stress Frequency Response"])
         #
         self.list_top_items.append(self.item_top_resultsViewer_structural)
         self.list_child_items.append(self.item_child_plotStructuralModeShapes)
@@ -276,15 +256,9 @@ class MenuItems(QTreeWidget):
         #
         self.item_top_resultsViewer_acoustic = QTreeWidgetItem(["Results Viewer - Acoustic"])
         self.item_child_plotAcousticModeShapes = QTreeWidgetItem(["Plot Acoustic Mode Shapes"])
-        self.item_child_plotAcousticPressureField = QTreeWidgetItem(
-            ["Plot Acoustic Pressure Field"]
-        )
-        self.item_child_plotAcousticFrequencyResponse = QTreeWidgetItem(
-            ["Plot Acoustic Frequency Response"]
-        )
-        self.item_child_plotAcousticDeltaPressures = QTreeWidgetItem(
-            ["Plot Acoustic Delta Pressures"]
-        )
+        self.item_child_plotAcousticPressureField = QTreeWidgetItem(["Plot Acoustic Pressure Field"])
+        self.item_child_plotAcousticFrequencyResponse = QTreeWidgetItem(["Plot Acoustic Frequency Response"])
+        self.item_child_plotAcousticDeltaPressures = QTreeWidgetItem(["Plot Acoustic Delta Pressures"])
         self.item_child_plot_TL_NR = QTreeWidgetItem(["Plot Transmission Loss or Attenuation"])
         #
         self.list_top_items.append(self.item_top_resultsViewer_acoustic)
@@ -326,21 +300,17 @@ class MenuItems(QTreeWidget):
         self.addTopLevelItem(self.item_top_resultsViewer_structural)
         self.item_top_resultsViewer_structural.addChild(self.item_child_plotStructuralModeShapes)
         self.item_top_resultsViewer_structural.addChild(self.item_child_plotDisplacementField)
-        self.item_top_resultsViewer_structural.addChild(
-            self.item_child_plotStructuralFrequencyResponse
-        )
-        self.item_top_resultsViewer_structural.addChild(
-            self.item_child_plotReactionsFrequencyResponse
-        )
-        self.item_top_resultsViewer_structural.addChild(self.item_child_plotStressField)
-        self.item_top_resultsViewer_structural.addChild(self.item_child_plotStressFrequencyResponse)
+        self.item_top_resultsViewer_structural.addChild(self.item_child_plotStructuralFrequencyResponse)
+        # self.item_top_resultsViewer_structural.addChild(self.item_child_plotReactionsFrequencyResponse)
+        # self.item_top_resultsViewer_structural.addChild(self.item_child_plotStressField)
+        # self.item_top_resultsViewer_structural.addChild(self.item_child_plotStressFrequencyResponse)
 
         self.addTopLevelItem(self.item_top_resultsViewer_acoustic)
         self.item_top_resultsViewer_acoustic.addChild(self.item_child_plotAcousticModeShapes)
         self.item_top_resultsViewer_acoustic.addChild(self.item_child_plotAcousticPressureField)
         self.item_top_resultsViewer_acoustic.addChild(self.item_child_plotAcousticFrequencyResponse)
-        self.item_top_resultsViewer_acoustic.addChild(self.item_child_plotAcousticDeltaPressures)
-        self.item_top_resultsViewer_acoustic.addChild(self.item_child_plot_TL_NR)
+        # self.item_top_resultsViewer_acoustic.addChild(self.item_child_plotAcousticDeltaPressures)
+        # self.item_top_resultsViewer_acoustic.addChild(self.item_child_plot_TL_NR)
 
     def _configItems(self):
         """Configure all items."""
