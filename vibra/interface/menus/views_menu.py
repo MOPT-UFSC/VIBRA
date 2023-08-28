@@ -18,7 +18,7 @@ class ViewsMenu(QMenu):
         self.create_layout()
 
     def create_actions(self):
-        color = QColor("#0055DD")
+        color = QColor("#448cff")
         self.top_view_icon = load_icon(Path("data/icons/top.png"), color)
         self.bottom_view_icon = load_icon(Path("data/icons/bottom.png"), color)
         self.right_view_icon = load_icon(Path("data/icons/right.png"), color)

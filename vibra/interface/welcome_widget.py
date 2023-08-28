@@ -24,15 +24,17 @@ class WelcomeWidget(QWidget):
     def setup_image(self, layout):
         image_label = QLabel(self)
         image_label.setAlignment(Qt.AlignCenter)
-        pixmap = QPixmap("data/icons/logo_vibra.png").scaled(140, 140)
+        pixmap = QPixmap("data/icons/azul cinza.png").scaled(500, 500)
         image_label.setPixmap(pixmap)
+        image_label.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(image_label)
 
-        message_label = QLabel(
-            "Vibra: Finite Element Software for Acoustic and Structural Analysis", self
-        )
-        message_label.setStyleSheet("font: 11pt")
-        message_label.setAlignment(Qt.AlignHCenter)
+        layout.setSpacing(15) 
+
+        message_label = QLabel("Vibra: Finite Element Software for Acoustic and Structural Analysis", self)
+        message_label.setAlignment(Qt.AlignCenter)
+        message_label.setContentsMargins(0, 0, 0, 0)
+        
         layout.addWidget(message_label)
 
     def setup_labels(self, layout):

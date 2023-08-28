@@ -15,7 +15,7 @@ class HelpMenu(QMenu):
         self.create_layout()
 
     def create_actions(self):
-        color = QColor("#0055DD")
+        color = QColor("#448cff")
         help_icon = load_icon(Path("data/icons/help.png"), color)
         self.help_action = QAction(help_icon, "About Vibra", self)
         self.help_action.triggered.connect(self.help_callback)
