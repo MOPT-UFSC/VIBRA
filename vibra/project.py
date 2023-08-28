@@ -2,11 +2,15 @@ import logging
 from pathlib import Path
 from time import sleep
 
-from vibra.engine.assemblers.modal_assembler import ModalAssembler
+from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
+from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.model import Model
-from vibra.engine.assemblers.acoustic_modal_assembler import AcousticModalAssembler
-from vibra.engine.assemblers.structural_modal_assembler import StructuralModalAssembler
-from vibra.engine.solvers.modal_solver import ModalSolver
+from vibra.engine.solvers.acoustic_harmonic_solver import (
+    AcousticHarmonicSolver,
+)
+from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
+from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
+from vibra.project_file import ProjectFile
 from vibra.utils.progress_status import ProgressStatus
 
 
@@ -20,13 +24,20 @@ class Project:
         self.geometry_path = ""
         self.fluid_list_path = ""
         self.material_list_path = ""
+        self.imported_table_state = False
         self.analysis_data = None
+        self.dissipation_model = None
+        self.static_solver = None
+        self.acoustic_modal_solver = None
+        self.structural_modal_solver = None
+        self.acoustic_harmonic_solver = None
+        self.structural_harmonic_solver = None
         #
         self.model = Model()
-        self.acoustic_modal_assembler = AcousticModalAssembler(self.model)
-        self.structural_modal_assembler = StructuralModalAssembler(self.model)
-        self.acoustic_modal_solver = ModalSolver(self.acoustic_modal_assembler)
-        self.structural_modal_solver = ModalSolver(self.structural_modal_assembler)
+        self.file = ProjectFile()
+        self.acoustic_assembler = AcousticAssembler(self.model)
+        self.structural_assembler = StructuralAssembler(self.model)
+
 
     @classmethod
     def load(cls, path):
@@ -62,34 +73,129 @@ class Project:
     def set_mesh_setup(self, mesh_setup):
         self.model.set_mesh_setup(mesh_setup)
 
+    def set_acoustic_element_to_model(self):
+        self.model.set_acoustic_element(self.acoustic_assembler.get_element())
+
+    def set_structural_element_to_model(self):
+        self.model.set_structural_element(self.structural_assembler.get_element())
+
     def generate_mesh(self):
         if self.model is None:
             return
         self.model.process_mesh()
 
+    def set_structural_boundary_condition(self, data, line, surface):
+        self.model.set_structural_boundary_condition(data, line, surface)
+
+    def set_acoustic_pressure(self, data, surface):
+        self.model.set_acoustic_pressure(data, surface)
+
+    def set_mass_flow_rate(self, data, surface):
+        self.model.set_mass_flow_rate(data, surface)
+
+    def set_volume_velocity(self, data, surface):
+        self.model.set_volume_velocity(data, surface)
+
+    def set_particle_velocity(self, data, surface):
+        self.model.set_particle_velocity(data, surface)
+
+    def set_specific_impedance(self, data, surface):
+        self.model.set_specific_impedance(data, surface)
+
+    def set_dissipation_model(self, data):
+        self.model.set_dissipation_model_data(data)
+
     def set_analysis_data(self, data):
         self.analysis_data = data
-        if data["analysis_id"] == 2:
-            self.structural_modal_solver = ModalSolver(self.structural_modal_assembler, analysis_data=data)
-        elif data["analysis_id"] == 4:
-            self.acoustic_modal_solver = ModalSolver(self.acoustic_modal_assembler, analysis_data=data)
+        self.acoustic_assembler.set_analysis_data(data)
+        self.structural_assembler.set_analysis_data(data)
+
+    def set_frequencies(self, frequencies, f_min, f_max, f_step):
+        analysis_data = self.analysis_data
+        if analysis_data is not None:
+            analysis_data["frequencies"] = frequencies
+            analysis_data["f_min"] = f_min
+            analysis_data["f_max"] = f_max
+            analysis_data["f_step"] = f_step
         else:
-            raise NotImplementedError("Not implemented solver")
+            analysis_data = {"frequencies" : frequencies,
+                             "f_min" : f_min,
+                             "f_max" : f_max,
+                             "f_step" : f_step}
+        self.set_analysis_data(analysis_data)
+
+    def update_import_table_state(self, state):
+        self.imported_table_state = state
+
+    def create_solver(self):
+        """
+        """
+        data = self.analysis_data
+        if "analysis_id" in data.keys():
+            # structural harmonic analysis - direct method
+            if data["analysis_id"] == 0:
+                print("Structural harmonic analysis (direct method) not implemented")
+                raise NotImplementedError("Not implemented solver")
+
+            # structural harmonic analysis - mode superposition method
+            elif data["analysis_id"] == 1:
+                print("Structural harmonic analysis (mode superposition method) not implemented")
+                raise NotImplementedError("Not implemented solver")
+
+            # structural modal analysis
+            elif data["analysis_id"] == 2:
+                self.set_structural_element_to_model()
+                self.structural_modal_solver = StructuralModalSolver(
+                    self.structural_assembler, analysis_data=data
+                )
+            # acoustic harmonic analysis
+            elif data["analysis_id"] == 3:
+                self.set_acoustic_element_to_model()
+                self.acoustic_harmonic_solver = AcousticHarmonicSolver(
+                    self.acoustic_assembler, analysis_data=data
+                )
+            # acoustic modal analysis
+            elif data["analysis_id"] == 4:
+                self.set_acoustic_element_to_model()
+                self.acoustic_modal_solver = AcousticModalSolver(
+                    self.acoustic_assembler, analysis_data=data
+                )
+            # couled harmonic analysis (direct method)
+            elif data["analysis_id"] == 5:
+                print("Coupled harmonic analysis (direct method) not implemented")
+                raise NotImplementedError("Not implemented solver")
+
+            # couled harmonic analysis (mode superposition method)
+            elif data["analysis_id"] == 6:
+                print("Coupled harmonic analysis (mode superposition method) not implemented")
+                raise NotImplementedError("Not implemented solver")
+
+            # static analysis
+            elif data["analysis_id"] == 7:
+                print("Static analysis not implemented")
+                raise NotImplementedError("Not implemented solver")
+
+            else:
+
+                raise NotImplementedError("Not implemented solver")
 
     def set_element_formulation(self, element):
-        self.acoustic_modal_assembler.set_element_formulation(element)
+        self.acoustic_assembler.set_element_formulation(element)
+        self.structural_assembler.set_element_formulation(element)
 
-    def solve_modal_acoustic(self):
-        self.acoustic_modal_assembler.assemble_global_matrices()
+    def solve_acoustic_modal_analysis(self):
+        self.acoustic_assembler.assemble_global_matrices()
         self.acoustic_modal_solver.solve()
 
-    def solve_modal_structural(self):
-        self.structural_modal_assembler.assemble_global_matrices()
+    def solve_structural_modal_analysis(self):
+        self.structural_assembler.assemble_global_matrices()
         self.structural_modal_solver.solve()
+
+    def solve_acoustic_harmonic_analysis(self):
+        self.acoustic_assembler.assemble_global_matrices()
+        self.acoustic_harmonic_solver.solve()
 
     def long_function(self):
         for i in range(20):
             logging.info("long_function" + ProgressStatus(i, 20))
-
-            # print(i)
             sleep(0.1)

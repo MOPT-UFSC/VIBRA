@@ -17,4 +17,4 @@ class Fluid:
 
     @property
     def impedance(self):
-        return self.fluid_density*self.speed_of_sound
+        return self.fluid_density * self.speed_of_sound

@@ -1,10 +1,10 @@
-
+import logging
 import os
 import sys
-import gmsh
-import logging
-import numpy as np
 from pathlib import Path
+
+import gmsh
+import numpy as np
 
 from vibra.engine.mesher.element_type import *
 from vibra.utils.progress_status import ProgressStatus
@@ -23,6 +23,11 @@ class Mesh:
         self.lines_connectivity = np.array([])
         self.faces_connectivity = np.array([])
         self.solids_connectivity = np.array([])
+        self.nodes_from_lines = dict()
+        self.nodes_from_surfaces = dict()
+        self.nodes_from_volumes = dict()
+        self.entity_ranges = dict()
+        self.surfaces_from_volumes = dict()
 
     @classmethod
     def from_cad(
@@ -51,17 +56,17 @@ class Mesh:
         obj = Mesh()
         obj.load_cad(
             path,
-            minimum_element_size = minimum_element_size,
-            maximum_element_size = maximum_element_size,
-            element_type = element_type,
-            geometry_tolerance = geometry_tolerance,
-            size_factor = size_factor,
-            dimension = dimension,
-            threads = threads,
-            gmsh_gui = gmsh_gui,
+            minimum_element_size=minimum_element_size,
+            maximum_element_size=maximum_element_size,
+            element_type=element_type,
+            geometry_tolerance=geometry_tolerance,
+            size_factor=size_factor,
+            dimension=dimension,
+            threads=threads,
+            gmsh_gui=gmsh_gui,
         )
         return obj
-    
+
     @classmethod
     def from_dat(cls, nodal_path, lines_path=None, faces_path=None, solids_path=None):
         obj = Mesh()
@@ -85,11 +90,8 @@ class Mesh:
         size_factor: float = 0.50,
         dimension: int = 3,
         threads: int = 2,
-        gmsh_gui: bool = False
+        gmsh_gui: bool = False,
     ):
-        # path = "C:\Repositorios\VIBRA\data\examples\script_files\script_hex_elements.txt"
-        self.basename = os.path.basename(path)
-
         path = Path(path)
         gmsh.initialize("", False)
         logging.info(f"Generating mesh from {path}")
@@ -116,19 +118,12 @@ class Mesh:
 
         logging.info("Processing Mesh" + ProgressStatus(70, 100))
         self._process_mesh()
-        
+
         if gmsh_gui:
-            if '-nopopup' not in sys.argv:
+            if "-nopopup" not in sys.argv:
                 gmsh.fltk.run()
-        
+
         gmsh.finalize()
-
-        if not os.path.exists("vibra/output_data"):
-            os.mkdir("vibra/output_data")
-
-        self.export_nodes_coordinates("vibra/output_data/nodal_coordinates.dat")
-        self.export_faces_connectivity("vibra/output_data/faces_connectivitiy.dat")
-        self.export_solids_connectivity("vibra/output_data/solids_connectivitiy.dat")
 
         logging.info(
             f"Mesh generated with {len(self.nodal_coordinates)} nodes"
@@ -181,7 +176,7 @@ class Mesh:
 
         for size, faces in mesh_refinement_parameters:
             threshold_type=gmsh.model.mesh.field.add("Constant")
-            gmsh.model.mesh.field.setNumbers(threshold_type,"SurfacesList",faces)
+            gmsh.model.mesh.field.setNumbers(threshold_type, "SurfacesList", faces)
             gmsh.model.mesh.field.setNumber(threshold_type, "VIn", size)
             fields_list.append(threshold_type)
 
@@ -197,40 +192,38 @@ class Mesh:
         tolerance,
         size_factor,
         threads,
+        mesh_refinement_parameters = None
     ):
-        mesh_refinement_parameters = [
-            (20,[7]),
-            (20,[28, 32, 50])
-        ]
+        if mesh_refinement_parameters is None:
+            mesh_refinement_parameters = []
+
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("General.NumThreads", threads)
         gmsh.option.setNumber("Geometry.Tolerance", tolerance)
-        
+
         if size_factor != 0:
             gmsh.option.setNumber("Mesh.MeshSizeFactor", size_factor)
         else:
             # gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
             # gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
-            self.local_mesh_refine(minimum_element_size,mesh_refinement_parameters)
+            self.local_mesh_refine(minimum_element_size, mesh_refinement_parameters)
 
 
-        if "script" not in self.basename:
-            gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
-            gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
-            gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_type.recombination_algorithm)
-            gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", element_type.subdivision_algorithm)
-            gmsh.option.setNumber("Mesh.RecombineAll", element_type.recombine_all)
+        gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
+        gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
+        gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_type.recombination_algorithm)
+        gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", element_type.subdivision_algorithm)
+        gmsh.option.setNumber("Mesh.RecombineAll", element_type.recombine_all)
 
         gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
         gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_type.second_order_incomplete)
-
-    #=================================================================================================
 
     def _process_mesh(self):
         """
         Transform gmsh data in a more manageable format (aka nodal coords and connectivity).
         """
+        self.reset_variables()
         indexes, coords, _ = gmsh.model.mesh.getNodes(includeBoundary=True)
         total_nodes = int(np.max(indexes))
         self.nodal_coordinates = np.zeros((total_nodes, 4))
@@ -240,9 +233,12 @@ class Mesh:
         connectivity_dim1 = dict()
         connectivity_dim2 = dict()
         connectivity_dim3 = dict()
-        self.entity_ranges = dict()
 
         for dim, tag in gmsh.model.getEntities():
+            if dim == 3:
+                _, downwards = gmsh.model.getAdjacencies(dim, tag)
+                self.surfaces_from_volumes[tag] = list(downwards)
+
             elements_data = dict()
             element_types, element_indexes, element_nodes = gmsh.model.mesh.getElements(dim, tag)
 
@@ -255,9 +251,7 @@ class Mesh:
                 )
 
                 array_element_nodes = np.array(element_nodes[i]).reshape(-1, nodes_per_element)
-                # not sure if it should be done here, but that is an easy way to fix the
-                # connectivity to start from 0
-                array_element_nodes -= 1
+                array_element_nodes -= 1  # index connectivity from 0
 
                 elements_data[element_type] = {
                     "indexes": element_indexes[i],
@@ -272,16 +266,76 @@ class Mesh:
 
             elif dim == 1:  # Lines
                 connectivity_dim1[dim, tag] = elements_data
+                self.nodes_from_lines[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
 
             elif dim == 2:  # Surfaces
                 connectivity_dim2[dim, tag] = elements_data
+                self.nodes_from_surfaces[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
 
             elif dim == 3:  # Solids
                 connectivity_dim3[dim, tag] = elements_data
+                self.nodes_from_volumes[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
 
         self.lines_connectivity = self._get_connectivity_array(connectivity_dim1)
         self.faces_connectivity = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity = self._get_connectivity_array(connectivity_dim3)
+
+    def get_model_areas(self, path):
+        """This method returns returns the all surface area processed using
+        gmsh internal functions.
+
+        """
+
+        surfaces_areas = dict()
+        bodies_volumes = dict()
+
+        # The adoption of quadratic elements ensures better results for area calculations.
+        element_type = TETRAHEDRON_10
+        gmsh.initialize("", False)
+        gmsh.option.setNumber("General.Terminal", 0)
+        gmsh.option.setNumber("General.Verbosity", 0)
+        gmsh.option.setNumber("General.NumThreads", 4)
+        gmsh.merge(str(path))
+
+        gmsh.option.setNumber("Geometry.Tolerance", 1e-8)
+        gmsh.option.setNumber("Mesh.MeshSizeFactor", 0.1)
+        gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
+        gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
+        gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_type.recombination_algorithm)
+        gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", element_type.subdivision_algorithm)
+        gmsh.option.setNumber("Mesh.RecombineAll", element_type.recombine_all)
+
+        gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
+        gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_type.second_order_incomplete)
+
+        gmsh.model.mesh.generate(dim=2)
+
+        for dim, tag in gmsh.model.getEntities():
+            if dim == 2:  # Surfaces
+                p = gmsh.model.addPhysicalGroup(2, [tag])
+                gmsh.plugin.setNumber("MeshVolume", "Dimension", 2)
+                gmsh.plugin.setNumber("MeshVolume", "PhysicalGroup", p)
+                gmsh.plugin.run("MeshVolume")
+                views = gmsh.view.getTags()
+                _, _, data = gmsh.view.getListData(views[-1])
+
+                surfaces_areas[tag] = data[-1][-1] / (1e6)
+
+            # maybe it is going to be necessary evaluate the bodies volumes too
+            # elif dim == 3:  # Solids
+
+            #     p = gmsh.model.addPhysicalGroup(3, [tag])
+            #     gmsh.plugin.setNumber("MeshVolume", "Dimension", 3)
+            #     gmsh.plugin.setNumber("MeshVolume", "PhysicalGroup", p)
+            #     gmsh.plugin.run("MeshVolume")
+            #     views = gmsh.view.getTags()
+            #     _, _, data = gmsh.view.getListData(views[-1])
+
+            #     bodies_volumes[tag] = data[-1][-1]
+
+        gmsh.finalize()
+
+        return surfaces_areas  # , bodies_volumes
 
     def _get_connectivity_array(self, input_dict):
         """

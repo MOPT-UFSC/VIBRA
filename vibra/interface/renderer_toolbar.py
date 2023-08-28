@@ -3,7 +3,9 @@ from pathlib import Path
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QToolBar
 
-from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
+from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
+    CommonRenderWidget,
+)
 from vibra.utils.icons import load_icon
 from vibra.interface.local_refine_widget import LocalRefineWidget
 
@@ -27,7 +29,6 @@ class RendererToolbar(QToolBar):
                 border-style: solid;
                 border-width: 1px;
                 border-color: #888888;
-                border-radius: 3px
             }
             """
         )

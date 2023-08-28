@@ -8,8 +8,10 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from vibra.interface.exception_message import ErrorMessage
+from vibra.config import UserConfig
+from vibra.interface.analysis_filter_menu import AnalysisFilter
 from vibra.interface.clip_plane_widget import ClipPlaneWidget
+from vibra.interface.exception_message import ErrorMessage
 from vibra.interface.loading_bar import load_function
 from vibra.interface.menu_items import MenuItems
 from vibra.interface.menus.help_menu import HelpMenu
@@ -21,10 +23,6 @@ from vibra.interface.menus.views_menu import ViewsMenu
 from vibra.interface.renderer_toolbar import RendererToolbar
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_tabs import ViewerTabs
-
-from vibra.interface.analysis_filter_menu import AnalysisFilter
-
-from vibra.config import UserConfig
 from vibra.project import Project
 from vibra.utils.icons import load_icon
 
@@ -33,6 +31,7 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
 
+        self.dialog = None
         self.project = Project()
         self.user_config = UserConfig()
         self.status_bar = StatusBar(self)
@@ -50,15 +49,8 @@ class MainWindow(QMainWindow):
         self.clip_plane.slider_released.connect(self.slider_released_callback)
         self.clip_plane.closed.connect(self.disable_cut)
 
-    def selection_changed_callback(self, points, lines, faces):
-        if points:
-            self.status_bar.show_points(points)
-        elif lines:
-            self.status_bar.show_lines(lines)
-        elif faces:
-            self.status_bar.show_faces(faces)
-        else:
-            self.status_bar.clear_selections()
+    def selection_changed_callback(self, points, lines, faces, volumes):
+        self.status_bar.set_selection(points, lines, faces, volumes)
 
     def slider_pressed_callback(self):
         self.viewer_tabs.start_cutting_mode()
@@ -90,7 +82,6 @@ class MainWindow(QMainWindow):
         }
 
     def create_basic_layout(self):
-
         self.menu_widget = MenuItems()
         self.analysis_filter = AnalysisFilter()
 
@@ -124,7 +115,6 @@ class MainWindow(QMainWindow):
         central_widget = QWidget()
         central_widget.setLayout(grid_layout_central)
         self.setCentralWidget(central_widget)
-        
 
         # working_area = QSplitter(Qt.Horizontal)
         # self.setCentralWidget(working_area)
@@ -133,7 +123,7 @@ class MainWindow(QMainWindow):
         # working_area.addWidget(left_widget)
         # # working_area.addWidget(self.menu_widget)
         # working_area.addWidget(self.viewer_tabs)
-        
+
         # working_area.widget(0).setMinimumWidth(280)
         # working_area.widget(0).setMaximumWidth(320)
         # working_area.widget(0).setContentsMargins(0,0,0,0)
@@ -170,7 +160,7 @@ class MainWindow(QMainWindow):
 
     def get_user_config(self):
         return self.user_config
-    
+
     def get_project(self):
         return self.project
 
@@ -234,17 +224,27 @@ class MainWindow(QMainWindow):
 
     def process_acoustic_modal_analysis(self):
         try:
-            self.project.solve_modal_acoustic()
+            self.project.solve_acoustic_modal_analysis()
         except NotImplementedError as e:
             ErrorMessage(e)
         else:
             self.viewer_tabs.show_acoustic_modal_analysis()
 
-
     def process_structural_modal_analysis(self):
         try:
-            self.project.solve_modal_structural()
+            self.project.solve_structural_modal_analysis()
         except NotImplementedError as e:
             ErrorMessage(e)
         else:
             self.viewer_tabs.show_structural_modal_analysis()
+
+    def process_acoustic_harmonic_analysis(self):
+        try:
+            self.project.solve_acoustic_harmonic_analysis()
+        except NotImplementedError as e:
+            ErrorMessage(e)
+        else:
+            self.viewer_tabs.show_acoustic_harmonic_analysis()
+
+    def set_input_widget(self, dialog):
+        self.dialog = dialog

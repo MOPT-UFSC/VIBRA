@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import*
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 
 from vibra.utils.interface_functions import get_main_window
 
@@ -14,7 +14,6 @@ class AnalysisFilter(QWidget):
         self.frame = QFrame()
         self.frame_main = QFrame()
         self.frame_buttons = QFrame()
-        # self.frame.setStyleSheet("border-radius: 2px; border-style: solid; border-width: 1px")
 
         self.line = QFrame()
         self.line.setLineWidth(2)
@@ -46,8 +45,12 @@ class AnalysisFilter(QWidget):
         self.radio_button_structural.setFixedHeight(30)
         self.radio_button_coupled.setFixedHeight(30)
         #
-        self.radio_button_acoustic.clicked.connect(self.main_window.menu_widget.filter_analysis_type)
-        self.radio_button_structural.clicked.connect(self.main_window.menu_widget.filter_analysis_type)
+        self.radio_button_acoustic.clicked.connect(
+            self.main_window.menu_widget.filter_analysis_type
+        )
+        self.radio_button_structural.clicked.connect(
+            self.main_window.menu_widget.filter_analysis_type
+        )
         self.radio_button_coupled.clicked.connect(self.main_window.menu_widget.filter_analysis_type)
         #
 
@@ -55,7 +58,7 @@ class AnalysisFilter(QWidget):
         group.addButton(self.radio_button_acoustic)
         group.addButton(self.radio_button_structural)
         group.addButton(self.radio_button_coupled)
-        
+
         grid_buttons = QHBoxLayout()
         grid_buttons.addWidget(self.radio_button_acoustic)
         grid_buttons.addWidget(self.radio_button_structural)
@@ -78,6 +81,6 @@ class AnalysisFilter(QWidget):
         grid_layout2.setVerticalSpacing(2)
         self.setLayout(grid_layout2)
         grid_layout2.setContentsMargins(4, 2, 4, 2)
-        
+
         self.setMinimumSize(QSize(280, 80))
         self.setMaximumSize(QSize(280, 80))

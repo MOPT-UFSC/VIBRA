@@ -1,12 +1,13 @@
-from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 
-from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
-from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
-from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
 from vibra.interface.tabs.mesh_info_bar import MeshInfoBar
+from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
+from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
+from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
+    CommonRenderWidget,
+)
 from vibra.utils.interface_functions import get_main_window
-
 
 SHOW_POINTS = 0
 SHOW_LINES = 1
@@ -104,7 +105,7 @@ class MeshRenderWidget(CommonRenderWidget):
         if self.view_mode == SHOW_FACES:
             self.edges_actor.GetProperty().SetColor(dark_color)
             self.solids_actor.GetProperty().SetColor(light_color)
-        
+
         elif theme == "light":
             self.edges_actor.GetProperty().SetColor(dark_color)
             self.solids_actor.GetProperty().SetColor(dark_color)
@@ -121,11 +122,8 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor = None
 
     def _actors_exists(self):
-        actors = [
-            self.solids_actor,
-            self.edges_actor
-        ]
+        actors = [self.solids_actor, self.edges_actor]
         return all([actor is not None for actor in actors])
-    
+
     def _get_info_tab(self):
         pass

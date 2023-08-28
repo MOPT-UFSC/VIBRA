@@ -1,4 +1,6 @@
 import logging
+from threading import Lock
+from time import time
 
 import vtk
 from PyQt5.QtWidgets import QFrame, QStackedLayout
@@ -8,8 +10,6 @@ from vibra.interface.viewer_3d.interactor_styles.arcball_camera import (
     vtkInteractorStyleArcballCamera,
 )
 from vibra.utils.interface_functions import get_main_window
-from threading import Lock
-from time import time 
 
 
 class CommonRenderWidget(QFrame):
@@ -199,11 +199,11 @@ class CommonRenderWidget(QFrame):
         view_up = (0, 1, 0)
         self.set_custom_view(position, view_up)
 
-    # 
+    #
     def start_animation(self):
         if self.playing_animation:
             return
-        
+
         self.playing_animation = True
 
     def stop_animation(self):
@@ -216,14 +216,14 @@ class CommonRenderWidget(QFrame):
         self.playing_animation = False
 
     def _animation_callback(self, obj, event):
-        '''
+        """
         Common function with controls that are meaningfull to
         all kinds of animations.
-        '''
-        
+        """
+
         if not self.playing_animation:
             return
-        
+
         # If the time to update the frame takes
         # longer than expected
         if self._animation_lock.locked():
