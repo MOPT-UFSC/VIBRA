@@ -10,6 +10,10 @@ from vibra.interface.model_inputs.structural.material_inputs import (
 )
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_functions import get_main_window
+from vibra.interface.model_inputs.mesh.mesher_inputs import MesherInputs
+from vibra.interface.model_inputs.structural.material_inputs import MaterialInput
+from vibra.interface.material_widget import MaterialWidget
+from vibra.interface.set_fluid_widget import FluidWidget
 
 
 class MesherMenu(QMenu):
@@ -22,7 +26,7 @@ class MesherMenu(QMenu):
         self.create_layout()
 
     def create_and_connect_actions(self):
-        color = QColor("#0055DD")
+        color = QColor("#448cff")
         #
         self.new_project_icon = load_icon(Path("data/icons/new_file.png"), color)
         #
@@ -46,11 +50,10 @@ class MesherMenu(QMenu):
         self.addAction(self.generate_mesh_action)
 
     def call_fluid_configurator(self):
-        pass
+        FluidWidget()
 
     def call_material_configurator(self):
-        MaterialInput()
-        pass
+        MaterialWidget()  
 
     def call_mesher_inputs(self):
         mesher = MesherInputs()

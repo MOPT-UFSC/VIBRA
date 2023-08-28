@@ -39,7 +39,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../../../../../../Downloads/load - Copia.png</normaloff>../../../../../../Downloads/load - Copia.png</iconset>
+    <normaloff>../../../../Downloads/load - Copia.png</normaloff>../../../../Downloads/load - Copia.png</iconset>
   </property>
   <property name="whatsThis">
    <string/>
@@ -81,12 +81,15 @@
     </property>
     <property name="font">
      <font>
-      <family>Arial</family>
+      <family>Segoe UI</family>
       <pointsize>14</pointsize>
-      <weight>75</weight>
+      <weight>50</weight>
       <italic>false</italic>
-      <bold>true</bold>
+      <bold>false</bold>
      </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 14pt &quot;Segoe UI&quot;;</string>
     </property>
     <property name="text">
      <string>SELECT THE ANALYSIS METHOD</string>
@@ -145,12 +148,15 @@
     </property>
     <property name="font">
      <font>
-      <family>Arial</family>
-      <pointsize>12</pointsize>
-      <weight>75</weight>
-      <italic>true</italic>
-      <bold>true</bold>
+      <family>Segoe UI</family>
+      <pointsize>13</pointsize>
+      <weight>50</weight>
+      <italic>false</italic>
+      <bold>false</bold>
      </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 13pt &quot;Segoe UI&quot;;</string>
     </property>
     <property name="inputMethodHints">
      <set>Qt::ImhNoAutoUppercase</set>
@@ -192,12 +198,15 @@
     </property>
     <property name="font">
      <font>
-      <family>Arial</family>
-      <pointsize>12</pointsize>
-      <weight>75</weight>
-      <italic>true</italic>
-      <bold>true</bold>
+      <family>Segoe UI</family>
+      <pointsize>13</pointsize>
+      <weight>50</weight>
+      <italic>false</italic>
+      <bold>false</bold>
      </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 13pt &quot;Segoe UI&quot;;</string>
     </property>
     <property name="text">
      <string>Go to Analysis setup</string>
@@ -214,11 +223,15 @@
     </property>
     <property name="font">
      <font>
-      <family>Arial</family>
-      <pointsize>12</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
+      <family>Segoe UI</family>
+      <pointsize>13</pointsize>
+      <weight>50</weight>
+      <italic>false</italic>
+      <bold>false</bold>
      </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 13pt &quot;Segoe UI&quot;;</string>
     </property>
     <property name="text">
      <string>Method:</string>
@@ -238,12 +251,15 @@
     </property>
     <property name="font">
      <font>
-      <family>Arial</family>
-      <pointsize>12</pointsize>
-      <weight>75</weight>
+      <family>Segoe UI</family>
+      <pointsize>13</pointsize>
+      <weight>50</weight>
       <italic>false</italic>
-      <bold>true</bold>
+      <bold>false</bold>
      </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 13pt &quot;Segoe UI&quot;;</string>
     </property>
     <property name="frameShape">
      <enum>QFrame::Box</enum>

@@ -33,7 +33,7 @@ class RendererToolbar(QToolBar):
         )
 
     def create_actions(self):
-        color = QColor("#0055DD")
+        color = QColor("#448cff")
 
         #
         top_view_icon = load_icon(Path("data/icons/top.png"), color)

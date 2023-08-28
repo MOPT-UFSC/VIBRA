@@ -71,7 +71,7 @@ class MainWindow(QMainWindow):
     def configure_window(self):
         self.setMinimumSize(1300, 700)
         self.showMaximized()
-        self.setWindowIcon(load_icon(Path("data/icons/logo_vibra.png"), QColor("#0055DD")))
+        self.setWindowIcon(load_icon(Path("data/icons/logo_vibra.png"), QColor("#448cff")))
         self.setWindowTitle("Vibra")
 
         # for qdarktheme
