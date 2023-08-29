@@ -12,6 +12,12 @@ class MeshSetup:
     maximum_element_size: float
 
 
+@dataclass
+class MeshLocalRefinementSetup:
+    element_size: float
+    entity_ids: list[int]
+
+
 AUTO_MESH_SETUP = MeshSetup(
     element_type=DEFAULT_ELEMENT_TYPE,
     geometry_tolerance=1e-6,

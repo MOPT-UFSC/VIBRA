@@ -9,6 +9,7 @@ import numpy as np
 from vibra.engine.mesher.element_type import *
 from vibra.utils.progress_status import ProgressStatus
 
+# FieldsList=[]
 
 class Mesh:
     def __init__(self):
@@ -113,6 +114,7 @@ class Mesh:
 
         logging.info("Loading Geometry" + ProgressStatus(15, 100))
         gmsh.model.mesh.generate(dim=self.dimension)
+        gmsh.model.mesh.removeDuplicateNodes()
 
         logging.info("Processing Mesh" + ProgressStatus(70, 100))
         self._process_mesh()
@@ -165,6 +167,23 @@ class Mesh:
         header = "Index || Solid ID || Element type ID || Element ID || Connected Node IDs"
         np.savetxt(filename, self.solids_connectivity, delimiter=";", header=header, fmt="%i")
 
+    def local_mesh_refine(self, lc_geral, mesh_refinement_parameters):
+        fields_list=[]
+        gmsh.model.mesh.field.add("Constant")
+        gmsh.model.mesh.field.setNumbers(1, "SurfacesList", [])
+        gmsh.model.mesh.field.setNumber(1, "VOut", lc_geral)
+        fields_list.append(1)
+
+        for size, faces in mesh_refinement_parameters:
+            threshold_type=gmsh.model.mesh.field.add("Constant")
+            gmsh.model.mesh.field.setNumbers(threshold_type, "SurfacesList", faces)
+            gmsh.model.mesh.field.setNumber(threshold_type, "VIn", size)
+            fields_list.append(threshold_type)
+
+        minimum_field=gmsh.model.mesh.field.add("Min")
+        gmsh.model.mesh.field.setNumbers(minimum_field,"FieldsList",fields_list)
+        gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
+
     def _configure_mesh(
         self,
         element_type,
@@ -173,7 +192,11 @@ class Mesh:
         tolerance,
         size_factor,
         threads,
+        mesh_refinement_parameters = None
     ):
+        if mesh_refinement_parameters is None:
+            mesh_refinement_parameters = []
+
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("General.NumThreads", threads)
@@ -182,8 +205,10 @@ class Mesh:
         if size_factor != 0:
             gmsh.option.setNumber("Mesh.MeshSizeFactor", size_factor)
         else:
-            gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
-            gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
+            # gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
+            # gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
+            self.local_mesh_refine(minimum_element_size, mesh_refinement_parameters)
+
 
         gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
         gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
@@ -226,9 +251,7 @@ class Mesh:
                 )
 
                 array_element_nodes = np.array(element_nodes[i]).reshape(-1, nodes_per_element)
-                # not sure if it should be done here, but that is an easy way to fix the
-                # connectivity to start from 0
-                array_element_nodes -= 1
+                array_element_nodes -= 1  # index connectivity from 0
 
                 elements_data[element_type] = {
                     "indexes": element_indexes[i],
