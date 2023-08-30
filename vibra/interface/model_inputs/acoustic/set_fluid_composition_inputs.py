@@ -29,11 +29,11 @@ class SetFluidCompositionInput(QDialog):
     def __init__(self, selected_fluid_to_edit=None, *args, **kwargs):
         super().__init__()
 
-        uic.loadUi(Path('data/ui_files/model/acoustic/set_fluid_composition_input.ui'), self)
-        
-        play_pause_icon_path = str(Path('data/icons/play_pause.png'))
+        uic.loadUi(Path("data/ui_files/model/acoustic/set_fluid_composition_input.ui"), self)
+
+        play_pause_icon_path = str(Path("data/icons/play_pause.png"))
         self.icon_animate = QIcon(play_pause_icon_path)
-        icon_path = str(Path('data/icons/logo_vibra.png'))
+        icon_path = str(Path("data/icons/logo_vibra.png"))
         self.icon = QIcon(icon_path)
         self.setWindowIcon(self.icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)

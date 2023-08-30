@@ -32,7 +32,7 @@ class MaterialInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        uic.loadUi(Path('data/ui_files/model/structural/material_input.ui'), self)
+        uic.loadUi(Path("data/ui_files/model/structural/material_input.ui"), self)
 
         icon_path = str(Path("data/icons/logo_vibra.png"))
         self.icon = QIcon(icon_path)

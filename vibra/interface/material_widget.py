@@ -1,10 +1,28 @@
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QLineEdit, QTableWidgetItem, QColorDialog, QLabel, QVBoxLayout, QGridLayout, QPushButton, QDialog, QHBoxLayout, QTableWidget, QTableWidgetItem
-from pathlib import Path
-from vibra.utils.icons import load_icon
-from vibra.engine.properties.material import Material, load_material_list, save_material_list
 import random
+from pathlib import Path
+
+from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import (
+    QColorDialog,
+    QDialog,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+)
+
+from vibra.engine.properties.material import (
+    Material,
+    load_material_list,
+    save_material_list,
+)
+from vibra.utils.icons import load_icon
+
 
 class MaterialWidget(QDialog):
     material_list = []
@@ -22,7 +40,7 @@ class MaterialWidget(QDialog):
         add_material_icon = load_icon(Path("data/icons/plus-thick.png"), self.color)
         add_material_button.setIconSize(QSize(30, 30))
         add_material_button.setIcon(add_material_icon)
-    
+
         add_material_button.setFixedSize(30, 30)
         add_material_button.clicked.connect(self.add_material)
         toolbar_layout.addWidget(add_material_button)
@@ -42,17 +60,17 @@ class MaterialWidget(QDialog):
         reset_button.clicked.connect(self.reset_widgets)
         toolbar_layout.addWidget(reset_button)
         toolbar_layout.setAlignment(Qt.AlignTop)
-        
+
         header = [
             "Name",
             "Density\n[kg/m3]",
             "Young Modulus\n[GPa]",
             "Poisson",
             "Expansion cofficient\n[m/K]",
-            "Color"
+            "Color",
         ]
         self.table = QTableWidget()
-        self.table.setColumnCount(len(header)) 
+        self.table.setColumnCount(len(header))
         self.table.setHorizontalHeaderLabels(header)
         self.table.setSelectionBehavior(1)
         self.table.resizeColumnsToContents()
@@ -84,12 +102,12 @@ class MaterialWidget(QDialog):
         main_layout.addLayout(final_layout)
 
         self.setLayout(main_layout)
-        self.setMinimumSize(650,500)
+        self.setMinimumSize(650, 500)
 
         self.load_material_list()
         self.update_table()
         self.exec_()
-    
+
     def load_material_list(self):
         path = Path("material_library.json")
         if not path.exists():
@@ -114,14 +132,14 @@ class MaterialWidget(QDialog):
 
         if not instance.completed:
             return
-        
+
         r, g, b, _ = instance.color.getRgb()
         new_material = Material(
-            name = str(instance.line_edit_material_name.text()),
-            color = (r, g, b),
-            density = float(instance.line_edit_density.text()),
-            young_modulus = float(instance.line_edit_young_modulus.text()) * 1e9,
-            poisson_ratio = float(instance.line_edit_poisson.text()),
+            name=str(instance.line_edit_material_name.text()),
+            color=(r, g, b),
+            density=float(instance.line_edit_density.text()),
+            young_modulus=float(instance.line_edit_young_modulus.text()) * 1e9,
+            poisson_ratio=float(instance.line_edit_poisson.text()),
         )
 
         self.material_list.append(new_material)
@@ -153,47 +171,45 @@ class MaterialWidget(QDialog):
 
 
 class MaterialAdd(QDialog):
-
     def __init__(self):
         super().__init__()
 
-        r = random.randint(0,255)
-        g = random.randint(0,255)
-        b = random.randint(0,255)
+        r = random.randint(0, 255)
+        g = random.randint(0, 255)
+        b = random.randint(0, 255)
 
-
-        self.color = QColor(r,g,b)
+        self.color = QColor(r, g, b)
 
         self.setWindowTitle("New Material")
         layout1 = QGridLayout()
         layout1.setAlignment(Qt.AlignTop)
 
         material_name_label = QLabel("Material Name")
-        self.line_edit_material_name =  QLineEdit()
+        self.line_edit_material_name = QLineEdit()
         density_label = QLabel("Density[kg/m3]")
-        self.line_edit_density =  QLineEdit()
+        self.line_edit_density = QLineEdit()
         poisson_label = QLabel("Poisson")
-        self.line_edit_poisson =  QLineEdit()
+        self.line_edit_poisson = QLineEdit()
         expansion_label = QLabel("Expansion cofficient[m/K]")
-        self.line_edit_expansion_cofficient =  QLineEdit()
+        self.line_edit_expansion_cofficient = QLineEdit()
         young_label = QLabel("Young Modulus[GPa]")
-        self.line_edit_young_modulus =  QLineEdit()
+        self.line_edit_young_modulus = QLineEdit()
         color_label = QLabel("Color")
-        self.color_button =  QPushButton("")
+        self.color_button = QPushButton("")
         self.color_button.setFocusPolicy(Qt.NoFocus)
         self.add_new_material_button = QPushButton("Add New Material")
         self.cancel_button = QPushButton("Cancel")
 
-        self.add_new_material_button.setMinimumSize(40,40)
+        self.add_new_material_button.setMinimumSize(40, 40)
         self.add_new_material_button.clicked.connect(self.confirm_button_callback)
-        
-        self.cancel_button.setMinimumSize(40,40)
+
+        self.cancel_button.setMinimumSize(40, 40)
         self.cancel_button.clicked.connect(self.cancel_button_callback)
 
         self.color_button.clicked.connect(self.color_button_callback)
 
         self.setLayout(layout1)
-        self.setMinimumSize(500,100)
+        self.setMinimumSize(500, 100)
 
         self.error_label_material_name = QLabel("")
         self.error_label_density = QLabel("")
@@ -205,27 +221,27 @@ class MaterialAdd(QDialog):
         layout1.addWidget(self.line_edit_material_name, 1, 0)
         layout1.addWidget(density_label, 0, 1)
         layout1.addWidget(self.line_edit_density, 1, 1)
-        layout1.addWidget(self.error_label_material_name, 2, 0)   
-        layout1.addWidget(poisson_label, 3, 0)  
+        layout1.addWidget(self.error_label_material_name, 2, 0)
+        layout1.addWidget(poisson_label, 3, 0)
         layout1.addWidget(self.line_edit_poisson, 4, 0)
-        layout1.addWidget(self.error_label_poisson, 5, 0)  
-        layout1.addWidget(young_label, 0, 2)   
+        layout1.addWidget(self.error_label_poisson, 5, 0)
+        layout1.addWidget(young_label, 0, 2)
         layout1.addWidget(self.line_edit_young_modulus, 1, 2)
-        layout1.addWidget(self.error_label_density, 2, 1)  
-        layout1.addWidget(expansion_label, 3, 1)   
+        layout1.addWidget(self.error_label_density, 2, 1)
+        layout1.addWidget(expansion_label, 3, 1)
         layout1.addWidget(self.line_edit_expansion_cofficient, 4, 1)
-        layout1.addWidget(self.error_label_expansion, 5, 1)  
-        layout1.addWidget(self.error_label_young, 2, 2) 
-        layout1.addWidget(color_label, 3, 2)   
-        layout1.addWidget(self.color_button, 4, 2)  
+        layout1.addWidget(self.error_label_expansion, 5, 1)
+        layout1.addWidget(self.error_label_young, 2, 2)
+        layout1.addWidget(color_label, 3, 2)
+        layout1.addWidget(self.color_button, 4, 2)
         layout1.addWidget(self.add_new_material_button, 8, 2)
         layout1.addWidget(self.cancel_button, 8, 0)
 
         pick_color = self.color.name()
         self.color_button.setStyleSheet(f"background-color: {pick_color};")
-    
+
         self.completed = False
-        
+
         self.exec_()
 
     def confirm_button_callback(self):
@@ -246,7 +262,7 @@ class MaterialAdd(QDialog):
         else:
             error = True
             self.error_label_material_name.setText("Please put a material name")
-            self.error_label_material_name.setStyleSheet(f'color: {red_color.name()};')
+            self.error_label_material_name.setStyleSheet(f"color: {red_color.name()};")
             self.line_edit_material_name.setStyleSheet(border_color)
 
         if self.line_edit_density.text() and self.line_edit_density.text().isnumeric():
@@ -255,25 +271,28 @@ class MaterialAdd(QDialog):
         else:
             error = True
             self.error_label_density.setText("Please put a density")
-            self.error_label_density.setStyleSheet(f'color: {red_color.name()};')
+            self.error_label_density.setStyleSheet(f"color: {red_color.name()};")
             self.line_edit_density.setStyleSheet(border_color)
-        
+
         if self.line_edit_young_modulus.text() and self.line_edit_young_modulus.text().isnumeric():
             self.error_label_young.setText("")
             self.line_edit_young_modulus.setStyleSheet(none_color)
         else:
             error = True
             self.error_label_young.setText("Please put a number")
-            self.error_label_young.setStyleSheet(f'color: {red_color.name()};')
+            self.error_label_young.setStyleSheet(f"color: {red_color.name()};")
             self.line_edit_young_modulus.setStyleSheet(border_color)
-        
-        if self.line_edit_expansion_cofficient.text() and self.line_edit_expansion_cofficient.text().isnumeric():
+
+        if (
+            self.line_edit_expansion_cofficient.text()
+            and self.line_edit_expansion_cofficient.text().isnumeric()
+        ):
             self.error_label_expansion.setText("")
             self.line_edit_expansion_cofficient.setStyleSheet(none_color)
         else:
             error = True
             self.error_label_expansion.setText("Please put a number")
-            self.error_label_expansion.setStyleSheet(f'color: {red_color.name()};')
+            self.error_label_expansion.setStyleSheet(f"color: {red_color.name()};")
             self.line_edit_expansion_cofficient.setStyleSheet(border_color)
 
         if self.line_edit_poisson.text() and self.line_edit_poisson.text().isnumeric():
@@ -282,9 +301,9 @@ class MaterialAdd(QDialog):
         else:
             error = True
             self.error_label_poisson.setText("Please put a number")
-            self.error_label_poisson.setStyleSheet(f'color: {red_color.name()};')
+            self.error_label_poisson.setStyleSheet(f"color: {red_color.name()};")
             self.line_edit_poisson.setStyleSheet(border_color)
-        
+
         return error
 
     def cancel_button_callback(self):
@@ -294,6 +313,3 @@ class MaterialAdd(QDialog):
         self.color = QColorDialog.getColor()
         pick_color = self.color.name()
         self.color_button.setStyleSheet(f"background-color: {pick_color};")
-
-        
-    

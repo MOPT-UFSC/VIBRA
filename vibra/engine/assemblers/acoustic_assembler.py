@@ -83,8 +83,8 @@ class AcousticAssembler:
                 nodes = self.model.mesh.nodes_from_surfaces[surface_id]
                 for _ in nodes:
                     global_prescribed.extend(values)
-        
-        #TODO: implement same structure for lines
+
+        # TODO: implement same structure for lines
 
         try:
             aux_ones = np.ones(number_frequencies, dtype=complex)
@@ -108,7 +108,7 @@ class AcousticAssembler:
                 nodes = self.model.mesh.nodes_from_surfaces[surface_id]
                 for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
                     _prescribed_indexes.append(index)
-        
+
         if len(_prescribed_indexes) == 0:
             return _prescribed_indexes
         else:
@@ -172,8 +172,8 @@ class AcousticAssembler:
             self.mass_matrix = _mass_matrix_full
 
     def get_acoustic_excitations(self):
-        """ This method processes the acoustic model excitations and
-            returns the output data in the form of mass flow rate. 
+        """This method processes the acoustic model excitations and
+        returns the output data in the form of mass flow rate.
         """
 
         if self.frequencies is None:
@@ -185,64 +185,60 @@ class AcousticAssembler:
         acoustic_excitation = defaultdict(float)
 
         for (property, _id), data in self.properties.surface_properties.items():
-            
             if property == "mass_flow_rate":
-
                 real_values = np.array(data["real_values"])
                 imag_values = np.array(data["imag_values"])
-                complex_values = real_values + 1j*imag_values
+                complex_values = real_values + 1j * imag_values
                 if complex_values.shape[0] == 1:
-                    complex_values = complex_values*aux_ones
+                    complex_values = complex_values * aux_ones
 
                 if data["nodal_attribution"]:
                     nodes = self.model.mesh.nodes_from_surfaces[_id]
                     N = len(nodes)
                     for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
                         if data["averaged"]:
-                            acoustic_excitation[index] += complex_values/N
+                            acoustic_excitation[index] += complex_values / N
                         else:
                             acoustic_excitation[index] += complex_values
 
             elif property == "volume_velocity":
-
                 real_values = np.array(data["real_values"])
                 imag_values = np.array(data["imag_values"])
-                complex_values = real_values + 1j*imag_values
+                complex_values = real_values + 1j * imag_values
                 if complex_values.shape[0] == 1:
-                    complex_values = complex_values*aux_ones
+                    complex_values = complex_values * aux_ones
 
                 if data["nodal_attribution"]:
                     nodes = self.model.mesh.nodes_from_surfaces[_id]
                     N = len(nodes)
-                    #TODO: get the surface fluid property
+                    # TODO: get the surface fluid property
                     fluid = self.model.properties.get_fluid()
                     rho = fluid.fluid_density
                     for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
                         if data["averaged"]:
-                            acoustic_excitation[index] += (complex_values*rho)/N
+                            acoustic_excitation[index] += (complex_values * rho) / N
                         else:
-                            acoustic_excitation[index] += complex_values*rho
+                            acoustic_excitation[index] += complex_values * rho
 
             elif property == "particle_velocity":
-
                 real_values = np.array(data["real_values"])
                 imag_values = np.array(data["imag_values"])
-                complex_values = real_values + 1j*imag_values
+                complex_values = real_values + 1j * imag_values
                 if complex_values.shape[0] == 1:
-                    complex_values = complex_values*aux_ones
+                    complex_values = complex_values * aux_ones
 
                 if data["nodal_attribution"]:
                     nodes = self.model.mesh.nodes_from_surfaces[_id]
                     N = len(nodes)
-                    #TODO: get the surface fluid property
+                    # TODO: get the surface fluid property
                     fluid = self.model.properties.get_fluid()
                     rho = fluid.fluid_density
                     area = self.model.surfaces_areas[_id]
                     for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
                         if data["averaged"]:
-                            acoustic_excitation[index] += (rho*area*complex_values)/N
+                            acoustic_excitation[index] += (rho * area * complex_values) / N
                         else:
-                            acoustic_excitation[index] += rho*area*complex_values
+                            acoustic_excitation[index] += rho * area * complex_values
 
         indexes = list(acoustic_excitation.keys())
         excitation = list(acoustic_excitation.values())

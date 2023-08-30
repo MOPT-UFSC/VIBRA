@@ -7,6 +7,7 @@ import numpy as np
 
 from vibra.interface.general.print_message_input import PrintMessageInput
 
+
 class ProjectFile:
     def __init__(self):
         self._reset()

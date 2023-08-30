@@ -47,7 +47,7 @@ class ParticleVelocityInput(QDialog):
         self.typed_ids = []
         self.remove_particle_velocity = False
         self.particle_velocity = None
-        self.userPath = os.path.expanduser('~')
+        self.userPath = os.path.expanduser("~")
         self.new_load_path_table = ""
         self.project_path = self.project.file.project_path
         self.acoustic_bc_filename = self.project.file.acoustic_model_setup_filename
@@ -164,23 +164,20 @@ class ParticleVelocityInput(QDialog):
             if property == "particle_velocity":
                 real_values = np.array(data["real_values"])
                 imag_values = np.array(data["imag_values"])
-                complex_values = real_values + 1j*imag_values
+                complex_values = real_values + 1j * imag_values
                 new = QTreeWidgetItem([str(surface_id), str(self.text_label(complex_values))])
                 new.setTextAlignment(0, Qt.AlignCenter)
                 new.setTextAlignment(1, Qt.AlignCenter)
                 self.treeWidget_particle_velocity.addTopLevelItem(new)
         self.update_tabs_visibility()
 
-
     def geometry_selection_callback(self, points, lines, faces):
-        
         if faces:
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
-        
+
         elif not any([points, lines, faces]):
             self.lineEdit_selection_id.setText("")
-
 
     def check_complex_entries(self, lineEdit_real, lineEdit_imag):
         self.stop = False
@@ -234,18 +231,19 @@ class ParticleVelocityInput(QDialog):
             return
 
         if particle_velocity is not None:
-
             self.particle_velocity = particle_velocity
             real_values = [np.real(particle_velocity)]
             imag_values = [np.imag(particle_velocity)]
 
             nodal_attribution = self.radioButton_nodal_attribution_constant.isChecked()
-            key_avg =self.checkBox_averaged_constant_values.isChecked()
-            
-            data = {"real_values" : real_values,
-                    "imag_values" : imag_values,
-                    "nodal_attribution" : nodal_attribution,
-                    "averaged" : key_avg}
+            key_avg = self.checkBox_averaged_constant_values.isChecked()
+
+            data = {
+                "real_values": real_values,
+                "imag_values": imag_values,
+                "nodal_attribution": nodal_attribution,
+                "averaged": key_avg,
+            }
 
             for _id in self.typed_ids:
                 self.project.set_particle_velocity(data, _id)
@@ -346,7 +344,6 @@ class ParticleVelocityInput(QDialog):
         )
 
     def check_table_values(self):
-
         lineEdit_selection_id = self.lineEdit_selection_id.text()
         self.stop, self.typed_ids = self.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
@@ -380,11 +377,13 @@ class ParticleVelocityInput(QDialog):
                     nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
                     key_avg = self.checkBox_averaged_constant_values.isChecked()
 
-                    data = {"real_values" : real_values,
-                            "imag_values" : imag_values,
-                            "nodal_attribution" : nodal_attribution,
-                            "averaged" : key_avg,
-                            "table_name" : self.basename_particle_velocity}
+                    data = {
+                        "real_values": real_values,
+                        "imag_values": imag_values,
+                        "nodal_attribution": nodal_attribution,
+                        "averaged": key_avg,
+                        "table_name": self.basename_particle_velocity,
+                    }
 
                     self.project.set_particle_velocity(data, _id)
 
@@ -424,7 +423,7 @@ class ParticleVelocityInput(QDialog):
             for key in surface_properties.keys():
                 property, surface_id = key
                 if property == "particle_velocity" and picked_id == surface_id:
-                    #TODO: remove imported particle velocity tables
+                    # TODO: remove imported particle velocity tables
                     list_table_names = self.get_list_table_names_from_selected_surfaces([picked_id])
                     self.process_table_file_removal(list_table_names)
                     self.properties._remove_surface_property("particle_velocity", picked_id)
@@ -450,9 +449,11 @@ class ParticleVelocityInput(QDialog):
             title = f"Resetting of all applied particle velocities"
             message = "Do you really want to remove the particle velocity applied to the following surface(s)?\n\n"
             message += f"{surface_ids}"
-            message += "\n\nPress the Continue button to proceed with the resetting or press Cancel or "
+            message += (
+                "\n\nPress the Continue button to proceed with the resetting or press Cancel or "
+            )
             message += "Close buttons to abort the current operation."
-            buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
             read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
 
             if read._doNotRun:
@@ -474,11 +475,11 @@ class ParticleVelocityInput(QDialog):
                 self.properties._reset_property("particle_velocity")
                 self.properties.export_model_properties()
 
-                #TODO: remove imported tables
+                # TODO: remove imported tables
                 self.process_table_file_removal(_list_table_names)
 
                 title = "particle velocity resetting process complete"
-                message = "All particle velocity applied to the acoustic " 
+                message = "All particle velocity applied to the acoustic "
                 message += "model have been removed from the model."
                 PrintMessageInput([title, message, window_title_2])
 
@@ -516,7 +517,7 @@ class ParticleVelocityInput(QDialog):
             property, surface_id = key
             if property == "particle_velocity":
                 surface_ids.append(surface_id)
-        
+
         if len(surface_ids) == 0:
             self.tabWidget_particle_velocity.setCurrentWidget(self.tab_constant_values)
             self.tab_remove.setDisabled(True)

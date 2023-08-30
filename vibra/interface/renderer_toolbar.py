@@ -3,11 +3,11 @@ from pathlib import Path
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QToolBar
 
+from vibra.interface.local_refine_widget import LocalRefineWidget
 from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
     CommonRenderWidget,
 )
 from vibra.utils.icons import load_icon
-from vibra.interface.local_refine_widget import LocalRefineWidget
 
 
 class RendererToolbar(QToolBar):
@@ -114,7 +114,7 @@ class RendererToolbar(QToolBar):
     # Callbacks
 
     def local_refine_mesh_callback(self):
-        LocalRefineWidget()   
+        LocalRefineWidget()
 
     def top_view_callback(self):
         widget = self.viewer_tabs.currentWidget()

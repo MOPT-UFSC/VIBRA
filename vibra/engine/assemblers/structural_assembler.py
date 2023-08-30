@@ -116,18 +116,18 @@ class StructuralAssembler:
     def get_prescribed_indexes(self):
         _prescribed_indexes = []
 
-        for (property, line_id) in self.properties.line_properties.keys():
+        for property, line_id in self.properties.line_properties.keys():
             if property == "prescribed_dofs":
                 nodes = self.model.mesh.nodes_from_lines[line_id]
                 for index in self.model.get_structural_global_dofs_from_nodes(nodes):
                     _prescribed_indexes.append(index)
 
-        for (property, surface_id) in self.properties.surface_properties.keys():
-            if property == "prescribed_dofs":    
+        for property, surface_id in self.properties.surface_properties.keys():
+            if property == "prescribed_dofs":
                 nodes = self.model.mesh.nodes_from_surfaces[surface_id]
                 for index in self.model.get_structural_global_dofs_from_nodes(nodes):
                     _prescribed_indexes.append(index)
-        
+
         if len(_prescribed_indexes) == 0:
             return _prescribed_indexes
         else:

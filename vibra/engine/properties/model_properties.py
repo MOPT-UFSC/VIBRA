@@ -1,9 +1,10 @@
+import json
+import os
 from dataclasses import dataclass
 
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 from vibra.project_file import ProjectFile
-import json, os
 
 DEFAULT_MATERIAL = Material(
     name="Steel",
@@ -66,7 +67,6 @@ class ModelProperties:
         self.global_properties["material", "global"] = DEFAULT_MATERIAL
         self.global_properties["fluid", "global"] = DEFAULT_FLUID
 
-
     def get_material(self, element=None) -> Material:
         return self._get_property("material")
 
@@ -95,8 +95,8 @@ class ModelProperties:
             return c_0
         elif dissipation_model["model"] == "proportional damping":
             factor = dissipation_model["speed of sound factor"]
-            return (1 + factor*1j)*c_0
-        
+            return (1 + factor * 1j) * c_0
+
     def get_structural_boundary_condition(self, surface):
         return self._get_property("prescribed_dofs", surface=surface)
 
@@ -145,7 +145,9 @@ class ModelProperties:
     def set_specific_impedance(self, data, surface):
         self._set_property("specific_impedance", data, surface=surface)
 
-    def _set_property(self, property: str, value, node=None, element=None, line=None, surface=None, volume=None):
+    def _set_property(
+        self, property: str, value, node=None, element=None, line=None, surface=None, volume=None
+    ):
         """
         Sets a value to a property by node, element, line, surface or volume
         if any of these exists. Otherwise sets the property as global.
@@ -164,7 +166,9 @@ class ModelProperties:
         else:
             self.global_properties[property, "global"] = value
 
-    def _get_property(self, property: str, node=None, element=None, line=None, surface=None, volume=None):
+    def _get_property(
+        self, property: str, node=None, element=None, line=None, surface=None, volume=None
+    ):
         """
         Finds the value that corresponds to the property needed.
         Checks node, element, entity, volume and global data by
@@ -192,8 +196,8 @@ class ModelProperties:
         return None
 
     def check_if_there_are_tables_at_the_model(self):
-        """ This method checks if there are imported table of values in
-            the model. It returns True if exists or False elsewhere. 
+        """This method checks if there are imported table of values in
+        the model. It returns True if exists or False elsewhere.
         """
         data_dicts = [
             self.nodal_properties,
@@ -229,69 +233,63 @@ class ModelProperties:
             keys_to_remove = []
 
             for key in data.keys():
-                
                 if len(key) == 2:
                     existing_property, _ = key
                 else:
                     existing_property = key
-                
+
                 if property == existing_property:
                     keys_to_remove.append(key)
 
             for _key in keys_to_remove:
                 data.pop(_key)
 
-    def _remove_nodal_property(self, property: str, nodal_id : int):
-        """ Remove a nodal property at specific nodal_id.
-        """
+    def _remove_nodal_property(self, property: str, nodal_id: int):
+        """Remove a nodal property at specific nodal_id."""
         key = (property, nodal_id)
         if key in self.nodal_properties.keys():
             self.nodal_properties.pop(key)
 
-    def _remove_element_property(self, property: str, element_id : int):
-        """ Remove a element property at specific element_id.
-        """
+    def _remove_element_property(self, property: str, element_id: int):
+        """Remove a element property at specific element_id."""
         key = (property, element_id)
         if key in self.element_properties.keys():
             self.element_properties.pop(key)
 
-    def _remove_line_property(self, property: str, line_id : int):
-        """ Remove a line property at specific line_id.
-        """
+    def _remove_line_property(self, property: str, line_id: int):
+        """Remove a line property at specific line_id."""
         key = (property, line_id)
         if key in self.line_properties.keys():
             self.line_properties.pop(key)
 
-    def _remove_surface_property(self, property: str, surface_id : int):
-        """ Remove a surface property at specific surface_id.
-        """
+    def _remove_surface_property(self, property: str, surface_id: int):
+        """Remove a surface property at specific surface_id."""
         key = (property, surface_id)
         if key in self.surface_properties.keys():
             self.surface_properties.pop(key)
 
-    def _remove_volume_property(self, property: str, volume_id : int):
-        """ Remove a volume property at specific volume_id.
-        """
+    def _remove_volume_property(self, property: str, volume_id: int):
+        """Remove a volume property at specific volume_id."""
         key = (property, volume_id)
         if key in self.volume_properties.keys():
             self.volume_properties.pop(key)
 
     def as_json(self):
         def normalize(prop: dict):
-            '''
-            Sadly json doesn't accepts tuple keys, 
+            """
+            Sadly json doesn't accepts tuple keys,
             so we need to convert it to a string like:
             "property id" = value
-            '''
-            return {f"{p} {i}":v for (p,i), v in prop.items()}
+            """
+            return {f"{p} {i}": v for (p, i), v in prop.items()}
 
         data = dict(
             # global_properties = normalize(self.global_properties),
-            volume_properties = normalize(self.volume_properties),
-            surface_properties = normalize(self.surface_properties),
-            line_properties = normalize(self.line_properties),
-            element_properties = normalize(self.element_properties),
-            nodal_properties = normalize(self.nodal_properties),
+            volume_properties=normalize(self.volume_properties),
+            surface_properties=normalize(self.surface_properties),
+            line_properties=normalize(self.line_properties),
+            element_properties=normalize(self.element_properties),
+            nodal_properties=normalize(self.nodal_properties),
         )
         return json.dumps(data, indent=2)
 
@@ -312,7 +310,6 @@ class ModelProperties:
         self.element_properties = denormalize(data["element_properties"])
         self.nodal_properties = denormalize(data["nodal_properties"])
 
-
     def export_model_properties(self):
         try:
             path = os.path.join(self.file.project_path, "model_properties.json")
@@ -321,11 +318,12 @@ class ModelProperties:
         except Exception as error:
             print(str(error))
 
+
 if __name__ == "__main__":
     p = ModelProperties()
     with open("teste.json", "w") as file:
         file.write(p.as_json())
-    
+
     q = ModelProperties()
     with open("teste.json", "r") as file:
         data = json.load(file)

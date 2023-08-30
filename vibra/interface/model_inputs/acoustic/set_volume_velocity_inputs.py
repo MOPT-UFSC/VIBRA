@@ -47,7 +47,7 @@ class VolumeVelocityInput(QDialog):
         self.typed_ids = []
         self.remove_volume_velocity = False
         self.volume_velocity = None
-        self.userPath = os.path.expanduser('~')
+        self.userPath = os.path.expanduser("~")
         self.new_load_path_table = ""
         self.project_path = self.project.file.project_path
         self.acoustic_bc_filename = self.project.file.acoustic_model_setup_filename
@@ -56,7 +56,6 @@ class VolumeVelocityInput(QDialog):
         self.volume_velocity_tables_folder_path = os.path.join(
             self.acoustic_folder_path, "volume_velocity_files"
         )
-
 
     def _define_qt_variables(self):
         # QCheckBox objects
@@ -141,7 +140,6 @@ class VolumeVelocityInput(QDialog):
         geometry_widget = self.main_window.viewer_tabs.geometry_widget
         geometry_widget.selection_changed.connect(self.geometry_selection_callback)
 
-
     def tabEvent_volume_velocity(self):
         self.current_tab = self.tabWidget_volume_velocity.currentIndex()
         if self.current_tab == 2:
@@ -164,23 +162,20 @@ class VolumeVelocityInput(QDialog):
             if property == "volume_velocity":
                 real_values = np.array(data["real_values"])
                 imag_values = np.array(data["imag_values"])
-                complex_values = real_values + 1j*imag_values
+                complex_values = real_values + 1j * imag_values
                 new = QTreeWidgetItem([str(surface_id), str(self.text_label(complex_values))])
                 new.setTextAlignment(0, Qt.AlignCenter)
                 new.setTextAlignment(1, Qt.AlignCenter)
                 self.treeWidget_volume_velocity.addTopLevelItem(new)
         self.update_tabs_visibility()
 
-
     def geometry_selection_callback(self, points, lines, faces):
-        
         if faces:
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
-        
+
         elif not any([points, lines, faces]):
             self.lineEdit_selection_id.setText("")
-
 
     def check_complex_entries(self, lineEdit_real, lineEdit_imag):
         self.stop = False
@@ -234,18 +229,19 @@ class VolumeVelocityInput(QDialog):
             return
 
         if volume_velocity is not None:
-
             self.volume_velocity = volume_velocity
             real_values = [np.real(volume_velocity)]
             imag_values = [np.imag(volume_velocity)]
 
             nodal_attribution = self.radioButton_nodal_attribution_constant.isChecked()
-            key_avg =self.checkBox_averaged_constant_values.isChecked()
-            
-            data = {"real_values" : real_values,
-                    "imag_values" : imag_values,
-                    "nodal_attribution" : nodal_attribution,
-                    "averaged" : key_avg}
+            key_avg = self.checkBox_averaged_constant_values.isChecked()
+
+            data = {
+                "real_values": real_values,
+                "imag_values": imag_values,
+                "nodal_attribution": nodal_attribution,
+                "averaged": key_avg,
+            }
 
             for _id in self.typed_ids:
                 self.project.set_volume_velocity(data, _id)
@@ -302,7 +298,9 @@ class VolumeVelocityInput(QDialog):
                     self.lineEdit_reset(self.lineEdit_load_table_path)
                     return None, None
                 else:
-                    self.project.set_frequencies(self.frequencies, self.f_min, self.f_max, self.f_step)
+                    self.project.set_frequencies(
+                        self.frequencies, self.f_min, self.f_max, self.f_step
+                    )
 
             return imported_values, imported_filename
 
@@ -346,7 +344,6 @@ class VolumeVelocityInput(QDialog):
         )
 
     def check_table_values(self):
-
         lineEdit_selection_id = self.lineEdit_selection_id.text()
         self.stop, self.typed_ids = self.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
@@ -380,11 +377,13 @@ class VolumeVelocityInput(QDialog):
                     nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
                     key_avg = self.checkBox_averaged_constant_values.isChecked()
 
-                    data = {"real_values" : real_values,
-                            "imag_values" : imag_values,
-                            "nodal_attribution" : nodal_attribution,
-                            "averaged" : key_avg,
-                            "table_name" : self.basename_volume_velocity}
+                    data = {
+                        "real_values": real_values,
+                        "imag_values": imag_values,
+                        "nodal_attribution": nodal_attribution,
+                        "averaged": key_avg,
+                        "table_name": self.basename_volume_velocity,
+                    }
 
                 self.project.set_volume_velocity(data, _id)
 
@@ -424,7 +423,7 @@ class VolumeVelocityInput(QDialog):
             for key in surface_properties.keys():
                 property, surface_id = key
                 if property == "volume_velocity" and picked_id == surface_id:
-                    #TODO: remove imported volume velocity tables
+                    # TODO: remove imported volume velocity tables
                     list_table_names = self.get_list_table_names_from_selected_surfaces([picked_id])
                     self.process_table_file_removal(list_table_names)
                     self.properties._remove_surface_property("volume_velocity", picked_id)
@@ -450,7 +449,9 @@ class VolumeVelocityInput(QDialog):
             title = f"Resetting of all applied volume velocities"
             message = "Do you really want to remove the volume velocity applied to the following surface(s)?\n\n"
             message += f"{surface_ids}"
-            message += "\n\nPress the Continue button to proceed with the resetting or press Cancel or "
+            message += (
+                "\n\nPress the Continue button to proceed with the resetting or press Cancel or "
+            )
             message += "Close buttons to abort the current operation."
             buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
             read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
@@ -578,9 +579,8 @@ class VolumeVelocityInput(QDialog):
             self.close()
         else:
             return
-        
-    def change_project_frequency_setup(self, table_name, frequencies):
 
+    def change_project_frequency_setup(self, table_name, frequencies):
         self.list_frequencies = []
         analysis_data = self.main_window.project.analysis_data
         if analysis_data is not None:
@@ -593,7 +593,10 @@ class VolumeVelocityInput(QDialog):
         if isinstance(frequencies, np.ndarray):
             frequencies = list(frequencies)
         update_freqs = False
-        if self.list_frequencies == [] or not self.properties.check_if_there_are_tables_at_the_model():
+        if (
+            self.list_frequencies == []
+            or not self.properties.check_if_there_are_tables_at_the_model()
+        ):
             update_freqs = True
             self.list_frequencies = frequencies
         #
@@ -603,7 +606,7 @@ class VolumeVelocityInput(QDialog):
                 self.frequencies = np.array(frequencies)
                 self.f_min = self.frequencies[0]
                 self.f_max = self.frequencies[-1]
-                self.f_step = self.frequencies[1] - self.frequencies[0] 
+                self.f_step = self.frequencies[1] - self.frequencies[0]
                 # self.file.add_frequency_in_file(self.f_min, self.f_max, self.f_step)
                 self.imported_table_frequency_setup = True
             return False

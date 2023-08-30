@@ -38,7 +38,6 @@ class Project:
         self.acoustic_assembler = AcousticAssembler(self.model)
         self.structural_assembler = StructuralAssembler(self.model)
 
-
     @classmethod
     def load(cls, path):
         logging.info(f"Loading {path}")
@@ -118,18 +117,19 @@ class Project:
             analysis_data["f_max"] = f_max
             analysis_data["f_step"] = f_step
         else:
-            analysis_data = {"frequencies" : frequencies,
-                             "f_min" : f_min,
-                             "f_max" : f_max,
-                             "f_step" : f_step}
+            analysis_data = {
+                "frequencies": frequencies,
+                "f_min": f_min,
+                "f_max": f_max,
+                "f_step": f_step,
+            }
         self.set_analysis_data(analysis_data)
 
     def update_import_table_state(self, state):
         self.imported_table_state = state
 
     def create_solver(self):
-        """
-        """
+        """ """
         data = self.analysis_data
         if "analysis_id" in data.keys():
             # structural harmonic analysis - direct method
@@ -176,7 +176,6 @@ class Project:
                 raise NotImplementedError("Not implemented solver")
 
             else:
-
                 raise NotImplementedError("Not implemented solver")
 
     def set_element_formulation(self, element):

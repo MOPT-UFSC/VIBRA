@@ -29,12 +29,14 @@ class WelcomeWidget(QWidget):
         image_label.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(image_label)
 
-        layout.setSpacing(15) 
+        layout.setSpacing(15)
 
-        message_label = QLabel("Vibra: Finite Element Software for Acoustic and Structural Analysis", self)
+        message_label = QLabel(
+            "Vibra: Finite Element Software for Acoustic and Structural Analysis", self
+        )
         message_label.setAlignment(Qt.AlignCenter)
         message_label.setContentsMargins(0, 0, 0, 0)
-        
+
         layout.addWidget(message_label)
 
     def setup_labels(self, layout):

@@ -101,10 +101,10 @@ class Model:
     # Properties can be accessed from outside, so this "indirection layer" is not needed
     def set_dissipation_model_data(self, data):
         self.properties.set_dissipation_model(data)
-    
+
     def set_structural_boundary_condition(self, data, line, surface):
         self.properties.set_structural_boundary_condition(data, line, surface)
-    
+
     def set_structural_load(self, data, line, surface):
         self.properties.set_structural_load(data, line, surface)
 
@@ -116,9 +116,9 @@ class Model:
 
     def set_volume_velocity(self, data, surface):
         self.properties.set_volume_velocity(data, surface)
-    
+
     def set_particle_velocity(self, data, surface):
         self.properties.set_particle_velocity(data, surface)
-            
+
     def set_specific_impedance(self, data, surface):
         self.properties.set_specific_impedance(data, surface)

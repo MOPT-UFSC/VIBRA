@@ -11,6 +11,7 @@ from vibra.utils.progress_status import ProgressStatus
 
 # FieldsList=[]
 
+
 class Mesh:
     def __init__(self):
         self.reset_variables()
@@ -168,20 +169,20 @@ class Mesh:
         np.savetxt(filename, self.solids_connectivity, delimiter=";", header=header, fmt="%i")
 
     def local_mesh_refine(self, lc_geral, mesh_refinement_parameters):
-        fields_list=[]
+        fields_list = []
         gmsh.model.mesh.field.add("Constant")
         gmsh.model.mesh.field.setNumbers(1, "SurfacesList", [])
         gmsh.model.mesh.field.setNumber(1, "VOut", lc_geral)
         fields_list.append(1)
 
         for size, faces in mesh_refinement_parameters:
-            threshold_type=gmsh.model.mesh.field.add("Constant")
+            threshold_type = gmsh.model.mesh.field.add("Constant")
             gmsh.model.mesh.field.setNumbers(threshold_type, "SurfacesList", faces)
             gmsh.model.mesh.field.setNumber(threshold_type, "VIn", size)
             fields_list.append(threshold_type)
 
-        minimum_field=gmsh.model.mesh.field.add("Min")
-        gmsh.model.mesh.field.setNumbers(minimum_field,"FieldsList",fields_list)
+        minimum_field = gmsh.model.mesh.field.add("Min")
+        gmsh.model.mesh.field.setNumbers(minimum_field, "FieldsList", fields_list)
         gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
 
     def _configure_mesh(
@@ -192,7 +193,7 @@ class Mesh:
         tolerance,
         size_factor,
         threads,
-        mesh_refinement_parameters = None
+        mesh_refinement_parameters=None,
     ):
         if mesh_refinement_parameters is None:
             mesh_refinement_parameters = []
@@ -208,7 +209,6 @@ class Mesh:
             # gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
             # gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
             self.local_mesh_refine(minimum_element_size, mesh_refinement_parameters)
-
 
         gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
         gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
