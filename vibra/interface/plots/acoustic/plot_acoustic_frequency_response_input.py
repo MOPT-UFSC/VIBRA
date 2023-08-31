@@ -37,21 +37,22 @@ class PlotAcousticFrequencyResponseInput(QDialog):
         self._reset_variables()
         self._define_qt_variables()
         self._create_connections()
-        self._update_analysis_data_and_solution()
+        self._load_analysis_data_and_solution()
         self.exec()
 
-    def _update_analysis_data_and_solution(self):
-        # self.analysis_method = project.analysis_method_label
+    def _load_analysis_data_and_solution(self):
+        self.analysis_method = ""
         analysis_data = self.project.analysis_data
         if "analysis_id" in analysis_data.keys():
-            self.analysis_method = analysis_data["analysis_id"]
+            if analysis_data["analysis_id"] == 3:
+                self.analysis_method = "Direct method"
         if "frequencies" in analysis_data.keys():
             self.frequencies = analysis_data["frequencies"]
         self.solution = self.project.acoustic_harmonic_solver.solution
 
     def _load_icons(self):
         self.icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.export_icon = QIcon(get_icons_path('send_to_disk.png'))
+        self.export_icon = QIcon(get_icons_path('save.png'))
         self.icon = QIcon(self.icon_path)
         self.setWindowIcon(self.icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -76,18 +77,20 @@ class PlotAcousticFrequencyResponseInput(QDialog):
     def geometry_selection_callback(self, points, lines, faces):
         
         index = self.comboBox_selector_filter.currentIndex()
-        print(faces)
         if faces and index == 0:
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
+            self.entity_type = "surface"
 
         if lines and index == 1:
             text = ", ".join([str(i) for i in lines])
             self.lineEdit_selection_id.setText(text)
+            self.entity_type = "line"
 
         if points and index == 2:
             text = ", ".join([str(i) for i in points])
             self.lineEdit_selection_id.setText(text)
+            self.entity_type = "point"
 
         elif not any([points, lines, faces]):
             self.lineEdit_selection_id.setText("")
@@ -158,6 +161,8 @@ class PlotAcousticFrequencyResponseInput(QDialog):
             return False, list_ids[0]
         else:
             return False, list_ids
+        
+    
 
     def get_response(self):
 
@@ -173,20 +178,16 @@ class PlotAcousticFrequencyResponseInput(QDialog):
 
         response = np.sum(self.solution[rows,:], axis=0, dtype=complex)
 
-        if complex(0) in response:
-            response += np.ones(len(response), dtype=float)*(1e-12)
+        # if complex(0) in response:
+        #     response += np.ones(len(response), dtype=float)*(1e-12)
         return response
 
     def join_model_data(self):
-        # if float(0) in self.frequencies:
-        #     shift = 1
-        # else:
-        shift = 0
         self.model_results = dict()
         self.title = "Acoustic frequency response - {}".format(self.analysis_method)
-        legend_label = "Acoustic pressure at node {}".format(self.surface_ids)
-        self.model_results = {  "x_data" : self.frequencies[shift:],
-                                "y_data" : self.get_response()[shift:],
+        legend_label = "Acoustic pressure at {} {}".format(self.entity_type, self.typed_ids[0])
+        self.model_results = {  "x_data" : self.frequencies,
+                                "y_data" : self.get_response(),
                                 "x_label" : "Frequency [Hz]",
                                 "y_label" : "Nodal response",
                                 "title" : self.title,

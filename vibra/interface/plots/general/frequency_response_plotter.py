@@ -32,10 +32,9 @@ class FrequencyResponsePlotter(QDialog):
         self._create_connections()
 
     def _load_icons(self):
-        self.icon_path = str(Path("data/icons/logo_vibra.png"))
+        self.vibra_icon = QIcon(get_icons_path('logo_vibra.png'))
         self.export_icon = QIcon(get_icons_path('send_to_disk.png'))
-        self.icon = QIcon(self.icon_path)
-        self.setWindowIcon(self.icon)
+        self.setWindowIcon(self.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle("Frequency response plotter")

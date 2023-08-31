@@ -34,10 +34,9 @@ class ImportDataToCompare(QDialog):
         self.exec()
 
     def _load_icons(self):
-        self.icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.export_icon = QIcon(get_icons_path('send_to_disk.png'))
-        self.icon = QIcon(self.icon_path)
-        self.setWindowIcon(self.icon)
+        self.import_icon = QIcon(get_icons_path('import.png'))
+        self.vibra_icon = QIcon(get_icons_path('logo_vibra.png'))
+        self.setWindowIcon(self.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle("Import data to compare")
@@ -69,7 +68,7 @@ class ImportDataToCompare(QDialog):
         self.pushButton_add_imported_data_to_plot = self.findChild(QPushButton, 'pushButton_add_imported_data_to_plot')
         self.pushButton_reset_imported_data = self.findChild(QPushButton, 'pushButton_reset_imported_data')
         self.pushButton_search_file_to_import = self.findChild(QPushButton, 'pushButton_search_file_to_import')
-        self.pushButton_search_file_to_import.setIcon(self.search_icon)
+        self.pushButton_search_file_to_import.setIcon(self.import_icon)
         # SpinBox
         self.spinBox_skiprows = self.findChild(QSpinBox, 'spinBox_skiprows')
         # TreeWidget

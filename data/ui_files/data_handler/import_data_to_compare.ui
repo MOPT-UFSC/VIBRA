@@ -233,13 +233,13 @@
                 <widget class="QPushButton" name="pushButton_reset_imported_data">
                  <property name="minimumSize">
                   <size>
-                   <width>60</width>
+                   <width>72</width>
                    <height>30</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>60</width>
+                   <width>72</width>
                    <height>30</height>
                   </size>
                  </property>
