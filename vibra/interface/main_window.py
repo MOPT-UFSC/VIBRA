@@ -9,6 +9,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 from vibra.config import UserConfig
+from vibra.file.vibra_file import VibraFile
 from vibra.interface.analysis_filter_menu import AnalysisFilter
 from vibra.interface.clip_plane_widget import ClipPlaneWidget
 from vibra.interface.exception_message import ErrorMessage
@@ -25,7 +26,7 @@ from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_tabs import ViewerTabs
 from vibra.project import Project
 from vibra.utils.icons import load_icon
-from vibra.file.vibra_file import VibraFile
+
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):

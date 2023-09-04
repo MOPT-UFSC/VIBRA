@@ -1,31 +1,32 @@
-from zipfile import ZipFile
-from pathlib import Path
-from io import BytesIO, StringIO
 import json
+from dataclasses import asdict
+from io import BytesIO, StringIO
+from pathlib import Path
+from zipfile import ZipFile
+
+import numpy as np
 from PIL import Image
 from PIL.PngImagePlugin import PngImageFile
 
-from vibra.project import Project
+from vibra import __version__
+from vibra.engine.mesher.element_type import ElementType
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.errors import UnsuportedFileError
-from vibra import __version__
-from vibra.engine.mesher.element_type import ElementType
 from vibra.file.custom_json_decoder import CustomJsonDecoder
 from vibra.file.custom_json_encoder import CustomJsonEncoder
-
-from dataclasses import asdict
-import numpy as np
+from vibra.project import Project
 
 
 class VibraFile:
-    '''
+    """
     Reads and writes data to vibra files.
     The methods of this class are separated in three main parts:
         - Getters (Read data directly from the file)
         - Writers (Write data from a project into the file)
         - Readers (Read data from the file and inserts into the project)
-    '''
+    """
+
     def __init__(self, path, open_mode="r") -> None:
         self.path = Path(path)
         self.open_mode = open_mode
@@ -68,10 +69,10 @@ class VibraFile:
         data = BytesIO(self._read_string("thumbnail.png"))
         return Image.open(data)
 
-    def get_mesh(self) -> Mesh | None:            
+    def get_mesh(self) -> Mesh | None:
         if not self.mesh_exists():
             return None
-        
+
         mesh = Mesh()
         mesh_info = self._read_json("mesh/mesh_info.json")
         mesh.dimension = mesh_info["dimension"]
@@ -83,7 +84,7 @@ class VibraFile:
 
         if "mesh_setup" in mesh_info:
             mesh.mesh_setup = mesh_info["mesh_setup"]
-        
+
         mesh.nodal_coordinates = self._read_array("mesh/nodal_coordinates.dat")
         mesh.lines_connectivity = self._read_array("mesh/lines_connectivity.dat", dtype=int)
         mesh.faces_connectivity = self._read_array("mesh/faces_connectivity.dat", dtype=int)
@@ -94,7 +95,7 @@ class VibraFile:
     def get_geometry(self) -> str:
         mesh_info = self._read_json("mesh/mesh_info.json")
         return mesh_info["geometry_setup"]
-    
+
     def mesh_exists(self) -> bool:
         needed_paths = [
             "mesh/nodal_coordinates.dat",
@@ -106,10 +107,7 @@ class VibraFile:
 
     # WRITER
     def _write_header(self, project):
-        header = dict(
-            name=project.name,
-            version=(__version__)
-        )
+        header = dict(name=project.name, version=(__version__))
         self._write_json("header.json", header)
 
     def _write_thumbnail(self, project):
@@ -138,7 +136,11 @@ class VibraFile:
             mesh_info["mesh_setup"] = mesh.mesh_setup
 
         self._write_json("mesh/mesh_info.json", mesh_info)
-        self._write_array("mesh/nodal_coordinates.dat", mesh.nodal_coordinates, fmt=["%i", "%.16f", "%.16f", "%.16f"])
+        self._write_array(
+            "mesh/nodal_coordinates.dat",
+            mesh.nodal_coordinates,
+            fmt=["%i", "%.16f", "%.16f", "%.16f"],
+        )
         self._write_array("mesh/lines_connectivity.dat", mesh.lines_connectivity, fmt="%i")
         self._write_array("mesh/faces_connectivity.dat", mesh.faces_connectivity, fmt="%i")
         self._write_array("mesh/solids_connectivity.dat", mesh.solids_connectivity, fmt="%i")

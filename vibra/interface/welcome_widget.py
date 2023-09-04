@@ -1,18 +1,26 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel
-from PyQt5.QtGui import QIcon, QPixmap, QImage
-from PyQt5.QtCore import QSize, Qt, pyqtSignal
-from pathlib import Path
 from functools import partial
+from pathlib import Path
+
 import numpy as np
+from PyQt5.QtCore import QSize, Qt, pyqtSignal
+from PyQt5.QtGui import QIcon, QImage, QPixmap
+from PyQt5.QtWidgets import (
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
+
 from vibra.file.vibra_file import VibraFile
-from vibra.utils.interface_functions import get_main_window
 from vibra.project import Project
+from vibra.utils.interface_functions import get_main_window
 
 
 class WelcomeWidget(QWidget):
     def __init__(self):
         super().__init__()
-        
+
         self.main_window = get_main_window()
         layout = QVBoxLayout(self)
         self.setLayout(layout)
@@ -29,7 +37,6 @@ class WelcomeWidget(QWidget):
         image_label.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(image_label)
 
-
         message_label = QLabel(
             "         Finite Element Software for Acoustic and Structural Analysis", self
         )
@@ -45,7 +52,7 @@ class WelcomeWidget(QWidget):
 
         new_item = WelcomeItem("New", QIcon("data/icons/new_file.png"))
         new_item.clicked.connect(self.new_project)
-        
+
         open_item = WelcomeItem("Open", QIcon("data/icons/import.png"))
         open_item.clicked.connect(self.open_project)
 
@@ -53,7 +60,7 @@ class WelcomeWidget(QWidget):
         labels_layout.addWidget(open_item)
         labels_layout.setAlignment(Qt.AlignCenter)
 
-        layout.addLayout(labels_layout)    
+        layout.addLayout(labels_layout)
         layout.addStretch()
 
     def setup_recent_projects(self, layout):
@@ -76,7 +83,6 @@ class WelcomeWidget(QWidget):
             button.setFixedSize(110, 110)
             # button.clicked.connect(handler)
             buttons_layout.addWidget(button)
-        
 
     def setup_example_projects(self, layout):
         example_label = QLabel("Example Projects", self)
@@ -127,7 +133,7 @@ class WelcomeWidget(QWidget):
 
 class WelcomeItem(QWidget):
     clicked = pyqtSignal()
-    
+
     def __init__(self, text="", icon=None):
         super().__init__()
 

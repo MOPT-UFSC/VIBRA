@@ -1,7 +1,6 @@
 import json
 import re
 
-
 INT_REGEX = re.compile(r"[+-]?([0-9]*)")
 FLOAT_REGEX = re.compile(r"[+-]?([0-9]*[.])?[0-9]+")
 
@@ -23,13 +22,13 @@ class CustomJsonDecoder(json.JSONDecoder):
     def is_tuple_key(self, key):
         if not isinstance(key, str):
             return False
-        
+
         parts = key.split(", ")
         if len(parts) <= 1:
             return False
 
         return True
-    
+
     def key_to_tuple(self, key):
         parts = key.split(", ")
         tuple_values = []

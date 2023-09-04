@@ -13,7 +13,6 @@ from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
 )
 from vibra.utils.interface_functions import get_main_window
 
-
 SHOW_POINTS = 0
 SHOW_LINES = 1
 SHOW_FACES = 2
@@ -167,7 +166,10 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         elif (clicked_actor == self.faces_actor) and shift_pressed:
             face_entity = self.main_window.project.model.mesh.faces_connectivity[clicked_cell][1]
-            for volume, surfaces in self.main_window.project.model.mesh.surfaces_from_volumes.items():
+            for (
+                volume,
+                surfaces,
+            ) in self.main_window.project.model.mesh.surfaces_from_volumes.items():
                 if face_entity in surfaces:
                     self.select_volume(volume, join=ctrl_pressed, remove=alt_pressed)
                     break
@@ -227,7 +229,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         all_element_indexes = []
         for line in self.selected_lines:
             a, b = self.main_window.project.model.mesh.entity_ranges[1, line]
-            all_element_indexes.extend(range(a,b))
+            all_element_indexes.extend(range(a, b))
 
         self.lines_actor.clear_colors()
         self.lines_actor.paint_cells(self.selection_color, all_element_indexes)

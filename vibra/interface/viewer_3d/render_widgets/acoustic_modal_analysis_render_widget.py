@@ -14,8 +14,8 @@ from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
 from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
     CommonRenderWidget,
 )
-from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
 from vibra.utils.interface_functions import get_main_window
+from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
 
 
 class AcousticModalAnalysisRenderWidget(CommonRenderWidget):

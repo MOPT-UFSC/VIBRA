@@ -45,7 +45,7 @@ class Project:
         logging.info(f"Loading {path}")
         with VibraFile(path, "r") as file:
             obj = file.read()
-        return obj        
+        return obj
 
     def save(self, path):
         from vibra.file.vibra_file import VibraFile
