@@ -226,8 +226,8 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         all_element_indexes = []
         for line in self.selected_lines:
-            element_indexes = self.main_window.project.model.mesh.entity_ranges[1, line]
-            all_element_indexes.extend(element_indexes)
+            a, b = self.main_window.project.model.mesh.entity_ranges[1, line]
+            all_element_indexes.extend(range(a,b))
 
         self.lines_actor.clear_colors()
         self.lines_actor.paint_cells(self.selection_color, all_element_indexes)
@@ -250,8 +250,8 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         all_element_indexes = []
         for face in self.selected_faces:
-            element_indexes = self.main_window.project.model.mesh.entity_ranges[2, face]
-            all_element_indexes.extend(element_indexes)
+            a, b = self.main_window.project.model.mesh.entity_ranges[2, face]
+            all_element_indexes.extend(range(a, b))
 
         self.faces_actor.clear_colors()
         self.faces_actor.paint_cells(self.selection_color, all_element_indexes)
