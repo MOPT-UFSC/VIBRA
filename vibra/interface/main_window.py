@@ -25,7 +25,7 @@ from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_tabs import ViewerTabs
 from vibra.project import Project
 from vibra.utils.icons import load_icon
-
+from vibra.file.vibra_file import VibraFile
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
@@ -191,6 +191,40 @@ class MainWindow(QMainWindow):
             return
 
         # self.viewer_3d.save_png(path)
+
+    def save_project(self):
+        self.save_project_as()
+
+    def save_project_as(self):
+        path, check = QFileDialog.getSaveFileName(
+            self,
+            "Vibra",
+            filter="Vibra File (*.vibra)",
+        )
+
+        if not check:
+            return
+
+        self.project.name = Path(path).stem
+        self.project.save(path)
+
+    def open_project(self, path=None):
+        if path is None:
+            path, check = QFileDialog.getOpenFileName(
+                self, "Open File", filter="Vibra File (*.vibra)"
+            )
+            path = Path(path)
+
+            if not check:
+                return
+
+        self.project = Project.load(path)
+        # self.user_config.add_recent_file(path)
+
+        self.viewer_tabs.close_mesh_tabs()
+        self.viewer_tabs.show_geometry()
+        self.viewer_tabs.show_mesh()
+        self.viewer_tabs.update_plots()
 
     def import_geometry(self):
         path, check = QFileDialog.getOpenFileName(

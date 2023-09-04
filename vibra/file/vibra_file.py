@@ -76,7 +76,7 @@ class VibraFile:
         mesh_info = self._read_json("mesh/mesh_info.json")
         mesh.dimension = mesh_info["dimension"]
         mesh.entity_ranges = mesh_info["entity_ranges"]
-        mesh.element_type = mesh_info["element_type"]
+        mesh.element_type = ElementType(**mesh_info["element_type"])
 
         if "geometry_setup" in mesh_info:
             mesh.geometry_setup = mesh_info["geometry_setup"]
@@ -113,6 +113,7 @@ class VibraFile:
         self._write_json("header.json", header)
 
     def _write_thumbnail(self, project):
+        return
         if project.thumbnail is None:
             return
 
@@ -148,6 +149,7 @@ class VibraFile:
         project.name = header["name"]
 
     def _read_thumbnail(self, project):
+        return
         project.thumbnail = self.get_thumbnail()
 
     def _read_mesh(self, project):
@@ -165,8 +167,8 @@ class VibraFile:
         return self.zip.read(arcname)
 
     def _write_json(self, arcname, data):
-        json_data = json.dumps(data, indent=2)
-        self._write_string(arcname, json_data, cls=CustomJsonEncoder)
+        json_data = json.dumps(data, indent=2, cls=CustomJsonEncoder)
+        self._write_string(arcname, json_data)
 
     def _read_json(self, arcname):
         data = self._read_string(arcname)
