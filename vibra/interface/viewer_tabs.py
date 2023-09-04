@@ -33,6 +33,7 @@ from vibra.interface.viewer_3d.render_widgets.structural_modal_analysis_render_w
     StructuralModalAnalysisRenderWidget,
 )
 from vibra.interface.welcome_widget import WelcomeWidget
+from vibra.utils.interface_functions import get_main_window
 
 
 class ViewerTabs(QTabWidget):
@@ -42,13 +43,13 @@ class ViewerTabs(QTabWidget):
         self.tabCloseRequested.connect(self.removeTab)
         self.configure_window()
 
-        self.project = project
+        self.main_window = get_main_window()
         self.user_config = user_config
 
-        self.geometry_widget = GeometryRenderWidget(self.project)
-        self.mesh_widget = MeshRenderWidget(self.project)
-        self.acoustic_modal_analysis = AcousticModalAnalysisRenderWidget(self.project)
-        self.structural_modal_analysis = StructuralModalAnalysisRenderWidget(self.project)
+        self.geometry_widget = GeometryRenderWidget()
+        self.mesh_widget = MeshRenderWidget()
+        self.acoustic_modal_analysis = AcousticModalAnalysisRenderWidget()
+        self.structural_modal_analysis = StructuralModalAnalysisRenderWidget()
 
         self.welcome = WelcomeWidget()
         self.help_widget = HelpWidget()
@@ -103,8 +104,8 @@ class ViewerTabs(QTabWidget):
         self.setCurrentWidget(self.structural_modal_analysis)
 
     def show_acoustic_harmonic_analysis(self):
-        widget = AcousticHarmonicAnalysisRenderWidget(self.project)
-        if self.project.acoustic_harmonic_solver.solution is None:
+        widget = AcousticHarmonicAnalysisRenderWidget()
+        if self.main_window.project.acoustic_harmonic_solver.solution is None:
             return
         self.create_a_new_tab_if_it_does_not_exist(widget, "Acoustic Harmonic Analysis")
         widget.update_plot()

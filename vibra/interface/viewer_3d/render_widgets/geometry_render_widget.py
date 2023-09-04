@@ -11,6 +11,8 @@ from vibra.interface.viewer_3d.interactor_styles.selection_interactor import (
 from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
     CommonRenderWidget,
 )
+from vibra.utils.interface_functions import get_main_window
+
 
 SHOW_POINTS = 0
 SHOW_LINES = 1
@@ -20,10 +22,10 @@ SHOW_FACES = 2
 class GeometryRenderWidget(CommonRenderWidget):
     selection_changed = pyqtSignal(set, set, set, set)
 
-    def __init__(self, project, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.project = project
+        self.main_window = get_main_window()
         self.view_mode = SHOW_FACES
 
         self.geometry_info = GeometryInfoBar()
@@ -54,10 +56,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.update_plot()
 
     def update_plot(self):
-        if self.project is None:
+        if self.main_window.project is None:
             return
 
-        model = self.project.model
+        model = self.main_window.project.model
         if model is None:
             return
 
@@ -156,16 +158,16 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.select_point(clicked_cell, join=ctrl_pressed, remove=alt_pressed)
 
         elif clicked_actor == self.lines_actor:
-            line_entity = self.project.model.mesh.lines_connectivity[clicked_cell][1]
+            line_entity = self.main_window.project.model.mesh.lines_connectivity[clicked_cell][1]
             self.select_line(line_entity, join=ctrl_pressed, remove=alt_pressed)
 
         elif (clicked_actor == self.faces_actor) and not shift_pressed:
-            face_entity = self.project.model.mesh.faces_connectivity[clicked_cell][1]
+            face_entity = self.main_window.project.model.mesh.faces_connectivity[clicked_cell][1]
             self.select_face(face_entity, join=ctrl_pressed, remove=alt_pressed)
 
         elif (clicked_actor == self.faces_actor) and shift_pressed:
-            face_entity = self.project.model.mesh.faces_connectivity[clicked_cell][1]
-            for volume, surfaces in self.project.model.mesh.surfaces_from_volumes.items():
+            face_entity = self.main_window.project.model.mesh.faces_connectivity[clicked_cell][1]
+            for volume, surfaces in self.main_window.project.model.mesh.surfaces_from_volumes.items():
                 if face_entity in surfaces:
                     self.select_volume(volume, join=ctrl_pressed, remove=alt_pressed)
                     break
@@ -224,7 +226,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         all_element_indexes = []
         for line in self.selected_lines:
-            element_indexes = self.project.model.mesh.entity_ranges[1, line]
+            element_indexes = self.main_window.project.model.mesh.entity_ranges[1, line]
             all_element_indexes.extend(element_indexes)
 
         self.lines_actor.clear_colors()
@@ -248,7 +250,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         all_element_indexes = []
         for face in self.selected_faces:
-            element_indexes = self.project.model.mesh.entity_ranges[2, face]
+            element_indexes = self.main_window.project.model.mesh.entity_ranges[2, face]
             all_element_indexes.extend(element_indexes)
 
         self.faces_actor.clear_colors()
@@ -272,9 +274,9 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         all_element_indexes = []
         for volume in self.selected_volumes:
-            surfaces = self.project.model.mesh.surfaces_from_volumes[volume]
+            surfaces = self.main_window.project.model.mesh.surfaces_from_volumes[volume]
             for face in surfaces:
-                element_indexes = self.project.model.mesh.entity_ranges[2, face]
+                element_indexes = self.main_window.project.model.mesh.entity_ranges[2, face]
                 all_element_indexes.extend(element_indexes)
 
         self.faces_actor.clear_colors()

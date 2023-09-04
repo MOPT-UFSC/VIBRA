@@ -18,6 +18,7 @@ from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
     CommonRenderWidget,
 )
 from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
+from vibra.utils.interface_functions import get_main_window
 
 
 class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
@@ -25,10 +26,10 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
     # and probably with other analysis classes, so it may be a good idea to
     # make a superclass that controls all the common stuff.
 
-    def __init__(self, project, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.project = project
+        self.main_window = get_main_window()
         self.control_bar = StructuralModalAnalysisBar()
         self.control_bar.value_changed.connect(self.update_deformations)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
@@ -71,16 +72,16 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         return self.control_bar.frequency_box.currentIndex()
 
     def update_frequencies(self):
-        solver = self.project.structural_modal_solver
+        solver = self.main_window.project.structural_modal_solver
         if solver is None:
             return
         self.control_bar.set_frequencies(solver.natural_frequencies)
 
     def update_plot(self):
-        if self.project is None:
+        if self.main_window.project is None:
             return
 
-        model = self.project.model
+        model = self.main_window.project.model
         if model is None:
             return
 
@@ -88,7 +89,7 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
-        solver = self.project.structural_modal_solver
+        solver = self.main_window.project.structural_modal_solver
         if solver.modal_shape is None:
             return
 
@@ -124,7 +125,7 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         if not self._actors_exists():
             return
 
-        solver = self.project.structural_modal_solver
+        solver = self.main_window.project.structural_modal_solver
         if solver.modal_shape is None:
             return
 
@@ -248,7 +249,7 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         if not self._actors_exists():
             return
 
-        solver = self.project.structural_modal_solver
+        solver = self.main_window.project.structural_modal_solver
         if solver.modal_shape is None:
             return
 
@@ -289,7 +290,7 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         return normal[:3]
 
     def _calculate_displacements(self, index, phase):
-        solver = self.project.structural_modal_solver
+        solver = self.main_window.project.structural_modal_solver
         if solver.modal_shape is None:
             return
 
