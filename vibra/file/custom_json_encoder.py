@@ -35,15 +35,3 @@ class CustomJsonEncoder(json.JSONEncoder):
                 key = ", ".join(str(i) for i in key)
             new_obj[key] = val
         return new_obj
-
-
-import numpy as np
-
-a = dict()
-a[0.0, 0, "a"] = [1,2,3]
-a[0.0, 1, "a"] = np.array([1,2,3])
-a[1.0, 0, "a"] = 2
-a[1.0, 1, "a"] = 3
-
-b = json.dumps(a, indent=2, cls=CustomJsonEncoder)
-print(b)
