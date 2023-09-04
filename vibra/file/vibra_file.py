@@ -81,7 +81,7 @@ class VibraFile:
         if "geometry_setup" in mesh_info:
             mesh.geometry_setup = mesh_info["geometry_setup"]
 
-        if "mesh_setup" is mesh_info:
+        if "mesh_setup" in mesh_info:
             mesh.mesh_setup = mesh_info["mesh_setup"]
         
         mesh.nodal_coordinates = self._read_array("mesh/nodal_coordinates.dat")
