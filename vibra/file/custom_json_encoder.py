@@ -1,5 +1,6 @@
 import json
 from dataclasses import asdict, is_dataclass
+import numpy as np
 
 
 class CustomJsonEncoder(json.JSONEncoder):

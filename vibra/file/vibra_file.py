@@ -48,15 +48,14 @@ class VibraFile:
     def write(self, project):
         self._write_header(project)
         self._write_thumbnail(project)
-        self._write_geometry(project)
         self._write_mesh(project)
 
-    def read(self, project):
+    def read(self) -> Project:
         project = Project()
         self._read_header(project)
         self._read_thumbnail(project)
-        self._read_geometry(project)
         self._read_mesh(project)
+        return project
 
     # GETTERS
     def get_header(self) -> dict:
@@ -73,12 +72,24 @@ class VibraFile:
         if not self.mesh_exists():
             return None
         
+        mesh = Mesh()
         mesh_info = self._read_json("mesh/mesh_info.json")
-        mesh_info["nodal_coordinates"] = self._read_array("mesh/nodal_coordinates.dat")
-        mesh_info["lines_connectivity"] = self._read_array("mesh/lines_connectivity.dat", dtype=int)
-        mesh_info["faces_connectivity"] = self._read_array("mesh/faces_connectivity.dat", dtype=int)
-        mesh_info["solids_connectivity"] = self._read_array("mesh/solids_connectivity.dat", dtype=int)
-        return mesh_info
+        mesh.dimension = mesh_info["dimension"]
+        mesh.entity_ranges = mesh_info["entity_ranges"]
+        mesh.element_type = mesh_info["element_type"]
+
+        if "geometry_setup" in mesh_info:
+            mesh.geometry_setup = mesh_info["geometry_setup"]
+
+        if "mesh_setup" is mesh_info:
+            mesh.mesh_setup = mesh_info["mesh_setup"]
+        
+        mesh.nodal_coordinates = self._read_array("mesh/nodal_coordinates.dat")
+        mesh.lines_connectivity = self._read_array("mesh/lines_connectivity.dat", dtype=int)
+        mesh.faces_connectivity = self._read_array("mesh/faces_connectivity.dat", dtype=int)
+        mesh.solids_connectivity = self._read_array("mesh/solids_connectivity.dat", dtype=int)
+
+        return mesh
 
     def get_geometry(self) -> str:
         mesh_info = self._read_json("mesh/mesh_info.json")
@@ -95,29 +106,52 @@ class VibraFile:
 
     # WRITER
     def _write_header(self, project):
-        pass
+        header = dict(
+            name=project.name,
+            version=(__version__)
+        )
+        self._write_json("header.json", header)
 
     def _write_thumbnail(self, project):
-        pass
+        if project.thumbnail is None:
+            return
 
-    def _write_geometry(self, project):
-        pass
+        data = BytesIO()
+        project.thumbnail.save(data, "PNG")
+        self._write_string("thumbnail.png", data.getvalue())
 
     def _write_mesh(self, project):
-        pass
+        mesh = project.model.mesh
+        if mesh is None:
+            return
+
+        mesh_info = dict()
+        mesh_info["dimension"] = mesh.dimension
+        mesh_info["entity_ranges"] = mesh.entity_ranges
+        mesh_info["element_type"] = mesh.element_type
+
+        if mesh.geometry_setup is not None:
+            mesh_info["geometry_setup"] = mesh.geometry_setup
+
+        if mesh.mesh_setup is not None:
+            mesh_info["mesh_setup"] = mesh.mesh_setup
+
+        self._write_json("mesh/mesh_info.json", mesh_info)
+        self._write_array("mesh/nodal_coordinates.dat", mesh.nodal_coordinates, fmt=["%i", "%.16f", "%.16f", "%.16f"])
+        self._write_array("mesh/lines_connectivity.dat", mesh.lines_connectivity, fmt="%i")
+        self._write_array("mesh/faces_connectivity.dat", mesh.faces_connectivity, fmt="%i")
+        self._write_array("mesh/solids_connectivity.dat", mesh.solids_connectivity, fmt="%i")
 
     # READER
     def _read_header(self, project):
-        pass
+        header = self.get_header()
+        project.name = header["name"]
 
     def _read_thumbnail(self, project):
-        pass
-
-    def _read_geometry(self, project):
-        pass
+        project.thumbnail = self.get_thumbnail()
 
     def _read_mesh(self, project):
-        pass
+        project.model.mesh = self.get_mesh()
 
     # USEFULL
     def _path_exists(self, path: str) -> bool:

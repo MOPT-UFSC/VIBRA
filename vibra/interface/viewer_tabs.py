@@ -17,9 +17,6 @@ from vibra.interface.viewer_3d.render_widgets.acoustic_modal_analysis_render_wid
 from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
     CommonRenderWidget,
 )
-from vibra.interface.viewer_3d.render_widgets.example_analysis_render_widget import (
-    ExampleAnalysisRenderWidget,
-)
 from vibra.interface.viewer_3d.render_widgets.example_render_widget import (
     ExampleRenderWidget,
 )
