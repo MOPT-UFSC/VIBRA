@@ -120,6 +120,7 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self.set_mesh_visibility(mesh_visibility)
         self.renderer.ResetCamera()
         self.update()
+        self.main_window.project.thumbnail = self.get_thumbnail()
 
     def update_deformations(self):
         if not self._actors_exists():

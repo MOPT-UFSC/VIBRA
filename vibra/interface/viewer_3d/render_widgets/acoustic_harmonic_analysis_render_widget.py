@@ -132,6 +132,7 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
 
         self.renderer.ResetCamera()
         self.update()
+        self.main_window.project.thumbnail = self.get_thumbnail()
 
     def update_animation(self, frame):
         if not self._actors_exists():

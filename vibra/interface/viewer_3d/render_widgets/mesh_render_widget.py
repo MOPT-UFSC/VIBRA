@@ -63,6 +63,8 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.renderer.ResetCamera()
         self.show_faces()
+        if self.main_window.project.thumbnail is None:
+            self.main_window.project.thumbnail = self.get_thumbnail()
 
     #
     def show_points(self):

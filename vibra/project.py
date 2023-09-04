@@ -21,6 +21,8 @@ class Project:
     def reset_variables(self):
         #
         self.name = "Project"
+        self.thumbnail = None
+        #
         self.geometry_path = ""
         self.fluid_list_path = ""
         self.material_list_path = ""

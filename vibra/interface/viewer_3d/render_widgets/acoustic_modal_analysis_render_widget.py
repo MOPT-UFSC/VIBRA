@@ -140,6 +140,7 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
 
         self.renderer.ResetCamera()
         self.update()
+        self.main_window.project.thumbnail = self.get_thumbnail()
 
     def update_deformation(self):
         if not self._actors_exists():

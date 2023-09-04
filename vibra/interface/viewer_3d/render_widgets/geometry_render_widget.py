@@ -80,6 +80,9 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.renderer.ResetCamera()
         self.show_faces()
+        if self.main_window.project.thumbnail is None:
+            self.main_window.project.thumbnail = self.get_thumbnail()
+        self.main_window.project.thumbnail.show()
 
     def set_theme(self, theme):
         super().set_theme(theme)
