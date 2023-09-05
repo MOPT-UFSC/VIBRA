@@ -10,7 +10,7 @@ user_config_path = Path(".config.ini")
 class UserConfig:
     version: tuple = "0.0.0"
     theme: str = "dark"
-    menu_items_visible: str = "1"
+    menu_items_visible: bool = True
     recent_files: list = field(default_factory=list)
 
     @classmethod
