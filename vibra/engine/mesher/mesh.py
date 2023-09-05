@@ -16,11 +16,11 @@ from vibra.utils.progress_status import ProgressStatus
 
 class Mesh:
     def __init__(self):
+        self.geometry_setup = None
+        self.mesh_setup = None
         self.reset_variables()
 
     def reset_variables(self):
-        self.geometry_setup = None
-        self.mesh_setup = None
 
         self.dimension = 0
         self.entity_ranges = dict()
@@ -96,8 +96,6 @@ class Mesh:
         *args,
         **kwargs
     ):
-        self.geometry_setup = GeometrySetup(string, suffix)
-
         # sadly in windows we cannot use the with statement
         # that removes the files automatically =(
         tmp = NamedTemporaryFile(suffix=suffix, delete=False)
@@ -109,6 +107,8 @@ class Mesh:
         self.load_cad(tmp.name, *args, **kwargs)
         tmp.close()
         tmp_path.unlink(missing_ok=True)  # deletes the file
+
+        self.geometry_setup = GeometrySetup(string, suffix)
 
     def load_cad(
         self,

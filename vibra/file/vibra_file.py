@@ -12,6 +12,7 @@ from vibra import __version__
 from vibra.engine.mesher.element_type import ElementType
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import MeshSetup
+from vibra.engine.mesher.geometry_setup import GeometrySetup
 from vibra.errors import UnsuportedFileError
 from vibra.file.custom_json_decoder import CustomJsonDecoder
 from vibra.file.custom_json_encoder import CustomJsonEncoder
@@ -74,16 +75,18 @@ class VibraFile:
             return None
 
         mesh = Mesh()
+        mesh.generated_mesh = True
         mesh_info = self._read_json("mesh/mesh_info.json")
         mesh.dimension = mesh_info["dimension"]
         mesh.entity_ranges = mesh_info["entity_ranges"]
         mesh.element_type = ElementType(**mesh_info["element_type"])
 
         if "geometry_setup" in mesh_info:
-            mesh.geometry_setup = mesh_info["geometry_setup"]
+            mesh.geometry_setup = GeometrySetup(**mesh_info["geometry_setup"])
 
         if "mesh_setup" in mesh_info:
             mesh.mesh_setup = mesh_info["mesh_setup"]
+            mesh.mesh_setup["element_type"] = mesh.element_type
 
         mesh.nodal_coordinates = self._read_array("mesh/nodal_coordinates.dat")
         mesh.lines_connectivity = self._read_array("mesh/lines_connectivity.dat", dtype=int)
@@ -128,8 +131,7 @@ class VibraFile:
         mesh_info["entity_ranges"] = mesh.entity_ranges
         mesh_info["element_type"] = mesh.element_type
 
-        if mesh.geometry_setup is not None:
-            mesh_info["geometry_setup"] = mesh.geometry_setup
+        mesh_info["geometry_setup"] = mesh.geometry_setup
 
         if mesh.mesh_setup is not None:
             mesh_info["mesh_setup"] = mesh.mesh_setup
@@ -154,6 +156,7 @@ class VibraFile:
 
     def _read_mesh(self, project):
         project.model.mesh = self.get_mesh()
+        project.model.mesh_setup = project.model.mesh.mesh_setup
 
     # USEFULL
     def _path_exists(self, path: str) -> bool:

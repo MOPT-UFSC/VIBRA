@@ -102,7 +102,6 @@ class MenuItems(QTreeWidget):
         super().__init__()
 
         self.main_window = get_main_window()
-        self.project = self.main_window.project
         self.obj = None
 
         # self._createIcons()
@@ -114,7 +113,7 @@ class MenuItems(QTreeWidget):
         self._addItems()
         self._configItems()
         self._updateItems()
-        self._initial_items_acces_config()
+        # self._initial_items_acces_config()
 
         self.setMinimumWidth(220)
         self.setMaximumWidth(280)
@@ -542,13 +541,13 @@ class MenuItems(QTreeWidget):
     def run_analysis(self):
         """ """
 
-        if self.project.model.mesh is None:
+        if self.main_window.project.model.mesh is None:
             return
         #
-        if self.project.analysis_data is None:
+        if self.main_window.project.analysis_data is None:
             return
         #
-        if not self.project.model.generated_mesh:
+        if not self.main_window.project.model.generated_mesh:
             try:
                 self.generate_mesh()
             except IncompleteSetupError or IncompleteMeshSetup as error:
@@ -644,20 +643,20 @@ class MenuItems(QTreeWidget):
         self.item_top_resultsViewer_structural.setHidden(True)
         self.item_top_resultsViewer_acoustic.setHidden(True)
 
-        if self.project.analysis_data is None:
+        if self.main_window.project.analysis_data is None:
             return
 
-        analysis_id = self.project.analysis_data["analysis_id"]
+        analysis_id = self.main_window.project.analysis_data["analysis_id"]
 
-        # if self.project.analysis_id in [None, 2,4]:
+        # if self.main_window.project.analysis_id in [None, 2,4]:
         #     self.item_child_analysisSetup.setDisabled(True)
         # else:
         #     self.item_child_analysisSetup.setDisabled(False)
 
-        # if self.project.analysis_id is not None and self.project.setup_analysis_complete:
+        # if self.main_window.project.analysis_id is not None and self.main_window.project.setup_analysis_complete:
         #     self.item_child_runAnalysis.setDisabled(False)
 
-        # if self.project.get_structural_solution() is not None or self.project.get_acoustic_solution() is not None:
+        # if self.main_window.project.get_structural_solution() is not None or self.main_window.project.get_acoustic_solution() is not None:
 
         if analysis_id in [0, 1, 2]:
             self.item_top_resultsViewer_structural.setHidden(False)
@@ -708,7 +707,7 @@ class MenuItems(QTreeWidget):
         self.collapseItem(self.item_top_generalSettings)
         self.collapseItem(self.item_top_structuralModelSetup)
         self.collapseItem(self.item_top_acoustic_model_setup)
-        analysis_id = self.project.analysis_data["analysis_id"]
+        analysis_id = self.main_window.project.analysis_data["analysis_id"]
 
         if analysis_id in [0, 1, 2]:
             self.item_top_resultsViewer_structural.setHidden(False)
