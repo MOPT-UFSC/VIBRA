@@ -193,6 +193,10 @@ class MainWindow(QMainWindow):
 
         # self.viewer_3d.save_png(path)
 
+    def new_project(self):
+        self.project = Project()
+        self.import_geometry()
+
     def save_project(self):
         self.save_project_as()
 
@@ -212,7 +216,7 @@ class MainWindow(QMainWindow):
     def open_project(self, path=None):
         if path is None:
             path, check = QFileDialog.getOpenFileName(
-                self, "Open File", filter="Vibra File (*.vibra)"
+                self, "Open Project", filter="Vibra File (*.vibra)"
             )
             path = Path(path)
 
@@ -230,7 +234,7 @@ class MainWindow(QMainWindow):
     def import_geometry(self):
         path, check = QFileDialog.getOpenFileName(
             self,
-            "Open File",
+            "Import Geometry",
             filter="Geometry Files (*.stp *.step *.iges)",
         )
 

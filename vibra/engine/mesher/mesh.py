@@ -5,6 +5,7 @@ from pathlib import Path
 
 import gmsh
 import numpy as np
+from tempfile import NamedTemporaryFile
 
 from vibra.engine.mesher.element_type import *
 from vibra.engine.mesher.geometry_setup import GeometrySetup
@@ -79,18 +80,6 @@ class Mesh:
             )
 
         return obj
-
-    @classmethod
-    def from_dat(cls, nodal_path, lines_path=None, faces_path=None, solids_path=None):
-        obj = Mesh()
-        obj.nodal_coordinates = obj.import_nodes_coordinates(nodal_path)
-        if lines_path is not None:
-            pass
-        if faces_path is not None:
-            obj.faces_connectivity = obj.import_faces_connectivity(faces_path)
-        if solids_path is not None:
-            obj.solids_connectivity = obj.import_solids_connectivity(solids_path)
-        return obj
     
     def update_parameters(self, *args, **kwargs):
         self.load_cad_string(
@@ -109,9 +98,17 @@ class Mesh:
     ):
         self.geometry_setup = GeometrySetup(string, suffix)
 
-        with NamedTemporaryFile(suffix=suffix) as tmp:
-            tmp.write(string.encode("iso-8859-1"))
-            self.load_cad(tmp.name, *args, **kwargs)
+        # sadly in windows we cannot use the with statement
+        # that removes the files automatically =(
+        tmp = NamedTemporaryFile(suffix=suffix, delete=False)
+        tmp_path = Path(tmp.name)
+
+        with open(tmp_path, "w") as file:
+            file.write(string)
+
+        self.load_cad(tmp.name, *args, **kwargs)
+        tmp.close()
+        tmp_path.unlink(missing_ok=True)  # deletes the file
 
     def load_cad(
         self,
@@ -147,7 +144,7 @@ class Mesh:
         self.element_type = element_type
 
         logging.info("Loading Geometry" + ProgressStatus(15, 100))
-        gmsh.model.mesh.generate(dim=self.dimension)
+        gmsh.model.mesh.generate(dim=element_type.dimensions)
         gmsh.model.mesh.removeDuplicateNodes()
 
         logging.info("Processing Mesh" + ProgressStatus(70, 100))
@@ -295,7 +292,7 @@ class Mesh:
             if dim == 0:  # Points
                 # The index of points is one less than the
                 # tag value, that is why this is the correct range.
-                self.entity_ranges[dim, tag] = range(tag - 1, tag)
+                self.entity_ranges[dim, tag] = (tag - 1, tag)
 
             elif dim == 1:  # Lines
                 connectivity_dim1[dim, tag] = elements_data
@@ -412,7 +409,7 @@ class Mesh:
                 start = end
                 ind += 1
             entity_end = end
-            self.entity_ranges[entity_dim, entity_tag] = range(entity_start, entity_end)
+            self.entity_ranges[entity_dim, entity_tag] = (entity_start, entity_end)
 
         output_data[:, 0] = np.arange(1, n + 1, 1)
 

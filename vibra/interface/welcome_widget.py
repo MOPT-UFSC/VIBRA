@@ -115,7 +115,7 @@ class WelcomeWidget(QWidget):
             examples_layout.addWidget(item)
 
     def new_project(self):
-        self.main_window.import_geometry()
+        self.main_window.new_project()
 
     def open_project(self):
         self.main_window.open_project()
