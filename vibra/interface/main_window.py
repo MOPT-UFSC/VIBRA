@@ -229,7 +229,6 @@ class MainWindow(QMainWindow):
         self.viewer_tabs.close_mesh_tabs()
         self.viewer_tabs.show_geometry()
         self.viewer_tabs.show_mesh()
-        self.viewer_tabs.update_plots()
 
     def import_geometry(self):
         path, check = QFileDialog.getOpenFileName(
@@ -247,7 +246,6 @@ class MainWindow(QMainWindow):
 
         self.viewer_tabs.close_mesh_tabs()
         self.viewer_tabs.show_geometry()
-        self.viewer_tabs.update_plots()
 
         self.renderer_toolbar.setDisabled(False)
         self.menu_widget.modify_items_access_after_geometry_importing()

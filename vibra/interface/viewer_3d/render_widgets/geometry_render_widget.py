@@ -80,8 +80,12 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.renderer.ResetCamera()
         self.show_faces()
-        if self.main_window.project.thumbnail is None:
-            self.main_window.project.thumbnail = self.get_thumbnail()
+
+        # This seems to be running twice and I don't know why.
+        # First it gets a terrible image then it gets a better one.
+        # I will keep it like this because it is fast enough, but this
+        # may be addressed in near future.
+        self.main_window.project.thumbnail = self.get_thumbnail()
 
     def set_theme(self, theme):
         super().set_theme(theme)
