@@ -3,6 +3,7 @@ import re
 
 INT_REGEX = re.compile(r"[+-]?([0-9]*)")
 FLOAT_REGEX = re.compile(r"[+-]?([0-9]*[.])?[0-9]+")
+COMPLEX_REGEX = re.compile(r"[+-]?([0-9]*[.])?[0-9][+-]([0-9]*[.])?[0-9]+j")
 
 
 class CustomJsonDecoder(json.JSONDecoder):
@@ -15,6 +16,10 @@ class CustomJsonDecoder(json.JSONDecoder):
             for key, val in obj.items():
                 if self.is_tuple_key(key):
                     key = self.key_to_tuple(key)
+
+                if isinstance(val, str):
+                    val = self.convert_to_numeric(val)
+                
                 new_dict[key] = val
             return new_dict
         return obj
@@ -33,9 +38,15 @@ class CustomJsonDecoder(json.JSONDecoder):
         parts = key.split(", ")
         tuple_values = []
         for part in parts:
-            if INT_REGEX.fullmatch(part):
-                part = int(part)
-            elif FLOAT_REGEX.fullmatch(part):
-                part = float(part)
+            part = self.convert_to_numeric(part)
             tuple_values.append(part)
         return tuple(tuple_values)
+
+    def convert_to_numeric(self, value):
+        if INT_REGEX.fullmatch(value):
+            return int(value)
+        elif FLOAT_REGEX.fullmatch(value):
+            return float(value)
+        elif COMPLEX_REGEX.fullmatch(value):
+            return complex(value)
+        return value

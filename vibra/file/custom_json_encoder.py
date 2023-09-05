@@ -25,6 +25,9 @@ class CustomJsonEncoder(json.JSONEncoder):
             # converts to a list of python types
             return [i.item() for i in obj]
 
+        if isinstance(obj, complex):
+            return f"{obj.real}+{obj.imag}j"
+
         return json.JSONEncoder.default(self, obj)
 
     def transform_key_tuples(self, obj):
