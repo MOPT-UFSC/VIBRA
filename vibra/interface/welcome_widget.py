@@ -73,16 +73,10 @@ class WelcomeWidget(QWidget):
         layout.addLayout(buttons_layout)
         layout.addStretch()
 
-        # recent_button_handlers = [self.open_recent_project1, self.open_recent_project2, self.open_recent_project3, self.open_recent_project4, self.open_recent_project5]
+        number_of_recent = 5
 
-        # for handler in recent_button_handlers:
-        for i in range(5):
-            button = QPushButton(self)
-            button.setIcon(QIcon(""))
-            button.setIconSize(QSize(100, 100))
-            button.setFixedSize(110, 110)
-            # button.clicked.connect(handler)
-            buttons_layout.addWidget(button)
+        for _ in range(number_of_recent):
+            buttons_layout.addWidget(WelcomeItem())
 
     def setup_example_projects(self, layout):
         example_label = QLabel("Example Projects", self)
@@ -94,9 +88,12 @@ class WelcomeWidget(QWidget):
         layout.addLayout(examples_layout)
         layout.addStretch()
 
-        examples_path = Path("data/examples/vibra_files/")
+        # number of exam
+        number_of_examples = 5
+        example_paths = Path("data/examples/vibra_files/").glob("*.vibra")
+        example_paths = list(example_paths)[:number_of_examples]
 
-        for path in examples_path.glob("*.vibra"):
+        for path in example_paths:
             with VibraFile(path) as file:
                 thumbnail = file.get_thumbnail()
 
@@ -113,6 +110,10 @@ class WelcomeWidget(QWidget):
             item = WelcomeItem(name, icon)
             item.clicked.connect(handler)
             examples_layout.addWidget(item)
+        
+        # Complete the remaining with empty items
+        for _ in range(number_of_examples - len(example_paths)):
+            examples_layout.addWidget(WelcomeItem())
 
     def new_project(self):
         self.main_window.new_project()
