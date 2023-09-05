@@ -111,7 +111,6 @@ class VibraFile:
         self._write_json("header.json", header)
 
     def _write_thumbnail(self, project):
-        return
         if project.thumbnail is None:
             return
 
@@ -151,7 +150,6 @@ class VibraFile:
         project.name = header["name"]
 
     def _read_thumbnail(self, project):
-        return
         project.thumbnail = self.get_thumbnail()
 
     def _read_mesh(self, project):
