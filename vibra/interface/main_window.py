@@ -34,7 +34,7 @@ class MainWindow(QMainWindow):
 
         self.dialog = None
         self.project = Project()
-        self.user_config = UserConfig()
+        self.user_config = UserConfig.load()
         self.status_bar = StatusBar(self)
         self.clip_plane = ClipPlaneWidget(self)
         self.viewer_tabs = ViewerTabs(self, self.project, self.user_config)
