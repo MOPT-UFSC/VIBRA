@@ -32,19 +32,11 @@ class WelcomeWidget(QWidget):
     def setup_image(self, layout):
         image_label = QLabel(self)
         image_label.setAlignment(Qt.AlignCenter)
-        pixmap = QPixmap("data/icons/azul cinza.png").scaled(400, 400, Qt.KeepAspectRatio)
+        pixmap = QPixmap("data/icons/azul cinza.png").scaled(350, 350, Qt.KeepAspectRatio)
         image_label.setPixmap(pixmap)
         image_label.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(image_label)
 
-        message_label = QLabel(
-            "         Finite Element Software for Acoustic and Structural Analysis", self
-        )
-        message_label.setAlignment(Qt.AlignCenter)
-        message_label.setContentsMargins(0, 0, 0, 0)
-
-        # layout.setSpacing(15)
-        layout.addWidget(message_label)
         layout.addStretch()
 
     def setup_labels(self, layout):
@@ -140,8 +132,8 @@ class WelcomeItem(QWidget):
 
         button = QPushButton(self)
         button.clicked.connect(self.clicked.emit)
-        button.setFixedSize(QSize(100, 100))
-        button.setIconSize(QSize(90, 90))
+        button.setFixedSize(QSize(90, 90))
+        button.setIconSize(QSize(80, 80))
 
         if icon is not None:
             button.setIcon(icon)
