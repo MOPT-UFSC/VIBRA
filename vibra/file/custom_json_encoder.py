@@ -31,17 +31,17 @@ class CustomJsonEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
     def transform_key_tuples(self, obj):
-        '''
+        """
         If obj is a dict removes recursivelly all keys that
-        are tuples and replaces by a sequence string. 
+        are tuples and replaces by a sequence string.
 
         Example:
             {(0,0):0, (0,1):1, (1,0):2, (1,1):3}
 
             is transformed to
-            
+
             {"0,0":0, "0,1":1, "1,0":2, "1,1":3}
-        '''
+        """
         if isinstance(obj, dict):
             obj = self.transform_key_tuples_dict(obj)
         elif isinstance(obj, (tuple, list)):

@@ -3,10 +3,11 @@ from threading import Lock
 from time import time
 
 import vtk
+from PIL import Image
 from PyQt5.QtWidgets import QFrame, QStackedLayout
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from vtk.util.numpy_support import vtk_to_numpy
-from PIL import Image
+
 from vibra.interface.viewer_3d.interactor_styles.arcball_camera import (
     vtkInteractorStyleArcballCamera,
 )
@@ -73,7 +74,7 @@ class CommonRenderWidget(QFrame):
 
         array = vtk_to_numpy(vtk_array).reshape(height, width, components)
         image = Image.fromarray(array).transpose(Image.FLIP_TOP_BOTTOM)
-        
+
         size = min(image.width, image.height)
         box = (
             (image.width - size) // 2,

@@ -1,6 +1,6 @@
 import json
 from dataclasses import asdict
-from io import BytesIO, StringIO
+from io import BytesIO
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -10,9 +10,9 @@ from PIL.PngImagePlugin import PngImageFile
 
 from vibra import __version__
 from vibra.engine.mesher.element_type import ElementType
+from vibra.engine.mesher.geometry_setup import GeometrySetup
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import MeshSetup
-from vibra.engine.mesher.geometry_setup import GeometrySetup
 from vibra.errors import UnsuportedFileError
 from vibra.file.custom_json_decoder import CustomJsonDecoder
 from vibra.file.custom_json_encoder import CustomJsonEncoder

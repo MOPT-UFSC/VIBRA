@@ -2,10 +2,10 @@ import logging
 import os
 import sys
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 import gmsh
 import numpy as np
-from tempfile import NamedTemporaryFile
 
 from vibra.engine.mesher.element_type import *
 from vibra.engine.mesher.geometry_setup import GeometrySetup
@@ -21,7 +21,6 @@ class Mesh:
         self.reset_variables()
 
     def reset_variables(self):
-
         self.dimension = 0
         self.entity_ranges = dict()
         self.element_type = DEFAULT_ELEMENT_TYPE
@@ -80,7 +79,7 @@ class Mesh:
             )
 
         return obj
-    
+
     def update_parameters(self, *args, **kwargs):
         self.load_cad_string(
             self.geometry_setup.data,
@@ -89,13 +88,7 @@ class Mesh:
             **kwargs,
         )
 
-    def load_cad_string(
-        self,
-        string: str,
-        suffix: str,
-        *args,
-        **kwargs
-    ):
+    def load_cad_string(self, string: str, suffix: str, *args, **kwargs):
         # sadly in windows we cannot use the with statement
         # that removes the files automatically =(
         tmp = NamedTemporaryFile(suffix=suffix, delete=False)

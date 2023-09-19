@@ -102,7 +102,7 @@ class WelcomeWidget(QWidget):
             item = WelcomeItem(name, icon)
             item.clicked.connect(handler)
             examples_layout.addWidget(item)
-        
+
         # Complete the remaining with empty items
         for _ in range(number_of_examples - len(example_paths)):
             examples_layout.addWidget(WelcomeItem())

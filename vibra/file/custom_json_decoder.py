@@ -19,7 +19,7 @@ class CustomJsonDecoder(json.JSONDecoder):
 
                 if isinstance(val, str):
                     val = self.convert_to_numeric(val)
-                
+
                 new_dict[key] = val
             return new_dict
         return obj
