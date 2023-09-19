@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from vibra.file.vibra_file import VibraFile
+from vibra.vibra_file import VibraDecoder
 from vibra.project import Project
 from vibra.utils.interface_functions import get_main_window
 
@@ -86,7 +86,7 @@ class WelcomeWidget(QWidget):
         example_paths = list(example_paths)[:number_of_examples]
 
         for path in example_paths:
-            with VibraFile(path) as file:
+            with VibraDecoder(path) as file:
                 thumbnail = file.get_thumbnail()
 
             if thumbnail is not None:

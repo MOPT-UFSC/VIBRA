@@ -7,9 +7,9 @@ from zipfile import ZipFile
 import numpy as np
 from PIL import Image
 
-from vibra import __version__
-from vibra.file.custom_json_decoder import CustomJsonDecoder
-from vibra.file.custom_json_encoder import CustomJsonEncoder
+from vibra.vibra_file.custom_json_decoder import CustomJsonDecoder
+from vibra.vibra_file.custom_json_encoder import CustomJsonEncoder
+from vibra.errors import UnsuportedFileError
 
 
 class FileHandler:
@@ -26,7 +26,13 @@ class FileHandler:
         self.close()
 
     def open(self):
-        self.zip = ZipFile(self.path, self.open_mode)
+        try:
+            self.zip = ZipFile(self.path, self.open_mode)
+        except Exception:
+            return UnsuportedFileError(
+                "Invalid file",
+                "This file format is not currently suported."
+            )
 
     def close(self):
         self.zip.close()

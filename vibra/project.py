@@ -42,19 +42,19 @@ class Project:
 
     @classmethod
     def load(cls, path):
-        from vibra.file.vibra_file import VibraFile
+        from vibra.vibra_file import VibraDecoder
 
         logging.info(f"Loading {path}")
-        with VibraFile(path, "r") as file:
-            obj = file.read()
+        with VibraDecoder(path, "r") as file:
+            obj = file.decode()
         return obj
 
     def save(self, path):
-        from vibra.file.vibra_file import VibraFile
+        from vibra.vibra_file import VibraEncoder
 
         logging.info(f"Saving project in {path}")
-        with VibraFile(path, "w") as file:
-            file.write(self)
+        with VibraEncoder(path, "w") as file:
+            file.encode(self)
 
     def get_fluid_list_path(self):
         return self.fluid_list_path

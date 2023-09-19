@@ -9,7 +9,6 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 from vibra.config import UserConfig
-from vibra.file.vibra_file import VibraFile
 from vibra.interface.analysis_filter_menu import AnalysisFilter
 from vibra.interface.clip_plane_widget import ClipPlaneWidget
 from vibra.interface.exception_message import ErrorMessage
