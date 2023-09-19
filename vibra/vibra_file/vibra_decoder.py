@@ -75,3 +75,12 @@ class VibraDecoder(FileHandler):
     def _read_mesh(self, project):
         project.model.mesh = self.get_mesh()
         project.model.mesh_setup = project.model.mesh.mesh_setup
+
+    def _read_properties(self, project):
+        data = self._read_json("model/properties.json")
+        project.model.properties.global_properties = data["global_properties"]
+        project.model.properties.volume_properties = data["volume_properties"]
+        project.model.properties.surface_properties = data["surface_properties"]
+        project.model.properties.line_properties = data["line_properties"]
+        project.model.properties.element_properties = data["element_properties"]
+        project.model.properties.nodal_properties = data["nodal_properties"]

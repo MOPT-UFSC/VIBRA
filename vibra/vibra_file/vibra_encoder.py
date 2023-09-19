@@ -7,6 +7,7 @@ class VibraEncoder(FileHandler):
         self._write_header(project)
         self._write_thumbnail(project)
         self._write_mesh(project)
+        self._write_properties(project)
 
     def _write_header(self, project):
         header = dict(name=project.name, version=(__version__))
@@ -16,7 +17,7 @@ class VibraEncoder(FileHandler):
         if project.thumbnail is None:
             return
         
-        self._write_image(project.thumbnail)
+        self._write_image("thumbnail.png", project.thumbnail)
 
     def _write_mesh(self, project):
         mesh = project.model.mesh
@@ -42,3 +43,14 @@ class VibraEncoder(FileHandler):
         self._write_array("mesh/lines_connectivity.dat", mesh.lines_connectivity, fmt="%i")
         self._write_array("mesh/faces_connectivity.dat", mesh.faces_connectivity, fmt="%i")
         self._write_array("mesh/solids_connectivity.dat", mesh.solids_connectivity, fmt="%i")
+
+    def _write_properties(self, project):
+        data = dict(
+            global_properties = project.model.properties.global_properties,
+            volume_properties = project.model.properties.volume_properties,
+            surface_properties = project.model.properties.surface_properties,
+            line_properties = project.model.properties.line_properties,
+            element_properties = project.model.properties.element_properties,
+            nodal_properties = project.model.properties.nodal_properties,
+        )
+        self._write_json("model/properties.json", data)
