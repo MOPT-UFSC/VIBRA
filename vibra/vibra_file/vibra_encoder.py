@@ -3,6 +3,9 @@ from vibra import __version__
 
 
 class VibraEncoder(FileHandler):
+    '''
+    Encodes a project to vibra file format.
+    '''
     def encode(self, project):
         self._write_header(project)
         self._write_thumbnail(project)

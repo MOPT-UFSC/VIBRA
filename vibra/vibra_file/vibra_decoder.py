@@ -11,6 +11,9 @@ from PIL.PngImagePlugin import PngImageFile
 
 
 class VibraDecoder(FileHandler):
+    '''
+    Decodes the vibra file format.
+    '''
     def decode(self) -> Project:
         project = Project()
         self._read_header(project)
@@ -52,7 +55,10 @@ class VibraDecoder(FileHandler):
 
         return mesh
 
-    def get_geometry(self) -> str:
+    def get_geometry(self) -> str | None:
+        if not self.mesh_exists():
+            return None
+
         mesh_info = self._read_json("mesh/mesh_info.json")
         return mesh_info["geometry_setup"]
 

@@ -13,6 +13,13 @@ from vibra.errors import UnsuportedFileError
 
 
 class FileHandler:
+    '''
+    Reads and writes suported files inside the file "container"
+    adopted by this project.
+
+    It is just an interface to make easier to convert thing, use BytesIO,
+    custom json and stuff like.
+    '''
     def __init__(self, path, open_mode="r") -> None:
         self.path = Path(path)
         self.open_mode = open_mode
