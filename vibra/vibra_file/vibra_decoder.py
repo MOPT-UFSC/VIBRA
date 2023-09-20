@@ -36,7 +36,7 @@ class VibraDecoder(FileHandler):
 
         mesh = Mesh()
         mesh.generated_mesh = True
-        mesh_info = self._read_json("mesh/mesh_info.json")
+        mesh_info = self._read_json("model/mesh/mesh_info.json")
         mesh.dimension = mesh_info["dimension"]
         mesh.entity_ranges = mesh_info["entity_ranges"]
         mesh.element_type = ElementType(**mesh_info["element_type"])
@@ -48,10 +48,10 @@ class VibraDecoder(FileHandler):
             mesh.mesh_setup = mesh_info["mesh_setup"]
             mesh.mesh_setup["element_type"] = mesh.element_type
 
-        mesh.nodal_coordinates = self._read_array("mesh/nodal_coordinates.dat")
-        mesh.lines_connectivity = self._read_array("mesh/lines_connectivity.dat", dtype=int)
-        mesh.faces_connectivity = self._read_array("mesh/faces_connectivity.dat", dtype=int)
-        mesh.solids_connectivity = self._read_array("mesh/solids_connectivity.dat", dtype=int)
+        mesh.nodal_coordinates = self._read_array("model/mesh/nodal_coordinates.dat")
+        mesh.lines_connectivity = self._read_array("model/mesh/lines_connectivity.dat", dtype=int)
+        mesh.faces_connectivity = self._read_array("model/mesh/faces_connectivity.dat", dtype=int)
+        mesh.solids_connectivity = self._read_array("model/mesh/solids_connectivity.dat", dtype=int)
 
         return mesh
 
@@ -64,10 +64,10 @@ class VibraDecoder(FileHandler):
 
     def mesh_exists(self) -> bool:
         needed_paths = [
-            "mesh/nodal_coordinates.dat",
-            "mesh/lines_connectivity.dat",
-            "mesh/faces_connectivity.dat",
-            "mesh/solids_connectivity.dat",
+            "model/mesh/nodal_coordinates.dat",
+            "model/mesh/lines_connectivity.dat",
+            "model/mesh/faces_connectivity.dat",
+            "model/mesh/solids_connectivity.dat",
         ]
         return all(self._path_exists(path) for path in needed_paths)
 
