@@ -38,15 +38,15 @@ class VibraEncoder(FileHandler):
         if mesh.mesh_setup is not None:
             mesh_info["mesh_setup"] = mesh.mesh_setup
 
-        self._write_json("mesh/mesh_info.json", mesh_info)
+        self._write_json("model/mesh/mesh_info.json", mesh_info)
         self._write_array(
-            "mesh/nodal_coordinates.dat",
+            "model/mesh/nodal_coordinates.dat",
             mesh.nodal_coordinates,
             fmt=["%i", "%.16f", "%.16f", "%.16f"],
         )
-        self._write_array("mesh/lines_connectivity.dat", mesh.lines_connectivity, fmt="%i")
-        self._write_array("mesh/faces_connectivity.dat", mesh.faces_connectivity, fmt="%i")
-        self._write_array("mesh/solids_connectivity.dat", mesh.solids_connectivity, fmt="%i")
+        self._write_array("model/mesh/lines_connectivity.dat", mesh.lines_connectivity, fmt="%i")
+        self._write_array("model/mesh/faces_connectivity.dat", mesh.faces_connectivity, fmt="%i")
+        self._write_array("model/mesh/solids_connectivity.dat", mesh.solids_connectivity, fmt="%i")
 
     def _write_properties(self, project):
         data = dict(
