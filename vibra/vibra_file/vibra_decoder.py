@@ -1,4 +1,4 @@
-from vibra.vibra_file.file_handler import FileHandler
+from PIL.PngImagePlugin import PngImageFile
 
 from vibra import __version__
 from vibra.engine.mesher.element_type import ElementType
@@ -7,20 +7,21 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.errors import UnsuportedFileError
 from vibra.project import Project
-from PIL.PngImagePlugin import PngImageFile
+from vibra.vibra_file.file_handler import FileHandler
 
 
 class VibraDecoder(FileHandler):
-    '''
+    """
     Decodes the vibra file format.
-    '''
+    """
+
     def decode(self) -> Project:
         project = Project()
         self._read_header(project)
         self._read_thumbnail(project)
         self._read_mesh(project)
         return project
-    
+
     def get_header(self) -> dict:
         return self._read_json("header.json")
 

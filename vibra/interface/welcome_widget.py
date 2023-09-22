@@ -12,9 +12,9 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from vibra.vibra_file import VibraDecoder
 from vibra.project import Project
 from vibra.utils.interface_functions import get_main_window
+from vibra.vibra_file import VibraDecoder
 
 
 class WelcomeWidget(QWidget):

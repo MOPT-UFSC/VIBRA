@@ -1,11 +1,12 @@
-from vibra.vibra_file.file_handler import FileHandler
 from vibra import __version__
+from vibra.vibra_file.file_handler import FileHandler
 
 
 class VibraEncoder(FileHandler):
-    '''
+    """
     Encodes a project to vibra file format.
-    '''
+    """
+
     def encode(self, project):
         self._write_header(project)
         self._write_thumbnail(project)
@@ -19,7 +20,7 @@ class VibraEncoder(FileHandler):
     def _write_thumbnail(self, project):
         if project.thumbnail is None:
             return
-        
+
         self._write_image("thumbnail.png", project.thumbnail)
 
     def _write_mesh(self, project):
@@ -49,11 +50,11 @@ class VibraEncoder(FileHandler):
 
     def _write_properties(self, project):
         data = dict(
-            global_properties = project.model.properties.global_properties,
-            volume_properties = project.model.properties.volume_properties,
-            surface_properties = project.model.properties.surface_properties,
-            line_properties = project.model.properties.line_properties,
-            element_properties = project.model.properties.element_properties,
-            nodal_properties = project.model.properties.nodal_properties,
+            global_properties=project.model.properties.global_properties,
+            volume_properties=project.model.properties.volume_properties,
+            surface_properties=project.model.properties.surface_properties,
+            line_properties=project.model.properties.line_properties,
+            element_properties=project.model.properties.element_properties,
+            nodal_properties=project.model.properties.nodal_properties,
         )
         self._write_json("model/properties.json", data)
