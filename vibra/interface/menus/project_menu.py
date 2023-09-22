@@ -54,6 +54,7 @@ class ProjectMenu(QMenu):
         self.capture_image_action.triggered.connect(self.capture_image_callback)
         self.open_project_action.triggered.connect(self.open_project_callback)
         self.save_action.triggered.connect(self.save_callback)
+        self.save_as_action.triggered.connect(self.save_as_callback)
         self.theme_action.triggered.connect(self.theme_callback)
         self.exit_action.triggered.connect(self.exit_callback)
 
@@ -76,6 +77,9 @@ class ProjectMenu(QMenu):
 
     def save_callback(self):
         self.main_window.save_project()
+
+    def save_as_callback(self):
+        self.main_window.save_project_as()
 
     def help_callback(self):
         self.main_window.viewer_tabs.show_help()
