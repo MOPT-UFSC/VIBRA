@@ -72,7 +72,7 @@ class ProjectMenu(QMenu):
         self.addAction(self.exit_action)
 
     def open_project_callback(self):
-        self.main_window.open_project()
+        self.main_window.open_project_dialog()
 
     def save_callback(self):
         self.main_window.save_project()
@@ -99,7 +99,7 @@ class ProjectMenu(QMenu):
         self.main_window.capture_image()
 
     def import_geometry_callback(self):
-        self.main_window.import_geometry()
+        self.main_window.import_geometry_dialog()
 
     # TODO: Create and connect actions for these
     def show_geometry_callback(self):

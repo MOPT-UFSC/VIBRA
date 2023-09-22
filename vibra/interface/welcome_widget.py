@@ -111,7 +111,7 @@ class WelcomeWidget(QWidget):
         self.main_window.new_project()
 
     def open_project(self):
-        self.main_window.open_project()
+        self.main_window.open_project_dialog()
 
     def open_recent_project(self, path):
         self.main_window.open_project(path)

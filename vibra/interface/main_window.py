@@ -119,20 +119,6 @@ class MainWindow(QMainWindow):
         central_widget.setLayout(grid_layout_central)
         self.setCentralWidget(central_widget)
 
-        # working_area = QSplitter(Qt.Horizontal)
-        # self.setCentralWidget(working_area)
-
-        # # working_area.addWidget(_menus)
-        # working_area.addWidget(left_widget)
-        # # working_area.addWidget(self.menu_widget)
-        # working_area.addWidget(self.viewer_tabs)
-
-        # working_area.widget(0).setMinimumWidth(280)
-        # working_area.widget(0).setMaximumWidth(320)
-        # working_area.widget(0).setContentsMargins(0,0,0,0)
-
-        # working_area.setSizes([200, 400])
-
     def create_menu_bar(self):
         self.menu_bar = self.menuBar()
         self.menu_bar.addMenu(ProjectMenu(self))
@@ -197,7 +183,7 @@ class MainWindow(QMainWindow):
 
     def new_project(self):
         self.project = Project()
-        self.import_geometry()
+        self.import_geometry_dialog()
 
     def save_project(self):
         self.save_project_as()
@@ -214,25 +200,18 @@ class MainWindow(QMainWindow):
 
         self.project.name = Path(path).stem
         self.project.save(path)
+    
+    def open_project_dialog(self):
+        path, check = QFileDialog.getOpenFileName(
+            self, "Open Project", filter="Vibra File (*.vibra)"
+        )
 
-    def open_project(self, path=None):
-        if path is None:
-            path, check = QFileDialog.getOpenFileName(
-                self, "Open Project", filter="Vibra File (*.vibra)"
-            )
-            path = Path(path)
+        if not check:
+            return
 
-            if not check:
-                return
+        self.open_project(path)
 
-        self.project = Project.load(path)
-        # self.user_config.add_recent_file(path)
-
-        self.viewer_tabs.close_mesh_tabs()
-        self.viewer_tabs.show_geometry()
-        self.viewer_tabs.show_mesh()
-
-    def import_geometry(self):
+    def import_geometry_dialog(self):
         path, check = QFileDialog.getOpenFileName(
             self,
             "Import Geometry",
@@ -241,7 +220,19 @@ class MainWindow(QMainWindow):
 
         if not check:
             return
+        
+        self.import_geometry(path)
 
+    def open_project(self, path):
+        path = Path(path)
+        self.project = Project.load(path)
+        # self.user_config.add_recent_file(path)
+
+        self.viewer_tabs.close_mesh_tabs()
+        self.viewer_tabs.show_geometry()
+        self.viewer_tabs.show_mesh()
+
+    def import_geometry(self, path):
         # Slow function running with loading bar
         import_geometry = load_function(self.project.import_geometry, self)
         import_geometry(path)

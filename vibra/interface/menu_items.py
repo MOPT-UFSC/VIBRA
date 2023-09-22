@@ -396,7 +396,7 @@ class MenuItems(QTreeWidget):
 
         if item == self.item_child_import_geometry:
             if not self.item_child_import_geometry.isDisabled():
-                self.main_window.import_geometry()
+                self.main_window.import_geometry_dialog()
                 if os.path.exists(self.main_window.project.geometry_path):
                     self.modify_items_access_after_geometry_importing()
 
