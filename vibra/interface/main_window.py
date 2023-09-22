@@ -1,5 +1,4 @@
 import logging
-import os
 import random
 from pathlib import Path
 from time import sleep
@@ -26,8 +25,6 @@ from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_tabs import ViewerTabs
 from vibra.project import Project
 from vibra.utils.icons import load_icon
-
-os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 
 
 class MainWindow(QMainWindow):
