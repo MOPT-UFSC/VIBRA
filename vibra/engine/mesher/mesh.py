@@ -223,7 +223,6 @@ class Mesh:
         """
         Transform gmsh data in a more manageable format (aka nodal coords and connectivity).
         """
-        self.reset_variables()
         indexes, coords, _ = gmsh.model.mesh.getNodes(includeBoundary=True)
         total_nodes = int(np.max(indexes))
         self.nodal_coordinates = np.zeros((total_nodes, 4))
@@ -233,6 +232,10 @@ class Mesh:
         connectivity_dim1 = dict()
         connectivity_dim2 = dict()
         connectivity_dim3 = dict()
+
+        self.nodes_from_lines.clear()
+        self.nodes_from_surfaces.clear()
+        self.nodes_from_volumes.clear()
 
         for dim, tag in gmsh.model.getEntities():
             if dim == 3:
