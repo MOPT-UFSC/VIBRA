@@ -1,7 +1,10 @@
-# Vibra
-Por favor, coloquem rascunhos no diretório sketchs =D
+<p align="center">
+   <img src="https://github.com/MOPT-UFSC/VIBRA/blob/main/pics/VIBRA.png?raw=true" alt="VIBRA logo" width="200"/>
 
-# Poetry commands
+
+# Vibra
+
+## Poetry commands
 ```
 poetry install
 ```
