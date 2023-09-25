@@ -25,6 +25,7 @@ jobs:
         python-version: "3.10"
     - name: Install dependencies
       run: |
+        apt install libglu1-mesa
         python -m pip install --upgrade pip
         pip install poetry
         poetry install
