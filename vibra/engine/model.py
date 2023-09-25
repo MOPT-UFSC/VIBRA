@@ -41,6 +41,7 @@ class Model:
 
     def set_mesh_setup(self, mesh_setup):
         self.mesh_setup = mesh_setup
+        self.mesh.mesh_setup = mesh_setup
 
     def process_visual_geometry_mesh(self):
         self.mesh = Mesh.from_cad(self.geometry_path, dimension=2, size_factor=0.1)
@@ -48,8 +49,8 @@ class Model:
         self.generated_mesh = False
 
     def process_mesh(self):
-        if self.geometry_path == "" or not os.path.exists(self.geometry_path):
-            message = "Geometry file not defined"
+        if (self.mesh is None) or (self.mesh.geometry_setup is None):
+            message = "Geometry not defined"
             context = (
                 "The geometry file has not been defined yet."
                 "You should to import a supported CAD file format to proceed."
@@ -61,13 +62,14 @@ class Model:
         if self.mesh_setup is None:
             message = "Mesh setup not defined"
             context = (
-                "The mesh setup has not been defined yet.\n"
+                "The mesh setup has not been defined yet."
                 "You should to configure the mesher to proceed."
             )
             raise IncompleteSetupError(message, context=context)
 
         # self.geometry_path = Path("data/examples/script_files/script_hex_elements.txt")
-        self.mesh = Mesh.from_cad(self.geometry_path, gmsh_gui=False, **self.mesh_setup)
+        # self.mesh = Mesh.from_cad(self.geometry_path, gmsh_gui=False, **self.mesh_setup)
+        self.mesh.update_parameters(**self.mesh_setup)
         self.generated_mesh = True
 
     def set_material(self, material):

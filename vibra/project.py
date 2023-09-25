@@ -21,6 +21,8 @@ class Project:
     def reset_variables(self):
         #
         self.name = "Project"
+        self.thumbnail = None
+        #
         self.geometry_path = ""
         self.fluid_list_path = ""
         self.material_list_path = ""
@@ -40,10 +42,19 @@ class Project:
 
     @classmethod
     def load(cls, path):
+        from vibra.vibra_file import VibraDecoder
+
         logging.info(f"Loading {path}")
+        with VibraDecoder(path, "r") as file:
+            obj = file.decode()
+        return obj
 
     def save(self, path):
-        logging.info(f"Saving project in my/save/path")
+        from vibra.vibra_file import VibraEncoder
+
+        logging.info(f"Saving project in {path}")
+        with VibraEncoder(path, "w") as file:
+            file.encode(self)
 
     def get_fluid_list_path(self):
         return self.fluid_list_path

@@ -25,7 +25,7 @@ class FacesActor(vtk.vtkActor):
         data.Allocate(nel * len(self.mesh.faces_connectivity))
         point_colors.SetNumberOfComponents(3)
         point_colors.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
-        cell_colors.SetNumberOfComponents(nel)
+        cell_colors.SetNumberOfComponents(3)
         cell_colors.SetNumberOfTuples(len(self.mesh.faces_connectivity))
 
         for _, x, y, z in self.mesh.nodal_coordinates:

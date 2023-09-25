@@ -3,8 +3,10 @@ from threading import Lock
 from time import time
 
 import vtk
+from PIL import Image
 from PyQt5.QtWidgets import QFrame, QStackedLayout
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from vtk.util.numpy_support import vtk_to_numpy
 
 from vibra.interface.viewer_3d.interactor_styles.arcball_camera import (
     vtkInteractorStyleArcballCamera,
@@ -59,6 +61,29 @@ class CommonRenderWidget(QFrame):
             logging.warn(e)
         else:
             self.set_theme(main_window.user_config.theme)
+
+    def get_thumbnail(self):
+        image_filter = vtk.vtkWindowToImageFilter()
+        image_filter.SetInput(self.render_interactor.GetRenderWindow())
+        image_filter.Update()
+
+        vtk_image = image_filter.GetOutput()
+        width, height, _ = vtk_image.GetDimensions()
+        vtk_array = vtk_image.GetPointData().GetScalars()
+        components = vtk_array.GetNumberOfComponents()
+
+        array = vtk_to_numpy(vtk_array).reshape(height, width, components)
+        image = Image.fromarray(array).transpose(Image.FLIP_TOP_BOTTOM)
+
+        size = min(image.width, image.height)
+        box = (
+            (image.width - size) // 2,
+            (image.height - size) // 2,
+            (image.width + size) // 2,
+            (image.height + size) // 2,
+        )
+        image = image.crop(box=box).resize(size=(512, 512))
+        return image
 
     def save_png(self, path):
         imageFilter = vtk.vtkWindowToImageFilter()

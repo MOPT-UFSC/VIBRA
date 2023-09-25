@@ -13,6 +13,7 @@ class ElementType:
     recombine_all: bool
     second_order_incomplete: bool
     element_order: int
+    dimensions: int
 
 
 TETRAHEDRON_4 = ElementType(
@@ -23,6 +24,7 @@ TETRAHEDRON_4 = ElementType(
     recombine_all=False,
     second_order_incomplete=False,
     element_order=1,
+    dimensions=3,
 )
 
 TETRAHEDRON_10 = ElementType(
@@ -33,6 +35,7 @@ TETRAHEDRON_10 = ElementType(
     recombine_all=False,
     second_order_incomplete=False,
     element_order=2,
+    dimensions=3,
 )
 
 HEXAHEDRON_8 = ElementType(
@@ -43,6 +46,7 @@ HEXAHEDRON_8 = ElementType(
     recombine_all=True,
     second_order_incomplete=False,
     element_order=1,
+    dimensions=3,
 )
 
 HEXAHEDRON_20 = ElementType(
@@ -53,6 +57,7 @@ HEXAHEDRON_20 = ElementType(
     recombine_all=True,
     second_order_incomplete=True,
     element_order=2,
+    dimensions=3,
 )
 
 DEFAULT_ELEMENT_TYPE = TETRAHEDRON_4

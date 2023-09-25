@@ -2,11 +2,13 @@ import logging
 import os
 import sys
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 import gmsh
 import numpy as np
 
 from vibra.engine.mesher.element_type import *
+from vibra.engine.mesher.geometry_setup import GeometrySetup
 from vibra.utils.progress_status import ProgressStatus
 
 # FieldsList=[]
@@ -14,6 +16,8 @@ from vibra.utils.progress_status import ProgressStatus
 
 class Mesh:
     def __init__(self):
+        self.geometry_setup = None
+        self.mesh_setup = None
         self.reset_variables()
 
     def reset_variables(self):
@@ -66,19 +70,38 @@ class Mesh:
             threads=threads,
             gmsh_gui=gmsh_gui,
         )
+
+        # saves the data to edit mesh parameters later
+        with open(path, "r", encoding="iso-8859-1") as file:
+            obj.geometry_setup = GeometrySetup(
+                file.read(),
+                suffix=path.suffix,
+            )
+
         return obj
 
-    @classmethod
-    def from_dat(cls, nodal_path, lines_path=None, faces_path=None, solids_path=None):
-        obj = Mesh()
-        obj.nodal_coordinates = obj.import_nodes_coordinates(nodal_path)
-        if lines_path is not None:
-            pass
-        if faces_path is not None:
-            obj.faces_connectivity = obj.import_faces_connectivity(faces_path)
-        if solids_path is not None:
-            obj.solids_connectivity = obj.import_solids_connectivity(solids_path)
-        return obj
+    def update_parameters(self, *args, **kwargs):
+        self.load_cad_string(
+            self.geometry_setup.data,
+            self.geometry_setup.suffix,
+            *args,
+            **kwargs,
+        )
+
+    def load_cad_string(self, string: str, suffix: str, *args, **kwargs):
+        # sadly in windows we cannot use the with statement
+        # that removes the files automatically =(
+        tmp = NamedTemporaryFile(suffix=suffix, delete=False)
+        tmp_path = Path(tmp.name)
+
+        with open(tmp_path, "w") as file:
+            file.write(string)
+
+        self.load_cad(tmp.name, *args, **kwargs)
+        tmp.close()
+        tmp_path.unlink(missing_ok=True)  # deletes the file
+
+        self.geometry_setup = GeometrySetup(string, suffix)
 
     def load_cad(
         self,
@@ -114,7 +137,7 @@ class Mesh:
         self.element_type = element_type
 
         logging.info("Loading Geometry" + ProgressStatus(15, 100))
-        gmsh.model.mesh.generate(dim=self.dimension)
+        gmsh.model.mesh.generate(dim=element_type.dimensions)
         gmsh.model.mesh.removeDuplicateNodes()
 
         logging.info("Processing Mesh" + ProgressStatus(70, 100))
@@ -265,7 +288,7 @@ class Mesh:
             if dim == 0:  # Points
                 # The index of points is one less than the
                 # tag value, that is why this is the correct range.
-                self.entity_ranges[dim, tag] = range(tag - 1, tag)
+                self.entity_ranges[dim, tag] = (tag - 1, tag)
 
             elif dim == 1:  # Lines
                 connectivity_dim1[dim, tag] = elements_data
@@ -382,7 +405,7 @@ class Mesh:
                 start = end
                 ind += 1
             entity_end = end
-            self.entity_ranges[entity_dim, entity_tag] = range(entity_start, entity_end)
+            self.entity_ranges[entity_dim, entity_tag] = (entity_start, entity_end)
 
         output_data[:, 0] = np.arange(1, n + 1, 1)
 

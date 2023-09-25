@@ -42,11 +42,10 @@ class VisibilitySettingsMenu(QMenu):
     def call_show_or_hide_menu_items(self):
         if self.bool_state:
             text = "Show menu items"
-            self.main_window.set_menu_items_visibility_state("0")
         else:
             text = "Hide menu items"
-            self.main_window.set_menu_items_visibility_state("1")
 
+        self.main_window.set_menu_items_visibility_state(self.bool_state)
         self.show_or_hide_menu_items_action.setText(text)
         self.bool_state = not self.bool_state
         self.main_window.menu_widget.setVisible(self.bool_state)
@@ -63,8 +62,5 @@ class VisibilitySettingsMenu(QMenu):
             self.theme_action.setIcon(self.theme_moon_icon)
 
     def load_user_preference_state(self):
-        if self.main_window.user_config.menu_items_visible == "0":
-            self.bool_state = True
-        elif self.main_window.user_config.menu_items_visible == "1":
-            self.bool_state = False
+        self.bool_state = self.main_window.user_config.menu_items_visible
         self.call_show_or_hide_menu_items()
