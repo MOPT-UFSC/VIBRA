@@ -118,6 +118,16 @@ class Mesh:
         threads: int = 2,
         gmsh_gui: bool = False,
     ):
+        self.mesh_setup = dict(
+            minimum_element_size=minimum_element_size,
+            maximum_element_size=maximum_element_size,
+            element_type=element_type,
+            geometry_tolerance=geometry_tolerance,
+            size_factor=size_factor,
+            dimension=dimension,
+            threads=threads,
+        )
+
         path = Path(path)
         gmsh.initialize("", False)
         logging.info(f"Generating mesh from {path}")
