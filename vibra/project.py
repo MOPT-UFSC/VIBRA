@@ -23,6 +23,7 @@ class Project:
         self.name = "Project"
         self.thumbnail = None
         #
+        self.save_path = None
         self.geometry_path = ""
         self.fluid_list_path = ""
         self.material_list_path = ""
@@ -47,6 +48,7 @@ class Project:
         logging.info(f"Loading {path}")
         with VibraDecoder(path, "r") as file:
             obj = file.decode()
+        obj.save_path = Path(path)
         return obj
 
     def save(self, path):
@@ -55,6 +57,7 @@ class Project:
         logging.info(f"Saving project in {path}")
         with VibraEncoder(path, "w") as file:
             file.encode(self)
+        self.save_path = Path(path)
 
     def get_fluid_list_path(self):
         return self.fluid_list_path

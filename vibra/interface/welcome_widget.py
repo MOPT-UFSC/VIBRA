@@ -108,7 +108,7 @@ class WelcomeWidget(QWidget):
             examples_layout.addWidget(WelcomeItem())
 
     def new_project(self):
-        self.main_window.new_project()
+        self.main_window.new_project_dialog()
 
     def open_project(self):
         self.main_window.open_project_dialog()

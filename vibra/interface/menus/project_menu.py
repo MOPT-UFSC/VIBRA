@@ -76,10 +76,10 @@ class ProjectMenu(QMenu):
         self.main_window.open_project_dialog()
 
     def save_callback(self):
-        self.main_window.save_project()
+        self.main_window.save_project_dialog()
 
     def save_as_callback(self):
-        self.main_window.save_project_as()
+        self.main_window.save_project_as_dialog()
 
     def help_callback(self):
         self.main_window.viewer_tabs.show_help()

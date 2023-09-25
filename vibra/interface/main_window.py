@@ -178,25 +178,27 @@ class MainWindow(QMainWindow):
 
         # self.viewer_3d.save_png(path)
 
-    def new_project(self):
+    def new_project_dialog(self):
         self.project = Project()
         self.import_geometry_dialog()
 
-    def save_project(self):
-        self.save_project_as()
+    def save_project_dialog(self):
+        if self.project.save_path is None:
+            self.save_project_as_dialog()
+        else:
+            self.save_project_as(self.project.save_path)
 
-    def save_project_as(self):
+    def save_project_as_dialog(self):
         path, check = QFileDialog.getSaveFileName(
             self,
-            "Vibra",
+            "Save As",
             filter="Vibra File (*.vibra)",
         )
 
         if not check:
             return
 
-        self.project.name = Path(path).stem
-        self.project.save(path)
+        self.save_project_as(path)
     
     def open_project_dialog(self):
         path, check = QFileDialog.getOpenFileName(
@@ -211,7 +213,7 @@ class MainWindow(QMainWindow):
     def import_geometry_dialog(self):
         path, check = QFileDialog.getOpenFileName(
             self,
-            "Import Geometry",
+            "Select Geometry",
             filter="Geometry Files (*.stp *.step *.iges)",
         )
 
@@ -219,6 +221,12 @@ class MainWindow(QMainWindow):
             return
         
         self.import_geometry(path)
+    
+    def save_project_as(self, path):
+        path = Path(path)
+        self.project.name = path.stem
+        self.project.save(path)
+        self.user_config.save()  # why not
 
     def open_project(self, path):
         path = Path(path)
@@ -242,7 +250,7 @@ class MainWindow(QMainWindow):
 
     def close_app(self):
         close = QMessageBox.question(
-            self, "QUIT", "Are you sure want to close Vibra?", QMessageBox.Yes | QMessageBox.No
+            self, "QUIT", "Are you sure want to close Vibra?", QMessageBox.Yes | QMessageBox.No | QM
         )
 
         if close == QMessageBox.Yes:
