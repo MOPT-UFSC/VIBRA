@@ -6,6 +6,7 @@ import numpy as np
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.errors import IncompleteSetupError
+from vibra.engine.mesher.geometry_setup import GeometrySetup
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 
@@ -22,7 +23,7 @@ class Model:
     def reset_variables(self):
         #
         self.geometry_path = ""
-        self.mesh = None
+        self.mesh = Mesh()
         self.mesh_setup = None
         self.generated_mesh = False
         self.surfaces_areas = dict()
@@ -34,7 +35,13 @@ class Model:
         self.properties = ModelProperties()
 
     def set_geometry_path(self, path):
-        self.geometry_path = Path(path)
+        path = Path(path)
+        self.geometry_path = path
+        with open(path, "r", encoding="iso-8859-1") as file:
+            self.mesh.geometry_setup = GeometrySetup(
+                file.read(),
+                suffix=path.suffix,
+            )
 
     def set_properties(self, properties):
         self.properties = properties

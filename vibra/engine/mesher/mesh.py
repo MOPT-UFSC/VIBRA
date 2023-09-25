@@ -58,6 +58,8 @@ class Mesh:
         Then you can create other constructor like this and avoid a
         lot of confusing if statements in the __init__ method.
         """
+        path = Path(path)
+
         obj = Mesh()
         obj.load_cad(
             path,
