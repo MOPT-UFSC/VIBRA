@@ -3,10 +3,10 @@ from pathlib import Path
 
 import numpy as np
 
+from vibra.engine.mesher.geometry_setup import GeometrySetup
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.errors import IncompleteSetupError
-from vibra.engine.mesher.geometry_setup import GeometrySetup
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 

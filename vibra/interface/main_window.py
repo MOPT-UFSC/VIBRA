@@ -199,7 +199,7 @@ class MainWindow(QMainWindow):
             return
 
         self.save_project_as(path)
-    
+
     def open_project_dialog(self):
         path, check = QFileDialog.getOpenFileName(
             self, "Open Project", filter="Vibra File (*.vibra)"
@@ -219,9 +219,9 @@ class MainWindow(QMainWindow):
 
         if not check:
             return
-        
+
         self.import_geometry(path)
-    
+
     def save_project_as(self, path):
         path = Path(path)
         self.project.name = path.stem
