@@ -22,7 +22,7 @@ class Model:
 
     def reset_variables(self):
         #
-        self.geometry_path = ""
+        self.geometry_path = Path("")
         self.mesh = None
         self.mesh_setup = None
         self.generated_mesh = False
