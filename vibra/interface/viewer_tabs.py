@@ -51,11 +51,11 @@ class ViewerTabs(QTabWidget):
         self.welcome = WelcomeWidget()
         self.help_widget = HelpWidget()
 
-        self.show_wellcome()
+        self.show_welcome()
 
     #
-    def show_wellcome(self):
-        self.addTab(self.welcome, "Wellcome!")
+    def show_welcome(self):
+        self.addTab(self.welcome, "Welcome!")
         self.setCurrentWidget(self.welcome)
 
     def show_example(self):
