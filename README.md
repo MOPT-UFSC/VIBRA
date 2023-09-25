@@ -3,9 +3,8 @@
 
 
 # Vibra
-Por favor, coloquem rascunhos no diretório sketchs =D
 
-# Poetry commands
+## Poetry commands
 ```
 poetry install
 ```
