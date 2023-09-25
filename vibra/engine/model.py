@@ -23,7 +23,7 @@ class Model:
     def reset_variables(self):
         #
         self.geometry_path = ""
-        self.mesh = Mesh()
+        self.mesh = None
         self.mesh_setup = None
         self.generated_mesh = False
         self.surfaces_areas = dict()
@@ -35,20 +35,13 @@ class Model:
         self.properties = ModelProperties()
 
     def set_geometry_path(self, path):
-        path = Path(path)
-        self.geometry_path = path
-        with open(path, "r", encoding="iso-8859-1") as file:
-            self.mesh.geometry_setup = GeometrySetup(
-                file.read(),
-                suffix=path.suffix,
-            )
+        self.geometry_path = Path(path)
 
     def set_properties(self, properties):
         self.properties = properties
 
     def set_mesh_setup(self, mesh_setup):
         self.mesh_setup = mesh_setup
-        self.mesh.mesh_setup = mesh_setup
 
     def process_visual_geometry_mesh(self):
         self.mesh = Mesh.from_cad(self.geometry_path, dimension=2, size_factor=0.1)
@@ -56,7 +49,7 @@ class Model:
         self.generated_mesh = False
 
     def process_mesh(self):
-        if (self.mesh is None) or (self.mesh.geometry_setup is None):
+        if not self.geometry_path.exists():
             message = "Geometry not defined"
             context = (
                 "The geometry file has not been defined yet."
@@ -73,6 +66,9 @@ class Model:
                 "You should to configure the mesher to proceed."
             )
             raise IncompleteSetupError(message, context=context)
+
+        if self.mesh is None:
+            self.mesh = Mesh.from_cad(self.geometry_path)
 
         # self.geometry_path = Path("data/examples/script_files/script_hex_elements.txt")
         # self.mesh = Mesh.from_cad(self.geometry_path, gmsh_gui=False, **self.mesh_setup)

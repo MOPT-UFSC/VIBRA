@@ -250,7 +250,7 @@ class MainWindow(QMainWindow):
 
     def close_app(self):
         close = QMessageBox.question(
-            self, "QUIT", "Are you sure want to close Vibra?", QMessageBox.Yes | QMessageBox.No | QM
+            self, "QUIT", "Are you sure want to close Vibra?", QMessageBox.Yes | QMessageBox.No
         )
 
         if close == QMessageBox.Yes:
