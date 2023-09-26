@@ -33,7 +33,7 @@ class MainWindow(QMainWindow):
 
         self.dialog = None
         self.project = Project()
-        self.user_config = UserConfig()
+        self.user_config = UserConfig.load()
         self.status_bar = StatusBar(self)
         self.clip_plane = ClipPlaneWidget(self)
         self.viewer_tabs = ViewerTabs(self, self.project, self.user_config)
@@ -116,20 +116,6 @@ class MainWindow(QMainWindow):
         central_widget.setLayout(grid_layout_central)
         self.setCentralWidget(central_widget)
 
-        # working_area = QSplitter(Qt.Horizontal)
-        # self.setCentralWidget(working_area)
-
-        # # working_area.addWidget(_menus)
-        # working_area.addWidget(left_widget)
-        # # working_area.addWidget(self.menu_widget)
-        # working_area.addWidget(self.viewer_tabs)
-
-        # working_area.widget(0).setMinimumWidth(280)
-        # working_area.widget(0).setMaximumWidth(320)
-        # working_area.widget(0).setContentsMargins(0,0,0,0)
-
-        # working_area.setSizes([200, 400])
-
     def create_menu_bar(self):
         self.menu_bar = self.menuBar()
         self.menu_bar.addMenu(ProjectMenu(self))
@@ -177,7 +163,7 @@ class MainWindow(QMainWindow):
         self.user_config.theme = theme
         self.menu_widget._configItems()
 
-    def set_menu_items_visibility_state(self, state: str):
+    def set_menu_items_visibility_state(self, state: bool):
         self.user_config.menu_items_visible = state
 
     def capture_image(self):
@@ -192,23 +178,72 @@ class MainWindow(QMainWindow):
 
         # self.viewer_3d.save_png(path)
 
-    def import_geometry(self):
+    def new_project_dialog(self):
+        self.project = Project()
+        self.import_geometry_dialog()
+
+    def save_project_dialog(self):
+        if self.project.save_path is None:
+            self.save_project_as_dialog()
+        else:
+            self.save_project_as(self.project.save_path)
+
+    def save_project_as_dialog(self):
+        path, check = QFileDialog.getSaveFileName(
+            self,
+            "Save As",
+            filter="Vibra File (*.vibra)",
+        )
+
+        if not check:
+            return
+
+        self.save_project_as(path)
+
+    def open_project_dialog(self):
+        path, check = QFileDialog.getOpenFileName(
+            self, "Open Project", filter="Vibra File (*.vibra)"
+        )
+
+        if not check:
+            return
+
+        self.open_project(path)
+
+    def import_geometry_dialog(self):
         path, check = QFileDialog.getOpenFileName(
             self,
-            "Open File",
+            "Select Geometry",
             filter="Geometry Files (*.stp *.step *.iges)",
         )
 
         if not check:
             return
 
+        self.import_geometry(path)
+
+    def save_project_as(self, path):
+        path = Path(path)
+        self.project.name = path.stem
+        self.project.save(path)
+        self.user_config.save()  # why not
+
+    def open_project(self, path):
+        path = Path(path)
+        self.project = Project.load(path)
+        # self.user_config.add_recent_file(path)
+
+        self.viewer_tabs.close_mesh_tabs()
+        self.viewer_tabs.show_geometry()
+        self.viewer_tabs.show_mesh()
+
+    def import_geometry(self, path):
         # Slow function running with loading bar
         import_geometry = load_function(self.project.import_geometry, self)
         import_geometry(path)
 
         self.viewer_tabs.close_mesh_tabs()
         self.viewer_tabs.show_geometry()
-        self.viewer_tabs.update_plots()
 
         self.renderer_toolbar.setDisabled(False)
         self.menu_widget.modify_items_access_after_geometry_importing()

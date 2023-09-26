@@ -38,7 +38,7 @@ class ProjectMenu(QMenu):
 
         #
         self.new_project_action = QAction(self.new_project_icon, "New Project", self)
-        self.load_project_action = QAction(self.load_project_icon, "Load Project", self)
+        self.open_project_action = QAction(self.load_project_icon, "Open Project", self)
         self.recent_action = QAction(self.recent_icon, "Recent", self)
         self.import_geometry_action = QAction(self.import_geometry_icon, "Import geometry", self)
 
@@ -52,14 +52,16 @@ class ProjectMenu(QMenu):
         #
         self.import_geometry_action.triggered.connect(self.import_geometry_callback)
         self.capture_image_action.triggered.connect(self.capture_image_callback)
+        self.open_project_action.triggered.connect(self.open_project_callback)
         self.save_action.triggered.connect(self.save_callback)
+        self.save_as_action.triggered.connect(self.save_as_callback)
         self.theme_action.triggered.connect(self.theme_callback)
         self.exit_action.triggered.connect(self.exit_callback)
 
     def create_layout(self):
         self.clear()
         self.addAction(self.new_project_action)
-        self.addAction(self.load_project_action)
+        self.addAction(self.open_project_action)
         self.addAction(self.recent_action)
         self.addAction(self.import_geometry_action)
         self.addSeparator()
@@ -70,8 +72,14 @@ class ProjectMenu(QMenu):
         self.addAction(self.theme_action)
         self.addAction(self.exit_action)
 
+    def open_project_callback(self):
+        self.main_window.open_project_dialog()
+
     def save_callback(self):
-        self.main_window.project.save()
+        self.main_window.save_project_dialog()
+
+    def save_as_callback(self):
+        self.main_window.save_project_as_dialog()
 
     def help_callback(self):
         self.main_window.viewer_tabs.show_help()
@@ -95,11 +103,11 @@ class ProjectMenu(QMenu):
         self.main_window.capture_image()
 
     def import_geometry_callback(self):
-        self.main_window.import_geometry()
+        self.main_window.import_geometry_dialog()
 
     # TODO: Create and connect actions for these
     def show_geometry_callback(self):
-        self.parent().viewer_tabs.show_geometry()
+        self.main_window.viewer_tabs.show_geometry()
 
     def show_example_callback(self):
         self.main_window.viewer_tabs.show_example()
