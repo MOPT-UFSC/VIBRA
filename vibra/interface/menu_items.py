@@ -239,6 +239,7 @@ class MenuItems(QTreeWidget):
         self.item_child_selectAnalysisType = QTreeWidgetItem(["Select Analysis Type"])
         self.item_child_analysisSetup = QTreeWidgetItem(["Analysis Setup"])
         self.item_child_runAnalysis = QTreeWidgetItem(["Run Analysis (F5)"])
+        self.item_child_analysisSetup.setDisabled(True)
         #
         self.list_top_items.append(self.item_top_analysis)
         self.list_child_items.append(self.item_child_selectAnalysisType)
