@@ -112,7 +112,12 @@ class Mesh:
 
         self.dimension = min(dimension, gmsh.model.getDimension())
         self.element_type = element_type
+        
+        volumes_list = gmsh.model.getEntities(3)
+        gmsh.model.occ.fragment(volumes_list,volumes_list)
+        gmsh.model.occ.synchronize()
 
+        
         logging.info("Loading Geometry" + ProgressStatus(15, 100))
         gmsh.model.mesh.generate(dim=self.dimension)
         gmsh.model.mesh.removeDuplicateNodes()
