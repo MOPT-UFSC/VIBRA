@@ -1,5 +1,10 @@
 # Local files
 .config.ini
+.fluid_library.dat
+.material_library.dat
+
+# Local directory
+output_data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -8,6 +13,9 @@ __pycache__/
 
 # C extensions
 *.so
+*.dat
+*.ini
+*.json
 
 # Distribution / packaging
 .vscode/

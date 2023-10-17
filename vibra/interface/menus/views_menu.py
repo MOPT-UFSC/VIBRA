@@ -3,7 +3,9 @@ from pathlib import Path
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QMenu
 
-from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
+from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
+    CommonRenderWidget,
+)
 from vibra.utils.icons import load_icon
 
 
@@ -16,69 +18,69 @@ class ViewsMenu(QMenu):
         self.create_layout()
 
     def create_actions(self):
-        color = QColor("#0055DD")
-        self.view_up_icon = load_icon(Path("data/icons/top.png"), color)
-        self.view_down_icon = load_icon(Path("data/icons/bottom.png"), color)
-        self.view_right_icon = load_icon(Path("data/icons/right.png"), color)
-        self.view_left_icon = load_icon(Path("data/icons/left.png"), color)
-        self.view_back_icon = load_icon(Path("data/icons/back.png"), color)
-        self.view_front_icon = load_icon(Path("data/icons/front.png"), color)
-        self.view_orthogonal_icon = load_icon(Path("data/icons/orthogonal.png"), color)
-        self.view_up_action = QAction(self.view_up_icon, "Up View", self)
-        self.view_down_action = QAction(self.view_down_icon, "Down View", self)
-        self.view_left_action = QAction(self.view_left_icon, "Left View", self)
-        self.view_right_action = QAction(self.view_right_icon, "Right View", self)
-        self.view_front_action = QAction(self.view_front_icon, "Front View", self)
-        self.view_back_action = QAction(self.view_back_icon, "Back View", self)
-        self.view_orthogonal_action = QAction(self.view_orthogonal_icon, "Orthogonal View", self)
-        self.view_up_action.triggered.connect(self.show_view_up_callback)
-        self.view_down_action.triggered.connect(self.show_view_down_callback)
-        self.view_left_action.triggered.connect(self.show_view_left_callback)
-        self.view_right_action.triggered.connect(self.show_view_right_callback)
-        self.view_front_action.triggered.connect(self.show_view_front_callback)
-        self.view_back_action.triggered.connect(self.show_view_back_callback)
-        self.view_orthogonal_action.triggered.connect(self.show_view_orthogonal_callback)
+        color = QColor("#448cff")
+        self.top_view_icon = load_icon(Path("data/icons/top.png"), color)
+        self.bottom_view_icon = load_icon(Path("data/icons/bottom.png"), color)
+        self.right_view_icon = load_icon(Path("data/icons/right.png"), color)
+        self.left_view_icon = load_icon(Path("data/icons/left.png"), color)
+        self.back_view_icon = load_icon(Path("data/icons/back.png"), color)
+        self.front_view_icon = load_icon(Path("data/icons/front.png"), color)
+        self.isometric_view_icon = load_icon(Path("data/icons/orthogonal.png"), color)
+        self.top_view_action = QAction(self.top_view_icon, "Top View", self)
+        self.bottom_view_action = QAction(self.bottom_view_icon, "Bottom View", self)
+        self.left_view_action = QAction(self.left_view_icon, "Left View", self)
+        self.right_view_action = QAction(self.right_view_icon, "Right View", self)
+        self.front_view_action = QAction(self.front_view_icon, "Front View", self)
+        self.back_view_action = QAction(self.back_view_icon, "Back View", self)
+        self.isometric_view_action = QAction(self.isometric_view_icon, "Isometric View", self)
+        self.top_view_action.triggered.connect(self.show_top_view_callback)
+        self.bottom_view_action.triggered.connect(self.show_bottom_view_callback)
+        self.left_view_action.triggered.connect(self.show_left_view_callback)
+        self.right_view_action.triggered.connect(self.show_right_view_callback)
+        self.front_view_action.triggered.connect(self.show_front_view_callback)
+        self.back_view_action.triggered.connect(self.show_back_view_callback)
+        self.isometric_view_action.triggered.connect(self.show_isometric_view_callback)
 
     def create_layout(self):
-        self.addAction(self.view_up_action)
-        self.addAction(self.view_down_action)
-        self.addAction(self.view_left_action)
-        self.addAction(self.view_right_action)
-        self.addAction(self.view_front_action)
-        self.addAction(self.view_back_action)
-        self.addAction(self.view_orthogonal_action)
+        self.addAction(self.top_view_action)
+        self.addAction(self.bottom_view_action)
+        self.addAction(self.left_view_action)
+        self.addAction(self.right_view_action)
+        self.addAction(self.front_view_action)
+        self.addAction(self.back_view_action)
+        self.addAction(self.isometric_view_action)
 
-    def show_view_up_callback(self):
+    def show_top_view_callback(self):
         widget = self.parent().viewer_tabs.currentWidget()
         if isinstance(widget, CommonRenderWidget):
-            widget.set_view_up()
+            widget.set_top_view()
 
-    def show_view_down_callback(self):
+    def show_bottom_view_callback(self):
         widget = self.parent().viewer_tabs.currentWidget()
         if isinstance(widget, CommonRenderWidget):
-            widget.set_view_down()
+            widget.set_bottom_view()
 
-    def show_view_left_callback(self):
+    def show_left_view_callback(self):
         widget = self.parent().viewer_tabs.currentWidget()
         if isinstance(widget, CommonRenderWidget):
-            widget.set_view_left()
+            widget.set_left_view()
 
-    def show_view_right_callback(self):
+    def show_right_view_callback(self):
         widget = self.parent().viewer_tabs.currentWidget()
         if isinstance(widget, CommonRenderWidget):
-            widget.set_view_right()
+            widget.set_right_view()
 
-    def show_view_front_callback(self):
+    def show_front_view_callback(self):
         widget = self.parent().viewer_tabs.currentWidget()
         if isinstance(widget, CommonRenderWidget):
-            widget.set_view_front()
+            widget.set_front_view()
 
-    def show_view_back_callback(self):
+    def show_back_view_callback(self):
         widget = self.parent().viewer_tabs.currentWidget()
         if isinstance(widget, CommonRenderWidget):
-            widget.set_view_back()
+            widget.set_back_view()
 
-    def show_view_orthogonal_callback(self):
+    def show_isometric_view_callback(self):
         widget = self.parent().viewer_tabs.currentWidget()
         if isinstance(widget, CommonRenderWidget):
-            widget.set_view_orthogonal()
+            widget.set_isometric_view()

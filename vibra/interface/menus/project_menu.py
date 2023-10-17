@@ -3,20 +3,24 @@ from pathlib import Path
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QMenu
 
+from vibra.interface.exception_message import ErrorMessage
 from vibra.interface.loading_bar import load_function
 from vibra.utils.icons import load_icon
+from vibra.utils.interface_functions import get_main_window
 
 
 class ProjectMenu(QMenu):
     def __init__(self, parent):
         super().__init__(parent)
+        #
+        self.main_window = get_main_window()
+        #
         self.setTitle("Project")
-
         self.create_actions()
         self.create_layout()
 
     def create_actions(self):
-        color = QColor("#0055DD")
+        color = QColor("#448cff")
 
         self.new_project_icon = load_icon(Path("data/icons/new_file.png"), color)
         self.load_project_icon = load_icon(Path("data/icons/import.png"), color)
@@ -34,7 +38,7 @@ class ProjectMenu(QMenu):
 
         #
         self.new_project_action = QAction(self.new_project_icon, "New Project", self)
-        self.load_project_action = QAction(self.load_project_icon, "Load Project", self)
+        self.open_project_action = QAction(self.load_project_icon, "Open Project", self)
         self.recent_action = QAction(self.recent_icon, "Recent", self)
         self.import_geometry_action = QAction(self.import_geometry_icon, "Import geometry", self)
 
@@ -48,14 +52,16 @@ class ProjectMenu(QMenu):
         #
         self.import_geometry_action.triggered.connect(self.import_geometry_callback)
         self.capture_image_action.triggered.connect(self.capture_image_callback)
+        self.open_project_action.triggered.connect(self.open_project_callback)
         self.save_action.triggered.connect(self.save_callback)
+        self.save_as_action.triggered.connect(self.save_as_callback)
         self.theme_action.triggered.connect(self.theme_callback)
         self.exit_action.triggered.connect(self.exit_callback)
 
     def create_layout(self):
         self.clear()
         self.addAction(self.new_project_action)
-        self.addAction(self.load_project_action)
+        self.addAction(self.open_project_action)
         self.addAction(self.recent_action)
         self.addAction(self.import_geometry_action)
         self.addSeparator()
@@ -66,34 +72,51 @@ class ProjectMenu(QMenu):
         self.addAction(self.theme_action)
         self.addAction(self.exit_action)
 
+    def open_project_callback(self):
+        self.main_window.open_project_dialog()
+
     def save_callback(self):
-        self.parent().project.save()
+        self.main_window.save_project_dialog()
+
+    def save_as_callback(self):
+        self.main_window.save_project_as_dialog()
 
     def help_callback(self):
-        self.parent().viewer_tabs.show_help()
+        self.main_window.viewer_tabs.show_help()
 
     def exit_callback(self):
-        loaded_function = load_function(self.parent().project.long_function, self)
-        loaded_function()
+        # loaded_function = load_function(self.parent().project.long_function, self)
+        # loaded_function()
+        loaded_solve = load_function(self.solve_example_analysis_callback, self)
+        loaded_solve()
 
     def theme_callback(self):
-        if self.parent().user_config.theme == "light":
-            self.parent().set_theme("dark")
+        if self.main_window.user_config.theme == "light":
+            self.main_window.set_theme("dark")
             self.theme_action.setIcon(self.theme_sun_icon)
 
-        elif self.parent().user_config.theme == "dark":
-            self.parent().set_theme("light")
+        elif self.main_window.user_config.theme == "dark":
+            self.main_window.set_theme("light")
             self.theme_action.setIcon(self.theme_moon_icon)
 
     def capture_image_callback(self):
-        self.parent().capture_image()
+        self.main_window.capture_image()
 
     def import_geometry_callback(self):
-        self.parent().import_geometry()
+        self.main_window.import_geometry_dialog()
 
     # TODO: Create and connect actions for these
-    def show_model_callback(self):
-        self.parent().viewer_tabs.show_model()
+    def show_geometry_callback(self):
+        self.main_window.viewer_tabs.show_geometry()
 
     def show_example_callback(self):
-        self.parent().viewer_tabs.show_example()
+        self.main_window.viewer_tabs.show_example()
+
+    #
+    def solve_example_analysis_callback(self):
+        try:
+            self.main_window.project.solve_modal_acoustic()
+        except NotImplementedError as e:
+            ErrorMessage(e)
+        else:
+            self.main_window.viewer_tabs.show_acoustic_modal_analysis()

@@ -3,7 +3,10 @@ from pathlib import Path
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QToolBar
 
-from vibra.interface.viewer_3d.common_render_widget import CommonRenderWidget
+from vibra.interface.local_refine_widget import LocalRefineWidget
+from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
+    CommonRenderWidget,
+)
 from vibra.utils.icons import load_icon
 
 
@@ -26,49 +29,48 @@ class RendererToolbar(QToolBar):
                 border-style: solid;
                 border-width: 1px;
                 border-color: #888888;
-                border-radius: 3px
             }
             """
         )
 
     def create_actions(self):
-        color = QColor("#0055DD")
+        color = QColor("#448cff")
 
         #
-        view_up_icon = load_icon(Path("data/icons/top.png"), color)
-        self.view_up_action = QAction(view_up_icon, "Up View", self)
-        self.view_up_action.triggered.connect(self.view_up_callback)
-        self.view_up_action.setShortcut("Ctrl+Shift+1")
+        top_view_icon = load_icon(Path("data/icons/top.png"), color)
+        self.top_view_action = QAction(top_view_icon, "Top View", self)
+        self.top_view_action.triggered.connect(self.top_view_callback)
+        self.top_view_action.setShortcut("Ctrl+Shift+1")
 
-        view_down_icon = load_icon(Path("data/icons/bottom.png"), color)
-        self.view_down_action = QAction(view_down_icon, "Down View", self)
-        self.view_down_action.triggered.connect(self.view_down_callback)
-        self.view_down_action.setShortcut("Ctrl+Shift+2")
+        bottom_icon = load_icon(Path("data/icons/bottom.png"), color)
+        self.bottom_view_action = QAction(bottom_icon, "Bottom View", self)
+        self.bottom_view_action.triggered.connect(self.bottom_view_callback)
+        self.bottom_view_action.setShortcut("Ctrl+Shift+2")
 
-        view_right_icon = load_icon(Path("data/icons/right.png"), color)
-        self.view_right_action = QAction(view_right_icon, "Right View", self)
-        self.view_right_action.triggered.connect(self.view_right_callback)
-        self.view_right_action.setShortcut("Ctrl+Shift+4")
+        right_view_icon = load_icon(Path("data/icons/right.png"), color)
+        self.right_view_action = QAction(right_view_icon, "Right View", self)
+        self.right_view_action.triggered.connect(self.right_view_callback)
+        self.right_view_action.setShortcut("Ctrl+Shift+4")
 
-        view_left_icon = load_icon(Path("data/icons/left.png"), color)
-        self.view_left_action = QAction(view_left_icon, "Left View", self)
-        self.view_left_action.triggered.connect(self.view_left_callback)
-        self.view_left_action.setShortcut("Ctrl+Shift+3")
+        left_view_icon = load_icon(Path("data/icons/left.png"), color)
+        self.left_view_action = QAction(left_view_icon, "Left View", self)
+        self.left_view_action.triggered.connect(self.left_view_callback)
+        self.left_view_action.setShortcut("Ctrl+Shift+3")
 
-        view_back_icon = load_icon(Path("data/icons/back.png"), color)
-        self.view_back_action = QAction(view_back_icon, "Back View", self)
-        self.view_back_action.triggered.connect(self.view_back_callback)
-        self.view_back_action.setShortcut("Ctrl+Shift+6")
+        back_view_icon = load_icon(Path("data/icons/back.png"), color)
+        self.back_view_action = QAction(back_view_icon, "Back View", self)
+        self.back_view_action.triggered.connect(self.back_view_callback)
+        self.back_view_action.setShortcut("Ctrl+Shift+6")
 
-        view_front_icon = load_icon(Path("data/icons/front.png"), color)
-        self.view_front_action = QAction(view_front_icon, "Front View", self)
-        self.view_front_action.triggered.connect(self.view_front_callback)
-        self.view_front_action.setShortcut("Ctrl+Shift+5")
+        front_view_icon = load_icon(Path("data/icons/front.png"), color)
+        self.front_view_action = QAction(front_view_icon, "Front View", self)
+        self.front_view_action.triggered.connect(self.front_view_callback)
+        self.front_view_action.setShortcut("Ctrl+Shift+5")
 
         view_orthogonal_icon = load_icon(Path("data/icons/orthogonal.png"), color)
-        self.view_orthogonal_action = QAction(view_orthogonal_icon, "Orthogonal View", self)
-        self.view_orthogonal_action.triggered.connect(self.view_orthogonal_callback)
-        self.view_orthogonal_action.setShortcut("Ctrl+Shift+7")
+        self.isometric_view_action = QAction(view_orthogonal_icon, "Isometric View", self)
+        self.isometric_view_action.triggered.connect(self.isometric_view_callback)
+        self.isometric_view_action.setShortcut("Ctrl+Shift+7")
 
         #
         show_points_icon = load_icon(Path("data/icons/nodes.png"), color)
@@ -87,57 +89,67 @@ class RendererToolbar(QToolBar):
         self.clip_plane_action = QAction(clip_plane_icon, "Clip Plane", self)
         self.clip_plane_action.triggered.connect(self.clip_plane_callback)
 
+        local_refine_mesh_icon = load_icon(Path("data/icons/tube_cut.png"), color)
+        self.local_refine_mesh_action = QAction(local_refine_mesh_icon, "Clip Plane", self)
+        self.local_refine_mesh_action.triggered.connect(self.local_refine_mesh_callback)
+
     def configure_layout(self):
         self.addSeparator()
-        self.addAction(self.view_up_action)
-        self.addAction(self.view_down_action)
-        self.addAction(self.view_right_action)
-        self.addAction(self.view_left_action)
-        self.addAction(self.view_front_action)
-        self.addAction(self.view_back_action)
-        self.addAction(self.view_orthogonal_action)
+        self.addAction(self.top_view_action)
+        self.addAction(self.bottom_view_action)
+        self.addAction(self.right_view_action)
+        self.addAction(self.left_view_action)
+        self.addAction(self.front_view_action)
+        self.addAction(self.back_view_action)
+        self.addAction(self.isometric_view_action)
         self.addSeparator()
-        self.addAction(self.show_lines_action)
         self.addAction(self.show_points_action)
+        self.addAction(self.show_lines_action)
         self.addAction(self.show_faces_action)
         self.addSeparator()
         self.addAction(self.clip_plane_action)
+        self.addSeparator()
+        self.addAction(self.local_refine_mesh_action)
 
     # Callbacks
-    def view_up_callback(self):
-        widget = self.viewer_tabs.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.set_view_up()
 
-    def view_down_callback(self):
-        widget = self.viewer_tabs.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.set_view_down()
+    def local_refine_mesh_callback(self):
+        LocalRefineWidget()
 
-    def view_left_callback(self):
+    def top_view_callback(self):
         widget = self.viewer_tabs.currentWidget()
         if isinstance(widget, CommonRenderWidget):
-            widget.set_view_left()
+            widget.set_top_view()
 
-    def view_right_callback(self):
+    def bottom_view_callback(self):
         widget = self.viewer_tabs.currentWidget()
         if isinstance(widget, CommonRenderWidget):
-            widget.set_view_right()
+            widget.set_bottom_view()
 
-    def view_front_callback(self):
+    def left_view_callback(self):
         widget = self.viewer_tabs.currentWidget()
         if isinstance(widget, CommonRenderWidget):
-            widget.set_view_front()
+            widget.set_left_view()
 
-    def view_back_callback(self):
+    def right_view_callback(self):
         widget = self.viewer_tabs.currentWidget()
         if isinstance(widget, CommonRenderWidget):
-            widget.set_view_back()
+            widget.set_right_view()
 
-    def view_orthogonal_callback(self):
+    def front_view_callback(self):
         widget = self.viewer_tabs.currentWidget()
         if isinstance(widget, CommonRenderWidget):
-            widget.set_view_orthogonal()
+            widget.set_front_view()
+
+    def back_view_callback(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_back_view()
+
+    def isometric_view_callback(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_isometric_view()
 
     def show_points_callback(self):
         widget = self.parent().viewer_tabs.currentWidget()

@@ -1,0 +1,89 @@
+from math import pi
+from pathlib import Path
+
+from PyQt5 import uic
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.utils.interface_functions import get_main_window
+
+window_title1 = "ERROR MESSAGE"
+window_title2 = "WARNING MESSAGE"
+
+
+class AcousticModalAnalysisInput(QDialog):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        uic.loadUi(Path("data/ui_files/analysis/acoustic/acoustic_modal_analysis_input.ui"), self)
+        self.main_window = get_main_window()
+        self.project = self.main_window.project
+
+        icon_path = str(Path("data/icons/logo_vibra.png"))
+        self.icon = QIcon(icon_path)
+        self.setWindowIcon(self.icon)
+
+        self.lineEdit_number_modes = self.findChild(QLineEdit, "lineEdit_number_modes")
+        self.lineEdit_input_sigma_factor = self.findChild(QLineEdit, "lineEdit_input_sigma_factor")
+
+        self.modes = int(self.lineEdit_number_modes.text())
+        self.sigma_factor = float(self.lineEdit_input_sigma_factor.text())
+        self.sigma_factor = (2 * pi * self.sigma_factor) ** 2
+
+        self.pushButton_run_analysis_setup = self.findChild(
+            QPushButton, "pushButton_run_analysis_setup"
+        )
+        self.pushButton_run_analysis_advanced = self.findChild(
+            QPushButton, "pushButton_run_analysis_advanced"
+        )
+
+        if self.project.model.mesh_setup is None:
+            self.pushButton_run_analysis_setup.setDisabled(True)
+            self.pushButton_run_analysis_advanced.setDisabled(True)
+
+        self.pushButton_run_analysis_setup.clicked.connect(self.confirm)
+        self.pushButton_run_analysis_advanced.clicked.connect(self.confirm)
+
+        self.complete = False
+        self.exec_()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            self.confirm()
+        elif event.key() == Qt.Key_Escape:
+            self.close()
+
+    def check(self):
+        if self.lineEdit_number_modes.text() == "":
+            title = "INVALID INPUT VALUE"
+            message = "Invalid a value to the number of modes."
+            self.text_data = [title, message, window_title1]
+            return True
+        else:
+            try:
+                self.modes = int(self.lineEdit_number_modes.text())
+            except Exception:
+                title = "INVALID INPUT VALUE"
+                message = "Invalid input value for number of modes."
+                self.text_data = [title, message, window_title1]
+                return True
+            try:
+                self.sigma_factor = (2 * pi * float(self.lineEdit_input_sigma_factor.text())) ** 2
+            except Exception:
+                title = "INVALID INPUT VALUE"
+                message = "Invalid input value for sigma factor."
+                self.text_data = [title, message, window_title1]
+                return True
+        return False
+
+    def confirm(self):
+        if self.check():
+            PrintMessageInput(self.text_data)
+            return
+        self.complete = True
+        self.close()
+
+    def button_clicked(self):
+        self.check()

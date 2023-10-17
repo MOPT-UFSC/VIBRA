@@ -13,14 +13,14 @@ class LinesActor(vtk.vtkActor):
         mapper = vtk.vtkPolyDataMapper()
         cell_colors = vtk.vtkUnsignedCharArray()
 
-        data.Allocate(len(self.mesh.lines))
+        data.Allocate(len(self.mesh.lines_connectivity))
         cell_colors.SetNumberOfComponents(3)
-        cell_colors.SetNumberOfTuples(len(self.mesh.lines))
+        cell_colors.SetNumberOfTuples(len(self.mesh.lines_connectivity))
 
-        for i, (x, y, z) in enumerate(self.mesh.points):
-            points.InsertPoint(i, x, y, z)
+        for _, x, y, z in self.mesh.nodal_coordinates:
+            points.InsertNextPoint(x, y, z)
 
-        for a, b in self.mesh.lines:
+        for a, b in self.mesh.lines_connectivity[:, 4:]:
             data.InsertNextCell(vtk.VTK_LINE, 2, (a, b))
 
         data.SetPoints(points)

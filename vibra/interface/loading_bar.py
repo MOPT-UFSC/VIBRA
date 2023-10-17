@@ -139,6 +139,7 @@ def load_function(function, parent):
             # Calls the actual function
             function(*args, **kwargs)
 
+        finally:
             # Shows the full progress bar and closes
             loading_window.progress_bar.setValue(100)
             sleep(0.1)  # A small delay so we can see the 100%
@@ -150,10 +151,7 @@ def load_function(function, parent):
             # Restores the previous cursor
             QApplication.restoreOverrideCursor()
 
-        except AttributeError:
-            logging.warn("No loading window found")
-
-        finally:
+            # Removes the ProgressBarLogUpdater
             logging.getLogger().removeHandler(progress_handler)
 
     return wrapper

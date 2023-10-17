@@ -4,28 +4,38 @@ import vtk
 class FacesActor(vtk.vtkActor):
     def __init__(self, mesh):
         self.mesh = mesh
+        self.data = None
+
         self.create_geometry()
         self.configure_appearance()
-        self.color_stack = []
 
     def create_geometry(self):
+        #
         data = vtk.vtkPolyData()
         points = vtk.vtkPoints()
         mapper = vtk.vtkPolyDataMapper()
         point_colors = vtk.vtkUnsignedCharArray()
         cell_colors = vtk.vtkUnsignedCharArray()
-
-        data.Allocate(len(self.mesh.faces))
+        #
+        nel = len(self.mesh.faces_connectivity[0, 4:])
+        # face_nodes = [3, 6, 4, 8]
+        # types = [vtk.VTK_TRIANGLE, vtk.VTK_QUADRATIC_TRIANGLE, vtk.VTK_QUAD, vtk.VTK_QUADRATIC_QUAD]
+        # aux = dict(zip(face_nodes, types))
+        #
+        data.Allocate(nel * len(self.mesh.faces_connectivity))
         point_colors.SetNumberOfComponents(3)
-        point_colors.SetNumberOfTuples(len(self.mesh.points))
+        point_colors.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
         cell_colors.SetNumberOfComponents(3)
-        cell_colors.SetNumberOfTuples(len(self.mesh.faces))
+        cell_colors.SetNumberOfTuples(len(self.mesh.faces_connectivity))
 
-        for i, (x, y, z) in enumerate(self.mesh.points):
-            points.InsertPoint(i, x, y, z)
-
-        for a, b, c in self.mesh.faces:
-            data.InsertNextCell(vtk.VTK_TRIANGLE, 3, [a, b, c])
+        for _, x, y, z in self.mesh.nodal_coordinates:
+            points.InsertNextPoint(x, y, z)
+        #
+        for values in list(self.mesh.faces_connectivity[:, 4:]):
+            try:
+                data.InsertNextCell(vtk.VTK_TRIANGLE, nel, list(values))
+            except:
+                raise NotImplementedError("Not implemented plane element")
 
         data.SetPoints(points)
         data.GetPointData().SetScalars(point_colors)
@@ -35,7 +45,8 @@ class FacesActor(vtk.vtkActor):
         normals_filter.AddInputData(data)
         normals_filter.Update()
 
-        mapper.SetInputData(normals_filter.GetOutput())
+        self.data = normals_filter.GetOutput()
+        mapper.SetInputData(self.data)
         self.SetMapper(mapper)
 
     def configure_appearance(self):
@@ -47,9 +58,11 @@ class FacesActor(vtk.vtkActor):
         self.clear_colors()
 
     def clear_colors(self):
-        data = self.GetMapper().GetInput()
-        point_colors = data.GetPointData().GetScalars()
-        cell_colors = data.GetCellData().GetScalars()
+        if self.data is None:
+            return
+
+        point_colors = self.data.GetPointData().GetScalars()
+        cell_colors = self.data.GetCellData().GetScalars()
 
         r, g, b = self.GetProperty().GetColor()
         r = int(r * 255)
@@ -66,34 +79,11 @@ class FacesActor(vtk.vtkActor):
 
         self.GetMapper().ScalarVisibilityOff()
 
-    def push(self):
-        data = self.GetMapper().GetInput()
-        cell_colors = data.GetCellData().GetScalars()
-
-        mode = self.GetMapper().GetScalarMode()
-        colors = vtk.vtkUnsignedCharArray()
-        colors.DeepCopy(cell_colors)
-
-        self.color_stack.append((mode, colors))
-
-    def pop(self):
-        if not self.color_stack:
-            return None
-
-        mode, colors = self.color_stack.pop()
-        data = self.GetMapper().GetInput()
-        data.GetCellData().SetScalars(colors)
-
-        self.GetMapper().SetScalarMode(mode)
-        self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
-        self.GetMapper().ScalarVisibilityOn()
-
-        return colors
-
     def paint_points(self, color, points):
-        data = self.GetMapper().GetInput()
-        point_colors = data.GetPointData().GetScalars()
+        if self.data is None:
+            return
 
+        point_colors = self.data.GetPointData().GetScalars()
         for i in points:
             point_colors.SetTuple(i, color)
 
@@ -102,9 +92,10 @@ class FacesActor(vtk.vtkActor):
         self.GetMapper().ScalarVisibilityOn()
 
     def paint_cells(self, color: tuple[3], faces: tuple[int]):
-        data = self.GetMapper().GetInput()
-        cell_colors = data.GetCellData().GetScalars()
+        if self.data is None:
+            return
 
+        cell_colors = self.data.GetCellData().GetScalars()
         for i in faces:
             cell_colors.SetTuple(i, color)
 

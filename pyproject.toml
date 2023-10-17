@@ -12,6 +12,8 @@ pyqt5 = "^5.15.9"
 vtk = "^9.2.6"
 pyqtdarktheme = "^2.1.0"
 gmsh = "^4.11.1"
+ctrefprop = "^0.10.2"
+scipy = "^1.11.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"
