@@ -1,5 +1,6 @@
-from configparser import ConfigParser
-from dataclasses import dataclass
+import json
+import logging
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 user_config_path = Path(".config.ini")
@@ -9,30 +10,44 @@ user_config_path = Path(".config.ini")
 class UserConfig:
     version: tuple = "0.0.0"
     theme: str = "dark"
-    menu_items_visible: str = "1"
+    menu_items_visible: bool = True
+    recent_files: list = field(default_factory=list)
 
-    def __post_init__(self):
-        self.config = ConfigParser()
-        self.config.add_section("info")
-        self.config.add_section("appearance")
+    @classmethod
+    def load(cls):
+        path = Path(".config.json")
 
-        if user_config_path.exists():
-            self.load()
-        else:
-            self.save()
+        if not path.exists():
+            return cls()
 
-    def load(self):
-        self.config.read(user_config_path)
-        self.version = self.config.get("info", "version", fallback=self.version)
-        self.theme = self.config.get("appearance", "theme", fallback=self.theme)
-        self.menu_items_visible = self.config.get(
-            "appearance", "menu_items_visible", fallback=self.menu_items_visible
-        )
+        try:
+            with open(".config.json", "r") as file:
+                data = json.load(file)
+            return cls(**data)
+        except json.decoder.JSONDecodeError as e:
+            logging.error(e)
+            return cls()
 
     def save(self):
-        self.config.set("info", "version", self.version)
-        self.config.set("appearance", "theme", self.theme)
-        self.config.set("appearance", "menu_items_visible", self.menu_items_visible)
+        with open(".config.json", "w") as file:
+            json.dump(asdict(self), file, indent=2)
 
-        with open(user_config_path, "w") as file:
-            self.config.write(file)
+    def add_recent_file(self, path):
+        """
+        Puts the path in the top of the stack.
+        If it already exists remove previous instance.
+
+        Here we need to store the path as a string to make
+        it is easier to serialize.
+        It is not a problem because it is a local configuration
+        file that will not be transfered to anywhere.
+        """
+
+        self.remove_recent_file(str(path))
+        self.recent_files.append(str(path))
+        while len(self.recent_files) > 5:
+            self.recent_files.pop(0)
+
+    def remove_recent_file(self, path):
+        if path in self.recent_files:
+            self.recent_files.remove(str(path))

@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 
+from vibra.engine.mesher.geometry_setup import GeometrySetup
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.errors import IncompleteSetupError
@@ -21,7 +22,7 @@ class Model:
 
     def reset_variables(self):
         #
-        self.geometry_path = ""
+        self.geometry_path = Path("")
         self.mesh = None
         self.mesh_setup = None
         self.generated_mesh = False
@@ -48,8 +49,8 @@ class Model:
         self.generated_mesh = False
 
     def process_mesh(self):
-        if self.geometry_path == "" or not os.path.exists(self.geometry_path):
-            message = "Geometry file not defined"
+        if not self.geometry_path.exists():
+            message = "Geometry not defined"
             context = (
                 "The geometry file has not been defined yet."
                 "You should to import a supported CAD file format to proceed."
@@ -61,13 +62,17 @@ class Model:
         if self.mesh_setup is None:
             message = "Mesh setup not defined"
             context = (
-                "The mesh setup has not been defined yet.\n"
+                "The mesh setup has not been defined yet."
                 "You should to configure the mesher to proceed."
             )
             raise IncompleteSetupError(message, context=context)
 
+        if self.mesh is None:
+            self.mesh = Mesh.from_cad(self.geometry_path)
+
         # self.geometry_path = Path("data/examples/script_files/script_hex_elements.txt")
-        self.mesh = Mesh.from_cad(self.geometry_path, gmsh_gui=False, **self.mesh_setup)
+        # self.mesh = Mesh.from_cad(self.geometry_path, gmsh_gui=False, **self.mesh_setup)
+        self.mesh.update_parameters(**self.mesh_setup)
         self.generated_mesh = True
 
     def set_material(self, material):

@@ -274,6 +274,7 @@ class ModelProperties:
         if key in self.volume_properties.keys():
             self.volume_properties.pop(key)
 
+    # TODO: remove this
     def as_json(self):
         def normalize(prop: dict):
             """
@@ -293,6 +294,7 @@ class ModelProperties:
         )
         return json.dumps(data, indent=2)
 
+    # TODO: remove this
     def load_json(self, data: dict):
         def denormalize(prop: dict):
             new_prop = dict()

@@ -17,10 +17,10 @@ SHOW_FACES = 2
 class MeshRenderWidget(CommonRenderWidget):
     selection_changed = pyqtSignal(list, list, list)
 
-    def __init__(self, project, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.project = project
+        self.main_window = get_main_window()
         self.view_mode = SHOW_FACES
 
         self.mesh_info = MeshInfoBar()
@@ -40,10 +40,10 @@ class MeshRenderWidget(CommonRenderWidget):
         self.update_plot()
 
     def update_plot(self):
-        if self.project is None:
+        if self.main_window.project is None:
             return
 
-        model = self.project.model
+        model = self.main_window.project.model
         if model is None:
             return
 
@@ -63,6 +63,7 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.renderer.ResetCamera()
         self.show_faces()
+        self.main_window.project.thumbnail = self.get_thumbnail()
 
     #
     def show_points(self):
