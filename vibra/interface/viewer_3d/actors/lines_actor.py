@@ -20,8 +20,13 @@ class LinesActor(vtk.vtkActor):
         for _, x, y, z in self.mesh.nodal_coordinates:
             points.InsertNextPoint(x, y, z)
 
-        for a, b in self.mesh.lines_connectivity[:, 4:]:
-            data.InsertNextCell(vtk.VTK_LINE, 2, (a, b))
+        connect = self.mesh.lines_connectivity[:, 4:]
+        if len(connect[0, :]) == 2:    
+            for a, b in connect:
+                data.InsertNextCell(vtk.VTK_LINE, 2, (a, b))
+        else:
+            for a, b, c in connect:
+                data.InsertNextCell(vtk.VTK_QUADRATIC_EDGE, 3, (a, b, c))
 
         data.SetPoints(points)
         data.GetCellData().SetScalars(cell_colors)
