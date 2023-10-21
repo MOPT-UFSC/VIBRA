@@ -11,8 +11,10 @@ class Element:
 
     # Constants of the element
     NODES_PER_ELEMENT: int = 0
+    NODES_PER_ELEMENT_2D: int = 0
     DOFS_PER_NODE: int = 0
     DOFS_PER_ELEMENT: int = NODES_PER_ELEMENT * DOFS_PER_NODE
+    DOFS_PER_ELEMENT_2D: int = NODES_PER_ELEMENT_2D * DOFS_PER_NODE
 
     def elementary_matrices(self) -> tuple[np.ndarray]:
         raise NotImplementedError("The function elementary_matrices was not implemented")

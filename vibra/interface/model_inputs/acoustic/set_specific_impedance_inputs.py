@@ -242,12 +242,10 @@ class SpecificImpedanceInput(QDialog):
             nodal_attribution = self.radioButton_nodal_attribution_constant.isChecked()
             key_avg = self.checkBox_averaged_constant_values.isChecked()
 
-            data = {
-                "real_values": real_values,
-                "imag_values": imag_values,
-                "nodal_attribution": nodal_attribution,
-                "averaged": key_avg,
-            }
+            data = {"real_values": real_values,
+                    "imag_values": imag_values,
+                    "nodal_attribution": nodal_attribution,
+                    "averaged": key_avg}
 
             for _id in self.typed_ids:
                 self.project.set_specific_impedance(data, _id)

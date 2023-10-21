@@ -20,6 +20,8 @@ class AcousticAssembler:
     def reset(self):
         self.stiffness_matrix = None
         self.mass_matrix = None
+        self.damping_matrix = 0.
+        self.flow_mass_matrix = None
         self.frequencies = None
         self.prescribed_values = []
         self.prescribed_indexes = []
@@ -129,6 +131,32 @@ class AcousticAssembler:
     def get_matrices_dropping_indexes(self):
         return self.unprescribed_indexes, self.prescribed_indexes
 
+    def get_surface_data_for_element_integration_by_property(self, label):
+        """ """
+        connect = None
+        data = dict()
+        index = 0
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == label:
+                if not data["nodal_attribution"]:
+                    # TODO: get the surface fluid property
+                    fluid = self.model.properties.get_fluid()
+                    rho = fluid.fluid_density
+                    area = self.model.surfaces_areas[surface_id]
+                    real_values = np.array(data["real_values"], dtype=float)
+                    imag_values = np.array(data["imag_values"], dtype=float)
+                    complex_values = real_values + 1j*imag_values 
+                    face_elements = self.model.mesh.elements_from_surfaces[surface_id]
+                    for el in face_elements:
+                        data[index] = [el, complex_values, rho, area]
+                        index += 1
+        if len(data) > 0:
+            list_elements = list(data.keys())
+            connect = self.model.mesh.faces_connectivity[list_elements, :]
+
+        return connect, data
+
     def assemble_global_matrices(self):
         """
         Calculates global matrices.
@@ -152,26 +180,43 @@ class AcousticAssembler:
         self.data_K = self.data_K.flatten()
         self.data_M = self.data_M.flatten()
 
-        _stiffness_matrix_full = csr_matrix(
-            (self.data_K, (ind_rows, ind_cols)), shape=(total_dofs, total_dofs)
-        )
-        _mass_matrix_full = csr_matrix(
-            (self.data_M, (ind_rows, ind_cols)), shape=(total_dofs, total_dofs)
-        )
+        _stiffness_matrix_full = csr_matrix((self.data_K, (ind_rows, ind_cols)), shape=(total_dofs, total_dofs))
+        _mass_matrix_full = csr_matrix((self.data_M, (ind_rows, ind_cols)), shape=(total_dofs, total_dofs))
 
         self.process_indexes()
         if len(self.prescribed_indexes) > 0:
-            self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][
-                :, self.unprescribed_indexes
-            ]
-            self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][
-                :, self.unprescribed_indexes
-            ]
+            self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+            self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]                
         else:
             self.stiffness_matrix = _stiffness_matrix_full
             self.mass_matrix = _mass_matrix_full
 
-    def get_acoustic_excitations(self):
+    def assemble_global_damping_matrix(self):
+
+        element = self.get_element()
+        dofs_Z = element.DOFS_PER_ELEMENT_2D
+        total_dofs = element.DOF_PER_NODE * len(element.nodal_coordinates)
+
+        connect_Z, data = self.get_surface_data_for_element_integration_by_property("specific_impedance")
+        if connect_Z is None:
+            nel_Z = 0  
+        else:
+            nel_Z = connect_Z.shape[0]
+            self.data_Z = np.zeros((nel_Z, dofs_Z, dofs_Z), dtype=complex)
+            ind_rows_Z, ind_cols_Z = element.generate_ind_rows_cols_2D(connect_Z)
+
+            for i, [el, value, rho, area] in enumerate(data.values()):
+                self.data_Z[i, :, :] = element.matricesZ3(i, rho, value)
+
+            self.data_Z = self.data_Z.flatten()
+            _damping_matrix_full = csr_matrix((self.data_Z, (ind_rows_Z, ind_cols_Z)), shape=(total_dofs, total_dofs))
+            
+            if len(self.prescribed_indexes) > 0:
+                self.damping_matrix = _damping_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+            else:
+                self.damping_matrix = _damping_matrix_full
+
+    def get_acoustic_excitations_by_nodal_attribution(self):
         """This method processes the acoustic model excitations and
         returns the output data in the form of mass flow rate.
         """
@@ -239,13 +284,62 @@ class AcousticAssembler:
                             acoustic_excitation[index] += (rho * area * complex_values) / N
                         else:
                             acoustic_excitation[index] += rho * area * complex_values
+        
+        element = self.get_element()
+        total_dofs = element.DOF_PER_NODE * len(element.nodal_coordinates)
+        output = np.zeros((total_dofs, number_frequencies), dtype=complex)
 
-        indexes = list(acoustic_excitation.keys())
-        excitation = list(acoustic_excitation.values())
+        if len(self.prescribed_indexes) > 0:
+            indexes = list(acoustic_excitation.keys())
+            excitation = list(acoustic_excitation.values())
+            output[indexes, :] = np.array(excitation)
+            return output[self.unprescribed_indexes, :]
+        else:
+            return output
+        
+    def get_acoustic_excitations_by_element_integration(self):
+
+        if self.frequencies is None:
+            number_frequencies = 1
+        else:
+            number_frequencies = len(self.frequencies)
 
         element = self.get_element()
         total_dofs = element.DOF_PER_NODE * len(element.nodal_coordinates)
         output = np.zeros((total_dofs, number_frequencies), dtype=complex)
-        output[indexes, :] = np.array(excitation)
+        aux_ones = np.ones((1, number_frequencies), dtype=complex)
 
-        return output[self.unprescribed_indexes, :]
+        connect_mf, data_mf = self.get_surface_data_for_element_integration_by_property("mass_flow_rate")
+        if connect_mf is not None:
+            element.reorder_face_connect(connect_mf)
+            for i, [el, complex_values, _, _] in enumerate(data_mf.values()):
+                indices = element.connect_face[i, 1:]
+                normalized_excitation_matrix = element.excitationF3(i)
+                if complex_values.shape[0] == 1:
+                    complex_values = complex_values * aux_ones
+                output[indices, :] += normalized_excitation_matrix.T @ complex_values
+        
+        connect_vv, data_vv = self.get_surface_data_for_element_integration_by_property("volume_velocity")
+        if connect_vv is not None:
+            element.reorder_face_connect(connect_vv)
+            for i, [el, complex_values, rho, _] in enumerate(data_vv.values()):
+                indices = element.connect_face[i, 1:]
+                normalized_excitation_matrix = element.excitationF3(i)
+                if complex_values.shape[0] == 1:
+                    complex_values = complex_values * aux_ones
+                output[indices, :] += (normalized_excitation_matrix.T @ complex_values) * rho
+        
+        connect_pv, data_pv = self.get_surface_data_for_element_integration_by_property("particle_velocity")
+        if connect_pv is not None:
+            element.reorder_face_connect(connect_pv)
+            for i, [el, complex_values, rho, area] in enumerate(data_pv.values()):
+                indices = element.connect_face[i, 1:]
+                normalized_excitation_matrix = element.excitationF3(i)
+                if complex_values.shape[0] == 1:
+                    complex_values = complex_values * aux_ones
+                output[indices, :] += (normalized_excitation_matrix.T @ complex_values) * rho * area
+            
+        if len(self.prescribed_indexes) > 0:
+            return output[self.unprescribed_indexes, :]
+        else:
+            return output

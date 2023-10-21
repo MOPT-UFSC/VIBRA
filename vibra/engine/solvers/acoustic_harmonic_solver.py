@@ -34,27 +34,25 @@ class AcousticHarmonicSolver:
         self.dissipation_model = data
 
     def solve(self):
+        """ """
         self.M = self.assembler.mass_matrix
         self.K = self.assembler.stiffness_matrix
-        self.mass_flow = self.assembler.get_acoustic_excitations()
-        (
-            self.unprescribed_indexes,
-            self.prescribed_indexes,
-        ) = self.assembler.get_matrices_dropping_indexes()
-        (
-            self.prescribed_values,
-            self.array_prescribed_values,
-        ) = self.assembler.get_prescribed_values()
-
+        self.C = self.assembler.damping_matrix
+        self.mass_flow = self.assembler.get_acoustic_excitations_by_nodal_attribution()
+        self.mass_flow += self.assembler.get_acoustic_excitations_by_element_integration()
+        #
+        self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
+        self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_values()
         rows = len(self.prescribed_indexes) + len(self.unprescribed_indexes)
         cols = len(self.frequencies)
 
         solution = np.zeros((rows, cols), dtype=complex)
 
         for i, freq in enumerate(self.frequencies):
-            logging.info(f"Solving for frequency {freq}" + ProgressStatus(i, len(self.frequencies)))
+            message = f"Solution in progress -> step {i+1} and frequency {freq} Hz"
+            logging.info( message + ProgressStatus(i, len(self.frequencies)))
             omega = 2 * np.pi * freq
-            A = self.K - (omega**2) * self.M
+            A = self.K - (omega**2) * self.M + 1j*omega*self.C
             F = -1j * omega * self.mass_flow[:, i]
             solution[:, i] = spsolve(A, F)
 

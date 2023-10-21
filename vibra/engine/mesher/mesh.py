@@ -30,9 +30,11 @@ class Mesh:
         self.solids_connectivity = np.array([])
         self.nodes_from_lines = dict()
         self.nodes_from_surfaces = dict()
+        self.elements_from_surfaces = dict()
         self.nodes_from_volumes = dict()
         self.entity_ranges = dict()
         self.surfaces_from_volumes = dict()
+        self.connectivity_from_surfaces = dict()
 
     @classmethod
     def from_cad(
@@ -296,11 +298,9 @@ class Mesh:
                 array_element_nodes = np.array(element_nodes[i]).reshape(-1, nodes_per_element)
                 array_element_nodes -= 1  # index connectivity from 0
 
-                elements_data[element_type] = {
-                    "indexes": element_indexes[i],
-                    "array_element_nodes": array_element_nodes,
-                    "element_to_nodes": dict(zip(element_indexes[i], array_element_nodes)),
-                }
+                elements_data[element_type] = { "indexes": element_indexes[i],
+                                                "array_element_nodes": array_element_nodes,
+                                                "element_to_nodes": dict(zip(element_indexes[i], array_element_nodes)) }
 
             if dim == 0:  # Points
                 # The index of points is one less than the
@@ -314,6 +314,8 @@ class Mesh:
             elif dim == 2:  # Surfaces
                 connectivity_dim2[dim, tag] = elements_data
                 self.nodes_from_surfaces[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
+                self.elements_from_surfaces[tag] = element_indexes
+                self.connectivity_from_surfaces[tag] = array_element_nodes
 
             elif dim == 3:  # Solids
                 connectivity_dim3[dim, tag] = elements_data
