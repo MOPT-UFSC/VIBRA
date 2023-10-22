@@ -192,6 +192,9 @@
             <property name="styleSheet">
              <string notr="true">color: rgb(0, 0, 255); background-color: rgb(255,255,255); font: 75 bold 11pt &quot;Segoe UI&quot;;</string>
             </property>
+            <property name="text">
+             <string>0</string>
+            </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
             </property>
@@ -223,6 +226,9 @@
             <property name="styleSheet">
              <string notr="true">color: rgb(0, 0, 255); background-color: rgb(255,255,255); font: 75 bold 11pt &quot;Segoe UI&quot;;</string>
             </property>
+            <property name="text">
+             <string>2</string>
+            </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
             </property>
@@ -253,6 +259,9 @@
             </property>
             <property name="styleSheet">
              <string notr="true">color: rgb(0, 0, 255); background-color: rgb(255,255,255); font: 75 bold 11pt &quot;Segoe UI&quot;;</string>
+            </property>
+            <property name="text">
+             <string>200</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>

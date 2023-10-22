@@ -1,6 +1,6 @@
 import numpy as np
 
-from vibra.engine.elements.element import Element
+from vibra.engine.elements.solid_elements import Element3D
 
 
 def shapeT4C(ssx, ttx, rrx):
@@ -41,7 +41,7 @@ def get_detJAC_and_invJAC(JAC):
     return detJAC, (1 / detJAC) * AUJJ
 
 
-class STRUCT_TETRAHEDRON_4S(Element):
+class STRUCT_TETRAHEDRON_4S(Element3D):
     #
     NODES_PER_ELEMENT = 4
     DOF_PER_NODE = 3

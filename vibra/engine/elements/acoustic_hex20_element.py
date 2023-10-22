@@ -1,6 +1,6 @@
 import numpy as np
 
-from vibra.engine.elements.element import Element
+from vibra.engine.elements.solid_elements import (Element3D)
 
 
 def shapeH20(ssx, ttx, rrx):
@@ -129,7 +129,7 @@ def get_detJAC_and_invJAC_3D(JAC):
     return detJAC, (1 / detJAC) * AUJJ
 
 
-class ACT_HEXAHEDRON_20C:
+class ACT_HEXAHEDRON_20C(Element3D):
     #
     NODES_PER_ELEMENT = 20
     DOF_PER_NODE = 1
@@ -152,7 +152,6 @@ class ACT_HEXAHEDRON_20C:
 
     def define_integration_points(self):
         """ """
-        # integration points
         self.nint = 27
         self.pint = np.array(
             [
@@ -339,8 +338,8 @@ class ACT_HEXAHEDRON_20C:
         detJAC, invJAC = get_detJAC_and_invJAC_3D(JAC)
         dphi_t = invJAC @ self.dphi
         #
-        B = np.zeros((self.nint, 3, self.DOFS_PER_ELEMENT), dtype=float)
-        N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
+        B = np.zeros((self.nint, 3, self.DOFS_PER_ELEMENT_3D), dtype=float)
+        N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT_3D), dtype=float)
         #
         B[:, 0, :] = dphi_t[:, 0, :]
         B[:, 1, :] = dphi_t[:, 1, :]
@@ -350,8 +349,8 @@ class ACT_HEXAHEDRON_20C:
         #
         # integration loop
         Ke, Me = 0, 0
-        # Ke = np.zeros((self.DOFS_PER_ELEMENT, self.DOFS_PER_ELEMENT), dtype=float)
-        # Me = np.zeros((self.DOFS_PER_ELEMENT, self.DOFS_PER_ELEMENT), dtype=float)
+        # Ke = np.zeros((self.DOFS_PER_ELEMENT_3D, self.DOFS_PER_ELEMENT_3D), dtype=float)
+        # Me = np.zeros((self.DOFS_PER_ELEMENT_3D, self.DOFS_PER_ELEMENT_3D), dtype=float)
         for i in range(self.nint):
             Ke += B[i, :, :].T @ B[i, :, :] * (detJAC[i, :, :] * self.wps[i])
             Me += (1 / c_0**2) * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps[i])
@@ -368,7 +367,7 @@ class ACT_HEXAHEDRON_20C:
         """This method processess the dofs indices (rows and columns) for assembly"""
 
         self.reorder_connect()
-        dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
+        dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT_3D
         ind_dofs = dofs * self.connectivity[:, 1:]
 
         vect_indices = ind_dofs.flatten()

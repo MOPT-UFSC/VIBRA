@@ -32,13 +32,13 @@ class StructuralAssembler:
         element_type = self.model.mesh.element_type
 
         if element_type == TETRAHEDRON_4:
-            return STRUCT_TETRAHEDRON_4S(self.model)
+            return STRUCT_TETRAHEDRON_4S(self.model), None
         elif element_type == TETRAHEDRON_10:
-            return STRUCT_TETRAHEDRON_10S(self.model)
+            return STRUCT_TETRAHEDRON_10S(self.model), None
         elif element_type == HEXAHEDRON_8:
-            return STRUCT_HEXAHEDRON_8(self.model)
+            return STRUCT_HEXAHEDRON_8(self.model), None
         elif element_type == HEXAHEDRON_20:
-            return STRUCT_HEXAHEDRON_20(self.model)
+            return STRUCT_HEXAHEDRON_20(self.model), None
         else:
             raise NotImplementedError(f"Element type is not supported yet.")
 
@@ -134,8 +134,8 @@ class StructuralAssembler:
             return _prescribed_indexes
 
     def get_unprescribed_indexes(self):
-        element = self.get_element()
-        total_dofs = element.DOF_PER_NODE * len(element.nodal_coordinates)
+        element_3D, _ = self.get_element()
+        total_dofs = element_3D.DOF_PER_NODE * len(element_3D.nodal_coordinates)
         all_indexes = np.arange(total_dofs, dtype=int)
         prescribed_indexes = self.get_prescribed_indexes()
 
@@ -149,18 +149,18 @@ class StructuralAssembler:
         Calculates global matrices.
         """
 
-        element = self.get_element()
-        ind_rows, ind_cols = element.generate_ind_rows_cols()
+        element_3D, _ = self.get_element()
+        ind_rows, ind_cols = element_3D.generate_ind_rows_cols()
 
-        dofs = element.DOFS_PER_ELEMENT
-        nel = len(element.connectivity)
-        total_dofs = element.DOF_PER_NODE * len(element.nodal_coordinates)
+        dofs = element_3D.DOFS_PER_ELEMENT
+        nel = len(element_3D.connectivity)
+        total_dofs = element_3D.DOF_PER_NODE * len(element_3D.nodal_coordinates)
 
         self.data_K = np.zeros((nel, dofs, dofs), dtype=float)
         self.data_M = np.zeros((nel, dofs, dofs), dtype=float)
 
         for el in range(nel):
-            Ke, Me = element.elementary_matrices(el)
+            Ke, Me = element_3D.elementary_matrices(el)
             self.data_K[el, :, :] = Ke
             self.data_M[el, :, :] = Me
 

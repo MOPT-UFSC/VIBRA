@@ -1,6 +1,6 @@
 import numpy as np
 
-from vibra.engine.elements.element import Element
+from vibra.engine.elements.solid_elements import Element3D
 
 
 def shapeT10C(l1, l2, l3):
@@ -89,7 +89,7 @@ def get_detJAC_and_invJAC(JAC):
     return detJAC, (1 / detJAC) * AUJJ
 
 
-def get_detJAC_and_invJAC_3D(JAC):
+def get_detJAC_and_invJAC(JAC):
     """ """
 
     detJAC = (
@@ -117,7 +117,7 @@ def get_detJAC_and_invJAC_3D(JAC):
     return detJAC, (1 / detJAC) * AUJJ
 
 
-class STRUCT_TETRAHEDRON_10S(Element):
+class STRUCT_TETRAHEDRON_10S(Element3D):
     #
     NODES_PER_ELEMENT = 10
     DOF_PER_NODE = 3
@@ -249,7 +249,7 @@ class STRUCT_TETRAHEDRON_10S(Element):
         rho = self.material.density
         #
         JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
-        detJAC, invJAC = get_detJAC_and_invJAC_3D(JAC)
+        detJAC, invJAC = get_detJAC_and_invJAC(JAC)
         dphi_t = invJAC @ self.dphi
         #
         B = np.zeros((self.nint, 6, self.DOFS_PER_ELEMENT), dtype=float)

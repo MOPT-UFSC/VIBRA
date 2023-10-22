@@ -1,6 +1,6 @@
 import numpy as np
 
-from vibra.engine.elements.element import Element
+from vibra.engine.elements.solid_elements import Element3D
 
 
 def shapeH8(ssx, ttx, rrx):
@@ -82,7 +82,7 @@ def get_detJAC_and_invJAC_3D(JAC):
     return detJAC, (1 / detJAC) * AUJJ
 
 
-class ACT_HEXAHEDRON_8C(Element):
+class ACT_HEXAHEDRON_8C(Element3D):
     #
     NODES_PER_ELEMENT = 8
     DOF_PER_NODE = 1

@@ -30,7 +30,6 @@ class Mesh:
         self.solids_connectivity = np.array([])
         self.nodes_from_lines = dict()
         self.nodes_from_surfaces = dict()
-        self.elements_from_surfaces = dict()
         self.nodes_from_volumes = dict()
         self.entity_ranges = dict()
         self.surfaces_from_volumes = dict()
@@ -291,9 +290,7 @@ class Mesh:
                 continue
 
             for i, element_type in enumerate(element_types):
-                _, _, _, nodes_per_element, _, _ = gmsh.model.mesh.getElementProperties(
-                    element_type
-                )
+                _, _, _, nodes_per_element, _, _ = gmsh.model.mesh.getElementProperties(element_type)
 
                 array_element_nodes = np.array(element_nodes[i]).reshape(-1, nodes_per_element)
                 array_element_nodes -= 1  # index connectivity from 0
@@ -314,8 +311,12 @@ class Mesh:
             elif dim == 2:  # Surfaces
                 connectivity_dim2[dim, tag] = elements_data
                 self.nodes_from_surfaces[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
-                self.elements_from_surfaces[tag] = element_indexes
-                self.connectivity_from_surfaces[tag] = array_element_nodes
+                self.connectivity_from_surfaces[tag] = {"element_indexes" : element_indexes[0],
+                                                        "connectivity" : array_element_nodes}
+                # if tag == 3:
+                #     print(f"nodes: {np.array([*set(element_nodes[0])], dtype=int) - 1}")
+                #     print(f"connect: {array_element_nodes}")
+                #     print(f"element_indexes: {element_indexes}")
 
             elif dim == 3:  # Solids
                 connectivity_dim3[dim, tag] = elements_data
@@ -324,6 +325,7 @@ class Mesh:
         self.lines_connectivity = self._get_connectivity_array(connectivity_dim1)
         self.faces_connectivity = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity = self._get_connectivity_array(connectivity_dim3)
+        np.savetxt("faces_connectivity.dat", self.faces_connectivity, delimiter=",", fmt='%i')
 
     def get_model_areas(self, path):
         """This method returns returns the all surface area processed using
