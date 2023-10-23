@@ -9,7 +9,8 @@ from vibra.engine.elements.acoustic_hex20_element import ACT_HEXAHEDRON_20C
 from vibra.engine.elements.acoustic_tet4_element import ACT_TETRAHEDRON_4C
 from vibra.engine.elements.acoustic_tet10_element import ACT_TETRAHEDRON_10C
 # 2D elements
-from vibra.engine.elements.acoustic_triang3_element import ACT_TRIANGLE_3
+from vibra.engine.elements.acoustic_face3_element import ACT_FACE_3
+from vibra.engine.elements.acoustic_face4_element import ACT_FACE_4
 #
 from vibra.engine.mesher.element_type import *
 
@@ -24,7 +25,7 @@ class AcousticAssembler:
         self.stiffness_matrix = None
         self.mass_matrix = None
         self.damping_matrix = None
-        self.flow_mass_matrix = None
+        self.mass_flow_vectors = None
         self.frequencies = None
         self.prescribed_values = []
         self.prescribed_indexes = []
@@ -34,11 +35,11 @@ class AcousticAssembler:
         element_type = self.model.mesh.element_type
 
         if element_type == TETRAHEDRON_4:
-            return ACT_TETRAHEDRON_4C(self.model), ACT_TRIANGLE_3(self.model)
+            return ACT_TETRAHEDRON_4C(self.model), ACT_FACE_3(self.model)
         elif element_type == TETRAHEDRON_10:
             return ACT_TETRAHEDRON_10C(self.model), None
         elif element_type == HEXAHEDRON_8:
-            return ACT_HEXAHEDRON_8C(self.model), None
+            return ACT_HEXAHEDRON_8C(self.model), ACT_FACE_4(self.model)
         elif element_type == HEXAHEDRON_20:
             return ACT_HEXAHEDRON_20C(self.model), None
         else:
@@ -162,7 +163,7 @@ class AcousticAssembler:
 
         return connect, output_data
 
-    def assemble_global_matrices(self):
+    def assemble_mass_and_stiffness_global_matrices(self):
         """
         Calculates global matrices.
         """
@@ -196,8 +197,6 @@ class AcousticAssembler:
             self.stiffness_matrix = _stiffness_matrix_full
             self.mass_matrix = _mass_matrix_full
 
-        self.assemble_global_damping_matrix()
-
     def assemble_global_damping_matrix(self):
 
         if self.frequencies is None:
@@ -223,7 +222,7 @@ class AcousticAssembler:
             ind_rows_Z, ind_cols_Z = element_2D.generate_ind_rows_cols(connect_Z)
             for i, [el, complex_values, rho, _] in enumerate(data.values()):
                 normalized_matrix_Z = element_2D.matrices_Z(i)
-                normalized_matrix_Z_base = element_2D.matricesZ3(i)
+                normalized_matrix_Z_base = element_2D.matrices_Z_base(i)
                 print(el, normalized_matrix_Z-normalized_matrix_Z_base)
                 if complex_values.shape[0] == 1:
                     complex_values = complex_values * aux_ones
@@ -355,8 +354,8 @@ class AcousticAssembler:
             for i, [el, complex_values, rho, _] in enumerate(data_vv.values()):
                 indices = element_2D.connect_face[i, :]
                 normalized_excitation_matrix = element_2D.excitation_F(i)
-                normalized_excitation_matrix_base = element_2D.forceF3(i)
-                print(el, normalized_excitation_matrix-normalized_excitation_matrix_base)
+                # normalized_excitation_matrix_base = element_2D.excitation_F_base(i)
+                # print(el, normalized_excitation_matrix-normalized_excitation_matrix_base)
                 if complex_values.shape[0] == 1:
                     complex_values = complex_values * aux_ones
                 elif len(complex_values.shape) == 1:
@@ -368,14 +367,30 @@ class AcousticAssembler:
             element_2D.reorder_connect(connect_pv)
             for i, [el, complex_values, rho, area] in enumerate(data_pv.values()):
                 indices = element_2D.connect_face[i, :]
-                normalized_excitation_matrix = element_2D.excitation_F(i)
+                # print(f"element index: {el}")
+                # normalized_excitation_matrix = element_2D.excitation_F(i)
+                # normalized_excitation_matrix_base = element_2D.excitation_F_base(i)
+                # print(normalized_excitation_matrix)
+                # print(normalized_excitation_matrix_base)
                 if complex_values.shape[0] == 1:
                     complex_values = complex_values * aux_ones
                 elif len(complex_values.shape) == 1:
                     complex_values = complex_values.reshape(1,-1)
-                output[indices, :] += (normalized_excitation_matrix @ complex_values) * rho * area
+                output[indices, :] += (normalized_excitation_matrix @ complex_values) * rho# * area
             
         if len(self.prescribed_indexes) > 0:
             return output[self.unprescribed_indexes, :]
         else:
             return output
+        
+    def process_assemble(self):
+        self.assemble_mass_and_stiffness_global_matrices()
+        self.assemble_global_damping_matrix()
+        A = self.get_acoustic_excitations_by_nodal_attribution()
+        B = self.get_acoustic_excitations_by_element_integration()
+        self.mass_flow_vectors = A + B
+        #
+        # indA = np.arange(0, len(A), 1)
+        indB = np.arange(0, len(B), 1)
+        # np.savetxt("excitation_nodal.dat", np.array([indA, A[:,-1]]).T, delimiter=",")
+        np.savetxt("excitation_element.dat", np.array([indB, B[:,-1]]).T, delimiter=",")

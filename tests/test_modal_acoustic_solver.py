@@ -17,7 +17,7 @@ def test_modal_acoustic():
     model.process_mesh()
 
     modal_assembler = AcousticAssembler(model)
-    modal_assembler.assemble_global_matrices()
+    modal_assembler.process_assemble()
 
     modal_solver = AcousticModalSolver(modal_assembler)
     modal_solver.solve()

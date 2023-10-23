@@ -197,15 +197,15 @@ class Project:
         self.structural_assembler.set_element_formulation(element)
 
     def solve_acoustic_modal_analysis(self):
-        self.acoustic_assembler.assemble_global_matrices()
+        self.acoustic_assembler.process_assemble()
         self.acoustic_modal_solver.solve()
 
     def solve_structural_modal_analysis(self):
-        self.structural_assembler.assemble_global_matrices()
+        self.structural_assembler.process_assemble()
         self.structural_modal_solver.solve()
 
     def solve_acoustic_harmonic_analysis(self):
-        self.acoustic_assembler.assemble_global_matrices()
+        self.acoustic_assembler.process_assemble()
         self.acoustic_harmonic_solver.solve()
 
     def long_function(self):

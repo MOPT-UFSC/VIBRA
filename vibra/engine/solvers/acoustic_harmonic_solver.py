@@ -38,14 +38,7 @@ class AcousticHarmonicSolver:
         self.M = self.assembler.mass_matrix
         self.K = self.assembler.stiffness_matrix
         self.C = self.assembler.damping_matrix
-        A = self.assembler.get_acoustic_excitations_by_nodal_attribution()
-        B = self.assembler.get_acoustic_excitations_by_element_integration()
-        self.mass_flow = A + B
-        #
-        # indA = np.arange(0, len(A), 1)
-        indB = np.arange(0, len(B), 1)
-        # np.savetxt("excitation_nodal.dat", np.array([indA, A[:,-1]]).T, delimiter=",")
-        np.savetxt("excitation_element.dat", np.array([indB, B[:,-1]]).T, delimiter=",")
+        self.mass_flow = self.assembler.mass_flow_vectors
         #
         self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
         self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_values()
@@ -54,6 +47,7 @@ class AcousticHarmonicSolver:
 
         solution = np.zeros((rows, cols), dtype=complex)
         logging.info( "Solving harmonic analysis..." + ProgressStatus(0, len(self.frequencies)))
+        # return
 
         for i, freq in enumerate(self.frequencies):
             message = f"Solution step {i+1} and frequency {freq} Hz"

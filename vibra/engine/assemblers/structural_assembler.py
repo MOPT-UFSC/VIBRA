@@ -144,7 +144,7 @@ class StructuralAssembler:
     def get_matrices_dropping_indexes(self):
         return self.unprescribed_indexes, self.prescribed_indexes
 
-    def assemble_global_matrices(self):
+    def assemble_mass_and_stiffness_global_matrices(self):
         """
         Calculates global matrices.
         """
@@ -185,3 +185,14 @@ class StructuralAssembler:
         else:
             self.stiffness_matrix = _stiffness_matrix_full
             self.mass_matrix = _mass_matrix_full
+
+    def process_assemble(self):
+        self.assemble_mass_and_stiffness_global_matrices()
+        # A = self.get_structural_excitations_by_nodal_attribution()
+        # B = self.get_structural_excitations_by_element_integration()
+        # self.flow_mass_vectors = A + B
+        #
+        # indA = np.arange(0, len(A), 1)
+        # indB = np.arange(0, len(B), 1)
+        # np.savetxt("excitation_nodal.dat", np.array([indA, A[:,-1]]).T, delimiter=",")
+        # np.savetxt("excitation_element.dat", np.array([indB, B[:,-1]]).T, delimiter=",")

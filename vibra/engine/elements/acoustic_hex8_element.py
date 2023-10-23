@@ -69,15 +69,15 @@ def get_detJAC_and_invJAC_3D(JAC):
     detJAC = detJAC.reshape(-1, 1, 1)
     # adj(JAC)
     AUJJ = np.zeros((detJAC.shape[0], 3, 3), dtype=float)
-    AUJJ[:, 0, 0] = 1 * ((JAC[:, 1, 1] * JAC[:, 2, 2]) - (JAC[:, 2, 1] * JAC[:, 1, 2]))
-    AUJJ[:, 1, 0] = -1 * ((JAC[:, 1, 0] * JAC[:, 2, 2]) - (JAC[:, 1, 2] * JAC[:, 2, 0]))
-    AUJJ[:, 2, 0] = 1 * ((JAC[:, 1, 0] * JAC[:, 2, 1]) - (JAC[:, 1, 1] * JAC[:, 2, 0]))
-    AUJJ[:, 0, 1] = -1 * ((JAC[:, 0, 1] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 1]))
-    AUJJ[:, 1, 1] = 1 * ((JAC[:, 0, 0] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 0]))
-    AUJJ[:, 2, 1] = -1 * ((JAC[:, 0, 0] * JAC[:, 2, 1]) - (JAC[:, 0, 1] * JAC[:, 2, 0]))
-    AUJJ[:, 0, 2] = 1 * ((JAC[:, 0, 1] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 1]))
-    AUJJ[:, 1, 2] = -1 * ((JAC[:, 0, 0] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 0]))
-    AUJJ[:, 2, 2] = 1 * ((JAC[:, 0, 0] * JAC[:, 1, 1]) - (JAC[:, 0, 1] * JAC[:, 1, 0]))
+    AUJJ[:, 0, 0] =  ((JAC[:, 1, 1] * JAC[:, 2, 2]) - (JAC[:, 2, 1] * JAC[:, 1, 2]))
+    AUJJ[:, 1, 0] = -((JAC[:, 1, 0] * JAC[:, 2, 2]) - (JAC[:, 1, 2] * JAC[:, 2, 0]))
+    AUJJ[:, 2, 0] =  ((JAC[:, 1, 0] * JAC[:, 2, 1]) - (JAC[:, 1, 1] * JAC[:, 2, 0]))
+    AUJJ[:, 0, 1] = -((JAC[:, 0, 1] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 1]))
+    AUJJ[:, 1, 1] =  ((JAC[:, 0, 0] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 0]))
+    AUJJ[:, 2, 1] = -((JAC[:, 0, 0] * JAC[:, 2, 1]) - (JAC[:, 0, 1] * JAC[:, 2, 0]))
+    AUJJ[:, 0, 2] =  ((JAC[:, 0, 1] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 1]))
+    AUJJ[:, 1, 2] = -((JAC[:, 0, 0] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 0]))
+    AUJJ[:, 2, 2] =  ((JAC[:, 0, 0] * JAC[:, 1, 1]) - (JAC[:, 0, 1] * JAC[:, 1, 0]))
 
     return detJAC, (1 / detJAC) * AUJJ
 
@@ -109,22 +109,18 @@ class ACT_HEXAHEDRON_8C(Element3D):
         con = 1 / np.sqrt(3)
         self.wps = 1
         #
-        self.pint = np.array(
-            [
-                [-con, -con, -con],
-                [con, -con, -con],
-                [con, con, -con],
-                [-con, con, -con],
-                [-con, -con, con],
-                [con, -con, con],
-                [con, con, con],
-                [-con, con, con],
-            ]
-        )
+        self.pint = np.array( [ [-con, -con, -con],
+                                [ con, -con, -con],
+                                [ con,  con, -con],
+                                [-con,  con, -con],
+                                [-con, -con,  con],
+                                [ con, -con,  con],
+                                [ con,  con,  con],
+                                [-con,  con,  con] ], dtype=float)
 
     def process_shape_functions_and_derivatives(self):
-        """This method processes the shape functions and their
-        derivatives for all integration points.
+        """ This method processes the shape functions and their
+            derivatives for all integration points.
         """
         ssx = self.pint[:, 0]
         ttx = self.pint[:, 1]
@@ -147,23 +143,23 @@ class ACT_HEXAHEDRON_8C(Element3D):
         # derivatives
         dphi = np.zeros((self.nint, 3, self.NODES_PER_ELEMENT), dtype=float)
         #
-        dphi[:, 0, 0] = (-1.0) * (1.0 - ttx) * (1.0 - rrx)
-        dphi[:, 0, 1] = (1.0) * (1.0 - ttx) * (1.0 - rrx)
-        dphi[:, 0, 2] = (1.0) * (1.0 + ttx) * (1.0 - rrx)
-        dphi[:, 0, 3] = (-1.0) * (1.0 + ttx) * (1.0 - rrx)
-        dphi[:, 0, 4] = (-1.0) * (1.0 - ttx) * (1.0 + rrx)
-        dphi[:, 0, 5] = (1.0) * (1.0 - ttx) * (1.0 + rrx)
-        dphi[:, 0, 6] = (1.0) * (1.0 + ttx) * (1.0 + rrx)
-        dphi[:, 0, 7] = (-1.0) * (1.0 + ttx) * (1.0 + rrx)
+        dphi[:, 0, 0] = -(1.0 - ttx) * (1.0 - rrx)
+        dphi[:, 0, 1] =  (1.0 - ttx) * (1.0 - rrx)
+        dphi[:, 0, 2] =  (1.0 + ttx) * (1.0 - rrx)
+        dphi[:, 0, 3] = -(1.0 + ttx) * (1.0 - rrx)
+        dphi[:, 0, 4] = -(1.0 - ttx) * (1.0 + rrx)
+        dphi[:, 0, 5] =  (1.0 - ttx) * (1.0 + rrx)
+        dphi[:, 0, 6] =  (1.0 + ttx) * (1.0 + rrx)
+        dphi[:, 0, 7] = -(1.0 + ttx) * (1.0 + rrx)
 
-        dphi[:, 1, 0] = (1.0 - ssx) * (-1.0) * (1.0 - rrx)
-        dphi[:, 1, 1] = (1.0 + ssx) * (-1.0) * (1.0 - rrx)
-        dphi[:, 1, 2] = (1.0 + ssx) * (1.0) * (1.0 - rrx)
-        dphi[:, 1, 3] = (1.0 - ssx) * (1.0) * (1.0 - rrx)
-        dphi[:, 1, 4] = (1.0 - ssx) * (-1.0) * (1.0 + rrx)
-        dphi[:, 1, 5] = (1.0 + ssx) * (-1.0) * (1.0 + rrx)
-        dphi[:, 1, 6] = (1.0 + ssx) * (1.0) * (1.0 + rrx)
-        dphi[:, 1, 7] = (1.0 - ssx) * (1.0) * (1.0 + rrx)
+        dphi[:, 1, 0] = -(1.0 - ssx) * (1.0 - rrx)
+        dphi[:, 1, 1] = -(1.0 + ssx) * (1.0 - rrx)
+        dphi[:, 1, 2] =  (1.0 + ssx) * (1.0 - rrx)
+        dphi[:, 1, 3] =  (1.0 - ssx) * (1.0 - rrx)
+        dphi[:, 1, 4] = -(1.0 - ssx) * (1.0 + rrx)
+        dphi[:, 1, 5] = -(1.0 + ssx) * (1.0 + rrx)
+        dphi[:, 1, 6] =  (1.0 + ssx) * (1.0 + rrx)
+        dphi[:, 1, 7] =  (1.0 - ssx) * (1.0 + rrx)
 
         dphi[:, 2, 0] = (1.0 - ssx) * (1.0 - ttx) * (-1.0)
         dphi[:, 2, 1] = (1.0 + ssx) * (1.0 - ttx) * (-1.0)
