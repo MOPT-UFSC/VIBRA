@@ -23,8 +23,8 @@ from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import (
 from vibra.interface.model_inputs.acoustic.set_mass_flow_rate_inputs import (
     MassFlowRateInput,
 )
-from vibra.interface.model_inputs.acoustic.set_particle_velocity_inputs import (
-    ParticleVelocityInput,
+from vibra.interface.model_inputs.acoustic.set_surface_velocity_inputs import (
+    SurfaceVelocityInput,
 )
 from vibra.interface.model_inputs.acoustic.set_specific_impedance_inputs import (
     SpecificImpedanceInput,
@@ -222,7 +222,7 @@ class MenuItems(QTreeWidget):
         self.item_child_set_acoustic_pressure = QTreeWidgetItem(["Set Acoustic Pressure"])
         self.item_child_set_mass_flow_rate = QTreeWidgetItem(["Set Mass Flow Rate"])
         self.item_child_set_volume_velocity = QTreeWidgetItem(["Set Volume Velocity"])
-        self.item_child_set_particle_velocity = QTreeWidgetItem(["Set Particle Velocity"])
+        self.item_child_set_surface_velocity = QTreeWidgetItem(["Set Surface Velocity"])
         self.item_child_set_specific_impedance = QTreeWidgetItem(["Set Specific Impedance"])
         self.item_child_set_radiation_impedance = QTreeWidgetItem(["Set Radiation Impedance"])
         self.item_child_add_compressor_excitation = QTreeWidgetItem(["Add Compressor Excitation"])
@@ -232,7 +232,7 @@ class MenuItems(QTreeWidget):
         self.list_child_items.append(self.item_child_set_dissipation_model)
         self.list_child_items.append(self.item_child_set_mass_flow_rate)
         self.list_child_items.append(self.item_child_set_volume_velocity)
-        self.list_child_items.append(self.item_child_set_particle_velocity)
+        self.list_child_items.append(self.item_child_set_surface_velocity)
         self.list_child_items.append(self.item_child_set_specific_impedance)
         # self.list_child_items.append(self.item_child_set_radiation_impedance)
         # self.list_child_items.append(self.item_child_add_compressor_excitation)
@@ -309,7 +309,7 @@ class MenuItems(QTreeWidget):
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_dissipation_model)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_mass_flow_rate)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_volume_velocity)
-        self.item_top_acoustic_model_setup.addChild(self.item_child_set_particle_velocity)
+        self.item_top_acoustic_model_setup.addChild(self.item_child_set_surface_velocity)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_specific_impedance)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_radiation_impedance)
         self.item_top_acoustic_model_setup.addChild(self.item_child_add_compressor_excitation)
@@ -450,9 +450,9 @@ class MenuItems(QTreeWidget):
             if not self.item_child_set_mass_flow_rate.isDisabled():
                 self.obj = MassFlowRateInput()
 
-        elif item == self.item_child_set_particle_velocity:
-            if not self.item_child_set_particle_velocity.isDisabled():
-                self.obj = ParticleVelocityInput()
+        elif item == self.item_child_set_surface_velocity:
+            if not self.item_child_set_surface_velocity.isDisabled():
+                self.obj = SurfaceVelocityInput()
 
         elif item == self.item_child_set_specific_impedance:
             if not self.item_child_set_specific_impedance.isDisabled():
@@ -611,7 +611,7 @@ class MenuItems(QTreeWidget):
         self.item_child_set_acoustic_pressure.setDisabled(bool_key)
         self.item_child_set_mass_flow_rate.setDisabled(bool_key)
         self.item_child_set_volume_velocity.setDisabled(bool_key)
-        self.item_child_set_particle_velocity.setDisabled(bool_key)
+        self.item_child_set_surface_velocity.setDisabled(bool_key)
         self.item_child_set_specific_impedance.setDisabled(bool_key)
         self.item_child_set_radiation_impedance.setDisabled(bool_key)
         self.item_child_add_compressor_excitation.setDisabled(bool_key)

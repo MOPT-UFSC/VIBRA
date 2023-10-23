@@ -224,7 +224,7 @@ class SpecificImpedanceInput(QDialog):
             self.properties._remove_surface_property("acoustic_pressure", _id)
             self.properties._remove_surface_property("mass_flow_rate", _id)
             self.properties._remove_surface_property("volume_velocity", _id)
-            self.properties._remove_surface_property("particle_velocity", _id)
+            self.properties._remove_surface_property("surface_velocity", _id)
             self.properties._remove_surface_property("compressor_excitation", _id)
 
         specific_impedance = self.check_complex_entries(
@@ -356,7 +356,7 @@ class SpecificImpedanceInput(QDialog):
             self.properties._remove_surface_property("acoustic_pressure", _id)
             self.properties._remove_surface_property("mass_flow_rate", _id)
             self.properties._remove_surface_property("volume_velocity", _id)
-            self.properties._remove_surface_property("particle_velocity", _id)
+            self.properties._remove_surface_property("surface_velocity", _id)
             self.properties._remove_surface_property("compressor_excitation", _id)
 
         list_table_names = self.get_list_table_names_from_selected_surfaces(self.typed_ids)

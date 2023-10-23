@@ -170,8 +170,8 @@ class MesherInputs(QDialog):
     def check_inputs_for_general_tab(self):
         #
         self.reset_mesh_setup_variables()
-        element_shape = self.comboBox_element_shape.currentText()
-        shape_function = self.comboBox_shape_function.currentText()
+        element_shape = self.comboBox_element_shape.currentText()[2:]
+        shape_function = self.comboBox_shape_function.currentText()[2:]
         #
         if element_shape == "Tetrahedral" and shape_function == "Linear":
             self.element_type = TETRAHEDRON_4

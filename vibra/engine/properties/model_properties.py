@@ -124,8 +124,8 @@ class ModelProperties:
     def get_volume_velocity(self, surface):
         return self._get_property("volume_velocity", surface=surface)
 
-    def get_particle_velocity(self, surface):
-        return self._get_property("particle_velocity", surface=surface)
+    def get_surface_velocity(self, surface):
+        return self._get_property("surface_velocity", surface=surface)
 
     def get_specific_impedance(self, surface):
         return self._get_property("specific_impedance", surface=surface)
@@ -139,8 +139,8 @@ class ModelProperties:
     def set_volume_velocity(self, data, surface):
         self._set_property("volume_velocity", data, surface=surface)
 
-    def set_particle_velocity(self, data, surface):
-        self._set_property("particle_velocity", data, surface=surface)
+    def set_surface_velocity(self, data, surface):
+        self._set_property("surface_velocity", data, surface=surface)
 
     def set_specific_impedance(self, data, surface):
         self._set_property("specific_impedance", data, surface=surface)

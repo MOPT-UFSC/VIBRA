@@ -42,7 +42,7 @@
    <enum>Qt::DefaultContextMenu</enum>
   </property>
   <property name="windowTitle">
-   <string>Set particle velocity acoustic excitation</string>
+   <string>Set specific impendace</string>
   </property>
   <property name="whatsThis">
    <string/>

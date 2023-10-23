@@ -46,6 +46,13 @@
      <height>740</height>
     </size>
    </property>
+   <property name="font">
+    <font>
+     <weight>50</weight>
+     <italic>false</italic>
+     <bold>false</bold>
+    </font>
+   </property>
    <property name="frameShape">
     <enum>QFrame::Box</enum>
    </property>
@@ -176,6 +183,13 @@
         <height>16777215</height>
        </size>
       </property>
+      <property name="font">
+       <font>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+       </font>
+      </property>
       <property name="frameShape">
        <enum>QFrame::NoFrame</enum>
       </property>
@@ -212,13 +226,31 @@
            <height>16777215</height>
           </size>
          </property>
+         <property name="font">
+          <font>
+           <family>MS Shell Dlg 2</family>
+           <pointsize>11</pointsize>
+           <weight>50</weight>
+           <italic>false</italic>
+           <bold>false</bold>
+          </font>
+         </property>
          <property name="styleSheet">
-          <string notr="true">font: 75 italic bold 11pt &quot;Arial&quot;;</string>
+          <string notr="true"/>
          </property>
          <property name="currentIndex">
           <number>0</number>
          </property>
          <widget class="QWidget" name="tab_general">
+          <property name="font">
+           <font>
+            <family>Arial</family>
+            <pointsize>11</pointsize>
+            <weight>50</weight>
+            <italic>true</italic>
+            <bold>false</bold>
+           </font>
+          </property>
           <attribute name="title">
            <string>General</string>
           </attribute>
@@ -239,112 +271,6 @@
             <number>0</number>
            </property>
            <item row="0" column="0">
-            <widget class="QFrame" name="frame_label_2">
-             <property name="minimumSize">
-              <size>
-               <width>520</width>
-               <height>60</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>520</width>
-               <height>60</height>
-              </size>
-             </property>
-             <property name="frameShape">
-              <enum>QFrame::NoFrame</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Raised</enum>
-             </property>
-             <layout class="QGridLayout" name="gridLayout_12">
-              <property name="leftMargin">
-               <number>0</number>
-              </property>
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <property name="rightMargin">
-               <number>0</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
-              <property name="spacing">
-               <number>0</number>
-              </property>
-              <item row="0" column="0">
-               <widget class="QFrame" name="frame_14">
-                <property name="minimumSize">
-                 <size>
-                  <width>280</width>
-                  <height>40</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>280</width>
-                  <height>40</height>
-                 </size>
-                </property>
-                <property name="frameShape">
-                 <enum>QFrame::Box</enum>
-                </property>
-                <property name="frameShadow">
-                 <enum>QFrame::Raised</enum>
-                </property>
-                <property name="lineWidth">
-                 <number>2</number>
-                </property>
-                <layout class="QGridLayout" name="gridLayout_13">
-                 <property name="leftMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="topMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="rightMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="spacing">
-                  <number>2</number>
-                 </property>
-                 <item row="0" column="0">
-                  <widget class="QLabel" name="label_18">
-                   <property name="minimumSize">
-                    <size>
-                     <width>260</width>
-                     <height>32</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>260</width>
-                     <height>32</height>
-                    </size>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">font: 75 bold 12pt &quot;Arial&quot;;</string>
-                   </property>
-                   <property name="text">
-                    <string>Simplified element options</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item row="1" column="0">
             <widget class="QFrame" name="frame_inputs_general">
              <property name="minimumSize">
               <size>
@@ -357,6 +283,13 @@
                <width>520</width>
                <height>360</height>
               </size>
+             </property>
+             <property name="font">
+              <font>
+               <family>MS Shell Dlg 2</family>
+               <pointsize>10</pointsize>
+               <italic>false</italic>
+              </font>
              </property>
              <property name="frameShape">
               <enum>QFrame::NoFrame</enum>
@@ -396,11 +329,11 @@
                 </property>
                 <property name="font">
                  <font>
-                  <family>Arial</family>
+                  <family>MS Shell Dlg 2</family>
                   <pointsize>11</pointsize>
-                  <weight>75</weight>
-                  <italic>true</italic>
-                  <bold>true</bold>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
                  </font>
                 </property>
                 <property name="styleSheet">
@@ -429,8 +362,13 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
                   <height>32</height>
                  </size>
                 </property>
+                <property name="font">
+                 <font>
+                  <pointsize>11</pointsize>
+                 </font>
+                </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+                 <string notr="true"/>
                 </property>
                 <property name="text">
                  <string>Size factor:</string>
@@ -459,11 +397,11 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
                 </property>
                 <property name="font">
                  <font>
-                  <family>Arial</family>
+                  <family>MS Shell Dlg 2</family>
                   <pointsize>11</pointsize>
-                  <weight>75</weight>
-                  <italic>true</italic>
-                  <bold>true</bold>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
                  </font>
                 </property>
                 <property name="styleSheet">
@@ -492,8 +430,13 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
                   <height>32</height>
                  </size>
                 </property>
+                <property name="font">
+                 <font>
+                  <pointsize>11</pointsize>
+                 </font>
+                </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+                 <string notr="true"/>
                 </property>
                 <property name="text">
                  <string>Minimum element size:</string>
@@ -517,8 +460,13 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
                   <height>32</height>
                  </size>
                 </property>
+                <property name="font">
+                 <font>
+                  <pointsize>11</pointsize>
+                 </font>
+                </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+                 <string notr="true"/>
                 </property>
                 <property name="text">
                  <string>Shape function:</string>
@@ -542,18 +490,23 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
                   <height>32</height>
                  </size>
                 </property>
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                 </font>
+                </property>
                 <property name="styleSheet">
-                 <string notr="true">QComboBox{font: 75 italic bold 11pt &quot;Arial&quot;}
-QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; font: 75 italic bold 11pt &quot;Arial&quot;}</string>
+                 <string notr="true">QComboBox{}
+QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px}</string>
                 </property>
                 <item>
                  <property name="text">
-                  <string>Linear</string>
+                  <string>  Linear</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>Quadratic</string>
+                  <string>  Quadratic</string>
                  </property>
                 </item>
                </widget>
@@ -572,8 +525,17 @@ QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-styl
                   <height>32</height>
                  </size>
                 </property>
+                <property name="font">
+                 <font>
+                  <family>MS Shell Dlg 2</family>
+                  <pointsize>11</pointsize>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+                 <string notr="true"/>
                 </property>
                 <property name="text">
                  <string>Element shape:</string>
@@ -597,28 +559,33 @@ QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-styl
                   <height>32</height>
                  </size>
                 </property>
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                 </font>
+                </property>
                 <property name="styleSheet">
-                 <string notr="true">QComboBox{font: 75 italic bold 11pt &quot;Arial&quot;}
-QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; font: 75 italic bold 11pt &quot;Arial&quot;}</string>
+                 <string notr="true">QComboBox{}
+QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px}</string>
                 </property>
                 <item>
                  <property name="text">
-                  <string>Tetrahedral</string>
+                  <string>  Tetrahedral</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>Hexahedral</string>
+                  <string>  Hexahedral</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>Triangular</string>
+                  <string>  Triangular</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>Quadrangular</string>
+                  <string>  Quadrangular</string>
                  </property>
                 </item>
                </widget>
@@ -637,8 +604,13 @@ QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-styl
                   <height>32</height>
                  </size>
                 </property>
+                <property name="font">
+                 <font>
+                  <pointsize>11</pointsize>
+                 </font>
+                </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+                 <string notr="true"/>
                 </property>
                 <property name="text">
                  <string>Maximum element size:</string>
@@ -664,11 +636,11 @@ QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-styl
                 </property>
                 <property name="font">
                  <font>
-                  <family>Arial</family>
+                  <family>MS Shell Dlg 2</family>
                   <pointsize>11</pointsize>
-                  <weight>75</weight>
-                  <italic>true</italic>
-                  <bold>true</bold>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
                  </font>
                 </property>
                 <property name="styleSheet">
@@ -777,6 +749,11 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
                      <height>28</height>
                     </size>
                    </property>
+                   <property name="font">
+                    <font>
+                     <pointsize>11</pointsize>
+                    </font>
+                   </property>
                    <property name="text">
                     <string>Disabled</string>
                    </property>
@@ -801,11 +778,11 @@ QLineEdit::Disabled{color: rgb(120,120,120); background-color: rgba(0, 0, 0, 0)}
                 </property>
                 <property name="font">
                  <font>
-                  <family>Arial</family>
+                  <family>MS Shell Dlg 2</family>
                   <pointsize>11</pointsize>
-                  <weight>75</weight>
-                  <italic>true</italic>
-                  <bold>true</bold>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
                  </font>
                 </property>
                 <property name="styleSheet">
@@ -834,8 +811,13 @@ background-color: rgba(255, 255, 255, 200);</string>
                   <height>32</height>
                  </size>
                 </property>
+                <property name="font">
+                 <font>
+                  <pointsize>11</pointsize>
+                 </font>
+                </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+                 <string notr="true"/>
                 </property>
                 <property name="text">
                  <string>Geometry tolerance:</string>
@@ -895,8 +877,13 @@ background-color: rgba(255, 255, 255, 200);</string>
                      <height>32</height>
                     </size>
                    </property>
+                   <property name="font">
+                    <font>
+                     <pointsize>11</pointsize>
+                    </font>
+                   </property>
                    <property name="styleSheet">
-                    <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+                    <string notr="true"/>
                    </property>
                    <property name="text">
                     <string>[mm]</string>
@@ -959,8 +946,13 @@ background-color: rgba(255, 255, 255, 200);</string>
                      <height>32</height>
                     </size>
                    </property>
+                   <property name="font">
+                    <font>
+                     <pointsize>11</pointsize>
+                    </font>
+                   </property>
                    <property name="styleSheet">
-                    <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+                    <string notr="true"/>
                    </property>
                    <property name="text">
                     <string>[mm]</string>
@@ -1023,8 +1015,13 @@ background-color: rgba(255, 255, 255, 200);</string>
                      <height>32</height>
                     </size>
                    </property>
+                   <property name="font">
+                    <font>
+                     <pointsize>11</pointsize>
+                    </font>
+                   </property>
                    <property name="styleSheet">
-                    <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+                    <string notr="true"/>
                    </property>
                    <property name="text">
                     <string>[mm]</string>
@@ -1064,6 +1061,12 @@ background-color: rgba(255, 255, 255, 200);</string>
            </property>
            <item row="0" column="0">
             <widget class="QScrollArea" name="scrollArea">
+             <property name="font">
+              <font>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
              <property name="verticalScrollBarPolicy">
               <enum>Qt::ScrollBarAlwaysOn</enum>
              </property>
@@ -1076,7 +1079,7 @@ background-color: rgba(255, 255, 255, 200);</string>
                 <x>0</x>
                 <y>0</y>
                 <width>488</width>
-                <height>592</height>
+                <height>528</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_6">
@@ -1096,112 +1099,6 @@ background-color: rgba(255, 255, 255, 200);</string>
                 <number>4</number>
                </property>
                <item row="0" column="0">
-                <widget class="QFrame" name="frame_label_3">
-                 <property name="minimumSize">
-                  <size>
-                   <width>480</width>
-                   <height>60</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>480</width>
-                   <height>60</height>
-                  </size>
-                 </property>
-                 <property name="frameShape">
-                  <enum>QFrame::NoFrame</enum>
-                 </property>
-                 <property name="frameShadow">
-                  <enum>QFrame::Raised</enum>
-                 </property>
-                 <layout class="QGridLayout" name="gridLayout_15">
-                  <property name="leftMargin">
-                   <number>0</number>
-                  </property>
-                  <property name="topMargin">
-                   <number>0</number>
-                  </property>
-                  <property name="rightMargin">
-                   <number>0</number>
-                  </property>
-                  <property name="bottomMargin">
-                   <number>0</number>
-                  </property>
-                  <property name="spacing">
-                   <number>0</number>
-                  </property>
-                  <item row="0" column="0">
-                   <widget class="QFrame" name="frame_16">
-                    <property name="minimumSize">
-                     <size>
-                      <width>260</width>
-                      <height>40</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>260</width>
-                      <height>40</height>
-                     </size>
-                    </property>
-                    <property name="frameShape">
-                     <enum>QFrame::Box</enum>
-                    </property>
-                    <property name="frameShadow">
-                     <enum>QFrame::Raised</enum>
-                    </property>
-                    <property name="lineWidth">
-                     <number>2</number>
-                    </property>
-                    <layout class="QGridLayout" name="gridLayout_16">
-                     <property name="leftMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="topMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="rightMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="bottomMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="spacing">
-                      <number>2</number>
-                     </property>
-                     <item row="0" column="0">
-                      <widget class="QLabel" name="label_21">
-                       <property name="minimumSize">
-                        <size>
-                         <width>220</width>
-                         <height>32</height>
-                        </size>
-                       </property>
-                       <property name="maximumSize">
-                        <size>
-                         <width>220</width>
-                         <height>32</height>
-                        </size>
-                       </property>
-                       <property name="styleSheet">
-                        <string notr="true">font: 75 bold 12pt &quot;Arial&quot;;</string>
-                       </property>
-                       <property name="text">
-                        <string>GMSH general options</string>
-                       </property>
-                       <property name="alignment">
-                        <set>Qt::AlignCenter</set>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-               </item>
-               <item row="1" column="0">
                 <widget class="QFrame" name="frame_inputs_advanced">
                  <property name="minimumSize">
                   <size>
@@ -1214,6 +1111,14 @@ background-color: rgba(255, 255, 255, 200);</string>
                    <width>480</width>
                    <height>600</height>
                   </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true"/>
                  </property>
                  <property name="frameShape">
                   <enum>QFrame::NoFrame</enum>
@@ -1237,7 +1142,7 @@ background-color: rgba(255, 255, 255, 200);</string>
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+                     <string notr="true"/>
                     </property>
                     <property name="text">
                      <string>2D algorithm:</string>
@@ -1261,9 +1166,14 @@ background-color: rgba(255, 255, 255, 200);</string>
                       <height>32</height>
                      </size>
                     </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>10</pointsize>
+                     </font>
+                    </property>
                     <property name="styleSheet">
-                     <string notr="true">QComboBox{font: 75 italic bold 11pt &quot;Arial&quot;}
-QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; font: 75 italic bold 11pt &quot;Arial&quot;}</string>
+                     <string notr="true">QComboBox{}
+QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px}</string>
                     </property>
                     <item>
                      <property name="text">
@@ -1322,7 +1232,7 @@ QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-styl
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+                     <string notr="true"/>
                     </property>
                     <property name="text">
                      <string>3D algorithm:</string>
@@ -1346,9 +1256,14 @@ QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-styl
                       <height>32</height>
                      </size>
                     </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>10</pointsize>
+                     </font>
+                    </property>
                     <property name="styleSheet">
-                     <string notr="true">QComboBox{font: 75 italic bold 11pt &quot;Arial&quot;}
-QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; font: 75 italic bold 11pt &quot;Arial&quot;}</string>
+                     <string notr="true">QComboBox{}
+QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px}</string>
                     </property>
                     <item>
                      <property name="text">
@@ -1392,7 +1307,7 @@ QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-styl
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+                     <string notr="true"/>
                     </property>
                     <property name="text">
                      <string>2D recombination algorithm:</string>
@@ -1416,9 +1331,14 @@ QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-styl
                       <height>32</height>
                      </size>
                     </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>10</pointsize>
+                     </font>
+                    </property>
                     <property name="styleSheet">
-                     <string notr="true">QComboBox{font: 75 italic bold 11pt &quot;Arial&quot;}
-QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; font: 75 italic bold 11pt &quot;Arial&quot;}</string>
+                     <string notr="true">QComboBox{}
+QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px}</string>
                     </property>
                     <item>
                      <property name="text">
@@ -1457,7 +1377,7 @@ QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-styl
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+                     <string notr="true"/>
                     </property>
                     <property name="text">
                      <string>Recombine all triangular mesh:</string>
@@ -1540,7 +1460,7 @@ QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-styl
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+                     <string notr="true"/>
                     </property>
                     <property name="text">
                      <string>Subdivision algorithm</string>
@@ -1564,9 +1484,14 @@ QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-styl
                       <height>32</height>
                      </size>
                     </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>10</pointsize>
+                     </font>
+                    </property>
                     <property name="styleSheet">
-                     <string notr="true">QComboBox{font: 75 italic bold 11pt &quot;Arial&quot;}
-QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; font: 75 italic bold 11pt &quot;Arial&quot;}</string>
+                     <string notr="true">QComboBox{}
+QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px}</string>
                     </property>
                     <item>
                      <property name="text">
@@ -1600,7 +1525,7 @@ QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-styl
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+                     <string notr="true"/>
                     </property>
                     <property name="text">
                      <string>Smoothing steps:</string>
@@ -1626,11 +1551,11 @@ QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-styl
                     </property>
                     <property name="font">
                      <font>
-                      <family>Arial</family>
+                      <family>MS Shell Dlg 2</family>
                       <pointsize>11</pointsize>
-                      <weight>75</weight>
-                      <italic>true</italic>
-                      <bold>true</bold>
+                      <weight>50</weight>
+                      <italic>false</italic>
+                      <bold>false</bold>
                      </font>
                     </property>
                     <property name="styleSheet">
@@ -1660,7 +1585,7 @@ background-color: rgba(255, 255, 255, 200);</string>
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+                     <string notr="true"/>
                     </property>
                     <property name="text">
                      <string>Element size factor:</string>
@@ -1686,11 +1611,11 @@ background-color: rgba(255, 255, 255, 200);</string>
                     </property>
                     <property name="font">
                      <font>
-                      <family>Arial</family>
+                      <family>MS Shell Dlg 2</family>
                       <pointsize>11</pointsize>
-                      <weight>75</weight>
-                      <italic>true</italic>
-                      <bold>true</bold>
+                      <weight>50</weight>
+                      <italic>false</italic>
+                      <bold>false</bold>
                      </font>
                     </property>
                     <property name="styleSheet">
@@ -1720,7 +1645,7 @@ background-color: rgba(255, 255, 255, 200);</string>
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+                     <string notr="true"/>
                     </property>
                     <property name="text">
                      <string>Minimum element size:</string>
@@ -1746,11 +1671,11 @@ background-color: rgba(255, 255, 255, 200);</string>
                     </property>
                     <property name="font">
                      <font>
-                      <family>Arial</family>
+                      <family>MS Shell Dlg 2</family>
                       <pointsize>11</pointsize>
-                      <weight>75</weight>
-                      <italic>true</italic>
-                      <bold>true</bold>
+                      <weight>50</weight>
+                      <italic>false</italic>
+                      <bold>false</bold>
                      </font>
                     </property>
                     <property name="styleSheet">
@@ -1780,7 +1705,7 @@ background-color: rgba(255, 255, 255, 200);</string>
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+                     <string notr="true"/>
                     </property>
                     <property name="text">
                      <string>Maximum element size:</string>
@@ -1806,11 +1731,11 @@ background-color: rgba(255, 255, 255, 200);</string>
                     </property>
                     <property name="font">
                      <font>
-                      <family>Arial</family>
+                      <family>MS Shell Dlg 2</family>
                       <pointsize>11</pointsize>
-                      <weight>75</weight>
-                      <italic>true</italic>
-                      <bold>true</bold>
+                      <weight>50</weight>
+                      <italic>false</italic>
+                      <bold>false</bold>
                      </font>
                     </property>
                     <property name="styleSheet">
@@ -1840,7 +1765,7 @@ background-color: rgba(255, 255, 255, 200);</string>
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+                     <string notr="true"/>
                     </property>
                     <property name="text">
                      <string>Geometry tolerance:</string>
@@ -1866,11 +1791,11 @@ background-color: rgba(255, 255, 255, 200);</string>
                     </property>
                     <property name="font">
                      <font>
-                      <family>Arial</family>
+                      <family>MS Shell Dlg 2</family>
                       <pointsize>11</pointsize>
-                      <weight>75</weight>
-                      <italic>true</italic>
-                      <bold>true</bold>
+                      <weight>50</weight>
+                      <italic>false</italic>
+                      <bold>false</bold>
                      </font>
                     </property>
                     <property name="styleSheet">
@@ -1900,7 +1825,7 @@ background-color: rgba(255, 255, 255, 200);</string>
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 75 bold 11pt &quot;Arial&quot;;</string>
+                     <string notr="true"/>
                     </property>
                     <property name="text">
                      <string>Element order:</string>
@@ -1924,9 +1849,14 @@ background-color: rgba(255, 255, 255, 200);</string>
                       <height>32</height>
                      </size>
                     </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>10</pointsize>
+                     </font>
+                    </property>
                     <property name="styleSheet">
-                     <string notr="true">QComboBox{font: 75 italic bold 11pt &quot;Arial&quot;}
-QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; font: 75 italic bold 11pt &quot;Arial&quot;}</string>
+                     <string notr="true">QComboBox{}
+QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px}</string>
                     </property>
                     <item>
                      <property name="text">
@@ -2097,14 +2027,14 @@ QComboBox::hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-styl
            <family>Arial</family>
            <pointsize>12</pointsize>
            <weight>75</weight>
-           <italic>true</italic>
+           <italic>false</italic>
            <bold>true</bold>
           </font>
          </property>
          <property name="styleSheet">
-          <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 italic bold 12pt &quot;Arial&quot;}
-QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 italic bold 12pt &quot;Arial&quot;}
-QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 italic bold 12pt &quot;Arial&quot;}</string>
+          <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 bold 12pt &quot;Arial&quot;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 bold 12pt &quot;Arial&quot;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 bold 12pt &quot;Arial&quot;}</string>
          </property>
          <property name="text">
           <string>Confirm mesh setup</string>

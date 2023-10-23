@@ -176,10 +176,12 @@ class PlotAcousticFrequencyResponseInput(QDialog):
         else:
             return
 
-        response = np.sum(self.solution[rows,:], axis=0, dtype=complex)
+        response = np.average(self.solution[rows,:], axis=0)
 
         # if complex(0) in response:
-        #     response += np.ones(len(response), dtype=float)*(1e-12)
+        #     response += 1e-12
+            # response += np.ones(len(response), dtype=float)*(1e-12)
+
         return response
 
     def join_model_data(self):

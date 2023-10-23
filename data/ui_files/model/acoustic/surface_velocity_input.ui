@@ -42,7 +42,7 @@
    <enum>Qt::DefaultContextMenu</enum>
   </property>
   <property name="windowTitle">
-   <string>Set particle velocity acoustic excitation</string>
+   <string>Set surface velocity acoustic excitation</string>
   </property>
   <property name="whatsThis">
    <string/>
@@ -99,7 +99,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Set particle velocity acoustic excitation</string>
+         <string>Set surface velocity acoustic excitation</string>
         </property>
         <property name="textFormat">
          <enum>Qt::AutoText</enum>
@@ -237,7 +237,8 @@
             <enum>Qt::ClickFocus</enum>
            </property>
            <property name="styleSheet">
-            <string notr="true">color: rgb(0, 0, 255);</string>
+            <string notr="true">color: rgb(0, 0, 255);
+background-color: rgb(255, 255, 255);</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -258,7 +259,7 @@
        </widget>
       </item>
       <item row="1" column="0">
-       <widget class="QTabWidget" name="tabWidget_particle_velocity">
+       <widget class="QTabWidget" name="tabWidget_surface_velocity">
         <property name="minimumSize">
          <size>
           <width>360</width>
@@ -367,7 +368,8 @@
                 </font>
                </property>
                <property name="styleSheet">
-                <string notr="true"/>
+                <string notr="true">color: rgb(0, 0, 255);
+background-color: rgb(255, 255, 255);</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -429,7 +431,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Particle velocity:</string>
+                <string>Surface velocity:</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -522,7 +524,8 @@
                 </font>
                </property>
                <property name="styleSheet">
-                <string notr="true"/>
+                <string notr="true">color: rgb(0, 0, 255);
+background-color: rgb(255, 255, 255);</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -1097,6 +1100,10 @@ QPushButton:pressed{border-radius: 4px; border-color: rgb(0, 170, 255); border-s
                  <bold>false</bold>
                 </font>
                </property>
+               <property name="styleSheet">
+                <string notr="true">color: rgb(0, 0, 255);
+background-color: rgb(255, 255, 255);</string>
+               </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
                </property>
@@ -1418,7 +1425,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
            </widget>
           </item>
           <item row="0" column="0">
-           <widget class="QTreeWidget" name="treeWidget_particle_velocity">
+           <widget class="QTreeWidget" name="treeWidget_surface_velocity">
             <property name="minimumSize">
              <size>
               <width>320</width>

@@ -221,7 +221,7 @@ class AcousticPressureInput(QDialog):
         for _id in self.typed_ids:
             self.properties._remove_surface_property("mass_flow_rate", _id)
             self.properties._remove_surface_property("volume_velocity", _id)
-            self.properties._remove_surface_property("particle_velocity", _id)
+            self.properties._remove_surface_property("surface_velocity", _id)
             self.properties._remove_surface_property("specific_impedance", _id)
             self.properties._remove_surface_property("compressor_excitation", _id)
 
@@ -355,7 +355,7 @@ class AcousticPressureInput(QDialog):
         for _id in self.typed_ids:
             self.properties._remove_surface_property("mass_flow_rate", _id)
             self.properties._remove_surface_property("volume_velocity", _id)
-            self.properties._remove_surface_property("particle_velocity", _id)
+            self.properties._remove_surface_property("surface_velocity", _id)
             self.properties._remove_surface_property("specific_impedance", _id)
             self.properties._remove_surface_property("compressor_excitation", _id)
 

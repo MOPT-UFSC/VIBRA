@@ -109,8 +109,8 @@ class Project:
     def set_volume_velocity(self, data, surface):
         self.model.set_volume_velocity(data, surface)
 
-    def set_particle_velocity(self, data, surface):
-        self.model.set_particle_velocity(data, surface)
+    def set_surface_velocity(self, data, surface):
+        self.model.set_surface_velocity(data, surface)
 
     def set_specific_impedance(self, data, surface):
         self.model.set_specific_impedance(data, surface)

@@ -286,7 +286,7 @@ class AcousticAssembler:
                         else:
                             acoustic_excitation[index] += complex_values * rho
 
-            elif property == "particle_velocity":
+            elif property == "surface_velocity":
                 real_values = np.array(data["real_values"])
                 imag_values = np.array(data["imag_values"])
                 complex_values = real_values + 1j * imag_values
@@ -363,7 +363,7 @@ class AcousticAssembler:
                     complex_values = complex_values.reshape(1,-1)
                 output[indices, :] += (normalized_excitation_matrix @ complex_values) * rho
         
-        connect_pv, data_pv = self.get_surface_data_for_element_integration_by_property("particle_velocity")
+        connect_pv, data_pv = self.get_surface_data_for_element_integration_by_property("surface_velocity")
         if connect_pv is not None:
             element_2D.reorder_connect(connect_pv)
             for i, [el, complex_values, rho, area] in enumerate(data_pv.values()):

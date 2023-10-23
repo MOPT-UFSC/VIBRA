@@ -156,9 +156,9 @@ class ACT_TRIANGLE_3(Element2D):
         Vn = 1
 
         ############## Definir plano de trabalho e adaptar coordenadas para tal plano
-        XX1, YY1, ZZ1 = coord[connect_face[ee,0]-1*0,1], coord[connect_face[ee,0]-1*0,2], coord[connect_face[ee,0]-1*0,3]
-        XX2, YY2, ZZ2 = coord[connect_face[ee,1]-1*0,1], coord[connect_face[ee,1]-1*0,2], coord[connect_face[ee,1]-1*0,3]
-        XX3, YY3, ZZ3 = coord[connect_face[ee,2]-1*0,1], coord[connect_face[ee,2]-1*0,2], coord[connect_face[ee,2]-1*0,3]
+        XX1, YY1, ZZ1 = coord[connect_face[ee,0],1], coord[connect_face[ee,0],2], coord[connect_face[ee,0],3]
+        XX2, YY2, ZZ2 = coord[connect_face[ee,1],1], coord[connect_face[ee,1],2], coord[connect_face[ee,1],3]
+        XX3, YY3, ZZ3 = coord[connect_face[ee,2],1], coord[connect_face[ee,2],2], coord[connect_face[ee,2],3]
 
         vec21 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
         vec31 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
