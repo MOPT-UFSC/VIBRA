@@ -88,7 +88,7 @@ class ACT_FACE_3(Element2D):
         #
         self.phi, self.dphi = shapeFZ3(ssx, ttx)
 
-    def matrices_Z(self, el_index):
+    def matrices_Z(self, el_index, rho=1, impedance=1):
         """ Z matrices
         """
 
@@ -105,11 +105,11 @@ class ACT_FACE_3(Element2D):
         #
         Ze = 0.
         for i in range(self.nint):
-            Ze += (1/2) * N[i, :, :].T @ N[i, :, :] * (detJAC*self.wps)
+            Ze += (1/2) * (rho/impedance) * N[i, :, :].T @ N[i, :, :] * (detJAC*self.wps)
             # print(f"matrices_Z: index - {el_index} k - {i} {N[i, :, :]}")
         return Ze
 
-    def excitation_F(self, el_index):
+    def excitation_F(self, el_index, Vn=1):
         """ F matrices
         """
 
@@ -125,7 +125,7 @@ class ACT_FACE_3(Element2D):
         #
         Fe = 0.
         for i in range(self.nint):            
-            Fe += (1/2)*N[i, :, :].T*(detJAC*self.wps)
+            Fe += (1/2) * Vn * N[i, :, :].T * (detJAC * self.wps)
             # print(f"excitation_F: index - {el_index} : k - {i} {N[i, :, :]}")
         return Fe
 
@@ -146,14 +146,13 @@ class ACT_FACE_3(Element2D):
 
         return ind_rows_face, ind_cols_face
 
-    def excitation_F_base(self, ee):
+    def excitation_F_base(self, ee, Vn=1):
         """ F3 matrices
         """
         #Check Connectivity -- Ansys = Gmsh
 
         coord = self.nodal_coordinates
         connect_face = self.connect_face
-        Vn = 1
 
         ############## Definir plano de trabalho e adaptar coordenadas para tal plano
         XX1, YY1, ZZ1 = coord[connect_face[ee,0],1], coord[connect_face[ee,0],2], coord[connect_face[ee,0],3]
@@ -210,19 +209,17 @@ class ACT_FACE_3(Element2D):
                 N[0,iii]=phi[iii]
 
             # print(f"forceF3: index - {ee} : k - {i} {N}")           
-            Fe += (1/2)*Vn*N.T*(detJAC*wps)
+            Fe += (1/2) * Vn * N.T * (detJAC * wps)
 
         return Fe
 
-    def matrices_Z_base(self, ee):
+    def matrices_Z_base(self, ee, rho=1, impedance=1):
         """ Z3 matrices
         """
         #Check Connectivity -- Ansys = Gmsh
 
         coord = self.nodal_coordinates
         connect_face = self.connect_face
-        rho = 1
-        imped = 1
 
         ############## Definir plano de trabalho e adaptar coordenadas para tal plano
         XX1, YY1, ZZ1 = coord[connect_face[ee,0]-1*0,1], coord[connect_face[ee,0]-1*0,2], coord[connect_face[ee,0]-1*0,3]
@@ -275,14 +272,12 @@ class ACT_FACE_3(Element2D):
             #Inverse Jacobian
             detJAC = JAC[0,0] * JAC[1,1]  - JAC[0,1] * JAC[1,0]
             # print(f"matricesZ3: index - {ee} \n {coord_loc} {detJAC} -> {i}")
-            
-            # N[0, :] = phi
 
             for iii in range(3):
                 N[0, iii] = phi[iii]
             
             # print(f"matricesZ3: index - {ee} k - {i} {N}")
             
-            Ze += (1/2)*rho*(1/imped)*N.T@N*(detJAC*wps)
+            Ze += (1/2) * (rho/impedance) * N.T@N * (detJAC * wps)
 
         return Ze

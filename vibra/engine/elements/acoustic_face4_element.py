@@ -132,49 +132,6 @@ class ACT_FACE_4(Element2D):
         dphi[:, 1, 2] = -(1.-ssx)
         dphi[:, 1, 3] = -(1.+ssx)
         self.dphi = dphi/denominator
-        
-    def matrices_Z(self, el_index):
-        """ Z matrices
-        """
-
-        ie = self.connect_face[el_index, :]
-        coords = self.nodal_coordinates[ie, :]
-        coord_loc = get_local_coordinates(coords)
-        #
-        JAC = self.dphi @ coord_loc
-        detJAC = get_detJAC_3D(JAC)
-        # print(f"matrices_Z: index - {el_index} \n {coord_loc} {detJAC}")
-        #
-        N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
-        N[:, 0, :] = self.phi
-        #
-        Ze = 0.
-        for i in range(self.nint):
-            Ze += (1/2) * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :]*self.wps)
-            # print(f"matrices_Z: index - {el_index} k - {i} {N[i, :, :]}")
-        return Ze
-
-    def excitation_F(self, el_index):
-        """ F matrices
-        """
-
-        ie = self.connect_face[el_index, :]
-        coords = self.nodal_coordinates[ie, :]
-        coord_loc = get_local_coordinates(coords)
-
-        print(f"new: {coord_loc}")
-        #
-        JAC = self.dphi @ coord_loc
-        detJAC = get_detJAC_3D(JAC)
-        #
-        N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
-        N[:, 0, :] = self.phi
-        #
-        Fe = 0.
-        for i in range(self.nint):            
-            Fe += (1/2)*N[i, :, :].T*(detJAC[i, :, :]*self.wps)
-            # print(f"excitation_F: index - {el_index} : k - {i} {N[i, :, :]}")
-        return Fe
 
     def reorder_connect(self, connect_face):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
@@ -192,15 +149,58 @@ class ACT_FACE_4(Element2D):
         ind_cols_face = (np.tile(ind_dofs, edofs)).flatten()
 
         return ind_rows_face, ind_cols_face
+        
+    def matrices_Z(self, el_index, rho=1, impedance=1):
+        """ Z matrices
+        """
 
-    def excitation_F_base(self, ee):
+        ie = self.connect_face[el_index, :]
+        coords = self.nodal_coordinates[ie, :]
+        coord_loc = get_local_coordinates(coords)
+        #
+        JAC = self.dphi @ coord_loc
+        detJAC = get_detJAC_3D(JAC)
+        # print(f"matrices_Z: index - {el_index} \n {coord_loc} {detJAC}")
+        #
+        N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
+        N[:, 0, :] = self.phi
+        #
+        Ze = 0.
+        for i in range(self.nint):
+            Ze += (rho/impedance) * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :]*self.wps)
+            # print(f"matrices_Z: index - {el_index} k - {i} {N[i, :, :]}")
+        return Ze
+
+    def excitation_F(self, el_index, Vn=1):
+        """ F matrices
+        """
+
+        ie = self.connect_face[el_index, :]
+        coords = self.nodal_coordinates[ie, :]
+        coord_loc = get_local_coordinates(coords)
+
+        # print(f" new: {coord_loc}")
+        #
+        JAC = self.dphi @ coord_loc
+        detJAC = get_detJAC_3D(JAC)
+        #
+        N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
+        N[:, 0, :] = self.phi
+        #
+        Fe = 0.
+        for i in range(self.nint):
+            # print(f" new detJAC: {detJAC[i, :, :]}")     
+            Fe += (1/4) * Vn * N[i, :, :].T * (detJAC[i, :, :] * self.wps)
+            # print(f"excitation_F: index - {el_index} : k - {i} {N[i, :, :]}")
+        return Fe
+
+    def excitation_F_base(self, ee, Vn=1):
         """ F4 matrices
         """
         #Check Connectivity -- Ansys = Gmsh
 
         coord = self.nodal_coordinates
         connect_face = self.connect_face
-        Vn = 1
 
         ############## Definir plano de trabalho e adaptar coordenadas para tal plano
         XX1, YY1, ZZ1 = coord[connect_face[ee,0],1], coord[connect_face[ee,0],2], coord[connect_face[ee,0],3]
@@ -241,7 +241,7 @@ class ACT_FACE_4(Element2D):
                               [x3, y3],
                               [x4, y4]])
         
-        print(f"base: {coord_loc}")
+        # print(f"base: {coord_loc}")
 
         ################ Definir pontos de integração 2D
         nint, con, wps = 4, 1/np.sqrt(3), 1
@@ -251,7 +251,8 @@ class ACT_FACE_4(Element2D):
                          [ con, -con]])
 
         ######################## Inicio da integração na face
-        Fe = np.zeros((4,1),dtype=complex)
+        # Fe = np.zeros((4,1),dtype=complex)
+        Fe = 0.
         N = np.zeros((1,4))
         # integration
         for i in range(nint):
@@ -268,19 +269,18 @@ class ACT_FACE_4(Element2D):
             for iii in range(4):
                 N[0,iii]=phi[iii]
             
-            Fe += (1/4)*Vn*N.T*(detJAC*wps)
+            Fe += (1/4) * Vn * N.T * (detJAC * wps)
+            # print(f"base detJAC: {detJAC}")     
 
         return Fe
 
-    def matrices_Z_base(self, ee):
+    def matrices_Z_base(self, ee, rho=1, impedance=1):
         """ Z4 matrices
         """
         #Check Connectivity -- Ansys = Gmsh
 
         coord = self.nodal_coordinates
         connect_face = self.connect_face
-        rho = 1
-        imped = 1
 
         ############## Definir plano de trabalho e adaptar coordenadas para tal plano
         XX1, YY1, ZZ1 = coord[connect_face[ee,0],1], coord[connect_face[ee,0],2], coord[connect_face[ee,0],3]
@@ -329,8 +329,9 @@ class ACT_FACE_4(Element2D):
                          [ con, -con]])
 
         ######################## Inicio da integração na face
-        Ze = np.zeros((4,4),dtype=complex)
         Area = 0
+        Ze = 0.
+        # Ze = np.zeros((4,4),dtype=complex)
         N = np.zeros((1,4))
         # integration
         for i in range(nint):
@@ -347,6 +348,6 @@ class ACT_FACE_4(Element2D):
             for iii in range(4):
                 N[0,iii]=phi[iii]
             
-            Ze += rho*(1/imped)*N.T@N*(detJAC*wps)
+            Ze += (rho/impedance) * N.T@N * (detJAC * wps)
 
         return Ze

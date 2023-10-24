@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QComboBox, QLineEdit, QPushButton, QDialog
+from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt5.QtGui import QIcon
 from PyQt5 import uic
 from pathlib import Path
@@ -18,14 +18,14 @@ def get_icons_path(filename):
     if os.path.exists(path):
         return str(Path(path))
 
-window_title1 = "ERROR MESSAGE"
-window_title2 = "WARNING MESSAGE"
+window_title1 = "Error"
+window_title2 = "Warning"
 
-class PlotAcousticFrequencyResponseInput(QDialog):
+class PlotAcousticFrequencyResponseFunctionInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        uic.loadUi(Path('data/ui_files/plots/acoustic/plot_acoustic_frequency_response_input.ui'), self)
+        uic.loadUi(Path('data/ui_files/plots/acoustic/plot_acoustic_frequency_response_function.ui'), self)
 
         self.main_window = get_main_window()
         self.main_window.set_input_widget(self)
@@ -58,61 +58,110 @@ class PlotAcousticFrequencyResponseInput(QDialog):
         self.setWindowModality(Qt.WindowModal)
 
     def _reset_variables(self):
-        self.unit_label = "Pa"
+        self.unit_label = "Pa/Pa"
 
     def _define_qt_variables(self):
+        # QComboBox
         self.comboBox_selector_filter = self.findChild(QComboBox, 'comboBox_selector_filter')
-        self.lineEdit_selection_id = self.findChild(QLineEdit, 'lineEdit_selection_id')
+        # QLineEdit
+        self.lineEdit_output_node_id = self.findChild(QLineEdit, 'lineEdit_output_node_id')
+        self.lineEdit_input_node_id = self.findChild(QLineEdit, 'lineEdit_input_node_id')
+        self.current_lineEdit = self.lineEdit_output_node_id
+        # QPushButton
         self.pushButton_call_data_exporter = self.findChild(QPushButton, 'pushButton_call_data_exporter')
         self.pushButton_plot_frequency_response = self.findChild(QPushButton, 'pushButton_plot_frequency_response')
+        self.pushButton_flip_selection = self.findChild(QPushButton, 'pushButton_flip_selection')
         self.pushButton_call_data_exporter.setIcon(self.export_icon)
 
     def _create_connections(self):
         self.pushButton_call_data_exporter.clicked.connect(self.call_data_exporter)
+        self.pushButton_flip_selection.clicked.connect(self.flip_nodes)
         self.pushButton_plot_frequency_response.clicked.connect(self.call_plotter)
         geometry_widget = self.main_window.viewer_tabs.geometry_widget
         geometry_widget.selection_changed.connect(self.geometry_selection_callback)
+        #
+        self.clickable(self.lineEdit_input_node_id).connect(self.lineEdit_1_clicked)
+        self.clickable(self.lineEdit_output_node_id).connect(self.lineEdit_2_clicked)
+
+    def clickable(self, widget):
+        class Filter(QObject):
+            clicked = pyqtSignal()
+
+            def eventFilter(self, obj, event):
+                if obj == widget and event.type() == QEvent.MouseButtonRelease and obj.rect().contains(event.pos()):
+                    self.clicked.emit()
+                    return True
+                else:
+                    return False
+
+        filter = Filter(widget)
+        widget.installEventFilter(filter)
+        return filter.clicked
+
+    def lineEdit_1_clicked(self):
+        self.current_lineEdit = self.lineEdit_input_node_id
+
+    def lineEdit_2_clicked(self):
+        self.current_lineEdit = self.lineEdit_output_node_id
+
+    def writeNodes(self, list_node_ids):
+        node_id = list_node_ids[0]
+        self.current_lineEdit.setText(str(node_id))
     
     def geometry_selection_callback(self, points, lines, faces):
         
         index = self.comboBox_selector_filter.currentIndex()
         if faces and index == 0:
             text = ", ".join([str(i) for i in faces])
-            self.lineEdit_selection_id.setText(text)
+            self.current_lineEdit.setText(text)
             self.entity_type = "surface"
 
         if lines and index == 1:
             text = ", ".join([str(i) for i in lines])
-            self.lineEdit_selection_id.setText(text)
+            self.current_lineEdit.setText(text)
             self.entity_type = "line"
 
         if points and index == 2:
             text = ", ".join([str(i) for i in points])
-            self.lineEdit_selection_id.setText(text)
+            self.current_lineEdit.setText(text)
             self.entity_type = "point"
 
         elif not any([points, lines, faces]):
-            self.lineEdit_selection_id.setText("")
+            self.current_lineEdit.setText("")
+
+    def flip_nodes(self):
+        temp_text_input = self.lineEdit_input_node_id.text()
+        temp_text_output = self.lineEdit_output_node_id.text()
+        self.lineEdit_input_node_id.setText(temp_text_output)
+        self.lineEdit_output_node_id.setText(temp_text_input)
 
     def call_plotter(self):
-        lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.check_input_surface_id(lineEdit_selection_id)
-        if self.stop:
-            self.lineEdit_selection_id.setFocus()
+        if self.check_inputs():
             return
         self.join_model_data()
         self.plotter = FrequencyResponsePlotter()
         self.plotter._set_data_to_plot(self.model_results)
 
     def call_data_exporter(self):
-        lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.check_input_surface_id(lineEdit_selection_id)
-        if self.stop:
-            self.lineEdit_selection_id.setFocus()
+        if self.check_inputs():
             return
         self.join_model_data()
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(self.model_results)
+
+    def check_inputs(self):
+
+        lineEdit_output_node_id = self.lineEdit_output_node_id.text()
+        self.stop, self.output_node_id = self.check_input_surface_id(lineEdit_output_node_id, single_ID=True)
+        if self.stop:
+            self.lineEdit_output_node_id.setFocus()
+            return True
+        
+        lineEdit_input_node_id = self.lineEdit_input_node_id.text()
+        self.stop, self.input_node_id = self.check_input_surface_id(lineEdit_input_node_id, single_ID=True)
+        if self.stop:
+            self.lineEdit_input_node_id.setFocus()
+            return True
 
     def check_input_surface_id(self, lineEdit, single_ID=False):
         try:
@@ -160,35 +209,47 @@ class PlotAcousticFrequencyResponseInput(QDialog):
             return False, list_ids[0]
         else:
             return False, list_ids
-        
-    
 
     def get_response(self):
 
         index = self.comboBox_selector_filter.currentIndex()
-        selected_id = self.typed_ids[0]
 
         if index == 0:
-            rows = self.project.model.mesh.nodes_from_surfaces[selected_id]
+            self.selection_type = "surfaces"
+            rows_num = self.project.model.mesh.nodes_from_surfaces[self.output_node_id]
+            rows_den = self.project.model.mesh.nodes_from_surfaces[self.input_node_id]
         elif index == 1:
-            rows = self.project.model.mesh.nodes_from_lines[selected_id]
+            self.selection_type = "lines"
+            rows_num = self.project.model.mesh.nodes_from_lines[self.output_node_id]
+            rows_den = self.project.model.mesh.nodes_from_lines[self.input_node_id]
         else:
-            return
+            self.selection_type = ""
+            return None
 
-        response = np.average(self.solution[rows,:], axis=0)
+        numerator = np.average(self.solution[rows_num,:], axis=0)
+        denominator = np.average(self.solution[rows_den,:], axis=0)
 
-        # if complex(0) in response:
-        #     response += 1e-12
-            # response += np.ones(len(response), dtype=float)*(1e-12)
+        if complex(0) in denominator:
+            denominator += 1e-12
+
+        response = numerator/denominator
 
         return response
 
     def join_model_data(self):
+
         self.model_results = dict()
-        self.title = "Acoustic frequency response - {}".format(self.analysis_method)
-        legend_label = "Acoustic pressure at {} {}".format(self.entity_type, self.typed_ids[0])
+        y_data = self.get_response()
+        if y_data is None:
+            return
+
+        self.title = "Acoustic frequency response function - {}".format(self.analysis_method)
+        legend_label = "Acoustic FRF between {} {} and {}".format(self.selection_type, 
+                                                                  self.output_node_id, 
+                                                                  self.input_node_id)
+
         self.model_results = {  "x_data" : self.frequencies,
-                                "y_data" : self.get_response(),
+                                "y_data" : y_data,
                                 "x_label" : "Frequency [Hz]",
                                 "y_label" : "Nodal response",
                                 "title" : self.title,

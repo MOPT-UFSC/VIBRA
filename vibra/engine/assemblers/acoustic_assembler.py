@@ -1,3 +1,4 @@
+import logging
 from collections import defaultdict
 from time import time
 
@@ -13,6 +14,8 @@ from vibra.engine.elements.acoustic_face3_element import ACT_FACE_3
 from vibra.engine.elements.acoustic_face4_element import ACT_FACE_4
 #
 from vibra.engine.mesher.element_type import *
+from vibra.utils.progress_status import ProgressStatus
+
 
 
 class AcousticAssembler:
@@ -222,8 +225,8 @@ class AcousticAssembler:
             ind_rows_Z, ind_cols_Z = element_2D.generate_ind_rows_cols(connect_Z)
             for i, [el, complex_values, rho, _] in enumerate(data.values()):
                 normalized_matrix_Z = element_2D.matrices_Z(i)
-                normalized_matrix_Z_base = element_2D.matrices_Z_base(i)
-                print(el, normalized_matrix_Z-normalized_matrix_Z_base)
+                # normalized_matrix_Z_base = element_2D.matrices_Z_base(i)
+                # print(el, normalized_matrix_Z-normalized_matrix_Z_base)
                 if complex_values.shape[0] == 1:
                     complex_values = complex_values * aux_ones
                 for j in range(number_frequencies):
@@ -349,34 +352,31 @@ class AcousticAssembler:
         
         connect_vv, data_vv = self.get_surface_data_for_element_integration_by_property("volume_velocity")
         if connect_vv is not None:
-            # print(connect_vv)
             element_2D.reorder_connect(connect_vv)
             for i, [el, complex_values, rho, _] in enumerate(data_vv.values()):
                 indices = element_2D.connect_face[i, :]
                 normalized_excitation_matrix = element_2D.excitation_F(i)
-                # normalized_excitation_matrix_base = element_2D.excitation_F_base(i)
-                # print(el, normalized_excitation_matrix-normalized_excitation_matrix_base)
                 if complex_values.shape[0] == 1:
                     complex_values = complex_values * aux_ones
                 elif len(complex_values.shape) == 1:
                     complex_values = complex_values.reshape(1,-1)
                 output[indices, :] += (normalized_excitation_matrix @ complex_values) * rho
         
-        connect_pv, data_pv = self.get_surface_data_for_element_integration_by_property("surface_velocity")
-        if connect_pv is not None:
-            element_2D.reorder_connect(connect_pv)
-            for i, [el, complex_values, rho, area] in enumerate(data_pv.values()):
+        connect_sv, data_sv = self.get_surface_data_for_element_integration_by_property("surface_velocity")
+        if connect_sv is not None:
+            element_2D.reorder_connect(connect_sv)
+            for i, [el, complex_values, rho, _] in enumerate(data_sv.values()):
                 indices = element_2D.connect_face[i, :]
-                # print(f"element index: {el}")
-                # normalized_excitation_matrix = element_2D.excitation_F(i)
+                normalized_excitation_matrix = element_2D.excitation_F(i)
                 # normalized_excitation_matrix_base = element_2D.excitation_F_base(i)
                 # print(normalized_excitation_matrix)
                 # print(normalized_excitation_matrix_base)
+                # print(el, normalized_excitation_matrix - normalized_excitation_matrix_base)
                 if complex_values.shape[0] == 1:
                     complex_values = complex_values * aux_ones
                 elif len(complex_values.shape) == 1:
                     complex_values = complex_values.reshape(1,-1)
-                output[indices, :] += (normalized_excitation_matrix @ complex_values) * rho# * area
+                output[indices, :] += (normalized_excitation_matrix @ complex_values) * rho
             
         if len(self.prescribed_indexes) > 0:
             return output[self.unprescribed_indexes, :]
@@ -384,10 +384,20 @@ class AcousticAssembler:
             return output
         
     def process_assemble(self):
+        logging.info( "Assembling global matrices..." + ProgressStatus(10, 100))
         self.assemble_mass_and_stiffness_global_matrices()
+        
+        logging.info( "Assembling global matrices..." + ProgressStatus(70, 100))
         self.assemble_global_damping_matrix()
-        A = self.get_acoustic_excitations_by_nodal_attribution()
+        
+        logging.info( "Assembling global matrices..." + ProgressStatus(80, 100))
         B = self.get_acoustic_excitations_by_element_integration()
+        
+        logging.info( "Processing element related loads..." + ProgressStatus(90, 100))
+        A = self.get_acoustic_excitations_by_nodal_attribution()
+        
+        logging.info( "Processing nodal loads..." + ProgressStatus(100, 100))
+        
         self.mass_flow_vectors = A + B
         #
         # indA = np.arange(0, len(A), 1)

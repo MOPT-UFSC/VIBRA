@@ -1,5 +1,4 @@
 import logging
-
 import numpy as np
 from scipy.linalg import eig
 from scipy.sparse.linalg import spsolve
