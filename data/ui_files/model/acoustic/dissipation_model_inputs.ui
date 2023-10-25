@@ -405,13 +405,13 @@ rho_complex = (1 + n*1j)*rho_real</string>
               <widget class="QLabel" name="label_18">
                <property name="minimumSize">
                 <size>
-                 <width>120</width>
+                 <width>100</width>
                  <height>26</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>120</width>
+                 <width>140</width>
                  <height>26</height>
                 </size>
                </property>
@@ -436,13 +436,13 @@ rho_complex = (1 + n*1j)*rho_real</string>
               <widget class="QLabel" name="label_19">
                <property name="minimumSize">
                 <size>
-                 <width>120</width>
+                 <width>100</width>
                  <height>26</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>120</width>
+                 <width>140</width>
                  <height>26</height>
                 </size>
                </property>

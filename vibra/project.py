@@ -159,21 +159,18 @@ class Project:
             # structural modal analysis
             elif data["analysis_id"] == 2:
                 self.set_structural_element_to_model()
-                self.structural_modal_solver = StructuralModalSolver(
-                    self.structural_assembler, analysis_data=data
-                )
+                self.structural_modal_solver = StructuralModalSolver(self.structural_assembler, analysis_data=data)
+           
             # acoustic harmonic analysis
             elif data["analysis_id"] == 3:
                 self.set_acoustic_element_to_model()
-                self.acoustic_harmonic_solver = AcousticHarmonicSolver(
-                    self.acoustic_assembler, analysis_data=data
-                )
+                self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_assembler, analysis_data=data)
+            
             # acoustic modal analysis
             elif data["analysis_id"] == 4:
                 self.set_acoustic_element_to_model()
-                self.acoustic_modal_solver = AcousticModalSolver(
-                    self.acoustic_assembler, analysis_data=data
-                )
+                self.acoustic_modal_solver = AcousticModalSolver(self.acoustic_assembler, analysis_data=data)
+            
             # couled harmonic analysis (direct method)
             elif data["analysis_id"] == 5:
                 print("Coupled harmonic analysis (direct method) not implemented")

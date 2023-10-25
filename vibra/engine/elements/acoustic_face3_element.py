@@ -70,13 +70,17 @@ class ACT_FACE_3(Element2D):
 
     def define_integration_points(self):
         """ """
-        self.nint = 3
-        con1 = 2/3
-        con2 = 15/90
-        self.wps = 1/3
-        self.pint = np.array([  [con1, con1],
-                                [con1, con2],
-                                [con2, con1]  ], dtype=float)
+        # self.nint = 3
+        # con1 = 2/3
+        # con2 = 15/90
+        # self.wps = 1/3
+        # self.pint = np.array([  [con1, con1],
+        #                         [con1, con2],
+        #                         [con2, con1]  ], dtype=float)
+        self.nint = 1
+        con = 1/3
+        self.wps = 1
+        self.pint = np.array([[con, con]], dtype=float)
 
     def process_shape_functions_and_derivatives(self):
         """
