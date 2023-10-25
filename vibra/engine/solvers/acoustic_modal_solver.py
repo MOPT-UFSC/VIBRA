@@ -2,7 +2,10 @@ import logging
 
 import numpy as np
 from scipy.linalg import eig
+from scipy.sparse import lil_matrix, coo_matrix, csr_matrix
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh, inv, lobpcg
+from scipy.sparse.csgraph import reverse_cuthill_mckee
+import matplotlib.pyplot as plt
 
 from vibra.utils.progress_status import ProgressStatus
 
@@ -36,6 +39,9 @@ class AcousticModalSolver:
                     self.analysis_type = "acoustic"
 
     def solve(self, K=[], M=[], which="LM", normalize=True, harmonic_analysis=False):
+        """
+        """
+        
         if K != [] and M != []:
             KT = K
             MT = M
@@ -43,10 +49,14 @@ class AcousticModalSolver:
             KT = self.assembler.stiffness_matrix
             MT = self.assembler.mass_matrix
 
-        logging.info("Finding eigen values and eigen vectors" + ProgressStatus(7, 100))
-        self.eigen_values, self.eigen_vectors = eigs(
-            KT, M=MT, k=self.modes, which=which, sigma=self.sigma_factor
-        )
+        logging.info("Reducing global matrices bandwidth" + ProgressStatus(5, 100))
+        KT, MT = self.reduces_matrices_bandwidth(KT, MT)
+
+        logging.info("Finding eigen values and eigen vectors" + ProgressStatus(10, 100))
+        self.eigen_values, self.eigen_vectors = eigs(KT, M=MT, k=self.modes, which=which, sigma=self.sigma_factor)
+        
+        logging.info("Reversing eigen vectors indices" + ProgressStatus(10, 100))
+        self.reverse_bandwith()
 
         logging.info("Extracting information from solution" + ProgressStatus(95, 100))
         positive_real = np.absolute(np.real(self.eigen_values))
@@ -93,3 +103,48 @@ class AcousticModalSolver:
             else:
                 full_solution[self.prescribed_indexes, :] = self.array_prescribed_values[:, 0:cols]
         return np.real(full_solution)
+
+
+    def reduces_matrices_bandwidth(self, K, M):
+        """
+        """
+
+        self.ind_K = reverse_cuthill_mckee(K, symmetric_mode=True)
+        self.ind_M = reverse_cuthill_mckee(M, symmetric_mode=True)
+
+        M = self.sp_permute_matrix(M, self.ind_K, self.ind_K)
+        K = self.sp_permute_matrix(K, self.ind_K, self.ind_K)
+        # plt.cla()
+        # plt.spy(M, color=(0.25,0.25,0.25))
+        # plt.show()
+        return K, M
+    
+    def reverse_bandwith(self):
+        """
+        """
+        self.eigen_vectors = self.sp_permute_vector(self.eigen_vectors, self.ind_K)
+
+    def sp_permute_matrix(self, A, perm_r, perm_c):
+        """ permute rows and columns of A """
+        M, N = A.shape
+        # row permumation matrix
+        Pr = coo_matrix((np.ones(M), (np.arange(M), perm_r))).tocsr()
+        # column permutation matrix
+        Pc = coo_matrix((np.ones(N), (perm_c, np.arange(N)))).tocsr()
+        return Pc.T * A * Pr.T
+    
+    def sp_permute_vector(self, A, perm_r):
+        """ permute rows and columns of A """
+        M, N = A.shape
+        # row permumation matrix
+        Pr = coo_matrix((np.ones(M), (np.arange(M), perm_r))).tocsr()
+        return Pr.T * A
+    
+    # def sp_permute_matrix(self, A, perm_r, perm_c):
+    #     """ permute rows and columns of A """
+    #     M, N = A.shape
+    #     # row permumation matrix
+    #     Pr = coo_matrix((np.ones(M), (perm_r, np.arange(N)))).tocsr()
+    #     # column permutation matrix
+    #     Pc = coo_matrix((np.ones(M), (np.arange(M), perm_c))).tocsr()
+    #     return Pr.T * A * Pc.T

@@ -105,7 +105,7 @@ class ACT_FACE_3(Element2D):
         #
         Ze = 0.
         for i in range(self.nint):
-            Ze += (1/2) * (rho/impedance) * N[i, :, :].T @ N[i, :, :] * (detJAC*self.wps)
+            Ze += -(1/2) * (rho/impedance) * N[i, :, :].T @ N[i, :, :] * (detJAC*self.wps)
             # print(f"matrices_Z: index - {el_index} k - {i} {N[i, :, :]}")
         return Ze
 
@@ -125,7 +125,7 @@ class ACT_FACE_3(Element2D):
         #
         Fe = 0.
         for i in range(self.nint):            
-            Fe += (1/2) * Vn * N[i, :, :].T * (detJAC * self.wps)
+            Fe += -(1/2) * Vn * N[i, :, :].T * (detJAC * self.wps)
             # print(f"excitation_F: index - {el_index} : k - {i} {N[i, :, :]}")
         return Fe
 
@@ -209,7 +209,7 @@ class ACT_FACE_3(Element2D):
                 N[0,iii]=phi[iii]
 
             # print(f"forceF3: index - {ee} : k - {i} {N}")           
-            Fe += (1/2) * Vn * N.T * (detJAC * wps)
+            Fe += -(1/2) * Vn * N.T * (detJAC * wps)
 
         return Fe
 
@@ -222,9 +222,9 @@ class ACT_FACE_3(Element2D):
         connect_face = self.connect_face
 
         ############## Definir plano de trabalho e adaptar coordenadas para tal plano
-        XX1, YY1, ZZ1 = coord[connect_face[ee,0]-1*0,1], coord[connect_face[ee,0]-1*0,2], coord[connect_face[ee,0]-1*0,3]
-        XX2, YY2, ZZ2 = coord[connect_face[ee,1]-1*0,1], coord[connect_face[ee,1]-1*0,2], coord[connect_face[ee,1]-1*0,3]
-        XX3, YY3, ZZ3 = coord[connect_face[ee,2]-1*0,1], coord[connect_face[ee,2]-1*0,2], coord[connect_face[ee,2]-1*0,3]
+        XX1, YY1, ZZ1 = coord[connect_face[ee,0],1], coord[connect_face[ee,0],2], coord[connect_face[ee,0],3]
+        XX2, YY2, ZZ2 = coord[connect_face[ee,1],1], coord[connect_face[ee,1],2], coord[connect_face[ee,1],3]
+        XX3, YY3, ZZ3 = coord[connect_face[ee,2],1], coord[connect_face[ee,2],2], coord[connect_face[ee,2],3]
 
         vec21 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
         vec31 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
@@ -278,6 +278,6 @@ class ACT_FACE_3(Element2D):
             
             # print(f"matricesZ3: index - {ee} k - {i} {N}")
             
-            Ze += (1/2) * (rho/impedance) * N.T@N * (detJAC * wps)
+            Ze += -(1/2) * (rho/impedance) * N.T@N * (detJAC * wps)
 
         return Ze

@@ -64,18 +64,18 @@ class AcousticAssembler:
 
     def get_prescribed_values(self):
         """
-        This method returns all the values of the structural degrees of freedom with prescribed structural displacement or rotation boundary conditions.
+        This method returns all the values of the acoustic degrees of freedom with prescribed pressure boundary conditions.
 
         Returns
         ----------
         array
-            Values of the structural degrees of freedom with prescribed displacement or rotation boundary conditions.
+            Values of the acoustic degrees of freedom with prescribed pressure boundary conditions.
 
         See also
         --------
-        get_prescribed_indexes : Indexes of the structural degrees of freedom with prescribed displacement or rotation boundary conditions.
+        get_prescribed_indexes : Indexes of the acoustic degrees of freedom with prescribed pressure boundary conditions.
 
-        get_unprescribed_indexes : Indexes of the structural free degrees of freedom.
+        get_unprescribed_indexes : Indexes of the acoustic free degrees of freedom.
         """
 
         global_prescribed = []
@@ -85,18 +85,22 @@ class AcousticAssembler:
         else:
             number_frequencies = len(self.frequencies)
 
+        aux_ones = np.ones(number_frequencies, dtype=complex)
+
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "acoustic_pressure":
-                values = data["values"]
+                real_values = np.array(data["real_values"])
+                imag_values = np.array(data["imag_values"])
+                complex_values = real_values + 1j * imag_values
                 nodes = self.model.mesh.nodes_from_surfaces[surface_id]
                 for _ in nodes:
-                    global_prescribed.extend(values)
+                    global_prescribed.extend(complex_values)
 
         # TODO: implement same structure for lines
 
         try:
-            aux_ones = np.ones(number_frequencies, dtype=complex)
+
             for value in global_prescribed:
                 if isinstance(value, complex):
                     list_prescribed_dofs.append(aux_ones * value)
@@ -193,12 +197,11 @@ class AcousticAssembler:
         _mass_matrix_full = csr_matrix((self.data_M, (ind_rows, ind_cols)), shape=(total_dofs, total_dofs))
 
         self.process_indexes()
-        if len(self.prescribed_indexes) > 0:
-            self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-            self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]                
-        else:
-            self.stiffness_matrix = _stiffness_matrix_full
-            self.mass_matrix = _mass_matrix_full
+        self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+        self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]          
+        
+        self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_indexes]
+        self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_indexes]   
 
     def assemble_global_damping_matrix(self):
 
@@ -215,7 +218,7 @@ class AcousticAssembler:
 
         connect_Z, data = self.get_surface_data_for_element_integration_by_property("specific_impedance")
         if connect_Z is None:
-            self.damping_matrix = np.zeros(number_frequencies, dtype=complex)
+            _damping_matrix_full = [csr_matrix((total_dofs, total_dofs)) for _ in range(number_frequencies)]
         else:
 
             nel_Z = connect_Z.shape[0]
@@ -234,10 +237,8 @@ class AcousticAssembler:
 
             _damping_matrix_full = [csr_matrix((self.data_Z[j].flatten(), (ind_rows_Z, ind_cols_Z)), shape=(total_dofs, total_dofs)) for j in range(number_frequencies)]
             
-            if len(self.prescribed_indexes) > 0:
-                self.damping_matrix = [matrix[self.unprescribed_indexes, :][:, self.unprescribed_indexes] for matrix in _damping_matrix_full]
-            else:
-                self.damping_matrix = _damping_matrix_full
+        self.damping_matrix = [matrix[self.unprescribed_indexes, :][:, self.unprescribed_indexes] for matrix in _damping_matrix_full]
+        self.damping_matrix_r = [matrix[:, self.prescribed_indexes] for matrix in _damping_matrix_full]
 
     def get_acoustic_excitations_by_nodal_attribution(self):
         """ This method processes the acoustic model excitations and

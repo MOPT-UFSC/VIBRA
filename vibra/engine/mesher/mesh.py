@@ -325,7 +325,9 @@ class Mesh:
         self.lines_connectivity = self._get_connectivity_array(connectivity_dim1)
         self.faces_connectivity = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity = self._get_connectivity_array(connectivity_dim3)
-        np.savetxt("faces_connectivity.dat", self.faces_connectivity, delimiter=",", fmt='%i')
+        # print(f"Nodal coordinates: {self.nodal_coordinates.shape}")
+        # print(f"Connectivity: {self.solids_connectivity.shape}")
+        # np.savetxt("faces_connectivity.dat", self.faces_connectivity, delimiter=",", fmt='%i')
 
     def get_model_areas(self, path):
         """This method returns returns the all surface area processed using

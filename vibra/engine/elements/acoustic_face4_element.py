@@ -167,7 +167,7 @@ class ACT_FACE_4(Element2D):
         #
         Ze = 0.
         for i in range(self.nint):
-            Ze += (rho/impedance) * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :]*self.wps)
+            Ze += -(rho/impedance) * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :]*self.wps)
             # print(f"matrices_Z: index - {el_index} k - {i} {N[i, :, :]}")
         return Ze
 
@@ -190,7 +190,7 @@ class ACT_FACE_4(Element2D):
         Fe = 0.
         for i in range(self.nint):
             # print(f" new detJAC: {detJAC[i, :, :]}")     
-            Fe += (1/4) * Vn * N[i, :, :].T * (detJAC[i, :, :] * self.wps)
+            Fe += -(1/4) * Vn * N[i, :, :].T * (detJAC[i, :, :] * self.wps)
             # print(f"excitation_F: index - {el_index} : k - {i} {N[i, :, :]}")
         return Fe
 
@@ -269,7 +269,7 @@ class ACT_FACE_4(Element2D):
             for iii in range(4):
                 N[0,iii]=phi[iii]
             
-            Fe += (1/4) * Vn * N.T * (detJAC * wps)
+            Fe += -(1/4) * Vn * N.T * (detJAC * wps)
             # print(f"base detJAC: {detJAC}")     
 
         return Fe
@@ -298,7 +298,7 @@ class ACT_FACE_4(Element2D):
         ZZ = vecZZ/np.linalg.norm(vecZZ)
         vecYY = np.cross(ZZ,XX)
         YY = vecYY/np.linalg.norm(vecYY)
-        COSDIR = np.array([XX,YY,ZZ]) 
+        COSDIR = np.array([XX,YY,ZZ])
 
         loc_x_axis = vec12.copy()
         loc_z_axis = np.cross(loc_x_axis, vec14)
@@ -348,6 +348,6 @@ class ACT_FACE_4(Element2D):
             for iii in range(4):
                 N[0,iii]=phi[iii]
             
-            Ze += (rho/impedance) * N.T@N * (detJAC * wps)
+            Ze += -(rho/impedance) * N.T@N * (detJAC * wps)
 
         return Ze
