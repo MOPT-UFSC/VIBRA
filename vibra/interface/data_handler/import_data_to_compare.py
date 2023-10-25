@@ -79,7 +79,7 @@ class ImportDataToCompare(QDialog):
         for i, width in enumerate(widths_1):
             self.treeWidget_import_text_files.setColumnWidth(i, width)
 
-        widths_2 = [180, 150, 60]
+        widths_2 = [180, 180, 60]
         for i, width in enumerate(widths_2):
             self.treeWidget_import_sheet_files.setColumnWidth(i, width)
 
