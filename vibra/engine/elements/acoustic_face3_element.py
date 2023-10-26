@@ -70,17 +70,13 @@ class ACT_FACE_3(Element2D):
 
     def define_integration_points(self):
         """ """
-        # self.nint = 3
-        # con1 = 2/3
-        # con2 = 15/90
-        # self.wps = 1/3
-        # self.pint = np.array([  [con1, con1],
-        #                         [con1, con2],
-        #                         [con2, con1]  ], dtype=float)
-        self.nint = 1
-        con = 1/3
-        self.wps = 1
-        self.pint = np.array([[con, con]], dtype=float)
+        self.nint = 3
+        con1 = 1/6
+        con2 = 2/3
+        self.wps = 1/3
+        self.pint = np.array([[con1, con1],
+                              [con2, con1],
+                              [con1, con2]], dtype=float)
 
     def process_shape_functions_and_derivatives(self):
         """
@@ -186,12 +182,12 @@ class ACT_FACE_3(Element2D):
 
         ################ Definir pontos de integração 2D
         nint = 3
-        con1 = 2/3
-        con2 = 15/90
+        con1 = 1/6
+        con2 = 2/3
         wps = 1/3
         pint = np.array([[con1, con1],
-                         [con1, con2],
-                         [con2, con1]])
+                         [con2, con1],
+                         [con1, con2]])
 
         ######################## Inicio da integração na face
         Fe = np.zeros((3,1),dtype=complex)
@@ -254,12 +250,12 @@ class ACT_FACE_3(Element2D):
 
         ################ Definir pontos de integração 2D
         nint = 3
-        con1 = 2/3
-        con2 = 15/90
+        con1 = 1/6
+        con2 = 2/3
         wps = 1/3
         pint = np.array([[con1, con1],
-                         [con1, con2],
-                         [con2, con1]])
+                         [con2, con1],
+                         [con1, con2]])
 
         ######################## Inicio da integração na face
         Ze = np.zeros((3,3),dtype=complex)

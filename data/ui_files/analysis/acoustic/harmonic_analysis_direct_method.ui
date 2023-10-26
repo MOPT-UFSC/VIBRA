@@ -102,7 +102,7 @@
         </property>
         <property name="font">
          <font>
-          <family>Segoe UI</family>
+          <family>MS Shell Dlg 2</family>
           <pointsize>11</pointsize>
           <weight>50</weight>
           <italic>false</italic>
@@ -151,7 +151,7 @@
             </property>
             <property name="font">
              <font>
-              <family>Segoe UI</family>
+              <family>MS Shell Dlg 2</family>
               <pointsize>11</pointsize>
               <weight>50</weight>
               <italic>false</italic>
@@ -182,15 +182,15 @@
             </property>
             <property name="font">
              <font>
-              <family>Segoe UI</family>
+              <family>MS Shell Dlg 2</family>
               <pointsize>11</pointsize>
-              <weight>75</weight>
+              <weight>9</weight>
               <italic>false</italic>
-              <bold>true</bold>
+              <bold>false</bold>
              </font>
             </property>
             <property name="styleSheet">
-             <string notr="true">color: rgb(0, 0, 255); background-color: rgb(255,255,255); font: 75 bold 11pt &quot;Segoe UI&quot;;</string>
+             <string notr="true">color: rgb(0, 0, 255); background-color: rgb(255,255,255); font: 75 11pt &quot;MS Shell Dlg 2&quot;;</string>
             </property>
             <property name="text">
              <string>0</string>
@@ -216,15 +216,15 @@
             </property>
             <property name="font">
              <font>
-              <family>Segoe UI</family>
+              <family>MS Shell Dlg 2</family>
               <pointsize>11</pointsize>
-              <weight>75</weight>
+              <weight>9</weight>
               <italic>false</italic>
-              <bold>true</bold>
+              <bold>false</bold>
              </font>
             </property>
             <property name="styleSheet">
-             <string notr="true">color: rgb(0, 0, 255); background-color: rgb(255,255,255); font: 75 bold 11pt &quot;Segoe UI&quot;;</string>
+             <string notr="true">color: rgb(0, 0, 255); background-color: rgb(255,255,255); font: 75 11pt &quot;MS Shell Dlg 2&quot;;</string>
             </property>
             <property name="text">
              <string>2</string>
@@ -250,15 +250,15 @@
             </property>
             <property name="font">
              <font>
-              <family>Segoe UI</family>
+              <family>MS Shell Dlg 2</family>
               <pointsize>11</pointsize>
-              <weight>75</weight>
+              <weight>9</weight>
               <italic>false</italic>
-              <bold>true</bold>
+              <bold>false</bold>
              </font>
             </property>
             <property name="styleSheet">
-             <string notr="true">color: rgb(0, 0, 255); background-color: rgb(255,255,255); font: 75 bold 11pt &quot;Segoe UI&quot;;</string>
+             <string notr="true">color: rgb(0, 0, 255); background-color: rgb(255,255,255); font: 75 11pt &quot;MS Shell Dlg 2&quot;;</string>
             </property>
             <property name="text">
              <string>200</string>
@@ -284,7 +284,7 @@
             </property>
             <property name="font">
              <font>
-              <family>Segoe UI</family>
+              <family>MS Shell Dlg 2</family>
               <pointsize>11</pointsize>
               <weight>50</weight>
               <italic>false</italic>
@@ -315,7 +315,7 @@
             </property>
             <property name="font">
              <font>
-              <family>Segoe UI</family>
+              <family>MS Shell Dlg 2</family>
               <pointsize>11</pointsize>
               <weight>50</weight>
               <italic>false</italic>
@@ -346,7 +346,7 @@
             </property>
             <property name="font">
              <font>
-              <family>Segoe UI</family>
+              <family>MS Shell Dlg 2</family>
               <pointsize>11</pointsize>
               <weight>50</weight>
               <italic>false</italic>
@@ -377,7 +377,7 @@
             </property>
             <property name="font">
              <font>
-              <family>Segoe UI</family>
+              <family>MS Shell Dlg 2</family>
               <pointsize>11</pointsize>
               <weight>50</weight>
               <italic>false</italic>
@@ -408,7 +408,7 @@
             </property>
             <property name="font">
              <font>
-              <family>Segoe UI</family>
+              <family>MS Shell Dlg 2</family>
               <pointsize>11</pointsize>
               <weight>50</weight>
               <italic>false</italic>
@@ -502,7 +502,7 @@
            </property>
            <property name="font">
             <font>
-             <family>Segoe UI</family>
+             <family>MS Shell Dlg 2</family>
              <pointsize>11</pointsize>
              <weight>50</weight>
              <italic>false</italic>
@@ -510,9 +510,9 @@
             </font>
            </property>
            <property name="styleSheet">
-            <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 11pt &quot;Segoe UI&quot;;}
-QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 11pt &quot;Segoe UI&quot;;}
-QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 11pt &quot;Segoe UI&quot;;}</string>
+            <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 11pt &quot;MS Shell Dlg 2&quot;;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 11pt &quot;MS Shell Dlg 2&quot;;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 11pt &quot;MS Shell Dlg 2&quot;;}</string>
            </property>
            <property name="text">
             <string>Enter setup</string>
@@ -535,7 +535,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
            </property>
            <property name="font">
             <font>
-             <family>Segoe UI</family>
+             <family>MS Shell Dlg 2</family>
              <pointsize>11</pointsize>
              <weight>50</weight>
              <italic>false</italic>
@@ -543,9 +543,9 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
             </font>
            </property>
            <property name="styleSheet">
-            <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 11pt &quot;Segoe UI&quot;;}
-QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 11pt &quot;Segoe UI&quot;;}
-QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 11pt &quot;Segoe UI&quot;;}</string>
+            <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 11pt &quot;MS Shell Dlg 2&quot;;}
+QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 11pt &quot;MS Shell Dlg 2&quot;;}
+QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 11pt &quot;MS Shell Dlg 2&quot;;}</string>
            </property>
            <property name="text">
             <string>Run analysis</string>
@@ -595,7 +595,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
        <widget class="QLabel" name="label_title">
         <property name="font">
          <font>
-          <family>Segoe UI</family>
+          <family>MS Shell Dlg 2</family>
           <pointsize>12</pointsize>
           <weight>50</weight>
           <italic>false</italic>
@@ -617,7 +617,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
        <widget class="QLabel" name="label_subtitle">
         <property name="font">
          <font>
-          <family>Segoe UI</family>
+          <family>MS Shell Dlg 2</family>
           <pointsize>12</pointsize>
           <weight>50</weight>
           <italic>false</italic>
