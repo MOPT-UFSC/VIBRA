@@ -282,7 +282,7 @@
        <widget class="QLabel" name="density_label_11">
         <property name="geometry">
          <rect>
-          <x>258</x>
+          <x>260</x>
           <y>128</y>
           <width>66</width>
           <height>26</height>
@@ -484,6 +484,11 @@
           <height>26</height>
          </size>
         </property>
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
+        </property>
         <property name="text">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-style:normal;&quot;&gt;[N.s/m²]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
@@ -573,6 +578,11 @@
           <width>66</width>
           <height>26</height>
          </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
         </property>
         <property name="text">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-style:normal;&quot;&gt;[W/mK]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1171,7 +1181,7 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
        <widget class="QLabel" name="density_label_28">
         <property name="geometry">
          <rect>
-          <x>258</x>
+          <x>260</x>
           <y>166</y>
           <width>66</width>
           <height>26</height>
@@ -1307,7 +1317,7 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
        <widget class="QLabel" name="coefficient_mK_16">
         <property name="geometry">
          <rect>
-          <x>258</x>
+          <x>260</x>
           <y>204</y>
           <width>66</width>
           <height>26</height>
@@ -1324,6 +1334,11 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
           <width>60</width>
           <height>26</height>
          </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
         </property>
         <property name="text">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-style:normal;&quot;&gt;[Pa]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1680,21 +1695,21 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
        <widget class="QLabel" name="density_label_23">
         <property name="geometry">
          <rect>
-          <x>258</x>
+          <x>260</x>
           <y>128</y>
-          <width>60</width>
+          <width>66</width>
           <height>26</height>
          </rect>
         </property>
         <property name="minimumSize">
          <size>
-          <width>60</width>
+          <width>66</width>
           <height>26</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>60</width>
+          <width>66</width>
           <height>26</height>
          </size>
         </property>
@@ -1773,7 +1788,7 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
        <widget class="QLabel" name="density_label_25">
         <property name="geometry">
          <rect>
-          <x>652</x>
+          <x>654</x>
           <y>14</y>
           <width>66</width>
           <height>26</height>
@@ -1801,7 +1816,7 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
        <widget class="QLabel" name="density_label_5">
         <property name="geometry">
          <rect>
-          <x>652</x>
+          <x>654</x>
           <y>166</y>
           <width>66</width>
           <height>26</height>
@@ -1919,7 +1934,7 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
        <widget class="QLabel" name="coefficient_mK_13">
         <property name="geometry">
          <rect>
-          <x>652</x>
+          <x>654</x>
           <y>90</y>
           <width>66</width>
           <height>26</height>
@@ -2241,7 +2256,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
        <widget class="QLabel" name="density_label_26">
         <property name="geometry">
          <rect>
-          <x>652</x>
+          <x>654</x>
           <y>52</y>
           <width>66</width>
           <height>26</height>
@@ -2309,7 +2324,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
        <widget class="QLabel" name="coefficient_mK_14">
         <property name="geometry">
          <rect>
-          <x>652</x>
+          <x>654</x>
           <y>204</y>
           <width>66</width>
           <height>26</height>
@@ -2327,6 +2342,11 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
           <height>26</height>
          </size>
         </property>
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
+        </property>
         <property name="text">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-style:normal;&quot;&gt;[N.s/m²]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
@@ -2334,7 +2354,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
        <widget class="QLabel" name="poisson_label_6">
         <property name="geometry">
          <rect>
-          <x>652</x>
+          <x>654</x>
           <y>128</y>
           <width>66</width>
           <height>26</height>
@@ -2351,6 +2371,11 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
           <width>66</width>
           <height>26</height>
          </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
         </property>
         <property name="text">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-style:normal;&quot;&gt;[W/mK]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -2427,23 +2452,28 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
        <widget class="QLabel" name="coefficient_mK_15">
         <property name="geometry">
          <rect>
-          <x>258</x>
+          <x>260</x>
           <y>204</y>
-          <width>60</width>
+          <width>66</width>
           <height>26</height>
          </rect>
         </property>
         <property name="minimumSize">
          <size>
-          <width>60</width>
+          <width>66</width>
           <height>26</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>60</width>
+          <width>66</width>
           <height>26</height>
          </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
         </property>
         <property name="text">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-style:normal;&quot;&gt;[Pa]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -2452,21 +2482,21 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
        <widget class="QLabel" name="density_label_27">
         <property name="geometry">
          <rect>
-          <x>258</x>
+          <x>260</x>
           <y>166</y>
-          <width>60</width>
+          <width>66</width>
           <height>26</height>
          </rect>
         </property>
         <property name="minimumSize">
          <size>
-          <width>60</width>
+          <width>66</width>
           <height>26</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>60</width>
+          <width>66</width>
           <height>26</height>
          </size>
         </property>
@@ -2759,6 +2789,11 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
           <width>66</width>
           <height>26</height>
          </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
         </property>
         <property name="text">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-style:normal;&quot;&gt;[N.s/m²]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -3296,7 +3331,7 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
        <widget class="QLabel" name="density_label_15">
         <property name="geometry">
          <rect>
-          <x>258</x>
+          <x>260</x>
           <y>128</y>
           <width>66</width>
           <height>26</height>
@@ -3324,7 +3359,7 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
        <widget class="QLabel" name="coefficient_mK_18">
         <property name="geometry">
          <rect>
-          <x>258</x>
+          <x>260</x>
           <y>204</y>
           <width>66</width>
           <height>26</height>
@@ -3341,6 +3376,11 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
           <width>66</width>
           <height>26</height>
          </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
         </property>
         <property name="text">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-style:normal;&quot;&gt;[Pa]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -3549,7 +3589,7 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
        <widget class="QLabel" name="density_label_29">
         <property name="geometry">
          <rect>
-          <x>258</x>
+          <x>260</x>
           <y>166</y>
           <width>66</width>
           <height>26</height>
@@ -3637,6 +3677,11 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
           <width>66</width>
           <height>26</height>
          </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
         </property>
         <property name="text">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-style:normal;&quot;&gt;[W/mK]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -4043,7 +4088,7 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
     <property name="font">
      <font>
       <family>MS Shell Dlg 2</family>
-      <pointsize>10</pointsize>
+      <pointsize>9</pointsize>
       <weight>50</weight>
       <bold>false</bold>
      </font>
@@ -4064,7 +4109,7 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
      <bool>true</bool>
     </property>
     <property name="alternatingRowColors">
-     <bool>true</bool>
+     <bool>false</bool>
     </property>
     <property name="indentation">
      <number>0</number>
@@ -4091,22 +4136,13 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
      <property name="font">
       <font>
        <family>MS Shell Dlg 2</family>
-       <pointsize>11</pointsize>
+       <pointsize>10</pointsize>
        <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
      <property name="textAlignment">
       <set>AlignCenter</set>
-     </property>
-     <property name="foreground">
-      <brush brushstyle="SolidPattern">
-       <color alpha="255">
-        <red>0</red>
-        <green>0</green>
-        <blue>0</blue>
-       </color>
-      </brush>
      </property>
     </column>
     <column>
@@ -4116,7 +4152,7 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
      <property name="font">
       <font>
        <family>MS Shell Dlg 2</family>
-       <pointsize>11</pointsize>
+       <pointsize>10</pointsize>
        <weight>50</weight>
        <bold>false</bold>
       </font>
@@ -4131,15 +4167,6 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
        <blue>255</blue>
       </color>
      </property>
-     <property name="foreground">
-      <brush brushstyle="SolidPattern">
-       <color alpha="255">
-        <red>0</red>
-        <green>0</green>
-        <blue>0</blue>
-       </color>
-      </brush>
-     </property>
     </column>
     <column>
      <property name="text">
@@ -4148,22 +4175,13 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
      <property name="font">
       <font>
        <family>MS Shell Dlg 2</family>
-       <pointsize>11</pointsize>
+       <pointsize>10</pointsize>
        <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
      <property name="textAlignment">
       <set>AlignCenter</set>
-     </property>
-     <property name="foreground">
-      <brush brushstyle="SolidPattern">
-       <color alpha="255">
-        <red>0</red>
-        <green>0</green>
-        <blue>0</blue>
-       </color>
-      </brush>
      </property>
     </column>
     <column>
@@ -4173,7 +4191,7 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
      <property name="font">
       <font>
        <family>MS Shell Dlg 2</family>
-       <pointsize>11</pointsize>
+       <pointsize>10</pointsize>
        <weight>50</weight>
        <bold>false</bold>
       </font>
@@ -4181,14 +4199,31 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
      <property name="textAlignment">
       <set>AlignCenter</set>
      </property>
-     <property name="foreground">
-      <brush brushstyle="SolidPattern">
-       <color alpha="255">
-        <red>0</red>
-        <green>0</green>
-        <blue>0</blue>
-       </color>
-      </brush>
+    </column>
+    <column>
+     <property name="text">
+      <string>Temperature [K]</string>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="textAlignment">
+      <set>AlignCenter</set>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Pressure [Pa]</string>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="textAlignment">
+      <set>AlignCenter</set>
      </property>
     </column>
     <column>
@@ -4198,22 +4233,13 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
      <property name="font">
       <font>
        <family>MS Shell Dlg 2</family>
-       <pointsize>11</pointsize>
+       <pointsize>10</pointsize>
        <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
      <property name="textAlignment">
       <set>AlignCenter</set>
-     </property>
-     <property name="foreground">
-      <brush brushstyle="SolidPattern">
-       <color alpha="255">
-        <red>0</red>
-        <green>0</green>
-        <blue>0</blue>
-       </color>
-      </brush>
      </property>
     </column>
     <column>
@@ -4223,22 +4249,13 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
      <property name="font">
       <font>
        <family>MS Shell Dlg 2</family>
-       <pointsize>11</pointsize>
+       <pointsize>10</pointsize>
        <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
      <property name="textAlignment">
       <set>AlignCenter</set>
-     </property>
-     <property name="foreground">
-      <brush brushstyle="SolidPattern">
-       <color alpha="255">
-        <red>0</red>
-        <green>0</green>
-        <blue>0</blue>
-       </color>
-      </brush>
      </property>
     </column>
    </widget>

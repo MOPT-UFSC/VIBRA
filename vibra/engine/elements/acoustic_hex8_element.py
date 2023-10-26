@@ -222,3 +222,11 @@ class ACT_HEXAHEDRON_8C(Element3D):
         self.ind_cols = (np.tile(ind_dofs, edofs)).flatten()
 
         return self.ind_rows, self.ind_cols
+    
+    def get_fluid_properties(self, el_index):
+        """ This method returns the fluid properties """
+        c_0 = self.model.properties.get_speed_of_sound(element = el_index)
+        rho_0 = self.model.properties.get_fluid_density(element = el_index)
+        fluid = self.model.properties.get_fluid(element = el_index)
+        dinamic_viscosity = fluid.dynamic_viscosity
+        return rho_0, c_0, dinamic_viscosity

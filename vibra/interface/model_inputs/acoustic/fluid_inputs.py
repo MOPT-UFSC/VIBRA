@@ -205,7 +205,7 @@ class FluidInput(QDialog):
         self.tabWidget_fluid.setTabVisible(2, False)
         # QTreeWidget
         self.treeWidget_fluids = self.findChild(QTreeWidget, 'treeWidget_fluids')
-        widhts = [50, 140, 170, 180, 172, 80]
+        widhts = [50, 140, 160, 160, 160]
         for col_index, width in enumerate(widhts):
             self.treeWidget_fluids.setColumnWidth(col_index, width)
         for col_index in [6, 7, 8, 9]:
@@ -324,7 +324,7 @@ class FluidInput(QDialog):
     def pick_color_add_refprop(self):
         read = PickColorInput()
         if read.complete:
-            str_color = str(read.color).replace(" ", "")  # [1:-1]
+            str_color = str(read.color).replace(" ", "")
             self.lineEdit_color_rp.setText(str_color)
             self.lineEdit_color_rp.setStyleSheet(f"background-color: rgb({str_color[1:-1]})")
             self.refprop_fluid = True
@@ -964,38 +964,39 @@ class FluidInput(QDialog):
             name = self.clicked_item.text(1)
             fluid_density = float(self.clicked_item.text(2))
             speed_of_sound = float(self.clicked_item.text(3))
-            color = self.clicked_item.text(5)
             
+            if self.clicked_item.text(4) != "":
+                temperature = float(self.clicked_item.text(4))
+
+            if self.clicked_item.text(5) != "":
+                pressure = float(self.clicked_item.text(5))
+            
+            color = self.clicked_item.text(7)
+
+            if self.clicked_item.text(8) != "":
+                isentropic_exponent = float(self.clicked_item.text(8))
+            elif self.flag_all_fluid_inputs:
+                list_empty_inputs.append("isentropic exponent")    
+ 
+            if self.clicked_item.text(9) != "":
+                thermal_conductivity = float(self.clicked_item.text(9))
+            elif self.flag_all_fluid_inputs:
+                list_empty_inputs.append("thermal conductivity")
+
+            if self.clicked_item.text(10) != "":
+                specific_heat_Cp = float(self.clicked_item.text(10))
+            elif self.flag_all_fluid_inputs:
+                list_empty_inputs.append("specific heat Cp")
+
+            if self.clicked_item.text(11) != "":
+                dynamic_viscosity = float(self.clicked_item.text(11))
+            elif self.flag_all_fluid_inputs:
+                list_empty_inputs.append("dynamic viscosity")
+  
             title = "Empty entries in fluid properties"
             message = "Please, it is necessary update the fluid properties or select another " 
             message += "fluid in the list before trying to attribute a fluid to the bodies."
             message += "\n\nEmpty entries:\n"
-
-            if self.clicked_item.text(6) != "":
-                isentropic_exponent = float(self.clicked_item.text(6))
-            elif self.flag_all_fluid_inputs:
-                list_empty_inputs.append("isentropic exponent")    
- 
-            if self.clicked_item.text(7) != "":
-                thermal_conductivity = float(self.clicked_item.text(7))
-            elif self.flag_all_fluid_inputs:
-                list_empty_inputs.append("thermal conductivity")
-
-            if self.clicked_item.text(8) != "":
-                specific_heat_Cp = float(self.clicked_item.text(8))
-            elif self.flag_all_fluid_inputs:
-                list_empty_inputs.append("specific heat Cp")
-
-            if self.clicked_item.text(9) != "":
-                dynamic_viscosity = float(self.clicked_item.text(9))
-            elif self.flag_all_fluid_inputs:
-                list_empty_inputs.append("dynamic viscosity")    
-
-            if self.clicked_item.text(10) != "":
-                temperature = float(self.clicked_item.text(10))
-
-            if self.clicked_item.text(11) != "":
-                pressure = float(self.clicked_item.text(11))
 
             if list_empty_inputs != []:                
                 for label in list_empty_inputs:
@@ -1106,23 +1107,23 @@ class FluidInput(QDialog):
                                                 fluid_density,
                                                 speed_of_sound, 
                                                 impedance,
+                                                temperature,
+                                                pressure,
                                                 color,
                                                 isentropic_exponent,
                                                 thermal_conductivity,
                                                 specific_heat_Cp,
-                                                dynamic_viscosity,
-                                                temperature,
-                                                pressure  ])
+                                                dynamic_viscosity  ])
 
                 colorRGB = getColorRGB(color)
                 self.list_names.append(name)
                 self.list_ids.append(int(identifier))
                 self.list_colors.append(colorRGB)
 
-                load_fluid.setBackground(5, QBrush(QColor(colorRGB[0], colorRGB[1], colorRGB[2])))
-                load_fluid.setForeground(5, QBrush(QColor(colorRGB[0], colorRGB[1], colorRGB[2])))
+                load_fluid.setBackground(7, QBrush(QColor(colorRGB[0], colorRGB[1], colorRGB[2])))
+                load_fluid.setForeground(7, QBrush(QColor(colorRGB[0], colorRGB[1], colorRGB[2])))
 
-                for i in range(6):
+                for i in range(7):
                     load_fluid.setTextAlignment(i, Qt.AlignCenter)
 
                 self.treeWidget_fluids.addTopLevelItem(load_fluid)
@@ -1259,9 +1260,9 @@ class FluidInput(QDialog):
         self.pushButton_edit_fluid_in_refprop.setDisabled(True)
 
         if self.compressor_thermodynamic_state:
-            if str(round(self.temperature_comp,4)) != item.text(10):
+            if str(round(self.temperature_comp,4)) != item.text(4):
                 return
-            if str(round(self.pressure_comp,4)) != item.text(11):
+            if str(round(self.pressure_comp,4)) != item.text(5):
                 return
         else:
             if self.tabWidget_fluid.currentIndex() == 0:
@@ -1271,12 +1272,7 @@ class FluidInput(QDialog):
 
         self.pushButton_confirm.setVisible(True)
         
-        self.selected_fluid_to_edit()
-        
-        # N = len(self.list_edit_lineEdit)
-        # for i in range(N):
-        #     self.list_edit_lineEdit[i].setText(item.text(i))
-        # self.temp_fluid_color = item.text(2)   
+        self.selected_fluid_to_edit() 
 
         fluid_name = item.text(1)
         self.lineEdit_selected_fluid_name.setText(fluid_name)
@@ -1312,7 +1308,7 @@ class FluidInput(QDialog):
             self.editing = True
             self.temp_fluid_name = self.clicked_item.text(0)
             self.temp_fluid_id = self.clicked_item.text(1)
-            self.temp_fluid_color = self.clicked_item.text(5)
+            self.temp_fluid_color = self.clicked_item.text(7)
 
             N = len(self.list_edit_lineEdit)
             for i in range(N):

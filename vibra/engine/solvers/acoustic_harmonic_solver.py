@@ -69,7 +69,7 @@ class AcousticHarmonicSolver:
 
         return p_min, p_max
 
-    def solve(self):
+    def solve(self, print_log=False):
         """ """
         #
         self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
@@ -77,6 +77,7 @@ class AcousticHarmonicSolver:
         M = self.assembler.mass_matrix
         K = self.assembler.stiffness_matrix
         C = self.assembler.damping_matrix
+        C_visc = self.assembler.visc_damping_matrix
         Q = self.assembler.mass_flow_vectors
         F_eq = self.get_combined_model_excitation()
         #
@@ -99,10 +100,13 @@ class AcousticHarmonicSolver:
 
             message = f"Solution step {i+1} and frequency {freq} Hz"
             logging.info( message + ProgressStatus(i, len(self.frequencies)))
+
+            if print_log:
+                print(f"Solution step {i} -> frequency {freq} Hz")
             
             omega = 2 * np.pi * freq
             # _C = self.sp_permute_matrix(C[i], self.chuthill_indexes, self.chuthill_indexes)
-            _C = C[i]
+            _C = C[i] + C_visc
 
             A = _K - (omega**2) * _M + 1j * omega * _C
             F = - 1j * omega * _Q[:, i] - _F_eq[:, i]
@@ -167,6 +171,7 @@ class AcousticHarmonicSolver:
         Kr = (self.assembler.stiffness_matrix_r.toarray())[self.unprescribed_indexes, :]
         Mr = (self.assembler.mass_matrix_r.toarray())[self.unprescribed_indexes, :]
         Cr = [(sparse_matrix.toarray())[self.unprescribed_indexes, :] for sparse_matrix in self.assembler.damping_matrix_r]
+        Cr_visc = (self.assembler.visc_damping_matrix_r.toarray())[self.unprescribed_indexes, :]
 
         rows = Kr.shape[0]
         cols = len(self.frequencies)
@@ -189,7 +194,7 @@ class AcousticHarmonicSolver:
                 #
                 Kr_add = np.sum((Kr * self.array_prescribed_values[:, i]), axis=1)
                 Mr_add = np.sum((Mr * self.array_prescribed_values[:, i]), axis=1)
-                Cr_add = np.sum((Cr[i] * self.array_prescribed_values[:, i]), axis=1)
+                Cr_add = np.sum(((Cr[i] + Cr_visc) * self.array_prescribed_values[:, i]), axis=1)
                 #
                 omega = 2*np.pi*freq
                 F_Kadd = Kr_add

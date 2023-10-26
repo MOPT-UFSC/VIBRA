@@ -123,10 +123,12 @@ class ACT_TETRAHEDRON_4C(Element3D):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
         self.connectivity = self.connectivity[:, [0, 6, 4, 5, 7]]
 
-    def generate_ind_rows_cols(self):
+    def generate_ind_rows_cols(self, reorder=True):
         """ This method processess the dofs indices (rows and columns) for assembly"""
-
-        self.reorder_connect()
+        if reorder:
+            self.reorder_connect()
+        else:
+            self.connectivity = self.connectivity[:, [0, 4, 5, 6, 7]]
         dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
         ind_dofs = dofs * self.connectivity[:, 1:]
 
@@ -135,3 +137,11 @@ class ACT_TETRAHEDRON_4C(Element3D):
         self.ind_cols = (np.tile(ind_dofs, edofs)).flatten()
 
         return self.ind_rows, self.ind_cols
+    
+    def get_fluid_properties(self, el_index):
+        """ This method returns the fluid properties """
+        c_0 = self.model.properties.get_speed_of_sound(element = el_index)
+        rho_0 = self.model.properties.get_fluid_density(element = el_index)
+        fluid = self.model.properties.get_fluid(element = el_index)
+        dinamic_viscosity = fluid.dynamic_viscosity
+        return rho_0, c_0, dinamic_viscosity

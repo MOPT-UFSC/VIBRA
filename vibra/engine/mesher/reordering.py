@@ -3,35 +3,14 @@ import numpy as np
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import reverse_cuthill_mckee as rcm
 
+
 class Reordering:
+
     def __init__(self, mesh):
         self.mesh = mesh
-        self.nodal_cordinates = self.mesh.nodal_coordinates
+        self.nodal_coordinates = self.mesh.nodal_coordinates
         self.solids_connectivity = self.mesh.solids_connectivity
         self.faces_connectivity = self.mesh.faces_connectivity
-
-
-    def get_global_graph(self):
-        if self.dim == 2:
-            dict_elements = self.elements_2d
-        elif self.dim == 3:
-            dict_elements = self.elements_3d
-        rows = []
-        cols = []
-        graph_data = []
-        total = len(self.nodes)
-
-        for element in dict_elements.values():
-            indexes = element.nodes_indexes-1
-            mat = element.graph_matrix
-            # mat = np.ones((len(indexes), len(indexes)))
-            aux = np.tile(indexes, (len(indexes),1))
-            rows += list(aux.T.flatten())
-            cols += list(aux.flatten())
-            graph_data += list(mat.flatten())
-
-        full_graph = csr_matrix((graph_data, (rows, cols)), shape=[total, total])
-        return full_graph
 
     def get_global_graph(self):
         graph_data = []
@@ -45,18 +24,60 @@ class Reordering:
             cols += list(aux.flatten())
             graph_data += list(mat.flatten())
 
-        N_gl = self.nodal_cordinates.shape[0]
+        N_gl = self.nodal_coordinates.shape[0]
         full_graph = csr_matrix((graph_data, (rows, cols)), shape=[N_gl, N_gl])
         return full_graph
 
-    def _define_reordering(self):
+    def _process_reordering(self):
         graph = self.get_global_graph()
         self.map_nodes_indexes = {}
+        nodal_coordinates = dict()
         self.perm = rcm(graph, symmetric_mode=True) + 1 # inicia no índice 1
-        for vector in self.nodal_cordinates:
+        for vector in self.nodal_coordinates:
             node_id_gmsh = int(vector[0])
             self.map_nodes_indexes[self.perm[node_id_gmsh - 1]] = node_id_gmsh
-            self.nodes[self.perm[node_id_gmsh - 1]].index = node_id_gmsh
+            nodal_coordinates[self.perm[node_id_gmsh - 1]] = vector[1:]
+
+        self.nodal_coordinates = self.get_new_nodal_coordinates(nodal_coordinates)
+        self.solids_connectivity = self.get_new_solids_connectivity()
+        self.faces_connectivity = self.get_new_faces_connectivity()
+
+    def get_new_nodal_coordinates(self, nodal_coordinates):
+        """
+        """
+        _nodal_coordinates = np.zeros_like(self.nodal_coordinates, dtype=float)
+        _nodal_coordinates[:, 0] = np.array(list(nodal_coordinates.keys()))
+        _nodal_coordinates[:, 1] = np.array(list(nodal_coordinates.values()))
+        indexes = np.argsort(_nodal_coordinates[:, 0])
+        _nodal_coordinates = _nodal_coordinates[indexes, :]
+        return _nodal_coordinates
+
+    def get_new_solids_connectivity(self):
+        """
+        """
+        _solids_connectivity = np.zeros_like(self.solids_connectivity, dtype=int)
+        _solids_connectivity[:, 0] = np.arange(len(_solids_connectivity), dtype=int)
+        _solids_connectivity[:, 1] = _solids_connectivity[:,1]
+        _solids_connectivity[:, 2] = _solids_connectivity[:,2]
+        _solids_connectivity[:, 3] = _solids_connectivity[:,3]
+        for el, values in enumerate(self.solids_connectivity):
+            _solids_connectivity[el, 4:] = self.get_new_indexes_nodes(values[4:])
+        return _solids_connectivity
+
+    def get_new_solids_connectivity(self):
+        """
+        """
+        _faces_connectivity = np.zeros_like(self.faces_connectivity, dtype=int)
+        _faces_connectivity[:, 0] = np.arange(len(_faces_connectivity), dtype=int)
+        for el, values in enumerate(self.faces_connectivity):
+            _faces_connectivity[el, :] = self.get_new_indexes_nodes(values)
+        return _faces_connectivity
+
+    def get_new_indexes_nodes(self, indexes):
+        nodes = np.zeros_like(indexes, dtype=int)
+        for i, index in enumerate(indexes):
+            nodes[i] = self.map_nodes_indexes[index]
+        return nodes
 
     def get_elementary_graph_info(self, etype_tag):
         """ This method returns the elemetary mask matrix 
@@ -208,3 +229,26 @@ class Reordering:
 93 -> 125-node fourth order hexahedron (8 nodes associated with the vertices, 36 with the edges, 54 with the faces, 27 in the volume)
 
 """
+
+    # # TODO: TOP REDUCT CODE - remove before validation
+    # def get_global_graph(self):
+    #     if self.dim == 2:
+    #         dict_elements = self.elements_2d
+    #     elif self.dim == 3:
+    #         dict_elements = self.elements_3d
+    #     rows = []
+    #     cols = []
+    #     graph_data = []
+    #     total = len(self.nodes)
+
+    #     for element in dict_elements.values():
+    #         indexes = element.nodes_indexes-1
+    #         mat = element.graph_matrix
+    #         # mat = np.ones((len(indexes), len(indexes)))
+    #         aux = np.tile(indexes, (len(indexes),1))
+    #         rows += list(aux.T.flatten())
+    #         cols += list(aux.flatten())
+    #         graph_data += list(mat.flatten())
+
+    #     full_graph = csr_matrix((graph_data, (rows, cols)), shape=[total, total])
+    #     return full_graph

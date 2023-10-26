@@ -155,7 +155,10 @@ class AcousticAssembler:
                     # TODO: get the surface fluid property
                     fluid = self.model.properties.get_fluid()
                     rho = fluid.fluid_density
-                    area = self.model.surfaces_areas[surface_id]
+                    if surface_id in self.model.surfaces_areas.keys():
+                        area = self.model.surfaces_areas[surface_id]
+                    else:
+                        area = None
                     real_values = np.array(data["real_values"], dtype=float)
                     imag_values = np.array(data["imag_values"], dtype=float)
                     complex_values = real_values + 1j*imag_values 
@@ -170,13 +173,13 @@ class AcousticAssembler:
 
         return connect, output_data
 
-    def assemble_mass_and_stiffness_global_matrices(self):
+    def assemble_mass_and_stiffness_global_matrices(self, reorder=True):
         """
         Calculates global matrices.
         """
 
         element_3D, _ = self.get_element()
-        ind_rows, ind_cols = element_3D.generate_ind_rows_cols()
+        ind_rows, ind_cols = element_3D.generate_ind_rows_cols(reorder=reorder)
 
         dofs = element_3D.DOFS_PER_ELEMENT
         nel = len(element_3D.connectivity)
@@ -184,24 +187,31 @@ class AcousticAssembler:
 
         self.data_K = np.zeros((nel, dofs, dofs), dtype=complex)
         self.data_M = np.zeros((nel, dofs, dofs), dtype=complex)
+        self.data_Cvisc = np.zeros((nel, dofs, dofs), dtype=complex)
 
         for el in range(nel):
             Ke, Me = element_3D.elementary_matrices(el)
+            rho_0, c_0, mu_0 = element_3D.get_fluid_properties(el)
             self.data_K[el, :, :] = Ke
             self.data_M[el, :, :] = Me
+            self.data_Cvisc[el, :, :] = ((4*mu_0)/(3*rho_0*c_0**2))*Ke
 
         self.data_K = self.data_K.flatten()
         self.data_M = self.data_M.flatten()
+        self.data_Cvisc = self.data_Cvisc.flatten()
 
         _stiffness_matrix_full = csr_matrix((self.data_K, (ind_rows, ind_cols)), shape=(total_dofs, total_dofs))
         _mass_matrix_full = csr_matrix((self.data_M, (ind_rows, ind_cols)), shape=(total_dofs, total_dofs))
+        _visc_damping_matrix_full = csr_matrix((self.data_Cvisc, (ind_rows, ind_cols)), shape=(total_dofs, total_dofs))
 
         self.process_indexes()
         self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-        self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]          
+        self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+        self.visc_damping_matrix = _visc_damping_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         
         self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_indexes]
         self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_indexes]   
+        self.visc_damping_matrix_r = _visc_damping_matrix_full[:, self.prescribed_indexes]
 
     def assemble_global_damping_matrix(self):
 
@@ -383,8 +393,11 @@ class AcousticAssembler:
             return output[self.unprescribed_indexes, :]
         else:
             return output
-        
-    def process_assemble(self):
+
+
+
+
+    def process_assemble(self, reorder=True):
         logging.info( "Assembling global matrices..." + ProgressStatus(10, 100))
         self.assemble_mass_and_stiffness_global_matrices()
         

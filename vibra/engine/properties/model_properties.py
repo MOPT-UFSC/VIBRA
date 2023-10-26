@@ -85,6 +85,18 @@ class ModelProperties:
     def set_dissipation_model(self, data, volume=None):
         self._set_property("dissipation_model", data)
 
+    def get_fluid_density(self, element=None):
+        #
+        fluid = self.get_fluid(element=element)
+        rho_0 = fluid.fluid_density
+        #
+        dissipation_model = self.get_dissipation_model(element=element)
+        if dissipation_model is None:
+            return rho_0
+        elif dissipation_model["model"] == "proportional damping":
+            factor = dissipation_model["fluid density factor"]
+            return (1 + factor * 1j) * rho_0
+
     def get_speed_of_sound(self, element=None):
         #
         fluid = self.get_fluid(element=element)
