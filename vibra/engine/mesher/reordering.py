@@ -11,15 +11,16 @@ class Reordering:
         self.nodal_coordinates = self.mesh.nodal_coordinates
         self.solids_connectivity = self.mesh.solids_connectivity
         self.faces_connectivity = self.mesh.faces_connectivity
+        self.lines_connectivity = self.mesh.lines_connectivity
 
     def get_global_graph(self):
         graph_data = []
         rows, cols = [], []
-        for i, values in self.solids_connectivity:
-            etype_tag = values[i, 2]
+        for i, values in enumerate(self.solids_connectivity):
+            etype_tag = values[2]
             mat, n_nodes = self.get_elementary_graph_info(etype_tag)
-            indexes = values[i, 4 : 4 + n_nodes]
-            aux = np.tile(indexes, (len(indexes),1))
+            indexes = values[4 : 4 + n_nodes]
+            aux = np.tile(indexes, (len(indexes), 1))
             rows += list(aux.T.flatten())
             cols += list(aux.flatten())
             graph_data += list(mat.flatten())
@@ -30,54 +31,70 @@ class Reordering:
 
     def _process_reordering(self):
         graph = self.get_global_graph()
-        self.map_nodes_indexes = {}
-        nodal_coordinates = dict()
-        self.perm = rcm(graph, symmetric_mode=True) + 1 # inicia no índice 1
+        self.map_nodes_indexes = dict()
+        self.nodal_coordinates_data = dict()
+        self.perm = rcm(graph, symmetric_mode=True)# + 1 # inicia no índice 1
         for vector in self.nodal_coordinates:
             node_id_gmsh = int(vector[0])
-            self.map_nodes_indexes[self.perm[node_id_gmsh - 1]] = node_id_gmsh
-            nodal_coordinates[self.perm[node_id_gmsh - 1]] = vector[1:]
+            self.map_nodes_indexes[self.perm[node_id_gmsh]] = node_id_gmsh
+            self.nodal_coordinates_data[self.perm[node_id_gmsh]] = vector[1:]
 
-        self.nodal_coordinates = self.get_new_nodal_coordinates(nodal_coordinates)
-        self.solids_connectivity = self.get_new_solids_connectivity()
-        self.faces_connectivity = self.get_new_faces_connectivity()
-
-    def get_new_nodal_coordinates(self, nodal_coordinates):
+    def get_new_nodal_coordinates(self):
         """
         """
         _nodal_coordinates = np.zeros_like(self.nodal_coordinates, dtype=float)
-        _nodal_coordinates[:, 0] = np.array(list(nodal_coordinates.keys()))
-        _nodal_coordinates[:, 1] = np.array(list(nodal_coordinates.values()))
+        _nodal_coordinates[:, 0 ] = np.array(list(self.nodal_coordinates_data.keys()))
+        _nodal_coordinates[:, 1:] = np.array(list(self.nodal_coordinates_data.values()))
         indexes = np.argsort(_nodal_coordinates[:, 0])
         _nodal_coordinates = _nodal_coordinates[indexes, :]
         return _nodal_coordinates
 
-    def get_new_solids_connectivity(self):
+    def get_new_connectivity(self, connectivity_array):
         """
         """
-        _solids_connectivity = np.zeros_like(self.solids_connectivity, dtype=int)
+        _solids_connectivity = np.zeros_like(connectivity_array, dtype=int)
         _solids_connectivity[:, 0] = np.arange(len(_solids_connectivity), dtype=int)
         _solids_connectivity[:, 1] = _solids_connectivity[:,1]
         _solids_connectivity[:, 2] = _solids_connectivity[:,2]
         _solids_connectivity[:, 3] = _solids_connectivity[:,3]
-        for el, values in enumerate(self.solids_connectivity):
-            _solids_connectivity[el, 4:] = self.get_new_indexes_nodes(values[4:])
+        for el, values in enumerate(connectivity_array):
+            _solids_connectivity[el, 4:] = self.get_new_indexes_nodes_for_vector(values[4:])
         return _solids_connectivity
 
-    def get_new_solids_connectivity(self):
+    def get_new_indexes_nodes_for_vector(self, indexes):
+        """ This method returns ...
         """
-        """
-        _faces_connectivity = np.zeros_like(self.faces_connectivity, dtype=int)
-        _faces_connectivity[:, 0] = np.arange(len(_faces_connectivity), dtype=int)
-        for el, values in enumerate(self.faces_connectivity):
-            _faces_connectivity[el, :] = self.get_new_indexes_nodes(values)
-        return _faces_connectivity
-
-    def get_new_indexes_nodes(self, indexes):
-        nodes = np.zeros_like(indexes, dtype=int)
+        vect_nodes = np.zeros_like(indexes, dtype=int)
         for i, index in enumerate(indexes):
-            nodes[i] = self.map_nodes_indexes[index]
-        return nodes
+            vect_nodes[i] = self.map_nodes_indexes[index]
+        return vect_nodes
+
+    def get_new_indexes_nodes_for_matrix(self, mat_indexes):
+        """ This method returns ...
+        """
+        mat_nodes = np.zeros_like(mat_indexes, dtype=int)
+        for i, vector in enumerate(mat_indexes):
+            mat_nodes[i, :] = self.get_new_indexes_nodes_for_vector(vector)
+        return mat_nodes
+
+    def updates_nodes_from(self, data):
+        """ This method returns ...
+        """
+        aux_dict = dict()
+        if not isinstance(data, dict):
+            return aux_dict
+        for key, data in data.items():
+            if isinstance(data, dict):
+                temp = dict()
+                if "element_indexes" in data.keys():
+                    temp["element_indexes"] = data["element_indexes"]  
+                if "connectivity" in data.keys():
+                    temp["connectivity"] = self.get_new_indexes_nodes_for_matrix(data["connectivity"])
+                aux_dict[key] = temp
+            else:
+                aux_dict[key] = self.get_new_indexes_nodes_for_vector(data)
+        return aux_dict
+
 
     def get_elementary_graph_info(self, etype_tag):
         """ This method returns the elemetary mask matrix 
@@ -105,10 +122,10 @@ class Reordering:
             return None
 
     def mask_matrix_tet4_act(self):
-        mat = np.ones([[1, 1, 1, 1],
-                       [1, 1, 1, 1],
-                       [1, 1, 1, 1],
-                       [1, 1, 1, 1]], dtype=float)
+        mat = np.array([[1, 1, 1, 1],
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1]], dtype=float)
         return mat
 
     def mask_matrix_tet10_act(self):

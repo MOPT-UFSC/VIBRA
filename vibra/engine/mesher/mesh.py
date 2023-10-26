@@ -9,6 +9,7 @@ import numpy as np
 
 from vibra.engine.mesher.element_type import *
 from vibra.engine.mesher.geometry_setup import GeometrySetup
+from vibra.engine.mesher.reordering import Reordering
 from vibra.utils.progress_status import ProgressStatus
 
 # FieldsList=[]
@@ -21,6 +22,7 @@ class Mesh:
         self.reset_variables()
 
     def reset_variables(self):
+        self.reordering = None
         self.dimension = 0
         self.entity_ranges = dict()
         self.element_type = DEFAULT_ELEMENT_TYPE
@@ -291,7 +293,7 @@ class Mesh:
         gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
         gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_type.second_order_incomplete)
 
-    def _process_mesh(self):
+    def _process_mesh(self, nodes_reordering=True):
         """
         Transform gmsh data in a more manageable format (aka nodal coords and connectivity).
         """
@@ -299,7 +301,7 @@ class Mesh:
         total_nodes = int(np.max(indexes))
         self.nodal_coordinates = np.zeros((total_nodes, 4))
         self.nodal_coordinates[indexes - 1, 1:] = coords.reshape(-1, 3) / 1000
-        self.nodal_coordinates[indexes - 1, :1] = indexes.reshape(-1, 1)
+        self.nodal_coordinates[indexes - 1, :1] = indexes.reshape(-1, 1) - 1
 
         connectivity_dim1 = dict()
         connectivity_dim2 = dict()
@@ -342,12 +344,9 @@ class Mesh:
             elif dim == 2:  # Surfaces
                 connectivity_dim2[dim, tag] = elements_data
                 self.nodes_from_surfaces[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
-                self.connectivity_from_surfaces[tag] = {"element_indexes" : element_indexes[0],
+                array_element_indexes = np.array([*set(element_indexes[0])], dtype=int) - 1
+                self.connectivity_from_surfaces[tag] = {"element_indexes" : array_element_indexes,
                                                         "connectivity" : array_element_nodes}
-                # if tag == 3:
-                #     print(f"nodes: {np.array([*set(element_nodes[0])], dtype=int) - 1}")
-                #     print(f"connect: {array_element_nodes}")
-                #     print(f"element_indexes: {element_indexes}")
 
             elif dim == 3:  # Solids
                 connectivity_dim3[dim, tag] = elements_data
@@ -356,6 +355,24 @@ class Mesh:
         self.lines_connectivity = self._get_connectivity_array(connectivity_dim1)
         self.faces_connectivity = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity = self._get_connectivity_array(connectivity_dim3)
+
+        if nodes_reordering and False:
+            self.process_nodes_reordering()
+
+    def process_nodes_reordering(self):
+        """ This method processes the nodes reordering to reducie the global matrices 
+            bandwidth and improve the solution performance.
+        """
+        self.reordering = Reordering(self)
+        self.reordering._process_reordering()
+        self.nodal_coordinates = self.reordering.get_new_nodal_coordinates()
+        self.lines_connectivity = self.reordering.get_new_connectivity(self.lines_connectivity)
+        self.faces_connectivity = self.reordering.get_new_connectivity(self.faces_connectivity)
+        self.solids_connectivity = self.reordering.get_new_connectivity(self.solids_connectivity)
+        self.nodes_from_lines = self.reordering.updates_nodes_from(self.nodes_from_lines)
+        self.nodes_from_surfaces = self.reordering.updates_nodes_from(self.nodes_from_surfaces)
+        self.nodes_from_volumes = self.reordering.updates_nodes_from(self.nodes_from_volumes)
+        self.connectivity_from_surfaces = self.reordering.updates_nodes_from(self.connectivity_from_surfaces)
         # print(f"Nodal coordinates: {self.nodal_coordinates.shape}")
         # print(f"Connectivity: {self.solids_connectivity.shape}")
         # np.savetxt("faces_connectivity.dat", self.faces_connectivity, delimiter=",", fmt='%i')
