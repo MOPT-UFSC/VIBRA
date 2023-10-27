@@ -210,10 +210,14 @@ class ACT_HEXAHEDRON_8C(Element3D):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
         self.connectivity = self.connectivity[:, [0, 4, 5, 6, 7, 8, 9, 10, 11]]
 
-    def generate_ind_rows_cols(self):
+    def generate_ind_rows_cols(self, reorder=True):
         """This method processess the dofs indices (rows and columns) for assembly"""
 
-        self.reorder_connect()
+        if reorder:
+            self.reorder_connect()
+        else:
+            self.connectivity = self.connectivity[:, [0, 4, 5, 6, 7, 8, 9, 10, 11]]
+
         dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
         ind_dofs = dofs * self.connectivity[:, 1:]
 
