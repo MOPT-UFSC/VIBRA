@@ -78,9 +78,9 @@ class AcousticHarmonicSolver:
         C_visc = self.assembler.visc_damping_matrix
         Q = self.assembler.mass_flow_vectors
         F_eq = self.get_combined_model_excitation()
-        #
-        # self.plot_graph(K, M)
-        #
+
+        # self.plot_graph(M)
+
         rows = K.shape[0]
         cols = len(self.frequencies)
         solution = np.zeros((rows, cols), dtype=complex)
@@ -181,10 +181,10 @@ class AcousticHarmonicSolver:
        
         return F_eq
 
-    def plot_graph(self, M):
+    def plot_graph(self, matrix):
         """
         """
         plt.ion()
         plt.cla()
-        plt.spy(M, color=(0.25,0.25,0.25))
+        plt.spy(matrix, color=(0.25,0.25,0.25))
         plt.show()

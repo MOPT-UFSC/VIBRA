@@ -17,7 +17,7 @@ class AcousticModalSolver:
         self.load_analysis_data(analysis_data)
 
     def reset_variables(self):
-        self.modes = 20
+        self.modes = 30
         self.sigma_factor = 0.01
         self.analysis_type = None
         self.natural_frequencies = None
@@ -48,7 +48,7 @@ class AcousticModalSolver:
             KT = self.assembler.stiffness_matrix
             MT = self.assembler.mass_matrix
 
-        # self.plot_graph(KT, MT)
+        # self.plot_graph(KT)
 
         logging.info("Solving the eigenproblem..." + ProgressStatus(10, 100))
         self.eigen_values, self.eigen_vectors = eigs(KT, M=MT, k=self.modes, which=which, sigma=self.sigma_factor)
@@ -99,10 +99,10 @@ class AcousticModalSolver:
         return np.real(full_solution)
 
 
-    def plot_graph(self, K, M):
+    def plot_graph(self, graph):
         """
         """
         plt.ion()
         plt.cla()
-        plt.spy(M, color=(0.25,0.25,0.25))
+        plt.spy(graph, color=(0.25,0.25,0.25))
         plt.show()

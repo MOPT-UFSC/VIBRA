@@ -8,9 +8,9 @@ from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 #
 import numpy as np
 import matplotlib.pyplot as plt
+from time import time
 
-
-def load_external_mesh_and_solve():
+def load_external_mesh_and_solve(reorder_nodes=False):
    
     # Define nodal coordinates, connectivity and results path to compare
     coord_path = "data/examples/mesh/muffler/coord_muff.csv"
@@ -18,9 +18,13 @@ def load_external_mesh_and_solve():
 
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(coord_path, index_zero=True)
-    mesh.import_external_connectivity(connect_path, index_zero=True)
+    mesh.import_external_connectivity(connect_path, index_zero=True, etype_tag=4)
     mesh.element_type = TETRAHEDRON_4
     mesh.connectivity_from_surfaces = get_faces_connectivities()
+    
+    if reorder_nodes:
+        mesh._process_nodes_reordering()
+        map_nodes_indexes = mesh.reordering.map_nodes_indexes
 
     # Define fluid properties
     rho = 1.18
@@ -66,53 +70,66 @@ def load_external_mesh_and_solve():
     # Set the analysis frequency setup
     assembler.set_frequencies(frequencies)
     assembler.process_assemble(reorder=False)
-
+    
+    # t0 = time()
+    # # Run modal analysis
     # modal_solver = AcousticModalSolver(assembler)
     # natural_frequencies, modal_shape = modal_solver.solve()
+    # dt = time() - t0
+    # print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
+    # return
     
     # Define the analysis type and load setup
     analysis_data = {"analysis_id" : 3, "frequencies" : frequencies}
     harmonic_solver = AcousticHarmonicSolver(assembler, analysis_data=analysis_data)
     
-    # Run analysis
+    t0 = time()
+    # Run harmonic analysis
     solution = harmonic_solver.solve(print_log=True)
-    
-    node = 3597
-    cols = solution.shape[1]
-    
-    results = np.zeros((cols, 3), dtype=float)
-    results[:, 0] = frequencies
-    results[:, 1] = np.real(solution[node-1, :])
-    results[:, 2] = np.imag(solution[node-1, :])
-    filename = f"acoustic_pressure_at_node_{node}_Vibra.dat"
-    np.savetxt(filename, results, delimiter=",")
+    dt = time() - t0
+    print(f"Elapsed time to solve harmonic analysis: {round(dt, 4)}")
 
-    results_path = "data/examples/mesh/muffler/3pode2.csv"
+    if solution is not None:
 
-    data_ref = np.loadtxt(results_path, delimiter=",")
-    freq_ref = data_ref[:, 0]
-    P_ref = data_ref[:, 1] + 1j*data_ref[:, 2]
+        cols = solution.shape[1]
 
-    fig, ax = plt.subplots()
-    ax.semilogy(frequencies, np.abs(solution[node-1, :]), 'r', label='VIBRA')
-    ax.semilogy(freq_ref, np.abs(P_ref), 'k--', label='ANSYS')
-    ax.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Absolute', title='Harmonic Response - Outlet pressure')
-    ax.grid()
+        node = 3596
+        if reorder_nodes:
+            node = int(map_nodes_indexes[node])
+        
+        results = np.zeros((cols, 3), dtype=float)
+        results[:, 0] = frequencies
+        results[:, 1] = np.real(solution[node, :])
+        results[:, 2] = np.imag(solution[node, :])
+        filename = f"acoustic_pressure_at_node_{node}_Vibra.dat"
+        np.savetxt(filename, results, delimiter=",")
 
-    fig, ax2 = plt.subplots()
-    ax2.plot(frequencies, np.real(solution[node-1, :]), 'r', label='VIBRA')
-    ax2.plot(freq_ref, np.real(P_ref), 'k--', label='ANSYS')
-    ax2.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Real', title='Harmonic Response - Outlet pressure')
-    ax2.grid()
+        results_path = "data/examples/mesh/muffler/3pode2.csv"
 
-    fig, ax3 = plt.subplots()
-    ax3.plot(frequencies, np.imag(solution[node-1, :]), 'r', label='VIBRA')
-    ax3.plot(freq_ref, np.imag(P_ref), 'k--', label='ANSYS')
-    ax3.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Imaginary', title='Harmonic Response - Outlet pressure')
-    ax3.grid()
+        data_ref = np.loadtxt(results_path, delimiter=",")
+        freq_ref = data_ref[:, 0]
+        P_ref = data_ref[:, 1] + 1j*data_ref[:, 2]
 
-    plt.legend()
-    plt.show()
+        fig, ax1 = plt.subplots()
+        ax1.semilogy(frequencies, np.abs(solution[node, :]), 'r', label='VIBRA')
+        ax1.semilogy(freq_ref, np.abs(P_ref), 'k--', label='ANSYS')
+        ax1.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Absolute', title='Harmonic Response - Outlet pressure')
+        ax1.grid()
+
+        fig, ax2 = plt.subplots()
+        ax2.plot(frequencies, np.real(solution[node, :]), 'r', label='VIBRA')
+        ax2.plot(freq_ref, np.real(P_ref), 'k--', label='ANSYS')
+        ax2.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Real', title='Harmonic Response - Outlet pressure')
+        ax2.grid()
+
+        fig, ax3 = plt.subplots()
+        ax3.plot(frequencies, np.imag(solution[node, :]), 'r', label='VIBRA')
+        ax3.plot(freq_ref, np.imag(P_ref), 'k--', label='ANSYS')
+        ax3.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Imaginary', title='Harmonic Response - Outlet pressure')
+        ax3.grid()
+
+        plt.legend()
+        plt.show()
 
 def get_faces_connectivities():
     
@@ -218,4 +235,4 @@ def save_results(data):
     pass
 
 if __name__ == "__main__":
-    load_external_mesh_and_solve()
+    load_external_mesh_and_solve(reorder_nodes=False)

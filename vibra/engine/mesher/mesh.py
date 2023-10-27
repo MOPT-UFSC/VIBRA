@@ -194,7 +194,8 @@ class Mesh:
         return np.loadtxt(filename, delimiter=";", header=header, fmt="%i")
     
     def import_external_nodal_coordinates(self, filename, index_zero=True):
-        
+        """
+        """
         data = np.loadtxt(filename, delimiter=",")
         rows, cols = data.shape
         
@@ -206,7 +207,9 @@ class Mesh:
         self.nodal_coordinates[:,0] = indexes
         self.nodal_coordinates[:,1:] = data[:,1:]
 
-    def import_external_connectivity(self, filename, index_zero=True):
+    def import_external_connectivity(self, filename, index_zero=True, etype_tag=1):
+        """
+        """
         data = np.loadtxt(filename, delimiter=",")
         rows, cols = data.shape
         
@@ -219,10 +222,9 @@ class Mesh:
         self.solids_connectivity = np.zeros((rows, cols+3), dtype=int)
         self.solids_connectivity[:, 0] = indexes
         self.solids_connectivity[:, 1] = aux
-        self.solids_connectivity[:, 2] = aux
+        self.solids_connectivity[:, 2] = aux*etype_tag
         self.solids_connectivity[:, 3] = indexes
         self.solids_connectivity[:, 4:] = connect
-
 
     def export_nodes_coordinates(self, filename):
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
