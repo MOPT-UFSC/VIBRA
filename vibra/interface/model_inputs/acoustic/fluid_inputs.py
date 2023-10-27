@@ -397,14 +397,14 @@ class FluidInput(QDialog):
                                     self.lineEdit_name_edit,
                                     self.lineEdit_fluid_density_edit,
                                     self.lineEdit_speed_of_sound_edit,
+                                    self.lineEdit_temperature_edit,
+                                    self.lineEdit_pressure_edit,
                                     self.lineEdit_impedance_edit,
                                     self.lineEdit_color_edit,
                                     self.lineEdit_isentropic_exponent_edit,
                                     self.lineEdit_thermal_conductivity_edit,
                                     self.lineEdit_specific_heat_Cp_edit,
-                                    self.lineEdit_dynamic_viscosity_edit,
-                                    self.lineEdit_temperature_edit,
-                                    self.lineEdit_pressure_edit ]
+                                    self.lineEdit_dynamic_viscosity_edit ]
 
     def check_compressor_inputs(self):
         if self.compressor_thermodynamic_state:
@@ -1106,9 +1106,9 @@ class FluidInput(QDialog):
                                                 name, 
                                                 fluid_density,
                                                 speed_of_sound, 
-                                                impedance,
                                                 temperature,
                                                 pressure,
+                                                impedance,
                                                 color,
                                                 isentropic_exponent,
                                                 thermal_conductivity,
@@ -1120,10 +1120,10 @@ class FluidInput(QDialog):
                 self.list_ids.append(int(identifier))
                 self.list_colors.append(colorRGB)
 
-                load_fluid.setBackground(7, QBrush(QColor(colorRGB[0], colorRGB[1], colorRGB[2])))
-                load_fluid.setForeground(7, QBrush(QColor(colorRGB[0], colorRGB[1], colorRGB[2])))
+                # load_fluid.setBackground(7, QBrush(QColor(colorRGB[0], colorRGB[1], colorRGB[2])))
+                # load_fluid.setForeground(7, QBrush(QColor(colorRGB[0], colorRGB[1], colorRGB[2])))
 
-                for i in range(7):
+                for i in range(11):
                     load_fluid.setTextAlignment(i, Qt.AlignCenter)
 
                 self.treeWidget_fluids.addTopLevelItem(load_fluid)
@@ -1276,17 +1276,19 @@ class FluidInput(QDialog):
 
         fluid_name = item.text(1)
         self.lineEdit_selected_fluid_name.setText(fluid_name)
-
+        
         if fluid_name in self.fluid_name_to_REFPROP_data.keys():
             self.tabWidget_fluid.setTabVisible(1, True)
             self.tabWidget_fluid.setCurrentIndex(1)
             self.tabWidget_edit.setTabVisible(1, True)
-            self.tabWidget_edit.setCurrentIndex(1)
-            self.pushButton_call_refprop.setDisabled(True)
+            # self.tabWidget_edit.setCurrentIndex(1)
+            # self.pushButton_call_refprop.setDisabled(True)
             self.pushButton_edit_fluid_in_refprop.setDisabled(False)
             self.selected_REFPROP_fluid = self.fluid_name_to_REFPROP_data[fluid_name]   
         else:
-            self.tabWidget_add.setCurrentIndex(0)
+            self.tabWidget_edit.setTabVisible(1, False)
+            self.tabWidget_fluid.setCurrentIndex(1)
+            self.tabWidget_edit.setCurrentIndex(0)
 
         self.pushButton_pickColor_edit.setDisabled(False)
         self.pushButton_confirm_fluid_edition.setDisabled(False)

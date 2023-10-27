@@ -1,4 +1,5 @@
 import os
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -8,6 +9,7 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.errors import IncompleteSetupError
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.utils.progress_status import ProgressStatus
 
 
 class ModelStatus:
@@ -46,7 +48,7 @@ class Model:
         self.mesh_setup = mesh_setup
 
     def process_visual_geometry_mesh(self):
-        self.mesh = Mesh.from_cad(self.geometry_path, dimension=2, size_factor=0.1)
+        self.mesh = Mesh.from_cad(self.geometry_path, dimension=2, size_factor=0.2)
         self.surfaces_areas = self.mesh.get_model_areas(self.geometry_path)
         self.generated_mesh = False
 
@@ -73,9 +75,13 @@ class Model:
             self.mesh = Mesh.from_cad(self.geometry_path)
 
         # self.geometry_path = Path("data/examples/script_files/script_hex_elements.txt")
-        # self.mesh = Mesh.from_cad(self.geometry_path, gmsh_gui=False, **self.mesh_setup)
+        # self.mesh = Mesh.from_cad(self.geometry_path, gmsh_gui=True, **self.mesh_setup)
+
         self.mesh.update_parameters(**self.mesh_setup)
         self.generated_mesh = True
+
+        logging.info("Renumbering nodes..." + ProgressStatus(90, 100))
+        self.mesh._process_nodes_reordering()
 
     def set_material(self, material):
         self.properties.set_material(material)

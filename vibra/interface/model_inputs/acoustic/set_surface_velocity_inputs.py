@@ -100,6 +100,10 @@ class SurfaceVelocityInput(QDialog):
         self.radioButton_element_integration_constant.clicked.connect(self.update_controls_for_constant_value)
         self.radioButton_nodal_attribution_table.clicked.connect(self.update_controls_for_table_of_values)
         self.radioButton_element_integration_table.clicked.connect(self.update_controls_for_table_of_values)
+        self.radioButton_element_integration_constant.setChecked(True)
+        self.radioButton_element_integration_table.setChecked(True)
+        self.update_controls_for_constant_value()
+        self.update_controls_for_table_of_values()
         #
         self.tabWidget_surface_velocity.currentChanged.connect(self.tabEvent_surface_velocity)
         self.treeWidget_surface_velocity.itemClicked.connect(self.on_click_item)

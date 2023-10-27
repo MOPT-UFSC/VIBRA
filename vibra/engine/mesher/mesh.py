@@ -293,7 +293,7 @@ class Mesh:
         gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
         gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_type.second_order_incomplete)
 
-    def _process_mesh(self, nodes_reordering=True):
+    def _process_mesh(self):
         """
         Transform gmsh data in a more manageable format (aka nodal coords and connectivity).
         """
@@ -356,13 +356,16 @@ class Mesh:
         self.faces_connectivity = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity = self._get_connectivity_array(connectivity_dim3)
 
-        if nodes_reordering and False:
-            self.process_nodes_reordering()
-
-    def process_nodes_reordering(self):
+    def _process_nodes_reordering(self):
         """ This method processes the nodes reordering to reducie the global matrices 
             bandwidth and improve the solution performance.
         """
+        # print(f"Nodal coordinates: {self.nodal_coordinates.shape}")
+        # print(f"Connectivity: {self.solids_connectivity.shape}")
+        # np.savetxt("nodal_coordinates.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
+        # np.savetxt("faces_connectivity.dat", self.faces_connectivity, delimiter=",", fmt='%i')
+        # np.savetxt("solids_connectivity.dat", self.solids_connectivity, delimiter=",", fmt='%i')
+        
         self.reordering = Reordering(self)
         self.reordering._process_reordering()
         self.nodal_coordinates = self.reordering.get_new_nodal_coordinates()
@@ -373,10 +376,13 @@ class Mesh:
         self.nodes_from_surfaces = self.reordering.updates_nodes_from(self.nodes_from_surfaces)
         self.nodes_from_volumes = self.reordering.updates_nodes_from(self.nodes_from_volumes)
         self.connectivity_from_surfaces = self.reordering.updates_nodes_from(self.connectivity_from_surfaces)
-        # print(f"Nodal coordinates: {self.nodal_coordinates.shape}")
-        # print(f"Connectivity: {self.solids_connectivity.shape}")
-        # np.savetxt("faces_connectivity.dat", self.faces_connectivity, delimiter=",", fmt='%i')
-
+        
+        # print(f"Nodal coordinates (after): {self.nodal_coordinates.shape}")
+        # print(f"Connectivity (after): {self.solids_connectivity.shape}")
+        # np.savetxt("nodal_coordinates_reordered.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
+        # np.savetxt("faces_connectivity_reordered.dat", self.faces_connectivity, delimiter=",", fmt='%i')
+        # np.savetxt("solids_connectivity_reordered.dat", self.solids_connectivity, delimiter=",", fmt='%i')
+        
     def get_model_areas(self, path):
         """This method returns returns the all surface area processed using
         gmsh internal functions.

@@ -1,6 +1,8 @@
 
 import numpy as np
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_matrix, coo_matrix
+import matplotlib.pyplot as plt
+
 from scipy.sparse.csgraph import reverse_cuthill_mckee as rcm
 
 
@@ -10,56 +12,77 @@ class Reordering:
         self.mesh = mesh
         self.nodal_coordinates = self.mesh.nodal_coordinates
         self.solids_connectivity = self.mesh.solids_connectivity
-        self.faces_connectivity = self.mesh.faces_connectivity
-        self.lines_connectivity = self.mesh.lines_connectivity
+        self.initialize()
+
+    def initialize(self):
+        self.nodes_by_element_type = {  1  :  2,     # Line2 
+                                        2  :  3,     # Tria3
+                                        3  :  4,     # Quad4
+                                        4  :  4,     # Tet4
+                                        5  :  8,     # Hex8
+                                        11  : 10,    # Tet10
+                                        17  : 20  }  # Hex20
 
     def get_global_graph(self):
+        """
+        """
+        rows = []
+        cols = []
         graph_data = []
-        rows, cols = [], []
+        #
         for i, values in enumerate(self.solids_connectivity):
             etype_tag = values[2]
-            mat, n_nodes = self.get_elementary_graph_info(etype_tag)
+            n_nodes = self.nodes_by_element_type[etype_tag]
+            mat = self.get_elementary_graph_info(etype_tag)
             indexes = values[4 : 4 + n_nodes]
             aux = np.tile(indexes, (len(indexes), 1))
             rows += list(aux.T.flatten())
             cols += list(aux.flatten())
             graph_data += list(mat.flatten())
-
+        
+        # print(rows)
         N_gl = self.nodal_coordinates.shape[0]
         full_graph = csr_matrix((graph_data, (rows, cols)), shape=[N_gl, N_gl])
+
         return full_graph
 
     def _process_reordering(self):
+        """
+        """
         graph = self.get_global_graph()
+        # self.plot_graph(graph)
         self.map_nodes_indexes = dict()
         self.nodal_coordinates_data = dict()
-        self.perm = rcm(graph, symmetric_mode=True)# + 1 # inicia no índice 1
-        for vector in self.nodal_coordinates:
-            node_id_gmsh = int(vector[0])
-            self.map_nodes_indexes[self.perm[node_id_gmsh]] = node_id_gmsh
-            self.nodal_coordinates_data[self.perm[node_id_gmsh]] = vector[1:]
+        perm_rcm = rcm(graph, symmetric_mode=True)
+        indexes = self.nodal_coordinates[:, 0]
+        self.perm = self.sp_permute_vector(indexes.reshape(-1,1), perm_rcm).flatten()
+
+        for ind in indexes:
+            node_id_gmsh = int(ind)
+            self.map_nodes_indexes[node_id_gmsh] = self.perm[node_id_gmsh]
+
+        # # saving data
+        # gmsh_id = self.nodal_coordinates[:, 0]
+        # data = np.array([gmsh_id, perm_rcm], dtype=int).T
+        # data2 = np.array([gmsh_id, self.perm], dtype=int).T
+        # np.savetxt("dicionario_permutador_reord.dat", data, delimiter=",", fmt="%i")
+        # np.savetxt("dicionario_permutador_reord_new.dat", data2, delimiter=",", fmt="%i")
 
     def get_new_nodal_coordinates(self):
         """
         """
-        _nodal_coordinates = np.zeros_like(self.nodal_coordinates, dtype=float)
-        _nodal_coordinates[:, 0 ] = np.array(list(self.nodal_coordinates_data.keys()))
-        _nodal_coordinates[:, 1:] = np.array(list(self.nodal_coordinates_data.values()))
-        indexes = np.argsort(_nodal_coordinates[:, 0])
-        _nodal_coordinates = _nodal_coordinates[indexes, :]
-        return _nodal_coordinates
+        indexes = np.argsort(self.perm)
+        self.nodal_coordinates[:, 1:] = self.nodal_coordinates[indexes, 1:]
+        return self.nodal_coordinates
 
     def get_new_connectivity(self, connectivity_array):
         """
         """
-        _solids_connectivity = np.zeros_like(connectivity_array, dtype=int)
-        _solids_connectivity[:, 0] = np.arange(len(_solids_connectivity), dtype=int)
-        _solids_connectivity[:, 1] = _solids_connectivity[:,1]
-        _solids_connectivity[:, 2] = _solids_connectivity[:,2]
-        _solids_connectivity[:, 3] = _solids_connectivity[:,3]
+        _connectivity = connectivity_array.copy()
         for el, values in enumerate(connectivity_array):
-            _solids_connectivity[el, 4:] = self.get_new_indexes_nodes_for_vector(values[4:])
-        return _solids_connectivity
+            n_nodes = self.nodes_by_element_type[values[2]]
+            _connectivity[el, 4 : 4 + n_nodes] = self.get_new_indexes_nodes_for_vector(values[4 : 4 + n_nodes])
+        return _connectivity
 
     def get_new_indexes_nodes_for_vector(self, indexes):
         """ This method returns ...
@@ -95,10 +118,8 @@ class Reordering:
                 aux_dict[key] = self.get_new_indexes_nodes_for_vector(data)
         return aux_dict
 
-
     def get_elementary_graph_info(self, etype_tag):
-        """ This method returns the elemetary mask matrix 
-            and the number of nodes per element.
+        """ This method returns the elemetary mask matrix.
             
             Parameters:
             ----------
@@ -107,16 +128,16 @@ class Reordering:
             Returns:
             ---------
             mask_matrix: np.ndarray elementary mask matrix
-            nodes_per_element: int value equals to the number of nodes per element.
+
         """
         if etype_tag == 4: # tetrahedron-4
-            return self.mask_matrix_tet4_act(), 4
+            return self.mask_matrix_tet4_act()
         elif etype_tag == 11: # tetrahedron-10
-            return self.mask_matrix_tet10_act(), 10
+            return self.mask_matrix_tet10_act()
         elif etype_tag == 5: # hexahedron-8
-            return self.mask_matrix_hex8_act(), 8
+            return self.mask_matrix_hex8_act()
         elif etype_tag == 17: # hexahedron-20
-            return self.mask_matrix_hex20_act(), 20
+            return self.mask_matrix_hex20_act()
         else:
             print(f"Not implemented element: {etype_tag}")
             return None
@@ -174,7 +195,30 @@ class Reordering:
                         [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],                        
                         [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]], dtype=float)
         return mat
-        
+
+
+    def plot_graph(self, graph):
+        plt.ion()
+        plt.cla()
+        plt.spy(graph, color=(0.25,0.25,0.25))
+        plt.show()
+
+    def sp_permute_matrix(self, A, perm_r, perm_c):
+        """ permute rows and columns of A """
+        M, N = A.shape
+        # row permumation matrix
+        Pr = coo_matrix((np.ones(M), (np.arange(M), perm_r))).tocsr()
+        # column permutation matrix
+        Pc = coo_matrix((np.ones(N), (perm_c, np.arange(N)))).tocsr()
+        return Pc.T * A * Pr.T
+
+    def sp_permute_vector(self, A, perm_r):
+        """ permute rows and columns of A """
+        M, N = A.shape
+        # row permumation matrix
+        Pr = coo_matrix((np.ones(M), (np.arange(M), perm_r))).tocsr()
+        return Pr.T * A
+
 # The GMSH Nodes ordering information are available at  https://gmsh.info/doc/texinfo/gmsh.html#Node-ordering
 
 """

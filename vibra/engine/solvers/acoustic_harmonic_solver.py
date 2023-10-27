@@ -1,8 +1,6 @@
 import logging
 import numpy as np
-from scipy.sparse import coo_matrix
 from scipy.sparse.linalg import spsolve
-from scipy.sparse.csgraph import reverse_cuthill_mckee
 import matplotlib.pyplot as plt
 
 from vibra.utils.progress_status import ProgressStatus
@@ -76,19 +74,12 @@ class AcousticHarmonicSolver:
         #
         M = self.assembler.mass_matrix
         K = self.assembler.stiffness_matrix
-        C = self.assembler.damping_matrix
+        C_imp = self.assembler.damping_matrix
         C_visc = self.assembler.visc_damping_matrix
         Q = self.assembler.mass_flow_vectors
         F_eq = self.get_combined_model_excitation()
         #
-        # _K, _M = self.reduces_matrices_bandwidth(K, M)
-        # _Q = self.sp_permute_vector(Q, self.chuthill_indexes)
-        # _F_eq = self.sp_permute_vector(F_eq, self.chuthill_indexes)
-        #
-        _K = K
-        _M = M
-        _Q = Q
-        _F_eq = F_eq
+        # self.plot_graph(K, M)
         #
         rows = K.shape[0]
         cols = len(self.frequencies)
@@ -105,31 +96,17 @@ class AcousticHarmonicSolver:
                 print(f"Solution step {i} -> frequency {freq} Hz")
             
             omega = 2 * np.pi * freq
-            # _C = self.sp_permute_matrix(C[i], self.chuthill_indexes, self.chuthill_indexes)
-            _C = C[i] + C_visc
 
-            A = _K - (omega**2) * _M + 1j * omega * _C
-            F = - 1j * omega * _Q[:, i] - _F_eq[:, i]
+            C = C_imp[i] + C_visc
+
+            A = K - (omega**2) * M + 1j * omega * C
+            F = - 1j * omega * Q[:, i] - F_eq[:, i]
 
             solution[:, i] = spsolve(A, F)
 
-        # solution = self.sp_permute_vector(solution, np.flip(self.chuthill_indexes))
         self.solution = self._reinsert_prescribed_dofs(solution)
 
         return self.solution
-
-    def reduces_matrices_bandwidth(self, K, M):
-        """
-        """
-        self.chuthill_indexes = reverse_cuthill_mckee(K, symmetric_mode=True)
-        # self.chuthill_indexes = reverse_cuthill_mckee(M, symmetric_mode=True)
-        #
-        M = self.sp_permute_matrix(M, self.chuthill_indexes, self.chuthill_indexes)
-        K = self.sp_permute_matrix(K, self.chuthill_indexes, self.chuthill_indexes)
-        # plt.cla()
-        # plt.spy(M, color=(0.25,0.25,0.25))
-        # plt.show()
-        return K, M
 
     def _reinsert_prescribed_dofs(self, solution):
         """
@@ -203,19 +180,11 @@ class AcousticHarmonicSolver:
                 F_eq[:, i] = F_Kadd + F_Madd + F_Cadd
        
         return F_eq
-    
-    def sp_permute_matrix(self, A, perm_r, perm_c):
-        """ permute rows and columns of A """
-        M, N = A.shape
-        # row permumation matrix
-        Pr = coo_matrix((np.ones(M), (np.arange(M), perm_r))).tocsr()
-        # column permutation matrix
-        Pc = coo_matrix((np.ones(N), (perm_c, np.arange(N)))).tocsr()
-        return Pc.T * A * Pr.T
-    
-    def sp_permute_vector(self, A, perm_r):
-        """ permute rows and columns of A """
-        M, N = A.shape
-        # row permumation matrix
-        Pr = coo_matrix((np.ones(M), (np.arange(M), perm_r))).tocsr()
-        return Pr.T * A
+
+    def plot_graph(self, M):
+        """
+        """
+        plt.ion()
+        plt.cla()
+        plt.spy(M, color=(0.25,0.25,0.25))
+        plt.show()
