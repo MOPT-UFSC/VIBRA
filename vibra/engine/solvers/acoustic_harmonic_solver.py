@@ -2,6 +2,7 @@ import logging
 import numpy as np
 from scipy.sparse.linalg import spsolve
 import matplotlib.pyplot as plt
+from pypardiso import *
 
 from vibra.utils.progress_status import ProgressStatus
 
@@ -69,6 +70,7 @@ class AcousticHarmonicSolver:
 
     def solve(self, print_log=False):
         """ """
+        ps = PyPardisoSolver(mtype=3)
         #
         self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
         #
@@ -102,7 +104,8 @@ class AcousticHarmonicSolver:
             A = K - (omega**2) * M + 1j * omega * C
             F = - 1j * omega * Q[:, i] - F_eq[:, i]
 
-            solution[:, i] = spsolve(A, F)
+            # solution[:, i] = spsolve(A, F)
+            solution[:, i] = ps.solve(A, F)
 
         self.solution = self._reinsert_prescribed_dofs(solution)
 
