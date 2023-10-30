@@ -1,7 +1,11 @@
 import logging
+import os
 import numpy as np
 from scipy.sparse.linalg import spsolve
 import matplotlib.pyplot as plt
+
+# os.environ["OMP_THREAD_LIMIT"] = "8"
+# os.environ["OMP_NUM_THREADS"] = "6"
 from pypardiso import *
 
 from vibra.utils.progress_status import ProgressStatus

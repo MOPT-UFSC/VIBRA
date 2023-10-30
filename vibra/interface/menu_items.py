@@ -14,37 +14,21 @@ from vibra.interface.loading_bar import load_function
 from vibra.interface.model_inputs.acoustic.fluid_inputs import FluidInput
 #
 #
-from vibra.interface.model_inputs.acoustic.set_acoustic_pressure import (
-    AcousticPressureInput,
-)
-from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import (
-    DissipationModelInput,
-)
-from vibra.interface.model_inputs.acoustic.set_mass_flow_rate_inputs import (
-    MassFlowRateInput,
-)
-from vibra.interface.model_inputs.acoustic.set_surface_velocity_inputs import (
-    SurfaceVelocityInput,
-)
-from vibra.interface.model_inputs.acoustic.set_specific_impedance_inputs import (
-    SpecificImpedanceInput,
-)
-from vibra.interface.model_inputs.acoustic.set_volume_velocity_inputs import (
-    VolumeVelocityInput,
-)
+from vibra.interface.model_inputs.acoustic.set_acoustic_pressure import AcousticPressureInput
+from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import DissipationModelInput
+from vibra.interface.model_inputs.acoustic.set_mass_flow_rate_inputs import MassFlowRateInput
+from vibra.interface.model_inputs.acoustic.set_surface_velocity_inputs import SurfaceVelocityInput
+from vibra.interface.model_inputs.acoustic.set_specific_impedance_inputs import SpecificImpedanceInput
+from vibra.interface.model_inputs.acoustic.set_volume_velocity_inputs import VolumeVelocityInput
 from vibra.interface.model_inputs.mesh.mesher_inputs import MesherInputs
 #
 #
-from vibra.interface.model_inputs.structural.boundary_condition_inputs import (
-    BoundaryConditionInputs,
-)
-from vibra.interface.model_inputs.structural.material_inputs import (
-    MaterialInput,
-)
-
+from vibra.interface.model_inputs.structural.boundary_condition_inputs import BoundaryConditionInputs
+from vibra.interface.model_inputs.structural.material_inputs import MaterialInput
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_input import PlotAcousticFrequencyResponseInput
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_input import PlotAcousticFrequencyResponseFunctionInput
-
+#
+#
 from vibra.utils.interface_functions import get_main_window
 
 
@@ -117,7 +101,8 @@ class MenuItems(QTreeWidget):
         self._addItems()
         self._configItems()
         self._updateItems()
-        # self._initial_items_acces_config()
+        # self.modify_analysis_items_acces(True)
+        self._initial_items_acces_config()
 
         self.setMinimumWidth(220)
         self.setMaximumWidth(280)
@@ -615,6 +600,7 @@ class MenuItems(QTreeWidget):
 
     def modify_analysis_items_acces(self, bool_key):
         self.item_child_selectAnalysisType.setDisabled(bool_key)
+        self.item_child_runAnalysis.setDisabled(bool_key)
 
     def modify_items_acoustic_results_viewer(self, bool_key):
         self.item_child_plotAcousticModeShapes.setDisabled(bool_key)
@@ -638,15 +624,17 @@ class MenuItems(QTreeWidget):
         self.modify_structural_model_setup_items_acces(False)
         self.modify_analysis_items_acces(False)
         self.item_top_analysis.setHidden(False)
+        self.item_child_runAnalysis.setDisabled(True)
         self.filter_analysis_type()
 
     def filter_analysis_type(self):
         if not self.item_top_analysis.isHidden():
             self.item_top_acoustic_model_setup.setHidden(True)
             self.item_top_structuralModelSetup.setHidden(True)
-            if self.main_window.analysis_filter.radio_button_acoustic.isChecked():
+            index = self.main_window.analysis_filter.comboBox_analysis_selector.currentIndex()
+            if index == 0:# self.main_window.analysis_filter.radio_button_acoustic.isChecked():
                 self.item_top_acoustic_model_setup.setHidden(False)
-            elif self.main_window.analysis_filter.radio_button_structural.isChecked():
+            elif index == 1:# self.main_window.analysis_filter.radio_button_structural.isChecked():
                 self.item_top_structuralModelSetup.setHidden(False)
             else:
                 self.item_top_acoustic_model_setup.setHidden(False)

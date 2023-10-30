@@ -214,20 +214,20 @@
           <widget class="QLineEdit" name="lineEdit_selection_id">
            <property name="minimumSize">
             <size>
-             <width>170</width>
+             <width>120</width>
              <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>170</width>
+             <width>120</width>
              <height>30</height>
             </size>
            </property>
            <property name="font">
             <font>
              <family>MS Shell Dlg 2</family>
-             <pointsize>11</pointsize>
+             <pointsize>10</pointsize>
              <weight>50</weight>
              <italic>false</italic>
              <bold>false</bold>
@@ -278,7 +278,7 @@ background-color: rgb(255, 255, 255);</string>
          </font>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tab_constant_values">
          <attribute name="title">
@@ -349,13 +349,13 @@ background-color: rgb(255, 255, 255);</string>
                <property name="minimumSize">
                 <size>
                  <width>80</width>
-                 <height>26</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>80</width>
-                 <height>26</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="font">
@@ -381,13 +381,13 @@ background-color: rgb(255, 255, 255);</string>
                <property name="minimumSize">
                 <size>
                  <width>60</width>
-                 <height>26</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>60</width>
-                 <height>26</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="font">
@@ -412,13 +412,13 @@ background-color: rgb(255, 255, 255);</string>
                <property name="minimumSize">
                 <size>
                  <width>120</width>
-                 <height>26</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>120</width>
-                 <height>26</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="font">
@@ -505,13 +505,13 @@ background-color: rgb(255, 255, 255);</string>
                <property name="minimumSize">
                 <size>
                  <width>80</width>
-                 <height>26</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>80</width>
-                 <height>26</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="font">

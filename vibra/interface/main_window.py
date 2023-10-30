@@ -132,6 +132,7 @@ class MainWindow(QMainWindow):
         self.renderer_toolbar = RendererToolbar(self, self.viewer_tabs)
         self.addToolBar(self.renderer_toolbar)
         self.renderer_toolbar.setDisabled(True)
+        self.analysis_filter.setDisabled(True)
 
     def config_tool_tip_appearance(self):
         tool_tip_style = "QToolTip { color: rgb(0, 0, 0); background-color: rgb(255, 255, 255) }"
@@ -246,6 +247,7 @@ class MainWindow(QMainWindow):
         self.viewer_tabs.show_geometry()
 
         self.renderer_toolbar.setDisabled(False)
+        self.analysis_filter.setDisabled(False)
         self.menu_widget.modify_items_access_after_geometry_importing()
 
     def close_app(self):
