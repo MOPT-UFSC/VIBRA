@@ -367,13 +367,13 @@ background-color: rgb(255, 255, 255);</string>
                <property name="minimumSize">
                 <size>
                  <width>80</width>
-                 <height>26</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>80</width>
-                 <height>26</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="font">
@@ -523,13 +523,13 @@ background-color: rgb(255, 255, 255);</string>
                <property name="minimumSize">
                 <size>
                  <width>80</width>
-                 <height>26</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>80</width>
-                 <height>26</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="font">

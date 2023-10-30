@@ -394,10 +394,7 @@ class AcousticAssembler:
         else:
             return output
 
-
-
-
-    def process_assemble(self, reorder=True):
+    def process_assemble(self):
         logging.info( "Assembling global matrices..." + ProgressStatus(10, 100))
         self.assemble_mass_and_stiffness_global_matrices()
         
@@ -411,10 +408,4 @@ class AcousticAssembler:
         A = self.get_acoustic_excitations_by_nodal_attribution()
         
         logging.info( "Processing nodal loads..." + ProgressStatus(100, 100))
-        
         self.mass_flow_vectors = A + B
-        #
-        # indA = np.arange(0, len(A), 1)
-        indB = np.arange(0, len(B), 1)
-        # np.savetxt("excitation_nodal.dat", np.array([indA, A[:,-1]]).T, delimiter=",")
-        np.savetxt("excitation_element.dat", np.array([indB, B[:,-1]]).T, delimiter=",")

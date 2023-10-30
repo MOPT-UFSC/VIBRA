@@ -18,7 +18,7 @@ def load_external_mesh_and_solve(reorder_nodes=False):
 
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(coord_path, index_zero=True)
-    mesh.import_external_connectivity(connect_path, index_zero=True, etype_tag=4)
+    mesh.import_external_connectivity(connect_path, index_zero=True, etype_tag=4, e_nodes=4)
     mesh.element_type = TETRAHEDRON_4
     mesh.connectivity_from_surfaces = get_faces_connectivities()
     
@@ -69,7 +69,7 @@ def load_external_mesh_and_solve(reorder_nodes=False):
 
     # Set the analysis frequency setup
     assembler.set_frequencies(frequencies)
-    assembler.process_assemble(reorder=False)
+    assembler.process_assemble()
     
     # t0 = time()
     # # Run modal analysis
@@ -228,11 +228,31 @@ def get_faces_connectivities():
     
     return connectivity_from_surfaces
 
-def plot_results(data):
-    pass
+def plot_results():
+    path_pardiso = "temp/acoustic_pressure_at_node_3596_Vibra_pardiso.dat"
+    path_scipy = "temp/acoustic_pressure_at_node_3596_Vibra_scipy.dat"
+
+    data_pardiso = np.loadtxt(path_pardiso, delimiter=",")
+    data_scipy = np.loadtxt(path_scipy, delimiter=",")
+
+    freq_pardiso = data_pardiso[:, 0]
+    Xf_pardiso = data_pardiso[:, 1] + 1j*data_pardiso[:, 2]
+
+    freq_scipy = data_scipy[:, 0]
+    Xf_scipy = data_scipy[:, 1] + 1j*data_scipy[:, 2]
+
+    fig, ax1 = plt.subplots()
+    ax1.semilogy(freq_pardiso, np.abs(Xf_pardiso), 'r', label='pardiso')
+    ax1.semilogy(freq_scipy, np.abs(Xf_scipy), 'k--', label='scipy')
+    # ax1.semilogy(freq_scipy, np.abs(Xf_pardiso - Xf_scipy), 'k-', label='difference')
+    ax1.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Absolute', title='Harmonic Response - Outlet pressure')
+    ax1.grid()
+    plt.legend()
+    plt.show()
 
 def save_results(data):
     pass
 
 if __name__ == "__main__":
     load_external_mesh_and_solve(reorder_nodes=False)
+    # plot_results()

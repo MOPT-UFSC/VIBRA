@@ -278,7 +278,7 @@ background-color: rgb(255, 255, 255);</string>
          </font>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="tab_constant_values">
          <attribute name="title">

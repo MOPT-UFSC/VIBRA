@@ -207,7 +207,7 @@ class Mesh:
         self.nodal_coordinates[:,0] = indexes
         self.nodal_coordinates[:,1:] = data[:,1:]
 
-    def import_external_connectivity(self, filename, index_zero=True, etype_tag=1):
+    def import_external_connectivity(self, filename, index_zero=True, etype_tag=1, e_nodes=1):
         """
         """
         data = np.loadtxt(filename, delimiter=",")
@@ -223,7 +223,7 @@ class Mesh:
         self.solids_connectivity[:, 0] = indexes
         self.solids_connectivity[:, 1] = aux
         self.solids_connectivity[:, 2] = aux*etype_tag
-        self.solids_connectivity[:, 3] = indexes
+        self.solids_connectivity[:, 3] = aux*e_nodes
         self.solids_connectivity[:, 4:] = connect
 
     def export_nodes_coordinates(self, filename):
@@ -470,15 +470,19 @@ class Mesh:
         for (entity_dim, entity_tag), e_data in input_dict.items():
             entity_start = start
             for etype_tag, data in e_data.items():
+
                 end += n_list[ind]
                 indexes = data["indexes"]
                 nodes = data["array_element_nodes"]
+
                 rows = len(indexes)
                 cols = nodes.shape[1]
+                aux = np.ones(rows, dtype=int)
 
-                output_data[start:end, 1] = np.ones(rows) * entity_tag
-                output_data[start:end, 2] = np.ones(rows) * etype_tag
-                output_data[start:end, 3] = indexes
+                output_data[start:end, 1] = aux * entity_tag
+                output_data[start:end, 2] = aux * etype_tag
+                # output_data[start:end, 3] = indexes
+                output_data[start:end, 3] = aux * cols
                 output_data[start:end, 4 : 4 + cols] = nodes
 
                 start = end

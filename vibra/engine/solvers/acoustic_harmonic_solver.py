@@ -3,9 +3,11 @@ import os
 import numpy as np
 from scipy.sparse.linalg import spsolve
 import matplotlib.pyplot as plt
-
+#
+# os.environ["OMP_DYNAMIC"] = "FALSE"
 # os.environ["OMP_THREAD_LIMIT"] = "8"
-# os.environ["OMP_NUM_THREADS"] = "6"
+# os.environ["OMP_NUM_THREADS"] = "4"
+# 
 from pypardiso import *
 
 from vibra.utils.progress_status import ProgressStatus
@@ -83,8 +85,8 @@ class AcousticHarmonicSolver:
         C_imp = self.assembler.damping_matrix
         C_visc = self.assembler.visc_damping_matrix
         Q = self.assembler.mass_flow_vectors
-        F_eq = self.get_combined_model_excitation()
-
+        #
+        F_eq = self.get_prescribed_pressure_model_excitation()
         # self.plot_graph(M)
 
         rows = K.shape[0]
@@ -140,7 +142,7 @@ class AcousticHarmonicSolver:
 
         return full_solution
     
-    def get_combined_model_excitation(self):
+    def get_prescribed_pressure_model_excitation(self):
         """
         This method adds the effects of prescribed acoustic pressure into mass flow global vector.
 
@@ -150,12 +152,15 @@ class AcousticHarmonicSolver:
             F_eq. Each column corresponds to a frequency of analysis.
         """
 
+        logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(0, len(self.frequencies)))
         self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_values()
         #
         Kr = (self.assembler.stiffness_matrix_r.toarray())[self.unprescribed_indexes, :]
         Mr = (self.assembler.mass_matrix_r.toarray())[self.unprescribed_indexes, :]
         Cr = [(sparse_matrix.toarray())[self.unprescribed_indexes, :] for sparse_matrix in self.assembler.damping_matrix_r]
         Cr_visc = (self.assembler.visc_damping_matrix_r.toarray())[self.unprescribed_indexes, :]
+
+        logging.info( "Processing prescribed pressure model excitation..." + ProgressStatus(10, len(self.frequencies)))
 
         rows = Kr.shape[0]
         cols = len(self.frequencies)
@@ -176,6 +181,8 @@ class AcousticHarmonicSolver:
                         
             for i, freq in enumerate(self.frequencies):
                 #
+                logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(i + 10, len(self.frequencies) + 10))
+                #
                 Kr_add = np.sum((Kr * self.array_prescribed_values[:, i]), axis=1)
                 Mr_add = np.sum((Mr * self.array_prescribed_values[:, i]), axis=1)
                 Cr_add = np.sum(((Cr[i] + Cr_visc) * self.array_prescribed_values[:, i]), axis=1)
@@ -185,7 +192,8 @@ class AcousticHarmonicSolver:
                 F_Madd = (-(omega**2))*Mr_add 
                 F_Cadd = 1j*omega*Cr_add
                 F_eq[:, i] = F_Kadd + F_Madd + F_Cadd
-       
+
+        logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(100, 100))
         return F_eq
 
     def plot_graph(self, matrix):

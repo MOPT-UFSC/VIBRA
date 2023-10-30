@@ -140,13 +140,13 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>320</width>
+          <width>280</width>
           <height>36</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>320</width>
+          <width>300</width>
           <height>36</height>
          </size>
         </property>
@@ -163,7 +163,7 @@
          <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 11pt &quot;MS Shell Dlg 2&quot;}
 QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 11pt &quot;MS Shell Dlg 2&quot;}
 QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 11pt &quot;MS Shell Dlg 2&quot;}
-QPushButton:disabled{border-radius: 6px; border-style: ridge; border-width: 2px; color: rgb(150, 150, 150); background-color: rgba(220, 220, 220, 120); font: 11pt &quot;MS Shell Dlg 2&quot;}</string>
+QPushButton:disabled{border-radius: 6px; border-color: rgb(100, 100, 100); border-style: ridge; border-width: 2px; color: rgb(150, 150, 150); background-color: rgba(220, 220, 220, 120); font: 11pt &quot;MS Shell Dlg 2&quot;}</string>
         </property>
         <property name="text">
          <string>Harmonic Analysis - Structural</string>
@@ -191,13 +191,13 @@ QPushButton:disabled{border-radius: 6px; border-style: ridge; border-width: 2px;
        <widget class="QPushButton" name="pushButton_harmonic_acoustic">
         <property name="minimumSize">
          <size>
-          <width>320</width>
+          <width>280</width>
           <height>36</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>320</width>
+          <width>300</width>
           <height>36</height>
          </size>
         </property>
@@ -214,7 +214,7 @@ QPushButton:disabled{border-radius: 6px; border-style: ridge; border-width: 2px;
          <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 11pt &quot;MS Shell Dlg 2&quot;}
 QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 11pt &quot;MS Shell Dlg 2&quot;}
 QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 11pt &quot;MS Shell Dlg 2&quot;}
-QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(150, 150, 150); background-color: rgba(220, 220, 220, 120); font: 11pt &quot;MS Shell Dlg 2&quot;}</string>
+QPushButton:disabled{border-radius: 6px; border-color: rgb(100, 100, 100); border-style: ridge; border-width: 2px; color: rgb(150, 150, 150); background-color: rgba(220, 220, 220, 120); font: 11pt &quot;MS Shell Dlg 2&quot;}</string>
         </property>
         <property name="text">
          <string>Harmonic Analysis - Acoustic</string>
@@ -225,13 +225,13 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
        <widget class="QPushButton" name="pushButton_harmonic_coupled">
         <property name="minimumSize">
          <size>
-          <width>320</width>
+          <width>280</width>
           <height>36</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>320</width>
+          <width>300</width>
           <height>36</height>
          </size>
         </property>
@@ -248,7 +248,7 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
          <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 11pt &quot;MS Shell Dlg 2&quot;}
 QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 11pt &quot;MS Shell Dlg 2&quot;}
 QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 11pt &quot;MS Shell Dlg 2&quot;}
-QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(150, 150, 150); background-color: rgba(220, 220, 220, 120); font: 11pt &quot;MS Shell Dlg 2&quot;}</string>
+QPushButton:disabled{border-radius: 6px; border-color: rgb(100, 100, 100); border-style: ridge; border-width: 2px; color: rgb(150, 150, 150); background-color: rgba(220, 220, 220, 120); font: 11pt &quot;MS Shell Dlg 2&quot;}</string>
         </property>
         <property name="text">
          <string>Harmonic Analysis - Coupled</string>
@@ -266,13 +266,13 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
        <widget class="QPushButton" name="pushButton_modal_structural">
         <property name="minimumSize">
          <size>
-          <width>320</width>
+          <width>280</width>
           <height>36</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>320</width>
+          <width>300</width>
           <height>36</height>
          </size>
         </property>
@@ -289,7 +289,7 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
          <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 11pt &quot;MS Shell Dlg 2&quot;}
 QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 11pt &quot;MS Shell Dlg 2&quot;}
 QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 11pt &quot;MS Shell Dlg 2&quot;}
-QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(150, 150, 150); background-color: rgba(220, 220, 220, 120); font: 11pt &quot;MS Shell Dlg 2&quot;}</string>
+QPushButton:disabled{border-radius: 6px; border-color: rgb(100, 100, 100); border-style: ridge; border-width: 2px; color: rgb(150, 150, 150); background-color: rgba(220, 220, 220, 120); font: 11pt &quot;MS Shell Dlg 2&quot;}</string>
         </property>
         <property name="text">
          <string>Modal Analysis - Structural</string>
@@ -300,13 +300,13 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
        <widget class="QPushButton" name="pushButton_modal_acoustic">
         <property name="minimumSize">
          <size>
-          <width>320</width>
+          <width>280</width>
           <height>36</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>320</width>
+          <width>300</width>
           <height>36</height>
          </size>
         </property>
@@ -323,7 +323,7 @@ QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); borde
          <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 11pt &quot;MS Shell Dlg 2&quot;}
 QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 11pt &quot;MS Shell Dlg 2&quot;}
 QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 11pt &quot;MS Shell Dlg 2&quot;}
-QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(150, 150, 150); background-color: rgba(220, 220, 220, 120); font: 11pt &quot;MS Shell Dlg 2&quot;}</string>
+QPushButton:disabled{border-radius: 6px; border-color: rgb(100, 100, 100); border-style: ridge; border-width: 2px; color: rgb(150, 150, 150); background-color: rgba(220, 220, 220, 120); font: 11pt &quot;MS Shell Dlg 2&quot;}</string>
         </property>
         <property name="text">
          <string>Modal Analysis - Acoustic</string>

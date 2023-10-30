@@ -2,6 +2,7 @@
 import numpy as np
 from scipy.sparse import csr_matrix, coo_matrix
 import matplotlib.pyplot as plt
+from time import time
 
 from scipy.sparse.csgraph import reverse_cuthill_mckee as rcm
 
@@ -15,6 +16,7 @@ class Reordering:
         self.initialize()
 
     def initialize(self):
+
         self.nodes_by_element_type = {  1  :  2,     # Line2 
                                         2  :  3,     # Tria3
                                         3  :  4,     # Quad4
@@ -23,43 +25,98 @@ class Reordering:
                                         11  : 10,    # Tet10
                                         17  : 20  }  # Hex20
 
+        self.mask_tet4 = np.array([ [1, 1, 1, 1],
+                                    [1, 1, 1, 1],
+                                    [1, 1, 1, 1],
+                                    [1, 1, 1, 1] ], dtype=float).flatten()
+                
+        self.mask_tet10 = np.array([[1, 0, 0, 0, 1, 0, 1, 1, 0, 0],
+                                    [0, 1, 0, 0, 1, 1, 0, 0, 0, 1],
+                                    [0, 0, 1, 0, 0, 1, 1, 0, 1, 0],
+                                    [0, 0, 0, 1, 0, 0, 0, 1, 1, 1],
+                                    [1, 1, 0, 0, 1, 0, 0, 0, 0, 0],
+                                    [0, 1, 1, 0, 0, 1, 0, 0, 0, 0],
+                                    [1, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+                                    [1, 0, 0, 1, 0, 0, 0, 1, 0, 0],
+                                    [0, 0, 1, 1, 0, 0, 0, 0, 1, 0],
+                                    [0, 1, 0, 1, 0, 0, 0, 0, 0, 1] ], dtype=float).flatten()
+
+        self.mask_hex8 = np.array([ [1, 1, 0, 1, 1, 0, 0, 0],
+                                    [1, 1, 1, 0, 0, 1, 0, 0],
+                                    [0, 1, 1, 1, 0, 0, 1, 0],
+                                    [1, 0, 1, 1, 0, 0, 0, 1],
+                                    [1, 0, 0, 0, 1, 1, 0, 1],
+                                    [0, 1, 0, 0, 1, 1, 1, 0],
+                                    [0, 0, 1, 0, 0, 1, 1, 1],
+                                    [0, 0, 0, 1, 1, 0, 1, 1] ], dtype=float).flatten()
+
+        self.mask_hex20 = np.array([[1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                    [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+                                    [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0],
+                                    [0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+                                    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0],
+                                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0],
+                                    [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1],
+                                    [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
+                                    [1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                    [1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                    [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                    [0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+                                    [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+                                    [0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+                                    [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+                                    [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+                                    [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                                    [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+                                    [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],                        
+                                    [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]], dtype=float).flatten()
+
     def get_global_graph(self):
         """
         """
-        rows = []
-        cols = []
-        graph_data = []
+        # rows = []
+        # cols = []
+        # graph_data = []
+        Nt = np.sum(self.solids_connectivity[:, 3]**2)
+        rows = np.zeros(Nt, dtype=int)
+        cols = np.zeros(Nt, dtype=int)
+        graph_data = np.zeros(Nt, dtype=float)
         #
+        start = 0
+        end = 0
         for i, values in enumerate(self.solids_connectivity):
-            etype_tag = values[2]
-            n_nodes = self.nodes_by_element_type[etype_tag]
-            mat = self.get_elementary_graph_info(etype_tag)
+            n_nodes = self.nodes_by_element_type[values[2]]
+            mat = self.get_elementary_graph_info(values[2])
             indexes = values[4 : 4 + n_nodes]
+            end += len(mat)
             aux = np.tile(indexes, (len(indexes), 1))
-            rows += list(aux.T.flatten())
-            cols += list(aux.flatten())
-            graph_data += list(mat.flatten())
-        
-        # print(rows)
+            rows[start:end] = aux.T.flatten()
+            cols[start:end] = aux.flatten()
+            graph_data[start:end] = mat
+            start = end
+            # rows += list(aux.T.flatten())
+            # cols += list(aux.flatten())
+            # graph_data += list(mat)
+        #    
         N_gl = self.nodal_coordinates.shape[0]
         full_graph = csr_matrix((graph_data, (rows, cols)), shape=[N_gl, N_gl])
-
+        #
         return full_graph
 
     def _process_reordering(self):
         """
         """
-        graph = self.get_global_graph()
-        # self.plot_graph(graph)
         self.map_nodes_indexes = dict()
         self.nodal_coordinates_data = dict()
+        graph = self.get_global_graph()
+        # self.plot_graph(graph)
         perm_rcm = rcm(graph, symmetric_mode=True)
-        indexes = self.nodal_coordinates[:, 0]
-        self.perm = self.sp_permute_vector(indexes.reshape(-1,1), perm_rcm).flatten()
+        indexes = (self.nodal_coordinates[:, 0]).astype(int)
+        self.perm = self.sp_permute_vector(indexes.reshape(-1, 1), perm_rcm).flatten()
+        self.map_nodes_indexes = dict(zip(indexes, self.perm))
 
-        for ind in indexes:
-            node_id_gmsh = int(ind)
-            self.map_nodes_indexes[node_id_gmsh] = self.perm[node_id_gmsh]
+        # for node_id_gmsh in indexes:
+        #     self.map_nodes_indexes[node_id_gmsh] = self.perm[node_id_gmsh]
 
         # # saving data
         # gmsh_id = self.nodal_coordinates[:, 0]
@@ -143,58 +200,58 @@ class Reordering:
             return None
 
     def mask_matrix_tet4_act(self):
-        mat = np.array([[1, 1, 1, 1],
-                        [1, 1, 1, 1],
-                        [1, 1, 1, 1],
-                        [1, 1, 1, 1]], dtype=float)
-        return mat
+        # mat = np.array([[1, 1, 1, 1],
+        #                 [1, 1, 1, 1],
+        #                 [1, 1, 1, 1],
+        #                 [1, 1, 1, 1]], dtype=float)
+        return self.mask_tet4
 
     def mask_matrix_tet10_act(self):
-        mat = np.array([[1, 0, 0, 0, 1, 0, 1, 1, 0, 0],
-                        [0, 1, 0, 0, 1, 1, 0, 0, 0, 1],
-                        [0, 0, 1, 0, 0, 1, 1, 0, 1, 0],
-                        [0, 0, 0, 1, 0, 0, 0, 1, 1, 1],
-                        [1, 1, 0, 0, 1, 0, 0, 0, 0, 0],
-                        [0, 1, 1, 0, 0, 1, 0, 0, 0, 0],
-                        [1, 0, 1, 0, 0, 0, 1, 0, 0, 0],
-                        [1, 0, 0, 1, 0, 0, 0, 1, 0, 0],
-                        [0, 0, 1, 1, 0, 0, 0, 0, 1, 0],
-                        [0, 1, 0, 1, 0, 0, 0, 0, 0, 1]], dtype=float)
-        return mat
+        # mat = np.array([[1, 0, 0, 0, 1, 0, 1, 1, 0, 0],
+        #                 [0, 1, 0, 0, 1, 1, 0, 0, 0, 1],
+        #                 [0, 0, 1, 0, 0, 1, 1, 0, 1, 0],
+        #                 [0, 0, 0, 1, 0, 0, 0, 1, 1, 1],
+        #                 [1, 1, 0, 0, 1, 0, 0, 0, 0, 0],
+        #                 [0, 1, 1, 0, 0, 1, 0, 0, 0, 0],
+        #                 [1, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+        #                 [1, 0, 0, 1, 0, 0, 0, 1, 0, 0],
+        #                 [0, 0, 1, 1, 0, 0, 0, 0, 1, 0],
+        #                 [0, 1, 0, 1, 0, 0, 0, 0, 0, 1]], dtype=float)
+        return self.mask_tet10
 
     def mask_matrix_hex8_act(self):
-        mat = np.array([[1, 1, 0, 1, 1, 0, 0, 0],
-                        [1, 1, 1, 0, 0, 1, 0, 0],
-                        [0, 1, 1, 1, 0, 0, 1, 0],
-                        [1, 0, 1, 1, 0, 0, 0, 1],
-                        [1, 0, 0, 0, 1, 1, 0, 1],
-                        [0, 1, 0, 0, 1, 1, 1, 0],
-                        [0, 0, 1, 0, 0, 1, 1, 1],
-                        [0, 0, 0, 1, 1, 0, 1, 1]], dtype=float)
-        return mat
+        # mat = np.array([[1, 1, 0, 1, 1, 0, 0, 0],
+        #                 [1, 1, 1, 0, 0, 1, 0, 0],
+        #                 [0, 1, 1, 1, 0, 0, 1, 0],
+        #                 [1, 0, 1, 1, 0, 0, 0, 1],
+        #                 [1, 0, 0, 0, 1, 1, 0, 1],
+        #                 [0, 1, 0, 0, 1, 1, 1, 0],
+        #                 [0, 0, 1, 0, 0, 1, 1, 1],
+        #                 [0, 0, 0, 1, 1, 0, 1, 1]], dtype=float)
+        return self.mask_hex8
         
     def mask_matrix_hex20_act(self):
-        mat = np.array([[1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                        [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
-                        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0],
-                        [0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
-                        [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0],
-                        [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0],
-                        [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1],
-                        [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
-                        [1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                        [1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                        [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                        [0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-                        [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-                        [0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-                        [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-                        [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
-                        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-                        [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-                        [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],                        
-                        [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]], dtype=float)
-        return mat
+        # mat = np.array([[1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #                 [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+        #                 [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0],
+        #                 [0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+        #                 [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0],
+        #                 [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0],
+        #                 [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1],
+        #                 [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
+        #                 [1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #                 [1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #                 [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #                 [0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        #                 [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+        #                 [0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+        #                 [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+        #                 [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+        #                 [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+        #                 [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+        #                 [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],                        
+        #                 [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]], dtype=float)
+        return self.mask_hex20
 
 
     def plot_graph(self, graph):
