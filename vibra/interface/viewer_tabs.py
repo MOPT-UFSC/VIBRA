@@ -47,6 +47,7 @@ class ViewerTabs(QTabWidget):
         self.mesh_widget = MeshRenderWidget()
         self.acoustic_modal_analysis = AcousticModalAnalysisRenderWidget()
         self.structural_modal_analysis = StructuralModalAnalysisRenderWidget()
+        self.acoustic_harmonic_analysis = AcousticHarmonicAnalysisRenderWidget()
 
         self.welcome = WelcomeWidget()
         self.help_widget = HelpWidget()
@@ -101,12 +102,11 @@ class ViewerTabs(QTabWidget):
         self.setCurrentWidget(self.structural_modal_analysis)
 
     def show_acoustic_harmonic_analysis(self):
-        widget = AcousticHarmonicAnalysisRenderWidget()
-        if self.main_window.project.acoustic_harmonic_solver.solution is None:
-            return
-        self.create_a_new_tab_if_it_does_not_exist(widget, "Acoustic Harmonic Analysis")
-        widget.update_plot()
-        self.setCurrentWidget(widget)
+        if self.acoustic_harmonic_analysis not in self.tabs():
+            self.addTab(self.structural_modal_analysis, "Acoustic Modal Analysis")
+
+        self.acoustic_harmonic_analysis.update_plot()
+        self.setCurrentWidget(self.acoustic_harmonic_analysis)
 
     def create_a_new_tab_if_it_does_not_exist(self, widget, tab_text):
         for i in range(self.count()):
