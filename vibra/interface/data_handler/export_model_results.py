@@ -7,15 +7,15 @@ from pathlib import Path
 import os
 import numpy as np
 
-from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.general.print_message_input2 import PrintMessageInput
 
 def get_icons_path(filename):
     path = f"data/icons/{filename}"
     if os.path.exists(path):
         return str(Path(path))
 
-window_title1 = "ERROR MESSAGE"
-window_title2 = "WARNING MESSAGE"
+window_title1 = "Error"
+window_title2 = "Warning"
 
 class ExportModelResults(QDialog):
     def __init__(self, *args, **kwargs):
@@ -29,10 +29,10 @@ class ExportModelResults(QDialog):
         self._create_connections()
 
     def _load_icons(self):
-        self.export_icon = QIcon(get_icons_path('send_to_disk.png'))
+        self.export_icon = QIcon(get_icons_path('save.png'))
         self.vibra_icon = QIcon(get_icons_path('logo_vibra.png'))
-        self.search_icon = QIcon(get_icons_path('searchFile.png'))
-        self.update_icon = QIcon(get_icons_path('update_icon.jpg'))
+        self.search_icon = QIcon(get_icons_path('import.png'))
+        self.update_icon = QIcon(get_icons_path('delete.png'))
         self.setWindowIcon(self.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
@@ -95,12 +95,12 @@ class ExportModelResults(QDialog):
             if self.save_path == "":
                 title = "None folder selected"
                 message = "Plese, choose a folder before trying export the results."
-                PrintMessageInput([title, message, window_title1])
+                PrintMessageInput([window_title1, title, message])
                 return
         else:
             title = "Empty file name"
             message = "Inform a file name before trying export the results."
-            PrintMessageInput([title, message, window_title1])
+            PrintMessageInput([window_title1, title, message])
             return
 
         file_name = self.lineEdit_file_name.text() + ".dat"
@@ -120,7 +120,7 @@ class ExportModelResults(QDialog):
 
         title = "Information"
         message = "The results have been exported."
-        PrintMessageInput([title, message, window_title2])
+        PrintMessageInput([window_title2, title, message], auto_close=True)
         self.close()
 
     def keyPressEvent(self, event):

@@ -1,4 +1,5 @@
 import os
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -8,6 +9,7 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.errors import IncompleteSetupError
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.utils.progress_status import ProgressStatus
 
 
 class ModelStatus:
@@ -29,8 +31,10 @@ class Model:
         self.surfaces_areas = dict()
 
         self.analysis_data = None
-        self.acoustic_element = None
-        self.structural_element = None
+        self.solid_acoustic_element = None
+        self.surface_acoustic_element = None
+        self.solid_structural_element = None
+        self.surface_structural_element = None
 
         self.properties = ModelProperties()
 
@@ -44,7 +48,7 @@ class Model:
         self.mesh_setup = mesh_setup
 
     def process_visual_geometry_mesh(self):
-        self.mesh = Mesh.from_cad(self.geometry_path, dimension=2, size_factor=0.1)
+        self.mesh = Mesh.from_cad(self.geometry_path, dimension=2, size_factor=0.2)
         self.surfaces_areas = self.mesh.get_model_areas(self.geometry_path)
         self.generated_mesh = False
 
@@ -71,9 +75,13 @@ class Model:
             self.mesh = Mesh.from_cad(self.geometry_path)
 
         # self.geometry_path = Path("data/examples/script_files/script_hex_elements.txt")
-        # self.mesh = Mesh.from_cad(self.geometry_path, gmsh_gui=False, **self.mesh_setup)
+        # self.mesh = Mesh.from_cad(self.geometry_path, gmsh_gui=True, **self.mesh_setup)
+
         self.mesh.update_parameters(**self.mesh_setup)
         self.generated_mesh = True
+
+        logging.info("Renumbering nodes..." + ProgressStatus(90, 100))
+        self.mesh._process_nodes_reordering()
 
     def set_material(self, material):
         self.properties.set_material(material)
@@ -82,23 +90,23 @@ class Model:
         self.properties.set_fluid(fluid)
 
     def set_acoustic_element(self, element):
-        self.acoustic_element = element
+        self.solid_acoustic_element, self.surface_acoustic_element = element
 
     def set_structural_element(self, element):
-        self.structural_element = element
+        self.solid_structural_element, self.surface_structural_element = element
 
     def get_acoustic_global_dofs_from_nodes(self, nodes):
-        if self.acoustic_element is None:
+        if self.solid_acoustic_element is None:
             return []
-        _dofs_per_node = self.acoustic_element.DOF_PER_NODE
+        _dofs_per_node = self.solid_acoustic_element.DOF_PER_NODE
         _nodes = nodes.reshape(-1, 1)
         global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
         return np.array(global_dofs.flatten(), dtype=int)
 
     def get_structural_global_dofs_from_nodes(self, nodes):
-        if self.structural_element is None:
+        if self.solid_structural_element is None:
             return []
-        _dofs_per_node = self.structural_element.DOF_PER_NODE
+        _dofs_per_node = self.solid_structural_element.DOF_PER_NODE
         _nodes = nodes.reshape(-1, 1)
         global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
         return np.array(global_dofs.flatten(), dtype=int)
@@ -122,8 +130,8 @@ class Model:
     def set_volume_velocity(self, data, surface):
         self.properties.set_volume_velocity(data, surface)
 
-    def set_particle_velocity(self, data, surface):
-        self.properties.set_particle_velocity(data, surface)
+    def set_surface_velocity(self, data, surface):
+        self.properties.set_surface_velocity(data, surface)
 
     def set_specific_impedance(self, data, surface):
         self.properties.set_specific_impedance(data, surface)

@@ -9,6 +9,7 @@ import numpy as np
 
 from vibra.engine.mesher.element_type import *
 from vibra.engine.mesher.geometry_setup import GeometrySetup
+from vibra.engine.mesher.reordering import Reordering
 from vibra.utils.progress_status import ProgressStatus
 
 # FieldsList=[]
@@ -21,6 +22,7 @@ class Mesh:
         self.reset_variables()
 
     def reset_variables(self):
+        self.reordering = None
         self.dimension = 0
         self.entity_ranges = dict()
         self.element_type = DEFAULT_ELEMENT_TYPE
@@ -33,6 +35,7 @@ class Mesh:
         self.nodes_from_volumes = dict()
         self.entity_ranges = dict()
         self.surfaces_from_volumes = dict()
+        self.connectivity_from_surfaces = dict()
 
     @classmethod
     def from_cad(
@@ -189,6 +192,39 @@ class Mesh:
     def import_solids_connectivity(self, filename):
         header = "Index || Solid ID || Element type ID || Element ID || Connected Node IDs"
         return np.loadtxt(filename, delimiter=";", header=header, fmt="%i")
+    
+    def import_external_nodal_coordinates(self, filename, index_zero=True):
+        """
+        """
+        data = np.loadtxt(filename, delimiter=",")
+        rows, cols = data.shape
+        
+        indexes = data[:,0]
+        if index_zero:
+            indexes -= 1   
+
+        self.nodal_coordinates = np.zeros((rows, cols), dtype=float)
+        self.nodal_coordinates[:,0] = indexes
+        self.nodal_coordinates[:,1:] = data[:,1:]
+
+    def import_external_connectivity(self, filename, index_zero=True, etype_tag=1, e_nodes=1):
+        """
+        """
+        data = np.loadtxt(filename, delimiter=",")
+        rows, cols = data.shape
+        
+        indexes = data[:,0]
+        connect = data[:, 1:]
+        if index_zero:
+            connect -= 1
+
+        aux = np.ones(rows)
+        self.solids_connectivity = np.zeros((rows, cols+3), dtype=int)
+        self.solids_connectivity[:, 0] = indexes
+        self.solids_connectivity[:, 1] = aux
+        self.solids_connectivity[:, 2] = aux*etype_tag
+        self.solids_connectivity[:, 3] = aux*e_nodes
+        self.solids_connectivity[:, 4:] = connect
 
     def export_nodes_coordinates(self, filename):
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
@@ -267,7 +303,7 @@ class Mesh:
         total_nodes = int(np.max(indexes))
         self.nodal_coordinates = np.zeros((total_nodes, 4))
         self.nodal_coordinates[indexes - 1, 1:] = coords.reshape(-1, 3) / 1000
-        self.nodal_coordinates[indexes - 1, :1] = indexes.reshape(-1, 1)
+        self.nodal_coordinates[indexes - 1, :1] = indexes.reshape(-1, 1) - 1
 
         connectivity_dim1 = dict()
         connectivity_dim2 = dict()
@@ -289,18 +325,14 @@ class Mesh:
                 continue
 
             for i, element_type in enumerate(element_types):
-                _, _, _, nodes_per_element, _, _ = gmsh.model.mesh.getElementProperties(
-                    element_type
-                )
+                _, _, _, nodes_per_element, _, _ = gmsh.model.mesh.getElementProperties(element_type)
 
                 array_element_nodes = np.array(element_nodes[i]).reshape(-1, nodes_per_element)
                 array_element_nodes -= 1  # index connectivity from 0
 
-                elements_data[element_type] = {
-                    "indexes": element_indexes[i],
-                    "array_element_nodes": array_element_nodes,
-                    "element_to_nodes": dict(zip(element_indexes[i], array_element_nodes)),
-                }
+                elements_data[element_type] = { "indexes": element_indexes[i],
+                                                "array_element_nodes": array_element_nodes,
+                                                "element_to_nodes": dict(zip(element_indexes[i], array_element_nodes)) }
 
             if dim == 0:  # Points
                 # The index of points is one less than the
@@ -314,6 +346,9 @@ class Mesh:
             elif dim == 2:  # Surfaces
                 connectivity_dim2[dim, tag] = elements_data
                 self.nodes_from_surfaces[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
+                array_element_indexes = np.array([*set(element_indexes[0])], dtype=int) - 1
+                self.connectivity_from_surfaces[tag] = {"element_indexes" : array_element_indexes,
+                                                        "connectivity" : array_element_nodes}
 
             elif dim == 3:  # Solids
                 connectivity_dim3[dim, tag] = elements_data
@@ -323,6 +358,33 @@ class Mesh:
         self.faces_connectivity = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity = self._get_connectivity_array(connectivity_dim3)
 
+    def _process_nodes_reordering(self):
+        """ This method processes the nodes reordering to reducie the global matrices 
+            bandwidth and improve the solution performance.
+        """
+        # print(f"Nodal coordinates: {self.nodal_coordinates.shape}")
+        # print(f"Connectivity: {self.solids_connectivity.shape}")
+        # np.savetxt("nodal_coordinates.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
+        # np.savetxt("faces_connectivity.dat", self.faces_connectivity, delimiter=",", fmt='%i')
+        # np.savetxt("solids_connectivity.dat", self.solids_connectivity, delimiter=",", fmt='%i')
+        
+        self.reordering = Reordering(self)
+        self.reordering._process_reordering()
+        self.nodal_coordinates = self.reordering.get_new_nodal_coordinates()
+        self.lines_connectivity = self.reordering.get_new_connectivity(self.lines_connectivity)
+        self.faces_connectivity = self.reordering.get_new_connectivity(self.faces_connectivity)
+        self.solids_connectivity = self.reordering.get_new_connectivity(self.solids_connectivity)
+        self.nodes_from_lines = self.reordering.updates_nodes_from(self.nodes_from_lines)
+        self.nodes_from_surfaces = self.reordering.updates_nodes_from(self.nodes_from_surfaces)
+        self.nodes_from_volumes = self.reordering.updates_nodes_from(self.nodes_from_volumes)
+        self.connectivity_from_surfaces = self.reordering.updates_nodes_from(self.connectivity_from_surfaces)
+        
+        # print(f"Nodal coordinates (after): {self.nodal_coordinates.shape}")
+        # print(f"Connectivity (after): {self.solids_connectivity.shape}")
+        # np.savetxt("nodal_coordinates_reordered.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
+        # np.savetxt("faces_connectivity_reordered.dat", self.faces_connectivity, delimiter=",", fmt='%i')
+        # np.savetxt("solids_connectivity_reordered.dat", self.solids_connectivity, delimiter=",", fmt='%i')
+        
     def get_model_areas(self, path):
         """This method returns returns the all surface area processed using
         gmsh internal functions.
@@ -408,15 +470,19 @@ class Mesh:
         for (entity_dim, entity_tag), e_data in input_dict.items():
             entity_start = start
             for etype_tag, data in e_data.items():
+
                 end += n_list[ind]
                 indexes = data["indexes"]
                 nodes = data["array_element_nodes"]
+
                 rows = len(indexes)
                 cols = nodes.shape[1]
+                aux = np.ones(rows, dtype=int)
 
-                output_data[start:end, 1] = np.ones(rows) * entity_tag
-                output_data[start:end, 2] = np.ones(rows) * etype_tag
-                output_data[start:end, 3] = indexes
+                output_data[start:end, 1] = aux * entity_tag
+                output_data[start:end, 2] = aux * etype_tag
+                # output_data[start:end, 3] = indexes
+                output_data[start:end, 3] = aux * cols
                 output_data[start:end, 4 : 4 + cols] = nodes
 
                 start = end

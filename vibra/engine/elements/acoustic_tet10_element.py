@@ -1,6 +1,6 @@
 import numpy as np
 
-from vibra.engine.elements.element import Element
+from vibra.engine.elements.solid_elements import Element3D
 
 
 def shape10TC(l1, l2, l3):
@@ -89,7 +89,7 @@ def get_detJAC_and_invJAC(JAC):
     return detJAC, (1 / detJAC) * AUJJ
 
 
-def get_detJAC_and_invJAC_3D(JAC):
+def get_detJAC_and_invJAC(JAC):
     """ """
 
     detJAC = (
@@ -117,7 +117,7 @@ def get_detJAC_and_invJAC_3D(JAC):
     return detJAC, (1 / detJAC) * AUJJ
 
 
-class ACT_TETRAHEDRON_10C(Element):
+class ACT_TETRAHEDRON_10C(Element3D):
     NODES_PER_ELEMENT = 10
     DOF_PER_NODE = 1
     DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
@@ -255,7 +255,7 @@ class ACT_TETRAHEDRON_10C(Element):
         ie = self.connectivity[el_index, 1:]
         #
         JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
-        detJAC, invJAC = get_detJAC_and_invJAC_3D(JAC)
+        detJAC, invJAC = get_detJAC_and_invJAC(JAC)
         dphi_t = invJAC @ self.dphi
         #
         B = np.zeros((self.nint, 3, self.DOFS_PER_ELEMENT), dtype=float)
@@ -297,3 +297,11 @@ class ACT_TETRAHEDRON_10C(Element):
         self.ind_cols = (np.tile(ind_dofs, edofs)).flatten()
 
         return self.ind_rows, self.ind_cols
+    
+    def get_fluid_properties(self, el_index):
+        """ This method returns the fluid properties """
+        c_0 = self.model.properties.get_speed_of_sound(element = el_index)
+        rho_0 = self.model.properties.get_fluid_density(element = el_index)
+        fluid = self.model.properties.get_fluid(element = el_index)
+        dinamic_viscosity = fluid.dynamic_viscosity
+        return rho_0, c_0, dinamic_viscosity

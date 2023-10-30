@@ -1,9 +1,9 @@
 import numpy as np
 
-from vibra.engine.elements.element import Element
+from vibra.engine.elements.solid_elements import Element3D
 
 
-def get_detJAC_and_invJAC_3D(JAC):
+def get_detJAC_and_invJAC(JAC):
     """ """
 
     detJAC = (
@@ -31,7 +31,7 @@ def get_detJAC_and_invJAC_3D(JAC):
     return detJAC, (1 / detJAC) * AUJJ
 
 
-class STRUCT_HEXAHEDRON_20:
+class STRUCT_HEXAHEDRON_20(Element3D):
     #
     NODES_PER_ELEMENT = 20
     DOF_PER_NODE = 3
@@ -227,7 +227,7 @@ class STRUCT_HEXAHEDRON_20:
         rho = self.material.density
         #
         JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
-        detJAC, invJAC = get_detJAC_and_invJAC_3D(JAC)
+        detJAC, invJAC = get_detJAC_and_invJAC(JAC)
         dphi_t = invJAC @ self.dphi
         #
         B = np.zeros((self.nint, 6, self.DOFS_PER_ELEMENT), dtype=float)

@@ -140,7 +140,7 @@ class ProjectFile:
 
         self.write_data_in_file(file_path, config)
 
-    def add_particle_velocity_to_file(self, data):
+    def add_surface_velocity_to_file(self, data):
         file_path = os.path.join(self.project_path, self.acoustic_model_setup_filename)
         config = configparser.ConfigParser()
         config.read(file_path)
@@ -149,11 +149,11 @@ class ProjectFile:
         for entity_id in data["entity_ids"]:
             section = f"{data['entity_type']} - {entity_id}"
             if section in sections:
-                config[section]["particle velocity"] = str(data["values"])
+                config[section]["surface velocity"] = str(data["values"])
                 config[section]["averaged"] = str(data["averaged"])
             else:
                 config[section] = {
-                    "particle velocity": data["values"],
+                    "surface velocity": data["values"],
                     "averaged": data["averaged"],
                 }
             if "table_name" in data.keys():

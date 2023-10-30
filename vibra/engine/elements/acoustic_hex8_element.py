@@ -1,6 +1,6 @@
 import numpy as np
 
-from vibra.engine.elements.element import Element
+from vibra.engine.elements.solid_elements import Element3D
 
 
 def shapeH8(ssx, ttx, rrx):
@@ -69,20 +69,20 @@ def get_detJAC_and_invJAC_3D(JAC):
     detJAC = detJAC.reshape(-1, 1, 1)
     # adj(JAC)
     AUJJ = np.zeros((detJAC.shape[0], 3, 3), dtype=float)
-    AUJJ[:, 0, 0] = 1 * ((JAC[:, 1, 1] * JAC[:, 2, 2]) - (JAC[:, 2, 1] * JAC[:, 1, 2]))
-    AUJJ[:, 1, 0] = -1 * ((JAC[:, 1, 0] * JAC[:, 2, 2]) - (JAC[:, 1, 2] * JAC[:, 2, 0]))
-    AUJJ[:, 2, 0] = 1 * ((JAC[:, 1, 0] * JAC[:, 2, 1]) - (JAC[:, 1, 1] * JAC[:, 2, 0]))
-    AUJJ[:, 0, 1] = -1 * ((JAC[:, 0, 1] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 1]))
-    AUJJ[:, 1, 1] = 1 * ((JAC[:, 0, 0] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 0]))
-    AUJJ[:, 2, 1] = -1 * ((JAC[:, 0, 0] * JAC[:, 2, 1]) - (JAC[:, 0, 1] * JAC[:, 2, 0]))
-    AUJJ[:, 0, 2] = 1 * ((JAC[:, 0, 1] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 1]))
-    AUJJ[:, 1, 2] = -1 * ((JAC[:, 0, 0] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 0]))
-    AUJJ[:, 2, 2] = 1 * ((JAC[:, 0, 0] * JAC[:, 1, 1]) - (JAC[:, 0, 1] * JAC[:, 1, 0]))
+    AUJJ[:, 0, 0] =  ((JAC[:, 1, 1] * JAC[:, 2, 2]) - (JAC[:, 2, 1] * JAC[:, 1, 2]))
+    AUJJ[:, 1, 0] = -((JAC[:, 1, 0] * JAC[:, 2, 2]) - (JAC[:, 1, 2] * JAC[:, 2, 0]))
+    AUJJ[:, 2, 0] =  ((JAC[:, 1, 0] * JAC[:, 2, 1]) - (JAC[:, 1, 1] * JAC[:, 2, 0]))
+    AUJJ[:, 0, 1] = -((JAC[:, 0, 1] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 1]))
+    AUJJ[:, 1, 1] =  ((JAC[:, 0, 0] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 0]))
+    AUJJ[:, 2, 1] = -((JAC[:, 0, 0] * JAC[:, 2, 1]) - (JAC[:, 0, 1] * JAC[:, 2, 0]))
+    AUJJ[:, 0, 2] =  ((JAC[:, 0, 1] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 1]))
+    AUJJ[:, 1, 2] = -((JAC[:, 0, 0] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 0]))
+    AUJJ[:, 2, 2] =  ((JAC[:, 0, 0] * JAC[:, 1, 1]) - (JAC[:, 0, 1] * JAC[:, 1, 0]))
 
     return detJAC, (1 / detJAC) * AUJJ
 
 
-class ACT_HEXAHEDRON_8C(Element):
+class ACT_HEXAHEDRON_8C(Element3D):
     #
     NODES_PER_ELEMENT = 8
     DOF_PER_NODE = 1
@@ -109,22 +109,18 @@ class ACT_HEXAHEDRON_8C(Element):
         con = 1 / np.sqrt(3)
         self.wps = 1
         #
-        self.pint = np.array(
-            [
-                [-con, -con, -con],
-                [con, -con, -con],
-                [con, con, -con],
-                [-con, con, -con],
-                [-con, -con, con],
-                [con, -con, con],
-                [con, con, con],
-                [-con, con, con],
-            ]
-        )
+        self.pint = np.array( [ [-con, -con, -con],
+                                [ con, -con, -con],
+                                [ con,  con, -con],
+                                [-con,  con, -con],
+                                [-con, -con,  con],
+                                [ con, -con,  con],
+                                [ con,  con,  con],
+                                [-con,  con,  con] ], dtype=float)
 
     def process_shape_functions_and_derivatives(self):
-        """This method processes the shape functions and their
-        derivatives for all integration points.
+        """ This method processes the shape functions and their
+            derivatives for all integration points.
         """
         ssx = self.pint[:, 0]
         ttx = self.pint[:, 1]
@@ -147,23 +143,23 @@ class ACT_HEXAHEDRON_8C(Element):
         # derivatives
         dphi = np.zeros((self.nint, 3, self.NODES_PER_ELEMENT), dtype=float)
         #
-        dphi[:, 0, 0] = (-1.0) * (1.0 - ttx) * (1.0 - rrx)
-        dphi[:, 0, 1] = (1.0) * (1.0 - ttx) * (1.0 - rrx)
-        dphi[:, 0, 2] = (1.0) * (1.0 + ttx) * (1.0 - rrx)
-        dphi[:, 0, 3] = (-1.0) * (1.0 + ttx) * (1.0 - rrx)
-        dphi[:, 0, 4] = (-1.0) * (1.0 - ttx) * (1.0 + rrx)
-        dphi[:, 0, 5] = (1.0) * (1.0 - ttx) * (1.0 + rrx)
-        dphi[:, 0, 6] = (1.0) * (1.0 + ttx) * (1.0 + rrx)
-        dphi[:, 0, 7] = (-1.0) * (1.0 + ttx) * (1.0 + rrx)
+        dphi[:, 0, 0] = -(1.0 - ttx) * (1.0 - rrx)
+        dphi[:, 0, 1] =  (1.0 - ttx) * (1.0 - rrx)
+        dphi[:, 0, 2] =  (1.0 + ttx) * (1.0 - rrx)
+        dphi[:, 0, 3] = -(1.0 + ttx) * (1.0 - rrx)
+        dphi[:, 0, 4] = -(1.0 - ttx) * (1.0 + rrx)
+        dphi[:, 0, 5] =  (1.0 - ttx) * (1.0 + rrx)
+        dphi[:, 0, 6] =  (1.0 + ttx) * (1.0 + rrx)
+        dphi[:, 0, 7] = -(1.0 + ttx) * (1.0 + rrx)
 
-        dphi[:, 1, 0] = (1.0 - ssx) * (-1.0) * (1.0 - rrx)
-        dphi[:, 1, 1] = (1.0 + ssx) * (-1.0) * (1.0 - rrx)
-        dphi[:, 1, 2] = (1.0 + ssx) * (1.0) * (1.0 - rrx)
-        dphi[:, 1, 3] = (1.0 - ssx) * (1.0) * (1.0 - rrx)
-        dphi[:, 1, 4] = (1.0 - ssx) * (-1.0) * (1.0 + rrx)
-        dphi[:, 1, 5] = (1.0 + ssx) * (-1.0) * (1.0 + rrx)
-        dphi[:, 1, 6] = (1.0 + ssx) * (1.0) * (1.0 + rrx)
-        dphi[:, 1, 7] = (1.0 - ssx) * (1.0) * (1.0 + rrx)
+        dphi[:, 1, 0] = -(1.0 - ssx) * (1.0 - rrx)
+        dphi[:, 1, 1] = -(1.0 + ssx) * (1.0 - rrx)
+        dphi[:, 1, 2] =  (1.0 + ssx) * (1.0 - rrx)
+        dphi[:, 1, 3] =  (1.0 - ssx) * (1.0 - rrx)
+        dphi[:, 1, 4] = -(1.0 - ssx) * (1.0 + rrx)
+        dphi[:, 1, 5] = -(1.0 + ssx) * (1.0 + rrx)
+        dphi[:, 1, 6] =  (1.0 + ssx) * (1.0 + rrx)
+        dphi[:, 1, 7] =  (1.0 - ssx) * (1.0 + rrx)
 
         dphi[:, 2, 0] = (1.0 - ssx) * (1.0 - ttx) * (-1.0)
         dphi[:, 2, 1] = (1.0 + ssx) * (1.0 - ttx) * (-1.0)
@@ -214,10 +210,14 @@ class ACT_HEXAHEDRON_8C(Element):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
         self.connectivity = self.connectivity[:, [0, 4, 5, 6, 7, 8, 9, 10, 11]]
 
-    def generate_ind_rows_cols(self):
+    def generate_ind_rows_cols(self, reorder=True):
         """This method processess the dofs indices (rows and columns) for assembly"""
 
-        self.reorder_connect()
+        if reorder:
+            self.reorder_connect()
+        else:
+            self.connectivity = self.connectivity[:, [0, 4, 5, 6, 7, 8, 9, 10, 11]]
+
         dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
         ind_dofs = dofs * self.connectivity[:, 1:]
 
@@ -226,3 +226,11 @@ class ACT_HEXAHEDRON_8C(Element):
         self.ind_cols = (np.tile(ind_dofs, edofs)).flatten()
 
         return self.ind_rows, self.ind_cols
+    
+    def get_fluid_properties(self, el_index):
+        """ This method returns the fluid properties """
+        c_0 = self.model.properties.get_speed_of_sound(element = el_index)
+        rho_0 = self.model.properties.get_fluid_density(element = el_index)
+        fluid = self.model.properties.get_fluid(element = el_index)
+        dinamic_viscosity = fluid.dynamic_viscosity
+        return rho_0, c_0, dinamic_viscosity

@@ -1,8 +1,10 @@
 import logging
 
 import numpy as np
-from scipy.linalg import eig
+from scipy.sparse import lil_matrix, coo_matrix, csr_matrix
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh, inv, lobpcg
+from scipy.sparse.csgraph import reverse_cuthill_mckee
+import matplotlib.pyplot as plt
 
 from vibra.utils.progress_status import ProgressStatus
 
@@ -15,7 +17,7 @@ class AcousticModalSolver:
         self.load_analysis_data(analysis_data)
 
     def reset_variables(self):
-        self.modes = 20
+        self.modes = 30
         self.sigma_factor = 0.01
         self.analysis_type = None
         self.natural_frequencies = None
@@ -36,6 +38,9 @@ class AcousticModalSolver:
                     self.analysis_type = "acoustic"
 
     def solve(self, K=[], M=[], which="LM", normalize=True, harmonic_analysis=False):
+        """
+        """
+        
         if K != [] and M != []:
             KT = K
             MT = M
@@ -43,12 +48,12 @@ class AcousticModalSolver:
             KT = self.assembler.stiffness_matrix
             MT = self.assembler.mass_matrix
 
-        logging.info("Finding eigen values and eigen vectors" + ProgressStatus(7, 100))
-        self.eigen_values, self.eigen_vectors = eigs(
-            KT, M=MT, k=self.modes, which=which, sigma=self.sigma_factor
-        )
+        # self.plot_graph(KT)
 
-        logging.info("Extracting information from solution" + ProgressStatus(95, 100))
+        logging.info("Solving the eigenproblem..." + ProgressStatus(10, 100))
+        self.eigen_values, self.eigen_vectors = eigs(KT, M=MT, k=self.modes, which=which, sigma=self.sigma_factor)
+
+        logging.info("Extracting information from solution..." + ProgressStatus(95, 100))
         positive_real = np.absolute(np.real(self.eigen_values))
         natural_frequencies = np.sqrt(positive_real) / (2 * np.pi)
         modal_shape = np.real(self.eigen_vectors)
@@ -87,9 +92,17 @@ class AcousticModalSolver:
 
         if len(self.prescribed_indexes) > 0:
             if modal_analysis:
-                full_solution[self.prescribed_indexes, :] = np.zeros(
-                    (len(self.prescribed_values), cols)
-                )
+                full_solution[self.prescribed_indexes, :] = np.zeros((len(self.prescribed_values), cols))
             else:
                 full_solution[self.prescribed_indexes, :] = self.array_prescribed_values[:, 0:cols]
+        
         return np.real(full_solution)
+
+
+    def plot_graph(self, graph):
+        """
+        """
+        plt.ion()
+        plt.cla()
+        plt.spy(graph, color=(0.25,0.25,0.25))
+        plt.show()

@@ -59,12 +59,10 @@ class SpecificImpedanceInput(QDialog):
 
     def _define_qt_variables(self):
         # QCheckBox objects
-        self.checkBox_averaged_constant_values = self.findChild(
-            QCheckBox, "checkBox_averaged_constant_values"
-        )
-        self.checkBox_averaged_table_values = self.findChild(
-            QCheckBox, "checkBox_averaged_table_values"
-        )
+        self.checkBox_averaged_constant_values = self.findChild(QCheckBox, "checkBox_averaged_constant_values")
+        self.checkBox_averaged_table_values = self.findChild(QCheckBox, "checkBox_averaged_table_values")
+        # self.checkBox_averaged_constant_values.setDisabled(True)
+        # self.checkBox_averaged_table_values.setDisabled(True)
         # QLineEdit objects
         self.lineEdit_selection_id = self.findChild(QLineEdit, "lineEdit_selection_id")
         self.lineEdit_real_value = self.findChild(QLineEdit, "lineEdit_real_value")
@@ -72,47 +70,32 @@ class SpecificImpedanceInput(QDialog):
         self.lineEdit_load_table_path = self.findChild(QLineEdit, "lineEdit_table_path")
         # QPushButton objects
         self.pushButton_load_table = self.findChild(QPushButton, "pushButton_load_table")
-        self.pushButton_constant_value_confirm = self.findChild(
-            QPushButton, "pushButton_constant_value_confirm"
-        )
-        self.pushButton_table_values_confirm = self.findChild(
-            QPushButton, "pushButton_table_values_confirm"
-        )
-        self.pushButton_remove_bc_confirm = self.findChild(
-            QPushButton, "pushButton_remove_bc_confirm"
-        )
+        self.pushButton_constant_value_confirm = self.findChild(QPushButton, "pushButton_constant_value_confirm")
+        self.pushButton_table_values_confirm = self.findChild(QPushButton, "pushButton_table_values_confirm")
+        self.pushButton_remove_bc_confirm = self.findChild(QPushButton, "pushButton_remove_bc_confirm")
         self.pushButton_reset = self.findChild(QPushButton, "pushButton_reset")
         # QRadioButton objects
-        self.radioButton_nodal_attribution_constant = self.findChild(
-            QRadioButton, "radioButton_nodal_attribution_constant"
-        )
-        self.radioButton_element_integration_constant = self.findChild(
-            QRadioButton, "radioButton_element_integration_constant"
-        )
-        self.radioButton_element_integration_table = self.findChild(
-            QRadioButton, "radioButton_element_integration_table"
-        )
-        self.radioButton_nodal_attribution_table = self.findChild(
-            QRadioButton, "radioButton_nodal_attribution_table"
-        )
+        self.radioButton_nodal_attribution_constant = self.findChild(QRadioButton, "radioButton_nodal_attribution_constant")
+        self.radioButton_element_integration_constant = self.findChild(QRadioButton, "radioButton_element_integration_constant")
+        self.radioButton_element_integration_table = self.findChild(QRadioButton, "radioButton_element_integration_table")
+        self.radioButton_nodal_attribution_table = self.findChild(QRadioButton, "radioButton_nodal_attribution_table")
+        #
+        self.radioButton_nodal_attribution_constant.setDisabled(True)
+        self.radioButton_nodal_attribution_table.setDisabled(True)
+        self.radioButton_element_integration_constant.setChecked(True)
+        self.radioButton_element_integration_table.setChecked(True)
+        self.update_controls_for_constant_value()
+        self.update_controls_for_table_of_values()
         # QSpinBox object
         self.spinBox_skiprows = self.findChild(QSpinBox, "spinBox")
         # QTabWidget objects
-        self.tabWidget_specific_impedance = self.findChild(
-            QTabWidget, "tabWidget_specific_impedance"
-        )
-        self.tab_constant_values = self.tabWidget_specific_impedance.findChild(
-            QWidget, "tab_constant_values"
-        )
-        self.tab_table_values = self.tabWidget_specific_impedance.findChild(
-            QWidget, "tab_table_values"
-        )
+        self.tabWidget_specific_impedance = self.findChild(QTabWidget, "tabWidget_specific_impedance")
+        self.tab_constant_values = self.tabWidget_specific_impedance.findChild(QWidget, "tab_constant_values")
+        self.tab_table_values = self.tabWidget_specific_impedance.findChild(QWidget, "tab_table_values")
         self.tab_remove = self.tabWidget_specific_impedance.findChild(QWidget, "tab_remove")
         self.current_tab = self.tabWidget_specific_impedance.currentIndex()
         # QTreeWidget objects
-        self.treeWidget_specific_impedance = self.findChild(
-            QTreeWidget, "treeWidget_specific_impedance"
-        )
+        self.treeWidget_specific_impedance = self.findChild(QTreeWidget, "treeWidget_specific_impedance")
         self.treeWidget_specific_impedance.setColumnWidth(1, 20)
         self.treeWidget_specific_impedance.setColumnWidth(2, 80)
 
@@ -124,18 +107,10 @@ class SpecificImpedanceInput(QDialog):
         self.pushButton_load_table.clicked.connect(self.load_specific_impedance_table)
         self.pushButton_reset.clicked.connect(self.check_reset)
         #
-        self.radioButton_nodal_attribution_constant.clicked.connect(
-            self.update_controls_for_constant_value
-        )
-        self.radioButton_element_integration_constant.clicked.connect(
-            self.update_controls_for_constant_value
-        )
-        self.radioButton_nodal_attribution_table.clicked.connect(
-            self.update_controls_for_table_of_values
-        )
-        self.radioButton_element_integration_table.clicked.connect(
-            self.update_controls_for_table_of_values
-        )
+        self.radioButton_nodal_attribution_constant.clicked.connect(self.update_controls_for_constant_value)
+        self.radioButton_element_integration_constant.clicked.connect(self.update_controls_for_constant_value)
+        self.radioButton_nodal_attribution_table.clicked.connect(self.update_controls_for_table_of_values)
+        self.radioButton_element_integration_table.clicked.connect(self.update_controls_for_table_of_values)
         #
         self.tabWidget_specific_impedance.currentChanged.connect(self.tabEvent_specific_impedance)
         self.treeWidget_specific_impedance.itemClicked.connect(self.on_click_item)
@@ -221,11 +196,8 @@ class SpecificImpedanceInput(QDialog):
             return
 
         for _id in self.typed_ids:
-            self.properties._remove_surface_property("acoustic_pressure", _id)
-            self.properties._remove_surface_property("mass_flow_rate", _id)
-            self.properties._remove_surface_property("volume_velocity", _id)
-            self.properties._remove_surface_property("particle_velocity", _id)
-            self.properties._remove_surface_property("compressor_excitation", _id)
+            pass
+            # self.properties._remove_surface_property("acoustic_pressure", _id)
 
         specific_impedance = self.check_complex_entries(
             self.lineEdit_real_value, self.lineEdit_imag_value
@@ -242,12 +214,10 @@ class SpecificImpedanceInput(QDialog):
             nodal_attribution = self.radioButton_nodal_attribution_constant.isChecked()
             key_avg = self.checkBox_averaged_constant_values.isChecked()
 
-            data = {
-                "real_values": real_values,
-                "imag_values": imag_values,
-                "nodal_attribution": nodal_attribution,
-                "averaged": key_avg,
-            }
+            data = {"real_values": real_values,
+                    "imag_values": imag_values,
+                    "nodal_attribution": nodal_attribution,
+                    "averaged": key_avg}
 
             for _id in self.typed_ids:
                 self.project.set_specific_impedance(data, _id)
@@ -355,11 +325,8 @@ class SpecificImpedanceInput(QDialog):
             return
 
         for _id in self.typed_ids:
-            self.properties._remove_surface_property("acoustic_pressure", _id)
-            self.properties._remove_surface_property("mass_flow_rate", _id)
-            self.properties._remove_surface_property("volume_velocity", _id)
-            self.properties._remove_surface_property("particle_velocity", _id)
-            self.properties._remove_surface_property("compressor_excitation", _id)
+            pass
+            # self.properties._remove_surface_property("acoustic_pressure", _id)
 
         list_table_names = self.get_list_table_names_from_selected_surfaces(self.typed_ids)
         if self.lineEdit_load_table_path != "":
@@ -528,10 +495,9 @@ class SpecificImpedanceInput(QDialog):
                 surface_ids.append(surface_id)
 
         if len(surface_ids) == 0:
-            self.tabWidget_specific_impedance.setCurrentWidget(self.tab_constant_values)
-            self.tab_remove.setDisabled(True)
+            self.tabWidget_specific_impedance.setTabVisible(2, False)
         else:
-            self.tab_remove.setDisabled(False)
+            self.tabWidget_specific_impedance.setTabVisible(2, True)
 
     def check_input_surface_id(self, lineEdit, single_ID=False):
         try:

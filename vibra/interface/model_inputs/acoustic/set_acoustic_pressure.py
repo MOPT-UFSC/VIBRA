@@ -53,18 +53,12 @@ class AcousticPressureInput(QDialog):
         self.acoustic_bc_filename = self.project.file.acoustic_model_setup_filename
         self.acoustic_bc_info_path = os.path.join(self.project_path, self.acoustic_bc_filename)
         self.acoustic_folder_path = self.project.file.acoustic_imported_data_folder_path
-        self.acoustic_pressure_tables_folder_path = os.path.join(
-            self.acoustic_folder_path, "acoustic_pressure_files"
-        )
+        self.acoustic_pressure_tables_folder_path = os.path.join(self.acoustic_folder_path, "acoustic_pressure_files")
 
     def _define_qt_variables(self):
         # QCheckBox objects
-        self.checkBox_averaged_constant_values = self.findChild(
-            QCheckBox, "checkBox_averaged_constant_values"
-        )
-        self.checkBox_averaged_table_values = self.findChild(
-            QCheckBox, "checkBox_averaged_table_values"
-        )
+        self.checkBox_averaged_constant_values = self.findChild(QCheckBox, "checkBox_averaged_constant_values")
+        self.checkBox_averaged_table_values = self.findChild(QCheckBox, "checkBox_averaged_table_values")
         # QLineEdit objects
         self.lineEdit_selection_id = self.findChild(QLineEdit, "lineEdit_selection_id")
         self.lineEdit_real_value = self.findChild(QLineEdit, "lineEdit_real_value")
@@ -72,45 +66,28 @@ class AcousticPressureInput(QDialog):
         self.lineEdit_load_table_path = self.findChild(QLineEdit, "lineEdit_table_path")
         # QPushButton objects
         self.pushButton_load_table = self.findChild(QPushButton, "pushButton_load_table")
-        self.pushButton_constant_value_confirm = self.findChild(
-            QPushButton, "pushButton_constant_value_confirm"
-        )
-        self.pushButton_table_values_confirm = self.findChild(
-            QPushButton, "pushButton_table_values_confirm"
-        )
-        self.pushButton_remove_bc_confirm = self.findChild(
-            QPushButton, "pushButton_remove_bc_confirm"
-        )
+        self.pushButton_constant_value_confirm = self.findChild(QPushButton, "pushButton_constant_value_confirm")
+        self.pushButton_table_values_confirm = self.findChild(QPushButton, "pushButton_table_values_confirm")
+        self.pushButton_remove_bc_confirm = self.findChild(QPushButton, "pushButton_remove_bc_confirm")
         self.pushButton_reset = self.findChild(QPushButton, "pushButton_reset")
         # QRadioButton objects
-        self.radioButton_nodal_attribution_constant = self.findChild(
-            QRadioButton, "radioButton_nodal_attribution_constant"
-        )
-        self.radioButton_element_integration_constant = self.findChild(
-            QRadioButton, "radioButton_element_integration_constant"
-        )
-        self.radioButton_element_integration_table = self.findChild(
-            QRadioButton, "radioButton_element_integration_table"
-        )
-        self.radioButton_nodal_attribution_table = self.findChild(
-            QRadioButton, "radioButton_nodal_attribution_table"
-        )
+        self.radioButton_nodal_attribution_constant = self.findChild(QRadioButton, "radioButton_nodal_attribution_constant")
+        self.radioButton_element_integration_constant = self.findChild(QRadioButton, "radioButton_element_integration_constant")
+        self.radioButton_element_integration_table = self.findChild(QRadioButton, "radioButton_element_integration_table")
+        self.radioButton_nodal_attribution_table = self.findChild(QRadioButton, "radioButton_nodal_attribution_table")
+        #
+        self.radioButton_element_integration_constant.setDisabled(True)
+        self.radioButton_element_integration_table.setDisabled(True)
         # QSpinBox object
         self.spinBox_skiprows = self.findChild(QSpinBox, "spinBox")
         # QTabWidget objects
         self.tabWidget_acoustic_pressure = self.findChild(QTabWidget, "tabWidget_acoustic_pressure")
-        self.tab_constant_values = self.tabWidget_acoustic_pressure.findChild(
-            QWidget, "tab_constant_values"
-        )
-        self.tab_table_values = self.tabWidget_acoustic_pressure.findChild(
-            QWidget, "tab_table_values"
-        )
+        self.tab_constant_values = self.tabWidget_acoustic_pressure.findChild(QWidget, "tab_constant_values")
+        self.tab_table_values = self.tabWidget_acoustic_pressure.findChild(QWidget, "tab_table_values")
         self.tab_remove = self.tabWidget_acoustic_pressure.findChild(QWidget, "tab_remove")
         self.current_tab = self.tabWidget_acoustic_pressure.currentIndex()
         # QTreeWidget objects
-        self.treeWidget_acoustic_pressure = self.findChild(
-            QTreeWidget, "treeWidget_acoustic_pressure"
-        )
+        self.treeWidget_acoustic_pressure = self.findChild(QTreeWidget, "treeWidget_acoustic_pressure")
         self.treeWidget_acoustic_pressure.setColumnWidth(1, 20)
         self.treeWidget_acoustic_pressure.setColumnWidth(2, 80)
 
@@ -221,8 +198,7 @@ class AcousticPressureInput(QDialog):
         for _id in self.typed_ids:
             self.properties._remove_surface_property("mass_flow_rate", _id)
             self.properties._remove_surface_property("volume_velocity", _id)
-            self.properties._remove_surface_property("particle_velocity", _id)
-            self.properties._remove_surface_property("specific_impedance", _id)
+            self.properties._remove_surface_property("surface_velocity", _id)
             self.properties._remove_surface_property("compressor_excitation", _id)
 
         acoustic_pressure = self.check_complex_entries(
@@ -355,8 +331,7 @@ class AcousticPressureInput(QDialog):
         for _id in self.typed_ids:
             self.properties._remove_surface_property("mass_flow_rate", _id)
             self.properties._remove_surface_property("volume_velocity", _id)
-            self.properties._remove_surface_property("particle_velocity", _id)
-            self.properties._remove_surface_property("specific_impedance", _id)
+            self.properties._remove_surface_property("surface_velocity", _id)
             self.properties._remove_surface_property("compressor_excitation", _id)
 
         list_table_names = self.get_list_table_names_from_selected_surfaces(self.typed_ids)

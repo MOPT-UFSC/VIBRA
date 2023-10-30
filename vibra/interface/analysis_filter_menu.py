@@ -1,6 +1,6 @@
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PyQt5.QtCore import Qt, QSize
+# from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QFrame, QLabel, QComboBox
 
 from vibra.utils.interface_functions import get_main_window
 
@@ -10,77 +10,48 @@ class AnalysisFilter(QWidget):
         super().__init__()
 
         self.main_window = get_main_window()
+        self.initialize()
 
-        self.frame = QFrame()
-        self.frame_main = QFrame()
-        self.frame_buttons = QFrame()
-
-        self.line = QFrame()
-        self.line.setLineWidth(2)
-        self.line.setFrameShape(QFrame.HLine)
-        self.line.setFrameShadow(QFrame.Sunken)
-
-        self.label_main = QLabel("Analysis type selector", self)
-        self.label_main.setMinimumSize(QSize(270, 30))
-        self.label_main.setMaximumSize(QSize(270, 30))
-        self.label_main.setStyleSheet("font: 50 bold 11pt")
-        self.label_main.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-
-        grid_main = QGridLayout()
-        grid_main.addWidget(self.label_main, 0, 0)
-        grid_main.addWidget(self.line, 1, 0)
+        grid_main = QHBoxLayout()
+        grid_main.addWidget(self.spacing_frame_left)
+        grid_main.addWidget(self.label_main)
+        grid_main.addWidget(self.comboBox_analysis_selector)
+        grid_main.addWidget(self.spacing_frame_right)
         grid_main.setContentsMargins(0, 0, 0, 0)
-        self.frame_main.setLayout(grid_main)
+        
+        self.setLayout(grid_main)
+        self.setFixedSize(QSize(280, 70))
 
-        self.radio_button_acoustic = QRadioButton("Acoustic", self)
-        self.radio_button_structural = QRadioButton("Structural", self)
-        self.radio_button_coupled = QRadioButton("Coupled", self)
+    def initialize(self):
+        """
+        """
+        # self.frame = QFrame()
+        # self.frame.setLineWidth(1)
+        # self.frame.setFrameShape(QFrame.Box)
         #
-        self.radio_button_acoustic.setStyleSheet("font: 10pt")
-        self.radio_button_structural.setStyleSheet("font: 10pt")
-        self.radio_button_coupled.setStyleSheet("font: 10pt")
-        self.radio_button_acoustic.setChecked(True)
+        self.spacing_frame_left = QFrame()
+        # self.spacing_frame_left.setLineWidth(1)
+        # self.spacing_frame_left.setFrameShape(QFrame.Box)
+        self.spacing_frame_right = QFrame()
+        # self.spacing_frame_right.setLineWidth(1)
+        # self.spacing_frame_right.setFrameShape(QFrame.Box)
+
+        self.label_main = QLabel("Analysis type:", self)
+        self.label_main.setMinimumSize(QSize(40, 30))
+        self.label_main.setMaximumSize(QSize(150, 30))
+        self.label_main.setStyleSheet("font: 11pt")
+        self.label_main.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        # self.label_main.setFrameShape(QFrame.Box)
+
+        self.comboBox_analysis_selector = QComboBox(self)
+        labels = [" Acoustic", " Structural", " Coupled"]
+        for label in labels:
+            self.comboBox_analysis_selector.addItem(label)
+
+        self.comboBox_analysis_selector.setFixedHeight(30)
+        self.comboBox_analysis_selector.setFixedWidth(110)
+        self.comboBox_analysis_selector.setStyleSheet("""   QComboBox{border-radius: 4px; border-style: ridge; border-width: 2px; font: 10pt "MS Shell Dlg 2"}
+                                                            QComboBox:hover{border-radius: 4px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; background-color: rgba(174, 213, 255, 100); font: 10pt "MS Shell Dlg 2"}
+                                                            QComboBox:disabled{border-radius: 4px; border-style: ridge; border-width: 2px; font: 10pt "MS Shell Dlg 2"}   """)
         #
-        self.radio_button_acoustic.setFixedHeight(30)
-        self.radio_button_structural.setFixedHeight(30)
-        self.radio_button_coupled.setFixedHeight(30)
-        #
-        self.radio_button_acoustic.clicked.connect(
-            self.main_window.menu_widget.filter_analysis_type
-        )
-        self.radio_button_structural.clicked.connect(
-            self.main_window.menu_widget.filter_analysis_type
-        )
-        self.radio_button_coupled.clicked.connect(self.main_window.menu_widget.filter_analysis_type)
-        #
-
-        group = QButtonGroup()
-        group.addButton(self.radio_button_acoustic)
-        group.addButton(self.radio_button_structural)
-        group.addButton(self.radio_button_coupled)
-
-        grid_buttons = QHBoxLayout()
-        grid_buttons.addWidget(self.radio_button_acoustic)
-        grid_buttons.addWidget(self.radio_button_structural)
-        grid_buttons.addWidget(self.radio_button_coupled)
-        grid_buttons.setContentsMargins(2, 0, 2, 0)
-        self.frame_buttons.setLayout(grid_buttons)
-
-        grid_layout = QGridLayout()
-        grid_layout.addWidget(self.frame_main, 0, 0)
-        grid_layout.addWidget(self.line, 1, 0)
-        grid_layout.addWidget(self.frame_buttons, 2, 0)
-        #
-        self.frame.setLayout(grid_layout)
-        self.frame.setContentsMargins(0, 0, 0, 0)
-        grid_layout.setContentsMargins(0, 0, 0, 0)
-        grid_layout.setVerticalSpacing(2)
-
-        grid_layout2 = QGridLayout()
-        grid_layout2.addWidget(self.frame, 0, 0)
-        grid_layout2.setVerticalSpacing(2)
-        self.setLayout(grid_layout2)
-        grid_layout2.setContentsMargins(4, 2, 4, 2)
-
-        self.setMinimumSize(QSize(280, 80))
-        self.setMaximumSize(QSize(280, 80))
+        self.comboBox_analysis_selector.currentIndexChanged.connect(self.main_window.menu_widget.filter_analysis_type)
