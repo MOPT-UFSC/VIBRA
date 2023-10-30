@@ -41,6 +41,8 @@ from vibra.interface.model_inputs.structural.boundary_condition_inputs import (
 from vibra.interface.model_inputs.structural.material_inputs import (
     MaterialInput,
 )
+
+from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_input import PlotAcousticFrequencyResponseInput
 from vibra.utils.interface_functions import get_main_window
 
 
@@ -521,7 +523,7 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_plotAcousticFrequencyResponse:
             if not self.item_child_plotAcousticFrequencyResponse.isDisabled():
-                pass
+                PlotAcousticFrequencyResponseInput()
 
         elif item == self.item_child_plotAcousticDeltaPressures:
             if not self.item_child_plotAcousticDeltaPressures.isDisabled():
