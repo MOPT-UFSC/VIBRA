@@ -12,7 +12,6 @@ priority = "default"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
-mkl = "2023.2.0"
 numpy = "^1.24.2"
 pyqt5 = "^5.15.9"
 pyqt5-qt5 = "5.15.2"
@@ -24,6 +23,8 @@ scipy = "^1.11.1"
 pandas = "^2.1.0"
 openpyxl = "^3.1.2"
 pypardiso = {git = "https://github.com/andrejstmh/PyPardisoProject"}
+mkl = "2023.2.0"
+intel-openmp = "2023.2.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"

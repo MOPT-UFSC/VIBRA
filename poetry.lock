@@ -350,13 +350,16 @@ reference = "pypi-public"
 
 [[package]]
 name = "intel-openmp"
-version = "2023.2.2"
-description = "Intel OpenMP* Runtime Library"
+version = "2023.2.0"
+description = "Intel® OpenMP* Runtime Library"
 optional = false
 python-versions = "*"
 files = [
-    {file = "intel_openmp-2023.2.2-py2.py3-none-win32.whl", hash = "sha256:68043e7a06f45199e5b3a417992b9107a6f84585f922e16df72c4a2a0c35ae8d"},
-    {file = "intel_openmp-2023.2.2-py2.py3-none-win_amd64.whl", hash = "sha256:bafc32250c7cb6bb2c04cc91e0ae9c3d48d91873f7bb01567a74f36005aa45be"},
+    {file = "intel_openmp-2023.2.0-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:b937d37b3ce736be29c9740ff7396a88ce09438b484a81b4542ea066eb3021dd"},
+    {file = "intel_openmp-2023.2.0-py2.py3-none-manylinux1_i686.whl", hash = "sha256:747e3b7789baf849896aa6ec42ecfdd2a05b37118bd970cb89e898b07fb84bf1"},
+    {file = "intel_openmp-2023.2.0-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:5a604c4c9413640074b22bd444dbf27979ebb9c4fd0344a81f003f392171e56e"},
+    {file = "intel_openmp-2023.2.0-py2.py3-none-win32.whl", hash = "sha256:9c429a3e371c50aa9ed4fda56e905fd49a29b706633149e39e9c414adf8a91f9"},
+    {file = "intel_openmp-2023.2.0-py2.py3-none-win_amd64.whl", hash = "sha256:49a85f4532041da84ceb0fb7a1c207614bf4d56def11ba2d456a9cd17943c15b"},
 ]
 
 [package.source]
@@ -1249,4 +1252,4 @@ reference = "pypi-public"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "224d40423aa01b2c410fe7ca563cba0c0a9db57bc1563ad59448fd9eb3473d47"
+content-hash = "443483c7bb077e2d761765a563a070beaf75af9a49a43460336fc59af7f69c74"
