@@ -89,6 +89,7 @@ class MainWindow(QMainWindow):
         grid_layout_left.addWidget(self.analysis_filter, 0, 0)
         grid_layout_left.addWidget(self.menu_widget, 1, 0)
         grid_layout_left.setContentsMargins(0, 0, 0, 0)
+        grid_layout_left.setVerticalSpacing(0)
 
         left_widget = QWidget()
         left_widget.setLayout(grid_layout_left)
