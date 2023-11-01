@@ -16,8 +16,7 @@ class PrintMessageInput(QDialog):
 
         self.frame_message = self.findChild(QFrame, "frame_message")
 
-        icons_path = "data/icons/"
-        path = str(Path(icons_path + "logo_vibra.png"))
+        path = str(Path("data/icons/logo_vibra.png"))
         self.icon = QIcon(path)
         self.setWindowIcon(self.icon)
 

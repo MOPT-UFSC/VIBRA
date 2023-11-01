@@ -214,20 +214,20 @@
           <widget class="QLineEdit" name="lineEdit_selection_id">
            <property name="minimumSize">
             <size>
-             <width>170</width>
+             <width>120</width>
              <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>170</width>
+             <width>120</width>
              <height>30</height>
             </size>
            </property>
            <property name="font">
             <font>
              <family>MS Shell Dlg 2</family>
-             <pointsize>11</pointsize>
+             <pointsize>10</pointsize>
              <weight>50</weight>
              <italic>false</italic>
              <bold>false</bold>
@@ -237,7 +237,8 @@
             <enum>Qt::ClickFocus</enum>
            </property>
            <property name="styleSheet">
-            <string notr="true">color: rgb(0, 0, 255);</string>
+            <string notr="true">color: rgb(0, 0, 255);
+background-color: rgb(255, 255, 255);</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -497,13 +498,13 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
                <property name="minimumSize">
                 <size>
                  <width>80</width>
-                 <height>26</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>80</width>
-                 <height>26</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="font">
@@ -516,7 +517,8 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
                 </font>
                </property>
                <property name="styleSheet">
-                <string notr="true"/>
+                <string notr="true">color: rgb(0, 0, 255);
+background-color: rgb(255, 255, 255);</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -528,13 +530,13 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
                <property name="minimumSize">
                 <size>
                  <width>60</width>
-                 <height>26</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>60</width>
-                 <height>26</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="font">
@@ -559,13 +561,13 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
                <property name="minimumSize">
                 <size>
                  <width>120</width>
-                 <height>26</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>120</width>
-                 <height>26</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="font">
@@ -652,13 +654,13 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
                <property name="minimumSize">
                 <size>
                  <width>80</width>
-                 <height>26</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>80</width>
-                 <height>26</height>
+                 <height>30</height>
                 </size>
                </property>
                <property name="font">
@@ -671,7 +673,8 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
                 </font>
                </property>
                <property name="styleSheet">
-                <string notr="true"/>
+                <string notr="true">color: rgb(0, 0, 255);
+background-color: rgb(255, 255, 255);</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -999,6 +1002,10 @@ QPushButton:pressed{border-radius: 4px; border-color: rgb(0, 170, 255); border-s
                  <weight>50</weight>
                  <bold>false</bold>
                 </font>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">color: rgb(0, 0, 255);
+background-color: rgb(255, 255, 255);</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>

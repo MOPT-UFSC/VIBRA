@@ -85,6 +85,18 @@ class ModelProperties:
     def set_dissipation_model(self, data, volume=None):
         self._set_property("dissipation_model", data)
 
+    def get_fluid_density(self, element=None):
+        #
+        fluid = self.get_fluid(element=element)
+        rho_0 = fluid.fluid_density
+        #
+        dissipation_model = self.get_dissipation_model(element=element)
+        if dissipation_model is None:
+            return rho_0
+        elif dissipation_model["model"] == "proportional damping":
+            factor = dissipation_model["fluid density factor"]
+            return (1 + factor * 1j) * rho_0
+
     def get_speed_of_sound(self, element=None):
         #
         fluid = self.get_fluid(element=element)
@@ -124,8 +136,8 @@ class ModelProperties:
     def get_volume_velocity(self, surface):
         return self._get_property("volume_velocity", surface=surface)
 
-    def get_particle_velocity(self, surface):
-        return self._get_property("particle_velocity", surface=surface)
+    def get_surface_velocity(self, surface):
+        return self._get_property("surface_velocity", surface=surface)
 
     def get_specific_impedance(self, surface):
         return self._get_property("specific_impedance", surface=surface)
@@ -139,8 +151,8 @@ class ModelProperties:
     def set_volume_velocity(self, data, surface):
         self._set_property("volume_velocity", data, surface=surface)
 
-    def set_particle_velocity(self, data, surface):
-        self._set_property("particle_velocity", data, surface=surface)
+    def set_surface_velocity(self, data, surface):
+        self._set_property("surface_velocity", data, surface=surface)
 
     def set_specific_impedance(self, data, surface):
         self._set_property("specific_impedance", data, surface=surface)

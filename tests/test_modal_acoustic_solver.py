@@ -17,10 +17,35 @@ def test_modal_acoustic():
     model.process_mesh()
 
     modal_assembler = AcousticAssembler(model)
-    modal_assembler.assemble_global_matrices()
+    modal_assembler.process_assemble()
 
     modal_solver = AcousticModalSolver(modal_assembler)
     modal_solver.solve()
 
     # Não sei o que seria legal de verificar aqui
     assert True
+
+
+def process_external_model():
+    
+    coord_path = "data/examples/mesh/muffler/coord_muff.csv"
+    connect_path = "data/examples/mesh/muffler/connect_muff.csv"
+    
+    mesh = Mesh()
+    mesh.import_external_nodal_coordinates(coord_path)
+    mesh.import_external_connectivity(connect_path)
+
+    model = Model()
+    model.generated_mesh = True
+
+    modal_assembler = AcousticAssembler(model)
+    modal_assembler.process_assemble()
+
+    modal_solver = AcousticModalSolver(modal_assembler)
+    natural_frequencies, modal_shape = modal_solver.solve()
+
+    print(natural_frequencies)
+
+
+if __name__ == "__main__":
+    process_external_model()

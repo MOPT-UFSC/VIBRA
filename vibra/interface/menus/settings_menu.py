@@ -25,9 +25,7 @@ class VisibilitySettingsMenu(QMenu):
         self.theme_sun_icon = load_icon(Path("data/icons/sun_icon.png"), color)
         self.theme_moon_icon = load_icon(Path("data/icons/moon_icon.png"), color)
         #
-        self.show_or_hide_menu_items_action = QAction(
-            self.new_project_icon, "Hide menu items", self
-        )
+        self.show_or_hide_menu_items_action = QAction(self.new_project_icon, "Hide menu items", self)
         self.theme_action = QAction(self.theme_sun_icon, "Theme", self)
         #
         self.show_or_hide_menu_items_action.triggered.connect(self.call_show_or_hide_menu_items)

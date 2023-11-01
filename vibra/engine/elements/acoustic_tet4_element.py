@@ -1,16 +1,17 @@
 import numpy as np
 
-from vibra.engine.elements.element import Element
+from vibra.engine.elements.solid_elements import Element3D
 
 
 def shape4TC(ssx, ttx, rrx):
     """This function returns the shape functions and its derivatives."""
     # shape functions
-    phi = np.array([1 - ssx - ttx - rrx, ttx, rrx, ssx], dtype=float)
+    phi = np.array([1 - ssx - ttx - rrx, ttx, rrx, ssx], dtype=float).T
     # derivatives
-    dphi = np.array([[-1, 0, 0, 1], [-1, 1, 0, 0], [-1, 0, 1, 0]], dtype=float)
+    dphi = np.array([[-1, 0, 0, 1], 
+                     [-1, 1, 0, 0], 
+                     [-1, 0, 1, 0]], dtype=float)
     return phi, dphi
-
 
 def get_detJAC_and_invJAC(JAC):
     """ """
@@ -27,27 +28,26 @@ def get_detJAC_and_invJAC(JAC):
 
     # adj(JAC)
     AUJJ = np.zeros((3, 3), dtype=float)
-    AUJJ[0, 0] = 1 * ((JAC[1, 1] * JAC[2, 2]) - (JAC[2, 1] * JAC[1, 2]))
-    AUJJ[1, 0] = -1 * ((JAC[1, 0] * JAC[2, 2]) - (JAC[1, 2] * JAC[2, 0]))
-    AUJJ[2, 0] = 1 * ((JAC[1, 0] * JAC[2, 1]) - (JAC[1, 1] * JAC[2, 0]))
-    AUJJ[0, 1] = -1 * ((JAC[0, 1] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 1]))
-    AUJJ[1, 1] = 1 * ((JAC[0, 0] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 0]))
-    AUJJ[2, 1] = -1 * ((JAC[0, 0] * JAC[2, 1]) - (JAC[0, 1] * JAC[2, 0]))
-    AUJJ[0, 2] = 1 * ((JAC[0, 1] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 1]))
-    AUJJ[1, 2] = -1 * ((JAC[0, 0] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 0]))
-    AUJJ[2, 2] = 1 * ((JAC[0, 0] * JAC[1, 1]) - (JAC[0, 1] * JAC[1, 0]))
+    AUJJ[0, 0] =  ((JAC[1, 1] * JAC[2, 2]) - (JAC[2, 1] * JAC[1, 2]))
+    AUJJ[1, 0] = -((JAC[1, 0] * JAC[2, 2]) - (JAC[1, 2] * JAC[2, 0]))
+    AUJJ[2, 0] =  ((JAC[1, 0] * JAC[2, 1]) - (JAC[1, 1] * JAC[2, 0]))
+    AUJJ[0, 1] = -((JAC[0, 1] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 1]))
+    AUJJ[1, 1] =  ((JAC[0, 0] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 0]))
+    AUJJ[2, 1] = -((JAC[0, 0] * JAC[2, 1]) - (JAC[0, 1] * JAC[2, 0]))
+    AUJJ[0, 2] =  ((JAC[0, 1] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 1]))
+    AUJJ[1, 2] = -((JAC[0, 0] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 0]))
+    AUJJ[2, 2] =  ((JAC[0, 0] * JAC[1, 1]) - (JAC[0, 1] * JAC[1, 0]))
 
     return detJAC, (1 / detJAC) * AUJJ
 
 
-class ACT_TETRAHEDRON_4C(Element):
+class ACT_TETRAHEDRON_4C(Element3D):
     #
-    NODES_PER_ELEMENT = 4
     DOF_PER_NODE = 1
+    NODES_PER_ELEMENT = 4
     DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
 
     def __init__(self, model):
-        #
         self.model = model
         self.initialize_variables()
         self.define_integration_points()
@@ -58,21 +58,22 @@ class ACT_TETRAHEDRON_4C(Element):
         self.element_label = "acoustic_tetrahedron_4"
         self.nodal_coordinates = self.model.mesh.nodal_coordinates
         self.connectivity = self.model.mesh.solids_connectivity
+        self.faces_connectivity = self.model.mesh.faces_connectivity
         #
         self.number_of_nodes = len(self.nodal_coordinates)
         self.number_of_elements = len(self.connectivity)
 
     def define_integration_points(self):
         """ """
-        # integration points
         self.nint = 4
-        con1 = (5 - np.sqrt(5)) / 20
-        con2 = (5 + 3 * np.sqrt(5)) / 20
-        self.wps = 1 / 4
+        con1 = (5 - np.sqrt(5))/20
+        con2 = (5 + 3 * np.sqrt(5))/20
+        self.wps = 1/4
 
-        self.pint = np.array(
-            [[con1, con1, con1], [con1, con1, con2], [con1, con2, con1], [con2, con1, con1]]
-        )
+        self.pint = np.array([[con1, con1, con1], 
+                              [con1, con1, con2], 
+                              [con1, con2, con1], 
+                              [con2, con1, con1]])
 
     def process_shape_functions_and_derivatives(self):
         """
@@ -122,10 +123,14 @@ class ACT_TETRAHEDRON_4C(Element):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
         self.connectivity = self.connectivity[:, [0, 6, 4, 5, 7]]
 
-    def generate_ind_rows_cols(self):
-        """This method processess the dofs indices (rows and columns) for assembly"""
+    def generate_ind_rows_cols(self, reorder=True):
+        """ This method processess the dofs indices (rows and columns) for assembly"""
 
-        self.reorder_connect()
+        if reorder:
+            self.reorder_connect()
+        else:
+            self.connectivity = self.connectivity[:, [0, 4, 5, 6, 7]]
+
         dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
         ind_dofs = dofs * self.connectivity[:, 1:]
 
@@ -134,3 +139,11 @@ class ACT_TETRAHEDRON_4C(Element):
         self.ind_cols = (np.tile(ind_dofs, edofs)).flatten()
 
         return self.ind_rows, self.ind_cols
+    
+    def get_fluid_properties(self, el_index):
+        """ This method returns the fluid properties """
+        c_0 = self.model.properties.get_speed_of_sound(element = el_index)
+        rho_0 = self.model.properties.get_fluid_density(element = el_index)
+        fluid = self.model.properties.get_fluid(element = el_index)
+        dinamic_viscosity = fluid.dynamic_viscosity
+        return rho_0, c_0, dinamic_viscosity

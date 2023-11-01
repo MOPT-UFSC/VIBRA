@@ -109,8 +109,8 @@ class Project:
     def set_volume_velocity(self, data, surface):
         self.model.set_volume_velocity(data, surface)
 
-    def set_particle_velocity(self, data, surface):
-        self.model.set_particle_velocity(data, surface)
+    def set_surface_velocity(self, data, surface):
+        self.model.set_surface_velocity(data, surface)
 
     def set_specific_impedance(self, data, surface):
         self.model.set_specific_impedance(data, surface)
@@ -159,21 +159,18 @@ class Project:
             # structural modal analysis
             elif data["analysis_id"] == 2:
                 self.set_structural_element_to_model()
-                self.structural_modal_solver = StructuralModalSolver(
-                    self.structural_assembler, analysis_data=data
-                )
+                self.structural_modal_solver = StructuralModalSolver(self.structural_assembler, analysis_data=data)
+           
             # acoustic harmonic analysis
             elif data["analysis_id"] == 3:
                 self.set_acoustic_element_to_model()
-                self.acoustic_harmonic_solver = AcousticHarmonicSolver(
-                    self.acoustic_assembler, analysis_data=data
-                )
+                self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_assembler, analysis_data=data)
+            
             # acoustic modal analysis
             elif data["analysis_id"] == 4:
                 self.set_acoustic_element_to_model()
-                self.acoustic_modal_solver = AcousticModalSolver(
-                    self.acoustic_assembler, analysis_data=data
-                )
+                self.acoustic_modal_solver = AcousticModalSolver(self.acoustic_assembler, analysis_data=data)
+            
             # couled harmonic analysis (direct method)
             elif data["analysis_id"] == 5:
                 print("Coupled harmonic analysis (direct method) not implemented")
@@ -197,15 +194,15 @@ class Project:
         self.structural_assembler.set_element_formulation(element)
 
     def solve_acoustic_modal_analysis(self):
-        self.acoustic_assembler.assemble_global_matrices()
+        self.acoustic_assembler.process_assemble()
         self.acoustic_modal_solver.solve()
 
     def solve_structural_modal_analysis(self):
-        self.structural_assembler.assemble_global_matrices()
+        self.structural_assembler.process_assemble()
         self.structural_modal_solver.solve()
 
     def solve_acoustic_harmonic_analysis(self):
-        self.acoustic_assembler.assemble_global_matrices()
+        self.acoustic_assembler.process_assemble()
         self.acoustic_harmonic_solver.solve()
 
     def long_function(self):

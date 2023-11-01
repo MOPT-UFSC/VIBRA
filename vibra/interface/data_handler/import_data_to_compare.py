@@ -16,9 +16,6 @@ def get_icons_path(filename):
     if os.path.exists(path):
         return str(Path(path))
 
-window_title1 = "ERROR MESSAGE"
-window_title2 = "WARNING MESSAGE"
-
 class ImportDataToCompare(QDialog):
     def __init__(self, plotter, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -26,8 +23,9 @@ class ImportDataToCompare(QDialog):
         uic.loadUi(Path('data/ui_files/data_handler/import_data_to_compare.ui'), self)
         
         self.plotter = plotter
-        
+
         self._load_icons()
+        self._config_window()
         self._reset_variables()
         self._define_and_configure_Qt_variables()
         self._create_connections()
@@ -36,6 +34,8 @@ class ImportDataToCompare(QDialog):
     def _load_icons(self):
         self.import_icon = QIcon(get_icons_path('import.png'))
         self.vibra_icon = QIcon(get_icons_path('logo_vibra.png'))
+        
+    def _config_window(self):    
         self.setWindowIcon(self.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
@@ -79,7 +79,7 @@ class ImportDataToCompare(QDialog):
         for i, width in enumerate(widths_1):
             self.treeWidget_import_text_files.setColumnWidth(i, width)
 
-        widths_2 = [180, 150, 60]
+        widths_2 = [180, 180, 60]
         for i, width in enumerate(widths_2):
             self.treeWidget_import_sheet_files.setColumnWidth(i, width)
 
@@ -109,8 +109,12 @@ class ImportDataToCompare(QDialog):
                 self.update_treeWidget_info()
 
     def import_results(self):
+        
         try:
+
+            window_title = "ERROR MESSAGE"
             message = ""
+
             run = True
             if self.checkBox_skiprows.isChecked():
                 skiprows = self.spinBox_skiprows.value()
@@ -135,10 +139,18 @@ class ImportDataToCompare(QDialog):
                         wb = openpyxl.load_workbook(self.imported_path)
                         sheetnames = wb.sheetnames
                         for sheetname in sheetnames:
-                            sheet_data = pd.read_excel(self.imported_path, 
-                                                       sheet_name = sheetname, 
-                                                       header = skiprows, 
-                                                       usecols = [0,1,2]).to_numpy()
+
+                            try:
+                                sheet_data = pd.read_excel(self.imported_path, 
+                                                        sheet_name = sheetname, 
+                                                        header = skiprows, 
+                                                        usecols = [0,1,2]).to_numpy()
+                            except:
+                                sheet_data = pd.read_excel(self.imported_path, 
+                                                        sheet_name = sheetname, 
+                                                        header = skiprows, 
+                                                        usecols = [0,1]).to_numpy()
+
                             key = self.get_data_index()
                             self.imported_results[key] = {  "data" : sheet_data,
                                                             "filename" : filename,
@@ -163,7 +175,7 @@ class ImportDataToCompare(QDialog):
             return
         
         if message != "":
-            PrintMessageInput([title, message, window_title1])
+            PrintMessageInput([title, message, window_title])
 
     def update_treeWidget_info(self):
         self.cache_checkButtons_state()
@@ -195,7 +207,7 @@ class ImportDataToCompare(QDialog):
         index = 1
         run = True
         while run:
-            if index in self.plotter.data_to_plot.keys():
+            if index in self.plotter.data_to_plot.keys() or index in self.imported_results.keys():
                 index += 1
             else:
                 key = index
@@ -216,8 +228,12 @@ class ImportDataToCompare(QDialog):
                     color = np.random.randint(0,255,3)/255
 
                 data = self.imported_results[id]["data"]
+                cols = data.shape[1]
                 x_values = data[:, 0]
-                y_values = data[:, 1] + 1j*data[:, 2]
+                if cols == 2:
+                    y_values = data[:, 1]
+                else:
+                    y_values = data[:, 1] + 1j*data[:, 2]
 
                 if "sheetname" in self.imported_results[id].keys():
                     sheetname = self.imported_results[id]["sheetname"]
@@ -255,6 +271,6 @@ class ImportDataToCompare(QDialog):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.check_inputs_and_plot()
+            self.add_imported_data_to_plot()
         elif event.key() == Qt.Key_Escape:
             self.close()
