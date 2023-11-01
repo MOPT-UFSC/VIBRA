@@ -105,6 +105,7 @@ class ViewerTabs(QTabWidget):
         if self.acoustic_harmonic_analysis not in self.tabs():
             self.addTab(self.acoustic_harmonic_analysis, "Acoustic Harmonic Analysis")
 
+        self.acoustic_harmonic_analysis.update_frequencies()
         self.acoustic_harmonic_analysis.update_plot()
         self.setCurrentWidget(self.acoustic_harmonic_analysis)
 
