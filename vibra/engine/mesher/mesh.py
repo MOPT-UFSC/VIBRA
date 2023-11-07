@@ -11,9 +11,6 @@ from vibra.engine.mesher.element_type import *
 from vibra.engine.mesher.geometry_setup import GeometrySetup
 from vibra.utils.progress_status import ProgressStatus
 
-# FieldsList=[]
-
-
 class Mesh:
     def __init__(self):
         self.geometry_setup = None
@@ -47,6 +44,7 @@ class Mesh:
         dimension: int = 3,
         threads: int = 1,
         gmsh_gui: bool = False,
+        mesh_refinement_parameters = None
     ):
         """
         Custom constructor so you can create a mesh with this sintax:
@@ -71,6 +69,7 @@ class Mesh:
             dimension=dimension,
             threads=threads,
             gmsh_gui=gmsh_gui,
+            mesh_refinement_parameters = mesh_refinement_parameters
         )
 
         # saves the data to edit mesh parameters later
@@ -117,6 +116,7 @@ class Mesh:
         dimension: int = 3,
         threads: int = 2,
         gmsh_gui: bool = False,
+        mesh_refinement_parameters = None
     ):
         self.mesh_setup = dict(
             minimum_element_size=minimum_element_size,
@@ -126,6 +126,7 @@ class Mesh:
             size_factor=size_factor,
             dimension=dimension,
             threads=threads,
+            mesh_refinement_parameters = mesh_refinement_parameters
         )
 
         path = Path(path)
@@ -140,6 +141,7 @@ class Mesh:
             geometry_tolerance,
             size_factor,
             threads,
+            mesh_refinement_parameters
         )
 
         logging.info("Loading Geometry" + ProgressStatus(10, 100))
@@ -214,6 +216,7 @@ class Mesh:
         gmsh.model.mesh.field.setNumbers(1, "SurfacesList", [])
         gmsh.model.mesh.field.setNumber(1, "VOut", lc_geral)
         fields_list.append(1)
+        print(mesh_refinement_parameters)
 
         for size, faces in mesh_refinement_parameters:
             threshold_type = gmsh.model.mesh.field.add("Constant")

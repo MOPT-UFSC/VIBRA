@@ -97,7 +97,6 @@ class LocalRefineWidget(QDialog):
         # layout
         layout_main = QVBoxLayout()
         layout_main.addLayout(self.layout_mesh_parameters)
-        layout_main.addLayout(self.layout_mesh_parameters)
         layout_main.addLayout(layout_refining_parameters)
         layout_main.addWidget(self.table)
         layout_main.addWidget(self.apply_button)
@@ -144,12 +143,12 @@ class LocalRefineWidget(QDialog):
         global_mesh_size = int(self.global_mesh_size_textbox.text())
         faces_list = self.faces_list_textbox.text()
         refined_size = self.refining_size_textbox.text()
-        if refined_size != "":
-            refined_size.split(",")
-            refined_size = [int(i) for i in refined_size]
-        if faces_list != "":
-            faces_list.split(",")
-            faces_list = [int(i) for i in faces_list]
+        # if refined_size != "":
+        #     refined_size.split(",")
+        #     refined_size = [int(i) for i in refined_size]
+        # if faces_list != "":
+        #     faces_list.split(",")
+        #     faces_list = [int(i) for i in faces_list]
 
         if element_shape == "tetrahedral" and shape_function == "linear":
             self.element_type = TETRAHEDRON_4
@@ -165,9 +164,10 @@ class LocalRefineWidget(QDialog):
         self.mesh_setup = {
             "element_type": self.element_type,
             "geometry_tolerance": 1e-6, # for now, implementing another textbox for this is needed (is it?)
-            "size_factor": 1,
+            "size_factor": 0,
             "minimum_element_size": global_mesh_size,
             "maximum_element_size": global_mesh_size,
+            "mesh_refinement_parameters": self.get_inputs_table()
         }
         
         main_window = get_main_window()
