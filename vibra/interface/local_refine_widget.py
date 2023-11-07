@@ -26,7 +26,6 @@ class LocalRefineWidget(QDialog):
 
         self.layout_mesh_parameters = QGridLayout()
         
-        
         # global mesh size
         self.global_mesh_size_textbox_label = QLabel(self)
         self.global_mesh_size_textbox_label.setText("Global mesh size:")
@@ -123,7 +122,8 @@ class LocalRefineWidget(QDialog):
         self.exec_()
 
     def apply_button_callback(self):
-        self.check_inputs()
+        self.get_inputs_table()
+        # self.check_inputs()
 
     def trash_button_callback(self):
         current_row = self.table.currentRow()
@@ -135,6 +135,19 @@ class LocalRefineWidget(QDialog):
         self.table.setRowCount(a+1) 
         self.table.setItem(a, 0, QTableWidgetItem(self.refining_size_textbox.text()))
         self.table.setItem(a, 1, QTableWidgetItem(self.faces_list_textbox.text()))
+    
+    def  get_inputs_table(self):
+        faces_and_refined_size_list = []
+        
+        for i in range(self.table.rowCount()):
+            mesh_text = float(self.table.item(i,0).text())
+            faces_text = self.table.item(i,1).text()
+            faces_text = [int(i) for i in faces_text.split(",")]
+            faces_and_refined_size_list.append((mesh_text,faces_text))
+        print(faces_and_refined_size_list)
+
+        
+        
         
     def check_inputs(self):
         element_shape = self.element_type_list.currentText().lower()
