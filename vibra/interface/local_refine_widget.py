@@ -84,7 +84,19 @@ class LocalRefineWidget(QDialog):
         self.table = QTableWidget()
         self.table.setColumnCount(len(header))
         self.table.setHorizontalHeaderLabels(header)
+        self.table.setSelectionBehavior(1)
         self.table.resizeColumnsToContents()
+        self.table.horizontalHeader().setSectionResizeMode(0)
+        self.table.horizontalHeader().setStretchLastSection(True)
+
+
+        # self.table.setRowCount(10) # o tamanho aqui deve atualizar conforme o botao "add" for apertado
+        # self.table.setItem(1, 1, QTableWidgetItem("asdadadasdasd"))
+
+
+
+    
+        
         
         # apply_button
         self.apply_button = QPushButton("Apply")
@@ -102,10 +114,23 @@ class LocalRefineWidget(QDialog):
         self.setWindowTitle("Mesh setup")
         self.resize(500,500)
 
+        self.add_button.clicked.connect(self.add_button_callback)
+        self.trash_button.clicked.connect(self.trash_button_callback)
         # self.apply_button.clicked.connect(self.apply_button_callback)
 
         self.exec_()
 
     def apply_button_callback(self):
         self.banana.setText("Changes applied")
+
+    def trash_button_callback(self):
+        current_row = self.table.currentRow()
+        self.table.removeRow(current_row)
+
+
+    def add_button_callback(self):
+        self.table.setRowCount(3) # o tamanho aqui deve atualizar conforme o botao "add" for apertado
+        self.table.setItem(0, 0, QTableWidgetItem(self.refining_size_textbox.text()))
+        self.table.setItem(0, 1, QTableWidgetItem(self.faces_list_textbox.text()))
+        
     
