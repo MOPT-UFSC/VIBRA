@@ -15,6 +15,8 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QComboBox,
 )
+from vibra.engine.mesher.element_type import *
+from vibra.utils.interface_functions import get_main_window
 
 
 
@@ -116,12 +118,12 @@ class LocalRefineWidget(QDialog):
 
         self.add_button.clicked.connect(self.add_button_callback)
         self.trash_button.clicked.connect(self.trash_button_callback)
-        # self.apply_button.clicked.connect(self.apply_button_callback)
+        self.apply_button.clicked.connect(self.apply_button_callback)
 
         self.exec_()
 
     def apply_button_callback(self):
-        self.banana.setText("Changes applied")
+        self.check_inputs()
 
     def trash_button_callback(self):
         current_row = self.table.currentRow()
@@ -132,5 +134,47 @@ class LocalRefineWidget(QDialog):
         self.table.setRowCount(3) # o tamanho aqui deve atualizar conforme o botao "add" for apertado
         self.table.setItem(0, 0, QTableWidgetItem(self.refining_size_textbox.text()))
         self.table.setItem(0, 1, QTableWidgetItem(self.faces_list_textbox.text()))
+
+    def check_inputs(self):
+        element_shape = self.element_type_list.currentText().lower()
+        shape_function = self.shape_function_list.currentText().lower()
+        global_mesh_size = int(self.global_mesh_size_textbox.text())
+        faces_list = self.faces_list_textbox.text()
+        refined_size = self.refining_size_textbox.text()
+        if refined_size != "":
+            refined_size.split(",")
+            refined_size = [int(i) for i in refined_size]
+        if faces_list != "":
+            faces_list.split(",")
+            faces_list = [int(i) for i in faces_list]
+
+        if element_shape == "tetrahedral" and shape_function == "linear":
+            self.element_type = TETRAHEDRON_4
+        elif element_shape == "tetrahedral" and shape_function == "quadratic":
+            self.element_type = TETRAHEDRON_10
+        elif element_shape == "hexahedral" and shape_function == "linear":
+            self.element_type = HEXAHEDRON_8
+        elif element_shape == "hexahedral" and shape_function == "quadratic":
+            self.element_type = HEXAHEDRON_20
+        else:
+            raise NotImplementedError(f"Element type not defined!")
+
+        self.mesh_setup = {
+            "element_type": self.element_type,
+            "geometry_tolerance": 1e-6, # for now, implementing another textbox for this is needed (is it?)
+            "size_factor": 1,
+            "minimum_element_size": global_mesh_size,
+            "maximum_element_size": global_mesh_size,
+        }
+        
+        main_window = get_main_window()
+        main_window.project.set_mesh_setup(self.mesh_setup)
+        main_window.project.generate_mesh()
+        main_window.viewer_tabs.show_mesh()
+        main_window.viewer_tabs.update_plots()
+
+
+
+
         
     
