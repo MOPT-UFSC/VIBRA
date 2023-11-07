@@ -129,8 +129,9 @@ class LocalRefineWidget(QDialog):
 
 
     def add_button_callback(self):
-        self.table.setRowCount(3) # o tamanho aqui deve atualizar conforme o botao "add" for apertado
-        self.table.setItem(0, 0, QTableWidgetItem(self.refining_size_textbox.text()))
-        self.table.setItem(0, 1, QTableWidgetItem(self.faces_list_textbox.text()))
+        a= self.table.rowCount()
+        self.table.setRowCount(a+1) 
+        self.table.setItem(a, 0, QTableWidgetItem(self.refining_size_textbox.text()))
+        self.table.setItem(a, 1, QTableWidgetItem(self.faces_list_textbox.text()))
         
     
