@@ -90,15 +90,6 @@ class LocalRefineWidget(QDialog):
         self.table.horizontalHeader().setSectionResizeMode(0)
         self.table.horizontalHeader().setStretchLastSection(True)
 
-
-        # self.table.setRowCount(10) # o tamanho aqui deve atualizar conforme o botao "add" for apertado
-        # self.table.setItem(1, 1, QTableWidgetItem("asdadadasdasd"))
-
-
-
-    
-        
-        
         # apply_button
         self.apply_button = QPushButton("Apply")
 
@@ -123,7 +114,7 @@ class LocalRefineWidget(QDialog):
 
     def apply_button_callback(self):
         self.get_inputs_table()
-        # self.check_inputs()
+        self.check_inputs()
 
     def trash_button_callback(self):
         current_row = self.table.currentRow()
@@ -144,10 +135,8 @@ class LocalRefineWidget(QDialog):
             faces_text = self.table.item(i,1).text()
             faces_text = [int(i) for i in faces_text.split(",")]
             faces_and_refined_size_list.append((mesh_text,faces_text))
-        print(faces_and_refined_size_list)
-
         
-        
+        return faces_and_refined_size_list
         
     def check_inputs(self):
         element_shape = self.element_type_list.currentText().lower()
