@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from time import time
 
-def load_external_mesh_and_solve(reorder_nodes=False):
+def test_load_external_mesh_and_solve(reorder_nodes=False):
    
     # Define nodal coordinates, connectivity and results path to compare
     coord_path = "data/examples/mesh/muffler/coord_muff.csv"
@@ -254,5 +254,5 @@ def save_results(data):
     pass
 
 if __name__ == "__main__":
-    load_external_mesh_and_solve(reorder_nodes=False)
+    test_load_external_mesh_and_solve(reorder_nodes=False)
     # plot_results()
