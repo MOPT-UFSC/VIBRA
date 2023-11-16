@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from time import time
 
-def test_load_external_mesh_and_solve(reorder_nodes=False):
+def test_load_external_mesh_and_solve(reorder_nodes=True):
    
     # Define nodal coordinates, connectivity and results path to compare
     coord_path = "data/examples/mesh/muffler/coord_muff.csv"
@@ -29,7 +29,7 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
     # Define fluid properties
     rho = 1.18
     Co = 343.0
-    dynamic_viscosity = 0*1.846e-05
+    dynamic_viscosity = 1*1.8e-05
     #
     fluid = Fluid(  name = "Air", 
                     identifier = 1, 
@@ -104,25 +104,25 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
         filename = f"acoustic_pressure_at_node_{node}_Vibra_pardiso.dat"
         np.savetxt(filename, results, delimiter=",")
 
-        results_path = "data/examples/mesh/muffler/3pode2.csv"
+        results_path = "data/examples/mesh/muffler/external_results.csv"
 
         data_ref = np.loadtxt(results_path, delimiter=",")
         freq_ref = data_ref[:, 0]
         P_ref = data_ref[:, 1] + 1j*data_ref[:, 2]
 
-        fig, ax1 = plt.subplots()
+        fig1, ax1 = plt.subplots()
         ax1.semilogy(frequencies, np.abs(solution[node, :]), 'r', label='VIBRA')
         ax1.semilogy(freq_ref, np.abs(P_ref), 'k--', label='ANSYS')
         ax1.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Absolute', title='Harmonic Response - Outlet pressure')
         ax1.grid()
 
-        fig, ax2 = plt.subplots()
+        fig2, ax2 = plt.subplots()
         ax2.plot(frequencies, np.real(solution[node, :]), 'r', label='VIBRA')
         ax2.plot(freq_ref, np.real(P_ref), 'k--', label='ANSYS')
         ax2.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Real', title='Harmonic Response - Outlet pressure')
         ax2.grid()
 
-        fig, ax3 = plt.subplots()
+        fig3, ax3 = plt.subplots()
         ax3.plot(frequencies, np.imag(solution[node, :]), 'r', label='VIBRA')
         ax3.plot(freq_ref, np.imag(P_ref), 'k--', label='ANSYS')
         ax3.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Imaginary', title='Harmonic Response - Outlet pressure')
