@@ -213,6 +213,7 @@ class MenuItems(QTreeWidget):
         self.item_child_set_specific_impedance = QTreeWidgetItem(["Set Specific Impedance"])
         self.item_child_set_radiation_impedance = QTreeWidgetItem(["Set Radiation Impedance"])
         self.item_child_add_compressor_excitation = QTreeWidgetItem(["Add Compressor Excitation"])
+        self.item_child_set_lrf_model = QTreeWidgetItem(["Set Low Reduced Frequency Model"])
         #
         self.list_top_items.append(self.item_top_acoustic_model_setup)
         self.list_child_items.append(self.item_child_set_acoustic_pressure)
@@ -223,6 +224,7 @@ class MenuItems(QTreeWidget):
         self.list_child_items.append(self.item_child_set_specific_impedance)
         self.list_child_items.append(self.item_child_set_radiation_impedance)
         self.list_child_items.append(self.item_child_add_compressor_excitation)
+        self.list_child_items.append(self.item_child_set_lrf_model)
         #
         self.item_top_analysis = QTreeWidgetItem(["Analysis"])
         self.item_child_selectAnalysisType = QTreeWidgetItem(["Select Analysis Type"])
@@ -283,11 +285,12 @@ class MenuItems(QTreeWidget):
 
         self.addTopLevelItem(self.item_top_acoustic_model_setup)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_acoustic_pressure)
-        self.item_top_acoustic_model_setup.addChild(self.item_child_set_dissipation_model)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_mass_flow_rate)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_volume_velocity)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_surface_velocity)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_specific_impedance)
+        self.item_top_acoustic_model_setup.addChild(self.item_child_set_dissipation_model)
+        self.item_top_acoustic_model_setup.addChild(self.item_child_set_lrf_model)
         # self.item_top_acoustic_model_setup.addChild(self.item_child_set_radiation_impedance)
         # self.item_top_acoustic_model_setup.addChild(self.item_child_add_compressor_excitation)
 
@@ -419,6 +422,11 @@ class MenuItems(QTreeWidget):
         elif item == self.item_child_set_dissipation_model:
             if not self.item_child_set_dissipation_model.isDisabled():
                 self.obj = DissipationModelInput()
+
+        elif item == self.item_child_set_lrf_model:
+            if not self.item_child_set_lrf_model.isDisabled():
+                print("Entrei LRF")
+                # self.obj = LRFModelInput()
 
         elif item == self.item_child_set_volume_velocity:
             if not self.item_child_set_volume_velocity.isDisabled():
@@ -590,6 +598,7 @@ class MenuItems(QTreeWidget):
 
     def modify_acoustic_model_setup_items_acces(self, bool_key):
         self.item_child_set_dissipation_model.setDisabled(bool_key)
+        self.item_child_set_lrf_model.setDisabled(bool_key)
         self.item_child_set_acoustic_pressure.setDisabled(bool_key)
         self.item_child_set_mass_flow_rate.setDisabled(bool_key)
         self.item_child_set_volume_velocity.setDisabled(bool_key)

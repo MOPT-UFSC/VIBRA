@@ -12,7 +12,7 @@ from time import time
 
 def test_load_external_mesh_and_solve(reorder_nodes=True):
    
-    # Define nodal coordinates, connectivity and results path to compare
+    # Define the nodal coordinates and connectivity file path
     coord_path = "data/examples/mesh/muffler/coord_muff.csv"
     connect_path = "data/examples/mesh/muffler/connect_muff.csv"
 
@@ -26,13 +26,13 @@ def test_load_external_mesh_and_solve(reorder_nodes=True):
         mesh._process_nodes_reordering()
         map_nodes_indexes = mesh.reordering.map_nodes_indexes
 
-    # Define fluid properties
+    # Define the fluid properties
     rho = 1.18
     Co = 343.0
     dynamic_viscosity = 1*1.8e-05
     #
-    fluid = Fluid(  name = "Air", 
-                    identifier = 1, 
+    fluid = Fluid(  name = "Air",
+                    identifier = 1,
                     color = (200, 200, 200),
                     fluid_density = rho,
                     speed_of_sound = Co,
@@ -229,6 +229,7 @@ def get_faces_connectivities():
     return connectivity_from_surfaces
 
 def plot_results():
+
     path_pardiso = "temp/acoustic_pressure_at_node_3596_Vibra_pardiso.dat"
     path_scipy = "temp/acoustic_pressure_at_node_3596_Vibra_scipy.dat"
 
