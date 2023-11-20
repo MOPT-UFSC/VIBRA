@@ -63,7 +63,7 @@ def test_load_external_mesh_and_solve(reorder_nodes=True):
     
     # Define the analysis frequency setup
     df = 1
-    f_min = 2
+    f_min = 1
     f_max = 500
     frequencies = np.arange(f_min, f_max + df, df)
 
@@ -110,9 +110,14 @@ def test_load_external_mesh_and_solve(reorder_nodes=True):
         freq_ref = data_ref[:, 0]
         P_ref = data_ref[:, 1] + 1j*data_ref[:, 2]
 
+        error_abs = np.abs((solution[node, :] - P_ref)/((solution[node, :] + P_ref)/2))
+        # assert error_abs < 1e-1
+
         fig1, ax1 = plt.subplots()
-        ax1.semilogy(frequencies, np.abs(solution[node, :]), 'r', label='VIBRA')
-        ax1.semilogy(freq_ref, np.abs(P_ref), 'k--', label='ANSYS')
+        # ax1.semilogy(frequencies, np.abs(solution[node, :]), 'r', label='VIBRA')
+        # ax1.semilogy(freq_ref, np.abs(P_ref), 'k--', label='ANSYS')
+        # ax1.semilogy(freq_ref, np.abs(solution[node, :] - P_ref), 'k--', label='ANSYS')
+        ax1.semilogy(freq_ref, error_abs, 'k--', label='ANSYS')
         ax1.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Absolute', title='Harmonic Response - Outlet pressure')
         ax1.grid()
 
