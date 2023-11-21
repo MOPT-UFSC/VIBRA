@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Set the low reduced frequency model</string>
+   <string>Set the low reduced frequency eq. model</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <property name="leftMargin">
@@ -58,7 +58,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Set the low reduced frequency model</string>
+         <string>Set the low reduced frequency eq. model</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -193,7 +193,8 @@
             <enum>Qt::ClickFocus</enum>
            </property>
            <property name="styleSheet">
-            <string notr="true">color: rgb(0, 0, 255);</string>
+            <string notr="true">color: rgb(0, 0, 255);
+background-color: rgb(255, 255, 255);</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -414,7 +415,8 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
 Co_complex = (1 + n*1j)*Co_real</string>
                </property>
                <property name="styleSheet">
-                <string notr="true"/>
+                <string notr="true">color: rgb(0, 0, 255);
+background-color: rgb(255, 255, 255);</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -485,6 +487,11 @@ Co_complex = (1 + n*1j)*Co_real</string>
              </item>
              <item row="0" column="2">
               <widget class="QComboBox" name="comboBox_selection_type">
+               <property name="font">
+                <font>
+                 <pointsize>11</pointsize>
+                </font>
+               </property>
                <item>
                 <property name="text">
                  <string> Volume</string>
@@ -565,7 +572,7 @@ Co_complex = (1 + n*1j)*Co_real</string>
               <widget class="QLabel" name="label_title">
                <property name="maximumSize">
                 <size>
-                 <width>260</width>
+                 <width>280</width>
                  <height>32</height>
                 </size>
                </property>
@@ -578,7 +585,7 @@ Co_complex = (1 + n*1j)*Co_real</string>
                 <enum>QFrame::Box</enum>
                </property>
                <property name="text">
-                <string>Low reduced frequency model setup</string>
+                <string>Low reduced frequency eq. model setup</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>

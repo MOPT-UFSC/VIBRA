@@ -88,7 +88,7 @@ class ModelProperties:
     def set_dissipation_model(self, data, volume=None):
         self._set_property("dissipation_model", data)
 
-    def set_lrf_eq_model(self, data, surface=None, volume=None):
+    def set_lrf_eq_model_data(self, data, surface=None, volume=None):
         self._set_property("lrf_eq_model", data, surface=surface, volume=volume)
 
     def get_fluid_density(self, element=None):

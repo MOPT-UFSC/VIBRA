@@ -29,7 +29,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         self.setWindowIcon(self.icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Set the dissipation model")
+        self.setWindowTitle("Set the low reduced frequency eq. model")
 
         self.main_window = get_main_window()
         self.main_window.set_input_widget(self)
@@ -62,9 +62,26 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         self.current_tab = self.tabWidget_lrf_model.currentIndex()
 
     def _create_connections(self):
-        self.pushButton_confirm.clicked.connect(self.set_lrf_eq_model)
+        self.pushButton_confirm.clicked.connect(self.set_lrf_eq_model_data)
         self.pushButton_remove.clicked.connect(self.remove_lrf_eq_model_inputs)
         self.pushButton_reset.clicked.connect(self.reset_lrf_eq_model_inputs)
+        #
+        geometry_widget = self.main_window.viewer_tabs.geometry_widget
+        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
+
+    def geometry_selection_callback(self, points, lines, faces, volumes):
+        if faces:
+            text = ", ".join([str(i) for i in faces])
+            self.lineEdit_selection_id.setText(text)
+            self.comboBox_selection_type.setCurrentIndex(1)
+        
+        elif volumes:
+            text = ", ".join([str(i) for i in volumes])
+            self.lineEdit_selection_id.setText(text)
+            self.comboBox_selection_type.setCurrentIndex(0)
+
+        elif not any([points, lines, faces]):
+            self.lineEdit_selection_id.setText("")
 
     def remove_lrf_eq_model_inputs(self):
         pass
@@ -74,11 +91,11 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
     def check_lrf_eq_model_entries(self):
         
-        lineEdit_selection_id = self.lineEdit_selection_id.text()
+        selection_id = self.lineEdit_selection_id.text()
         if self.comboBox_selection_type.currentIndex() == 0:
-            self.stop, self.typed_ids = self.check_input_volume_id(lineEdit_selection_id)
+            self.stop, self.volume_ids = self.check_input_volume_id(selection_id)
         else:
-            self.stop, self.typed_ids = self.check_input_surface_id(lineEdit_selection_id)
+            self.stop, self.surface_ids_ids = self.check_input_surface_id(selection_id)
         
         if self.stop:
             self.lineEdit_selection_id.setFocus()
@@ -92,7 +109,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             lineEdit.setFocus()
             return True
 
-    def set_lrf_eq_model(self):
+    def set_lrf_eq_model_data(self):
         
         if self.check_lrf_eq_model_entries():
             return
@@ -102,18 +119,20 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
                 "selection_type": index,
                 "diameter": self.diameter}
 
-        list_elements = []
         if index == 0:
-            self.project.set_lrf_eq_model(data, volume=self.typed_ids)
+            for _id in self.volume_ids:
+                self.project.set_lrf_eq_model_data(data, volume=_id)
         else:
-            self.project.set_lrf_eq_model(data, surface=self.typed_ids)
+            for _id in self.surface_ids:
+                self.project.set_lrf_eq_model_data(data, surface=_id)
 
-        for volume_id in self.typed_ids:
-            for element_id in self.project.model.mesh.elements_from_volumes[volume_id]:
-                if element_id not in list_elements:
-                    list_elements.append(element_id)
-
+        # list_elements = []
+        # for volume_id in self.typed_ids:
+        #     for element_id in self.project.model.mesh.elements_from_volumes[volume_id]:
+        #         if element_id not in list_elements:
+        #             list_elements.append(element_id)
         # print(f"The dissipation model has been attributed to volumes: {self.typed_ids}")
+
         self.close()
 
     def check_input_surface_id(self, lineEdit, single_ID=False):
@@ -208,7 +227,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         else:
             return False, list_ids
 
-    def check_inputs(self, lineEdit, label, only_positive=False, zero_included=True, _float=True):
+    def check_inputs(self, lineEdit, label, only_positive=True, zero_included=False, _float=True):
         self.stop = False
         message = ""
         title = "Invalid input to the analysis setup"

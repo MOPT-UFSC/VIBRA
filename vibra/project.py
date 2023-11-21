@@ -118,7 +118,7 @@ class Project:
     def set_dissipation_model(self, data):
         self.model.set_dissipation_model_data(data)
 
-    def set_lrf_eq_model(self, data, surface=None, volume=None):
+    def set_lrf_eq_model_data(self, data, surface=None, volume=None):
         self.model.set_lrf_eq_model_data(data, surface=surface, volume=volume)
 
     def set_analysis_data(self, data):

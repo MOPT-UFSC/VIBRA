@@ -116,7 +116,7 @@ class Model:
         self.properties.set_dissipation_model(data)
 
     def set_lrf_eq_model_data(self, data, surface=None, volume=None):
-        self.properties.set_lrf_eq_model(data, surface=surface, volume=volume)
+        self.properties.set_lrf_eq_model_data(data, surface=surface, volume=volume)
 
     def set_structural_boundary_condition(self, data, line, surface):
         self.properties.set_structural_boundary_condition(data, line, surface)
