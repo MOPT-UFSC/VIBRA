@@ -118,6 +118,9 @@ class Project:
     def set_dissipation_model(self, data):
         self.model.set_dissipation_model_data(data)
 
+    def set_lrf_eq_model(self, data, surface=None, volume=None):
+        self.model.set_lrf_eq_model_data(data, surface=surface, volume=volume)
+
     def set_analysis_data(self, data):
         self.analysis_data = data
         self.acoustic_assembler.set_analysis_data(data)
@@ -131,12 +134,11 @@ class Project:
             analysis_data["f_max"] = f_max
             analysis_data["f_step"] = f_step
         else:
-            analysis_data = {
-                "frequencies": frequencies,
-                "f_min": f_min,
-                "f_max": f_max,
-                "f_step": f_step,
-            }
+            analysis_data = {   "frequencies": frequencies,
+                                "f_min": f_min,
+                                "f_max": f_max,
+                                "f_step": f_step,
+                            }
         self.set_analysis_data(analysis_data)
 
     def update_import_table_state(self, state):

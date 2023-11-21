@@ -16,6 +16,7 @@ from vibra.interface.model_inputs.acoustic.fluid_inputs import FluidInput
 #
 from vibra.interface.model_inputs.acoustic.set_acoustic_pressure import AcousticPressureInput
 from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import DissipationModelInput
+from vibra.interface.model_inputs.acoustic.set_lrf_eq_model_inputs import LowReducedFrequencyEquivalentModelInput
 from vibra.interface.model_inputs.acoustic.set_mass_flow_rate_inputs import MassFlowRateInput
 from vibra.interface.model_inputs.acoustic.set_surface_velocity_inputs import SurfaceVelocityInput
 from vibra.interface.model_inputs.acoustic.set_specific_impedance_inputs import SpecificImpedanceInput
@@ -213,7 +214,7 @@ class MenuItems(QTreeWidget):
         self.item_child_set_specific_impedance = QTreeWidgetItem(["Set Specific Impedance"])
         self.item_child_set_radiation_impedance = QTreeWidgetItem(["Set Radiation Impedance"])
         self.item_child_add_compressor_excitation = QTreeWidgetItem(["Add Compressor Excitation"])
-        self.item_child_set_lrf_model = QTreeWidgetItem(["Set Low Reduced Frequency Model"])
+        self.item_child_set_lrf_eq_model = QTreeWidgetItem(["Set Low Reduced Frequency Eq. Model"])
         #
         self.list_top_items.append(self.item_top_acoustic_model_setup)
         self.list_child_items.append(self.item_child_set_acoustic_pressure)
@@ -224,7 +225,7 @@ class MenuItems(QTreeWidget):
         self.list_child_items.append(self.item_child_set_specific_impedance)
         self.list_child_items.append(self.item_child_set_radiation_impedance)
         self.list_child_items.append(self.item_child_add_compressor_excitation)
-        self.list_child_items.append(self.item_child_set_lrf_model)
+        self.list_child_items.append(self.item_child_set_lrf_eq_model)
         #
         self.item_top_analysis = QTreeWidgetItem(["Analysis"])
         self.item_child_selectAnalysisType = QTreeWidgetItem(["Select Analysis Type"])
@@ -290,7 +291,7 @@ class MenuItems(QTreeWidget):
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_surface_velocity)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_specific_impedance)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_dissipation_model)
-        self.item_top_acoustic_model_setup.addChild(self.item_child_set_lrf_model)
+        self.item_top_acoustic_model_setup.addChild(self.item_child_set_lrf_eq_model)
         # self.item_top_acoustic_model_setup.addChild(self.item_child_set_radiation_impedance)
         # self.item_top_acoustic_model_setup.addChild(self.item_child_add_compressor_excitation)
 
@@ -423,10 +424,9 @@ class MenuItems(QTreeWidget):
             if not self.item_child_set_dissipation_model.isDisabled():
                 self.obj = DissipationModelInput()
 
-        elif item == self.item_child_set_lrf_model:
-            if not self.item_child_set_lrf_model.isDisabled():
-                print("Entrei LRF")
-                # self.obj = LRFModelInput()
+        elif item == self.item_child_set_lrf_eq_model:
+            if not self.item_child_set_lrf_eq_model.isDisabled():
+                self.obj = LowReducedFrequencyEquivalentModelInput()
 
         elif item == self.item_child_set_volume_velocity:
             if not self.item_child_set_volume_velocity.isDisabled():
@@ -598,7 +598,7 @@ class MenuItems(QTreeWidget):
 
     def modify_acoustic_model_setup_items_acces(self, bool_key):
         self.item_child_set_dissipation_model.setDisabled(bool_key)
-        self.item_child_set_lrf_model.setDisabled(bool_key)
+        self.item_child_set_lrf_eq_model.setDisabled(bool_key)
         self.item_child_set_acoustic_pressure.setDisabled(bool_key)
         self.item_child_set_mass_flow_rate.setDisabled(bool_key)
         self.item_child_set_volume_velocity.setDisabled(bool_key)

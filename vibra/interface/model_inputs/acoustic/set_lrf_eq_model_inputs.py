@@ -18,11 +18,11 @@ window_title_1 = "ERROR"
 window_title_2 = "WARNING"
 
 
-class LowReducedFrequencyModelInput(QDialog):
+class LowReducedFrequencyEquivalentModelInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        uic.loadUi(Path("data/ui_files/model/acoustic/dissipation_model_inputs.ui"), self)
+        uic.loadUi(Path("data/ui_files/model/acoustic/lrf_eq_model_inputs.ui"), self)
 
         icon_path = str(Path("data/icons/logo_vibra.png"))
         self.icon = QIcon(icon_path)
@@ -47,68 +47,124 @@ class LowReducedFrequencyModelInput(QDialog):
         self.fluid_density_factor = 0
 
     def _define_qt_variables(self):
+        # QComboBox objects
+        self.comboBox_selection_type = self.findChild(QComboBox, 'comboBox_selection_type')
         # QLineEdit objects
         self.lineEdit_selection_id = self.findChild(QLineEdit, "lineEdit_selection_id")
-        self.lineEdit_fluid_density_complex_factor = self.findChild(QLineEdit, "lineEdit_fluid_density_complex_factor")
-        self.lineEdit_speed_of_sound_complex_factor = self.findChild(QLineEdit, "lineEdit_speed_of_sound_complex_factor")
+        self.lineEdit_diameter = self.findChild(QLineEdit, "lineEdit_diameter")
         # QPushButton objects
-        self.pushButton_confirm_proportional_damping = self.findChild(QPushButton, "pushButton_confirm_proportional_damping")
+        self.pushButton_confirm = self.findChild(QPushButton, "pushButton_confirm")
+        self.pushButton_remove = self.findChild(QPushButton, "pushButton_remove")
+        self.pushButton_reset = self.findChild(QPushButton, "pushButton_reset")
         # QTabWidget objects
         self.tabWidget_lrf_model = self.findChild(QTabWidget, "tabWidget_lrf_model")
         self.tab_setup = self.tabWidget_lrf_model.findChild(QWidget, "tab_setup")
         self.current_tab = self.tabWidget_lrf_model.currentIndex()
 
     def _create_connections(self):
-        #
-        self.pushButton_confirm_proportional_damping.clicked.connect(self.set_dissipation_model)
+        self.pushButton_confirm.clicked.connect(self.set_lrf_eq_model)
+        self.pushButton_remove.clicked.connect(self.remove_lrf_eq_model_inputs)
+        self.pushButton_reset.clicked.connect(self.reset_lrf_eq_model_inputs)
 
-    def check_dissipation_model_entries(self):
+    def remove_lrf_eq_model_inputs(self):
+        pass
+
+    def reset_lrf_eq_model_inputs(self):
+        pass
+
+    def check_lrf_eq_model_entries(self):
+        
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.check_input_volume_id(lineEdit_selection_id)
+        if self.comboBox_selection_type.currentIndex() == 0:
+            self.stop, self.typed_ids = self.check_input_volume_id(lineEdit_selection_id)
+        else:
+            self.stop, self.typed_ids = self.check_input_surface_id(lineEdit_selection_id)
+        
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return True
+        
+        #TODO: get volumes inside surfaces boundaries if selection by surfaces was enabled
+        # tab_index = self.tabWidget_lrf_model.currentIndex()
+        lineEdit = self.lineEdit_diameter
+        self.diameter = self.check_inputs(lineEdit, "Diameter", only_positive=True)
+        if self.stop:
+            lineEdit.setFocus()
+            return True
 
-        tab_index = self.tabWidget_lrf_model.currentIndex()
-        if tab_index == 0:
-            self.model = "proportional damping"
-            #
-            lineEdit = self.lineEdit_speed_of_sound_complex_factor
-            self.speed_of_sound_factor = self.check_inputs(
-                lineEdit, "Speed of sound complex factor", only_positive=True
-            )
-            if self.stop:
-                lineEdit.setFocus()
-                return True
-            #
-            lineEdit = self.lineEdit_fluid_density_complex_factor
-            self.fluid_density_factor = self.check_inputs(
-                lineEdit, "Fluid density complex factor", only_positive=True
-            )
-            if self.stop:
-                lineEdit.setFocus()
-                return True
-        else:
-            print("Not implemented dissipation model.")
-
-    def set_dissipation_model(self):
-        if self.check_dissipation_model_entries():
+    def set_lrf_eq_model(self):
+        
+        if self.check_lrf_eq_model_entries():
             return
+        
+        index = self.comboBox_selection_type.currentIndex()
+        data = {"entity_ids": self.typed_ids,
+                "selection_type": index,
+                "diameter": self.diameter}
 
-        data = {
-            "entity_ids": self.typed_ids,
-            "model": self.model,
-            "speed of sound factor": self.speed_of_sound_factor,
-            "fluid density factor": self.fluid_density_factor,
-        }
+        list_elements = []
+        if index == 0:
+            self.project.set_lrf_eq_model(data, volume=self.typed_ids)
+        else:
+            self.project.set_lrf_eq_model(data, surface=self.typed_ids)
 
-        self.project.set_dissipation_model(data)
+        for volume_id in self.typed_ids:
+            for element_id in self.project.model.mesh.elements_from_volumes[volume_id]:
+                if element_id not in list_elements:
+                    list_elements.append(element_id)
+
         # print(f"The dissipation model has been attributed to volumes: {self.typed_ids}")
         self.close()
 
-    def check_input_volume_id(self, lineEdit, single_ID=False):
+    def check_input_surface_id(self, lineEdit, single_ID=False):
         try:
             title = "Invalid entry to the Surface ID"
+            message = ""
+            tokens = lineEdit.strip().split(",")
+            self.surface_ids = self.project.model.mesh.nodes_from_surfaces.keys()
+
+            try:
+                tokens.remove("")
+            except:
+                pass
+
+            _size = len(self.surface_ids)
+            list_ids = list(map(int, tokens))
+
+            if len(list_ids) == 0:
+                message = "An empty input field for the Surface ID has been detected. Please, enter a valid Surface ID to proceed."
+
+            elif len(list_ids) >= 1:
+                if single_ID and len(list_ids) > 1:
+                    message = "Multiple Selected IDs"
+                else:
+                    try:
+                        for _id in list_ids:
+                            if _id not in self.surface_ids:
+                                message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
+                                message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+                                break
+                    except Exception as error_log:
+                        message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
+                        message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+                        message += f"\n\n{str(error_log)}"
+
+        except Exception as log_error:
+            message = "Wrong input for the Selected ID's. "
+            message += f"\n\n{str(log_error)}"
+
+        if message != "":
+            PrintMessageInput([title, message, window_title_1])
+            return True, []
+
+        if single_ID:
+            return False, list_ids[0]
+        else:
+            return False, list_ids
+
+    def check_input_volume_id(self, lineEdit, single_ID=False):
+        try:
+            title = "Invalid entry to the Volume ID"
             message = ""
             tokens = lineEdit.strip().split(",")
             self.volume_ids = self.project.model.mesh.nodes_from_volumes.keys()
@@ -122,7 +178,7 @@ class LowReducedFrequencyModelInput(QDialog):
             list_ids = list(map(int, tokens))
 
             if len(list_ids) == 0:
-                message = "An empty input field for the Surface ID has been detected. Please, enter a valid Surface ID to proceed."
+                message = "An empty input field for the Volume ID has been detected. Please, enter a valid Volume ID to proceed."
 
             elif len(list_ids) >= 1:
                 if single_ID and len(list_ids) > 1:
@@ -132,11 +188,11 @@ class LowReducedFrequencyModelInput(QDialog):
                         for _id in list_ids:
                             if _id not in self.volume_ids:
                                 message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                                message += f"The input value(s) must be integer(s) number(s) N such that 1 <= N <= {_size}."
+                                message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
                                 break
                     except Exception as error_log:
                         message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                        message += f"The input value(s) must be integer(s) number(s) N such that 1 <= N <= {_size}."
+                        message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
                         message += f"\n\n{str(error_log)}"
 
         except Exception as log_error:

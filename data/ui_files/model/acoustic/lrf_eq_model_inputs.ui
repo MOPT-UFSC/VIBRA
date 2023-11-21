@@ -484,7 +484,7 @@ Co_complex = (1 + n*1j)*Co_real</string>
               </widget>
              </item>
              <item row="0" column="2">
-              <widget class="QComboBox" name="comboBox">
+              <widget class="QComboBox" name="comboBox_selection_type">
                <item>
                 <property name="text">
                  <string> Volume</string>

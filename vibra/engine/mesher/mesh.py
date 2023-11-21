@@ -33,6 +33,7 @@ class Mesh:
         self.nodes_from_lines = dict()
         self.nodes_from_surfaces = dict()
         self.nodes_from_volumes = dict()
+        self.elements_from_volumes = dict()
         self.entity_ranges = dict()
         self.surfaces_from_volumes = dict()
         self.connectivity_from_surfaces = dict()
@@ -108,42 +109,37 @@ class Mesh:
 
         self.geometry_setup = GeometrySetup(string, suffix)
 
-    def load_cad(
-        self,
-        path: (str | Path),
-        *,
-        minimum_element_size: float = 30.0,
-        maximum_element_size: float = 30.0,
-        element_type: ElementType = DEFAULT_ELEMENT_TYPE,
-        geometry_tolerance: float = 1e-6,
-        size_factor: float = 0.50,
-        dimension: int = 3,
-        threads: int = 2,
-        gmsh_gui: bool = False,
-    ):
-        self.mesh_setup = dict(
-            minimum_element_size=minimum_element_size,
-            maximum_element_size=maximum_element_size,
-            element_type=element_type,
-            geometry_tolerance=geometry_tolerance,
-            size_factor=size_factor,
-            dimension=dimension,
-            threads=threads,
-        )
+    def load_cad(   self,
+                    path: (str | Path),
+                    *,
+                    minimum_element_size: float = 30.0,
+                    maximum_element_size: float = 30.0,
+                    element_type: ElementType = DEFAULT_ELEMENT_TYPE,
+                    geometry_tolerance: float = 1e-6,
+                    size_factor: float = 0.50,
+                    dimension: int = 3,
+                    threads: int = 2,
+                    gmsh_gui: bool = False ):
+        
+        self.mesh_setup = dict( minimum_element_size=minimum_element_size,
+                                maximum_element_size=maximum_element_size,
+                                element_type=element_type,
+                                geometry_tolerance=geometry_tolerance,
+                                size_factor=size_factor,
+                                dimension=dimension,
+                                threads=threads )
 
         path = Path(path)
         gmsh.initialize("", False)
         logging.info(f"Generating mesh from {path}")
 
         logging.info("Configuring Mesh" + ProgressStatus(5, 100))
-        self._configure_mesh(
-            element_type,
-            minimum_element_size,
-            maximum_element_size,
-            geometry_tolerance,
-            size_factor,
-            threads,
-        )
+        self._configure_mesh(   element_type,
+                                minimum_element_size,
+                                maximum_element_size,
+                                geometry_tolerance,
+                                size_factor,
+                                threads,   )
 
         logging.info("Loading Geometry" + ProgressStatus(10, 100))
         gmsh.merge(str(path))
@@ -151,10 +147,7 @@ class Mesh:
         self.dimension = min(dimension, gmsh.model.getDimension())
         self.element_type = element_type
         
-        volumes_list = gmsh.model.getEntities(3)
-        gmsh.model.occ.fragment(volumes_list,volumes_list)
-        gmsh.model.occ.synchronize()
-
+        self._merge_nodes_from_adjacent_volumes()
         
         logging.info("Loading Geometry" + ProgressStatus(15, 100))
         gmsh.model.mesh.generate(dim=element_type.dimensions)
@@ -169,12 +162,17 @@ class Mesh:
 
         gmsh.finalize()
 
-        logging.info(
-            f"Mesh generated with {len(self.nodal_coordinates)} nodes"
-            f", {len(self.lines_connectivity)} dim 1"
-            f", {len(self.faces_connectivity)} dim 2"
-            f"and {len(self.solids_connectivity)} dim 3 elements"
-        )
+        logging.info(   f"Mesh generated with {len(self.nodal_coordinates)} nodes"
+                        f", {len(self.lines_connectivity)} dim 1"
+                        f", {len(self.faces_connectivity)} dim 2"
+                        f"and {len(self.solids_connectivity)} dim 3 elements"   )
+
+    def _merge_nodes_from_adjacent_volumes(self):
+        """ This method merges all nodes from adjacent volumes.
+        """
+        volumes_list = gmsh.model.getEntities(3)
+        gmsh.model.occ.fragment(volumes_list,volumes_list)
+        gmsh.model.occ.synchronize()    
 
     def import_nodes_coordinates(self, filename):
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
@@ -313,6 +311,8 @@ class Mesh:
         self.nodes_from_surfaces.clear()
         self.nodes_from_volumes.clear()
 
+        self.elements_from_volumes.clear()
+
         for dim, tag in gmsh.model.getEntities():
             if dim == 3:
                 _, downwards = gmsh.model.getAdjacencies(dim, tag)
@@ -353,6 +353,7 @@ class Mesh:
             elif dim == 3:  # Solids
                 connectivity_dim3[dim, tag] = elements_data
                 self.nodes_from_volumes[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
+                self.elements_from_volumes[tag] = np.array([*set(element_indexes[0])], dtype=int) - 1
 
         self.lines_connectivity = self._get_connectivity_array(connectivity_dim1)
         self.faces_connectivity = self._get_connectivity_array(connectivity_dim2)

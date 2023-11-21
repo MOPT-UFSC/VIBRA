@@ -75,6 +75,9 @@ class ModelProperties:
 
     def get_dissipation_model(self, element=None):
         return self._get_property("dissipation_model")
+    
+    def get_lrf_model_inputs(self, element_id):
+        return self._get_property("lrf_eq_model", element=element_id)
 
     def set_material(self, material: Material, element=None):
         self._set_property("material", material)
@@ -84,6 +87,9 @@ class ModelProperties:
 
     def set_dissipation_model(self, data, volume=None):
         self._set_property("dissipation_model", data)
+
+    def set_lrf_eq_model(self, data, surface=None, volume=None):
+        self._set_property("lrf_eq_model", data, surface=surface, volume=volume)
 
     def get_fluid_density(self, element=None):
         #
@@ -108,6 +114,9 @@ class ModelProperties:
         elif dissipation_model["model"] == "proportional damping":
             factor = dissipation_model["speed of sound factor"]
             return (1 + factor * 1j) * c_0
+        
+    def get_lrf_model_inputs(self):
+        pass
 
     def get_structural_boundary_condition(self, surface):
         return self._get_property("prescribed_dofs", surface=surface)
