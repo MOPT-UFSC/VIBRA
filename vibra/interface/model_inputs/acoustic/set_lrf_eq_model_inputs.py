@@ -6,11 +6,9 @@ import numpy as np
 from PyQt5 import uic
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QDialog, QComboBox, QLineEdit, QPushButton, QTabWidget, QWidget
+from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
 
-from vibra.interface.general.call_double_confirmation_input import (
-    CallDoubleConfirmationInput,
-)
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.utils.interface_functions import get_main_window
 
@@ -115,24 +113,25 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             return
         
         index = self.comboBox_selection_type.currentIndex()
-        data = {"entity_ids": self.typed_ids,
-                "selection_type": index,
-                "diameter": self.diameter}
-
         if index == 0:
+
+            data = {"volume_ids" : self.typed_ids,
+                    "selection_type" : index,
+                    "diameter" : self.diameter}
+
             for _id in self.volume_ids:
                 self.project.set_lrf_eq_model_data(data, volume=_id)
+
         else:
+
+            data = {"surface_ids" : self.typed_ids,
+                    "selection_type" : index,
+                    "diameter" : self.diameter}
+
             for _id in self.surface_ids:
                 self.project.set_lrf_eq_model_data(data, surface=_id)
 
-        # list_elements = []
-        # for volume_id in self.typed_ids:
-        #     for element_id in self.project.model.mesh.elements_from_volumes[volume_id]:
-        #         if element_id not in list_elements:
-        #             list_elements.append(element_id)
-        # print(f"The dissipation model has been attributed to volumes: {self.typed_ids}")
-
+        # print(f"The lrf eq. model has been attributed to volumes: {self.typed_ids}")
         self.close()
 
     def check_input_surface_id(self, lineEdit, single_ID=False):

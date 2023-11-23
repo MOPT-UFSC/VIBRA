@@ -4,6 +4,7 @@ from time import time
 
 import numpy as np
 from scipy.sparse import coo_matrix, csr_matrix
+from scipy.special import jv
 # 3D elements
 from vibra.engine.elements.acoustic_hex8_element import ACT_HEXAHEDRON_8C
 from vibra.engine.elements.acoustic_hex20_element import ACT_HEXAHEDRON_20C
@@ -133,6 +134,81 @@ class AcousticAssembler:
         all_indexes = np.arange(total_dofs, dtype=int)
         prescribed_indexes = self.get_prescribed_indexes()
         return np.delete(all_indexes, prescribed_indexes)
+    
+    def get_lrf_eq_data(self):
+        lrf_eq_data = dict()
+
+        # for key, data in self.properties.surface_properties.items():
+        #     property, surface_id = key
+        #     if property == "lrf_eq_model":
+        #         for surface_id in data["surface_ids"]:
+        #             fluid = self.properties.get_fluid(surface=surface_id)
+        #             for element_id in self.model.mesh.elements_from_surfaces[surface_id]:
+        #                 # fluid = self.properties.get_fluid(element=element_id)
+        #                 if element_id not in list(lrf_eq_data.keys()):
+        #                     lrf_eq_data[element_id] = {"diameter" : data["diameter"],
+        #                                                "c_0" : fluid.speed_of_sound,
+        #                                                "rho_0" : fluid.fluid_density,
+        #                                                "mu" : fluid.dynamic_viscosity,
+        #                                                "gamma" : fluid.isentropic_exponent,
+        #                                                "prandtl" : fluid.prandtl_number,
+        #                                                "pressure" : fluid.pressure_state}
+        
+        for key, data in self.properties.volume_properties.items():
+            property, volume_id = key
+            if property == "lrf_eq_model":
+                for volume_id in data["volume_ids"]:
+                    fluid = self.properties.get_fluid(volume=volume_id)
+                    for element_id in self.model.mesh.elements_from_volumes[volume_id]:
+                        # fluid = self.properties.get_fluid(element=element_id)
+                        if element_id not in list(lrf_eq_data.keys()):
+                            lrf_eq_data[element_id] = {"diameter" : data["diameter"],
+                                                       "c_0" : fluid.speed_of_sound,
+                                                       "rho_0" : fluid.fluid_density,
+                                                       "mu" : fluid.dynamic_viscosity,
+                                                       "gamma" : fluid.isentropic_exponent,
+                                                       "prandtl" : fluid.prandtl_number,
+                                                       "pressure" : fluid.pressure_state}
+        
+        return lrf_eq_data
+
+
+    def process_lrf_properties(self):
+        """ """
+        lrf_properties = dict()
+        if self.frequencies is None:
+            return lrf_properties
+        
+        # if self.frequencies is None:
+        #     number_frequencies = 1
+        # else:
+        #     number_frequencies = len(self.frequencies)
+        
+        lrf_eq_data = self.get_lrf_eq_data()        
+        if lrf_eq_data:
+            for element_index, parameters in lrf_eq_data.items():
+                diameter, c_local, rho_local, mu, gamma, Pr, pressure = parameters  
+
+                if float(0) in self.frequencies:
+                    freqs = self.frequencies[1:]
+                else:
+                    freqs = self.frequencies
+                
+                omegas = 2 * (np.pi) * freqs
+                s = (diameter/2) * ((omegas*rho_local/mu)**(1/2))
+
+                rho_ef = -rho_local * (jv(0, (1j**(3/2))*s)) / (jv(2, (1j**(3/2))*s))
+                K0_ef = (pressure*gamma) / (gamma + (gamma - 1) * jv(2, (1j**(3/2))*s*(Pr**(1/2))) / jv(0, (1j**(3/2))*s*(Pr**(1/2))))
+                c_ef_2 = K0_ef/rho_ef
+
+                if float(0) in self.frequencies:
+                    rho_ef = np.insert(rho_ef, 0, rho_local)
+                    c_ef_2 = np.insert(c_ef_2, 0, c_local**2)                
+
+                lrf_properties[element_index] = {   "rho_ef" : rho_ef,
+                                                    "c_ef_2" : c_ef_2    }
+
+        return lrf_properties
 
     def process_indexes(self):
         self.prescribed_indexes = self.get_prescribed_indexes()
@@ -189,9 +265,23 @@ class AcousticAssembler:
         self.data_M = np.zeros((nel, dofs, dofs), dtype=complex)
         self.data_Cvisc = np.zeros((nel, dofs, dofs), dtype=complex)
 
+        # lrf_properties = self.process_lrf_properties()
+
+        # if lrf_properties:
+        #     for el in range(nel):
+        #         Ke, Me = element_3D.elementary_matrices(el)
+        #         self.data_K[el, :, :] = Ke
+        #         if el in lrf_properties.keys():
+        #             c_ef_2 = lrf_properties[el]["c_ef_2"]
+        #             self.data_M[el, :, :] = Me/c_ef_2
+        #         else:
+        #             _, c_0, _ = self.model.get_fluid_properties(element=el)
+        #             self.data_M[el, :, :] = Me/(c_0**2)
+
+        # else:
         for el in range(nel):
             Ke, Me = element_3D.elementary_matrices(el)
-            rho_0, c_0, mu_0 = element_3D.get_fluid_properties(el)
+            rho_0, c_0, mu_0 = self.model.get_fluid_properties(proportional_damping=True, element=el)
             self.data_K[el, :, :] = Ke
             self.data_M[el, :, :] = Me
             self.data_Cvisc[el, :, :] = ((4*mu_0)/(3*rho_0*c_0**2))*Ke

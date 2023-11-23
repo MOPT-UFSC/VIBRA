@@ -5,9 +5,7 @@ from time import sleep
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.model import Model
-from vibra.engine.solvers.acoustic_harmonic_solver import (
-    AcousticHarmonicSolver,
-)
+from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
 from vibra.project_file import ProjectFile
@@ -77,11 +75,11 @@ class Project:
         logging.info(f"Importing geometry at {path}")
         self.model.process_visual_geometry_mesh()
 
-    def set_fluid(self, fluid):
-        self.model.set_fluid(fluid)
+    def set_fluid(self, fluid, **kwargs):
+        self.model.set_fluid(fluid, **kwargs)
 
-    def set_material(self, material):
-        self.model.set_material(material)
+    def set_material(self, material, **kwargs):
+        self.model.set_material(material, **kwargs)
 
     def set_mesh_setup(self, mesh_setup):
         self.model.set_mesh_setup(mesh_setup)

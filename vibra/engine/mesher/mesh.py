@@ -33,7 +33,8 @@ class Mesh:
         self.nodes_from_lines = dict()
         self.nodes_from_surfaces = dict()
         self.nodes_from_volumes = dict()
-        self.elements_from_volumes = dict()
+        self.gmsh_elements_from_surfaces = dict()
+        self.gmsh_elements_from_volumes = dict()
         self.entity_ranges = dict()
         self.surfaces_from_volumes = dict()
         self.connectivity_from_surfaces = dict()
@@ -311,7 +312,8 @@ class Mesh:
         self.nodes_from_surfaces.clear()
         self.nodes_from_volumes.clear()
 
-        self.elements_from_volumes.clear()
+        self.gmsh_elements_from_surfaces.clear()
+        self.gmsh_elements_from_volumes.clear()
 
         for dim, tag in gmsh.model.getEntities():
             if dim == 3:
@@ -349,15 +351,45 @@ class Mesh:
                 array_element_indexes = np.array([*set(element_indexes[0])], dtype=int) - 1
                 self.connectivity_from_surfaces[tag] = {"element_indexes" : array_element_indexes,
                                                         "connectivity" : array_element_nodes}
+                self.gmsh_elements_from_surfaces[tag] = np.array([*set(element_indexes[0])], dtype=int)
 
             elif dim == 3:  # Solids
                 connectivity_dim3[dim, tag] = elements_data
                 self.nodes_from_volumes[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
-                self.elements_from_volumes[tag] = np.array([*set(element_indexes[0])], dtype=int) - 1
+                self.gmsh_elements_from_volumes[tag] = np.array([*set(element_indexes[0])], dtype=int)
+        
+        self.lines_connectivity, self.map_line_elements = self._get_connectivity_array(connectivity_dim1)
+        self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)
+        self.solids_connectivity, self.map_solid_elements = self._get_connectivity_array(connectivity_dim3)
+        #
+        self._maps_surfaces_by_elements()
+        self._maps_volumes_by_elements()
 
-        self.lines_connectivity = self._get_connectivity_array(connectivity_dim1)
-        self.faces_connectivity = self._get_connectivity_array(connectivity_dim2)
-        self.solids_connectivity = self._get_connectivity_array(connectivity_dim3)
+    def _maps_surfaces_by_elements(self):
+        self.surface_from_element = dict()
+        self.elements_from_surfaces = dict()
+        for tag, gmsh_indexes in self.elements_from_surfaces.items():
+            n = len(gmsh_indexes)
+            internal_indexes = np.zeros(n, dtype=int)
+            for i, gmsh_index in enumerate(gmsh_indexes):
+                index = self.map_solid_elements[gmsh_index]
+                internal_indexes[i] = index
+                self.surface_from_element[index] = tag
+            self.elements_from_surfaces[tag] = internal_indexes
+
+    def _maps_volumes_by_elements(self):
+        self.volume_from_element = dict()
+        self.elements_from_volumes = dict()
+        for tag, gmsh_indexes in self.gmsh_elements_from_volumes.items():
+            n = len(gmsh_indexes)
+            internal_indexes = np.zeros(n, dtype=int)
+            for i, gmsh_index in enumerate(gmsh_indexes):
+                index = self.map_solid_elements[gmsh_index]
+                internal_indexes[i] = index
+                self.volume_from_element[index] = tag
+            self.elements_from_volumes[tag] = internal_indexes
+        data = np.array([list(self.volume_from_element.keys()), list(self.volume_from_element.values())], dtype=int).T
+        np.savetxt("elementos_volumes.dat", data, delimiter=",")
 
     def _process_nodes_reordering(self):
         """ This method processes the nodes reordering to reducie the global matrices 
@@ -466,6 +498,7 @@ class Mesh:
 
         n = int(np.sum(n_list))
         output_data = np.zeros((n, max_cols + 4), dtype=int)
+        gmsh_elements = np.zeros(n, dtype=int)
 
         start, end, ind = 0, 0, 0
         for (entity_dim, entity_tag), e_data in input_dict.items():
@@ -485,6 +518,7 @@ class Mesh:
                 # output_data[start:end, 3] = indexes
                 output_data[start:end, 3] = aux * cols
                 output_data[start:end, 4 : 4 + cols] = nodes
+                gmsh_elements[start:end] = indexes
 
                 start = end
                 ind += 1
@@ -492,8 +526,9 @@ class Mesh:
             self.entity_ranges[entity_dim, entity_tag] = (entity_start, entity_end)
 
         output_data[:, 0] = np.arange(1, n + 1, 1)
-
-        return output_data
+        internal_indexes = np.arange(n, dtype=int)
+        map_elements = dict(zip(gmsh_elements, internal_indexes))
+        return output_data, map_elements
 
 
 if __name__ == "__main__":
