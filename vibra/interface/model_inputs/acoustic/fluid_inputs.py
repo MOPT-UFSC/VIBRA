@@ -1016,7 +1016,8 @@ class FluidInput(QDialog):
                                 pressure = pressure )
 
             if self.radioButton_selected_bodies.isChecked():
-                self.stop, self.selected_ids = self.project.model.check_input_volume_id(self.lineEdit_selected_ID)
+                str_selected_ID = self.lineEdit_selected_ID.text()
+                self.stop, self.selected_ids = self.project.model.check_input_volume_id(str_selected_ID)
                 if self.stop:
                     return
                 for volume_id in self.selected_ids:

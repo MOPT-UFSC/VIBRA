@@ -110,8 +110,8 @@ class Model:
         else:
             c_0 = fluid.speed_of_sound
             rho_0 = fluid.fluid_density
-        if volume not in [1, 8]:
-            print(volume, element, proportional_damping, c_0, rho_0, dynamic_viscosity)
+        # if volume not in [1, 8]:
+        #     print(volume, element, proportional_damping, c_0, rho_0, dynamic_viscosity)
         return rho_0, c_0, dynamic_viscosity
 
     def set_acoustic_element(self, element):
@@ -164,11 +164,11 @@ class Model:
     def set_specific_impedance(self, data, surface):
         self.properties.set_specific_impedance(data, surface)
 
-    def check_input_surface_id(self, lineEdit, single_ID=False):
+    def check_input_surface_id(self, str_selected_ids, single_ID=False):
         try:
             title = "Invalid entry to the Surface ID"
             message = ""
-            tokens = lineEdit.strip().split(",")
+            tokens = str_selected_ids.strip().split(",")
             self.surface_ids = self.project.model.mesh.nodes_from_surfaces.keys()
 
             try:
@@ -210,11 +210,11 @@ class Model:
         else:
             return False, list_ids
 
-    def check_input_volume_id(self, lineEdit, single_ID=False):
+    def check_input_volume_id(self, str_selected_ids, single_ID=False):
         try:
             title = "Invalid entry to the Volume ID"
             message = ""
-            tokens = lineEdit.strip().split(",")
+            tokens = str_selected_ids.strip().split(",")
             self.volume_ids = self.mesh.nodes_from_volumes.keys()
 
             try:

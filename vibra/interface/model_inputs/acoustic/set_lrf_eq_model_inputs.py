@@ -32,6 +32,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         self.main_window = get_main_window()
         self.main_window.set_input_widget(self)
         self.project = self.main_window.project
+        self.main_window.viewer_tabs.show_geometry()
 
         self._reset_variables()
         self._define_qt_variables()
@@ -94,7 +95,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             self.stop, self.volume_ids = self.check_input_volume_id(selection_id)
         else:
             self.stop, self.surface_ids_ids = self.check_input_surface_id(selection_id)
-        
+
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return True
@@ -115,7 +116,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         index = self.comboBox_selection_type.currentIndex()
         if index == 0:
 
-            data = {"volume_ids" : self.typed_ids,
+            data = {"volume_ids" : self.volume_ids,
                     "selection_type" : index,
                     "diameter" : self.diameter}
 
@@ -124,7 +125,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
         else:
 
-            data = {"surface_ids" : self.typed_ids,
+            data = {"surface_ids" : self.surface_ids_ids,
                     "selection_type" : index,
                     "diameter" : self.diameter}
 

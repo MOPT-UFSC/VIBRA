@@ -156,11 +156,12 @@ class AcousticAssembler:
         
         for key, data in self.properties.volume_properties.items():
             property, volume_id = key
+            print(property, volume_id)
             if property == "lrf_eq_model":
+                print(volume_id, data)
                 for volume_id in data["volume_ids"]:
                     fluid = self.properties.get_fluid(volume=volume_id)
                     for element_id in self.model.mesh.elements_from_volumes[volume_id]:
-                        # fluid = self.properties.get_fluid(element=element_id)
                         if element_id not in list(lrf_eq_data.keys()):
                             lrf_eq_data[element_id] = {"diameter" : data["diameter"],
                                                        "c_0" : fluid.speed_of_sound,
@@ -169,6 +170,7 @@ class AcousticAssembler:
                                                        "gamma" : fluid.isentropic_exponent,
                                                        "prandtl" : fluid.prandtl_number,
                                                        "pressure" : fluid.pressure_state}
+                            print(volume_id, element_id, lrf_eq_data[element_id])
         
         return lrf_eq_data
 
@@ -177,6 +179,7 @@ class AcousticAssembler:
         """ """
         lrf_properties = dict()
         if self.frequencies is None:
+            print("sem frequências determinadas")
             return lrf_properties
         
         # if self.frequencies is None:
