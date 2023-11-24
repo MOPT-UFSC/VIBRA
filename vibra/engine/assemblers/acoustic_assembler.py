@@ -265,26 +265,28 @@ class AcousticAssembler:
         self.data_M = np.zeros((nel, dofs, dofs), dtype=complex)
         self.data_Cvisc = np.zeros((nel, dofs, dofs), dtype=complex)
 
-        # lrf_properties = self.process_lrf_properties()
+        lrf_properties = self.process_lrf_properties()
 
-        # if lrf_properties:
-        #     for el in range(nel):
-        #         Ke, Me = element_3D.elementary_matrices(el)
-        #         self.data_K[el, :, :] = Ke
-        #         if el in lrf_properties.keys():
-        #             c_ef_2 = lrf_properties[el]["c_ef_2"]
-        #             self.data_M[el, :, :] = Me/c_ef_2
-        #         else:
-        #             _, c_0, _ = self.model.get_fluid_properties(element=el)
-        #             self.data_M[el, :, :] = Me/(c_0**2)
+        print(f"entrei aqui: {lrf_properties}")
 
-        # else:
-        for el in range(nel):
-            Ke, Me = element_3D.elementary_matrices(el)
-            rho_0, c_0, mu_0 = self.model.get_fluid_properties(proportional_damping=True, element=el)
-            self.data_K[el, :, :] = Ke
-            self.data_M[el, :, :] = Me
-            self.data_Cvisc[el, :, :] = ((4*mu_0)/(3*rho_0*c_0**2))*Ke
+        if lrf_properties:
+            for el in range(nel):
+                Ke, Me = element_3D.elementary_matrices(el)
+                self.data_K[el, :, :] = Ke
+                if el in lrf_properties.keys():
+                    c_ef_2 = lrf_properties[el]["c_ef_2"]
+                    self.data_M[el, :, :] = Me/c_ef_2
+                else:
+                    _, c_0, _ = self.model.get_fluid_properties(element=el)
+                    self.data_M[el, :, :] = Me/(c_0**2)
+
+        else:
+            for el in range(nel):
+                Ke, Me = element_3D.elementary_matrices(el)
+                rho_0, c_0, mu_0 = self.model.get_fluid_properties(proportional_damping=True, element=el)
+                self.data_K[el, :, :] = Ke
+                self.data_M[el, :, :] = Me/c_0**2
+                self.data_Cvisc[el, :, :] = ((4*mu_0)/(3*rho_0*c_0**2))*Ke
 
         self.data_K = self.data_K.flatten()
         self.data_M = self.data_M.flatten()

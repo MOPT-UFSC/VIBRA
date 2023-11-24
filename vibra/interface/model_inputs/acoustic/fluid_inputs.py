@@ -210,8 +210,7 @@ class FluidInput(QDialog):
         # QWidget
         self.tab_user_defined = self.tabWidget_add.findChild(QWidget, 'tab_user_defined')
         self.tab_refprop_button = self.tabWidget_add.findChild(QWidget, 'tab_refprop_button')
-        self.tab_refprop_all_entries = self.tabWidget_add.findChild(QWidget, 'tab_refprop_all_entries')        
-
+        self.tab_refprop_all_entries = self.tabWidget_add.findChild(QWidget, 'tab_refprop_all_entries')
 
     def _create_connections(self):
         #
@@ -241,14 +240,19 @@ class FluidInput(QDialog):
         #
         self.treeWidget_fluids.itemClicked.connect(self.on_click_item)
         self.treeWidget_fluids.itemDoubleClicked.connect(self.on_doubleclick_item)
+        #
+        geometry_widget = self.main_window.viewer_tabs.geometry_widget
+        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
 
     def geometry_selection_callback(self, points, lines, faces, volumes):
+        """ """
         if volumes:
+            self.radioButton_selected_bodies.setChecked(True)
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selected_ID.setText(text)
-            self.radioButton_selected_bodies.setChecked(True)
 
         elif not any([points, lines, faces]):
+            self.radioButton_all_bodies.setChecked(True)
             self.lineEdit_selected_ID.setText("")
 
     def edit_REFPROP_fluid(self):

@@ -98,18 +98,21 @@ class Model:
         # c_0 = fluid.speed_of_sound
         element = kwargs.get("element", None)
         volume = kwargs.get("volume", None)
+        
         if element is not None:
             volume = self.mesh.volume_from_element[element]
 
         fluid = self.properties.get_fluid(volume=volume)
+        dynamic_viscosity = fluid.dynamic_viscosity
         if proportional_damping:
             c_0 = self.properties.get_speed_of_sound(fluid, volume=volume)
             rho_0 = self.properties.get_fluid_density(fluid, volume=volume)
         else:
             c_0 = fluid.speed_of_sound
             rho_0 = fluid.fluid_density
-        dinamic_viscosity = fluid.dynamic_viscosity
-        return rho_0, c_0, dinamic_viscosity
+        if volume not in [1, 8]:
+            print(volume, element, proportional_damping, c_0, rho_0, dynamic_viscosity)
+        return rho_0, c_0, dynamic_viscosity
 
     def set_acoustic_element(self, element):
         self.solid_acoustic_element, self.surface_acoustic_element = element
