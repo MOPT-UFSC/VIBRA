@@ -80,8 +80,10 @@ class AcousticHarmonicSolver:
         #
         self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
         #
-        M = self.assembler.mass_matrix
+        # M = self.assembler.mass_matrix
         K = self.assembler.stiffness_matrix
+        mass_matrices = self.assembler.mass_matrix
+        #
         C_imp = self.assembler.damping_matrix
         C_visc = self.assembler.visc_damping_matrix
         Q = self.assembler.mass_flow_vectors
@@ -106,6 +108,10 @@ class AcousticHarmonicSolver:
             omega = 2 * np.pi * freq
 
             C = C_imp[i] + C_visc
+            if len(mass_matrices) == 1:
+                M = mass_matrices[0]
+            else:
+                M = mass_matrices[i]
 
             A = K - (omega**2) * M + 1j * omega * C
             F = - 1j * omega * Q[:, i] - F_eq[:, i]
@@ -156,7 +162,7 @@ class AcousticHarmonicSolver:
         self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_values()
         #
         Kr = (self.assembler.stiffness_matrix_r.toarray())[self.unprescribed_indexes, :]
-        Mr = (self.assembler.mass_matrix_r.toarray())[self.unprescribed_indexes, :]
+        # Mr = (self.assembler.mass_matrix_r.toarray())[self.unprescribed_indexes, :]
         Cr_visc = (self.assembler.visc_damping_matrix_r.toarray())[self.unprescribed_indexes, :]
 
         logging.info( "Processing prescribed pressure model excitation..." + ProgressStatus(10, len(self.frequencies)))
@@ -177,10 +183,15 @@ class AcousticHarmonicSolver:
                     list_prescribed_values.append(value)
       
             self.array_prescribed_values = np.array(list_prescribed_values)
+            
+            if len(self.assembler.mass_matrix_r) == 1:
+                Mr = (self.assembler.mass_matrix_r[0].toarray())[self.unprescribed_indexes, :]
                         
             for i, freq in enumerate(self.frequencies):
                 #
                 logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(i + 10, len(self.frequencies) + 10))
+                if len(self.assembler.mass_matrix_r) > 1:
+                    Mr = (self.assembler.mass_matrix_r[i].toarray())[self.unprescribed_indexes, :]
                 Cr = (self.assembler.damping_matrix_r[i].toarray())[self.unprescribed_indexes, :]
                 #
                 Kr_add = np.sum((Kr * self.array_prescribed_values[:, i]), axis=1)

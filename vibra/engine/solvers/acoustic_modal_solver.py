@@ -46,7 +46,7 @@ class AcousticModalSolver:
             MT = M
         else:
             KT = self.assembler.stiffness_matrix
-            MT = self.assembler.mass_matrix
+            MT = self.assembler.mass_matrix[0]
 
         # self.plot_graph(KT)
 

@@ -135,8 +135,7 @@ class Project:
             analysis_data = {   "frequencies": frequencies,
                                 "f_min": f_min,
                                 "f_max": f_max,
-                                "f_step": f_step,
-                            }
+                                "f_step": f_step   }
         self.set_analysis_data(analysis_data)
 
     def update_import_table_state(self, state):
