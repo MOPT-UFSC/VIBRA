@@ -42,7 +42,7 @@ def test_load_external_mesh_and_solve(reorder_nodes=True):
     model = Model()
     model.mesh =  mesh
     model.generated_mesh = True
-    model.set_fluid(fluid)
+    model.set_fluid(fluid, volume=1)
 
     # Normal surface velocity data
     data_Vn = { "real_values" : [1],
@@ -114,10 +114,10 @@ def test_load_external_mesh_and_solve(reorder_nodes=True):
         # assert error_abs < 1e-1
 
         fig1, ax1 = plt.subplots()
-        # ax1.semilogy(frequencies, np.abs(solution[node, :]), 'r', label='VIBRA')
-        # ax1.semilogy(freq_ref, np.abs(P_ref), 'k--', label='ANSYS')
+        ax1.semilogy(frequencies, np.abs(solution[node, :]), 'r', label='VIBRA')
+        ax1.semilogy(freq_ref, np.abs(P_ref), 'k--', label='ANSYS')
         # ax1.semilogy(freq_ref, np.abs(solution[node, :] - P_ref), 'k--', label='ANSYS')
-        ax1.semilogy(freq_ref, error_abs, 'k--', label='ANSYS')
+        # ax1.semilogy(freq_ref, error_abs, 'k--', label='ANSYS')
         ax1.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Absolute', title='Harmonic Response - Outlet pressure')
         ax1.grid()
 

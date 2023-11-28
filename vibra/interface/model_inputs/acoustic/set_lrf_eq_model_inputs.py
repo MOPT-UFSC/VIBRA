@@ -116,8 +116,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         index = self.comboBox_selection_type.currentIndex()
         if index == 0:
 
-            data = {"volume_ids" : self.volume_ids,
-                    "selection_type" : index,
+            data = {"selection_type" : index,
                     "diameter" : self.diameter}
 
             for _id in self.volume_ids:
@@ -125,8 +124,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
         else:
 
-            data = {"surface_ids" : self.surface_ids_ids,
-                    "selection_type" : index,
+            data = {"selection_type" : index,
                     "diameter" : self.diameter}
 
             for _id in self.surface_ids:

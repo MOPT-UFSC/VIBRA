@@ -98,9 +98,13 @@ class Model:
         # c_0 = fluid.speed_of_sound
         element = kwargs.get("element", None)
         volume = kwargs.get("volume", None)
-        
+
         if element is not None:
-            volume = self.mesh.volume_from_element[element]
+            try:
+                volume = self.mesh.volume_from_element[element]
+            except:
+                # temporary solution to run external mesh file
+                volume = 1
 
         fluid = self.properties.get_fluid(volume=volume)
         dynamic_viscosity = fluid.dynamic_viscosity

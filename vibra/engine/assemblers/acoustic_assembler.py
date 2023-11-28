@@ -57,14 +57,17 @@ class AcousticAssembler:
         self.analysis_data = data
         if "frequencies" in data.keys():
             self.frequencies = data["frequencies"]
-            if self.frequencies is None:
-                self.number_frequencies = 1
-            else:
-                self.number_frequencies = len(self.frequencies)
+            self.update_number_of_frequencies()
 
     def set_frequencies(self, frequencies):
         self.frequencies = frequencies
+        self.update_number_of_frequencies()
 
+    def update_number_of_frequencies(self):
+        if self.frequencies is None:
+            self.number_frequencies = 1
+        else:
+            self.number_frequencies = len(self.frequencies)
 
     def is_assembled(self):
         return (self.stiffness_matrix is not None) and (self.mass_matrix is not None)
@@ -158,31 +161,30 @@ class AcousticAssembler:
         
         for key, data in self.properties.volume_properties.items():
             property, volume_id = key
-            print(property, volume_id)
             if property == "lrf_eq_model":
-                print(volume_id, data)
-                for volume_id in data["volume_ids"]:
-                    fluid = self.properties.get_fluid(volume=volume_id)
-                    for element_id in self.model.mesh.elements_from_volumes[volume_id]:
-                        if element_id not in list(lrf_eq_data.keys()):
-                            lrf_eq_data[element_id] = [ data["diameter"],
-                                                        fluid.speed_of_sound,
-                                                        fluid.fluid_density,
-                                                        fluid.dynamic_viscosity,
-                                                        fluid.isentropic_exponent,
-                                                        fluid.prandtl_number,
-                                                        fluid.pressure_state ]
-                            
-                            # lrf_eq_data[element_id] = {"diameter" : data["diameter"],
-                            #                            "c_0" : fluid.speed_of_sound,
-                            #                            "rho_0" : fluid.fluid_density,
-                            #                            "mu" : fluid.dynamic_viscosity,
-                            #                            "gamma" : fluid.isentropic_exponent,
-                            #                            "prandtl" : fluid.prandtl_number,
-                            #                            "pressure" : fluid.pressure_state}
-                            
-                            # print(volume_id, element_id, lrf_eq_data[element_id])
-        
+                # print(volume_id, data)
+                # for volume_id in data["volume_ids"]:
+                fluid = self.properties.get_fluid(volume=volume_id)
+                for element_id in self.model.mesh.elements_from_volumes[volume_id]:
+                    if element_id not in list(lrf_eq_data.keys()):
+                        lrf_eq_data[element_id] = [ data["diameter"],
+                                                    fluid.speed_of_sound,
+                                                    fluid.fluid_density,
+                                                    fluid.dynamic_viscosity,
+                                                    fluid.isentropic_exponent,
+                                                    fluid.prandtl_number,
+                                                    fluid.pressure_state ]
+                        
+                        # lrf_eq_data[element_id] = {"diameter" : data["diameter"],
+                        #                            "c_0" : fluid.speed_of_sound,
+                        #                            "rho_0" : fluid.fluid_density,
+                        #                            "mu" : fluid.dynamic_viscosity,
+                        #                            "gamma" : fluid.isentropic_exponent,
+                        #                            "prandtl" : fluid.prandtl_number,
+                        #                            "pressure" : fluid.pressure_state}
+                        
+                        # print(volume_id, element_id, lrf_eq_data[element_id])
+    
         return lrf_eq_data
 
 
@@ -290,7 +292,7 @@ class AcousticAssembler:
 
                 else:
                     _, c_0, _ = self.model.get_fluid_properties(element=el)
-                    self.data_M[el, :, :] = Me/(c_0**2)
+                    # self.data_M[el, :, :] = Me/(c_0**2)
                     for i in range(self.number_frequencies):
                         self.data_M[i, el, :, :] = Me/(c_0**2)
 
@@ -313,7 +315,7 @@ class AcousticAssembler:
         _mass_matrix_full = [csr_matrix((self.data_M[j, :, :, :].flatten(), (ind_rows, ind_cols)), shape=(total_dofs, total_dofs)) for j in range(nf)]
         _visc_damping_matrix_full = csr_matrix((self.data_Cvisc, (ind_rows, ind_cols)), shape=(total_dofs, total_dofs))
         dt = time() - t0
-        print(f"Elapsed time to assemble matrices: {dt}")
+        print(f"Elapsed time to generate matrices: {dt}")
         self.process_indexes()
         self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         # self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
