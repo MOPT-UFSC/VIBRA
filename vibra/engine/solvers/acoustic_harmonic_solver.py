@@ -82,12 +82,18 @@ class AcousticHarmonicSolver:
         #
         M = self.assembler.mass_matrix
         K = self.assembler.stiffness_matrix
+        #
         C_imp = self.assembler.damping_matrix
         C_visc = self.assembler.visc_damping_matrix
         Q = self.assembler.mass_flow_vectors
         #
-        F_eq = self.get_prescribed_pressure_model_excitation()
         # self.plot_graph(M)
+
+        freq_dependent = False
+        if self.assembler.model.lrf_properties:
+            freq_dependent = True
+        else:
+            F_eq = self.get_prescribed_pressure_model_excitation()
 
         rows = K.shape[0]
         cols = len(self.frequencies)
@@ -105,10 +111,16 @@ class AcousticHarmonicSolver:
             
             omega = 2 * np.pi * freq
 
-            C = C_imp[i] + C_visc
+            if freq_dependent:
+                self.assembler.assemble_global_mass_matrix(index=i)
+                F_eq = self.get_prescribed_pressure_model_excitation(freq_dependent=True, index=i)
+                M = self.assembler.mass_matrix
+                F = - 1j * omega * Q[:, i] - F_eq
+            else:
+                F = - 1j * omega * Q[:, i] - F_eq[:, i]
 
+            C = C_imp[i] + C_visc
             A = K - (omega**2) * M + 1j * omega * C
-            F = - 1j * omega * Q[:, i] - F_eq[:, i]
 
             # solution[:, i] = spsolve(A, F)
             solution[:, i] = ps.solve(A, F)
@@ -142,7 +154,7 @@ class AcousticHarmonicSolver:
 
         return full_solution
     
-    def get_prescribed_pressure_model_excitation(self):
+    def get_prescribed_pressure_model_excitation(self, freq_dependent=False, index=0):
         """
         This method adds the effects of prescribed acoustic pressure into mass flow global vector.
 
@@ -152,21 +164,25 @@ class AcousticHarmonicSolver:
             F_eq. Each column corresponds to a frequency of analysis.
         """
 
-        logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(0, len(self.frequencies)))
+        # logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(0, len(self.frequencies)))
         self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_values()
         #
         Kr = (self.assembler.stiffness_matrix_r.toarray())[self.unprescribed_indexes, :]
         Mr = (self.assembler.mass_matrix_r.toarray())[self.unprescribed_indexes, :]
-        Cr = [(sparse_matrix.toarray())[self.unprescribed_indexes, :] for sparse_matrix in self.assembler.damping_matrix_r]
         Cr_visc = (self.assembler.visc_damping_matrix_r.toarray())[self.unprescribed_indexes, :]
 
-        logging.info( "Processing prescribed pressure model excitation..." + ProgressStatus(10, len(self.frequencies)))
+        # logging.info( "Processing prescribed pressure model excitation..." + ProgressStatus(10, len(self.frequencies)))
 
         rows = Kr.shape[0]
-        cols = len(self.frequencies)
+        if freq_dependent:
+            cols = 1
+            F_eq = np.zeros(rows, dtype=complex)
+        else:
+            cols = len(self.frequencies)
+            F_eq = np.zeros((rows,cols), dtype=complex)
 
-        aux_ones = np.ones(cols, dtype=complex)
-        F_eq = np.zeros((rows,cols), dtype=complex)
+        nf = len(self.frequencies)
+        aux_ones = np.ones(nf, dtype=complex)
 
         if len(self.prescribed_values) != 0:
             list_prescribed_values = []
@@ -178,22 +194,42 @@ class AcousticHarmonicSolver:
                     list_prescribed_values.append(value)
       
             self.array_prescribed_values = np.array(list_prescribed_values)
-                        
-            for i, freq in enumerate(self.frequencies):
+
+            if freq_dependent:
+                # logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(index + 10, len(self.frequencies) + 10))
+
+                Cr = (self.assembler.damping_matrix_r[index].toarray())[self.unprescribed_indexes, :]
                 #
-                logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(i + 10, len(self.frequencies) + 10))
+                Kr_add = np.sum((Kr * self.array_prescribed_values[:, index]), axis=1)
+                Mr_add = np.sum((Mr * self.array_prescribed_values[:, index]), axis=1)
+                Cr_add = np.sum(((Cr + Cr_visc) * self.array_prescribed_values[:, index]), axis=1)
                 #
-                Kr_add = np.sum((Kr * self.array_prescribed_values[:, i]), axis=1)
-                Mr_add = np.sum((Mr * self.array_prescribed_values[:, i]), axis=1)
-                Cr_add = np.sum(((Cr[i] + Cr_visc) * self.array_prescribed_values[:, i]), axis=1)
-                #
-                omega = 2*np.pi*freq
+                omega = 2*np.pi*self.frequencies[index]
                 F_Kadd = Kr_add
                 F_Madd = (-(omega**2))*Mr_add 
                 F_Cadd = 1j*omega*Cr_add
-                F_eq[:, i] = F_Kadd + F_Madd + F_Cadd
+                F_eq = F_Kadd + F_Madd + F_Cadd
+            
+            else:
+               
+                for i, freq in enumerate(self.frequencies):
+                    #
+                    logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(i + 10, len(self.frequencies) + 10))
 
-        logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(100, 100))
+                    Cr = (self.assembler.damping_matrix_r[i].toarray())[self.unprescribed_indexes, :]
+                    #
+                    Kr_add = np.sum((Kr * self.array_prescribed_values[:, i]), axis=1)
+                    Mr_add = np.sum((Mr * self.array_prescribed_values[:, i]), axis=1)
+                    Cr_add = np.sum(((Cr + Cr_visc) * self.array_prescribed_values[:, i]), axis=1)
+                    #
+                    omega = 2*np.pi*freq
+                    F_Kadd = Kr_add
+                    F_Madd = (-(omega**2))*Mr_add 
+                    F_Cadd = 1j*omega*Cr_add
+                    F_eq[:, i] = F_Kadd + F_Madd + F_Cadd
+
+                logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(100, 100))
+
         return F_eq
 
     def plot_graph(self, matrix):

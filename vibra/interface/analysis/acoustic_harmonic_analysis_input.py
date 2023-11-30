@@ -9,9 +9,7 @@ from PyQt5.QtWidgets import *
 class AcousticHarmonicAnalysisInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        uic.loadUi(
-            Path("data/ui_files/analysis/acoustic/acoustic_harmonic_analysis_input.ui"), self
-        )
+        uic.loadUi(Path("data/ui_files/analysis/acoustic/acoustic_harmonic_analysis_input.ui"), self)
 
         icon_path = str(Path("data/icons/logo_vibra.png"))
         self.icon = QIcon(icon_path)

@@ -18,3 +18,15 @@ class Fluid:
     @property
     def impedance(self):
         return self.fluid_density * self.speed_of_sound
+    
+    @property
+    def prandtl_number(self):
+        if self.thermal_conductivity != 0:
+            return (self.specific_heat_Cp*self.dynamic_viscosity)/self.thermal_conductivity
+        else:
+            print("Define the fluid thermal conductivity to proceed with the Prandtl number calculation.")
+            return None
+        
+    @property
+    def pressure_state(self):
+        return self.fluid_density*(self.speed_of_sound**2)/self.isentropic_exponent

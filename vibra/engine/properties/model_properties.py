@@ -70,44 +70,47 @@ class ModelProperties:
     def get_material(self, element=None) -> Material:
         return self._get_property("material")
 
-    def get_fluid(self, element=None) -> Fluid:
-        return self._get_property("fluid")
+    def get_fluid(self, **kwargs) -> Fluid:
+        return self._get_property("fluid", **kwargs)
 
-    def get_dissipation_model(self, element=None):
-        return self._get_property("dissipation_model")
+    def get_dissipation_model(self, **kwargs):
+        return self._get_property("dissipation_model", **kwargs)
+    
+    def get_lrf_model_inputs(self, element_id):
+        return self._get_property("lrf_eq_model", element=element_id)
 
-    def set_material(self, material: Material, element=None):
-        self._set_property("material", material)
+    def set_material(self, material: Material, surface=None, volume=None):
+        self._set_property("material", material, surface=surface, volume=volume)
 
-    def set_fluid(self, fluid: Fluid, element=None):
-        self._set_property("fluid", fluid)
+    def set_fluid(self, fluid: Fluid, surface=None, volume=None):
+        self._set_property("fluid", fluid, surface=surface, volume=volume)
 
-    def set_dissipation_model(self, data, volume=None):
-        self._set_property("dissipation_model", data)
+    def set_dissipation_model(self, data, **kwargs):
+        self._set_property("dissipation_model", data, **kwargs)
 
-    def get_fluid_density(self, element=None):
-        #
-        fluid = self.get_fluid(element=element)
+    def set_lrf_eq_model_data(self, data, surface=None, volume=None):
+        self._set_property("lrf_eq_model", data, surface=surface, volume=volume)
+
+    def get_fluid_density(self, fluid, **kwargs):
         rho_0 = fluid.fluid_density
-        #
-        dissipation_model = self.get_dissipation_model(element=element)
+        dissipation_model = self.get_dissipation_model(**kwargs)
         if dissipation_model is None:
             return rho_0
         elif dissipation_model["model"] == "proportional damping":
             factor = dissipation_model["fluid density factor"]
             return (1 + factor * 1j) * rho_0
 
-    def get_speed_of_sound(self, element=None):
-        #
-        fluid = self.get_fluid(element=element)
+    def get_speed_of_sound(self, fluid, **kwargs):
         c_0 = fluid.speed_of_sound
-        #
-        dissipation_model = self.get_dissipation_model(element=element)
+        dissipation_model = self.get_dissipation_model(**kwargs)
         if dissipation_model is None:
             return c_0
         elif dissipation_model["model"] == "proportional damping":
             factor = dissipation_model["speed of sound factor"]
             return (1 + factor * 1j) * c_0
+        
+    def get_lrf_model_inputs(self):
+        pass
 
     def get_structural_boundary_condition(self, surface):
         return self._get_property("prescribed_dofs", surface=surface)
@@ -157,9 +160,7 @@ class ModelProperties:
     def set_specific_impedance(self, data, surface):
         self._set_property("specific_impedance", data, surface=surface)
 
-    def _set_property(
-        self, property: str, value, node=None, element=None, line=None, surface=None, volume=None
-    ):
+    def _set_property(self, property: str, value, node=None, element=None, line=None, surface=None, volume=None):
         """
         Sets a value to a property by node, element, line, surface or volume
         if any of these exists. Otherwise sets the property as global.
@@ -178,9 +179,7 @@ class ModelProperties:
         else:
             self.global_properties[property, "global"] = value
 
-    def _get_property(
-        self, property: str, node=None, element=None, line=None, surface=None, volume=None
-    ):
+    def _get_property(self, property: str, node=None, element=None, line=None, surface=None, volume=None):
         """
         Finds the value that corresponds to the property needed.
         Checks node, element, entity, volume and global data by

@@ -5,9 +5,7 @@ from time import sleep
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.model import Model
-from vibra.engine.solvers.acoustic_harmonic_solver import (
-    AcousticHarmonicSolver,
-)
+from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
 from vibra.project_file import ProjectFile
@@ -77,11 +75,11 @@ class Project:
         logging.info(f"Importing geometry at {path}")
         self.model.process_visual_geometry_mesh()
 
-    def set_fluid(self, fluid):
-        self.model.set_fluid(fluid)
+    def set_fluid(self, fluid, **kwargs):
+        self.model.set_fluid(fluid, **kwargs)
 
-    def set_material(self, material):
-        self.model.set_material(material)
+    def set_material(self, material, **kwargs):
+        self.model.set_material(material, **kwargs)
 
     def set_mesh_setup(self, mesh_setup):
         self.model.set_mesh_setup(mesh_setup)
@@ -118,6 +116,9 @@ class Project:
     def set_dissipation_model(self, data):
         self.model.set_dissipation_model_data(data)
 
+    def set_lrf_eq_model_data(self, data, surface=None, volume=None):
+        self.model.set_lrf_eq_model_data(data, surface=surface, volume=volume)
+
     def set_analysis_data(self, data):
         self.analysis_data = data
         self.acoustic_assembler.set_analysis_data(data)
@@ -131,12 +132,10 @@ class Project:
             analysis_data["f_max"] = f_max
             analysis_data["f_step"] = f_step
         else:
-            analysis_data = {
-                "frequencies": frequencies,
-                "f_min": f_min,
-                "f_max": f_max,
-                "f_step": f_step,
-            }
+            analysis_data = {   "frequencies": frequencies,
+                                "f_min": f_min,
+                                "f_max": f_max,
+                                "f_step": f_step   }
         self.set_analysis_data(analysis_data)
 
     def update_import_table_state(self, state):
@@ -194,6 +193,7 @@ class Project:
         self.structural_assembler.set_element_formulation(element)
 
     def solve_acoustic_modal_analysis(self):
+        self.model.reset_lrf_eq_model()
         self.acoustic_assembler.process_assemble()
         self.acoustic_modal_solver.solve()
 
@@ -202,6 +202,8 @@ class Project:
         self.structural_modal_solver.solve()
 
     def solve_acoustic_harmonic_analysis(self):
+        self.model.get_lrf_eq_data()
+        self.model.process_lrf_properties(self.analysis_data["frequencies"])
         self.acoustic_assembler.process_assemble()
         self.acoustic_harmonic_solver.solve()
 

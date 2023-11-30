@@ -37,9 +37,7 @@ class AnalysisSetupInput(QDialog):
         """
 
         if self.analysis_id in [1, 6]:
-            path = Path(
-                "data/ui_files/analysis/structural/harmonic_analysis_mode_superposition_method.ui"
-            )
+            path = Path("data/ui_files/analysis/structural/harmonic_analysis_mode_superposition_method.ui")
         elif self.analysis_id in [0, 5]:
             path = Path("data/ui_files/analysis/structural/harmonic_analysis_direct_method.ui")
         elif self.analysis_id in [3]:
@@ -160,9 +158,7 @@ class AnalysisSetupInput(QDialog):
                     self.lineEdit_modes.setFocus()
                     return True
 
-            input_fmin = self.check_inputs(
-                self.lineEdit_fmin, "'minimum frequency'", zero_included=True, _float=True
-            )
+            input_fmin = self.check_inputs(self.lineEdit_fmin, "'minimum frequency'", zero_included=True, _float=True)
             if self.stop:
                 self.lineEdit_fmin.setFocus()
                 return True
@@ -172,9 +168,7 @@ class AnalysisSetupInput(QDialog):
                 self.lineEdit_fmax.setFocus()
                 return True
 
-            input_fstep = self.check_inputs(
-                self.lineEdit_fstep, "'frequency resolution (df)'", _float=True
-            )
+            input_fstep = self.check_inputs(self.lineEdit_fstep, "'frequency resolution (df)'", _float=True)
             if self.stop:
                 self.lineEdit_fstep.setFocus()
                 return True

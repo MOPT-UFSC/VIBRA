@@ -1,7 +1,7 @@
 import numpy as np
 
 from vibra.engine.elements.solid_elements import Element3D
-
+# fmt: off
 
 def shapeT4C(ssx, ttx, rrx):
     """This function returns the shape functions and its derivatives."""
@@ -75,9 +75,10 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         con1 = (5 - np.sqrt(5)) / 20
         con2 = (5 + 3 * np.sqrt(5)) / 20
         self.wps = 1 / 4
-        self.pint = np.array(
-            [[con1, con1, con1], [con1, con1, con2], [con1, con2, con1], [con2, con1, con1]]
-        )
+        self.pint = np.array([  [con1, con1, con1], 
+                                [con1, con1, con2], 
+                                [con1, con2, con1], 
+                                [con2, con1, con1]  ])
 
     def process_shape_functions_and_derivatives(self):
         """This method processes the shape functions and their
@@ -89,7 +90,9 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         # shape functions
         self.phi = np.array([1 - ssx - ttx - rrx, ttx, rrx, ssx], dtype=float)
         # derivatives
-        self.dphi = np.array([[-1, 0, 0, 1], [-1, 1, 0, 0], [-1, 0, 1, 0]], dtype=float)
+        self.dphi = np.array([[-1, 0, 0, 1], 
+                              [-1, 1, 0, 0], 
+                              [-1, 0, 1, 0]], dtype=float)
 
     def get_constitutive_model(self, el_index, model_type="linear-isotropic"):
         """This methdo returns the material constitutive model."""
@@ -105,16 +108,12 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
             tempn = (1 - 2 * vv) / 2
             tempt = 1 - vv
             #
-            const_law = np.array(
-                [
-                    [tempt, vv, vv, 0, 0, 0],
-                    [vv, tempt, vv, 0, 0, 0],
-                    [vv, vv, tempt, 0, 0, 0],
-                    [0, 0, 0, tempn, 0, 0],
-                    [0, 0, 0, 0, tempn, 0],
-                    [0, 0, 0, 0, 0, tempn],
-                ]
-            )
+            const_law = np.array([  [tempt, vv, vv, 0, 0, 0],
+                                    [   vv, tempt, vv, 0, 0, 0],
+                                    [   vv, vv, tempt, 0, 0, 0],
+                                    [    0, 0, 0, tempn, 0, 0],
+                                    [    0, 0, 0, 0, tempn, 0],
+                                    [    0, 0, 0, 0, 0, tempn]]     )
 
             return tempc * const_law
 
@@ -166,29 +165,23 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
 
         self.reorder_connect()
         dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
-        ind_dofs = (
-            np.array(
-                [
-                    dofs * self.connectivity[:, 1] - 1,
-                    dofs * self.connectivity[:, 1],
-                    dofs * self.connectivity[:, 1] + 1,
-                    dofs * self.connectivity[:, 2] - 1,
-                    dofs * self.connectivity[:, 2],
-                    dofs * self.connectivity[:, 2] + 1,
-                    dofs * self.connectivity[:, 3] - 1,
-                    dofs * self.connectivity[:, 3],
-                    dofs * self.connectivity[:, 3] + 1,
-                    dofs * self.connectivity[:, 4] - 1,
-                    dofs * self.connectivity[:, 4],
-                    dofs * self.connectivity[:, 4] + 1,
-                ],
-                dtype=int,
-            )
-            + 1
-        ).T
+        ind_dofs = (np.array([  dofs * self.connectivity[:, 1] - 1,
+                                dofs * self.connectivity[:, 1],
+                                dofs * self.connectivity[:, 1] + 1,
+                                dofs * self.connectivity[:, 2] - 1,
+                                dofs * self.connectivity[:, 2],
+                                dofs * self.connectivity[:, 2] + 1,
+                                dofs * self.connectivity[:, 3] - 1,
+                                dofs * self.connectivity[:, 3],
+                                dofs * self.connectivity[:, 3] + 1,
+                                dofs * self.connectivity[:, 4] - 1,
+                                dofs * self.connectivity[:, 4],
+                                dofs * self.connectivity[:, 4] + 1  ], dtype=int) + 1).T
 
         vect_indices = ind_dofs.flatten()
         self.ind_rows = ((np.tile(vect_indices, (edofs, 1))).T).flatten()
         self.ind_cols = (np.tile(ind_dofs, edofs)).flatten()
 
         return self.ind_rows, self.ind_cols
+
+# fmt: on

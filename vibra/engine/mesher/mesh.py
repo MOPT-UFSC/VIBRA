@@ -3,6 +3,7 @@ import os
 import sys
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from collections import defaultdict
 
 import gmsh
 import numpy as np
@@ -33,8 +34,15 @@ class Mesh:
         self.nodes_from_lines = dict()
         self.nodes_from_surfaces = dict()
         self.nodes_from_volumes = dict()
+        self.gmsh_elements_from_surfaces = dict()
+        self.gmsh_elements_from_volumes = dict()
+        self.elements_from_volumes = dict()
+        self.elements_from_surfaces = dict()
+        self.volume_from_element = dict()
+        self.surface_from_element = dict()
         self.entity_ranges = dict()
         self.surfaces_from_volumes = dict()
+        self.volume_from_surface = defaultdict(list)
         self.connectivity_from_surfaces = dict()
 
     @classmethod
@@ -108,42 +116,37 @@ class Mesh:
 
         self.geometry_setup = GeometrySetup(string, suffix)
 
-    def load_cad(
-        self,
-        path: (str | Path),
-        *,
-        minimum_element_size: float = 30.0,
-        maximum_element_size: float = 30.0,
-        element_type: ElementType = DEFAULT_ELEMENT_TYPE,
-        geometry_tolerance: float = 1e-6,
-        size_factor: float = 0.50,
-        dimension: int = 3,
-        threads: int = 2,
-        gmsh_gui: bool = False,
-    ):
-        self.mesh_setup = dict(
-            minimum_element_size=minimum_element_size,
-            maximum_element_size=maximum_element_size,
-            element_type=element_type,
-            geometry_tolerance=geometry_tolerance,
-            size_factor=size_factor,
-            dimension=dimension,
-            threads=threads,
-        )
+    def load_cad(   self,
+                    path: (str | Path),
+                    *,
+                    minimum_element_size: float = 30.0,
+                    maximum_element_size: float = 30.0,
+                    element_type: ElementType = DEFAULT_ELEMENT_TYPE,
+                    geometry_tolerance: float = 1e-6,
+                    size_factor: float = 0.50,
+                    dimension: int = 3,
+                    threads: int = 2,
+                    gmsh_gui: bool = False ):
+        
+        self.mesh_setup = dict( minimum_element_size=minimum_element_size,
+                                maximum_element_size=maximum_element_size,
+                                element_type=element_type,
+                                geometry_tolerance=geometry_tolerance,
+                                size_factor=size_factor,
+                                dimension=dimension,
+                                threads=threads )
 
         path = Path(path)
         gmsh.initialize("", False)
         logging.info(f"Generating mesh from {path}")
 
         logging.info("Configuring Mesh" + ProgressStatus(5, 100))
-        self._configure_mesh(
-            element_type,
-            minimum_element_size,
-            maximum_element_size,
-            geometry_tolerance,
-            size_factor,
-            threads,
-        )
+        self._configure_mesh(   element_type,
+                                minimum_element_size,
+                                maximum_element_size,
+                                geometry_tolerance,
+                                size_factor,
+                                threads,   )
 
         logging.info("Loading Geometry" + ProgressStatus(10, 100))
         gmsh.merge(str(path))
@@ -151,10 +154,7 @@ class Mesh:
         self.dimension = min(dimension, gmsh.model.getDimension())
         self.element_type = element_type
         
-        volumes_list = gmsh.model.getEntities(3)
-        gmsh.model.occ.fragment(volumes_list,volumes_list)
-        gmsh.model.occ.synchronize()
-
+        self._merge_nodes_from_adjacent_volumes()
         
         logging.info("Loading Geometry" + ProgressStatus(15, 100))
         gmsh.model.mesh.generate(dim=element_type.dimensions)
@@ -169,12 +169,17 @@ class Mesh:
 
         gmsh.finalize()
 
-        logging.info(
-            f"Mesh generated with {len(self.nodal_coordinates)} nodes"
-            f", {len(self.lines_connectivity)} dim 1"
-            f", {len(self.faces_connectivity)} dim 2"
-            f"and {len(self.solids_connectivity)} dim 3 elements"
-        )
+        logging.info(   f"Mesh generated with {len(self.nodal_coordinates)} nodes"
+                        f", {len(self.lines_connectivity)} dim 1"
+                        f", {len(self.faces_connectivity)} dim 2"
+                        f"and {len(self.solids_connectivity)} dim 3 elements"   )
+
+    def _merge_nodes_from_adjacent_volumes(self):
+        """ This method merges all nodes from adjacent volumes.
+        """
+        volumes_list = gmsh.model.getEntities(3)
+        gmsh.model.occ.fragment(volumes_list,volumes_list)
+        gmsh.model.occ.synchronize()    
 
     def import_nodes_coordinates(self, filename):
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
@@ -225,6 +230,9 @@ class Mesh:
         self.solids_connectivity[:, 2] = aux*etype_tag
         self.solids_connectivity[:, 3] = aux*e_nodes
         self.solids_connectivity[:, 4:] = connect
+        #
+        self.elements_from_volumes.clear()
+        self.elements_from_volumes[1] = np.arange(rows, dtype=int)
 
     def export_nodes_coordinates(self, filename):
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
@@ -313,10 +321,17 @@ class Mesh:
         self.nodes_from_surfaces.clear()
         self.nodes_from_volumes.clear()
 
+        self.surfaces_from_volumes.clear()
+        self.volume_from_surface.clear()
+        self.gmsh_elements_from_surfaces.clear()
+        self.gmsh_elements_from_volumes.clear()
+
         for dim, tag in gmsh.model.getEntities():
             if dim == 3:
                 _, downwards = gmsh.model.getAdjacencies(dim, tag)
                 self.surfaces_from_volumes[tag] = list(downwards)
+                for surf_id in list(downwards):
+                    self.volume_from_surface[surf_id].append(tag)
 
             elements_data = dict()
             element_types, element_indexes, element_nodes = gmsh.model.mesh.getElements(dim, tag)
@@ -349,17 +364,48 @@ class Mesh:
                 array_element_indexes = np.array([*set(element_indexes[0])], dtype=int) - 1
                 self.connectivity_from_surfaces[tag] = {"element_indexes" : array_element_indexes,
                                                         "connectivity" : array_element_nodes}
+                self.gmsh_elements_from_surfaces[tag] = np.array([*set(element_indexes[0])], dtype=int)
 
             elif dim == 3:  # Solids
                 connectivity_dim3[dim, tag] = elements_data
                 self.nodes_from_volumes[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
+                self.gmsh_elements_from_volumes[tag] = np.array([*set(element_indexes[0])], dtype=int)
+        
+        self.lines_connectivity, self.map_line_elements = self._get_connectivity_array(connectivity_dim1)
+        self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)
+        self.solids_connectivity, self.map_solid_elements = self._get_connectivity_array(connectivity_dim3)
+        #
+        self._maps_surfaces_by_elements()
+        self._maps_volumes_by_elements()
 
-        self.lines_connectivity = self._get_connectivity_array(connectivity_dim1)
-        self.faces_connectivity = self._get_connectivity_array(connectivity_dim2)
-        self.solids_connectivity = self._get_connectivity_array(connectivity_dim3)
+    def _maps_surfaces_by_elements(self):
+        self.surface_from_element.clear()
+        self.elements_from_surfaces.clear()
+        for tag, gmsh_indexes in self.elements_from_surfaces.items():
+            n = len(gmsh_indexes)
+            internal_indexes = np.zeros(n, dtype=int)
+            for i, gmsh_index in enumerate(gmsh_indexes):
+                index = self.map_solid_elements[gmsh_index]
+                internal_indexes[i] = index
+                self.surface_from_element[index] = tag
+            self.elements_from_surfaces[tag] = internal_indexes
+
+    def _maps_volumes_by_elements(self):
+        self.volume_from_element.clear()
+        self.elements_from_volumes.clear()
+        for tag, gmsh_indexes in self.gmsh_elements_from_volumes.items():
+            n = len(gmsh_indexes)
+            internal_indexes = np.zeros(n, dtype=int)
+            for i, gmsh_index in enumerate(gmsh_indexes):
+                index = self.map_solid_elements[gmsh_index]
+                internal_indexes[i] = index
+                self.volume_from_element[index] = tag
+            self.elements_from_volumes[tag] = internal_indexes
+        # data = np.array([list(self.volume_from_element.keys()), list(self.volume_from_element.values())], dtype=int).T
+        # np.savetxt("elementos_volumes.dat", data, delimiter=",")
 
     def _process_nodes_reordering(self):
-        """ This method processes the nodes reordering to reducie the global matrices 
+        """ This method processes the nodes reordering to reduce the global matrices 
             bandwidth and improve the solution performance.
         """
         # print(f"Nodal coordinates: {self.nodal_coordinates.shape}")
@@ -465,6 +511,7 @@ class Mesh:
 
         n = int(np.sum(n_list))
         output_data = np.zeros((n, max_cols + 4), dtype=int)
+        gmsh_elements = np.zeros(n, dtype=int)
 
         start, end, ind = 0, 0, 0
         for (entity_dim, entity_tag), e_data in input_dict.items():
@@ -484,6 +531,7 @@ class Mesh:
                 # output_data[start:end, 3] = indexes
                 output_data[start:end, 3] = aux * cols
                 output_data[start:end, 4 : 4 + cols] = nodes
+                gmsh_elements[start:end] = indexes
 
                 start = end
                 ind += 1
@@ -491,8 +539,9 @@ class Mesh:
             self.entity_ranges[entity_dim, entity_tag] = (entity_start, entity_end)
 
         output_data[:, 0] = np.arange(1, n + 1, 1)
-
-        return output_data
+        internal_indexes = np.arange(n, dtype=int)
+        map_elements = dict(zip(gmsh_elements, internal_indexes))
+        return output_data, map_elements
 
 
 if __name__ == "__main__":
