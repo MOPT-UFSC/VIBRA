@@ -1,8 +1,10 @@
 import os
 import logging
 from pathlib import Path
+from collections import defaultdict
 
 import numpy as np
+from scipy.special import jv
 
 from vibra.engine.mesher.geometry_setup import GeometrySetup
 from vibra.engine.mesher.mesh import Mesh
@@ -37,7 +39,7 @@ class Model:
         self.surface_acoustic_element = None
         self.solid_structural_element = None
         self.surface_structural_element = None
-
+        self.reset_lrf_eq_model()
         self.properties = ModelProperties()
 
     def set_geometry_path(self, path):
@@ -91,6 +93,10 @@ class Model:
     def set_fluid(self, fluid, **kwargs):
         self.properties.set_fluid(fluid, **kwargs)
 
+    def set_mesh(self, mesh):
+        self.mesh = mesh
+        self.generated_mesh = True
+
     def get_fluid_properties(self, proportional_damping=False, **kwargs):
         """ This method returns the fluid properties """
         # volume_id = self.mesh.elements_from_volumes[el_index]
@@ -103,7 +109,7 @@ class Model:
             try:
                 volume = self.mesh.volume_from_element[element]
             except:
-                # temporary solution to run external mesh file
+                # temporary solution to allow running external mesh file
                 volume = 1
 
         fluid = self.properties.get_fluid(volume=volume)
@@ -139,6 +145,108 @@ class Model:
         _nodes = nodes.reshape(-1, 1)
         global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
         return np.array(global_dofs.flatten(), dtype=int)
+
+    def reset_lrf_eq_model(self):
+        self.lrf_eq_data = dict()
+        self.lrf_properties = dict()
+
+    def get_lrf_eq_data(self):
+        """ """
+        self.lrf_eq_data = dict()
+        # TODO: enable the elements selection by surfaces boundaries
+        # for key, data in self.properties.surface_properties.items():
+        #     property, surface_id = key
+        #     if property == "lrf_eq_model":
+        #         for surface_id in data["surface_ids"]:
+        #             fluid = self.properties.get_fluid(surface=surface_id)
+        #             for element_id in self.model.mesh.elements_from_surfaces[surface_id]:
+        #                 # fluid = self.properties.get_fluid(element=element_id)
+        #                 if element_id not in list(lrf_eq_data.keys()):
+        #                     lrf_eq_data[element_id] = {"diameter" : data["diameter"],
+        #                                                "c_0" : fluid.speed_of_sound,
+        #                                                "rho_0" : fluid.fluid_density,
+        #                                                "mu" : fluid.dynamic_viscosity,
+        #                                                "gamma" : fluid.isentropic_exponent,
+        #                                                "prandtl" : fluid.prandtl_number,
+        #                                                "pressure" : fluid.pressure_state}
+        for key, data in self.properties.volume_properties.items():
+            property, volume_id = key
+            if property == "lrf_eq_model":
+                #
+                fluid = self.properties.get_fluid(volume=volume_id)
+                #
+                d = data["diameter"]
+                c_0 = fluid.speed_of_sound
+                rho_0 = fluid.fluid_density
+                mu = fluid.dynamic_viscosity
+                gamma = fluid.isentropic_exponent
+                Pr = fluid.prandtl_number
+                P_0 = fluid.pressure_state
+                #
+                properties = [d, c_0, rho_0, mu, gamma, Pr, P_0]
+                self.set_lrf_eq_data([volume_id], properties)
+        
+        return self.lrf_eq_data
+
+    def set_lrf_eq_data(self, volume_ids, properties):
+        """ """
+        if isinstance(volume_ids, int):
+            volume_ids = [volume_ids]
+        for volume_id in volume_ids:
+            for element_id in self.mesh.elements_from_volumes[volume_id]:
+                self.lrf_eq_data[element_id] = properties
+
+    def process_lrf_properties(self, frequencies):
+        """ """
+
+        if frequencies is None:
+            return dict()
+
+        logging.info( "Processing lrf properties (2/2)..." + ProgressStatus(20, 100))
+        
+        aux = defaultdict(list)
+        self.lrf_properties = dict()
+        if self.lrf_eq_data:
+
+            if float(0) in frequencies:
+                freqs = frequencies[1:]
+            else:
+                freqs = frequencies
+            
+            for element_index, parameters in self.lrf_eq_data.items():
+                aux[str(parameters)].append(element_index)
+            
+            for str_parameters, element_indexes in aux.items():
+                parameters = [float(str_parameter) for str_parameter in str_parameters[1:-1].split(",")]
+                diameter, c_local, rho_local, mu, gamma, Pr, pressure = parameters  
+                
+                omegas = 2 * (np.pi) * freqs
+                s = (diameter/2) * ((omegas*rho_local/mu)**(1/2))
+
+                rho_ef = -rho_local * (jv(0, (1j**(3/2))*s)) / (jv(2, (1j**(3/2))*s))
+                K0_ef = (pressure*gamma) / (gamma + (gamma - 1) * jv(2, (1j**(3/2))*s*(Pr**(1/2))) / jv(0, (1j**(3/2))*s*(Pr**(1/2))))
+                c_ef_2 = K0_ef/rho_ef
+
+                if float(0) in frequencies:
+                    rho_ef = np.insert(rho_ef, 0, rho_local)
+                    c_ef_2 = np.insert(c_ef_2, 0, c_local**2)                
+                #
+                for element_index in element_indexes:
+                    self.lrf_properties[element_index] = {  "rho_ef" : rho_ef,
+                                                            "c_ef_2" : c_ef_2   }
+
+    def check_if_lrf_eq_model_is_active(self, surface_id):
+        if len(self.lrf_properties) == 0:
+            return False, None
+        
+        _volume_id = self.mesh.volume_from_surface[surface_id]
+        for key, _ in self.properties.volume_properties.items():
+            prop, volume_id = key
+            if prop == "lrf_eq_model" and volume_id == _volume_id[0]:
+                elements = self.mesh.elements_from_volumes[volume_id]
+                rho_eff = self.lrf_properties[elements[0]]["rho_ef"]
+                return True, rho_eff
+        return False, None
 
     # Properties can be accessed from outside, so this "indirection layer" is not needed
     def set_dissipation_model_data(self, data):

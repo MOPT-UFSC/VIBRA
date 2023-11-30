@@ -3,6 +3,7 @@ import os
 import sys
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from collections import defaultdict
 
 import gmsh
 import numpy as np
@@ -35,8 +36,13 @@ class Mesh:
         self.nodes_from_volumes = dict()
         self.gmsh_elements_from_surfaces = dict()
         self.gmsh_elements_from_volumes = dict()
+        self.elements_from_volumes = dict()
+        self.elements_from_surfaces = dict()
+        self.volume_from_element = dict()
+        self.surface_from_element = dict()
         self.entity_ranges = dict()
         self.surfaces_from_volumes = dict()
+        self.volume_from_surface = defaultdict(list)
         self.connectivity_from_surfaces = dict()
 
     @classmethod
@@ -224,6 +230,9 @@ class Mesh:
         self.solids_connectivity[:, 2] = aux*etype_tag
         self.solids_connectivity[:, 3] = aux*e_nodes
         self.solids_connectivity[:, 4:] = connect
+        #
+        self.elements_from_volumes.clear()
+        self.elements_from_volumes[1] = np.arange(rows, dtype=int)
 
     def export_nodes_coordinates(self, filename):
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
@@ -312,6 +321,8 @@ class Mesh:
         self.nodes_from_surfaces.clear()
         self.nodes_from_volumes.clear()
 
+        self.surfaces_from_volumes.clear()
+        self.volume_from_surface.clear()
         self.gmsh_elements_from_surfaces.clear()
         self.gmsh_elements_from_volumes.clear()
 
@@ -319,6 +330,8 @@ class Mesh:
             if dim == 3:
                 _, downwards = gmsh.model.getAdjacencies(dim, tag)
                 self.surfaces_from_volumes[tag] = list(downwards)
+                for surf_id in list(downwards):
+                    self.volume_from_surface[surf_id].append(tag)
 
             elements_data = dict()
             element_types, element_indexes, element_nodes = gmsh.model.mesh.getElements(dim, tag)
@@ -366,8 +379,8 @@ class Mesh:
         self._maps_volumes_by_elements()
 
     def _maps_surfaces_by_elements(self):
-        self.surface_from_element = dict()
-        self.elements_from_surfaces = dict()
+        self.surface_from_element.clear()
+        self.elements_from_surfaces.clear()
         for tag, gmsh_indexes in self.elements_from_surfaces.items():
             n = len(gmsh_indexes)
             internal_indexes = np.zeros(n, dtype=int)
@@ -378,8 +391,8 @@ class Mesh:
             self.elements_from_surfaces[tag] = internal_indexes
 
     def _maps_volumes_by_elements(self):
-        self.volume_from_element = dict()
-        self.elements_from_volumes = dict()
+        self.volume_from_element.clear()
+        self.elements_from_volumes.clear()
         for tag, gmsh_indexes in self.gmsh_elements_from_volumes.items():
             n = len(gmsh_indexes)
             internal_indexes = np.zeros(n, dtype=int)
@@ -388,11 +401,11 @@ class Mesh:
                 internal_indexes[i] = index
                 self.volume_from_element[index] = tag
             self.elements_from_volumes[tag] = internal_indexes
-        data = np.array([list(self.volume_from_element.keys()), list(self.volume_from_element.values())], dtype=int).T
-        np.savetxt("elementos_volumes.dat", data, delimiter=",")
+        # data = np.array([list(self.volume_from_element.keys()), list(self.volume_from_element.values())], dtype=int).T
+        # np.savetxt("elementos_volumes.dat", data, delimiter=",")
 
     def _process_nodes_reordering(self):
-        """ This method processes the nodes reordering to reducie the global matrices 
+        """ This method processes the nodes reordering to reduce the global matrices 
             bandwidth and improve the solution performance.
         """
         # print(f"Nodal coordinates: {self.nodal_coordinates.shape}")

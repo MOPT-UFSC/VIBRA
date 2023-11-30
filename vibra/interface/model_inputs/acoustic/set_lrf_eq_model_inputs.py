@@ -116,17 +116,13 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         index = self.comboBox_selection_type.currentIndex()
         if index == 0:
 
-            data = {"selection_type" : index,
-                    "diameter" : self.diameter}
-
+            data = {"diameter" : self.diameter}
             for _id in self.volume_ids:
                 self.project.set_lrf_eq_model_data(data, volume=_id)
 
         else:
 
-            data = {"selection_type" : index,
-                    "diameter" : self.diameter}
-
+            data = {"diameter" : self.diameter}
             for _id in self.surface_ids:
                 self.project.set_lrf_eq_model_data(data, surface=_id)
 

@@ -10,26 +10,34 @@ import numpy as np
 import matplotlib.pyplot as plt
 from time import time
 
-def test_load_external_mesh_and_solve(reorder_nodes=False):
+def test_load_external_mesh_and_solve_lrf_model(reorder_nodes=True):
     # return
     # Define the nodal coordinates and connectivity file path
     coord_path = "data/examples/mesh/muffler/coord_muff.csv"
     connect_path = "data/examples/mesh/muffler/connect_muff.csv"
-    
+
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(coord_path, index_zero=True)
     mesh.import_external_connectivity(connect_path, index_zero=True, etype_tag=4, e_nodes=4)
     mesh.element_type = TETRAHEDRON_4
     mesh.connectivity_from_surfaces = get_faces_connectivities()
+    mesh.volume_from_surface[1].append(1)
+    mesh.volume_from_surface[2].append(1)
     
     if reorder_nodes:
         mesh._process_nodes_reordering()
         map_nodes_indexes = mesh.reordering.map_nodes_indexes
 
     # Define the fluid properties
-    rho_0 = 1.18
-    c_0 = 343.0
-    mu = 1*1.8e-05
+    diam_hole = 0.004
+    rho_0 = 1.225
+    c_0 = 346.25
+    mu = 1*1.7894E-05
+    gamma = 1.4
+    Pr = 0.71
+    P_0 = rho_0*(c_0**2)/gamma
+    #
+    lrf_prop = [diam_hole, c_0, rho_0, mu, gamma, Pr, P_0]
     #
     fluid = Fluid(  name = "Air",
                     identifier = 1,
@@ -40,8 +48,7 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
 
     # Set the defined fluid
     model = Model()
-    model.mesh =  mesh
-    model.generated_mesh = True
+    model.set_mesh(mesh)
     model.set_fluid(fluid, volume=1)
 
     # Normal surface velocity data
@@ -59,6 +66,12 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
 
     model.set_surface_velocity(data_Vn, 1)
     model.set_specific_impedance(data_Z, 2)
+
+    data = {"diameter" : diam_hole}
+    model.set_lrf_eq_model_data(data, volume=1)
+    model.set_lrf_eq_data([1], lrf_prop)
+    
+    # Create an object to assembler
     assembler = AcousticAssembler(model)
     
     # Define the analysis frequency setup
@@ -69,6 +82,8 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
 
     # Set the analysis frequency setup
     assembler.set_frequencies(frequencies)
+    
+    model.process_lrf_properties(frequencies)
     assembler.process_assemble()
     
     # t0 = time()
@@ -93,7 +108,7 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
 
         cols = solution.shape[1]
 
-        node = 3596
+        node = 3602
         if reorder_nodes:
             node = int(map_nodes_indexes[node])
         
@@ -104,13 +119,13 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
         filename = f"acoustic_pressure_at_node_{node}_Vibra_pardiso.dat"
         np.savetxt(filename, results, delimiter=",")
 
-        results_path = "data/examples/mesh/muffler/external_results.csv"
+        results_path = "data/examples/mesh/muffler/LRF0_004.csv"
 
         data_ref = np.loadtxt(results_path, delimiter=",")
         freq_ref = data_ref[:, 0]
         P_ref = data_ref[:, 1] + 1j*data_ref[:, 2]
 
-        error_abs = np.abs((solution[node, :] - P_ref)/((solution[node, :] + P_ref)/2))
+        # error_abs = np.abs((solution[node, :] - P_ref)/((solution[node, :] + P_ref)/2))
         # assert error_abs < 1e-1
 
         fig1, ax1 = plt.subplots()
@@ -260,5 +275,5 @@ def save_results(data):
     pass
 
 if __name__ == "__main__":
-    test_load_external_mesh_and_solve(reorder_nodes=False)
+    test_load_external_mesh_and_solve_lrf_model(reorder_nodes=False)
     # plot_results()

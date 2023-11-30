@@ -193,6 +193,7 @@ class Project:
         self.structural_assembler.set_element_formulation(element)
 
     def solve_acoustic_modal_analysis(self):
+        self.model.reset_lrf_eq_model()
         self.acoustic_assembler.process_assemble()
         self.acoustic_modal_solver.solve()
 
@@ -201,6 +202,8 @@ class Project:
         self.structural_modal_solver.solve()
 
     def solve_acoustic_harmonic_analysis(self):
+        self.model.get_lrf_eq_data()
+        self.model.process_lrf_properties(self.analysis_data["frequencies"])
         self.acoustic_assembler.process_assemble()
         self.acoustic_harmonic_solver.solve()
 

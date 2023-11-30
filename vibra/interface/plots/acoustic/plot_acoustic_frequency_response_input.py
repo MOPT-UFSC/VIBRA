@@ -153,7 +153,7 @@ class PlotAcousticFrequencyResponseInput(QDialog):
 
         if message != "":
             window_title = "ERROR MESSAGE"
-            PrintMessageInput([title, message, window_title])
+            PrintMessageInput([window_title, title, message])
             return True, []
 
         if single_ID:
