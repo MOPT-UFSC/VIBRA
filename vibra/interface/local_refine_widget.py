@@ -14,6 +14,8 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem,
     QVBoxLayout,
     QComboBox,
+    QCheckBox,
+    
 )
 from vibra.engine.mesher.element_type import *
 from vibra.utils.interface_functions import get_main_window
@@ -33,7 +35,6 @@ class LocalRefineWidget(QDialog):
         self.global_mesh_size_textbox = QLineEdit(self)
         self.layout_mesh_parameters.addWidget(self.global_mesh_size_textbox, 2, 1)
 
-
         # element type list
         self.element_type_list_label = QLabel(self)
         self.element_type_list_label.setText("Element type:")
@@ -50,6 +51,19 @@ class LocalRefineWidget(QDialog):
         self.shape_function_list = QComboBox()
         self.shape_function_list.addItems(["Linear", "Quadratic"])
         self.layout_mesh_parameters.addWidget(self.shape_function_list, 2, 3)
+
+        # checkboxes
+        self.layout_checkboxes = QVBoxLayout()
+
+        # mesh connection checkbox
+        self.mesh_connection_layout = QHBoxLayout()
+        self.mesh_connection_checkbox = QCheckBox(self)
+        self.mesh_connection_layout.addWidget(self.mesh_connection_checkbox)
+        self.mesh_connection_checkbox_label = QLabel(self)
+        self.mesh_connection_checkbox_label.setText("Connect adjacent meshes")
+        self.mesh_connection_layout.addWidget(self.mesh_connection_checkbox_label)
+        self.layout_checkboxes.addLayout(self.mesh_connection_layout)
+        
 
 
 
@@ -97,6 +111,7 @@ class LocalRefineWidget(QDialog):
         # layout
         layout_main = QVBoxLayout()
         layout_main.addLayout(self.layout_mesh_parameters)
+        layout_main.addLayout(self.layout_checkboxes)
         layout_main.addLayout(layout_refining_parameters)
         layout_main.addWidget(self.table)
         layout_main.addWidget(self.apply_button)
