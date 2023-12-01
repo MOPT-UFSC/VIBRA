@@ -57,14 +57,11 @@ class LocalRefineWidget(QDialog):
 
         # mesh connection checkbox
         self.mesh_connection_layout = QHBoxLayout()
-        self.mesh_connection_checkbox = QCheckBox(self)
+        self.mesh_connection_checkbox = QCheckBox("Merge nodes from neighbour volumes")
         self.mesh_connection_layout.addWidget(self.mesh_connection_checkbox)
         self.mesh_connection_checkbox.setChecked(True)
-        self.mesh_connection_checkbox_label = QLabel(self)
-        self.mesh_connection_checkbox_label.setText("Merge nodes from neighbour volumes")
-        self.mesh_connection_layout.addWidget(self.mesh_connection_checkbox_label)
-        self.layout_checkboxes.addLayout(self.mesh_connection_layout)
         self.mesh_connection_layout.addStretch()
+        self.layout_checkboxes.addLayout(self.mesh_connection_layout)
 
 
 
