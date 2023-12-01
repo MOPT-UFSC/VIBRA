@@ -59,11 +59,12 @@ class LocalRefineWidget(QDialog):
         self.mesh_connection_layout = QHBoxLayout()
         self.mesh_connection_checkbox = QCheckBox(self)
         self.mesh_connection_layout.addWidget(self.mesh_connection_checkbox)
+        self.mesh_connection_checkbox.setChecked(True)
         self.mesh_connection_checkbox_label = QLabel(self)
-        self.mesh_connection_checkbox_label.setText("Connect adjacent meshes")
+        self.mesh_connection_checkbox_label.setText("Merge nodes from neighbour volumes")
         self.mesh_connection_layout.addWidget(self.mesh_connection_checkbox_label)
         self.layout_checkboxes.addLayout(self.mesh_connection_layout)
-        
+        self.mesh_connection_layout.addStretch()
 
 
 
@@ -136,14 +137,13 @@ class LocalRefineWidget(QDialog):
 
 
     def add_button_callback(self):
-        a= self.table.rowCount()
+        a = self.table.rowCount()
         self.table.setRowCount(a+1) 
         self.table.setItem(a, 0, QTableWidgetItem(self.refining_size_textbox.text()))
         self.table.setItem(a, 1, QTableWidgetItem(self.faces_list_textbox.text()))
     
-    def  get_inputs_table(self):
+    def get_inputs_table(self):
         faces_and_refined_size_list = []
-        
         for i in range(self.table.rowCount()):
             mesh_text = float(self.table.item(i,0).text())
             faces_text = self.table.item(i,1).text()
@@ -182,7 +182,8 @@ class LocalRefineWidget(QDialog):
             "size_factor": 0,
             "minimum_element_size": global_mesh_size,
             "maximum_element_size": global_mesh_size,
-            "mesh_refinement_parameters": self.get_inputs_table()
+            "mesh_refinement_parameters": self.get_inputs_table(),
+            "mesh_connection": self.mesh_connection_checkbox.isChecked(),
         }
         
         main_window = get_main_window()

@@ -44,7 +44,8 @@ class Mesh:
         dimension: int = 3,
         threads: int = 1,
         gmsh_gui: bool = False,
-        mesh_refinement_parameters = None
+        mesh_refinement_parameters = None, 
+        mesh_connection = True,
     ):
         """
         Custom constructor so you can create a mesh with this sintax:
@@ -69,7 +70,8 @@ class Mesh:
             dimension=dimension,
             threads=threads,
             gmsh_gui=gmsh_gui,
-            mesh_refinement_parameters = mesh_refinement_parameters
+            mesh_refinement_parameters = mesh_refinement_parameters,
+            mesh_connection = mesh_connection,
         )
 
         # saves the data to edit mesh parameters later
@@ -116,7 +118,9 @@ class Mesh:
         dimension: int = 3,
         threads: int = 2,
         gmsh_gui: bool = False,
-        mesh_refinement_parameters = None
+        mesh_refinement_parameters = None,
+        mesh_connection = True,
+
     ):
         self.mesh_setup = dict(
             minimum_element_size=minimum_element_size,
@@ -126,7 +130,8 @@ class Mesh:
             size_factor=size_factor,
             dimension=dimension,
             threads=threads,
-            mesh_refinement_parameters = mesh_refinement_parameters
+            mesh_refinement_parameters = mesh_refinement_parameters,
+            mesh_connection = mesh_connection,
         )
 
         path = Path(path)
@@ -141,7 +146,8 @@ class Mesh:
             geometry_tolerance,
             size_factor,
             threads,
-            mesh_refinement_parameters
+            mesh_refinement_parameters,
+            mesh_connection,
         )
 
         logging.info("Loading Geometry" + ProgressStatus(10, 100))
@@ -150,11 +156,11 @@ class Mesh:
         self.dimension = min(dimension, gmsh.model.getDimension())
         self.element_type = element_type
         
-        volumes_list = gmsh.model.getEntities(3)
-        gmsh.model.occ.fragment(volumes_list,volumes_list)
-        gmsh.model.occ.synchronize()
-
-        
+        if mesh_connection:
+            volumes_list = gmsh.model.getEntities(3)
+            gmsh.model.occ.fragment(volumes_list,volumes_list)
+            gmsh.model.occ.synchronize()
+            
         logging.info("Loading Geometry" + ProgressStatus(15, 100))
         gmsh.model.mesh.generate(dim=element_type.dimensions)
         gmsh.model.mesh.removeDuplicateNodes()
@@ -216,7 +222,6 @@ class Mesh:
         gmsh.model.mesh.field.setNumbers(1, "SurfacesList", [])
         gmsh.model.mesh.field.setNumber(1, "VOut", lc_geral)
         fields_list.append(1)
-        print(mesh_refinement_parameters)
 
         for size, faces in mesh_refinement_parameters:
             threshold_type = gmsh.model.mesh.field.add("Constant")
@@ -237,6 +242,7 @@ class Mesh:
         size_factor,
         threads,
         mesh_refinement_parameters=None,
+        mesh_connection = True,
     ):
         if mesh_refinement_parameters is None:
             mesh_refinement_parameters = []
