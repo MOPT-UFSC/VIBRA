@@ -281,7 +281,7 @@ class Model:
             title = "Invalid entry to the Surface ID"
             message = ""
             tokens = str_selected_ids.strip().split(",")
-            self.surface_ids = self.project.model.mesh.nodes_from_surfaces.keys()
+            self.surface_ids = self.mesh.nodes_from_surfaces.keys()
 
             try:
                 tokens.remove("")

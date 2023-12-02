@@ -6,7 +6,7 @@ import numpy as np
 from PyQt5 import uic
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QDialog, QComboBox, QLineEdit, QPushButton, QTabWidget, QWidget
+from PyQt5.QtWidgets import QDialog, QComboBox, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
 from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
 
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -32,16 +32,20 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         self.main_window = get_main_window()
         self.main_window.set_input_widget(self)
         self.project = self.main_window.project
+        self.model = self.main_window.project.model
+        self.properties = self.model.properties
+        
         self.main_window.viewer_tabs.show_geometry()
 
         self._reset_variables()
         self._define_qt_variables()
         self._create_connections()
+        self.load_lrf_data()
         self.exec()
 
     def _reset_variables(self):
         self.typed_ids = []
-        self.model = ""
+        # self.model = ""
         self.speed_of_sound_factor = 0
         self.fluid_density_factor = 0
 
@@ -59,11 +63,16 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         self.tabWidget_lrf_model = self.findChild(QTabWidget, "tabWidget_lrf_model")
         self.tab_setup = self.tabWidget_lrf_model.findChild(QWidget, "tab_setup")
         self.current_tab = self.tabWidget_lrf_model.currentIndex()
+        # QTreeWidget objects
+        self.treeWidget_lrf_model_info = self.findChild(QTreeWidget, "treeWidget_lrf_model_info")
 
     def _create_connections(self):
         self.pushButton_confirm.clicked.connect(self.set_lrf_eq_model_data)
         self.pushButton_remove.clicked.connect(self.remove_lrf_eq_model_inputs)
         self.pushButton_reset.clicked.connect(self.reset_lrf_eq_model_inputs)
+        #
+        self.treeWidget_lrf_model_info.itemClicked.connect(self.on_click_item)
+        self.treeWidget_lrf_model_info.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         geometry_widget = self.main_window.viewer_tabs.geometry_widget
         geometry_widget.selection_changed.connect(self.geometry_selection_callback)
@@ -83,18 +92,48 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             self.lineEdit_selection_id.setText("")
 
     def remove_lrf_eq_model_inputs(self):
-        pass
+        self.remove_lrf_eq_from_selection()
 
     def reset_lrf_eq_model_inputs(self):
-        pass
+        self.check_reset()
+
+    def load_lrf_data(self):
+        self.treeWidget_lrf_model_info.clear()
+        for key, data in self.properties.volume_properties.items():
+            property, volume_id = key
+            if property == "lrf_eq_model":
+                diameter = data["diameter"]
+                new = QTreeWidgetItem([str(volume_id), "volume", str(diameter)])
+                for i in range(3):
+                    new.setTextAlignment(i, Qt.AlignCenter)
+                self.treeWidget_lrf_model_info.addTopLevelItem(new)
+        self.update_tabs_visibility()
+
+    def update_tabs_visibility(self):
+        surface_ids = []
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "lrf_eq_model":
+                surface_ids.append(surface_id)
+
+        volume_ids = []
+        for key, data in self.properties.volume_properties.items():
+            property, volume_id = key
+            if property == "lrf_eq_model":
+                volume_ids.append(volume_id)
+
+        if len(surface_ids) + len(volume_ids):
+            self.tabWidget_lrf_model.setTabVisible(1, True)
+        else:
+            self.tabWidget_lrf_model.setTabVisible(1, False)
 
     def check_lrf_eq_model_entries(self):
         
         selection_id = self.lineEdit_selection_id.text()
         if self.comboBox_selection_type.currentIndex() == 0:
-            self.stop, self.volume_ids = self.check_input_volume_id(selection_id)
+            self.stop, self.volume_ids = self.model.check_input_volume_id(selection_id)
         else:
-            self.stop, self.surface_ids_ids = self.check_input_surface_id(selection_id)
+            self.stop, self.surface_ids_ids = self.model.check_input_surface_id(selection_id)
 
         if self.stop:
             self.lineEdit_selection_id.setFocus()
@@ -128,98 +167,6 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
         # print(f"The lrf eq. model has been attributed to volumes: {self.typed_ids}")
         self.close()
-
-    def check_input_surface_id(self, lineEdit, single_ID=False):
-        try:
-            title = "Invalid entry to the Surface ID"
-            message = ""
-            tokens = lineEdit.strip().split(",")
-            self.surface_ids = self.project.model.mesh.nodes_from_surfaces.keys()
-
-            try:
-                tokens.remove("")
-            except:
-                pass
-
-            _size = len(self.surface_ids)
-            list_ids = list(map(int, tokens))
-
-            if len(list_ids) == 0:
-                message = "An empty input field for the Surface ID has been detected. Please, enter a valid Surface ID to proceed."
-
-            elif len(list_ids) >= 1:
-                if single_ID and len(list_ids) > 1:
-                    message = "Multiple Selected IDs"
-                else:
-                    try:
-                        for _id in list_ids:
-                            if _id not in self.surface_ids:
-                                message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                                message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
-                                break
-                    except Exception as error_log:
-                        message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                        message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
-                        message += f"\n\n{str(error_log)}"
-
-        except Exception as log_error:
-            message = "Wrong input for the Selected ID's. "
-            message += f"\n\n{str(log_error)}"
-
-        if message != "":
-            PrintMessageInput([title, message, window_title_1])
-            return True, []
-
-        if single_ID:
-            return False, list_ids[0]
-        else:
-            return False, list_ids
-
-    def check_input_volume_id(self, lineEdit, single_ID=False):
-        try:
-            title = "Invalid entry to the Volume ID"
-            message = ""
-            tokens = lineEdit.strip().split(",")
-            self.volume_ids = self.project.model.mesh.nodes_from_volumes.keys()
-
-            try:
-                tokens.remove("")
-            except:
-                pass
-
-            _size = len(self.volume_ids)
-            list_ids = list(map(int, tokens))
-
-            if len(list_ids) == 0:
-                message = "An empty input field for the Volume ID has been detected. Please, enter a valid Volume ID to proceed."
-
-            elif len(list_ids) >= 1:
-                if single_ID and len(list_ids) > 1:
-                    message = "Multiple Selected IDs"
-                else:
-                    try:
-                        for _id in list_ids:
-                            if _id not in self.volume_ids:
-                                message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                                message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
-                                break
-                    except Exception as error_log:
-                        message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                        message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
-                        message += f"\n\n{str(error_log)}"
-
-        except Exception as log_error:
-            message = "Wrong input for the Selected ID's. "
-            message += f"\n\n{str(log_error)}"
-
-        if message != "":
-            PrintMessageInput([title, message, window_title_1])
-            return True, []
-
-        if single_ID:
-            return False, list_ids[0]
-        else:
-            return False, list_ids
 
     def check_inputs(self, lineEdit, label, only_positive=True, zero_included=False, _float=True):
         self.stop = False
@@ -259,3 +206,73 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             self.stop = True
             return None
         return out
+
+    def on_click_item(self, item):
+        self.lineEdit_selection_id.setText(item.text(0))
+
+    def on_doubleclick_item(self, item):
+        self.lineEdit_selection_id.setText(item.text(0))
+        self.remove_lrf_eq_from_selection()
+
+    def remove_lrf_eq_from_selection(self):
+
+        if self.lineEdit_selection_id.text() != "":
+
+            picked_id = int(self.lineEdit_selection_id.text())
+            surface_properties = self.properties.surface_properties.copy()
+            volume_properties = self.properties.volume_properties.copy()
+            
+            for key in surface_properties.keys():
+                property, surface_id = key
+                if property == "lrf_eq_model" and picked_id == surface_id:
+                    self.properties._remove_surface_property("lrf_eq_model", picked_id)
+                    self.load_lrf_data()
+                    self.lineEdit_selection_id.setText("")
+                    return
+                
+            for key in volume_properties.keys():
+                property, volume_id = key
+                if property == "lrf_eq_model" and picked_id == volume_id:
+                    self.properties._remove_volume_property("lrf_eq_model", picked_id)
+                    self.load_lrf_data()
+                    self.lineEdit_selection_id.setText("")
+                    return
+
+    def check_reset(self):
+
+        surface_ids = []
+        for key in self.properties.surface_properties.keys():
+            property, surface_id = key
+            if property == "lrf_eq_model":
+                surface_ids.append(surface_id)
+
+        volume_ids = []
+        for key in self.properties.volume_properties.keys():
+            property, volume_id = key
+            if property == "lrf_eq_model":
+                volume_ids.append(volume_id)
+
+        if len(surface_ids) + len(volume_ids):
+            title = f"Resetting LRF eq. model"
+            message = "Do you really want to remove the LRF eq. defined to the model?\n\n"
+            message += "\n\nPress the Continue button to proceed with the resetting or press Cancel or "
+            message += "Close buttons to abort the current operation."
+            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
+            read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
+
+            if read._doNotRun:
+                return
+
+            if read._continue:
+
+                if len(surface_ids) + len(volume_ids) > 0:
+                    self.properties._reset_property("lrf_eq_model")
+
+                self.properties.export_model_properties()
+
+                title = "surface velocity resetting process complete"
+                message = "All surface velocity applied to the acoustic "
+                message += "model have been removed from the model."
+                PrintMessageInput([title, message, window_title_2])
+
+                self.close()

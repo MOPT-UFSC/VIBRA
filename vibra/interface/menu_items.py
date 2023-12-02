@@ -214,7 +214,7 @@ class MenuItems(QTreeWidget):
         self.item_child_set_specific_impedance = QTreeWidgetItem(["Set Specific Impedance"])
         self.item_child_set_radiation_impedance = QTreeWidgetItem(["Set Radiation Impedance"])
         self.item_child_add_compressor_excitation = QTreeWidgetItem(["Add Compressor Excitation"])
-        self.item_child_set_lrf_eq_model = QTreeWidgetItem(["Set Low Reduced Frequency Eq. Model"])
+        self.item_child_set_lrf_eq_model = QTreeWidgetItem(["Set LRF Equivalent Model"])
         #
         self.list_top_items.append(self.item_top_acoustic_model_setup)
         self.list_child_items.append(self.item_child_set_acoustic_pressure)

@@ -282,8 +282,10 @@ class ModelProperties:
     def _remove_volume_property(self, property: str, volume_id: int):
         """Remove a volume property at specific volume_id."""
         key = (property, volume_id)
+        print(f"entrei: {key}")
         if key in self.volume_properties.keys():
             self.volume_properties.pop(key)
+            print(key)
 
     # TODO: remove this
     def as_json(self):

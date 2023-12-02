@@ -31,6 +31,8 @@ class PlotAcousticFrequencyResponseInput(QDialog):
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
         self.project = self.main_window.project
+        self.model = self.project.model
+        self.properties = self.model.properties
 
         self._load_icons()
         self._reset_variables()
@@ -96,7 +98,7 @@ class PlotAcousticFrequencyResponseInput(QDialog):
 
     def call_plotter(self):
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.check_input_surface_id(lineEdit_selection_id)
+        self.stop, self.typed_ids = self.model.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return
@@ -106,62 +108,13 @@ class PlotAcousticFrequencyResponseInput(QDialog):
 
     def call_data_exporter(self):
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.check_input_surface_id(lineEdit_selection_id)
+        self.stop, self.typed_ids = self.model.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return
         self.join_model_data()
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(self.model_results)
-
-    def check_input_surface_id(self, lineEdit, single_ID=False):
-        try:
-            title = "Invalid entry to the Surface ID"
-            message = ""
-            tokens = lineEdit.strip().split(",")
-            self.surface_ids = self.project.model.mesh.nodes_from_surfaces.keys()
-
-            try:
-                tokens.remove("")
-            except:
-                pass
-
-            _size = len(self.surface_ids)
-            list_ids = list(map(int, tokens))
-
-            if len(list_ids) == 0:
-                message = "An empty input field for the Surface ID has been detected. Please, enter a valid Surface ID to proceed."
-
-            elif len(list_ids) >= 1:
-                if single_ID and len(list_ids) > 1:
-                    message = "Multiple Selected IDs"
-                else:
-                    try:
-                        for _id in list_ids:
-                            if _id not in self.surface_ids:
-                                message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                                message += f"The input value(s) must be integer(s) number(s) N such that 1 <= N <= {_size}."
-                                break
-                    except Exception as error_log:
-                        message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                        message += f"The input value(s) must be integer(s) number(s) N such that 1 <= N <= {_size}."
-                        message += f"\n\n{str(error_log)}"
-
-        except Exception as log_error:
-            message = "Wrong input for the Selected ID's. "
-            message += f"\n\n{str(log_error)}"
-
-        if message != "":
-            window_title = "ERROR MESSAGE"
-            PrintMessageInput([window_title, title, message])
-            return True, []
-
-        if single_ID:
-            return False, list_ids[0]
-        else:
-            return False, list_ids
-        
-    
 
     def get_response(self):
 

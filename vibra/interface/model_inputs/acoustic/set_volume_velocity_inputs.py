@@ -35,7 +35,8 @@ class VolumeVelocityInput(QDialog):
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
         self.project = self.main_window.project
-        self.properties = self.project.model.properties
+        self.model = self.project.model
+        self.properties = self.model.properties
 
         self._reset_variables()
         self._define_qt_variables()
@@ -53,9 +54,8 @@ class VolumeVelocityInput(QDialog):
         self.acoustic_bc_filename = self.project.file.acoustic_model_setup_filename
         self.acoustic_bc_info_path = os.path.join(self.project_path, self.acoustic_bc_filename)
         self.acoustic_folder_path = self.project.file.acoustic_imported_data_folder_path
-        self.volume_velocity_tables_folder_path = os.path.join(
-            self.acoustic_folder_path, "volume_velocity_files"
-        )
+        self.volume_velocity_tables_folder_path = os.path.join( self.acoustic_folder_path, 
+                                                                "volume_velocity_files" )
 
     def _define_qt_variables(self):
         # QCheckBox objects
@@ -101,18 +101,10 @@ class VolumeVelocityInput(QDialog):
         self.pushButton_load_table.clicked.connect(self.load_volume_velocity_table)
         self.pushButton_reset.clicked.connect(self.check_reset)
         #
-        self.radioButton_nodal_attribution_constant.clicked.connect(
-            self.update_controls_for_constant_value
-        )
-        self.radioButton_element_integration_constant.clicked.connect(
-            self.update_controls_for_constant_value
-        )
-        self.radioButton_nodal_attribution_table.clicked.connect(
-            self.update_controls_for_table_of_values
-        )
-        self.radioButton_element_integration_table.clicked.connect(
-            self.update_controls_for_table_of_values
-        )
+        self.radioButton_nodal_attribution_constant.clicked.connect(self.update_controls_for_constant_value)
+        self.radioButton_element_integration_constant.clicked.connect(self.update_controls_for_constant_value)
+        self.radioButton_nodal_attribution_table.clicked.connect(self.update_controls_for_table_of_values)
+        self.radioButton_element_integration_table.clicked.connect(self.update_controls_for_table_of_values)
         #
         self.tabWidget_volume_velocity.currentChanged.connect(self.tabEvent_volume_velocity)
         self.treeWidget_volume_velocity.itemClicked.connect(self.on_click_item)
@@ -192,7 +184,7 @@ class VolumeVelocityInput(QDialog):
 
     def check_constant_values(self):
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.check_input_surface_id(lineEdit_selection_id)
+        self.stop, self.typed_ids = self.model.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return
@@ -325,7 +317,7 @@ class VolumeVelocityInput(QDialog):
 
     def check_table_values(self):
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.check_input_surface_id(lineEdit_selection_id)
+        self.stop, self.typed_ids = self.model.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return
@@ -497,52 +489,6 @@ class VolumeVelocityInput(QDialog):
             self.tabWidget_volume_velocity.setTabVisible(2, False)
         else:
             self.tabWidget_volume_velocity.setTabVisible(2, True)
-
-    def check_input_surface_id(self, lineEdit, single_ID=False):
-        try:
-            title = "Invalid entry to the Surface ID"
-            message = ""
-            tokens = lineEdit.strip().split(",")
-            self.surface_ids = self.project.model.mesh.nodes_from_surfaces.keys()
-
-            try:
-                tokens.remove("")
-            except:
-                pass
-
-            _size = len(self.surface_ids)
-            list_ids = list(map(int, tokens))
-
-            if len(list_ids) == 0:
-                message = "An empty input field for the Surface ID has been detected. Please, enter a valid Surface ID to proceed."
-
-            elif len(list_ids) >= 1:
-                if single_ID and len(list_ids) > 1:
-                    message = "Multiple Selected IDs"
-                else:
-                    try:
-                        for _id in list_ids:
-                            if _id not in self.surface_ids:
-                                message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                                message += f"The input value(s) must be integer(s) number(s) N such that 1 <= N <= {_size}."
-                                break
-                    except Exception as error_log:
-                        message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                        message += f"The input value(s) must be integer(s) number(s) N such that 1 <= N <= {_size}."
-                        message += f"\n\n{str(error_log)}"
-
-        except Exception as log_error:
-            message = "Wrong input for the Selected ID's. "
-            message += f"\n\n{str(log_error)}"
-
-        if message != "":
-            PrintMessageInput([title, message, window_title_1])
-            return True, []
-
-        if single_ID:
-            return False, list_ids[0]
-        else:
-            return False, list_ids
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
