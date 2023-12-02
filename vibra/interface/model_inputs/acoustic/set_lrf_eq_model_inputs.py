@@ -1,8 +1,9 @@
-import configparser
 import os
+import configparser
+import numpy as np
 from pathlib import Path
 
-import numpy as np
+# fmt: off
 from PyQt5 import uic
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
@@ -55,6 +56,8 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         # QLineEdit objects
         self.lineEdit_selection_id = self.findChild(QLineEdit, "lineEdit_selection_id")
         self.lineEdit_diameter = self.findChild(QLineEdit, "lineEdit_diameter")
+        self.lineEdit_selection_radius = self.findChild(QLineEdit, "lineEdit_selection_radius")
+        self.lineEdit_selection_radius.setDisabled(True)
         # QPushButton objects
         self.pushButton_confirm = self.findChild(QPushButton, "pushButton_confirm")
         self.pushButton_remove = self.findChild(QPushButton, "pushButton_remove")
@@ -78,11 +81,14 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         geometry_widget.selection_changed.connect(self.geometry_selection_callback)
 
     def geometry_selection_callback(self, points, lines, faces, volumes):
+        self.lineEdit_selection_radius.setDisabled(True)
         if faces:
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_selection_type.setCurrentIndex(1)
-        
+            self.lineEdit_selection_radius.setDisabled(False)
+            self.update_selection()
+
         elif volumes:
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selection_id.setText(text)
@@ -90,6 +96,21 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
         elif not any([points, lines, faces]):
             self.lineEdit_selection_id.setText("")
+
+    def update_selection(self):
+        nodal_coordinates = self.model.mesh.nodal_coordinates
+        selection_id = self.lineEdit_selection_id.text()
+
+        rows = []
+        if self.comboBox_selection_type.currentIndex() == 1:
+            self.stop, self.surface_ids_ids = self.model.check_input_surface_id(selection_id)
+        for surface_id in self.surface_ids_ids:
+            for row in self.model.mesh.nodes_from_surfaces[surface_id]:
+                rows.append(row)
+
+        if rows:
+            center_coords = np.sum(nodal_coordinates[rows, 1:], axis=0)
+            print(center_coords)
 
     def remove_lrf_eq_model_inputs(self):
         self.remove_lrf_eq_from_selection()
@@ -276,3 +297,5 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
                 PrintMessageInput([title, message, window_title_2])
 
                 self.close()
+
+# fmt: on
