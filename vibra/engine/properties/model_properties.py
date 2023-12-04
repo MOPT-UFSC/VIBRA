@@ -58,6 +58,7 @@ class ModelProperties:
 
     def _reset_variables(self):
         self.global_properties = dict()
+        self.group_properties = dict()
         self.volume_properties = dict()
         self.surface_properties = dict()
         self.line_properties = dict()
@@ -88,8 +89,8 @@ class ModelProperties:
     def set_dissipation_model(self, data, **kwargs):
         self._set_property("dissipation_model", data, **kwargs)
 
-    def set_lrf_eq_model_data(self, data, surface=None, volume=None):
-        self._set_property("lrf_eq_model", data, surface=surface, volume=volume)
+    def set_lrf_eq_model_data(self, data, group=None, volume=None):
+        self._set_property("lrf_eq_model", data, group=group, volume=volume)
 
     def get_fluid_density(self, fluid, **kwargs):
         rho_0 = fluid.fluid_density
@@ -160,7 +161,7 @@ class ModelProperties:
     def set_specific_impedance(self, data, surface):
         self._set_property("specific_impedance", data, surface=surface)
 
-    def _set_property(self, property: str, value, node=None, element=None, line=None, surface=None, volume=None):
+    def _set_property(self, property: str, value, node=None, element=None, line=None, surface=None, volume=None, group=None):
         """
         Sets a value to a property by node, element, line, surface or volume
         if any of these exists. Otherwise sets the property as global.
@@ -176,6 +177,8 @@ class ModelProperties:
             self.line_properties[property, line] = value
         elif element is not None:
             self.element_properties[property, element] = value
+        elif group is not None:
+            self.group_properties[property, group] = value
         else:
             self.global_properties[property, "global"] = value
 

@@ -42,8 +42,10 @@ class Mesh:
         self.surface_from_element = dict()
         self.entity_ranges = dict()
         self.surfaces_from_volumes = dict()
-        self.volume_from_surface = defaultdict(list)
         self.connectivity_from_surfaces = dict()
+        self.volume_from_surface = defaultdict(list)
+        self.face_elements_from_nodes = defaultdict(list)
+        self.solid_elements_from_nodes = defaultdict(list)
 
     @classmethod
     def from_cad(
@@ -377,6 +379,7 @@ class Mesh:
         #
         self._maps_surfaces_by_elements()
         self._maps_volumes_by_elements()
+        self._process_solid_elements_connected_to_nodes()
 
     def _maps_surfaces_by_elements(self):
         self.surface_from_element.clear()
@@ -385,7 +388,7 @@ class Mesh:
             n = len(gmsh_indexes)
             internal_indexes = np.zeros(n, dtype=int)
             for i, gmsh_index in enumerate(gmsh_indexes):
-                index = self.map_solid_elements[gmsh_index]
+                index = self.map_face_elements[gmsh_index]
                 internal_indexes[i] = index
                 self.surface_from_element[index] = tag
             self.elements_from_surfaces[tag] = internal_indexes
@@ -401,8 +404,18 @@ class Mesh:
                 internal_indexes[i] = index
                 self.volume_from_element[index] = tag
             self.elements_from_volumes[tag] = internal_indexes
-        # data = np.array([list(self.volume_from_element.keys()), list(self.volume_from_element.values())], dtype=int).T
-        # np.savetxt("elementos_volumes.dat", data, delimiter=",")
+
+    def _process_face_elements_connected_to_nodes(self):
+        self.face_elements_from_nodes.clear()
+        for i, connected_nodes in enumerate(self.faces_connectivity[:, 4:]):
+            for node in connected_nodes:
+                self.face_elements_from_nodes[node].append(i)
+
+    def _process_solid_elements_connected_to_nodes(self):
+        self.solid_elements_from_nodes.clear()
+        for i, connected_nodes in enumerate(self.solids_connectivity[:, 4:]):
+            for node in connected_nodes:
+                self.solid_elements_from_nodes[node].append(i)
 
     def _process_nodes_reordering(self):
         """ This method processes the nodes reordering to reduce the global matrices 
@@ -535,6 +548,7 @@ class Mesh:
 
                 start = end
                 ind += 1
+
             entity_end = end
             self.entity_ranges[entity_dim, entity_tag] = (entity_start, entity_end)
 

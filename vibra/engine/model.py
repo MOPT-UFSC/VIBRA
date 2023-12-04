@@ -248,12 +248,51 @@ class Model:
                 return True, rho_eff
         return False, None
 
+    def get_average_nodal_coordinates(self, str_surface_ids):
+
+        rows = []
+        center_coords = [None, None, None]
+        nodal_coordinates = self.mesh.nodal_coordinates
+        self.stop, self.surface_ids = self.check_input_surface_id(str_surface_ids)
+
+        if self.stop:
+            return center_coords
+
+        for surface_id in self.surface_ids:
+            for row in self.mesh.nodes_from_surfaces[surface_id]:
+                rows.append(row)
+
+        if rows:
+            center_coords = np.average(nodal_coordinates[rows, 1:], axis=0)   
+   
+        return center_coords
+
+    def get_elements_and_nodes_from_sphere(self, str_surface_ids, selection_radius):
+
+        center_coords = self.get_average_nodal_coordinates(str_surface_ids)
+        if None in center_coords:
+            return [], []
+
+        nodal_coordinates = self.mesh.nodal_coordinates
+        diff = np.linalg.norm(nodal_coordinates[:, 1:] - center_coords, axis=1) 
+        mask = diff <= selection_radius
+
+        selected_elements = []
+        nodes_inside_sphere = []
+        if True in mask:
+            nodes_inside_sphere = nodal_coordinates[:,0][mask] 
+            for node_id in nodes_inside_sphere:
+                for element_id in self.mesh.solid_elements_from_nodes[node_id]:
+                    selected_elements.append(element_id)
+
+        return selected_elements, nodes_inside_sphere
+
     # Properties can be accessed from outside, so this "indirection layer" is not needed
     def set_dissipation_model_data(self, data):
         self.properties.set_dissipation_model(data)
 
-    def set_lrf_eq_model_data(self, data, surface=None, volume=None):
-        self.properties.set_lrf_eq_model_data(data, surface=surface, volume=volume)
+    def set_lrf_eq_model_data(self, data, group=None, volume=None):
+        self.properties.set_lrf_eq_model_data(data, group=group, volume=volume)
 
     def set_structural_boundary_condition(self, data, line, surface):
         self.properties.set_structural_boundary_condition(data, line, surface)
