@@ -117,6 +117,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         elif not any([points, lines, faces]):
             self.lineEdit_selection_id.setText("")
             self.lineEdit_center_coordinates.setText("")
+        self.call_sphere_plotter()
 
     def get_center_coordinates(self):
         selection_id = self.lineEdit_selection_id.text()
@@ -146,7 +147,8 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         # self.selection_radius para pegar o raio da esfera
         center_coords = self.get_center_coordinates()
         if len(center_coords):
-            pass
+            geometry_widget = self.main_window.viewer_tabs.geometry_widget
+            geometry_widget.set_selection_sphere(center_coords, self.selection_radius)
 
     def get_selection_information(self):
         selection_id = self.lineEdit_selection_id.text()
@@ -367,5 +369,10 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
                 PrintMessageInput([title, message, window_title_2])
 
                 self.close()
+    
+    def closeEvent(self, event):
+        geometry_widget = self.main_window.viewer_tabs.geometry_widget
+        geometry_widget.set_selection_sphere((0,0,0), 0)
+        geometry_widget.selection_changed.disconnect(self.geometry_selection_callback)
 
 # fmt: on

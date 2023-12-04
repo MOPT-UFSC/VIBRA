@@ -7,6 +7,8 @@ from vibra.interface.viewer_3d.actors.lines_actor import LinesActor
 from vibra.interface.viewer_3d.actors.points_actor import PointsActor
 from vibra.interface.viewer_3d.interactor_styles.selection_interactor import SelectionInteractor
 from vibra.interface.viewer_3d.render_widgets.common_render_widget import CommonRenderWidget
+from vibra.interface.viewer_3d.actors.selection_sphere import SelectionSphere
+
 
 from vibra.utils.interface_functions import get_main_window
 
@@ -37,6 +39,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.points_actor = None
         self.lines_actor = None
         self.faces_actor = None
+        self.selection_sphere = None
 
         self.selection_color = (20, 106, 245)
         self.selected_points = set()
@@ -65,6 +68,12 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.update_theme()
         self.remove_actors()
+
+        self.selection_sphere = SelectionSphere()
+        self.selection_sphere.GetProperty().SetColor([i/255 for i in self.selection_color])
+        self.selection_sphere.VisibilityOff()
+        self.selection_sphere.PickableOff()
+        self.renderer.AddActor(self.selection_sphere)
 
         self.points_actor = PointsActor(mesh)
         self.renderer.AddActor(self.points_actor)
@@ -181,6 +190,19 @@ class GeometryRenderWidget(CommonRenderWidget):
                                         self.selected_faces,
                                         self.selected_volumes)
 
+        self.update()
+    
+    def set_selection_sphere(self, center, radius):
+        if self.selection_sphere is None:
+            return
+
+        if radius == 0:
+            self.selection_sphere.VisibilityOff()
+            return
+
+        self.selection_sphere.VisibilityOn()
+        self.selection_sphere.SetPosition(center)
+        self.selection_sphere.SetScale(radius, radius, radius)
         self.update()
 
     def select_point(self, new_point, *, join=False, remove=False):
@@ -302,15 +324,18 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.renderer.RemoveActor(self.points_actor)
         self.renderer.RemoveActor(self.lines_actor)
         self.renderer.RemoveActor(self.faces_actor)
+        self.renderer.RemoveActor(self.selection_sphere)
 
         self.points_actor = None
         self.lines_actor = None
         self.faces_actor = None
+        self.selection_sphere = None
 
     def _actors_exists(self):
         actors = [
             self.points_actor,
             self.lines_actor,
             self.faces_actor,
+            self.selection_sphere,
         ]
         return all([actor is not None for actor in actors])
