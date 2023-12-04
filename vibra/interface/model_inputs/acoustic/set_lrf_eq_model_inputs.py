@@ -149,6 +149,9 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         if len(center_coords):
             geometry_widget = self.main_window.viewer_tabs.geometry_widget
             geometry_widget.set_selection_sphere(center_coords, self.selection_radius)
+            mesh_widget = self.main_window.viewer_tabs.mesh_widget
+            mesh_widget.select_multiple_volumes(range(0, 1000))
+
 
     def get_selection_information(self):
         selection_id = self.lineEdit_selection_id.text()

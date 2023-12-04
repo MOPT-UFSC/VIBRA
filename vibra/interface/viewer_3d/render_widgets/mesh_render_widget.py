@@ -22,6 +22,7 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.main_window = get_main_window()
         self.view_mode = SHOW_FACES
+        self.selection_color = (20, 106, 245)
 
         self.mesh_info = MeshInfoBar()
 
@@ -115,6 +116,11 @@ class MeshRenderWidget(CommonRenderWidget):
             self.edges_actor.GetProperty().SetColor(light_color)
             self.solids_actor.GetProperty().SetColor(light_color)
 
+    def select_multiple_volumes(self, new_volumes, *, join=False, remove=False):
+        if not self._actors_exists():
+            return
+        self.solids_actor.paint_cells(self.selection_color, new_volumes)
+        self.update()
     #
     def remove_actors(self):
         self.renderer.RemoveActor(self.solids_actor)
