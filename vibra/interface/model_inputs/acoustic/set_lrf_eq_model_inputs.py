@@ -110,6 +110,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             self.lineEdit_selection_radius.setDisabled(False)
             self.pushButton_selection_info.setDisabled(False)
             self.get_center_coordinates()
+            self.call_sphere_plotter()
         elif volumes:
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selection_id.setText(text)
@@ -117,7 +118,6 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         elif not any([points, lines, faces]):
             self.lineEdit_selection_id.setText("")
             self.lineEdit_center_coordinates.setText("")
-        self.call_sphere_plotter()
 
     def get_center_coordinates(self):
         selection_id = self.lineEdit_selection_id.text()
@@ -144,14 +144,12 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         if self.comboBox_selection_type.currentIndex() == 1:
             if self.check_selection_radius():
                 return
-        # self.selection_radius para pegar o raio da esfera
-        center_coords = self.get_center_coordinates()
-        if len(center_coords):
-            geometry_widget = self.main_window.viewer_tabs.geometry_widget
-            geometry_widget.set_selection_sphere(center_coords, self.selection_radius)
-            mesh_widget = self.main_window.viewer_tabs.mesh_widget
-            mesh_widget.select_multiple_volumes(range(0, 1000))
-
+            center_coords = self.get_center_coordinates()
+            if len(center_coords):
+                geometry_widget = self.main_window.viewer_tabs.geometry_widget
+                geometry_widget.set_selection_sphere(center_coords, self.selection_radius)
+                mesh_widget = self.main_window.viewer_tabs.mesh_widget
+                mesh_widget.select_multiple_volumes(range(0, 1000))
 
     def get_selection_information(self):
         selection_id = self.lineEdit_selection_id.text()
