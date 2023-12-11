@@ -109,7 +109,8 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             self.comboBox_selection_type.setCurrentIndex(1)
             self.lineEdit_selection_radius.setDisabled(False)
             self.pushButton_selection_info.setDisabled(False)
-            self.get_center_coordinates()
+            # self.get_center_coordinates()
+            self.call_sphere_plotter()
         elif volumes:
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selection_id.setText(text)
@@ -117,7 +118,14 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         elif not any([points, lines, faces]):
             self.lineEdit_selection_id.setText("")
             self.lineEdit_center_coordinates.setText("")
-        self.call_sphere_plotter()
+
+    def check_selection_radius(self):
+        self.selection_radius = None
+        lineEdit = self.lineEdit_selection_radius
+        self.selection_radius = self.check_inputs(lineEdit, "Selection radius")
+        if self.stop:
+            lineEdit.setFocus()
+            return True
 
     def get_center_coordinates(self):
         selection_id = self.lineEdit_selection_id.text()
@@ -132,26 +140,16 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         self.lineEdit_center_coordinates.setText(str(_round_center_coords))
         return center_coords
 
-    def check_selection_radius(self):
-        self.selection_radius = None
-        lineEdit = self.lineEdit_selection_radius
-        self.selection_radius = self.check_inputs(lineEdit, "Selection radius", only_positive=True)
-        if self.stop:
-            lineEdit.setFocus()
-            return True
-
     def call_sphere_plotter(self):
         if self.comboBox_selection_type.currentIndex() == 1:
             if self.check_selection_radius():
                 return
-        # self.selection_radius para pegar o raio da esfera
         center_coords = self.get_center_coordinates()
         if len(center_coords):
             geometry_widget = self.main_window.viewer_tabs.geometry_widget
             geometry_widget.set_selection_sphere(center_coords, self.selection_radius)
             mesh_widget = self.main_window.viewer_tabs.mesh_widget
             mesh_widget.select_multiple_volumes(range(0, 1000))
-
 
     def get_selection_information(self):
         selection_id = self.lineEdit_selection_id.text()
@@ -213,19 +211,18 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             self.stop, self.volume_ids = self.model.check_input_volume_id(selection_id)
         else:
             self.stop, self.surface_ids = self.model.check_input_surface_id(selection_id)
-            self.selection_radius = self.check_inputs(lineEdit, "Selection radius", only_positive=True)
+            lineEdit = self.lineEdit_selection_radius
+            self.selection_radius = self.check_inputs(lineEdit, "Selection radius")
             if self.stop:
-                self.lineEdit_selection_radius.setFocus()
+                lineEdit.setFocus()
                 return True
 
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return True
 
-        #TODO: get volumes inside surfaces boundaries if selection by surfaces was enabled
-        # tab_index = self.tabWidget_lrf_model.currentIndex()
         lineEdit = self.lineEdit_diameter
-        self.diameter = self.check_inputs(lineEdit, "Diameter", only_positive=True)
+        self.diameter = self.check_inputs(lineEdit, "Diameter")
         if self.stop:
             lineEdit.setFocus()
             return True
@@ -245,6 +242,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         else:
 
             group_id = self.get_lrf_group_index()
+            print(f"group_id: {group_id}")
             data = {"surface_ids" : np.array(self.surface_ids),
                     "diameter" : self.diameter,
                     "selection_radius" : self.selection_radius}
@@ -256,9 +254,11 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
     def get_lrf_group_index(self):
         keys = []
-        for (group_id, _) in self.properties.group_properties.keys():
-            if group_id not in keys:
-                keys.append(group_id)
+        for key in self.properties.group_properties.keys():
+            property, group_id = key
+            if property == "lrf_eq_model":
+                if group_id not in keys:
+                    keys.append(group_id)
         index = 1
         while index in keys:
             index += 1
@@ -376,6 +376,9 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
     def closeEvent(self, event):
         geometry_widget = self.main_window.viewer_tabs.geometry_widget
         geometry_widget.set_selection_sphere((0,0,0), 0)
-        geometry_widget.selection_changed.disconnect(self.geometry_selection_callback)
+        try:
+            geometry_widget.selection_changed.disconnect(self.geometry_selection_callback)
+        except:
+            pass
 
 # fmt: on
