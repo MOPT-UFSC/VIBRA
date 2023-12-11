@@ -153,36 +153,43 @@ class Model:
     def get_lrf_eq_data(self):
         """ """
         self.lrf_eq_data = dict()
-        # TODO: enable the elements selection by surfaces boundaries
-        # for key, data in self.properties.surface_properties.items():
-        #     property, surface_id = key
-        #     if property == "lrf_eq_model":
-        #         for surface_id in data["surface_ids"]:
-        #             fluid = self.properties.get_fluid(surface=surface_id)
-        #             for element_id in self.model.mesh.elements_from_surfaces[surface_id]:
-        #                 # fluid = self.properties.get_fluid(element=element_id)
-        #                 if element_id not in list(lrf_eq_data.keys()):
-        #                     lrf_eq_data[element_id] = {"diameter" : data["diameter"],
-        #                                                "c_0" : fluid.speed_of_sound,
-        #                                                "rho_0" : fluid.fluid_density,
-        #                                                "mu" : fluid.dynamic_viscosity,
-        #                                                "gamma" : fluid.isentropic_exponent,
-        #                                                "prandtl" : fluid.prandtl_number,
-        #                                                "pressure" : fluid.pressure_state}
+
+        for key, data in self.properties.group_properties.items():
+            property, group_id = key
+            if property == "lrf_eq_model":
+                print(property, group_id)
+                d = data["diameter"]
+                surface_ids = data["surface_ids"]
+                selection_radius = data["selection_radius"]
+                selected_elements, _ = self.get_elements_and_nodes_from_sphere(surface_ids, selection_radius)
+                for element_id in selected_elements:
+                    #
+                    fluid = self.properties.get_fluid(element=element_id)
+                    c_0, rho_0, mu, gamma, Pr, P_0 = fluid.get_lrf_properties()
+                    properties = [d, c_0, rho_0, mu, gamma, Pr, P_0]
+                    #
+                    if element_id not in list(self.lrf_eq_data.keys()):
+                        print(element_id, properties)
+                        self.lrf_eq_data[element_id] = properties
+        
         for key, data in self.properties.volume_properties.items():
             property, volume_id = key
             if property == "lrf_eq_model":
-                #
-                fluid = self.properties.get_fluid(volume=volume_id)
-                #
+                # #
+                # fluid = self.properties.get_fluid(volume=volume_id)
+                # #
+                # d = data["diameter"]
+                # c_0 = fluid.speed_of_sound
+                # rho_0 = fluid.fluid_density
+                # mu = fluid.dynamic_viscosity
+                # gamma = fluid.isentropic_exponent
+                # Pr = fluid.prandtl_number
+                # P_0 = fluid.pressure_state
+                # #
                 d = data["diameter"]
-                c_0 = fluid.speed_of_sound
-                rho_0 = fluid.fluid_density
-                mu = fluid.dynamic_viscosity
-                gamma = fluid.isentropic_exponent
-                Pr = fluid.prandtl_number
-                P_0 = fluid.pressure_state
-                #
+                fluid = self.properties.get_fluid(volume=volume_id)
+                c_0, rho_0, mu, gamma, Pr, P_0 = fluid.get_lrf_properties()
+
                 properties = [d, c_0, rho_0, mu, gamma, Pr, P_0]
                 self.set_lrf_eq_data([volume_id], properties)
         
@@ -248,11 +255,16 @@ class Model:
                 return True, rho_eff
         return False, None
 
-    def get_average_nodal_coordinates(self, str_surface_ids):
+    def get_average_nodal_coordinates(self, surface_ids):
 
         rows = []
         center_coords = [None, None, None]
         nodal_coordinates = self.mesh.nodal_coordinates
+
+        if isinstance(surface_ids, (list, tuple)):
+            str_surface_ids = str(surface_ids)[1:-1]
+        else:
+            str_surface_ids = surface_ids
         self.stop, self.surface_ids = self.check_input_surface_id(str_surface_ids)
 
         if self.stop:
@@ -267,9 +279,9 @@ class Model:
    
         return center_coords
 
-    def get_elements_and_nodes_from_sphere(self, str_surface_ids, selection_radius):
+    def get_elements_and_nodes_from_sphere(self, surface_ids, selection_radius):
 
-        center_coords = self.get_average_nodal_coordinates(str_surface_ids)
+        center_coords = self.get_average_nodal_coordinates(surface_ids)
         if None in center_coords:
             return [], []
 

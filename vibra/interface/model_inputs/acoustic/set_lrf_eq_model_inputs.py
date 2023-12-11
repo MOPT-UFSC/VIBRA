@@ -109,7 +109,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             self.comboBox_selection_type.setCurrentIndex(1)
             self.lineEdit_selection_radius.setDisabled(False)
             self.pushButton_selection_info.setDisabled(False)
-            self.get_center_coordinates()
+            # self.get_center_coordinates()
             self.call_sphere_plotter()
         elif volumes:
             text = ", ".join([str(i) for i in volumes])
@@ -133,14 +133,6 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         _round_center_coords = [round(value,4) for value in center_coords]
         self.lineEdit_center_coordinates.setText(str(_round_center_coords))
         return center_coords
-
-    def check_selection_radius(self):
-        self.selection_radius = None
-        lineEdit = self.lineEdit_selection_radius
-        self.selection_radius = self.check_inputs(lineEdit, "Selection radius", only_positive=True)
-        if self.stop:
-            lineEdit.setFocus()
-            return True
 
     def call_sphere_plotter(self):
         if self.comboBox_selection_type.currentIndex() == 1:
@@ -219,19 +211,18 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             self.stop, self.volume_ids = self.model.check_input_volume_id(selection_id)
         else:
             self.stop, self.surface_ids = self.model.check_input_surface_id(selection_id)
-            self.selection_radius = self.check_inputs(lineEdit, "Selection radius", only_positive=True)
+            lineEdit = self.lineEdit_selection_radius
+            self.selection_radius = self.check_inputs(lineEdit, "Selection radius")
             if self.stop:
-                self.lineEdit_selection_radius.setFocus()
+                lineEdit.setFocus()
                 return True
 
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return True
 
-        #TODO: get volumes inside surfaces boundaries if selection by surfaces was enabled
-        # tab_index = self.tabWidget_lrf_model.currentIndex()
         lineEdit = self.lineEdit_diameter
-        self.diameter = self.check_inputs(lineEdit, "Diameter", only_positive=True)
+        self.diameter = self.check_inputs(lineEdit, "Diameter")
         if self.stop:
             lineEdit.setFocus()
             return True
@@ -251,6 +242,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         else:
 
             group_id = self.get_lrf_group_index()
+            print(f"group_id: {group_id}")
             data = {"surface_ids" : np.array(self.surface_ids),
                     "diameter" : self.diameter,
                     "selection_radius" : self.selection_radius}
@@ -262,9 +254,11 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
     def get_lrf_group_index(self):
         keys = []
-        for (group_id, _) in self.properties.group_properties.keys():
-            if group_id not in keys:
-                keys.append(group_id)
+        for key in self.properties.group_properties.keys():
+            property, group_id = key
+            if property == "lrf_eq_model":
+                if group_id not in keys:
+                    keys.append(group_id)
         index = 1
         while index in keys:
             index += 1
