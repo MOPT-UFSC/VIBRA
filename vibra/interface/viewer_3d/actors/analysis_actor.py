@@ -57,7 +57,7 @@ class AnalysisActor(SolidsActor):
         point_colors = self.data.GetPointData().GetScalars()
         for i, val in enumerate(values):
             color = [0, 0, 0]
-            # yes, vtk uses it as a fucking pointer instead of returning a tuple...
+            # yes, vtk uses it as a f****** python pointer instead of returning a tuple...
             self.lookup_table.GetColor(val, color)
             color = [int(i * 255) for i in color]
             point_colors.SetTuple(i, color)
