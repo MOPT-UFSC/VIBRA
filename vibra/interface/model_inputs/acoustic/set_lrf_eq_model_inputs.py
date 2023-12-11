@@ -149,9 +149,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             center_coords = self.get_center_coordinates()
             if len(center_coords):
                 geometry_widget = self.main_window.viewer_tabs.geometry_widget
-                geometry_widget.set_selection_sphere(center_coords, self.selection_radius)
-                mesh_widget = self.main_window.viewer_tabs.mesh_widget
-                mesh_widget.select_multiple_volumes(range(0, 1000))
+                geometry_widget.set_selection_sphere(center_coords, self.selection_radius)    
 
     def hide_sphere(self):
         geometry_widget = self.main_window.viewer_tabs.geometry_widget
@@ -209,6 +207,10 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             self.tabWidget_lrf_model.setTabVisible(1, True)
         else:
             self.tabWidget_lrf_model.setTabVisible(1, False)
+    
+    def highlight_mesh_elements(self, elements):
+        mesh_widget = self.main_window.viewer_tabs.mesh_widget
+        mesh_widget.select_multiple_volumes(elements)
 
     def check_lrf_eq_model_entries(self):
         
