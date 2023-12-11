@@ -115,17 +115,11 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_selection_type.setCurrentIndex(0)
+            self.hide_sphere()
         elif not any([points, lines, faces]):
             self.lineEdit_selection_id.setText("")
             self.lineEdit_center_coordinates.setText("")
-
-    def check_selection_radius(self):
-        self.selection_radius = None
-        lineEdit = self.lineEdit_selection_radius
-        self.selection_radius = self.check_inputs(lineEdit, "Selection radius")
-        if self.stop:
-            lineEdit.setFocus()
-            return True
+            self.hide_sphere()
 
     def get_center_coordinates(self):
         selection_id = self.lineEdit_selection_id.text()
@@ -144,12 +138,16 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         if self.comboBox_selection_type.currentIndex() == 1:
             if self.check_selection_radius():
                 return
-        center_coords = self.get_center_coordinates()
-        if len(center_coords):
-            geometry_widget = self.main_window.viewer_tabs.geometry_widget
-            geometry_widget.set_selection_sphere(center_coords, self.selection_radius)
-            mesh_widget = self.main_window.viewer_tabs.mesh_widget
-            mesh_widget.select_multiple_volumes(range(0, 1000))
+            center_coords = self.get_center_coordinates()
+            if len(center_coords):
+                geometry_widget = self.main_window.viewer_tabs.geometry_widget
+                geometry_widget.set_selection_sphere(center_coords, self.selection_radius)
+                mesh_widget = self.main_window.viewer_tabs.mesh_widget
+                mesh_widget.select_multiple_volumes(range(0, 1000))
+
+    def hide_sphere(self):
+        geometry_widget = self.main_window.viewer_tabs.geometry_widget
+        geometry_widget.set_selection_sphere((0,0,0), 0)
 
     def get_selection_information(self):
         selection_id = self.lineEdit_selection_id.text()
@@ -374,11 +372,11 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
                 self.close()
     
     def closeEvent(self, event):
-        geometry_widget = self.main_window.viewer_tabs.geometry_widget
-        geometry_widget.set_selection_sphere((0,0,0), 0)
+        self.hide_sphere()
         try:
+            geometry_widget = self.main_window.viewer_tabs.geometry_widget
             geometry_widget.selection_changed.disconnect(self.geometry_selection_callback)
-        except:
-            pass
+        except TypeError:
+            pass  # ignore if there is nothing to disconect
 
 # fmt: on
