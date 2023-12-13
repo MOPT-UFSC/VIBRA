@@ -1,5 +1,3 @@
-import os
-import configparser
 import numpy as np
 from pathlib import Path
 
@@ -79,6 +77,11 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         #
         self.comboBox_selection_type.currentIndexChanged.connect(self.update_controls_visibility)
         #
+        geometry_widget = self.main_window.viewer_tabs.geometry_widget
+        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
+        #
+        self.lineEdit_selection_radius.editingFinished.connect(self.call_sphere_plotter)
+        #
         self.pushButton_confirm.clicked.connect(self.set_lrf_eq_model_data)
         self.pushButton_selection_info.clicked.connect(self.get_selection_information)
         self.pushButton_remove.clicked.connect(self.remove_lrf_eq_model_inputs)
@@ -87,8 +90,6 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         self.treeWidget_lrf_model_info.itemClicked.connect(self.on_click_item)
         self.treeWidget_lrf_model_info.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        geometry_widget = self.main_window.viewer_tabs.geometry_widget
-        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
         self.update_controls_visibility()
 
     def update_controls_visibility(self):

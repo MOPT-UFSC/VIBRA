@@ -70,7 +70,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.remove_actors()
 
         self.selection_sphere = SelectionSphere()
-        self.selection_sphere.GetProperty().SetColor([i/255 for i in self.selection_color])
+        # self.selection_sphere.GetProperty().SetColor([i/255 for i in self.selection_color])
+        self.selection_sphere.GetProperty().SetColor([1, 0, 0])
         self.selection_sphere.VisibilityOff()
         self.selection_sphere.PickableOff()
         self.renderer.AddActor(self.selection_sphere)

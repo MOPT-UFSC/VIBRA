@@ -43,6 +43,9 @@ class Mesh:
         self.entity_ranges = dict()
         self.surfaces_from_volumes = dict()
         self.connectivity_from_surfaces = dict()
+        self.nodes_from_face_element = dict()
+        self.nodes_from_solid_element = dict()
+        self.solid_elements_center = dict()
         self.volume_from_surface = defaultdict(list)
         self.face_elements_from_nodes = defaultdict(list)
         self.solid_elements_from_nodes = defaultdict(list)
@@ -237,14 +240,9 @@ class Mesh:
         self.elements_from_volumes[1] = np.arange(rows, dtype=int)
 
     def export_nodes_coordinates(self, filename):
+        fmt = ["%i", "%.16f", "%.16f", "%.16f"]
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
-        np.savetxt(
-            filename,
-            self.nodal_coordinates,
-            delimiter=";",
-            header=header,
-            fmt=["%i", "%.16f", "%.16f", "%.16f"],
-        )
+        np.savetxt(filename, self.nodal_coordinates, delimiter=";", header=header, fmt=fmt)
 
     def export_faces_connectivity(self, filename):
         header = "Index || Element ID || Face ID || Element type ID || Connected Node IDs"
@@ -379,7 +377,6 @@ class Mesh:
         #
         self._maps_surfaces_by_elements()
         self._maps_volumes_by_elements()
-        self._process_solid_elements_connected_to_nodes()
 
     def _maps_surfaces_by_elements(self):
         self.surface_from_element.clear()
@@ -406,14 +403,18 @@ class Mesh:
             self.elements_from_volumes[tag] = internal_indexes
 
     def _process_face_elements_connected_to_nodes(self):
+        self.nodes_from_face_element.clear()
         self.face_elements_from_nodes.clear()
         for i, connected_nodes in enumerate(self.faces_connectivity[:, 4:]):
+            self.nodes_from_face_element[i] = connected_nodes
             for node in connected_nodes:
                 self.face_elements_from_nodes[node].append(i)
 
     def _process_solid_elements_connected_to_nodes(self):
+        self.nodes_from_solid_element.clear()
         self.solid_elements_from_nodes.clear()
         for i, connected_nodes in enumerate(self.solids_connectivity[:, 4:]):
+            self.nodes_from_solid_element[i] = connected_nodes
             for node in connected_nodes:
                 self.solid_elements_from_nodes[node].append(i)
 
@@ -437,7 +438,10 @@ class Mesh:
         self.nodes_from_surfaces = self.reordering.updates_nodes_from(self.nodes_from_surfaces)
         self.nodes_from_volumes = self.reordering.updates_nodes_from(self.nodes_from_volumes)
         self.connectivity_from_surfaces = self.reordering.updates_nodes_from(self.connectivity_from_surfaces)
-        
+        # self._process_face_elements_connected_to_nodes()
+        self._process_solid_elements_connected_to_nodes()
+        self._process_element_centroids()
+
         # print(f"Nodal coordinates (after): {self.nodal_coordinates.shape}")
         # print(f"Connectivity (after): {self.solids_connectivity.shape}")
         # np.savetxt("nodal_coordinates_reordered.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
@@ -552,10 +556,19 @@ class Mesh:
             entity_end = end
             self.entity_ranges[entity_dim, entity_tag] = (entity_start, entity_end)
 
-        output_data[:, 0] = np.arange(1, n + 1, 1)
         internal_indexes = np.arange(n, dtype=int)
+        # output_data[:, 0] = np.arange(1, n + 1, 1)
+        output_data[:, 0] = internal_indexes 
         map_elements = dict(zip(gmsh_elements, internal_indexes))
+
         return output_data, map_elements
+
+    def _process_element_centroids(self):
+        """ This method evaluates the element average center coordinates. """
+        self.solid_elements_center.clear()
+        for index, nodes in self.nodes_from_solid_element.items():
+            self.solid_elements_center[index] = np.average(self.nodal_coordinates[nodes, 1:], axis=0)
+            # print(index, self.solid_elements_center[index])
 
 
 if __name__ == "__main__":

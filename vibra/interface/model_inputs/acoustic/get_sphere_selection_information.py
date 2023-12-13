@@ -27,6 +27,7 @@ class GetSphereSelectionInformation(QDialog):
         self.setWindowTitle("Get sphere selection information")
 
         self.main_window = get_main_window()
+        self.main_window.viewer_tabs.show_mesh()
         # self.main_window.set_input_widget(self)
         self.project = self.main_window.project
         self.model = self.main_window.project.model
@@ -58,18 +59,18 @@ class GetSphereSelectionInformation(QDialog):
 
     def get_selection_info(self):
         list_elements, list_nodes = self.model.get_elements_and_nodes_from_sphere(self.selection_id, self.selection_radius)
+        # print(f"List of elements: {list_elements}")
+        # print(f"List of nodes: {list_nodes}")
         center_coords = self.model.get_average_nodal_coordinates(self.selection_id)
         if None in center_coords:
             self.lineEdit_center_coordinates.setText("")
         else:
             _round_center_coords = [round(value,4) for value in center_coords]
             self.lineEdit_center_coordinates.setText(str(_round_center_coords))
-
         self.lineEdit_number_of_elements.setText(str(len(list_elements)))
         self.lineEdit_number_of_nodes.setText(str(len(list_nodes)))
         self.highlight_mesh_elements(list_elements)
 
     def highlight_mesh_elements(self, elements):
         mesh_widget = self.main_window.viewer_tabs.mesh_widget
-        # _elements = list(np.random.randint(0, 1000, 800))
         mesh_widget.select_multiple_volumes(elements)

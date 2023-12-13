@@ -281,7 +281,7 @@ class Model:
         selected_elements = []
         nodes_inside_sphere = []
         if True in mask:
-            nodes_inside_sphere = nodal_coordinates[:,0][mask] 
+            nodes_inside_sphere = nodal_coordinates[:,0][mask]
             for node_id in nodes_inside_sphere:
                 for element_id in self.mesh.solid_elements_from_nodes[node_id]:
                     selected_elements.append(element_id)
