@@ -35,22 +35,30 @@ class LocalRefineWidget(QDialog):
         self.global_mesh_size_textbox = QLineEdit(self)
         self.layout_mesh_parameters.addWidget(self.global_mesh_size_textbox, 2, 1)
 
+        # geometry tolerance
+        self.geometry_tolerance_textbox_label = QLabel(self)
+        self.geometry_tolerance_textbox_label.setText("Geometry Tolerance:")
+        self.layout_mesh_parameters.addWidget(self.geometry_tolerance_textbox_label, 1, 2)
+        self.geometry_tolerance_textbox = QLineEdit(self)
+        self.geometry_tolerance_textbox.insert("1e-6")
+        self.layout_mesh_parameters.addWidget(self.geometry_tolerance_textbox, 2, 2)
+
         # element type list
         self.element_type_list_label = QLabel(self)
         self.element_type_list_label.setText("Element type:")
-        self.layout_mesh_parameters.addWidget(self.element_type_list_label, 1, 2)
+        self.layout_mesh_parameters.addWidget(self.element_type_list_label, 1, 3)
         self.element_type_list = QComboBox()
         self.element_type_list.addItems(["Tetrahedral", "Hexahedral", "Triangular", "Quadrangular"])
-        self.layout_mesh_parameters.addWidget(self.element_type_list, 2, 2)
+        self.layout_mesh_parameters.addWidget(self.element_type_list, 2, 3)
 
 
         # shape function list
         self.shape_function_list_label = QLabel(self)
         self.shape_function_list_label.setText("Shape function:")
-        self.layout_mesh_parameters.addWidget(self.shape_function_list_label, 1, 3)
+        self.layout_mesh_parameters.addWidget(self.shape_function_list_label, 1, 4)
         self.shape_function_list = QComboBox()
         self.shape_function_list.addItems(["Linear", "Quadratic"])
-        self.layout_mesh_parameters.addWidget(self.shape_function_list, 2, 3)
+        self.layout_mesh_parameters.addWidget(self.shape_function_list, 2, 4)
 
         # checkboxes
         self.layout_checkboxes = QVBoxLayout()
@@ -153,6 +161,7 @@ class LocalRefineWidget(QDialog):
         element_shape = self.element_type_list.currentText().lower()
         shape_function = self.shape_function_list.currentText().lower()
         global_mesh_size = int(self.global_mesh_size_textbox.text())
+        geometry_tolerance = float(self.geometry_tolerance_textbox.text())
         faces_list = self.faces_list_textbox.text()
         refined_size = self.refining_size_textbox.text()
         # if refined_size != "":
@@ -175,7 +184,7 @@ class LocalRefineWidget(QDialog):
 
         self.mesh_setup = {
             "element_type": self.element_type,
-            "geometry_tolerance": 1e-6, # for now, implementing another textbox for this is needed (is it?)
+            "geometry_tolerance": geometry_tolerance,
             "size_factor": 0,
             "minimum_element_size": global_mesh_size,
             "maximum_element_size": global_mesh_size,
