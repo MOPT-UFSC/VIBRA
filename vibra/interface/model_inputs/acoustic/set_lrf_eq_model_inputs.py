@@ -109,7 +109,6 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             self.comboBox_selection_type.setCurrentIndex(1)
             self.lineEdit_selection_radius.setDisabled(False)
             self.pushButton_selection_info.setDisabled(False)
-            # self.get_center_coordinates()
             self.call_sphere_plotter()
         elif volumes:
             text = ", ".join([str(i) for i in volumes])
@@ -133,6 +132,14 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         _round_center_coords = [round(value,4) for value in center_coords]
         self.lineEdit_center_coordinates.setText(str(_round_center_coords))
         return center_coords
+
+    def check_selection_radius(self):
+        self.selection_radius = None
+        lineEdit = self.lineEdit_selection_radius
+        self.selection_radius = self.check_inputs(lineEdit, "Selection radius")
+        if self.stop:
+            lineEdit.setFocus()
+            return True
 
     def call_sphere_plotter(self):
         if self.comboBox_selection_type.currentIndex() == 1:
@@ -162,6 +169,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         self.check_reset()
 
     def load_lrf_data(self):
+
         self.treeWidget_lrf_model_info.clear()
         for key, data in self.properties.volume_properties.items():
             property, volume_id = key
@@ -171,6 +179,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
                 self.treeWidget_lrf_model_info.addTopLevelItem(new)
+
         for key, data in self.properties.group_properties.items():
             property, group_id = key
             if property == "lrf_eq_model":
@@ -179,6 +188,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
                 self.treeWidget_lrf_model_info.addTopLevelItem(new)
+
         self.update_tabs_visibility()
 
     def update_tabs_visibility(self):
@@ -242,15 +252,15 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         else:
 
             group_id = self.get_lrf_group_index()
-            print(f"group_id: {group_id}")
             data = {"surface_ids" : np.array(self.surface_ids),
-                    "diameter" : self.diameter,
-                    "selection_radius" : self.selection_radius}
+                    "selection_radius" : self.selection_radius,
+                    "diameter" : self.diameter}
 
             for _id in self.surface_ids:
                 self.project.set_lrf_eq_model_data(data, group=group_id)
-
-        self.close()
+        
+        self.load_lrf_data()
+        # self.close()
 
     def get_lrf_group_index(self):
         keys = []
@@ -315,13 +325,13 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         if self.lineEdit_selection_id.text() != "":
 
             picked_id = int(self.lineEdit_selection_id.text())
-            surface_properties = self.properties.surface_properties.copy()
+            group_properties = self.properties.group_properties.copy()
             volume_properties = self.properties.volume_properties.copy()
             
-            for key in surface_properties.keys():
-                property, surface_id = key
-                if property == "lrf_eq_model" and picked_id == surface_id:
-                    self.properties._remove_surface_property("lrf_eq_model", picked_id)
+            for key in group_properties.keys():
+                property, group_id = key
+                if property == "lrf_eq_model" and picked_id == group_id:
+                    self.properties._remove_group_property("lrf_eq_model", picked_id)
                     self.load_lrf_data()
                     self.lineEdit_selection_id.setText("")
                     return
@@ -336,11 +346,11 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
     def check_reset(self):
 
-        surface_ids = []
-        for key in self.properties.surface_properties.keys():
-            property, surface_id = key
+        group_ids = []
+        for key in self.properties.group_properties.keys():
+            property, group_id = key
             if property == "lrf_eq_model":
-                surface_ids.append(surface_id)
+                group_ids.append(group_id)
 
         volume_ids = []
         for key in self.properties.volume_properties.keys():
@@ -348,7 +358,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             if property == "lrf_eq_model":
                 volume_ids.append(volume_id)
 
-        if len(surface_ids) + len(volume_ids):
+        if len(group_ids) + len(volume_ids):
             title = f"Resetting LRF eq. model"
             message = "Do you really want to remove the LRF eq. defined to the model?\n\n"
             message += "\n\nPress the Continue button to proceed with the resetting or press Cancel or "
@@ -361,13 +371,13 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
             if read._continue:
 
-                if len(surface_ids) + len(volume_ids) > 0:
+                if len(group_ids) + len(volume_ids) > 0:
                     self.properties._reset_property("lrf_eq_model")
 
                 self.properties.export_model_properties()
 
-                title = "surface velocity resetting process complete"
-                message = "All surface velocity applied to the acoustic "
+                title = "LRF eq. model resetting process complete"
+                message = "All LRF eq. effects applied to the acoustic "
                 message += "model have been removed from the model."
                 PrintMessageInput([title, message, window_title_2])
 

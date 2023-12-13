@@ -390,13 +390,11 @@ class AcousticPressureInput(QDialog):
         return list_table_names
 
     def text_label(self, value):
-        text = ""
-        if isinstance(value, complex):
+        if value.shape[0] == 1:
             value_label = str(value)
-        elif isinstance(value, np.ndarray):
+        else:
             value_label = "Table"
-        text = "{}".format(value_label)
-        return text
+        return "{}".format(value_label)
 
     def remove_bc_from_selection(self):
         if self.lineEdit_selection_id.text() != "":

@@ -97,22 +97,27 @@ class Model:
         self.mesh = mesh
         self.generated_mesh = True
 
-    def get_fluid_properties(self, proportional_damping=False, **kwargs):
-        """ This method returns the fluid properties """
-        # volume_id = self.mesh.elements_from_volumes[el_index]
-        # fluid = self.properties.get_fluid(volume=volume_id)
-        # c_0 = fluid.speed_of_sound
-        element = kwargs.get("element", None)
+    def get_volume(self, **kwargs):
+        """ This method returns the volume based on kwargs. """
         volume = kwargs.get("volume", None)
-
-        if element is not None:
+        if volume is None:
             try:
+                element = kwargs.get("element", None) 
                 volume = self.mesh.volume_from_element[element]
             except:
                 # temporary solution to allow running external mesh file
                 volume = 1
+        return volume
 
+    def get_fluid(self, **kwargs):
+        """ This method returns the fluid relative to an element or volume and the volume id itself. """
+        volume = self.get_volume(**kwargs)
         fluid = self.properties.get_fluid(volume=volume)
+        return fluid, volume
+
+    def get_fluid_properties(self, proportional_damping=False, **kwargs):
+        """ This method returns the fluid properties """
+        fluid, volume = self.get_fluid(**kwargs)
         dynamic_viscosity = fluid.dynamic_viscosity
         if proportional_damping:
             c_0 = self.properties.get_speed_of_sound(fluid, volume=volume)
@@ -120,8 +125,6 @@ class Model:
         else:
             c_0 = fluid.speed_of_sound
             rho_0 = fluid.fluid_density
-        # if volume not in [1, 8]:
-        #     print(volume, element, proportional_damping, c_0, rho_0, dynamic_viscosity)
         return rho_0, c_0, dynamic_viscosity
 
     def set_acoustic_element(self, element):
@@ -157,39 +160,29 @@ class Model:
         for key, data in self.properties.group_properties.items():
             property, group_id = key
             if property == "lrf_eq_model":
-                print(property, group_id)
+                #
                 d = data["diameter"]
                 surface_ids = data["surface_ids"]
                 selection_radius = data["selection_radius"]
                 selected_elements, _ = self.get_elements_and_nodes_from_sphere(surface_ids, selection_radius)
                 for element_id in selected_elements:
                     #
-                    fluid = self.properties.get_fluid(element=element_id)
+                    fluid, _ = self.get_fluid(element=element_id)
                     c_0, rho_0, mu, gamma, Pr, P_0 = fluid.get_lrf_properties()
                     properties = [d, c_0, rho_0, mu, gamma, Pr, P_0]
                     #
                     if element_id not in list(self.lrf_eq_data.keys()):
-                        print(element_id, properties)
+                        #
                         self.lrf_eq_data[element_id] = properties
         
         for key, data in self.properties.volume_properties.items():
             property, volume_id = key
             if property == "lrf_eq_model":
-                # #
-                # fluid = self.properties.get_fluid(volume=volume_id)
-                # #
-                # d = data["diameter"]
-                # c_0 = fluid.speed_of_sound
-                # rho_0 = fluid.fluid_density
-                # mu = fluid.dynamic_viscosity
-                # gamma = fluid.isentropic_exponent
-                # Pr = fluid.prandtl_number
-                # P_0 = fluid.pressure_state
-                # #
+                #
                 d = data["diameter"]
-                fluid = self.properties.get_fluid(volume=volume_id)
+                fluid, _ = self.get_fluid(volume=volume_id)
                 c_0, rho_0, mu, gamma, Pr, P_0 = fluid.get_lrf_properties()
-
+                #
                 properties = [d, c_0, rho_0, mu, gamma, Pr, P_0]
                 self.set_lrf_eq_data([volume_id], properties)
         
@@ -261,11 +254,7 @@ class Model:
         center_coords = [None, None, None]
         nodal_coordinates = self.mesh.nodal_coordinates
 
-        if isinstance(surface_ids, (list, tuple)):
-            str_surface_ids = str(surface_ids)[1:-1]
-        else:
-            str_surface_ids = surface_ids
-        self.stop, self.surface_ids = self.check_input_surface_id(str_surface_ids)
+        self.stop, self.surface_ids = self.check_input_surface_id(surface_ids)
 
         if self.stop:
             return center_coords
@@ -327,20 +316,24 @@ class Model:
     def set_specific_impedance(self, data, surface):
         self.properties.set_specific_impedance(data, surface)
 
-    def check_input_surface_id(self, str_selected_ids, single_ID=False):
+    def check_input_surface_id(self, selected_ids, single_ID=False):
         try:
             title = "Invalid entry to the Surface ID"
             message = ""
-            tokens = str_selected_ids.strip().split(",")
+            if isinstance(selected_ids, str):
+                tokens = selected_ids.strip().split(",")
+                try:
+                    tokens.remove("")
+                except:
+                    pass
+                list_ids = list(map(int, tokens))
+            elif isinstance(selected_ids, list):
+                list_ids = selected_ids
+            elif isinstance(selected_ids, (tuple, np.ndarray)):
+                list_ids = list(selected_ids)
+
             self.surface_ids = self.mesh.nodes_from_surfaces.keys()
-
-            try:
-                tokens.remove("")
-            except:
-                pass
-
             _size = len(self.surface_ids)
-            list_ids = list(map(int, tokens))
 
             if len(list_ids) == 0:
                 message = "An empty input field for the Surface ID has been detected. Please, enter a valid Surface ID to proceed."
@@ -373,20 +366,24 @@ class Model:
         else:
             return False, list_ids
 
-    def check_input_volume_id(self, str_selected_ids, single_ID=False):
+    def check_input_volume_id(self, selected_ids, single_ID=False):
         try:
             title = "Invalid entry to the Volume ID"
             message = ""
-            tokens = str_selected_ids.strip().split(",")
+            if isinstance(selected_ids, str):
+                tokens = selected_ids.strip().split(",")
+                try:
+                    tokens.remove("")
+                except:
+                    pass
+                list_ids = list(map(int, tokens))
+            elif isinstance(selected_ids, list):
+                list_ids = selected_ids
+            elif isinstance(selected_ids, (tuple, np.ndarray)):
+                list_ids = list(selected_ids)
+            
             self.volume_ids = self.mesh.nodes_from_volumes.keys()
-
-            try:
-                tokens.remove("")
-            except:
-                pass
-
             _size = len(self.volume_ids)
-            list_ids = list(map(int, tokens))
 
             if len(list_ids) == 0:
                 message = "An empty input field for the Volume ID has been detected. Please, enter a valid Volume ID to proceed."
