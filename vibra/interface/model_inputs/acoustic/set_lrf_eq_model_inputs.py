@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import QDialog, QComboBox, QFrame, QLineEdit, QPushButton, 
 from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
 
 from vibra.interface.model_inputs.acoustic.get_sphere_selection_information import GetSphereSelectionInformation
-from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.general.print_message_input2 import PrintMessageInput
 from vibra.utils.interface_functions import get_main_window
 
 window_title_1 = "ERROR"
@@ -308,7 +308,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
                 message = f"Insert some value at the {label} input field."
 
         if message != "":
-            PrintMessageInput([title, message, window_title])
+            PrintMessageInput([window_title, title, message])
             self.stop = True
             return None
         return out
@@ -360,9 +360,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
         if len(group_ids) + len(volume_ids):
             title = f"Resetting LRF eq. model"
-            message = "Do you really want to remove the LRF eq. defined to the model?\n\n"
-            message += "\n\nPress the Continue button to proceed with the resetting or press Cancel or "
-            message += "Close buttons to abort the current operation."
+            message = "Do you really want to remove all LRF equivalent model inputs defined to the acoustic model?"
             buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
             read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
 
@@ -376,10 +374,10 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
                 self.properties.export_model_properties()
 
-                title = "LRF eq. model resetting process complete"
-                message = "All LRF eq. effects applied to the acoustic "
-                message += "model have been removed from the model."
-                PrintMessageInput([title, message, window_title_2])
+                title = "Model resetting complete"
+                message = "All LRF equivalent model effects active on "
+                message += "the acoustic model have been removed."
+                PrintMessageInput([window_title_2, title, message], auto_close=True)
 
                 self.close()
     

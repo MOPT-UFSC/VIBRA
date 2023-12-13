@@ -234,14 +234,13 @@ class ModelProperties:
         """
         Clears all instances of a specific property from the structure.
         """
-        data_dicts = [
-            self.nodal_properties,
-            self.element_properties,
-            self.line_properties,
-            self.surface_properties,
-            self.volume_properties,
-            self.global_properties,
-        ]
+        data_dicts = [  self.nodal_properties,
+                        self.element_properties,
+                        self.line_properties,
+                        self.surface_properties,
+                        self.volume_properties,
+                        self.group_properties,
+                        self.global_properties  ]
 
         for data in data_dicts:
             keys_to_remove = []

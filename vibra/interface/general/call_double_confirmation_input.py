@@ -18,9 +18,10 @@ class CallDoubleConfirmationInput(QDialog):
         super().__init__(*args, **kwargs)
         uic.loadUi(Path("data/ui_files/general/call_double_confirmation_input.ui"), self)
 
-        icons_path = str(Path("data/icons/pulse.png"))
-        self.icon = QIcon(icons_path)
+        path = str(Path("data/icons/logo_vibra.png"))
+        self.icon = QIcon(path)
         self.setWindowIcon(self.icon)
+        
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle("Vibra")

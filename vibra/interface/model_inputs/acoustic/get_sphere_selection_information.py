@@ -36,6 +36,8 @@ class GetSphereSelectionInformation(QDialog):
         self.selection_radius = selection_radius
         self.lineEdit_selection_radius.setText(str(self.selection_radius))
 
+        self._define_qt_variables()
+        self._create_connections()
         self.get_selection_info()
         self.exec()
 
@@ -65,3 +67,9 @@ class GetSphereSelectionInformation(QDialog):
 
         self.lineEdit_number_of_elements.setText(str(len(list_elements)))
         self.lineEdit_number_of_nodes.setText(str(len(list_nodes)))
+        self.highlight_mesh_elements(list_elements)
+
+    def highlight_mesh_elements(self, elements):
+        mesh_widget = self.main_window.viewer_tabs.mesh_widget
+        # _elements = list(np.random.randint(0, 1000, 800))
+        mesh_widget.select_multiple_volumes(elements)
