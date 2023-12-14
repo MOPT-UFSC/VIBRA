@@ -451,7 +451,15 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
                 PrintMessageInput([window_title_2, title, message], auto_close=True)
 
                 self.close()
-    
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            self.set_lrf_eq_model_data()
+        elif event.key() == Qt.Key_Delete:
+            self.remove_lrf_eq_from_selection()
+        elif event.key() == Qt.Key_Escape:
+            self.close()
+
     def closeEvent(self, event):
         self.hide_sphere()
         try:
