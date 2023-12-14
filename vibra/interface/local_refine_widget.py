@@ -30,10 +30,8 @@ class LocalRefineWidget(QDialog):
 
         self.main_window = get_main_window()
         geometry_widget = self.main_window.viewer_tabs.geometry_widget
-        geometry_widget.clear_selection()
         geometry_widget.selection_changed.connect(self.geometry_selection_callback)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
-
 
         self.layout_mesh_parameters = QGridLayout()
         
@@ -43,6 +41,10 @@ class LocalRefineWidget(QDialog):
         self.layout_mesh_parameters.addWidget(self.global_mesh_size_textbox_label, 1, 1)
         self.global_mesh_size_textbox = QLineEdit(self)
         self.layout_mesh_parameters.addWidget(self.global_mesh_size_textbox, 2, 1)
+        
+        self.error_global_mesh_size = QLabel("")
+        self.layout_mesh_parameters.addWidget(self.error_global_mesh_size, 3, 1)
+        
 
         # geometry tolerance
         self.geometry_tolerance_textbox_label = QLabel(self)
@@ -79,6 +81,12 @@ class LocalRefineWidget(QDialog):
         self.mesh_connection_checkbox.setChecked(True)
         self.mesh_connection_layout.addStretch()
         self.layout_checkboxes.addLayout(self.mesh_connection_layout)
+
+        # space 
+        self.space = QLabel("")
+        self.layout_checkboxes.addWidget(self.space)
+
+
 
 
 
@@ -143,8 +151,14 @@ class LocalRefineWidget(QDialog):
         self.show()
 
     def apply_button_callback(self):
-        self.get_inputs_table()
-        self.check_inputs()
+        try: 
+            self.get_inputs_table()
+            self.check_inputs()
+        except ValueError:
+            red_color = QColor(224, 73, 70)
+            border_color = f"border: 0.5px solid {red_color.name()};"
+            self.error_global_mesh_size.setText("Please put a number")
+            self.error_global_mesh_size.setStyleSheet(f"color: {red_color.name()};")
 
     def trash_button_callback(self):
         current_row = self.table.currentRow()
@@ -206,6 +220,7 @@ class LocalRefineWidget(QDialog):
         generate_mesh()
         main_window.viewer_tabs.show_mesh()
         main_window.viewer_tabs.update_plots()
+        self.error_global_mesh_size.setText("")
 
 
 
