@@ -19,12 +19,21 @@ from PyQt5.QtWidgets import (
 )
 from vibra.engine.mesher.element_type import *
 from vibra.utils.interface_functions import get_main_window
+from vibra.interface.loading_bar import load_function
+
 
 
 
 class LocalRefineWidget(QDialog):
     def __init__(self):
         super().__init__()
+
+        self.main_window = get_main_window()
+        geometry_widget = self.main_window.viewer_tabs.geometry_widget
+        geometry_widget.clear_selection()
+        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+
 
         self.layout_mesh_parameters = QGridLayout()
         
@@ -87,6 +96,7 @@ class LocalRefineWidget(QDialog):
         self.faces_list_textbox_label = QLabel(self)
         self.faces_list_textbox_label.setText("Faces List:")
         self.faces_list_textbox = QLineEdit(self)
+
         
         layout_refining_parameters.addWidget(self.faces_list_textbox_label, 1, 2)
         layout_refining_parameters.addWidget(self.faces_list_textbox, 2, 2)
@@ -130,7 +140,7 @@ class LocalRefineWidget(QDialog):
         self.trash_button.clicked.connect(self.trash_button_callback)
         self.apply_button.clicked.connect(self.apply_button_callback)
 
-        self.exec_()
+        self.show()
 
     def apply_button_callback(self):
         self.get_inputs_table()
@@ -146,6 +156,10 @@ class LocalRefineWidget(QDialog):
         self.table.setRowCount(a+1) 
         self.table.setItem(a, 0, QTableWidgetItem(self.refining_size_textbox.text()))
         self.table.setItem(a, 1, QTableWidgetItem(self.faces_list_textbox.text()))
+
+    def geometry_selection_callback(self, points, lines, faces):
+        faces_list = ", ".join([str(i) for i in faces])
+        self.faces_list_textbox.setText(faces_list)
     
     def get_inputs_table(self):
         faces_and_refined_size_list = []
@@ -164,12 +178,6 @@ class LocalRefineWidget(QDialog):
         geometry_tolerance = float(self.geometry_tolerance_textbox.text())
         faces_list = self.faces_list_textbox.text()
         refined_size = self.refining_size_textbox.text()
-        # if refined_size != "":
-        #     refined_size.split(",")
-        #     refined_size = [int(i) for i in refined_size]
-        # if faces_list != "":
-        #     faces_list.split(",")
-        #     faces_list = [int(i) for i in faces_list]
 
         if element_shape == "tetrahedral" and shape_function == "linear":
             self.element_type = TETRAHEDRON_4
@@ -194,7 +202,8 @@ class LocalRefineWidget(QDialog):
         
         main_window = get_main_window()
         main_window.project.set_mesh_setup(self.mesh_setup)
-        main_window.project.generate_mesh()
+        generate_mesh = load_function(self.main_window.project.generate_mesh, self.main_window)
+        generate_mesh()
         main_window.viewer_tabs.show_mesh()
         main_window.viewer_tabs.update_plots()
 

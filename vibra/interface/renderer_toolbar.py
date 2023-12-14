@@ -89,10 +89,6 @@ class RendererToolbar(QToolBar):
         self.clip_plane_action = QAction(clip_plane_icon, "Clip Plane", self)
         self.clip_plane_action.triggered.connect(self.clip_plane_callback)
 
-        local_refine_mesh_icon = load_icon(Path("data/icons/tube_cut.png"), color)
-        self.local_refine_mesh_action = QAction(local_refine_mesh_icon, "Clip Plane", self)
-        self.local_refine_mesh_action.triggered.connect(self.local_refine_mesh_callback)
-
     def configure_layout(self):
         self.addSeparator()
         self.addAction(self.top_view_action)
@@ -108,14 +104,8 @@ class RendererToolbar(QToolBar):
         self.addAction(self.show_faces_action)
         self.addSeparator()
         self.addAction(self.clip_plane_action)
-        self.addSeparator()
-        self.addAction(self.local_refine_mesh_action)
 
     # Callbacks
-
-    def local_refine_mesh_callback(self):
-        LocalRefineWidget()
-
     def top_view_callback(self):
         widget = self.viewer_tabs.currentWidget()
         if isinstance(widget, CommonRenderWidget):
