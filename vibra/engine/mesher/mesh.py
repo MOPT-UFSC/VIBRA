@@ -455,6 +455,13 @@ class Mesh:
         n_solid_elements = self.solids_connectivity.shape[0]
         return n_nodes, n_face_elements, n_solid_elements
 
+    def get_geometry_info(self):
+        points = len(self.entity_ranges)
+        lines = len(self.nodes_from_lines)
+        surfaces = len(self.nodes_from_surfaces)
+        volumes = len(self.nodes_from_volumes)
+        return points, lines, surfaces, volumes
+
     def get_model_areas(self, path):
         """This method returns returns the all surface area processed using
         gmsh internal functions.

@@ -71,6 +71,8 @@ class ViewerTabs(QTabWidget):
             self.addTab(self.geometry_widget, "Geometry")
         self.geometry_widget.update_plot()
         self.setCurrentWidget(self.geometry_widget)
+        points, lines, surfaces, volumes = self.main_window.project.model.mesh.get_geometry_info()
+        self.main_window.update_geometry_information(points, lines, surfaces, volumes)
 
     def show_mesh(self):
         if self.mesh_widget not in self.tabs():
