@@ -25,7 +25,6 @@ from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_tabs import ViewerTabs
 from vibra.project import Project
 from vibra.utils.icons import load_icon
-from vibra.interface.local_refine_widget import LocalRefineWidget
 
 
 class MainWindow(QMainWindow):
@@ -43,8 +42,6 @@ class MainWindow(QMainWindow):
         self.create_basic_layout()
         self.load_user_preferences()
         self.config_tool_tip_appearance()
-
-        self.local_refining = LocalRefineWidget()
 
         self.viewer_tabs.geometry_widget.selection_changed.connect(self.selection_changed_callback)
         self.clip_plane.slider_pressed.connect(self.slider_pressed_callback)
