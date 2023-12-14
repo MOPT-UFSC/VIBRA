@@ -31,11 +31,11 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
         self.main_window = get_main_window()
         self.main_window.set_input_widget(self)
+        self.main_window.viewer_tabs.show_geometry()
+        
         self.project = self.main_window.project
         self.model = self.main_window.project.model
         self.properties = self.model.properties
-        
-        self.main_window.viewer_tabs.show_geometry()
 
         self._reset_variables()
         self._define_qt_variables()
@@ -51,10 +51,12 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
     def _define_qt_variables(self):
         # QComboBox objects
-        self.comboBox_selection_type = self.findChild(QComboBox, 'comboBox_selection_type')
+        self.comboBox_selection_by = self.findChild(QComboBox, 'comboBox_selection_by')
+        self.comboBox_filter = self.findChild(QComboBox, 'comboBox_filter')
         # QFrame objects
         self.frame_selection_by_surface = self.findChild(QFrame, 'frame_selection_by_surface')
         self.frame_center_coordinates = self.findChild(QFrame, "frame_center_coordinates")
+        self.frame_filter_options = self.findChild(QFrame, 'frame_filter_options')
         # QLineEdit objects
         self.lineEdit_center_coordinates = self.findChild(QLineEdit, 'lineEdit_center_coordinates')
         self.lineEdit_selection_id = self.findChild(QLineEdit, "lineEdit_selection_id")
@@ -63,6 +65,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         self.lineEdit_selection_radius.setDisabled(True)
         # QPushButton objects
         self.pushButton_confirm = self.findChild(QPushButton, "pushButton_confirm")
+        self.pushButton_get_lrf_info = self.findChild(QPushButton, "pushButton_get_lrf_info")
         self.pushButton_selection_info = self.findChild(QPushButton, "pushButton_selection_info")
         self.pushButton_remove = self.findChild(QPushButton, "pushButton_remove")
         self.pushButton_reset = self.findChild(QPushButton, "pushButton_reset")
@@ -75,7 +78,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
     def _create_connections(self):
         #
-        self.comboBox_selection_type.currentIndexChanged.connect(self.update_controls_visibility)
+        self.comboBox_selection_by.currentIndexChanged.connect(self.update_selection_type_controls)
         #
         geometry_widget = self.main_window.viewer_tabs.geometry_widget
         geometry_widget.selection_changed.connect(self.geometry_selection_callback)
@@ -83,6 +86,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         self.lineEdit_selection_radius.editingFinished.connect(self.call_sphere_plotter)
         #
         self.pushButton_confirm.clicked.connect(self.set_lrf_eq_model_data)
+        self.pushButton_get_lrf_info.clicked.connect(self.get_lrf_info)
         self.pushButton_selection_info.clicked.connect(self.get_selection_information)
         self.pushButton_remove.clicked.connect(self.remove_lrf_eq_model_inputs)
         self.pushButton_reset.clicked.connect(self.reset_lrf_eq_model_inputs)
@@ -90,16 +94,18 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         self.treeWidget_lrf_model_info.itemClicked.connect(self.on_click_item)
         self.treeWidget_lrf_model_info.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        self.update_controls_visibility()
+        self.update_selection_type_controls()
 
-    def update_controls_visibility(self):
-        index = self.comboBox_selection_type.currentIndex()
+    def update_selection_type_controls(self):
+        index = self.comboBox_selection_by.currentIndex()
         if index == 0:
             self.frame_center_coordinates.setVisible(False)
             self.frame_selection_by_surface.setVisible(False)
+            self.frame_filter_options.setVisible(False)
         else:
             self.frame_center_coordinates.setVisible(True)
             self.frame_selection_by_surface.setVisible(True)
+            self.frame_filter_options.setVisible(True)
 
     def geometry_selection_callback(self, points, lines, faces, volumes):
         self.lineEdit_selection_radius.setDisabled(True)
@@ -107,14 +113,14 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         if faces:
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_selection_type.setCurrentIndex(1)
+            self.comboBox_selection_by.setCurrentIndex(1)
             self.lineEdit_selection_radius.setDisabled(False)
             self.pushButton_selection_info.setDisabled(False)
             self.call_sphere_plotter()
         elif volumes:
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_selection_type.setCurrentIndex(0)
+            self.comboBox_selection_by.setCurrentIndex(0)
             self.hide_sphere()
         elif not any([points, lines, faces]):
             self.lineEdit_selection_id.setText("")
@@ -122,17 +128,34 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             self.hide_sphere()
 
     def get_center_coordinates(self):
+
         selection_id = self.lineEdit_selection_id.text()
-        if selection_id == "":
+        selection_index = self.comboBox_selection_by.currentIndex()
+        if selection_id == "" or selection_index == 0:
             self.lineEdit_center_coordinates.setText("")
             return []
-        center_coords = self.model.get_average_nodal_coordinates(selection_id)
-        if None in center_coords:
-            self.lineEdit_center_coordinates.setText("")
-            return []
-        _round_center_coords = [round(value,4) for value in center_coords]
-        self.lineEdit_center_coordinates.setText(str(_round_center_coords))
+
+        index = self.comboBox_selection_by.currentIndex()
+        if index == 1:
+            averaged_selection = False
+        elif index == 2:
+            averaged_selection = True
+
+        center_coords = self.model.get_average_nodal_coordinates(selection_id, averaged=averaged_selection)
+        if averaged_selection:
+            try:
+                _round_center_coords = [round(value,4) for value in center_coords[0]]
+                self.lineEdit_center_coordinates.setText(str(_round_center_coords))
+            except:
+                self.lineEdit_center_coordinates.setText("")
+                return []
+        else:
+            self.lineEdit_center_coordinates.setText("Multiple centers")
         return center_coords
+
+    def update_entities_controls(self):
+        self.update_selection_type_controls()
+        self.call_sphere_plotter()
 
     def check_selection_radius(self):
         self.selection_radius = None
@@ -143,13 +166,14 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             return True
 
     def call_sphere_plotter(self):
-        if self.comboBox_selection_type.currentIndex() == 1:
+        if self.comboBox_selection_by.currentIndex() > 0:
             if self.check_selection_radius():
                 return
             center_coords = self.get_center_coordinates()
             if len(center_coords):
                 geometry_widget = self.main_window.viewer_tabs.geometry_widget
-                geometry_widget.set_selection_sphere(center_coords, self.selection_radius)    
+                for coords in center_coords:
+                    geometry_widget.set_selection_sphere(coords, self.selection_radius)    
 
     def hide_sphere(self):
         geometry_widget = self.main_window.viewer_tabs.geometry_widget
@@ -157,11 +181,24 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
     def get_selection_information(self):
         selection_id = self.lineEdit_selection_id.text()
+        index = self.comboBox_selection_by.currentIndex()
         if selection_id != "":
-            if self.comboBox_selection_type.currentIndex() == 1:
+            if index > 0:
+
                 if self.check_selection_radius():
                     return
-                GetSphereSelectionInformation(selection_id, self.selection_radius)
+                
+                if index == 1:
+                    averaged_selection = False
+                elif index == 2:
+                    averaged_selection = True
+                
+                filter_type = self.comboBox_filter.currentIndex()
+                GetSphereSelectionInformation(  selection_id,
+                                                self.selection_radius,
+                                                averaged_selection,
+                                                filter_type  )
+                self.main_window.viewer_tabs.show_geometry()
 
     def remove_lrf_eq_model_inputs(self):
         self.remove_lrf_eq_from_selection()
@@ -218,7 +255,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
     def check_lrf_eq_model_entries(self):
         
         selection_id = self.lineEdit_selection_id.text()
-        if self.comboBox_selection_type.currentIndex() == 0:
+        if self.comboBox_selection_by.currentIndex() == 0:
             self.stop, self.volume_ids = self.model.check_input_volume_id(selection_id)
         else:
             self.stop, self.surface_ids = self.model.check_input_surface_id(selection_id)
@@ -243,7 +280,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         if self.check_lrf_eq_model_entries():
             return
         
-        index = self.comboBox_selection_type.currentIndex()
+        index = self.comboBox_selection_by.currentIndex()
         if index == 0:
 
             data = {"diameter" : self.diameter}
@@ -252,9 +289,18 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
         else:
 
+            if index == 1:
+                averaged_selection = False
+            elif index == 2:
+                averaged_selection = True
+
             group_id = self.get_lrf_group_index()
+            filter_type = self.comboBox_filter.currentIndex()
+
             data = {"surface_ids" : np.array(self.surface_ids),
                     "selection_radius" : self.selection_radius,
+                    "averaged" : averaged_selection,
+                    "filter_type" : filter_type,
                     "diameter" : self.diameter}
 
             for _id in self.surface_ids:
@@ -321,6 +367,31 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         self.lineEdit_selection_id.setText(item.text(0))
         self.remove_lrf_eq_from_selection()
 
+    def get_lrf_info(self):
+        if self.lineEdit_selection_id.text() != "":
+
+            picked_id = self.lineEdit_selection_id.text()
+            
+            def get_info(data):
+                GetSphereSelectionInformation(  data["surface_ids"],
+                                                data["selection_radius"],
+                                                data["averaged"],
+                                                data["filter_type"]  )
+                self.main_window.viewer_tabs.show_geometry()
+
+            group_properties = self.properties.group_properties.copy()
+            for key, data in group_properties.items():
+                property, group_id = key
+                if property == "lrf_eq_model" and int(picked_id) == group_id:
+                    # self.pushButton_get_lrf_info.setDisabled(False)
+                    return get_info(data)
+
+            # volume_properties = self.properties.volume_properties.copy()
+            # for key, data in volume_properties.items():
+            #     property, volume_id = key
+            #     if property == "lrf_eq_model" and int(picked_id) == volume_id:
+            #         return get_info()
+            
     def remove_lrf_eq_from_selection(self):
 
         if self.lineEdit_selection_id.text() != "":

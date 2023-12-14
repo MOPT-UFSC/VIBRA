@@ -14,7 +14,7 @@ window_title_1 = "ERROR"
 window_title_2 = "WARNING"
 
 class GetSphereSelectionInformation(QDialog):
-    def __init__(self, selection_id, selection_radius, *args, **kwargs):
+    def __init__(self, selection_id, selection_radius, averaged, filter_type, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         uic.loadUi(Path("data/ui_files/model/acoustic/get_sphere_selection_information.ui"), self)
@@ -35,6 +35,8 @@ class GetSphereSelectionInformation(QDialog):
 
         self.selection_id = selection_id
         self.selection_radius = selection_radius
+        self.averaged = averaged
+        self.filter_type = filter_type
         self.lineEdit_selection_radius.setText(str(self.selection_radius))
 
         self._define_qt_variables()
@@ -58,15 +60,23 @@ class GetSphereSelectionInformation(QDialog):
         self.pushButton_close.clicked.connect(self.close)
 
     def get_selection_info(self):
-        list_elements, list_nodes = self.model.get_elements_and_nodes_from_sphere(self.selection_id, self.selection_radius)
-        # print(f"List of elements: {list_elements}")
-        # print(f"List of nodes: {list_nodes}")
-        center_coords = self.model.get_average_nodal_coordinates(self.selection_id)
-        if None in center_coords:
+
+        list_elements, list_nodes = self.model.get_elements_and_nodes_from_sphere(  self.selection_id, 
+                                                                                    self.selection_radius, 
+                                                                                    averaged=self.averaged,
+                                                                                    filter_type=self.filter_type)
+
+        list_center_coords = self.model.get_average_nodal_coordinates(  self.selection_id,
+                                                                        averaged=self.averaged  )
+
+        if len(list_center_coords) == 0:
             self.lineEdit_center_coordinates.setText("")
-        else:
-            _round_center_coords = [round(value,4) for value in center_coords]
+        elif len(list_center_coords) == 1:
+            _round_center_coords = [round(value,4) for value in list_center_coords[0]]
             self.lineEdit_center_coordinates.setText(str(_round_center_coords))
+        else:
+            self.lineEdit_center_coordinates.setText("Multiple centers")
+
         self.lineEdit_number_of_elements.setText(str(len(list_elements)))
         self.lineEdit_number_of_nodes.setText(str(len(list_nodes)))
         self.highlight_mesh_elements(list_elements)

@@ -32,7 +32,7 @@ class ExportModelResults(QDialog):
         self.export_icon = QIcon(get_icons_path('save.png'))
         self.vibra_icon = QIcon(get_icons_path('logo_vibra.png'))
         self.search_icon = QIcon(get_icons_path('import.png'))
-        self.update_icon = QIcon(get_icons_path('delete.png'))
+        self.clean_icon = QIcon(get_icons_path('broom.png'))
         self.setWindowIcon(self.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
@@ -54,7 +54,7 @@ class ExportModelResults(QDialog):
         self.pushButton_export_results = self.findChild(QPushButton, 'pushButton_export_results')
         self.pushButton_reset_filename = self.findChild(QPushButton, 'pushButton_reset_filename')
         self.pushButton_choose_folder_export.setIcon(self.search_icon)
-        self.pushButton_reset_filename.setIcon(self.update_icon)
+        self.pushButton_reset_filename.setIcon(self.clean_icon)
 
     def _create_connections(self):
         self.pushButton_choose_folder_export.clicked.connect(self._choose_path_export_results)

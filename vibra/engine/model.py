@@ -164,7 +164,12 @@ class Model:
                 d = data["diameter"]
                 surface_ids = data["surface_ids"]
                 selection_radius = data["selection_radius"]
-                selected_elements, _ = self.get_elements_and_nodes_from_sphere(surface_ids, selection_radius)
+                averaged = data["averaged"]
+                filter_type = data["filter_type"]
+                selected_elements, _ = self.get_elements_and_nodes_from_sphere( surface_ids, 
+                                                                                selection_radius,
+                                                                                averaged = averaged,
+                                                                                filter_type = filter_type )
                 for element_id in selected_elements:
                     #
                     fluid, _ = self.get_fluid(element=element_id)
@@ -236,6 +241,7 @@ class Model:
                                                             "c_ef_2" : c_ef_2   }
 
     def check_if_lrf_eq_model_is_active(self, surface_id):
+
         if len(self.lrf_properties) == 0:
             return False, None
         
@@ -248,43 +254,85 @@ class Model:
                 return True, rho_eff
         return False, None
 
-    def get_average_nodal_coordinates(self, surface_ids):
+    def get_average_nodal_coordinates(self, surface_ids, averaged=False):
 
-        rows = []
-        center_coords = [None, None, None]
         nodal_coordinates = self.mesh.nodal_coordinates
-
         self.stop, self.surface_ids = self.check_input_surface_id(surface_ids)
 
         if self.stop:
-            return center_coords
+            return []
 
+        rows = []
         for surface_id in self.surface_ids:
-            for row in self.mesh.nodes_from_surfaces[surface_id]:
-                rows.append(row)
+            if averaged:
+                for row in self.mesh.nodes_from_surfaces[surface_id]:
+                    rows.append(row)
+            else:
+                _nodes = list(self.mesh.nodes_from_surfaces[surface_id])
+                rows.append(_nodes)
 
+        center_coords = list()
         if rows:
-            center_coords = np.average(nodal_coordinates[rows, 1:], axis=0)   
-   
+            if averaged:
+                avg_coords = np.average(nodal_coordinates[rows, 1:], axis=0)   
+                center_coords.append(avg_coords)
+            else:
+                for row in rows:
+                    avg_coords = np.average(nodal_coordinates[row, 1:], axis=0)
+                    center_coords.append(avg_coords)
+
         return center_coords
 
-    def get_elements_and_nodes_from_sphere(self, surface_ids, selection_radius):
+    def get_elements_and_nodes_from_sphere(self, surface_ids, selection_radius, averaged=False, filter_type=0):
 
-        center_coords = self.get_average_nodal_coordinates(surface_ids)
-        if None in center_coords:
+        list_center_coords = self.get_average_nodal_coordinates(surface_ids, averaged=averaged)
+        if len(list_center_coords) == 0:
             return [], []
-
-        nodal_coordinates = self.mesh.nodal_coordinates
-        diff = np.linalg.norm(nodal_coordinates[:, 1:] - center_coords, axis=1) 
-        mask = diff <= selection_radius
 
         selected_elements = []
         nodes_inside_sphere = []
-        if True in mask:
-            nodes_inside_sphere = nodal_coordinates[:,0][mask]
-            for node_id in nodes_inside_sphere:
-                for element_id in self.mesh.solid_elements_from_nodes[node_id]:
-                    selected_elements.append(element_id)
+        node_indexes = self.mesh.nodal_coordinates[:,0]
+        nodal_coordinates = self.mesh.nodal_coordinates[:,1:]
+        element_indexes = np.array(list(self.mesh.solid_elements_center.keys()), dtype=int)
+        elements_center_coordinates = np.array(list(self.mesh.solid_elements_center.values()), dtype=float)
+        for center_coords in list_center_coords:
+            
+            if filter_type == 0: # filters the elements inside sphere based on elements coordinates center
+                
+                diff_elem = np.linalg.norm(elements_center_coordinates - center_coords, axis=1) 
+                diff_nodes = np.linalg.norm(nodal_coordinates - center_coords, axis=1)
+                mask_elem = diff_elem <= selection_radius
+                mask_nodes = diff_nodes <= selection_radius
+            
+                if sum(mask_nodes):
+                    for node_id in node_indexes[mask_nodes]:
+                        if node_id not in nodes_inside_sphere:
+                            nodes_inside_sphere.append(node_id)
+            
+                if sum(mask_elem):
+                    for element_id in element_indexes[mask_elem]:
+                        if element_id not in selected_elements:
+                            selected_elements.append(element_id)
+
+            else: # filters the elements based on nodes inside sphere
+
+                diff_nodes = np.linalg.norm(nodal_coordinates - center_coords, axis=1) 
+                mask_nodes = diff_nodes <= selection_radius
+                if sum(mask_nodes):
+                    for node_id in node_indexes[mask_nodes]:
+                        if node_id not in nodes_inside_sphere:
+                            nodes_inside_sphere.append(node_id)
+                            for element_id in self.mesh.solid_elements_from_nodes[node_id]:
+                                if element_id not in selected_elements:
+                                    selected_elements.append(element_id)
+
+            if True in mask_nodes:
+                for node_id in nodal_coordinates[:,0][mask_nodes]:
+                    if node_id not in nodes_inside_sphere:
+                        nodes_inside_sphere.append(node_id)
+                        for element_id in self.mesh.solid_elements_from_nodes[node_id]:
+                            if element_id not in selected_elements:
+                                selected_elements.append(element_id)
 
         return selected_elements, nodes_inside_sphere
 

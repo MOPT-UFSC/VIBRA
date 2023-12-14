@@ -438,6 +438,7 @@ class Mesh:
         self.nodes_from_surfaces = self.reordering.updates_nodes_from(self.nodes_from_surfaces)
         self.nodes_from_volumes = self.reordering.updates_nodes_from(self.nodes_from_volumes)
         self.connectivity_from_surfaces = self.reordering.updates_nodes_from(self.connectivity_from_surfaces)
+
         # self._process_face_elements_connected_to_nodes()
         self._process_solid_elements_connected_to_nodes()
         self._process_element_centroids()
