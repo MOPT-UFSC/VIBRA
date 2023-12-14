@@ -106,16 +106,19 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             self.frame_center_coordinates.setVisible(True)
             self.frame_selection_by_surface.setVisible(True)
             self.frame_filter_options.setVisible(True)
+            self.call_sphere_plotter()
 
     def geometry_selection_callback(self, points, lines, faces, volumes):
         self.lineEdit_selection_radius.setDisabled(True)
         self.pushButton_selection_info.setDisabled(True)
+        selection_index = self.comboBox_selection_by.currentIndex()
         if faces:
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_selection_by.setCurrentIndex(1)
             self.lineEdit_selection_radius.setDisabled(False)
             self.pushButton_selection_info.setDisabled(False)
+            if selection_index == 0:
+                self.comboBox_selection_by.setCurrentIndex(1)
             self.call_sphere_plotter()
         elif volumes:
             text = ", ".join([str(i) for i in volumes])
@@ -152,10 +155,6 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         else:
             self.lineEdit_center_coordinates.setText("Multiple centers")
         return center_coords
-
-    def update_entities_controls(self):
-        self.update_selection_type_controls()
-        self.call_sphere_plotter()
 
     def check_selection_radius(self):
         self.selection_radius = None
