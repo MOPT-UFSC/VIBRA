@@ -448,7 +448,13 @@ class Mesh:
         # np.savetxt("nodal_coordinates_reordered.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
         # np.savetxt("faces_connectivity_reordered.dat", self.faces_connectivity, delimiter=",", fmt='%i')
         # np.savetxt("solids_connectivity_reordered.dat", self.solids_connectivity, delimiter=",", fmt='%i')
-        
+
+    def get_mesh_info(self):
+        n_nodes = self.nodal_coordinates.shape[0]
+        n_face_elements = self.faces_connectivity.shape[0]
+        n_solid_elements = self.solids_connectivity.shape[0]
+        return n_nodes, n_face_elements, n_solid_elements
+
     def get_model_areas(self, path):
         """This method returns returns the all surface area processed using
         gmsh internal functions.

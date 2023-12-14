@@ -8,16 +8,26 @@ class StatusBar(QStatusBar):
         self.lines_label = QLabel("Selected Lines:\t")
         self.faces_label = QLabel("Selected Faces:\t")
         self.volumes_label = QLabel("Selected Volumes:\t")
+        self.nodes_label = QLabel("Nodes: \t")
+        self.solid_elements_label = QLabel("Solid Elements: \t")
+        self.face_elements_label = QLabel("Face Elements: \t")
 
         # adding label to status bar
         self.addWidget(self.lines_label)
         self.addWidget(self.points_label)
         self.addWidget(self.faces_label)
         self.addWidget(self.volumes_label)
+        self.addWidget(self.nodes_label)
+        self.addWidget(self.face_elements_label)
+        self.addWidget(self.solid_elements_label)
+
         self.faces_label.setFixedWidth(160)
         self.points_label.setFixedWidth(160)
         self.lines_label.setFixedWidth(160)
         self.volumes_label.setFixedWidth(160)
+        self.nodes_label.setFixedWidth(140)
+        self.face_elements_label.setFixedWidth(160)
+        self.solid_elements_label.setFixedWidth(160)
 
     def set_selection(self, points, lines, faces, volumes):
         self.show_points(points)
@@ -64,6 +74,20 @@ class StatusBar(QStatusBar):
                 self.volumes_label.setText(f"Selected Volumes: [{len(n_volumes)}]")
         else:
             self.volumes_label.setText(f"Selected Volume: {str_volumes}")
+
+    def update_mesh_information(self, nodes, face_elements, solid_elements):
+        self.update_number_of_nodes(nodes)
+        self.update_number_of_face_elements(face_elements)
+        self.update_number_of_solid_elements(solid_elements)
+
+    def update_number_of_nodes(self, number_of_nodes):
+        self.nodes_label.setText(f"Nodes: {number_of_nodes}")
+
+    def update_number_of_face_elements(self, number_of_face_elements):
+        self.face_elements_label.setText(f"Face Elements: {number_of_face_elements}")
+
+    def update_number_of_solid_elements(self, number_of_solid_elements):
+        self.solid_elements_label.setText(f"Solid Elements: {number_of_solid_elements}")
 
     def clear_selections(self):
         self.set_selection([], [], [], [])

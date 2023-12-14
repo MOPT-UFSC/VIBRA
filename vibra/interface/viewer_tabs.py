@@ -77,6 +77,8 @@ class ViewerTabs(QTabWidget):
             self.addTab(self.mesh_widget, "Mesh")
         self.mesh_widget.update_plot()
         self.setCurrentWidget(self.mesh_widget)
+        nodes, face_elements, solid_elements = self.main_window.project.model.mesh.get_mesh_info()
+        self.main_window.update_mesh_information(nodes, face_elements, solid_elements)
 
     def show_example_analysis(self):
         if self.example_analysis_widget not in self.tabs():
