@@ -55,8 +55,8 @@ class MainWindow(QMainWindow):
     def update_mesh_information(self, nodes, face_elements, solid_elements):
         self.status_bar.update_mesh_information(nodes, face_elements, solid_elements)
 
-    def update_geometry_information(self, points, lines, surfaces, volumes):
-        self.status_bar.update_geometry_information(points, lines, surfaces, volumes)
+    def update_geometry_information(self):
+        self.status_bar.update_geometry_information()
 
     def slider_pressed_callback(self):
         self.viewer_tabs.start_cutting_mode()

@@ -26,12 +26,12 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.main_window = get_main_window()
         self.view_mode = SHOW_FACES
 
-        self.geometry_info = GeometryInfoBar()
+        # self.geometry_info = GeometryInfoBar()
 
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
         layout = QVBoxLayout()
-        layout.addWidget(self.geometry_info)
+        # layout.addWidget(self.geometry_info)
         layout.addWidget(self.render_interactor)
         self.setLayout(layout)
         self.setContentsMargins(0, 0, 0, 0)

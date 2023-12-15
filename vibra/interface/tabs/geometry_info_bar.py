@@ -16,10 +16,10 @@ class GeometryInfoBar(QWidget):
         self.project = self.main_window.project
         self.mesh = self.project.model.mesh
 
-        self.number_of_points = None
-        self.number_of_curves = None
-        self.number_of_surfaces = None
-        self.number_of_volumes = None
+        self.number_of_points = ""
+        self.number_of_curves = ""
+        self.number_of_surfaces = ""
+        self.number_of_volumes = ""
 
         self._define_qt_variables()
 
@@ -27,10 +27,10 @@ class GeometryInfoBar(QWidget):
         #
         self.frame_spacer = QFrame()
         #
-        self.label_number_of_points = QLabel(f"Number of points: {self.number_of_points}")
-        self.label_number_of_curves = QLabel(f"Number of curves: {self.number_of_curves}")
-        self.label_number_of_surfaces = QLabel(f"Number of surfaces: {self.number_of_surfaces}")
-        self.label_number_of_volumes = QLabel(f"Number of volumes: {self.number_of_volumes}")
+        self.label_number_of_points = QLabel(f"Points: \t")
+        self.label_number_of_curves = QLabel(f"Curves: \t")
+        self.label_number_of_surfaces = QLabel(f"Surfaces: \t")
+        self.label_number_of_volumes = QLabel(f"Volumes: \t")
         #
         analysis_info_layout = QGridLayout()
         layout = QHBoxLayout()
@@ -46,7 +46,7 @@ class GeometryInfoBar(QWidget):
         layout.addLayout(analysis_info_layout)
         self.setLayout(layout)
         self.setContentsMargins(2, 0, 2, 0)
-        self.setStyleSheet("border: 1px solid")
+        # self.setStyleSheet("border: 1px solid")
         layout.setContentsMargins(0, 0, 0, 0)
 
     def _config_widgets(self):
@@ -59,14 +59,21 @@ class GeometryInfoBar(QWidget):
         self.frame_spacer.setMaximumHeight(height)
 
         # self.label_number_of_points.setAlignment(Qt.AlignRight)
-        self.label_number_of_points.setMinimumSize(100, height)
-        self.label_number_of_points.setMaximumSize(200, height)
+        self.label_number_of_points.setMinimumSize(80, height)
+        self.label_number_of_points.setMaximumSize(160, height)
 
-        self.label_number_of_curves.setMinimumSize(100, height)
-        self.label_number_of_curves.setMaximumSize(200, height)
+        self.label_number_of_curves.setMinimumSize(80, height)
+        self.label_number_of_curves.setMaximumSize(160, height)
 
-        self.label_number_of_surfaces.setMinimumSize(100, height)
-        self.label_number_of_surfaces.setMaximumSize(200, height)
+        self.label_number_of_surfaces.setMinimumSize(80, height)
+        self.label_number_of_surfaces.setMaximumSize(160, height)
 
-        self.label_number_of_volumes.setMinimumSize(100, height)
-        self.label_number_of_volumes.setMaximumSize(200, height)
+        self.label_number_of_volumes.setMinimumSize(80, height)
+        self.label_number_of_volumes.setMaximumSize(160, height)
+
+    def update_geometry_information(self):
+        points, curves, surfaces, volumes = self.main_window.project.model.mesh.get_geometry_info()
+        self.label_number_of_points.setText(f"Points: {points}")
+        self.label_number_of_curves.setText(f"Curves: {curves}")
+        self.label_number_of_surfaces.setText(f"Surfaces: {surfaces}")
+        self.label_number_of_volumes.setText(f"Volumes: {volumes}")
