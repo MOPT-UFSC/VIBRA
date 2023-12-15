@@ -247,6 +247,9 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         all_element_indexes = []
         for line in self.selected_lines:
+            if not (1, line) in self.main_window.project.model.mesh.entity_ranges:
+                return 
+
             a, b = self.main_window.project.model.mesh.entity_ranges[1, line]
             all_element_indexes.extend(range(a, b))
 
@@ -271,6 +274,9 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         all_element_indexes = []
         for face in self.selected_faces:
+            if not (2, face) in self.main_window.project.model.mesh.entity_ranges:
+                return
+
             a, b = self.main_window.project.model.mesh.entity_ranges[2, face]
             all_element_indexes.extend(range(a, b))
 
@@ -298,6 +304,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         for volume in self.selected_volumes:
             surfaces = self.main_window.project.model.mesh.surfaces_from_volumes[volume]
             for face in surfaces:
+                if not (2, face) in self.main_window.project.model.mesh.entity_ranges:
+                    return
+
                 a, b = self.main_window.project.model.mesh.entity_ranges[2, face]
                 all_element_indexes.extend(range(a, b))
 
