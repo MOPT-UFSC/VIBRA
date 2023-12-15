@@ -171,12 +171,15 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             center_coords = self.get_center_coordinates()
             if len(center_coords):
                 geometry_widget = self.main_window.viewer_tabs.geometry_widget
-                for coords in center_coords:
-                    geometry_widget.set_selection_sphere(coords, self.selection_radius)    
+                all_radius = [self.selection_radius for i in center_coords]
+                geometry_widget.set_selection_spheres(center_coords, all_radius)
+
+                # for coords in center_coords:
+                #     geometry_widget.set_selection_spheres(coords, self.selection_radius)    
 
     def hide_sphere(self):
         geometry_widget = self.main_window.viewer_tabs.geometry_widget
-        geometry_widget.set_selection_sphere((0,0,0), 0)
+        geometry_widget.clear_selection_spheres()
 
     def get_selection_information(self):
         selection_id = self.lineEdit_selection_id.text()
