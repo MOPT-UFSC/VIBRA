@@ -8,6 +8,7 @@ from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
     CommonRenderWidget,
 )
 from vibra.utils.interface_functions import get_main_window
+from vibra.interface.viewer_3d.actors.selection_spheres import SelectionSpheres
 
 SHOW_POINTS = 0
 SHOW_LINES = 1
@@ -36,6 +37,7 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.solids_actor = None
         self.edges_actor = None
+        self.selection_spheres_actor = None
 
         self.create_axes()
         self.update_plot()
@@ -54,6 +56,12 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.update_theme()
         self.remove_actors()
+
+        self.selection_spheres_actor = SelectionSpheres()
+        self.selection_spheres_actor.GetProperty().SetColor([1, 0, 0])
+        self.selection_spheres_actor.VisibilityOff()
+        self.selection_spheres_actor.PickableOff()
+        self.renderer.AddActor(self.selection_spheres_actor)
 
         self.solids_actor = SolidsActor(mesh)
         self.renderer.AddActor(self.solids_actor)
@@ -121,15 +129,29 @@ class MeshRenderWidget(CommonRenderWidget):
             return
         self.solids_actor.paint_cells(self.selection_color, new_volumes)
         self.update()
+
+    def clear_selection_spheres(self):
+        self.selection_spheres_actor.VisibilityOff()
+
+    def set_selection_spheres(self, all_centers, all_radius):
+        if self.selection_spheres_actor is None:
+            return
+
+        self.selection_spheres_actor.create_geometry(all_centers, all_radius)
+        self.selection_spheres_actor.VisibilityOn()
+        self.update()
+
     #
     def remove_actors(self):
         self.renderer.RemoveActor(self.solids_actor)
         self.renderer.RemoveActor(self.edges_actor)
+        self.renderer.RemoveActor(self.selection_spheres_actor)
         self.solids_actor = None
         self.edges_actor = None
+        self.selection_spheres_actor = None
 
     def _actors_exists(self):
-        actors = [self.solids_actor, self.edges_actor]
+        actors = [self.solids_actor, self.edges_actor, self.selection_spheres_actor]
         return all([actor is not None for actor in actors])
 
     def _get_info_tab(self):
