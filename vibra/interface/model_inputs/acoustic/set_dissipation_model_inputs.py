@@ -161,7 +161,7 @@ class DissipationModelInput(QDialog):
     def check_inputs(self, lineEdit, label, only_positive=False, zero_included=True, _float=True):
         self.stop = False
         message = ""
-        title = "Invalid input to the analysis setup"
+        title = "Invalid input at dissipation model"
         window_title = "ERROR"
         if lineEdit.text() != "":
             try:

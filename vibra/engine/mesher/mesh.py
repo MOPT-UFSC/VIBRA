@@ -155,16 +155,14 @@ class Mesh:
         logging.info(f"Generating mesh from {path}")
 
         logging.info("Configuring Mesh" + ProgressStatus(5, 100))
-        self._configure_mesh(
-            element_type,
-            minimum_element_size,
-            maximum_element_size,
-            geometry_tolerance,
-            size_factor,
-            threads,
-            mesh_refinement_parameters,
-            mesh_connection,
-        )
+        self._configure_mesh(   element_type,
+                                minimum_element_size,
+                                maximum_element_size,
+                                geometry_tolerance,
+                                size_factor,
+                                threads,
+                                mesh_refinement_parameters,
+                                mesh_connection   )
 
         logging.info("Loading Geometry" + ProgressStatus(10, 100))
         gmsh.merge(str(path))
