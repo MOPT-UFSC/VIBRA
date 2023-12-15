@@ -13,9 +13,6 @@ from vibra.engine.mesher.geometry_setup import GeometrySetup
 from vibra.engine.mesher.reordering import Reordering
 from vibra.utils.progress_status import ProgressStatus
 
-# FieldsList=[]
-
-
 class Mesh:
     def __init__(self):
         self.geometry_setup = None
@@ -63,6 +60,8 @@ class Mesh:
         dimension: int = 3,
         threads: int = 1,
         gmsh_gui: bool = False,
+        mesh_refinement_parameters = None, 
+        mesh_connection = True,
     ):
         """
         Custom constructor so you can create a mesh with this sintax:
@@ -87,6 +86,8 @@ class Mesh:
             dimension=dimension,
             threads=threads,
             gmsh_gui=gmsh_gui,
+            mesh_refinement_parameters = mesh_refinement_parameters,
+            mesh_connection = mesh_connection,
         )
 
         # saves the data to edit mesh parameters later
@@ -121,37 +122,49 @@ class Mesh:
 
         self.geometry_setup = GeometrySetup(string, suffix)
 
-    def load_cad(   self,
-                    path: (str | Path),
-                    *,
-                    minimum_element_size: float = 30.0,
-                    maximum_element_size: float = 30.0,
-                    element_type: ElementType = DEFAULT_ELEMENT_TYPE,
-                    geometry_tolerance: float = 1e-6,
-                    size_factor: float = 0.50,
-                    dimension: int = 3,
-                    threads: int = 2,
-                    gmsh_gui: bool = False ):
-        
-        self.mesh_setup = dict( minimum_element_size=minimum_element_size,
-                                maximum_element_size=maximum_element_size,
-                                element_type=element_type,
-                                geometry_tolerance=geometry_tolerance,
-                                size_factor=size_factor,
-                                dimension=dimension,
-                                threads=threads )
+    def load_cad(
+        self,
+        path: (str | Path),
+        *,
+        minimum_element_size: float = 30.0,
+        maximum_element_size: float = 30.0,
+        element_type: ElementType = DEFAULT_ELEMENT_TYPE,
+        geometry_tolerance: float = 1e-6,
+        size_factor: float = 0.50,
+        dimension: int = 3,
+        threads: int = 2,
+        gmsh_gui: bool = False,
+        mesh_refinement_parameters = None,
+        mesh_connection = True,
+
+    ):
+        self.mesh_setup = dict(
+            minimum_element_size=minimum_element_size,
+            maximum_element_size=maximum_element_size,
+            element_type=element_type,
+            geometry_tolerance=geometry_tolerance,
+            size_factor=size_factor,
+            dimension=dimension,
+            threads=threads,
+            mesh_refinement_parameters = mesh_refinement_parameters,
+            mesh_connection = mesh_connection,
+        )
 
         path = Path(path)
         gmsh.initialize("", False)
         logging.info(f"Generating mesh from {path}")
 
         logging.info("Configuring Mesh" + ProgressStatus(5, 100))
-        self._configure_mesh(   element_type,
-                                minimum_element_size,
-                                maximum_element_size,
-                                geometry_tolerance,
-                                size_factor,
-                                threads,   )
+        self._configure_mesh(
+            element_type,
+            minimum_element_size,
+            maximum_element_size,
+            geometry_tolerance,
+            size_factor,
+            threads,
+            mesh_refinement_parameters,
+            mesh_connection,
+        )
 
         logging.info("Loading Geometry" + ProgressStatus(10, 100))
         gmsh.merge(str(path))
@@ -159,8 +172,11 @@ class Mesh:
         self.dimension = min(dimension, gmsh.model.getDimension())
         self.element_type = element_type
         
-        self._merge_nodes_from_adjacent_volumes()
-        
+        if mesh_connection:
+            volumes_list = gmsh.model.getEntities(3)
+            gmsh.model.occ.fragment(volumes_list,volumes_list)
+            gmsh.model.occ.synchronize()
+            
         logging.info("Loading Geometry" + ProgressStatus(15, 100))
         gmsh.model.mesh.generate(dim=element_type.dimensions)
         gmsh.model.mesh.removeDuplicateNodes()
@@ -278,6 +294,7 @@ class Mesh:
         size_factor,
         threads,
         mesh_refinement_parameters=None,
+        mesh_connection = True,
     ):
         if mesh_refinement_parameters is None:
             mesh_refinement_parameters = []
