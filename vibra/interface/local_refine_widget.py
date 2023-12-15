@@ -56,7 +56,7 @@ class LocalRefineWidget(QDialog):
         self.global_mesh_size_textbox_label.setText("Global mesh size:")
         self.layout_mesh_parameters.addWidget(self.global_mesh_size_textbox_label, 1, 1)
         self.lineEdit_global_mesh_size = QLineEdit(self)
-        self.lineEdit_global_mesh_size.setText("80")
+        self.lineEdit_global_mesh_size.setText("100")
         self.lineEdit_global_mesh_size.setAlignment(Qt.AlignHCenter)
         self.layout_mesh_parameters.addWidget(self.lineEdit_global_mesh_size, 2, 1)
         
