@@ -52,6 +52,12 @@ class MainWindow(QMainWindow):
     def selection_changed_callback(self, points, lines, faces, volumes):
         self.status_bar.set_selection(points, lines, faces, volumes)
 
+    def update_mesh_information(self, nodes, face_elements, solid_elements):
+        self.status_bar.update_mesh_information(nodes, face_elements, solid_elements)
+
+    def update_geometry_information(self):
+        self.status_bar.update_geometry_information()
+
     def slider_pressed_callback(self):
         self.viewer_tabs.start_cutting_mode()
 
