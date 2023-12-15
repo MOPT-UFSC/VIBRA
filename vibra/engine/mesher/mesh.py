@@ -172,7 +172,7 @@ class Mesh:
         
         if mesh_connection:
             volumes_list = gmsh.model.getEntities(3)
-            gmsh.model.occ.fragment(volumes_list,volumes_list)
+            gmsh.model.occ.fragment(volumes_list, volumes_list)
             gmsh.model.occ.synchronize()
             
         logging.info("Loading Geometry" + ProgressStatus(15, 100))

@@ -6,10 +6,16 @@ from PyQt5 import uic
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QDialog, QComboBox, QFrame, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
-from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
 
 from vibra.interface.model_inputs.acoustic.get_sphere_selection_information import GetSphereSelectionInformation
+from vibra.interface.local_refine_widget import LocalRefineWidget
+#
+from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
 from vibra.interface.general.print_message_input2 import PrintMessageInput
+from vibra.interface.exception_message import ErrorMessage
+from vibra.errors import IncompleteMeshSetup, IncompleteSetupError
+
+from vibra.interface.loading_bar import load_function
 from vibra.utils.interface_functions import get_main_window
 
 window_title_1 = "ERROR"
@@ -46,6 +52,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
     def _reset_variables(self):
         self.typed_ids = []
         # self.model = ""
+        self.mesher = None
         self.speed_of_sound_factor = 0
         self.fluid_density_factor = 0
 
@@ -191,6 +198,9 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
                     averaged_selection = False
                 elif index == 2:
                     averaged_selection = True
+
+                if self.generate_mesh():
+                    return
                 
                 filter_type = self.comboBox_filter.currentIndex()
                 GetSphereSelectionInformation(  selection_id,
@@ -198,6 +208,13 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
                                                 averaged_selection,
                                                 filter_type  )
                 self.main_window.viewer_tabs.show_geometry()
+
+    def generate_mesh(self):
+        if not self.main_window.project.model.generated_mesh:
+            self.mesher = LocalRefineWidget(close_after_generate=True)
+            if not self.mesher.complete:
+                self.mesher = None
+                return True
 
     def remove_lrf_eq_model_inputs(self):
         self.remove_lrf_eq_from_selection()

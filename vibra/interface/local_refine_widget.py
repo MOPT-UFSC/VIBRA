@@ -24,7 +24,7 @@ from vibra.utils.interface_functions import get_main_window
 
 
 class LocalRefineWidget(QDialog):
-    def __init__(self):
+    def __init__(self, **kwargs):
         super().__init__()
 
         icon_path = str(Path("data/icons/logo_vibra.png"))
@@ -39,13 +39,11 @@ class LocalRefineWidget(QDialog):
         geometry_widget = self.main_window.viewer_tabs.geometry_widget
         geometry_widget.selection_changed.connect(self.geometry_selection_callback)
 
+        self.close_after_generate = kwargs.get("close_after_generate", False)
+        self.complete = False
         self._create_and_config_widgets()
-
-        self.add_button.clicked.connect(self.add_button_callback)
-        self.trash_button.clicked.connect(self.trash_button_callback)
-        self.generate_mesh_button.clicked.connect(self.generate_mesh_button_callback)
-
-        self.show()
+        self._create_connections()
+        self.exec()
 
     def _create_and_config_widgets(self):
         
@@ -154,6 +152,11 @@ class LocalRefineWidget(QDialog):
         # self.resize(500,500)
         self.setFixedSize(500,400)
 
+    def _create_connections(self):
+        self.add_button.clicked.connect(self.add_button_callback)
+        self.trash_button.clicked.connect(self.trash_button_callback)
+        self.generate_mesh_button.clicked.connect(self.generate_mesh_button_callback)
+
     def generate_mesh_button_callback(self):
 
         if self.check_mesh_inputs():
@@ -164,6 +167,9 @@ class LocalRefineWidget(QDialog):
         generate_mesh()
         self.main_window.viewer_tabs.show_mesh()
         self.main_window.viewer_tabs.update_plots()
+        self.complete = True
+        if self.close_after_generate:
+            self.close()
 
     def trash_button_callback(self):
         current_row = self.table.currentRow()

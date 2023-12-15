@@ -10,28 +10,25 @@ from vibra.interface.analysis.analysis_setup_input import AnalysisSetupInput
 from vibra.interface.analysis.analysis_type_input import AnalysisTypeInput
 from vibra.interface.exception_message import ErrorMessage
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.loading_bar import load_function
 from vibra.interface.model_inputs.acoustic.fluid_inputs import FluidInput
-#
+from vibra.interface.local_refine_widget import LocalRefineWidget
 #
 from vibra.interface.model_inputs.acoustic.set_acoustic_pressure import AcousticPressureInput
-from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import DissipationModelInput
-from vibra.interface.model_inputs.acoustic.set_lrf_eq_model_inputs import LowReducedFrequencyEquivalentModelInput
 from vibra.interface.model_inputs.acoustic.set_mass_flow_rate_inputs import MassFlowRateInput
 from vibra.interface.model_inputs.acoustic.set_surface_velocity_inputs import SurfaceVelocityInput
 from vibra.interface.model_inputs.acoustic.set_specific_impedance_inputs import SpecificImpedanceInput
 from vibra.interface.model_inputs.acoustic.set_volume_velocity_inputs import VolumeVelocityInput
-from vibra.interface.model_inputs.mesh.mesher_inputs import MesherInputs
-#
+from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import DissipationModelInput
+from vibra.interface.model_inputs.acoustic.set_lrf_eq_model_inputs import LowReducedFrequencyEquivalentModelInput
+# from vibra.interface.model_inputs.mesh.mesher_inputs import MesherInputs
 #
 from vibra.interface.model_inputs.structural.boundary_condition_inputs import BoundaryConditionInputs
 from vibra.interface.model_inputs.structural.material_inputs import MaterialInput
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_input import PlotAcousticFrequencyResponseInput
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_input import PlotAcousticFrequencyResponseFunctionInput
 #
-#
+from vibra.interface.loading_bar import load_function
 from vibra.utils.interface_functions import get_main_window
-from vibra.interface.local_refine_widget import LocalRefineWidget
 
 
 class BorderItemDelegate(QStyledItemDelegate):
@@ -194,7 +191,6 @@ class MenuItems(QTreeWidget):
         self.list_top_items.append(self.item_top_generalSettings)
         self.list_child_items.append(self.item_child_import_geometry)
         self.list_child_items.append(self.item_child_mesh_setup)
-        self.list_child_items.append(self.item_child_generate_mesh)
         self.list_child_items.append(self.item_child_set_material)
         self.list_child_items.append(self.item_child_set_fluid)
         #
@@ -279,7 +275,6 @@ class MenuItems(QTreeWidget):
         self.item_top_generalSettings.addChild(self.item_child_set_material)
         self.item_top_generalSettings.addChild(self.item_child_set_fluid)
         self.item_top_generalSettings.addChild(self.item_child_mesh_setup)
-        # self.item_top_generalSettings.addChild(self.item_child_generate_mesh)
 
         self.addTopLevelItem(self.item_top_structuralModelSetup)
         self.item_top_structuralModelSetup.addChild(self.item_child_set_boundary_condition)
@@ -389,17 +384,9 @@ class MenuItems(QTreeWidget):
         elif item == self.item_child_mesh_setup:
             if not self.item_child_mesh_setup.isDisabled():
                 self.obj = LocalRefineWidget()
-                # if self.obj.complete:
-                #     self.main_window.project.set_mesh_setup(self.obj.mesh_setup)
-                #     self.generate_mesh_action.setDisabled(False)
-                #     self.item_child_generate_mesh.setDisabled(False)
-
-        elif item == self.item_child_generate_mesh:
-            if not self.item_child_generate_mesh.isDisabled():
-                self.generate_mesh()
-                # we dont want any window showing wrong meshes
                 self.main_window.viewer_tabs.close_analysis_tabs()
                 self.main_window.viewer_tabs.update_plots()
+
 
         elif item == self.item_child_set_material:
             if not self.item_child_set_material.isDisabled():
@@ -534,40 +521,41 @@ class MenuItems(QTreeWidget):
 
     def run_analysis(self):
         """ """
-
-        if self.main_window.project.model.mesh is None:
-            return
+        if not self.main_window.project.model.generated_mesh:
+            obj = LocalRefineWidget()
+            if obj.complete:
+                self.main_window.viewer_tabs.close_analysis_tabs()
+                self.main_window.viewer_tabs.update_plots()
+            else:
+                return
         #
         if self.main_window.project.analysis_data is None:
             return
         #
-        if not self.main_window.project.model.generated_mesh:
-            try:
-                self.generate_mesh()
-            except IncompleteSetupError or IncompleteMeshSetup as error:
-                # Please use this error message. It is easy to use,
-                # is very clean and follows the operational system standard.
-                ErrorMessage(error)
-                return
+        # if not self.main_window.project.model.generated_mesh:
+        #     try:
+        #         self.generate_mesh()
+        #     except IncompleteSetupError or IncompleteMeshSetup as error:
+        #         # Please use this error message. It is easy to use,
+        #         # is very clean and follows the operational system standard.
+        #         ErrorMessage(error)
+        #         return
         #
         analysis_id = self.main_window.project.analysis_data["analysis_id"]
         #
         if analysis_id == 2:
-            solve_modal = load_function(
-                self.main_window.process_structural_modal_analysis, self.main_window
-            )
+            solve_modal = load_function(self.main_window.process_structural_modal_analysis, 
+                                        self.main_window)
             solve_modal()
 
         elif analysis_id == 3:
-            solve_harmonic = load_function(
-                self.main_window.process_acoustic_harmonic_analysis, self.main_window
-            )
+            solve_harmonic = load_function(self.main_window.process_acoustic_harmonic_analysis, 
+                                           self.main_window)
             solve_harmonic()
 
         elif analysis_id == 4:
-            solve_modal = load_function(
-                self.main_window.process_acoustic_modal_analysis, self.main_window
-            )
+            solve_modal = load_function(self.main_window.process_acoustic_modal_analysis, 
+                                        self.main_window)
             solve_modal()
         else:
             raise NotImplementedError("Not implemented analysis")

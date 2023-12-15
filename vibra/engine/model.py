@@ -59,20 +59,16 @@ class Model:
     def process_mesh(self):
         if not self.geometry_path.exists():
             message = "Geometry not defined"
-            context = (
-                "The geometry file has not been defined yet."
-                "You should to import a supported CAD file format to proceed."
-                "\n\n"
-                "Suported file formats: *.iges and *.step"
-            )
+            context = ( "The geometry file has not been defined yet."
+                        "You should to import a supported CAD file format to proceed."
+                        "\n\n"
+                        "Suported file formats: *.iges and *.step" )
             raise IncompleteSetupError(message, context=context)
 
         if self.mesh_setup is None:
             message = "Mesh setup not defined"
-            context = (
-                "The mesh setup has not been defined yet."
-                "You should to configure the mesher to proceed."
-            )
+            context = ( "The mesh setup has not been defined yet."
+                        "You should to configure the mesher to proceed." )
             raise IncompleteSetupError(message, context=context)
 
         if self.mesh is None:
