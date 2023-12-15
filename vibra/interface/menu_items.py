@@ -31,6 +31,7 @@ from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_in
 #
 #
 from vibra.utils.interface_functions import get_main_window
+from vibra.interface.local_refine_widget import LocalRefineWidget
 
 
 class BorderItemDelegate(QStyledItemDelegate):
@@ -278,7 +279,7 @@ class MenuItems(QTreeWidget):
         self.item_top_generalSettings.addChild(self.item_child_set_material)
         self.item_top_generalSettings.addChild(self.item_child_set_fluid)
         self.item_top_generalSettings.addChild(self.item_child_mesh_setup)
-        self.item_top_generalSettings.addChild(self.item_child_generate_mesh)
+        # self.item_top_generalSettings.addChild(self.item_child_generate_mesh)
 
         self.addTopLevelItem(self.item_top_structuralModelSetup)
         self.item_top_structuralModelSetup.addChild(self.item_child_set_boundary_condition)
@@ -387,11 +388,11 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_mesh_setup:
             if not self.item_child_mesh_setup.isDisabled():
-                self.obj = MesherInputs()
-                if self.obj.complete:
-                    self.main_window.project.set_mesh_setup(self.obj.mesh_setup)
-                    self.generate_mesh_action.setDisabled(False)
-                    self.item_child_generate_mesh.setDisabled(False)
+                self.obj = LocalRefineWidget()
+                # if self.obj.complete:
+                #     self.main_window.project.set_mesh_setup(self.obj.mesh_setup)
+                #     self.generate_mesh_action.setDisabled(False)
+                #     self.item_child_generate_mesh.setDisabled(False)
 
         elif item == self.item_child_generate_mesh:
             if not self.item_child_generate_mesh.isDisabled():
