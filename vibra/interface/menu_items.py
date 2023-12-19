@@ -11,7 +11,7 @@ from vibra.interface.analysis.analysis_type_input import AnalysisTypeInput
 from vibra.interface.exception_message import ErrorMessage
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.fluid_inputs import FluidInput
-from vibra.interface.local_refine_widget import LocalRefineWidget
+from vibra.interface.mesh.mesher_inputs import MesherInputs
 #
 from vibra.interface.model_inputs.acoustic.set_acoustic_pressure import AcousticPressureInput
 from vibra.interface.model_inputs.acoustic.set_mass_flow_rate_inputs import MassFlowRateInput
@@ -20,7 +20,6 @@ from vibra.interface.model_inputs.acoustic.set_specific_impedance_inputs import 
 from vibra.interface.model_inputs.acoustic.set_volume_velocity_inputs import VolumeVelocityInput
 from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import DissipationModelInput
 from vibra.interface.model_inputs.acoustic.set_lrf_eq_model_inputs import LowReducedFrequencyEquivalentModelInput
-# from vibra.interface.model_inputs.mesh.mesher_inputs import MesherInputs
 #
 from vibra.interface.model_inputs.structural.boundary_condition_inputs import BoundaryConditionInputs
 from vibra.interface.model_inputs.structural.material_inputs import MaterialInput
@@ -383,7 +382,7 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_mesh_setup:
             if not self.item_child_mesh_setup.isDisabled():
-                self.obj = LocalRefineWidget()
+                self.obj = MesherInputs()
                 self.main_window.viewer_tabs.close_analysis_tabs()
                 self.main_window.viewer_tabs.update_plots()
 
@@ -522,7 +521,7 @@ class MenuItems(QTreeWidget):
     def run_analysis(self):
         """ """
         if not self.main_window.project.model.generated_mesh:
-            obj = LocalRefineWidget()
+            obj = MesherInputs()
             if obj.complete:
                 self.main_window.viewer_tabs.close_analysis_tabs()
                 self.main_window.viewer_tabs.update_plots()

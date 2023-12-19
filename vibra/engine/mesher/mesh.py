@@ -335,6 +335,7 @@ class Mesh:
         self.nodes_from_lines.clear()
         self.nodes_from_surfaces.clear()
         self.nodes_from_volumes.clear()
+        self.connectivity_from_surfaces.clear()
 
         self.surfaces_from_volumes.clear()
         self.volume_from_surface.clear()
@@ -389,6 +390,11 @@ class Mesh:
         self.lines_connectivity, self.map_line_elements = self._get_connectivity_array(connectivity_dim1)
         self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity, self.map_solid_elements = self._get_connectivity_array(connectivity_dim3)
+        for i, values in enumerate(self.solids_connectivity[:,4:]):
+            if (np.array([0,0,0,0]) == values).all():
+                print(f"Invalid node - index: {i}")
+            else:
+                pass
         #
         self._maps_surfaces_by_elements()
         self._maps_volumes_by_elements()

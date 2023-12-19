@@ -5,10 +5,8 @@ from PyQt5.QtWidgets import QAction, QMenu
 
 from vibra.interface.loading_bar import load_function
 from vibra.interface.material_widget import MaterialWidget
-from vibra.interface.model_inputs.mesh.mesher_inputs import MesherInputs
-from vibra.interface.model_inputs.structural.material_inputs import (
-    MaterialInput,
-)
+from vibra.interface.mesh.mesher_inputs import MesherInputs
+from vibra.interface.model_inputs.structural.material_inputs import MaterialInput
 from vibra.interface.set_fluid_widget import FluidWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_functions import get_main_window

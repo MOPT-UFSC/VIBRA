@@ -131,17 +131,17 @@ class MeshRenderWidget(CommonRenderWidget):
         self.update()
 
     def clear_selection_spheres(self):
+        if self.selection_spheres_actor is None:
+            return
         self.selection_spheres_actor.VisibilityOff()
 
     def set_selection_spheres(self, all_centers, all_radius):
         if self.selection_spheres_actor is None:
             return
-
         self.selection_spheres_actor.create_geometry(all_centers, all_radius)
         self.selection_spheres_actor.VisibilityOn()
         self.update()
 
-    #
     def remove_actors(self):
         self.renderer.RemoveActor(self.solids_actor)
         self.renderer.RemoveActor(self.edges_actor)

@@ -279,7 +279,7 @@ class Model:
 
         return center_coords
 
-    def get_elements_and_nodes_from_sphere(self, surface_ids, selection_radius, averaged=False, filter_type=0):
+    def get_elements_and_nodes_from_sphere(self, surface_ids, selection_radius, averaged=False, filter_type=0, export_data=False):
 
         list_center_coords = self.get_average_nodal_coordinates(surface_ids, averaged=averaged)
         if len(list_center_coords) == 0:
@@ -310,7 +310,7 @@ class Model:
                         if element_id not in selected_elements:
                             selected_elements.append(element_id)
 
-            else: # filters the elements based on nodes inside sphere
+            else: # filters the elements inside sphere based on nodal coordinates
 
                 diff_nodes = np.linalg.norm(nodal_coordinates - center_coords, axis=1) 
                 mask_nodes = diff_nodes <= selection_radius
@@ -322,13 +322,23 @@ class Model:
                                 if element_id not in selected_elements:
                                     selected_elements.append(element_id)
 
-            if True in mask_nodes:
-                for node_id in nodal_coordinates[:,0][mask_nodes]:
-                    if node_id not in nodes_inside_sphere:
-                        nodes_inside_sphere.append(node_id)
-                        for element_id in self.mesh.solid_elements_from_nodes[node_id]:
-                            if element_id not in selected_elements:
-                                selected_elements.append(element_id)
+        if export_data:
+            # list_nodes = np.array(nodes_inside_sphere, dtype=int).reshape(-1,1)
+            # list_elements = np.array(selected_elements, dtype=int).reshape(-1,1)
+            list_nodes = np.array(nodes_inside_sphere).reshape(-1,1)
+            list_elements = np.array(selected_elements).reshape(-1,1)
+            connectivity = self.mesh.solids_connectivity[:, 4:]
+            rows = len(list_elements)
+            cols = connectivity.shape[1]
+            data_elem = np.zeros((rows, cols+1), dtype=int)
+            data_elem[:, 0] = selected_elements
+            data_elem[:, 1:] = connectivity[selected_elements, :]
+
+            np.savetxt("nodes_inside_sphere.dat", list_nodes, delimiter=";", fmt='%i')
+            np.savetxt("selected_elements.dat", list_elements, delimiter=";", fmt='%i')
+            np.savetxt("selected_elements_data.dat", data_elem, delimiter=";", fmt="%i")
+            print(f"Number of nodes: {len(nodes_inside_sphere)}")
+            print(f"Number of elements: {len(selected_elements)}")
 
         return selected_elements, nodes_inside_sphere
 

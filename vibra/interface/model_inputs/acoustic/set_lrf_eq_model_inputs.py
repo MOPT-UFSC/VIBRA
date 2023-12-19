@@ -8,12 +8,12 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QDialog, QComboBox, QFrame, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
 
 from vibra.interface.model_inputs.acoustic.get_sphere_selection_information import GetSphereSelectionInformation
-from vibra.interface.local_refine_widget import LocalRefineWidget
+from vibra.interface.mesh.mesher_inputs import MesherInputs
 #
 from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
 from vibra.interface.general.print_message_input2 import PrintMessageInput
-from vibra.interface.exception_message import ErrorMessage
-from vibra.errors import IncompleteMeshSetup, IncompleteSetupError
+# from vibra.interface.exception_message import ErrorMessage
+# from vibra.errors import IncompleteMeshSetup, IncompleteSetupError
 
 from vibra.interface.loading_bar import load_function
 from vibra.utils.interface_functions import get_main_window
@@ -216,7 +216,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
     def generate_mesh(self):
         if not self.main_window.project.model.generated_mesh:
-            self.mesher = LocalRefineWidget(close_after_generate=True)
+            self.mesher = MesherInputs(close_after_generate=True)
             if not self.mesher.complete:
                 self.mesher = None
                 return True
