@@ -216,6 +216,10 @@ class AcousticAssembler:
             nf = 1
             aux_ones = np.ones(nf, dtype=float)
             self.den = np.zeros((nel, nf), dtype=complex)
+            
+            # list_nodes = []
+            # nn, _, _ = self.model.mesh.get_mesh_info()
+            # base_nodes = list(np.arange(nn, dtype=int))
             for el in range(nel):
                 Ke, Me = element_3D.elementary_matrices(el)
                 self.data_K[el, :, :] = Ke
@@ -223,6 +227,16 @@ class AcousticAssembler:
                 rho_0, c_0, mu_0 = self.model.get_fluid_properties(proportional_damping=True, element=el)
                 self.den[el, :] = aux_ones/(c_0**2)
                 self.data_Cvisc[el, :, :] = ((4*mu_0)/(3*rho_0*c_0**2))*Ke
+                # for _id in self.model.mesh.solids_connectivity[el, 4:]:
+                #     if _id not in list_nodes:
+                #         list_nodes.append(_id)
+
+            # ordered_nodes = list(np.sort(list_nodes))
+            # for base_id in base_nodes:
+            #     if base_id in ordered_nodes:
+            #         ordered_nodes.remove(base_id)
+
+            # print(f"List of nodes: {ordered_nodes}")
 
         self.process_indexes()
 

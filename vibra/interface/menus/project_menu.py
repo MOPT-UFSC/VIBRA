@@ -30,6 +30,7 @@ class ProjectMenu(QMenu):
         self.save_icon = load_icon(Path("data/icons/save.png"), color)
         self.save_as_icon = load_icon(Path("data/icons/save_as.png"), color)
         self.save_as_png_icon = load_icon(Path("data/icons/png.png"), color)
+        self.export_mesh_icon = load_icon(Path("data/icons/save.png"), color)
 
         self.theme_sun_icon = load_icon(Path("data/icons/sun_icon.png"), color)
         self.theme_moon_icon = load_icon(Path("data/icons/moon_icon.png"), color)
@@ -44,6 +45,7 @@ class ProjectMenu(QMenu):
 
         self.save_action = QAction(self.save_icon, "Save", self)
         self.save_as_action = QAction(self.save_as_icon, "Save as", self)
+        self.export_mesh_action = QAction(self.export_mesh_icon, "Export mesh", self)
 
         self.capture_image_action = QAction(self.capture_image_icon, "Capture image", self)
         self.theme_action = QAction(self.theme_sun_icon, "Theme", self)
@@ -55,6 +57,7 @@ class ProjectMenu(QMenu):
         self.open_project_action.triggered.connect(self.open_project_callback)
         self.save_action.triggered.connect(self.save_callback)
         self.save_as_action.triggered.connect(self.save_as_callback)
+        self.export_mesh_action.triggered.connect(self.export_mesh_callback)
         self.theme_action.triggered.connect(self.theme_callback)
         self.exit_action.triggered.connect(self.exit_callback)
 
@@ -67,6 +70,7 @@ class ProjectMenu(QMenu):
         self.addSeparator()
         self.addAction(self.save_action)
         self.addAction(self.save_as_action)
+        self.addAction(self.export_mesh_action)
         self.addSeparator()
         self.addAction(self.capture_image_action)
         self.addAction(self.theme_action)
@@ -80,6 +84,9 @@ class ProjectMenu(QMenu):
 
     def save_as_callback(self):
         self.main_window.save_project_as_dialog()
+    
+    def export_mesh_callback(self):
+        self.main_window.export_mesh()
 
     def help_callback(self):
         self.main_window.viewer_tabs.show_help()

@@ -1,12 +1,13 @@
 import logging
 import os
+import gmsh
 import sys
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from collections import defaultdict
 
-import gmsh
 import numpy as np
+from collections import defaultdict
+from vtk import vtkUnstructuredGrid, vtkPoints, vtkDoubleArray, vtkXMLUnstructuredGridWriter, VTK_TETRA
 
 from vibra.engine.mesher.element_type import *
 from vibra.engine.mesher.geometry_setup import GeometrySetup
@@ -253,18 +254,50 @@ class Mesh:
         self.elements_from_volumes.clear()
         self.elements_from_volumes[1] = np.arange(rows, dtype=int)
 
-    def export_nodes_coordinates(self, filename):
+    def export_nodal_coordinates(self, filename):
         fmt = ["%i", "%.16f", "%.16f", "%.16f"]
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
         np.savetxt(filename, self.nodal_coordinates, delimiter=";", header=header, fmt=fmt)
 
-    def export_faces_connectivity(self, filename):
+    def export_face_elements_connectivity(self, filename):
         header = "Index || Element ID || Face ID || Element type ID || Connected Node IDs"
         np.savetxt(filename, self.faces_connectivity, delimiter=";", header=header, fmt="%i")
 
-    def export_solids_connectivity(self, filename):
+    def export_solid_elements_connectivity(self, filename):
         header = "Index || Solid ID || Element type ID || Element ID || Connected Node IDs"
         np.savetxt(filename, self.solids_connectivity, delimiter=";", header=header, fmt="%i")
+
+    def export_vtu_file(self, filename):
+        """ This methods exports vtu file. """
+        points = vtkPoints()
+        vtk_dataset = vtkUnstructuredGrid()
+        for id, coords in enumerate(self.nodal_coordinates[:,1:]):
+            points.InsertPoint(id, list(coords))
+            vtk_dataset.SetPoints(points)
+        #
+        n_nodes, nf_elem, ns_elem = self.get_mesh_info()
+        vtk_dataset.Allocate(ns_elem)
+        for id, connect in enumerate(self.solids_connectivity[:, 4:]):
+            vtk_dataset.InsertNextCell(VTK_TETRA, 4, list(connect))
+
+        # unod1 = np.zeros((nnode), dtype=complex)
+        # for i in range(nnode):
+        #     unod1[i] = P[i, modo1]
+                            
+        # array1 = vtkDoubleArray()
+        # array1.SetNumberOfComponents(1)
+        # array1.SetNumberOfTuples(nnode)
+        # array1.SetName('Pressure Real')
+
+        # for id in range(nnode):
+        #     values1 = [np.real(unod1[id])]
+        #     array1.SetTuple(id, values1)
+        #     vtk_dataset.GetPointData().AddArray(array1)
+            
+        writer = vtkXMLUnstructuredGridWriter()
+        writer.SetFileName(filename)
+        writer.SetInputData(vtk_dataset)
+        writer.Write()
 
     def local_mesh_refine(self, lc_geral, mesh_refinement_parameters):
         fields_list = []
@@ -463,7 +496,6 @@ class Mesh:
         # self._process_face_elements_connected_to_nodes()
         self._process_solid_elements_connected_to_nodes()
         self._process_element_centroids()
-
         # print(f"Nodal coordinates (after): {self.nodal_coordinates.shape}")
         # print(f"Connectivity (after): {self.solids_connectivity.shape}")
         # np.savetxt("nodal_coordinates_reordered.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
@@ -603,7 +635,6 @@ class Mesh:
         self.solid_elements_center.clear()
         for index, nodes in self.nodes_from_solid_element.items():
             self.solid_elements_center[index] = np.average(self.nodal_coordinates[nodes, 1:], axis=0)
-            # print(index, self.solid_elements_center[index])
 
 
 if __name__ == "__main__":

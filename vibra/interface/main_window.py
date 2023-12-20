@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import *
 from vibra.config import UserConfig
 from vibra.interface.analysis_filter_menu import AnalysisFilter
 from vibra.interface.clip_plane_widget import ClipPlaneWidget
+from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.exception_message import ErrorMessage
 from vibra.interface.loading_bar import load_function
 from vibra.interface.menu_items import MenuItems
@@ -235,6 +236,9 @@ class MainWindow(QMainWindow):
         self.project.name = path.stem
         self.project.save(path)
         self.user_config.save()  # why not
+
+    def export_mesh(self):
+        ExportMeshData()
 
     def open_project(self, path):
         path = Path(path)
