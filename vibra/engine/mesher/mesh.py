@@ -7,7 +7,7 @@ from tempfile import NamedTemporaryFile
 
 import numpy as np
 from collections import defaultdict
-from vtk import vtkUnstructuredGrid, vtkPoints, vtkDoubleArray, vtkXMLUnstructuredGridWriter, VTK_TETRA
+from vtk import vtkUnstructuredGrid, vtkPoints, vtkDoubleArray, vtkXMLUnstructuredGridWriter, VTK_TETRA, VTK_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_QUADRATIC_HEXAHEDRON
 
 from vibra.engine.mesher.element_type import *
 from vibra.engine.mesher.geometry_setup import GeometrySetup
@@ -275,10 +275,22 @@ class Mesh:
             points.InsertPoint(id, list(coords))
             vtk_dataset.SetPoints(points)
         #
+        NODES_PER_ELEMENT = len(self.solids_connectivity[0, 4:])
+        if NODES_PER_ELEMENT == 4:
+            vtk_cell = VTK_TETRA
+        elif NODES_PER_ELEMENT == 10:
+            vtk_cell = VTK_QUADRATIC_TETRA
+        elif NODES_PER_ELEMENT == 8:
+            vtk_cell = VTK_HEXAHEDRON
+        elif NODES_PER_ELEMENT == 20:
+            vtk_cell = VTK_QUADRATIC_HEXAHEDRON
+        else:
+            raise TypeError("Unsupported element type.")
+
         n_nodes, nf_elem, ns_elem = self.get_mesh_info()
         vtk_dataset.Allocate(ns_elem)
         for id, connect in enumerate(self.solids_connectivity[:, 4:]):
-            vtk_dataset.InsertNextCell(VTK_TETRA, 4, list(connect))
+            vtk_dataset.InsertNextCell(vtk_cell, NODES_PER_ELEMENT, list(connect))
 
         # unod1 = np.zeros((nnode), dtype=complex)
         # for i in range(nnode):

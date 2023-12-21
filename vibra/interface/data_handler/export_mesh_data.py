@@ -97,12 +97,12 @@ class ExportMeshData(QDialog):
 
     def export_mesh_data(self):
 
+        if self.generate_mesh():
+            return
+
         if not os.path.exists(self.folder_path):
             if self.search_folder():
                 return
-
-        if self.generate_mesh():
-            return
 
         if self.checkBox_nodal_coordinates.isChecked():
             _path = Path(f"{self.folder_path}/nodal_coordinates.dat")

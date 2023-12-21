@@ -231,6 +231,9 @@
            <property name="text">
             <string> Export mesh</string>
            </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
           </widget>
          </item>
          <item row="0" column="2">
@@ -292,6 +295,9 @@
            </property>
            <property name="text">
             <string> Folder</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -372,6 +378,15 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>lineEdit_folder_path</tabstop>
+  <tabstop>pushButton_search_folder</tabstop>
+  <tabstop>checkBox_nodal_coordinates</tabstop>
+  <tabstop>checkBox_face_elements_connectivity</tabstop>
+  <tabstop>checkBox_solid_elements_connectivity</tabstop>
+  <tabstop>checkBox_export_vtu_file</tabstop>
+  <tabstop>pushButton_export_mesh</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
