@@ -43,7 +43,10 @@
    <property name="bottomMargin">
     <number>4</number>
    </property>
-   <item row="0" column="0">
+   <property name="spacing">
+    <number>4</number>
+   </property>
+   <item row="1" column="0">
     <widget class="QFrame" name="frame">
      <property name="frameShape">
       <enum>QFrame::Box</enum>
@@ -64,75 +67,9 @@
       <property name="bottomMargin">
        <number>4</number>
       </property>
-      <item row="0" column="0">
-       <widget class="QFrame" name="frame_3">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>48</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>48</height>
-         </size>
-        </property>
-        <property name="frameShape">
-         <enum>QFrame::NoFrame</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_3">
-         <property name="leftMargin">
-          <number>4</number>
-         </property>
-         <property name="topMargin">
-          <number>4</number>
-         </property>
-         <property name="rightMargin">
-          <number>4</number>
-         </property>
-         <property name="bottomMargin">
-          <number>4</number>
-         </property>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>26</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>32</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>11</pointsize>
-            </font>
-           </property>
-           <property name="frameShape">
-            <enum>QFrame::Box</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Raised</enum>
-           </property>
-           <property name="text">
-            <string>Export mesh data</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
+      <property name="spacing">
+       <number>4</number>
+      </property>
       <item row="2" column="0">
        <widget class="QFrame" name="frame_2">
         <property name="frameShape">
@@ -158,9 +95,14 @@
           <widget class="QCheckBox" name="checkBox_nodal_coordinates">
            <property name="maximumSize">
             <size>
-             <width>200</width>
+             <width>232</width>
              <height>16777215</height>
             </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
            </property>
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The nodal coordinates will be exported to the &amp;quot;nodal_coordinates.dat&amp;quot; file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -174,9 +116,14 @@
           <widget class="QCheckBox" name="checkBox_solid_elements_connectivity">
            <property name="maximumSize">
             <size>
-             <width>200</width>
+             <width>232</width>
              <height>16777215</height>
             </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
            </property>
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The solid elements connectivity data will be exported to the &amp;quot;solid_elements_connectivity.dat&amp;quot; file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -190,9 +137,14 @@
           <widget class="QCheckBox" name="checkBox_export_vtu_file">
            <property name="maximumSize">
             <size>
-             <width>200</width>
+             <width>232</width>
              <height>16777215</height>
             </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
            </property>
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The mesh data will be exported to the &amp;quot;mesh_data.vtu&amp;quot; file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -206,9 +158,14 @@
           <widget class="QCheckBox" name="checkBox_face_elements_connectivity">
            <property name="maximumSize">
             <size>
-             <width>200</width>
+             <width>232</width>
              <height>16777215</height>
             </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
            </property>
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The face elements connectivity data will be exported to the &amp;quot;face_elements_connectivity.dat&amp;quot; file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -223,6 +180,12 @@
       </item>
       <item row="3" column="0">
        <widget class="QFrame" name="frame_4">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>40</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
           <width>16777215</width>
@@ -260,6 +223,11 @@
          </item>
          <item row="0" column="1">
           <widget class="QPushButton" name="pushButton_export_mesh">
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string> Export mesh</string>
            </property>
@@ -280,6 +248,12 @@
       </item>
       <item row="1" column="0">
        <widget class="QFrame" name="frame_5">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>40</height>
+         </size>
+        </property>
         <property name="frameShape">
          <enum>QFrame::NoFrame</enum>
         </property>
@@ -311,12 +285,86 @@
          </item>
          <item row="0" column="1">
           <widget class="QPushButton" name="pushButton_search_folder">
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string> Folder</string>
            </property>
           </widget>
          </item>
         </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QFrame" name="frame_3">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>40</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>48</height>
+      </size>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <property name="leftMargin">
+       <number>4</number>
+      </property>
+      <property name="topMargin">
+       <number>4</number>
+      </property>
+      <property name="rightMargin">
+       <number>4</number>
+      </property>
+      <property name="bottomMargin">
+       <number>4</number>
+      </property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>26</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
+        </property>
+        <property name="text">
+         <string>Mesh data export assistant</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
        </widget>
       </item>
      </layout>
