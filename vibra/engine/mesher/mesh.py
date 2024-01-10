@@ -4,6 +4,7 @@ import gmsh
 import sys
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from time import time
 
 import numpy as np
 from collections import defaultdict
@@ -151,6 +152,7 @@ class Mesh:
             mesh_connection = mesh_connection,
         )
 
+        t0 = time()
         path = Path(path)
         gmsh.initialize("", False)
         logging.info(f"Generating mesh from {path}")
@@ -172,9 +174,7 @@ class Mesh:
         self.element_type = element_type
         
         if mesh_connection:
-            volumes_list = gmsh.model.getEntities(3)
-            gmsh.model.occ.fragment(volumes_list, volumes_list)
-            gmsh.model.occ.synchronize()
+            self._merge_nodes_from_adjacent_volumes()
             
         logging.info("Loading Geometry" + ProgressStatus(15, 100))
         gmsh.model.mesh.generate(dim=element_type.dimensions)
@@ -188,6 +188,8 @@ class Mesh:
                 gmsh.fltk.run()
 
         gmsh.finalize()
+        dt = time() - t0
+        # print(f"Elapsed time: {dt}")
 
         logging.info(   f"Mesh generated with {len(self.nodal_coordinates)} nodes"
                         f", {len(self.lines_connectivity)} dim 1"
@@ -198,7 +200,7 @@ class Mesh:
         """ This method merges all nodes from adjacent volumes.
         """
         volumes_list = gmsh.model.getEntities(3)
-        gmsh.model.occ.fragment(volumes_list,volumes_list)
+        gmsh.model.occ.fragment(volumes_list, volumes_list)
         gmsh.model.occ.synchronize()    
 
     def import_nodes_coordinates(self, filename):
@@ -435,11 +437,12 @@ class Mesh:
         self.lines_connectivity, self.map_line_elements = self._get_connectivity_array(connectivity_dim1)
         self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity, self.map_solid_elements = self._get_connectivity_array(connectivity_dim3)
+        #
+        # TODO: remove as soon as possible
+        aux_zeros = np.zeros(len(self.solids_connectivity[0,4:]))
         for i, values in enumerate(self.solids_connectivity[:,4:]):
-            if (np.array([0,0,0,0]) == values).all():
+            if (aux_zeros == values).all():
                 print(f"Invalid node - index: {i}")
-            else:
-                pass
         #
         self._maps_surfaces_by_elements()
         self._maps_volumes_by_elements()
@@ -484,7 +487,7 @@ class Mesh:
             for node in connected_nodes:
                 self.solid_elements_from_nodes[node].append(i)
 
-    def _process_nodes_reordering(self):
+    def _process_nodes_reordering(self, print_log=False):
         """ This method processes the nodes reordering to reduce the global matrices 
             bandwidth and improve the solution performance.
         """
@@ -493,21 +496,56 @@ class Mesh:
         # np.savetxt("nodal_coordinates.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
         # np.savetxt("faces_connectivity.dat", self.faces_connectivity, delimiter=",", fmt='%i')
         # np.savetxt("solids_connectivity.dat", self.solids_connectivity, delimiter=",", fmt='%i')
-        
+
+        t0 = time()
         self.reordering = Reordering(self)
+        if print_log:
+            dt = time()  - t0
+            print(f"Time to process - reordering (1/4): {dt}")
+        logging.info("Reordering nodes (1/4)" + ProgressStatus(20, 100))
+
+        t0 = time()
         self.reordering._process_reordering()
-        self.nodal_coordinates = self.reordering.get_new_nodal_coordinates()
+        if print_log:
+            dt = time()  - t0
+            print(f"Time to process - reordering (2/4): {dt}")
+        logging.info("Reordering nodes (2/4)" + ProgressStatus(60, 100))
+
+        t0 = time()
         self.lines_connectivity = self.reordering.get_new_connectivity(self.lines_connectivity)
         self.faces_connectivity = self.reordering.get_new_connectivity(self.faces_connectivity)
         self.solids_connectivity = self.reordering.get_new_connectivity(self.solids_connectivity)
+        if print_log:
+            dt = time()  - t0
+            print(f"Time to process - reordering (3/4): {dt}")
+        logging.info("Reordering nodes (3/4)" + ProgressStatus(80, 100))
+
+        t0 = time()
+        self.nodal_coordinates = self.reordering.get_new_nodal_coordinates()        
         self.nodes_from_lines = self.reordering.updates_nodes_from(self.nodes_from_lines)
         self.nodes_from_surfaces = self.reordering.updates_nodes_from(self.nodes_from_surfaces)
         self.nodes_from_volumes = self.reordering.updates_nodes_from(self.nodes_from_volumes)
         self.connectivity_from_surfaces = self.reordering.updates_nodes_from(self.connectivity_from_surfaces)
-
+        if print_log:
+            dt = time()  - t0
+            print(f"Time to process - reordering (4/4): {dt}")
+        logging.info("Reordering nodes (4/4)" + ProgressStatus(100, 100))
+            
+        t0 = time()
         # self._process_face_elements_connected_to_nodes()
+        
+        t0 = time()
         self._process_solid_elements_connected_to_nodes()
-        self._process_element_centroids()
+        if print_log:
+            dt = time()  - t0
+            print(f"Time to post-process - reordering (1/2): {dt}")
+        
+        t0 = time()
+        self._process_element_average_coordinates()
+        if print_log:    
+            dt = time()  - t0
+            print(f"Time to post-process - reordering (2/2): {dt}")
+         
         # print(f"Nodal coordinates (after): {self.nodal_coordinates.shape}")
         # print(f"Connectivity (after): {self.solids_connectivity.shape}")
         # np.savetxt("nodal_coordinates_reordered.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
@@ -642,7 +680,7 @@ class Mesh:
 
         return output_data, map_elements
 
-    def _process_element_centroids(self):
+    def _process_element_average_coordinates(self):
         """ This method evaluates the element average center coordinates. """
         self.solid_elements_center.clear()
         for index, nodes in self.nodes_from_solid_element.items():

@@ -6,6 +6,7 @@ from time import time
 
 from scipy.sparse.csgraph import reverse_cuthill_mckee as rcm
 
+# fmt: off
 
 class Reordering:
 
@@ -74,9 +75,6 @@ class Reordering:
     def get_global_graph(self):
         """
         """
-        # rows = []
-        # cols = []
-        # graph_data = []
         Nt = np.sum(self.solids_connectivity[:, 3]**2)
         rows = np.zeros(Nt, dtype=int)
         cols = np.zeros(Nt, dtype=int)
@@ -94,9 +92,6 @@ class Reordering:
             cols[start:end] = aux.flatten()
             graph_data[start:end] = mat
             start = end
-            # rows += list(aux.T.flatten())
-            # cols += list(aux.flatten())
-            # graph_data += list(mat)
         #    
         N_gl = self.nodal_coordinates.shape[0]
         full_graph = csr_matrix((graph_data, (rows, cols)), shape=[N_gl, N_gl])
@@ -107,7 +102,6 @@ class Reordering:
         """
         """
         self.map_nodes_indexes = dict()
-        self.nodal_coordinates_data = dict()
         graph = self.get_global_graph()
         # self.plot_graph(graph)
         perm_rcm = rcm(graph, symmetric_mode=True)
@@ -157,13 +151,13 @@ class Reordering:
             mat_nodes[i, :] = self.get_new_indexes_nodes_for_vector(vector)
         return mat_nodes
 
-    def updates_nodes_from(self, data):
+    def updates_nodes_from(self, input_data):
         """ This method returns ...
         """
         aux_dict = dict()
-        if not isinstance(data, dict):
+        if not isinstance(input_data, dict):
             return aux_dict
-        for key, data in data.items():
+        for key, data in input_data.items():
             if isinstance(data, dict):
                 temp = dict()
                 if "element_indexes" in data.keys():
@@ -188,71 +182,16 @@ class Reordering:
 
         """
         if etype_tag == 4: # tetrahedron-4
-            return self.mask_matrix_tet4_act()
+            return self.mask_tet4
         elif etype_tag == 11: # tetrahedron-10
-            return self.mask_matrix_tet10_act()
+            return self.mask_tet10
         elif etype_tag == 5: # hexahedron-8
-            return self.mask_matrix_hex8_act()
+            return self.mask_hex8
         elif etype_tag == 17: # hexahedron-20
-            return self.mask_matrix_hex20_act()
+            return self.mask_hex20
         else:
             print(f"Not implemented element: {etype_tag}")
             return None
-
-    def mask_matrix_tet4_act(self):
-        # mat = np.array([[1, 1, 1, 1],
-        #                 [1, 1, 1, 1],
-        #                 [1, 1, 1, 1],
-        #                 [1, 1, 1, 1]], dtype=float)
-        return self.mask_tet4
-
-    def mask_matrix_tet10_act(self):
-        # mat = np.array([[1, 0, 0, 0, 1, 0, 1, 1, 0, 0],
-        #                 [0, 1, 0, 0, 1, 1, 0, 0, 0, 1],
-        #                 [0, 0, 1, 0, 0, 1, 1, 0, 1, 0],
-        #                 [0, 0, 0, 1, 0, 0, 0, 1, 1, 1],
-        #                 [1, 1, 0, 0, 1, 0, 0, 0, 0, 0],
-        #                 [0, 1, 1, 0, 0, 1, 0, 0, 0, 0],
-        #                 [1, 0, 1, 0, 0, 0, 1, 0, 0, 0],
-        #                 [1, 0, 0, 1, 0, 0, 0, 1, 0, 0],
-        #                 [0, 0, 1, 1, 0, 0, 0, 0, 1, 0],
-        #                 [0, 1, 0, 1, 0, 0, 0, 0, 0, 1]], dtype=float)
-        return self.mask_tet10
-
-    def mask_matrix_hex8_act(self):
-        # mat = np.array([[1, 1, 0, 1, 1, 0, 0, 0],
-        #                 [1, 1, 1, 0, 0, 1, 0, 0],
-        #                 [0, 1, 1, 1, 0, 0, 1, 0],
-        #                 [1, 0, 1, 1, 0, 0, 0, 1],
-        #                 [1, 0, 0, 0, 1, 1, 0, 1],
-        #                 [0, 1, 0, 0, 1, 1, 1, 0],
-        #                 [0, 0, 1, 0, 0, 1, 1, 1],
-        #                 [0, 0, 0, 1, 1, 0, 1, 1]], dtype=float)
-        return self.mask_hex8
-        
-    def mask_matrix_hex20_act(self):
-        # mat = np.array([[1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #                 [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
-        #                 [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0],
-        #                 [0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
-        #                 [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0],
-        #                 [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0],
-        #                 [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1],
-        #                 [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
-        #                 [1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #                 [1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #                 [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #                 [0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-        #                 [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-        #                 [0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-        #                 [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-        #                 [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
-        #                 [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-        #                 [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-        #                 [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],                        
-        #                 [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]], dtype=float)
-        return self.mask_hex20
-
 
     def plot_graph(self, graph):
         plt.ion()
@@ -348,25 +287,4 @@ class Reordering:
 
 """
 
-    # # TODO: TOP REDUCT CODE - remove before validation
-    # def get_global_graph(self):
-    #     if self.dim == 2:
-    #         dict_elements = self.elements_2d
-    #     elif self.dim == 3:
-    #         dict_elements = self.elements_3d
-    #     rows = []
-    #     cols = []
-    #     graph_data = []
-    #     total = len(self.nodes)
-
-    #     for element in dict_elements.values():
-    #         indexes = element.nodes_indexes-1
-    #         mat = element.graph_matrix
-    #         # mat = np.ones((len(indexes), len(indexes)))
-    #         aux = np.tile(indexes, (len(indexes),1))
-    #         rows += list(aux.T.flatten())
-    #         cols += list(aux.flatten())
-    #         graph_data += list(mat.flatten())
-
-    #     full_graph = csr_matrix((graph_data, (rows, cols)), shape=[total, total])
-    #     return full_graph
+# fmt: on
