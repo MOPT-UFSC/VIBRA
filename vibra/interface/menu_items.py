@@ -25,6 +25,7 @@ from vibra.interface.model_inputs.structural.boundary_condition_inputs import Bo
 from vibra.interface.model_inputs.structural.material_inputs import MaterialInput
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_input import PlotAcousticFrequencyResponseInput
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_input import PlotAcousticFrequencyResponseFunctionInput
+from vibra.interface.plots.acoustic.plot_transmission_loss_input import PlotTransmissionLossInput
 #
 from vibra.interface.loading_bar import load_function
 from vibra.utils.interface_functions import get_main_window
@@ -311,7 +312,7 @@ class MenuItems(QTreeWidget):
         self.item_top_resultsViewer_acoustic.addChild(self.item_child_plotAcousticFrequencyResponse)
         self.item_top_resultsViewer_acoustic.addChild(self.item_child_plotAcousticFrequencyResponseFunction)
         # self.item_top_resultsViewer_acoustic.addChild(self.item_child_plotAcousticDeltaPressures)
-        # self.item_top_resultsViewer_acoustic.addChild(self.item_child_plot_TL_NR)
+        self.item_top_resultsViewer_acoustic.addChild(self.item_child_plot_TL_NR)
 
     def _configItems(self):
         """Configure all items."""
@@ -508,7 +509,7 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_plot_TL_NR:
             if not self.item_child_plot_TL_NR.isDisabled():
-                pass
+                PlotTransmissionLossInput()
 
     def generate_mesh(self):
         """ """

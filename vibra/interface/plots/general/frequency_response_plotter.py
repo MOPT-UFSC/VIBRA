@@ -26,7 +26,7 @@ class FrequencyResponsePlotter(QDialog):
         uic.loadUi(Path('data/ui_files/plots/general/frequency_response_plot.ui'), self)
 
         self._load_icons()
-        self._reset_variables()
+        self._initialize()
         self._initialize_canvas()
         self._define_qt_variables()
         self._create_connections()
@@ -39,7 +39,8 @@ class FrequencyResponsePlotter(QDialog):
         self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle("Frequency response plotter")
 
-    def _reset_variables(self):
+    def _initialize(self):
+        self.imported_dB = False
         self._layout = None
         self.x_data = None
         self.y_data = None
@@ -58,28 +59,34 @@ class FrequencyResponsePlotter(QDialog):
                         [0.25, 0.25, 0.25] ]
 
     def _define_qt_variables(self):
+
         # QCheckBox
-        self.checkBox_grid = self.findChild(QCheckBox, 'checkBox_grid')
-        self.checkBox_legends = self.findChild(QCheckBox, 'checkBox_legends')
-        self.checkBox_cursor_legends = self.findChild(QCheckBox, 'checkBox_cursor_legends')
+        self.checkBox_grid : QCheckBox
+        self.checkBox_legends : QCheckBox
+        self.checkBox_cursor_legends : QCheckBox
+
         # QComboBox
-        self.comboBox_plot_type = self.findChild(QComboBox, 'comboBox_plot_type')
-        self.comboBox_differentiate_data = self.findChild(QComboBox, 'comboBox_differentiate_data')
+        self.comboBox_plot_type : QComboBox
+        self.comboBox_differentiate_data : QComboBox
+
         # QFrame
-        self.frame_vertical_lines = self.findChild(QFrame, 'frame_vertical_lines') 
+        self.frame_vertical_lines : QFrame
+
         # QPushButton
-        self.pushButton_import_data = self.findChild(QPushButton, 'pushButton_import_data')
+        self.pushButton_import_data : QPushButton
+
         # QRadioButton
-        self.radioButton_absolute = self.findChild(QRadioButton, 'radioButton_absolute')
-        self.radioButton_real = self.findChild(QRadioButton, 'radioButton_real')
-        self.radioButton_imaginary = self.findChild(QRadioButton, 'radioButton_imaginary')
-        self.radioButton_decibel_scale = self.findChild(QRadioButton, 'radioButton_decibel_scale')
-        self.radioButton_disable_cursors = self.findChild(QRadioButton, 'radioButton_disable_cursors')
-        self.radioButton_cross_cursor = self.findChild(QRadioButton, 'radioButton_cross_cursor')
-        self.radioButton_harmonic_cursor = self.findChild(QRadioButton, 'radioButton_harmonic_cursor')
-        self.pushButton_export_data = self.findChild(QPushButton, 'pushButton_export_data')
+        self.radioButton_absolute : QRadioButton
+        self.radioButton_real : QRadioButton
+        self.radioButton_imaginary : QRadioButton
+        self.radioButton_decibel_scale : QRadioButton
+        self.radioButton_disable_cursors : QRadioButton
+        self.radioButton_cross_cursor : QRadioButton
+        self.radioButton_harmonic_cursor : QRadioButton
+        self.pushButton_export_data : QPushButton
+
         # QWidget
-        self.widget_plot = self.findChild(QWidget, 'widget_plot')
+        self.widget_plot : QWidget
 
     def _create_connections(self):
         self.checkBox_grid.stateChanged.connect(self.plot_data_in_freq_domain)
@@ -116,6 +123,7 @@ class FrequencyResponsePlotter(QDialog):
         aux_real = self.radioButton_real.isChecked()
         aux_imag = self.radioButton_imaginary.isChecked()
         aux_decibel = self.radioButton_decibel_scale.isChecked()
+
         self.aux_bool = aux_real + aux_imag + aux_decibel
         if self.aux_bool:
             self.comboBox_plot_type.setDisabled(True)
@@ -128,6 +136,8 @@ class FrequencyResponsePlotter(QDialog):
             self.plot_data_in_freq_domain()
         
     def _update_plot_type(self):
+        # if self.not_update:
+        #     return
         self.plot_type = self.comboBox_plot_type.currentText()
         self.plot_data_in_freq_domain()
 
@@ -152,6 +162,17 @@ class FrequencyResponsePlotter(QDialog):
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(data)
 
+    def imported_dB_data(self):
+        self.imported_dB = True
+        self.comboBox_plot_type.setCurrentIndex(2)
+        self.comboBox_plot_type.setDisabled(True)
+        self.radioButton_absolute.setDisabled(True)
+        self.radioButton_real.setDisabled(True)
+        self.radioButton_real.setChecked(True)
+        self.radioButton_imaginary.setDisabled(True)
+        self.radioButton_decibel_scale.setDisabled(True)
+        self.comboBox_differentiate_data.setDisabled(True)
+
     def load_data_to_plot(self, data):
         if "x_data" in data.keys():
             self.x_data = data["x_data"]
@@ -160,6 +181,8 @@ class FrequencyResponsePlotter(QDialog):
         if "unit" in data.keys():
             if data["unit"] != "":
                 self.unit = data["unit"]
+                # if self.unit == "dB":
+                #     self.imported_dB_data()
         if "x_label" in data.keys():
             self.x_label = data["x_label"]
         if "y_label" in data.keys():
@@ -209,6 +232,9 @@ class FrequencyResponsePlotter(QDialog):
         else:
             type_label = "absolute"
 
+        if self.imported_dB:
+            return f"{label} [dB]"
+
         unit = self.get_unit_considering_differentiation()
         if self.radioButton_decibel_scale.isChecked():
             return f"{label} - {type_label} [dB]"
@@ -241,7 +267,7 @@ class FrequencyResponsePlotter(QDialog):
         self.legends = []
         self.plots = []
 
-        for key, data in self.data_to_plot.items():
+        for _, data in self.data_to_plot.items():
             self.load_data_to_plot(data)
             if self.y_data is not None:
                 self.mask_x = self.x_data <= 0
@@ -271,6 +297,7 @@ class FrequencyResponsePlotter(QDialog):
                     self.widget_plot.setLayout(self._layout)
 
         if len(self.plots) != 0:
+
             if self.checkBox_legends.isChecked():
                 self.ax.legend(handles=self.plots, labels=self.legends)
                 
@@ -280,11 +307,12 @@ class FrequencyResponsePlotter(QDialog):
             
             if self.title != "":
                 self.ax.set_title(self.title, fontsize = 12, fontweight = self.font_weight)
-            
+
             if self.checkBox_grid.isChecked():
                 self.ax.grid()
 
             self.mpl_canvas_frequency_plot.draw()
+            return
 
     def call_semilog_y_plot(self, first_index=0):
         _plot, = self.ax.semilogy(  self.x_data[first_index:], 
@@ -378,5 +406,11 @@ class FrequencyResponsePlotter(QDialog):
     def _set_data_to_plot(self, data):
         if isinstance(data, dict):
             self.data_to_plot["model", 0] = data
+            self.plot_data_in_freq_domain()
+            self.exec()
+
+    def _multiple_data_to_plot(self, data):
+        if isinstance(data, dict):
+            self.data_to_plot = data
             self.plot_data_in_freq_domain()
             self.exec()
