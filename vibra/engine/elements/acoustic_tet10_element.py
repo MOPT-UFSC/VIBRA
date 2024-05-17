@@ -2,6 +2,7 @@ import numpy as np
 
 from vibra.engine.elements.solid_elements import Element3D
 
+# fmt: off
 
 def shape10TC(l1, l2, l3):
     """This function returns the shape functions and its derivatives."""
@@ -251,7 +252,7 @@ class ACT_TETRAHEDRON_10C(Element3D):
         # rho = fluid.fluid_density
         # c_0 = fluid.speed_of_sound
 
-        c_0 = self.model.properties.get_speed_of_sound(element=el_index)
+        # c_0 = self.model.properties.get_speed_of_sound(element=el_index)
         ie = self.connectivity[el_index, 1:]
         #
         JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
@@ -270,14 +271,10 @@ class ACT_TETRAHEDRON_10C(Element3D):
         # integration loop
         Ke, Me = 0, 0
         for i in range(self.nint):
+
             Ke += (1 / 6) * B[i, :, :].T @ B[i, :, :] * (detJAC[i, :, :] * self.wps[i])
-            Me += (
-                (1 / 6)
-                * (1 / c_0**2)
-                * N[i, :, :].T
-                @ N[i, :, :]
-                * (detJAC[i, :, :] * self.wps[i])
-            )
+            Me += ((1 / 6) * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps[i]))
+            # Me += ((1 / 6) * (1 / c_0**2) * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps[i]))
 
         return Ke, Me
 
@@ -285,10 +282,14 @@ class ACT_TETRAHEDRON_10C(Element3D):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
         self.connectivity = self.connectivity[:, [0, 6, 4, 5, 7, 10, 8, 9, 12, 11, 13]]
 
-    def generate_ind_rows_cols(self):
+    def generate_ind_rows_cols(self, reorder=True):
         """This method processess the dofs indices (rows and columns) for assembly"""
 
-        self.reorder_connect()
+        if reorder:
+            self.reorder_connect()
+        else:
+            self.connectivity = self.connectivity[:, [0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]]
+
         dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
         ind_dofs = dofs * self.connectivity[:, 1:]
 
@@ -297,3 +298,5 @@ class ACT_TETRAHEDRON_10C(Element3D):
         self.ind_cols = (np.tile(ind_dofs, edofs)).flatten()
 
         return self.ind_rows, self.ind_cols
+    
+# fmt: on

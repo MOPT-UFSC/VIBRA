@@ -23,6 +23,8 @@ class Reordering:
                                         3  :  4,     # Quad4
                                         4  :  4,     # Tet4
                                         5  :  8,     # Hex8
+                                        8  :  3,     # Line3
+                                        9  :  6,     # Tria6
                                         11  : 10,    # Tet10
                                         17  : 20  }  # Hex20
 

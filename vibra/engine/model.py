@@ -80,8 +80,8 @@ class Model:
         self.mesh.update_parameters(**self.mesh_setup)
         self.generated_mesh = True
 
-        logging.info("Renumbering nodes..." + ProgressStatus(90, 100))
-        self.mesh._process_nodes_reordering()
+        # logging.info("Renumbering nodes..." + ProgressStatus(90, 100))
+        # self.mesh._process_nodes_reordering()
 
     def set_material(self, material, **kwargs):
         self.properties.set_material(material, **kwargs)
