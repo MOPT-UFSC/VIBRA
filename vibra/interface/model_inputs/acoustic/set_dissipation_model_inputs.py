@@ -31,6 +31,9 @@ class DissipationModelInput(QDialog):
 
         self.main_window = get_main_window()
         self.main_window.set_input_widget(self)
+        geometry_widget = self.main_window.viewer_tabs.geometry_widget
+        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
+
         self.project = self.main_window.project
 
         self._reset_variables()
@@ -45,28 +48,31 @@ class DissipationModelInput(QDialog):
         self.fluid_density_factor = 0
 
     def _define_qt_variables(self):
-        # QLineEdit objects
-        self.lineEdit_selection_id = self.findChild(QLineEdit, "lineEdit_selection_id")
-        self.lineEdit_fluid_density_complex_factor = self.findChild(
-            QLineEdit, "lineEdit_fluid_density_complex_factor"
-        )
-        self.lineEdit_speed_of_sound_complex_factor = self.findChild(
-            QLineEdit, "lineEdit_speed_of_sound_complex_factor"
-        )
-        # QPushButton objects
-        self.pushButton_confirm_proportional_damping = self.findChild(
-            QPushButton, "pushButton_confirm_proportional_damping"
-        )
-        # QTabWidget objects
-        self.tabWidget_dissipation_model = self.findChild(QTabWidget, "tabWidget_dissipation_model")
-        self.tab_proportional_damping = self.tabWidget_dissipation_model.findChild(
-            QWidget, "tab_proportional_damping"
-        )
-        self.current_tab = self.tabWidget_dissipation_model.currentIndex()
+
+        # QLineEdit
+        self.lineEdit_selection_id : QLineEdit
+        self.lineEdit_fluid_density_complex_factor : QLineEdit
+        self.lineEdit_speed_of_sound_complex_factor : QLineEdit
+        self.lineEdit_selection_id.setStyleSheet("")
+
+        # QPushButton
+        self.pushButton_confirm_proportional_damping : QPushButton
+
+        # QTabWidget
+        self.tabWidget_dissipation_model : QTabWidget
 
     def _create_connections(self):
         #
         self.pushButton_confirm_proportional_damping.clicked.connect(self.set_dissipation_model)
+
+    def geometry_selection_callback(self, points, lines, faces, volumes):
+        """ """
+        if volumes:
+            text = ", ".join([str(i) for i in volumes])
+            self.lineEdit_selection_id.setText(text)
+
+        elif not any([points, lines, faces]):
+            return
 
     def check_dissipation_model_entries(self):
         lineEdit_selection_id = self.lineEdit_selection_id.text()
