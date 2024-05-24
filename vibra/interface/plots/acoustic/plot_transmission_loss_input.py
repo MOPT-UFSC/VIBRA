@@ -181,10 +181,8 @@ class PlotTransmissionLossInput(QDialog):
         rho_in = fluid_in.fluid_density
         c0_in = fluid_in.speed_of_sound
 
-        d_in = 0.2
-        d_out = 0.2
-        A_in = np.pi*(d_in**2)/4
-        A_out = np.pi*(d_out**2)/4
+        A_in = self.project.model.surfaces_areas[self.input_surface_id]
+        A_out = self.project.model.surfaces_areas[self.output_surface_id]
 
         # the zero_shift constant is summed to avoid zero values either in P_input2 or P_output2 variables
         zero_shift = 1e-12
