@@ -279,6 +279,9 @@ class GeometryRenderWidget(CommonRenderWidget):
             a, b = self.main_window.project.model.mesh.entity_ranges[2, face]
             all_element_indexes.extend(range(a, b))
 
+            # indexes = self.main_window.project.model.mesh.entity_ranges[2, face]
+            # all_element_indexes.extend(indexes)
+
         self.faces_actor.clear_colors()
         self.faces_actor.paint_cells(self.selection_color, all_element_indexes)
         self.update()
@@ -306,8 +309,11 @@ class GeometryRenderWidget(CommonRenderWidget):
                 if not (2, face) in self.main_window.project.model.mesh.entity_ranges:
                     return
 
-                a, b = self.main_window.project.model.mesh.entity_ranges[2, face]
-                all_element_indexes.extend(range(a, b))
+            a, b = self.main_window.project.model.mesh.entity_ranges[2, face]
+            all_element_indexes.extend(range(a, b))
+
+            # indexes = self.main_window.project.model.mesh.entity_ranges[2, face]
+            # all_element_indexes.extend(indexes)
 
         self.faces_actor.clear_colors()
         self.faces_actor.paint_cells(self.selection_color, all_element_indexes)

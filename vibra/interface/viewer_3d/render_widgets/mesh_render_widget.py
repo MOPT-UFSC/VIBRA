@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import *
 
 from vibra.interface.tabs.mesh_info_bar import MeshInfoBar
 from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
+from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
 from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
     CommonRenderWidget,
@@ -35,6 +36,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.setLayout(layout)
         self.setContentsMargins(0, 0, 0, 0)
 
+        self.faces_actor = None
         self.solids_actor = None
         self.edges_actor = None
         self.selection_spheres_actor = None
@@ -63,6 +65,9 @@ class MeshRenderWidget(CommonRenderWidget):
         self.selection_spheres_actor.PickableOff()
         self.renderer.AddActor(self.selection_spheres_actor)
 
+        self.faces_actor = FacesActor(mesh)
+        self.renderer.AddActor(self.faces_actor)
+
         self.solids_actor = SolidsActor(mesh)
         self.renderer.AddActor(self.solids_actor)
 
@@ -87,6 +92,7 @@ class MeshRenderWidget(CommonRenderWidget):
         main_window = get_main_window()
         theme = main_window.user_config.theme
         self.view_mode = SHOW_LINES
+        self.faces_actor.VisibilityOff()
         self.solids_actor.VisibilityOff()
         self.edges_actor.VisibilityOn()
         self.update_theme()
@@ -95,7 +101,8 @@ class MeshRenderWidget(CommonRenderWidget):
     def show_faces(self):
         self.view_mode = SHOW_FACES
         self.solids_actor.GetProperty().SetRepresentationToSurface()
-        self.solids_actor.VisibilityOn()
+        self.faces_actor.VisibilityOn()
+        self.solids_actor.VisibilityOff()
         self.edges_actor.VisibilityOn()
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
         self.update_theme()
@@ -114,15 +121,24 @@ class MeshRenderWidget(CommonRenderWidget):
         # otherwise it should follow the theme
         if self.view_mode == SHOW_FACES:
             self.edges_actor.GetProperty().SetColor(dark_color)
+            self.faces_actor.GetProperty().SetColor(light_color)
             self.solids_actor.GetProperty().SetColor(light_color)
 
         elif theme == "light":
             self.edges_actor.GetProperty().SetColor(dark_color)
+            self.faces_actor.GetProperty().SetColor(dark_color)
             self.solids_actor.GetProperty().SetColor(dark_color)
 
         elif theme == "dark":
             self.edges_actor.GetProperty().SetColor(light_color)
+            self.faces_actor.GetProperty().SetColor(light_color)
             self.solids_actor.GetProperty().SetColor(light_color)
+
+    def select_multiple_faces(self, new_faces, *, join=False, remove=False):
+        if not self._actors_exists():
+            return
+        self.faces_actor.paint_cells(self.selection_color, new_faces)
+        self.update()
 
     def select_multiple_volumes(self, new_volumes, *, join=False, remove=False):
         if not self._actors_exists():
@@ -143,15 +159,17 @@ class MeshRenderWidget(CommonRenderWidget):
         self.update()
 
     def remove_actors(self):
-        self.renderer.RemoveActor(self.solids_actor)
         self.renderer.RemoveActor(self.edges_actor)
+        self.renderer.RemoveActor(self.faces_actor)
+        self.renderer.RemoveActor(self.solids_actor)
         self.renderer.RemoveActor(self.selection_spheres_actor)
-        self.solids_actor = None
         self.edges_actor = None
+        self.faces_actor = None
+        self.solids_actor = None
         self.selection_spheres_actor = None
 
     def _actors_exists(self):
-        actors = [self.solids_actor, self.edges_actor, self.selection_spheres_actor]
+        actors = [self.solids_actor, self.faces_actor, self.edges_actor, self.selection_spheres_actor]
         return all([actor is not None for actor in actors])
 
     def _get_info_tab(self):

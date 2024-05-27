@@ -118,16 +118,18 @@ class PlotAcousticFrequencyResponseInput(QDialog):
 
     def get_response(self):
 
-        index = self.comboBox_selector_filter.currentIndex()
         selected_id = self.typed_ids[0]
+        index = self.comboBox_selector_filter.currentIndex()
 
         if index == 0:
             rows = self.project.model.mesh.nodes_from_surfaces[selected_id]
         elif index == 1:
             rows = self.project.model.mesh.nodes_from_lines[selected_id]
         else:
-            return
+            rows = [3670]
+            # return
 
+        # print(len(rows))
         response = np.average(self.solution[rows,:], axis=0)
 
         # if complex(0) in response:
@@ -139,11 +141,11 @@ class PlotAcousticFrequencyResponseInput(QDialog):
     def join_model_data(self):
         self.model_results = dict()
         self.title = "Acoustic frequency response - {}".format(self.analysis_method)
-        legend_label = "Acoustic pressure at {} {}".format(self.entity_type, self.typed_ids[0])
+        legend_label = "Acoustic pressure at {} [{}]".format(self.entity_type, self.typed_ids[0])
         self.model_results = {  "x_data" : self.frequencies,
                                 "y_data" : self.get_response(),
                                 "x_label" : "Frequency [Hz]",
-                                "y_label" : "Nodal response",
+                                "y_label" : "Acoustic pressure",
                                 "title" : self.title,
                                 "data_information" : legend_label,
                                 "legend" : legend_label,

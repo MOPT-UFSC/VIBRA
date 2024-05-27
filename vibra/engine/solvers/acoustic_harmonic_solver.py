@@ -86,6 +86,7 @@ class AcousticHarmonicSolver:
         C_imp = self.assembler.damping_matrix
         C_visc = self.assembler.visc_damping_matrix
         Q = self.assembler.mass_flow_vectors
+        # np.savetxt("mass_flow_vectors.dat", Q)
         #
         # self.plot_graph(M)
 

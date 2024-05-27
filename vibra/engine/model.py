@@ -194,7 +194,7 @@ class Model:
         if isinstance(volume_ids, int):
             volume_ids = [volume_ids]
         for volume_id in volume_ids:
-            for element_id in self.mesh.elements_from_volumes[volume_id]:
+            for element_id in self.mesh.elements_from_volume[volume_id]:
                 self.lrf_eq_data[element_id] = properties
 
     def process_lrf_properties(self, frequencies):
@@ -245,7 +245,7 @@ class Model:
         for key, _ in self.properties.volume_properties.items():
             prop, volume_id = key
             if prop == "lrf_eq_model" and volume_id == _volume_id[0]:
-                elements = self.mesh.elements_from_volumes[volume_id]
+                elements = self.mesh.elements_from_volume[volume_id]
                 rho_eff = self.lrf_properties[elements[0]]["rho_ef"]
                 return True, rho_eff
         return False, None

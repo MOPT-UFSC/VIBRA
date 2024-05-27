@@ -17,6 +17,7 @@ from vibra.interface.model_inputs.acoustic.set_acoustic_pressure import Acoustic
 from vibra.interface.model_inputs.acoustic.set_mass_flow_rate_inputs import MassFlowRateInput
 from vibra.interface.model_inputs.acoustic.set_surface_velocity_inputs import SurfaceVelocityInput
 from vibra.interface.model_inputs.acoustic.set_specific_impedance_inputs import SpecificImpedanceInput
+from vibra.interface.model_inputs.acoustic.set_anechoic_termination_inputs import SetAnechoicTerminationInputs
 from vibra.interface.model_inputs.acoustic.set_volume_velocity_inputs import VolumeVelocityInput
 from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import DissipationModelInput
 from vibra.interface.model_inputs.acoustic.set_lrf_eq_model_inputs import LowReducedFrequencyEquivalentModelInput
@@ -208,10 +209,13 @@ class MenuItems(QTreeWidget):
         self.item_child_set_mass_flow_rate = QTreeWidgetItem(["Set Mass Flow Rate"])
         self.item_child_set_volume_velocity = QTreeWidgetItem(["Set Volume Velocity"])
         self.item_child_set_surface_velocity = QTreeWidgetItem(["Set Surface Velocity"])
+        self.item_child_set_anechoic_termination = QTreeWidgetItem(["Set Anechoic Termination"])
         self.item_child_set_specific_impedance = QTreeWidgetItem(["Set Specific Impedance"])
-        self.item_child_set_radiation_impedance = QTreeWidgetItem(["Set Radiation Impedance"])
-        self.item_child_add_compressor_excitation = QTreeWidgetItem(["Add Compressor Excitation"])
         self.item_child_set_lrf_eq_model = QTreeWidgetItem(["Set LRF Equivalent Model"])
+        self.item_child_add_compressor_excitation = QTreeWidgetItem(["Add Compressor Excitation"])
+
+        self.item_child_set_anechoic_termination.setToolTip(0, "equivalent to the long pipe boundary condition")
+
         #
         self.list_top_items.append(self.item_top_acoustic_model_setup)
         self.list_child_items.append(self.item_child_set_acoustic_pressure)
@@ -220,7 +224,7 @@ class MenuItems(QTreeWidget):
         self.list_child_items.append(self.item_child_set_volume_velocity)
         self.list_child_items.append(self.item_child_set_surface_velocity)
         self.list_child_items.append(self.item_child_set_specific_impedance)
-        self.list_child_items.append(self.item_child_set_radiation_impedance)
+        self.list_child_items.append(self.item_child_set_anechoic_termination)
         self.list_child_items.append(self.item_child_add_compressor_excitation)
         self.list_child_items.append(self.item_child_set_lrf_eq_model)
         #
@@ -285,10 +289,10 @@ class MenuItems(QTreeWidget):
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_mass_flow_rate)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_volume_velocity)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_surface_velocity)
+        self.item_top_acoustic_model_setup.addChild(self.item_child_set_anechoic_termination)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_specific_impedance)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_dissipation_model)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_lrf_eq_model)
-        # self.item_top_acoustic_model_setup.addChild(self.item_child_set_radiation_impedance)
         # self.item_top_acoustic_model_setup.addChild(self.item_child_add_compressor_excitation)
 
         self.addTopLevelItem(self.item_top_analysis)
@@ -432,9 +436,9 @@ class MenuItems(QTreeWidget):
             if not self.item_child_set_specific_impedance.isDisabled():
                 self.obj = SpecificImpedanceInput()
 
-        elif item == self.item_child_set_radiation_impedance:
-            if not self.item_child_set_radiation_impedance.isDisabled():
-                pass
+        elif item == self.item_child_set_anechoic_termination:
+            if not self.item_child_set_anechoic_termination.isDisabled():
+                self.obj = SetAnechoicTerminationInputs()
 
         elif item == self.item_child_add_compressor_excitation:
             if not self.item_child_add_compressor_excitation.isDisabled():
@@ -593,7 +597,7 @@ class MenuItems(QTreeWidget):
         self.item_child_set_volume_velocity.setDisabled(bool_key)
         self.item_child_set_surface_velocity.setDisabled(bool_key)
         self.item_child_set_specific_impedance.setDisabled(bool_key)
-        self.item_child_set_radiation_impedance.setDisabled(bool_key)
+        self.item_child_set_anechoic_termination.setDisabled(bool_key)
         self.item_child_add_compressor_excitation.setDisabled(bool_key)
 
     def modify_analysis_items_acces(self, bool_key):

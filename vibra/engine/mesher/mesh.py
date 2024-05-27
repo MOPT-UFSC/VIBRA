@@ -35,8 +35,8 @@ class Mesh:
         self.nodes_from_volumes = dict()
         self.gmsh_elements_from_surfaces = dict()
         self.gmsh_elements_from_volumes = dict()
-        self.elements_from_volumes = dict()
-        self.elements_from_surfaces = dict()
+        self.elements_from_volume = dict()
+        self.elements_from_surface = dict()
         self.volume_from_element = dict()
         self.surface_from_element = dict()
         self.entity_ranges = dict()
@@ -253,8 +253,8 @@ class Mesh:
         self.solids_connectivity[:, 3] = aux*e_nodes
         self.solids_connectivity[:, 4:] = connect
         #
-        self.elements_from_volumes.clear()
-        self.elements_from_volumes[1] = np.arange(rows, dtype=int)
+        self.elements_from_volume.clear()
+        self.elements_from_volume[1] = np.arange(rows, dtype=int)
 
     def export_nodal_coordinates(self, filename):
         fmt = ["%i", "%.16f", "%.16f", "%.16f"]
@@ -375,6 +375,11 @@ class Mesh:
         self.nodal_coordinates[indexes - 1, 1:] = coords.reshape(-1, 3) / 1000
         self.nodal_coordinates[indexes - 1, :1] = indexes.reshape(-1, 1) - 1
 
+        mask = np.linalg.norm(self.nodal_coordinates[:,1:] - np.array([0, 0, 0]), axis=1) < 0.005
+        # mask = np.abs(self.nodal_coordinates[:,1]) < 0.005
+        ids = self.nodal_coordinates[:,0][mask]
+        # print(len(ids), ids)
+
         connectivity_dim1 = dict()
         connectivity_dim2 = dict()
         connectivity_dim3 = dict()
@@ -449,27 +454,31 @@ class Mesh:
 
     def _maps_surfaces_by_elements(self):
         self.surface_from_element.clear()
-        self.elements_from_surfaces.clear()
-        for tag, gmsh_indexes in self.elements_from_surfaces.items():
+        self.elements_from_surface.clear()
+        for tag, gmsh_indexes in self.gmsh_elements_from_surfaces.items():
+
             n = len(gmsh_indexes)
             internal_indexes = np.zeros(n, dtype=int)
+            self.elements_from_surface[tag] = internal_indexes
+
             for i, gmsh_index in enumerate(gmsh_indexes):
                 index = self.map_face_elements[gmsh_index]
                 internal_indexes[i] = index
                 self.surface_from_element[index] = tag
-            self.elements_from_surfaces[tag] = internal_indexes
 
     def _maps_volumes_by_elements(self):
         self.volume_from_element.clear()
-        self.elements_from_volumes.clear()
+        self.elements_from_volume.clear()
         for tag, gmsh_indexes in self.gmsh_elements_from_volumes.items():
+
             n = len(gmsh_indexes)
             internal_indexes = np.zeros(n, dtype=int)
+            self.elements_from_volume[tag] = internal_indexes
+
             for i, gmsh_index in enumerate(gmsh_indexes):
                 index = self.map_solid_elements[gmsh_index]
                 internal_indexes[i] = index
                 self.volume_from_element[index] = tag
-            self.elements_from_volumes[tag] = internal_indexes
 
     def _process_face_elements_connected_to_nodes(self):
         self.nodes_from_face_element.clear()
@@ -650,6 +659,7 @@ class Mesh:
         start, end, ind = 0, 0, 0
         for (entity_dim, entity_tag), e_data in input_dict.items():
             entity_start = start
+            # indexes_from_entity = []
             for etype_tag, data in e_data.items():
 
                 end += n_list[ind]
@@ -666,12 +676,15 @@ class Mesh:
                 output_data[start:end, 3] = aux * cols
                 output_data[start:end, 4 : 4 + cols] = nodes
                 gmsh_elements[start:end] = indexes
+                # indexes_from_entity.extend(indexes)
 
                 start = end
                 ind += 1
 
             entity_end = end
+
             self.entity_ranges[entity_dim, entity_tag] = (entity_start, entity_end)
+            # self.entity_ranges[entity_dim, entity_tag] = indexes_from_entity
 
         internal_indexes = np.arange(n, dtype=int)
         # output_data[:, 0] = np.arange(1, n + 1, 1)

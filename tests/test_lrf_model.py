@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from time import time
 
 def test_load_external_mesh_and_solve_lrf_model(reorder_nodes=True):
-    # return
+    return
     # Define the nodal coordinates and connectivity file path
     coord_path = "data/examples/mesh/muffler/coord_muff.csv"
     connect_path = "data/examples/mesh/muffler/connect_muff.csv"

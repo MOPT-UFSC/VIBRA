@@ -17,12 +17,14 @@ from vibra.engine.elements.acoustic_face4_element import ACT_FACE_4
 from vibra.engine.mesher.element_type import *
 from vibra.utils.progress_status import ProgressStatus
 
+# from vibra.utils.interface_functions import get_main_window
 
 
 class AcousticAssembler:
     def __init__(self, model):
         self.model = model
         self.properties = model.properties
+        # self.main_window = get_main_window()
         self.reset()
 
     def reset(self):
@@ -152,20 +154,18 @@ class AcousticAssembler:
         connect = None
         output_data = dict()
         aux_connect = dict()
+        all_indexes = list()
 
         for key, data in self.properties.surface_properties.items():
             prop, surface_id = key
             if prop == property_label:
                 if not data["nodal_attribution"]:
-                    
+ 
                     if surface_id in self.model.surfaces_areas.keys():
                         area = self.model.surfaces_areas[surface_id]
                     else:
                         area = None
 
-                    real_values = np.array(data["real_values"], dtype=float)
-                    imag_values = np.array(data["imag_values"], dtype=float)
-                    complex_values = real_values + 1j*imag_values
                     info = self.model.mesh.connectivity_from_surfaces[surface_id]
 
                     lrf_active, rho_eff = self.model.check_if_lrf_eq_model_is_active(surface_id)
@@ -175,12 +175,45 @@ class AcousticAssembler:
                         fluid = self.model.properties.get_fluid(surface=surface_id)
                         rho = fluid.fluid_density
 
-                    for i, el in enumerate(info["element_indexes"]):
+                    if "anechoic_termination" in data.keys():
+                        volume_id = data["volume_id"]
+                        fluid = self.model.properties.get_fluid(volume=volume_id)
+                        rho = fluid.fluid_density
+                        C0 = fluid.speed_of_sound
+                        Z0 = rho*C0
+                        real_values = np.array([Z0], dtype=float)
+                        imag_values = np.array([0], dtype=float)
+                    else:
+                        real_values = np.array(data["real_values"], dtype=float)
+                        imag_values = np.array(data["imag_values"], dtype=float)
+
+                    complex_values = real_values + 1j*imag_values
+
+                    # print(lrf_active)
+                    # print(key, complex_values, rho, area)
+                    # print(info["element_indexes"].shape, info["connectivity"].shape)
+                    # print(info["connectivity"])
+
+                    surface_indexes = list(self.model.mesh.elements_from_surface[surface_id])
+                    all_indexes.extend(surface_indexes)
+
+                    # for i, el in enumerate(info["element_indexes"]):
+                    for i, el in enumerate(surface_indexes):
                         aux_connect[el] = info["connectivity"][i]
                         output_data[el] = [el, complex_values, rho, area]
-                        
-        if len(aux_connect) > 0:
+                    # print(len(aux_connect))
+
+        if aux_connect:
+            # element_indexes = np.array(all_indexes)
             connect = np.array(list(aux_connect.values()), dtype=int)
+
+            # print(connect.shape)
+            # if property_label == "specific_impedance":
+            #     filename = f"connect_data_{property_label}.dat"
+            #     np.savetxt(filename, np.insert(connect, 0, element_indexes, axis=1), fmt="%i")
+            #     self.main_window.viewer_tabs.show_mesh()
+            #     mesh_widget = self.main_window.viewer_tabs.mesh_widget
+            #     mesh_widget.select_multiple_faces(all_indexes)
 
         return connect, output_data
 
@@ -279,7 +312,7 @@ class AcousticAssembler:
                     self.data_Z[j][i, :, :] = normalized_matrix_Z * (rho[j] / complex_values[j])
 
             _damping_matrix_full = [csr_matrix((self.data_Z[j].flatten(), (ind_rows_Z, ind_cols_Z)), shape=(total_dofs, total_dofs)) for j in range(self.number_frequencies)]
-            
+
         self.damping_matrix = [matrix[self.unprescribed_indexes, :][:, self.unprescribed_indexes] for matrix in _damping_matrix_full]
         self.damping_matrix_r = [matrix[:, self.prescribed_indexes] for matrix in _damping_matrix_full]
 
@@ -352,6 +385,8 @@ class AcousticAssembler:
                         fluid = self.model.properties.get_fluid(surface=_id)
                         rho = fluid.fluid_density
                     area = self.model.surfaces_areas[_id]
+
+                    # print(_id, rho, area)
                     for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
                         if data["averaged"]:
                             acoustic_excitation[index] += (rho * area * complex_values) / N

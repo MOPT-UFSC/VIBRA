@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from time import time
 
 def test_load_external_mesh_and_solve(reorder_nodes=False):
-    return
+    # return
     # Define the nodal coordinates and connectivity file path
     coord_path = "data/examples/mesh/muffler/coord_muff.csv"
     connect_path = "data/examples/mesh/muffler/connect_muff.csv"
@@ -20,7 +20,10 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
     mesh.import_external_nodal_coordinates(coord_path, index_zero=True)
     mesh.import_external_connectivity(connect_path, index_zero=True, etype_tag=4, e_nodes=4)
     mesh.element_type = TETRAHEDRON_4
+
     mesh.connectivity_from_surfaces = get_faces_connectivities()
+    for tag, surf_data in mesh.connectivity_from_surfaces.items():
+        mesh.elements_from_surface[tag] = surf_data["element_indexes"]
     
     if reorder_nodes:
         mesh._process_nodes_reordering()
@@ -49,7 +52,7 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
                 "imag_values" : [0],
                 "nodal_attribution" : False,
                 "averaged" : False }
-    
+
     # Impedance data
     Zo = fluid.impedance
     data_Z = {  "real_values" : [Zo],
@@ -58,9 +61,10 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
                 "averaged" : False  }
 
     model.set_surface_velocity(data_Vn, 1)
+    # model.set_specific_impedance(data_Z, 1)
     model.set_specific_impedance(data_Z, 2)
     assembler = AcousticAssembler(model)
-    
+
     # Define the analysis frequency setup
     df = 1
     f_min = 1
@@ -193,33 +197,33 @@ def get_faces_connectivities():
     #                          [3,5,3,2],
     #                          [4,4,3,5]],dtype=int)
     
-    connect_face2 = np.array([[  1,  375,  376, 3600 ],
-                              [  2,  376,  377, 3600 ],
-                              [  3,  377, 3598, 3600 ],
-                              [  4,  377,  378, 3598 ],
-                              [  5,  378,  366, 3598 ],
-                              [  6,  366, 3597, 3598 ],
-                              [  7,  366,  367, 3597 ],
-                              [  8,  367,  368, 3597 ],
-                              [  9,  368, 3599, 3597 ],
-                              [ 10,  368,  369, 3599 ],
-                              [ 11,  369,  370, 3599 ],
-                              [ 12,  370, 3601, 3599 ],
-                              [ 13,  370,  371, 3601 ],
-                              [ 14,  371,  372, 3601 ],
-                              [ 15,  372, 3603, 3601 ],
-                              [ 16,  372,  373, 3603 ],
-                              [ 17,  373, 3602, 3603 ],
-                              [ 18,  373,  374, 3602 ],
-                              [ 19,  374,  375, 3602 ],
-                              [ 20,  375, 3600, 3602 ],
-                              [ 21, 3602, 3600, 3596 ],
-                              [ 22, 3600, 3598, 3596 ],
-                              [ 23, 3598, 3597, 3596 ],
-                              [ 24, 3597, 3599, 3596 ],
-                              [ 25, 3599, 3601, 3596 ],
-                              [ 26, 3601, 3603, 3596 ],
-                              [ 27, 3603, 3602, 3596 ]], dtype=int) - 1
+    connect_face2 = np.array([[ 101,  375,  376, 3600 ],
+                              [ 102,  376,  377, 3600 ],
+                              [ 103,  377, 3598, 3600 ],
+                              [ 104,  377,  378, 3598 ],
+                              [ 105,  378,  366, 3598 ],
+                              [ 106,  366, 3597, 3598 ],
+                              [ 107,  366,  367, 3597 ],
+                              [ 108,  367,  368, 3597 ],
+                              [ 109,  368, 3599, 3597 ],
+                              [ 110,  368,  369, 3599 ],
+                              [ 111,  369,  370, 3599 ],
+                              [ 112,  370, 3601, 3599 ],
+                              [ 113,  370,  371, 3601 ],
+                              [ 114,  371,  372, 3601 ],
+                              [ 115,  372, 3603, 3601 ],
+                              [ 116,  372,  373, 3603 ],
+                              [ 117,  373, 3602, 3603 ],
+                              [ 118,  373,  374, 3602 ],
+                              [ 119,  374,  375, 3602 ],
+                              [ 120,  375, 3600, 3602 ],
+                              [ 121, 3602, 3600, 3596 ],
+                              [ 122, 3600, 3598, 3596 ],
+                              [ 123, 3598, 3597, 3596 ],
+                              [ 124, 3597, 3599, 3596 ],
+                              [ 125, 3599, 3601, 3596 ],
+                              [ 126, 3601, 3603, 3596 ],
+                              [ 127, 3603, 3602, 3596 ]], dtype=int) - 1
 
     nel_face2 = len(connect_face2)
 

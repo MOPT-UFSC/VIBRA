@@ -92,6 +92,7 @@ class FacesActor(vtk.vtkActor):
         self.GetMapper().ScalarVisibilityOn()
 
     def paint_cells(self, color: tuple[3], faces: tuple[int]):
+
         if self.data is None:
             return
 
