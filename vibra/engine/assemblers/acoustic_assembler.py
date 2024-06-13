@@ -230,6 +230,7 @@ class AcousticAssembler:
         self.data_K = np.zeros((nel, dofs, dofs), dtype=complex)
         self.data_M = np.zeros((nel, dofs, dofs), dtype=complex)
         self.data_Cvisc = np.zeros((nel, dofs, dofs), dtype=complex)
+        self.data_Qvisc = np.zeros((nel, dofs, dofs), dtype=complex)
 
         if self.model.lrf_properties:
             nf = self.number_frequencies
@@ -253,13 +254,19 @@ class AcousticAssembler:
             # list_nodes = []
             # nn, _, _ = self.model.mesh.get_mesh_info()
             # base_nodes = list(np.arange(nn, dtype=int))
+
             for el in range(nel):
+
+                rho_0, c_0, mu_0 = self.model.get_fluid_properties(proportional_damping=True, element=el)
+                self.den[el, :] = aux_ones/(c_0**2)
+
                 Ke, Me = element_3D.elementary_matrices(el)
                 self.data_K[el, :, :] = Ke
                 self.data_M[el, :, :] = Me
-                rho_0, c_0, mu_0 = self.model.get_fluid_properties(proportional_damping=True, element=el)
-                self.den[el, :] = aux_ones/(c_0**2)
+
                 self.data_Cvisc[el, :, :] = ((4*mu_0)/(3*rho_0*c_0**2))*Ke
+                self.data_Qvisc[el, :, :] = ((4*mu_0)/(3*rho_0))*Ke
+
                 # for _id in self.model.mesh.solids_connectivity[el, 4:]:
                 #     if _id not in list_nodes:
                 #         list_nodes.append(_id)
@@ -319,6 +326,10 @@ class AcousticAssembler:
         _visc_damping_matrix_full = csr_matrix((self.data_Cvisc.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
         self.visc_damping_matrix = _visc_damping_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         self.visc_damping_matrix_r = _visc_damping_matrix_full[:, self.prescribed_indexes]
+        
+        _Qvisc_damping_matrix_full = csr_matrix((self.data_Qvisc.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
+        self.Qvisc_damping_matrix = _Qvisc_damping_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+        self.Qvisc_damping_matrix_r = _Qvisc_damping_matrix_full[:, self.prescribed_indexes]
 
     def get_acoustic_excitations_by_nodal_attribution(self):
         """ This method processes the acoustic model excitations and

@@ -86,6 +86,7 @@ class AcousticHarmonicSolver:
         C_imp = self.assembler.damping_matrix
         C_visc = self.assembler.visc_damping_matrix
         Q = self.assembler.mass_flow_vectors
+        Q_visc = self.assembler.Qvisc_damping_matrix*0
         # np.savetxt("mass_flow_vectors.dat", Q)
         #
         # self.plot_graph(M)
@@ -116,9 +117,9 @@ class AcousticHarmonicSolver:
                 self.assembler.assemble_global_mass_matrix(index=i)
                 F_eq = self.get_prescribed_pressure_model_excitation(freq_dependent=True, index=i)
                 M = self.assembler.mass_matrix
-                F = - 1j * omega * Q[:, i] - F_eq
+                F = Q_visc @ Q[:, i] - 1j * omega * Q[:, i] - F_eq
             else:
-                F = - 1j * omega * Q[:, i] - F_eq[:, i]
+                F = Q_visc @ Q[:, i] - 1j * omega * Q[:, i] - F_eq[:, i]
 
             C = C_imp[i] + C_visc
             A = K - (omega**2) * M + 1j * omega * C
