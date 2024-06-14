@@ -140,6 +140,10 @@ class SpecificImpedanceInput(QDialog):
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "specific_impedance":
+
+                if "anechoic_termination" in data.keys():
+                    continue
+
                 real_values = np.array(data["real_values"])
                 imag_values = np.array(data["imag_values"])
                 complex_values = real_values + 1j * imag_values
@@ -147,6 +151,7 @@ class SpecificImpedanceInput(QDialog):
                 new.setTextAlignment(0, Qt.AlignCenter)
                 new.setTextAlignment(1, Qt.AlignCenter)
                 self.treeWidget_specific_impedance.addTopLevelItem(new)
+
         self.update_tabs_visibility()
 
     def geometry_selection_callback(self, points, lines, faces):

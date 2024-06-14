@@ -8,12 +8,13 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import *
 
+from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.utils.interface_functions import get_main_window
 
-window_title_1 = "ERROR"
-window_title_2 = "WARNING"
+window_title_1 = "Error"
+window_title_2 = "Warning"
 
 
 class DissipationModelInput(QDialog):
@@ -39,6 +40,9 @@ class DissipationModelInput(QDialog):
         self._reset_variables()
         self._define_qt_variables()
         self._create_connections()
+
+        ConfigWidgetAppearance(self, tool_tip=True)
+
         self.exec()
 
     def _reset_variables(self):
