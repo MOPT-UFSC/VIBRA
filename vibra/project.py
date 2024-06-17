@@ -116,6 +116,9 @@ class Project:
     def set_dissipation_model(self, data):
         self.model.set_dissipation_model_data(data)
 
+    def set_porous_material_model(self, data, volume=None):
+        self.model.set_porous_material_model_data(data, volume=volume)
+
     def set_lrf_eq_model_data(self, data, group=None, volume=None):
         self.model.set_lrf_eq_model_data(data, group=group, volume=volume)
 
