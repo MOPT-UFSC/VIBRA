@@ -30,7 +30,7 @@ from vibra.interface.viewer_3d.render_widgets.structural_modal_analysis_render_w
     StructuralModalAnalysisRenderWidget,
 )
 from vibra.interface.welcome_widget import WelcomeWidget
-from vibra.utils.interface_functions import get_main_window
+#from vibra.utils.interface_functions import get_main_window
 
 
 class ViewerTabs(QTabWidget):
@@ -40,7 +40,7 @@ class ViewerTabs(QTabWidget):
         self.tabCloseRequested.connect(self.removeTab)
         self.configure_window()
 
-        self.main_window = get_main_window()
+        self.main_window = parent
         self.user_config = user_config
 
         self.geometry_widget = GeometryRenderWidget()

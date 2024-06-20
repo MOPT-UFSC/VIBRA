@@ -620,7 +620,7 @@ class MenuItems(QTreeWidget):
         self.item_child_plotStructuralModeShapes.setDisabled(bool_key)
 
     def modify_items_access_after_geometry_importing(self):
-        self.main_window.renderer_toolbar.setDisabled(False)
+        self.main_window.tool_bar.setDisabled(False)
         self.modify_general_settings_items_access(False)
         self.modify_acoustic_model_setup_items_acces(False)
         self.modify_structural_model_setup_items_acces(False)

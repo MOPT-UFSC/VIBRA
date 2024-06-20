@@ -6,151 +6,101 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1045</width>
-    <height>598</height>
+    <width>1055</width>
+    <height>586</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QSplitter" name="splitter">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>1025</width>
-      <height>568</height>
-     </rect>
-    </property>
-    <property name="lineWidth">
-     <number>1</number>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
-    </property>
-    <property name="opaqueResize">
-     <bool>true</bool>
-    </property>
-    <property name="handleWidth">
-     <number>3</number>
-    </property>
-    <widget class="QStackedWidget" name="setup_widgets_stack">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="contextMenuPolicy">
-      <enum>Qt::DefaultContextMenu</enum>
-     </property>
-     <property name="styleSheet">
-      <string notr="true"/>
-     </property>
-     <property name="currentIndex">
-      <number>0</number>
-     </property>
-     <widget class="QWidget" name="page">
-      <property name="autoFillBackground">
-       <bool>false</bool>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QSplitter" name="splitter">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
       </property>
-      <property name="styleSheet">
-       <string notr="true">background: red;</string>
-      </property>
+      <widget class="QStackedWidget" name="stacked_setup">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <widget class="QWidget" name="page">
+        <property name="styleSheet">
+         <string notr="true">background-color: rgb(255, 0, 0);</string>
+        </property>
+       </widget>
+       <widget class="QWidget" name="page_2">
+        <property name="styleSheet">
+         <string notr="true">background-color: rgb(0, 0, 255);</string>
+        </property>
+       </widget>
+      </widget>
      </widget>
-     <widget class="QWidget" name="page_2">
-      <property name="styleSheet">
-       <string notr="true">background: blue;</string>
-      </property>
-     </widget>
-    </widget>
-    <widget class="QStackedWidget" name="render_widgets_stack">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="currentIndex">
-      <number>0</number>
-     </property>
-     <widget class="QWidget" name="page_3">
-      <property name="styleSheet">
-       <string notr="true">background: red;</string>
-      </property>
-     </widget>
-     <widget class="QWidget" name="page_4">
-      <property name="styleSheet">
-       <string notr="true">background: black;</string>
-      </property>
-     </widget>
-    </widget>
-   </widget>
+    </item>
+   </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1045</width>
+     <width>1055</width>
      <height>26</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuProject">
+   <widget class="QMenu" name="menu_project">
     <property name="title">
      <string>Project</string>
     </property>
-    <addaction name="actionNew_project"/>
-    <addaction name="actionOpen_project"/>
-    <addaction name="actionRecent"/>
-    <addaction name="actionImport_geometry"/>
+    <addaction name="action_new_project"/>
+    <addaction name="action_open_project"/>
+    <addaction name="action_recent"/>
+    <addaction name="action_import_geometry"/>
     <addaction name="separator"/>
-    <addaction name="actionSave"/>
-    <addaction name="actionSave_as"/>
-    <addaction name="actionExport_mesh"/>
+    <addaction name="action_save"/>
+    <addaction name="action_save_as"/>
+    <addaction name="action_export_mesh"/>
     <addaction name="separator"/>
-    <addaction name="actionCapture_Image"/>
-    <addaction name="actionTheme"/>
-    <addaction name="actionExit"/>
+    <addaction name="action_capture_image"/>
+    <addaction name="action_exit"/>
    </widget>
-   <widget class="QMenu" name="menuSettings">
+   <widget class="QMenu" name="menu_settings">
     <property name="title">
      <string>Visibility settings</string>
     </property>
-    <addaction name="actionShow_menu_items"/>
-    <addaction name="actionTheme_2"/>
+    <addaction name="action_show_menu_items"/>
+    <addaction name="action_theme"/>
    </widget>
-   <widget class="QMenu" name="menuModel_Info">
+   <widget class="QMenu" name="menu_model_setup">
     <property name="title">
      <string>Model setup</string>
     </property>
-    <addaction name="actionSet_fluid"/>
-    <addaction name="actionSet_material"/>
-    <addaction name="actionMesher_setup"/>
+    <addaction name="action_set_fluid"/>
+    <addaction name="action_set_material"/>
+    <addaction name="action_mesher_setup"/>
    </widget>
-   <widget class="QMenu" name="menuTools">
+   <widget class="QMenu" name="menu_view_mode">
     <property name="title">
      <string>View mode</string>
     </property>
-    <addaction name="actionFace_View"/>
-    <addaction name="actionLine_View"/>
-    <addaction name="actionNode_View"/>
+    <addaction name="action_face_view_2"/>
+    <addaction name="action_line_view_2"/>
+    <addaction name="action_node_view_2"/>
    </widget>
-   <widget class="QMenu" name="menuHelp">
+   <widget class="QMenu" name="menu_help">
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="actionAbout_Vibra"/>
+    <addaction name="action_about_vibra"/>
    </widget>
-   <addaction name="menuProject"/>
-   <addaction name="menuSettings"/>
-   <addaction name="menuModel_Info"/>
-   <addaction name="menuTools"/>
-   <addaction name="menuHelp"/>
+   <addaction name="menu_project"/>
+   <addaction name="menu_settings"/>
+   <addaction name="menu_model_setup"/>
+   <addaction name="menu_view_mode"/>
+   <addaction name="menu_help"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
-  <widget class="QToolBar" name="toolBar">
+  <widget class="QStatusBar" name="status_bar"/>
+  <widget class="QToolBar" name="tool_bar">
    <property name="windowTitle">
     <string>toolBar</string>
    </property>
@@ -160,25 +110,27 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionNew_project"/>
-   <addaction name="actionOpen_project"/>
-   <addaction name="actionReset_Project"/>
+   <addaction name="action_new_project"/>
+   <addaction name="action_open_project"/>
+   <addaction name="action_reset_project"/>
    <addaction name="separator"/>
-   <addaction name="actionTop_View"/>
-   <addaction name="actionBottom_View"/>
-   <addaction name="actionRight_View"/>
-   <addaction name="actionLeft_View"/>
-   <addaction name="actionFront_View"/>
-   <addaction name="actionBack_View"/>
-   <addaction name="actionIsometric_View"/>
+   <addaction name="action_top_view"/>
+   <addaction name="action_bottom_view"/>
+   <addaction name="action_right_view"/>
+   <addaction name="action_left_view"/>
+   <addaction name="action_front_view"/>
+   <addaction name="action_back_view"/>
+   <addaction name="action_isometric_view"/>
+   <addaction name="action_zoom_to_fit"/>
    <addaction name="separator"/>
-   <addaction name="actionNode_View_2"/>
-   <addaction name="actionLine_View_2"/>
-   <addaction name="actionFace_View_2"/>
+   <addaction name="action_node_view"/>
+   <addaction name="action_line_view"/>
+   <addaction name="action_face_view"/>
+   <addaction name="action_clip_plane"/>
+   <addaction name="action_symbols"/>
    <addaction name="separator"/>
-   <addaction name="actionClip_Plane"/>
   </widget>
-  <action name="actionNew_project">
+  <action name="action_new_project">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/new_file.png</normaloff>../../../data/icons/new_file.png</iconset>
@@ -187,7 +139,7 @@
     <string>New project</string>
    </property>
   </action>
-  <action name="actionOpen_project">
+  <action name="action_open_project">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/import.png</normaloff>../../../data/icons/import.png</iconset>
@@ -196,7 +148,7 @@
     <string>Open Project</string>
    </property>
   </action>
-  <action name="actionRecent">
+  <action name="action_recent">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/recent.png</normaloff>../../../data/icons/recent.png</iconset>
@@ -205,7 +157,7 @@
     <string>Recent</string>
    </property>
   </action>
-  <action name="actionImport_geometry">
+  <action name="action_import_geometry">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/image-plus.png</normaloff>../../../data/icons/image-plus.png</iconset>
@@ -214,7 +166,7 @@
     <string>Import geometry</string>
    </property>
   </action>
-  <action name="actionSave">
+  <action name="action_save">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/save.png</normaloff>../../../data/icons/save.png</iconset>
@@ -223,7 +175,7 @@
     <string>Save</string>
    </property>
   </action>
-  <action name="actionSave_as">
+  <action name="action_save_as">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/save_as.png</normaloff>../../../data/icons/save_as.png</iconset>
@@ -232,7 +184,7 @@
     <string>Save as</string>
    </property>
   </action>
-  <action name="actionExport_mesh">
+  <action name="action_export_mesh">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/save.png</normaloff>../../../data/icons/save.png</iconset>
@@ -241,7 +193,7 @@
     <string>Export mesh</string>
    </property>
   </action>
-  <action name="actionCapture_Image">
+  <action name="action_capture_image">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/cube-scan.png</normaloff>../../../data/icons/cube-scan.png</iconset>
@@ -250,16 +202,7 @@
     <string>Capture Image</string>
    </property>
   </action>
-  <action name="actionTheme">
-   <property name="icon">
-    <iconset>
-     <normaloff>../../../data/icons/sun_icon.png</normaloff>../../../data/icons/sun_icon.png</iconset>
-   </property>
-   <property name="text">
-    <string>Theme</string>
-   </property>
-  </action>
-  <action name="actionExit">
+  <action name="action_exit">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/exit.png</normaloff>../../../data/icons/exit.png</iconset>
@@ -268,16 +211,16 @@
     <string>Exit</string>
    </property>
   </action>
-  <action name="actionShow_menu_items">
+  <action name="action_show_menu_items">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/new_file.png</normaloff>../../../data/icons/new_file.png</iconset>
    </property>
    <property name="text">
-    <string>Show menu items</string>
+    <string>Hide menu items</string>
    </property>
   </action>
-  <action name="actionTheme_2">
+  <action name="action_theme">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/sun_icon.png</normaloff>../../../data/icons/sun_icon.png</iconset>
@@ -286,7 +229,7 @@
     <string>Theme</string>
    </property>
   </action>
-  <action name="actionSet_fluid">
+  <action name="action_set_fluid">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/new_file.png</normaloff>../../../data/icons/new_file.png</iconset>
@@ -295,7 +238,7 @@
     <string>Set fluid</string>
    </property>
   </action>
-  <action name="actionSet_material">
+  <action name="action_set_material">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/new_file.png</normaloff>../../../data/icons/new_file.png</iconset>
@@ -304,7 +247,7 @@
     <string>Set material</string>
    </property>
   </action>
-  <action name="actionMesher_setup">
+  <action name="action_mesher_setup">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/new_file.png</normaloff>../../../data/icons/new_file.png</iconset>
@@ -313,7 +256,7 @@
     <string>Mesher setup</string>
    </property>
   </action>
-  <action name="actionFace_View">
+  <action name="action_face_view_2">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/faces.png</normaloff>../../../data/icons/faces.png</iconset>
@@ -322,7 +265,7 @@
     <string>Face View</string>
    </property>
   </action>
-  <action name="actionLine_View">
+  <action name="action_line_view_2">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/lines.png</normaloff>../../../data/icons/lines.png</iconset>
@@ -331,7 +274,7 @@
     <string>Line View</string>
    </property>
   </action>
-  <action name="actionNode_View">
+  <action name="action_node_view_2">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/nodes.png</normaloff>../../../data/icons/nodes.png</iconset>
@@ -340,7 +283,7 @@
     <string>Node View</string>
    </property>
   </action>
-  <action name="actionAbout_Vibra">
+  <action name="action_about_vibra">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/help.png</normaloff>../../../data/icons/help.png</iconset>
@@ -349,7 +292,7 @@
     <string>About Vibra</string>
    </property>
   </action>
-  <action name="actionReset_Project">
+  <action name="action_reset_project">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/reset-image (2).png</normaloff>../../../data/icons/reset-image (2).png</iconset>
@@ -358,7 +301,7 @@
     <string>Reset Project</string>
    </property>
   </action>
-  <action name="actionTop_View">
+  <action name="action_top_view">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/top.png</normaloff>../../../data/icons/top.png</iconset>
@@ -367,7 +310,7 @@
     <string>Top View</string>
    </property>
   </action>
-  <action name="actionBottom_View">
+  <action name="action_bottom_view">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/bottom.png</normaloff>../../../data/icons/bottom.png</iconset>
@@ -376,7 +319,7 @@
     <string>Bottom View</string>
    </property>
   </action>
-  <action name="actionRight_View">
+  <action name="action_right_view">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/right.png</normaloff>../../../data/icons/right.png</iconset>
@@ -385,7 +328,7 @@
     <string>Right View</string>
    </property>
   </action>
-  <action name="actionLeft_View">
+  <action name="action_left_view">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/left.png</normaloff>../../../data/icons/left.png</iconset>
@@ -394,7 +337,7 @@
     <string>Left View</string>
    </property>
   </action>
-  <action name="actionFront_View">
+  <action name="action_front_view">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/front.png</normaloff>../../../data/icons/front.png</iconset>
@@ -403,7 +346,7 @@
     <string>Front View</string>
    </property>
   </action>
-  <action name="actionBack_View">
+  <action name="action_back_view">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/back.png</normaloff>../../../data/icons/back.png</iconset>
@@ -412,7 +355,7 @@
     <string>Back View</string>
    </property>
   </action>
-  <action name="actionIsometric_View">
+  <action name="action_isometric_view">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/orthogonal.png</normaloff>../../../data/icons/orthogonal.png</iconset>
@@ -421,7 +364,7 @@
     <string>Isometric View</string>
    </property>
   </action>
-  <action name="actionNode_View_2">
+  <action name="action_node_view">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/nodes.png</normaloff>../../../data/icons/nodes.png</iconset>
@@ -430,7 +373,7 @@
     <string>Node View</string>
    </property>
   </action>
-  <action name="actionLine_View_2">
+  <action name="action_line_view">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/lines.png</normaloff>../../../data/icons/lines.png</iconset>
@@ -439,7 +382,7 @@
     <string>Line View</string>
    </property>
   </action>
-  <action name="actionFace_View_2">
+  <action name="action_face_view">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/faces.png</normaloff>../../../data/icons/faces.png</iconset>
@@ -448,13 +391,31 @@
     <string>Face View</string>
    </property>
   </action>
-  <action name="actionClip_Plane">
+  <action name="action_clip_plane">
    <property name="icon">
     <iconset>
      <normaloff>../../../data/icons/tube_cut.png</normaloff>../../../data/icons/tube_cut.png</iconset>
    </property>
    <property name="text">
     <string>Clip Plane</string>
+   </property>
+  </action>
+  <action name="action_symbols">
+   <property name="icon">
+    <iconset>
+     <normaloff>../../../data/icons/show_symbols.png</normaloff>../../../data/icons/show_symbols.png</iconset>
+   </property>
+   <property name="text">
+    <string>Symbols</string>
+   </property>
+  </action>
+  <action name="action_zoom_to_fit">
+   <property name="icon">
+    <iconset>
+     <normaloff>../../../../data/icons/zoom_icon.png</normaloff>../../../../data/icons/zoom_icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Zoom To Fit</string>
    </property>
   </action>
  </widget>

@@ -5,7 +5,7 @@ import sys
 import vtk
 from PyQt5.QtWidgets import QApplication
 
-from vibra.interface.main_window import MainWindow
+from vibra.interface.main_window2 import MainWindow
 
 
 def configure_logs():
