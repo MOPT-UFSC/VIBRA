@@ -11,6 +11,7 @@ from vibra.interface.analysis.analysis_type_input import AnalysisTypeInput
 from vibra.interface.exception_message import ErrorMessage
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.fluid_inputs import FluidInput
+from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input import SetFluidInput
 from vibra.interface.mesh.mesher_inputs import MesherInputs
 #
 from vibra.interface.model_inputs.acoustic.set_acoustic_pressure import AcousticPressureInput
@@ -398,7 +399,8 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_set_fluid:
             if not self.item_child_set_fluid.isDisabled():
-                self.obj = FluidInput()
+                # self.obj = FluidInput()
+                self.obj = SetFluidInput()
 
         elif item == self.item_child_set_boundary_condition:
             if not self.item_child_set_boundary_condition.isDisabled():

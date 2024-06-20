@@ -26,10 +26,10 @@ from vibra.interface.menus.views_menu import ViewsMenu
 from vibra.interface.renderer_toolbar import RendererToolbar
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_tabs import ViewerTabs
+from vibra.interface.formatters.icons import *
 from vibra.project import Project
-from vibra.utils.icons import load_icon
 
-from time import time
+from vibra.utils.icons import load_icon
 
 
 class MainWindow(QMainWindow):
@@ -80,7 +80,9 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1300, 700)
         # self.showMaximized()
         self.showMinimized()
-        self.setWindowIcon(load_icon(Path("data/icons/logo_vibra.png"), QColor("#448cff")))
+        # self.vibra_icon = load_icon(Path("data/icons/logo_vibra.png"), QColor("#448cff"))
+        self.vibra_icon = get_vibra_icon()
+        self.setWindowIcon(self.vibra_icon)
         self.setWindowTitle("Vibra")
 
         # for qdarktheme

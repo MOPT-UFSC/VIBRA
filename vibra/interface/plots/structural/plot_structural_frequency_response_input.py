@@ -7,6 +7,8 @@ from pathlib import Path
 import os
 import numpy as np
 
+from vibra import app
+
 from pulse.postprocessing.plot_structural_data import get_structural_frf
 from data.user_input.data_handler.export_model_results import ExportModelResults
 from data.user_input.plots.general.frequency_response_plotter import FrequencyResponsePlotter
@@ -70,9 +72,9 @@ class PlotStructuralFrequencyResponseInput(QDialog):
         self.pushButton_plot_frequency_response.clicked.connect(self.call_plotter)
     
     def _load_icons(self):
-        self.pulse_icon = QIcon(get_icons_path('pulse.png'))
+        self.icon = app().main_window.vibra_icon
         self.export_icon = QIcon(get_icons_path('send_to_disk.png'))
-        self.setWindowIcon(self.pulse_icon)
+        self.setWindowIcon(self.icon)
 
     def writeNodes(self, list_node_ids):
         text = ""

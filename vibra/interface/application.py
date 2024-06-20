@@ -2,6 +2,7 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QApplication
 
 from vibra import ICON_DIR, UI_DIR
+from vibra.interface.config import Config
 from vibra.interface.main_window import MainWindow
 from vibra.interface.splash_screen import SplashScreen
 
@@ -18,7 +19,7 @@ class Application(QApplication):
         self.processEvents()
 
         # global params
-        # self.config = Config()
+        self.config = Config()
         # self.file = ProjectFile()
         # self.project = Project()
 

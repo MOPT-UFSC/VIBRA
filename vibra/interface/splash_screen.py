@@ -19,9 +19,6 @@ class SplashScreen(QSplashScreen):
         self.update_position(parent)
         self.update_progress(5)
 
-        # pixmap = QPixmap(str(ICON_DIR / "logos/OpenPulse_logo_gray.png"))
-        # self.setPixmap(QPixmap())
-
     def _config_widget(self):
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         self.progressBar.setStyleSheet( """  QProgressBar{background-color : rgba(255, 255, 255, 0); border-radius: 6px; border-style: ridge; border-width: 0px;}

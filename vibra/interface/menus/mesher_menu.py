@@ -40,7 +40,7 @@ class MesherMenu(QMenu):
 
     def create_layout(self):
         self.clear()
-        self.addAction(self.set_fluid_action)
+        # self.addAction(self.set_fluid_action)
         self.addAction(self.set_material_action)
         self.addAction(self.mesher_setup_action)
         # self.addAction(self.generate_mesh_action)
