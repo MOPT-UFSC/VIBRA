@@ -1,0 +1,84 @@
+[Air @293.15]
+name = Air @293.15
+identifier = 1
+color = [200,200,200]
+fluid density = 1.215
+speed of sound = 343.2021
+impedance = 416.9905
+isentropic exponent = 1.4
+thermal conductivity = 0.0263
+specific heat cp = 1007
+dynamic viscosity = 1.846e-05
+temperature = 293.15
+pressure = 102222.9
+
+[Air @300K]
+name = Air @300K
+identifier = 2
+color = [0,0,255]
+fluid density = 1.1614
+speed of sound = 347.21
+impedance = 403.2496
+isentropic exponent = 1.4
+thermal conductivity = 0.0263
+specific heat cp = 1007
+dynamic viscosity = 1.846e-05
+temperature = 300
+pressure = 101325
+
+[Air @400K]
+name = Air @400K
+identifier = 3
+color = [0,255,255]
+fluid density = 0.8711
+speed of sound = 400.21
+impedance = 348.629
+isentropic exponent = 1.395
+thermal conductivity = 0.0338
+specific heat cp = 1013
+dynamic viscosity = 2.301e-05
+temperature = 400
+pressure = 101325
+
+[Hydrogen @300K]
+name = Hydrogen @300K
+identifier = 4
+color = [150,0,150]
+fluid density = 0.08078
+speed of sound = 1318.43
+impedance = 106.5027
+isentropic exponent = 1.405
+thermal conductivity = 0.183
+specific heat cp = 14307
+dynamic viscosity = 8.96e-06
+temperature = 300
+pressure = 101325
+
+[Hydrogen @400K]
+name = Hydrogen @400K
+identifier = 5
+color = [200,125,255]
+fluid density = 0.06059
+speed of sound = 1518.598
+impedance = 92.0118
+isentropic exponent = 1.398
+thermal conductivity = 0.226
+specific heat cp = 14476
+dynamic viscosity = 1.082e-05
+temperature = 400
+pressure = 101325
+
+[Methane @300K]
+name = Methane @300K
+identifier = 6
+color = [200,150,50]
+fluid density = 0.657
+speed of sound = 449.2
+impedance = 295.1244
+isentropic exponent = 1.299
+thermal conductivity = 0.0339
+specific heat cp = 2232
+dynamic viscosity = 1.1e-05
+temperature = 300
+pressure = 101325
+
