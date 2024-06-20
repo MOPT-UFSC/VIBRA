@@ -13,6 +13,7 @@ from vibra.interface.clip_plane_widget import ClipPlaneWidget
 from vibra.project import Project
 from vibra.interface.viewer_tabs import ViewerTabs
 from vibra.config import UserConfig
+from vibra.interface.analysis_filter_menu import AnalysisFilter
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.menu_items import MenuItems
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
@@ -22,8 +23,6 @@ from vibra.interface.mesh.mesher_inputs import MesherInputs
 from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
     CommonRenderWidget,
 )
-from vibra.interface.help_widget import HelpWidget
-
 
 
 class MainWindow(QMainWindow):
@@ -38,6 +37,7 @@ class MainWindow(QMainWindow):
         self.viewer_tabs = ViewerTabs(self, self.project, self.user_config)
         self.status_bar = StatusBar(self)
         self.menu_items = MenuItems()
+        self.analysis_filter = AnalysisFilter()  #ANDRE
 
         self.configure_window()
 
@@ -117,6 +117,7 @@ class MainWindow(QMainWindow):
         self.setStatusBar(self.status_bar)
         self.stacked_setup.addWidget(self.menu_items)
         self.stacked_setup.setCurrentWidget(self.menu_items)
+        self.dialog = None  #ANDRE
 
         # for qdarktheme
         self.custom_colors = {
@@ -146,8 +147,9 @@ class MainWindow(QMainWindow):
         self._connect_actions()
         self.load_user_preferences()
     
-    
-
+    def closeEvent(self, event):
+        self.close_app()
+        event.ignore()
     
     def update_geometry_information(self):
         self.status_bar.update_geometry_information()
@@ -156,6 +158,7 @@ class MainWindow(QMainWindow):
         self.status_bar.update_mesh_information(nodes, face_elements, solid_elements)
     
     def action_clip_plane_callback(self):
+        print("Oi")
         self.clip_plane = ClipPlaneWidget(self)
 
         self.clip_plane.slider_pressed.connect(self.slider_pressed_callback)
@@ -209,6 +212,9 @@ class MainWindow(QMainWindow):
         self.user_config.menu_items_visible = state
     
     def action_open_project_callback(self):
+        self.open_project_dialog()
+    
+    def open_project_dialog(self):
         path, check = QFileDialog.getOpenFileName(
             self, "Open Project", filter="Vibra File (*.vibra)"
         )
@@ -354,7 +360,7 @@ class MainWindow(QMainWindow):
     def action_line_view_2_callback(self):
         self.action_line_view_callback()
     
-    def action_node_view_callback(self):
+    def action_node_view_callback(self):  #ANDRE
         widget = self.viewer_tabs.currentWidget()
         if isinstance(widget, CommonRenderWidget):
             widget.show_points()
@@ -364,3 +370,53 @@ class MainWindow(QMainWindow):
     
     def action_about_vibra_callback(self):
         self.viewer_tabs.show_help()
+    
+    def action_top_view_callback(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_top_view()
+    
+    def action_bottom_view_callback(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_bottom_view()
+    
+    def action_right_view_callback(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_right_view()
+        
+    def action_left_view_callback(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_left_view()
+        
+    def action_front_view_callback(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_front_view()
+        
+    def action_back_view_callback(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_back_view()
+        
+    def action_isometric_view_callback(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_isometric_view()
+
+    def action_zoom_to_fit_callback(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.renderer.ResetCamera()
+            widget.update()
+        
+    def close_app(self):
+        close = QMessageBox.question(
+            self, "QUIT", "Are you sure want to close Vibra?", QMessageBox.Yes | QMessageBox.No
+        )
+
+        if close == QMessageBox.Yes:
+            self.user_config.save()
+            exit()

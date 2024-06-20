@@ -128,7 +128,6 @@
    <addaction name="action_face_view"/>
    <addaction name="action_clip_plane"/>
    <addaction name="action_symbols"/>
-   <addaction name="separator"/>
   </widget>
   <action name="action_new_project">
    <property name="icon">

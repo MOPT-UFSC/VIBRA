@@ -54,4 +54,4 @@ class AnalysisFilter(QWidget):
                                                             QComboBox:hover{border-radius: 4px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; background-color: rgba(174, 213, 255, 100); font: 10pt "MS Shell Dlg 2"}
                                                             QComboBox:disabled{border-radius: 4px; border-style: ridge; border-width: 2px; font: 10pt "MS Shell Dlg 2"}   """)
         #
-        self.comboBox_analysis_selector.currentIndexChanged.connect(self.main_window.menu_widget.filter_analysis_type)
+        self.comboBox_analysis_selector.currentIndexChanged.connect(self.main_window.menu_items.filter_analysis_type)

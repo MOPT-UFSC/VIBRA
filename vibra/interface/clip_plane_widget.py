@@ -13,6 +13,7 @@ class ClipPlaneWidget(QWidget):
         super().__init__(parent)
         self.configure_window()
         self.create_sliders()
+        self.show()
 
     def configure_window(self):
         self.setWindowTitle("Clip Plane")
