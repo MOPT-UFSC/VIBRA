@@ -1,13 +1,26 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 import sys
+import platform
+
+os = platform.system()
+
+if os == "Windows":
+    current_system_binaries = [
+        (f"{sys.prefix}/Library/bin/mkl_rt.2.dll", "./Library/bin/")
+    ]
+elif os == "Linux":
+    current_system_binaries = [
+        (f"{sys.prefix}/lib/libmkl_rt.so.2", "./lib/")
+    ]
+else:
+    current_system_binaries = []
+
 
 a = Analysis(
-    ['vibra\\launch.py'],
+    ['vibra/launch.py'],
     pathex=[],
-    binaries=[
-        (f"{sys.prefix}/Library/bin/mkl_rt.2.dll", "./Library/bin/")
-    ],
+    binaries=current_system_binaries,
     datas=[
         ("vibra/interface/data/", "vibra/interface/data/")
     ],
