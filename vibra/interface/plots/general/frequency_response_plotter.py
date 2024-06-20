@@ -40,20 +40,23 @@ class FrequencyResponsePlotter(QDialog):
         self.setWindowTitle("Frequency response plotter")
 
     def _initialize(self):
+
         self.imported_dB = False
         self._layout = None
         self.x_data = None
         self.y_data = None
         self.importer = None
+
+        self.data_to_plot = dict()
+
         self.title = ""
         self.font_weight = "normal"
-        self.data_to_plot = dict()
+
         self.colors = [ [0,0,1],
                         [0,0,0],
-                        [0,1,0],
-                        [1,1,0],
-                        [0,1,1],
+                        [1,0,0],
                         [1,0,1],
+                        [0,1,1],
                         [0.75,0.75,0.75],
                         [0.5, 0.5, 0.5],
                         [0.25, 0.25, 0.25] ]

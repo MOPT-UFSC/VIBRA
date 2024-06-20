@@ -95,7 +95,7 @@ class SetFluidInput(QDialog):
         self._add_fluid_input_widget()
         self.frame_main_widget.adjustSize()
 
-        # QPushButtonget_comboBox_index
+        # QPushButton
         self.pushButton_attribute_fluid = self.findChild(QPushButton, 'pushButton_attribute_fluid')
         self.pushButton_remove_row = self.fluid_widget.findChild(QPushButton, 'pushButton_remove_row')
 

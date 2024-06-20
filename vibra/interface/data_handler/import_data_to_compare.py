@@ -42,21 +42,23 @@ class ImportDataToCompare(QDialog):
         self.setWindowTitle("Import data to compare")
 
     def _reset_variables(self):
-        self.userPath = os.path.expanduser('~')
-        self.imported_path = ""
+
         self.imported_data = None
+
         self.imported_results = dict()
         self.ids_to_checkBox = dict()
         self.checkButtons_state = dict()
+
+        self.userPath = os.path.expanduser('~')
+        self.imported_path = ""
+
         self.colors = [ [0,0,0],
-                        [0,1,0],
-                        [1,1,0],
-                        [0,1,1],
+                        [1,0,0],
                         [1,0,1],
+                        [0,1,1],
                         [0.75,0.75,0.75],
                         [0.5, 0.5, 0.5],
-                        [0.25, 0.25, 0.25],
-                        [0,0,1] ]
+                        [0.25, 0.25, 0.25] ]
 
     def _define_and_configure_Qt_variables(self):
         # CheckBox
