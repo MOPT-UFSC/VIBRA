@@ -8,10 +8,9 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+from vibra import UI_DIR
 from vibra.engine.properties.material import Material
-from vibra.interface.general.call_double_confirmation_input import (
-    CallDoubleConfirmationInput,
-)
+from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
 from vibra.interface.general.pick_color_input import PickColorInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.libraries.default_libraries import default_material_library
@@ -32,7 +31,8 @@ class MaterialInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        uic.loadUi(Path("data/ui_files/model/structural/material_input.ui"), self)
+        ui_path = UI_DIR / "model/structural/material_input.ui"
+        uic.loadUi(ui_path, self)
 
         icon_path = str(Path("data/icons/logo_vibra.png"))
         self.icon = QIcon(icon_path)

@@ -9,18 +9,24 @@ import numpy as np
 import pandas as pd
 import openpyxl
 
+from vibra import UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 def get_icons_path(filename):
     path = f"data/icons/{filename}"
     if os.path.exists(path):
         return str(Path(path))
+    
+window_title_1 = "Error"
+window_title_2 = "Warning"
+
 
 class ImportDataToCompare(QDialog):
     def __init__(self, plotter, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        uic.loadUi(Path('data/ui_files/data_handler/import_data_to_compare.ui'), self)
+        ui_path = UI_DIR / "data_handler/import_data_to_compare.ui"
+        uic.loadUi(ui_path, self)
         
         self.plotter = plotter
 
@@ -114,7 +120,6 @@ class ImportDataToCompare(QDialog):
         
         try:
 
-            window_title = "ERROR MESSAGE"
             message = ""
 
             run = True
@@ -177,7 +182,7 @@ class ImportDataToCompare(QDialog):
             return
         
         if message != "":
-            PrintMessageInput([title, message, window_title])
+            PrintMessageInput([title, message, window_title_1])
 
     def update_treeWidget_info(self):
         self.cache_checkButtons_state()

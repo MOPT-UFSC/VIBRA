@@ -7,49 +7,47 @@ from pathlib import Path
 import os
 import numpy as np
 
-from vibra import app
+from vibra import app, UI_DIR
 
-from pulse.postprocessing.plot_structural_data import get_structural_frf
-from data.user_input.data_handler.export_model_results import ExportModelResults
-from data.user_input.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.general.print_message_input2 import PrintMessageInput
+from vibra.interface.data_handler.export_model_results import ExportModelResults
+from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 
 def get_icons_path(filename):
     path = f"data/icons/{filename}"
     if os.path.exists(path):
         return str(Path(path))
 
-window_title1 = "ERROR MESSAGE"
-window_title2 = "WARNING MESSAGE"
+window_title1 = "Error"
+window_title2 = "Warning"
 
 class PlotStructuralFrequencyResponseInput(QDialog):
-    def __init__(self, project, opv, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        uic.loadUi(Path('data/user_input/ui_files/plots_/results_/structural_/plot_structural_frequency_response.ui'), self)
+        ui_path = UI_DIR / "plots_/results_/structural_/plot_structural_frequency_response.ui"
+        uic.loadUi(ui_path, self)
 
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
+        self.main_window = app().main_window
+        self.main_window.set_input_widget(self)
+        self.main_window.viewer_tabs.show_geometry()
+        self.project = self.main_window.project
+        self.model = self.project.model
+        self.properties = self.model.properties
 
-        self.opv = opv
-        self.opv.setInputObject(self)
-        
-        self.preprocessor = project.preprocessor
-        self.before_run = project.get_pre_solution_model_checks()
-        self.list_node_IDs = self.opv.getListPickedPoints()
-
-        self.nodes = project.preprocessor.nodes
-        self.analysisMethod = project.analysis_method_label
-        self.frequencies = project.frequencies
-        self.solution = project.get_structural_solution()
-
+        self._config_window()
         self._load_icons()
-        self._reset_variables()
+        self._initialize()
         self._define_qt_variables()
         self._create_connections()
         self.writeNodes(self.list_node_IDs)
         self.exec()
 
-    def _reset_variables(self):
+    def _config_window(self):
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModal)
+
+    def _initialize(self):
         self.dof_labels = ["Ux", "Uy", "Uz", "Rx", "Ry", "Rz"]
 
     def _define_qt_variables(self):
@@ -132,12 +130,27 @@ class PlotStructuralFrequencyResponseInput(QDialog):
         return False
 
     def get_response(self):
-        response = get_structural_frf(self.preprocessor, 
-                                      self.solution,
-                                      self.node_ID, 
-                                      self.local_dof)
-        return response
 
+        selected_id = self.typed_ids[0]
+        index = self.comboBox_selector_filter.currentIndex()
+
+        if index == 0:
+            rows = self.project.model.mesh.nodes_from_surfaces[selected_id]
+        elif index == 1:
+            rows = self.project.model.mesh.nodes_from_lines[selected_id]
+        else:
+            rows = [3670]
+            # return
+
+        # print(len(rows))
+        response = np.average(self.solution[rows,:], axis=0)
+
+        # if complex(0) in response:
+        #     response += 1e-12
+            # response += np.ones(len(response), dtype=float)*(1e-12)
+
+        return response
+    
     def join_model_data(self):
         self.model_results = dict()
         self.title = "Structural frequency response - {}".format(self.analysisMethod)

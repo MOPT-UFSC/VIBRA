@@ -6,6 +6,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.utils.interface_functions import get_main_window
 
@@ -37,15 +38,15 @@ class AnalysisSetupInput(QDialog):
         """
 
         if self.analysis_id in [1, 6]:
-            path = Path("data/ui_files/analysis/structural/harmonic_analysis_mode_superposition_method.ui")
+            ui_path = UI_DIR / "analysis/structural/harmonic_analysis_mode_superposition_method.ui"
         elif self.analysis_id in [0, 5]:
-            path = Path("data/ui_files/analysis/structural/harmonic_analysis_direct_method.ui")
+            ui_path = UI_DIR / "analysis/structural/harmonic_analysis_direct_method.ui"
         elif self.analysis_id in [3]:
-            path = Path("data/ui_files/analysis/acoustic/harmonic_analysis_direct_method.ui")
+            ui_path = UI_DIR / "analysis/acoustic/harmonic_analysis_direct_method.ui"
         else:
             return
 
-        uic.loadUi(path, self)
+        uic.loadUi(ui_path, self)
         #
         icon_path = str(Path("data/icons/logo_vibra.png"))
         self.icon = QIcon(icon_path)

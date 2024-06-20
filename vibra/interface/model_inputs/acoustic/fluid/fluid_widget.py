@@ -44,7 +44,7 @@ class FluidWidget(QWidget):
         self.compressor_thermodynamic_state = kwargs.get("compressor_thermodynamic_state", dict())
 
         self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
+        # self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
 
         self.project = self.main_window.project

@@ -5,6 +5,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+from vibra import UI_DIR
 from vibra.interface.analysis.acoustic_harmonic_analysis_input import (
     AcousticHarmonicAnalysisInput,
 )
@@ -27,7 +28,9 @@ class AnalysisTypeInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        uic.loadUi(Path("data/ui_files/analysis/analysis_type_input.ui"), self)
+        ui_path = UI_DIR / "analysis/analysis_type_input.ui"
+        uic.loadUi(ui_path, self)
+
         self.main_window = get_main_window()
 
         icon_path = str(Path("data/icons/logo_vibra.png"))

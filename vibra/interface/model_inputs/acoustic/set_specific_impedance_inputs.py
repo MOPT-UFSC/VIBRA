@@ -8,9 +8,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import *
 
-from vibra.interface.general.call_double_confirmation_input import (
-    CallDoubleConfirmationInput,
-)
+from vibra import UI_DIR
+from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.utils.interface_functions import get_main_window
 
@@ -22,7 +21,8 @@ class SpecificImpedanceInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        uic.loadUi(Path("data/ui_files/model/acoustic/specific_impedance_input.ui"), self)
+        ui_path = UI_DIR / "model/acoustic/specific_impedance_input.ui"
+        uic.loadUi(ui_path, self)
 
         icon_path = str(Path("data/icons/logo_vibra.png"))
         self.icon = QIcon(icon_path)

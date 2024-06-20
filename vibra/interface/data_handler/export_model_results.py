@@ -7,6 +7,7 @@ from pathlib import Path
 import os
 import numpy as np
 
+from vibra import UI_DIR
 from vibra.interface.general.print_message_input2 import PrintMessageInput
 
 def get_icons_path(filename):
@@ -21,7 +22,8 @@ class ExportModelResults(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        uic.loadUi(Path('data/ui_files/data_handler/export_model_results.ui'), self)
+        ui_path = UI_DIR / "data_handler/export_model_results.ui"
+        uic.loadUi(ui_path, self)
 
         self._load_icons()
         self._reset_variables()

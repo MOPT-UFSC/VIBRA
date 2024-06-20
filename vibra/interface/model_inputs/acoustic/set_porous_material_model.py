@@ -8,9 +8,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QDoubleSpinBox, QDialog, QLineEdit, QPushButton, QTabWidget
 
-from vibra.interface.general.call_double_confirmation_input import (
-    CallDoubleConfirmationInput,
-)
+from vibra import UI_DIR
+from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.utils.interface_functions import get_main_window
 
@@ -22,8 +21,7 @@ class SetPorousMaterialModel(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # ui_path = UI_DIR / "model/acoustic/set_porous_material_model.ui"
-        ui_path = Path("data/ui_files/model/acoustic/set_porous_material_model.ui")
+        ui_path = UI_DIR / "model/acoustic/set_porous_material_model.ui"
         uic.loadUi(ui_path, self)
 
         self.main_window = get_main_window()

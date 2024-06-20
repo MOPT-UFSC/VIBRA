@@ -6,18 +6,21 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+from vibra import UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.utils.interface_functions import get_main_window
 
-window_title1 = "ERROR MESSAGE"
-window_title2 = "WARNING MESSAGE"
+window_title1 = "Error"
+window_title2 = "Warning"
 
 
 class AcousticModalAnalysisInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        uic.loadUi(Path("data/ui_files/analysis/acoustic/acoustic_modal_analysis_input.ui"), self)
+        ui_path = UI_DIR / "analysis/acoustic/acoustic_modal_analysis_input.ui"
+        uic.loadUi(ui_path, self)
+
         self.main_window = get_main_window()
         self.project = self.main_window.project
 

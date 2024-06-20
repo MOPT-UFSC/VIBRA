@@ -5,6 +5,7 @@ from PyQt5.QtCore import QRect, Qt
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtWidgets import QDialog, QLabel, QPushButton
 
+from vibra import UI_DIR
 
 class CallDoubleConfirmationInput(QDialog):
     def __init__(
@@ -16,7 +17,9 @@ class CallDoubleConfirmationInput(QDialog):
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
-        uic.loadUi(Path("data/ui_files/general/call_double_confirmation_input.ui"), self)
+
+        ui_path = UI_DIR / "general/call_double_confirmation_input.ui"
+        uic.loadUi(ui_path, self)
 
         path = str(Path("data/icons/logo_vibra.png"))
         self.icon = QIcon(path)
