@@ -2,6 +2,7 @@ import logging
 import random
 from pathlib import Path
 from time import sleep
+import sys
 
 import qdarktheme
 from PyQt5.QtCore import *
@@ -298,7 +299,7 @@ class MainWindow(QMainWindow):
 
         if close == QMessageBox.Yes:
             self.user_config.save()
-            exit()
+            sys.exit()
 
     def process_acoustic_modal_analysis(self):
         try:
