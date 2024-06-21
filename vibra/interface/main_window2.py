@@ -37,7 +37,7 @@ class MainWindow(QMainWindow):
         self.viewer_tabs = ViewerTabs(self, self.project, self.user_config)
         self.status_bar = StatusBar(self)
         self.menu_items = MenuItems()
-        self.analysis_filter = AnalysisFilter()  #ANDRE
+        self.analysis_filter = AnalysisFilter() 
 
         self.configure_window()
 
@@ -348,24 +348,15 @@ class MainWindow(QMainWindow):
         if isinstance(widget, CommonRenderWidget):
             widget.show_faces()
     
-    def action_face_view_2_callback(self):
-        self.action_face_view_callback()
-    
     def action_line_view_callback(self):
         widget = self.viewer_tabs.currentWidget()
         if isinstance(widget, CommonRenderWidget):
             widget.show_lines()
-        
-    def action_line_view_2_callback(self):
-        self.action_line_view_callback()
     
-    def action_node_view_callback(self):  #ANDRE
+    def action_node_view_callback(self):
         widget = self.viewer_tabs.currentWidget()
         if isinstance(widget, CommonRenderWidget):
             widget.show_points()
-    
-    def action_node_view_2_callback(self):
-        self.action_node_view_callback()
     
     def action_about_vibra_callback(self):
         self.viewer_tabs.show_help()

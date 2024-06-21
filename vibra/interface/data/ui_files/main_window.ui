@@ -83,9 +83,9 @@
     <property name="title">
      <string>View mode</string>
     </property>
-    <addaction name="action_face_view_2"/>
-    <addaction name="action_line_view_2"/>
-    <addaction name="action_node_view_2"/>
+    <addaction name="action_node_view"/>
+    <addaction name="action_line_view"/>
+    <addaction name="action_face_view"/>
    </widget>
    <widget class="QMenu" name="menu_help">
     <property name="title">
@@ -253,33 +253,6 @@
    </property>
    <property name="text">
     <string>Mesher setup</string>
-   </property>
-  </action>
-  <action name="action_face_view_2">
-   <property name="icon">
-    <iconset>
-     <normaloff>../../../data/icons/faces.png</normaloff>../../../data/icons/faces.png</iconset>
-   </property>
-   <property name="text">
-    <string>Face View</string>
-   </property>
-  </action>
-  <action name="action_line_view_2">
-   <property name="icon">
-    <iconset>
-     <normaloff>../../../data/icons/lines.png</normaloff>../../../data/icons/lines.png</iconset>
-   </property>
-   <property name="text">
-    <string>Line View</string>
-   </property>
-  </action>
-  <action name="action_node_view_2">
-   <property name="icon">
-    <iconset>
-     <normaloff>../../../data/icons/nodes.png</normaloff>../../../data/icons/nodes.png</iconset>
-   </property>
-   <property name="text">
-    <string>Node View</string>
    </property>
   </action>
   <action name="action_about_vibra">
