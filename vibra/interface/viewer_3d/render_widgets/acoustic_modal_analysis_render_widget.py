@@ -85,6 +85,9 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
             return
 
         solver = self.main_window.project.acoustic_modal_solver
+        if solver is None:
+            return
+
         if solver.modal_shape is None:
             return
 

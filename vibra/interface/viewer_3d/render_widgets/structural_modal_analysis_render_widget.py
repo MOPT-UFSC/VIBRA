@@ -90,6 +90,9 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
             return
 
         solver = self.main_window.project.structural_modal_solver
+        if solver is None:
+            return
+
         if solver.modal_shape is None:
             return
 

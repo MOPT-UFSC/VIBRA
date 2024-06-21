@@ -52,66 +52,69 @@ class ViewerTabs(QTabWidget):
         self.welcome = WelcomeWidget()
         self.help_widget = HelpWidget()
 
+        self.add_tabs()
+        self.reset_tab_visibility()
         self.show_welcome()
 
-    #
-    def show_welcome(self):
+    def add_tabs(self):
         self.addTab(self.welcome, "Welcome!")
-        self.setCurrentWidget(self.welcome)
+        self.addTab(self.geometry_widget, "Geometry")
+        self.addTab(self.mesh_widget, "Mesh")
+        self.addTab(self.acoustic_modal_analysis, "Acoustic Modal Analysis")
+        self.addTab(self.structural_modal_analysis, "Structural Modal Analysis")
+        self.addTab(self.acoustic_harmonic_analysis, "Acoustic Harmonic Analysis")
 
-    def show_example(self):
-        example_widget = ExampleRenderWidget(self)
-        example_widget.set_theme(self.user_config.theme)
+    def reset_tab_visibility(self):
+        for i in range(self.count()):
+            self.setTabVisible(i, False)
 
-        self.addTab(example_widget, "Example")
-        self.setCurrentWidget(example_widget)
+    def show_welcome(self):
+        self.setTabVisible(0, True)
 
     def show_geometry(self):
-        if self.geometry_widget not in self.tabs():
-            self.addTab(self.geometry_widget, "Geometry")
-        self.geometry_widget.update_plot()
-        self.setCurrentWidget(self.geometry_widget)
-        # self.geometry_widget.geometry_info.update_geometry_information()
-        self.main_window.update_geometry_information()
+        if self.currentIndex() != 1:
+            self.setTabVisible(1, True)
+            self.geometry_widget.update_plot()
+            self.main_window.update_geometry_information()
+            self.setCurrentIndex(1)
+            # self.geometry_widget.geometry_info.update_geometry_information()
 
     def show_mesh(self):
-        if self.mesh_widget not in self.tabs():
-            self.addTab(self.mesh_widget, "Mesh")
-        self.mesh_widget.update_plot()
-        self.setCurrentWidget(self.mesh_widget)
+        if self.currentIndex() != 2:
+            self.setTabVisible(2, True)
+            self.mesh_widget.update_plot()
+            self.setCurrentIndex(2)
+
         nodes, face_elements, solid_elements = self.main_window.project.model.mesh.get_mesh_info()
         self.main_window.update_mesh_information(nodes, face_elements, solid_elements)
 
-    def show_example_analysis(self):
-        if self.example_analysis_widget not in self.tabs():
-            self.addTab(self.example_analysis_widget, "Example analysis")
-
-        self.example_analysis_widget.update_plot()
-        self.setCurrentWidget(self.example_analysis_widget)
-
-    def show_acoustic_modal_analysis(self):
-        if self.acoustic_modal_analysis not in self.tabs():
-            self.addTab(self.acoustic_modal_analysis, "Acoustic Modal Analysis")
-
-        self.acoustic_modal_analysis.update_frequencies()
-        self.acoustic_modal_analysis.update_plot()
-        self.setCurrentWidget(self.acoustic_modal_analysis)
+    def show_acoustic_harmonic_analysis(self):
+        if self.currentIndex() != 3:
+            self.setTabVisible(3, True)
+            self.acoustic_modal_analysis.update_frequencies()
+            self.acoustic_modal_analysis.update_plot()
+            self.setCurrentIndex(3)
 
     def show_structural_modal_analysis(self):
-        if self.structural_modal_analysis not in self.tabs():
-            self.addTab(self.structural_modal_analysis, "Acoustic Modal Analysis")
-
-        self.structural_modal_analysis.update_frequencies()
-        self.structural_modal_analysis.update_plot()
-        self.setCurrentWidget(self.structural_modal_analysis)
+        if self.currentIndex() != 4:
+            self.setTabVisible(4, True)
+            self.structural_modal_analysis.update_frequencies()
+            self.structural_modal_analysis.update_plot()
+            self.setCurrentIndex(4)
 
     def show_acoustic_harmonic_analysis(self):
-        if self.acoustic_harmonic_analysis not in self.tabs():
-            self.addTab(self.acoustic_harmonic_analysis, "Acoustic Harmonic Analysis")
+        if self.currentIndex() != 5:
+            self.setTabVisible(5, True)
+            self.acoustic_harmonic_analysis.update_frequencies()
+            self.acoustic_harmonic_analysis.update_plot()
+            self.setCurrentIndex(5)
 
-        self.acoustic_harmonic_analysis.update_frequencies()
-        self.acoustic_harmonic_analysis.update_plot()
-        self.setCurrentWidget(self.acoustic_harmonic_analysis)
+    # def show_example_analysis(self):
+    #     if self.example_analysis_widget not in self.tabs():
+    #         self.addTab(self.example_analysis_widget, "Example analysis")
+
+    #     self.example_analysis_widget.update_plot()
+    #     self.setCurrentWidget(self.example_analysis_widget)
 
     def create_a_new_tab_if_it_does_not_exist(self, widget, tab_text):
         for i in range(self.count()):
@@ -135,23 +138,28 @@ class ViewerTabs(QTabWidget):
                 tab.update_plot()
 
     def close_analysis_tabs(self):
-        self._close_widgets(
-            self.acoustic_modal_analysis,
-            self.structural_modal_analysis,
-        )
+        for i in range(self.count()):
+            if i > 2:
+                self.setTabVisible(i, False)
+        
+        # self._close_widgets(
+        #     self.acoustic_modal_analysis,
+        #     self.structural_modal_analysis,
+        # )
 
     def close_mesh_tabs(self):
-        self._close_widgets(
-            self.mesh_widget,
-            self.geometry_widget,
-            self.acoustic_modal_analysis,
-            self.structural_modal_analysis,
-        )
+        self.setTabVisible(2, False)
+        # self._close_widgets(
+        #     self.mesh_widget,
+        #     self.geometry_widget,
+        #     self.acoustic_modal_analysis,
+        #     self.structural_modal_analysis,
+        # )
 
-    def _close_widgets(self, *widgets_list):
-        for widget in widgets_list:
-            i = self.indexOf(widget)
-            self.removeTab(i)
+    # def _close_widgets(self, *widgets_list):
+    #     for widget in widgets_list:
+    #         i = self.indexOf(widget)
+    #         self.removeTab(i)
 
     #
     def start_cutting_mode(self):

@@ -83,6 +83,9 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
             return
 
         solver = self.main_window.project.acoustic_harmonic_solver
+        if solver is None:
+            return
+
         if solver.solution is None:
             return
 

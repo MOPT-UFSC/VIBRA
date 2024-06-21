@@ -116,8 +116,8 @@ class ProjectMenu(QMenu):
     def show_geometry_callback(self):
         self.main_window.viewer_tabs.show_geometry()
 
-    def show_example_callback(self):
-        self.main_window.viewer_tabs.show_example()
+    # def show_example_callback(self):
+    #     self.main_window.viewer_tabs.show_example()
 
     #
     def solve_example_analysis_callback(self):
