@@ -156,7 +156,6 @@ class ViewerTabs(QTabWidget):
     #
     def start_cutting_mode(self):
         for tab in self.tabs():
-            print(type(tab))
             if not hasattr(tab, "start_cutting_mode"):
                 continue
             tab.start_cutting_mode()

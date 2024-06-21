@@ -158,7 +158,6 @@ class MainWindow(QMainWindow):
         self.status_bar.update_mesh_information(nodes, face_elements, solid_elements)
     
     def action_clip_plane_callback(self):
-        print("Oi")
         self.clip_plane = ClipPlaneWidget(self)
 
         self.clip_plane.slider_pressed.connect(self.slider_pressed_callback)
