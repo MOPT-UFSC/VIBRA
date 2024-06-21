@@ -78,12 +78,16 @@ class MesherInputs(QDialog):
 
         if self.check_mesh_inputs():
             return
-        
+
+        self.main_window.project.reset_solutions()
         self.main_window.project.set_mesh_setup(self.mesh_setup)
         generate_mesh = load_function(self.main_window.project.generate_mesh, self.main_window)
         generate_mesh()
+
         self.main_window.viewer_tabs.show_mesh()
+        self.main_window.viewer_tabs.close_analysis_tabs()
         self.main_window.viewer_tabs.update_plots()
+
         self.complete = True
         if self.close_after_generate:
             self.close()

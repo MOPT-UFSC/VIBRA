@@ -7,7 +7,8 @@ from pathlib import Path
 import os
 import numpy as np
 
-from vibra import UI_DIR
+from vibra import app, UI_DIR
+from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.print_message_input2 import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
@@ -29,9 +30,10 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         ui_path = UI_DIR / "plots/acoustic/plot_acoustic_frequency_response_function.ui"
         uic.loadUi(ui_path, self)
 
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
+
         self.project = self.main_window.project
         self.model = self.project.model
         self.properties = self.model.properties
@@ -40,24 +42,15 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         self._reset_variables()
         self._define_qt_variables()
         self._create_connections()
+    
+        ConfigWidgetAppearance(self, tool_tip=True)
+
         self._load_analysis_data_and_solution()
         self.exec()
 
-    def _load_analysis_data_and_solution(self):
-        self.analysis_method = ""
-        analysis_data = self.project.analysis_data
-        if "analysis_id" in analysis_data.keys():
-            if analysis_data["analysis_id"] == 3:
-                self.analysis_method = "Direct method"
-        if "frequencies" in analysis_data.keys():
-            self.frequencies = analysis_data["frequencies"]
-        self.solution = self.project.acoustic_harmonic_solver.solution
-
     def _load_icons(self):
-        self.icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.export_icon = QIcon(get_icons_path('save.png'))
-        self.icon = QIcon(self.icon_path)
-        self.setWindowIcon(self.icon)
+        self.vibra_icon = app().main_window.vibra_icon
+        self.setWindowIcon(self.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
 
@@ -66,21 +59,22 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
 
     def _define_qt_variables(self):
         # QComboBox
-        self.comboBox_selector_filter = self.findChild(QComboBox, 'comboBox_selector_filter')
+        self.comboBox_selector_filter : QComboBox
         # QLineEdit
-        self.lineEdit_output_node_id = self.findChild(QLineEdit, 'lineEdit_output_node_id')
-        self.lineEdit_input_node_id = self.findChild(QLineEdit, 'lineEdit_input_node_id')
+        self.lineEdit_output_node_id : QLineEdit
+        self.lineEdit_input_node_id : QLineEdit
         self.current_lineEdit = self.lineEdit_output_node_id
         # QPushButton
-        self.pushButton_call_data_exporter = self.findChild(QPushButton, 'pushButton_call_data_exporter')
-        self.pushButton_plot_frequency_response = self.findChild(QPushButton, 'pushButton_plot_frequency_response')
-        self.pushButton_flip_selection = self.findChild(QPushButton, 'pushButton_flip_selection')
-        self.pushButton_call_data_exporter.setIcon(self.export_icon)
+        self.pushButton_call_data_exporter : QPushButton
+        self.pushButton_plot_frequency_response : QPushButton
+        self.pushButton_flip_selection : QPushButton
 
     def _create_connections(self):
+        #
         self.pushButton_call_data_exporter.clicked.connect(self.call_data_exporter)
         self.pushButton_flip_selection.clicked.connect(self.flip_nodes)
         self.pushButton_plot_frequency_response.clicked.connect(self.call_plotter)
+        #
         geometry_widget = self.main_window.viewer_tabs.geometry_widget
         geometry_widget.selection_changed.connect(self.geometry_selection_callback)
         #
@@ -111,7 +105,21 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
     def writeNodes(self, list_node_ids):
         node_id = list_node_ids[0]
         self.current_lineEdit.setText(str(node_id))
-    
+
+    def _load_analysis_data_and_solution(self):
+
+        self.analysis_method = ""
+        analysis_data = self.project.analysis_data
+
+        if "analysis_id" in analysis_data.keys():
+            if analysis_data["analysis_id"] == 3:
+                self.analysis_method = "Direct method"
+
+        if "frequencies" in analysis_data.keys():
+            self.frequencies = analysis_data["frequencies"]
+
+        self.solution = self.project.acoustic_harmonic_solver.solution
+
     def geometry_selection_callback(self, points, lines, faces):
         
         index = self.comboBox_selector_filter.currentIndex()
@@ -175,10 +183,12 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
             self.selection_type = "surfaces"
             rows_num = self.project.model.mesh.nodes_from_surfaces[self.output_node_id]
             rows_den = self.project.model.mesh.nodes_from_surfaces[self.input_node_id]
+
         elif index == 1:
             self.selection_type = "lines"
             rows_num = self.project.model.mesh.nodes_from_lines[self.output_node_id]
             rows_den = self.project.model.mesh.nodes_from_lines[self.input_node_id]
+
         else:
             self.selection_type = ""
             return None

@@ -292,6 +292,9 @@ class MainWindow(QMainWindow):
         self.analysis_filter.setDisabled(False)
         self.menu_widget.modify_items_access_after_geometry_importing()
 
+        self.project.reset_solutions()
+        self.project.model.properties._reset_variables()
+
     def close_app(self):
         close = QMessageBox.question(
             self, "QUIT", "Are you sure want to close Vibra?", QMessageBox.Yes | QMessageBox.No

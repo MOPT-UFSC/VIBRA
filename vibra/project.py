@@ -28,16 +28,37 @@ class Project:
         self.imported_table_state = False
         self.analysis_data = None
         self.dissipation_model = None
-        self.static_solver = None
-        self.acoustic_modal_solver = None
-        self.structural_modal_solver = None
-        self.acoustic_harmonic_solver = None
-        self.structural_harmonic_solver = None
         #
         self.model = Model()
         self.file = ProjectFile()
         self.acoustic_assembler = AcousticAssembler(self.model)
         self.structural_assembler = StructuralAssembler(self.model)
+        #
+        self.static_solver = None
+        self.acoustic_modal_solver = None
+        self.structural_modal_solver = None
+        self.acoustic_harmonic_solver = None
+        self.structural_harmonic_solver = None
+
+    def reset_solutions(self):
+
+        if self.static_solver is not None:
+            self.static_solver.reset_variables()
+
+        if self.acoustic_modal_solver is not None:
+            self.acoustic_modal_solver.reset_variables()
+
+        if self.structural_modal_solver is not None:
+            self.structural_modal_solver.reset_variables()
+
+        if self.acoustic_harmonic_solver is not None:
+            self.acoustic_harmonic_solver.reset_variables()
+
+        if self.structural_modal_solver is not None:
+            self.structural_modal_solver.reset_variables()
+
+        if self.structural_harmonic_solver is not None:
+            self.structural_harmonic_solver.reset_variables()
 
     @classmethod
     def load(cls, path):
