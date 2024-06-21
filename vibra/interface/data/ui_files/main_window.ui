@@ -17,6 +17,9 @@
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
      <widget class="QSplitter" name="splitter">
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
@@ -128,6 +131,7 @@
    <addaction name="action_face_view"/>
    <addaction name="action_clip_plane"/>
    <addaction name="action_symbols"/>
+   <addaction name="separator"/>
   </widget>
   <action name="action_new_project">
    <property name="icon">
@@ -388,6 +392,21 @@
    </property>
    <property name="text">
     <string>Zoom To Fit</string>
+   </property>
+  </action>
+  <action name="action_structural_workspace">
+   <property name="text">
+    <string>Structural Workspace</string>
+   </property>
+  </action>
+  <action name="action_acoustic_workspace">
+   <property name="text">
+    <string>Acoustic Workspace</string>
+   </property>
+  </action>
+  <action name="action_coupled_workspace">
+   <property name="text">
+    <string>Coupled Workspace</string>
    </property>
   </action>
  </widget>

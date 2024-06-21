@@ -13,7 +13,6 @@ from vibra.interface.clip_plane_widget import ClipPlaneWidget
 from vibra.project import Project
 from vibra.interface.viewer_tabs import ViewerTabs
 from vibra.config import UserConfig
-from vibra.interface.analysis_filter_menu import AnalysisFilter
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.menu_items import MenuItems
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
@@ -23,6 +22,7 @@ from vibra.interface.mesh.mesher_inputs import MesherInputs
 from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
     CommonRenderWidget,
 )
+from vibra.utils.enumerators import Workspace
 
 
 class MainWindow(QMainWindow):
@@ -37,7 +37,6 @@ class MainWindow(QMainWindow):
         self.viewer_tabs = ViewerTabs(self, self.project, self.user_config)
         self.status_bar = StatusBar(self)
         self.menu_items = MenuItems()
-        self.analysis_filter = AnalysisFilter() 
 
         self.configure_window()
 
@@ -68,6 +67,9 @@ class MainWindow(QMainWindow):
         self.action_clip_plane: QAction
         self.action_zoom_to_fit: QAction
         self.action_action_symbols: QAction
+        self.action_structural_workspace: QAction
+        self.action_acoustic_workspace: QAction
+        self.action_coupled_workspace: QAction
 
         #QSplitter
         self.splitter: QSplitter
@@ -84,9 +86,6 @@ class MainWindow(QMainWindow):
 
         # QToolBar
         self.tool_bar: QToolBar
-    
-    def create_connections(self):
-        pass
     
     def _connect_actions(self):
         '''
@@ -146,10 +145,35 @@ class MainWindow(QMainWindow):
         self._config_window()
         self._connect_actions()
         self.load_user_preferences()
+        self._create_workspaces_toolbar()
     
     def closeEvent(self, event):
         self.close_app()
         event.ignore()
+    
+    def _create_workspaces_toolbar(self):
+        actions = {
+            Workspace.STRUCTURAL_SETUP: self.action_structural_workspace,
+            Workspace.ACOUSTIC_SETUP: self.action_acoustic_workspace,
+            Workspace.COUPLED: self.action_coupled_workspace
+        }
+
+        self.combo_box_workspaces = QComboBox()
+        self.combo_box_workspaces.setMinimumSize(170, 26)
+
+        # iterating sorted items make the icons appear in the same 
+        # order as defined in the Workspace enumerator
+        for _, action in sorted(actions.items()):
+            self.combo_box_workspaces.addItem(action.text())
+
+        self.combo_box_workspaces.currentIndexChanged.connect(self.update_combobox_indexes)
+        self.combo_box_workspaces.currentIndexChanged.connect(lambda x: actions[x].trigger())
+        self.tool_bar.addWidget(self.combo_box_workspaces)
+
+        self.combo_box_workspaces.currentIndexChanged.connect(self.menu_items.filter_analysis_type)
+    
+    def update_combobox_indexes(self):
+        pass
     
     def update_geometry_information(self):
         self.status_bar.update_geometry_information()
@@ -410,6 +434,10 @@ class MainWindow(QMainWindow):
         if close == QMessageBox.Yes:
             self.user_config.save()
             exit()
+        
+    def get_current_workspace(self):
+        workspace = self.combo_box_workspaces.currentIndex()
+        return workspace
         
     def get_project(self):
         return self.project

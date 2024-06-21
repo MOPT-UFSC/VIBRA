@@ -30,7 +30,7 @@ from vibra.interface.plots.acoustic.plot_transmission_loss_input import PlotTran
 #
 from vibra.interface.loading_bar import load_function
 from vibra.utils.interface_functions import get_main_window
-
+from vibra.utils.enumerators import Workspace
 
 class BorderItemDelegate(QStyledItemDelegate):
     def __init__(self, parent, borderRole):
@@ -633,10 +633,10 @@ class MenuItems(QTreeWidget):
         if not self.item_top_analysis.isHidden():
             self.item_top_acoustic_model_setup.setHidden(True)
             self.item_top_structuralModelSetup.setHidden(True)
-            index = self.main_window.analysis_filter.comboBox_analysis_selector.currentIndex()
-            if index == 0:# self.main_window.analysis_filter.radio_button_acoustic.isChecked():
+            index = self.main_window.get_current_workspace()
+            if index == Workspace.ACOUSTIC_SETUP:# self.main_window.analysis_filter.radio_button_acoustic.isChecked():
                 self.item_top_acoustic_model_setup.setHidden(False)
-            elif index == 1:# self.main_window.analysis_filter.radio_button_structural.isChecked():
+            elif index == Workspace.STRUCTURAL_SETUP:# self.main_window.analysis_filter.radio_button_structural.isChecked():
                 self.item_top_structuralModelSetup.setHidden(False)
             else:
                 self.item_top_acoustic_model_setup.setHidden(False)
