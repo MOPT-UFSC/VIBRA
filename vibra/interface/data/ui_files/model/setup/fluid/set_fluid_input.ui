@@ -154,12 +154,12 @@
            </property>
            <item>
             <property name="text">
-             <string> All lines</string>
+             <string> All bodies</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string> Selected lines</string>
+             <string> Selected bodies</string>
             </property>
            </item>
           </widget>
@@ -233,7 +233,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
             </font>
            </property>
            <property name="text">
-            <string>Selected lines:</string>
+            <string>Selected bodies:</string>
            </property>
            <property name="textFormat">
             <enum>Qt::AutoText</enum>

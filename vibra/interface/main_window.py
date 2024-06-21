@@ -80,7 +80,6 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1300, 700)
         # self.showMaximized()
         self.showMinimized()
-        # self.vibra_icon = load_icon(Path("data/icons/logo_vibra.png"), QColor("#448cff"))
         self.vibra_icon = get_vibra_icon()
         self.setWindowIcon(self.vibra_icon)
         self.setWindowTitle("Vibra")

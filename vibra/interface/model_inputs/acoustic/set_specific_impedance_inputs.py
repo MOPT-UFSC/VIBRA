@@ -114,6 +114,7 @@ class SpecificImpedanceInput(QDialog):
         self.radioButton_element_integration_table.clicked.connect(self.update_controls_for_table_of_values)
         #
         self.tabWidget_specific_impedance.currentChanged.connect(self.tabEvent_specific_impedance)
+        #
         self.treeWidget_specific_impedance.itemClicked.connect(self.on_click_item)
         self.treeWidget_specific_impedance.itemDoubleClicked.connect(self.on_doubleclick_item)
         #

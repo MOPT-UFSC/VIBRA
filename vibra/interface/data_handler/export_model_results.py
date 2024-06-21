@@ -120,10 +120,10 @@ class ExportModelResults(QDialog):
    
         np.savetxt(self.export_path, data_to_export, delimiter=",", header=header)
 
+        self.close()
         title = "Information"
         message = "The results have been exported."
         PrintMessageInput([window_title2, title, message], auto_close=True)
-        self.close()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

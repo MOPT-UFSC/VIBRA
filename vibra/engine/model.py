@@ -343,8 +343,8 @@ class Model:
         return selected_elements, nodes_inside_sphere
 
     # Properties can be accessed from outside, so this "indirection layer" is not needed
-    def set_dissipation_model_data(self, data):
-        self.properties.set_dissipation_model(data)
+    def set_dissipation_model_data(self, data, volume=None):
+        self.properties.set_dissipation_model(data, volume=volume)
 
     def set_porous_material_model_data(self, data, volume=None):
         self.properties.set_porous_material_model_data(data, volume=volume)
