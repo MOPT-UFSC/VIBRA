@@ -100,7 +100,7 @@ class WelcomeWidget(QWidget):
             name = path.name
 
             handler = partial(self.open_example_project, path)
-            item = WelcomeItem(name, icon)
+            item = WelcomeItem(name, icon, should_paint=False)
             item.clicked.connect(handler)
             examples_layout.addWidget(item)
 
@@ -128,13 +128,14 @@ class WelcomeWidget(QWidget):
 class WelcomeItem(QWidget):
     clicked = pyqtSignal()
 
-    def __init__(self, text="", icon=None):
+    def __init__(self, text="", icon=None, should_paint=True):
         super().__init__()
 
         button = QPushButton(self)
         button.clicked.connect(self.clicked.emit)
         button.setFixedSize(QSize(90, 90))
         button.setIconSize(QSize(80, 80))
+        button.should_paint = should_paint 
 
         if icon is not None:
             button.setIcon(icon)
@@ -146,3 +147,4 @@ class WelcomeItem(QWidget):
         layout.addWidget(button)
         layout.addWidget(label)
         self.setLayout(layout)
+    

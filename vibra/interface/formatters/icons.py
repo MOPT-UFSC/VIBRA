@@ -8,6 +8,7 @@ from PyQt5.QtCore import QSize
 
 from vibra import ICON_DIR
 
+
 def get_icons_path(filename):
     path = ICON_DIR / filename
     if path.exists():
@@ -71,6 +72,9 @@ def change_icon_color_for_widgets(widgets: list[QWidget], color: QColor):
             continue
         
         if not hasattr(widget, "setIcon") or not callable(widget.setIcon):
+            continue
+    
+        if hasattr(widget, "should_paint") and not widget.should_paint:
             continue
         
         icon = widget.icon()

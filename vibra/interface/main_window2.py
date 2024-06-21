@@ -6,6 +6,7 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 
+from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.exception_message import ErrorMessage
 from vibra.interface.loading_bar import load_function
 from vibra.utils.icons import load_icon
@@ -114,7 +115,7 @@ class MainWindow(QMainWindow):
         self.setStatusBar(self.status_bar)
         self.stacked_setup.addWidget(self.menu_items)
         self.stacked_setup.setCurrentWidget(self.menu_items)
-        self.dialog = None  #ANDRE
+        self.dialog = None 
 
         # for qdarktheme
         self.custom_colors = {
@@ -135,6 +136,14 @@ class MainWindow(QMainWindow):
         self.viewer_tabs.set_theme(theme)
         self.user_config.theme = theme
         self.menu_items._configItems()
+
+        if theme == "dark":
+            icon_color = QColor("#5f9af4")
+        elif theme == "light":
+            icon_color = QColor("#1a73e8")
+
+        widgets = self.findChildren((QAction, QAbstractButton))
+        change_icon_color_for_widgets(widgets, icon_color)
 
     def load_user_preferences(self):
         self.set_theme(self.user_config.theme)
