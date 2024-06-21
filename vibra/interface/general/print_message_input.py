@@ -5,11 +5,14 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtWidgets import QDialog, QFrame, QLabel, QPushButton
 
+from vibra import UI_DIR
 
 class PrintMessageInput(QDialog):
     def __init__(self, text_info, justify=True, opv=None, fontsizes=[13, 12], *args, **kwargs):
         super().__init__(*args, **kwargs)
-        uic.loadUi("data/ui_files/general/print_messages.ui", self)
+
+        ui_path = UI_DIR / "general/print_messages.ui"
+        uic.loadUi(ui_path, self)
 
         self.pushButton_close = self.findChild(QPushButton, "pushButton_close")
         self.pushButton_close.clicked.connect(self.message_close)

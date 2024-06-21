@@ -7,6 +7,7 @@ from pathlib import Path
 import os
 import numpy as np
 
+from vibra import UI_DIR
 from vibra.interface.mesh.mesher_inputs import MesherInputs
 from vibra.interface.general.print_message_input2 import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
@@ -23,7 +24,8 @@ class ExportMeshData(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        uic.loadUi(Path('data/ui_files/data_handler/export_mesh.ui'), self)
+        ui_path = UI_DIR / "data_handler/export_mesh.ui"
+        uic.loadUi(ui_path, self)
 
         self.main_window = get_main_window()
         self.main_window.set_input_widget(self)

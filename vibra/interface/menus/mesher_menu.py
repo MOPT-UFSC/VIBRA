@@ -4,10 +4,10 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QMenu
 
 from vibra.interface.loading_bar import load_function
-from vibra.interface.material_widget import MaterialWidget
+# from vibra.interface.material_widget import MaterialWidget
 from vibra.interface.mesh.mesher_inputs import MesherInputs
-from vibra.interface.model_inputs.structural.material_inputs import MaterialInput
-from vibra.interface.set_fluid_widget import FluidWidget
+# from vibra.interface.model_inputs.structural.material_inputs import MaterialInput
+# from vibra.interface.set_fluid_widget import FluidWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_functions import get_main_window
 
@@ -32,24 +32,24 @@ class MesherMenu(QMenu):
         self.generate_mesh_action = QAction(self.new_project_icon, "Generate mesh", self)
         self.generate_mesh_action.setObjectName("generate_mesh_action")
         #
-        self.set_fluid_action.triggered.connect(self.call_fluid_configurator)
-        self.set_material_action.triggered.connect(self.call_material_configurator)
+        # self.set_fluid_action.triggered.connect(self.call_fluid_configurator)
+        # self.set_material_action.triggered.connect(self.call_material_configurator)
         self.mesher_setup_action.triggered.connect(self.call_mesher_inputs)
         self.generate_mesh_action.triggered.connect(self.call_generate_mesh)
         self.generate_mesh_action.setDisabled(True)
 
     def create_layout(self):
         self.clear()
-        self.addAction(self.set_fluid_action)
+        # self.addAction(self.set_fluid_action)
         self.addAction(self.set_material_action)
         self.addAction(self.mesher_setup_action)
         # self.addAction(self.generate_mesh_action)
 
-    def call_fluid_configurator(self):
-        FluidWidget()
+    # def call_fluid_configurator(self):
+    #     FluidWidget()
 
-    def call_material_configurator(self):
-        MaterialWidget()
+    # def call_material_configurator(self):
+    #     MaterialWidget()
 
     def call_mesher_inputs(self):
         mesher = MesherInputs()

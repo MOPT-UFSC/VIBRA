@@ -2,11 +2,14 @@ import logging
 import random
 from pathlib import Path
 from time import sleep
+import sys
 
 import qdarktheme
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
+
+from vibra import app
 
 from vibra.config import UserConfig
 from vibra.interface.analysis_filter_menu import AnalysisFilter
@@ -24,26 +27,25 @@ from vibra.interface.menus.views_menu import ViewsMenu
 from vibra.interface.renderer_toolbar import RendererToolbar
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_tabs import ViewerTabs
+from vibra.interface.formatters.icons import *
 from vibra.project import Project
+
 from vibra.utils.icons import load_icon
 
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
-
+        
         self.dialog = None
         self.project = Project()
         self.user_config = UserConfig.load()
         self.status_bar = StatusBar(self)
-        self.clip_plane = ClipPlaneWidget(self)
-        self.viewer_tabs = ViewerTabs(self, self.project, self.user_config)
 
-        self.configure_window()
-        self.create_basic_layout()
-        self.load_user_preferences()
-        self.config_tool_tip_appearance()
+    def _define_qt_variables(self):
+        pass
 
+    def _create_connections(self):
         self.viewer_tabs.geometry_widget.selection_changed.connect(self.selection_changed_callback)
         self.clip_plane.slider_pressed.connect(self.slider_pressed_callback)
         self.clip_plane.value_changed.connect(self.slider_moved_callback)
@@ -75,10 +77,12 @@ class MainWindow(QMainWindow):
     def disable_cut(self):
         self.viewer_tabs.stop_cutting_mode()
 
-    def configure_window(self):
+    def _config_window(self):
         self.setMinimumSize(1300, 700)
-        self.showMaximized()
-        self.setWindowIcon(load_icon(Path("data/icons/logo_vibra.png"), QColor("#448cff")))
+        # self.showMaximized()
+        self.showMinimized()
+        self.vibra_icon = get_vibra_icon()
+        self.setWindowIcon(self.vibra_icon)
         self.setWindowTitle("Vibra")
 
         # for qdarktheme
@@ -145,6 +149,33 @@ class MainWindow(QMainWindow):
     def config_tool_tip_appearance(self):
         tool_tip_style = "QToolTip { color: rgb(0, 0, 0); background-color: rgb(255, 255, 255) }"
         self.setStyleSheet(tool_tip_style)
+
+    def _load_render_widgets(self):
+        self.clip_plane = ClipPlaneWidget(self)
+        # t0 = time()
+        self.viewer_tabs = ViewerTabs(self, self.project, self.user_config)
+        # dt = time() - t0
+        # print(f"elapsed time to load class: {round(dt, 4)}")
+
+    def configure_main_window(self):
+
+        app().splash.update_progress(10)
+        self._config_window()
+
+        app().splash.update_progress(30)
+        self._load_render_widgets()
+
+        app().splash.update_progress(60)
+        self._define_qt_variables()
+        self._create_connections()
+        self.create_basic_layout()
+
+        app().splash.update_progress(90)
+        self.load_user_preferences()
+        self.config_tool_tip_appearance()
+
+        app().splash.close()
+        self.showMaximized()
 
     def load_user_preferences(self):
         self.set_theme(self.user_config.theme)
@@ -268,7 +299,7 @@ class MainWindow(QMainWindow):
 
         if close == QMessageBox.Yes:
             self.user_config.save()
-            exit()
+            sys.exit()
 
     def process_acoustic_modal_analysis(self):
         try:

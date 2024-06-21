@@ -16,13 +16,14 @@ from vibra.config import UserConfig
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.menu_items import MenuItems
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
-from vibra.interface.set_fluid_widget import FluidWidget
+from vibra.interface.model_inputs.acoustic.fluid.fluid_widget import FluidWidget
 from vibra.interface.material_widget import MaterialWidget
 from vibra.interface.mesh.mesher_inputs import MesherInputs
 from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
     CommonRenderWidget,
 )
 from vibra.utils.enumerators import Workspace
+from vibra import app
 
 
 class MainWindow(QMainWindow):
@@ -34,11 +35,8 @@ class MainWindow(QMainWindow):
 
         self.project = Project()
         self.user_config = UserConfig.load()
-        self.viewer_tabs = ViewerTabs(self, self.project, self.user_config)
         self.status_bar = StatusBar(self)
         self.menu_items = MenuItems()
-
-        self.configure_window()
 
     def _define_qt_variables(self):
         '''
@@ -140,6 +138,9 @@ class MainWindow(QMainWindow):
 
     def load_user_preferences(self):
         self.set_theme(self.user_config.theme)
+    
+    def _load_render_widgets(self):
+        self.viewer_tabs = ViewerTabs(self, self.project, self.user_config)
 
     def configure_window(self):
         self._config_window()
@@ -147,9 +148,33 @@ class MainWindow(QMainWindow):
         self.load_user_preferences()
         self._create_workspaces_toolbar()
     
+    def configure_main_window(self):
+
+        app().splash.update_progress(10)
+        self._load_render_widgets()
+
+        app().splash.update_progress(30)
+        self._config_window()
+
+        app().splash.update_progress(60)
+        self._define_qt_variables()
+        self._connect_actions()
+
+        app().splash.update_progress(90)
+        self.load_user_preferences()
+        self.config_tool_tip_appearance()
+        self._create_workspaces_toolbar()
+
+        app().splash.close()
+        self.showMaximized()
+    
     def closeEvent(self, event):
         self.close_app()
         event.ignore()
+    
+    def config_tool_tip_appearance(self):
+        tool_tip_style = "QToolTip { color: rgb(0, 0, 0); background-color: rgb(255, 255, 255) }"
+        self.setStyleSheet(tool_tip_style)
     
     def _create_workspaces_toolbar(self):
         actions = {

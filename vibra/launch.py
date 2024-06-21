@@ -1,12 +1,12 @@
-import logging
-import os
-import sys
+import logging, os, platform, sys, vtk
+from PyQt5 import Qt, QtCore, QtWidgets
 
-import vtk
-from PyQt5.QtWidgets import QApplication
+from vibra.interface.application import Application
 
-from vibra.interface. import MainWindow
+import qdarktheme
 
+import matplotlib
+matplotlib.use("Qt5Agg")
 
 def configure_logs():
     """
@@ -34,8 +34,25 @@ def configure_logs():
     logger.addHandler(file_handler)
     logger.addHandler(stream_handler)
 
+def main():
+    """ Vibra main
+        The main function starts the Vibra software.
+        This will create the mainWindow and also pass the terminal arguments to it.
 
-if __name__ == "__main__":
+        # If are using Windows with HighDPI active, this'll set the scale to 100%
+        # But the screen and text'll be blurry
+
+        Example:
+            To start the Vibra you must first install all requeriments and
+            tip this command in the terminal:
+            (Python3)
+
+                $ python pulse.py
+
+        Todo:
+            Fix the HighDPI part to not blurry the screen. See more by searching "PyQt5 HighDPI".
+    """
+    
     configure_logs()
 
     # disables the terrible vtk error handler and its logs
@@ -46,7 +63,14 @@ if __name__ == "__main__":
     # Make the window scale evenly for every monitor
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
+    if platform.system() == "Windows":
+        sys.argv.append("--platform")
+        sys.argv.append("windows:dpiawareness=0")
+
+    qdarktheme.enable_hi_dpi()
+    app = Application(sys.argv)
+    sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    main()

@@ -14,6 +14,7 @@ class Fluid:
     dynamic_viscosity: float = 0.0
     temperature: float = 0.0
     pressure: float = 0.0
+    molar_mass: float = 0.0
 
     @property
     def impedance(self):

@@ -15,6 +15,7 @@ from PyQt5.QtWidgets import (
 from vibra.project import Project
 from vibra.utils.interface_functions import get_main_window
 from vibra.vibra_file import VibraDecoder
+from vibra import VIBRA_DIR
 
 
 class WelcomeWidget(QWidget):
@@ -82,7 +83,7 @@ class WelcomeWidget(QWidget):
 
         # number of exam
         number_of_examples = 5
-        example_paths = Path("data/examples/vibra_files/").glob("*.vibra")
+        example_paths = (VIBRA_DIR / "interface/data/examples/vibra_files/").glob("*.vibra")
         example_paths = list(example_paths)[:number_of_examples]
 
         for path in example_paths:

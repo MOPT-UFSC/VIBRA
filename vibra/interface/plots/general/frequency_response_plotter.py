@@ -8,6 +8,7 @@ import os
 import numpy as np
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
+from vibra import UI_DIR
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.data_handler.import_data_to_compare import ImportDataToCompare
 from vibra.interface.plots.general.mpl_canvas import MplCanvas
@@ -23,7 +24,8 @@ class FrequencyResponsePlotter(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        uic.loadUi(Path('data/ui_files/plots/general/frequency_response_plot.ui'), self)
+        ui_path = UI_DIR / "plots/general/frequency_response_plot.ui"
+        uic.loadUi(ui_path, self)
 
         self._load_icons()
         self._initialize()
@@ -40,20 +42,23 @@ class FrequencyResponsePlotter(QDialog):
         self.setWindowTitle("Frequency response plotter")
 
     def _initialize(self):
+
         self.imported_dB = False
         self._layout = None
         self.x_data = None
         self.y_data = None
         self.importer = None
+
+        self.data_to_plot = dict()
+
         self.title = ""
         self.font_weight = "normal"
-        self.data_to_plot = dict()
+
         self.colors = [ [0,0,1],
                         [0,0,0],
-                        [0,1,0],
-                        [1,1,0],
-                        [0,1,1],
+                        [1,0,0],
                         [1,0,1],
+                        [0,1,1],
                         [0.75,0.75,0.75],
                         [0.5, 0.5, 0.5],
                         [0.25, 0.25, 0.25] ]
