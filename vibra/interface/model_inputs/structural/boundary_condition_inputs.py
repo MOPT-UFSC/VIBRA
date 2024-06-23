@@ -9,7 +9,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 from vibra import UI_DIR
-from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 # from pulse.utils import remove_bc_from_file, os.path.join
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.utils.interface_functions import get_main_window
@@ -19,7 +19,7 @@ class BoundaryConditionInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/structural/boundary_condition_input.ui"
+        ui_path = UI_DIR / "model/setup/structural/boundary_condition_input.ui"
         uic.loadUi(ui_path, self)
 
         icon_path = str(Path("data/icons/logo_vibra.png"))
@@ -620,13 +620,12 @@ class BoundaryConditionInputs(QDialog):
         self.process_table_file_removal(list_table_names)
 
     def reset_all(self):
+
         title = "Remove all prescribed dofs from structural model"
-        message = (
-            "Do you really want to remove all prescribed dofs from the structural model?\n\n\n"
-        )
-        message += "Press the Continue button to proceed with removal or press Cancel or Close buttons to abort the current operation."
+        message = "Would you like to remove all prescribed dofs from the structural model?"
+
         buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
-        read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
+        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
         if read._continue:
             self.basenames = []

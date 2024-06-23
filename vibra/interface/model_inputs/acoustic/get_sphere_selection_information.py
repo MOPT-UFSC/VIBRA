@@ -18,7 +18,7 @@ class GetSphereSelectionInformation(QDialog):
     def __init__(self, selection_id, selection_radius, averaged, filter_type, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/acoustic/get_sphere_selection_information.ui"
+        ui_path = UI_DIR / "model/setup/acoustic/get_sphere_selection_information.ui"
         uic.loadUi(ui_path, self)
 
         icon_path = str(Path("data/icons/logo_vibra.png"))

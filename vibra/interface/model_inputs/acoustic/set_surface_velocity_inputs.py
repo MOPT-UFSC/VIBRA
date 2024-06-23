@@ -8,10 +8,9 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import *
 
-from vibra import UI_DIR
-from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
+from vibra import app, UI_DIR
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.utils.interface_functions import get_main_window
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -21,28 +20,29 @@ class SurfaceVelocityInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/acoustic/surface_velocity_input.ui"
+        ui_path = UI_DIR / "model/setup/acoustic/surface_velocity_input.ui"
         uic.loadUi(ui_path, self)
 
-        icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.icon = QIcon(icon_path)
-        self.setWindowIcon(self.icon)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Set surface velocity acoustic excitation")
-
-        self.main_window = get_main_window()
-        self.main_window.set_input_widget(self)
-        self.main_window.viewer_tabs.show_geometry()
+        self.main_window = app().main_window
         self.project = self.main_window.project
         self.model = self.project.model
         self.properties = self.model.properties
 
+        self.main_window.set_input_widget(self)
+        self.main_window.viewer_tabs.show_geometry()
+
         self._reset_variables()
+        self._config_window()
         self._define_qt_variables()
         self._create_connections()
         self.load_info()
         self.exec()
+
+    def _config_window(self):
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(self.main_window.vibra_icon)
+        self.setWindowTitle("Set surface velocity acoustic excitation")
 
     def _reset_variables(self):
         self.typed_ids = []
@@ -54,9 +54,7 @@ class SurfaceVelocityInput(QDialog):
         self.acoustic_bc_filename = self.project.file.acoustic_model_setup_filename
         self.acoustic_bc_info_path = os.path.join(self.project_path, self.acoustic_bc_filename)
         self.acoustic_folder_path = self.project.file.acoustic_imported_data_folder_path
-        self.surface_velocity_tables_folder_path = os.path.join(
-            self.acoustic_folder_path, "surface_velocity_files"
-        )
+        self.surface_velocity_tables_folder_path = os.path.join(self.acoustic_folder_path, "surface_velocity_files")
 
     def _define_qt_variables(self):
         # QCheckBox objects
@@ -416,18 +414,17 @@ class SurfaceVelocityInput(QDialog):
             if property == "surface_velocity":
                 surface_ids.append(surface_id)
 
-        if len(surface_ids) > 0:
-            title = f"Resetting of all applied surface velocities"
-            message = "Do you really want to remove the surface velocity applied to the following surface(s)?\n\n"
-            message += f"{surface_ids}"
-            message += (
-                "\n\nPress the Continue button to proceed with the resetting or press Cancel or "
-            )
-            message += "Close buttons to abort the current operation."
-            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
-            read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
+        if surface_ids:
 
-            if read._doNotRun:
+            title = f"Resetting of all applied surface velocities"
+
+            message = "Would you like to remove the surface velocity applied to the following surface(s)?\n\n"
+            message += f"{surface_ids}"
+
+            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
+            read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+
+            if read._cancel:
                 return
 
             _list_table_names = []

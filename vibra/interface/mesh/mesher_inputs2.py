@@ -5,11 +5,10 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from vibra import UI_DIR
+from vibra import app, UI_DIR
 from vibra.engine.mesher.element_type import *
-from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.utils.interface_functions import get_main_window
 
 
 class MesherInputs(QDialog):
@@ -19,95 +18,64 @@ class MesherInputs(QDialog):
         ui_path = UI_DIR / "mesh/element_setup.ui"
         uic.loadUi(ui_path, self)
 
-        icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.icon = QIcon(icon_path)
-        self.setWindowIcon(self.icon)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Mesher setup")
-
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         self.main_window.set_input_widget(self)
 
-        self.complete = False
+        self._config_window()
         self._define_qt_variables()
         self._create_connections()
         self._config_window()
         self.exec()
 
+    def _initialize(self):
+        self.complete = False
+
+    def _config_window(self):
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(self.main_window.vibra_icon)
+        self.setWindowTitle("Mesher setup")
+
     def _define_qt_variables(self):
-        # Papai do céu está triste com tanto camelCase em vez de snake_case =(
 
-        # QCheckBox objects
-        self.checkBox_size_factor = self.findChild(QCheckBox, "checkBox_size_factor")
-        self.checkBox_recomb_all_triangular_mesh = self.findChild(
-            QCheckBox, "checkBox_recomb_all_triangular_mesh"
-        )
-        self.checkBox_use_incomplete_elements = self.findChild(
-            QCheckBox, "checkBox_use_incomplete_elements"
-        )
-        self.checkBox_recomb_all_triangular_mesh = self.findChild(
-            QCheckBox, "checkBox_recomb_all_triangular_mesh"
-        )
-        self.checkBox_use_incomplete_elements = self.findChild(
-            QCheckBox, "checkBox_use_incomplete_elements"
-        )
+        # QCheckBox
+        self.checkBox_size_factor : QCheckBox
+        self.checkBox_recomb_all_triangular_mesh : QCheckBox
+        self.checkBox_use_incomplete_elements : QCheckBox
+        self.checkBox_recomb_all_triangular_mesh : QCheckBox
+        self.checkBox_use_incomplete_elements : QCheckBox
 
-        # QComboBox objects
-        self.comboBox_element_shape = self.findChild(QComboBox, "comboBox_element_shape")
-        self.comboBox_shape_function = self.findChild(QComboBox, "comboBox_shape_function")
-        self.comboBox_2D_algorithm = self.findChild(QComboBox, "comboBox_2D_algorithm")
-        self.comboBox_3D_algorithm = self.findChild(QComboBox, "comboBox_3D_algorithm")
-        self.comboBox_2D_recomb_algorithm = self.findChild(
-            QComboBox, "comboBox_2D_recomb_algorithm"
-        )
-        self.comboBox_subdivision_algorithm = self.findChild(
-            QComboBox, "comboBox_subdivision_algorithm"
-        )
-        self.comboBox_element_order = self.findChild(QComboBox, "comboBox_element_order")
+        # QComboBox
+        self.comboBox_element_shape : QComboBox
+        self.comboBox_shape_function : QComboBox
+        self.comboBox_2D_algorithm : QComboBox
+        self.comboBox_3D_algorithm : QComboBox
+        self.comboBox_2D_recomb_algorithm : QComboBox
+        self.comboBox_subdivision_algorithm : QComboBox
+        self.comboBox_element_order : QComboBox
 
-        # QLabel objects
-        self.label_size_factor = self.findChild(QLabel, "label_size_factor")
-        self.label_minimum_element_size_gen = self.findChild(
-            QLabel, "label_minimum_element_size_gen"
-        )
-        self.label_maximum_element_size_gen = self.findChild(
-            QLabel, "label_maximum_element_size_gen"
-        )
+        # QLabel
+        self.label_size_factor : QLabel
+        self.label_minimum_element_size_gen : QLabel
+        self.label_maximum_element_size_gen : QLabel
 
-        # QLineEdit objects
-        self.lineEdit_size_factor_gen = self.findChild(QLineEdit, "lineEdit_size_factor_gen")
-        self.lineEdit_minimum_element_size_gen = self.findChild(
-            QLineEdit, "lineEdit_minimum_element_size_gen"
-        )
-        self.lineEdit_maximum_element_size_gen = self.findChild(
-            QLineEdit, "lineEdit_maximum_element_size_gen"
-        )
-        self.lineEdit_geometry_tolerance_gen = self.findChild(
-            QLineEdit, "lineEdit_geometry_tolerance_gen"
-        )
-        self.lineEdit_smoothing_steps = self.findChild(QLineEdit, "lineEdit_smoothing_steps")
-        self.lineEdit_size_factor_adv = self.findChild(QLineEdit, "lineEdit_size_factor_adv")
-        self.lineEdit_minimum_element_size_adv = self.findChild(
-            QLineEdit, "lineEdit_minimum_element_size_adv"
-        )
-        self.lineEdit_maximum_element_size_adv = self.findChild(
-            QLineEdit, "lineEdit_maximum_element_size_adv"
-        )
-        self.lineEdit_geometry_tolerance_adv = self.findChild(
-            QLineEdit, "lineEdit_geometry_tolerance_adv"
-        )
-        self.lineEdit_minimum_element_size_adv = self.findChild(
-            QLineEdit, "lineEdit_minimum_element_size_adv"
-        )
+        # QLineEdit
+        self.lineEdit_size_factor_gen : QLineEdit
+        self.lineEdit_minimum_element_size_gen : QLineEdit
+        self.lineEdit_maximum_element_size_gen : QLineEdit
+        self.lineEdit_geometry_tolerance_gen : QLineEdit
+        self.lineEdit_smoothing_steps : QLineEdit
+        self.lineEdit_size_factor_adv : QLineEdit
+        self.lineEdit_minimum_element_size_adv : QLineEdit
+        self.lineEdit_maximum_element_size_adv : QLineEdit
+        self.lineEdit_geometry_tolerance_adv : QLineEdit
+        self.lineEdit_minimum_element_size_adv : QLineEdit
 
         # QPushButton object
-        self.pushButton_confirm_mesh_setup = self.findChild(
-            QPushButton, "pushButton_confirm_mesh_setup"
-        )
+        self.pushButton_confirm_mesh_setup : QPushButton
 
         # QTabWidget object
-        self.tabWidget_element_options = self.findChild(QTabWidget, "tabWidget_element_options")
+        self.tabWidget_element_options : QTabWidget
         self.tabWidget_element_options.setTabEnabled(1, False)
 
     def _create_connections(self):

@@ -8,9 +8,9 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from vibra import UI_DIR
+from vibra import app, UI_DIR
 from vibra.engine.properties.material import Material
-from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.pick_color_input import PickColorInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.libraries.default_libraries import default_material_library
@@ -31,8 +31,25 @@ class MaterialInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/structural/material_input.ui"
+        ui_path = UI_DIR / "model/setup/structural/material_input.ui"
         uic.loadUi(ui_path, self)
+
+        self.main_window = app().main_window
+        self.project = self.main_window.get_project()
+
+        self.main_window.set_input_widget(self)
+
+        #
+        self._reset_variables()
+        self._config_window()
+        self._create_material_library_file()
+        self._define_Qt_variables()
+        self._create_connections()
+        self.update()
+        self.loadList()
+        self.exec()
+
+    def _config_window(self):
 
         icon_path = str(Path("data/icons/logo_vibra.png"))
         self.icon = QIcon(icon_path)
@@ -41,25 +58,6 @@ class MaterialInput(QDialog):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle("Set: material")
-
-        self.main_window = get_main_window()
-        self.main_window.set_input_widget(self)
-        self.project = self.main_window.get_project()
-        #
-        # self.opv = opv
-        # self.opv.setInputObject(self)
-        # self.bodies_ids = self.opv.getListPickedLines()
-        # self.project = project
-        # self.preprocessor = project.preprocessor
-        # self.before_run = project.get_pre_solution_model_checks()
-        #
-        self._reset_variables()
-        self._create_material_library_file()
-        self._define_Qt_variables()
-        self._create_connections()
-        self.update()
-        self.loadList()
-        self.exec()
 
     def _reset_variables(self):
         #
@@ -810,17 +808,17 @@ class MaterialInput(QDialog):
             return
 
     def reset_library_to_default(self):
-        title = "Resetting of materials library"
-        message = "Do you really want to reset the material library to default values?\n\n\n"
-        message += "Press the 'Proceed' button to proceed with resetting or press 'Cancel' or 'Close' buttons to abort the current operation."
-        read = CallDoubleConfirmationInput(
-            title, message, leftButton_label="Cancel", rightButton_label="Proceed"
-        )
 
-        if read._doNotRun:
+        title = "Resetting of materials library"
+        message = "Would you like to reset the material library to default values?"
+
+        read = GetUserConfirmationInput(title, message, leftButton_label="Cancel", rightButton_label="Proceed")
+
+        if read._cancel:
             return
 
         if read._continue:
+
             config_cache = configparser.ConfigParser()
             config_cache.read(self.material_path)
             sections_cache = config_cache.sections()

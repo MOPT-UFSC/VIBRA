@@ -159,7 +159,7 @@ class AnalysisSetupInput(QDialog):
                     self.lineEdit_modes.setFocus()
                     return True
 
-            input_fmin = self.check_inputs(self.lineEdit_fmin, "'minimum frequency'", zero_included=True, _float=True)
+            input_fmin = self.check_inputs(self.lineEdit_fmin, "'minimum frequency'", zero_included=False, _float=True)
             if self.stop:
                 self.lineEdit_fmin.setFocus()
                 return True

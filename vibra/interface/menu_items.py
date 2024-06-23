@@ -21,6 +21,7 @@ from vibra.interface.model_inputs.acoustic.set_anechoic_termination_inputs impor
 from vibra.interface.model_inputs.acoustic.set_volume_velocity_inputs import VolumeVelocityInput
 from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import DissipationModelInput
 from vibra.interface.model_inputs.acoustic.set_lrf_eq_model_inputs import LowReducedFrequencyEquivalentModelInput
+from vibra.interface.model_inputs.acoustic.set_porous_material_model import SetPorousMaterialModel
 #
 from vibra.interface.model_inputs.structural.boundary_condition_inputs import BoundaryConditionInputs
 from vibra.interface.model_inputs.structural.material_inputs import MaterialInput
@@ -212,6 +213,7 @@ class MenuItems(QTreeWidget):
         self.item_child_set_anechoic_termination = QTreeWidgetItem(["Set Anechoic Termination"])
         self.item_child_set_specific_impedance = QTreeWidgetItem(["Set Specific Impedance"])
         self.item_child_set_lrf_eq_model = QTreeWidgetItem(["Set LRF Equivalent Model"])
+        self.item_child_set_porous_material_model = QTreeWidgetItem(["Set Porous Material Model"])
         self.item_child_add_compressor_excitation = QTreeWidgetItem(["Add Compressor Excitation"])
 
         self.item_child_set_anechoic_termination.setToolTip(0, "equivalent to the long pipe boundary condition")
@@ -226,6 +228,7 @@ class MenuItems(QTreeWidget):
         self.list_child_items.append(self.item_child_set_specific_impedance)
         self.list_child_items.append(self.item_child_set_anechoic_termination)
         self.list_child_items.append(self.item_child_add_compressor_excitation)
+        self.list_child_items.append(self.item_child_set_porous_material_model)
         self.list_child_items.append(self.item_child_set_lrf_eq_model)
         #
         self.item_top_analysis = QTreeWidgetItem(["Analysis"])
@@ -292,6 +295,7 @@ class MenuItems(QTreeWidget):
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_anechoic_termination)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_specific_impedance)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_dissipation_model)
+        self.item_top_acoustic_model_setup.addChild(self.item_child_set_porous_material_model)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_lrf_eq_model)
         # self.item_top_acoustic_model_setup.addChild(self.item_child_add_compressor_excitation)
 
@@ -419,6 +423,10 @@ class MenuItems(QTreeWidget):
         elif item == self.item_child_set_lrf_eq_model:
             if not self.item_child_set_lrf_eq_model.isDisabled():
                 self.obj = LowReducedFrequencyEquivalentModelInput()
+
+        elif item == self.item_child_set_porous_material_model:
+            if not self.item_child_set_porous_material_model.isDisabled():
+                self.obj = SetPorousMaterialModel()
 
         elif item == self.item_child_set_volume_velocity:
             if not self.item_child_set_volume_velocity.isDisabled():
@@ -590,14 +598,15 @@ class MenuItems(QTreeWidget):
         self.item_child_setNodalLoads.setDisabled(bool_key)
 
     def modify_acoustic_model_setup_items_acces(self, bool_key):
-        self.item_child_set_dissipation_model.setDisabled(bool_key)
-        self.item_child_set_lrf_eq_model.setDisabled(bool_key)
         self.item_child_set_acoustic_pressure.setDisabled(bool_key)
         self.item_child_set_mass_flow_rate.setDisabled(bool_key)
         self.item_child_set_volume_velocity.setDisabled(bool_key)
         self.item_child_set_surface_velocity.setDisabled(bool_key)
         self.item_child_set_specific_impedance.setDisabled(bool_key)
         self.item_child_set_anechoic_termination.setDisabled(bool_key)
+        self.item_child_set_dissipation_model.setDisabled(bool_key)
+        self.item_child_set_lrf_eq_model.setDisabled(bool_key)
+        self.item_child_set_porous_material_model.setDisabled(bool_key)
         self.item_child_add_compressor_excitation.setDisabled(bool_key)
 
     def modify_analysis_items_acces(self, bool_key):

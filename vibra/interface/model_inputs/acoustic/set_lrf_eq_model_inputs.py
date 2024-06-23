@@ -11,7 +11,7 @@ from vibra import UI_DIR
 from vibra.interface.model_inputs.acoustic.get_sphere_selection_information import GetSphereSelectionInformation
 from vibra.interface.mesh.mesher_inputs import MesherInputs
 #
-from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input2 import PrintMessageInput
 # from vibra.interface.exception_message import ErrorMessage
 # from vibra.errors import IncompleteMeshSetup, IncompleteSetupError
@@ -27,7 +27,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/acoustic/lrf_eq_model_inputs.ui"
+        ui_path = UI_DIR / "model/setup/acoustic/lrf_eq_model_inputs.ui"
         uic.loadUi(ui_path, self)
 
         icon_path = str(Path("data/icons/logo_vibra.png"))
@@ -454,12 +454,14 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
                 volume_ids.append(volume_id)
 
         if len(group_ids) + len(volume_ids):
-            title = f"Resetting LRF eq. model"
-            message = "Do you really want to remove all LRF equivalent model inputs defined to the acoustic model?"
-            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
-            read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
 
-            if read._doNotRun:
+            title = f"Resetting LRF eq. model"
+            message = "Would you like to remove all LRF equivalent model inputs defined to the acoustic model?"
+
+            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
+            read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+
+            if read._cancel:
                 return
 
             if read._continue:

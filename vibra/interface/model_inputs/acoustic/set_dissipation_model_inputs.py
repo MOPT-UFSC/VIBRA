@@ -24,7 +24,7 @@ class DissipationModelInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/acoustic/dissipation_model_inputs.ui"
+        ui_path = UI_DIR / "model/setup/acoustic/dissipation_model_inputs.ui"
         uic.loadUi(ui_path, self)
 
         self.main_window = get_main_window()

@@ -6,6 +6,7 @@ from collections import defaultdict
 import numpy as np
 from scipy.special import jv
 
+from vibra.engine.porous_materials.porous_materials_models import PorousMaterialModels
 from vibra.engine.mesher.geometry_setup import GeometrySetup
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.model_properties import ModelProperties
@@ -39,7 +40,11 @@ class Model:
         self.surface_acoustic_element = None
         self.solid_structural_element = None
         self.surface_structural_element = None
-        self.reset_lrf_eq_model()
+
+        self.lrf_eq_data = dict()
+        self.lrf_properties = dict()
+        self.porous_material_properties = dict()
+
         self.properties = ModelProperties()
 
     def set_geometry_path(self, path):
@@ -145,13 +150,14 @@ class Model:
         global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
         return np.array(global_dofs.flatten(), dtype=int)
 
-    def reset_lrf_eq_model(self):
+    def get_lrf_eq_data(self, modal=False):
+        """ """
+
         self.lrf_eq_data = dict()
         self.lrf_properties = dict()
 
-    def get_lrf_eq_data(self):
-        """ """
-        self.lrf_eq_data = dict()
+        if modal:
+            return
 
         for key, data in self.properties.group_properties.items():
             property, group_id = key
@@ -248,6 +254,33 @@ class Model:
                 elements = self.mesh.elements_from_volume[volume_id]
                 rho_eff = self.lrf_properties[elements[0]]["rho_ef"]
                 return True, rho_eff
+
+        return False, None
+
+    def process_porous_material_properties(self, frequencies):
+
+        model = PorousMaterialModels()
+        model.process_equivalent_properties(frequencies)
+        material_model = model.porous_material_model
+
+        self.porous_material_properties = dict()
+        for volume_id, data in material_model.items():
+            for element_id in self.mesh.elements_from_volume[volume_id]:
+                self.porous_material_properties[element_id] = data
+
+    def check_if_porous_material_model_is_active(self, surface_id):
+
+        if self.porous_material_properties:
+            return False, None
+
+        for key, data in self.properties.volume_properties.items():
+            prop, volume_id = key
+            if prop == "porous_material_model":
+                if surface_id in data["surfaces_from_volume"]:
+                    elements = self.mesh.elements_from_volume[volume_id]
+                    rho_eq = self.porous_material_properties[elements[0]]["rho_eq"]
+                    return True, rho_eq
+
         return False, None
 
     def get_average_nodal_coordinates(self, surface_ids, averaged=False):
@@ -346,8 +379,8 @@ class Model:
     def set_dissipation_model_data(self, data, volume=None):
         self.properties.set_dissipation_model(data, volume=volume)
 
-    def set_porous_material_model_data(self, data, volume=None):
-        self.properties.set_porous_material_model_data(data, volume=volume)
+    def set_porous_material_model_data(self, data, surface=None, volume=None):
+        self.properties.set_porous_material_model_data(data, surface=surface, volume=volume)
 
     def set_lrf_eq_model_data(self, data, group=None, volume=None):
         self.properties.set_lrf_eq_model_data(data, group=group, volume=volume)

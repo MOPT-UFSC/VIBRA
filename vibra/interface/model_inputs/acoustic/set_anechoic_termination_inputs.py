@@ -8,10 +8,10 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import *
 
-from vibra import UI_DIR
-from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
+from vibra import app, UI_DIR
+from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.utils.interface_functions import get_main_window
 
 window_title_1 = "ERROR"
 window_title_2 = "WARNING"
@@ -21,28 +21,32 @@ class SetAnechoicTerminationInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/acoustic/set_anechoic_termination_input.ui"
+        ui_path = UI_DIR / "model/setup/acoustic/set_anechoic_termination_input.ui"
         uic.loadUi(ui_path, self)
 
-        icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.icon = QIcon(icon_path)
-        self.setWindowIcon(self.icon)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Set anechoic termination")
-
-        self.main_window = get_main_window()
-        self.main_window.set_input_widget(self)
-        self.main_window.viewer_tabs.show_geometry()
+        self.main_window = app().main_window
         self.project = self.main_window.project
         self.model = self.project.model
         self.properties = self.model.properties
 
+        self.main_window.set_input_widget(self)
+        self.main_window.viewer_tabs.show_geometry()
+
         self._reset()
+        self._config_window()
         self._define_qt_variables()
         self._create_connections()
+
+        ConfigWidgetAppearance(self, tool_tip=True)
+
         self.load_info()
         self.exec()
+
+    def _config_window(self):
+        self.setWindowIcon(app().main_window.vibra_icon)
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModal)
+        self.setWindowTitle("Set anechoic termination")
 
     def _reset(self):
         self.typed_ids = []
@@ -225,9 +229,9 @@ class SetAnechoicTerminationInputs(QDialog):
             message = "Would you like to remove the all anechoic terminations from the model?"
 
             buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
-            read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
+            read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
-            if read._doNotRun:
+            if read._cancel:
                 return
 
             if read._continue:

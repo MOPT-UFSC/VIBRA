@@ -137,8 +137,8 @@ class Project:
     def set_dissipation_model(self, data, volume):
         self.model.set_dissipation_model_data(data, volume=volume)
 
-    def set_porous_material_model(self, data, volume=None):
-        self.model.set_porous_material_model_data(data, volume=volume)
+    def set_porous_material_model(self, data, **kwargs):
+        self.model.set_porous_material_model_data(data, **kwargs)
 
     def set_lrf_eq_model_data(self, data, group=None, volume=None):
         self.model.set_lrf_eq_model_data(data, group=group, volume=volume)
@@ -217,7 +217,7 @@ class Project:
         self.structural_assembler.set_element_formulation(element)
 
     def solve_acoustic_modal_analysis(self):
-        self.model.reset_lrf_eq_model()
+        self.model.get_lrf_eq_data(modal=True)
         self.acoustic_assembler.process_assemble()
         self.acoustic_modal_solver.solve()
 
@@ -226,9 +226,9 @@ class Project:
         self.structural_modal_solver.solve()
 
     def solve_acoustic_harmonic_analysis(self):
-        self.model.reset_lrf_eq_model()
         self.model.get_lrf_eq_data()
         self.model.process_lrf_properties(self.analysis_data["frequencies"])
+        self.model.process_porous_material_properties(self.analysis_data["frequencies"])
         self.acoustic_assembler.process_assemble()
         self.acoustic_harmonic_solver.solve()
 
