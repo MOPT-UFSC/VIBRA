@@ -6,7 +6,7 @@ from PyQt5 import uic
 from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.model_inputs.acoustic.fluid.fluid_widget import FluidWidget
-from vibra.interface.general.print_message_input2 import PrintMessageInput
+from vibra.interface.general.print_message_input import PrintMessageInput
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -105,6 +105,10 @@ class SetFluidInput(QDialog):
     def _add_fluid_input_widget(self):
         self.fluid_widget = FluidWidget(parent_widget=self, compressor_thermodynamic_state=self.compressor_thermodynamic_state)
         self.grid_layout.addWidget(self.fluid_widget)
+        self.fluid_widget.pushButton_remove_column.clicked.connect(self.reset_selected_fluid_lineEdit)
+
+    def reset_selected_fluid_lineEdit(self):
+        self.lineEdit_selected_fluid_name.setText("")
 
     def load_compressor_info(self):
         self.fluid_widget.load_compressor_info()

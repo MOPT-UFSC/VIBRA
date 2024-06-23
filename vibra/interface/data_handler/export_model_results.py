@@ -8,7 +8,7 @@ import os
 import numpy as np
 
 from vibra import UI_DIR
-from vibra.interface.general.print_message_input2 import PrintMessageInput
+from vibra.interface.general.print_message_input import PrintMessageInput
 
 def get_icons_path(filename):
     path = f"data/icons/{filename}"

@@ -1,27 +1,16 @@
-from pathlib import Path
-
-from PyQt5 import uic
+from PyQt5.QtWidgets import QDialog, QPushButton
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PyQt5 import uic
 
-from vibra import UI_DIR
-from vibra.interface.analysis.acoustic_harmonic_analysis_input import (
-    AcousticHarmonicAnalysisInput,
-)
-from vibra.interface.analysis.acoustic_modal_analysis_input import (
-    AcousticModalAnalysisInput,
-)
-from vibra.interface.analysis.coupled_harmonic_analysis_input import (
-    CoupledHarmonicAnalysisInput,
-)
-from vibra.interface.analysis.structural_harmonic_analysis_input import (
-    StructuralHarmonicAnalysisInput,
-)
-from vibra.interface.analysis.structural_modal_analysis_input import (
-    StructuralModalAnalysisInput,
-)
-from vibra.utils.interface_functions import get_main_window
+from vibra import app, UI_DIR
+from vibra.interface.analysis.acoustic_harmonic_analysis_input import AcousticHarmonicAnalysisInput
+from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
+from vibra.interface.analysis.coupled_harmonic_analysis_input import CoupledHarmonicAnalysisInput
+from vibra.interface.analysis.structural_harmonic_analysis_input import StructuralHarmonicAnalysisInput
+from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
+
+from pathlib import Path
 
 
 class AnalysisTypeInput(QDialog):
@@ -31,7 +20,7 @@ class AnalysisTypeInput(QDialog):
         ui_path = UI_DIR / "analysis/analysis_type_input.ui"
         uic.loadUi(ui_path, self)
 
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
 
         icon_path = str(Path("data/icons/logo_vibra.png"))
         self.icon = QIcon(icon_path)

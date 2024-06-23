@@ -159,7 +159,7 @@ class SetPorousMaterialModel(QDialog):
 
         tab_index = self.tabWidget_main.currentIndex()
 
-        if tab_index == 3:
+        if tab_index == 4:
             self.lineEdit_selected_id.setText("")
             self.lineEdit_selected_id.setDisabled(True)
             self.comboBox_attribution_type.setDisabled(True)
@@ -198,9 +198,9 @@ class SetPorousMaterialModel(QDialog):
                 volume_with_porous_material_model.append(volume_id)
 
         if volume_with_porous_material_model:
-            self.tabWidget_main.setTabVisible(3, True)
+            self.tabWidget_main.setTabVisible(4, True)
         else:
-            self.tabWidget_main.setTabVisible(3, False)
+            self.tabWidget_main.setTabVisible(4, False)
 
     def load_info(self):
 
@@ -279,7 +279,7 @@ class SetPorousMaterialModel(QDialog):
             message += f"\n\n{str(log_error)}"
 
         if message != "":
-            PrintMessageInput([title, message, window_title_1])
+            PrintMessageInput([window_title_1, title, message])
             return True, []
 
         if single_ID:
@@ -297,6 +297,20 @@ class SetPorousMaterialModel(QDialog):
     def process_Delany_Bazley_model_inputs(self):
         self.material_model_data = {
                                     "model" : "Delany-Bazley",
+                                    "C1" : self.doubleSpinBox_C1_DB.value(),
+                                    "C2" : self.doubleSpinBox_C2_DB.value(),
+                                    "C3" : self.doubleSpinBox_C3_DB.value(),
+                                    "C4" : self.doubleSpinBox_C4_DB.value(),
+                                    "C5" : self.doubleSpinBox_C5_DB.value(),
+                                    "C6" : self.doubleSpinBox_C6_DB.value(),
+                                    "C7" : self.doubleSpinBox_C7_DB.value(),
+                                    "C8" : self.doubleSpinBox_C8_DB.value(),
+                                    "flow_resistivity" : self.doubleSpinBox_flow_resistivity_DB.value()
+                                    }
+
+    def process_Delany_Bazley_Miki_model_inputs(self):
+        self.material_model_data = {
+                                    "model" : "Delany-Bazley-Miki",
                                     "C1" : self.doubleSpinBox_C1_DB.value(),
                                     "C2" : self.doubleSpinBox_C2_DB.value(),
                                     "C3" : self.doubleSpinBox_C3_DB.value(),
@@ -336,8 +350,10 @@ class SetPorousMaterialModel(QDialog):
         if index == 0:
             self.process_Delany_Bazley_model_inputs()
         elif index == 1:
-            self.process_Jhonson_Champoux_Allard_model_inputs()
+            self.process_Delany_Bazley_Miki_model_inputs()
         elif index == 2:
+            self.process_Jhonson_Champoux_Allard_model_inputs()
+        elif index == 3:
             self.process_Jhonson_Champoux_Allard_Lafarge_model_inputs()
         else:
             return
@@ -355,7 +371,7 @@ class SetPorousMaterialModel(QDialog):
 
         # print(self.material_model_data)
         model = self.material_model_data["model"]
-        print(f"The porous material model '{model}' has been attributed to volumes: {volume_ids}")
+        print(f"The porous material model '{model}' has been attributed to the volumes {volume_ids}")
 
         self.close()
 

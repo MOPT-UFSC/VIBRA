@@ -171,7 +171,7 @@ class SpecificImpedanceInput(QDialog):
                 real_F = float(lineEdit_real.text())
             except Exception:
                 message = "Wrong input for real part of specific impedance."
-                PrintMessageInput([title, message, window_title_1])
+                PrintMessageInput([window_title_1, title, message])
                 self.lineEdit_real_value.setFocus()
                 self.stop = True
                 return
@@ -183,7 +183,7 @@ class SpecificImpedanceInput(QDialog):
                 imag_F = float(lineEdit_imag.text())
             except Exception:
                 message = "Wrong input for imaginary part of specific impedance."
-                PrintMessageInput([title, message, window_title_1])
+                PrintMessageInput([window_title_1, title, message])
                 self.lineEdit_imag_value.setFocus()
                 self.stop = True
                 return
@@ -239,7 +239,7 @@ class SpecificImpedanceInput(QDialog):
             title = "Additional inputs required"
             message = "You must inform at least one specific impedance\n"
             message += "before confirming the input!"
-            PrintMessageInput([title, message, window_title_1])
+            PrintMessageInput([window_title_1, title, message])
             self.lineEdit_real_value.setFocus()
 
     def load_table(self, lineEdit, direct_load=False):
@@ -264,7 +264,7 @@ class SpecificImpedanceInput(QDialog):
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"
                 message += " data must have three columns in the form: frequencies, real and imaginary values."
-                PrintMessageInput([title, message, window_title_1])
+                PrintMessageInput([window_title_1, title, message])
                 return None, None
 
             imported_values = imported_file[:, 1]
@@ -287,7 +287,7 @@ class SpecificImpedanceInput(QDialog):
 
         except Exception as log_error:
             message = str(log_error)
-            PrintMessageInput([title, message, window_title_1])
+            PrintMessageInput([window_title_1, title, message])
             lineEdit.setFocus()
             return None, None
 
@@ -316,7 +316,7 @@ class SpecificImpedanceInput(QDialog):
         except Exception as log_error:
             title = "Error reached while saving table files"
             message = str(log_error)
-            PrintMessageInput([title, message, window_title_1])
+            PrintMessageInput([window_title_1, title, message])
             return None, None
 
     def load_specific_impedance_table(self):
@@ -379,7 +379,7 @@ class SpecificImpedanceInput(QDialog):
             title = "Additional inputs required"
             message = "You must inform at least one specific impedance\n"
             message += "table path before confirming the input!"
-            PrintMessageInput([title, message, window_title_1])
+            PrintMessageInput([window_title_1, title, message])
             self.lineEdit_load_table_path.setFocus()
 
     def get_list_table_names_from_selected_surfaces(self, list_ids):
@@ -463,7 +463,7 @@ class SpecificImpedanceInput(QDialog):
                 title = "specific impedance resetting process complete"
                 message = "All specific impedance applied to the acoustic "
                 message += "model have been removed from the model."
-                PrintMessageInput([title, message, window_title_2])
+                PrintMessageInput([window_title_2, title, message])
 
                 self.close()
 

@@ -3,11 +3,10 @@ from PyQt5.QtGui import QIcon, QFont, QBrush, QColor
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
 
-from pulse import app, UI_DIR
-from pulse.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
-from pulse.interface.user_input.model.setup.material.material_widget import MaterialInputs
-from pulse.interface.handler.geometry_handler import GeometryHandler
-from pulse.interface.user_input.project.print_message import PrintMessageInput
+from vibra import app, UI_DIR
+from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
+from vibra.interface.model_inputs.structural.material.material_widget import MaterialInputs
+from vibra.interface.general.print_message_input import PrintMessageInput
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -197,17 +196,7 @@ class SetMaterialInput(QDialog):
             return
 
     def actions_to_finalize(self):
-        build_data = self.file.get_segment_build_data_from_file()
-        geometry_handler = GeometryHandler()
-        geometry_handler.set_length_unit(self.file.length_unit)
-        geometry_handler.process_pipeline(build_data)
         self.close()
-
-    def load_project(self):
-        self.project.initial_load_project_actions(self.file.project_ini_file_path)
-        self.project.load_project_files()
-        app().main_window.input_widget.initial_project_action(True)
-        self.complete = True
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

@@ -7,17 +7,17 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QDialog, QComboBox, QFrame, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
 
-from vibra import UI_DIR
+from vibra import app, UI_DIR
 from vibra.interface.model_inputs.acoustic.get_sphere_selection_information import GetSphereSelectionInformation
 from vibra.interface.mesh.mesher_inputs import MesherInputs
 #
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.interface.general.print_message_input2 import PrintMessageInput
+from vibra.interface.general.print_message_input import PrintMessageInput
 # from vibra.interface.exception_message import ErrorMessage
 # from vibra.errors import IncompleteMeshSetup, IncompleteSetupError
 
 from vibra.interface.loading_bar import load_function
-from vibra.utils.interface_functions import get_main_window
+
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -37,7 +37,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle("Set the low reduced frequency eq. model")
 
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
         

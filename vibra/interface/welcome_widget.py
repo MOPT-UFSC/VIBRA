@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (
 )
 
 from vibra.project import Project
-from vibra.utils.interface_functions import get_main_window
+from vibra import app
 from vibra.vibra_file import VibraDecoder
 from vibra import VIBRA_DIR
 
@@ -22,7 +22,8 @@ class WelcomeWidget(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
+
         layout = QVBoxLayout(self)
         self.setLayout(layout)
         self.setup_image(layout)

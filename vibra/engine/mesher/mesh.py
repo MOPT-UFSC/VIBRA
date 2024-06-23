@@ -79,18 +79,18 @@ class Mesh:
 
         obj = Mesh()
         obj.load_cad(
-            path,
-            minimum_element_size=minimum_element_size,
-            maximum_element_size=maximum_element_size,
-            element_type=element_type,
-            geometry_tolerance=geometry_tolerance,
-            size_factor=size_factor,
-            dimension=dimension,
-            threads=threads,
-            gmsh_gui=gmsh_gui,
-            mesh_refinement_parameters = mesh_refinement_parameters,
-            mesh_connection = mesh_connection,
-        )
+                    path,
+                    minimum_element_size=minimum_element_size,
+                    maximum_element_size=maximum_element_size,
+                    element_type=element_type,
+                    geometry_tolerance=geometry_tolerance,
+                    size_factor=size_factor,
+                    dimension=dimension,
+                    threads=threads,
+                    gmsh_gui=gmsh_gui,
+                    mesh_refinement_parameters = mesh_refinement_parameters,
+                    mesh_connection = mesh_connection,
+                    )
 
         # saves the data to edit mesh parameters later
         with open(path, "r", encoding="iso-8859-1") as file:
@@ -125,34 +125,35 @@ class Mesh:
         self.geometry_setup = GeometrySetup(string, suffix)
 
     def load_cad(
-        self,
-        path: (str | Path),
-        *,
-        minimum_element_size: float = 30.0,
-        maximum_element_size: float = 30.0,
-        element_type: ElementType = DEFAULT_ELEMENT_TYPE,
-        geometry_tolerance: float = 1e-6,
-        size_factor: float = 0.50,
-        dimension: int = 3,
-        threads: int = 2,
-        gmsh_gui: bool = False,
-        mesh_refinement_parameters = None,
-        mesh_connection = True,
+                    self,
+                    path: (str | Path),
+                    *,
+                    minimum_element_size: float = 30.0,
+                    maximum_element_size: float = 30.0,
+                    element_type: ElementType = DEFAULT_ELEMENT_TYPE,
+                    geometry_tolerance: float = 1e-6,
+                    size_factor: float = 0.50,
+                    dimension: int = 3,
+                    threads: int = 4,
+                    gmsh_gui: bool = False,
+                    mesh_refinement_parameters = None,
+                    mesh_connection = True,
+                ):
 
-    ):
         self.mesh_setup = dict(
-            minimum_element_size=minimum_element_size,
-            maximum_element_size=maximum_element_size,
-            element_type=element_type,
-            geometry_tolerance=geometry_tolerance,
-            size_factor=size_factor,
-            dimension=dimension,
-            threads=threads,
-            mesh_refinement_parameters = mesh_refinement_parameters,
-            mesh_connection = mesh_connection,
-        )
+                                minimum_element_size=minimum_element_size,
+                                maximum_element_size=maximum_element_size,
+                                element_type=element_type,
+                                geometry_tolerance=geometry_tolerance,
+                                size_factor=size_factor,
+                                dimension=dimension,
+                                threads=threads,
+                                mesh_refinement_parameters = mesh_refinement_parameters,
+                                mesh_connection = mesh_connection
+                                )
 
-        t0 = time()
+        self.mesh_connection = mesh_connection
+        # t0 = time()
         path = Path(path)
         gmsh.initialize("", False)
         logging.info(f"Generating mesh from {path}")
@@ -165,17 +166,19 @@ class Mesh:
                                 size_factor,
                                 threads,
                                 mesh_refinement_parameters,
-                                mesh_connection   )
+                            )
 
         logging.info("Loading Geometry" + ProgressStatus(10, 100))
         gmsh.merge(str(path))
+        # gmsh.open(str(path))
+        gmsh.model.occ.synchronize()
 
         self.dimension = min(dimension, gmsh.model.getDimension())
         self.element_type = element_type
-        
-        if mesh_connection:
+
+        if self.mesh_connection:
             self._merge_nodes_from_adjacent_volumes()
-            
+
         logging.info("Loading Geometry" + ProgressStatus(15, 100))
         gmsh.model.mesh.generate(dim=element_type.dimensions)
         gmsh.model.mesh.removeDuplicateNodes()
@@ -188,7 +191,7 @@ class Mesh:
                 gmsh.fltk.run()
 
         gmsh.finalize()
-        dt = time() - t0
+        # dt = time() - t0
         # print(f"Elapsed time: {dt}")
 
         logging.info(   f"Mesh generated with {len(self.nodal_coordinates)} nodes"
@@ -201,7 +204,7 @@ class Mesh:
         """
         volumes_list = gmsh.model.getEntities(3)
         gmsh.model.occ.fragment(volumes_list, volumes_list)
-        gmsh.model.occ.synchronize()    
+        gmsh.model.occ.synchronize() 
 
     def import_nodes_coordinates(self, filename):
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
@@ -331,16 +334,16 @@ class Mesh:
         gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
 
     def _configure_mesh(
-        self,
-        element_type,
-        minimum_element_size,
-        maximum_element_size,
-        tolerance,
-        size_factor,
-        threads,
-        mesh_refinement_parameters=None,
-        mesh_connection = True,
-    ):
+                        self,
+                        element_type,
+                        minimum_element_size,
+                        maximum_element_size,
+                        tolerance,
+                        size_factor,
+                        threads,
+                        mesh_refinement_parameters=None
+                        ):
+
         if mesh_refinement_parameters is None:
             mesh_refinement_parameters = []
 
@@ -361,7 +364,6 @@ class Mesh:
         gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_type.recombination_algorithm)
         gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", element_type.subdivision_algorithm)
         gmsh.option.setNumber("Mesh.RecombineAll", element_type.recombine_all)
-
         gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
         gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_type.second_order_incomplete)
 
@@ -375,9 +377,9 @@ class Mesh:
         self.nodal_coordinates[indexes - 1, 1:] = coords.reshape(-1, 3) / 1000
         self.nodal_coordinates[indexes - 1, :1] = indexes.reshape(-1, 1) - 1
 
-        mask = np.linalg.norm(self.nodal_coordinates[:,1:] - np.array([0, 0, 0]), axis=1) < 0.005
+        # mask = np.linalg.norm(self.nodal_coordinates[:,1:] - np.array([0, 0, 0]), axis=1) < 0.005
         # mask = np.abs(self.nodal_coordinates[:,1]) < 0.005
-        ids = self.nodal_coordinates[:,0][mask]
+        # ids = self.nodal_coordinates[:,0][mask]
         # print(len(ids), ids)
 
         connectivity_dim1 = dict()
@@ -395,9 +397,13 @@ class Mesh:
         self.gmsh_elements_from_volumes.clear()
 
         for dim, tag in gmsh.model.getEntities():
+
+            # print(dim, tag)
+
             if dim == 3:
                 _, downwards = gmsh.model.getAdjacencies(dim, tag)
                 self.surfaces_from_volumes[tag] = list(downwards)
+                # print(tag, list(downwards))
                 for surf_id in list(downwards):
                     self.volume_from_surface[surf_id].append(tag)
 
@@ -585,13 +591,18 @@ class Mesh:
 
         # The adoption of quadratic elements ensures better results for area calculations.
         element_type = TETRAHEDRON_10
+
         gmsh.initialize("", False)
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("General.NumThreads", 4)
         gmsh.merge(str(path))
+        # gmsh.open(str(path))
 
-        gmsh.option.setNumber("Geometry.Tolerance", 1e-8)
+        if self.mesh_connection:
+            self._merge_nodes_from_adjacent_volumes()
+
+        gmsh.option.setNumber("Geometry.Tolerance", 1e-6)
         gmsh.option.setNumber("Mesh.MeshSizeFactor", 0.1)
         gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
         gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
@@ -605,15 +616,22 @@ class Mesh:
         gmsh.model.mesh.generate(dim=2)
 
         for dim, tag in gmsh.model.getEntities():
+
+            # print(dim, tag)
+
             if dim == 2:  # Surfaces
+
                 p = gmsh.model.addPhysicalGroup(2, [tag])
                 gmsh.plugin.setNumber("MeshVolume", "Dimension", 2)
                 gmsh.plugin.setNumber("MeshVolume", "PhysicalGroup", p)
                 gmsh.plugin.run("MeshVolume")
+
                 views = gmsh.view.getTags()
                 _, _, data = gmsh.view.getListData(views[-1])
 
                 surfaces_areas[tag] = data[-1][-1] / (1e6)
+                # if tag in [32, 36]:
+                #     print(tag, data[-1][-1] / (1e6))
 
             # maybe it is going to be necessary evaluate the bodies volumes too
             # elif dim == 3:  # Solids

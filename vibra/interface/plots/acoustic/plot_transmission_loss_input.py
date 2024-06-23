@@ -7,12 +7,11 @@ from pathlib import Path
 import os
 import numpy as np
 
-from vibra import UI_DIR
-from vibra.interface.general.print_message_input2 import PrintMessageInput
+from vibra import app, UI_DIR
+from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 
-from vibra.utils.interface_functions import get_main_window
 
 def get_icons_path(filename):
     path = f"data/icons/{filename}"
@@ -29,12 +28,13 @@ class PlotTransmissionLossInput(QDialog):
         ui_path = UI_DIR / "plots/acoustic/plot_transmission_loss.ui"
         uic.loadUi(ui_path, self)
 
-        self.main_window = get_main_window()
-        self.main_window.set_input_widget(self)
-        self.main_window.viewer_tabs.show_geometry()
+        self.main_window = app().main_window
         self.project = self.main_window.project
         self.model = self.project.model
         self.properties = self.model.properties
+
+        self.main_window.set_input_widget(self)
+        self.main_window.viewer_tabs.show_geometry()
 
         self._load_icons()
         self._reset_variables()
@@ -183,6 +183,7 @@ class PlotTransmissionLossInput(QDialog):
         rho_in = fluid_in.fluid_density
         c0_in = fluid_in.speed_of_sound
 
+        # print(self.project.model.surfaces_areas)
         A_in = self.project.model.surfaces_areas[self.input_surface_id]
         A_out = self.project.model.surfaces_areas[self.output_surface_id]
 

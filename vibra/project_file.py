@@ -7,6 +7,8 @@ import numpy as np
 
 from vibra.interface.general.print_message_input import PrintMessageInput
 
+window_title_1 = "Error"
+window_title_2 = "Warning"
 
 class ProjectFile:
     def __init__(self):
@@ -221,10 +223,14 @@ class ProjectFile:
                             config.write(config_file)
 
             if message is not None and bc_removed:
-                PrintMessageInput(["Removal of selected boundary condition", message, "WARNING"])
+                title = "Removal of selected boundary condition"
+                PrintMessageInput([window_title_2, title, message])
 
-        except Exception as log_error:
-            PrintMessageInput(["Error while removing BC from file", str(log_error), "ERROR"])
+        except Exception as error_log:
+
+            title = "Error while removing BC from file"
+            message = str(error_log)
+            PrintMessageInput([window_title_1, title, message])
 
     def remove_acoustic_table_files_from_folder(
         self, filename, folder_name, remove_empty_files=True

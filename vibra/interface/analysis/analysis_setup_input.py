@@ -7,18 +7,19 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 from vibra import app, UI_DIR
+from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.utils.interface_functions import get_main_window
 
-window_title = "ERROR"
+window_title_1 = "Error"
 
 
 class AnalysisSetupInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         self.project = self.main_window.project
+
         self.analysis_data = self.project.analysis_data
         self.analysis_id = self.analysis_data["analysis_id"]
         self.imported_table_state = self.main_window.project.imported_table_state
@@ -47,19 +48,25 @@ class AnalysisSetupInput(QDialog):
             return
 
         uic.loadUi(ui_path, self)
-        #
-        icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.icon = QIcon(icon_path)
-        self.setWindowIcon(self.icon)
-        #
+
+        self._config_window()
         self._reset_variables()
         self._load_analysis_data()
         self._define_qt_variables()
         self._create_connections()
+        self._update_fmin()
+
+        ConfigWidgetAppearance(self)
+
         self.update_frequency_setup_input_texts()
         self.update_damping_input_texts()
-        #
         self.exec_()
+
+    def _config_window(self):
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(self.main_window.vibra_icon)
+        self.setWindowTitle("Analysis setup")
 
     def _reset_variables(self):
         self.complete = False
@@ -69,33 +76,36 @@ class AnalysisSetupInput(QDialog):
         self.f_step = 0
 
     def _define_qt_variables(self):
-        self.label_title = self.findChild(QLabel, "label_title")
-        self.label_subtitle = self.findChild(QLabel, "label_subtitle")
+        # QLabel
+        self.label_title : QLabel
+        self.label_subtitle : QLabel
 
         if self.analysis_id == 1:
-            self.lineEdit_modes = self.findChild(QLineEdit, "lineEdit_modes")
+            self.lineEdit_modes : QLineEdit
 
-        self.lineEdit_av = self.findChild(QLineEdit, "lineEdit_av")
-        self.lineEdit_bv = self.findChild(QLineEdit, "lineEdit_bv")
-        self.lineEdit_ah = self.findChild(QLineEdit, "lineEdit_ah")
-        self.lineEdit_bh = self.findChild(QLineEdit, "lineEdit_bh")
+        self.lineEdit_av : QLineEdit
+        self.lineEdit_bv : QLineEdit
+        self.lineEdit_ah : QLineEdit
+        self.lineEdit_bh : QLineEdit
 
-        self.lineEdit_fmin = self.findChild(QLineEdit, "lineEdit_min")
-        self.lineEdit_fmax = self.findChild(QLineEdit, "lineEdit_max")
-        self.lineEdit_fstep = self.findChild(QLineEdit, "lineEdit_step")
+        self.lineEdit_fmin : QLineEdit
+        self.lineEdit_fmax : QLineEdit
+        self.lineEdit_fstep : QLineEdit
 
-        self.pushButton_confirm_close = self.findChild(QPushButton, "pushButton_confirm_close")
-        self.pushButton_confirm_run_analysis = self.findChild(
-            QPushButton, "pushButton_confirm_run_analysis"
-        )
+        self.pushButton_confirm_close : QPushButton
+        self.pushButton_confirm_run_analysis : QPushButton
 
-        self.tabWidget = self.findChild(QTabWidget, "tabWidget")
+        self.tabWidget : QTabWidget
         self.currentTab = self.tabWidget.currentIndex()
 
     def _create_connections(self):
         self.pushButton_confirm_close.clicked.connect(self.check_exit)
         self.pushButton_confirm_run_analysis.clicked.connect(self.check_run)
         self.tabWidget.currentChanged.connect(self.tabEvent)
+
+    def _update_fmin(self):
+        df = self.lineEdit_fstep.text()
+        self.lineEdit_fmin.setText(df)
 
     def _load_analysis_data(self):
         data = self.project.analysis_data
@@ -179,7 +189,7 @@ class AnalysisSetupInput(QDialog):
                 message = "The maximum frequency (fmax) must be greater than \n"
                 message += "the sum between minimum frequency (fmin) and \n"
                 message += "frequency resolution (df)."
-                PrintMessageInput([title, message, window_title])
+                PrintMessageInput([window_title_1, title, message])
                 return True
 
         alpha_v = beta_v = alpha_h = beta_h = 0.0
@@ -278,7 +288,7 @@ class AnalysisSetupInput(QDialog):
                 message = f"Insert some value at the {label} input field."
 
         if message != "":
-            PrintMessageInput([title, message, window_title])
+            PrintMessageInput([window_title_1, title, message])
             self.stop = True
             return None
         return out

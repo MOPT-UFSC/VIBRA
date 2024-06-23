@@ -153,7 +153,7 @@ class MainWindow(QMainWindow):
     def _load_render_widgets(self):
         self.clip_plane = ClipPlaneWidget(self)
         # t0 = time()
-        self.viewer_tabs = ViewerTabs(self, self.project, self.user_config)
+        self.viewer_tabs = ViewerTabs(self)
         # dt = time() - t0
         # print(f"elapsed time to load class: {round(dt, 4)}")
 

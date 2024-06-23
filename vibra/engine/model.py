@@ -14,7 +14,8 @@ from vibra.errors import IncompleteSetupError
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.utils.progress_status import ProgressStatus
 
-window_title = "Error"
+window_title_1 = "Error"
+window_title_2 = "Warning"
 
 
 class ModelStatus:
@@ -28,12 +29,10 @@ class Model:
         self.reset_variables()
 
     def reset_variables(self):
-        #
-        self.geometry_path = Path("")
+
         self.mesh = None
         self.mesh_setup = None
         self.generated_mesh = False
-        self.surfaces_areas = dict()
 
         self.analysis_data = None
         self.solid_acoustic_element = None
@@ -41,9 +40,12 @@ class Model:
         self.solid_structural_element = None
         self.surface_structural_element = None
 
+        self.surfaces_areas = dict()
         self.lrf_eq_data = dict()
         self.lrf_properties = dict()
         self.porous_material_properties = dict()
+
+        self.geometry_path = Path("")
 
         self.properties = ModelProperties()
 
@@ -57,7 +59,7 @@ class Model:
         self.mesh_setup = mesh_setup
 
     def process_visual_geometry_mesh(self):
-        self.mesh = Mesh.from_cad(self.geometry_path, dimension=2, size_factor=0.2)
+        self.mesh = Mesh.from_cad(self.geometry_path, dimension=2, size_factor=0.15)
         self.surfaces_areas = self.mesh.get_model_areas(self.geometry_path)
         self.generated_mesh = False
 
@@ -448,7 +450,7 @@ class Model:
             message += f"\n\n{str(log_error)}"
 
         if message != "":
-            PrintMessageInput([title, message, window_title])
+            PrintMessageInput([window_title_1, title, message])
             return True, []
 
         if single_ID:
@@ -498,7 +500,7 @@ class Model:
             message += f"\n\n{str(log_error)}"
 
         if message != "":
-            PrintMessageInput([title, message, window_title])
+            PrintMessageInput([window_title_1, title, message])
             return True, []
 
         if single_ID:

@@ -8,6 +8,7 @@ class StatusBar(QStatusBar):
         super().__init__(parent)
 
         self.main_window = get_main_window()
+
         self._create_qt_variables()
         self._config_widgets()
         self._config_sizes()

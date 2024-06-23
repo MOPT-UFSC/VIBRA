@@ -6,12 +6,11 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from vibra import UI_DIR
+from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.utils.interface_functions import get_main_window
 
-window_title1 = "Error"
-window_title2 = "Warning"
+window_title_1 = "Error"
+window_title_2 = "Warning"
 
 
 class AcousticModalAnalysisInput(QDialog):
@@ -21,7 +20,7 @@ class AcousticModalAnalysisInput(QDialog):
         ui_path = UI_DIR / "analysis/acoustic/acoustic_modal_analysis_input.ui"
         uic.loadUi(ui_path, self)
 
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         self.project = self.main_window.project
 
         icon_path = str(Path("data/icons/logo_vibra.png"))
@@ -59,31 +58,32 @@ class AcousticModalAnalysisInput(QDialog):
             self.close()
 
     def check(self):
+
+        title = "Invalid input value"
         if self.lineEdit_number_modes.text() == "":
-            title = "INVALID INPUT VALUE"
             message = "Invalid a value to the number of modes."
-            self.text_data = [title, message, window_title1]
+            PrintMessageInput([window_title_1, title, message])
             return True
         else:
+
             try:
                 self.modes = int(self.lineEdit_number_modes.text())
             except Exception:
-                title = "INVALID INPUT VALUE"
                 message = "Invalid input value for number of modes."
-                self.text_data = [title, message, window_title1]
+                PrintMessageInput([window_title_1, title, message])
                 return True
+
             try:
                 self.sigma_factor = (2 * pi * float(self.lineEdit_input_sigma_factor.text())) ** 2
             except Exception:
-                title = "INVALID INPUT VALUE"
                 message = "Invalid input value for sigma factor."
-                self.text_data = [title, message, window_title1]
+                PrintMessageInput([window_title_1, title, message])
                 return True
+
         return False
 
     def confirm(self):
         if self.check():
-            PrintMessageInput(self.text_data)
             return
         self.complete = True
         self.close()

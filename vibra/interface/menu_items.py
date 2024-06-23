@@ -5,6 +5,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+from vibra import app
 from vibra.errors import IncompleteMeshSetup, IncompleteSetupError
 from vibra.interface.analysis.analysis_setup_input import AnalysisSetupInput
 from vibra.interface.analysis.analysis_type_input import AnalysisTypeInput
@@ -24,7 +25,7 @@ from vibra.interface.model_inputs.acoustic.set_lrf_eq_model_inputs import LowRed
 from vibra.interface.model_inputs.acoustic.set_porous_material_model import SetPorousMaterialModel
 #
 from vibra.interface.model_inputs.structural.boundary_condition_inputs import BoundaryConditionInputs
-from vibra.interface.model_inputs.structural.material_inputs import MaterialInput
+from vibra.interface.model_inputs.structural.material.set_material_input import SetMaterialInput
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_input import PlotAcousticFrequencyResponseInput
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_input import PlotAcousticFrequencyResponseFunctionInput
 from vibra.interface.plots.acoustic.plot_transmission_loss_input import PlotTransmissionLossInput
@@ -90,7 +91,7 @@ class MenuItems(QTreeWidget):
     def __init__(self):
         super().__init__()
 
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         self.obj = None
 
         # self._createIcons()
@@ -398,7 +399,7 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_set_material:
             if not self.item_child_set_material.isDisabled():
-                self.obj = MaterialInput()
+                self.obj = SetMaterialInput()
 
         elif item == self.item_child_set_fluid:
             if not self.item_child_set_fluid.isDisabled():
@@ -756,11 +757,14 @@ class MenuItems(QTreeWidget):
         self.item_top_acoustic_model_setup.setHidden(False)
 
     def empty_project_action_message(self):
-        title = "EMPTY PROJECT"
+
+        window_title = "Error"
+        title = "Empty project"
+
         message = "Please, you should create a new project or load an already existing one before start to set up the model."
-        message += "\n\nIt is recommended to use the 'New Project' or the 'Import Project' \nbuttons to continue."
-        window_title = "ERROR"
-        PrintMessageInput([title, message, window_title], opv=self.main_window.getOPVWidget())
+        message += " It is recommended to use the 'New Project' or the 'Import Project' buttons to continue."
+
+        PrintMessageInput([window_title, title, message])
 
     def before_initilize(self):
         if self.main_window.dialog is not None:

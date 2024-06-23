@@ -8,7 +8,6 @@ from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.utils.interface_functions import get_main_window
 
 import configparser
 import os
@@ -27,7 +26,7 @@ class DissipationModelInput(QDialog):
         ui_path = UI_DIR / "model/setup/acoustic/dissipation_model_inputs.ui"
         uic.loadUi(ui_path, self)
 
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         self.main_window.set_input_widget(self)
 
         self.project = self.main_window.project
@@ -309,7 +308,7 @@ class DissipationModelInput(QDialog):
             message += f"\n\n{str(log_error)}"
 
         if message != "":
-            PrintMessageInput([title, message, window_title_1])
+            PrintMessageInput([window_title_1, title, message])
             return True, []
 
         if single_ID:
@@ -318,10 +317,11 @@ class DissipationModelInput(QDialog):
             return False, list_ids
 
     def check_inputs(self, lineEdit, label, only_positive=False, zero_included=True, _float=True):
+
         self.stop = False
         message = ""
+
         title = "Invalid input at dissipation model"
-        window_title = "ERROR"
         if lineEdit.text() != "":
             try:
                 if _float:
@@ -351,7 +351,7 @@ class DissipationModelInput(QDialog):
                 message = f"Insert some value at the {label} input field."
 
         if message != "":
-            PrintMessageInput([title, message, window_title])
+            PrintMessageInput([window_title_1, title, message])
             self.stop = True
             return None
         return out

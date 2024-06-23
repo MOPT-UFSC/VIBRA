@@ -12,8 +12,8 @@ from vibra import app, UI_DIR
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
-window_title_1 = "ERROR"
-window_title_2 = "WARNING"
+window_title_1 = "Error"
+window_title_2 = "Warning"
 
 
 class MassFlowRateInput(QDialog):
@@ -166,7 +166,7 @@ class MassFlowRateInput(QDialog):
                 real_F = float(lineEdit_real.text())
             except Exception:
                 message = "Wrong input for real part of volume velocity."
-                PrintMessageInput([title, message, window_title_1])
+                PrintMessageInput([window_title_1, title, message])
                 self.lineEdit_real_value.setFocus()
                 self.stop = True
                 return
@@ -178,7 +178,7 @@ class MassFlowRateInput(QDialog):
                 imag_F = float(lineEdit_imag.text())
             except Exception:
                 message = "Wrong input for imaginary part of volume velocity."
-                PrintMessageInput([title, message, window_title_1])
+                PrintMessageInput([window_title_1, title, message])
                 self.lineEdit_imag_value.setFocus()
                 self.stop = True
                 return
@@ -236,7 +236,7 @@ class MassFlowRateInput(QDialog):
             title = "Additional inputs required"
             message = "You must inform at least one volume velocity\n"
             message += "before confirming the input!"
-            PrintMessageInput([title, message, window_title_1])
+            PrintMessageInput([window_title_1, title, message])
             self.lineEdit_real_value.setFocus()
 
     def load_table(self, lineEdit, direct_load=False):
@@ -261,7 +261,7 @@ class MassFlowRateInput(QDialog):
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"
                 message += " data must have three columns in the form: frequencies, real and imaginary values."
-                PrintMessageInput([title, message, window_title_1])
+                PrintMessageInput([window_title_1, title, message])
                 return None, None
 
             imported_values = imported_file[:, 1]
@@ -284,7 +284,7 @@ class MassFlowRateInput(QDialog):
 
         except Exception as log_error:
             message = str(log_error)
-            PrintMessageInput([title, message, window_title_1])
+            PrintMessageInput([window_title_1, title, message])
             lineEdit.setFocus()
             return None, None
 
@@ -313,7 +313,7 @@ class MassFlowRateInput(QDialog):
         except Exception as log_error:
             title = "Error reached while saving table files"
             message = str(log_error)
-            PrintMessageInput([title, message, window_title_1])
+            PrintMessageInput([window_title_1, title, message])
             return None, None
 
     def load_mass_flow_rate_table(self):
@@ -373,7 +373,7 @@ class MassFlowRateInput(QDialog):
             title = "Additional inputs required"
             message = "You must inform at least one volume velocity\n"
             message += "table path before confirming the input!"
-            PrintMessageInput([title, message, window_title_1])
+            PrintMessageInput([window_title_1, title, message])
             self.lineEdit_load_table_path.setFocus()
 
     def get_list_table_names_from_selected_surfaces(self, list_ids):
@@ -457,7 +457,7 @@ class MassFlowRateInput(QDialog):
                 title = "Volume velocity resetting process complete"
                 message = "All volume velocity applied to the acoustic "
                 message += "model have been removed from the model."
-                PrintMessageInput([title, message, window_title_2])
+                PrintMessageInput([window_title_2, title, message])
 
                 self.close()
 

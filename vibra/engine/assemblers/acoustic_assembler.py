@@ -1,15 +1,10 @@
-import logging
-from collections import defaultdict
-from time import time
 
-import numpy as np
-from scipy.sparse import coo_matrix, csr_matrix
-from scipy.special import jv
 # 3D elements
 from vibra.engine.elements.acoustic_hex8_element import ACT_HEXAHEDRON_8C
 from vibra.engine.elements.acoustic_hex20_element import ACT_HEXAHEDRON_20C
 from vibra.engine.elements.acoustic_tet4_element import ACT_TETRAHEDRON_4C
 from vibra.engine.elements.acoustic_tet10_element import ACT_TETRAHEDRON_10C
+
 # 2D elements
 from vibra.engine.elements.acoustic_face3_element import ACT_FACE_3
 from vibra.engine.elements.acoustic_face4_element import ACT_FACE_4
@@ -17,14 +12,19 @@ from vibra.engine.elements.acoustic_face4_element import ACT_FACE_4
 from vibra.engine.mesher.element_type import *
 from vibra.utils.progress_status import ProgressStatus
 
-# from vibra.utils.interface_functions import get_main_window
+import logging
+from collections import defaultdict
+from time import time
+
+import numpy as np
+from scipy.sparse import coo_matrix, csr_matrix
+from scipy.special import jv
 
 
 class AcousticAssembler:
     def __init__(self, model):
         self.model = model
         self.properties = model.properties
-        # self.main_window = get_main_window()
         self.reset()
 
     def reset(self):

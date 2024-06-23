@@ -1,47 +1,27 @@
-from PyQt5.QtCore import QCoreApplication, pyqtSignal
-from PyQt5.QtWidgets import (
-    QLabel,
-    QPushButton,
-    QTabWidget,
-    QVBoxLayout,
-    QWidget,
-)
+# fmt: off
 
+from PyQt5.QtWidgets import QLabel, QPushButton, QTabWidget, QVBoxLayout, QWidget
+from PyQt5.QtCore import QCoreApplication, pyqtSignal
+
+from vibra import app
 from vibra.interface.help_widget import HelpWidget
-from vibra.interface.viewer_3d.render_widgets.acoustic_harmonic_analysis_render_widget import (
-    AcousticHarmonicAnalysisRenderWidget,
-)
-from vibra.interface.viewer_3d.render_widgets.acoustic_modal_analysis_render_widget import (
-    AcousticModalAnalysisRenderWidget,
-)
-from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
-    CommonRenderWidget,
-)
-from vibra.interface.viewer_3d.render_widgets.example_render_widget import (
-    ExampleRenderWidget,
-)
-from vibra.interface.viewer_3d.render_widgets.geometry_render_widget import (
-    GeometryRenderWidget,
-)
-from vibra.interface.viewer_3d.render_widgets.mesh_render_widget import (
-    MeshRenderWidget,
-)
-from vibra.interface.viewer_3d.render_widgets.structural_modal_analysis_render_widget import (
-    StructuralModalAnalysisRenderWidget,
-)
+from vibra.interface.viewer_3d.render_widgets.acoustic_harmonic_analysis_render_widget import AcousticHarmonicAnalysisRenderWidget
+from vibra.interface.viewer_3d.render_widgets.acoustic_modal_analysis_render_widget import AcousticModalAnalysisRenderWidget
+from vibra.interface.viewer_3d.render_widgets.common_render_widget import CommonRenderWidget
+from vibra.interface.viewer_3d.render_widgets.example_render_widget import ExampleRenderWidget
+from vibra.interface.viewer_3d.render_widgets.geometry_render_widget import GeometryRenderWidget
+from vibra.interface.viewer_3d.render_widgets.mesh_render_widget import MeshRenderWidget
+from vibra.interface.viewer_3d.render_widgets.structural_modal_analysis_render_widget import StructuralModalAnalysisRenderWidget
 from vibra.interface.welcome_widget import WelcomeWidget
-from vibra.utils.interface_functions import get_main_window
 
 
 class ViewerTabs(QTabWidget):
-    def __init__(self, parent, project, user_config):
+    def __init__(self, parent):
         super(QWidget, self).__init__(parent)
 
-        self.tabCloseRequested.connect(self.removeTab)
-        self.configure_window()
-
-        self.main_window = get_main_window()
-        self.user_config = user_config
+        self.main_window = app().main_window
+        self.project = app().main_window.project
+        self.user_config = app().main_window.user_config
 
         self.geometry_widget = GeometryRenderWidget()
         self.mesh_widget = MeshRenderWidget()
@@ -52,9 +32,13 @@ class ViewerTabs(QTabWidget):
         self.welcome = WelcomeWidget()
         self.help_widget = HelpWidget()
 
+        self.configure_window()
+
         self.add_tabs()
         self.reset_tab_visibility()
         self.show_welcome()
+
+        self.tabCloseRequested.connect(self.removeTab)
 
     def add_tabs(self):
         self.addTab(self.welcome, "Welcome!")
@@ -141,27 +125,10 @@ class ViewerTabs(QTabWidget):
         for i in range(self.count()):
             if i > 2:
                 self.setTabVisible(i, False)
-        
-        # self._close_widgets(
-        #     self.acoustic_modal_analysis,
-        #     self.structural_modal_analysis,
-        # )
 
     def close_mesh_tabs(self):
         self.setTabVisible(2, False)
-        # self._close_widgets(
-        #     self.mesh_widget,
-        #     self.geometry_widget,
-        #     self.acoustic_modal_analysis,
-        #     self.structural_modal_analysis,
-        # )
 
-    # def _close_widgets(self, *widgets_list):
-    #     for widget in widgets_list:
-    #         i = self.indexOf(widget)
-    #         self.removeTab(i)
-
-    #
     def start_cutting_mode(self):
         for tab in self.tabs():
             if not hasattr(tab, "start_cutting_mode"):
@@ -208,3 +175,5 @@ class ViewerTabs(QTabWidget):
     def tabs(self):
         for i in range(self.count()):
             yield self.widget(i)
+
+# fmt: on

@@ -7,13 +7,12 @@ from pathlib import Path
 import os
 import numpy as np
 
-from vibra import UI_DIR
+from vibra import app, UI_DIR
 from vibra.interface.mesh.mesher_inputs import MesherInputs
-from vibra.interface.general.print_message_input2 import PrintMessageInput
+from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 
-from vibra.utils.interface_functions import get_main_window
 
 def get_icons_path(filename):
     path = f"data/icons/{filename}"
@@ -27,7 +26,7 @@ class ExportMeshData(QDialog):
         ui_path = UI_DIR / "data_handler/export_mesh.ui"
         uic.loadUi(ui_path, self)
 
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         self.main_window.set_input_widget(self)
         
         self.project = self.main_window.project

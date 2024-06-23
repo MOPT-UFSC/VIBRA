@@ -5,18 +5,20 @@ from PyQt5 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.icons import *
+
+from vibra.interface.general.pick_color_input import PickColorInput
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+
 from vibra.libraries.default_libraries import default_material_library
-from vibra.interface.user_input.model.setup.general.color_selector import PickColorInput
-from vibra.interface.user_input.project.print_message import PrintMessageInput
-from vibra.interface.user_input.project.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.preprocessing.material import Material
+from vibra.engine.properties.material import Material
 
 import configparser
 from itertools import count
 from pathlib import Path
 
-window_title = "Error"
-window_title2 = "Warning"
+window_title_1 = "Error"
+window_title_2 = "Warning"
 
 COLOR_COLUMN = 5
 
@@ -117,7 +119,7 @@ class MaterialInputs(QWidget):
         except Exception as error_log:
             self.title = "Error while loading the material list"
             self.message = str(error_log)
-            PrintMessageInput([window_title, self.title, self.message])
+            PrintMessageInput([window_title_1, self.title, self.message])
             self.close()
 
         self.list_of_materials.clear()
@@ -278,18 +280,16 @@ class MaterialInputs(QWidget):
             value = float(item.text())
 
         except Exception as error:
-            window_title = "Error"
             title = "Invalid real number"
             message = f"The value typed for '{prop_labels[item.column()]}' must be a non-zero positive number."
-            PrintMessageInput([window_title, title, message])
+            PrintMessageInput([window_title_1, title, message])
             item.setText("")
             return True
 
         if value < 0:
-            window_title = "Error"
             title = "Negative value not allowed"
             message = f"The value typed for '{prop_labels[item.column()]}' must be a non-zero positive number."
-            PrintMessageInput([window_title, title, message])
+            PrintMessageInput([window_title_1, title, message])
             item.setText("")
             return True
         
@@ -332,7 +332,7 @@ class MaterialInputs(QWidget):
         except Exception as error_log:
             title = "Error while writing material data in file"
             message = str(error_log)
-            PrintMessageInput([window_title, title, message])
+            PrintMessageInput([window_title_1, title, message])
             return True
 
     def remove_material_from_file(self, material):

@@ -13,8 +13,8 @@ from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppe
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
-window_title_1 = "ERROR"
-window_title_2 = "WARNING"
+window_title_1 = "Error"
+window_title_2 = "Warning"
 
 
 class SetAnechoicTerminationInputs(QDialog):

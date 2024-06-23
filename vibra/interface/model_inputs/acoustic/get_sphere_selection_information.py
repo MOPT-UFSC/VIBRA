@@ -1,15 +1,15 @@
-import numpy as np
-from pathlib import Path
 
 # fmt: off
 from PyQt5 import uic
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QDialog, QComboBox, QFrame, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
+from PyQt5.QtWidgets import QDialog, QLineEdit, QPushButton
 
-from vibra import UI_DIR
+from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.utils.interface_functions import get_main_window
+
+import numpy as np
+from pathlib import Path
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -21,16 +21,10 @@ class GetSphereSelectionInformation(QDialog):
         ui_path = UI_DIR / "model/setup/acoustic/get_sphere_selection_information.ui"
         uic.loadUi(ui_path, self)
 
-        icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.icon = QIcon(icon_path)
-        self.setWindowIcon(self.icon)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Get sphere selection information")
-
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         self.main_window.viewer_tabs.show_mesh()
-        # self.main_window.set_input_widget(self)
+        self.main_window.set_input_widget(self)
+
         self.project = self.main_window.project
         self.model = self.main_window.project.model
         self.properties = self.model.properties
@@ -39,24 +33,33 @@ class GetSphereSelectionInformation(QDialog):
         self.selection_radius = selection_radius
         self.averaged = averaged
         self.filter_type = filter_type
-        self.lineEdit_selection_radius.setText(str(self.selection_radius))
 
+        self._config_window()
         self._define_qt_variables()
         self._create_connections()
         self.get_selection_info()
         self.exec()
 
+    def _config_window(self):
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(self.main_window.vibra_icon)
+        self.setWindowTitle("Get sphere selection information")
+
     def _define_qt_variables(self):
-        # QLineEdit objects
-        self.lineEdit_center_coordinates = self.findChild(QLineEdit, 'lineEdit_center_coordinates')
-        self.lineEdit_number_of_elements = self.findChild(QLineEdit, 'lineEdit_number_of_elements')
-        self.lineEdit_number_of_nodes = self.findChild(QLineEdit, 'lineEdit_number_of_nodes')
-        self.lineEdit_selection_radius = self.findChild(QLineEdit, 'lineEdit_selection_radius')
+
+        # QLineEdit
+        self.lineEdit_center_coordinates : QLineEdit
+        self.lineEdit_number_of_elements : QLineEdit
+        self.lineEdit_number_of_nodes : QLineEdit
+        self.lineEdit_selection_radius : QLineEdit
         self.lineEdit_number_of_elements.setDisabled(True)
         self.lineEdit_number_of_nodes.setDisabled(True)
         self.lineEdit_selection_radius.setDisabled(True)
-        # QPushButton objects
-        self.pushButton_close = self.findChild(QPushButton, 'pushButton_close')
+        self.lineEdit_selection_radius.setText(str(self.selection_radius))
+
+        # QPushButton
+        self.pushButton_close : QPushButton
     
     def _create_connections(self):
         self.pushButton_close.clicked.connect(self.close)

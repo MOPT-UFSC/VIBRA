@@ -36,7 +36,7 @@ class PorousMaterialModels:
 
                 fluid = self.properties.get_fluid(volume = volume_id)
 
-                if data["model"] == "Delany-Bazley":
+                if data["model"] in ["Delany-Bazley", "Delany-Bazley-Miki"]:
                     rho_eq, C_eq = self.get_Delany_Bazley_equivalent_properties(omega, fluid, data)
 
                 elif data["model"] == "Jhonson-Champoux-Allard":
@@ -49,7 +49,7 @@ class PorousMaterialModels:
                                                             "surfaces_from_volume" : surfaces_from_volume,
                                                             "rho_eq" : rho_eq,
                                                             "C_eq" : C_eq   
-                                                            }
+                                                        }
 
     def get_Delany_Bazley_equivalent_properties(self, omega, fluid, data):
 
@@ -67,6 +67,7 @@ class PorousMaterialModels:
         C8 = data["C8"]
 
         flow_resistivity = data["flow_resistivity"]
+        # print(data)
 
         C_0 = fluid.speed_of_sound
         rho_0 = fluid.fluid_density
@@ -74,14 +75,14 @@ class PorousMaterialModels:
         frequencies = omega / (2 * np.pi)
         X = frequencies / flow_resistivity
 
-        Z = (rho_0 * C_0)*( 1 + C1*(X**C2) - 1j*(C3*(X**C4)) )
-        k_eq = (omega / C_0)*( C5*(X**C6) + 1j*(1 + C7*(X**C8)) )
+        Z_eq = (rho_0 * C_0) * ( 1 + C1*(X**C2) - 1j*(C3*(X**C4)) )
+        k_eq = (omega / C_0) * ( C5*(X**C6) + 1j*(1 + C7*(X**C8)) )
 
         C_eq = omega / k_eq
-        rho_eq = Z / C_eq
+        rho_eq = Z_eq / C_eq
 
-        print(C_eq)
-        print(rho_eq)
+        # print(C_eq)
+        # print(rho_eq)
 
         return rho_eq, C_eq
 

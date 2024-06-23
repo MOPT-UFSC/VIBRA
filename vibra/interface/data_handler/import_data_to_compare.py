@@ -182,7 +182,7 @@ class ImportDataToCompare(QDialog):
             return
         
         if message != "":
-            PrintMessageInput([title, message, window_title_1])
+            PrintMessageInput([window_title_1, title, message])
 
     def update_treeWidget_info(self):
         self.cache_checkButtons_state()
