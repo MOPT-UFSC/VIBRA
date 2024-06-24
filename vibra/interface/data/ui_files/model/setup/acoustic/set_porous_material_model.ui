@@ -740,7 +740,7 @@
               </widget>
              </item>
              <item row="1" column="5">
-              <widget class="QDoubleSpinBox" name="doubleSpinBox_C6_DB_2">
+              <widget class="QDoubleSpinBox" name="doubleSpinBox_C6_DBM">
                <property name="minimumSize">
                 <size>
                  <width>100</width>
@@ -771,7 +771,7 @@
               </widget>
              </item>
              <item row="0" column="5">
-              <widget class="QDoubleSpinBox" name="doubleSpinBox_C5_DB_2">
+              <widget class="QDoubleSpinBox" name="doubleSpinBox_C5_DBM">
                <property name="minimumSize">
                 <size>
                  <width>100</width>
@@ -802,7 +802,7 @@
               </widget>
              </item>
              <item row="3" column="2">
-              <widget class="QDoubleSpinBox" name="doubleSpinBox_C4_DB_2">
+              <widget class="QDoubleSpinBox" name="doubleSpinBox_C4_DBM">
                <property name="minimumSize">
                 <size>
                  <width>100</width>
@@ -861,7 +861,7 @@
               </spacer>
              </item>
              <item row="2" column="5">
-              <widget class="QDoubleSpinBox" name="doubleSpinBox_C7_DB_2">
+              <widget class="QDoubleSpinBox" name="doubleSpinBox_C7_DBM">
                <property name="minimumSize">
                 <size>
                  <width>100</width>
@@ -907,7 +907,7 @@
               </widget>
              </item>
              <item row="3" column="5">
-              <widget class="QDoubleSpinBox" name="doubleSpinBox_C8_DB_2">
+              <widget class="QDoubleSpinBox" name="doubleSpinBox_C8_DBM">
                <property name="minimumSize">
                 <size>
                  <width>100</width>
@@ -953,7 +953,7 @@
               </widget>
              </item>
              <item row="2" column="2">
-              <widget class="QDoubleSpinBox" name="doubleSpinBox_C3_DB_2">
+              <widget class="QDoubleSpinBox" name="doubleSpinBox_C3_DBM">
                <property name="minimumSize">
                 <size>
                  <width>100</width>
@@ -1014,7 +1014,7 @@
               </widget>
              </item>
              <item row="0" column="2">
-              <widget class="QDoubleSpinBox" name="doubleSpinBox_C1_DB_2">
+              <widget class="QDoubleSpinBox" name="doubleSpinBox_C1_DBM">
                <property name="minimumSize">
                 <size>
                  <width>100</width>
@@ -1045,7 +1045,7 @@
               </widget>
              </item>
              <item row="1" column="2">
-              <widget class="QDoubleSpinBox" name="doubleSpinBox_C2_DB_2">
+              <widget class="QDoubleSpinBox" name="doubleSpinBox_C2_DBM">
                <property name="minimumSize">
                 <size>
                  <width>100</width>
@@ -1192,7 +1192,7 @@
               </widget>
              </item>
              <item row="0" column="2">
-              <widget class="QDoubleSpinBox" name="doubleSpinBox_flow_resistivity_DB_2">
+              <widget class="QDoubleSpinBox" name="doubleSpinBox_flow_resistivity_DBM">
                <property name="minimumSize">
                 <size>
                  <width>100</width>

@@ -8,6 +8,7 @@ import os
 import numpy as np
 
 from vibra import app, UI_DIR
+from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
@@ -40,6 +41,9 @@ class PlotTransmissionLossInput(QDialog):
         self._reset_variables()
         self._define_qt_variables()
         self._create_connections()
+
+        ConfigWidgetAppearance(self, tool_tip=True)
+
         self._config_widgets()
         self._load_analysis_data_and_solution()
         self.exec()

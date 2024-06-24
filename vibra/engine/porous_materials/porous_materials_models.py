@@ -1,6 +1,7 @@
 from vibra import app
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 class PorousMaterialModels:
 
@@ -31,9 +32,9 @@ class PorousMaterialModels:
         for key, data in self.properties.volume_properties.items():
             property, volume_id = key
             if property == "porous_material_model":
+                # print(key, data)
 
-                surfaces_from_volume = self.project.model.mesh.surfaces_from_volumes[volume_id]
-
+                # surfaces_from_volume = self.project.model.mesh.surfaces_from_volumes[volume_id]
                 fluid = self.properties.get_fluid(volume = volume_id)
 
                 if data["model"] in ["Delany-Bazley", "Delany-Bazley-Miki"]:
@@ -46,7 +47,6 @@ class PorousMaterialModels:
                     rho_eq, C_eq = self.get_JCAL_equivalent_properties(omega, fluid, data)
 
                 self.porous_material_model[volume_id] = {   "model" : data["model"],
-                                                            "surfaces_from_volume" : surfaces_from_volume,
                                                             "rho_eq" : rho_eq,
                                                             "C_eq" : C_eq   
                                                         }
@@ -67,7 +67,6 @@ class PorousMaterialModels:
         C8 = data["C8"]
 
         flow_resistivity = data["flow_resistivity"]
-        # print(data)
 
         C_0 = fluid.speed_of_sound
         rho_0 = fluid.fluid_density
@@ -76,13 +75,33 @@ class PorousMaterialModels:
         X = frequencies / flow_resistivity
 
         Z_eq = (rho_0 * C_0) * ( 1 + C1*(X**C2) - 1j*(C3*(X**C4)) )
-        k_eq = (omega / C_0) * ( C5*(X**C6) + 1j*(1 + C7*(X**C8)) )
+        k_eq = (-1j) * (omega / C_0) * ( C5*(X**C6) + 1j*(1 + C7*(X**C8)) )
 
         C_eq = omega / k_eq
         rho_eq = Z_eq / C_eq
 
-        # print(C_eq)
         # print(rho_eq)
+        # print(C_eq)
+
+        # L = 50e-3
+
+        # _Z_eq = (rho_0 * C_0) * ( 1 + C1*(X**C2) - 1j*(C3*(X**C4)) )
+        # _k_eq = (omega / C_0) * (-1j) * ( C5*(X**C6) + 1j*(1 + C7*(X**C8)) )
+
+        # Z_DB = -1j * _Z_eq / np.tan(_k_eq * L)
+        # alpha_DB = 1 - np.abs((Z_DB - rho_0*C_0) / (Z_DB + rho_0*C_0)) ** 2
+
+        # # Plotagem
+        # plt.figure()
+        # # plt.plot(f, alpha_DB70, 'k', linewidth=3)
+        # plt.plot(frequencies, alpha_DB, 'b', linewidth=3)
+        # # plt.plot(f, alpha_DB70_Mik90, 'r', linewidth=3)
+        # plt.grid(True)
+        # # plt.xlim([100, 10000])
+        # plt.xlabel('Frequência - [Hz]')
+        # plt.ylabel(r'$\alpha(\omega)$ [-]')
+        # plt.legend(['Delany-Bazley - model', "valid", 'Delany-Bazley-Miki - model'])
+        # plt.show()
 
         return rho_eq, C_eq
 

@@ -6,6 +6,7 @@ from collections import defaultdict
 import numpy as np
 from scipy.special import jv
 
+from vibra import app
 from vibra.engine.porous_materials.porous_materials_models import PorousMaterialModels
 from vibra.engine.mesher.geometry_setup import GeometrySetup
 from vibra.engine.mesher.mesh import Mesh
@@ -244,7 +245,7 @@ class Model:
                     self.lrf_properties[element_index] = {  "rho_ef" : rho_ef,
                                                             "c_ef_2" : c_ef_2   }
 
-    def check_if_lrf_eq_model_is_active(self, surface_id):
+    def is_lrf_eq_model_active(self, surface_id):
 
         if len(self.lrf_properties) == 0:
             return False, None
@@ -263,22 +264,23 @@ class Model:
 
         model = PorousMaterialModels()
         model.process_equivalent_properties(frequencies)
-        material_model = model.porous_material_model
 
         self.porous_material_properties = dict()
-        for volume_id, data in material_model.items():
+        for volume_id, data in model.porous_material_model.items():
             for element_id in self.mesh.elements_from_volume[volume_id]:
                 self.porous_material_properties[element_id] = data
 
-    def check_if_porous_material_model_is_active(self, surface_id):
+    def is_porous_material_model_active(self, surface_id):
 
-        if self.porous_material_properties:
+        if len(self.porous_material_properties) == 0:
             return False, None
 
         for key, data in self.properties.volume_properties.items():
             prop, volume_id = key
             if prop == "porous_material_model":
-                if surface_id in data["surfaces_from_volume"]:
+                surfaces_from_volume = app().main_window.project.model.mesh.surfaces_from_volumes[volume_id]
+
+                if surface_id in surfaces_from_volume:
                     elements = self.mesh.elements_from_volume[volume_id]
                     rho_eq = self.porous_material_properties[elements[0]]["rho_eq"]
                     return True, rho_eq

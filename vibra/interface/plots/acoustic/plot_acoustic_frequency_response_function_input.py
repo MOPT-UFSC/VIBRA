@@ -13,15 +13,13 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 
-from vibra.utils.interface_functions import get_main_window
-
 def get_icons_path(filename):
     path = f"data/icons/{filename}"
     if os.path.exists(path):
         return str(Path(path))
 
-window_title1 = "Error"
-window_title2 = "Warning"
+window_title_1 = "Error"
+window_title_2 = "Warning"
 
 class PlotAcousticFrequencyResponseFunctionInput(QDialog):
     def __init__(self, *args, **kwargs):
@@ -31,12 +29,12 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         uic.loadUi(ui_path, self)
 
         self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
-        self.main_window.viewer_tabs.show_geometry()
-
         self.project = self.main_window.project
         self.model = self.project.model
         self.properties = self.model.properties
+
+        self.main_window.set_input_widget(self)
+        self.main_window.viewer_tabs.show_geometry()
 
         self._load_icons()
         self._reset_variables()

@@ -55,13 +55,35 @@ for o in range(len(f)):
     Z_DB_M = -1j * Z_DB70_Mik90 / np.tan(k_DB70_Mik90 * L)
     alpha_DB70_Mik90[o] = 1 - np.abs((Z_DB_M - Zo) / (Z_DB_M + Zo)) ** 2
 
+
+C1 = 0.0497
+C2 = -0.754
+C3 = 0.0758
+C4 = -0.732
+C5 = 0.1690
+C6 = -0.595
+C7 = 0.0858
+C8 = -0.700
+
+rho_0 = po
+C_0 = co
+omega = w
+X = f / rf
+
+Z_eq = (rho_0 * C_0) * ( 1 + C1*(X**C2) - 1j*(C3*(X**C4)) )
+k_eq = (omega / C_0) * (-1j) * ( C5*(X**C6) + 1j*(1 + C7*(X**C8)) )
+
+Z_DB = -1j * Z_eq / np.tan(k_eq * L)
+alpha_DB = 1 - np.abs((Z_DB - rho_0*C_0) / (Z_DB + rho_0*C_0)) ** 2
+
 # Plotagem
 plt.figure()
 plt.plot(f, alpha_DB70, 'k', linewidth=3)
+plt.plot(f, alpha_DB, 'b', linewidth=3)
 plt.plot(f, alpha_DB70_Mik90, 'r', linewidth=3)
 plt.grid(True)
 plt.xlim([100, 10000])
 plt.xlabel('Frequência - [Hz]')
 plt.ylabel(r'$\alpha(\omega)$ [-]')
-plt.legend(['Delany-Bazley - model', 'Delany-Bazley-Miki - model'])
+plt.legend(['Delany-Bazley - model', "valid", 'Delany-Bazley-Miki - model'])
 plt.show()

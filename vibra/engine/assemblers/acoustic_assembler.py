@@ -168,8 +168,8 @@ class AcousticAssembler:
 
                     info = self.model.mesh.connectivity_from_surfaces[surface_id]
 
-                    lrf_active, rho_eff = self.model.check_if_lrf_eq_model_is_active(surface_id)
-                    pm_active, rho_eq = self.model.check_if_porous_material_model_is_active(surface_id)
+                    lrf_active, rho_eff = self.model.is_lrf_eq_model_active(surface_id)
+                    pm_active, rho_eq = self.model.is_porous_material_model_active(surface_id)
 
                     if lrf_active:
                         rho = rho_eff
@@ -389,8 +389,8 @@ class AcousticAssembler:
                     N = len(nodes)
                     
                     # TODO: get the surface fluid property
-                    lrf_active, rho_eff = self.model.check_if_lrf_eq_model_is_active(surface_id)
-                    pm_active, rho_eq = self.model.check_if_porous_material_model_is_active(surface_id)
+                    lrf_active, rho_eff = self.model.is_lrf_eq_model_active(surface_id)
+                    pm_active, rho_eq = self.model.is_porous_material_model_active(surface_id)
 
                     if lrf_active:
                         rho = rho_eff
@@ -421,8 +421,8 @@ class AcousticAssembler:
                     nodes = self.model.mesh.nodes_from_surfaces[surface_id]
                     N = len(nodes)
 
-                    lrf_active, rho_eff = self.model.check_if_lrf_eq_model_is_active(surface_id)
-                    pm_active, rho_eq = self.model.check_if_porous_material_model_is_active(surface_id)
+                    lrf_active, rho_eff = self.model.is_lrf_eq_model_active(surface_id)
+                    pm_active, rho_eq = self.model.is_porous_material_model_active(surface_id)
 
                     if lrf_active:
                         rho = rho_eff
