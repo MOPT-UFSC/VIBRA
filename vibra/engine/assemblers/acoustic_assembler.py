@@ -168,27 +168,33 @@ class AcousticAssembler:
 
                     info = self.model.mesh.connectivity_from_surfaces[surface_id]
 
-                    lrf_active, rho_eff = self.model.is_lrf_eq_model_active(surface_id)
-                    pm_active, rho_eq = self.model.is_porous_material_model_active(surface_id)
+                    lrf_active, rho_eff_lrf, C_eff_lrf = self.model.is_lrf_eq_model_active(surface_id)
+                    pm_active, rho_eff_pm, C_eff_pm = self.model.is_porous_material_model_active(surface_id)
 
                     if lrf_active:
-                        rho = rho_eff
+                        density = rho_eff_lrf
+                        speed_of_sound = C_eff_lrf
 
                     elif pm_active:
-                        rho = rho_eq
+                        density = rho_eff_pm
+                        speed_of_sound = C_eff_pm
 
                     else:
                         fluid = self.model.properties.get_fluid(surface=surface_id)
-                        rho = fluid.fluid_density
+                        density = fluid.fluid_density
+                        speed_of_sound = fluid.speed_of_sound
 
                     if "anechoic_termination" in data.keys():
-                        volume_id = data["volume_id"]
-                        fluid = self.model.properties.get_fluid(volume=volume_id)
-                        rho = fluid.fluid_density
-                        C0 = fluid.speed_of_sound
-                        Z0 = rho*C0
-                        real_values = np.array([Z0], dtype=float)
-                        imag_values = np.array([0], dtype=float)
+
+                        Zc = density * speed_of_sound
+
+                        if isinstance(Zc, float):
+                            real_values = np.array([Zc], dtype=float)
+                            imag_values = np.array([0], dtype=float)
+                        else:
+                            real_values = np.real(Zc)
+                            imag_values = np.imag(Zc)
+    
                     else:
                         real_values = np.array(data["real_values"], dtype=float)
                         imag_values = np.array(data["imag_values"], dtype=float)
@@ -206,7 +212,7 @@ class AcousticAssembler:
                     # for i, el in enumerate(info["element_indexes"]):
                     for i, el in enumerate(surface_indexes):
                         aux_connect[el] = info["connectivity"][i]
-                        output_data[el] = [el, complex_values, rho, area]
+                        output_data[el] = [el, complex_values, density, area]
                     # print(len(aux_connect))
 
         if aux_connect:
@@ -240,6 +246,7 @@ class AcousticAssembler:
 
         condition = self.model.lrf_properties or self.model.porous_material_properties
         if condition:
+
             nf = self.number_frequencies
             aux_ones = np.ones(nf, dtype=float)
             self.den = np.zeros((nel, nf), dtype=complex)
@@ -250,12 +257,12 @@ class AcousticAssembler:
                 self.data_M[el, :, :] = Me
 
                 if el in self.model.lrf_properties.keys():
-                    c_ef_2 = self.model.lrf_properties[el]["c_ef_2"]
-                    self.den[el, :] = 1 / c_ef_2
+                    C_eff = self.model.lrf_properties[el]["C_eff"]
+                    self.den[el, :] = 1 / (C_eff**2)
 
                 elif el in self.model.porous_material_properties.keys():
-                    C_eq = self.model.porous_material_properties[el]["C_eq"]
-                    self.den[el, :] = 1 / (C_eq**2)
+                    C_eff = self.model.porous_material_properties[el]["C_eff"]
+                    self.den[el, :] = 1 / (C_eff**2)
 
                 else:
                     _, c_0, _ = self.model.get_fluid_properties(element=el)
@@ -266,7 +273,7 @@ class AcousticAssembler:
             nf = 1
             aux_ones = np.ones(nf, dtype=float)
             self.den = np.zeros((nel, nf), dtype=complex)
-            
+
             # list_nodes = []
             # nn, _, _ = self.model.mesh.get_mesh_info()
             # base_nodes = list(np.arange(nn, dtype=int))
@@ -316,6 +323,7 @@ class AcousticAssembler:
         self.data_Z = dict()
 
         connect_Z, data = self.get_surface_data_for_element_integration_by_property("specific_impedance")
+        print(connect_Z)
         if connect_Z is None:
             _damping_matrix_full = [csr_matrix((total_dofs, total_dofs)) for _ in range(self.number_frequencies)]
         else:
@@ -389,14 +397,14 @@ class AcousticAssembler:
                     N = len(nodes)
                     
                     # TODO: get the surface fluid property
-                    lrf_active, rho_eff = self.model.is_lrf_eq_model_active(surface_id)
-                    pm_active, rho_eq = self.model.is_porous_material_model_active(surface_id)
+                    lrf_active, rho_eff_lrf, _ = self.model.is_lrf_eq_model_active(surface_id)
+                    pm_active, rho_eff_pm, _ = self.model.is_porous_material_model_active(surface_id)
 
                     if lrf_active:
-                        rho = rho_eff
+                        rho = rho_eff_lrf
 
                     elif pm_active:
-                        rho = rho_eq
+                        rho = rho_eff_pm
 
                     else:
                         fluid = self.model.properties.get_fluid(surface=surface_id)
@@ -421,14 +429,14 @@ class AcousticAssembler:
                     nodes = self.model.mesh.nodes_from_surfaces[surface_id]
                     N = len(nodes)
 
-                    lrf_active, rho_eff = self.model.is_lrf_eq_model_active(surface_id)
-                    pm_active, rho_eq = self.model.is_porous_material_model_active(surface_id)
+                    lrf_active, rho_eff_lrf, _ = self.model.is_lrf_eq_model_active(surface_id)
+                    pm_active, rho_eff_pm, _ = self.model.is_porous_material_model_active(surface_id)
 
                     if lrf_active:
-                        rho = rho_eff
+                        rho = rho_eff_lrf
 
                     elif pm_active:
-                        rho = rho_eq
+                        rho = rho_eff_pm
 
                     else:
                         fluid = self.model.properties.get_fluid(surface=surface_id)

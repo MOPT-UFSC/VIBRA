@@ -296,6 +296,8 @@ class MainWindow(QMainWindow):
         self.project.model.properties._reset_variables()
 
     def close_app(self):
+
+        self.close_dialogs()
         close = QMessageBox.question(
             self, "QUIT", "Are you sure want to close Vibra?", QMessageBox.Yes | QMessageBox.No
         )
@@ -330,3 +332,7 @@ class MainWindow(QMainWindow):
 
     def set_input_widget(self, dialog):
         self.dialog = dialog
+
+    def close_dialogs(self):
+        if isinstance(self.dialog, (QDialog, QWidget)):
+            self.dialog.close()

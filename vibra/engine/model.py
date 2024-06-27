@@ -235,45 +235,51 @@ class Model:
 
                 rho_ef = -rho_local * (jv(0, (1j**(3/2))*s)) / (jv(2, (1j**(3/2))*s))
                 K0_ef = (pressure*gamma) / (gamma + (gamma - 1) * jv(2, (1j**(3/2))*s*(Pr**(1/2))) / jv(0, (1j**(3/2))*s*(Pr**(1/2))))
-                c_ef_2 = K0_ef/rho_ef
+                c_ef = np.sqrt(K0_ef / rho_ef)
 
                 if float(0) in frequencies:
                     rho_ef = np.insert(rho_ef, 0, rho_local)
-                    c_ef_2 = np.insert(c_ef_2, 0, c_local**2)                
+                    c_ef = np.insert(c_ef, 0, c_local)      
                 #
                 for element_index in element_indexes:
-                    self.lrf_properties[element_index] = {  "rho_ef" : rho_ef,
-                                                            "c_ef_2" : c_ef_2   }
+                    self.lrf_properties[element_index] = {  "rho_eff" : rho_ef,
+                                                            "C_eff" : c_ef   }
 
     def is_lrf_eq_model_active(self, surface_id):
 
         if len(self.lrf_properties) == 0:
-            return False, None
+            return False, None, None
         
         _volume_id = self.mesh.volume_from_surface[surface_id]
         for key, _ in self.properties.volume_properties.items():
             prop, volume_id = key
             if prop == "lrf_eq_model" and volume_id == _volume_id[0]:
                 elements = self.mesh.elements_from_volume[volume_id]
-                rho_eff = self.lrf_properties[elements[0]]["rho_ef"]
-                return True, rho_eff
+                rho_eff = self.lrf_properties[elements[0]]["rho_eff"]
+                C_eff = self.lrf_properties[elements[0]]["C_eff"]
+                return True, rho_eff, C_eff
 
-        return False, None
+        return False, None, None
 
     def process_porous_material_properties(self, frequencies):
 
         model = PorousMaterialModels()
-        model.process_equivalent_properties(frequencies)
+        model.process_effective_properties(frequencies)
 
         self.porous_material_properties = dict()
         for volume_id, data in model.porous_material_model.items():
             for element_id in self.mesh.elements_from_volume[volume_id]:
                 self.porous_material_properties[element_id] = data
 
+        elements = list(self.porous_material_properties.keys())
+        print(f"Size - prop: {len(self.porous_material_properties)}")
+        mesh_widget = app().main_window.viewer_tabs.mesh_widget
+        mesh_widget.select_multiple_volumes(elements)
+
     def is_porous_material_model_active(self, surface_id):
 
         if len(self.porous_material_properties) == 0:
-            return False, None
+            return False, None, None
 
         for key, data in self.properties.volume_properties.items():
             prop, volume_id = key
@@ -282,10 +288,11 @@ class Model:
 
                 if surface_id in surfaces_from_volume:
                     elements = self.mesh.elements_from_volume[volume_id]
-                    rho_eq = self.porous_material_properties[elements[0]]["rho_eq"]
-                    return True, rho_eq
+                    rho_eff = self.porous_material_properties[elements[0]]["rho_eff"]
+                    C_eff = self.porous_material_properties[elements[0]]["C_eff"]
+                    return True, rho_eff, C_eff
 
-        return False, None
+        return False, None, None
 
     def get_average_nodal_coordinates(self, surface_ids, averaged=False):
 

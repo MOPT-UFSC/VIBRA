@@ -89,20 +89,18 @@ class SetPorousMaterialModel(QDialog):
 
         self.doubleSpinBox_porosity_JCA : QDoubleSpinBox
         self.doubleSpinBox_tortuosity_JCA : QDoubleSpinBox
-        self.doubleSpinBox_porous_material_length_JCA : QDoubleSpinBox
-        self.doubleSpinBox_characteristic_thermal_length_JCA : QDoubleSpinBox
-        self.doubleSpinBox_characteristic_viscous_length_JCA : QDoubleSpinBox
         self.doubleSpinBox_flow_resistivity_JCA : QDoubleSpinBox
 
         self.doubleSpinBox_porosity_JCAL : QDoubleSpinBox
         self.doubleSpinBox_tortuosity_JCAL : QDoubleSpinBox
-        self.doubleSpinBox_porous_material_length_JCAL : QDoubleSpinBox
-        self.doubleSpinBox_characteristic_thermal_length_JCAL : QDoubleSpinBox
-        self.doubleSpinBox_characteristic_viscous_length_JCAL : QDoubleSpinBox
         self.doubleSpinBox_flow_resistivity_JCAL : QDoubleSpinBox
 
         # QLineEdit
         self.lineEdit_selected_id : QLineEdit
+        self.lineEdit_thermal_characteristic_length_JCA : QLineEdit
+        self.lineEdit_viscous_characteristic_length_JCA : QLineEdit
+        self.lineEdit_thermal_characteristic_length_JCAL : QLineEdit
+        self.lineEdit_viscous_characteristic_length_JCAL : QLineEdit
 
         # QPushButton
         self.pushButton_confirm : QPushButton
@@ -226,10 +224,12 @@ class SetPorousMaterialModel(QDialog):
 
                 model = data["model"]
 
-                factors = list()
-                factors.append("various")
+                model_inputs = list()
+                for key, value in data.items():
+                    if key != "model":
+                        model_inputs.append(value)
 
-                new = QTreeWidgetItem([str(volume_id), model, str(factors)])
+                new = QTreeWidgetItem([str(volume_id), model, str(model_inputs)])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
@@ -335,29 +335,54 @@ class SetPorousMaterialModel(QDialog):
         return material_model_data
 
     def get_Jhonson_Champoux_Allard_model_inputs(self):
+
+        lineEdit = self.lineEdit_viscous_characteristic_length_JCA
+        vcl = self.check_inputs(lineEdit, "Viscous characteristic length", only_positive=True)
+        if self.stop:
+            lineEdit.setFocus()
+            return dict()
+
+        lineEdit = self.lineEdit_thermal_characteristic_length_JCA
+        tcl = self.check_inputs(lineEdit, "Thermal characteristic length", only_positive=True)
+        if self.stop:
+            lineEdit.setFocus()
+            return dict()
+
         material_model_data = {
                                 "model" : "Jhonson-Champoux-Allard",
                                 "porosity" : self.doubleSpinBox_porosity_JCA.value(),
                                 "tortuosity" : self.doubleSpinBox_tortuosity_JCA.value(),
-                                "length" : self.doubleSpinBox_porous_material_length_JCA.value(),
-                                "characteristic_thermal_length" : self.doubleSpinBox_characteristic_thermal_length_JCA.value(),
-                                "characteristic_viscous_length" : self.doubleSpinBox_characteristic_viscous_length_JCA.value(),
+                                "thermal_characteristic_length" : tcl,
+                                "viscous_characteristic_length" : vcl,
                                 "flow_resistivity" : self.doubleSpinBox_flow_resistivity_JCA.value()
                                }
+
         return material_model_data
 
     def get_Jhonson_Champoux_Allard_Lafarge_model_inputs(self):
+
+        lineEdit = self.lineEdit_viscous_characteristic_length_JCAL
+        vcl = self.check_inputs(lineEdit, "Viscous characteristic length", only_positive=True)
+        if self.stop:
+            lineEdit.setFocus()
+            return dict()
+
+        lineEdit = self.lineEdit_thermal_characteristic_length_JCAL
+        tcl = self.check_inputs(lineEdit, "Thermal characteristic length", only_positive=True)
+        if self.stop:
+            lineEdit.setFocus()
+            return dict()
+
         material_model_data = {
                                 "model" : "Jhonson-Champoux-Allard-Lafarge",
                                 "porosity" : self.doubleSpinBox_porosity_JCAL.value(),
                                 "tortuosity" : self.doubleSpinBox_tortuosity_JCAL.value(),
-                                "length" : self.doubleSpinBox_porous_material_length_JCAL.value(),
-                                "characteristic_thermal_length" : self.doubleSpinBox_characteristic_thermal_length_JCAL.value(),
-                                "characteristic_viscous_length" : self.doubleSpinBox_characteristic_viscous_length_JCAL.value(),
+                                "thermal_characteristic_length" : tcl,
+                                "viscous_characteristic_length" : vcl,
                                 "flow_resistivity" : self.doubleSpinBox_flow_resistivity_JCAL.value()
                                }
-        return material_model_data
 
+        return material_model_data
 
     def attribute_porous_material_to_selected_bodies(self):
 
@@ -372,22 +397,68 @@ class SetPorousMaterialModel(QDialog):
             model_data = self.get_Jhonson_Champoux_Allard_Lafarge_model_inputs()
         else:
             return
+        
+        if model_data:
 
-        if self.comboBox_attribution_type.currentIndex():
-            if self.check_selected_bodies():
-                return
-            volume_ids = self.volume_ids
+            if self.comboBox_attribution_type.currentIndex():
+                if self.check_selected_bodies():
+                    return
+                volume_ids = self.volume_ids
+
+            else:
+                volume_ids = list(self.project.model.mesh.nodes_from_volumes.keys())
+
+            for volume_id in volume_ids:
+                # surfaces_from_volume = self.project.model.mesh.surfaces_from_volumes[volume_id]
+                self.project.set_porous_material_model(model_data, volume=volume_id)
+
+            print(f"The porous material model '{model_data['model']}' has been attributed to the volumes {volume_ids}")
+            self.close()
+
+    def check_inputs(self, lineEdit, label, only_positive=False, zero_included=True, _float=True):
+
+        self.stop = False
+        message = ""
+
+        title = "Invalid input at dissipation model"
+        input_str = lineEdit.text()
+
+        if input_str != "":
+
+            input_str.replace(",", ".")
+
+            try:
+                if _float:
+                    out = float(input_str)
+                else:
+                    out = int(input_str)
+
+                if only_positive:
+                    if zero_included:
+                        if out < 0:
+                            message = f"Insert a positive value to the {label}."
+                            message += "\n\nNote: zero value is allowed."
+                    else:
+                        if out <= 0:
+                            message = f"Insert a positive value to the {label}."
+                            message += "\n\nNote: zero value is not allowed."
+
+            except Exception as _err:
+                message = "Dear user, you have typed and invalid value at the \n"
+                message += f"{label} input field.\n\n"
+                message += str(_err)
 
         else:
-            volume_ids = list(self.project.model.mesh.nodes_from_volumes.keys())
+            if zero_included:
+                return float(0)
+            else:
+                message = f"Insert some value at the {label} input field."
 
-        for volume_id in volume_ids:
-            # surfaces_from_volume = self.project.model.mesh.surfaces_from_volumes[volume_id]
-            self.project.set_porous_material_model(model_data, volume=volume_id)
-
-        print(f"The porous material model '{model_data['model']}' has been attributed to the volumes {volume_ids}")
-
-        self.close()
+        if message != "":
+            PrintMessageInput([window_title_1, title, message])
+            self.stop = True
+            return None
+        return out
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

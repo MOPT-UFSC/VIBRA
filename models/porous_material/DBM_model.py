@@ -25,11 +25,13 @@ k = w / co                        # número de onda
 Zo = po * co                      # impedância acústica do ar [Rayls]
 
 # Parâmetros macroscópicos do material poroso
-rf = 12627                         # resistividade ao fluxo [Ns/m^4]
+rf = 25743
+# rf = 12627                         # resistividade ao fluxo [Ns/m^4]
 L = 50e-3                          # espessura do material poroso [m]
 
 # Vetor de frequências
-f = np.arange(50, 10001)           # vetor frequência [Hz]
+df = 5
+f = np.arange(50, 1400+df, df)           # vetor frequência [Hz]
 w = 2 * np.pi * f                  # frequência angular [rad/s]
 
 # Inicialização dos arrays para armazenar os resultados

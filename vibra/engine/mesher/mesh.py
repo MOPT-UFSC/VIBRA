@@ -472,6 +472,8 @@ class Mesh:
                 internal_indexes[i] = index
                 self.surface_from_element[index] = tag
 
+            # self.elements_from_surface[tag] = internal_indexes
+
     def _maps_volumes_by_elements(self):
         self.volume_from_element.clear()
         self.elements_from_volume.clear()
@@ -485,6 +487,8 @@ class Mesh:
                 index = self.map_solid_elements[gmsh_index]
                 internal_indexes[i] = index
                 self.volume_from_element[index] = tag
+
+            # self.elements_from_volume[tag] = internal_indexes
 
     def _process_face_elements_connected_to_nodes(self):
         self.nodes_from_face_element.clear()

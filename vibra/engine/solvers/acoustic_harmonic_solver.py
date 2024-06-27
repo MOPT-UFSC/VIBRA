@@ -92,7 +92,8 @@ class AcousticHarmonicSolver:
         # self.plot_graph(M)
 
         freq_dependent = False
-        if self.assembler.model.lrf_properties:
+        condition = self.assembler.model.lrf_properties or self.assembler.model.porous_material_properties
+        if condition:
             freq_dependent = True
         else:
             F_eq = self.get_prescribed_pressure_model_excitation()
@@ -187,7 +188,7 @@ class AcousticHarmonicSolver:
         aux_ones = np.ones(nf, dtype=complex)
 
         if len(self.prescribed_values) != 0:
-            list_prescribed_values = []
+            list_prescribed_values = list()
 
             for value in self.prescribed_values:
                 if isinstance(value, complex):
