@@ -5,19 +5,20 @@ import matplotlib.pyplot as plt
 
 class PorousMaterialModels:
 
-    def __init__(self):
+    def __init__(self, model):
         super().__init__()
 
-        self.project = app().main_window.project
-        self.properties = self.project.model.properties
+        # self.project = app().main_window.project
+        self.model = model
+        self.properties = model.properties
 
         self.model_data_for_DB = None
         self.model_data_for_DBM = None
 
         self.porous_material_model = dict()
 
-    def set_Delany_Bazley_data(self, data):
-        self.model_data_for_DB = data
+    def set_external_model(self, model):
+        self.external_model = model
 
     def process_effective_properties(self, frequencies):
 
@@ -27,7 +28,7 @@ class PorousMaterialModels:
         else:
             freq = frequencies
 
-        omega = 2 * np.pi * freq    
+        omega = 2 * np.pi * freq
 
         for key, data in self.properties.volume_properties.items():
             property, volume_id = key
@@ -100,32 +101,32 @@ class PorousMaterialModels:
             effective properties.
         """
 
-        porosity = data["porosity"]
-        tortuosity = data["tortuosity"]
-        tcl = data["thermal_characteristic_length"]
-        vcl = data["viscous_characteristic_length"]
-        flow_resistivity = data["flow_resistivity"]
+        por = data["porosity"]
+        tor = data["tortuosity"]
+        Lv = data["viscous_characteristic_length"]
+        Lt = data["thermal_characteristic_length"]
+        Rf = data["flow_resistivity"]
 
         P_0 = fluid.pressure
         rho_0 = fluid.fluid_density
         C_0 = fluid.speed_of_sound
-        Z_0 = rho_0 * C_0
         gamma = fluid.isentropic_exponent
         Cp = fluid.specific_heat_Cp
         mu = fluid.dynamic_viscosity
         k_t = fluid.thermal_conductivity
+        Pr = mu * Cp / k_t
 
-        # Densidade complexa que descreve as perdas viscosas
-        rho_eff = ((rho_0 * tortuosity) / porosity) * (1 + ((flow_resistivity * porosity) / (1j * omega * rho_0 * tortuosity)) * np.sqrt(1 + ((1j * 4 * (tortuosity**2) * mu * omega* rho_0) / ((porosity * vcl * flow_resistivity)**2))))
+        # Effective density - visco-inertial effects
+        rho_eff = ((rho_0 * tor) / por) * (1 + ((Rf * por) / (1j * omega * rho_0 * tor)) * np.sqrt(1 + 1j * ((4 * omega * (tor**2) * mu * rho_0) / ((por * Lv * Rf)**2))))
 
-        # Módulo de compressibilidade efetivo que descreve as perdas térmicas
-        K_eff = ((P_0 * gamma) / porosity) / (gamma - (gamma - 1) * ((1 + ((8 * k_t) / (1j * omega* rho_0 * Cp * tcl**2)) * np.sqrt(1 + (1j * omega * Cp * rho_0 * tcl**2) / (16 * k_t)))**-1))
+        # Thermal effects
+        K_eff = ((P_0 * gamma) / por) / (gamma - (gamma - 1) * ((1 + ((8 * mu) / (1j * omega* rho_0 * Pr * Lt**2)) * np.sqrt(1 + (1j * omega * rho_0 * Pr * Lt**2) / (16 * mu)))**-1))
+
+        # Complex speed of sound
+        C_eff = np.sqrt(K_eff / rho_eff)
 
         # # Impedância característica complexa do material poroso
-        # Z_cr = np.sqrt(rho_eff * K_eff)
-
-        # Velocidade do som complexa no material poroso
-        C_eff = np.sqrt(K_eff / rho_eff)
+        # Z_cr = np.sqrt(rho_eff * K_eff)       
 
         # # Número de onda complexa no material poroso
         # k_cr = omega / C_eff
@@ -139,8 +140,8 @@ class PorousMaterialModels:
         # # Coeficiente de absorção sonora
         # alpha_r = 1 - np.abs(R_r)**2
 
-        print(rho_eff)
-        print(C_eff)
+        # print(rho_eff)
+        # print(C_eff)
         # return
 
         return rho_eff, C_eff
@@ -151,14 +152,14 @@ class PorousMaterialModels:
             effective properties.
         """
 
-        porosity = data["porosity"]
-        tortuosity = data["tortuosity"]
-        tcl = data["thermal_characteristic_length"]
-        vcl = data["viscous_characteristic_length"]
-        flow_resistivity = data["flow_resistivity"]
+        por = data["porosity"]
+        tor = data["tortuosity"]
+        Lv = data["viscous_characteristic_length"]
+        Lt = data["thermal_characteristic_length"]
+        Rf = data["flow_resistivity"]
 
-        q_viscous = mu / flow_resistivity
-        q_thermal = q_viscous * tortuosity
+        q_viscous = mu / Rf
+        q_thermal = q_viscous * tor
 
         P_0 = fluid.pressure
         rho_0 = fluid.fluid_density
@@ -170,10 +171,10 @@ class PorousMaterialModels:
         k_t = fluid.thermal_conductivity
 
         # Densidade complexa que descreve as perdas viscosas
-        rho_eff = ((tortuosity * rho_0) / porosity) * (1 + ((flow_resistivity * porosity) / (1j * omega * rho_0 * tortuosity)) * np.sqrt(1 + ((1j * 4 * tortuosity**2 * mu * rho_0 * omega) / (flow_resistivity**2 * vcl**2 * porosity**2))))
+        rho_eff = ((tor * rho_0) / por) * (1 + ((Rf * por) / (1j * omega * rho_0 * tor)) * np.sqrt(1 + ((1j * 4 * tor**2 * mu * rho_0 * omega) / (Rf**2 * Lv**2 * por**2))))
 
         # Módulo de compressibilidade efetivo que descreve as perdas térmicas
-        K_eff = ((gamma * P_0) / porosity) / (gamma - (gamma - 1) * (1 - 1j * ((porosity * k_t) / (omega * Cp * q_thermal * rho_0)) * np.sqrt(1 + ((1j * 4 * omega * Cp * rho_0 * q_thermal**2) / (porosity**2 * k_t * tcl**2))))**-1)
+        K_eff = ((gamma * P_0) / por) / (gamma - (gamma - 1) * (1 - 1j * ((por * k_t) / (omega * Cp * q_thermal * rho_0)) * np.sqrt(1 + ((1j * 4 * omega * Cp * rho_0 * q_thermal**2) / (por**2 * k_t * Lt**2))))**-1)
 
         # # Impedância característica complexa do material poroso
         # Z_cr = np.sqrt(rho_eff * K_eff)

@@ -323,7 +323,7 @@ class AcousticAssembler:
         self.data_Z = dict()
 
         connect_Z, data = self.get_surface_data_for_element_integration_by_property("specific_impedance")
-        print(connect_Z)
+
         if connect_Z is None:
             _damping_matrix_full = [csr_matrix((total_dofs, total_dofs)) for _ in range(self.number_frequencies)]
         else:

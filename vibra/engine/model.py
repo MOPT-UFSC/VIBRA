@@ -263,7 +263,7 @@ class Model:
 
     def process_porous_material_properties(self, frequencies):
 
-        model = PorousMaterialModels()
+        model = PorousMaterialModels(self)
         model.process_effective_properties(frequencies)
 
         self.porous_material_properties = dict()
@@ -271,10 +271,10 @@ class Model:
             for element_id in self.mesh.elements_from_volume[volume_id]:
                 self.porous_material_properties[element_id] = data
 
-        elements = list(self.porous_material_properties.keys())
-        print(f"Size - prop: {len(self.porous_material_properties)}")
-        mesh_widget = app().main_window.viewer_tabs.mesh_widget
-        mesh_widget.select_multiple_volumes(elements)
+        # elements = list(self.porous_material_properties.keys())
+        # print(f"Size - prop: {len(self.porous_material_properties)}")
+        # mesh_widget = app().main_window.viewer_tabs.mesh_widget
+        # mesh_widget.select_multiple_volumes(elements)
 
     def is_porous_material_model_active(self, surface_id):
 
@@ -284,7 +284,7 @@ class Model:
         for key, data in self.properties.volume_properties.items():
             prop, volume_id = key
             if prop == "porous_material_model":
-                surfaces_from_volume = app().main_window.project.model.mesh.surfaces_from_volumes[volume_id]
+                surfaces_from_volume = self.mesh.surfaces_from_volumes[volume_id]
 
                 if surface_id in surfaces_from_volume:
                     elements = self.mesh.elements_from_volume[volume_id]
