@@ -128,9 +128,6 @@ class PorousMaterialModels:
         # # Impedância característica complexa do material poroso
         # Z_cr = np.sqrt(rho_eff * K_eff)       
 
-        # # Número de onda complexa no material poroso
-        # k_cr = omega / C_eff
-
         # # Impedância de superfície complexa do material poroso
         # Z_sr = -1j * (Z_cr) * np.cot(k_cr * h)
 
@@ -139,10 +136,6 @@ class PorousMaterialModels:
 
         # # Coeficiente de absorção sonora
         # alpha_r = 1 - np.abs(R_r)**2
-
-        # print(rho_eff)
-        # print(C_eff)
-        # return
 
         return rho_eff, C_eff
 
@@ -158,9 +151,6 @@ class PorousMaterialModels:
         Lt = data["thermal_characteristic_length"]
         Rf = data["flow_resistivity"]
 
-        q_viscous = mu / Rf
-        q_thermal = q_viscous * tor
-
         P_0 = fluid.pressure
         rho_0 = fluid.fluid_density
         C_0 = fluid.speed_of_sound
@@ -170,17 +160,20 @@ class PorousMaterialModels:
         mu = fluid.dynamic_viscosity
         k_t = fluid.thermal_conductivity
 
-        # Densidade complexa que descreve as perdas viscosas
+        q_viscous = mu / Rf
+        q_thermal = q_viscous * tor
+
+        # Effective density - visco-inertial effects
         rho_eff = ((tor * rho_0) / por) * (1 + ((Rf * por) / (1j * omega * rho_0 * tor)) * np.sqrt(1 + ((1j * 4 * tor**2 * mu * rho_0 * omega) / (Rf**2 * Lv**2 * por**2))))
 
-        # Módulo de compressibilidade efetivo que descreve as perdas térmicas
+        # Thermal effects
         K_eff = ((gamma * P_0) / por) / (gamma - (gamma - 1) * (1 - 1j * ((por * k_t) / (omega * Cp * q_thermal * rho_0)) * np.sqrt(1 + ((1j * 4 * omega * Cp * rho_0 * q_thermal**2) / (por**2 * k_t * Lt**2))))**-1)
+
+        # Complex speed of sound
+        C_eff = np.sqrt(K_eff / rho_eff)
 
         # # Impedância característica complexa do material poroso
         # Z_cr = np.sqrt(rho_eff * K_eff)
-
-        # Velocidade do som complexa no material poroso
-        C_eff = np.sqrt(K_eff / rho_eff)
 
         # # Número de onda complexa no material poroso
         # k_cr = omega / C_eff

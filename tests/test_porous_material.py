@@ -94,7 +94,7 @@ def test_load_external_mesh_and_solve():
     omega = 2 * np.pi * frequencies
 
     # Configure porous material
-    porous_material_model = "JCA"
+    porous_material_model = "JCAL"
     pm_data = get_porous_material_data(model=porous_material_model)
     model.set_porous_material_model_data(pm_data, volume=1)
     model.process_porous_material_properties(frequencies)
@@ -137,9 +137,9 @@ def test_load_external_mesh_and_solve():
 
         if selected_surface == 1:
             if porous_material_model == "DB":
-                # data = imported_results["input_ns_DB"]
+                data = imported_results["input_ns_DB"]
                 # data = imported_results["input_ns_Z1_DB"]
-                data = imported_results["input_ns_Z2_DB"]
+                # data = imported_results["input_ns_Z2_DB"]
             elif porous_material_model == "DBM":
                 data = imported_results["input_ns_DBM"]
             elif porous_material_model == "JCA":
@@ -147,9 +147,9 @@ def test_load_external_mesh_and_solve():
 
         else:
             if porous_material_model == "DB":
-                # data = imported_results["output_ns_DB"]
+                data = imported_results["output_ns_DB"]
                 # data = imported_results["output_ns_Z1_DB"]
-                data = imported_results["output_ns_Z2_DB"]
+                # data = imported_results["output_ns_Z2_DB"]
             elif porous_material_model == "DBM":
                 data = imported_results["output_ns_DBM"]
             else:
@@ -216,6 +216,16 @@ def get_porous_material_data(model="DB"):
 
         material_model_data = {
                                 "model" : "Jhonson-Champoux-Allard",
+                                "porosity" : 0.9,
+                                "tortuosity" : 1.0,
+                                "viscous_characteristic_length" : 77e-6,
+                                "thermal_characteristic_length" : 159e-6,
+                                "flow_resistivity" : 1518.5066
+                               }
+    elif model == "JCAL":
+
+        material_model_data = {
+                                "model" : "Jhonson-Champoux-Allard-Lafarge",
                                 "porosity" : 0.9,
                                 "tortuosity" : 1.0,
                                 "viscous_characteristic_length" : 77e-6,
