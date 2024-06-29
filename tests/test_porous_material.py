@@ -94,8 +94,8 @@ def test_load_external_mesh_and_solve():
     omega = 2 * np.pi * frequencies
 
     # Configure porous material
-    porous_material_model = "JCAL"
-    pm_data = get_porous_material_data(model=porous_material_model)
+    pm_model = "JCAL"
+    pm_data = get_porous_material_data(model=pm_model)
     model.set_porous_material_model_data(pm_data, volume=1)
     model.process_porous_material_properties(frequencies)
 
@@ -117,7 +117,7 @@ def test_load_external_mesh_and_solve():
     # Define the analysis type and load setup
     analysis_data = {"analysis_id" : 3, "frequencies" : frequencies}
     harmonic_solver = AcousticHarmonicSolver(assembler, analysis_data=analysis_data)
-    
+
     t0 = time()
     # Run harmonic analysis
     solution = harmonic_solver.solve(print_log=True)

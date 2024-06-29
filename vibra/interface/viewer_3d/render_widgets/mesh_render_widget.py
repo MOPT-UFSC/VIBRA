@@ -145,6 +145,7 @@ class MeshRenderWidget(CommonRenderWidget):
             return
         self.solids_actor.paint_cells(self.selection_color, new_volumes)
         self.update()
+        print("passei aqui")
 
     def clear_selection_spheres(self):
         if self.selection_spheres_actor is None:

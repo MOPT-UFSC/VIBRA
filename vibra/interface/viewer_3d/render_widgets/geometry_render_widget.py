@@ -1,6 +1,7 @@
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
+from vibra import app
 from vibra.interface.tabs.geometry_info_bar import GeometryInfoBar
 from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 from vibra.interface.viewer_3d.actors.lines_actor import LinesActor
@@ -9,8 +10,6 @@ from vibra.interface.viewer_3d.interactor_styles.selection_interactor import Sel
 from vibra.interface.viewer_3d.render_widgets.common_render_widget import CommonRenderWidget
 from vibra.interface.viewer_3d.actors.selection_spheres import SelectionSpheres
 
-
-from vibra.utils.interface_functions import get_main_window
 
 SHOW_POINTS = 0
 SHOW_LINES = 1
@@ -23,7 +22,7 @@ class GeometryRenderWidget(CommonRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         self.view_mode = SHOW_FACES
 
         # self.geometry_info = GeometryInfoBar()
@@ -244,8 +243,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         else:
             self.selected_lines = set(new_lines)
 
-        all_element_indexes = []
+        all_element_indexes = list()
         for line in self.selected_lines:
+
             if not (1, line) in self.main_window.project.model.mesh.entity_ranges:
                 return 
 
@@ -271,16 +271,14 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.selected_faces = set(new_faces)
         self.selected_volumes.clear()
 
-        all_element_indexes = []
+        all_element_indexes = list()
         for face in self.selected_faces:
-            if not (2, face) in self.main_window.project.model.mesh.entity_ranges:
+
+            if face not in self.main_window.project.model.mesh.elements_from_surface.keys():
                 return
 
-            a, b = self.main_window.project.model.mesh.entity_ranges[2, face]
-            all_element_indexes.extend(range(a, b))
-
-            # indexes = self.main_window.project.model.mesh.entity_ranges[2, face]
-            # all_element_indexes.extend(indexes)
+            indexes = self.main_window.project.model.mesh.elements_from_surface[face]
+            all_element_indexes.extend(indexes)
 
         self.faces_actor.clear_colors()
         self.faces_actor.paint_cells(self.selection_color, all_element_indexes)
@@ -302,18 +300,17 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.selected_volumes = set(new_volumes)
         self.selected_faces.clear()
 
-        all_element_indexes = []
+        all_element_indexes = list()
         for volume in self.selected_volumes:
+
             surfaces = self.main_window.project.model.mesh.surfaces_from_volumes[volume]
             for face in surfaces:
-                if not (2, face) in self.main_window.project.model.mesh.entity_ranges:
+
+                if face not in self.main_window.project.model.mesh.elements_from_surface.keys():
                     return
 
-            a, b = self.main_window.project.model.mesh.entity_ranges[2, face]
-            all_element_indexes.extend(range(a, b))
-
-            # indexes = self.main_window.project.model.mesh.entity_ranges[2, face]
-            # all_element_indexes.extend(indexes)
+                indexes = self.main_window.project.model.mesh.elements_from_surface[face]
+                all_element_indexes.extend(indexes)
 
         self.faces_actor.clear_colors()
         self.faces_actor.paint_cells(self.selection_color, all_element_indexes)

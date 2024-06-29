@@ -3,12 +3,13 @@ from vibra import app
 import numpy as np
 import matplotlib.pyplot as plt
 
+# fmt: off
+
 class PorousMaterialModels:
 
     def __init__(self, model):
         super().__init__()
 
-        # self.project = app().main_window.project
         self.model = model
         self.properties = model.properties
 
@@ -188,3 +189,5 @@ class PorousMaterialModels:
         # alpha_r = 1 - np.abs(R_r)**2
 
         return rho_eff, C_eff
+
+# fmt: on

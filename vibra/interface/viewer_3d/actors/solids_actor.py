@@ -115,7 +115,6 @@ class SolidsActor(vtk.vtkActor):
 
     def paint_cells(self, color: tuple[3], faces: tuple[int]):
         if self.data is None:
-            print("retornei")
             return
 
         cell_colors = self.data.GetCellData().GetScalars()

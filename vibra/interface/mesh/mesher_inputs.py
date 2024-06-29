@@ -105,6 +105,22 @@ class MesherInputs(QDialog):
         self.main_window.viewer_tabs.close_analysis_tabs()
         self.main_window.viewer_tabs.update_plots()
 
+        try:
+
+            surf_tag = 36
+            vol_tag = 3
+
+            app().main_window.viewer_tabs.show_mesh()
+            mesh_widget = app().main_window.viewer_tabs.mesh_widget
+            surface_elements = app().main_window.project.model.mesh.elements_from_surface[surf_tag]
+            volume_elements = app().main_window.project.model.mesh.elements_from_volume[vol_tag]
+            print(len(volume_elements))
+            # mesh_widget.select_multiple_faces(surface_elements)
+            mesh_widget.select_multiple_volumes(volume_elements)
+
+        except:
+            pass
+
         self.complete = True
         if self.close_after_generate:
             self.close()

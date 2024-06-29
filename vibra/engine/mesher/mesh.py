@@ -1,19 +1,23 @@
+
+from vibra.engine.mesher.element_type import *
+from vibra.engine.mesher.geometry_setup import GeometrySetup
+from vibra.engine.mesher.reordering import Reordering
+from vibra.utils.progress_status import ProgressStatus
+
+from vtk import vtkUnstructuredGrid, vtkPoints, vtkDoubleArray, vtkXMLUnstructuredGridWriter, VTK_TETRA, VTK_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_QUADRATIC_HEXAHEDRON
+
 import logging
 import os
 import gmsh
 import sys
+
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from time import time
 
 import numpy as np
 from collections import defaultdict
-from vtk import vtkUnstructuredGrid, vtkPoints, vtkDoubleArray, vtkXMLUnstructuredGridWriter, VTK_TETRA, VTK_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_QUADRATIC_HEXAHEDRON
 
-from vibra.engine.mesher.element_type import *
-from vibra.engine.mesher.geometry_setup import GeometrySetup
-from vibra.engine.mesher.reordering import Reordering
-from vibra.utils.progress_status import ProgressStatus
 
 class Mesh:
     def __init__(self):
@@ -24,7 +28,6 @@ class Mesh:
     def reset_variables(self):
         self.reordering = None
         self.dimension = 0
-        self.entity_ranges = dict()
         self.element_type = DEFAULT_ELEMENT_TYPE
         self.nodal_coordinates = np.array([])
         self.lines_connectivity = np.array([])
@@ -444,6 +447,7 @@ class Mesh:
                 connectivity_dim3[dim, tag] = elements_data
                 self.nodes_from_volumes[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
                 self.gmsh_elements_from_volumes[tag] = np.array([*set(element_indexes[0])], dtype=int)
+                # print(tag, len(self.gmsh_elements_from_volumes[tag]))
         
         self.lines_connectivity, self.map_line_elements = self._get_connectivity_array(connectivity_dim1)
         self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)

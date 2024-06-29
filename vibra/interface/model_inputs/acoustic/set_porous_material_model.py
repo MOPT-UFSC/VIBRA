@@ -1,23 +1,20 @@
 from PyQt5.QtWidgets import QComboBox, QDialog, QDoubleSpinBox, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QCloseEvent
+from PyQt5.QtGui import QCloseEvent
 from PyQt5 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.utils.interface_functions import get_main_window
 
-import configparser
-import os
 from pathlib import Path
-
 import numpy as np
+
+# fmt: off
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
-
 
 class SetPorousMaterialModel(QDialog):
     def __init__(self, *args, **kwargs):
@@ -469,3 +466,5 @@ class SetPorousMaterialModel(QDialog):
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
         return super().closeEvent(a0)
+    
+# fmt: on

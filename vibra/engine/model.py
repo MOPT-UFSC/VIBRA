@@ -271,8 +271,9 @@ class Model:
             for element_id in self.mesh.elements_from_volume[volume_id]:
                 self.porous_material_properties[element_id] = data
 
-        # elements = list(self.porous_material_properties.keys())
-        # print(f"Size - prop: {len(self.porous_material_properties)}")
+            # elements = list(self.porous_material_properties.keys())
+            # print(f"Size - prop: {len(self.porous_material_properties)}")
+
         # mesh_widget = app().main_window.viewer_tabs.mesh_widget
         # mesh_widget.select_multiple_volumes(elements)
 
