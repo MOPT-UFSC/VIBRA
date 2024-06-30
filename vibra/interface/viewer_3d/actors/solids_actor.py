@@ -129,7 +129,7 @@ class SolidsActor(vtk.vtkActor):
         for i in volumes:
             cell_colors.SetTuple(i, color)
 
-        # self.data.Modified()
+        self.data.Modified()
         self.GetMapper().SetScalarModeToUseCellData()
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()

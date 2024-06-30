@@ -14,6 +14,7 @@ from vibra.interface.viewer_3d.actors.selection_spheres import SelectionSpheres
 SHOW_POINTS = 0
 SHOW_LINES = 1
 SHOW_FACES = 2
+SHOW_VOLUMES = 3
 
 
 class MeshRenderWidget(CommonRenderWidget):
@@ -107,6 +108,16 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
         self.update_theme()
         self.update()
+    
+    def show_volumes(self):
+        self.view_mode = SHOW_VOLUMES
+        self.solids_actor.GetProperty().SetRepresentationToSurface()
+        self.faces_actor.VisibilityOff()
+        self.solids_actor.VisibilityOn()
+        self.edges_actor.VisibilityOn()
+        self.edges_actor.GetProperty().SetColor(0, 0, 0)
+        self.update_theme()
+        self.update()
 
     def set_theme(self, theme):
         super().set_theme(theme)
@@ -119,7 +130,7 @@ class MeshRenderWidget(CommonRenderWidget):
 
         # It it is showing faces, the colors are fixed
         # otherwise it should follow the theme
-        if self.view_mode == SHOW_FACES:
+        if self.view_mode in (SHOW_FACES, SHOW_VOLUMES):
             self.edges_actor.GetProperty().SetColor(dark_color)
             self.faces_actor.GetProperty().SetColor(light_color)
             self.solids_actor.GetProperty().SetColor(light_color)
@@ -139,12 +150,14 @@ class MeshRenderWidget(CommonRenderWidget):
             return
         self.faces_actor.paint_cells(self.selection_color, new_faces)
         self.update()
+        self.show_faces()
 
     def select_multiple_volumes(self, new_volumes, *, join=False, remove=False):
         if not self._actors_exists():
             return
         self.solids_actor.paint_cells(self.selection_color, new_volumes)
         self.update()
+        self.show_volumes()
 
     def clear_selection_spheres(self):
         if self.selection_spheres_actor is None:
