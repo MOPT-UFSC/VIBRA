@@ -33,6 +33,7 @@ class MesherInputs(QDialog):
         geometry_widget.selection_changed.connect(self.geometry_selection_callback)
 
         self._config_window()
+        self._initialize()
         self._define_qt_variables()
         self._create_connections()
 
@@ -89,9 +90,9 @@ class MesherInputs(QDialog):
     def _create_connections(self):
         self.pushButton_add.clicked.connect(self.add_button_callback)
         self.pushButton_delete.clicked.connect(self.trash_button_callback)
-        self.pushButton_generate_mesh.clicked.connect(self.pushButton_generate_mesh_callback)
+        self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
 
-    def pushButton_generate_mesh_callback(self):
+    def generate_mesh_callback(self):
 
         if self.check_mesh_inputs():
             return
@@ -105,6 +106,9 @@ class MesherInputs(QDialog):
         self.main_window.viewer_tabs.close_analysis_tabs()
         self.main_window.viewer_tabs.update_plots()
 
+
+        # TODO: Grande, deixei este "print" para te auxiliar no debug e para fazer alguns testes que preciso
+        # na validação do modelo
         try:
 
             surf_tag = 36
@@ -114,9 +118,9 @@ class MesherInputs(QDialog):
             mesh_widget = app().main_window.viewer_tabs.mesh_widget
             surface_elements = app().main_window.project.model.mesh.elements_from_surface[surf_tag]
             volume_elements = app().main_window.project.model.mesh.elements_from_volume[vol_tag]
-            print(len(volume_elements))
-            # mesh_widget.select_multiple_faces(surface_elements)
-            mesh_widget.select_multiple_volumes(volume_elements)
+
+            mesh_widget.select_multiple_faces(surface_elements)
+            # mesh_widget.select_multiple_volumes(volume_elements)
 
         except:
             pass

@@ -56,7 +56,7 @@ class GetSphereSelectionInformation(QDialog):
         self.lineEdit_number_of_elements.setDisabled(True)
         self.lineEdit_number_of_nodes.setDisabled(True)
         self.lineEdit_selection_radius.setDisabled(True)
-        self.lineEdit_selection_radius.setText(str(self.selection_radius))
+        self.lineEdit_selection_radius.setText(str(round(self.selection_radius, 6)))
 
         # QPushButton
         self.pushButton_close : QPushButton
@@ -68,17 +68,19 @@ class GetSphereSelectionInformation(QDialog):
 
         list_elements, list_nodes = self.model.get_elements_and_nodes_from_sphere(  self.selection_id, 
                                                                                     self.selection_radius, 
-                                                                                    averaged=self.averaged,
-                                                                                    filter_type=self.filter_type)
+                                                                                    averaged = self.averaged,
+                                                                                    filter_type = self.filter_type)
 
         list_center_coords = self.model.get_average_nodal_coordinates(  self.selection_id,
                                                                         averaged=self.averaged  )
 
         if len(list_center_coords) == 0:
             self.lineEdit_center_coordinates.setText("")
+
         elif len(list_center_coords) == 1:
-            _round_center_coords = [round(value,4) for value in list_center_coords[0]]
+            _round_center_coords = [round(value, 4) for value in list_center_coords[0]]
             self.lineEdit_center_coordinates.setText(str(_round_center_coords))
+
         else:
             self.lineEdit_center_coordinates.setText("Multiple centers")
 

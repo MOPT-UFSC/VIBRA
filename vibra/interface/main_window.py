@@ -30,8 +30,6 @@ from vibra.interface.viewer_tabs import ViewerTabs
 from vibra.interface.formatters.icons import *
 from vibra.project import Project
 
-from vibra.utils.icons import load_icon
-
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):

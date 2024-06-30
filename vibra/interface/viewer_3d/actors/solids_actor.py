@@ -1,9 +1,9 @@
-from time import time
-
-import numpy as np
-import vtk
 
 from vibra.engine.mesher.element_type import *
+
+import vtk
+import numpy as np
+from time import time
 
 
 class SolidsActor(vtk.vtkActor):
@@ -31,27 +31,34 @@ class SolidsActor(vtk.vtkActor):
         if self.mesh.element_type == TETRAHEDRON_4:
             cell_type = vtk.VTK_TETRA
             nodes_connectivity = self.mesh.solids_connectivity[:, 4:]
+
         elif self.mesh.element_type == TETRAHEDRON_10:
             cell_type = vtk.VTK_QUADRATIC_TETRA
             nodes_order = (4, 5, 6, 7, 8, 9, 10, 11, 13, 12)
             nodes_connectivity = self.mesh.solids_connectivity[:, nodes_order]
+
         elif self.mesh.element_type == HEXAHEDRON_8:
             cell_type = vtk.VTK_HEXAHEDRON
             nodes_connectivity = self.mesh.solids_connectivity[:, 4:]
+
         elif self.mesh.element_type == HEXAHEDRON_20:
             cell_type = vtk.VTK_QUADRATIC_HEXAHEDRON
             nodes_order = (4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 17, 13, 20, 22, 23, 21, 14, 16, 18, 19)
             nodes_connectivity = self.mesh.solids_connectivity[:, nodes_order]
+
         else:
             raise NotImplementedError("Unknown element type")
+        
+        number_of_nodes = self.mesh.nodal_coordinates.shape[0]
+        number_of_elements = self.mesh.solids_connectivity.shape[0]
+        nodes_per_element = nodes_connectivity.shape[1]
 
-        data.Allocate(
-            self.mesh.solids_connectivity.shape[0] * self.mesh.solids_connectivity.shape[1]
-        )
+        data.Allocate( number_of_elements * nodes_per_element )
+
         point_colors.SetNumberOfComponents(3)
-        point_colors.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
+        point_colors.SetNumberOfTuples(number_of_nodes)
         cell_colors.SetNumberOfComponents(3)
-        cell_colors.SetNumberOfTuples(len(self.mesh.solids_connectivity))
+        cell_colors.SetNumberOfTuples(number_of_elements)
 
         for x, y, z in self.get_coordinates():
             points.InsertNextPoint(x, y, z)
@@ -113,15 +120,16 @@ class SolidsActor(vtk.vtkActor):
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
 
-    def paint_cells(self, color: tuple[3], faces: tuple[int]):
+    def paint_cells(self, color: tuple[3], volumes: tuple[int]):
+
         if self.data is None:
             return
 
         cell_colors = self.data.GetCellData().GetScalars()
-        for i in faces:
+        for i in volumes:
             cell_colors.SetTuple(i, color)
 
-        self.data.Modified()
+        # self.data.Modified()
         self.GetMapper().SetScalarModeToUseCellData()
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()

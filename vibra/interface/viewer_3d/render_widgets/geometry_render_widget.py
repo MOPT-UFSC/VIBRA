@@ -229,8 +229,11 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.points_actor.paint_cells(self.selection_color, self.selected_points)
         self.update()
         self.selection_changed.emit(
-            self.selected_points, self.selected_lines, self.selected_faces, self.selected_volumes
-        )
+                                    self.selected_points, 
+                                    self.selected_lines, 
+                                    self.selected_faces, 
+                                    self.selected_volumes
+                                    )
 
     def select_multiple_lines(self, new_lines, *, join=False, remove=False):
         if self.view_mode != SHOW_LINES:
@@ -256,8 +259,11 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.lines_actor.paint_cells(self.selection_color, all_element_indexes)
         self.update()
         self.selection_changed.emit(
-            self.selected_points, self.selected_lines, self.selected_faces, self.selected_volumes
-        )
+                                    self.selected_points, 
+                                    self.selected_lines, 
+                                    self.selected_faces, 
+                                    self.selected_volumes
+                                    )
 
     def select_multiple_faces(self, new_faces, *, join=False, remove=False):
         if self.view_mode != SHOW_FACES:
@@ -283,10 +289,12 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.faces_actor.clear_colors()
         self.faces_actor.paint_cells(self.selection_color, all_element_indexes)
         self.update()
-        self.selection_changed.emit(self.selected_points, 
+        self.selection_changed.emit(
+                                    self.selected_points, 
                                     self.selected_lines, 
                                     self.selected_faces, 
-                                    self.selected_volumes)
+                                    self.selected_volumes
+                                    )
 
     def select_multiple_volumes(self, new_volumes, *, join=False, remove=False):
         if self.view_mode != SHOW_FACES:
@@ -315,10 +323,12 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.faces_actor.clear_colors()
         self.faces_actor.paint_cells(self.selection_color, all_element_indexes)
         self.update()
-        self.selection_changed.emit(self.selected_points, 
+        self.selection_changed.emit(
+                                    self.selected_points, 
                                     self.selected_lines, 
                                     self.selected_faces, 
-                                    self.selected_volumes)
+                                    self.selected_volumes
+                                    )
 
     def clear_selection(self):
         self.points_actor.clear_colors()
@@ -329,7 +339,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.selected_faces = set()
         self.selected_volumes = set()
 
-    #
     def remove_actors(self):
         self.renderer.RemoveActor(self.points_actor)
         self.renderer.RemoveActor(self.lines_actor)
@@ -342,10 +351,12 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.selection_spheres_actor = None
 
     def _actors_exists(self):
-        actors = [
-            self.points_actor,
-            self.lines_actor,
-            self.faces_actor,
-            self.selection_spheres_actor,
-        ]
+
+        actors = [  
+                    self.points_actor,
+                    self.lines_actor,
+                    self.faces_actor,
+                    self.selection_spheres_actor,
+                ]
+
         return all([actor is not None for actor in actors])

@@ -88,6 +88,12 @@ class Model:
         self.mesh.update_parameters(**self.mesh_setup)
         self.generated_mesh = True
 
+        logging.info("Processing Mesh..." + ProgressStatus(90, 100))
+        self.mesh._process_solid_elements_connected_to_nodes()
+
+        logging.info("Processing Mesh..." + ProgressStatus(95, 100))
+        self.mesh._process_element_average_coordinates()
+
         # logging.info("Renumbering nodes..." + ProgressStatus(90, 100))
         # self.mesh._process_nodes_reordering()
 

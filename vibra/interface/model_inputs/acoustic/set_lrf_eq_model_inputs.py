@@ -5,9 +5,10 @@ from pathlib import Path
 from PyQt5 import uic
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QDialog, QComboBox, QFrame, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
+from PyQt5.QtWidgets import QDialog, QComboBox, QDoubleSpinBox, QFrame, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
 
 from vibra import app, UI_DIR
+from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.model_inputs.acoustic.get_sphere_selection_information import GetSphereSelectionInformation
 from vibra.interface.mesh.mesher_inputs import MesherInputs
 #
@@ -27,15 +28,8 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/setup/acoustic/lrf_eq_model_inputs.ui"
+        ui_path = UI_DIR / "model/setup/acoustic/set_lrf_eq_model_inputs.ui"
         uic.loadUi(ui_path, self)
-
-        icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.icon = QIcon(icon_path)
-        self.setWindowIcon(self.icon)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Set the low reduced frequency eq. model")
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -45,13 +39,23 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         self.model = self.main_window.project.model
         self.properties = self.model.properties
 
-        self._reset_variables()
+        self._config_window()
+        self._initialize()
         self._define_qt_variables()
         self._create_connections()
+
+        ConfigWidgetAppearance(self, tool_tip=True)
+
         self.load_lrf_data()
         self.exec()
 
-    def _reset_variables(self):
+    def _config_window(self):
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(app().main_window.vibra_icon)
+        self.setWindowTitle("Set the low reduced frequency eq. model")
+
+    def _initialize(self):
         self.typed_ids = []
         # self.model = ""
         self.mesher = None
@@ -59,40 +63,46 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         self.fluid_density_factor = 0
 
     def _define_qt_variables(self):
-        # QComboBox objects
-        self.comboBox_selection_by = self.findChild(QComboBox, 'comboBox_selection_by')
-        self.comboBox_filter = self.findChild(QComboBox, 'comboBox_filter')
-        # QFrame objects
-        self.frame_selection_by_surface = self.findChild(QFrame, 'frame_selection_by_surface')
-        self.frame_center_coordinates = self.findChild(QFrame, "frame_center_coordinates")
-        self.frame_filter_options = self.findChild(QFrame, 'frame_filter_options')
-        # QLineEdit objects
-        self.lineEdit_center_coordinates = self.findChild(QLineEdit, 'lineEdit_center_coordinates')
-        self.lineEdit_selection_id = self.findChild(QLineEdit, "lineEdit_selection_id")
-        self.lineEdit_diameter = self.findChild(QLineEdit, "lineEdit_diameter")
-        self.lineEdit_selection_radius = self.findChild(QLineEdit, "lineEdit_selection_radius")
-        self.lineEdit_selection_radius.setDisabled(True)
-        # QPushButton objects
-        self.pushButton_confirm = self.findChild(QPushButton, "pushButton_confirm")
-        self.pushButton_get_lrf_info = self.findChild(QPushButton, "pushButton_get_lrf_info")
-        self.pushButton_selection_info = self.findChild(QPushButton, "pushButton_selection_info")
-        self.pushButton_remove = self.findChild(QPushButton, "pushButton_remove")
-        self.pushButton_reset = self.findChild(QPushButton, "pushButton_reset")
-        # QTabWidget objects
-        self.tabWidget_lrf_model = self.findChild(QTabWidget, "tabWidget_lrf_model")
-        self.tab_setup = self.tabWidget_lrf_model.findChild(QWidget, "tab_setup")
-        self.current_tab = self.tabWidget_lrf_model.currentIndex()
-        # QTreeWidget objects
-        self.treeWidget_lrf_model_info = self.findChild(QTreeWidget, "treeWidget_lrf_model_info")
+
+        # QComboBox
+        self.comboBox_selection_by : QComboBox
+        self.comboBox_filter : QComboBox
+
+        # QDoubleSpinBox
+        self.doubleSpinBox_diameter : QDoubleSpinBox
+        self.doubleSpinBox_selection_radius : QDoubleSpinBox
+        self.doubleSpinBox_selection_radius.setDisabled(True)
+
+        # QFrame
+        self.frame_selection_by_surface : QFrame
+        self.frame_center_coordinates : QFrame
+        self.frame_filter_options : QFrame
+
+        # QLineEdit
+        self.lineEdit_selection_id : QLineEdit
+        self.lineEdit_center_coordinates : QLineEdit
+
+        # QPushButton
+        self.pushButton_confirm : QPushButton
+        self.pushButton_get_lrf_info : QPushButton
+        self.pushButton_selection_info : QPushButton
+        self.pushButton_remove : QPushButton
+        self.pushButton_reset : QPushButton
+
+        # QTabWidget
+        self.tabWidget_lrf_model : QTabWidget
+
+        # QTreeWidget
+        self.treeWidget_lrf_model_info : QTreeWidget
 
     def _create_connections(self):
         #
         self.comboBox_selection_by.currentIndexChanged.connect(self.update_selection_type_controls)
         #
+        self.doubleSpinBox_selection_radius.valueChanged.connect(self.call_sphere_plotter)
+        #
         geometry_widget = self.main_window.viewer_tabs.geometry_widget
         geometry_widget.selection_changed.connect(self.geometry_selection_callback)
-        #
-        self.lineEdit_selection_radius.editingFinished.connect(self.call_sphere_plotter)
         #
         self.pushButton_confirm.clicked.connect(self.set_lrf_eq_model_data)
         self.pushButton_get_lrf_info.clicked.connect(self.get_lrf_info)
@@ -118,13 +128,13 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             self.call_sphere_plotter()
 
     def geometry_selection_callback(self, points, lines, faces, volumes):
-        self.lineEdit_selection_radius.setDisabled(True)
+        self.doubleSpinBox_selection_radius.setDisabled(True)
         self.pushButton_selection_info.setDisabled(True)
         selection_index = self.comboBox_selection_by.currentIndex()
         if faces:
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
-            self.lineEdit_selection_radius.setDisabled(False)
+            self.doubleSpinBox_selection_radius.setDisabled(False)
             self.pushButton_selection_info.setDisabled(False)
             if selection_index == 0:
                 self.comboBox_selection_by.setCurrentIndex(1)
@@ -165,19 +175,12 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             self.lineEdit_center_coordinates.setText("Multiple centers")
         return center_coords
 
-    def check_selection_radius(self):
-        self.selection_radius = None
-        lineEdit = self.lineEdit_selection_radius
-        self.selection_radius = self.check_inputs(lineEdit, "Selection radius")
-        if self.stop:
-            lineEdit.setFocus()
-            return True
-
     def call_sphere_plotter(self):
         if self.comboBox_selection_by.currentIndex() > 0:
-            if self.check_selection_radius():
-                return
+
+            self.selection_radius = self.doubleSpinBox_selection_radius.value()
             center_coords = self.get_center_coordinates()
+
             if len(center_coords):
                 all_radius = [self.selection_radius for i in center_coords]
                 geometry_widget = self.main_window.viewer_tabs.geometry_widget
@@ -198,8 +201,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         if selection_id != "":
             if index > 0:
 
-                if self.check_selection_radius():
-                    return
+                self.selection_radius = self.doubleSpinBox_selection_radius.value()
                 
                 if index == 1:
                     averaged_selection = False
@@ -276,27 +278,19 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         mesh_widget.select_multiple_volumes(elements)
 
     def check_lrf_eq_model_entries(self):
-        
+
         selection_id = self.lineEdit_selection_id.text()
         if self.comboBox_selection_by.currentIndex() == 0:
-            self.stop, self.volume_ids = self.model.check_input_volume_id(selection_id)
+            _stop, self.volume_ids = self.model.check_input_volume_id(selection_id)
         else:
-            self.stop, self.surface_ids = self.model.check_input_surface_id(selection_id)
-            lineEdit = self.lineEdit_selection_radius
-            self.selection_radius = self.check_inputs(lineEdit, "Selection radius")
-            if self.stop:
-                lineEdit.setFocus()
-                return True
+            _stop, self.surface_ids = self.model.check_input_surface_id(selection_id)
+            self.selection_radius = self.doubleSpinBox_selection_radius.value()
 
-        if self.stop:
+        if _stop:
             self.lineEdit_selection_id.setFocus()
             return True
 
-        lineEdit = self.lineEdit_diameter
-        self.diameter = self.check_inputs(lineEdit, "Diameter")
-        if self.stop:
-            lineEdit.setFocus()
-            return True
+        self.diameter = self.doubleSpinBox_selection_radius.value()
 
     def set_lrf_eq_model_data(self):
         
@@ -348,7 +342,6 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         self.stop = False
         message = ""
         title = "Invalid input at LRF eq. model"
-        window_title = "ERROR"
         if lineEdit.text() != "":
             try:
                 if _float:
@@ -378,7 +371,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
                 message = f"Insert some value at the {label} input field."
 
         if message != "":
-            PrintMessageInput([window_title, title, message])
+            PrintMessageInput([window_title_1, title, message])
             self.stop = True
             return None
         return out
