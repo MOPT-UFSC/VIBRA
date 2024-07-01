@@ -27,10 +27,10 @@ def test_load_external_mesh_and_solve():
     mesh.import_external_connectivity(connect_path, index_zero=True, etype_tag=4, e_nodes=4)
     mesh.element_type = TETRAHEDRON_4
 
-    mesh.connectivity_from_surfaces = get_faces_connectivities()
-    for tag, surf_data in mesh.connectivity_from_surfaces.items():
+    for tag, surf_data in get_faces_connectivities().items():
         mesh.elements_from_surface[tag] = surf_data["element_indexes"]
-    
+        mesh.connectivity_from_surfaces[tag] = surf_data["connectivity"]
+
     mesh.surfaces_from_volumes[1] = [1, 2]
 
     # if reorder_nodes:
@@ -94,7 +94,7 @@ def test_load_external_mesh_and_solve():
     omega = 2 * np.pi * frequencies
 
     # Configure porous material
-    pm_model = "JCAL"
+    pm_model = "DB"
     pm_data = get_porous_material_data(model=pm_model)
     model.set_porous_material_model_data(pm_data, volume=1)
     model.process_porous_material_properties(frequencies)
@@ -136,21 +136,21 @@ def test_load_external_mesh_and_solve():
         imported_results = import_results()
 
         if selected_surface == 1:
-            if porous_material_model == "DB":
+            if pm_model == "DB":
                 data = imported_results["input_ns_DB"]
                 # data = imported_results["input_ns_Z1_DB"]
                 # data = imported_results["input_ns_Z2_DB"]
-            elif porous_material_model == "DBM":
+            elif pm_model == "DBM":
                 data = imported_results["input_ns_DBM"]
-            elif porous_material_model == "JCA":
+            elif pm_model == "JCA":
                 data = imported_results["input_ns_JCA"]
 
         else:
-            if porous_material_model == "DB":
+            if pm_model == "DB":
                 data = imported_results["output_ns_DB"]
                 # data = imported_results["output_ns_Z1_DB"]
                 # data = imported_results["output_ns_Z2_DB"]
-            elif porous_material_model == "DBM":
+            elif pm_model == "DBM":
                 data = imported_results["output_ns_DBM"]
             else:
                 data = imported_results["output_ns_JCA"]

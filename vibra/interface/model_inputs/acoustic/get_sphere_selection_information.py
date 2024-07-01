@@ -36,7 +36,7 @@ class GetSphereSelectionInformation(QDialog):
 
         self._config_window()
         self._define_qt_variables()
-        self._create_connections()
+        self._config_widgets()
         self.get_selection_info()
         self.exec()
 
@@ -49,20 +49,18 @@ class GetSphereSelectionInformation(QDialog):
     def _define_qt_variables(self):
 
         # QLineEdit
-        self.lineEdit_center_coordinates : QLineEdit
+        self.lineEdit_coordinate_x : QLineEdit
+        self.lineEdit_coordinate_y : QLineEdit
+        self.lineEdit_coordinate_z : QLineEdit
         self.lineEdit_number_of_elements : QLineEdit
         self.lineEdit_number_of_nodes : QLineEdit
         self.lineEdit_selection_radius : QLineEdit
+
+    def _config_widgets(self):
         self.lineEdit_number_of_elements.setDisabled(True)
         self.lineEdit_number_of_nodes.setDisabled(True)
         self.lineEdit_selection_radius.setDisabled(True)
         self.lineEdit_selection_radius.setText(str(round(self.selection_radius, 6)))
-
-        # QPushButton
-        self.pushButton_close : QPushButton
-    
-    def _create_connections(self):
-        self.pushButton_close.clicked.connect(self.close)
 
     def get_selection_info(self):
 
@@ -75,17 +73,24 @@ class GetSphereSelectionInformation(QDialog):
                                                                         averaged=self.averaged  )
 
         if len(list_center_coords) == 0:
-            self.lineEdit_center_coordinates.setText("")
+            self.lineEdit_coordinate_x.setText("")
+            self.lineEdit_coordinate_y.setText("")
+            self.lineEdit_coordinate_z.setText("")
 
         elif len(list_center_coords) == 1:
             _round_center_coords = [round(value, 4) for value in list_center_coords[0]]
-            self.lineEdit_center_coordinates.setText(str(_round_center_coords))
+            self.lineEdit_coordinate_x.setText(str(_round_center_coords[0]))
+            self.lineEdit_coordinate_y.setText(str(_round_center_coords[1]))
+            self.lineEdit_coordinate_z.setText(str(_round_center_coords[2]))
 
         else:
-            self.lineEdit_center_coordinates.setText("Multiple centers")
+            self.lineEdit_coordinate_x.setText("Multiple centers")
+            self.lineEdit_coordinate_y.setText("Multiple centers")
+            self.lineEdit_coordinate_z.setText("Multiple centers")
 
         self.lineEdit_number_of_elements.setText(str(len(list_elements)))
         self.lineEdit_number_of_nodes.setText(str(len(list_nodes)))
+
         self.highlight_mesh_elements(list_elements)
 
     def highlight_mesh_elements(self, elements):

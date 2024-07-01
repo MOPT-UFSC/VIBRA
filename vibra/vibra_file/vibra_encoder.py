@@ -30,9 +30,7 @@ class VibraEncoder(FileHandler):
 
         mesh_info = dict()
         mesh_info["dimension"] = mesh.dimension
-        mesh_info["entity_ranges"] = mesh.entity_ranges
         mesh_info["element_type"] = mesh.element_type
-
         mesh_info["geometry_setup"] = mesh.geometry_setup
 
         if mesh.mesh_setup is not None:

@@ -21,9 +21,9 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
     mesh.import_external_connectivity(connect_path, index_zero=True, etype_tag=4, e_nodes=4)
     mesh.element_type = TETRAHEDRON_4
 
-    mesh.connectivity_from_surfaces = get_faces_connectivities()
-    for tag, surf_data in mesh.connectivity_from_surfaces.items():
+    for tag, surf_data in get_faces_connectivities().items():
         mesh.elements_from_surface[tag] = surf_data["element_indexes"]
+        mesh.connectivity_from_surfaces = surf_data["connectivity"]
     
     if reorder_nodes:
         mesh._process_nodes_reordering()

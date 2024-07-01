@@ -33,21 +33,30 @@ class Mesh:
         self.lines_connectivity = np.array([])
         self.faces_connectivity = np.array([])
         self.solids_connectivity = np.array([])
+
+        self.nodes_from_points = dict()
         self.nodes_from_lines = dict()
         self.nodes_from_surfaces = dict()
         self.nodes_from_volumes = dict()
+
+        self.gmsh_elements_from_lines = dict()
         self.gmsh_elements_from_surfaces = dict()
         self.gmsh_elements_from_volumes = dict()
-        self.elements_from_volume = dict()
+
+        self.elements_from_line = dict()
         self.elements_from_surface = dict()
-        self.volume_from_element = dict()
+        self.elements_from_volume = dict()
+
+        self.line_from_element = dict()
         self.surface_from_element = dict()
-        self.entity_ranges = dict()
+        self.volume_from_element = dict()
+
         self.surfaces_from_volumes = dict()
         self.connectivity_from_surfaces = dict()
         self.nodes_from_face_element = dict()
         self.nodes_from_solid_element = dict()
         self.solid_elements_center = dict()
+
         self.volume_from_surface = defaultdict(list)
         self.face_elements_from_nodes = defaultdict(list)
         self.solid_elements_from_nodes = defaultdict(list)
@@ -320,11 +329,12 @@ class Mesh:
         writer.Write()
 
     def local_mesh_refine(self, lc_geral, mesh_refinement_parameters):
-        fields_list = []
+
+        fields_list = [1]
+
         gmsh.model.mesh.field.add("Constant")
         gmsh.model.mesh.field.setNumbers(1, "SurfacesList", [])
-        gmsh.model.mesh.field.setNumber(1, "VOut", lc_geral)
-        fields_list.append(1)
+        gmsh.model.mesh.field.setNumber(1, "VOut", lc_geral)       
 
         for size, faces in mesh_refinement_parameters:
             threshold_type = gmsh.model.mesh.field.add("Constant")
@@ -347,9 +357,6 @@ class Mesh:
                         mesh_refinement_parameters=None
                         ):
 
-        if mesh_refinement_parameters is None:
-            mesh_refinement_parameters = []
-
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("General.NumThreads", threads)
@@ -357,10 +364,13 @@ class Mesh:
 
         if size_factor != 0:
             gmsh.option.setNumber("Mesh.MeshSizeFactor", size_factor)
-        else:
-            # gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
-            # gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
+
+        elif mesh_refinement_parameters:
             self.local_mesh_refine(minimum_element_size, mesh_refinement_parameters)
+
+        else:
+            gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
+            gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
 
         gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
         gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
@@ -369,6 +379,7 @@ class Mesh:
         gmsh.option.setNumber("Mesh.RecombineAll", element_type.recombine_all)
         gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
         gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_type.second_order_incomplete)
+
 
     def _process_mesh(self):
         """
@@ -389,24 +400,25 @@ class Mesh:
         connectivity_dim2 = dict()
         connectivity_dim3 = dict()
 
+        self.nodes_from_points.clear()
         self.nodes_from_lines.clear()
         self.nodes_from_surfaces.clear()
         self.nodes_from_volumes.clear()
+
+        self.gmsh_elements_from_lines.clear()
+        self.gmsh_elements_from_surfaces.clear()
+        self.gmsh_elements_from_volumes.clear()
+
         self.connectivity_from_surfaces.clear()
 
         self.surfaces_from_volumes.clear()
         self.volume_from_surface.clear()
-        self.gmsh_elements_from_surfaces.clear()
-        self.gmsh_elements_from_volumes.clear()
 
         for dim, tag in gmsh.model.getEntities():
-
-            # print(dim, tag)
 
             if dim == 3:
                 _, downwards = gmsh.model.getAdjacencies(dim, tag)
                 self.surfaces_from_volumes[tag] = list(downwards)
-                # print(tag, list(downwards))
                 for surf_id in list(downwards):
                     self.volume_from_surface[surf_id].append(tag)
 
@@ -422,45 +434,66 @@ class Mesh:
                 array_element_nodes = np.array(element_nodes[i]).reshape(-1, nodes_per_element)
                 array_element_nodes -= 1  # index connectivity from 0
 
-                elements_data[element_type] = { "indexes": element_indexes[i],
-                                                "array_element_nodes": array_element_nodes,
-                                                "element_to_nodes": dict(zip(element_indexes[i], array_element_nodes)) }
+                elements_data[element_type] = { 
+                                                "indexes" : element_indexes[i],
+                                                "array_element_nodes" : array_element_nodes
+                                              }
 
             if dim == 0:  # Points
-                # The index of points is one less than the
-                # tag value, that is why this is the correct range.
-                self.entity_ranges[dim, tag] = (tag - 1, tag)
+                self.nodes_from_points[tag] = int(element_nodes[0]) - 1
 
             elif dim == 1:  # Lines
                 connectivity_dim1[dim, tag] = elements_data
                 self.nodes_from_lines[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
+                self.gmsh_elements_from_lines[tag] = np.array([*set(element_indexes[0])], dtype=int)
 
             elif dim == 2:  # Surfaces
                 connectivity_dim2[dim, tag] = elements_data
                 self.nodes_from_surfaces[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
-                array_element_indexes = np.array([*set(element_indexes[0])], dtype=int) - 1
-                self.connectivity_from_surfaces[tag] = {"element_indexes" : array_element_indexes,
-                                                        "connectivity" : array_element_nodes}
+                self.connectivity_from_surfaces[tag] = array_element_nodes
                 self.gmsh_elements_from_surfaces[tag] = np.array([*set(element_indexes[0])], dtype=int)
 
             elif dim == 3:  # Solids
                 connectivity_dim3[dim, tag] = elements_data
                 self.nodes_from_volumes[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
                 self.gmsh_elements_from_volumes[tag] = np.array([*set(element_indexes[0])], dtype=int)
-                # print(tag, len(self.gmsh_elements_from_volumes[tag]))
-        
+
         self.lines_connectivity, self.map_line_elements = self._get_connectivity_array(connectivity_dim1)
         self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity, self.map_solid_elements = self._get_connectivity_array(connectivity_dim3)
-        #
+
+        # np.savetxt("mesh_connectivity.dat", self.solids_connectivity, delimiter=";")
+        # np.savetxt("mesh_coordinates.dat", self.nodal_coordinates, delimiter=";")
+        # print(self.volume_from_surface[4])
+        # print(self.nodes_from_surfaces[4])
+        # print(self.connectivity_from_surfaces[4])
+
         # TODO: remove as soon as possible
         aux_zeros = np.zeros(len(self.solids_connectivity[0,4:]))
         for i, values in enumerate(self.solids_connectivity[:,4:]):
             if (aux_zeros == values).all():
                 print(f"Invalid node - index: {i}")
-        #
+
+        self._maps_lines_by_elements()
         self._maps_surfaces_by_elements()
         self._maps_volumes_by_elements()
+
+
+    def _maps_lines_by_elements(self):
+        self.line_from_element.clear()
+        self.elements_from_line.clear()
+        for tag, gmsh_indexes in self.gmsh_elements_from_lines.items():
+
+            n = len(gmsh_indexes)
+            internal_indexes = np.zeros(n, dtype=int)
+
+            for i, gmsh_index in enumerate(gmsh_indexes):
+                index = self.map_line_elements[gmsh_index]
+                internal_indexes[i] = index
+                self.line_from_element[index] = tag
+
+            self.elements_from_line[tag] = internal_indexes
+
 
     def _maps_surfaces_by_elements(self):
         self.surface_from_element.clear()
@@ -469,14 +502,15 @@ class Mesh:
 
             n = len(gmsh_indexes)
             internal_indexes = np.zeros(n, dtype=int)
-            self.elements_from_surface[tag] = internal_indexes
 
             for i, gmsh_index in enumerate(gmsh_indexes):
                 index = self.map_face_elements[gmsh_index]
                 internal_indexes[i] = index
                 self.surface_from_element[index] = tag
 
-            # self.elements_from_surface[tag] = internal_indexes
+            self.elements_from_surface[tag] = internal_indexes
+            # print(tag, internal_indexes)
+
 
     def _maps_volumes_by_elements(self):
         self.volume_from_element.clear()
@@ -485,14 +519,17 @@ class Mesh:
 
             n = len(gmsh_indexes)
             internal_indexes = np.zeros(n, dtype=int)
-            self.elements_from_volume[tag] = internal_indexes
 
             for i, gmsh_index in enumerate(gmsh_indexes):
                 index = self.map_solid_elements[gmsh_index]
                 internal_indexes[i] = index
                 self.volume_from_element[index] = tag
+                # if i == 0:
+                #     print(index, self.solids_connectivity[index,:])
 
-            # self.elements_from_volume[tag] = internal_indexes
+            self.elements_from_volume[tag] = internal_indexes
+            # print(self.elements_from_volume[tag], len(self.elements_from_volume[tag]))
+            # print(len(self.elements_from_volume[tag]))
 
     def _process_face_elements_connected_to_nodes(self):
         self.nodes_from_face_element.clear()
@@ -502,6 +539,7 @@ class Mesh:
             for node in connected_nodes:
                 self.face_elements_from_nodes[node].append(i)
 
+
     def _process_solid_elements_connected_to_nodes(self):
         self.nodes_from_solid_element.clear()
         self.solid_elements_from_nodes.clear()
@@ -510,70 +548,6 @@ class Mesh:
             for node in connected_nodes:
                 self.solid_elements_from_nodes[node].append(i)
 
-    def _process_nodes_reordering(self, print_log=False):
-        """ This method processes the nodes reordering to reduce the global matrices 
-            bandwidth and improve the solution performance.
-        """
-        # print(f"Nodal coordinates: {self.nodal_coordinates.shape}")
-        # print(f"Connectivity: {self.solids_connectivity.shape}")
-        # np.savetxt("nodal_coordinates.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
-        # np.savetxt("faces_connectivity.dat", self.faces_connectivity, delimiter=",", fmt='%i')
-        # np.savetxt("solids_connectivity.dat", self.solids_connectivity, delimiter=",", fmt='%i')
-
-        t0 = time()
-        self.reordering = Reordering(self)
-        if print_log:
-            dt = time()  - t0
-            print(f"Time to process - reordering (1/4): {dt}")
-        logging.info("Reordering nodes (1/4)" + ProgressStatus(20, 100))
-
-        t0 = time()
-        self.reordering._process_reordering()
-        if print_log:
-            dt = time()  - t0
-            print(f"Time to process - reordering (2/4): {dt}")
-        logging.info("Reordering nodes (2/4)" + ProgressStatus(60, 100))
-
-        t0 = time()
-        self.lines_connectivity = self.reordering.get_new_connectivity(self.lines_connectivity)
-        self.faces_connectivity = self.reordering.get_new_connectivity(self.faces_connectivity)
-        self.solids_connectivity = self.reordering.get_new_connectivity(self.solids_connectivity)
-        if print_log:
-            dt = time()  - t0
-            print(f"Time to process - reordering (3/4): {dt}")
-        logging.info("Reordering nodes (3/4)" + ProgressStatus(80, 100))
-
-        t0 = time()
-        self.nodal_coordinates = self.reordering.get_new_nodal_coordinates()        
-        self.nodes_from_lines = self.reordering.updates_nodes_from(self.nodes_from_lines)
-        self.nodes_from_surfaces = self.reordering.updates_nodes_from(self.nodes_from_surfaces)
-        self.nodes_from_volumes = self.reordering.updates_nodes_from(self.nodes_from_volumes)
-        self.connectivity_from_surfaces = self.reordering.updates_nodes_from(self.connectivity_from_surfaces)
-        if print_log:
-            dt = time()  - t0
-            print(f"Time to process - reordering (4/4): {dt}")
-        logging.info("Reordering nodes (4/4)" + ProgressStatus(100, 100))
-            
-        t0 = time()
-        # self._process_face_elements_connected_to_nodes()
-        
-        t0 = time()
-        self._process_solid_elements_connected_to_nodes()
-        if print_log:
-            dt = time()  - t0
-            print(f"Time to post-process - reordering (1/2): {dt}")
-        
-        t0 = time()
-        self._process_element_average_coordinates()
-        if print_log:    
-            dt = time()  - t0
-            print(f"Time to post-process - reordering (2/2): {dt}")
-         
-        # print(f"Nodal coordinates (after): {self.nodal_coordinates.shape}")
-        # print(f"Connectivity (after): {self.solids_connectivity.shape}")
-        # np.savetxt("nodal_coordinates_reordered.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
-        # np.savetxt("faces_connectivity_reordered.dat", self.faces_connectivity, delimiter=",", fmt='%i')
-        # np.savetxt("solids_connectivity_reordered.dat", self.solids_connectivity, delimiter=",", fmt='%i')
 
     def get_mesh_info(self):
         n_nodes = self.nodal_coordinates.shape[0]
@@ -581,12 +555,14 @@ class Mesh:
         n_solid_elements = self.solids_connectivity.shape[0]
         return n_nodes, n_face_elements, n_solid_elements
 
+
     def get_geometry_info(self):
-        points = len(self.entity_ranges)
+        points = len(self.nodes_from_points)
         lines = len(self.nodes_from_lines)
         surfaces = len(self.nodes_from_surfaces)
         volumes = len(self.nodes_from_volumes)
         return points, lines, surfaces, volumes
+
 
     def get_model_areas(self, path):
         """This method returns returns the all surface area processed using
@@ -657,6 +633,7 @@ class Mesh:
 
         return surfaces_areas  # , bodies_volumes
 
+
     def _get_connectivity_array(self, input_dict):
         """
         The returned value is an array where each line is a connectivity
@@ -682,10 +659,12 @@ class Mesh:
         output_data = np.zeros((n, max_cols + 4), dtype=int)
         gmsh_elements = np.zeros(n, dtype=int)
 
+        internal_indexes = np.arange(n, dtype=int)
+        output_data[:, 0] = internal_indexes 
+
         start, end, ind = 0, 0, 0
         for (entity_dim, entity_tag), e_data in input_dict.items():
-            entity_start = start
-            # indexes_from_entity = []
+
             for etype_tag, data in e_data.items():
 
                 end += n_list[ind]
@@ -698,32 +677,90 @@ class Mesh:
 
                 output_data[start:end, 1] = aux * entity_tag
                 output_data[start:end, 2] = aux * etype_tag
-                # output_data[start:end, 3] = indexes
                 output_data[start:end, 3] = aux * cols
                 output_data[start:end, 4 : 4 + cols] = nodes
                 gmsh_elements[start:end] = indexes
-                # indexes_from_entity.extend(indexes)
 
                 start = end
                 ind += 1
 
-            entity_end = end
-
-            self.entity_ranges[entity_dim, entity_tag] = (entity_start, entity_end)
-            # self.entity_ranges[entity_dim, entity_tag] = indexes_from_entity
-
-        internal_indexes = np.arange(n, dtype=int)
-        # output_data[:, 0] = np.arange(1, n + 1, 1)
-        output_data[:, 0] = internal_indexes 
         map_elements = dict(zip(gmsh_elements, internal_indexes))
 
         return output_data, map_elements
+
 
     def _process_element_average_coordinates(self):
         """ This method evaluates the element average center coordinates. """
         self.solid_elements_center.clear()
         for index, nodes in self.nodes_from_solid_element.items():
             self.solid_elements_center[index] = np.average(self.nodal_coordinates[nodes, 1:], axis=0)
+
+
+    def _process_nodes_reordering(self, print_log=False):
+        return
+        """ This method processes the nodes reordering to reduce the global matrices 
+            bandwidth and improve the solution performance.
+        """
+        # print(f"Nodal coordinates: {self.nodal_coordinates.shape}")
+        # print(f"Connectivity: {self.solids_connectivity.shape}")
+        # np.savetxt("nodal_coordinates.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
+        # np.savetxt("faces_connectivity.dat", self.faces_connectivity, delimiter=",", fmt='%i')
+        # np.savetxt("solids_connectivity.dat", self.solids_connectivity, delimiter=",", fmt='%i')
+
+        t0 = time()
+        self.reordering = Reordering(self)
+        if print_log:
+            dt = time()  - t0
+            print(f"Time to process - reordering (1/4): {dt}")
+        logging.info("Reordering nodes (1/4)" + ProgressStatus(20, 100))
+
+        t0 = time()
+        self.reordering._process_reordering()
+        if print_log:
+            dt = time()  - t0
+            print(f"Time to process - reordering (2/4): {dt}")
+        logging.info("Reordering nodes (2/4)" + ProgressStatus(60, 100))
+
+        t0 = time()
+        self.lines_connectivity = self.reordering.get_new_connectivity(self.lines_connectivity)
+        self.faces_connectivity = self.reordering.get_new_connectivity(self.faces_connectivity)
+        self.solids_connectivity = self.reordering.get_new_connectivity(self.solids_connectivity)
+        if print_log:
+            dt = time()  - t0
+            print(f"Time to process - reordering (3/4): {dt}")
+        logging.info("Reordering nodes (3/4)" + ProgressStatus(80, 100))
+
+        t0 = time()
+        self.nodal_coordinates = self.reordering.get_new_nodal_coordinates()        
+        self.nodes_from_lines = self.reordering.updates_nodes_from(self.nodes_from_lines)
+        self.nodes_from_surfaces = self.reordering.updates_nodes_from(self.nodes_from_surfaces)
+        self.nodes_from_volumes = self.reordering.updates_nodes_from(self.nodes_from_volumes)
+        self.connectivity_from_surfaces = self.reordering.updates_nodes_from(self.connectivity_from_surfaces)
+        if print_log:
+            dt = time()  - t0
+            print(f"Time to process - reordering (4/4): {dt}")
+        logging.info("Reordering nodes (4/4)" + ProgressStatus(100, 100))
+            
+        t0 = time()
+        # self._process_face_elements_connected_to_nodes()
+        
+        t0 = time()
+        self._process_solid_elements_connected_to_nodes()
+        if print_log:
+            dt = time()  - t0
+            print(f"Time to post-process - reordering (1/2): {dt}")
+        
+        t0 = time()
+        self._process_element_average_coordinates()
+        if print_log:    
+            dt = time()  - t0
+            print(f"Time to post-process - reordering (2/2): {dt}")
+         
+        # print(f"Nodal coordinates (after): {self.nodal_coordinates.shape}")
+        # print(f"Connectivity (after): {self.solids_connectivity.shape}")
+        # np.savetxt("nodal_coordinates_reordered.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
+        # np.savetxt("faces_connectivity_reordered.dat", self.faces_connectivity, delimiter=",", fmt='%i')
+        # np.savetxt("solids_connectivity_reordered.dat", self.solids_connectivity, delimiter=",", fmt='%i')
 
 
 if __name__ == "__main__":

@@ -35,7 +35,6 @@ class ImportDataToCompare(QDialog):
         self._reset_variables()
         self._define_and_configure_Qt_variables()
         self._create_connections()
-        self.exec()
 
     def _load_icons(self):
         self.import_icon = QIcon(get_icons_path('import.png'))

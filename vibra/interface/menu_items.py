@@ -394,8 +394,7 @@ class MenuItems(QTreeWidget):
             if not self.item_child_mesh_setup.isDisabled():
                 self.obj = MesherInputs()
                 self.main_window.viewer_tabs.close_analysis_tabs()
-                self.main_window.viewer_tabs.update_plots()
-
+                # self.main_window.viewer_tabs.update_plots()
 
         elif item == self.item_child_set_material:
             if not self.item_child_set_material.isDisabled():

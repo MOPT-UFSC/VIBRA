@@ -69,7 +69,7 @@ class ExportModelResults(QDialog):
 
     def _set_data_to_export(self, data):
         self.data = data
-        if len(data) > 0:
+        if data:
             self._load_data_information()
             self.exec()
 

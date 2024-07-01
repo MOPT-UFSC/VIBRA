@@ -249,11 +249,11 @@ class GeometryRenderWidget(CommonRenderWidget):
         all_element_indexes = list()
         for line in self.selected_lines:
 
-            if not (1, line) in self.main_window.project.model.mesh.entity_ranges:
-                return 
-
-            a, b = self.main_window.project.model.mesh.entity_ranges[1, line]
-            all_element_indexes.extend(range(a, b))
+            if line not in self.main_window.project.model.mesh.elements_from_line.keys():
+                return
+            
+            indexes = self.main_window.project.model.mesh.elements_from_line[line]
+            all_element_indexes.extend(indexes)
 
         self.lines_actor.clear_colors()
         self.lines_actor.paint_cells(self.selection_color, all_element_indexes)

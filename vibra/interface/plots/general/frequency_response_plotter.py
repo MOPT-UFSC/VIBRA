@@ -47,7 +47,9 @@ class FrequencyResponsePlotter(QDialog):
         self._layout = None
         self.x_data = None
         self.y_data = None
+
         self.importer = None
+        self.exporter = None
 
         self.data_to_plot = dict()
 
@@ -113,8 +115,7 @@ class FrequencyResponsePlotter(QDialog):
     def import_file(self):
         if self.importer is None:
             self.importer = ImportDataToCompare(self)
-        else:
-            self.importer.exec()
+        self.importer.exec()
 
     def _initial_config(self):
         self.aux_bool = False
@@ -419,3 +420,14 @@ class FrequencyResponsePlotter(QDialog):
             self.data_to_plot = data
             self.plot_data_in_freq_domain()
             self.exec()
+
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
+
+        if self.exporter is not None:
+            self.exporter.close()
+
+        if self.importer is not None:
+            self.importer.close()
+
+        # self.keep_window_open = False
+        return super().closeEvent(a0)

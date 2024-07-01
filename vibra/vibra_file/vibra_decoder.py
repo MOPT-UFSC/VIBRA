@@ -39,7 +39,6 @@ class VibraDecoder(FileHandler):
         mesh.generated_mesh = True
         mesh_info = self._read_json("model/mesh/mesh_info.json")
         mesh.dimension = mesh_info["dimension"]
-        mesh.entity_ranges = mesh_info["entity_ranges"]
         mesh.element_type = ElementType(**mesh_info["element_type"])
 
         if "geometry_setup" in mesh_info:

@@ -1,11 +1,9 @@
-import numpy as np
-from pathlib import Path
-
 # fmt: off
-from PyQt5 import uic
+
+from PyQt5.QtWidgets import  QComboBox, QDialog, QDoubleSpinBox, QFrame, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QDialog, QComboBox, QDoubleSpinBox, QFrame, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
+from PyQt5.QtGui import QCloseEvent
+from PyQt5 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
@@ -19,6 +17,8 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 
 from vibra.interface.loading_bar import load_function
 
+import numpy as np
+from pathlib import Path
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -47,7 +47,9 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         ConfigWidgetAppearance(self, tool_tip=True)
 
         self.load_lrf_data()
-        self.exec()
+
+        while self.keep_window_open:
+            self.exec()
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -56,7 +58,8 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         self.setWindowTitle("Set the low reduced frequency eq. model")
 
     def _initialize(self):
-        self.typed_ids = []
+        self.keep_window_open = True
+        self.typed_ids = list()
         # self.model = ""
         self.mesher = None
         self.speed_of_sound_factor = 0
@@ -81,10 +84,10 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         # QLineEdit
         self.lineEdit_selection_id : QLineEdit
         self.lineEdit_center_coordinates : QLineEdit
+        self.lineEdit_center_coordinates.setDisabled(True)
 
         # QPushButton
         self.pushButton_confirm : QPushButton
-        self.pushButton_get_lrf_info : QPushButton
         self.pushButton_selection_info : QPushButton
         self.pushButton_remove : QPushButton
         self.pushButton_reset : QPushButton
@@ -105,7 +108,6 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         geometry_widget.selection_changed.connect(self.geometry_selection_callback)
         #
         self.pushButton_confirm.clicked.connect(self.set_lrf_eq_model_data)
-        self.pushButton_get_lrf_info.clicked.connect(self.get_lrf_info)
         self.pushButton_selection_info.clicked.connect(self.get_selection_information)
         self.pushButton_remove.clicked.connect(self.remove_lrf_eq_model_inputs)
         self.pushButton_reset.clicked.connect(self.reset_lrf_eq_model_inputs)
@@ -128,9 +130,11 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             self.call_sphere_plotter()
 
     def geometry_selection_callback(self, points, lines, faces, volumes):
+
         self.doubleSpinBox_selection_radius.setDisabled(True)
         self.pushButton_selection_info.setDisabled(True)
         selection_index = self.comboBox_selection_by.currentIndex()
+
         if faces:
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
@@ -139,11 +143,13 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             if selection_index == 0:
                 self.comboBox_selection_by.setCurrentIndex(1)
             self.call_sphere_plotter()
+
         elif volumes:
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_selection_by.setCurrentIndex(0)
             self.hide_sphere()
+
         elif not any([points, lines, faces]):
             self.lineEdit_selection_id.setText("")
             self.lineEdit_center_coordinates.setText("")
@@ -155,7 +161,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         selection_index = self.comboBox_selection_by.currentIndex()
         if selection_id == "" or selection_index == 0:
             self.lineEdit_center_coordinates.setText("")
-            return []
+            return list()
 
         index = self.comboBox_selection_by.currentIndex()
         if index == 1:
@@ -170,7 +176,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
                 self.lineEdit_center_coordinates.setText(str(_round_center_coords))
             except:
                 self.lineEdit_center_coordinates.setText("")
-                return []
+                return list()
         else:
             self.lineEdit_center_coordinates.setText("Multiple centers")
         return center_coords
@@ -196,8 +202,10 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         mesh_widget.clear_selection_spheres()
 
     def get_selection_information(self):
+
         selection_id = self.lineEdit_selection_id.text()
         index = self.comboBox_selection_by.currentIndex()
+
         if selection_id != "":
             if index > 0:
 
@@ -211,11 +219,14 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
                 if self.generate_mesh():
                     return
                 
+                self.hide()
                 filter_type = self.comboBox_filter.currentIndex()
                 GetSphereSelectionInformation(  selection_id,
                                                 self.selection_radius,
                                                 averaged_selection,
                                                 filter_type  )
+
+                self.main_window.set_input_widget(self)
                 self.main_window.viewer_tabs.show_geometry()
 
     def generate_mesh(self):
@@ -256,13 +267,13 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
     def update_tabs_visibility(self):
 
-        group_ids = []
+        group_ids = list()
         for key in self.properties.group_properties.keys():
             property, group_id = key
             if property == "lrf_eq_model":
                 group_ids.append(group_id)
 
-        volume_ids = []
+        volume_ids = list()
         for key in self.properties.volume_properties.keys():
             property, volume_id = key
             if property == "lrf_eq_model":
@@ -327,7 +338,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         # self.close()
 
     def get_lrf_group_index(self):
-        keys = []
+        keys = list()
         for key in self.properties.group_properties.keys():
             property, group_id = key
             if property == "lrf_eq_model":
@@ -381,25 +392,28 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
     def on_doubleclick_item(self, item):
         self.lineEdit_selection_id.setText(item.text(0))
-        self.remove_lrf_eq_from_selection()
+        self.get_lrf_info()
+        # self.remove_lrf_eq_from_selection()
 
     def get_lrf_info(self):
         if self.lineEdit_selection_id.text() != "":
 
             picked_id = self.lineEdit_selection_id.text()
             
+            self.hide()
             def get_info(data):
                 GetSphereSelectionInformation(  data["surface_ids"],
                                                 data["selection_radius"],
                                                 data["averaged"],
                                                 data["filter_type"]  )
+
+                self.main_window.set_input_widget(self)
                 self.main_window.viewer_tabs.show_geometry()
 
             group_properties = self.properties.group_properties.copy()
             for key, data in group_properties.items():
                 property, group_id = key
                 if property == "lrf_eq_model" and int(picked_id) == group_id:
-                    # self.pushButton_get_lrf_info.setDisabled(False)
                     return get_info(data)
 
             # volume_properties = self.properties.volume_properties.copy()
@@ -434,13 +448,13 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
     def check_reset(self):
 
-        group_ids = []
+        group_ids = list()
         for key in self.properties.group_properties.keys():
             property, group_id = key
             if property == "lrf_eq_model":
                 group_ids.append(group_id)
 
-        volume_ids = []
+        volume_ids = list()
         for key in self.properties.volume_properties.keys():
             property, volume_id = key
             if property == "lrf_eq_model":
@@ -479,12 +493,15 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         elif event.key() == Qt.Key_Escape:
             self.close()
 
-    def closeEvent(self, event):
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.hide_sphere()
         try:
             geometry_widget = self.main_window.viewer_tabs.geometry_widget
             geometry_widget.selection_changed.disconnect(self.geometry_selection_callback)
         except TypeError:
             pass  # ignore if there is nothing to disconect
+
+        self.keep_window_open = False
+        return super().closeEvent(a0)
 
 # fmt: on

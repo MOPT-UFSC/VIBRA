@@ -60,9 +60,17 @@ class Model:
         self.mesh_setup = mesh_setup
 
     def process_visual_geometry_mesh(self):
-        self.mesh = Mesh.from_cad(self.geometry_path, dimension=2, size_factor=0.15)
-        self.surfaces_areas = self.mesh.get_model_areas(self.geometry_path)
-        self.generated_mesh = False
+
+        try:
+            self.mesh = Mesh.from_cad(self.geometry_path, dimension=2, size_factor=0.15)
+            self.surfaces_areas = self.mesh.get_model_areas(self.geometry_path)
+            self.generated_mesh = False
+
+        except Exception as error_log:
+            title = "Error while processing geometry"
+            message = str(error_log)
+            PrintMessageInput([window_title_1, title, message])        
+
 
     def process_mesh(self):
         if not self.geometry_path.exists():
@@ -276,9 +284,33 @@ class Model:
         for volume_id, data in model.porous_material_model.items():
             for element_id in self.mesh.elements_from_volume[volume_id]:
                 self.porous_material_properties[element_id] = data
+            # print(len(self.mesh.elements_from_volume[volume_id]))
 
-            # elements = list(self.porous_material_properties.keys())
-            # print(f"Size - prop: {len(self.porous_material_properties)}")
+        # mp_volumes = model.porous_material_model.keys()
+        # for surface_id, volumes in self.mesh.volume_from_surface.items():
+
+        #     if len(volumes) == 2:
+                
+        #         volume_id = None
+
+        #         if volumes[0] in mp_volumes and volumes[1] not in mp_volumes:
+        #             volume_id = volumes[0]
+
+        #         if volumes[0] not in mp_volumes and volumes[1] in mp_volumes:
+        #             volume_id = volumes[1]
+
+        #         if isinstance(volume_id, int):
+
+        #             data = {"anechoic_termination" : True,
+        #                     "volume_id" : volume_id,
+        #                     "nodal_attribution": False}
+
+        #             self.set_specific_impedance(data, surface_id)
+
+        #         print(surface_id, volumes)
+
+        # elements = list(self.porous_material_properties.keys())
+        # print(f"Size - prop: {len(self.porous_material_properties)}")
 
         # mesh_widget = app().main_window.viewer_tabs.mesh_widget
         # mesh_widget.select_multiple_volumes(elements)

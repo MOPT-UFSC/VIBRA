@@ -60,6 +60,11 @@ class Project:
         if self.structural_harmonic_solver is not None:
             self.structural_harmonic_solver.reset_variables()
 
+        if self.analysis_data is None:
+            return
+
+        self.create_solver()
+
     @classmethod
     def load(cls, path):
         from vibra.vibra_file import VibraDecoder
@@ -167,6 +172,7 @@ class Project:
 
     def create_solver(self):
         """ """
+
         data = self.analysis_data
         if "analysis_id" in data.keys():
             # structural harmonic analysis - direct method

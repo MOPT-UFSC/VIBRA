@@ -111,22 +111,24 @@ class MesherInputs(QDialog):
         # na validação do modelo
         try:
 
-            surf_tag = 36
-            vol_tag = 3
+            # surf_tag = 5
+            vol_tag = 1
 
             app().main_window.viewer_tabs.show_mesh()
             mesh_widget = app().main_window.viewer_tabs.mesh_widget
-            surface_elements = app().main_window.project.model.mesh.elements_from_surface[surf_tag]
+            # surface_elements = app().main_window.project.model.mesh.elements_from_surface[surf_tag]
             volume_elements = app().main_window.project.model.mesh.elements_from_volume[vol_tag]
 
-            mesh_widget.select_multiple_faces(surface_elements)
-            # mesh_widget.select_multiple_volumes(volume_elements)
+            # mesh_widget.select_multiple_faces(surface_elements)
+            mesh_widget.select_multiple_volumes(volume_elements)
 
         except:
             pass
 
         self.complete = True
-        if self.close_after_generate:
+
+        condition = self.lineEdit_faces_list.text() == "" and self.lineEdit_refining_size.text() == ""
+        if condition or self.close_after_generate:
             self.close()
 
     def trash_button_callback(self):
