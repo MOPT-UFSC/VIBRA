@@ -5,7 +5,9 @@ from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
+from vibra.external_mesh.external_mesh_data import ExternalMeshData
 
+import os
 import openpyxl
 
 import numpy as np
@@ -18,20 +20,47 @@ from time import time
 def test_load_external_mesh_and_solve():
     # return
 
-    # Define the nodal coordinates and connectivity file path
-    coord_path = "data/examples/mesh/porous_material/nodal_coordinates.dat"
-    connect_path = "data/examples/mesh/porous_material/connectivity_matrix.dat"
+    # start decoding the Ansys script file (ds.dat file or input file)
+
+    # mesh_path = "tests/data/mesh_files/fluid_suction_silencer_first_stage.dat"
+    mesh_path = "tests/data/mesh_files/suction_silencer_first_stage.dat"
+
+    if not os.path.exists(mesh_path):
+        return
+
+    # define the known 'Named selections' from model
+    named_selecion_to_tag = { 
+                                "input_face" : 1,
+                                "output_face" : 2
+                            }
+
+    t0 = time()
+    external_mesh = ExternalMeshData()
+    external_mesh.reset()
+    external_mesh.read_file(mesh_path)
+    external_mesh.set_named_selections(list(named_selecion_to_tag.keys()))
+    external_mesh.decode_mesh_data_from_file()
+    
+    dt = time() - t0
+    print(f"\n\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
 
     mesh = Mesh()
-    mesh.import_external_nodal_coordinates(coord_path, index_zero=True)
-    mesh.import_external_connectivity(connect_path, index_zero=True, etype_tag=4, e_nodes=4)
+    mesh.import_external_nodal_coordinates(external_mesh.nodal_coordinates, index_zero=True)
+    mesh.import_external_connectivity(external_mesh.connectivity_arrays, index_zero=True, etype_tag=4)
     mesh.element_type = TETRAHEDRON_4
 
-    for tag, surf_data in get_faces_connectivities().items():
+    for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
+        tag = named_selecion_to_tag[named_selection]
         mesh.elements_from_surface[tag] = surf_data["element_indexes"]
-        mesh.connectivity_from_surfaces[tag] = surf_data["connectivity"]
+        mesh.connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
 
     mesh.surfaces_from_volumes[1] = [1, 2]
+
+    # input surface area
+    mesh.surfaces_areas[1] = np.pi * ((488 / 1000)**2) / 4
+
+    # output surface area
+    mesh.surfaces_areas[2] = np.pi * ((589.6 / 1000)**2) / 4
 
     # if reorder_nodes:
     #     mesh._process_nodes_reordering()
@@ -68,6 +97,8 @@ def test_load_external_mesh_and_solve():
     model.mesh =  mesh
     model.generated_mesh = True
     model.set_fluid(fluid, volume=1)
+    model.set_fluid(fluid, volume=2)
+    model.set_fluid(fluid, volume=3)
 
     # Normal surface velocity data
     data_Vn = { "real_values" : [1],
@@ -84,19 +115,20 @@ def test_load_external_mesh_and_solve():
 
     model.set_surface_velocity(data_Vn, 1)
     # model.set_specific_impedance(data_Z, 1)
-    # model.set_specific_impedance(data_Z, 2)
+    model.set_specific_impedance(data_Z, 2)
 
     # Define the analysis frequency setup
     df = 5
     f_min = 5
     f_max = 1400
     frequencies = np.arange(f_min, f_max + df, df)
-    omega = 2 * np.pi * frequencies
 
     # Configure porous material
     pm_model = "DB"
     pm_data = get_porous_material_data(model=pm_model)
-    model.set_porous_material_model_data(pm_data, volume=1)
+    # model.set_porous_material_model_data(pm_data, volume=1)
+    model.set_porous_material_model_data(pm_data, volume=2)
+    model.set_porous_material_model_data(pm_data, volume=3)
     model.process_porous_material_properties(frequencies)
 
     assembler = AcousticAssembler(model)
@@ -118,65 +150,78 @@ def test_load_external_mesh_and_solve():
     analysis_data = {"analysis_id" : 3, "frequencies" : frequencies}
     harmonic_solver = AcousticHarmonicSolver(assembler, analysis_data=analysis_data)
 
-    t0 = time()
     # Run harmonic analysis
+
+    t0 = time()
     solution = harmonic_solver.solve(print_log=True)
     dt = time() - t0
     print(f"Elapsed time to solve harmonic analysis: {round(dt, 4)}")
 
     if solution is not None:
 
-        selected_surface = 2
+        output_ns = "output_face"
+        nodes = external_mesh.nodes_from_named_selection[output_ns]
 
-        nodes_from_surfaces = get_faces_nodes()
-
-        rows = nodes_from_surfaces[selected_surface]["nodes"]
+        rows = np.array(nodes, dtype=int) - 1
         nodal_solution = np.average(solution[rows, :], axis=0).flatten()
 
         imported_results = import_results()
 
-        if selected_surface == 1:
+        if output_ns == "input_face":
             if pm_model == "DB":
-                data = imported_results["input_ns_DB"]
+                # data = imported_results["input_ns_DB"]
                 # data = imported_results["input_ns_Z1_DB"]
                 # data = imported_results["input_ns_Z2_DB"]
+                data = imported_results["input_pressure_DB_Vn_Z1"]
+
             elif pm_model == "DBM":
                 data = imported_results["input_ns_DBM"]
+
             elif pm_model == "JCA":
                 data = imported_results["input_ns_JCA"]
 
-        else:
+        elif output_ns == "output_face":
             if pm_model == "DB":
-                data = imported_results["output_ns_DB"]
+                # data = imported_results["output_ns_DB"]
                 # data = imported_results["output_ns_Z1_DB"]
                 # data = imported_results["output_ns_Z2_DB"]
+                data = imported_results["output_pressure_DB_Vn_Z1"]
+
             elif pm_model == "DBM":
                 data = imported_results["output_ns_DBM"]
+
             else:
                 data = imported_results["output_ns_JCA"]
+
+        else:
+            return
 
         freq_ref = data[:, 0]
         results_ref = data[:, 1] + 1j*data[:, 2]
 
+        title = f"Harmonic response at {output_ns}"
+
         fig1, ax1 = plt.subplots()
         ax1.semilogy(frequencies, np.abs(nodal_solution), 'r', label='VIBRA')
         ax1.semilogy(freq_ref, np.abs(results_ref), 'k--', label='ANSYS')
-        ax1.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Absolute', title='Harmonic Response - Outlet pressure')
+        ax1.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Absolute', title=title)
         ax1.grid()
+        ax1.legend()
 
         fig2, ax2 = plt.subplots()
         ax2.plot(frequencies, np.real(nodal_solution), 'r', label='VIBRA')
         ax2.plot(freq_ref, np.real(results_ref), 'k--', label='ANSYS')
-        ax2.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Real', title='Harmonic Response - Outlet pressure')
+        ax2.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Real', title=title)
         ax2.grid()
+        ax2.legend()
 
         fig3, ax3 = plt.subplots()
         ax3.plot(frequencies, np.imag(nodal_solution), 'r', label='VIBRA')
         ax3.plot(freq_ref, np.imag(results_ref), 'k--', label='ANSYS')
-        ax3.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Imaginary', title='Harmonic Response - Outlet pressure')
+        ax3.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Imaginary', title=title)
         ax3.grid()
+        ax3.legend()
 
-        plt.legend()
         plt.show()
 
 
@@ -236,49 +281,12 @@ def get_porous_material_data(model="DB"):
     return material_model_data
 
 
-def get_faces_nodes():
-
-    input_face_path = "data/examples/mesh/porous_material/nodes_from_input_face.dat"
-    output_face_path = "data/examples/mesh/porous_material/nodes_from_output_face.dat"
-
-    input_face_data = np.loadtxt(input_face_path, delimiter=",", dtype=int) - 1
-    output_face_data = np.loadtxt(output_face_path, delimiter=",", dtype=int) - 1
-
-    nodes_from_surfaces = dict()
-
-    nodes_from_surfaces[1] = {  "node_indexes" : input_face_data[:, 0],
-                                       "nodes" : input_face_data[:, 1:]   }
-
-    nodes_from_surfaces[2] = {  "node_indexes" : output_face_data[:, 0],
-                                       "nodes" : output_face_data[:, 1:]   }
-
-    return nodes_from_surfaces
-
-
-def get_faces_connectivities():
-
-    input_face_path = "data/examples/mesh/porous_material/elements_from_input_face.dat"
-    output_face_path = "data/examples/mesh/porous_material/elements_from_output_face.dat"
-
-    input_face_data = np.loadtxt(input_face_path, delimiter=",", dtype=int) - 1
-    output_face_data = np.loadtxt(output_face_path, delimiter=",", dtype=int) - 1
-
-    connectivity_from_surfaces = dict()
-
-    connectivity_from_surfaces[1] = {   "element_indexes" : input_face_data[:, 0],
-                                        "connectivity" : input_face_data[:, 1:]   }
-
-    connectivity_from_surfaces[2] = {   "element_indexes" : output_face_data[:, 0],
-                                        "connectivity" : output_face_data[:, 1:]   }
-
-    return connectivity_from_surfaces
-
-
 def import_results():
 
     imported_results = dict()
 
-    results_path = "data/examples/mesh/porous_material/results/porous_validation.xlsx"
+    # results_path = "data/examples/mesh/porous_material/results/porous_validation.xlsx"
+    results_path = "data/examples/mesh/porous_material/results/suction_silencer_1stg.xlsx"
 
     wb = openpyxl.load_workbook(results_path)
 
@@ -325,6 +333,43 @@ def save_results(data):
 
     # error_abs = np.abs((solution[node, :] - P_ref)/((solution[node, :] + P_ref)/2))
     # assert error_abs < 1e-1
+
+# def get_faces_nodes():
+
+#     input_face_path = "data/examples/mesh/porous_material/nodes_from_input_face.dat"
+#     output_face_path = "data/examples/mesh/porous_material/nodes_from_output_face.dat"
+
+#     input_face_data = np.loadtxt(input_face_path, delimiter=",", dtype=int) - 1
+#     output_face_data = np.loadtxt(output_face_path, delimiter=",", dtype=int) - 1
+
+#     nodes_from_surfaces = dict()
+
+#     nodes_from_surfaces[1] = {  "node_indexes" : input_face_data[:, 0],
+#                                        "nodes" : input_face_data[:, 1:]   }
+
+#     nodes_from_surfaces[2] = {  "node_indexes" : output_face_data[:, 0],
+#                                        "nodes" : output_face_data[:, 1:]   }
+
+#     return nodes_from_surfaces
+
+
+# def get_faces_connectivities():
+
+#     input_face_path = "data/examples/mesh/porous_material/elements_from_input_face.dat"
+#     output_face_path = "data/examples/mesh/porous_material/elements_from_output_face.dat"
+
+#     input_face_data = np.loadtxt(input_face_path, delimiter=",", dtype=int) - 1
+#     output_face_data = np.loadtxt(output_face_path, delimiter=",", dtype=int) - 1
+
+#     connectivity_from_surfaces = dict()
+
+#     connectivity_from_surfaces[1] = {   "element_indexes" : input_face_data[:, 0],
+#                                         "connectivity" : input_face_data[:, 1:]   }
+
+#     connectivity_from_surfaces[2] = {   "element_indexes" : output_face_data[:, 0],
+#                                         "connectivity" : output_face_data[:, 1:]   }
+
+#     return connectivity_from_surfaces
 
 if __name__ == "__main__":
     test_load_external_mesh_and_solve(reorder_nodes=False)

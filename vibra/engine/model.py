@@ -41,7 +41,6 @@ class Model:
         self.solid_structural_element = None
         self.surface_structural_element = None
 
-        self.surfaces_areas = dict()
         self.lrf_eq_data = dict()
         self.lrf_properties = dict()
         self.porous_material_properties = dict()
@@ -63,7 +62,7 @@ class Model:
 
         try:
             self.mesh = Mesh.from_cad(self.geometry_path, dimension=2, size_factor=0.15)
-            self.surfaces_areas = self.mesh.get_model_areas(self.geometry_path)
+            self.mesh.get_model_areas(self.geometry_path)
             self.generated_mesh = False
 
         except Exception as error_log:
@@ -260,9 +259,6 @@ class Model:
                                                             "C_eff" : c_ef   }
 
     def is_lrf_eq_model_active(self, surface_id):
-
-        if len(self.lrf_properties) == 0:
-            return False, None, None
         
         _volume_id = self.mesh.volume_from_surface[surface_id]
         for key, _ in self.properties.volume_properties.items():
@@ -286,50 +282,20 @@ class Model:
                 self.porous_material_properties[element_id] = data
             # print(len(self.mesh.elements_from_volume[volume_id]))
 
-        # mp_volumes = model.porous_material_model.keys()
-        # for surface_id, volumes in self.mesh.volume_from_surface.items():
-
-        #     if len(volumes) == 2:
-                
-        #         volume_id = None
-
-        #         if volumes[0] in mp_volumes and volumes[1] not in mp_volumes:
-        #             volume_id = volumes[0]
-
-        #         if volumes[0] not in mp_volumes and volumes[1] in mp_volumes:
-        #             volume_id = volumes[1]
-
-        #         if isinstance(volume_id, int):
-
-        #             data = {"anechoic_termination" : True,
-        #                     "volume_id" : volume_id,
-        #                     "nodal_attribution": False}
-
-        #             self.set_specific_impedance(data, surface_id)
-
-        #         print(surface_id, volumes)
-
-        # elements = list(self.porous_material_properties.keys())
-        # print(f"Size - prop: {len(self.porous_material_properties)}")
-
-        # mesh_widget = app().main_window.viewer_tabs.mesh_widget
-        # mesh_widget.select_multiple_volumes(elements)
-
     def is_porous_material_model_active(self, surface_id):
-
-        if len(self.porous_material_properties) == 0:
-            return False, None, None
 
         for key, data in self.properties.volume_properties.items():
             prop, volume_id = key
             if prop == "porous_material_model":
-                surfaces_from_volume = self.mesh.surfaces_from_volumes[volume_id]
 
-                if surface_id in surfaces_from_volume:
-                    elements = self.mesh.elements_from_volume[volume_id]
-                    rho_eff = self.porous_material_properties[elements[0]]["rho_eff"]
-                    C_eff = self.porous_material_properties[elements[0]]["C_eff"]
-                    return True, rho_eff, C_eff
+                if volume_id in self.mesh.surfaces_from_volumes.keys():
+                    surfaces_from_volume = self.mesh.surfaces_from_volumes[volume_id]
+
+                    if surface_id in surfaces_from_volume:
+                        elements = self.mesh.elements_from_volume[volume_id]
+                        rho_eff = self.porous_material_properties[elements[0]]["rho_eff"]
+                        C_eff = self.porous_material_properties[elements[0]]["C_eff"]
+                        return True, rho_eff, C_eff
 
         return False, None, None
 

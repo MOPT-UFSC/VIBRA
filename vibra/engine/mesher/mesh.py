@@ -57,6 +57,9 @@ class Mesh:
         self.nodes_from_solid_element = dict()
         self.solid_elements_center = dict()
 
+        self.surfaces_areas = dict()
+        self.bodies_volumes = dict()
+
         self.volume_from_surface = defaultdict(list)
         self.face_elements_from_nodes = defaultdict(list)
         self.solid_elements_from_nodes = defaultdict(list)
@@ -235,41 +238,53 @@ class Mesh:
         header = "Index || Solid ID || Element type ID || Element ID || Connected Node IDs"
         return np.loadtxt(filename, delimiter=";", header=header, fmt="%i")
     
-    def import_external_nodal_coordinates(self, filename, index_zero=True):
+    def import_external_nodal_coordinates(self, data, index_zero=True):
         """
         """
-        data = np.loadtxt(filename, delimiter=",")
+        if isinstance(data, list):
+            data = np.array(data)
+
         rows, cols = data.shape
-        
+
         indexes = data[:,0]
         if index_zero:
-            indexes -= 1   
+            indexes -= 1
 
         self.nodal_coordinates = np.zeros((rows, cols), dtype=float)
         self.nodal_coordinates[:,0] = indexes
         self.nodal_coordinates[:,1:] = data[:,1:]
 
-    def import_external_connectivity(self, filename, index_zero=True, etype_tag=1, e_nodes=1):
+    def import_external_connectivity(self, connectivity, index_zero=True, etype_tag=1):
         """
         """
-        data = np.loadtxt(filename, delimiter=",")
+        self.elements_from_volume.clear()
+
+        data = list()
+        for key, connect_data in connectivity.items():
+
+            self.elements_from_volume[key[0]] = connect_data[:, 0] - 1
+
+            for nodes in connect_data:
+                data.append(nodes)
+
+        data = np.array(data, dtype=int)
         rows, cols = data.shape
-        
-        indexes = data[:,0]
-        connect = data[:, 1:]
+
+        indexes = data[:, 0]
+        volumes = data[:, 1]
+        nodes_per_element = data[:, 2]
+        connect = data[:, 3:]
+
         if index_zero:
             connect -= 1
 
         aux = np.ones(rows)
-        self.solids_connectivity = np.zeros((rows, cols+3), dtype=int)
+        self.solids_connectivity = np.zeros((rows, cols+1), dtype=int)
         self.solids_connectivity[:, 0] = indexes
-        self.solids_connectivity[:, 1] = aux
+        self.solids_connectivity[:, 1] = volumes
         self.solids_connectivity[:, 2] = aux*etype_tag
-        self.solids_connectivity[:, 3] = aux*e_nodes
+        self.solids_connectivity[:, 3] = nodes_per_element
         self.solids_connectivity[:, 4:] = connect
-        #
-        self.elements_from_volume.clear()
-        self.elements_from_volume[1] = np.arange(rows, dtype=int)
 
     def export_nodal_coordinates(self, filename):
         fmt = ["%i", "%.16f", "%.16f", "%.16f"]
@@ -570,8 +585,8 @@ class Mesh:
 
         """
 
-        surfaces_areas = dict()
-        bodies_volumes = dict()
+        self.surfaces_areas.clear()
+        self.bodies_volumes.clear()
 
         # The adoption of quadratic elements ensures better results for area calculations.
         element_type = TETRAHEDRON_10
@@ -613,7 +628,7 @@ class Mesh:
                 views = gmsh.view.getTags()
                 _, _, data = gmsh.view.getListData(views[-1])
 
-                surfaces_areas[tag] = data[-1][-1] / (1e6)
+                self.surfaces_areas[tag] = data[-1][-1] / (1e6)
                 # if tag in [32, 36]:
                 #     print(tag, data[-1][-1] / (1e6))
 
@@ -627,11 +642,9 @@ class Mesh:
             #     views = gmsh.view.getTags()
             #     _, _, data = gmsh.view.getListData(views[-1])
 
-            #     bodies_volumes[tag] = data[-1][-1]
+            #     self.bodies_volumes[tag] = data[-1][-1]
 
         gmsh.finalize()
-
-        return surfaces_areas  # , bodies_volumes
 
 
     def _get_connectivity_array(self, input_dict):

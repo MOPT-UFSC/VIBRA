@@ -1,6 +1,5 @@
-import numpy as np
+from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtCore import QObjectCleanupHandler
-from PyQt5.QtWidgets import *
 
 # from vibra.interface.modal_analysis_bar import AcousticModalAnalysisBar
 from vibra.interface.analysis_bars.acoustic_analysis_bar import (
@@ -16,6 +15,11 @@ from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
 )
 from vibra.utils.interface_functions import get_main_window
 from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
+
+from vibra.utils.progress_status import ProgressStatus
+
+import logging
+import numpy as np
 
 
 class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
@@ -166,6 +170,56 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
         self.analysis_actor.plot_colorbar(output_pressures, min_value, max_value)
         self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
         self.update()
+
+    def process_animation_frames(self):
+
+        """ This method processes the animation frames for one complete 
+            animation cycle. The animation controls are frame per cycle
+            and the number cycles.
+
+        """
+
+        print("go -> process_animation_frames")
+
+        self.animation_data = dict()
+
+        if not self._actors_exists():
+            return
+
+        solver = self.main_window.project.acoustic_harmonic_solver
+        if solver.solution is None:
+            return
+
+        index = self.current_shape_index()
+        if not (0 <= index < solver.solution.shape[1]):
+            return
+
+        nodal_solution = solver.solution[:, index].copy()
+        amplitudes = np.abs(nodal_solution)
+        phase = np.angle(nodal_solution)
+        
+        deg_angles = np.linspace(0, 360, self._animation_fps, endpoint=False)
+        min_value, max_value = solver.get_max_min_values_of_pressures(index)
+
+        if self.control_bar.absolute_button.isChecked():
+            min_value = 0
+            max_value = np.max(np.abs([min_value, max_value]))
+
+        for step, deg_angle in enumerate(deg_angles):
+
+            phi = deg_angle * np.pi / 180
+            output_pressures = amplitudes * np.cos(phase + phi)
+
+            if self.control_bar.absolute_button.isChecked():
+                output_pressures = np.abs(output_pressures)
+
+            self.animation_data[deg_angle] = output_pressures
+
+            logging.info( "Processing the animation frames..." + ProgressStatus(step, len(deg_angles)))
+
+        # self.analysis_actor.plot_colorbar(self.animation_data, min_value, max_value)
+        # self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
+        # self.update()
 
     def set_mesh_visibility(self, condition):
         if not self._actors_exists():

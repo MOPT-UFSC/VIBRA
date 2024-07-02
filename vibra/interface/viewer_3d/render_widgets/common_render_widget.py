@@ -267,3 +267,6 @@ class CommonRenderWidget(QFrame):
 
     def update_animation(self, frame):
         raise NotImplementedError('The function "update_animation" was not implemented!')
+    
+    def process_animation_frames(self):
+        raise NotImplementedError('The function "process_animation_frames" was not implemented!')

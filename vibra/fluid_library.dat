@@ -97,16 +97,30 @@ molar fractions = [0.00040265753976243213, 0.1754580229514798, 0.251862291121401
 [design_2nd_discharge]
 name = design_2nd_discharge
 identifier = 6
-temperature =  382.150000
-pressure =  2.070025e+06
-fluid density =  27.674341
-speed of sound =  284.927259
-isentropic exponent =  1.197318
-thermal conductivity =  3.281021e-02
-specific heat cp =  2029.577147
-dynamic viscosity =  1.284632e-05
+temperature = 382.150000
+pressure = 2.070025e+06
+fluid density = 27.674341
+speed of sound = 284.927259
+isentropic exponent = 1.197318
+thermal conductivity = 3.281021e-02
+specific heat cp = 2029.577147
+dynamic viscosity = 1.284632e-05
 molar mass = 38.635036
 color = [255, 170, 0, 255]
 key mixture = NITROGEN.FLD;CO2.FLD;METHANE.FLD;ETHANE.FLD;PROPANE.FLD;ISOBUTAN.FLD;BUTANE.FLD;IPENTANE.FLD;PENTANE.FLD;HEXANE.FLD;HEPTANE.FLD;OCTANE.FLD;H2S.FLD
 molar fractions = [0.00040265753976243213, 0.1754580229514798, 0.2518622911214013, 0.15210388564525873, 0.2144151399234951, 0.04539963760821422, 0.10469096033823236, 0.021340849607408903, 0.0275820414737266, 0.005536541171733442, 0.0008053150795248643, 0.00010066438494060803, 0.00030199315482182406]
+
+[vibre]
+name = vibre
+identifier = 9
+temperature = 293.15
+pressure = 101325
+fluid density = 10000
+speed of sound = 10000
+isentropic exponent = 1.4
+thermal conductivity = 0.01
+specific heat cp = 1600
+dynamic viscosity = 1e-6
+molar mass = 29
+color = [107, 255, 233, 255]
 
