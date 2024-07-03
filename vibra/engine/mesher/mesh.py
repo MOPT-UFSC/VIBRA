@@ -60,6 +60,7 @@ class Mesh:
         self.surfaces_areas = dict()
         self.bodies_volumes = dict()
 
+        self.nodal_area = defaultdict(list)
         self.volume_from_surface = defaultdict(list)
         self.face_elements_from_nodes = defaultdict(list)
         self.solid_elements_from_nodes = defaultdict(list)
@@ -493,6 +494,9 @@ class Mesh:
         self._maps_surfaces_by_elements()
         self._maps_volumes_by_elements()
 
+        self._process_face_elements_connected_to_nodes()
+        self._process_solid_elements_connected_to_nodes()
+
 
     def _maps_lines_by_elements(self):
         self.line_from_element.clear()
@@ -524,7 +528,6 @@ class Mesh:
                 self.surface_from_element[index] = tag
 
             self.elements_from_surface[tag] = internal_indexes
-            # print(tag, internal_indexes)
 
 
     def _maps_volumes_by_elements(self):
@@ -546,22 +549,81 @@ class Mesh:
             # print(self.elements_from_volume[tag], len(self.elements_from_volume[tag]))
             # print(len(self.elements_from_volume[tag]))
 
+
     def _process_face_elements_connected_to_nodes(self):
         self.nodes_from_face_element.clear()
         self.face_elements_from_nodes.clear()
-        for i, connected_nodes in enumerate(self.faces_connectivity[:, 4:]):
-            self.nodes_from_face_element[i] = connected_nodes
-            for node in connected_nodes:
-                self.face_elements_from_nodes[node].append(i)
+        for tag, connect_data in self.connectivity_from_surfaces.items():
+            flat_data = connect_data.flatten()
+            face_nodes = np.array([*set(flat_data)], dtype=int)
+            for node in face_nodes:
+                for elem_nodes in connect_data:
+                    if node in elem_nodes:
+                        self.face_elements_from_nodes[node].append(elem_nodes)
+
+
+        # import json
+        # with open("areas_data.json", "r") as file:
+        #     areas_data = json.load(file)
+
+        #     for key, data in areas_data.items():
+
+        #         _node = int(key)
+        #         if _node in [340, 341, 342]:
+
+        #             print(_node, self.face_elements_from_nodes[_node])
+        #             # print(_node, self.nodal_coordinates[_node, 1:])
+
+        #             for connect_nodes in self.face_elements_from_nodes[_node]:
+
+        #                 if len(connect_nodes) == 3:
+
+        #                     coord_A = self.nodal_coordinates[connect_nodes[0], 1:]
+        #                     coord_B = self.nodal_coordinates[connect_nodes[1], 1:]
+        #                     coord_C = self.nodal_coordinates[connect_nodes[2], 1:]
+
+        #                     AB = coord_B - coord_A
+        #                     BC = coord_C - coord_B
+        #                     area = np.linalg.norm(np.cross(AB, BC)) / 2
+
+        #                     print(_node, area)
+
+
+    # def _process_face_elements_connected_to_nodes(self):
+    #     self.nodes_from_face_element.clear()
+    #     self.face_elements_from_nodes.clear()
+    #     for el, connected_nodes in enumerate(self.faces_connectivity[:, 4:]):
+    #         self.nodes_from_face_element[el] = connected_nodes
+    #         for node in connected_nodes:
+    #             self.face_elements_from_nodes[node].append(el)
 
 
     def _process_solid_elements_connected_to_nodes(self):
         self.nodes_from_solid_element.clear()
         self.solid_elements_from_nodes.clear()
-        for i, connected_nodes in enumerate(self.solids_connectivity[:, 4:]):
-            self.nodes_from_solid_element[i] = connected_nodes
+        for el, connected_nodes in enumerate(self.solids_connectivity[:, 4:]):
+            self.nodes_from_solid_element[el] = connected_nodes
             for node in connected_nodes:
-                self.solid_elements_from_nodes[node].append(i)
+                self.solid_elements_from_nodes[node].append(el)
+
+
+    def _process_nodal_areas(self, node=None):
+        self.nodal_area.clear()
+        for node, data in self.face_elements_from_nodes.items():
+            area = 0
+            for elements in data:
+
+                if len(elements) == 3:
+
+                    coord_A = self.nodal_coordinates[elements[0], 1:]
+                    coord_B = self.nodal_coordinates[elements[1], 1:]
+                    coord_C = self.nodal_coordinates[elements[2], 1:]
+
+                    AB = coord_B - coord_A
+                    BC = coord_C - coord_B
+                    area = np.linalg.norm(np.cross(AB, BC)) / 2
+
+                    self.nodal_area[node].append(area)
 
 
     def get_mesh_info(self):

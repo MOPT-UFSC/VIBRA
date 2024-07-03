@@ -206,7 +206,7 @@ class AcousticAssembler:
                     source_factor = 1
                     if property_label == "surface_velocity":
                         for _key in self.properties.surface_properties.keys():
-                            if _key[1] == surface_id and _key[0] == "specific_impedance":
+                            if _key[0] == "specific_impedance" and _key[1] == surface_id:
                                 source_factor = 2
                                 break
 

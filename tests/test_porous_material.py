@@ -20,6 +20,22 @@ from time import time
 def test_load_external_mesh_and_solve():
     # return
 
+    # A = [-2.619833793E-18, -2.948000000E-01,  3.610258764E-17]
+    # B = [-2.584102675E-18, -2.907793122E-01,  4.852248521E-02]
+    # B = [-3.439645084E-18, -2.396502676E-01,  1.907572710E-02]
+    # C = [-3.430523528E-18, -2.386238534E-01, -3.308445933E-02]
+
+    # A = np.array(A)
+    # B = np.array(B)
+    # C = np.array(C)
+
+    # AB = B - A
+    # BC = C - B
+    # area = np.linalg.norm(np.cross(AB, BC)) / 2
+
+    # print(area)
+    # return
+
     # start decoding the Ansys script file (ds.dat file or input file)
 
     # mesh_path = "tests/data/mesh_files/fluid_suction_silencer_first_stage.dat"
@@ -53,6 +69,10 @@ def test_load_external_mesh_and_solve():
         tag = named_selecion_to_tag[named_selection]
         mesh.elements_from_surface[tag] = surf_data["element_indexes"]
         mesh.connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
+        ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
+        mesh.nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
+
+        mesh.volume_from_surface[tag] = [3]
 
     mesh.surfaces_from_volumes[1] = [1, 2]
 
@@ -61,6 +81,9 @@ def test_load_external_mesh_and_solve():
 
     # output surface area
     mesh.surfaces_areas[2] = np.pi * ((589.6 / 1000)**2) / 4
+
+    mesh._process_face_elements_connected_to_nodes()
+    mesh._process_nodal_areas()
 
     # if reorder_nodes:
     #     mesh._process_nodes_reordering()
@@ -157,23 +180,24 @@ def test_load_external_mesh_and_solve():
     dt = time() - t0
     print(f"Elapsed time to solve harmonic analysis: {round(dt, 4)}")
 
+    freq_TL, TL_model = harmonic_solver.get_transmission_loss(1, 2)
+
     if solution is not None:
 
         output_ns = "output_face"
-        nodes = external_mesh.nodes_from_named_selection[output_ns]
-
-        rows = np.array(nodes, dtype=int) - 1
-        nodal_solution = np.average(solution[rows, :], axis=0).flatten()
-
         imported_results = import_results()
 
         if output_ns == "input_face":
+
+            rows = mesh.nodes_from_surfaces[1]
+
             if pm_model == "DB":
                 # data = imported_results["input_ns_DB"]
                 # data = imported_results["input_ns_Z1_DB"]
                 # data = imported_results["input_ns_Z2_DB"]
                 # data = imported_results["input_pressure_DB_Vn_Z1"]
                 data = imported_results["input_pressure_no_gap_DB"]
+                TL_data = imported_results["TL_no_gap_DB"]
 
             elif pm_model == "DBM":
                 data = imported_results["input_ns_DBM"]
@@ -182,12 +206,16 @@ def test_load_external_mesh_and_solve():
                 data = imported_results["input_ns_JCA"]
 
         elif output_ns == "output_face":
+
+            rows = mesh.nodes_from_surfaces[2]
+
             if pm_model == "DB":
                 # data = imported_results["output_ns_DB"]
                 # data = imported_results["output_ns_Z1_DB"]
                 # data = imported_results["output_ns_Z2_DB"]
                 # data = imported_results["output_pressure_DB_Vn_Z1"]
                 data = imported_results["output_pressure_no_gap_DB"]
+                TL_data = imported_results["TL_no_gap_DB"]
 
             elif pm_model == "DBM":
                 data = imported_results["output_ns_DBM"]
@@ -197,6 +225,8 @@ def test_load_external_mesh_and_solve():
 
         else:
             return
+
+        nodal_solution = np.average(solution[rows, :], axis=0).flatten()
 
         freq_ref = data[:, 0]
         results_ref = data[:, 1] + 1j*data[:, 2]
@@ -223,6 +253,15 @@ def test_load_external_mesh_and_solve():
         ax3.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Imaginary', title=title)
         ax3.grid()
         ax3.legend()
+
+        fig4, ax4 = plt.subplots()
+        freq_ref = TL_data[:, 0]
+        TL_ref = TL_data[:, 1]
+        ax4.plot(freq_TL, TL_model, 'r', label='VIBRA')
+        ax4.plot(freq_ref, TL_ref, 'k--', label='ANSYS')
+        ax4.set(xlabel='Frequency [Hz]', ylabel='Transmission loss [dB]', title="Transmission loss")
+        ax4.grid()
+        ax4.legend()
 
         plt.show()
 

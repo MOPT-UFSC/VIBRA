@@ -1,5 +1,6 @@
 import logging
 import os
+import json
 import numpy as np
 from scipy.sparse.linalg import spsolve
 import matplotlib.pyplot as plt
@@ -242,6 +243,110 @@ class AcousticHarmonicSolver:
                 logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(100, 100))
 
         return F_eq
+
+
+    def get_transmission_loss(self, input_surface_id, output_surface_id):
+        """ Returns the transmission loss.
+        
+        """
+        
+        rows_output = self.assembler.model.mesh.nodes_from_surfaces[output_surface_id]
+        # P_out = np.average(self.solution[rows_output,:], axis=0)
+        P_out = self.solution[rows_output, :]
+
+        volume_out = self.assembler.model.mesh.volume_from_surface[output_surface_id][0]
+        volume_in = self.assembler.model.mesh.volume_from_surface[input_surface_id][0]
+
+        fluid_out, _ = self.assembler.model.get_fluid(volume=volume_out)
+        fluid_in, _ = self.assembler.model.get_fluid(volume=volume_in)
+
+        rho_out = fluid_out.fluid_density
+        c0_out = fluid_out.speed_of_sound
+
+        rho_in = fluid_in.fluid_density
+        c0_in = fluid_in.speed_of_sound
+
+        A_in = self.assembler.model.mesh.surfaces_areas[input_surface_id]
+        A_out = self.assembler.model.mesh.surfaces_areas[output_surface_id]
+
+        # nodes_out = len(self.assembler.model.mesh.nodes_from_surfaces[output_surface_id])
+
+        out_data = dict()
+        nodal_areas = np.zeros(len(rows_output), dtype=float)
+        for i, node in enumerate(rows_output):
+            areas = self.assembler.model.mesh.nodal_area[node]
+            nodal_areas[i] = sum(areas)
+            out_data[str(node)] = areas
+
+        with open("areas_data.json", "w") as file:
+            json.dump(out_data, file, indent=2)
+
+        # w_Aeff = nodal_areas.reshape(-1, 1) * (A_out / np.sum(nodal_areas))
+        w_Aeff = A_out / len(rows_output)
+
+        # the zero_shift constant is summed to avoid zero values either in P_input2 or P_output2 variables
+        zero_shift = 1e-12
+
+        # Transmission loss
+        surf_velocity = self.assembler.model.properties.get_surface_velocity(input_surface_id)
+        if surf_velocity is None:
+            return None
+
+        real_values = np.array(surf_velocity["real_values"])
+        imag_values = np.array(surf_velocity["imag_values"])
+        V_in = real_values + 1j * imag_values
+        
+        P_in = V_in * rho_in * c0_in# / 2
+        I_in = np.real(P_in * np.conjugate(V_in)) / 2
+        
+        # just downstream sound intensity is considered
+        I_in /= 1
+
+        W_in = 10*np.log10(I_in * A_in)
+
+        # Prms_in2 = (P_in/np.sqrt(2))**2
+        # Prms_out2 = np.real(P_out*np.conjugate(P_out)) / 2 + zero_shift
+
+        # W_in = 10*np.log10(Prms_in2*A_in/(rho_in*c0_in))
+        # W_out = 10*np.log10(Prms_out2*A_out/(rho_out*c0_out))
+
+        V_out = P_out / (rho_out * c0_out)
+        I_out = np.real(P_out * np.conjugate(V_out)) / 2
+
+        W_out = 10*np.log10(np.sum(I_out * w_Aeff, axis=0))
+
+        TL = W_in - W_out
+
+        if 0 in self.frequencies:
+            return self.frequencies[1:], TL[1:]
+
+        return self.frequencies, TL
+
+
+    def get_noise_reduction(self, input_surface_id, output_surface_id):
+        """ Returns the transmission loss.
+        
+        """
+
+        rows_input = self.assembler.model.mesh.nodes_from_surfaces[input_surface_id]
+        rows_output = self.assembler.model.mesh.nodes_from_surfaces[output_surface_id]
+
+        P_in = np.average(self.solution[rows_input,:], axis=0)
+        P_out = np.average(self.solution[rows_output,:], axis=0)
+
+        # the zero_shift constant is summed to avoid zero values either in P_input2 or P_output2 variables
+        zero_shift = 1e-12
+
+        Prms_out2 = np.real(P_out*np.conjugate(P_out)) / 2 + zero_shift
+        Prms_in2 = np.real(P_in*np.conjugate(P_in)) / 2 + zero_shift
+
+        NR = 10*np.log10(Prms_in2/Prms_out2)
+
+        if 0 in self.frequencies:
+            return self.frequencies[1:], NR[1:]
+
+        return self.frequencies, NR
+
 
     def plot_graph(self, matrix):
         """

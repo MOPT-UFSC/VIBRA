@@ -239,7 +239,8 @@ class SetPorousMaterialModel(QDialog):
         if volumes:
 
             if self.comboBox_attribution_type.currentIndex() == 0:
-                return
+                self.comboBox_attribution_type.setCurrentIndex(1)
+                # return
 
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selected_id.setText(text)

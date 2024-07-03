@@ -40,24 +40,21 @@ class PlotTransmissionLossInput(QDialog):
         ConfigWidgetAppearance(self, tool_tip=True)
 
         self._config_widgets()
-        self._load_analysis_data_and_solution()
+        self._load_analysis_data()
         self.exec()
 
-    def _load_analysis_data_and_solution(self):
+    def _load_analysis_data(self):
         self.analysis_method = ""
         analysis_data = self.project.analysis_data
         if "analysis_id" in analysis_data.keys():
             if analysis_data["analysis_id"] == 3:
                 self.analysis_method = "Direct method"
-        if "frequencies" in analysis_data.keys():
-            self.frequencies = analysis_data["frequencies"]
-        self.solution = self.project.acoustic_harmonic_solver.solution
 
     def _load_icons(self):
         self.vibra_icon = app().main_window.vibra_icon
-        self.setWindowIcon(self.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(self.vibra_icon)
 
     def _reset_variables(self):
         self.exporter = None
@@ -136,16 +133,20 @@ class PlotTransmissionLossInput(QDialog):
         self.lineEdit_output_surface_id.setText(temp_text_input)
 
     def call_plotter(self):
+
         if self.check_inputs():
             return
+
         self.join_model_data()
         self.plotter = FrequencyResponsePlotter()
         self.plotter.imported_dB_data()
         self.plotter._set_data_to_plot(self.model_results)
 
     def call_data_exporter(self):
+
         if self.check_inputs():
             return
+
         self.join_model_data()
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(self.model_results)
@@ -164,82 +165,25 @@ class PlotTransmissionLossInput(QDialog):
             self.lineEdit_input_surface_id.setFocus()
             return True
 
-    def get_TL_NR(self):
-
-        rows_output = self.project.model.mesh.nodes_from_surfaces[self.output_surface_id]
-        P_out = np.average(self.solution[rows_output,:], axis=0)
-
-        volume_out = self.project.model.mesh.volume_from_surface[self.output_surface_id][0]
-        volume_in = self.project.model.mesh.volume_from_surface[self.input_surface_id][0]
-
-        fluid_out, _ = self.project.model.get_fluid(volume=volume_out)
-        fluid_in, _ = self.project.model.get_fluid(volume=volume_in)
-
-        rho_out = fluid_out.fluid_density
-        c0_out = fluid_out.speed_of_sound
-
-        rho_in = fluid_in.fluid_density
-        c0_in = fluid_in.speed_of_sound
-
-        # print(self.project.model.surfaces_areas)
-        A_in = self.project.model.mesh.surfaces_areas[self.input_surface_id]
-        A_out = self.project.model.mesh.surfaces_areas[self.output_surface_id]
-
-        # the zero_shift constant is summed to avoid zero values either in P_input2 or P_output2 variables
-        zero_shift = 1e-12
-
-        if self.comboBox_processing_selector.currentIndex() == 0:
-
-            # Transmission loss
-            surf_velocity = self.project.model.properties.get_surface_velocity(self.input_surface_id)
-            if surf_velocity is None:
-                return None
-
-            real_values = np.array(surf_velocity["real_values"])
-            imag_values = np.array(surf_velocity["imag_values"])
-            V_n = real_values + 1j * imag_values
-            
-            P_in = V_n*rho_in*c0_in# / 2
-            Prms_in2 = (P_in/np.sqrt(2))**2
-
-            Prms_out2 = np.real(P_out*np.conjugate(P_out)) / 2 + zero_shift
-
-            W_in = 10*np.log10(Prms_in2*A_in/(rho_in*c0_in))
-            W_out = 10*np.log10(Prms_out2*A_out/(rho_out*c0_out))
-            TL = W_in - W_out
-
-            # TL = 20*np.log10(P_in/P_out) + 20*np.log10(A_in/A_out)
-
-            return TL[1:]
-
-        else:
-
-            # Noise reduction
-            rows_input = self.project.model.mesh.nodes_from_surfaces[self.input_surface_id]
-            P_in = np.average(self.solution[rows_input,:], axis=0)
-
-            Prms_out2 = np.real(P_out*np.conjugate(P_out)) / 2 + zero_shift
-            Prms_in2 = np.real(P_in*np.conjugate(P_in)) / 2 + zero_shift
-            NR = 10*np.log10(Prms_in2/Prms_out2)
-
-            return NR[1:]
-
     def join_model_data(self):
 
         self.model_results = dict()
-        y_data = self.get_TL_NR()
-        if y_data is None:
-            return
 
         if self.comboBox_processing_selector.currentIndex() == 0:
             plot_type = "Transmission loss"
+            self.project.model.mesh._process_nodal_areas()
+            x_data, y_data = self.project.acoustic_harmonic_solver.get_transmission_loss(self.input_surface_id, self.output_surface_id)
         else:
             plot_type = "Noise reduction"
+            x_data, y_data = self.project.acoustic_harmonic_solver.get_noise_reduction(self.input_surface_id, self.output_surface_id)
+
+        if y_data is None:
+            return
 
         self.title = f"{plot_type} - {self.analysis_method}"
 
         legend_label = f"{plot_type} between [{self.output_surface_id}] and [{self.input_surface_id}]"
-        self.model_results = {  "x_data" : self.frequencies[1:],
+        self.model_results = {  "x_data" : x_data,
                                 "y_data" : y_data,
                                 "x_label" : "Frequency [Hz]",
                                 "y_label" : plot_type,
