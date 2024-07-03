@@ -82,9 +82,6 @@ def test_load_external_mesh_and_solve():
     # output surface area
     mesh.surfaces_areas[2] = np.pi * ((589.6 / 1000)**2) / 4
 
-    mesh._process_face_elements_connected_to_nodes()
-    mesh._process_nodal_areas()
-
     # if reorder_nodes:
     #     mesh._process_nodes_reordering()
     #     map_nodes_indexes = mesh.reordering.map_nodes_indexes
@@ -179,6 +176,9 @@ def test_load_external_mesh_and_solve():
     solution = harmonic_solver.solve(print_log=True)
     dt = time() - t0
     print(f"Elapsed time to solve harmonic analysis: {round(dt, 4)}")
+
+    mesh._process_nodal_areas()
+    mesh._process_face_elements_connected_to_nodes()
 
     freq_TL, TL_model = harmonic_solver.get_transmission_loss(1, 2)
 

@@ -494,9 +494,6 @@ class Mesh:
         self._maps_surfaces_by_elements()
         self._maps_volumes_by_elements()
 
-        self._process_face_elements_connected_to_nodes()
-        self._process_solid_elements_connected_to_nodes()
-
 
     def _maps_lines_by_elements(self):
         self.line_from_element.clear()
@@ -551,16 +548,24 @@ class Mesh:
 
 
     def _process_face_elements_connected_to_nodes(self):
+
         self.nodes_from_face_element.clear()
         self.face_elements_from_nodes.clear()
+
         for tag, connect_data in self.connectivity_from_surfaces.items():
+
             flat_data = connect_data.flatten()
             face_nodes = np.array([*set(flat_data)], dtype=int)
             for node in face_nodes:
-                for elem_nodes in connect_data:
-                    if node in elem_nodes:
-                        self.face_elements_from_nodes[node].append(elem_nodes)
 
+                aux = 0
+                for col in range(connect_data.shape[1]):
+                    aux += connect_data[:, col] == node
+
+                mask = aux == 1
+                self.face_elements_from_nodes[node].append(connect_data[mask, :])
+       
+        # print(self.face_elements_from_nodes[340])
 
         # import json
         # with open("areas_data.json", "r") as file:

@@ -171,6 +171,7 @@ class PlotTransmissionLossInput(QDialog):
 
         if self.comboBox_processing_selector.currentIndex() == 0:
             plot_type = "Transmission loss"
+            self.project.model.mesh._process_face_elements_connected_to_nodes()
             self.project.model.mesh._process_nodal_areas()
             x_data, y_data = self.project.acoustic_harmonic_solver.get_transmission_loss(self.input_surface_id, self.output_surface_id)
         else:
