@@ -1,11 +1,7 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QDialog, QLineEdit, QPushButton, QRadioButton
+from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
-from pathlib import Path
-
-import os
-import numpy as np
 
 from vibra import app, UI_DIR
 
@@ -13,10 +9,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 
-def get_icons_path(filename):
-    path = f"data/icons/{filename}"
-    if os.path.exists(path):
-        return str(Path(path))
+import numpy as np
 
 window_title1 = "Error"
 window_title2 = "Warning"
@@ -44,6 +37,8 @@ class PlotStructuralFrequencyResponseInput(QDialog):
         self.exec()
 
     def _config_window(self):
+        self.vibra_icon = app().main_window.vibra_icon
+        self.setWindowIcon(self.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
 
@@ -71,7 +66,6 @@ class PlotStructuralFrequencyResponseInput(QDialog):
     
     def _load_icons(self):
         self.icon = app().main_window.vibra_icon
-        self.export_icon = QIcon(get_icons_path('send_to_disk.png'))
         self.setWindowIcon(self.icon)
 
     def writeNodes(self, list_node_ids):

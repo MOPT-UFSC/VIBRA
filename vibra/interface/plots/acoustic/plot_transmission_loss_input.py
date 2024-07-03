@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QComboBox, QLineEdit, QPushButton, QDialog
 from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QCloseEvent
 from PyQt5 import uic
 from pathlib import Path
 
@@ -13,11 +13,6 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 
-
-def get_icons_path(filename):
-    path = f"data/icons/{filename}"
-    if os.path.exists(path):
-        return str(Path(path))
 
 window_title1 = "Error"
 window_title2 = "Warning"
@@ -59,14 +54,14 @@ class PlotTransmissionLossInput(QDialog):
         self.solution = self.project.acoustic_harmonic_solver.solution
 
     def _load_icons(self):
-        self.icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.export_icon = QIcon(get_icons_path('save.png'))
-        self.icon = QIcon(self.icon_path)
-        self.setWindowIcon(self.icon)
+        self.vibra_icon = app().main_window.vibra_icon
+        self.setWindowIcon(self.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
 
     def _reset_variables(self):
+        self.exporter = None
+        self.plotter = None
         self.unit_label = "dB"
 
     def _define_qt_variables(self):
@@ -97,7 +92,6 @@ class PlotTransmissionLossInput(QDialog):
     def _config_widgets(self):
         self.current_lineEdit = self.lineEdit_input_surface_id
         self.lineEdit_input_surface_id.setFocus()
-        self.pushButton_call_data_exporter.setIcon(self.export_icon)
 
     def clickable(self, widget):
         class Filter(QObject):
@@ -205,7 +199,7 @@ class PlotTransmissionLossInput(QDialog):
             imag_values = np.array(surf_velocity["imag_values"])
             V_n = real_values + 1j * imag_values
             
-            P_in = V_n*rho_in*c0_in / 2
+            P_in = V_n*rho_in*c0_in# / 2
             Prms_in2 = (P_in/np.sqrt(2))**2
 
             Prms_out2 = np.real(P_out*np.conjugate(P_out)) / 2 + zero_shift
@@ -261,3 +255,14 @@ class PlotTransmissionLossInput(QDialog):
             self.call_plotter()
         elif event.key() == Qt.Key_Escape:
             self.close()
+
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
+
+        if self.exporter is not None:
+            self.exporter.close()
+
+        if self.plotter is not None:
+            self.plotter.close()
+
+        # self.keep_window_open = False
+        return super().closeEvent(a0)

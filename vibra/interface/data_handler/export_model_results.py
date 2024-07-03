@@ -1,19 +1,13 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QDialog, QFileDialog, QLabel, QLineEdit, QPushButton
+from PyQt5.QtGui import * 
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
-from pathlib import Path
+
+from vibra import app, UI_DIR
+from vibra.interface.general.print_message_input import PrintMessageInput
 
 import os
 import numpy as np
-
-from vibra import UI_DIR
-from vibra.interface.general.print_message_input import PrintMessageInput
-
-def get_icons_path(filename):
-    path = f"data/icons/{filename}"
-    if os.path.exists(path):
-        return str(Path(path))
 
 window_title1 = "Error"
 window_title2 = "Warning"
@@ -31,13 +25,9 @@ class ExportModelResults(QDialog):
         self._create_connections()
 
     def _load_icons(self):
-        self.export_icon = QIcon(get_icons_path('save.png'))
-        self.vibra_icon = QIcon(get_icons_path('logo_vibra.png'))
-        self.search_icon = QIcon(get_icons_path('import.png'))
-        self.clean_icon = QIcon(get_icons_path('broom.png'))
-        self.setWindowIcon(self.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Export model results")
 
     def _reset_variables(self):

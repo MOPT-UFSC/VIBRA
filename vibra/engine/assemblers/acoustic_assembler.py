@@ -36,9 +36,9 @@ class AcousticAssembler:
         self.mass_flow_vectors = None
         self.frequencies = None
         self.number_frequencies = 1
-        self.prescribed_values = []
-        self.prescribed_indexes = []
-        self.unprescribed_indexes = []
+        self.prescribed_values = list()
+        self.prescribed_indexes = list()
+        self.unprescribed_indexes = list()
 
     def get_element(self):
         element_type = self.model.mesh.element_type
@@ -92,8 +92,8 @@ class AcousticAssembler:
         get_unprescribed_indexes : Indexes of the acoustic free degrees of freedom.
         """
 
-        global_prescribed = []
-        list_prescribed_dofs = []
+        global_prescribed = list()
+        list_prescribed_dofs = list()
 
         aux_ones = np.ones(self.number_frequencies, dtype=complex)
 
@@ -124,7 +124,7 @@ class AcousticAssembler:
         return global_prescribed, array_prescribed_values
 
     def get_prescribed_indexes(self):
-        _prescribed_indexes = []
+        _prescribed_indexes = list()
         for key, _ in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "acoustic_pressure":
@@ -154,7 +154,7 @@ class AcousticAssembler:
     def get_surface_data_for_element_integration_by_property(self, property_label):
         """ """
         connect = None
-        output_data = dict()
+        surface_data = dict()
         aux_connect = dict()
         all_indexes = list()
 
@@ -162,11 +162,6 @@ class AcousticAssembler:
             prop, surface_id = key
             if prop == property_label:
                 if not data["nodal_attribution"]:
- 
-                    if surface_id in self.model.mesh.surfaces_areas.keys():
-                        area = self.model.mesh.surfaces_areas[surface_id]
-                    else:
-                        area = None
 
                     lrf_active, rho_eff_lrf, C_eff_lrf = self.model.is_lrf_eq_model_active(surface_id)
                     pm_active, rho_eff_pm, C_eff_pm = self.model.is_porous_material_model_active(surface_id)
@@ -191,11 +186,13 @@ class AcousticAssembler:
                         if isinstance(Zc, float):
                             real_values = np.array([Zc], dtype=float)
                             imag_values = np.array([0], dtype=float)
+
                         else:
                             real_values = np.real(Zc)
                             imag_values = np.imag(Zc)
-    
+
                     else:
+
                         real_values = np.array(data["real_values"], dtype=float)
                         imag_values = np.array(data["imag_values"], dtype=float)
 
@@ -206,9 +203,16 @@ class AcousticAssembler:
 
                     surf_connect = self.model.mesh.connectivity_from_surfaces[surface_id]
 
+                    source_factor = 1
+                    if property_label == "surface_velocity":
+                        for _key in self.properties.surface_properties.keys():
+                            if _key[1] == surface_id and _key[0] == "specific_impedance":
+                                source_factor = 2
+                                break
+
                     for i, el in enumerate(surface_elements):
                         aux_connect[el] = surf_connect[i]
-                        output_data[el] = [el, complex_values, density, area]
+                        surface_data[el] = [complex_values, source_factor]
 
         if aux_connect:
             connect = np.array(list(aux_connect.values()), dtype=int)
@@ -221,7 +225,7 @@ class AcousticAssembler:
             #     mesh_widget = app().main_window.viewer_tabs.mesh_widget
             #     mesh_widget.select_multiple_faces(all_indexes)
 
-        return connect, output_data
+        return connect, surface_data
 
     def get_data_to_process_global_matrices(self, reorder=True):
         """ This method processes the data required to assemble the global matrices. """
@@ -320,23 +324,23 @@ class AcousticAssembler:
         aux_ones = np.ones(self.number_frequencies, dtype=complex)
 
         _, element_2D = self.get_element()
-        dofs_Z = element_2D.DOFS_PER_ELEMENT
+        dofs = element_2D.DOFS_PER_ELEMENT
         total_dofs = element_2D.DOF_PER_NODE * len(element_2D.nodal_coordinates)
-        
-        connect_Z, data = self.get_surface_data_for_element_integration_by_property("specific_impedance")
 
-        if connect_Z is None:
+        connect, surface_data = self.get_surface_data_for_element_integration_by_property("specific_impedance")
+
+        if connect is None:
             _damping_matrix_full = [csr_matrix((total_dofs, total_dofs)) for _ in range(self.number_frequencies)]
 
         else:
 
-            nel_Z = connect_Z.shape[0]
+            nel = connect.shape[0]
             for j in range(self.number_frequencies):
-                data_Z[j] = np.zeros((nel_Z, dofs_Z, dofs_Z), dtype=complex)
+                data_Z[j] = np.zeros((nel, dofs, dofs), dtype=complex)
 
-            ind_rows_Z, ind_cols_Z = element_2D.generate_ind_rows_cols(connect_Z)
+            ind_rows_Z, ind_cols_Z = element_2D.generate_ind_rows_cols(connect)
 
-            for i, [el, complex_values, _, _] in enumerate(data.values()):
+            for i, [complex_values, _] in enumerate(surface_data.values()):
 
                 if complex_values.shape[0] == 1:
                     complex_values = complex_values * aux_ones
@@ -353,7 +357,7 @@ class AcousticAssembler:
         _visc_damping_matrix_full = csr_matrix((self.data_Cvisc.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
         self.visc_damping_matrix = _visc_damping_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         self.visc_damping_matrix_r = _visc_damping_matrix_full[:, self.prescribed_indexes]
-        
+
         _Qvisc_damping_matrix_full = csr_matrix((self.data_Qvisc.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
         self.Qvisc_damping_matrix = _Qvisc_damping_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         self.Qvisc_damping_matrix_r = _Qvisc_damping_matrix_full[:, self.prescribed_indexes]
@@ -469,7 +473,7 @@ class AcousticAssembler:
         connect_mf, data_mf = self.get_surface_data_for_element_integration_by_property("mass_flow_rate")
         if connect_mf is not None:
             element_2D.reorder_connect(connect_mf)
-            for i, [el, complex_values, _, _] in enumerate(data_mf.values()):
+            for i, [complex_values, _] in enumerate(data_mf.values()):
 
                 if complex_values.shape[0] == 1:
                     complex_values = complex_values * aux_ones
@@ -485,7 +489,7 @@ class AcousticAssembler:
         connect_vv, data_vv = self.get_surface_data_for_element_integration_by_property("volume_velocity")
         if connect_vv is not None:
             element_2D.reorder_connect(connect_vv)
-            for i, [el, complex_values, _, _] in enumerate(data_vv.values()):
+            for i, [complex_values, _] in enumerate(data_vv.values()):
 
                 if complex_values.shape[0] == 1:
                     complex_values = complex_values * aux_ones
@@ -501,7 +505,7 @@ class AcousticAssembler:
         connect_sv, data_sv = self.get_surface_data_for_element_integration_by_property("surface_velocity")
         if connect_sv is not None:
             element_2D.reorder_connect(connect_sv)
-            for i, [el, complex_values, _, _] in enumerate(data_sv.values()):
+            for i, [complex_values, source_factor] in enumerate(data_sv.values()):
 
                 if complex_values.shape[0] == 1:
                     complex_values = complex_values * aux_ones
@@ -510,7 +514,7 @@ class AcousticAssembler:
                     complex_values = complex_values.reshape(1,-1)
 
                 indices = element_2D.connect_face[i, :]
-                normalized_excitation_matrix = element_2D.excitation_F(i)
+                normalized_excitation_matrix = source_factor * element_2D.excitation_F(i)
 
                 output[indices, :] += normalized_excitation_matrix @ complex_values
 

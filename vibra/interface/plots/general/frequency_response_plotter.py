@@ -1,24 +1,18 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QComboBox, QCheckBox, QDialog, QFrame, QPushButton, QRadioButton, QVBoxLayout, QWidget
+from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
-from pathlib import Path
 
-import os
-import numpy as np
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-
-from vibra import UI_DIR
+from vibra import app, UI_DIR
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.data_handler.import_data_to_compare import ImportDataToCompare
 from vibra.interface.plots.general.mpl_canvas import MplCanvas
 
 from vibra.interface.plots.general.advanced_cursor import AdvancedCursor
 
-def get_icons_path(filename):
-    path = f"data/icons/{filename}"
-    if os.path.exists(path):
-        return str(Path(path))
+import numpy as np
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
+
 
 class FrequencyResponsePlotter(QDialog):
     def __init__(self, *args, **kwargs):
@@ -34,8 +28,7 @@ class FrequencyResponsePlotter(QDialog):
         self._create_connections()
 
     def _load_icons(self):
-        self.vibra_icon = QIcon(get_icons_path('logo_vibra.png'))
-        self.export_icon = QIcon(get_icons_path('send_to_disk.png'))
+        self.vibra_icon = app().main_window.vibra_icon
         self.setWindowIcon(self.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)

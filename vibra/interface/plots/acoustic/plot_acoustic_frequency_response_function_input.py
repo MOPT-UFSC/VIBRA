@@ -1,11 +1,7 @@
 from PyQt5.QtWidgets import QComboBox, QLineEdit, QPushButton, QDialog
 from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QCloseEvent
 from PyQt5 import uic
-from pathlib import Path
-
-import os
-import numpy as np
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
@@ -13,10 +9,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 
-def get_icons_path(filename):
-    path = f"data/icons/{filename}"
-    if os.path.exists(path):
-        return str(Path(path))
+import numpy as np
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -53,15 +46,20 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         self.setWindowModality(Qt.WindowModal)
 
     def _reset_variables(self):
+        self.exporter = None
+        self.plotter = None
         self.unit_label = "Pa/Pa"
 
     def _define_qt_variables(self):
+
         # QComboBox
         self.comboBox_selector_filter : QComboBox
+
         # QLineEdit
         self.lineEdit_output_node_id : QLineEdit
         self.lineEdit_input_node_id : QLineEdit
         self.current_lineEdit = self.lineEdit_output_node_id
+
         # QPushButton
         self.pushButton_call_data_exporter : QPushButton
         self.pushButton_plot_frequency_response : QPushButton
@@ -229,3 +227,14 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
             self.call_plotter()
         elif event.key() == Qt.Key_Escape:
             self.close()
+
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
+
+        if self.exporter is not None:
+            self.exporter.close()
+
+        if self.plotter is not None:
+            self.plotter.close()
+
+        # self.keep_window_open = False
+        return super().closeEvent(a0)

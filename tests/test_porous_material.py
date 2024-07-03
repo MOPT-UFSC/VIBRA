@@ -114,7 +114,7 @@ def test_load_external_mesh_and_solve():
                 "averaged" : False  }
 
     model.set_surface_velocity(data_Vn, 1)
-    # model.set_specific_impedance(data_Z, 1)
+    model.set_specific_impedance(data_Z, 1)
     model.set_specific_impedance(data_Z, 2)
 
     # Define the analysis frequency setup
@@ -172,7 +172,8 @@ def test_load_external_mesh_and_solve():
                 # data = imported_results["input_ns_DB"]
                 # data = imported_results["input_ns_Z1_DB"]
                 # data = imported_results["input_ns_Z2_DB"]
-                data = imported_results["input_pressure_DB_Vn_Z1"]
+                # data = imported_results["input_pressure_DB_Vn_Z1"]
+                data = imported_results["input_pressure_no_gap_DB"]
 
             elif pm_model == "DBM":
                 data = imported_results["input_ns_DBM"]
@@ -185,7 +186,8 @@ def test_load_external_mesh_and_solve():
                 # data = imported_results["output_ns_DB"]
                 # data = imported_results["output_ns_Z1_DB"]
                 # data = imported_results["output_ns_Z2_DB"]
-                data = imported_results["output_pressure_DB_Vn_Z1"]
+                # data = imported_results["output_pressure_DB_Vn_Z1"]
+                data = imported_results["output_pressure_no_gap_DB"]
 
             elif pm_model == "DBM":
                 data = imported_results["output_ns_DBM"]
