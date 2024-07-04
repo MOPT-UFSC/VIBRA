@@ -2,6 +2,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
 from vibra.interface.tabs.mesh_info_bar import MeshInfoBar
+from vibra.interface.viewer_3d.actors.nodes_actor import NodesActor
 from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
 from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
@@ -37,6 +38,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.setLayout(layout)
         self.setContentsMargins(0, 0, 0, 0)
 
+        self.nodes_actor = None
         self.faces_actor = None
         self.solids_actor = None
         self.edges_actor = None
@@ -66,6 +68,9 @@ class MeshRenderWidget(CommonRenderWidget):
         self.selection_spheres_actor.PickableOff()
         self.renderer.AddActor(self.selection_spheres_actor)
 
+        self.nodes_actor = NodesActor(mesh)
+        self.renderer.AddActor(self.nodes_actor)
+
         self.faces_actor = FacesActor(mesh)
         self.renderer.AddActor(self.faces_actor)
 
@@ -83,38 +88,38 @@ class MeshRenderWidget(CommonRenderWidget):
     #
     def show_points(self):
         self.view_mode = SHOW_POINTS
-        self.solids_actor.GetProperty().SetRepresentationToPoints()
-        self.solids_actor.VisibilityOn()
+        self.nodes_actor.VisibilityOn()
         self.edges_actor.VisibilityOff()
+        self.faces_actor.VisibilityOff()
+        self.solids_actor.VisibilityOff()
         self.update_theme()
         self.update()
 
     def show_lines(self):
-        main_window = get_main_window()
-        theme = main_window.user_config.theme
         self.view_mode = SHOW_LINES
+        self.nodes_actor.VisibilityOn()
+        self.edges_actor.VisibilityOn()
         self.faces_actor.VisibilityOff()
         self.solids_actor.VisibilityOff()
-        self.edges_actor.VisibilityOn()
         self.update_theme()
         self.update()
 
     def show_faces(self):
         self.view_mode = SHOW_FACES
-        self.solids_actor.GetProperty().SetRepresentationToSurface()
+        self.nodes_actor.VisibilityOn()
+        self.edges_actor.VisibilityOff()
         self.faces_actor.VisibilityOn()
         self.solids_actor.VisibilityOff()
-        self.edges_actor.VisibilityOn()
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
         self.update_theme()
         self.update()
     
     def show_volumes(self):
         self.view_mode = SHOW_VOLUMES
-        self.solids_actor.GetProperty().SetRepresentationToSurface()
+        self.nodes_actor.VisibilityOn()
+        self.edges_actor.VisibilityOff()
         self.faces_actor.VisibilityOff()
         self.solids_actor.VisibilityOn()
-        self.edges_actor.VisibilityOn()
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
         self.update_theme()
         self.update()
@@ -144,6 +149,14 @@ class MeshRenderWidget(CommonRenderWidget):
             self.edges_actor.GetProperty().SetColor(light_color)
             self.faces_actor.GetProperty().SetColor(light_color)
             self.solids_actor.GetProperty().SetColor(light_color)
+
+    def select_multiple_nodes(self, new_nodes, *, join=False, remove=False):
+        if not self._actors_exists():
+            return
+        self.nodes_actor.paint_cells([255, 0, 0], new_nodes)
+        self.update()
+        if self.view_mode != SHOW_FACES:
+            self.show_points()
 
     def select_multiple_faces(self, new_faces, *, join=False, remove=False):
         if not self._actors_exists():
