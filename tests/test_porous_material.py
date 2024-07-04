@@ -20,22 +20,6 @@ from time import time
 def test_load_external_mesh_and_solve():
     # return
 
-    # A = [-2.619833793E-18, -2.948000000E-01,  3.610258764E-17]
-    # B = [-2.584102675E-18, -2.907793122E-01,  4.852248521E-02]
-    # B = [-3.439645084E-18, -2.396502676E-01,  1.907572710E-02]
-    # C = [-3.430523528E-18, -2.386238534E-01, -3.308445933E-02]
-
-    # A = np.array(A)
-    # B = np.array(B)
-    # C = np.array(C)
-
-    # AB = B - A
-    # BC = C - B
-    # area = np.linalg.norm(np.cross(AB, BC)) / 2
-
-    # print(area)
-    # return
-
     # start decoding the Ansys script file (ds.dat file or input file)
 
     # mesh_path = "tests/data/mesh_files/fluid_suction_silencer_first_stage.dat"
@@ -75,12 +59,6 @@ def test_load_external_mesh_and_solve():
         mesh.volume_from_surface[tag] = [3]
 
     mesh.surfaces_from_volumes[1] = [1, 2]
-
-    # input surface area
-    mesh.surfaces_areas[1] = np.pi * ((488 / 1000)**2) / 4
-
-    # output surface area
-    mesh.surfaces_areas[2] = np.pi * ((589.6 / 1000)**2) / 4
 
     # if reorder_nodes:
     #     mesh._process_nodes_reordering()
@@ -140,7 +118,7 @@ def test_load_external_mesh_and_solve():
     # Define the analysis frequency setup
     df = 5
     f_min = 5
-    f_max = 1400
+    f_max = 15
     frequencies = np.arange(f_min, f_max + df, df)
 
     # Configure porous material
@@ -177,8 +155,8 @@ def test_load_external_mesh_and_solve():
     dt = time() - t0
     print(f"Elapsed time to solve harmonic analysis: {round(dt, 4)}")
 
-    mesh._process_nodal_areas()
     mesh._process_face_elements_connected_to_nodes()
+    mesh._process_nodal_areas()
 
     freq_TL, TL_model = harmonic_solver.get_transmission_loss(1, 2)
 

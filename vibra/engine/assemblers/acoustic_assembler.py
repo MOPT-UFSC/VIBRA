@@ -437,7 +437,7 @@ class AcousticAssembler:
                     nodes = self.model.mesh.nodes_from_surfaces[surface_id]
                     N = len(nodes)
 
-                    area = self.model.mesh.surfaces_areas[surface_id]
+                    area = self.model.mesh.surface_area_from_element_integration[surface_id]
 
                     for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
                         if data["averaged"]:

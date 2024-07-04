@@ -62,7 +62,7 @@ class Model:
 
         try:
             self.mesh = Mesh.from_cad(self.geometry_path, dimension=2, size_factor=0.15)
-            self.mesh.get_model_areas(self.geometry_path)
+            # self.mesh.get_model_areas(self.geometry_path)
             self.generated_mesh = False
 
         except Exception as error_log:
@@ -367,7 +367,7 @@ class Model:
                     for node_id in node_indexes[mask_nodes]:
                         if node_id not in nodes_inside_sphere:
                             nodes_inside_sphere.append(node_id)
-                            for element_id in self.mesh.solid_elements_from_nodes[node_id]:
+                            for element_id in self.mesh.solid_elements_connected_to_nodes[node_id]:
                                 if element_id not in selected_elements:
                                     selected_elements.append(element_id)
 
