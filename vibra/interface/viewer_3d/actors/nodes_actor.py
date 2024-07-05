@@ -79,11 +79,9 @@ class NodesActor(vtk.vtkActor):
         if self.data is None:
             return
 
-        print("opa")
         cell_colors = self.data.GetCellData().GetScalars()
         for i in volumes:
             cell_colors.SetTuple(i, color)
-        print("bão?")
 
         self.data.Modified()
         self.GetMapper().SetScalarModeToUseCellData()

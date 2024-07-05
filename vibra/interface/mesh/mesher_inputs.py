@@ -119,7 +119,7 @@ class MesherInputs(QDialog):
             # surface_elements = app().main_window.project.model.mesh.elements_from_surface[surf_tag]
             volume_elements = app().main_window.project.model.mesh.elements_from_volume[vol_tag]
 
-            mesh_widget.select_multiple_nodes(list(range(20_000)))
+            # mesh_widget.select_multiple_nodes(nodes)
             # mesh_widget.select_multiple_faces(surface_elements)
             # mesh_widget.select_multiple_volumes(volume_elements)
 
