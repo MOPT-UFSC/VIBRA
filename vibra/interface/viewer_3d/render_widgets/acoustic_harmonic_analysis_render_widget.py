@@ -273,6 +273,7 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
             return
         self.plane_actor.VisibilityOff()
         self.analysis_actor.disable_cut()
+        self.edges_actor.disable_cut()
 
     def configure_cutting_plane(self, position, orientation):
         if not self._actors_exists():
@@ -297,6 +298,7 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
         z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
         normal = self._calculate_normal_vector(orientation)
         self.analysis_actor.apply_cut((x, y, z), normal)
+        self.edges_actor.apply_cut((x, y, z), normal)
 
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
