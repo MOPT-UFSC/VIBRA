@@ -276,26 +276,31 @@ class AcousticHarmonicSolver:
         A_in = self.assembler.model.mesh.surface_area_from_element_integration[input_surface_id]
         A_out = self.assembler.model.mesh.surface_area_from_element_integration[output_surface_id]
 
-        print(rho_in, c0_in, A_in)
-        print(rho_out, c0_out, A_out)
-
-        # out_data = dict()
+        out_data = dict()
         nodal_areas_in = np.zeros(len(rows_input), dtype=float)
         for i, node in enumerate(rows_input):
             areas = self.assembler.model.mesh.nodal_area[node]
             nodal_areas_in[i] = sum(areas)
+            out_data[node] = sum(areas)
 
         nodal_areas_out = np.zeros(len(rows_output), dtype=float)
         for i, node in enumerate(rows_output):
             areas = self.assembler.model.mesh.nodal_area[node]
             nodal_areas_out[i] = sum(areas)
+            out_data[node] = sum(areas)
 
         # with open("areas_data.json", "w") as file:
         #     json.dump(out_data, file, indent=2)
 
+        # print("\n")
+        # for i in [177, 178, 8818]:
+        #     ratio = out_data[i] / np.sum(nodal_areas_in)
+        #     print(f"Node #{i+1} - area: {ratio*A_in} [m²]")
+
+        # print("\n")
         # for i in [340, 341, 8904]:
-        #     ratio = out_data[str(i)] / np.sum(nodal_areas)
-        #     print(f"Node#{i+1} - area: {ratio*A_out} [m²]")
+        #     ratio = out_data[i] / np.sum(nodal_areas_out)
+        #     print(f"Node #{i+1} - area: {ratio*A_out} [m²]")
 
         Aeff_in = nodal_areas_in.reshape(-1, 1) * (A_in / np.sum(nodal_areas_in))
         Aeff_out = nodal_areas_out.reshape(-1, 1) * (A_out / np.sum(nodal_areas_out))
@@ -311,13 +316,13 @@ class AcousticHarmonicSolver:
         real_values = np.array(surf_velocity["real_values"])
         imag_values = np.array(surf_velocity["imag_values"])
 
-        Vn = real_values + 1j * imag_values
-        # P_in = V_in * rho_in * c0_in# / 2
+        V_in = real_values + 1j * imag_values
+        P_in = V_in * rho_in * c0_in# / 2
 
-        V_in = Vn * (Aeff_in / A_in)
+        # V_in = (-1) * Vn * (Aeff_in / A_in)
 
         # V_in = P_in / (rho_in * c0_in)
-        I_in = np.abs(np.real(P_in * np.conjugate(V_in)) / 2)
+        I_in = np.real(P_in * np.conjugate(V_in)) / 2
 
         V_out = P_out / (rho_out * c0_out)
         I_out = np.real(P_out * np.conjugate(V_out)) / 2
@@ -325,12 +330,14 @@ class AcousticHarmonicSolver:
         W_in = 10*np.log10(np.sum(I_in * Aeff_in, axis=0))
         W_out = 10*np.log10(np.sum(I_out * Aeff_out, axis=0))
 
+        diff = 10*np.log10(np.sum(I_out * Aeff_out, axis=0)) - 10*np.log10(np.sum(I_out * A_out/len(rows_output), axis=0))
+
         TL = W_in - W_out
 
         if 0 in self.frequencies:
             return self.frequencies[1:], TL[1:]
 
-        return self.frequencies, TL
+        return self.frequencies, TL, diff
 
 
     def get_noise_reduction(self, input_surface_id, output_surface_id):

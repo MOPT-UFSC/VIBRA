@@ -118,7 +118,7 @@ def test_load_external_mesh_and_solve():
     # Define the analysis frequency setup
     df = 5
     f_min = 5
-    f_max = 15
+    f_max = 1400
     frequencies = np.arange(f_min, f_max + df, df)
 
     # Configure porous material
@@ -158,7 +158,7 @@ def test_load_external_mesh_and_solve():
     mesh._process_face_elements_connected_to_nodes()
     mesh._process_nodal_areas()
 
-    freq_TL, TL_model = harmonic_solver.get_transmission_loss(1, 2)
+    freq_TL, TL_model, diff_TL = harmonic_solver.get_transmission_loss(1, 2)
 
     if solution is not None:
 
@@ -240,6 +240,15 @@ def test_load_external_mesh_and_solve():
         ax4.set(xlabel='Frequency [Hz]', ylabel='Transmission loss [dB]', title="Transmission loss")
         ax4.grid()
         ax4.legend()
+
+        # fig5, ax5 = plt.subplots()
+        # freq_ref = TL_data[:, 0]
+        # TL_ref = TL_data[:, 1]
+        # ax5.plot(freq_TL, diff_TL, 'r', label='VIBRA')
+        # # ax5.plot(freq_ref, TL_ref, 'k--', label='ANSYS')
+        # ax5.set(xlabel='Frequency [Hz]', ylabel='Transmission loss [dB]', title="Transmission loss")
+        # ax5.grid()
+        # ax5.legend()
 
         plt.show()
 
