@@ -6,8 +6,7 @@ authors = ["Your Name <you@example.com>"]
 readme = "README.md"
 
 [[tool.poetry.source]]
-name = "pypi-public"
-url = "https://pypi.org/simple/"
+name = "PyPI"
 priority = "primary"
 
 [tool.poetry.dependencies]
