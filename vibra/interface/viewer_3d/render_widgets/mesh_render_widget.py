@@ -107,7 +107,7 @@ class MeshRenderWidget(CommonRenderWidget):
     def show_faces(self):
         self.view_mode = SHOW_FACES
         self.nodes_actor.VisibilityOn()
-        self.edges_actor.VisibilityOff()
+        self.edges_actor.VisibilityOn()
         self.faces_actor.VisibilityOn()
         self.solids_actor.VisibilityOff()
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
@@ -117,7 +117,7 @@ class MeshRenderWidget(CommonRenderWidget):
     def show_volumes(self):
         self.view_mode = SHOW_VOLUMES
         self.nodes_actor.VisibilityOn()
-        self.edges_actor.VisibilityOff()
+        self.edges_actor.VisibilityOn()
         self.faces_actor.VisibilityOff()
         self.solids_actor.VisibilityOn()
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
