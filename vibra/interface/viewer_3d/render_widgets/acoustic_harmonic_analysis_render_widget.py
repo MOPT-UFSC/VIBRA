@@ -153,11 +153,14 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
         if not (0 <= index < solver.solution.shape[1]):
             return
 
+        # Linear interpolation from 0 to 1 according to the current frame
         t = frame / (self._animation_total_frames - 1)
-        phase_deg = lerp(0, 360, t)
+        phi_sld = lerp(0, 2 * np.pi, t)
 
-        phi_sld = phase_deg * np.pi / 180
-        current_pressures = solver.solution[:, index].copy()
+        # phase_deg = lerp(0, 360, t)
+        # phi_sld = phase_deg * np.pi / 180
+
+        current_pressures = solver.solution[:, index]
         amplitudes = np.abs(current_pressures)
         phase = np.angle(current_pressures)
         output_pressures = amplitudes * np.cos(phase + phi_sld)

@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 # 
 from pypardiso import *
 
+from functools import cache
+
 from vibra.utils.progress_status import ProgressStatus
 
 
@@ -40,6 +42,7 @@ class AcousticHarmonicSolver:
     def load_dissipation_model(self, data):
         self.dissipation_model = data
 
+    @cache
     def get_max_min_values_of_pressures(self, column):
         """ This method returns the minimum and maximum pressure values
             of selected frequency for animation purposes.
@@ -77,6 +80,8 @@ class AcousticHarmonicSolver:
 
     def solve(self, print_log=False):
         """ """
+        self.get_max_min_values_of_pressures.cache_clear()
+
         ps = PyPardisoSolver(mtype=3)
         #
         self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
