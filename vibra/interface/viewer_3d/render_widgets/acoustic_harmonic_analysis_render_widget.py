@@ -20,7 +20,7 @@ from vibra.utils.progress_status import ProgressStatus
 
 import logging
 import numpy as np
-
+from time import time
 
 class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
     def __init__(self, parent=None):
@@ -151,28 +151,39 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
 
         index = self.current_shape_index()
         if not (0 <= index < solver.solution.shape[1]):
-            return
-
-        # Linear interpolation from 0 to 1 according to the current frame
-        t = frame / (self._animation_total_frames - 1)
-        phi_sld = lerp(0, 2 * np.pi, t)
-
-        # phase_deg = lerp(0, 360, t)
-        # phi_sld = phase_deg * np.pi / 180
+            return      
+        
+        t0 = time()
 
         current_pressures = solver.solution[:, index]
         amplitudes = np.abs(current_pressures)
         phase = np.angle(current_pressures)
-        output_pressures = amplitudes * np.cos(phase + phi_sld)
+
+        phi = np.linspace(0, 2 * np.pi, self._animation_fps, endpoint=False)
+        output_pressures = amplitudes * np.cos(phase + phi[frame])
 
         min_value, max_value = solver.get_max_min_values_of_pressures(index)
         if self.control_bar.absolute_button.isChecked():
             min_value = 0
             output_pressures = np.abs(output_pressures)
+        
+        dt = time() - t0
+        print(f"Elpased time to process A: {round(dt, 4)} s")
 
+        t0 = time()
         self.analysis_actor.plot_colorbar(output_pressures, min_value, max_value)
+        dt = time() - t0
+        print(f"Elpased time to process B: {round(dt, 4)} s")
+
+        t0 = time()
         self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
+        dt = time() - t0
+        print(f"Elpased time to process C: {round(dt, 4)} s")
+
+        t0 = time()
         self.update()
+        dt = time() - t0
+        print(f"Elpased time to process D: {round(dt, 4)} s")
 
     def process_animation_frames(self):
 

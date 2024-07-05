@@ -173,7 +173,7 @@ class PlotTransmissionLossInput(QDialog):
             plot_type = "Transmission loss"
             self.project.model.mesh._process_face_elements_connected_to_nodes()
             self.project.model.mesh._process_nodal_areas()
-            x_data, y_data = self.project.acoustic_harmonic_solver.get_transmission_loss(self.input_surface_id, self.output_surface_id)
+            x_data, y_data, _ = self.project.acoustic_harmonic_solver.get_transmission_loss(self.input_surface_id, self.output_surface_id)
         else:
             plot_type = "Noise reduction"
             x_data, y_data = self.project.acoustic_harmonic_solver.get_noise_reduction(self.input_surface_id, self.output_surface_id)
