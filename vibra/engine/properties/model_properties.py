@@ -2,6 +2,7 @@ import json
 import os
 from dataclasses import dataclass
 
+from vibra import app
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 from vibra.project_file import *
@@ -297,40 +298,54 @@ class ModelProperties:
         if key in self.group_properties.keys():
             self.group_properties.pop(key)
 
+
+    def export_model_properties(self):
+
+        print("export_model_properties")
+
+        try:
+
+            def normalize(prop: dict):
+                """
+                Sadly json doesn't accepts tuple keys,
+                so we need to convert it to a string like:
+                "property id" = value
+                """
+                output = dict()
+                for (property, tag), data in prop.items():
+
+                    key = f"{property} {tag}"
+
+                    if property in ["fluid", "material"]:
+                        if isinstance(data, (Fluid, Material)):
+                            output[key] = data.identifier
+                    else:
+                        output[key] = data
+
+                return output
+
+            data = dict(
+                        # global_properties = normalize(self.global_properties),
+                        volume_properties=normalize(self.volume_properties),
+                        surface_properties=normalize(self.surface_properties),
+                        line_properties=normalize(self.line_properties),
+                        element_properties=normalize(self.element_properties),
+                        nodal_properties=normalize(self.nodal_properties),
+                        )
+
+            path = app().main_window.project.model_properties
+            app().main_window.vibra_file.write(path, data)
+
+        except Exception as error_log:
+
+            title = "Error while exporting model properties"
+            message = str(error_log)
+            PrintMessageInput([window_title_1, title, message])
+
+        # return json.dumps(data, indent=2)
+
     # TODO: remove this
-    def as_json(self):
-        def normalize(prop: dict):
-            """
-            Sadly json doesn't accepts tuple keys,
-            so we need to convert it to a string like:
-            "property id" = value
-            """
-            output = dict()
-            for (property, tag), data in prop.items():
-
-                key = f"{property} {tag}"
-
-                if property in ["fluid", "material"]:
-                    if isinstance(data, (Fluid, Material)):
-                        output[key] = data.identifier
-                else:
-                    output[key] = data
-
-            return output
-            # return {f"{p} {i}": v for (p, i), v in prop.items()}
-
-        data = dict(
-            # global_properties = normalize(self.global_properties),
-            volume_properties=normalize(self.volume_properties),
-            surface_properties=normalize(self.surface_properties),
-            line_properties=normalize(self.line_properties),
-            element_properties=normalize(self.element_properties),
-            nodal_properties=normalize(self.nodal_properties),
-        )
-        return json.dumps(data, indent=2)
-
-    # TODO: remove this
-    def load_json(self, data: dict):
+    def get_mode_properties_from_json_file(self, data: dict):
         def denormalize(prop: dict):
             new_prop = dict()
             for key, val in prop.items():
@@ -346,15 +361,6 @@ class ModelProperties:
         self.line_properties = denormalize(data["line_properties"])
         self.element_properties = denormalize(data["element_properties"])
         self.nodal_properties = denormalize(data["nodal_properties"])
-
-    def export_model_properties(self):
-        try:
-            path = os.path.join(self.file.project_path, "model_properties.json")
-            with open(path, "w") as file:
-                file.write(self.as_json())
-        except Exception as error:
-            print(str(error))
-
 
 if __name__ == "__main__":
     p = ModelProperties()

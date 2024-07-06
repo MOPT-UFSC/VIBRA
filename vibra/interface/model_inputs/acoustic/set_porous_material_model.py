@@ -132,6 +132,7 @@ class SetPorousMaterialModel(QDialog):
         if self.lineEdit_selected_id.text() != "":
             volume_id = int(self.lineEdit_selected_id.text())
             self.properties._remove_volume_property("porous_material_model", volume_id)
+            self.properties.export_model_properties()
             self.load_info()
 
     def reset_porous_material_model(self):
@@ -156,8 +157,11 @@ class SetPorousMaterialModel(QDialog):
                 return
 
             if read._continue:
+
                 for volume_id in volume_ids:
                     self.properties._remove_volume_property("porous_material_model", volume_id)
+
+                self.properties.export_model_properties()
                 self.close()
 
     def tabEvent_porous_material_model(self):
@@ -409,6 +413,8 @@ class SetPorousMaterialModel(QDialog):
             for volume_id in volume_ids:
                 # surfaces_from_volume = self.project.model.mesh.surfaces_from_volumes[volume_id]
                 self.project.set_porous_material_model(model_data, volume=volume_id)
+            
+            self.properties.export_model_properties()
 
             print(f"The porous material model '{model_data['model']}' has been attributed to the volumes {volume_ids}")
             self.close()

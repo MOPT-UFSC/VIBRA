@@ -334,6 +334,8 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             for _id in self.surface_ids:
                 self.project.set_lrf_eq_model_data(data, group=group_id)
         
+        self.properties.export_model_properties()
+        
         self.load_lrf_data()
         # self.close()
 

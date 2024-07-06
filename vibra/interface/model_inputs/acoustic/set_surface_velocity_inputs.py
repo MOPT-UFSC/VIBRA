@@ -57,34 +57,37 @@ class SurfaceVelocityInput(QDialog):
         self.surface_velocity_tables_folder_path = os.path.join(self.acoustic_folder_path, "surface_velocity_files")
 
     def _define_qt_variables(self):
-        # QCheckBox objects
+
+        # QCheckBox
         self.checkBox_averaged_constant_values = self.findChild(QCheckBox, "checkBox_averaged_constant_values")
         self.checkBox_averaged_table_values = self.findChild(QCheckBox, "checkBox_averaged_table_values")
-        # QLineEdit objects
+
+        # QLineEdit
         self.lineEdit_selection_id = self.findChild(QLineEdit, "lineEdit_selection_id")
         self.lineEdit_real_value = self.findChild(QLineEdit, "lineEdit_real_value")
         self.lineEdit_imag_value = self.findChild(QLineEdit, "lineEdit_imag_value")
         self.lineEdit_load_table_path = self.findChild(QLineEdit, "lineEdit_table_path")
-        # QPushButton objects
+
+        # QPushButton
         self.pushButton_load_table = self.findChild(QPushButton, "pushButton_load_table")
         self.pushButton_constant_value_confirm = self.findChild(QPushButton, "pushButton_constant_value_confirm")
         self.pushButton_table_values_confirm = self.findChild(QPushButton, "pushButton_table_values_confirm")
         self.pushButton_remove_bc_confirm = self.findChild(QPushButton, "pushButton_remove_bc_confirm")
         self.pushButton_reset = self.findChild(QPushButton, "pushButton_reset")
-        # QRadioButton objects
+
+        # QRadioButton
         self.radioButton_nodal_attribution_constant = self.findChild(QRadioButton, "radioButton_nodal_attribution_constant")
         self.radioButton_element_integration_constant = self.findChild(QRadioButton, "radioButton_element_integration_constant")
         self.radioButton_element_integration_table = self.findChild(QRadioButton, "radioButton_element_integration_table")
         self.radioButton_nodal_attribution_table = self.findChild(QRadioButton, "radioButton_nodal_attribution_table")
+
         # QSpinBox object
         self.spinBox_skiprows = self.findChild(QSpinBox, "spinBox")
-        # QTabWidget objects
+
+        # QTabWidget
         self.tabWidget_surface_velocity = self.findChild(QTabWidget, "tabWidget_surface_velocity")
-        self.tab_constant_values = self.tabWidget_surface_velocity.findChild(QWidget, "tab_constant_values")
-        self.tab_table_values = self.tabWidget_surface_velocity.findChild(QWidget, "tab_table_values")
-        self.tab_remove = self.tabWidget_surface_velocity.findChild(QWidget, "tab_remove")
-        self.current_tab = self.tabWidget_surface_velocity.currentIndex()
-        # QTreeWidget objects
+
+        # QTreeWidget
         self.treeWidget_surface_velocity = self.findChild(QTreeWidget, "treeWidget_surface_velocity")
         self.treeWidget_surface_velocity.setColumnWidth(1, 20)
         self.treeWidget_surface_velocity.setColumnWidth(2, 80)
@@ -114,8 +117,7 @@ class SurfaceVelocityInput(QDialog):
         geometry_widget.selection_changed.connect(self.geometry_selection_callback)
 
     def tabEvent_surface_velocity(self):
-        self.current_tab = self.tabWidget_surface_velocity.currentIndex()
-        if self.current_tab == 2:
+        if self.tabWidget_surface_velocity.currentIndex() == 2:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
         else:
@@ -476,7 +478,7 @@ class SurfaceVelocityInput(QDialog):
         text = ""
         for _id in list_ids:
             text += "{}, ".format(_id)
-        if self.current_tab != 2:
+        if self.tabWidget_surface_velocity.currentIndex() != 2:
             self.lineEdit_selection_id.setText(text[:-2])
 
     def update_tabs_visibility(self):

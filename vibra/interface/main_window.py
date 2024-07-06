@@ -252,16 +252,16 @@ class MainWindow(QMainWindow):
             return
         
         self.project = Project()
-        self.vibra_file = Filebox(self.project_path)
+        self.vibra_file = Filebox(self.project_path, override=False)
 
         self.open_project()
 
     def import_geometry_dialog(self):
-        path, check = QFileDialog.getOpenFileName(
-            self,
-            "Select Geometry",
-            filter="Geometry Files (*.stp *.step *.igs *.iges)",
-        )
+        self.geometry_path, check = QFileDialog.getOpenFileName(
+                                                                self,
+                                                                "Select Geometry",
+                                                                filter="Geometry Files (*.stp *.step *.igs *.iges)",
+                                                                )
 
         if not check:
             return
@@ -270,7 +270,10 @@ class MainWindow(QMainWindow):
         self.create_temporary_vibra_folder()
         self.vibra_file = Filebox(self.project_path)
 
-        self.import_geometry(path)
+        basename = os.path.basename(self.geometry_path)
+        internal_path = f"geometry_files/{basename}"
+        self.vibra_file.write_from_path(internal_path, self.geometry_path)
+        self.import_geometry(self.geometry_path)
 
     def save_project_as(self, path):
         path = Path(path)

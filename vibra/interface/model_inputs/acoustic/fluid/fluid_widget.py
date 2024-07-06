@@ -129,31 +129,25 @@ class FluidWidget(QWidget):
         for j, width in enumerate([140, 80, 120, 80, 140, 40]):
             self.tableWidget_fluid_data.horizontalHeader().resizeSection(j, width)
             self.tableWidget_fluid_data.horizontalHeaderItem(j).setTextAlignment(Qt.AlignCenter)
-    
+
     def load_data_from_fluids_library(self):
 
         if not app().main_window.project_path.exists():
             self.reset_library_to_default()
             return
-        
-        config = app().main_window.vibra_file.read(self.fluid_filename)
-        print(list(config.sections()))
 
-        if not list(config.sections()):
+        config = app().main_window.vibra_file.read(self.fluid_filename)
+        if config is None:
             self.reset_library_to_default()
             return
 
-        # try:
-        #     config = configparser.ConfigParser()
-        #     config.read(self.fluid_path)
-
-        # except Exception as error_log:
-        #     self.title = "Error while loading the fluid list"
-        #     self.message = str(error_log)
-        #     PrintMessageInput([window_title_1, self.title, self.message])
-        #     self.close()
-
         self.list_of_fluids.clear()
+        self.fluid_name_to_refprop_data.clear()
+
+        if not list(config.sections()):
+            self.update_table()
+            return
+
         for tag in config.sections():
 
             section = config[tag]
@@ -497,18 +491,17 @@ class FluidWidget(QWidget):
                 fluid_data['molar fractions'] = molar_fractions
                 fluid_data['molar mass'] = round(self.fluid_data_refprop['molar mass'], 6)
 
-            config = ConfigParser()
-            config.read(self.fluid_path)
+            # config = ConfigParser()
+            # config.read(self.fluid_path)
+            # config[fluid_name] = fluid_data
+
+            # with open(self.fluid_path, 'w') as config_file:
+            #     config.write(config_file)
+
+            config = app().main_window.vibra_file.read(self.fluid_filename)
             config[fluid_name] = fluid_data
 
-            with open(self.fluid_path, 'w') as config_file:
-                config.write(config_file)
-
-            _path = os.path.basename(self.fluid_path)
-            _config = app().main_window.vibra_file.read(_path)
-            _config[fluid_name] = fluid_data
-
-            app().main_window.vibra_file.write(_path, _config)
+            app().main_window.vibra_file.write(self.fluid_filename, config)
 
         except Exception as error_log:
             title = "Error while writing fluid data in file"
@@ -524,7 +517,7 @@ class FluidWidget(QWidget):
             return
         
         config.remove_section(fluid.name)
-        app().main_window.vibra_file.read(self.fluid_filename, config)
+        app().main_window.vibra_file.write(self.fluid_filename, config)
 
         # with open(self.fluid_path, 'w') as config_file:
         #     config.write(config_file)

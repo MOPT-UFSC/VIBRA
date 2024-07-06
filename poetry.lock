@@ -216,14 +216,15 @@ files = []
 develop = false
 
 [package.dependencies]
+numpy = "^1.24.2"
 pillow = "^10.3.0"
 treelib = "^1.7.0"
 
 [package.source]
 type = "git"
-url = "https://github.com/andrefpf/fileboxes"
+url = "https://github.com/andrefpf/fileboxes.git"
 reference = "HEAD"
-resolved_reference = "2714b4d1c20a075b56a1f2f8b4cfd2cec1e08610"
+resolved_reference = "44ebd78e957ec727f84be06794b7a0ce910915fe"
 
 [[package]]
 name = "fonttools"
@@ -1220,4 +1221,4 @@ web = ["wslink (>=1.0.4)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "9915b8742cd118b7c46e9cfbc23bb44945f9b6fff44e270905be0c006e4d3153"
+content-hash = "258511bb5919e86244ac5957e2d7400f3dc8fe0b9fd6c69d42e64ba8d0006426"
