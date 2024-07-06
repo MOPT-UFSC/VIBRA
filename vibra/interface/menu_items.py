@@ -30,8 +30,9 @@ from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_input impor
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_input import PlotAcousticFrequencyResponseFunctionInput
 from vibra.interface.plots.acoustic.plot_transmission_loss_input import PlotTransmissionLossInput
 #
+from vibra.interface.process_analysis import ProcessAnalysis
+
 from vibra.interface.loading_bar import load_function
-from vibra.utils.interface_functions import get_main_window
 
 
 class BorderItemDelegate(QStyledItemDelegate):
@@ -553,20 +554,23 @@ class MenuItems(QTreeWidget):
         #         ErrorMessage(error)
         #         return
         #
+
+        analysis = ProcessAnalysis()
+
         analysis_id = self.main_window.project.analysis_data["analysis_id"]
         #
         if analysis_id == 2:
-            solve_modal = load_function(self.main_window.process_structural_modal_analysis, 
+            solve_modal = load_function(analysis.process_structural_modal_analysis, 
                                         self.main_window)
             solve_modal()
 
         elif analysis_id == 3:
-            solve_harmonic = load_function(self.main_window.process_acoustic_harmonic_analysis, 
+            solve_harmonic = load_function(analysis.process_acoustic_harmonic_analysis, 
                                            self.main_window)
             solve_harmonic()
 
         elif analysis_id == 4:
-            solve_modal = load_function(self.main_window.process_acoustic_modal_analysis, 
+            solve_modal = load_function(analysis.process_acoustic_modal_analysis, 
                                         self.main_window)
             solve_modal()
         else:

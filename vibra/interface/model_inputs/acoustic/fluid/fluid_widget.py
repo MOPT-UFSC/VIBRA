@@ -11,13 +11,15 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.model_inputs.acoustic.fluid.set_fluid_composition_input import SetFluidCompositionInput
 
+from vibra.project_file import *
+
 from vibra.engine.properties.fluid import Fluid
 from vibra.libraries.default_libraries import default_fluid_library
 
 from vibra.utils.utils import *
 
 import numpy as np
-import configparser
+from configparser import ConfigParser
 from pathlib import Path
 from itertools import count
 
@@ -50,6 +52,7 @@ class FluidWidget(QWidget):
         self.project = self.main_window.project
         self.model = self.project.model
         self.properties = self.model.properties
+        self.fluid_filename = self.project.fluid_filename
 
         self._initialize()
         self._define_qt_variables()
@@ -57,9 +60,6 @@ class FluidWidget(QWidget):
         self.load_data_from_fluids_library()
 
     def _initialize(self):
-
-        # self.preprocessor = self.project.preprocessor
-        self.fluid_path = Path("vibra/fluid_library.dat")
 
         self.row = None
         self.col = None
@@ -132,19 +132,26 @@ class FluidWidget(QWidget):
     
     def load_data_from_fluids_library(self):
 
-        self.fluid_path = Path(self.fluid_path)
-        if not self.fluid_path.exists():
+        if not app().main_window.project_path.exists():
+            self.reset_library_to_default()
+            return
+        
+        config = app().main_window.vibra_file.read(self.fluid_filename)
+        print(list(config.sections()))
+
+        if not list(config.sections()):
+            self.reset_library_to_default()
             return
 
-        try:
-            config = configparser.ConfigParser()
-            config.read(self.fluid_path)
+        # try:
+        #     config = configparser.ConfigParser()
+        #     config.read(self.fluid_path)
 
-        except Exception as error_log:
-            self.title = "Error while loading the fluid list"
-            self.message = str(error_log)
-            PrintMessageInput([window_title_1, self.title, self.message])
-            self.close()
+        # except Exception as error_log:
+        #     self.title = "Error while loading the fluid list"
+        #     self.message = str(error_log)
+        #     PrintMessageInput([window_title_1, self.title, self.message])
+        #     self.close()
 
         self.list_of_fluids.clear()
         for tag in config.sections():
@@ -490,30 +497,37 @@ class FluidWidget(QWidget):
                 fluid_data['molar fractions'] = molar_fractions
                 fluid_data['molar mass'] = round(self.fluid_data_refprop['molar mass'], 6)
 
-            config = configparser.ConfigParser()
+            config = ConfigParser()
             config.read(self.fluid_path)
             config[fluid_name] = fluid_data
 
             with open(self.fluid_path, 'w') as config_file:
                 config.write(config_file)
-                    
+
+            _path = os.path.basename(self.fluid_path)
+            _config = app().main_window.vibra_file.read(_path)
+            _config[fluid_name] = fluid_data
+
+            app().main_window.vibra_file.write(_path, _config)
+
         except Exception as error_log:
             title = "Error while writing fluid data in file"
             message = str(error_log)
             PrintMessageInput([window_title_1, title, message])
             return True
 
-    def remove_fluid_from_file(self, fluid):
+    def remove_fluid_from_file(self, fluid : Fluid):
 
-        config = configparser.ConfigParser()
-        config.read(self.fluid_path)
+        config = app().main_window.vibra_file.read(self.fluid_filename)
 
         if not fluid.name in config.sections():
             return
         
         config.remove_section(fluid.name)
-        with open(self.fluid_path, 'w') as config_file:
-            config.write(config_file)
+        app().main_window.vibra_file.read(self.fluid_filename, config)
+
+        # with open(self.fluid_path, 'w') as config_file:
+        #     config.write(config_file)
 
         # for line_id, entity in self.preprocessor.dict_tag_to_entity.items():
         #     if entity.fluid is None:
@@ -576,7 +590,7 @@ class FluidWidget(QWidget):
         # self.hide()
 
         title = "Resetting the fluids library"
-        message = "Would you like to reset the fluid library to default values?"
+        message = "Would you like to reset the fluid library to default?"
 
         buttons_config = {  "left_button_label" : "No", 
                             "right_button_label" : "Yes",
@@ -590,35 +604,59 @@ class FluidWidget(QWidget):
 
         if read._continue:
             return True
+        
+    def reset_library_callback(self):
+        if self.get_confirmation_to_proceed():
+            self.reset_library_to_default()
+            return True
+        return False
 
     def reset_library_to_default(self):
+        
+        # config_cache = None
+        # if app().main_window.project_path.exists():
+        config_cache = app().main_window.vibra_file.read(self.fluid_filename)
 
-        if self.get_confirmation_to_proceed():
-
-            config_cache = configparser.ConfigParser()
-            config_cache.read(self.fluid_path)  
+        sections_cache = list()
+        if config_cache is not None:
             sections_cache = config_cache.sections()
 
-            default_fluid_library(self.fluid_path)
-            config = configparser.ConfigParser()
-            config.read(self.fluid_path)
+        default_fluid_library()
 
-            fluid_names = list()
-            for section_cache in sections_cache:
-                if section_cache not in config.sections():
-                    fluid_names.append(config_cache[section_cache]["name"])
+        config = app().main_window.vibra_file.read(self.fluid_filename)
 
-            # for line_id, entity in self.preprocessor.dict_tag_to_entity.items():
-            #     if entity.fluid is not None:
-            #         if entity.fluid.name in fluid_names:
-            #             self.project.set_fluid_by_lines(line_id, None)
+        fluid_names = list()
+        for section_cache in sections_cache:
+            if section_cache not in config.sections():
+                fluid_name = config_cache[section_cache]["name"]
+                fluid_names.append(fluid_name)
 
-            self.load_data_from_fluids_library()
+        self.reset_fluids_from_bodies_and_surfaces(fluid_names)
+        self.load_data_from_fluids_library()
 
-            return True
+    def reset_fluids_from_bodies_and_surfaces(self, fluid_names : list):
 
-        return False
-        
+        surfaces_to_remove_fluid = list()
+        volumes_to_remove_fluid = list()
+
+        for key, data in self.properties.volume_properties.items():
+            property, volume_id = key
+            if property == "fluid":
+                if isinstance(data, Fluid):
+                    if data.name in fluid_names:
+                        volumes_to_remove_fluid.append(volume_id)
+                        self.model.properties._remove_volume_property("fluid", volume_id=volume_id)
+                        surface_ids = self.model.mesh.surfaces_from_volumes[volume_id]
+                        for surface_id in surface_ids:
+                            surfaces_to_remove_fluid.append(surface_id)
+
+        for vol_id in volumes_to_remove_fluid:
+            self.model.properties._remove_volume_property("fluid", volume_id=vol_id)
+
+        for surf_id in surfaces_to_remove_fluid:
+            self.model.properties._remove_surface_property("fluid", surface_id=surf_id)
+
+
     def call_refprop_interface(self):
 
         if isinstance(self.parent_widget, QDialog):

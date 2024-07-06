@@ -80,7 +80,7 @@ class MaterialInputs(QWidget):
     def create_connections(self):
         self.pushButton_add_row.clicked.connect(self.add_row)
         self.pushButton_remove_row.clicked.connect(self.remove_selected_row)
-        self.pushButton_reset_library.clicked.connect(self.reset_library_to_default)
+        # self.pushButton_reset_library.clicked.connect(self.reset_library_to_default)
         #
         self.tableWidget_material_data.itemChanged.connect(self.item_changed_callback)
         self.tableWidget_material_data.cellClicked.connect(self.cell_clicked_callback)
@@ -402,29 +402,31 @@ class MaterialInputs(QWidget):
         if read._continue:
             return True
 
+    def reset_library_callback(self):
+        if self.get_confirmation_to_proceed():
+            self.reset_library_to_default()
+
     def reset_library_to_default(self):
 
-        if self.get_confirmation_to_proceed():
+        config_cache = configparser.ConfigParser()
+        config_cache.read(self.material_path)  
+        sections_cache = config_cache.sections()
 
-            config_cache = configparser.ConfigParser()
-            config_cache.read(self.material_path)  
-            sections_cache = config_cache.sections()
+        default_material_library(self.material_path)
+        config = configparser.ConfigParser()
+        config.read(self.material_path)
 
-            default_material_library(self.material_path)
-            config = configparser.ConfigParser()
-            config.read(self.material_path)
+        material_names = []
+        for section_cache in sections_cache:
+            if section_cache not in config.sections():
+                material_names.append(config_cache[section_cache]["name"])
 
-            material_names = []
-            for section_cache in sections_cache:
-                if section_cache not in config.sections():
-                    material_names.append(config_cache[section_cache]["name"])
+        for line_id, entity in self.preprocessor.dict_tag_to_entity.items():
+            if entity.material is not None:
+                if entity.material.name in material_names:
+                    self.project.set_material_by_lines(line_id, None)
 
-            for line_id, entity in self.preprocessor.dict_tag_to_entity.items():
-                if entity.material is not None:
-                    if entity.material.name in material_names:
-                        self.project.set_material_by_lines(line_id, None)
-
-            self.load_data_from_materials_library()
+        self.load_data_from_materials_library()
         
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

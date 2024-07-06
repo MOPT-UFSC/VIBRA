@@ -4,7 +4,8 @@ from dataclasses import dataclass
 
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-from vibra.project_file import ProjectFile
+from vibra.project_file import *
+
 
 DEFAULT_MATERIAL = Material(
     name="Steel",
@@ -304,7 +305,19 @@ class ModelProperties:
             so we need to convert it to a string like:
             "property id" = value
             """
-            return {f"{p} {i}": v for (p, i), v in prop.items()}
+            output = dict()
+            for (property, tag), data in prop.items():
+
+                key = f"{property} {tag}"
+
+                if property in ["fluid", "material"]:
+                    if isinstance(data, (Fluid, Material)):
+                        output[key] = data.identifier
+                else:
+                    output[key] = data
+
+            return output
+            # return {f"{p} {i}": v for (p, i), v in prop.items()}
 
         data = dict(
             # global_properties = normalize(self.global_properties),

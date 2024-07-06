@@ -72,7 +72,7 @@ class ViewerTabs(QTabWidget):
         nodes, face_elements, solid_elements = self.main_window.project.model.mesh.get_mesh_info()
         self.main_window.update_mesh_information(nodes, face_elements, solid_elements)
 
-    def show_acoustic_harmonic_analysis(self):
+    def show_acoustic_modal_analysis(self):
         if self.currentIndex() != 3:
             self.setTabVisible(3, True)
             self.acoustic_modal_analysis.update_frequencies()

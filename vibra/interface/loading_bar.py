@@ -1,16 +1,11 @@
+from PyQt5.QtWidgets import QApplication, QLabel, QProgressBar, QVBoxLayout, QWidget
+from PyQt5.QtCore import Qt
+
+from vibra import app
+from vibra.utils.progress_status import ProgressStatus
+
 import logging
 from time import sleep
-
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (
-    QApplication,
-    QLabel,
-    QProgressBar,
-    QVBoxLayout,
-    QWidget,
-)
-
-from vibra.utils.progress_status import ProgressStatus
 
 
 class ProgressBarLogUpdater(logging.Handler):
@@ -77,6 +72,8 @@ class LoadingWindow(QWidget):
     def configure_window(self):
         self.setWindowTitle("Loading")
         self.setGeometry(200, 200, 400, 150)
+        self.setWindowIcon(app().main_window.vibra_icon)
+        self.setWindowTitle("Vibra")
 
         self.setWindowFlags(
             Qt.Window | Qt.CustomizeWindowHint | Qt.WindowTitleHint | Qt.WindowStaysOnTopHint
