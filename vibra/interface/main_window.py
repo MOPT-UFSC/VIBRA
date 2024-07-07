@@ -30,7 +30,7 @@ from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_tabs import ViewerTabs
 from vibra.interface.formatters.icons import *
 from vibra.project import Project
-from vibra.file.vibra_file_io import VibraFileIO
+from vibra.file.project_file_io import ProjectFileIO
 
 
 class MainWindow(QMainWindow):
@@ -46,6 +46,7 @@ class MainWindow(QMainWindow):
     def _initialize(self):
         self.project_path = ""    
         self.dialog = None
+        self.geometry_file_paths = list()
 
     def _define_qt_variables(self):
         pass
@@ -257,16 +258,15 @@ class MainWindow(QMainWindow):
             return
         
         self.project = Project()
-        self.file = VibraFileIO(self.project_path, override=False)
-
+        self.file = ProjectFileIO(self.project_path, override=False)
         self.open_project()
 
     def import_geometry_dialog(self):
-        self.geometry_path, check = QFileDialog.getOpenFileName(
-                                                                self,
-                                                                "Select Geometry",
-                                                                filter="Geometry Files (*.stp *.step *.igs *.iges)",
-                                                                )
+        geometry_path, check = QFileDialog.getOpenFileName(
+                                                            self,
+                                                            "Select Geometry",
+                                                            filter="Geometry Files (*.stp *.step *.igs *.iges)",
+                                                            )
 
         if not check:
             return
@@ -274,13 +274,11 @@ class MainWindow(QMainWindow):
         self.project = Project()
         self.create_temporary_vibra_folder()
 
-        # self.vibra_file = Filebox(self.project_path)
-        self.file = VibraFileIO(self.project_path)
-        self.file.write_geometry_in_file(self.geometry_path)
-        self.file.read_geometry_from_file()
-        print(self.file.geometry_file_paths)
+        self.file = ProjectFileIO(self.project_path)
+        self.file.write_geometry_in_file(geometry_path)
+        self.geometry_file_paths = self.file.read_geometry_from_file()
 
-        self.import_geometry(self.geometry_path)
+        self.import_geometry(self.geometry_file_paths)
 
     def save_project_as(self, path):
         path = Path(path)
@@ -300,10 +298,10 @@ class MainWindow(QMainWindow):
         self.viewer_tabs.show_geometry()
         self.viewer_tabs.show_mesh()
 
-    def import_geometry(self, path):
+    def import_geometry(self, paths):
         # Slow function running with loading bar
         import_geometry = load_function(self.project.import_geometry, self)
-        import_geometry(path)
+        import_geometry(paths)
 
         self.viewer_tabs.reset_tab_visibility()
         self.viewer_tabs.show_geometry()

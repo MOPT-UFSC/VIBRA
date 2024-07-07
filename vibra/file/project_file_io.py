@@ -7,7 +7,7 @@ from vibra.project_file import *
 
 from fileboxes import Filebox
 
-class VibraFileIO:
+class ProjectFileIO:
     
     def __init__(self, path, override=False):
         super().__init__()
@@ -17,11 +17,13 @@ class VibraFileIO:
         self.model = app().main_window.project.model
         self.properties = self.model.properties
 
-        user_path = os.path.expanduser("~")
-        self.project_folder_path = Path(user_path) / "temp_vibra"
-        self.geometry_file_paths = list()
+        self._initialize()
         self._set_default_filenames()
         # self._set_default_foldernames()
+
+    def _initialize(self):
+        user_path = os.path.expanduser("~")
+        self.project_folder_path = Path(user_path) / "temp_vibra"
 
     def _set_default_filenames(self):
         self.project_setup_filename = "project_setup.json"
@@ -34,7 +36,7 @@ class VibraFileIO:
 
         basename = os.path.basename(path)
         internal_path = f"geometry_files/{basename}"
-        self.vibra_file.write_from_path(internal_path, path)
+        self.vibra_file.write_from_path(internal_path, path, encoding="iso-8859-1")
 
         try:
 
@@ -57,19 +59,76 @@ class VibraFileIO:
             print(str(error_log))
 
     def read_geometry_from_file(self):
-        self.geometry_file_paths.clear()
-        self.project_setup = self.vibra_file.read(self.project_setup_filename)
-        if "geometry_filenames" in self.project_setup.keys():
-            for geom_name in self.project_setup["geometry_filenames"]:
+
+        geometry_file_paths = list()
+        project_setup = self.vibra_file.read(self.project_setup_filename)
+
+        if "geometry_filenames" in project_setup.keys():
+            for geom_name in project_setup["geometry_filenames"]:
 
                 dirname = self.project_folder_path / "geometry" 
                 temp_path = dirname / geom_name
+                internal_path = f"geometry_files/{geom_name}"
 
                 if not os.path.exists(dirname):
                     os.mkdir(dirname)
 
-                self.vibra_file.read_to_path(geom_name, temp_path)
-                self.geometry_file_paths.append(temp_path)
+                self.vibra_file.read_to_path(internal_path, temp_path, encoding="iso-8859-1")
+                geometry_file_paths.append(str(temp_path))
+
+        return geometry_file_paths
+
+    def write_mesh_setup_in_file(self, mesh_setup):
+
+        project_setup = self.vibra_file.read(self.project_setup_filename)
+        if project_setup is None:
+            return   
+
+        project_setup["mesh_setup"] = mesh_setup           
+        self.vibra_file.write(self.project_setup_filename, project_setup)
+    
+    def read_mesh_setup_from_file(self):
+
+        mesh_setup = None
+        project_setup = self.vibra_file.read(self.project_setup_filename)
+
+        if project_setup is None:
+            return
+
+        if "mesh_setup" in project_setup.keys():
+            mesh_setup = project_setup["mesh_setup"]
+
+        return mesh_setup
+
+    def write_analysis_setup_in_file(self, analysis_setup):
+
+        project_setup = self.vibra_file.read(self.project_setup_filename)
+        if project_setup is None:
+            return   
+
+        aux = dict()
+        for key, data in analysis_setup.items():
+            if key == "frequencies":
+                continue
+            # if isinstance(data, np.ndarray):
+            #     data = list(data)
+            aux[key] = data
+
+        project_setup["analysis_setup"] = aux         
+        self.vibra_file.write(self.project_setup_filename, project_setup)
+
+    def read_analysis_setup_from_file(self):
+
+        analysis_setup = None
+        project_setup = self.vibra_file.read(self.project_setup_filename)
+
+        if project_setup is None:
+            return
+
+        if "analysis_setup" in project_setup.keys():
+            analysis_setup = project_setup["analysis_setup"]
+
+        return analysis_setup
 
     def write_model_setup_in_file(self, project_setup : dict):
         self.vibra_file.write(self.project_setup_filename, project_setup)

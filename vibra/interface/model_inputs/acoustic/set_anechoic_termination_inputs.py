@@ -183,7 +183,7 @@ class SetAnechoicTerminationInputs(QDialog):
         for face_id in self.typed_ids:
             self.project.set_specific_impedance(data, face_id)
 
-        self.file.write_model_properties_in_file()
+        app().main_window.file.write_model_properties_in_file()
 
         print(f"[Set anechoic termination] - defined at surface(s) {self.typed_ids}")
         self.close()
@@ -238,7 +238,7 @@ class SetAnechoicTerminationInputs(QDialog):
                 for face_id in surface_ids:
                     self.properties._remove_surface_property("specific_impedance", face_id)
 
-                self.file.write_model_properties_in_file()
+                app().main_window.file.write_model_properties_in_file()
                 self.close()
 
     def update(self):

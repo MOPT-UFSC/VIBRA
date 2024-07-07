@@ -40,16 +40,16 @@ class Model:
         self.solid_structural_element = None
         self.surface_structural_element = None
 
+        self.geometry_paths = list()
+
         self.lrf_eq_data = dict()
         self.lrf_properties = dict()
         self.porous_material_properties = dict()
 
-        self.geometry_path = Path("")
-
         self.properties = ModelProperties()
 
-    def set_geometry_path(self, path):
-        self.geometry_path = Path(path)
+    def set_geometry_path(self, paths : list):
+        self.geometry_paths = paths
 
     def set_properties(self, properties):
         self.properties = properties
@@ -57,12 +57,12 @@ class Model:
     def set_mesh_setup(self, mesh_setup):
         self.mesh_setup = mesh_setup
 
-    def process_visual_geometry_mesh(self):
+    def process_visual_geometry_mesh(self, paths):
 
         try:
-            app().main_window.
-            self.mesh = Mesh.from_cad(self.fi.geometry_path, dimension=2, size_factor=0.15)
-            # self.mesh.get_model_areas(self.geometry_path)
+
+            self.mesh = Mesh.from_cad(paths, dimension=2, size_factor=0.15)
+            # self.mesh.get_model_areas(self.geometry_paths)
             self.generated_mesh = False
 
         except Exception as error_log:
@@ -72,7 +72,7 @@ class Model:
 
 
     def process_mesh(self):
-        if not self.geometry_path.exists():
+        if len(self.geometry_paths) == 0:
             message = "Geometry not defined"
             context = ( "The geometry file has not been defined yet."
                         "You should to import a supported CAD file format to proceed."
@@ -86,13 +86,10 @@ class Model:
                         "You should to configure the mesher to proceed." )
             raise IncompleteSetupError(message, context=context)
 
-        if self.mesh is None:
-            self.mesh = Mesh.from_cad(self.geometry_path)
+        # if self.mesh is None:
+        #     self.mesh = Mesh.from_cad(self.geometry_paths)
 
-        # self.geometry_path = Path("data/examples/script_files/script_hex_elements.txt")
-        # self.mesh = Mesh.from_cad(self.geometry_path, gmsh_gui=True, **self.mesh_setup)
-
-        self.mesh.update_parameters(**self.mesh_setup)
+        self.mesh.load_cad(self.geometry_paths, **self.mesh_setup)
         self.generated_mesh = True
 
         logging.info("Processing Mesh..." + ProgressStatus(90, 100))

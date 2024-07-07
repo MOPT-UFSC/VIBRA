@@ -92,7 +92,6 @@ class Mesh:
         Then you can create other constructor like this and avoid a
         lot of confusing if statements in the __init__ method.
         """
-        path = Path(path)
 
         obj = Mesh()
         obj.load_cad(
@@ -109,37 +108,29 @@ class Mesh:
                     mesh_connection = mesh_connection,
                     )
 
-        # # saves the data to edit mesh parameters later
-        # with open(path, "r", encoding="iso-8859-1") as file:
-        #     obj.geometry_setup = GeometrySetup(
-        #         file.read(),
-        #         suffix=path.suffix,
-        #     )
-
         return obj
 
-    def update_parameters(self, *args, **kwargs):
-        self.load_cad_string(
-            self.geometry_setup.data,
-            self.geometry_setup.suffix,
-            *args,
-            **kwargs,
-        )
+    # def update_parameters(self, paths, *args, **kwargs):
+    #     self.load_cad_string(
+    #         paths,
+    #         *args,
+    #         **kwargs,
+    #     )
 
-    def load_cad_string(self, string: str, suffix: str, *args, **kwargs):
-        # sadly in windows we cannot use the with statement
-        # that removes the files automatically =(
-        tmp = NamedTemporaryFile(suffix=suffix, delete=False)
-        tmp_path = Path(tmp.name)
+    # def load_cad_string(self, string: str, suffix: str, *args, **kwargs):
+    #     # sadly in windows we cannot use the with statement
+    #     # that removes the files automatically =(
+    #     tmp = NamedTemporaryFile(suffix=suffix, delete=False)
+    #     tmp_path = Path(tmp.name)
 
-        with open(tmp_path, "w") as file:
-            file.write(string)
+    #     with open(tmp_path, "w") as file:
+    #         file.write(string)
 
-        self.load_cad(tmp.name, *args, **kwargs)
-        tmp.close()
-        tmp_path.unlink(missing_ok=True)  # deletes the file
+    #     self.load_cad(tmp.name, *args, **kwargs)
+    #     tmp.close()
+    #     tmp_path.unlink(missing_ok=True)  # deletes the file
 
-        self.geometry_setup = GeometrySetup(string, suffix)
+    #     self.geometry_setup = GeometrySetup(string, suffix)
 
     def load_cad(
                     self,
@@ -170,10 +161,8 @@ class Mesh:
                                 )
 
         self.mesh_connection = mesh_connection
-        # t0 = time()
-        path = Path(path)
+
         gmsh.initialize("", False)
-        logging.info(f"Generating mesh from {path}")
 
         logging.info("Configuring Mesh" + ProgressStatus(5, 100))
         self._configure_mesh(   element_type,
@@ -186,9 +175,14 @@ class Mesh:
                             )
 
         logging.info("Loading Geometry" + ProgressStatus(10, 100))
+        if isinstance(paths, str):
+            paths = [paths]
+
+        # t0 = time()
         for path in paths:
             gmsh.merge(str(path))
-        # gmsh.open(str(path))
+            # gmsh.open(str(path))
+
         gmsh.model.occ.synchronize()
 
         self.dimension = min(dimension, gmsh.model.getDimension())

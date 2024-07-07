@@ -32,7 +32,7 @@ class Project:
         self.thumbnail = None
         #
         self.save_path = None
-        self.geometry_path = ""
+
         self.fluid_list_path = ""
         self.material_list_path = ""
         self.imported_table_state = False
@@ -108,11 +108,10 @@ class Project:
     def set_material_list_path(self, path):
         self.material_list_path = path
 
-    def import_geometry(self, path):
-        self.geometry_path = Path(path)
-        self.model.set_geometry_path(Path(path))
-        logging.info(f"Importing geometry at {path}")
-        self.model.process_visual_geometry_mesh()
+    def import_geometry(self, paths):
+        self.model.set_geometry_path(paths)
+        logging.info(f"Importing geometry file...")
+        self.model.process_visual_geometry_mesh(paths)
 
     def set_fluid(self, fluid, **kwargs):
         self.model.set_fluid(fluid, **kwargs)

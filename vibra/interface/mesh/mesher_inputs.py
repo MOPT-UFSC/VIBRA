@@ -138,8 +138,14 @@ class MesherInputs(QDialog):
         if self.check_mesh_inputs():
             return
 
+        condition = self.lineEdit_faces_list.text() == "" and self.lineEdit_refining_size.text() == ""
+        if condition or self.close_after_generate:
+            self.close()
+
         self.main_window.project.reset_solutions()
         self.main_window.project.set_mesh_setup(self.mesh_setup)
+        app().main_window.file.write_mesh_setup_in_file(self.file_mesh_setup)
+
         generate_mesh = load_function(self.main_window.project.generate_mesh, self.main_window)
         generate_mesh()
 
@@ -168,9 +174,6 @@ class MesherInputs(QDialog):
 
         self.complete = True
 
-        condition = self.lineEdit_faces_list.text() == "" and self.lineEdit_refining_size.text() == ""
-        if condition or self.close_after_generate:
-            self.close()
 
     def trash_button_callback(self):
         current_row = self.tableWidget_refining_mesh_data.currentRow()
@@ -233,6 +236,17 @@ class MesherInputs(QDialog):
                             "mesh_refinement_parameters" : self.get_inputs_table(),
                             "mesh_connection" : connected_mesh
                             }
+        
+        self.file_mesh_setup = { 
+                                "element_type" : self.comboBox_element_type.currentIndex(),
+                                "shape_function" : self.comboBox_shape_function.currentIndex(),
+                                "geometry_tolerance" : geometry_tolerance,
+                                "size_factor" : 0,
+                                "minimum_element_size" : min_factor*maximum_element_size,
+                                "maximum_element_size" : maximum_element_size,
+                                "mesh_refinement_parameters" : list(),
+                                "mesh_connection" : connected_mesh
+                                }
 
     def check_inputs(self, lineEdit, label, only_positive=True, zero_included=False, _float=True):
 
