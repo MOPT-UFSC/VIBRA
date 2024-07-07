@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 from time import sleep
 
+from vibra import app
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.model import Model

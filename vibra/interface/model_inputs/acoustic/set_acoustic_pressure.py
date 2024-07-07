@@ -227,7 +227,7 @@ class AcousticPressureInput(QDialog):
             for _id in self.typed_ids:
                 self.project.set_acoustic_pressure(data, _id)
 
-            self.properties.export_model_properties()
+            app().main_window.file.write_model_properties_in_file()
 
             print(f"[Set acoustic pressure] - defined at surface(s) {self.typed_ids}")
             # TODO: remove existing tables and update the render
@@ -367,7 +367,7 @@ class AcousticPressureInput(QDialog):
 
                     self.project.set_acoustic_pressure(data, _id)
 
-            self.properties.export_model_properties()
+            app().main_window.file.write_model_properties_in_file()
 
             self.process_table_file_removal(list_table_names)
             print(f"[Set acoustic pressure] - defined at surface(s) {self.typed_ids}")
@@ -452,7 +452,7 @@ class AcousticPressureInput(QDialog):
                                 _list_table_names.append(table_name)
 
                 self.properties._reset_property("acoustic_pressure")
-                self.properties.export_model_properties()
+                app().main_window.file.write_model_properties_in_file()
 
                 # TODO: remove imported tables
                 self.process_table_file_removal(_list_table_names)

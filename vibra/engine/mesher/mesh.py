@@ -69,7 +69,7 @@ class Mesh:
     @classmethod
     def from_cad(
         cls,
-        path: (str | Path),
+        paths: list,
         *,
         minimum_element_size: float = 30.0,
         maximum_element_size: float = 30.0,
@@ -96,7 +96,7 @@ class Mesh:
 
         obj = Mesh()
         obj.load_cad(
-                    path,
+                    paths,
                     minimum_element_size=minimum_element_size,
                     maximum_element_size=maximum_element_size,
                     element_type=element_type,
@@ -109,12 +109,12 @@ class Mesh:
                     mesh_connection = mesh_connection,
                     )
 
-        # saves the data to edit mesh parameters later
-        with open(path, "r", encoding="iso-8859-1") as file:
-            obj.geometry_setup = GeometrySetup(
-                file.read(),
-                suffix=path.suffix,
-            )
+        # # saves the data to edit mesh parameters later
+        # with open(path, "r", encoding="iso-8859-1") as file:
+        #     obj.geometry_setup = GeometrySetup(
+        #         file.read(),
+        #         suffix=path.suffix,
+        #     )
 
         return obj
 
@@ -143,7 +143,7 @@ class Mesh:
 
     def load_cad(
                     self,
-                    path: (str | Path),
+                    paths: (list | Path),
                     *,
                     minimum_element_size: float = 30.0,
                     maximum_element_size: float = 30.0,
@@ -186,7 +186,8 @@ class Mesh:
                             )
 
         logging.info("Loading Geometry" + ProgressStatus(10, 100))
-        gmsh.merge(str(path))
+        for path in paths:
+            gmsh.merge(str(path))
         # gmsh.open(str(path))
         gmsh.model.occ.synchronize()
 

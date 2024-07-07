@@ -6,11 +6,9 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 from vibra import app
-from vibra.errors import IncompleteMeshSetup, IncompleteSetupError
 from vibra.interface.analysis.analysis_setup_input import AnalysisSetupInput
 from vibra.interface.analysis.analysis_type_input import AnalysisTypeInput
-from vibra.interface.exception_message import ErrorMessage
-from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.structural.material.set_material_input import SetMaterialInput
 from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input import SetFluidInput
 from vibra.interface.mesh.mesher_inputs import MesherInputs
 #
@@ -25,7 +23,6 @@ from vibra.interface.model_inputs.acoustic.set_lrf_eq_model_inputs import LowRed
 from vibra.interface.model_inputs.acoustic.set_porous_material_model import SetPorousMaterialModel
 #
 from vibra.interface.model_inputs.structural.boundary_condition_inputs import BoundaryConditionInputs
-from vibra.interface.model_inputs.structural.material.set_material_input import SetMaterialInput
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_input import PlotAcousticFrequencyResponseInput
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_input import PlotAcousticFrequencyResponseFunctionInput
 from vibra.interface.plots.acoustic.plot_transmission_loss_input import PlotTransmissionLossInput
@@ -33,6 +30,9 @@ from vibra.interface.plots.acoustic.plot_transmission_loss_input import PlotTran
 from vibra.interface.process_analysis import ProcessAnalysis
 
 from vibra.interface.loading_bar import load_function
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.errors import IncompleteMeshSetup, IncompleteSetupError
+from vibra.interface.exception_message import ErrorMessage
 
 
 class BorderItemDelegate(QStyledItemDelegate):

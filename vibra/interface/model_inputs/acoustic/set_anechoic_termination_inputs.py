@@ -25,9 +25,9 @@ class SetAnechoicTerminationInputs(QDialog):
         uic.loadUi(ui_path, self)
 
         self.main_window = app().main_window
-        self.project = self.main_window.project
-        self.model = self.project.model
-        self.properties = self.model.properties
+        self.project = app().main_window.project
+        self.model = app().main_window.project.model
+        self.properties = app().main_window.project.model.properties
 
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
@@ -183,7 +183,7 @@ class SetAnechoicTerminationInputs(QDialog):
         for face_id in self.typed_ids:
             self.project.set_specific_impedance(data, face_id)
 
-        self.properties.export_model_properties()
+        self.file.write_model_properties_in_file()
 
         print(f"[Set anechoic termination] - defined at surface(s) {self.typed_ids}")
         self.close()
@@ -238,7 +238,7 @@ class SetAnechoicTerminationInputs(QDialog):
                 for face_id in surface_ids:
                     self.properties._remove_surface_property("specific_impedance", face_id)
 
-                self.properties.export_model_properties()
+                self.file.write_model_properties_in_file()
                 self.close()
 
     def update(self):

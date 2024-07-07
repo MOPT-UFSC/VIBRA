@@ -249,7 +249,7 @@ class SetFluidInput(QDialog):
                 print("[Set Fluid] - {} defined at all bodies.".format(selected_fluid.name))
 
             # self.actions_to_finalize()
-            self.properties.export_model_properties()
+            app().main_window.file.write_model_properties_in_file()
             self.complete = True
             self.close()
 

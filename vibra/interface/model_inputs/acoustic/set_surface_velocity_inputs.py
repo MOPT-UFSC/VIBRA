@@ -220,7 +220,7 @@ class SurfaceVelocityInput(QDialog):
             for _id in self.typed_ids:
                 self.project.set_surface_velocity(data, _id)
 
-            self.properties.export_model_properties()
+            app().main_window.file.write_model_properties_in_file()
 
             print(f"[Set surface Velocity] - defined at surface(s) {self.typed_ids}")
             # TODO: remove existing tables and update the render
@@ -358,7 +358,7 @@ class SurfaceVelocityInput(QDialog):
 
                     self.project.set_surface_velocity(data, _id)
 
-            self.properties.export_model_properties()
+            app().main_window.file.write_model_properties_in_file()
 
             self.process_table_file_removal(list_table_names)
             print(f"[Set surface Velocity] - defined at surface(s) {self.typed_ids}")
@@ -443,7 +443,7 @@ class SurfaceVelocityInput(QDialog):
                                 _list_table_names.append(table_name)
 
                 self.properties._reset_property("surface_velocity")
-                self.properties.export_model_properties()
+                app().main_window.file.write_model_properties_in_file()
 
                 # TODO: remove imported tables
                 self.process_table_file_removal(_list_table_names)

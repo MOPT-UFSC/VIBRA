@@ -39,6 +39,7 @@ class MesherInputs(QDialog):
 
         ConfigWidgetAppearance(self, tool_tip=True)
 
+        self._load_current_mesh_setup()
         self.exec()
 
     def _initialize(self):
@@ -60,7 +61,7 @@ class MesherInputs(QDialog):
         self.comboBox_shape_function : QComboBox
 
         # QDoubleSpinBox
-        self.doubleSpinBox_maximum_element_size_factor : QDoubleSpinBox
+        self.doubleSpinBox_maximum_element_size : QDoubleSpinBox
         self.doubleSpinBox_minimum_element_size_factor : QDoubleSpinBox
 
         # QLineEdit
@@ -92,6 +93,46 @@ class MesherInputs(QDialog):
         self.pushButton_delete.clicked.connect(self.trash_button_callback)
         self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
 
+    def _load_current_mesh_setup(self):
+        mesh_setup = app().main_window.project.model.mesh_setup
+        if mesh_setup:
+            try:
+                element_type = mesh_setup["element_type"]
+                geometry_tolerance = mesh_setup["geometry_tolerance"]
+                minimum_element_size = mesh_setup["minimum_element_size"]
+                maximum_element_size = mesh_setup["maximum_element_size"]
+                size_factor = minimum_element_size / maximum_element_size
+                # TODO: finalize in future updates
+                # mesh_refinement_parameters = mesh_setup["mesh_refinement_parameters"]
+                mesh_connection = mesh_setup["mesh_connection"]
+
+                self.update_element_type(element_type)
+                
+                self.doubleSpinBox_maximum_element_size.setValue(maximum_element_size)
+                self.doubleSpinBox_minimum_element_size_factor.setValue(size_factor)
+                self.lineEdit_geometry_tolerance.setText(str(geometry_tolerance))
+                self.checkBox_mesh_connection.setChecked(mesh_connection)
+
+            except Exception as error_log:
+                print(str(error_log))
+                pass
+
+    def update_element_type(self, element_type):
+        if element_type == TETRAHEDRON_4:
+            self.comboBox_element_type.setCurrentIndex(0)
+            self.comboBox_shape_function.setCurrentIndex(0)
+        elif element_type == TETRAHEDRON_10:
+            self.comboBox_element_type.setCurrentIndex(0)
+            self.comboBox_shape_function.setCurrentIndex(1)
+        elif element_type == HEXAHEDRON_8:
+            self.comboBox_element_type.setCurrentIndex(1)
+            self.comboBox_shape_function.setCurrentIndex(0)
+        elif element_type == HEXAHEDRON_20:
+            self.comboBox_element_type.setCurrentIndex(1)
+            self.comboBox_shape_function.setCurrentIndex(1)
+        else:
+            NotImplementedError()
+
     def generate_mesh_callback(self):
 
         if self.check_mesh_inputs():
@@ -107,24 +148,23 @@ class MesherInputs(QDialog):
         self.main_window.viewer_tabs.update_plots()
 
 
-        # TODO: Grande, deixei este "print" para te auxiliar no debug e para fazer alguns testes que preciso
-        # na validação do modelo
-        try:
+        # TODO: Remove this as soon as possible
+        # try:
 
-            # surf_tag = 5
-            vol_tag = 1
+        #     # surf_tag = 5
+        #     vol_tag = 1
 
-            app().main_window.viewer_tabs.show_mesh()
-            mesh_widget = app().main_window.viewer_tabs.mesh_widget
-            # surface_elements = app().main_window.project.model.mesh.elements_from_surface[surf_tag]
-            volume_elements = app().main_window.project.model.mesh.elements_from_volume[vol_tag]
+        #     app().main_window.viewer_tabs.show_mesh()
+        #     mesh_widget = app().main_window.viewer_tabs.mesh_widget
+        #     # surface_elements = app().main_window.project.model.mesh.elements_from_surface[surf_tag]
+        #     volume_elements = app().main_window.project.model.mesh.elements_from_volume[vol_tag]
 
-            # mesh_widget.select_multiple_nodes(nodes)
-            # mesh_widget.select_multiple_faces(surface_elements)
-            # mesh_widget.select_multiple_volumes(volume_elements)
+        #     # mesh_widget.select_multiple_nodes(nodes)
+        #     # mesh_widget.select_multiple_faces(surface_elements)
+        #     # mesh_widget.select_multiple_volumes(volume_elements)
 
-        except:
-            pass
+        # except:
+        #     pass
 
         self.complete = True
 
@@ -160,7 +200,7 @@ class MesherInputs(QDialog):
         
     def check_mesh_inputs(self):
 
-        maximum_element_size = self.doubleSpinBox_maximum_element_size_factor.value()
+        maximum_element_size = self.doubleSpinBox_maximum_element_size.value()
         min_factor = self.doubleSpinBox_minimum_element_size_factor.value()
 
         lineEdit = self.lineEdit_geometry_tolerance

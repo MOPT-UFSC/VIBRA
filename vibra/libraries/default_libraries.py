@@ -66,8 +66,7 @@ def default_material_library():
         "Thermal expansion coefficient": 1.9e-5,
     }
 
-    filename = app().main_window.project.material_filename
-    app().main_window.vibra_file.write(filename, config)
+    app().main_window.file.write_fluid_library_in_file(config)
 
 
 def default_fluid_library():
@@ -170,5 +169,4 @@ def default_fluid_library():
     # with open(path, "w") as config_file:
     #     config.write(config_file)
 
-    filename = app().main_window.project.fluid_filename
-    app().main_window.vibra_file.write(filename, config)
+    app().main_window.file.write_fluid_library_in_file(config)

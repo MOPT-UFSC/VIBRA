@@ -30,17 +30,22 @@ from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_tabs import ViewerTabs
 from vibra.interface.formatters.icons import *
 from vibra.project import Project
+from vibra.file.vibra_file_io import VibraFileIO
 
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
 
-        self.project_path = ""        
-        self.dialog = None
         self.project = Project()
         self.user_config = UserConfig.load()
         self.status_bar = StatusBar(self)
+
+        self._initialize()
+
+    def _initialize(self):
+        self.project_path = ""    
+        self.dialog = None
 
     def _define_qt_variables(self):
         pass
@@ -252,7 +257,7 @@ class MainWindow(QMainWindow):
             return
         
         self.project = Project()
-        self.vibra_file = Filebox(self.project_path, override=False)
+        self.file = VibraFileIO(self.project_path, override=False)
 
         self.open_project()
 
@@ -268,11 +273,13 @@ class MainWindow(QMainWindow):
 
         self.project = Project()
         self.create_temporary_vibra_folder()
-        self.vibra_file = Filebox(self.project_path)
 
-        basename = os.path.basename(self.geometry_path)
-        internal_path = f"geometry_files/{basename}"
-        self.vibra_file.write_from_path(internal_path, self.geometry_path)
+        # self.vibra_file = Filebox(self.project_path)
+        self.file = VibraFileIO(self.project_path)
+        self.file.write_geometry_in_file(self.geometry_path)
+        self.file.read_geometry_from_file()
+        print(self.file.geometry_file_paths)
+
         self.import_geometry(self.geometry_path)
 
     def save_project_as(self, path):

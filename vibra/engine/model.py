@@ -8,7 +8,6 @@ from scipy.special import jv
 
 from vibra import app
 from vibra.engine.porous_materials.porous_materials_models import PorousMaterialModels
-from vibra.engine.mesher.geometry_setup import GeometrySetup
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.errors import IncompleteSetupError
@@ -61,7 +60,8 @@ class Model:
     def process_visual_geometry_mesh(self):
 
         try:
-            self.mesh = Mesh.from_cad(self.geometry_path, dimension=2, size_factor=0.15)
+            app().main_window.
+            self.mesh = Mesh.from_cad(self.fi.geometry_path, dimension=2, size_factor=0.15)
             # self.mesh.get_model_areas(self.geometry_path)
             self.generated_mesh = False
 

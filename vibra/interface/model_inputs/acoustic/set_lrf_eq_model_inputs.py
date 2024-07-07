@@ -334,7 +334,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             for _id in self.surface_ids:
                 self.project.set_lrf_eq_model_data(data, group=group_id)
         
-        self.properties.export_model_properties()
+        app().main_window.file.write_model_properties_in_file()
         
         self.load_lrf_data()
         # self.close()
@@ -478,7 +478,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
                 if len(group_ids) + len(volume_ids) > 0:
                     self.properties._reset_property("lrf_eq_model")
 
-                self.properties.export_model_properties()
+                app().main_window.file.write_model_properties_in_file()
 
                 title = "Model resetting complete"
                 message = "All LRF equivalent model effects active on "

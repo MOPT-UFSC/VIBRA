@@ -104,7 +104,7 @@
           <number>6</number>
          </property>
          <item row="1" column="0">
-          <widget class="QDoubleSpinBox" name="doubleSpinBox_maximum_element_size_factor">
+          <widget class="QDoubleSpinBox" name="doubleSpinBox_maximum_element_size">
            <property name="maximumSize">
             <size>
              <width>16777215</width>
