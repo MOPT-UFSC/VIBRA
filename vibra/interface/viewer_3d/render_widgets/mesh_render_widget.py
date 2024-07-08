@@ -1,16 +1,17 @@
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
+import vtk
+
+from molde.render_widgets import CommonRenderWidget
 
 from vibra.interface.tabs.mesh_info_bar import MeshInfoBar
 from vibra.interface.viewer_3d.actors.nodes_actor import NodesActor
 from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
 from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
-from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
-    CommonRenderWidget,
-)
 from vibra.utils.interface_functions import get_main_window
 from vibra.interface.viewer_3d.actors.selection_spheres import SelectionSpheres
+from vibra import app
 
 SHOW_POINTS = 0
 SHOW_LINES = 1
@@ -23,6 +24,10 @@ class MeshRenderWidget(CommonRenderWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.mouse_click = (0, 0)
+        self.left_clicked.connect(self.click_callback)
+        self.left_released.connect(self.selection_callback)
+        app().main_window.selection_changed.connect(self.update_selection)
 
         self.main_window = get_main_window()
         self.view_mode = SHOW_FACES
@@ -149,6 +154,74 @@ class MeshRenderWidget(CommonRenderWidget):
             self.edges_actor.GetProperty().SetColor(light_color)
             self.faces_actor.GetProperty().SetColor(light_color)
             self.solids_actor.GetProperty().SetColor(light_color)
+
+    def selection_callback(self, x, y):
+        if not self._actors_exists():
+            return
+
+        picker = vtk.vtkCellPicker()
+        picker.Pick(x, y, 0, self.renderer)
+        clicked_cell = picker.GetCellId()
+        clicked_actor = picker.GetActor()
+        mesh = app().main_window.project.model.mesh
+
+        modifiers = QApplication.keyboardModifiers()
+        ctrl_pressed = modifiers & Qt.ControlModifier
+        shift_pressed = modifiers & Qt.ShiftModifier
+        alt_pressed = modifiers & Qt.AltModifier
+
+        if clicked_actor == self.nodes_actor:
+            app().main_window.set_mesh_selection(
+                nodes=[clicked_cell],
+                join=ctrl_pressed, remove=alt_pressed,
+            )
+
+        elif clicked_actor == self.edges_actor:
+            line_entity = mesh.lines_connectivity[clicked_cell][1]
+            app().main_window.set_mesh_selection(
+                nodes=[clicked_cell],
+                join=ctrl_pressed, remove=alt_pressed,
+            )
+
+        elif (clicked_actor == self.faces_actor):
+            face_entity = mesh.faces_connectivity[clicked_cell][1]
+            app().main_window.set_mesh_selection(
+                faces=[clicked_cell],
+                join=ctrl_pressed, remove=alt_pressed,
+            )
+
+        elif (clicked_actor == self.solids_actor) and shift_pressed:
+            face_entity = self.main_window.project.model.mesh.faces_connectivity[clicked_cell][1]
+            for (volume, surfaces) in self.main_window.project.model.mesh.surfaces_from_volumes.items():
+                if face_entity in surfaces:
+                    self.select_volume(volume, join=ctrl_pressed, remove=alt_pressed)
+                    break
+
+        else:
+            self.clear_selection()
+            self.selection_changed.emit(self.selected_points,
+                                        self.selected_lines,
+                                        self.selected_faces,
+                                        self.selected_volumes)
+    def update_selection(self):
+        '''
+        Update the visualization of selected data.
+        '''
+        if not self._actors_exists():
+            return
+
+        self.nodes_actor.clear_colors()
+        self.faces_actor.clear_colors()
+        self.solids_actor.clear_colors()
+
+        nodes = app().main_window.selected_element_nodes
+        faces = app().main_window.selected_element_faces
+        solids = app().main_window.selected_element_solids
+
+        self.nodes_actor.paint_cells([255, 0, 0], nodes)
+        self.faces_actor.paint_cells(self.selection_color, faces)
+        self.solids_actor.paint_cells(self.selection_color, solids)
+        self.update()
 
     def select_multiple_nodes(self, new_nodes, *, join=False, remove=False):
         if not self._actors_exists():

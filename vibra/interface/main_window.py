@@ -32,8 +32,19 @@ from vibra.project import Project
 
 
 class MainWindow(QMainWindow):
+    theme_changed = pyqtSignal(str)
+    visualization_changed = pyqtSignal()
+    selection_changed = pyqtSignal()
+
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
+
+        self.selected_element_nodes = set()
+        self.selected_element_faces = set()
+        self.selected_element_solids = set()
+        self.selected_entity_nodes = set()
+        self.selected_entity_faces = set()
+        self.selected_entity_solids = set()
         
         self.dialog = None
         self.project = Project()
@@ -49,6 +60,64 @@ class MainWindow(QMainWindow):
         self.clip_plane.value_changed.connect(self.slider_moved_callback)
         self.clip_plane.slider_released.connect(self.slider_released_callback)
         self.clip_plane.closed.connect(self.disable_cut)
+
+    def set_mesh_selection(self, *, nodes=None, faces=None, solids=None, join=False, remove=True):
+        if nodes is None:
+            nodes = set()
+
+        if faces is None:
+            faces = set()
+
+        if solids is None:
+            solids = set()
+
+        if join and remove:
+            self.selected_nodes ^= set(nodes)
+            self.selected_faces ^= set(faces)
+            self.selected_solids ^= set(solids)
+        elif join:
+            self.selected_nodes |= set(nodes)
+            self.selected_faces |= set(faces)
+            self.selected_solids |= set(solids)
+        elif remove:
+            self.selected_nodes -= set(nodes)
+            self.selected_faces -= set(faces)
+            self.selected_solids -= set(solids)
+        else:
+            self.selected_nodes = set(nodes)
+            self.selected_faces = set(faces)
+            self.selected_solids = set(solids)
+
+        self.selection_changed.emit()
+
+    def set_geometry_selection(self, *, nodes=None, faces=None, solids=None, join=False, remove=True):
+        if nodes is None:
+            nodes = set()
+
+        if faces is None:
+            faces = set()
+
+        if solids is None:
+            solids = set()
+
+        if join and remove:
+            self.selected_nodes ^= set(nodes)
+            self.selected_faces ^= set(faces)
+            self.selected_solids ^= set(solids)
+        elif join:
+            self.selected_nodes |= set(nodes)
+            self.selected_faces |= set(faces)
+            self.selected_solids |= set(solids)
+        elif remove:
+            self.selected_nodes -= set(nodes)
+            self.selected_faces -= set(faces)
+            self.selected_solids -= set(solids)
+        else:
+            self.selected_nodes = set(nodes)
+            self.selected_faces = set(faces)
+            self.selected_solids = set(solids)
+
+        self.selection_changed.emit()
 
     def selection_changed_callback(self, points, lines, faces, volumes):
         self.status_bar.set_selection(points, lines, faces, volumes)
