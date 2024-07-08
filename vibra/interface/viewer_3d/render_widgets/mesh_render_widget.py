@@ -9,6 +9,7 @@ from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
 from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
     CommonRenderWidget,
 )
+from vibra.interface.viewer_3d.actors.cutting_plane_actor import CuttingPlaneActor
 from vibra.utils.interface_functions import get_main_window
 from vibra.interface.viewer_3d.actors.selection_spheres import SelectionSpheres
 
@@ -80,6 +81,10 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor = EdgesActor(self.solids_actor.data)
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
         self.renderer.AddActor(self.edges_actor)
+
+        self.plane_actor = CuttingPlaneActor(self.solids_actor.GetBounds())
+        self.plane_actor.VisibilityOff()
+        self.renderer.AddActor(self.plane_actor)
 
         self.renderer.ResetCamera()
         self.show_faces()
@@ -200,3 +205,16 @@ class MeshRenderWidget(CommonRenderWidget):
 
     def _get_info_tab(self):
         pass
+
+    def start_cutting_mode(self):
+        if not self._actors_exists():
+            return
+        self.plane_actor.VisibilityOn()
+
+    def stop_cutting_mode(self):
+        if not self._actors_exists():
+            return
+        self.plane_actor.VisibilityOff()
+        self.solids_actor.disable_cut()
+        self.faces_actor.disable_cut()
+        self.edges_actor.disable_cut()
