@@ -44,6 +44,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.solids_actor = None
         self.edges_actor = None
         self.selection_spheres_actor = None
+        self.plane_actor = None
 
         self.create_axes()
         self.update_plot()
@@ -194,10 +195,12 @@ class MeshRenderWidget(CommonRenderWidget):
         self.renderer.RemoveActor(self.faces_actor)
         self.renderer.RemoveActor(self.solids_actor)
         self.renderer.RemoveActor(self.selection_spheres_actor)
+        self.renderer.RemoveActor(self.plane_actor)
         self.edges_actor = None
         self.faces_actor = None
         self.solids_actor = None
         self.selection_spheres_actor = None
+        self.plane_actor = None
 
     def _actors_exists(self):
         actors = [self.solids_actor, self.faces_actor, self.edges_actor, self.selection_spheres_actor]
@@ -210,6 +213,7 @@ class MeshRenderWidget(CommonRenderWidget):
         if not self._actors_exists():
             return
         self.plane_actor.VisibilityOn()
+        self.update()
 
     def stop_cutting_mode(self):
         if not self._actors_exists():
@@ -218,3 +222,25 @@ class MeshRenderWidget(CommonRenderWidget):
         self.solids_actor.disable_cut()
         self.faces_actor.disable_cut()
         self.edges_actor.disable_cut()
+        self.update()
+
+    def configure_cutting_plane(self, position, orientation):
+        if not self._actors_exists():
+            return
+
+        self.plane_actor.configure_cutting_plane(position, orientation)
+        self.update()
+
+    def apply_cutting_plane(self, position, orientation):
+        if not self._actors_exists():
+            return
+
+        x, y, z = self.plane_actor.calculate_x_y_z_position(position)
+        normal = self.plane_actor.calculate_normal_vector(orientation)
+        self.solids_actor.apply_cut((x, y, z), normal)
+        self.faces_actor.apply_cut((x, y, z), normal)
+
+        self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
+        self.plane_actor.GetProperty().SetOpacity(0.2)
+
+        self.update()

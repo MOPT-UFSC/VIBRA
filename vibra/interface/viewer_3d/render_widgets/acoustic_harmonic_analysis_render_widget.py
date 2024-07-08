@@ -14,8 +14,6 @@ from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
     CommonRenderWidget,
 )
 from vibra.utils.interface_functions import get_main_window
-from vibra.utils.math_functions import bounds_distance
-
 from vibra.utils.progress_status import ProgressStatus
 
 import logging
@@ -275,6 +273,7 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
         if not self._actors_exists():
             return
         self.plane_actor.VisibilityOn()
+        self.update()
 
     def stop_cutting_mode(self):
         if not self._actors_exists():
@@ -282,6 +281,7 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
         self.plane_actor.VisibilityOff()
         self.analysis_actor.disable_cut()
         self.edges_actor.disable_cut()
+        self.update()
 
     def configure_cutting_plane(self, position, orientation):
         if not self._actors_exists():
