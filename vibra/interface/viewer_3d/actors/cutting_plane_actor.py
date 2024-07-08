@@ -39,6 +39,7 @@ class CuttingPlaneActor(vtk.vtkActor):
     def configure_appearance(self):
         self.GetProperty().SetColor(0, 0.333, 0.867)
         self.GetProperty().LightingOff()
+        self.PickableOff()
 
     def configure_cutting_plane(self, position, orientation): 
         x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)

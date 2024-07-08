@@ -194,6 +194,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.renderer.RemoveActor(self.edges_actor)
         self.renderer.RemoveActor(self.faces_actor)
         self.renderer.RemoveActor(self.solids_actor)
+        self.renderer.RemoveActor(self.nodes_actor)
         self.renderer.RemoveActor(self.selection_spheres_actor)
         self.renderer.RemoveActor(self.plane_actor)
         self.edges_actor = None
@@ -201,6 +202,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.solids_actor = None
         self.selection_spheres_actor = None
         self.plane_actor = None
+        self.nodes_actor = None
 
     def _actors_exists(self):
         actors = [self.solids_actor, self.faces_actor, self.edges_actor, self.selection_spheres_actor]
@@ -222,6 +224,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.solids_actor.disable_cut()
         self.faces_actor.disable_cut()
         self.edges_actor.disable_cut()
+        self.nodes_actor.disable_cut()
         self.update()
 
     def configure_cutting_plane(self, position, orientation):
@@ -240,6 +243,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.solids_actor.apply_cut(xyz, normal)
         self.faces_actor.apply_cut(xyz, normal)
         self.edges_actor.apply_cut(xyz, normal)
+        self.nodes_actor.apply_cut(xyz, normal)
 
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
