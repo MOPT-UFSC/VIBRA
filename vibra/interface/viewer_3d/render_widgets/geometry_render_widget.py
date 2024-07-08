@@ -9,6 +9,7 @@ from vibra.interface.viewer_3d.actors.points_actor import PointsActor
 from vibra.interface.viewer_3d.interactor_styles.selection_interactor import SelectionInteractor
 from vibra.interface.viewer_3d.render_widgets.common_render_widget import CommonRenderWidget
 from vibra.interface.viewer_3d.actors.selection_spheres import SelectionSpheres
+from vibra.interface.viewer_3d.actors.cutting_plane_actor import CuttingPlaneActor
 
 
 SHOW_POINTS = 0
@@ -82,6 +83,10 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.faces_actor = FacesActor(mesh)
         self.renderer.AddActor(self.faces_actor)
+
+        self.plane_actor = CuttingPlaneActor(self.faces_actor.GetBounds())
+        self.plane_actor.VisibilityOff()
+        self.renderer.AddActor(self.plane_actor)
 
         self.renderer.ResetCamera()
         self.show_faces()
@@ -338,6 +343,43 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.selected_lines = set()
         self.selected_faces = set()
         self.selected_volumes = set()
+
+    def start_cutting_mode(self):
+        if not self._actors_exists():
+            return
+        self.plane_actor.VisibilityOn()
+        self.update()
+
+    def stop_cutting_mode(self):
+        if not self._actors_exists():
+            return
+        self.plane_actor.VisibilityOff()
+        self.points_actor.disable_cut()
+        self.lines_actor.disable_cut()
+        self.faces_actor.disable_cut()
+        self.update()
+
+    def configure_cutting_plane(self, position, orientation):
+        if not self._actors_exists():
+            return
+
+        self.plane_actor.configure_cutting_plane(position, orientation)
+        self.update()
+
+    def apply_cutting_plane(self, position, orientation):
+        if not self._actors_exists():
+            return
+
+        xyz = self.plane_actor.calculate_x_y_z_position(position)
+        normal = self.plane_actor.calculate_normal_vector(orientation)
+        self.points_actor.apply_cut(xyz, normal)
+        self.faces_actor.apply_cut(xyz, normal)
+        self.lines_actor.apply_cut(xyz, normal)
+
+        self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
+        self.plane_actor.GetProperty().SetOpacity(0.2)
+
+        self.update()
 
     def remove_actors(self):
         self.renderer.RemoveActor(self.points_actor)

@@ -58,3 +58,14 @@ class PointsActor(vtk.vtkActor):
         self.GetMapper().SetScalarModeToUseCellData()
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
+
+    def apply_cut(self, origin, normal):
+        plane = vtk.vtkPlane()
+        plane.SetOrigin(origin)
+        plane.SetNormal(normal)
+        self.GetMapper().RemoveAllClippingPlanes()
+        self.GetMapper().AddClippingPlane(plane)
+    
+    def disable_cut(self):
+        self.GetMapper().RemoveAllClippingPlanes()
+

@@ -18,7 +18,7 @@ from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
     CommonRenderWidget,
 )
 from vibra.utils.interface_functions import get_main_window
-from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
+from vibra.utils.math_functions import lerp
 
 
 class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
@@ -108,11 +108,8 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         self.edges_actor = EdgesActor(self.analysis_actor.data)
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
 
-        self.bounds = self.analysis_actor.GetBounds()
-        scale = bounds_distance(self.bounds)
-        self.plane_actor = CuttingPlaneActor()
+        self.plane_actor = CuttingPlaneActor(self.analysis_actor.GetBounds())
         self.plane_actor.VisibilityOff()
-        self.plane_actor.SetScale(scale, scale, scale)
 
         self.update_deformations()
         self.renderer.AddActor(self.analysis_actor)
@@ -207,34 +204,24 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
             return
         self.plane_actor.VisibilityOff()
         self.analysis_actor.disable_cut()
-        self.edges_actor.extract_data(self.analysis_actor.data)
+        self.edges_actor.disable_cut()
         self.update()
 
     def configure_cutting_plane(self, position, orientation):
         if not self._actors_exists():
             return
 
-        x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
-        y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
-        z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
-        self.plane_actor.SetPosition(x, y, z)
-        self.plane_actor.SetOrientation(orientation)
-
-        self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
-        self.plane_actor.GetProperty().SetOpacity(0.8)
+        self.plane_actor.configure_cutting_plane(position, orientation)
         self.update()
 
     def apply_cutting_plane(self, position, orientation):
         if not self._actors_exists():
             return
 
-        x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
-        y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
-        z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
-
-        normal = self._calculate_normal_vector(orientation)
-        self.analysis_actor.apply_cut((x, y, z), normal)
-        self.edges_actor.extract_data(self.analysis_actor.clipped_data)
+        xyz = self.plane_actor.calculate_x_y_z_position(position)
+        normal = self.plane_actor.calculate_normal_vector(orientation)
+        self.analysis_actor.apply_cut(xyz, normal)
+        self.edges_actor.apply_cut(xyz, normal)
 
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
@@ -283,15 +270,6 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
         ]
 
         return all([actor is not None for actor in actors])
-
-    def _calculate_normal_vector(self, orientation):
-        # https://forum.gamemaker.io/index.php?threads/solved-3d-rotations-with-a-shader-matrix-or-a-matrix-glsl-es.61064/
-
-        orientation = np.array(orientation) * np.pi / 180
-        rx, ry, rz = rotation_matrices(*orientation)
-
-        normal = rz @ rx @ ry @ np.array([1, 0, 0, 1])
-        return normal[:3]
 
     def _calculate_displacements(self, index, phase):
         solver = self.main_window.project.structural_modal_solver

@@ -294,10 +294,10 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
         if not self._actors_exists():
             return
 
-        x, y, z = self.plane_actor.calculate_x_y_z_position(position)
+        xyz = self.plane_actor.calculate_x_y_z_position(position)
         normal = self.plane_actor.calculate_normal_vector(orientation)
-        self.analysis_actor.apply_cut((x, y, z), normal)
-        self.edges_actor.apply_cut((x, y, z), normal)
+        self.analysis_actor.apply_cut(xyz, normal)
+        self.edges_actor.apply_cut(xyz, normal)
 
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
