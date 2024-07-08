@@ -31,22 +31,23 @@ class ExportModelResults(QDialog):
         self.setWindowTitle("Export model results")
 
     def _reset_variables(self):
-        self.userPath = os.path.expanduser('~')
+        self.user_path = os.path.expanduser('~')
         self.save_path = ""
         self.data = dict()
 
     def _define_qt_variables(self):
+
         # QLabel
-        self.label_data_information = self.findChild(QLabel, 'label_data_information')
+        self.label_data_information : QLabel
+
         # QLineEdit
-        self.lineEdit_file_name = self.findChild(QLineEdit, 'lineEdit_file_name')
-        self.lineEdit_save_results_path = self.findChild(QLineEdit, 'lineEdit_save_results_path')
+        self.lineEdit_file_name : QLineEdit
+        self.lineEdit_save_results_path : QLineEdit
+
         # QPushButton
-        self.pushButton_choose_folder_export = self.findChild(QPushButton, 'pushButton_choose_folder_export')
-        self.pushButton_export_results = self.findChild(QPushButton, 'pushButton_export_results')
-        self.pushButton_reset_filename = self.findChild(QPushButton, 'pushButton_reset_filename')
-        self.pushButton_choose_folder_export.setIcon(self.search_icon)
-        self.pushButton_reset_filename.setIcon(self.clean_icon)
+        self.pushButton_choose_folder_export : QPushButton
+        self.pushButton_export_results : QPushButton
+        self.pushButton_reset_filename : QPushButton
 
     def _create_connections(self):
         self.pushButton_choose_folder_export.clicked.connect(self._choose_path_export_results)
@@ -71,9 +72,9 @@ class ExportModelResults(QDialog):
             self.lineEdit_file_name.setFocus()
 
     def _choose_path_export_results(self):
-        
+
         if self.save_path == "":
-            _path = self.userPath
+            _path = self.user_path
         else:
             _path = self.save_path
 

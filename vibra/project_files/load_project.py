@@ -190,21 +190,26 @@ class LoadProject:
 
                 app().main_window.project.reset_solutions()
                 app().main_window.project.set_mesh_setup(mesh_setup)
-                
-                if self.load_mesh_data_from_file():
+
+                mesh_data = self.file.read_mesh_data_from_file()
+
+                if mesh_data is None:
                     generate_mesh = load_function(app().main_window.project.generate_mesh, app().main_window)
                     generate_mesh()
+                    app().main_window.file.write_mesh_data_in_file()
+
+                else:
+                    load_mesh =  load_function(self.load_mesh_data_from_file, app().main_window)
+                    load_mesh(mesh_data)
 
                 app().main_window.viewer_tabs.show_mesh()
                 app().main_window.viewer_tabs.close_analysis_tabs()
                 app().main_window.viewer_tabs.update_plots()
 
 
-    def load_mesh_data_from_file(self):
+    def load_mesh_data_from_file(self, mesh_data):
 
-        mesh_data = self.file.read_mesh_data_from_file()
-        if mesh_data is None:
-            return True
+        logging.info("Loading mesh..." + ProgressStatus(20, 100))
 
         self.model.mesh.nodal_coordinates = mesh_data["nodal_coordinates"]
         self.model.mesh.lines_connectivity = mesh_data["lines_connectivity"]
@@ -232,6 +237,8 @@ class LoadProject:
         connectivity_from_surfaces = dict()
         surfaces_from_volumes = dict()
         volume_from_surface = dict()
+
+        logging.info("Loading mesh..." + ProgressStatus(60, 100))
 
         for key, data in mesh_data.items():
 
@@ -292,19 +299,19 @@ class LoadProject:
         self.model.mesh.surfaces_from_volumes = surfaces_from_volumes
         self.model.mesh.volume_from_surface = volume_from_surface
 
+        logging.info("Loading mesh..." + ProgressStatus(80, 100))
+
         self.model.mesh._maps_lines_by_elements()
         self.model.mesh._maps_surfaces_by_elements()
         self.model.mesh._maps_volumes_by_elements()
 
         self.model.generated_mesh = True
 
-        logging.info("Processing Mesh..." + ProgressStatus(90, 100))
+        logging.info("Loading mesh..." + ProgressStatus(90, 100))
         self.model.mesh._process_solid_elements_connected_to_nodes()
 
-        logging.info("Processing Mesh..." + ProgressStatus(95, 100))
+        logging.info("Loading mesh..." + ProgressStatus(95, 100))
         self.model.mesh._process_element_average_coordinates()
-
-        return False
 
 
     def load_analysis_setup(self):
