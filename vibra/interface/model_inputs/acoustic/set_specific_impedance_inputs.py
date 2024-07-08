@@ -50,13 +50,6 @@ class SpecificImpedanceInput(QDialog):
         self.specific_impedance = None
         self.userPath = os.path.expanduser("~")
         self.new_load_path_table = ""
-        self.project_path = self.project.file.project_path
-        self.acoustic_bc_filename = self.project.file.acoustic_model_setup_filename
-        self.acoustic_bc_info_path = os.path.join(self.project_path, self.acoustic_bc_filename)
-        self.acoustic_folder_path = self.project.file.acoustic_imported_data_folder_path
-        self.specific_impedance_tables_folder_path = os.path.join(
-            self.acoustic_folder_path, "specific_impedance_files"
-        )
 
     def _define_qt_variables(self):
         # QCheckBox objects
@@ -320,11 +313,10 @@ class SpecificImpedanceInput(QDialog):
             return None, None
 
     def load_specific_impedance_table(self):
-        self.imported_values, self.filename_specific_impedance = self.load_table(
-            self.lineEdit_load_table_path
-        )
+        self.imported_values, self.basename = self.load_table(self.lineEdit_load_table_path)
 
     def check_table_values(self):
+
         lineEdit_selection_id = self.lineEdit_selection_id.text()
         self.stop, self.typed_ids = self.model.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
@@ -332,49 +324,41 @@ class SpecificImpedanceInput(QDialog):
             return
 
         for _id in self.typed_ids:
-            pass
             # self.properties._remove_surface_property("acoustic_pressure", _id)
+            pass
 
-        list_table_names = self.get_list_table_names_from_selected_surfaces(self.typed_ids)
         if self.lineEdit_load_table_path != "":
             for _id in self.typed_ids:
-                if self.filename_specific_impedance is None:
-                    self.imported_values, self.filename_specific_impedance = self.load_table(
-                        self.lineEdit_load_table_path, direct_load=True
-                    )
+                if self.basename is None:
+                    self.imported_values, self.basename = self.load_table(  self.lineEdit_load_table_path, 
+                                                                            direct_load=True  )
+
                 if self.imported_values is None:
                     return
-                else:
-                    (
-                        self.specific_impedance,
-                        self.basename_specific_impedance,
-                    ) = self.save_table_file(
-                        _id, self.imported_values, self.filename_specific_impedance
-                    )
-                    if self.basename_specific_impedance in list_table_names:
-                        list_table_names.remove(self.basename_specific_impedance)
 
-                    real_values = list(np.real(self.specific_impedance))
-                    imag_values = list(np.imag(self.specific_impedance))
+                else:
+
+                    real_values = list(self.imported_values[:, 1])
+                    imag_values = list(self.imported_values[:, 2])
 
                     nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
                     key_avg = self.checkBox_averaged_constant_values.isChecked()
 
                     data = {
-                        "real_values": real_values,
-                        "imag_values": imag_values,
-                        "nodal_attribution": nodal_attribution,
-                        "averaged": key_avg,
-                        "table_name": self.basename_specific_impedance,
-                    }
+                                "real_values": real_values,
+                                "imag_values": imag_values,
+                                "nodal_attribution": nodal_attribution,
+                                "averaged": key_avg,
+                                "table_name": self.basename,
+                            }
 
                     self.project.set_specific_impedance(data, _id)
 
             app().main_window.file.write_model_properties_in_file()
 
-            self.process_table_file_removal(list_table_names)
             print(f"[Set specific impedance] - defined at surface(s) {self.typed_ids}")
             self.close()
+
         else:
             title = "Additional inputs required"
             message = "You must inform at least one specific impedance\n"

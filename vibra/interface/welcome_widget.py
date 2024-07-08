@@ -12,7 +12,6 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from vibra.project import Project
 from vibra import app
 from vibra.vibra_file import VibraDecoder
 from vibra import VIBRA_DIR
@@ -119,7 +118,7 @@ class WelcomeWidget(QWidget):
         self.main_window.open_project(path)
 
     def open_example_project(self, path):
-        self.main_window.project = Project.load(path)
+        # self.main_window.project = Project.load(path)
         self.main_window.viewer_tabs.close_mesh_tabs()
         self.main_window.viewer_tabs.show_geometry()
         self.main_window.viewer_tabs.show_mesh()

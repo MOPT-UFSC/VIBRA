@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-from vibra.project_file import *
+# from vibra.project.project_file import *
 
 
 DEFAULT_MATERIAL = Material(
@@ -55,7 +55,7 @@ class ModelProperties:
     """
 
     def __init__(self, model=None):
-        self.file = ProjectFile()
+        # self.file = ProjectFile()
         self._reset_variables()
 
     def _reset_variables(self):

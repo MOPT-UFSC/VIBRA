@@ -453,22 +453,26 @@ class Mesh:
 
             if dim == 0:  # Points
                 self.nodes_from_points[tag] = int(element_nodes[0]) - 1
+                # print(f"Points: {tag} -> {self.nodes_from_points[tag]}")
 
             elif dim == 1:  # Lines
                 connectivity_dim1[dim, tag] = elements_data
                 self.nodes_from_lines[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
                 self.gmsh_elements_from_lines[tag] = np.array([*set(element_indexes[0])], dtype=int)
+                # print(f"Lines: {tag} -> {len(self.nodes_from_lines[tag])}")
 
             elif dim == 2:  # Surfaces
                 connectivity_dim2[dim, tag] = elements_data
                 self.nodes_from_surfaces[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
                 self.connectivity_from_surfaces[tag] = array_element_nodes
                 self.gmsh_elements_from_surfaces[tag] = np.array([*set(element_indexes[0])], dtype=int)
+                # print(f"Surfaces: {tag} -> {len(self.nodes_from_surfaces[tag])}")
 
             elif dim == 3:  # Solids
                 connectivity_dim3[dim, tag] = elements_data
                 self.nodes_from_volumes[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
                 self.gmsh_elements_from_volumes[tag] = np.array([*set(element_indexes[0])], dtype=int)
+                # print(f"Volumes: {tag} -> {len(self.nodes_from_volumes[tag])}")
 
         self.lines_connectivity, self.map_line_elements = self._get_connectivity_array(connectivity_dim1)
         self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)
@@ -535,12 +539,8 @@ class Mesh:
                 index = self.map_solid_elements[gmsh_index]
                 internal_indexes[i] = index
                 self.volume_from_element[index] = tag
-                # if i == 0:
-                #     print(index, self.solids_connectivity[index,:])
 
             self.elements_from_volume[tag] = internal_indexes
-            # print(self.elements_from_volume[tag], len(self.elements_from_volume[tag]))
-            # print(len(self.elements_from_volume[tag]))
 
 
     def _process_face_elements_connected_to_nodes(self):
@@ -751,6 +751,23 @@ class Mesh:
         map_elements = dict(zip(gmsh_elements, internal_indexes))
 
         return output_data, map_elements
+
+
+    def get_array_based_elements_mapping(self, entity="lines"):
+
+        if entity == "lines":
+            keys = list(self.map_line_elements.keys())
+            values = list(self.map_line_elements.values())
+        elif entity == "faces":
+            keys = list(self.map_face_elements.keys())
+            values = list(self.map_face_elements.values())
+        elif entity == "solids":
+            keys = list(self.map_solid_elements.keys())
+            values = list(self.map_solid_elements.values())
+        else:
+            return None
+
+        return np.array([keys, values], dtype=int).T
 
 
     def _process_element_average_coordinates(self):

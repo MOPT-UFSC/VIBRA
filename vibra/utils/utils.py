@@ -46,3 +46,10 @@ def get_list_bool_from_string(input_string):
 def get_new_path(path, name):
     path = Path(path)
     return path / name
+
+def get_color_rgb(color):
+    color = color.replace(" ", "")
+    if ("[" or "(") in color:
+        color = color[1:-1]
+    tokens = color.split(',')
+    return list(map(int, tokens))

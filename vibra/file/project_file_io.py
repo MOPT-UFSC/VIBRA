@@ -1,36 +1,50 @@
-import os
 from vibra import app
 
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-from vibra.project_file import *
+from vibra.interface.general.print_message_input import PrintMessageInput
+# from vibra.project_file import *
 
 from fileboxes import Filebox
 
+import os
+import h5py
+import numpy as np
+from pathlib import Path
+
+window_title_1 = "Error"
+window_title_2 = "Warning"
+
+
 class ProjectFileIO:
     
-    def __init__(self, path, override=False):
+    def __init__(self, path : str, override=False):
         super().__init__()
-        
-        self.vibra_file = Filebox(path, override=override)
+
+        self.path = path
+        self.vibra_file = Filebox(Path(path), override=override)
 
         self.model = app().main_window.project.model
         self.properties = self.model.properties
 
         self._initialize()
-        self._set_default_filenames()
-        # self._set_default_foldernames()
+        self._default_filenames()
+        self._default_foldernames()
 
     def _initialize(self):
-        user_path = os.path.expanduser("~")
-        self.project_folder_path = Path(user_path) / "temp_vibra"
+        # user_path = os.path.expanduser("~")
+        # self.project_folder_path = Path(user_path) / "temp_vibra"
+        self.project_folder_path = Path(os.path.dirname(self.path))
 
-    def _set_default_filenames(self):
+    def _default_filenames(self):
         self.project_setup_filename = "project_setup.json"
-        self.fluid_library_filename = "fluid_library.dat"
-        self.material_library_filename = "material_library.dat"
-        self.acoustic_model_setup_filename = "acoustic_model_setup.dat"
-        self.structural_model_setup_filename = "strucutral_model_setup.dat"
+        self.fluid_library_filename = "fluid_library.config"
+        self.material_library_filename = "material_library.config"
+        self.model_properties = "model_properties.json"
+        self.mesh_data_filename = "mesh_data.hdf5"
+
+    def _default_foldernames(self):
+        pass
 
     def write_geometry_in_file(self, path):
 
@@ -100,6 +114,85 @@ class ProjectFileIO:
 
         return mesh_setup
 
+    def write_mesh_data_in_file(self):
+
+        mesh_data = dict(
+                            nodal_coordinates = self.model.mesh.nodal_coordinates,
+                            lines_connectivity = self.model.mesh.lines_connectivity,
+                            faces_connectivity = self.model.mesh.faces_connectivity,
+                            solids_connectivity = self.model.mesh.solids_connectivity,
+
+                            map_line_elements = self.model.mesh.get_array_based_elements_mapping(entity = "lines"),
+                            map_face_elements = self.model.mesh.get_array_based_elements_mapping(entity = "faces"),
+                            map_solid_elements = self.model.mesh.get_array_based_elements_mapping(entity = "solids"),
+
+                            nodes_from_points = self.model.mesh.nodes_from_points,
+                            nodes_from_solids = self.model.mesh.nodes_from_lines,
+                            nodes_from_surfaces = self.model.mesh.nodes_from_surfaces,
+                            nodes_from_volumes = self.model.mesh.nodes_from_volumes,
+
+                            gmsh_elements_from_lines = self.model.mesh.gmsh_elements_from_lines,
+                            gmsh_elements_from_surfaces = self.model.mesh.gmsh_elements_from_surfaces,
+                            gmsh_elements_from_volumes = self.model.mesh.gmsh_elements_from_volumes,
+
+                            connectivity_from_surfaces = self.model.mesh.connectivity_from_surfaces,
+
+                            surfaces_from_volumes = self.model.mesh.surfaces_from_volumes,
+                            volume_from_surface = self.model.mesh.volume_from_surface
+                        )
+
+        file_path = self.project_folder_path / self.mesh_data_filename 
+        if os.path.exists(self.project_folder_path):
+            f = h5py.File(file_path, "w")
+            f.close()
+
+        f = h5py.File(file_path, 'w')
+        for key, data in mesh_data.items():
+
+            if isinstance(data, dict):
+                for _id, _values in data.items():
+                    _key = f"{key}_{_id}"
+                    f.create_dataset(_key, data=_values, dtype=int)
+
+            else:
+
+                if key == "nodal_coordinates":
+                    dtype = float 
+                else:
+                    dtype = int
+
+                f.create_dataset(key, data=data, dtype=dtype)
+
+        f.close()
+
+
+    def read_mesh_data_from_file(self):
+
+        mesh_data = dict()
+        file_path = self.project_folder_path / self.mesh_data_filename 
+
+        if os.path.exists(file_path):
+                
+            f = h5py.File(file_path, 'r')
+            list_groups = list(f.keys())
+
+            for group in list_groups:
+
+                mesh_data[group] = f.get(group)
+
+                try:
+                    mesh_data[group] = np.array(f.get(group))
+                except:
+                    mesh_data[group] = int(f.get(group))
+
+            f.close()
+
+        if mesh_data:
+            return mesh_data
+        
+        return None
+    
+
     def write_analysis_setup_in_file(self, analysis_setup):
 
         project_setup = self.vibra_file.read(self.project_setup_filename)
@@ -167,15 +260,14 @@ class ProjectFileIO:
 
             data = dict(
                         # global_properties = normalize(self.properties.global_properties),
-                        volume_properties=normalize(self.properties.volume_properties),
-                        surface_properties=normalize(self.properties.surface_properties),
-                        line_properties=normalize(self.properties.line_properties),
-                        element_properties=normalize(self.properties.element_properties),
-                        nodal_properties=normalize(self.properties.nodal_properties),
+                        volume_properties = normalize(self.properties.volume_properties),
+                        surface_properties = normalize(self.properties.surface_properties),
+                        line_properties = normalize(self.properties.line_properties),
+                        element_properties = normalize(self.properties.element_properties),
+                        nodal_properties = normalize(self.properties.nodal_properties),
                         )
 
-            path = app().main_window.project.model_properties
-            self.vibra_file.write(path, data)
+            self.vibra_file.write(self.model_properties, data)
 
         except Exception as error_log:
 
@@ -183,9 +275,8 @@ class ProjectFileIO:
             message = str(error_log)
             PrintMessageInput([window_title_1, title, message])
 
-        # return json.dumps(data, indent=2)
 
-    def read_model_properties_from_file(self, data: dict):
+    def read_model_properties_from_file(self):
 
         def denormalize(prop: dict):
             new_prop = dict()
@@ -196,9 +287,15 @@ class ProjectFileIO:
                 new_prop[p, i] = val
             return new_prop
 
-        self.global_properties = denormalize(data["global_properties"])
-        self.volume_properties = denormalize(data["volume_properties"])
-        self.surface_properties = denormalize(data["surface_properties"])
-        self.line_properties = denormalize(data["line_properties"])
-        self.element_properties = denormalize(data["element_properties"])
-        self.nodal_properties = denormalize(data["nodal_properties"])
+        data = self.vibra_file.read(self.model_properties)
+
+        model_properties = dict(
+                                # global_properties = denormalize(data["global_properties"]),
+                                volume_properties = denormalize(data["volume_properties"]),
+                                surface_properties = denormalize(data["surface_properties"]),
+                                line_properties = denormalize(data["line_properties"]),
+                                element_properties = denormalize(data["element_properties"]),
+                                nodal_properties = denormalize(data["nodal_properties"])
+                                )
+
+        return model_properties

@@ -54,11 +54,6 @@ class SetAnechoicTerminationInputs(QDialog):
         self.anechoic_termination = None
         self.userPath = os.path.expanduser("~")
         self.new_load_path_table = ""
-        self.project_path = self.project.file.project_path
-        self.acoustic_bc_filename = self.project.file.acoustic_model_setup_filename
-        self.acoustic_bc_info_path = os.path.join(self.project_path, self.acoustic_bc_filename)
-        self.acoustic_folder_path = self.project.file.acoustic_imported_data_folder_path
-        self.anechoic_termination_tables_folder_path = os.path.join(self.acoustic_folder_path, "anechoic_termination_files")
 
     def _define_qt_variables(self):
         

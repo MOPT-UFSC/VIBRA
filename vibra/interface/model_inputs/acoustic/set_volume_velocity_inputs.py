@@ -50,12 +50,6 @@ class VolumeVelocityInput(QDialog):
         self.volume_velocity = None
         self.userPath = os.path.expanduser("~")
         self.new_load_path_table = ""
-        self.project_path = self.project.file.project_path
-        self.acoustic_bc_filename = self.project.file.acoustic_model_setup_filename
-        self.acoustic_bc_info_path = os.path.join(self.project_path, self.acoustic_bc_filename)
-        self.acoustic_folder_path = self.project.file.acoustic_imported_data_folder_path
-        self.volume_velocity_tables_folder_path = os.path.join( self.acoustic_folder_path, 
-                                                                "volume_velocity_files" )
 
     def _define_qt_variables(self):
         # QCheckBox objects
@@ -232,15 +226,21 @@ class VolumeVelocityInput(QDialog):
             self.lineEdit_real_value.setFocus()
 
     def load_table(self, lineEdit, direct_load=False):
+
         title = "Error reached while loading 'volume velocity' table"
+
         try:
+
             if direct_load:
                 self.path_imported_table = lineEdit.text()
+
             else:
                 window_label = "Choose a table to import the volume velocity"
-                self.path_imported_table, _ = QFileDialog.getOpenFileName(
-                    None, window_label, self.userPath, "Files (*.csv; *.dat; *.txt)"
-                )
+                self.path_imported_table, _ = QFileDialog.getOpenFileName(  None, 
+                                                                            window_label, 
+                                                                            self.userPath, 
+                                                                            "Files (*.csv; *.dat; *.txt)"
+                                                                        )
 
             if self.path_imported_table == "":
                 return None, None
@@ -270,9 +270,11 @@ class VolumeVelocityInput(QDialog):
                     self.lineEdit_reset(self.lineEdit_load_table_path)
                     return None, None
                 else:
-                    self.project.set_frequencies(
-                        self.frequencies, self.f_min, self.f_max, self.f_step
-                    )
+                    self.project.set_frequencies(   self.frequencies, 
+                                                    self.f_min, 
+                                                    self.f_max, 
+                                                    self.f_step
+                                                )
 
             return imported_values, imported_filename
 
@@ -286,34 +288,32 @@ class VolumeVelocityInput(QDialog):
         lineEdit.setText("")
         lineEdit.setFocus()
 
-    def save_table_file(self, entity_id, values, filename):
-        try:
-            self.project.file.create_folders_acoustic("volume_velocity_files")
+    # def save_table_file(self, entity_id, values, filename):
+    #     try:
+    #         self.project.file.create_folders_acoustic("volume_velocity_files")
 
-            real_values = np.real(values)
-            imag_values = np.imag(values)
-            abs_values = np.abs(values)
-            data = np.array([self.frequencies, real_values, imag_values, abs_values]).T
+    #         real_values = np.real(values)
+    #         imag_values = np.imag(values)
+    #         abs_values = np.abs(values)
+    #         data = np.array([self.frequencies, real_values, imag_values, abs_values]).T
 
-            header = f"Vibra - imported table for volume velocity @ surface {entity_id} \n"
-            header += f"\nSource filename: {filename}\n"
-            header += "\nFrequency [Hz], real[m³/s], imaginary[m³/s], absolute[m³/s]"
-            basename = f"volume_velocity_surface_{entity_id}.dat"
+    #         header = f"Vibra - imported table for volume velocity @ surface {entity_id} \n"
+    #         header += f"\nSource filename: {filename}\n"
+    #         header += "\nFrequency [Hz], real[m³/s], imaginary[m³/s], absolute[m³/s]"
+    #         basename = f"volume_velocity_surface_{entity_id}.dat"
 
-            new_path_table = os.path.join(self.volume_velocity_tables_folder_path, basename)
-            np.savetxt(new_path_table, data, delimiter=",", header=header)
-            return values, basename
+    #         new_path_table = os.path.join(self.volume_velocity_tables_folder_path, basename)
+    #         np.savetxt(new_path_table, data, delimiter=",", header=header)
+    #         return values, basename
 
-        except Exception as log_error:
-            title = "Error reached while saving table files"
-            message = str(log_error)
-            PrintMessageInput([window_title_1, title, message])
-            return None, None
+    #     except Exception as log_error:
+    #         title = "Error reached while saving table files"
+    #         message = str(log_error)
+    #         PrintMessageInput([window_title_1, title, message])
+    #         return None, None
 
     def load_volume_velocity_table(self):
-        self.imported_values, self.filename_volume_velocity = self.load_table(
-            self.lineEdit_load_table_path
-        )
+        self.imported_values, self.basename = self.load_table( self.lineEdit_load_table_path )
 
     def check_table_values(self):
         lineEdit_selection_id = self.lineEdit_selection_id.text()
@@ -326,43 +326,37 @@ class VolumeVelocityInput(QDialog):
             self.properties._remove_surface_property("acoustic_pressure", _id)
             self.properties._remove_surface_property("compressor_excitation", _id)
 
-        list_table_names = self.get_list_table_names_from_selected_surfaces(self.typed_ids)
         if self.lineEdit_load_table_path != "":
             for _id in self.typed_ids:
-                if self.filename_volume_velocity is None:
-                    self.imported_values, self.filename_volume_velocity = self.load_table(
-                        self.lineEdit_load_table_path, direct_load=True
-                    )
+
+                if self.basename is None:
+                    self.imported_values, self.basename = self.load_table(  self.lineEdit_load_table_path, 
+                                                                            direct_load=True  )
+
                 if self.imported_values is None:
                     return
-                else:
-                    self.volume_velocity, self.basename_volume_velocity = self.save_table_file(
-                        _id, self.imported_values, self.filename_volume_velocity
-                    )
-                    if self.basename_volume_velocity in list_table_names:
-                        list_table_names.remove(self.basename_volume_velocity)
 
-                    real_values = list(np.real(self.volume_velocity))
-                    imag_values = list(np.imag(self.volume_velocity))
+                real_values = list(np.real(self.imported_values))
+                imag_values = list(np.imag(self.imported_values))
 
-                    nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
-                    key_avg = self.checkBox_averaged_constant_values.isChecked()
+                nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
+                key_avg = self.checkBox_averaged_constant_values.isChecked()
 
-                    data = {
+                data = {
                         "real_values": real_values,
                         "imag_values": imag_values,
                         "nodal_attribution": nodal_attribution,
                         "averaged": key_avg,
-                        "table_name": self.basename_volume_velocity,
-                    }
+                        "table_name": self.basename,
+                        }
 
                 self.project.set_volume_velocity(data, _id)
 
             app().main_window.file.write_model_properties_in_file()
 
-            self.process_table_file_removal(list_table_names)
             print(f"[Set Volume Velocity] - defined at surface(s) {self.typed_ids}")
             self.close()
+
         else:
             title = "Additional inputs required"
             message = "You must inform at least one volume velocity\n"
@@ -394,20 +388,10 @@ class VolumeVelocityInput(QDialog):
             for key in surface_properties.keys():
                 property, surface_id = key
                 if property == "volume_velocity" and picked_id == surface_id:
-                    # TODO: remove imported volume velocity tables
-                    list_table_names = self.get_list_table_names_from_selected_surfaces([picked_id])
-                    self.process_table_file_removal(list_table_names)
                     self.properties._remove_surface_property("volume_velocity", picked_id)
                     self.load_info()
                     self.lineEdit_selection_id.setText("")
                     return
-
-    def process_table_file_removal(self, list_table_names):
-        if list_table_names != []:
-            for table_name in list_table_names:
-                self.project.remove_acoustic_table_files_from_folder(
-                    table_name, "volume_velocity_files"
-                )
 
     def check_reset(self):
         surface_ids = []
@@ -444,9 +428,6 @@ class VolumeVelocityInput(QDialog):
 
                 self.properties._reset_property("volume_velocity")
                 app().main_window.file.write_model_properties_in_file()
-
-                # TODO: remove imported tables
-                self.process_table_file_removal(_list_table_names)
 
                 title = "Volume velocity resetting process complete"
                 message = "All volume velocity applied to the acoustic "

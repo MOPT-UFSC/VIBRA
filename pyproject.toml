@@ -25,6 +25,7 @@ pypardiso = {git = "https://github.com/andrejstmh/PyPardisoProject"}
 mkl = "2023.2.0"
 intel-openmp = "2023.2.0"
 fileboxes = {git = "https://github.com/andrefpf/fileboxes.git"}
+h5py = "^3.11.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"

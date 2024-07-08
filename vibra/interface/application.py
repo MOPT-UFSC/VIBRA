@@ -20,8 +20,6 @@ class Application(QApplication):
 
         # global params
         self.config = Config()
-        # self.file = ProjectFile()
-        # self.project = Project()
 
         # gui
         self.main_window = MainWindow()

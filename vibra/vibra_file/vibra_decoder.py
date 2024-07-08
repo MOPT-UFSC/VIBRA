@@ -6,7 +6,7 @@ from vibra.engine.mesher.geometry_setup import GeometrySetup
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.errors import UnsuportedFileError
-from vibra.project import Project
+from vibra.project_files.project import Project
 from vibra.vibra_file.file_handler import FileHandler
 
 

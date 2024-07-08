@@ -1,15 +1,6 @@
-import logging
-import random
-from pathlib import Path
-from time import sleep
-import sys
-
-import qdarktheme
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-
-from fileboxes import Filebox
+from PyQt5.QtWidgets import QDialog, QFileDialog, QFrame, QGridLayout, QMainWindow, QMessageBox
+from PyQt5.QtGui import QCloseEvent
+from PyQt5.QtCore import Qt
 
 from vibra import app
 from vibra.config import UserConfig
@@ -29,8 +20,19 @@ from vibra.interface.renderer_toolbar import RendererToolbar
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_tabs import ViewerTabs
 from vibra.interface.formatters.icons import *
-from vibra.project import Project
+
+from vibra.project_files.project import Project
+from vibra.project_files.load_project import LoadProject
+
 from vibra.file.project_file_io import ProjectFileIO
+
+import qdarktheme
+
+import logging
+import random
+from pathlib import Path
+from time import sleep
+import sys
 
 
 class MainWindow(QMainWindow):
@@ -46,7 +48,6 @@ class MainWindow(QMainWindow):
     def _initialize(self):
         self.project_path = ""    
         self.dialog = None
-        self.geometry_file_paths = list()
 
     def _define_qt_variables(self):
         pass
@@ -227,7 +228,7 @@ class MainWindow(QMainWindow):
     def create_temporary_vibra_folder(self):
         user_path = os.path.expanduser("~")
         self.project_folder_path = Path(user_path) / "temp_vibra"
-        self.project_path = self.project_folder_path / "tmp.vibra"
+        self.project_path = str(self.project_folder_path / "tmp.vibra")
         create_new_folder(user_path, "temp_vibra")
 
     def new_project_dialog(self):
@@ -241,10 +242,10 @@ class MainWindow(QMainWindow):
 
     def save_project_as_dialog(self):
         path, check = QFileDialog.getSaveFileName(
-            self,
-            "Save As",
-            filter="Vibra File (*.vibra)",
-        )
+                                                    self,
+                                                    "Save As",
+                                                    filter="Vibra File (*.vibra)",
+                                                )
 
         if not check:
             return
@@ -256,9 +257,10 @@ class MainWindow(QMainWindow):
 
         if not check:
             return
-        
+
         self.project = Project()
         self.file = ProjectFileIO(self.project_path, override=False)
+
         self.open_project()
 
     def import_geometry_dialog(self):
@@ -276,9 +278,9 @@ class MainWindow(QMainWindow):
 
         self.file = ProjectFileIO(self.project_path)
         self.file.write_geometry_in_file(geometry_path)
-        self.geometry_file_paths = self.file.read_geometry_from_file()
+        geometry_paths = self.file.read_geometry_from_file()
 
-        self.import_geometry(self.geometry_file_paths)
+        self.import_geometry(geometry_paths)
 
     def save_project_as(self, path):
         path = Path(path)
@@ -291,7 +293,10 @@ class MainWindow(QMainWindow):
 
     def open_project(self):
 
-        self.project.load()
+        self.load_project = LoadProject()
+        self.load_project.load()
+
+        # self.project.load()
         # self.user_config.add_recent_file(path)
 
         self.viewer_tabs.close_mesh_tabs()

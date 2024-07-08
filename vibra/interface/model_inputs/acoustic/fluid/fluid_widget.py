@@ -11,16 +11,11 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.model_inputs.acoustic.fluid.set_fluid_composition_input import SetFluidCompositionInput
 
-from vibra.project_file import *
-
 from vibra.engine.properties.fluid import Fluid
 from vibra.libraries.default_libraries import default_fluid_library
 
 from vibra.utils.utils import *
 
-import numpy as np
-from configparser import ConfigParser
-from pathlib import Path
 from itertools import count
 
 window_title_1 = "Error"
@@ -52,7 +47,6 @@ class FluidWidget(QWidget):
         self.project = self.main_window.project
         self.model = self.project.model
         self.properties = self.model.properties
-        self.fluid_filename = self.project.fluid_filename
 
         self._initialize()
         self._define_qt_variables()
@@ -132,7 +126,8 @@ class FluidWidget(QWidget):
 
     def load_data_from_fluids_library(self):
 
-        if not app().main_window.project_path.exists():
+        project_path = app().main_window.project_path
+        if not os.path.exists(project_path):
             self.reset_library_to_default()
             return
 
@@ -589,9 +584,7 @@ class FluidWidget(QWidget):
         return False
 
     def reset_library_to_default(self):
-        
-        # config_cache = None
-        # if app().main_window.project_path.exists():
+
         config_cache = app().main_window.file.read_fluid_library_from_file()
 
         sections_cache = list()

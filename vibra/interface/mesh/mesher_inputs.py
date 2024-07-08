@@ -149,9 +149,10 @@ class MesherInputs(QDialog):
         generate_mesh = load_function(self.main_window.project.generate_mesh, self.main_window)
         generate_mesh()
 
-        self.main_window.viewer_tabs.show_mesh()
-        self.main_window.viewer_tabs.close_analysis_tabs()
-        self.main_window.viewer_tabs.update_plots()
+        app().main_window.file.write_mesh_data_in_file()
+        app().main_window.viewer_tabs.show_mesh()
+        app().main_window.viewer_tabs.close_analysis_tabs()
+        app().main_window.viewer_tabs.update_plots()
 
 
         # TODO: Remove this as soon as possible
@@ -238,8 +239,8 @@ class MesherInputs(QDialog):
                             }
         
         self.file_mesh_setup = { 
-                                "element_type" : self.comboBox_element_type.currentIndex(),
-                                "shape_function" : self.comboBox_shape_function.currentIndex(),
+                                "element_type" : _element_type,
+                                "shape_function" : _shape_function,
                                 "geometry_tolerance" : geometry_tolerance,
                                 "size_factor" : 0,
                                 "minimum_element_size" : min_factor*maximum_element_size,

@@ -9,22 +9,12 @@ from vibra.engine.model import Model
 from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
-from vibra.project_file import ProjectFile
 from vibra.utils.progress_status import ProgressStatus
 
-from fileboxes import Filebox
 
 class Project:
     def __init__(self):
-        self.default_filenames()
         self.reset_variables()
-
-    def default_filenames(self):
-        self.fluid_filename = "fluid_library.config"
-        self.material_filename = "material_library.config"
-        self.model_properties = "model_properties.json"
-        self.analysis_setup = "analysis_setup.json"
-        self.mesh_setup = "mesh_setup.json"
 
     def reset_variables(self):
         #
@@ -40,7 +30,6 @@ class Project:
         self.dissipation_model = None
         #
         self.model = Model()
-        self.file = ProjectFile()
         self.acoustic_assembler = AcousticAssembler(self.model)
         self.structural_assembler = StructuralAssembler(self.model)
         #
