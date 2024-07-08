@@ -64,7 +64,6 @@ class MeshRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
-        self.update_theme()
         self.remove_actors()
 
         self.selection_spheres_actor = SelectionSpheres()
@@ -97,7 +96,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor.VisibilityOff()
         self.faces_actor.VisibilityOff()
         self.solids_actor.VisibilityOff()
-        self.update_theme()
         self.update()
 
     def show_lines(self):
@@ -106,7 +104,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor.VisibilityOn()
         self.faces_actor.VisibilityOff()
         self.solids_actor.VisibilityOff()
-        self.update_theme()
         self.update()
 
     def show_faces(self):
@@ -116,7 +113,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.faces_actor.VisibilityOn()
         self.solids_actor.VisibilityOff()
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
-        self.update_theme()
         self.update()
     
     def show_volumes(self):
@@ -126,13 +122,15 @@ class MeshRenderWidget(CommonRenderWidget):
         self.faces_actor.VisibilityOff()
         self.solids_actor.VisibilityOn()
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
-        self.update_theme()
         self.update()
 
     def set_theme(self, theme):
         super().set_theme(theme)
 
-        if not self._actors_exists():
+        try:
+            if not self._actors_exists():
+                return
+        except AttributeError:
             return
 
         light_color = (1, 1, 1)
@@ -155,6 +153,9 @@ class MeshRenderWidget(CommonRenderWidget):
             self.faces_actor.GetProperty().SetColor(light_color)
             self.solids_actor.GetProperty().SetColor(light_color)
 
+    def click_callback(self, x, y):
+        self.mouse_click = (x, y)
+
     def selection_callback(self, x, y):
         if not self._actors_exists():
             return
@@ -176,33 +177,26 @@ class MeshRenderWidget(CommonRenderWidget):
                 join=ctrl_pressed, remove=alt_pressed,
             )
 
-        elif clicked_actor == self.edges_actor:
-            line_entity = mesh.lines_connectivity[clicked_cell][1]
-            app().main_window.set_mesh_selection(
-                nodes=[clicked_cell],
-                join=ctrl_pressed, remove=alt_pressed,
-            )
-
         elif (clicked_actor == self.faces_actor):
             face_entity = mesh.faces_connectivity[clicked_cell][1]
             app().main_window.set_mesh_selection(
-                faces=[clicked_cell],
+                faces=[face_entity],
                 join=ctrl_pressed, remove=alt_pressed,
             )
 
-        elif (clicked_actor == self.solids_actor) and shift_pressed:
-            face_entity = self.main_window.project.model.mesh.faces_connectivity[clicked_cell][1]
-            for (volume, surfaces) in self.main_window.project.model.mesh.surfaces_from_volumes.items():
-                if face_entity in surfaces:
-                    self.select_volume(volume, join=ctrl_pressed, remove=alt_pressed)
-                    break
+        # elif (clicked_actor == self.solids_actor) and shift_pressed:
+        #     face_entity = self.main_window.project.model.mesh.faces_connectivity[clicked_cell][1]
+        #     for (volume, surfaces) in self.main_window.project.model.mesh.surfaces_from_volumes.items():
+        #         if face_entity in surfaces:
+        #             self.select_volume(volume, join=ctrl_pressed, remove=alt_pressed)
+        #             break
 
-        else:
-            self.clear_selection()
-            self.selection_changed.emit(self.selected_points,
-                                        self.selected_lines,
-                                        self.selected_faces,
-                                        self.selected_volumes)
+        # else:
+        #     self.clear_selection()
+        #     self.selection_changed.emit(self.selected_points,
+        #                                 self.selected_lines,
+        #                                 self.selected_faces,
+        #                                 self.selected_volumes)
     def update_selection(self):
         '''
         Update the visualization of selected data.

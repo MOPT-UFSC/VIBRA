@@ -67,7 +67,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
-        self.update_theme()
+        # self.update_theme()
         self.remove_actors()
 
         self.selection_spheres_actor = SelectionSpheres()
@@ -97,7 +97,10 @@ class GeometryRenderWidget(CommonRenderWidget):
     def set_theme(self, theme):
         super().set_theme(theme)
 
-        if not self._actors_exists():
+        try:
+            if not self._actors_exists():
+                return
+        except AttributeError:
             return
 
         if theme == "light":
@@ -353,7 +356,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.selection_spheres_actor = None
 
     def _actors_exists(self):
-
         actors = [  
                     self.points_actor,
                     self.lines_actor,
