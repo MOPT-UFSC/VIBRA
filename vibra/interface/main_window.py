@@ -39,12 +39,12 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
 
-        self.selected_element_nodes = set()
-        self.selected_element_faces = set()
-        self.selected_element_solids = set()
-        self.selected_entity_nodes = set()
-        self.selected_entity_faces = set()
-        self.selected_entity_solids = set()
+        self.selected_mesh_nodes = set()
+        self.selected_mesh_faces = set()
+        self.selected_mesh_solids = set()
+        self.selected_geometry_nodes = set()
+        self.selected_geometry_faces = set()
+        self.selected_geometry_solids = set()
         
         self.dialog = None
         self.project = Project()
@@ -72,21 +72,21 @@ class MainWindow(QMainWindow):
             solids = set()
 
         if join and remove:
-            self.selected_nodes ^= set(nodes)
-            self.selected_faces ^= set(faces)
-            self.selected_solids ^= set(solids)
+            self.selected_mesh_nodes ^= set(nodes)
+            self.selected_mesh_faces ^= set(faces)
+            self.selected_mesh_solids ^= set(solids)
         elif join:
-            self.selected_nodes |= set(nodes)
-            self.selected_faces |= set(faces)
-            self.selected_solids |= set(solids)
+            self.selected_mesh_nodes |= set(nodes)
+            self.selected_mesh_faces |= set(faces)
+            self.selected_mesh_solids |= set(solids)
         elif remove:
-            self.selected_nodes -= set(nodes)
-            self.selected_faces -= set(faces)
-            self.selected_solids -= set(solids)
+            self.selected_mesh_nodes -= set(nodes)
+            self.selected_mesh_faces -= set(faces)
+            self.selected_mesh_solids -= set(solids)
         else:
-            self.selected_nodes = set(nodes)
-            self.selected_faces = set(faces)
-            self.selected_solids = set(solids)
+            self.selected_mesh_nodes = set(nodes)
+            self.selected_mesh_faces = set(faces)
+            self.selected_mesh_solids = set(solids)
 
         self.selection_changed.emit()
 
@@ -101,21 +101,21 @@ class MainWindow(QMainWindow):
             solids = set()
 
         if join and remove:
-            self.selected_nodes ^= set(nodes)
-            self.selected_faces ^= set(faces)
-            self.selected_solids ^= set(solids)
+            self.selected_geometry_nodes ^= set(nodes)
+            self.selected_geometry_faces ^= set(faces)
+            self.selected_geometry_solids ^= set(solids)
         elif join:
-            self.selected_nodes |= set(nodes)
-            self.selected_faces |= set(faces)
-            self.selected_solids |= set(solids)
+            self.selected_geometry_nodes |= set(nodes)
+            self.selected_geometry_faces |= set(faces)
+            self.selected_geometry_solids |= set(solids)
         elif remove:
-            self.selected_nodes -= set(nodes)
-            self.selected_faces -= set(faces)
-            self.selected_solids -= set(solids)
+            self.selected_geometry_nodes -= set(nodes)
+            self.selected_geometry_faces -= set(faces)
+            self.selected_geometry_solids -= set(solids)
         else:
-            self.selected_nodes = set(nodes)
-            self.selected_faces = set(faces)
-            self.selected_solids = set(solids)
+            self.selected_geometry_nodes = set(nodes)
+            self.selected_geometry_faces = set(faces)
+            self.selected_geometry_solids = set(solids)
 
         self.selection_changed.emit()
 

@@ -178,11 +178,17 @@ class MeshRenderWidget(CommonRenderWidget):
             )
 
         elif (clicked_actor == self.faces_actor):
-            face_entity = mesh.faces_connectivity[clicked_cell][1]
             app().main_window.set_mesh_selection(
-                faces=[face_entity],
+                faces=[clicked_cell],
                 join=ctrl_pressed, remove=alt_pressed,
             )
+        
+        elif (clicked_actor == self.solids_actor):
+            app().main_window.set_mesh_selection(
+                solids=[clicked_cell],
+                join=ctrl_pressed, remove=alt_pressed,
+            )
+
 
         # elif (clicked_actor == self.solids_actor) and shift_pressed:
         #     face_entity = self.main_window.project.model.mesh.faces_connectivity[clicked_cell][1]
@@ -208,9 +214,9 @@ class MeshRenderWidget(CommonRenderWidget):
         self.faces_actor.clear_colors()
         self.solids_actor.clear_colors()
 
-        nodes = app().main_window.selected_element_nodes
-        faces = app().main_window.selected_element_faces
-        solids = app().main_window.selected_element_solids
+        nodes = app().main_window.selected_mesh_nodes
+        faces = app().main_window.selected_mesh_faces
+        solids = app().main_window.selected_mesh_solids
 
         self.nodes_actor.paint_cells([255, 0, 0], nodes)
         self.faces_actor.paint_cells(self.selection_color, faces)
@@ -252,10 +258,12 @@ class MeshRenderWidget(CommonRenderWidget):
         self.update()
 
     def remove_actors(self):
+        self.renderer.RemoveActor(self.nodes_actor)
         self.renderer.RemoveActor(self.edges_actor)
         self.renderer.RemoveActor(self.faces_actor)
         self.renderer.RemoveActor(self.solids_actor)
         self.renderer.RemoveActor(self.selection_spheres_actor)
+        self.nodes_actor = None
         self.edges_actor = None
         self.faces_actor = None
         self.solids_actor = None

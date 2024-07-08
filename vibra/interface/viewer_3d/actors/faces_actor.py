@@ -100,7 +100,7 @@ class FacesActor(vtk.vtkActor):
         for i in faces:
             cell_colors.SetTuple(i, color)
 
-        # self.data.Modified()
+        self.data.Modified()
         self.GetMapper().SetScalarModeToUseCellData()
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
