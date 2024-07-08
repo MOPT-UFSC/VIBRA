@@ -26,6 +26,7 @@ class ClipPlaneWidget(QWidget):
             | Qt.WindowCloseButtonHint
             | Qt.FramelessWindowHint
             | Qt.WindowShadeButtonHint
+            | Qt.WindowMinimizeButtonHint
         )
 
     def create_sliders(self):
