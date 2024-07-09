@@ -25,12 +25,13 @@ class PlotTransmissionLossInput(QDialog):
         uic.loadUi(ui_path, self)
 
         self.main_window = app().main_window
-        self.project = self.main_window.project
-        self.model = self.project.model
-        self.properties = self.model.properties
-
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
+
+        self.project = app().main_window.project
+        self.model = app().main_window.project.model
+        self.mesh = app().main_window.project.model.mesh
+        self.properties = app().main_window.project.model.properties
 
         self._load_icons()
         self._reset_variables()
@@ -154,13 +155,13 @@ class PlotTransmissionLossInput(QDialog):
     def check_inputs(self):
 
         lineEdit_output_surface_id = self.lineEdit_output_surface_id.text()
-        self.stop, self.output_surface_id = self.model.check_input_surface_id(lineEdit_output_surface_id, single_ID=True)
+        self.stop, self.output_surface_id = self.mesh.check_input_surface_id(lineEdit_output_surface_id, single_id=True)
         if self.stop:
             self.lineEdit_output_surface_id.setFocus()
             return True
         
         lineEdit_input_surface_id = self.lineEdit_input_surface_id.text()
-        self.stop, self.input_surface_id = self.model.check_input_surface_id(lineEdit_input_surface_id, single_ID=True)
+        self.stop, self.input_surface_id = self.mesh.check_input_surface_id(lineEdit_input_surface_id, single_id=True)
         if self.stop:
             self.lineEdit_input_surface_id.setFocus()
             return True
@@ -171,8 +172,8 @@ class PlotTransmissionLossInput(QDialog):
 
         if self.comboBox_processing_selector.currentIndex() == 0:
             plot_type = "Transmission loss"
-            self.project.model.mesh._process_face_elements_connected_to_nodes()
-            self.project.model.mesh._process_nodal_areas()
+            self.mesh._process_face_elements_connected_to_nodes()
+            self.mesh._process_nodal_areas()
             x_data, y_data, _ = self.project.acoustic_harmonic_solver.get_transmission_loss(self.input_surface_id, self.output_surface_id)
         else:
             plot_type = "Noise reduction"

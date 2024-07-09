@@ -279,13 +279,9 @@ class LoadProject:
                 id = int(key.replace("surfaces_from_volumes_", ""))
                 surfaces_from_volumes[id] = data
 
-            # elif "volume_from_surface" in key:
-            #     id = int(key.replace("volume_from_surface_", ""))
-            #     volume_from_surface[id] = data
-
         for vol_id, face_ids in surfaces_from_volumes.items():
-            for _id in face_ids:
-                volume_from_surface[_id].append(vol_id) 
+            for face_id in face_ids:
+                volume_from_surface[face_id].append(vol_id) 
 
         self.model.mesh.nodes_from_points = nodes_from_points
         self.model.mesh.nodes_from_lines = nodes_from_lines
@@ -312,11 +308,11 @@ class LoadProject:
 
         self.model.generated_mesh = True
 
-        logging.info("Loading mesh..." + ProgressStatus(90, 100))
+        logging.info("Loading mesh..." + ProgressStatus(95, 100))
         self.model.mesh._process_solid_elements_connected_to_nodes()
 
-        logging.info("Loading mesh..." + ProgressStatus(95, 100))
-        self.model.mesh._process_element_average_coordinates()
+        # logging.info("Loading mesh..." + ProgressStatus(95, 100))
+        # self.model.mesh._process_element_average_coordinates()
 
 
     def load_analysis_setup(self):

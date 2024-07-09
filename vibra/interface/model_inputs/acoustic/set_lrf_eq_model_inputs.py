@@ -35,9 +35,10 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
         
-        self.project = self.main_window.project
-        self.model = self.main_window.project.model
-        self.properties = self.model.properties
+        self.project = app().main_window.project
+        self.model = app().main_window.project.model
+        self.mesh = app().main_window.project.model.mesh
+        self.properties = app().main_window.project.model.properties
 
         self._config_window()
         self._initialize()
@@ -292,9 +293,9 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
         selection_id = self.lineEdit_selection_id.text()
         if self.comboBox_selection_by.currentIndex() == 0:
-            _stop, self.volume_ids = self.model.check_input_volume_id(selection_id)
+            _stop, self.volume_ids = self.mesh.check_input_volume_id(selection_id)
         else:
-            _stop, self.surface_ids = self.model.check_input_surface_id(selection_id)
+            _stop, self.surface_ids = self.mesh.check_input_surface_id(selection_id)
             self.selection_radius = self.doubleSpinBox_selection_radius.value()
 
         if _stop:

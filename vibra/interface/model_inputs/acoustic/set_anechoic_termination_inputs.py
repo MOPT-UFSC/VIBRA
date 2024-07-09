@@ -27,6 +27,7 @@ class SetAnechoicTerminationInputs(QDialog):
         self.main_window = app().main_window
         self.project = app().main_window.project
         self.model = app().main_window.project.model
+        self.mesh = app().main_window.project.model.mesh
         self.properties = app().main_window.project.model.properties
 
         self.main_window.set_input_widget(self)
@@ -129,7 +130,7 @@ class SetAnechoicTerminationInputs(QDialog):
     def update_volumes_from_faces(self):
 
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.model.check_input_surface_id(lineEdit_selection_id)
+        self.stop, self.typed_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
 
         list_volumes = list()
         for face_id in self.typed_ids:            
@@ -153,7 +154,7 @@ class SetAnechoicTerminationInputs(QDialog):
     def confirm_button_pressed(self):
 
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.model.check_input_surface_id(lineEdit_selection_id)
+        self.stop, self.typed_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return

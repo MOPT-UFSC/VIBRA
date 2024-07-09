@@ -22,12 +22,13 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         uic.loadUi(ui_path, self)
 
         self.main_window = app().main_window
-        self.project = self.main_window.project
-        self.model = self.project.model
-        self.properties = self.model.properties
-
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
+
+        self.project = app().main_window.project
+        self.model = app().main_window.project.model
+        self.mesh = app().main_window.project.model.mesh
+        self.properties = app().main_window.project.model.properties
 
         self._load_icons()
         self._reset_variables()
@@ -160,13 +161,13 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
     def check_inputs(self):
 
         lineEdit_output_node_id = self.lineEdit_output_node_id.text()
-        self.stop, self.output_node_id = self.model.check_input_surface_id(lineEdit_output_node_id, single_ID=True)
+        self.stop, self.output_node_id = self.mesh.check_input_surface_id(lineEdit_output_node_id, single_id=True)
         if self.stop:
             self.lineEdit_output_node_id.setFocus()
             return True
         
         lineEdit_input_node_id = self.lineEdit_input_node_id.text()
-        self.stop, self.input_node_id = self.model.check_input_surface_id(lineEdit_input_node_id, single_ID=True)
+        self.stop, self.input_node_id = self.mesh.check_input_surface_id(lineEdit_input_node_id, single_id=True)
         if self.stop:
             self.lineEdit_input_node_id.setFocus()
             return True

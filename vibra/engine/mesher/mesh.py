@@ -4,6 +4,9 @@ from vibra.engine.mesher.geometry_setup import GeometrySetup
 from vibra.engine.mesher.reordering import Reordering
 from vibra.utils.progress_status import ProgressStatus
 
+from vibra.interface.loading_bar import load_function
+from vibra.interface.general.print_message_input import PrintMessageInput
+
 from vtk import vtkUnstructuredGrid, vtkPoints, vtkDoubleArray, vtkXMLUnstructuredGridWriter, VTK_TETRA, VTK_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_QUADRATIC_HEXAHEDRON
 
 import logging
@@ -64,7 +67,9 @@ class Mesh:
         self.nodal_area = defaultdict(list)
         self.volume_from_surface = defaultdict(list)
         self.face_elements_connected_to_nodes = defaultdict(list)
-        self.solid_elements_connected_to_nodes = defaultdict(list)
+        # self.solid_elements_connected_to_nodes = defaultdict(list)
+        # self.solid_elements_connected_to_nodes = dict()
+
 
     @classmethod
     def from_cad(
@@ -403,11 +408,6 @@ class Mesh:
         self.nodal_coordinates[indexes - 1, 1:] = coords.reshape(-1, 3) / 1000
         self.nodal_coordinates[indexes - 1, :1] = indexes.reshape(-1, 1) - 1
 
-        # mask = np.linalg.norm(self.nodal_coordinates[:,1:] - np.array([0, 0, 0]), axis=1) < 0.005
-        # mask = np.abs(self.nodal_coordinates[:,1]) < 0.005
-        # ids = self.nodal_coordinates[:,0][mask]
-        # print(len(ids), ids)
-
         connectivity_dim1 = dict()
         connectivity_dim2 = dict()
         connectivity_dim3 = dict()
@@ -581,11 +581,24 @@ class Mesh:
 
     def _process_solid_elements_connected_to_nodes(self):
         self.nodes_from_solid_element.clear()
-        self.solid_elements_connected_to_nodes.clear()
+        # self.solid_elements_connected_to_nodes.clear()
+
+        # t0 = time()
         for el, connected_nodes in enumerate(self.solids_connectivity[:, 4:]):
             self.nodes_from_solid_element[el] = connected_nodes
-            for node in connected_nodes:
-                self.solid_elements_connected_to_nodes[node].append(el)
+            # for node in connected_nodes:
+            #     self.solid_elements_connected_to_nodes[node].append(el)
+
+        # dt = time() - t0
+        # print(f"Elapsed '_process_solid_elements_connected_to_nodes': {dt} s")
+
+
+    def get_solid_elements_connected_to_nodes(self, node_ids):
+        solid_elements_connected_to_nodes = dict()
+        for node_id in node_ids:
+            mask = np.sum(self.solids_connectivity[:, 4:] == node_id, axis=1) == 1
+            solid_elements_connected_to_nodes[node_id] = self.solids_connectivity[:, 0][mask]
+        return solid_elements_connected_to_nodes
 
 
     def _process_nodal_areas(self, node=None):
@@ -769,9 +782,224 @@ class Mesh:
 
     def _process_element_average_coordinates(self):
         """ This method evaluates the element average center coordinates. """
+        t0 = time()
         self.solid_elements_center.clear()
-        for index, nodes in self.nodes_from_solid_element.items():
+        Nel = self.solids_connectivity.shape[0]
+        for i, (index, nodes) in enumerate(self.nodes_from_solid_element.items()):
             self.solid_elements_center[index] = np.average(self.nodal_coordinates[nodes, 1:], axis=0)
+            logging.info("Post-processing mesh..." + ProgressStatus(int(i / Nel), 100))
+
+        dt = time() - t0
+        print(f"Elapsed  '_process_element_average_coordinates': {dt} s")
+
+
+    def get_average_nodal_coordinates(self, surface_ids, averaged=False):
+
+        nodal_coordinates = self.nodal_coordinates
+        self.stop, self.surface_ids = self.check_input_surface_id(surface_ids)
+
+        if self.stop:
+            return list()
+
+        rows = list()
+        for surface_id in self.surface_ids:
+            if averaged:
+                for row in self.nodes_from_surfaces[surface_id]:
+                    rows.append(row)
+            else:
+                _nodes = list(self.nodes_from_surfaces[surface_id])
+                rows.append(_nodes)
+
+        center_coords = list()
+        if rows:
+            if averaged:
+                avg_coords = np.average(nodal_coordinates[rows, 1:], axis=0)   
+                center_coords.append(avg_coords)
+            else:
+                for row in rows:
+                    avg_coords = np.average(nodal_coordinates[row, 1:], axis=0)
+                    center_coords.append(avg_coords)
+
+        return center_coords
+
+
+    def get_elements_and_nodes_from_sphere(self, surface_ids, selection_radius, averaged=False, filter_type=0, export_data=False):
+
+        list_center_coords = self.get_average_nodal_coordinates(surface_ids, averaged=averaged)
+        if len(list_center_coords) == 0:
+            return list(), list()
+
+        selected_elements = list()
+        nodes_inside_sphere = list()
+        node_indexes = self.nodal_coordinates[:,0]
+        nodal_coordinates = self.nodal_coordinates[:,1:]
+
+        if filter_type == 0:
+            self._process_element_average_coordinates()
+            element_indexes = np.array(list(self.solid_elements_center.keys()), dtype=int)
+            elements_center_coordinates = np.array(list(self.solid_elements_center.values()), dtype=float)
+
+        for center_coords in list_center_coords:
+            
+            if filter_type == 0: # filters the elements inside sphere based on elements coordinates center
+
+                diff_elem = np.linalg.norm(elements_center_coordinates - center_coords, axis=1) 
+                diff_nodes = np.linalg.norm(nodal_coordinates - center_coords, axis=1)
+                mask_elem = diff_elem <= selection_radius
+                mask_nodes = diff_nodes <= selection_radius
+            
+                if sum(mask_nodes):
+                    for node_id in node_indexes[mask_nodes]:
+                        if node_id not in nodes_inside_sphere:
+                            nodes_inside_sphere.append(node_id)
+            
+                if sum(mask_elem):
+                    for element_id in element_indexes[mask_elem]:
+                        if element_id not in selected_elements:
+                            selected_elements.append(element_id)
+
+            else: # filters the elements inside sphere based on nodal coordinates
+
+                diff_nodes = np.linalg.norm(nodal_coordinates - center_coords, axis=1) 
+                mask_nodes = diff_nodes <= selection_radius
+
+                if sum(mask_nodes):
+
+                    nodes_inside_sphere = node_indexes[mask_nodes]
+                    selection_data = self.get_solid_elements_connected_to_nodes[nodes_inside_sphere]
+                    for _node, element_ids in selection_data.items():
+                        for element_id in element_ids:
+                            if element_id not in selected_elements:
+                                selected_elements.append(element_id)
+
+        if export_data:
+            # list_nodes = np.array(nodes_inside_sphere, dtype=int).reshape(-1,1)
+            # list_elements = np.array(selected_elements, dtype=int).reshape(-1,1)
+            list_nodes = np.array(nodes_inside_sphere).reshape(-1,1)
+            list_elements = np.array(selected_elements).reshape(-1,1)
+            connectivity = self.solids_connectivity[:, 4:]
+            rows = len(list_elements)
+            cols = connectivity.shape[1]
+            data_elem = np.zeros((rows, cols+1), dtype=int)
+            data_elem[:, 0] = selected_elements
+            data_elem[:, 1:] = connectivity[selected_elements, :]
+
+            np.savetxt("nodes_inside_sphere.dat", list_nodes, delimiter=";", fmt='%i')
+            np.savetxt("selected_elements.dat", list_elements, delimiter=";", fmt='%i')
+            np.savetxt("selected_elements_data.dat", data_elem, delimiter=";", fmt="%i")
+            print(f"Number of nodes: {len(nodes_inside_sphere)}")
+            print(f"Number of elements: {len(selected_elements)}")
+
+        return selected_elements, nodes_inside_sphere
+
+
+    def check_input_surface_id(self, selected_ids, single_id=False):
+        try:
+            message = ""
+            if isinstance(selected_ids, str):
+                tokens = selected_ids.strip().split(",")
+                try:
+                    tokens.remove("")
+                except:
+                    pass
+                list_ids = list(map(int, tokens))
+
+            elif isinstance(selected_ids, list):
+                list_ids = selected_ids
+
+            elif isinstance(selected_ids, (tuple, np.ndarray)):
+                list_ids = list(selected_ids)
+
+            surface_ids = self.nodes_from_surfaces.keys()
+            _size = len(surface_ids)
+
+            if len(list_ids) == 0:
+                message = "An empty input field for the Surface ID has been detected. Please, enter a valid Surface ID to proceed."
+
+            elif len(list_ids) >= 1:
+                if single_id and len(list_ids) > 1:
+                    message = "Multiple Selected IDs"
+                else:
+                    try:
+                        for _id in list_ids:
+                            if _id not in surface_ids:
+                                message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
+                                message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+                                break
+                    except Exception as error_log:
+                        message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
+                        message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+                        message += f"\n\n{str(error_log)}"
+
+        except Exception as log_error:
+            message = "Wrong input for the Selected ID's. "
+            message += f"\n\n{str(log_error)}"
+
+        if message != "":
+            window_title = "Error"
+            title = "Invalid entry to the Surface ID"
+            PrintMessageInput([window_title, title, message])
+            return True, list()
+
+        if single_id:
+            return False, list_ids[0]
+        else:
+            return False, list_ids
+
+
+    def check_input_volume_id(self, selected_ids, single_id=False):
+        try:
+
+            message = ""
+            if isinstance(selected_ids, str):
+                tokens = selected_ids.strip().split(",")
+                try:
+                    tokens.remove("")
+                except:
+                    pass
+                list_ids = list(map(int, tokens))
+
+            elif isinstance(selected_ids, list):
+                list_ids = selected_ids
+
+            elif isinstance(selected_ids, (tuple, np.ndarray)):
+                list_ids = list(selected_ids)
+            
+            volume_ids = self.nodes_from_volumes.keys()
+            _size = len(volume_ids)
+
+            if len(list_ids) == 0:
+                message = "An empty input field for the Volume ID has been detected. Please, enter a valid Volume ID to proceed."
+
+            elif len(list_ids) >= 1:
+                if single_id and len(list_ids) > 1:
+                    message = "Multiple Selected IDs"
+                else:
+                    try:
+                        for _id in list_ids:
+                            if _id not in volume_ids:
+                                message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
+                                message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+                                break
+                    except Exception as error_log:
+                        message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
+                        message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+                        message += f"\n\n{str(error_log)}"
+
+        except Exception as log_error:
+            message = "Wrong input for the Selected ID's. "
+            message += f"\n\n{str(log_error)}"
+
+        if message != "":
+            window_title = "Error"
+            title = "Invalid entry to the Volume ID"
+            PrintMessageInput([window_title, title, message])
+            return True, list()
+
+        if single_id:
+            return False, list_ids[0]
+        else:
+            return False, list_ids
 
 
     def _process_nodes_reordering(self, print_log=False):

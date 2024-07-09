@@ -7,6 +7,7 @@ import numpy as np
 from scipy.special import jv
 
 from vibra import app
+from vibra.interface.loading_bar import load_function
 from vibra.engine.porous_materials.porous_materials_models import PorousMaterialModels
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.model_properties import ModelProperties
@@ -92,11 +93,11 @@ class Model:
         self.mesh.load_cad(self.geometry_paths, **self.mesh_setup)
         self.generated_mesh = True
 
-        logging.info("Processing Mesh..." + ProgressStatus(90, 100))
+        logging.info("Processing Mesh..." + ProgressStatus(95, 100))
         self.mesh._process_solid_elements_connected_to_nodes()
 
-        logging.info("Processing Mesh..." + ProgressStatus(95, 100))
-        self.mesh._process_element_average_coordinates()
+        # logging.info("Processing Mesh..." + ProgressStatus(95, 100))
+        # self.mesh._process_element_average_coordinates()
 
         # logging.info("Renumbering nodes..." + ProgressStatus(90, 100))
         # self.mesh._process_nodes_reordering()
@@ -149,7 +150,7 @@ class Model:
 
     def get_acoustic_global_dofs_from_nodes(self, nodes):
         if self.solid_acoustic_element is None:
-            return []
+            return list()
         _dofs_per_node = self.solid_acoustic_element.DOF_PER_NODE
         _nodes = nodes.reshape(-1, 1)
         global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
@@ -157,7 +158,7 @@ class Model:
 
     def get_structural_global_dofs_from_nodes(self, nodes):
         if self.solid_structural_element is None:
-            return []
+            return list()
         _dofs_per_node = self.solid_structural_element.DOF_PER_NODE
         _nodes = nodes.reshape(-1, 1)
         global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
@@ -181,10 +182,18 @@ class Model:
                 selection_radius = data["selection_radius"]
                 averaged = data["averaged"]
                 filter_type = data["filter_type"]
-                selected_elements, _ = self.get_elements_and_nodes_from_sphere( surface_ids, 
-                                                                                selection_radius,
-                                                                                averaged = averaged,
-                                                                                filter_type = filter_type )
+
+                post_process = load_function(self.mesh.get_elements_and_nodes_from_sphere, app().main_window)
+                selected_elements, _ = post_process(surface_ids, 
+                                                    selection_radius,
+                                                    averaged = averaged,
+                                                    filter_type = filter_type)
+
+                # selected_elements, _ = self.mesh.get_elements_and_nodes_from_sphere( surface_ids, 
+                #                                                                 selection_radius,
+                #                                                                 averaged = averaged,
+                #                                                                 filter_type = filter_type )
+
                 for element_id in selected_elements:
                     #
                     fluid, _ = self.get_fluid(element=element_id)
@@ -296,98 +305,6 @@ class Model:
 
         return False, None, None
 
-    def get_average_nodal_coordinates(self, surface_ids, averaged=False):
-
-        nodal_coordinates = self.mesh.nodal_coordinates
-        self.stop, self.surface_ids = self.check_input_surface_id(surface_ids)
-
-        if self.stop:
-            return []
-
-        rows = []
-        for surface_id in self.surface_ids:
-            if averaged:
-                for row in self.mesh.nodes_from_surfaces[surface_id]:
-                    rows.append(row)
-            else:
-                _nodes = list(self.mesh.nodes_from_surfaces[surface_id])
-                rows.append(_nodes)
-
-        center_coords = list()
-        if rows:
-            if averaged:
-                avg_coords = np.average(nodal_coordinates[rows, 1:], axis=0)   
-                center_coords.append(avg_coords)
-            else:
-                for row in rows:
-                    avg_coords = np.average(nodal_coordinates[row, 1:], axis=0)
-                    center_coords.append(avg_coords)
-
-        return center_coords
-
-    def get_elements_and_nodes_from_sphere(self, surface_ids, selection_radius, averaged=False, filter_type=0, export_data=False):
-
-        list_center_coords = self.get_average_nodal_coordinates(surface_ids, averaged=averaged)
-        if len(list_center_coords) == 0:
-            return [], []
-
-        selected_elements = []
-        nodes_inside_sphere = []
-        node_indexes = self.mesh.nodal_coordinates[:,0]
-        nodal_coordinates = self.mesh.nodal_coordinates[:,1:]
-        element_indexes = np.array(list(self.mesh.solid_elements_center.keys()), dtype=int)
-        elements_center_coordinates = np.array(list(self.mesh.solid_elements_center.values()), dtype=float)
-        for center_coords in list_center_coords:
-            
-            if filter_type == 0: # filters the elements inside sphere based on elements coordinates center
-                
-                diff_elem = np.linalg.norm(elements_center_coordinates - center_coords, axis=1) 
-                diff_nodes = np.linalg.norm(nodal_coordinates - center_coords, axis=1)
-                mask_elem = diff_elem <= selection_radius
-                mask_nodes = diff_nodes <= selection_radius
-            
-                if sum(mask_nodes):
-                    for node_id in node_indexes[mask_nodes]:
-                        if node_id not in nodes_inside_sphere:
-                            nodes_inside_sphere.append(node_id)
-            
-                if sum(mask_elem):
-                    for element_id in element_indexes[mask_elem]:
-                        if element_id not in selected_elements:
-                            selected_elements.append(element_id)
-
-            else: # filters the elements inside sphere based on nodal coordinates
-
-                diff_nodes = np.linalg.norm(nodal_coordinates - center_coords, axis=1) 
-                mask_nodes = diff_nodes <= selection_radius
-                if sum(mask_nodes):
-                    for node_id in node_indexes[mask_nodes]:
-                        if node_id not in nodes_inside_sphere:
-                            nodes_inside_sphere.append(node_id)
-                            for element_id in self.mesh.solid_elements_connected_to_nodes[node_id]:
-                                if element_id not in selected_elements:
-                                    selected_elements.append(element_id)
-
-        if export_data:
-            # list_nodes = np.array(nodes_inside_sphere, dtype=int).reshape(-1,1)
-            # list_elements = np.array(selected_elements, dtype=int).reshape(-1,1)
-            list_nodes = np.array(nodes_inside_sphere).reshape(-1,1)
-            list_elements = np.array(selected_elements).reshape(-1,1)
-            connectivity = self.mesh.solids_connectivity[:, 4:]
-            rows = len(list_elements)
-            cols = connectivity.shape[1]
-            data_elem = np.zeros((rows, cols+1), dtype=int)
-            data_elem[:, 0] = selected_elements
-            data_elem[:, 1:] = connectivity[selected_elements, :]
-
-            np.savetxt("nodes_inside_sphere.dat", list_nodes, delimiter=";", fmt='%i')
-            np.savetxt("selected_elements.dat", list_elements, delimiter=";", fmt='%i')
-            np.savetxt("selected_elements_data.dat", data_elem, delimiter=";", fmt="%i")
-            print(f"Number of nodes: {len(nodes_inside_sphere)}")
-            print(f"Number of elements: {len(selected_elements)}")
-
-        return selected_elements, nodes_inside_sphere
-
     # Properties can be accessed from outside, so this "indirection layer" is not needed
     def set_dissipation_model_data(self, data, volume=None):
         self.properties.set_dissipation_model(data, volume=volume)
@@ -418,103 +335,3 @@ class Model:
 
     def set_specific_impedance(self, data, surface):
         self.properties.set_specific_impedance(data, surface)
-
-    def check_input_surface_id(self, selected_ids, single_ID=False):
-        try:
-            title = "Invalid entry to the Surface ID"
-            message = ""
-            if isinstance(selected_ids, str):
-                tokens = selected_ids.strip().split(",")
-                try:
-                    tokens.remove("")
-                except:
-                    pass
-                list_ids = list(map(int, tokens))
-            elif isinstance(selected_ids, list):
-                list_ids = selected_ids
-            elif isinstance(selected_ids, (tuple, np.ndarray)):
-                list_ids = list(selected_ids)
-
-            self.surface_ids = self.mesh.nodes_from_surfaces.keys()
-            _size = len(self.surface_ids)
-
-            if len(list_ids) == 0:
-                message = "An empty input field for the Surface ID has been detected. Please, enter a valid Surface ID to proceed."
-
-            elif len(list_ids) >= 1:
-                if single_ID and len(list_ids) > 1:
-                    message = "Multiple Selected IDs"
-                else:
-                    try:
-                        for _id in list_ids:
-                            if _id not in self.surface_ids:
-                                message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                                message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
-                                break
-                    except Exception as error_log:
-                        message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                        message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
-                        message += f"\n\n{str(error_log)}"
-
-        except Exception as log_error:
-            message = "Wrong input for the Selected ID's. "
-            message += f"\n\n{str(log_error)}"
-
-        if message != "":
-            PrintMessageInput([window_title_1, title, message])
-            return True, []
-
-        if single_ID:
-            return False, list_ids[0]
-        else:
-            return False, list_ids
-
-    def check_input_volume_id(self, selected_ids, single_ID=False):
-        try:
-            title = "Invalid entry to the Volume ID"
-            message = ""
-            if isinstance(selected_ids, str):
-                tokens = selected_ids.strip().split(",")
-                try:
-                    tokens.remove("")
-                except:
-                    pass
-                list_ids = list(map(int, tokens))
-            elif isinstance(selected_ids, list):
-                list_ids = selected_ids
-            elif isinstance(selected_ids, (tuple, np.ndarray)):
-                list_ids = list(selected_ids)
-            
-            self.volume_ids = self.mesh.nodes_from_volumes.keys()
-            _size = len(self.volume_ids)
-
-            if len(list_ids) == 0:
-                message = "An empty input field for the Volume ID has been detected. Please, enter a valid Volume ID to proceed."
-
-            elif len(list_ids) >= 1:
-                if single_ID and len(list_ids) > 1:
-                    message = "Multiple Selected IDs"
-                else:
-                    try:
-                        for _id in list_ids:
-                            if _id not in self.volume_ids:
-                                message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                                message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
-                                break
-                    except Exception as error_log:
-                        message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                        message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
-                        message += f"\n\n{str(error_log)}"
-
-        except Exception as log_error:
-            message = "Wrong input for the Selected ID's. "
-            message += f"\n\n{str(log_error)}"
-
-        if message != "":
-            PrintMessageInput([window_title_1, title, message])
-            return True, []
-
-        if single_ID:
-            return False, list_ids[0]
-        else:
-            return False, list_ids

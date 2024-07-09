@@ -24,12 +24,13 @@ class SetPorousMaterialModel(QDialog):
         uic.loadUi(ui_path, self)
 
         self.main_window = app().main_window
-        self.project = app().main_window.project
-        self.model = self.project.model
-        self.properties = self.model.properties
-
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
+
+        self.project = app().main_window.project
+        self.model = app().main_window.project.model
+        self.mesh = app().main_window.project.model.mesh
+        self.properties = app().main_window.project.model.properties
 
         self._initialize()
         self._load_icons()
@@ -252,56 +253,9 @@ class SetPorousMaterialModel(QDialog):
         elif not any([points, lines, faces]):
             return
 
-    def check_input_volume_id(self, lineEdit, single_ID=False):
-        try:
-
-            title = "Invalid entry to the Surface ID"
-            message = ""
-            tokens = lineEdit.strip().split(",")
-            self.volume_ids = self.project.model.mesh.nodes_from_volumes.keys()
-
-            try:
-                tokens.remove("")
-            except:
-                pass
-
-            _size = len(self.volume_ids)
-            list_ids = list(map(int, tokens))
-
-            if len(list_ids) == 0:
-                message = "An empty input field for the Surface ID has been detected. Please, enter a valid Surface ID to proceed."
-
-            elif len(list_ids) >= 1:
-                if single_ID and len(list_ids) > 1:
-                    message = "Multiple Selected IDs"
-                else:
-                    try:
-                        for _id in list_ids:
-                            if _id not in self.volume_ids:
-                                message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                                message += f"The input value(s) must be integer(s) number(s) N such that 1 <= N <= {_size}."
-                                break
-                    except Exception as error_log:
-                        message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                        message += f"The input value(s) must be integer(s) number(s) N such that 1 <= N <= {_size}."
-                        message += f"\n\n{str(error_log)}"
-
-        except Exception as log_error:
-            message = "Wrong input for the Selected ID's. "
-            message += f"\n\n{str(log_error)}"
-
-        if message != "":
-            PrintMessageInput([window_title_1, title, message])
-            return True, []
-
-        if single_ID:
-            return False, list_ids[0]
-        else:
-            return False, list_ids
-
     def check_selected_bodies(self):
         lineEdit = self.lineEdit_selected_id.text()
-        self.stop, self.volume_ids = self.check_input_volume_id(lineEdit)
+        self.stop, self.volume_ids = self.mesh.check_input_volume_id(lineEdit)
         if self.stop:
             self.lineEdit_selected_id.setFocus()
             return True
@@ -399,7 +353,7 @@ class SetPorousMaterialModel(QDialog):
             model_data = self.get_Jhonson_Champoux_Allard_Lafarge_model_inputs()
         else:
             return
-        
+
         if model_data:
 
             if self.comboBox_attribution_type.currentIndex():
@@ -408,12 +362,12 @@ class SetPorousMaterialModel(QDialog):
                 volume_ids = self.volume_ids
 
             else:
-                volume_ids = list(self.project.model.mesh.nodes_from_volumes.keys())
+                volume_ids = list(self.mesh.nodes_from_volumes.keys())
 
             for volume_id in volume_ids:
-                # surfaces_from_volume = self.project.model.mesh.surfaces_from_volumes[volume_id]
+                # surfaces_from_volume = self.mesh.surfaces_from_volumes[volume_id]
                 self.project.set_porous_material_model(model_data, volume=volume_id)
-            
+
             app().main_window.file.write_model_properties_in_file()
 
             print(f"The porous material model '{model_data['model']}' has been attributed to the volumes {volume_ids}")
