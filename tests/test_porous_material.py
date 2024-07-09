@@ -22,8 +22,8 @@ def test_load_external_mesh_and_solve():
 
     # start decoding the Ansys script file (ds.dat file or input file)
 
-    # mesh_path = "tests/data/mesh_files/fluid_suction_silencer_first_stage.dat"
-    mesh_path = "tests/data/mesh_files/suction_silencer_first_stage.dat"
+    # mesh_path = "validation/data/porous_materials/mesh_files/fluid_suction_silencer_first_stage.dat"
+    mesh_path = "validation/data/porous_materials/mesh_files/suction_silencer_first_stage.dat"
 
     if not os.path.exists(mesh_path):
         return
@@ -313,8 +313,8 @@ def import_results():
 
     imported_results = dict()
 
-    # results_path = "data/examples/mesh/porous_material/results/porous_validation.xlsx"
-    results_path = "data/examples/mesh/porous_material/results/suction_silencer_1stg.xlsx"
+    # results_path = "validation/data/porous_materials/results/porous_validation.xlsx"
+    results_path = "validation/data/porous_materials/results/suction_silencer_1stg.xlsx"
 
     wb = openpyxl.load_workbook(results_path)
 
