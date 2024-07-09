@@ -160,11 +160,14 @@ class MeshRenderWidget(CommonRenderWidget):
         if not self._actors_exists():
             return
 
-        picker = vtk.vtkCellPicker()
-        picker.Pick(x, y, 0, self.renderer)
-        clicked_cell = picker.GetCellId()
-        clicked_actor = picker.GetActor()
-        mesh = app().main_window.project.model.mesh
+        # TODO: pick both nodes, faces and solids isolated
+        # then select only get the closest to the camera
+        cell_picker = vtk.vtkCellPicker()
+        cell_picker.SetTolerance(0.002)
+
+        cell_picker.Pick(x, y, 0, self.renderer)
+        clicked_cell = cell_picker.GetCellId()
+        clicked_actor = cell_picker.GetActor()
 
         modifiers = QApplication.keyboardModifiers()
         ctrl_pressed = modifiers & Qt.ControlModifier
@@ -177,32 +180,31 @@ class MeshRenderWidget(CommonRenderWidget):
                 join=ctrl_pressed, remove=alt_pressed,
             )
 
-        elif (clicked_actor == self.faces_actor):
+        elif clicked_actor == self.faces_actor:
             app().main_window.set_mesh_selection(
                 faces=[clicked_cell],
                 join=ctrl_pressed, remove=alt_pressed,
             )
         
-        elif (clicked_actor == self.solids_actor):
+        elif clicked_actor == self.solids_actor:
             app().main_window.set_mesh_selection(
                 solids=[clicked_cell],
                 join=ctrl_pressed, remove=alt_pressed,
             )
 
+    def _narrow_pickability_to_actor(self, target_actor: vtk.vtkActor):
+        actor: vtk.vtkActor
+        pickability = dict()
+        for actor in self.renderer.GetActors():
+            pickability[actor] = actor.GetPickable()
+            actor.SetPickable(actor == target_actor)
+        return pickability 
+    
+    def _restore_pickability(self, pickability: dict):
+        actor: vtk.vtkActor
+        for actor in self.renderer.GetActors():
+            actor.SetPickable(pickability[actor])
 
-        # elif (clicked_actor == self.solids_actor) and shift_pressed:
-        #     face_entity = self.main_window.project.model.mesh.faces_connectivity[clicked_cell][1]
-        #     for (volume, surfaces) in self.main_window.project.model.mesh.surfaces_from_volumes.items():
-        #         if face_entity in surfaces:
-        #             self.select_volume(volume, join=ctrl_pressed, remove=alt_pressed)
-        #             break
-
-        # else:
-        #     self.clear_selection()
-        #     self.selection_changed.emit(self.selected_points,
-        #                                 self.selected_lines,
-        #                                 self.selected_faces,
-        #                                 self.selected_volumes)
     def update_selection(self):
         '''
         Update the visualization of selected data.

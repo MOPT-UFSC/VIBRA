@@ -47,6 +47,7 @@ class NodesActor(vtk.vtkActor):
         self.SetMapper(mapper)
 
     def update_coordinates(self, coordinates):
+        points: vtk.vtkPoints
         points = self.data.GetPoints()
         for i, xyz in enumerate(coordinates):
             points.SetPoint(i, xyz)
@@ -54,7 +55,7 @@ class NodesActor(vtk.vtkActor):
 
     def configure_appearance(self):
         self.GetProperty().RenderPointsAsSpheresOn()
-        self.GetProperty().SetPointSize(3)
+        self.GetProperty().SetPointSize(6)
         self.GetProperty().LightingOff()
         self.clear_colors()
 
