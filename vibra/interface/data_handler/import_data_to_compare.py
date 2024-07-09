@@ -9,14 +9,10 @@ import numpy as np
 import pandas as pd
 import openpyxl
 
-from vibra import UI_DIR
+from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
 
-def get_icons_path(filename):
-    path = f"data/icons/{filename}"
-    if os.path.exists(path):
-        return str(Path(path))
-    
+
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
@@ -30,20 +26,15 @@ class ImportDataToCompare(QDialog):
         
         self.plotter = plotter
 
-        self._load_icons()
         self._config_window()
         self._reset_variables()
         self._define_and_configure_Qt_variables()
         self._create_connections()
-
-    def _load_icons(self):
-        self.import_icon = QIcon(get_icons_path('import.png'))
-        self.vibra_icon = QIcon(get_icons_path('logo_vibra.png'))
         
     def _config_window(self):    
-        self.setWindowIcon(self.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Import data to compare")
 
     def _reset_variables(self):
@@ -66,18 +57,22 @@ class ImportDataToCompare(QDialog):
                         [0.25, 0.25, 0.25] ]
 
     def _define_and_configure_Qt_variables(self):
+
         # CheckBox
         self.checkBox_skiprows = self.findChild(QCheckBox, "checkBox_skiprows")
+
         # LineEdit
         self.lineEdit_import_results_path = self.findChild(QLineEdit, 'lineEdit_import_results_path')
         self.lineEdit_import_results_path.setDisabled(True)
+
         # PushButton
         self.pushButton_add_imported_data_to_plot = self.findChild(QPushButton, 'pushButton_add_imported_data_to_plot')
         self.pushButton_reset_imported_data = self.findChild(QPushButton, 'pushButton_reset_imported_data')
         self.pushButton_search_file_to_import = self.findChild(QPushButton, 'pushButton_search_file_to_import')
-        self.pushButton_search_file_to_import.setIcon(self.import_icon)
+
         # SpinBox
         self.spinBox_skiprows = self.findChild(QSpinBox, 'spinBox_skiprows')
+
         # TreeWidget
         self.treeWidget_import_text_files = self.findChild(QTreeWidget, "treeWidget_import_text_files")
         self.treeWidget_import_sheet_files = self.findChild(QTreeWidget, "treeWidget_import_sheet_files")

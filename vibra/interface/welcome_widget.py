@@ -1,21 +1,15 @@
-from functools import partial
-from pathlib import Path
 
-import numpy as np
 from PyQt5.QtCore import QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon, QImage, QPixmap
-from PyQt5.QtWidgets import (
-    QHBoxLayout,
-    QLabel,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt5.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
-from vibra import app
+from vibra import app, VIBRA_DIR, ICON_DIR
 from vibra.vibra_file import VibraDecoder
-from vibra import VIBRA_DIR
 
+import numpy as np
+
+from functools import partial
+from pathlib import Path
 
 class WelcomeWidget(QWidget):
     def __init__(self):
@@ -33,7 +27,7 @@ class WelcomeWidget(QWidget):
     def setup_image(self, layout):
         image_label = QLabel(self)
         image_label.setAlignment(Qt.AlignCenter)
-        pixmap = QPixmap("data/icons/azul cinza.png").scaled(350, 350, Qt.KeepAspectRatio)
+        pixmap = QPixmap(str(ICON_DIR / "azul cinza.png")).scaled(350, 350, Qt.KeepAspectRatio)
         image_label.setPixmap(pixmap)
         image_label.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(image_label)
@@ -43,10 +37,10 @@ class WelcomeWidget(QWidget):
     def setup_labels(self, layout):
         labels_layout = QHBoxLayout()
 
-        new_item = WelcomeItem("New", QIcon("data/icons/new_file.png"))
+        new_item = WelcomeItem("New", QIcon(str(ICON_DIR / "new_file.png")))
         new_item.clicked.connect(self.new_project)
 
-        open_item = WelcomeItem("Open", QIcon("data/icons/import.png"))
+        open_item = WelcomeItem("Open", QIcon(str(ICON_DIR / "import.png")))
         open_item.clicked.connect(self.open_project)
 
         labels_layout.addWidget(new_item)

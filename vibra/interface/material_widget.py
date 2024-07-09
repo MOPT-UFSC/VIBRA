@@ -21,6 +21,8 @@ from vibra.engine.properties.material import (
     load_material_list,
     save_material_list,
 )
+
+from vibra import ICON_DIR
 from vibra.utils.icons import load_icon
 
 
@@ -37,7 +39,7 @@ class MaterialWidget(QDialog):
         toolbar_layout = QHBoxLayout()
         add_material_button = QPushButton()
         add_material_button.setFocusPolicy(Qt.NoFocus)
-        add_material_icon = load_icon(Path("data/icons/plus-thick.png"), self.color)
+        add_material_icon = load_icon(ICON_DIR / "plus-thick.png", self.color)
         add_material_button.setIconSize(QSize(30, 30))
         add_material_button.setIcon(add_material_icon)
 
@@ -47,7 +49,7 @@ class MaterialWidget(QDialog):
 
         trash_button = QPushButton()
         trash_button.setFocusPolicy(Qt.NoFocus)
-        trash_icon = load_icon(Path("data/icons/delete.png"), self.color)
+        trash_icon = load_icon(ICON_DIR / "delete.png", self.color)
         trash_button.setIconSize(QSize(30, 30))
         trash_button.setIcon(trash_icon)
         trash_button.setFixedSize(30, 30)

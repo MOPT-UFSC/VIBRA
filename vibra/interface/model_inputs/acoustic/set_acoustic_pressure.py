@@ -23,11 +23,9 @@ class AcousticPressureInput(QDialog):
         ui_path = UI_DIR / "model/setup/acoustic/acoustic_pressure_input.ui"
         uic.loadUi(ui_path, self)
 
-        icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.icon = QIcon(icon_path)
-        self.setWindowIcon(self.icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Prescribe an acoustic pressure")
 
         self.main_window = app().main_window

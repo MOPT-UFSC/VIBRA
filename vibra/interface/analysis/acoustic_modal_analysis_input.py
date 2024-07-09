@@ -23,9 +23,7 @@ class AcousticModalAnalysisInput(QDialog):
         self.main_window = app().main_window
         self.project = self.main_window.project
 
-        icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.icon = QIcon(icon_path)
-        self.setWindowIcon(self.icon)
+        self.setWindowIcon(app().main_window.vibra_icon)
 
         self.lineEdit_number_modes = self.findChild(QLineEdit, "lineEdit_number_modes")
         self.lineEdit_input_sigma_factor = self.findChild(QLineEdit, "lineEdit_input_sigma_factor")

@@ -5,7 +5,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from vibra import app
+from vibra import app, ICON_DIR
 from vibra.interface.analysis.analysis_setup_input import AnalysisSetupInput
 from vibra.interface.analysis.analysis_type_input import AnalysisTypeInput
 from vibra.interface.model_inputs.structural.material.set_material_input import SetMaterialInput
@@ -120,8 +120,7 @@ class MenuItems(QTreeWidget):
         Currently isn't used.
         """
         self.icon_child_set_material = QIcon()
-        icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.icon_child_set_material.addPixmap(QPixmap(icon_path), QIcon.Active, QIcon.On)
+        self.icon_child_set_material.addPixmap(QPixmap(str(ICON_DIR)), QIcon.Active, QIcon.On)
 
     def _createFonts(self):
         """Create Font objects that configure the font of the items."""

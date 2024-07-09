@@ -5,6 +5,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+from vibra import app, ICON_DIR
 from vibra.utils.icons import load_icon
 
 
@@ -19,8 +20,8 @@ class AcousticModalAnalysisBar(QWidget):
 
         self.create_sliders()
 
-        self.play_icon = load_icon(Path("data/icons/play.png"), QColor("#0055DD"))
-        self.pause_icon = load_icon(Path("data/icons/pause.png"), QColor("#0055DD"))
+        self.play_icon = load_icon(ICON_DIR / "play.png", QColor("#0055DD"))
+        self.pause_icon = load_icon(ICON_DIR / "pause.png", QColor("#0055DD"))
         self.play_pause_button = QPushButton(self.play_icon, "")
         self.play_pause_button.setShortcut("Space")
         self.play_pause_button.setMinimumWidth(80)

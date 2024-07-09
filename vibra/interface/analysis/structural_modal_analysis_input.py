@@ -6,7 +6,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from vibra import UI_DIR
+from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 window_title_1 = "Error"
@@ -20,9 +20,7 @@ class StructuralModalAnalysisInput(QDialog):
         ui_path = UI_DIR / "analysis/structural/structural_modal_analysis_input.ui"
         uic.loadUi(ui_path, self)
 
-        icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.icon = QIcon(icon_path)
-        self.setWindowIcon(self.icon)
+        self.setWindowIcon(app().main_window.vibra_icon)
 
         self.lineEdit_number_modes = self.findChild(QLineEdit, "lineEdit_number_modes")
         self.lineEdit_input_sigma_factor = self.findChild(QLineEdit, "lineEdit_input_sigma_factor")
