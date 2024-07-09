@@ -123,91 +123,6 @@ class LoadProject:
         self.library_materials = dict()
 
 
-    def load_model_properties(self):
-        _properties = self.file.read_model_properties_from_file()
-        for key, data in _properties.items():
-            if isinstance(data, dict):
-                for (property, id), prop_data in data.items():
-
-                    if property == "fluid":
-                        fluid_id = prop_data
-                        if fluid_id not in self.library_fluids.keys():
-                            continue
-                        else:
-                            prop_data = self.library_fluids[fluid_id]
-
-                    elif property == "material":
-                        material_id = prop_data
-                        if material_id not in self.library_materials.keys():
-                            continue
-                        else:
-                            prop_data = self.library_materials[material_id]
-
-                    if key == "volume_properties":
-                        self.properties._set_property(property, prop_data, volume=id)
-
-                    elif key == "surface_properties":
-                        self.properties._set_property(property, prop_data, surface=id)
-
-                    elif key == "line_properties":
-                        self.properties._set_property(property, prop_data, line=id)
-
-                    elif key == "element_properties":
-                        self.properties._set_property(property, prop_data, element=id)
-
-                    elif key == "nodal_properties":
-                        self.properties._set_property(property, prop_data, node=id)
-
-                    else:
-                        self.properties._set_property(property, prop_data)
-
-
-    def load_mesh_setup(self):
-        mesh_setup = self.file.read_mesh_setup_from_file()
-        
-        if "element_type" in mesh_setup.keys():
-            if "shape_function" in mesh_setup.keys():
-
-                element_type = mesh_setup["element_type"]
-                shape_function = mesh_setup["shape_function"]
-                
-                if element_type == " Tetrahedral" and shape_function == " Linear":
-                    solid_element = TETRAHEDRON_4
-
-                elif element_type == " Tetrahedral" and shape_function == " Quadratic":
-                    solid_element = TETRAHEDRON_10
-
-                elif element_type == " Hexahedral" and shape_function == " Linear":
-                    solid_element = HEXAHEDRON_8
-
-                elif element_type == " Hexahedral" and shape_function == " Quadratic":
-                    solid_element = HEXAHEDRON_20
-
-                else:
-                    raise NotImplementedError(f"Element type not defined!")
-                
-                mesh_setup["element_type"] = solid_element
-                mesh_setup.pop("shape_function")
-
-                app().main_window.project.reset_solutions()
-                app().main_window.project.set_mesh_setup(mesh_setup)
-
-                mesh_data = self.file.read_mesh_data_from_file()
-
-                if mesh_data is None:
-                    generate_mesh = load_function(app().main_window.project.generate_mesh, app().main_window)
-                    generate_mesh()
-                    app().main_window.file.write_mesh_data_in_file()
-
-                else:
-                    load_mesh =  load_function(self.load_mesh_data_from_file, app().main_window)
-                    load_mesh(mesh_data)
-
-                app().main_window.viewer_tabs.show_mesh()
-                app().main_window.viewer_tabs.close_analysis_tabs()
-                app().main_window.viewer_tabs.update_plots()
-
-
     def load_mesh_data_from_file(self, mesh_data):
 
         logging.info("Loading mesh..." + ProgressStatus(20, 100))
@@ -313,6 +228,102 @@ class LoadProject:
 
         # logging.info("Loading mesh..." + ProgressStatus(95, 100))
         # self.model.mesh._process_element_average_coordinates()
+
+
+    def load_mesh_setup(self):
+        mesh_setup = self.file.read_mesh_setup_from_file()
+        
+        if "element_type" in mesh_setup.keys():
+            if "shape_function" in mesh_setup.keys():
+
+                element_type = mesh_setup["element_type"]
+                shape_function = mesh_setup["shape_function"]
+                
+                if element_type == " Tetrahedral" and shape_function == " Linear":
+                    solid_element = TETRAHEDRON_4
+
+                elif element_type == " Tetrahedral" and shape_function == " Quadratic":
+                    solid_element = TETRAHEDRON_10
+
+                elif element_type == " Hexahedral" and shape_function == " Linear":
+                    solid_element = HEXAHEDRON_8
+
+                elif element_type == " Hexahedral" and shape_function == " Quadratic":
+                    solid_element = HEXAHEDRON_20
+
+                else:
+                    raise NotImplementedError(f"Element type not defined!")
+                
+                mesh_setup["element_type"] = solid_element
+                mesh_setup.pop("shape_function")
+
+                app().main_window.project.reset_solutions()
+                app().main_window.project.set_mesh_setup(mesh_setup)
+
+                mesh_data = self.file.read_mesh_data_from_file()
+
+                if mesh_data is None:
+                    generate_mesh = load_function(app().main_window.project.generate_mesh, app().main_window)
+                    generate_mesh()
+                    app().main_window.file.write_mesh_data_in_file()
+
+                else:
+                    load_mesh =  load_function(self.load_mesh_data_from_file, app().main_window)
+                    load_mesh(mesh_data)
+
+                update_render = load_function(self.update_render, app().main_window)
+                update_render()
+
+
+    def update_render(self):
+
+        logging.info("Updating render..." + ProgressStatus(20, 100))
+        app().main_window.viewer_tabs.show_mesh()
+
+        logging.info("Updating render..." + ProgressStatus(40, 100))
+        app().main_window.viewer_tabs.close_analysis_tabs()
+
+        logging.info("Updating render..." + ProgressStatus(90, 100))
+        app().main_window.viewer_tabs.update_plots()
+
+
+    def load_model_properties(self):
+        _properties = self.file.read_model_properties_from_file()
+        for key, data in _properties.items():
+            if isinstance(data, dict):
+                for (property, id), prop_data in data.items():
+
+                    if property == "fluid":
+                        fluid_id = prop_data
+                        if fluid_id not in self.library_fluids.keys():
+                            continue
+                        else:
+                            prop_data = self.library_fluids[fluid_id]
+
+                    elif property == "material":
+                        material_id = prop_data
+                        if material_id not in self.library_materials.keys():
+                            continue
+                        else:
+                            prop_data = self.library_materials[material_id]
+
+                    if key == "volume_properties":
+                        self.properties._set_property(property, prop_data, volume=id)
+
+                    elif key == "surface_properties":
+                        self.properties._set_property(property, prop_data, surface=id)
+
+                    elif key == "line_properties":
+                        self.properties._set_property(property, prop_data, line=id)
+
+                    elif key == "element_properties":
+                        self.properties._set_property(property, prop_data, element=id)
+
+                    elif key == "nodal_properties":
+                        self.properties._set_property(property, prop_data, node=id)
+
+                    else:
+                        self.properties._set_property(property, prop_data)
 
 
     def load_analysis_setup(self):
