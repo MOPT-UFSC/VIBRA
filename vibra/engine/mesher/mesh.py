@@ -67,8 +67,6 @@ class Mesh:
         self.nodal_area = defaultdict(list)
         self.volume_from_surface = defaultdict(list)
         self.face_elements_connected_to_nodes = defaultdict(list)
-        # self.solid_elements_connected_to_nodes = defaultdict(list)
-        # self.solid_elements_connected_to_nodes = dict()
 
 
     @classmethod
@@ -114,28 +112,6 @@ class Mesh:
                     )
 
         return obj
-
-    # def update_parameters(self, paths, *args, **kwargs):
-    #     self.load_cad_string(
-    #         paths,
-    #         *args,
-    #         **kwargs,
-    #     )
-
-    # def load_cad_string(self, string: str, suffix: str, *args, **kwargs):
-    #     # sadly in windows we cannot use the with statement
-    #     # that removes the files automatically =(
-    #     tmp = NamedTemporaryFile(suffix=suffix, delete=False)
-    #     tmp_path = Path(tmp.name)
-
-    #     with open(tmp_path, "w") as file:
-    #         file.write(string)
-
-    #     self.load_cad(tmp.name, *args, **kwargs)
-    #     tmp.close()
-    #     tmp_path.unlink(missing_ok=True)  # deletes the file
-
-    #     self.geometry_setup = GeometrySetup(string, suffix)
 
     def load_cad(
                     self,
@@ -425,6 +401,7 @@ class Mesh:
 
         self.surfaces_from_volumes.clear()
         self.volume_from_surface.clear()
+        self.solid_elements_center.clear()
 
         for dim, tag in gmsh.model.getEntities():
 
@@ -453,33 +430,26 @@ class Mesh:
 
             if dim == 0:  # Points
                 self.nodes_from_points[tag] = int(element_nodes[0]) - 1
-                # print(f"Points: {tag} -> {self.nodes_from_points[tag]}")
 
             elif dim == 1:  # Lines
                 connectivity_dim1[dim, tag] = elements_data
                 self.nodes_from_lines[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
                 self.gmsh_elements_from_lines[tag] = np.array([*set(element_indexes[0])], dtype=int)
-                # print(f"Lines: {tag} -> {len(self.nodes_from_lines[tag])}")
 
             elif dim == 2:  # Surfaces
                 connectivity_dim2[dim, tag] = elements_data
                 self.nodes_from_surfaces[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
                 self.connectivity_from_surfaces[tag] = array_element_nodes
                 self.gmsh_elements_from_surfaces[tag] = np.array([*set(element_indexes[0])], dtype=int)
-                # print(f"Surfaces: {tag} -> {len(self.nodes_from_surfaces[tag])}")
 
             elif dim == 3:  # Solids
                 connectivity_dim3[dim, tag] = elements_data
                 self.nodes_from_volumes[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
                 self.gmsh_elements_from_volumes[tag] = np.array([*set(element_indexes[0])], dtype=int)
-                # print(f"Volumes: {tag} -> {len(self.nodes_from_volumes[tag])}")
 
         self.lines_connectivity, self.map_line_elements = self._get_connectivity_array(connectivity_dim1)
         self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity, self.map_solid_elements = self._get_connectivity_array(connectivity_dim3)
-
-        # np.savetxt("mesh_connectivity.dat", self.solids_connectivity, delimiter=";")
-        # np.savetxt("mesh_coordinates.dat", self.nodal_coordinates, delimiter=";")
 
         # TODO: remove as soon as possible
         aux_zeros = np.zeros(len(self.solids_connectivity[0,4:]))
@@ -580,24 +550,34 @@ class Mesh:
 
 
     def _process_solid_elements_connected_to_nodes(self):
-        self.nodes_from_solid_element.clear()
-        # self.solid_elements_connected_to_nodes.clear()
-
         # t0 = time()
+
+        self.nodes_from_solid_element.clear()
         for el, connected_nodes in enumerate(self.solids_connectivity[:, 4:]):
             self.nodes_from_solid_element[el] = connected_nodes
-            # for node in connected_nodes:
-            #     self.solid_elements_connected_to_nodes[node].append(el)
 
         # dt = time() - t0
         # print(f"Elapsed '_process_solid_elements_connected_to_nodes': {dt} s")
 
 
     def get_solid_elements_connected_to_nodes(self, node_ids):
+
         solid_elements_connected_to_nodes = dict()
-        for node_id in node_ids:
+
+        # aux = 0.
+        Nel = len(node_ids)
+        for i, node_id in enumerate(node_ids):
+            # t0 = time()
+            # aux += self.solids_connectivity[:, 4:] == node_id
             mask = np.sum(self.solids_connectivity[:, 4:] == node_id, axis=1) == 1
             solid_elements_connected_to_nodes[node_id] = self.solids_connectivity[:, 0][mask]
+            # dt = time() - t0
+            # print(f"Loop time: {dt} s")
+            logging.info("Post-processing selection..." + ProgressStatus(int(100 * i / Nel), 100))
+
+        # mask = np.sum(aux, axis=1) >= 1
+        # solid_elements_connected_to_nodes = self.solids_connectivity[:, 0][mask]
+
         return solid_elements_connected_to_nodes
 
 
@@ -676,8 +656,6 @@ class Mesh:
         gmsh.model.mesh.generate(dim=2)
 
         for dim, tag in gmsh.model.getEntities():
-
-            # print(dim, tag)
 
             if dim == 2:  # Surfaces
 
@@ -780,18 +758,16 @@ class Mesh:
         return np.array([keys, values], dtype=int).T
 
 
-    def _process_element_average_coordinates(self):
+    def _process_element_average_coordinates(self, element_ids):
         """ This method evaluates the element average center coordinates. """
-        t0 = time()
-        self.solid_elements_center.clear()
-        Nel = self.solids_connectivity.shape[0]
-        for i, (index, nodes) in enumerate(self.nodes_from_solid_element.items()):
-            self.solid_elements_center[index] = np.average(self.nodal_coordinates[nodes, 1:], axis=0)
-            logging.info("Post-processing mesh..." + ProgressStatus(int(i / Nel), 100))
 
-        dt = time() - t0
-        print(f"Elapsed  '_process_element_average_coordinates': {dt} s")
+        solid_elements_center = dict()
 
+        for i, element_id in enumerate(element_ids):
+            nodes = self.nodes_from_solid_element[element_id]
+            solid_elements_center[element_id] = np.average(self.nodal_coordinates[nodes, 1:], axis=0)
+
+        return solid_elements_center
 
     def get_average_nodal_coordinates(self, surface_ids, averaged=False):
 
@@ -834,20 +810,26 @@ class Mesh:
         node_indexes = self.nodal_coordinates[:,0]
         nodal_coordinates = self.nodal_coordinates[:,1:]
 
-        if filter_type == 0:
-            self._process_element_average_coordinates()
-            element_indexes = np.array(list(self.solid_elements_center.keys()), dtype=int)
-            elements_center_coordinates = np.array(list(self.solid_elements_center.values()), dtype=float)
-
         for center_coords in list_center_coords:
             
             if filter_type == 0: # filters the elements inside sphere based on elements coordinates center
 
-                diff_elem = np.linalg.norm(elements_center_coordinates - center_coords, axis=1) 
+                filter_radius = 1.1 * selection_radius
+                _, filtered_elements = self.get_nodes_inside_sphere_and_its_elements_connected(center_coords, filter_radius)
+
+                if filtered_elements:
+                    filtered_solid_elements = self._process_element_average_coordinates(filtered_elements)
+                    element_indexes = np.array(list(filtered_solid_elements.keys()), dtype=int)
+                    elements_center_coordinates = np.array(list(filtered_solid_elements.values()), dtype=float)
+                else:
+                    return
+
                 diff_nodes = np.linalg.norm(nodal_coordinates - center_coords, axis=1)
-                mask_elem = diff_elem <= selection_radius
+                diff_elem = np.linalg.norm(elements_center_coordinates - center_coords, axis=1) 
+
                 mask_nodes = diff_nodes <= selection_radius
-            
+                mask_elem = diff_elem <= selection_radius
+
                 if sum(mask_nodes):
                     for node_id in node_indexes[mask_nodes]:
                         if node_id not in nodes_inside_sphere:
@@ -866,11 +848,14 @@ class Mesh:
                 if sum(mask_nodes):
 
                     nodes_inside_sphere = node_indexes[mask_nodes]
-                    selection_data = self.get_solid_elements_connected_to_nodes[nodes_inside_sphere]
+                    selection_data = self.get_solid_elements_connected_to_nodes(nodes_inside_sphere)
                     for _node, element_ids in selection_data.items():
                         for element_id in element_ids:
                             if element_id not in selected_elements:
                                 selected_elements.append(element_id)
+
+        self.nodes_inside_sphere = nodes_inside_sphere
+        self.selected_elements = selected_elements
 
         if export_data:
             # list_nodes = np.array(nodes_inside_sphere, dtype=int).reshape(-1,1)
@@ -891,6 +876,26 @@ class Mesh:
             print(f"Number of elements: {len(selected_elements)}")
 
         return selected_elements, nodes_inside_sphere
+
+
+    def get_nodes_inside_sphere_and_its_elements_connected(self, center_coords, selection_radius):
+
+        node_indexes = self.nodal_coordinates[:,0]
+        nodal_coordinates = self.nodal_coordinates[:,1:]
+
+        diff_nodes = np.linalg.norm(nodal_coordinates - center_coords, axis=1)
+        mask_nodes = diff_nodes <= selection_radius
+        nodes_inside_sphere = node_indexes[mask_nodes]
+
+        selection_data = self.get_solid_elements_connected_to_nodes(nodes_inside_sphere)
+
+        _selected_elements = list()
+        for _node, element_ids in selection_data.items():
+            _selected_elements.extend(element_ids)
+
+        selected_elements = np.array([*set(_selected_elements)], dtype=int)
+
+        return nodes_inside_sphere, list(selected_elements)
 
 
     def check_input_surface_id(self, selected_ids, single_id=False):

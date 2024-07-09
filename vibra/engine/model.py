@@ -176,7 +176,7 @@ class Model:
         for key, data in self.properties.group_properties.items():
             property, group_id = key
             if property == "lrf_eq_model":
-                #
+
                 d = data["diameter"]
                 surface_ids = data["surface_ids"]
                 selection_radius = data["selection_radius"]
@@ -184,15 +184,12 @@ class Model:
                 filter_type = data["filter_type"]
 
                 post_process = load_function(self.mesh.get_elements_and_nodes_from_sphere, app().main_window)
-                selected_elements, _ = post_process(surface_ids, 
-                                                    selection_radius,
-                                                    averaged = averaged,
-                                                    filter_type = filter_type)
+                post_process(   surface_ids, 
+                                selection_radius,
+                                averaged = averaged,
+                                filter_type = filter_type   )
 
-                # selected_elements, _ = self.mesh.get_elements_and_nodes_from_sphere( surface_ids, 
-                #                                                                 selection_radius,
-                #                                                                 averaged = averaged,
-                #                                                                 filter_type = filter_type )
+                selected_elements = self.mesh.selected_elements
 
                 for element_id in selected_elements:
                     #

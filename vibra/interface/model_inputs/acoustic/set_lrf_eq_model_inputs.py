@@ -170,7 +170,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         elif index == 2:
             averaged_selection = True
 
-        center_coords = self.model.get_average_nodal_coordinates(selection_id, averaged=averaged_selection)
+        center_coords = self.mesh.get_average_nodal_coordinates(selection_id, averaged=averaged_selection)
         if averaged_selection:
             try:
                 _round_center_coords = [round(value,4) for value in center_coords[0]]
