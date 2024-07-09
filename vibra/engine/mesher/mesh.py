@@ -145,7 +145,7 @@ class Mesh:
 
         gmsh.initialize("", False)
 
-        logging.info("Configuring Mesh" + ProgressStatus(5, 100))
+        logging.info("Configuring mesh..." + ProgressStatus(5, 100))
         self._configure_mesh(   element_type,
                                 minimum_element_size,
                                 maximum_element_size,
@@ -155,7 +155,7 @@ class Mesh:
                                 mesh_refinement_parameters,
                             )
 
-        logging.info("Loading Geometry" + ProgressStatus(10, 100))
+        logging.info("Loading geometry..." + ProgressStatus(10, 100))
         if isinstance(paths, str):
             paths = [paths]
 
@@ -172,11 +172,11 @@ class Mesh:
         if self.mesh_connection:
             self._merge_nodes_from_adjacent_volumes()
 
-        logging.info("Loading Geometry" + ProgressStatus(15, 100))
+        logging.info("Generating mesh..." + ProgressStatus(25, 100))
         gmsh.model.mesh.generate(dim=element_type.dimensions)
         gmsh.model.mesh.removeDuplicateNodes()
 
-        logging.info("Processing Mesh" + ProgressStatus(70, 100))
+        logging.info("Post-processing mesh..." + ProgressStatus(70, 100))
         self._process_mesh()
 
         if gmsh_gui:
@@ -446,6 +446,8 @@ class Mesh:
                 connectivity_dim3[dim, tag] = elements_data
                 self.nodes_from_volumes[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
                 self.gmsh_elements_from_volumes[tag] = np.array([*set(element_indexes[0])], dtype=int)
+
+        logging.info("Post-processing mesh..." + ProgressStatus(80, 100))
 
         self.lines_connectivity, self.map_line_elements = self._get_connectivity_array(connectivity_dim1)
         self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)
@@ -1023,14 +1025,14 @@ class Mesh:
         if print_log:
             dt = time()  - t0
             print(f"Time to process - reordering (1/4): {dt}")
-        logging.info("Reordering nodes (1/4)" + ProgressStatus(20, 100))
+        logging.info("Reordering nodes (1/4)..." + ProgressStatus(20, 100))
 
         t0 = time()
         self.reordering._process_reordering()
         if print_log:
             dt = time()  - t0
             print(f"Time to process - reordering (2/4): {dt}")
-        logging.info("Reordering nodes (2/4)" + ProgressStatus(60, 100))
+        logging.info("Reordering nodes (2/4)..." + ProgressStatus(60, 100))
 
         t0 = time()
         self.lines_connectivity = self.reordering.get_new_connectivity(self.lines_connectivity)
@@ -1039,7 +1041,7 @@ class Mesh:
         if print_log:
             dt = time()  - t0
             print(f"Time to process - reordering (3/4): {dt}")
-        logging.info("Reordering nodes (3/4)" + ProgressStatus(80, 100))
+        logging.info("Reordering nodes (3/4)..." + ProgressStatus(80, 100))
 
         t0 = time()
         self.nodal_coordinates = self.reordering.get_new_nodal_coordinates()        
@@ -1050,7 +1052,7 @@ class Mesh:
         if print_log:
             dt = time()  - t0
             print(f"Time to process - reordering (4/4): {dt}")
-        logging.info("Reordering nodes (4/4)" + ProgressStatus(100, 100))
+        logging.info("Reordering nodes (4/4)..." + ProgressStatus(100, 100))
             
         t0 = time()
         # self._process_face_elements_connected_to_nodes()

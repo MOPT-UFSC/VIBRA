@@ -10,7 +10,9 @@ from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppe
 from vibra.engine.mesher.element_type import *
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_bar import load_function
+from vibra.utils.progress_status import ProgressStatus
 
+import logging
 from pathlib import Path
 
 window_title_1 = "Error"
@@ -150,31 +152,17 @@ class MesherInputs(QDialog):
         generate_mesh()
 
         app().main_window.file.write_mesh_data_in_file()
-        app().main_window.viewer_tabs.show_mesh()
-        app().main_window.viewer_tabs.close_analysis_tabs()
-        app().main_window.viewer_tabs.update_plots()
 
-
-        # TODO: Remove this as soon as possible
-        # try:
-
-        #     # surf_tag = 5
-        #     vol_tag = 1
-
-        #     app().main_window.viewer_tabs.show_mesh()
-        #     mesh_widget = app().main_window.viewer_tabs.mesh_widget
-        #     # surface_elements = app().main_window.project.model.mesh.elements_from_surface[surf_tag]
-        #     volume_elements = app().main_window.project.model.mesh.elements_from_volume[vol_tag]
-
-        #     # mesh_widget.select_multiple_nodes(nodes)
-        #     # mesh_widget.select_multiple_faces(surface_elements)
-        #     # mesh_widget.select_multiple_volumes(volume_elements)
-
-        # except:
-        #     pass
+        actions_to_finalize = load_function(self.actions_to_finalize, self.main_window)
+        actions_to_finalize()
 
         self.complete = True
 
+    def actions_to_finalize(self):
+        logging.info("Updating render..." + ProgressStatus(95, 100))
+        app().main_window.viewer_tabs.show_mesh()
+        app().main_window.viewer_tabs.close_analysis_tabs()
+        app().main_window.viewer_tabs.update_plots()
 
     def trash_button_callback(self):
         current_row = self.tableWidget_refining_mesh_data.currentRow()

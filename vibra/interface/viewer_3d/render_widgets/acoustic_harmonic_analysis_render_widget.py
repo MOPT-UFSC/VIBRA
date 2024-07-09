@@ -229,7 +229,7 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
 
             self.animation_data[deg_angle] = output_pressures
 
-            logging.info( "Processing the animation frames..." + ProgressStatus(step, len(deg_angles)))
+            logging.info("Processing the animation frames..." + ProgressStatus(step, len(deg_angles)))
 
         # self.analysis_actor.plot_colorbar(self.animation_data, min_value, max_value)
         # self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
