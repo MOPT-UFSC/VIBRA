@@ -118,27 +118,26 @@ class ProjectFileIO:
 
         mesh_data = dict(
                             nodal_coordinates = self.model.mesh.nodal_coordinates,
-                            lines_connectivity = self.model.mesh.lines_connectivity,
-                            faces_connectivity = self.model.mesh.faces_connectivity,
-                            solids_connectivity = self.model.mesh.solids_connectivity,
-
-                            map_line_elements = self.model.mesh.get_array_based_elements_mapping(entity = "lines"),
-                            map_face_elements = self.model.mesh.get_array_based_elements_mapping(entity = "faces"),
-                            map_solid_elements = self.model.mesh.get_array_based_elements_mapping(entity = "solids"),
-
                             nodes_from_points = self.model.mesh.nodes_from_points,
                             nodes_from_solids = self.model.mesh.nodes_from_lines,
                             nodes_from_surfaces = self.model.mesh.nodes_from_surfaces,
                             nodes_from_volumes = self.model.mesh.nodes_from_volumes,
 
+                            lines_connectivity = self.model.mesh.lines_connectivity,
+                            faces_connectivity = self.model.mesh.faces_connectivity,
+                            solids_connectivity = self.model.mesh.solids_connectivity,
+                            connectivity_from_surfaces = self.model.mesh.connectivity_from_surfaces,
+
+                            map_line_elements = self.model.mesh.get_array_based_elements_mapping(entity = "lines"),
+                            map_face_elements = self.model.mesh.get_array_based_elements_mapping(entity = "faces"),
+                            map_solid_elements = self.model.mesh.get_array_based_elements_mapping(entity = "solids"),
+
                             gmsh_elements_from_lines = self.model.mesh.gmsh_elements_from_lines,
                             gmsh_elements_from_surfaces = self.model.mesh.gmsh_elements_from_surfaces,
                             gmsh_elements_from_volumes = self.model.mesh.gmsh_elements_from_volumes,
 
-                            connectivity_from_surfaces = self.model.mesh.connectivity_from_surfaces,
-
-                            surfaces_from_volumes = self.model.mesh.surfaces_from_volumes,
-                            volume_from_surface = self.model.mesh.volume_from_surface
+                            surfaces_from_volumes = self.model.mesh.surfaces_from_volumes
+                            # volume_from_surface = self.model.mesh.volume_from_surface
                         )
 
         file_path = self.project_folder_path / self.mesh_data_filename 
@@ -149,10 +148,29 @@ class ProjectFileIO:
         f = h5py.File(file_path, 'w')
         for key, data in mesh_data.items():
 
+            if "nodes" in key or "nodal" in key:
+                _key = f"nodal_data/{key}"
+
+            elif "connectivity" in key:
+                _key = f"connectivity/{key}"
+
+            elif "map" in key:
+                _key = f"maps/{key}"
+
+            elif "gmsh" in key:
+                _key = f"gmsh_data/{key}"
+
+            elif key == "surfaces_from_volumes":
+                _key = f"geometry_info/{key}"
+
+            else:
+                _key = key
+
             if isinstance(data, dict):
+
                 for _id, _values in data.items():
-                    _key = f"{key}_{_id}"
-                    f.create_dataset(_key, data=_values, dtype=int)
+                    name = f"{_key}_{_id}"
+                    f.create_dataset(name, data=_values, dtype=int)
 
             else:
 
@@ -161,7 +179,7 @@ class ProjectFileIO:
                 else:
                     dtype = int
 
-                f.create_dataset(key, data=data, dtype=dtype)
+                f.create_dataset(_key, data=data, dtype=dtype)
 
         f.close()
 
@@ -174,16 +192,17 @@ class ProjectFileIO:
         if os.path.exists(file_path):
                 
             f = h5py.File(file_path, 'r')
-            list_groups = list(f.keys())
+            groups = list(f.keys())
 
-            for group in list_groups:
+            for group in groups:
+                for key, values in f.get(group).items():
 
-                mesh_data[group] = f.get(group)
-
-                try:
-                    mesh_data[group] = np.array(f.get(group))
-                except:
-                    mesh_data[group] = int(f.get(group))
+                    try:
+                        mesh_data[key] = np.array(values)
+                        # mesh_data[group] = np.array(f.get(group))
+                    except:
+                        mesh_data[key] = int(values)
+                        # mesh_data[group] = int(f.get(group))
 
             f.close()
 

@@ -480,9 +480,6 @@ class Mesh:
 
         # np.savetxt("mesh_connectivity.dat", self.solids_connectivity, delimiter=";")
         # np.savetxt("mesh_coordinates.dat", self.nodal_coordinates, delimiter=";")
-        # print(self.volume_from_surface[4])
-        # print(self.nodes_from_surfaces[4])
-        # print(self.connectivity_from_surfaces[4])
 
         # TODO: remove as soon as possible
         aux_zeros = np.zeros(len(self.solids_connectivity[0,4:]))

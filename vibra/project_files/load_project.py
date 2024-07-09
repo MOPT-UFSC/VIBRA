@@ -8,6 +8,7 @@ from vibra.utils.progress_status import ProgressStatus
 
 from vibra.interface.loading_bar import load_function
 
+from collections import defaultdict
 import logging
 
 class LoadProject:
@@ -236,7 +237,7 @@ class LoadProject:
 
         connectivity_from_surfaces = dict()
         surfaces_from_volumes = dict()
-        volume_from_surface = dict()
+        volume_from_surface = defaultdict(list)
 
         logging.info("Loading mesh..." + ProgressStatus(60, 100))
 
@@ -278,9 +279,13 @@ class LoadProject:
                 id = int(key.replace("surfaces_from_volumes_", ""))
                 surfaces_from_volumes[id] = data
 
-            elif "volume_from_surface" in key:
-                id = int(key.replace("volume_from_surface_", ""))
-                volume_from_surface[id] = data
+            # elif "volume_from_surface" in key:
+            #     id = int(key.replace("volume_from_surface_", ""))
+            #     volume_from_surface[id] = data
+
+        for vol_id, face_ids in surfaces_from_volumes.items():
+            for _id in face_ids:
+                volume_from_surface[_id].append(vol_id) 
 
         self.model.mesh.nodes_from_points = nodes_from_points
         self.model.mesh.nodes_from_lines = nodes_from_lines
