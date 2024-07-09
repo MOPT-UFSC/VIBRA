@@ -24,22 +24,23 @@ class AnalysisActor(SolidsActor):
         plane = vtk.vtkPlane()
         plane.SetOrigin(origin)
         plane.SetNormal(normal)
-        self.GetMapper().RemoveAllClippingPlanes()
-        self.GetMapper().AddClippingPlane(plane)
 
-        # clipper = vtk.vtkExtractGeometry()
-        # clipper.SetInputData(self.data)
-        # clipper.SetImplicitFunction(plane)
-        # clipper.Update()
-        # self.clipped_data = clipper.GetOutput()
+        clipper = vtk.vtkExtractGeometry()
+        clipper.SetInputData(self.data)
+        clipper.SetImplicitFunction(plane)
+        clipper.ExtractInsideOff()
+        clipper.Update()
+        self.clipped_data = clipper.GetOutput()
 
-        # mapper = self.GetMapper()
-        # mapper.InterpolateScalarsBeforeMappingOn()
-        # mapper.SetInputData(self.clipped_data)
-        # mapper.Modified()
+        mapper = self.GetMapper()
+        mapper.InterpolateScalarsBeforeMappingOn()
+        mapper.SetInputConnection(clipper.GetOutputPort())
+        mapper.Modified()
 
     def disable_cut(self):
         self.GetMapper().RemoveAllClippingPlanes()
+        self.GetMapper().RemoveAllInputConnections(0)
+        self.GetMapper().SetInputData(self.data)
 
     def plot_colorbar(self, values, min_value, max_value):
         if self.data is None:

@@ -258,7 +258,7 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
 
         self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
         self.analysis_actor.plot_colorbar(color_scalars, min_value, max_value)
-        self.edges_actor.extract_data(self.analysis_actor.data)
+        # self.edges_actor.extract_data(self.analysis_actor.data)
         self.update()
 
     def _actors_exists(self):
