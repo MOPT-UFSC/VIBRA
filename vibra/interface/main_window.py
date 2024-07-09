@@ -253,10 +253,24 @@ class MainWindow(QMainWindow):
         self.save_project_as(path)
 
     def open_project_dialog(self):
-        self.project_path, check = QFileDialog.getOpenFileName(self, "Open Project", filter="Vibra File (*.vibra)")
+
+        last_path = app().config.get_last_project_folder()
+        if last_path is None:
+            path = os.path.expanduser("~")
+        else:
+            path = last_path
+
+        self.project_path, check = QFileDialog.getOpenFileName( 
+                                                                self, 
+                                                                "Open Project", 
+                                                                path, 
+                                                                filter = "Vibra File (*.vibra)"
+                                                                )
 
         if not check:
             return
+
+        app().config.write_last_project_folder_path_in_file(self.project_path)
 
         self.project = Project()
         self.file = ProjectFileIO(self.project_path, override=False)
@@ -264,14 +278,24 @@ class MainWindow(QMainWindow):
         self.open_project()
 
     def import_geometry_dialog(self):
+
+        last_path = app().config.get_last_geometry_folder()
+        if last_path is None:
+            path = os.path.expanduser("~")
+        else:
+            path = last_path
+
         geometry_path, check = QFileDialog.getOpenFileName(
                                                             self,
                                                             "Select Geometry",
-                                                            filter="Geometry Files (*.stp *.step *.igs *.iges)",
+                                                            path,
+                                                            filter = "Geometry Files (*.stp *.step *.igs *.iges)",
                                                             )
 
         if not check:
             return
+
+        app().config.write_last_geometry_folder_path_in_file(geometry_path)
 
         self.project = Project()
         self.create_temporary_vibra_folder()

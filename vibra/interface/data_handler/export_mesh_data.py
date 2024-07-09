@@ -2,7 +2,6 @@ from PyQt5.QtWidgets import QCheckBox, QDialog, QFileDialog, QLineEdit, QPushBut
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5 import uic
-from pathlib import Path
 
 from vibra import app, UI_DIR
 from vibra.interface.mesh.mesher_inputs import MesherInputs
@@ -12,6 +11,8 @@ from vibra.interface.plots.general.frequency_response_plotter import FrequencyRe
 
 import os
 import numpy as np
+from pathlib import Path
+
 
 class ExportMeshData(QDialog):
     def __init__(self, *args, **kwargs):
@@ -40,13 +41,9 @@ class ExportMeshData(QDialog):
         self.exec()
 
     def _load_icons(self):
-        self.export_icon = QIcon(get_icons_path('save.png'))
-        self.vibra_icon = QIcon(get_icons_path('logo_vibra.png'))
-        self.search_icon = QIcon(get_icons_path('import.png'))
-        self.clean_icon = QIcon(get_icons_path('broom.png'))
-        self.setWindowIcon(self.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Export mesh data")
 
     def _reset_variables(self):
