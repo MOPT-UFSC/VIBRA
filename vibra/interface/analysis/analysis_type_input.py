@@ -22,10 +22,7 @@ class AnalysisTypeInput(QDialog):
 
         self.main_window = app().main_window
 
-        icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.icon = QIcon(icon_path)
-        self.setWindowIcon(self.icon)
-
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
 
@@ -54,19 +51,13 @@ class AnalysisTypeInput(QDialog):
         self.sigma_factor = 1e-4
 
     def _define_qt_variables(self):
-        self.pushButton_harmonic_structural = self.findChild(
-            QPushButton, "pushButton_harmonic_structural"
-        )
-        self.pushButton_harmonic_acoustic = self.findChild(
-            QPushButton, "pushButton_harmonic_acoustic"
-        )
-        self.pushButton_harmonic_coupled = self.findChild(
-            QPushButton, "pushButton_harmonic_coupled"
-        )
-        self.pushButton_modal_structural = self.findChild(
-            QPushButton, "pushButton_modal_structural"
-        )
-        self.pushButton_modal_acoustic = self.findChild(QPushButton, "pushButton_modal_acoustic")
+        # QPushButton
+        self.pushButton_harmonic_structural : QPushButton
+        self.pushButton_harmonic_acoustic : QPushButton
+        self.pushButton_harmonic_coupled : QPushButton
+        self.pushButton_modal_structural : QPushButton
+        self.pushButton_modal_acoustic : QPushButton
+        # temporary
         self.pushButton_harmonic_structural.setDisabled(True)
         # self.pushButton_harmonic_acoustic.setDisabled(True)
         self.pushButton_harmonic_coupled.setDisabled(True)
@@ -173,11 +164,15 @@ class AnalysisTypeInput(QDialog):
             self.finalize()
 
     def finalize(self):
+
         self.complete = True
         if self.main_window.project.analysis_data is not None:
             for key, value in self.main_window.project.analysis_data.items():
                 if key in ["f_min", "f_max", "f_step", "frequencies"]:
                     self.analysis_data[key] = value
+
         self.main_window.project.set_analysis_data(self.analysis_data)
         self.main_window.project.create_solver()
+        app().main_window.file.write_analysis_setup_in_file(self.analysis_data)
+
         self.close()

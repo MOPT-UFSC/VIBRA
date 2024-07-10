@@ -5,12 +5,10 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from vibra import app
-from vibra.errors import IncompleteMeshSetup, IncompleteSetupError
+from vibra import app, ICON_DIR
 from vibra.interface.analysis.analysis_setup_input import AnalysisSetupInput
 from vibra.interface.analysis.analysis_type_input import AnalysisTypeInput
-from vibra.interface.exception_message import ErrorMessage
-from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.structural.material.set_material_input import SetMaterialInput
 from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input import SetFluidInput
 from vibra.interface.mesh.mesher_inputs import MesherInputs
 #
@@ -19,19 +17,21 @@ from vibra.interface.model_inputs.acoustic.set_mass_flow_rate_inputs import Mass
 from vibra.interface.model_inputs.acoustic.set_surface_velocity_inputs import SurfaceVelocityInput
 from vibra.interface.model_inputs.acoustic.set_specific_impedance_inputs import SpecificImpedanceInput
 from vibra.interface.model_inputs.acoustic.set_anechoic_termination_inputs import SetAnechoicTerminationInputs
-from vibra.interface.model_inputs.acoustic.set_volume_velocity_inputs import VolumeVelocityInput
 from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import DissipationModelInput
 from vibra.interface.model_inputs.acoustic.set_lrf_eq_model_inputs import LowReducedFrequencyEquivalentModelInput
 from vibra.interface.model_inputs.acoustic.set_porous_material_model import SetPorousMaterialModel
 #
 from vibra.interface.model_inputs.structural.boundary_condition_inputs import BoundaryConditionInputs
-from vibra.interface.model_inputs.structural.material.set_material_input import SetMaterialInput
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_input import PlotAcousticFrequencyResponseInput
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_input import PlotAcousticFrequencyResponseFunctionInput
 from vibra.interface.plots.acoustic.plot_transmission_loss_input import PlotTransmissionLossInput
 #
+from vibra.interface.process_analysis import ProcessAnalysis
+
 from vibra.interface.loading_bar import load_function
-from vibra.utils.interface_functions import get_main_window
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.errors import IncompleteMeshSetup, IncompleteSetupError
+from vibra.interface.exception_message import ErrorMessage
 
 
 class BorderItemDelegate(QStyledItemDelegate):
@@ -120,8 +120,7 @@ class MenuItems(QTreeWidget):
         Currently isn't used.
         """
         self.icon_child_set_material = QIcon()
-        icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.icon_child_set_material.addPixmap(QPixmap(icon_path), QIcon.Active, QIcon.On)
+        self.icon_child_set_material.addPixmap(QPixmap(str(ICON_DIR)), QIcon.Active, QIcon.On)
 
     def _createFonts(self):
         """Create Font objects that configure the font of the items."""
@@ -209,7 +208,6 @@ class MenuItems(QTreeWidget):
         self.item_child_set_dissipation_model = QTreeWidgetItem(["Set Dissipation Model"])
         self.item_child_set_acoustic_pressure = QTreeWidgetItem(["Set Acoustic Pressure"])
         self.item_child_set_mass_flow_rate = QTreeWidgetItem(["Set Mass Flow Rate"])
-        self.item_child_set_volume_velocity = QTreeWidgetItem(["Set Volume Velocity"])
         self.item_child_set_surface_velocity = QTreeWidgetItem(["Set Surface Velocity"])
         self.item_child_set_anechoic_termination = QTreeWidgetItem(["Set Anechoic Termination"])
         self.item_child_set_specific_impedance = QTreeWidgetItem(["Set Specific Impedance"])
@@ -224,7 +222,6 @@ class MenuItems(QTreeWidget):
         self.list_child_items.append(self.item_child_set_acoustic_pressure)
         self.list_child_items.append(self.item_child_set_dissipation_model)
         self.list_child_items.append(self.item_child_set_mass_flow_rate)
-        self.list_child_items.append(self.item_child_set_volume_velocity)
         self.list_child_items.append(self.item_child_set_surface_velocity)
         self.list_child_items.append(self.item_child_set_specific_impedance)
         self.list_child_items.append(self.item_child_set_anechoic_termination)
@@ -291,7 +288,6 @@ class MenuItems(QTreeWidget):
         self.addTopLevelItem(self.item_top_acoustic_model_setup)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_acoustic_pressure)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_mass_flow_rate)
-        self.item_top_acoustic_model_setup.addChild(self.item_child_set_volume_velocity)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_surface_velocity)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_anechoic_termination)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_specific_impedance)
@@ -387,7 +383,7 @@ class MenuItems(QTreeWidget):
         if item == self.item_child_import_geometry:
             if not self.item_child_import_geometry.isDisabled():
                 self.main_window.import_geometry_dialog()
-                if os.path.exists(self.main_window.project.geometry_path):
+                if app().main_window.file.read_geometry_from_file():
                     self.modify_items_access_after_geometry_importing()
 
         elif item == self.item_child_mesh_setup:
@@ -428,10 +424,6 @@ class MenuItems(QTreeWidget):
             if not self.item_child_set_porous_material_model.isDisabled():
                 self.obj = SetPorousMaterialModel()
 
-        elif item == self.item_child_set_volume_velocity:
-            if not self.item_child_set_volume_velocity.isDisabled():
-                self.obj = VolumeVelocityInput()
-
         elif item == self.item_child_set_mass_flow_rate:
             if not self.item_child_set_mass_flow_rate.isDisabled():
                 self.obj = MassFlowRateInput()
@@ -456,14 +448,19 @@ class MenuItems(QTreeWidget):
             if not self.item_child_selectAnalysisType.isDisabled():
                 analysis_type = AnalysisTypeInput()
                 if analysis_type.complete:
+
                     if analysis_type.analysis_id in [2, 4]:
                         self.run_analysis()
                         self.item_child_runAnalysis.setDisabled(False)
+
                     else:
+
                         analysis_setup = AnalysisSetupInput()
                         self.item_child_analysisSetup.setDisabled(False)
+
                         if analysis_setup.complete:
                             self.item_child_runAnalysis.setDisabled(False)
+
                         if analysis_setup.solve_analysis:
                             self.run_analysis()
 
@@ -553,20 +550,23 @@ class MenuItems(QTreeWidget):
         #         ErrorMessage(error)
         #         return
         #
+
+        analysis = ProcessAnalysis()
+
         analysis_id = self.main_window.project.analysis_data["analysis_id"]
         #
         if analysis_id == 2:
-            solve_modal = load_function(self.main_window.process_structural_modal_analysis, 
+            solve_modal = load_function(analysis.process_structural_modal_analysis, 
                                         self.main_window)
             solve_modal()
 
         elif analysis_id == 3:
-            solve_harmonic = load_function(self.main_window.process_acoustic_harmonic_analysis, 
+            solve_harmonic = load_function(analysis.process_acoustic_harmonic_analysis, 
                                            self.main_window)
             solve_harmonic()
 
         elif analysis_id == 4:
-            solve_modal = load_function(self.main_window.process_acoustic_modal_analysis, 
+            solve_modal = load_function(analysis.process_acoustic_modal_analysis, 
                                         self.main_window)
             solve_modal()
         else:
@@ -600,7 +600,6 @@ class MenuItems(QTreeWidget):
     def modify_acoustic_model_setup_items_acces(self, bool_key):
         self.item_child_set_acoustic_pressure.setDisabled(bool_key)
         self.item_child_set_mass_flow_rate.setDisabled(bool_key)
-        self.item_child_set_volume_velocity.setDisabled(bool_key)
         self.item_child_set_surface_velocity.setDisabled(bool_key)
         self.item_child_set_specific_impedance.setDisabled(bool_key)
         self.item_child_set_anechoic_termination.setDisabled(bool_key)

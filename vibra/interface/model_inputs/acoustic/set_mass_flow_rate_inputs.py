@@ -23,14 +23,14 @@ class MassFlowRateInput(QDialog):
         ui_path = UI_DIR / "model/setup/acoustic/mass_flow_rate_input.ui"
         uic.loadUi(ui_path, self)
 
-
         self.main_window = app().main_window
-        self.project = self.main_window.project
-        self.model = self.project.model
-        self.properties = self.model.properties
-
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
+
+        self.project = app().main_window.project
+        self.model = app().main_window.project.model
+        self.mesh = app().main_window.project.model.mesh
+        self.properties = app().main_window.project.model.properties
 
         self._reset_variables()
         self._config_window()
@@ -51,11 +51,6 @@ class MassFlowRateInput(QDialog):
         self.mass_flow_rate = None
         self.userPath = os.path.expanduser("~")
         self.new_load_path_table = ""
-        self.project_path = self.project.file.project_path
-        self.acoustic_bc_filename = self.project.file.acoustic_model_setup_filename
-        self.acoustic_bc_info_path = os.path.join(self.project_path, self.acoustic_bc_filename)
-        self.acoustic_folder_path = self.project.file.acoustic_imported_data_folder_path
-        self.mass_flow_rate_tables_folder_path = os.path.join(self.acoustic_folder_path, "mass_flow_rate_files")
 
     def _define_qt_variables(self):
         # QCheckBox objects
@@ -192,7 +187,7 @@ class MassFlowRateInput(QDialog):
 
     def check_constant_values(self):
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.model.check_input_surface_id(lineEdit_selection_id)
+        self.stop, self.typed_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return
@@ -226,7 +221,7 @@ class MassFlowRateInput(QDialog):
             for _id in self.typed_ids:
                 self.project.set_mass_flow_rate(data, _id)
 
-            self.properties.export_model_properties()
+            app().main_window.file.write_model_properties_in_file()
 
             print(f"[Set Mass Flow Rate] - defined at surface(s) {self.typed_ids}")
             # TODO: remove existing tables and update the render
@@ -317,56 +312,50 @@ class MassFlowRateInput(QDialog):
             return None, None
 
     def load_mass_flow_rate_table(self):
-        self.imported_values, self.filename_mass_flow_rate = self.load_table(
-            self.lineEdit_load_table_path
-        )
+        self.imported_values, self.basename = self.load_table(self.lineEdit_load_table_path)
 
     def check_table_values(self):
+
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.model.check_input_surface_id(lineEdit_selection_id)
+        self.stop, self.typed_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return
 
         for _id in self.typed_ids:
             self.properties._remove_surface_property("acoustic_pressure", _id)
+            self.properties._remove_surface_property("surface_velocity", _id)
             self.properties._remove_surface_property("compressor_excitation", _id)
 
-        list_table_names = self.get_list_table_names_from_selected_surfaces(self.typed_ids)
         if self.lineEdit_load_table_path != "":
             for _id in self.typed_ids:
-                if self.filename_mass_flow_rate is None:
-                    self.imported_values, self.filename_mass_flow_rate = self.load_table(
-                        self.lineEdit_load_table_path, direct_load=True
-                    )
+                if self.basename is None:
+                    self.imported_values, self.basename = self.load_table(  self.lineEdit_load_table_path, 
+                                                                            direct_load=True  )
+
                 if self.imported_values is None:
                     return
-                else:
-                    self.mass_flow_rate, self.basename_mass_flow_rate = self.save_table_file(
-                        _id, self.imported_values, self.filename_mass_flow_rate
-                    )
-                    if self.basename_mass_flow_rate in list_table_names:
-                        list_table_names.remove(self.basename_mass_flow_rate)
 
-                    real_values = list(np.real(self.mass_flow_rate))
-                    imag_values = list(np.imag(self.mass_flow_rate))
+                else:
+                    
+                    real_values = list(self.imported_values[:, 1])
+                    imag_values = list(self.imported_values[:, 2])
 
                     nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
                     key_avg = self.checkBox_averaged_constant_values.isChecked()
 
                     data = {
-                        "real_values": real_values,
-                        "imag_values": imag_values,
-                        "nodal_attribution": nodal_attribution,
-                        "averaged": key_avg,
-                        "table_name": self.basename_mass_flow_rate,
-                    }
+                                "real_values": real_values,
+                                "imag_values": imag_values,
+                                "nodal_attribution": nodal_attribution,
+                                "averaged": key_avg,
+                                "table_name": self.basename,
+                            }
 
                     self.project.set_mass_flow_rate(data, _id)
 
-            self.properties.export_model_properties()
+            app().main_window.file.write_model_properties_in_file()
 
-            self.process_table_file_removal(list_table_names)
             print(f"[Set Volume Velocity] - defined at surface(s) {self.typed_ids}")
             self.close()
         else:
@@ -449,7 +438,7 @@ class MassFlowRateInput(QDialog):
                                 _list_table_names.append(table_name)
 
                 self.properties._reset_property("mass_flow_rate")
-                self.properties.export_model_properties()
+                app().main_window.file.write_model_properties_in_file()
 
                 # TODO: remove imported tables
                 self.process_table_file_removal(_list_table_names)

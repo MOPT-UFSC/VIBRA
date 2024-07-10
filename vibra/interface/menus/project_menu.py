@@ -3,6 +3,7 @@ from pathlib import Path
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QMenu
 
+from vibra import ICON_DIR
 from vibra.interface.exception_message import ErrorMessage
 from vibra.interface.loading_bar import load_function
 from vibra.utils.icons import load_icon
@@ -22,20 +23,20 @@ class ProjectMenu(QMenu):
     def create_actions(self):
         color = QColor("#448cff")
 
-        self.new_project_icon = load_icon(Path("data/icons/new_file.png"), color)
-        self.load_project_icon = load_icon(Path("data/icons/import.png"), color)
-        self.recent_icon = load_icon(Path("data/icons/recent.png"), color)
-        self.import_geometry_icon = load_icon(Path("data/icons/image-plus.png"), color)
+        self.new_project_icon = load_icon(ICON_DIR / "new_file.png", color)
+        self.load_project_icon = load_icon(ICON_DIR / "import.png", color)
+        self.recent_icon = load_icon(ICON_DIR / "recent.png", color)
+        self.import_geometry_icon = load_icon(ICON_DIR / "image-plus.png", color)
 
-        self.save_icon = load_icon(Path("data/icons/save.png"), color)
-        self.save_as_icon = load_icon(Path("data/icons/save_as.png"), color)
-        self.save_as_png_icon = load_icon(Path("data/icons/png.png"), color)
-        self.export_mesh_icon = load_icon(Path("data/icons/save.png"), color)
+        self.save_icon = load_icon(ICON_DIR / "save.png", color)
+        self.save_as_icon = load_icon(ICON_DIR / "save_as.png", color)
+        self.save_as_png_icon = load_icon(ICON_DIR / "png.png", color)
+        self.export_mesh_icon = load_icon(ICON_DIR / "save.png", color)
 
-        self.theme_sun_icon = load_icon(Path("data/icons/sun_icon.png"), color)
-        self.theme_moon_icon = load_icon(Path("data/icons/moon_icon.png"), color)
-        self.capture_image_icon = load_icon(Path("data/icons/cube-scan.png"), color)
-        self.exit_icon = load_icon(Path("data/icons/exit.png"), color)
+        self.theme_sun_icon = load_icon(ICON_DIR / "sun_icon.png", color)
+        self.theme_moon_icon = load_icon(ICON_DIR / "moon_icon.png", color)
+        self.capture_image_icon = load_icon(ICON_DIR / "cube-scan.png", color)
+        self.exit_icon = load_icon(ICON_DIR / "exit.png", color)
 
         #
         self.new_project_action = QAction(self.new_project_icon, "New Project", self)

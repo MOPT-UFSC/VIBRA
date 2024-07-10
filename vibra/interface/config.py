@@ -37,6 +37,17 @@ class Config:
                 return section["last project folder"]
         return None
 
+    def get_last_project_folder(self):
+
+        config = configparser.ConfigParser()
+        config.read(self.config_path)
+
+        if config.has_section("User preferences"):
+            section = config["User preferences"]
+            if "last project folder" in section.keys():
+                return section["last project folder"]
+        return None
+
     def get_last_geometry_folder(self):
 
         config = configparser.ConfigParser()
@@ -71,6 +82,23 @@ class Config:
             else:
                 config["User preferences"] = {"interface theme" : theme,
                                               "background color" : theme}
+
+        except:
+            return
+
+        self.write_data_in_file(self.config_path, config) 
+
+    def write_last_project_folder_path_in_file(self, project_path : str):
+        try:
+
+            _path = os.path.dirname(project_path)
+            config = configparser.ConfigParser()
+            config.read(self.config_path)
+
+            if config.has_section('User preferences'):
+                config["User preferences"]["last project folder"] = _path
+            else:
+                config["User preferences"] = {"last project folder" : _path}
 
         except:
             return

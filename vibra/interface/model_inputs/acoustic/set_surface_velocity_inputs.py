@@ -24,12 +24,13 @@ class SurfaceVelocityInput(QDialog):
         uic.loadUi(ui_path, self)
 
         self.main_window = app().main_window
-        self.project = self.main_window.project
-        self.model = self.project.model
-        self.properties = self.model.properties
-
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
+
+        self.project = app().main_window.project
+        self.model = app().main_window.project.model
+        self.mesh = app().main_window.project.model.mesh
+        self.properties = app().main_window.project.model.properties
 
         self._reset_variables()
         self._config_window()
@@ -50,41 +51,39 @@ class SurfaceVelocityInput(QDialog):
         self.surface_velocity = None
         self.userPath = os.path.expanduser("~")
         self.new_load_path_table = ""
-        self.project_path = self.project.file.project_path
-        self.acoustic_bc_filename = self.project.file.acoustic_model_setup_filename
-        self.acoustic_bc_info_path = os.path.join(self.project_path, self.acoustic_bc_filename)
-        self.acoustic_folder_path = self.project.file.acoustic_imported_data_folder_path
-        self.surface_velocity_tables_folder_path = os.path.join(self.acoustic_folder_path, "surface_velocity_files")
 
     def _define_qt_variables(self):
-        # QCheckBox objects
+
+        # QCheckBox
         self.checkBox_averaged_constant_values = self.findChild(QCheckBox, "checkBox_averaged_constant_values")
         self.checkBox_averaged_table_values = self.findChild(QCheckBox, "checkBox_averaged_table_values")
-        # QLineEdit objects
+
+        # QLineEdit
         self.lineEdit_selection_id = self.findChild(QLineEdit, "lineEdit_selection_id")
         self.lineEdit_real_value = self.findChild(QLineEdit, "lineEdit_real_value")
         self.lineEdit_imag_value = self.findChild(QLineEdit, "lineEdit_imag_value")
         self.lineEdit_load_table_path = self.findChild(QLineEdit, "lineEdit_table_path")
-        # QPushButton objects
+
+        # QPushButton
         self.pushButton_load_table = self.findChild(QPushButton, "pushButton_load_table")
         self.pushButton_constant_value_confirm = self.findChild(QPushButton, "pushButton_constant_value_confirm")
         self.pushButton_table_values_confirm = self.findChild(QPushButton, "pushButton_table_values_confirm")
         self.pushButton_remove_bc_confirm = self.findChild(QPushButton, "pushButton_remove_bc_confirm")
         self.pushButton_reset = self.findChild(QPushButton, "pushButton_reset")
-        # QRadioButton objects
+
+        # QRadioButton
         self.radioButton_nodal_attribution_constant = self.findChild(QRadioButton, "radioButton_nodal_attribution_constant")
         self.radioButton_element_integration_constant = self.findChild(QRadioButton, "radioButton_element_integration_constant")
         self.radioButton_element_integration_table = self.findChild(QRadioButton, "radioButton_element_integration_table")
         self.radioButton_nodal_attribution_table = self.findChild(QRadioButton, "radioButton_nodal_attribution_table")
+
         # QSpinBox object
         self.spinBox_skiprows = self.findChild(QSpinBox, "spinBox")
-        # QTabWidget objects
+
+        # QTabWidget
         self.tabWidget_surface_velocity = self.findChild(QTabWidget, "tabWidget_surface_velocity")
-        self.tab_constant_values = self.tabWidget_surface_velocity.findChild(QWidget, "tab_constant_values")
-        self.tab_table_values = self.tabWidget_surface_velocity.findChild(QWidget, "tab_table_values")
-        self.tab_remove = self.tabWidget_surface_velocity.findChild(QWidget, "tab_remove")
-        self.current_tab = self.tabWidget_surface_velocity.currentIndex()
-        # QTreeWidget objects
+
+        # QTreeWidget
         self.treeWidget_surface_velocity = self.findChild(QTreeWidget, "treeWidget_surface_velocity")
         self.treeWidget_surface_velocity.setColumnWidth(1, 20)
         self.treeWidget_surface_velocity.setColumnWidth(2, 80)
@@ -114,8 +113,7 @@ class SurfaceVelocityInput(QDialog):
         geometry_widget.selection_changed.connect(self.geometry_selection_callback)
 
     def tabEvent_surface_velocity(self):
-        self.current_tab = self.tabWidget_surface_velocity.currentIndex()
-        if self.current_tab == 2:
+        if self.tabWidget_surface_velocity.currentIndex() == 2:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
         else:
@@ -184,7 +182,7 @@ class SurfaceVelocityInput(QDialog):
 
     def check_constant_values(self):
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.model.check_input_surface_id(lineEdit_selection_id)
+        self.stop, self.typed_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return
@@ -218,7 +216,7 @@ class SurfaceVelocityInput(QDialog):
             for _id in self.typed_ids:
                 self.project.set_surface_velocity(data, _id)
 
-            self.properties.export_model_properties()
+            app().main_window.file.write_model_properties_in_file()
 
             print(f"[Set surface Velocity] - defined at surface(s) {self.typed_ids}")
             # TODO: remove existing tables and update the render
@@ -256,8 +254,6 @@ class SurfaceVelocityInput(QDialog):
                 PrintMessageInput([window_title_1, title, message])
                 return None, None
 
-            imported_values = imported_file[:, 1]
-
             if imported_file.shape[1] >= 3:
                 self.frequencies = imported_file[:, 0]
                 self.f_min = self.frequencies[0]
@@ -272,7 +268,7 @@ class SurfaceVelocityInput(QDialog):
                 # else:
                 #     self.project.set_frequencies(self.frequencies, self.f_min, self.f_max, self.f_step)
 
-            return imported_values, imported_filename
+            return imported_file, imported_filename
 
         except Exception as log_error:
             message = str(log_error)
@@ -309,13 +305,12 @@ class SurfaceVelocityInput(QDialog):
             return None, None
 
     def load_surface_velocity_table(self):
-        self.imported_values, self.filename_surface_velocity = self.load_table(
-            self.lineEdit_load_table_path
-        )
+        self.imported_values, self.basename= self.load_table( self.lineEdit_load_table_path )
 
     def check_table_values(self):
+
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.model.check_input_surface_id(lineEdit_selection_id)
+        self.stop, self.typed_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return
@@ -324,43 +319,38 @@ class SurfaceVelocityInput(QDialog):
             self.properties._remove_surface_property("acoustic_pressure", _id)
             self.properties._remove_surface_property("compressor_excitation", _id)
 
-        list_table_names = self.get_list_table_names_from_selected_surfaces(self.typed_ids)
         if self.lineEdit_load_table_path != "":
             for _id in self.typed_ids:
-                if self.filename_surface_velocity is None:
-                    self.imported_values, self.filename_surface_velocity = self.load_table(
-                        self.lineEdit_load_table_path, direct_load=True
-                    )
+                if self.basename is None:
+                    self.imported_values, self.basename = self.load_table(  self.lineEdit_load_table_path, 
+                                                                            direct_load=True  )
+
                 if self.imported_values is None:
                     return
-                else:
-                    self.surface_velocity, self.basename_surface_velocity = self.save_table_file(
-                        _id, self.imported_values, self.filename_surface_velocity
-                    )
-                    if self.basename_surface_velocity in list_table_names:
-                        list_table_names.remove(self.basename_surface_velocity)
 
-                    real_values = list(np.real(self.surface_velocity))
-                    imag_values = list(np.imag(self.surface_velocity))
+                else:
+
+                    real_values = list(self.imported_values[:, 1])
+                    imag_values = list(self.imported_values[:, 2])
 
                     nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
                     key_avg = self.checkBox_averaged_constant_values.isChecked()
 
                     data = {
-                        "real_values": real_values,
-                        "imag_values": imag_values,
-                        "nodal_attribution": nodal_attribution,
-                        "averaged": key_avg,
-                        "table_name": self.basename_surface_velocity,
-                    }
+                                "real_values": real_values,
+                                "imag_values": imag_values,
+                                "nodal_attribution": nodal_attribution,
+                                "averaged": key_avg,
+                                "table_name": self.basename,
+                            }
 
                     self.project.set_surface_velocity(data, _id)
 
-            self.properties.export_model_properties()
+            app().main_window.file.write_model_properties_in_file()
 
-            self.process_table_file_removal(list_table_names)
             print(f"[Set surface Velocity] - defined at surface(s) {self.typed_ids}")
             self.close()
+
         else:
             title = "Additional inputs required"
             message = "You must inform at least one surface velocity\n"
@@ -441,7 +431,7 @@ class SurfaceVelocityInput(QDialog):
                                 _list_table_names.append(table_name)
 
                 self.properties._reset_property("surface_velocity")
-                self.properties.export_model_properties()
+                app().main_window.file.write_model_properties_in_file()
 
                 # TODO: remove imported tables
                 self.process_table_file_removal(_list_table_names)
@@ -476,7 +466,7 @@ class SurfaceVelocityInput(QDialog):
         text = ""
         for _id in list_ids:
             text += "{}, ".format(_id)
-        if self.current_tab != 2:
+        if self.tabWidget_surface_velocity.currentIndex() != 2:
             self.lineEdit_selection_id.setText(text[:-2])
 
     def update_tabs_visibility(self):

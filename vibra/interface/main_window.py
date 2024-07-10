@@ -1,16 +1,8 @@
-import logging
-import random
-from pathlib import Path
-from time import sleep
-import sys
-
-import qdarktheme
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QDialog, QFileDialog, QFrame, QGridLayout, QMainWindow, QMessageBox
+from PyQt5.QtGui import QCloseEvent
+from PyQt5.QtCore import pyqtSignal
 
 from vibra import app
-
 from vibra.config import UserConfig
 from vibra.interface.analysis_filter_menu import AnalysisFilter
 from vibra.interface.clip_plane_widget import ClipPlaneWidget
@@ -28,7 +20,19 @@ from vibra.interface.renderer_toolbar import RendererToolbar
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_tabs import ViewerTabs
 from vibra.interface.formatters.icons import *
-from vibra.project import Project
+
+from vibra.project_files.project import Project
+from vibra.project_files.load_project import LoadProject
+
+from vibra.file.project_file_io import ProjectFileIO
+
+import qdarktheme
+
+import logging
+import random
+from pathlib import Path
+from time import sleep
+import sys
 
 
 class MainWindow(QMainWindow):
@@ -50,6 +54,12 @@ class MainWindow(QMainWindow):
         self.project = Project()
         self.user_config = UserConfig.load()
         self.status_bar = StatusBar(self)
+
+        self._initialize()
+
+    def _initialize(self):
+        self.project_path = ""    
+        self.dialog = None
 
     def _define_qt_variables(self):
         pass
@@ -285,8 +295,13 @@ class MainWindow(QMainWindow):
 
         # self.viewer_3d.save_png(path)
 
+    def create_temporary_vibra_folder(self):
+        user_path = os.path.expanduser("~")
+        self.project_folder_path = Path(user_path) / "temp_vibra"
+        self.project_path = str(self.project_folder_path / "tmp.vibra")
+        create_new_folder(user_path, "temp_vibra")
+
     def new_project_dialog(self):
-        self.project = Project()
         self.import_geometry_dialog()
 
     def save_project_dialog(self):
@@ -297,10 +312,10 @@ class MainWindow(QMainWindow):
 
     def save_project_as_dialog(self):
         path, check = QFileDialog.getSaveFileName(
-            self,
-            "Save As",
-            filter="Vibra File (*.vibra)",
-        )
+                                                    self,
+                                                    "Save As",
+                                                    filter="Vibra File (*.vibra)",
+                                                )
 
         if not check:
             return
@@ -308,26 +323,58 @@ class MainWindow(QMainWindow):
         self.save_project_as(path)
 
     def open_project_dialog(self):
-        path, check = QFileDialog.getOpenFileName(
-            self, "Open Project", filter="Vibra File (*.vibra)"
-        )
+
+        last_path = app().config.get_last_project_folder()
+        if last_path is None:
+            path = os.path.expanduser("~")
+        else:
+            path = last_path
+
+        self.project_path, check = QFileDialog.getOpenFileName( 
+                                                                self, 
+                                                                "Open Project", 
+                                                                path, 
+                                                                filter = "Vibra File (*.vibra)"
+                                                                )
 
         if not check:
             return
 
-        self.open_project(path)
+        app().config.write_last_project_folder_path_in_file(self.project_path)
+
+        self.project = Project()
+        self.file = ProjectFileIO(self.project_path, override=False)
+
+        self.open_project()
 
     def import_geometry_dialog(self):
-        path, check = QFileDialog.getOpenFileName(
-            self,
-            "Select Geometry",
-            filter="Geometry Files (*.stp *.step *.igs *.iges)",
-        )
+
+        last_path = app().config.get_last_geometry_folder()
+        if last_path is None:
+            path = os.path.expanduser("~")
+        else:
+            path = last_path
+
+        geometry_path, check = QFileDialog.getOpenFileName(
+                                                            self,
+                                                            "Select Geometry",
+                                                            path,
+                                                            filter = "Geometry Files (*.stp *.step *.igs *.iges)",
+                                                            )
 
         if not check:
             return
 
-        self.import_geometry(path)
+        app().config.write_last_geometry_folder_path_in_file(geometry_path)
+
+        self.project = Project()
+        self.create_temporary_vibra_folder()
+
+        self.file = ProjectFileIO(self.project_path)
+        self.file.write_geometry_in_file(geometry_path)
+        geometry_paths = self.file.read_geometry_from_file()
+
+        self.import_geometry(geometry_paths)
 
     def save_project_as(self, path):
         path = Path(path)
@@ -338,19 +385,22 @@ class MainWindow(QMainWindow):
     def export_mesh(self):
         ExportMeshData()
 
-    def open_project(self, path):
-        path = Path(path)
-        self.project = Project.load(path)
+    def open_project(self):
+
+        self.load_project = LoadProject()
+        self.load_project.load()
+
+        # self.project.load()
         # self.user_config.add_recent_file(path)
 
         self.viewer_tabs.close_mesh_tabs()
         self.viewer_tabs.show_geometry()
         self.viewer_tabs.show_mesh()
 
-    def import_geometry(self, path):
+    def import_geometry(self, paths):
         # Slow function running with loading bar
         import_geometry = load_function(self.project.import_geometry, self)
-        import_geometry(path)
+        import_geometry(paths)
 
         self.viewer_tabs.reset_tab_visibility()
         self.viewer_tabs.show_geometry()
@@ -373,33 +423,15 @@ class MainWindow(QMainWindow):
             self.user_config.save()
             sys.exit()
 
-    def process_acoustic_modal_analysis(self):
-        try:
-            self.project.solve_acoustic_modal_analysis()
-        except NotImplementedError as e:
-            ErrorMessage(e)
-        else:
-            self.viewer_tabs.show_acoustic_modal_analysis()
-
-    def process_structural_modal_analysis(self):
-        try:
-            self.project.solve_structural_modal_analysis()
-        except NotImplementedError as e:
-            ErrorMessage(e)
-        else:
-            self.viewer_tabs.show_structural_modal_analysis()
-
-    def process_acoustic_harmonic_analysis(self):
-        try:
-            self.project.solve_acoustic_harmonic_analysis()
-        except NotImplementedError as e:
-            ErrorMessage(e)
-        else:
-            self.viewer_tabs.show_acoustic_harmonic_analysis()
-
     def set_input_widget(self, dialog):
         self.dialog = dialog
 
     def close_dialogs(self):
         if isinstance(self.dialog, (QDialog, QWidget)):
             self.dialog.close()
+
+def create_new_folder(path, folder_name):
+    folder_path = os.path.join(path, folder_name)
+    if not os.path.exists(folder_path):
+        os.mkdir(folder_path)
+    return folder_path

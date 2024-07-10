@@ -10,18 +10,14 @@ class PickColorInput(QColorDialog):
 
         self.title = kwargs.get("title", "")
 
-        self._load_icon()
         self._config_window()
         self._initialize()
         self.exec()
 
-    def _load_icon(self):
-        self.icon = app().main_window.vibra_icon
-
     def _config_window(self):
         self.setFixedSize(QSize(540, 410))
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowIcon(self.icon) 
+        self.setWindowIcon(app().main_window.vibra_icon) 
         self.setWindowTitle(self.title)
     
     def _initialize(self):

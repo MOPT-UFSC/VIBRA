@@ -1,12 +1,13 @@
-
 # fmt: off
-from PyQt5 import uic
+
+from PyQt5.QtWidgets import QDialog, QLineEdit, QPushButton
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QDialog, QLineEdit, QPushButton
+from PyQt5 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.loading_bar import load_function
 
 import numpy as np
 from pathlib import Path
@@ -22,12 +23,15 @@ class GetSphereSelectionInformation(QDialog):
         uic.loadUi(ui_path, self)
 
         self.main_window = app().main_window
-        self.main_window.viewer_tabs.show_mesh()
         self.main_window.set_input_widget(self)
 
-        self.project = self.main_window.project
-        self.model = self.main_window.project.model
-        self.properties = self.model.properties
+        if not app().main_window.viewer_tabs.isVisible():
+            return
+
+        self.project = app().main_window.project
+        self.model = app().main_window.project.model
+        self.mesh = app().main_window.project.model.mesh
+        self.properties = app().main_window.project.model.properties
 
         self.selection_id = selection_id
         self.selection_radius = selection_radius
@@ -64,12 +68,21 @@ class GetSphereSelectionInformation(QDialog):
 
     def get_selection_info(self):
 
-        list_elements, list_nodes = self.model.get_elements_and_nodes_from_sphere(  self.selection_id, 
-                                                                                    self.selection_radius, 
-                                                                                    averaged = self.averaged,
-                                                                                    filter_type = self.filter_type)
+        post_process = load_function(self.mesh.get_elements_and_nodes_from_sphere, app().main_window)
+        post_process(   self.selection_id, 
+                        self.selection_radius, 
+                        averaged = self.averaged,
+                        filter_type = self.filter_type   )
+        
+        list_elements = self.mesh.selected_elements
+        list_nodes = self.mesh.nodes_inside_sphere
 
-        list_center_coords = self.model.get_average_nodal_coordinates(  self.selection_id,
+        # list_elements, list_nodes = self.mesh.get_elements_and_nodes_from_sphere(  self.selection_id, 
+        #                                                                             self.selection_radius, 
+        #                                                                             averaged = self.averaged,
+        #                                                                             filter_type = self.filter_type)
+
+        list_center_coords = self.mesh.get_average_nodal_coordinates(  self.selection_id,
                                                                         averaged=self.averaged  )
 
         if len(list_center_coords) == 0:
@@ -93,6 +106,9 @@ class GetSphereSelectionInformation(QDialog):
 
         self.highlight_mesh_elements(list_elements)
 
+        if app().main_window.viewer_tabs.currentIndex() != 2:
+            app().main_window.viewer_tabs.setCurrentIndex(2)
+
     def highlight_mesh_elements(self, elements):
-        mesh_widget = self.main_window.viewer_tabs.mesh_widget
+        mesh_widget = app().main_window.viewer_tabs.mesh_widget
         mesh_widget.select_multiple_volumes(elements)

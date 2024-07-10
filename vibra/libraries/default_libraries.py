@@ -1,7 +1,9 @@
 import configparser
+import os
 
+from vibra import app
 
-def default_material_library(path):
+def default_material_library():
     config = configparser.ConfigParser()
 
     config["Steel"] = {
@@ -64,11 +66,10 @@ def default_material_library(path):
         "Thermal expansion coefficient": 1.9e-5,
     }
 
-    with open(path, "w") as config_file:
-        config.write(config_file)
+    app().main_window.file.write_fluid_library_in_file(config)
 
 
-def default_fluid_library(path):
+def default_fluid_library():
     # References:   Incropera, et al. FUNDAMENTALS OF HEAT AND MASS TRANSFER. 6th edition.
     #               Çengel, Yunus A., Boles, Michael A. THERMODYNAMICS. 5th edition.
     # TODO: check the fluids pressure state
@@ -165,5 +166,7 @@ def default_fluid_library(path):
         "Pressure": 101325,
     }
 
-    with open(path, "w") as config_file:
-        config.write(config_file)
+    # with open(path, "w") as config_file:
+    #     config.write(config_file)
+
+    app().main_window.file.write_fluid_library_in_file(config)

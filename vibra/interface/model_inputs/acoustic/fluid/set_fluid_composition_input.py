@@ -65,14 +65,11 @@ class SetFluidCompositionInput(QDialog):
     def _initialize(self):
 
         self.selected_row = None
-
         self.keep_window_open = True
-        self.composition_file_path = ""
 
-        self.save_path = ""
+        self.composition_file_path = ""
         self.export_file_path = ""
         self.user_path = os.path.expanduser('~')
-        self.fluid_path = self.project.get_fluid_list_path()
 
         # self.isentropic_label = "ISENK"   # isentropic exponent (real gas)
         self.isentropic_label = "CP/CV"     # isentropic expansion coefficient (ideal gas)

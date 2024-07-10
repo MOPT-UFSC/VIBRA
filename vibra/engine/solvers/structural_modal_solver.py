@@ -43,12 +43,12 @@ class StructuralModalSolver:
             KT = self.assembler.stiffness_matrix
             MT = self.assembler.mass_matrix
 
-        logging.info("Finding eigen values and eigen vectors" + ProgressStatus(7, 100))
+        logging.info("Finding eigen values and eigen vectors..." + ProgressStatus(7, 100))
         self.eigen_values, self.eigen_vectors = eigs(
             KT, M=MT, k=self.modes, which=which, sigma=self.sigma_factor
         )
 
-        logging.info("Extracting information from solution" + ProgressStatus(95, 100))
+        logging.info("Extracting information from solution..." + ProgressStatus(95, 100))
         positive_real = np.absolute(np.real(self.eigen_values))
         natural_frequencies = np.sqrt(positive_real) / (2 * np.pi)
         modal_shape = np.real(self.eigen_vectors)

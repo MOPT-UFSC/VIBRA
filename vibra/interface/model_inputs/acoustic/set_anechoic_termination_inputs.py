@@ -25,9 +25,10 @@ class SetAnechoicTerminationInputs(QDialog):
         uic.loadUi(ui_path, self)
 
         self.main_window = app().main_window
-        self.project = self.main_window.project
-        self.model = self.project.model
-        self.properties = self.model.properties
+        self.project = app().main_window.project
+        self.model = app().main_window.project.model
+        self.mesh = app().main_window.project.model.mesh
+        self.properties = app().main_window.project.model.properties
 
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
@@ -54,11 +55,6 @@ class SetAnechoicTerminationInputs(QDialog):
         self.anechoic_termination = None
         self.userPath = os.path.expanduser("~")
         self.new_load_path_table = ""
-        self.project_path = self.project.file.project_path
-        self.acoustic_bc_filename = self.project.file.acoustic_model_setup_filename
-        self.acoustic_bc_info_path = os.path.join(self.project_path, self.acoustic_bc_filename)
-        self.acoustic_folder_path = self.project.file.acoustic_imported_data_folder_path
-        self.anechoic_termination_tables_folder_path = os.path.join(self.acoustic_folder_path, "anechoic_termination_files")
 
     def _define_qt_variables(self):
         
@@ -134,7 +130,7 @@ class SetAnechoicTerminationInputs(QDialog):
     def update_volumes_from_faces(self):
 
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.model.check_input_surface_id(lineEdit_selection_id)
+        self.stop, self.typed_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
 
         list_volumes = list()
         for face_id in self.typed_ids:            
@@ -158,7 +154,7 @@ class SetAnechoicTerminationInputs(QDialog):
     def confirm_button_pressed(self):
 
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.model.check_input_surface_id(lineEdit_selection_id)
+        self.stop, self.typed_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return
@@ -183,7 +179,7 @@ class SetAnechoicTerminationInputs(QDialog):
         for face_id in self.typed_ids:
             self.project.set_specific_impedance(data, face_id)
 
-        self.properties.export_model_properties()
+        app().main_window.file.write_model_properties_in_file()
 
         print(f"[Set anechoic termination] - defined at surface(s) {self.typed_ids}")
         self.close()
@@ -238,7 +234,7 @@ class SetAnechoicTerminationInputs(QDialog):
                 for face_id in surface_ids:
                     self.properties._remove_surface_property("specific_impedance", face_id)
 
-                self.properties.export_model_properties()
+                app().main_window.file.write_model_properties_in_file()
                 self.close()
 
     def update(self):

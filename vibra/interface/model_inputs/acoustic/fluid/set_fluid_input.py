@@ -132,7 +132,7 @@ class SetFluidInput(QDialog):
 
     def reset_fluid_library_callback(self):
         self.hide()
-        self.fluid_widget.reset_library_to_default()
+        self.fluid_widget.reset_library_callback()
 
     def geometry_selection_callback(self, points, lines, faces, volumes):
         """ """
@@ -249,6 +249,7 @@ class SetFluidInput(QDialog):
                 print("[Set Fluid] - {} defined at all bodies.".format(selected_fluid.name))
 
             # self.actions_to_finalize()
+            app().main_window.file.write_model_properties_in_file()
             self.complete = True
             self.close()
 

@@ -4,6 +4,9 @@ from vibra.engine.mesher.geometry_setup import GeometrySetup
 from vibra.engine.mesher.reordering import Reordering
 from vibra.utils.progress_status import ProgressStatus
 
+from vibra.interface.loading_bar import load_function
+from vibra.interface.general.print_message_input import PrintMessageInput
+
 from vtk import vtkUnstructuredGrid, vtkPoints, vtkDoubleArray, vtkXMLUnstructuredGridWriter, VTK_TETRA, VTK_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_QUADRATIC_HEXAHEDRON
 
 import logging
@@ -64,12 +67,12 @@ class Mesh:
         self.nodal_area = defaultdict(list)
         self.volume_from_surface = defaultdict(list)
         self.face_elements_connected_to_nodes = defaultdict(list)
-        self.solid_elements_connected_to_nodes = defaultdict(list)
+
 
     @classmethod
     def from_cad(
         cls,
-        path: (str | Path),
+        paths: list,
         *,
         minimum_element_size: float = 30.0,
         maximum_element_size: float = 30.0,
@@ -92,11 +95,10 @@ class Mesh:
         Then you can create other constructor like this and avoid a
         lot of confusing if statements in the __init__ method.
         """
-        path = Path(path)
 
         obj = Mesh()
         obj.load_cad(
-                    path,
+                    paths,
                     minimum_element_size=minimum_element_size,
                     maximum_element_size=maximum_element_size,
                     element_type=element_type,
@@ -109,41 +111,11 @@ class Mesh:
                     mesh_connection = mesh_connection,
                     )
 
-        # saves the data to edit mesh parameters later
-        with open(path, "r", encoding="iso-8859-1") as file:
-            obj.geometry_setup = GeometrySetup(
-                file.read(),
-                suffix=path.suffix,
-            )
-
         return obj
-
-    def update_parameters(self, *args, **kwargs):
-        self.load_cad_string(
-            self.geometry_setup.data,
-            self.geometry_setup.suffix,
-            *args,
-            **kwargs,
-        )
-
-    def load_cad_string(self, string: str, suffix: str, *args, **kwargs):
-        # sadly in windows we cannot use the with statement
-        # that removes the files automatically =(
-        tmp = NamedTemporaryFile(suffix=suffix, delete=False)
-        tmp_path = Path(tmp.name)
-
-        with open(tmp_path, "w") as file:
-            file.write(string)
-
-        self.load_cad(tmp.name, *args, **kwargs)
-        tmp.close()
-        tmp_path.unlink(missing_ok=True)  # deletes the file
-
-        self.geometry_setup = GeometrySetup(string, suffix)
 
     def load_cad(
                     self,
-                    path: (str | Path),
+                    paths: (list | Path),
                     *,
                     minimum_element_size: float = 30.0,
                     maximum_element_size: float = 30.0,
@@ -170,12 +142,10 @@ class Mesh:
                                 )
 
         self.mesh_connection = mesh_connection
-        # t0 = time()
-        path = Path(path)
-        gmsh.initialize("", False)
-        logging.info(f"Generating mesh from {path}")
 
-        logging.info("Configuring Mesh" + ProgressStatus(5, 100))
+        gmsh.initialize("", False)
+
+        logging.info("Configuring mesh..." + ProgressStatus(5, 100))
         self._configure_mesh(   element_type,
                                 minimum_element_size,
                                 maximum_element_size,
@@ -185,9 +155,15 @@ class Mesh:
                                 mesh_refinement_parameters,
                             )
 
-        logging.info("Loading Geometry" + ProgressStatus(10, 100))
-        gmsh.merge(str(path))
-        # gmsh.open(str(path))
+        logging.info("Loading geometry..." + ProgressStatus(10, 100))
+        if isinstance(paths, str):
+            paths = [paths]
+
+        # t0 = time()
+        for path in paths:
+            gmsh.merge(str(path))
+            # gmsh.open(str(path))
+
         gmsh.model.occ.synchronize()
 
         self.dimension = min(dimension, gmsh.model.getDimension())
@@ -196,11 +172,11 @@ class Mesh:
         if self.mesh_connection:
             self._merge_nodes_from_adjacent_volumes()
 
-        logging.info("Loading Geometry" + ProgressStatus(15, 100))
+        logging.info("Generating mesh..." + ProgressStatus(25, 100))
         gmsh.model.mesh.generate(dim=element_type.dimensions)
         gmsh.model.mesh.removeDuplicateNodes()
 
-        logging.info("Processing Mesh" + ProgressStatus(70, 100))
+        logging.info("Post-processing mesh..." + ProgressStatus(70, 100))
         self._process_mesh()
 
         if gmsh_gui:
@@ -408,11 +384,6 @@ class Mesh:
         self.nodal_coordinates[indexes - 1, 1:] = coords.reshape(-1, 3) / 1000
         self.nodal_coordinates[indexes - 1, :1] = indexes.reshape(-1, 1) - 1
 
-        # mask = np.linalg.norm(self.nodal_coordinates[:,1:] - np.array([0, 0, 0]), axis=1) < 0.005
-        # mask = np.abs(self.nodal_coordinates[:,1]) < 0.005
-        # ids = self.nodal_coordinates[:,0][mask]
-        # print(len(ids), ids)
-
         connectivity_dim1 = dict()
         connectivity_dim2 = dict()
         connectivity_dim3 = dict()
@@ -430,6 +401,7 @@ class Mesh:
 
         self.surfaces_from_volumes.clear()
         self.volume_from_surface.clear()
+        self.solid_elements_center.clear()
 
         for dim, tag in gmsh.model.getEntities():
 
@@ -475,15 +447,11 @@ class Mesh:
                 self.nodes_from_volumes[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
                 self.gmsh_elements_from_volumes[tag] = np.array([*set(element_indexes[0])], dtype=int)
 
+        logging.info("Post-processing mesh..." + ProgressStatus(80, 100))
+
         self.lines_connectivity, self.map_line_elements = self._get_connectivity_array(connectivity_dim1)
         self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity, self.map_solid_elements = self._get_connectivity_array(connectivity_dim3)
-
-        # np.savetxt("mesh_connectivity.dat", self.solids_connectivity, delimiter=";")
-        # np.savetxt("mesh_coordinates.dat", self.nodal_coordinates, delimiter=";")
-        # print(self.volume_from_surface[4])
-        # print(self.nodes_from_surfaces[4])
-        # print(self.connectivity_from_surfaces[4])
 
         # TODO: remove as soon as possible
         aux_zeros = np.zeros(len(self.solids_connectivity[0,4:]))
@@ -540,12 +508,8 @@ class Mesh:
                 index = self.map_solid_elements[gmsh_index]
                 internal_indexes[i] = index
                 self.volume_from_element[index] = tag
-                # if i == 0:
-                #     print(index, self.solids_connectivity[index,:])
 
             self.elements_from_volume[tag] = internal_indexes
-            # print(self.elements_from_volume[tag], len(self.elements_from_volume[tag]))
-            # print(len(self.elements_from_volume[tag]))
 
 
     def _process_face_elements_connected_to_nodes(self):
@@ -588,12 +552,35 @@ class Mesh:
 
 
     def _process_solid_elements_connected_to_nodes(self):
+        # t0 = time()
+
         self.nodes_from_solid_element.clear()
-        self.solid_elements_connected_to_nodes.clear()
         for el, connected_nodes in enumerate(self.solids_connectivity[:, 4:]):
             self.nodes_from_solid_element[el] = connected_nodes
-            for node in connected_nodes:
-                self.solid_elements_connected_to_nodes[node].append(el)
+
+        # dt = time() - t0
+        # print(f"Elapsed '_process_solid_elements_connected_to_nodes': {dt} s")
+
+
+    def get_solid_elements_connected_to_nodes(self, node_ids):
+
+        solid_elements_connected_to_nodes = dict()
+
+        # aux = 0.
+        Nel = len(node_ids)
+        for i, node_id in enumerate(node_ids):
+            # t0 = time()
+            # aux += self.solids_connectivity[:, 4:] == node_id
+            mask = np.sum(self.solids_connectivity[:, 4:] == node_id, axis=1) == 1
+            solid_elements_connected_to_nodes[node_id] = self.solids_connectivity[:, 0][mask]
+            # dt = time() - t0
+            # print(f"Loop time: {dt} s")
+            logging.info("Post-processing selection..." + ProgressStatus(int(100 * i / Nel), 100))
+
+        # mask = np.sum(aux, axis=1) >= 1
+        # solid_elements_connected_to_nodes = self.solids_connectivity[:, 0][mask]
+
+        return solid_elements_connected_to_nodes
 
 
     def _process_nodal_areas(self, node=None):
@@ -671,8 +658,6 @@ class Mesh:
         gmsh.model.mesh.generate(dim=2)
 
         for dim, tag in gmsh.model.getEntities():
-
-            # print(dim, tag)
 
             if dim == 2:  # Surfaces
 
@@ -758,11 +743,270 @@ class Mesh:
         return output_data, map_elements
 
 
-    def _process_element_average_coordinates(self):
+    def get_array_based_elements_mapping(self, entity="lines"):
+
+        if entity == "lines":
+            keys = list(self.map_line_elements.keys())
+            values = list(self.map_line_elements.values())
+        elif entity == "faces":
+            keys = list(self.map_face_elements.keys())
+            values = list(self.map_face_elements.values())
+        elif entity == "solids":
+            keys = list(self.map_solid_elements.keys())
+            values = list(self.map_solid_elements.values())
+        else:
+            return None
+
+        return np.array([keys, values], dtype=int).T
+
+
+    def _process_element_average_coordinates(self, element_ids):
         """ This method evaluates the element average center coordinates. """
-        self.solid_elements_center.clear()
-        for index, nodes in self.nodes_from_solid_element.items():
-            self.solid_elements_center[index] = np.average(self.nodal_coordinates[nodes, 1:], axis=0)
+
+        solid_elements_center = dict()
+
+        for i, element_id in enumerate(element_ids):
+            nodes = self.nodes_from_solid_element[element_id]
+            solid_elements_center[element_id] = np.average(self.nodal_coordinates[nodes, 1:], axis=0)
+
+        return solid_elements_center
+
+    def get_average_nodal_coordinates(self, surface_ids, averaged=False):
+
+        nodal_coordinates = self.nodal_coordinates
+        self.stop, self.surface_ids = self.check_input_surface_id(surface_ids)
+
+        if self.stop:
+            return list()
+
+        rows = list()
+        for surface_id in self.surface_ids:
+            if averaged:
+                for row in self.nodes_from_surfaces[surface_id]:
+                    rows.append(row)
+            else:
+                _nodes = list(self.nodes_from_surfaces[surface_id])
+                rows.append(_nodes)
+
+        center_coords = list()
+        if rows:
+            if averaged:
+                avg_coords = np.average(nodal_coordinates[rows, 1:], axis=0)   
+                center_coords.append(avg_coords)
+            else:
+                for row in rows:
+                    avg_coords = np.average(nodal_coordinates[row, 1:], axis=0)
+                    center_coords.append(avg_coords)
+
+        return center_coords
+
+
+    def get_elements_and_nodes_from_sphere(self, surface_ids, selection_radius, averaged=False, filter_type=0, export_data=False):
+
+        list_center_coords = self.get_average_nodal_coordinates(surface_ids, averaged=averaged)
+        if len(list_center_coords) == 0:
+            return list(), list()
+
+        selected_elements = list()
+        nodes_inside_sphere = list()
+        node_indexes = self.nodal_coordinates[:,0]
+        nodal_coordinates = self.nodal_coordinates[:,1:]
+
+        for center_coords in list_center_coords:
+            
+            if filter_type == 0: # filters the elements inside sphere based on elements coordinates center
+
+                filter_radius = 1.1 * selection_radius
+                _, filtered_elements = self.get_nodes_inside_sphere_and_its_elements_connected(center_coords, filter_radius)
+
+                if filtered_elements:
+                    filtered_solid_elements = self._process_element_average_coordinates(filtered_elements)
+                    element_indexes = np.array(list(filtered_solid_elements.keys()), dtype=int)
+                    elements_center_coordinates = np.array(list(filtered_solid_elements.values()), dtype=float)
+                else:
+                    return
+
+                diff_nodes = np.linalg.norm(nodal_coordinates - center_coords, axis=1)
+                diff_elem = np.linalg.norm(elements_center_coordinates - center_coords, axis=1) 
+
+                mask_nodes = diff_nodes <= selection_radius
+                mask_elem = diff_elem <= selection_radius
+
+                if sum(mask_nodes):
+                    for node_id in node_indexes[mask_nodes]:
+                        if node_id not in nodes_inside_sphere:
+                            nodes_inside_sphere.append(node_id)
+            
+                if sum(mask_elem):
+                    for element_id in element_indexes[mask_elem]:
+                        if element_id not in selected_elements:
+                            selected_elements.append(element_id)
+
+            else: # filters the elements inside sphere based on nodal coordinates
+
+                diff_nodes = np.linalg.norm(nodal_coordinates - center_coords, axis=1) 
+                mask_nodes = diff_nodes <= selection_radius
+
+                if sum(mask_nodes):
+
+                    nodes_inside_sphere = node_indexes[mask_nodes]
+                    selection_data = self.get_solid_elements_connected_to_nodes(nodes_inside_sphere)
+                    for _node, element_ids in selection_data.items():
+                        for element_id in element_ids:
+                            if element_id not in selected_elements:
+                                selected_elements.append(element_id)
+
+        self.nodes_inside_sphere = nodes_inside_sphere
+        self.selected_elements = selected_elements
+
+        if export_data:
+            # list_nodes = np.array(nodes_inside_sphere, dtype=int).reshape(-1,1)
+            # list_elements = np.array(selected_elements, dtype=int).reshape(-1,1)
+            list_nodes = np.array(nodes_inside_sphere).reshape(-1,1)
+            list_elements = np.array(selected_elements).reshape(-1,1)
+            connectivity = self.solids_connectivity[:, 4:]
+            rows = len(list_elements)
+            cols = connectivity.shape[1]
+            data_elem = np.zeros((rows, cols+1), dtype=int)
+            data_elem[:, 0] = selected_elements
+            data_elem[:, 1:] = connectivity[selected_elements, :]
+
+            np.savetxt("nodes_inside_sphere.dat", list_nodes, delimiter=";", fmt='%i')
+            np.savetxt("selected_elements.dat", list_elements, delimiter=";", fmt='%i')
+            np.savetxt("selected_elements_data.dat", data_elem, delimiter=";", fmt="%i")
+            print(f"Number of nodes: {len(nodes_inside_sphere)}")
+            print(f"Number of elements: {len(selected_elements)}")
+
+        return selected_elements, nodes_inside_sphere
+
+
+    def get_nodes_inside_sphere_and_its_elements_connected(self, center_coords, selection_radius):
+
+        node_indexes = self.nodal_coordinates[:,0]
+        nodal_coordinates = self.nodal_coordinates[:,1:]
+
+        diff_nodes = np.linalg.norm(nodal_coordinates - center_coords, axis=1)
+        mask_nodes = diff_nodes <= selection_radius
+        nodes_inside_sphere = node_indexes[mask_nodes]
+
+        selection_data = self.get_solid_elements_connected_to_nodes(nodes_inside_sphere)
+
+        _selected_elements = list()
+        for _node, element_ids in selection_data.items():
+            _selected_elements.extend(element_ids)
+
+        selected_elements = np.array([*set(_selected_elements)], dtype=int)
+
+        return nodes_inside_sphere, list(selected_elements)
+
+
+    def check_input_surface_id(self, selected_ids, single_id=False):
+        try:
+            message = ""
+            if isinstance(selected_ids, str):
+                tokens = selected_ids.strip().split(",")
+                try:
+                    tokens.remove("")
+                except:
+                    pass
+                list_ids = list(map(int, tokens))
+
+            elif isinstance(selected_ids, list):
+                list_ids = selected_ids
+
+            elif isinstance(selected_ids, (tuple, np.ndarray)):
+                list_ids = list(selected_ids)
+
+            surface_ids = self.nodes_from_surfaces.keys()
+            _size = len(surface_ids)
+
+            if len(list_ids) == 0:
+                message = "An empty input field for the Surface ID has been detected. Please, enter a valid Surface ID to proceed."
+
+            elif len(list_ids) >= 1:
+                if single_id and len(list_ids) > 1:
+                    message = "Multiple Selected IDs"
+                else:
+                    try:
+                        for _id in list_ids:
+                            if _id not in surface_ids:
+                                message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
+                                message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+                                break
+                    except Exception as error_log:
+                        message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
+                        message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+                        message += f"\n\n{str(error_log)}"
+
+        except Exception as log_error:
+            message = "Wrong input for the Selected ID's. "
+            message += f"\n\n{str(log_error)}"
+
+        if message != "":
+            window_title = "Error"
+            title = "Invalid entry to the Surface ID"
+            PrintMessageInput([window_title, title, message])
+            return True, list()
+
+        if single_id:
+            return False, list_ids[0]
+        else:
+            return False, list_ids
+
+
+    def check_input_volume_id(self, selected_ids, single_id=False):
+        try:
+
+            message = ""
+            if isinstance(selected_ids, str):
+                tokens = selected_ids.strip().split(",")
+                try:
+                    tokens.remove("")
+                except:
+                    pass
+                list_ids = list(map(int, tokens))
+
+            elif isinstance(selected_ids, list):
+                list_ids = selected_ids
+
+            elif isinstance(selected_ids, (tuple, np.ndarray)):
+                list_ids = list(selected_ids)
+            
+            volume_ids = self.nodes_from_volumes.keys()
+            _size = len(volume_ids)
+
+            if len(list_ids) == 0:
+                message = "An empty input field for the Volume ID has been detected. Please, enter a valid Volume ID to proceed."
+
+            elif len(list_ids) >= 1:
+                if single_id and len(list_ids) > 1:
+                    message = "Multiple Selected IDs"
+                else:
+                    try:
+                        for _id in list_ids:
+                            if _id not in volume_ids:
+                                message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
+                                message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+                                break
+                    except Exception as error_log:
+                        message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
+                        message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+                        message += f"\n\n{str(error_log)}"
+
+        except Exception as log_error:
+            message = "Wrong input for the Selected ID's. "
+            message += f"\n\n{str(log_error)}"
+
+        if message != "":
+            window_title = "Error"
+            title = "Invalid entry to the Volume ID"
+            PrintMessageInput([window_title, title, message])
+            return True, list()
+
+        if single_id:
+            return False, list_ids[0]
+        else:
+            return False, list_ids
 
 
     def _process_nodes_reordering(self, print_log=False):
@@ -781,14 +1025,14 @@ class Mesh:
         if print_log:
             dt = time()  - t0
             print(f"Time to process - reordering (1/4): {dt}")
-        logging.info("Reordering nodes (1/4)" + ProgressStatus(20, 100))
+        logging.info("Reordering nodes (1/4)..." + ProgressStatus(20, 100))
 
         t0 = time()
         self.reordering._process_reordering()
         if print_log:
             dt = time()  - t0
             print(f"Time to process - reordering (2/4): {dt}")
-        logging.info("Reordering nodes (2/4)" + ProgressStatus(60, 100))
+        logging.info("Reordering nodes (2/4)..." + ProgressStatus(60, 100))
 
         t0 = time()
         self.lines_connectivity = self.reordering.get_new_connectivity(self.lines_connectivity)
@@ -797,7 +1041,7 @@ class Mesh:
         if print_log:
             dt = time()  - t0
             print(f"Time to process - reordering (3/4): {dt}")
-        logging.info("Reordering nodes (3/4)" + ProgressStatus(80, 100))
+        logging.info("Reordering nodes (3/4)..." + ProgressStatus(80, 100))
 
         t0 = time()
         self.nodal_coordinates = self.reordering.get_new_nodal_coordinates()        
@@ -808,7 +1052,7 @@ class Mesh:
         if print_log:
             dt = time()  - t0
             print(f"Time to process - reordering (4/4): {dt}")
-        logging.info("Reordering nodes (4/4)" + ProgressStatus(100, 100))
+        logging.info("Reordering nodes (4/4)..." + ProgressStatus(100, 100))
             
         t0 = time()
         # self._process_face_elements_connected_to_nodes()

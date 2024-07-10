@@ -3,6 +3,7 @@ from pathlib import Path
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QMenu
 
+from vibra import ICON_DIR
 from vibra.utils.icons import load_icon
 
 
@@ -16,7 +17,7 @@ class HelpMenu(QMenu):
 
     def create_actions(self):
         color = QColor("#448cff")
-        help_icon = load_icon(Path("data/icons/help.png"), color)
+        help_icon = load_icon(ICON_DIR / "help.png", color)
         self.help_action = QAction(help_icon, "About Vibra", self)
         self.help_action.triggered.connect(self.help_callback)
 

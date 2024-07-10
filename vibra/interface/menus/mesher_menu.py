@@ -3,6 +3,7 @@ from pathlib import Path
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QMenu
 
+from vibra import ICON_DIR
 from vibra.interface.loading_bar import load_function
 # from vibra.interface.material_widget import MaterialWidget
 from vibra.interface.mesh.mesher_inputs import MesherInputs
@@ -23,8 +24,7 @@ class MesherMenu(QMenu):
 
     def create_and_connect_actions(self):
         color = QColor("#448cff")
-        #
-        self.new_project_icon = load_icon(Path("data/icons/new_file.png"), color)
+        self.new_project_icon = load_icon(ICON_DIR / "new_file.png", color)
         #
         self.set_fluid_action = QAction(self.new_project_icon, "Set fluid", self)
         self.set_material_action = QAction(self.new_project_icon, "Set material", self)

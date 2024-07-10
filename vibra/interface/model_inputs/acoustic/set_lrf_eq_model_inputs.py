@@ -35,9 +35,10 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
         
-        self.project = self.main_window.project
-        self.model = self.main_window.project.model
-        self.properties = self.model.properties
+        self.project = app().main_window.project
+        self.model = app().main_window.project.model
+        self.mesh = app().main_window.project.model.mesh
+        self.properties = app().main_window.project.model.properties
 
         self._config_window()
         self._initialize()
@@ -169,7 +170,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         elif index == 2:
             averaged_selection = True
 
-        center_coords = self.model.get_average_nodal_coordinates(selection_id, averaged=averaged_selection)
+        center_coords = self.mesh.get_average_nodal_coordinates(selection_id, averaged=averaged_selection)
         if averaged_selection:
             try:
                 _round_center_coords = [round(value,4) for value in center_coords[0]]
@@ -292,9 +293,9 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
         selection_id = self.lineEdit_selection_id.text()
         if self.comboBox_selection_by.currentIndex() == 0:
-            _stop, self.volume_ids = self.model.check_input_volume_id(selection_id)
+            _stop, self.volume_ids = self.mesh.check_input_volume_id(selection_id)
         else:
-            _stop, self.surface_ids = self.model.check_input_surface_id(selection_id)
+            _stop, self.surface_ids = self.mesh.check_input_surface_id(selection_id)
             self.selection_radius = self.doubleSpinBox_selection_radius.value()
 
         if _stop:
@@ -333,6 +334,8 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
             for _id in self.surface_ids:
                 self.project.set_lrf_eq_model_data(data, group=group_id)
+        
+        app().main_window.file.write_model_properties_in_file()
         
         self.load_lrf_data()
         # self.close()
@@ -476,7 +479,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
                 if len(group_ids) + len(volume_ids) > 0:
                     self.properties._reset_property("lrf_eq_model")
 
-                self.properties.export_model_properties()
+                app().main_window.file.write_model_properties_in_file()
 
                 title = "Model resetting complete"
                 message = "All LRF equivalent model effects active on "
