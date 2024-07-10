@@ -46,10 +46,9 @@ class ProjectFileIO:
         pass
 
     def write_geometry_in_file(self, path):
-
         basename = os.path.basename(path)
         internal_path = f"geometry_files/{basename}"
-        self.vibra_file.write_from_path(internal_path, path, encoding="iso-8859-1")
+        self.vibra_file.write_from_path(internal_path, path)
 
         try:
 
@@ -145,46 +144,42 @@ class ProjectFileIO:
 
         # f = h5py.File(file_path, 'w')
 
-        aux_file = io.BytesIO()
-        with h5py.File(aux_file, "w") as f:
+        if self.mesh_data_filename in self.vibra_file:
+            self.vibra_file.remove(self.mesh_data_filename)            
 
-            for key, data in mesh_data.items():
+        with self.vibra_file.open(self.mesh_data_filename) as internal_file:
+            with h5py.File(internal_file, "w") as f:
+                for key, data in mesh_data.items():
+                    if "nodes" in key or "nodal" in key:
+                        _key = f"nodal_data/{key}"
 
-                if "nodes" in key or "nodal" in key:
-                    _key = f"nodal_data/{key}"
+                    elif "connectivity" in key:
+                        _key = f"connectivity/{key}"
 
-                elif "connectivity" in key:
-                    _key = f"connectivity/{key}"
+                    elif "map" in key:
+                        _key = f"maps/{key}"
 
-                elif "map" in key:
-                    _key = f"maps/{key}"
+                    elif "gmsh" in key:
+                        _key = f"gmsh_data/{key}"
 
-                elif "gmsh" in key:
-                    _key = f"gmsh_data/{key}"
+                    elif key == "surfaces_from_volumes":
+                        _key = f"geometry_info/{key}"
 
-                elif key == "surfaces_from_volumes":
-                    _key = f"geometry_info/{key}"
-
-                else:
-                    _key = key
-
-                if isinstance(data, dict):
-
-                    for _id, _values in data.items():
-                        name = f"{_key}_{_id}"
-                        f.create_dataset(name, data=_values, dtype=int)
-
-                else:
-
-                    if key == "nodal_coordinates":
-                        dtype = float 
                     else:
-                        dtype = int
+                        _key = key
 
-                    f.create_dataset(_key, data=data, dtype=dtype)
+                    if isinstance(data, dict):
+                        for _id, _values in data.items():
+                            name = f"{_key}_{_id}"
+                            f.create_dataset(name, data=_values, dtype=int)
 
-        f.close()
-        self.vibra_file.write_file(self.mesh_data_filename, aux_file)
+                    else:
+                        if key == "nodal_coordinates":
+                            dtype = float 
+                        else:
+                            dtype = int
+
+                        f.create_dataset(_key, data=data, dtype=dtype)
 
 
     def read_mesh_data_from_file(self):
@@ -195,7 +190,7 @@ class ProjectFileIO:
 
         mesh_data = dict()
 
-        with self.vibra_file.open(self.mesh_data_filename, mode = "r") as internal_file:
+        with self.vibra_file.open(self.mesh_data_filename) as internal_file:
             with h5py.File(internal_file, "r") as f:
 
                 groups = list(f.keys())
