@@ -1,13 +1,14 @@
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
+from molde.render_widgets import CommonRenderWidget
+
 from vibra import app
 from vibra.interface.tabs.geometry_info_bar import GeometryInfoBar
 from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 from vibra.interface.viewer_3d.actors.lines_actor import LinesActor
 from vibra.interface.viewer_3d.actors.points_actor import PointsActor
 from vibra.interface.viewer_3d.interactor_styles.selection_interactor import SelectionInteractor
-from vibra.interface.viewer_3d.render_widgets.common_render_widget import CommonRenderWidget
 from vibra.interface.viewer_3d.actors.selection_spheres import SelectionSpheres
 from vibra.interface.viewer_3d.actors.cutting_plane_actor import CuttingPlaneActor
 
@@ -66,7 +67,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
-        self.update_theme()
+        # self.update_theme()
         self.remove_actors()
 
         self.selection_spheres_actor = SelectionSpheres()
@@ -100,7 +101,10 @@ class GeometryRenderWidget(CommonRenderWidget):
     def set_theme(self, theme):
         super().set_theme(theme)
 
-        if not self._actors_exists():
+        try:
+            if not self._actors_exists():
+                return
+        except AttributeError:
             return
 
         if theme == "light":
@@ -393,7 +397,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.selection_spheres_actor = None
 
     def _actors_exists(self):
-
         actors = [  
                     self.points_actor,
                     self.lines_actor,

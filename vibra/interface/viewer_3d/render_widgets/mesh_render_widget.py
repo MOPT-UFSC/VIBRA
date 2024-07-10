@@ -1,17 +1,18 @@
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
+import vtk
+
+from molde.render_widgets import CommonRenderWidget
 
 from vibra.interface.tabs.mesh_info_bar import MeshInfoBar
 from vibra.interface.viewer_3d.actors.nodes_actor import NodesActor
 from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
 from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
-from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
-    CommonRenderWidget,
-)
 from vibra.interface.viewer_3d.actors.cutting_plane_actor import CuttingPlaneActor
 from vibra.utils.interface_functions import get_main_window
 from vibra.interface.viewer_3d.actors.selection_spheres import SelectionSpheres
+from vibra import app
 
 SHOW_POINTS = 0
 SHOW_LINES = 1
@@ -24,6 +25,10 @@ class MeshRenderWidget(CommonRenderWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.mouse_click = (0, 0)
+        self.left_clicked.connect(self.click_callback)
+        self.left_released.connect(self.selection_callback)
+        app().main_window.selection_changed.connect(self.update_selection)
 
         self.main_window = get_main_window()
         self.view_mode = SHOW_FACES
@@ -61,7 +66,6 @@ class MeshRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
-        self.update_theme()
         self.remove_actors()
 
         self.selection_spheres_actor = SelectionSpheres()
@@ -98,7 +102,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor.VisibilityOff()
         self.faces_actor.VisibilityOff()
         self.solids_actor.VisibilityOff()
-        self.update_theme()
         self.update()
 
     def show_lines(self):
@@ -107,7 +110,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor.VisibilityOn()
         self.faces_actor.VisibilityOff()
         self.solids_actor.VisibilityOff()
-        self.update_theme()
         self.update()
 
     def show_faces(self):
@@ -117,7 +119,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.faces_actor.VisibilityOn()
         self.solids_actor.VisibilityOff()
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
-        self.update_theme()
         self.update()
     
     def show_volumes(self):
@@ -127,13 +128,15 @@ class MeshRenderWidget(CommonRenderWidget):
         self.faces_actor.VisibilityOff()
         self.solids_actor.VisibilityOn()
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
-        self.update_theme()
         self.update()
 
     def set_theme(self, theme):
         super().set_theme(theme)
 
-        if not self._actors_exists():
+        try:
+            if not self._actors_exists():
+                return
+        except AttributeError:
             return
 
         light_color = (1, 1, 1)
@@ -155,6 +158,78 @@ class MeshRenderWidget(CommonRenderWidget):
             self.edges_actor.GetProperty().SetColor(light_color)
             self.faces_actor.GetProperty().SetColor(light_color)
             self.solids_actor.GetProperty().SetColor(light_color)
+
+    def click_callback(self, x, y):
+        self.mouse_click = (x, y)
+
+    def selection_callback(self, x, y):
+        if not self._actors_exists():
+            return
+
+        # TODO: pick both nodes, faces and solids isolated
+        # then select only get the closest to the camera
+        cell_picker = vtk.vtkCellPicker()
+        cell_picker.SetTolerance(0.002)
+
+        cell_picker.Pick(x, y, 0, self.renderer)
+        clicked_cell = cell_picker.GetCellId()
+        clicked_actor = cell_picker.GetActor()
+
+        modifiers = QApplication.keyboardModifiers()
+        ctrl_pressed = modifiers & Qt.ControlModifier
+        shift_pressed = modifiers & Qt.ShiftModifier
+        alt_pressed = modifiers & Qt.AltModifier
+
+        if clicked_actor == self.nodes_actor:
+            app().main_window.set_mesh_selection(
+                nodes=[clicked_cell],
+                join=ctrl_pressed, remove=alt_pressed,
+            )
+
+        elif clicked_actor == self.faces_actor:
+            app().main_window.set_mesh_selection(
+                faces=[clicked_cell],
+                join=ctrl_pressed, remove=alt_pressed,
+            )
+        
+        elif clicked_actor == self.solids_actor:
+            app().main_window.set_mesh_selection(
+                solids=[clicked_cell],
+                join=ctrl_pressed, remove=alt_pressed,
+            )
+
+    def _narrow_pickability_to_actor(self, target_actor: vtk.vtkActor):
+        actor: vtk.vtkActor
+        pickability = dict()
+        for actor in self.renderer.GetActors():
+            pickability[actor] = actor.GetPickable()
+            actor.SetPickable(actor == target_actor)
+        return pickability 
+    
+    def _restore_pickability(self, pickability: dict):
+        actor: vtk.vtkActor
+        for actor in self.renderer.GetActors():
+            actor.SetPickable(pickability[actor])
+
+    def update_selection(self):
+        '''
+        Update the visualization of selected data.
+        '''
+        if not self._actors_exists():
+            return
+
+        self.nodes_actor.clear_colors()
+        self.faces_actor.clear_colors()
+        self.solids_actor.clear_colors()
+
+        nodes = app().main_window.selected_mesh_nodes
+        faces = app().main_window.selected_mesh_faces
+        solids = app().main_window.selected_mesh_solids
+
+        self.nodes_actor.paint_cells([255, 0, 0], nodes)
+        self.faces_actor.paint_cells(self.selection_color, faces)
+        self.solids_actor.paint_cells(self.selection_color, solids)
+        self.update()
 
     def select_multiple_nodes(self, new_nodes, *, join=False, remove=False):
         if not self._actors_exists():
@@ -191,12 +266,14 @@ class MeshRenderWidget(CommonRenderWidget):
         self.update()
 
     def remove_actors(self):
+        self.renderer.RemoveActor(self.nodes_actor)
         self.renderer.RemoveActor(self.edges_actor)
         self.renderer.RemoveActor(self.faces_actor)
         self.renderer.RemoveActor(self.solids_actor)
         self.renderer.RemoveActor(self.nodes_actor)
         self.renderer.RemoveActor(self.selection_spheres_actor)
         self.renderer.RemoveActor(self.plane_actor)
+        self.nodes_actor = None
         self.edges_actor = None
         self.faces_actor = None
         self.solids_actor = None
