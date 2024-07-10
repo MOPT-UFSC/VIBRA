@@ -53,7 +53,6 @@ class MainWindow(QMainWindow):
         self.dialog = None
         self.project = Project()
         self.user_config = UserConfig.load()
-        self.status_bar = StatusBar(self)
 
         self._initialize()
 
@@ -172,6 +171,7 @@ class MainWindow(QMainWindow):
     def create_basic_layout(self):
         self.menu_widget = MenuItems()
         self.analysis_filter = AnalysisFilter()
+        self.status_bar = StatusBar(self)
 
         grid_layout_left = QGridLayout()
         grid_layout_left.addWidget(self.analysis_filter, 0, 0)
