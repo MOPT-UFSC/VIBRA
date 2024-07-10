@@ -202,11 +202,11 @@ class MeshRenderWidget(CommonRenderWidget):
         solids_distance = np.linalg.norm(camera_position - solid_pos)
         closest = min(node_distance, faces_distance, solids_distance)
 
-        if closest == node_distance:
+        if (closest == node_distance) and (node_id >= 0):
             picked_nodes.append(node_id)
-        elif closest == faces_distance:
+        elif (closest == faces_distance) and (face_id >= 0):
             picked_faces.append(face_id)
-        elif closest == solids_distance:
+        elif (closest == solids_distance) and (solid_id >= 0):
             picked_solids.append(solid_id)
 
         return picked_nodes, picked_faces, picked_solids
@@ -252,7 +252,7 @@ class MeshRenderWidget(CommonRenderWidget):
         
         self.update_selection_info()
 
-        self.nodes_actor.clear_colors()
+        self.nodes_actor.clear_colors((0, 0, 0, 0))
         self.faces_actor.clear_colors()
         self.solids_actor.clear_colors()
 

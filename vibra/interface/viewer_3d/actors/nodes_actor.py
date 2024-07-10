@@ -28,11 +28,9 @@ class NodesActor(vtk.vtkActor):
         cell_colors = vtk.vtkUnsignedCharArray()
 
         data.Allocate(len(self.mesh.nodal_coordinates))
-        cell_colors.SetNumberOfComponents(3)
+        cell_colors.SetNumberOfComponents(4)
         cell_colors.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
-        cell_colors.FillComponent(0, 0)
-        cell_colors.FillComponent(1, 0)
-        cell_colors.FillComponent(2, 1)
+        cell_colors.Fill(0)
 
         for i, (x, y, z) in enumerate(self.get_coordinates()):
             points.InsertNextPoint(x, y, z)
@@ -55,30 +53,33 @@ class NodesActor(vtk.vtkActor):
 
     def configure_appearance(self):
         self.GetProperty().RenderPointsAsSpheresOn()
-        self.GetProperty().SetPointSize(8)
+        self.GetProperty().SetPointSize(10)
         self.GetProperty().LightingOff()
-        self.clear_colors()
+        self.clear_colors((0, 0, 0, 0))
 
-    def clear_colors(self):
+    def clear_colors(self, color=(255, 255, 255, 255)):
         if self.data is None:
             return
 
         cell_colors = self.data.GetCellData().GetScalars()
-
-        r, g, b = self.GetProperty().GetColor()
-        r = int(r * 255)
-        g = int(g * 255)
-        b = int(b * 255)
+        r, g, b, a = color
 
         cell_colors.FillComponent(0, r)
         cell_colors.FillComponent(1, g)
         cell_colors.FillComponent(2, b)
+        cell_colors.FillComponent(3, a)
 
-        self.GetMapper().ScalarVisibilityOff()
+        self.data.Modified()
+        self.GetMapper().SetScalarModeToUseCellData()
+        self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
+        self.GetMapper().ScalarVisibilityOn()
 
-    def paint_cells(self, color: tuple[3], volumes: tuple[int]):
+    def paint_cells(self, color: tuple[int, int, int] | tuple[int, int, int, int], volumes: tuple[int]):
         if self.data is None:
             return
+
+        if len(color) == 3:
+            color = *color, 255
 
         cell_colors = self.data.GetCellData().GetScalars()
         for i in volumes:
