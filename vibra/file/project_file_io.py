@@ -8,6 +8,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from fileboxes import Filebox
 
 import os
+import io
 import h5py
 import numpy as np
 from pathlib import Path
@@ -32,8 +33,6 @@ class ProjectFileIO:
         self._default_foldernames()
 
     def _initialize(self):
-        # user_path = os.path.expanduser("~")
-        # self.project_folder_path = Path(user_path) / "temp_vibra"
         self.project_folder_path = Path(os.path.dirname(self.path))
 
     def _default_filenames(self):
@@ -137,74 +136,80 @@ class ProjectFileIO:
                             gmsh_elements_from_volumes = self.model.mesh.gmsh_elements_from_volumes,
 
                             surfaces_from_volumes = self.model.mesh.surfaces_from_volumes
-                            # volume_from_surface = self.model.mesh.volume_from_surface
                         )
 
-        file_path = self.project_folder_path / self.mesh_data_filename 
-        if os.path.exists(self.project_folder_path):
-            f = h5py.File(file_path, "w")
-            f.close()
+        # file_path = self.project_folder_path / self.mesh_data_filename
+        # if os.path.exists(self.project_folder_path):
+        #     f = h5py.File(file_path, "w")
+        #     f.close()
 
-        f = h5py.File(file_path, 'w')
-        for key, data in mesh_data.items():
+        # f = h5py.File(file_path, 'w')
 
-            if "nodes" in key or "nodal" in key:
-                _key = f"nodal_data/{key}"
+        aux_file = io.BytesIO()
+        with h5py.File(aux_file, "w") as f:
 
-            elif "connectivity" in key:
-                _key = f"connectivity/{key}"
+            for key, data in mesh_data.items():
 
-            elif "map" in key:
-                _key = f"maps/{key}"
+                if "nodes" in key or "nodal" in key:
+                    _key = f"nodal_data/{key}"
 
-            elif "gmsh" in key:
-                _key = f"gmsh_data/{key}"
+                elif "connectivity" in key:
+                    _key = f"connectivity/{key}"
 
-            elif key == "surfaces_from_volumes":
-                _key = f"geometry_info/{key}"
+                elif "map" in key:
+                    _key = f"maps/{key}"
 
-            else:
-                _key = key
+                elif "gmsh" in key:
+                    _key = f"gmsh_data/{key}"
 
-            if isinstance(data, dict):
+                elif key == "surfaces_from_volumes":
+                    _key = f"geometry_info/{key}"
 
-                for _id, _values in data.items():
-                    name = f"{_key}_{_id}"
-                    f.create_dataset(name, data=_values, dtype=int)
-
-            else:
-
-                if key == "nodal_coordinates":
-                    dtype = float 
                 else:
-                    dtype = int
+                    _key = key
 
-                f.create_dataset(_key, data=data, dtype=dtype)
+                if isinstance(data, dict):
+
+                    for _id, _values in data.items():
+                        name = f"{_key}_{_id}"
+                        f.create_dataset(name, data=_values, dtype=int)
+
+                else:
+
+                    if key == "nodal_coordinates":
+                        dtype = float 
+                    else:
+                        dtype = int
+
+                    f.create_dataset(_key, data=data, dtype=dtype)
 
         f.close()
+        self.vibra_file.write_file(self.mesh_data_filename, aux_file)
 
 
     def read_mesh_data_from_file(self):
 
+        # file_path = self.project_folder_path / self.mesh_data_filename 
+        # if os.path.exists(file_path):
+            # f = h5py.File(file_path, 'r')
+
         mesh_data = dict()
-        file_path = self.project_folder_path / self.mesh_data_filename 
 
-        if os.path.exists(file_path):
-                
-            f = h5py.File(file_path, 'r')
-            groups = list(f.keys())
+        with self.vibra_file.open(self.mesh_data_filename, mode = "r") as internal_file:
+            with h5py.File(internal_file, "r") as f:
 
-            for group in groups:
-                for key, values in f.get(group).items():
+                groups = list(f.keys())
 
-                    try:
-                        mesh_data[key] = np.array(values)
-                        # mesh_data[group] = np.array(f.get(group))
-                    except:
-                        mesh_data[key] = int(values)
-                        # mesh_data[group] = int(f.get(group))
+                for group in groups:
+                    for key, values in f.get(group).items():
 
-            f.close()
+                        try:
+                            mesh_data[key] = np.array(values)
+
+                        except:
+                            mesh_data[key] = int(values)
+
+                f.close()
 
         if mesh_data:
             return mesh_data
