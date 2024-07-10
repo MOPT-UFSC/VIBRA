@@ -1,6 +1,7 @@
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 import vtk
+import numpy as np
 
 from molde.render_widgets import CommonRenderWidget
 
@@ -168,41 +169,66 @@ class MeshRenderWidget(CommonRenderWidget):
         if not self._actors_exists():
             return
 
-        # TODO: pick both nodes, faces and solids isolated
-        # then select only get the closest to the camera
-        cell_picker = vtk.vtkCellPicker()
-        cell_picker.SetTolerance(0.002)
-
-        cell_picker.Pick(x, y, 0, self.renderer)
-        clicked_cell = cell_picker.GetCellId()
-        clicked_actor = cell_picker.GetActor()
+        mouse_moved = False
+        if mouse_moved:
+            picked_nodes, picked_faces, picked_solids = self._get_area_picked_cell_id(x, y)
+        else:
+            picked_nodes, picked_faces, picked_solids = self._get_picked_cell_id(x, y)
 
         modifiers = QApplication.keyboardModifiers()
         ctrl_pressed = modifiers & Qt.ControlModifier
-        shift_pressed = modifiers & Qt.ShiftModifier
         alt_pressed = modifiers & Qt.AltModifier
 
-        if clicked_actor == self.nodes_actor:
-            self.main_window.set_mesh_selection(
-                nodes=[clicked_cell],
-                join=ctrl_pressed, remove=alt_pressed,
-            )
+        app().main_window.set_mesh_selection(
+            nodes=picked_nodes,
+            faces=picked_faces,
+            solids=picked_solids,
+            join=ctrl_pressed, remove=alt_pressed,
+        )
 
-        elif clicked_actor == self.faces_actor:
-            self.main_window.set_mesh_selection(
-                faces=[clicked_cell],
-                join=ctrl_pressed, remove=alt_pressed,
-            )
+    # These pick functions can be placed into a separated class
+    def _get_picked_cell_id(self, x, y):
+        picked_nodes = []
+        picked_faces = []
+        picked_solids = []
+
+        node_id, node_pos = self._pick_actor(x, y, self.nodes_actor)
+        face_id, face_pos = self._pick_actor(x, y, self.faces_actor)
+        solid_id, solid_pos = self._pick_actor(x, y, self.solids_actor)
+
+        camera_position = np.array(self.renderer.GetActiveCamera().GetPosition())
+        node_distance = np.linalg.norm(camera_position - node_pos)
+        faces_distance = np.linalg.norm(camera_position - face_pos)
+        solids_distance = np.linalg.norm(camera_position - solid_pos)
+        closest = min(node_distance, faces_distance, solids_distance)
+
+        if closest == node_distance:
+            picked_nodes.append(node_id)
+        elif closest == faces_distance:
+            picked_faces.append(face_id)
+        elif closest == solids_distance:
+            picked_solids.append(solid_id)
+
+        return picked_nodes, picked_faces, picked_solids
+
+    def _get_area_picked_cell_id(self, x, y):
+        # Not implemented
+        picked_nodes = []
+        picked_faces = []
+        picked_solids = []
+        return picked_nodes, picked_faces, picked_solids
+
+    def _pick_actor(self, x, y, target_actor):
+        cell_picker = vtk.vtkCellPicker()
+        cell_picker.SetTolerance(0.003)
         
-        elif clicked_actor == self.solids_actor:
-            self.main_window.set_mesh_selection(
-                solids=[clicked_cell],
-                join=ctrl_pressed, remove=alt_pressed,
-            )
-        else:
-            self.main_window.set_mesh_selection(
-                join=ctrl_pressed, remove=alt_pressed,
-            )
+        pickability = self._narrow_pickability_to_actor(target_actor)
+        cell_picker.Pick(x, y, 0, self.renderer)
+        self._restore_pickability(pickability)
+
+        cell_id = cell_picker.GetCellId()
+        position = cell_picker.GetPickPosition()
+        return cell_id, position
 
     def _narrow_pickability_to_actor(self, target_actor: vtk.vtkActor):
         actor: vtk.vtkActor
