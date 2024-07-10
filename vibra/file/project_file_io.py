@@ -138,14 +138,12 @@ class ProjectFileIO:
                             surfaces_from_volumes = self.model.mesh.surfaces_from_volumes
                         )
 
-        # file_path = self.project_folder_path / self.mesh_data_filename
-        # if os.path.exists(self.project_folder_path):
-        #     f = h5py.File(file_path, "w")
-        #     f.close()
+        aux_file = self.project_folder_path / self.mesh_data_filename
+        if os.path.exists(self.project_folder_path):
+            f = h5py.File(aux_file, "w")
+            f.close()
 
-        # f = h5py.File(file_path, 'w')
-
-        aux_file = io.BytesIO()
+        # aux_file = io.BytesIO()
         with h5py.File(aux_file, "w") as f:
 
             for key, data in mesh_data.items():
@@ -184,32 +182,33 @@ class ProjectFileIO:
                     f.create_dataset(_key, data=data, dtype=dtype)
 
         f.close()
-        self.vibra_file.write_file(self.mesh_data_filename, aux_file)
+        # self.vibra_file.write_file(self.mesh_data_filename, aux_file)
 
 
     def read_mesh_data_from_file(self):
 
-        # file_path = self.project_folder_path / self.mesh_data_filename 
-        # if os.path.exists(file_path):
-            # f = h5py.File(file_path, 'r')
-
         mesh_data = dict()
 
-        with self.vibra_file.open(self.mesh_data_filename, mode = "r") as internal_file:
-            with h5py.File(internal_file, "r") as f:
+        # aux_file = self.vibra_file.read_file(self.mesh_data_filename)
+        # with self.vibra_file.open(self.mesh_data_filename, mode = "r") as internal_file:
+        # with h5py.File(aux_file, "r") as f:
 
-                groups = list(f.keys())
+        file_path = self.project_folder_path / self.mesh_data_filename 
+        if os.path.exists(file_path):
+            f = h5py.File(file_path, 'r')
 
-                for group in groups:
-                    for key, values in f.get(group).items():
+            groups = list(f.keys())
 
-                        try:
-                            mesh_data[key] = np.array(values)
+            for group in groups:
+                for key, values in f.get(group).items():
 
-                        except:
-                            mesh_data[key] = int(values)
+                    try:
+                        mesh_data[key] = np.array(values)
 
-                f.close()
+                    except:
+                        mesh_data[key] = int(values)
+
+            f.close()
 
         if mesh_data:
             return mesh_data

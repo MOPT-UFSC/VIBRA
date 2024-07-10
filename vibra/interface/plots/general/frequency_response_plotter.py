@@ -28,10 +28,9 @@ class FrequencyResponsePlotter(QDialog):
         self._create_connections()
 
     def _load_icons(self):
-        self.vibra_icon = app().main_window.vibra_icon
-        self.setWindowIcon(self.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Frequency response plotter")
 
     def _initialize(self):
@@ -89,11 +88,14 @@ class FrequencyResponsePlotter(QDialog):
         self.widget_plot : QWidget
 
     def _create_connections(self):
+        #
         self.checkBox_grid.stateChanged.connect(self.plot_data_in_freq_domain)
         self.checkBox_legends.stateChanged.connect(self.plot_data_in_freq_domain)
         self.checkBox_cursor_legends.stateChanged.connect(self.plot_data_in_freq_domain)
+        #
         self.comboBox_plot_type.currentIndexChanged.connect(self._update_plot_type)
         self.comboBox_differentiate_data.currentIndexChanged.connect(self.plot_data_in_freq_domain)
+        #
         self.radioButton_real.clicked.connect(self._update_comboBox)
         self.radioButton_imaginary.clicked.connect(self._update_comboBox)
         self.radioButton_absolute.clicked.connect(self._update_comboBox)
@@ -101,8 +103,10 @@ class FrequencyResponsePlotter(QDialog):
         self.radioButton_disable_cursors.clicked.connect(self.update_cursor_controls)
         self.radioButton_cross_cursor.clicked.connect(self.update_cursor_controls)
         self.radioButton_harmonic_cursor.clicked.connect(self.update_cursor_controls)
+        #
         self.pushButton_import_data.clicked.connect(self.import_file)
         self.pushButton_export_data.clicked.connect(self.call_data_exporter)
+        #
         self._initial_config()
 
     def import_file(self):
@@ -173,6 +177,7 @@ class FrequencyResponsePlotter(QDialog):
         self.comboBox_differentiate_data.setDisabled(True)
 
     def load_data_to_plot(self, data):
+
         if "x_data" in data.keys():
             self.x_data = data["x_data"]
         if "y_data" in data.keys():
@@ -263,8 +268,8 @@ class FrequencyResponsePlotter(QDialog):
     def plot_data_in_freq_domain(self):
 
         self.ax.cla()
-        self.legends = []
-        self.plots = []
+        self.legends = list()
+        self.plots = list()
 
         for _, data in self.data_to_plot.items():
             self.load_data_to_plot(data)
@@ -402,13 +407,13 @@ class FrequencyResponsePlotter(QDialog):
 
         self.mouse_connection = self.fig.canvas.mpl_connect(s='motion_notify_event', func=self.cursor.mouse_move)
 
-    def _set_data_to_plot(self, data):
-        if isinstance(data, dict):
-            self.data_to_plot["model", 0] = data
-            self.plot_data_in_freq_domain()
-            self.exec()
+    # def _set_data_to_plot(self, data):
+    #     if isinstance(data, dict):
+    #         self.data_to_plot["model", 0] = data
+    #         self.plot_data_in_freq_domain()
+    #         self.exec()
 
-    def _multiple_data_to_plot(self, data):
+    def _set_data_to_plot(self, data):
         if isinstance(data, dict):
             self.data_to_plot = data
             self.plot_data_in_freq_domain()
