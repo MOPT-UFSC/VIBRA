@@ -6,19 +6,19 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>460</width>
+    <width>500</width>
     <height>260</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>460</width>
+    <width>500</width>
     <height>260</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>460</width>
+    <width>500</width>
     <height>260</height>
    </size>
   </property>
@@ -121,18 +121,18 @@
         <property name="minimumSize">
          <size>
           <width>300</width>
-          <height>28</height>
+          <height>30</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>28</height>
+          <height>30</height>
          </size>
         </property>
         <property name="font">
          <font>
-          <pointsize>8</pointsize>
+          <pointsize>9</pointsize>
          </font>
         </property>
         <property name="alignment">
@@ -144,14 +144,14 @@
        <widget class="QPushButton" name="pushButton_search">
         <property name="minimumSize">
          <size>
-          <width>80</width>
-          <height>28</height>
+          <width>40</width>
+          <height>30</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>80</width>
-          <height>28</height>
+          <width>40</width>
+          <height>30</height>
          </size>
         </property>
         <property name="font">
@@ -160,7 +160,11 @@
          </font>
         </property>
         <property name="text">
-         <string>Search</string>
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>../../../../icons/new_file.png</normaloff>../../../../icons/new_file.png</iconset>
         </property>
        </widget>
       </item>
@@ -222,19 +226,19 @@
           <widget class="QComboBox" name="comboBox_sheet_names">
            <property name="minimumSize">
             <size>
-             <width>100</width>
+             <width>160</width>
              <height>28</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>200</width>
+             <width>160</width>
              <height>28</height>
             </size>
            </property>
            <property name="font">
             <font>
-             <pointsize>10</pointsize>
+             <pointsize>9</pointsize>
             </font>
            </property>
           </widget>
@@ -297,13 +301,13 @@
         <property name="minimumSize">
          <size>
           <width>90</width>
-          <height>28</height>
+          <height>30</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
           <width>90</width>
-          <height>28</height>
+          <height>30</height>
          </size>
         </property>
         <property name="font">
@@ -321,13 +325,13 @@
         <property name="minimumSize">
          <size>
           <width>90</width>
-          <height>28</height>
+          <height>30</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
           <width>90</width>
-          <height>28</height>
+          <height>30</height>
          </size>
         </property>
         <property name="font">

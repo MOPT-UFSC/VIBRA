@@ -26,49 +26,36 @@ class Config:
             if self.config_path.exists():
                 os.remove(self.config_path)
 
-    def get_last_project_folder(self):
+    def get_last_folder_for(self, label : str):
 
         config = configparser.ConfigParser()
         config.read(self.config_path)
 
         if config.has_section("User preferences"):
             section = config["User preferences"]
-            if "last project folder" in section.keys():
-                return section["last project folder"]
+            key = f"last {label}"
+            if key in section.keys():
+                return section[key]
+
         return None
 
-    def get_last_project_folder(self):
+    def write_last_folder_path_in_file(self, label : str, project_path : str):
+        try:
 
-        config = configparser.ConfigParser()
-        config.read(self.config_path)
+            _path = os.path.dirname(project_path)
+            config = configparser.ConfigParser()
+            config.read(self.config_path)
+            
+            key = f"last {label}"
+            if config.has_section('User preferences'):
+                config["User preferences"][key] = _path
+            else:
+                config["User preferences"] = {key : _path}
 
-        if config.has_section("User preferences"):
-            section = config["User preferences"]
-            if "last project folder" in section.keys():
-                return section["last project folder"]
-        return None
+        except:
+            return
 
-    def get_last_geometry_folder(self):
-
-        config = configparser.ConfigParser()
-        config.read(self.config_path)
-
-        if config.has_section("User preferences"):
-            section = config["User preferences"]
-            if "last geometry folder" in section.keys():
-                return section["last geometry folder"]
-        return None
-    
-    def get_last_fluid_composition_folder(self):
-
-        config = configparser.ConfigParser()
-        config.read(self.config_path)
-
-        if config.has_section("User preferences"):
-            section = config["User preferences"]
-            if "last fluid composition" in section.keys():
-                return section["last fluid composition"]
-        return None
+        self.write_data_in_file(self.config_path, config)
 
     def write_theme_in_file(self, theme : str):
         try:
@@ -86,58 +73,7 @@ class Config:
         except:
             return
 
-        self.write_data_in_file(self.config_path, config) 
-
-    def write_last_project_folder_path_in_file(self, project_path : str):
-        try:
-
-            _path = os.path.dirname(project_path)
-            config = configparser.ConfigParser()
-            config.read(self.config_path)
-
-            if config.has_section('User preferences'):
-                config["User preferences"]["last project folder"] = _path
-            else:
-                config["User preferences"] = {"last project folder" : _path}
-
-        except:
-            return
-
-        self.write_data_in_file(self.config_path, config) 
-
-    def write_last_geometry_folder_path_in_file(self, geometry_path : str):
-        try:
-
-            _path = os.path.dirname(geometry_path)
-            config = configparser.ConfigParser()
-            config.read(self.config_path)
-
-            if config.has_section('User preferences'):
-                config["User preferences"]["last geometry folder"] = _path
-            else:
-                config["User preferences"] = {"last geometry folder" : _path}
-
-        except:
-            return
-
-        self.write_data_in_file(self.config_path, config) 
-
-    def write_last_fluid_composition_folder_path_in_file(self, fluid_composition_path : str):
-        try:
-
-            _path = os.path.dirname(fluid_composition_path)
-            config = configparser.ConfigParser()
-            config.read(self.config_path)
-
-            if config.has_section('User preferences'):
-                config["User preferences"]["last fluid composition"] = _path
-            else:
-                config["User preferences"] = {"last fluid composition" : _path}
-
-        except:
-            return
-
-        self.write_data_in_file(self.config_path, config) 
+        self.write_data_in_file(self.config_path, config)
 
     def write_colormap_in_file(self, colormap : str):
         try:

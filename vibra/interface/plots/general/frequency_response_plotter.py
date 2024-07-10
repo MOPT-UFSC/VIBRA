@@ -161,9 +161,9 @@ class FrequencyResponsePlotter(QDialog):
         self.fig = self.mpl_canvas_frequency_plot.fig
     
     def call_data_exporter(self):
-        data = self.data_to_plot["model", 0]
+        # data = self.data_to_plot["model", 0]
         self.exporter = ExportModelResults()
-        self.exporter._set_data_to_export(data)
+        self.exporter._set_data_to_export(self.data_to_plot)
 
     def imported_dB_data(self):
         self.imported_dB = True
@@ -406,12 +406,6 @@ class FrequencyResponsePlotter(QDialog):
                                         number_vertLines = number_vertLines   )
 
         self.mouse_connection = self.fig.canvas.mpl_connect(s='motion_notify_event', func=self.cursor.mouse_move)
-
-    # def _set_data_to_plot(self, data):
-    #     if isinstance(data, dict):
-    #         self.data_to_plot["model", 0] = data
-    #         self.plot_data_in_freq_domain()
-    #         self.exec()
 
     def _set_data_to_plot(self, data):
         if isinstance(data, dict):

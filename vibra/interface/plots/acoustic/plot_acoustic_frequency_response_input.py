@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QComboBox, QDialog, QLineEdit, QPushButton
+from PyQt5.QtWidgets import QComboBox, QDialog, QLineEdit, QPushButton, QFileDialog
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCloseEvent
 from PyQt5 import uic
@@ -38,7 +38,9 @@ class PlotAcousticFrequencyResponseInput(QDialog):
         ConfigWidgetAppearance(self, tool_tip=True)
 
         self._load_analysis_data_and_solution()
-        self.exec()
+
+        while self.keep_window_open:
+            self.exec()
 
     def _load_analysis_data_and_solution(self):
         self.analysis_method = ""
@@ -60,6 +62,7 @@ class PlotAcousticFrequencyResponseInput(QDialog):
         self.exporter = None
         self.plotter = None
         self.unit_label = "Pa"
+        self.keep_window_open = True
 
     def _define_qt_variables(self):
         # QComboBox
@@ -145,6 +148,8 @@ class PlotAcousticFrequencyResponseInput(QDialog):
             self.lineEdit_selection_id.setFocus()
             return
 
+        self.hide()
+
         self.join_model_data()
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(self.model_results)
@@ -193,7 +198,7 @@ class PlotAcousticFrequencyResponseInput(QDialog):
                                         "x_label" : "Frequency [Hz]",
                                         "y_label" : "Acoustic pressure",
                                         "title" : self.title,
-                                        "data_information" : legend_label,
+                                        "data_type" : "acoustic pressure",
                                         "legend" : legend_label,
                                         "unit" : self.unit_label,
                                         "color" : self.get_color(i),
@@ -224,5 +229,5 @@ class PlotAcousticFrequencyResponseInput(QDialog):
         if self.plotter is not None:
             self.plotter.close()
 
-        # self.keep_window_open = False
+        self.keep_window_open = False
         return super().closeEvent(a0)

@@ -10,116 +10,38 @@ import os
 import openpyxl
 import numpy as np
 import pandas as pd
+from pathlib import Path
 
-window_title1 = "Error"
-window_title2 = "Warning"
+window_title_1 = "Error"
+window_title_2 = "Warning"
 
-class ExportModelResults(QDialog):
+class ExportModelResults(QFileDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "data_handler/export_model_results.ui"
-        uic.loadUi(ui_path, self)
+        self.main_window = app().main_window
 
-        self._load_icons()
-        self._reset_variables()
-        self._define_qt_variables()
-        self._create_connections()
+        self._initialize()
 
-    def _load_icons(self):
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Export model results")
-
-    def _reset_variables(self):
+    def _initialize(self):
         self.user_path = os.path.expanduser('~')
         self.save_path = ""
         self.data = dict()
 
-    def _define_qt_variables(self):
-
-        # QLabel
-        self.label_data_information : QLabel
-
-        # QLineEdit
-        self.lineEdit_file_name : QLineEdit
-        self.lineEdit_save_results_path : QLineEdit
-
-        # QPushButton
-        self.pushButton_choose_folder_export : QPushButton
-        self.pushButton_export_results : QPushButton
-
-    def _create_connections(self):
-        self.pushButton_choose_folder_export.clicked.connect(self._choose_path_export_results)
-        self.pushButton_export_results.clicked.connect(self._export_results)
-
-    def _set_data_to_export(self, data):
+    def _set_data_to_export(self, data : dict):
         self.data = data
         if data:
-            self._load_data_information()
-            self.exec()
+            self.call_file_dialog_and_export_data()
 
-    def _load_data_information(self):
-
-        if len(self.data) == 1:
-            for key, data in self.data.items():
-                if "data_information" in data.keys():
-                    text = "Data information: "
-                    text += data["data_information"]
-        else:
-            text = "Multiple selection"
-
-        self.label_data_information.setText(text)
-        self.lineEdit_file_name.setFocus()
-
-    def _choose_path_export_results(self):
-
-        if self.save_path == "":
-            _path = self.user_path
-        else:
-            _path = self.save_path
-
-        self.save_path = QFileDialog.getExistingDirectory(None, 'Choose a folder to export the results', _path)
-        self.save_name = os.path.basename(self.save_path)
-        self.lineEdit_save_results_path.setText(str(self.save_path))
-
-    def _export_results(self):
-        
-        if self.lineEdit_file_name.text() != "":
-            if self.save_path == "":
-                title = "None folder selected"
-                message = "Plese, choose a folder before trying export the results."
-                PrintMessageInput([window_title1, title, message])
-                return
-        else:
-            title = "Empty file name"
-            message = "Inform a file name before trying export the results."
-            PrintMessageInput([window_title1, title, message])
-            return
-
-        format_index = 1
-
-        if format_index == 0:
-            self.export_data_in_text_format()
-
-        elif format_index == 1:
-            self.export_data_in_spreadsheet_format()
-
-        self.close()
-        title = "Information"
-        message = "The results have been exported."
-        PrintMessageInput([window_title2, title, message], auto_close=True)
-
-    def export_data_in_text_format(self, delimiter=","):
+    def export_data_in_text_format(self, export_path, delimiter=","):
 
         for key, data in self.data.items():
             
-            selection_type, selection_id = key
-            suffix = f"{selection_type}_{selection_id}"
+            # selection_type, selection_id = key
+            # suffix = f"{selection_type}_{selection_id}"
 
-            file_name = self.lineEdit_file_name.text() + suffix + ".dat"
-            export_path = os.path.join(self.save_path, file_name)
+            # file_name = self.lineEdit_file_name.text() + suffix + ".dat"
+            # export_path = os.path.join(self.save_path, file_name)
             
             x_data = data["x_data"]
             y_data = data["y_data"]
@@ -130,10 +52,7 @@ class ExportModelResults(QDialog):
     
             np.savetxt(export_path, data_to_export, delimiter=delimiter, header=header)
 
-    def export_data_in_spreadsheet_format(self):
-
-        file_name = self.lineEdit_file_name.text() + ".xlsx"
-        export_path = os.path.join(self.save_path, file_name)
+    def export_data_in_spreadsheet_format(self, export_path):
 
         with pd.ExcelWriter(export_path) as writer:
 
@@ -156,8 +75,40 @@ class ExportModelResults(QDialog):
                 df = pd.DataFrame(data_to_export, columns=header)
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self._export_results()
-        elif event.key() == Qt.Key_Escape:
-            self.close()
+    def call_file_dialog_and_export_data(self):
+
+        caption = "Export the model results"
+
+        path = app().config.get_last_folder_for("export data folder")
+        if path is None:
+            directory_path = os.path.expanduser("~")
+        else:
+            directory_path = path
+
+        if len(self.data) == 1:
+            _filter = "Text file (*.dat);;Text file (*.txt);; Text file (*.csv);; Spreadsheet (*.xlsx)"
+        else:
+            _filter = "Spreadsheet (*.xlsx)"
+
+        file_path, check = self.getSaveFileName(self.main_window, 
+                                                caption, 
+                                                directory_path, 
+                                                filter = _filter)
+
+        if not check:
+            return
+
+        app().config.write_last_folder_path_in_file("export data folder", file_path)
+
+        sufix = Path(file_path).suffix      
+        if sufix == ".xlsx":
+            self.export_data_in_spreadsheet_format(file_path)
+        else:
+            self.export_data_in_text_format(file_path)
+
+        # self.print_final_message()
+
+    def print_final_message(self):
+        title = "Information"
+        message = "The results have been exported."
+        PrintMessageInput([window_title_2, title, message], auto_close=True)
