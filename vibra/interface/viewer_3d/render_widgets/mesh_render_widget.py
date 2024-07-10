@@ -13,6 +13,7 @@ from vibra.interface.viewer_3d.actors.cutting_plane_actor import CuttingPlaneAct
 from vibra.utils.interface_functions import get_main_window
 from vibra.interface.viewer_3d.actors.selection_spheres import SelectionSpheres
 from vibra import app
+from molde.utils.format_sequences import format_long_sequence
 
 SHOW_POINTS = 0
 SHOW_LINES = 1
@@ -26,13 +27,14 @@ class MeshRenderWidget(CommonRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.mouse_click = (0, 0)
-        self.left_clicked.connect(self.click_callback)
-        self.left_released.connect(self.selection_callback)
-        app().main_window.selection_changed.connect(self.update_selection)
 
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         self.view_mode = SHOW_FACES
         self.selection_color = (20, 106, 245)
+
+        self.left_clicked.connect(self.click_callback)
+        self.left_released.connect(self.selection_callback)
+        self.main_window.selection_changed.connect(self.update_selection)
 
         self.mesh_info = MeshInfoBar()
 
@@ -181,20 +183,24 @@ class MeshRenderWidget(CommonRenderWidget):
         alt_pressed = modifiers & Qt.AltModifier
 
         if clicked_actor == self.nodes_actor:
-            app().main_window.set_mesh_selection(
+            self.main_window.set_mesh_selection(
                 nodes=[clicked_cell],
                 join=ctrl_pressed, remove=alt_pressed,
             )
 
         elif clicked_actor == self.faces_actor:
-            app().main_window.set_mesh_selection(
+            self.main_window.set_mesh_selection(
                 faces=[clicked_cell],
                 join=ctrl_pressed, remove=alt_pressed,
             )
         
         elif clicked_actor == self.solids_actor:
-            app().main_window.set_mesh_selection(
+            self.main_window.set_mesh_selection(
                 solids=[clicked_cell],
+                join=ctrl_pressed, remove=alt_pressed,
+            )
+        else:
+            self.main_window.set_mesh_selection(
                 join=ctrl_pressed, remove=alt_pressed,
             )
 
@@ -217,14 +223,16 @@ class MeshRenderWidget(CommonRenderWidget):
         '''
         if not self._actors_exists():
             return
+        
+        self.update_selection_info()
 
         self.nodes_actor.clear_colors()
         self.faces_actor.clear_colors()
         self.solids_actor.clear_colors()
 
-        nodes = app().main_window.selected_mesh_nodes
-        faces = app().main_window.selected_mesh_faces
-        solids = app().main_window.selected_mesh_solids
+        nodes = self.main_window.selected_mesh_nodes
+        faces = self.main_window.selected_mesh_faces
+        solids = self.main_window.selected_mesh_solids
 
         self.nodes_actor.paint_cells([255, 0, 0], nodes)
         self.faces_actor.paint_cells(self.selection_color, faces)
@@ -326,3 +334,37 @@ class MeshRenderWidget(CommonRenderWidget):
         self.plane_actor.GetProperty().SetOpacity(0.2)
 
         self.update()
+    
+    def update_selection_info(self):
+        text = ""
+        text += self.nodes_info_text()
+        text += self.faces_info_text()
+        
+        self.set_info_text(text)
+    
+    def nodes_info_text(self):
+        nodes = list(self.main_window.selected_mesh_nodes)
+        text = ""
+        if len(nodes) > 1:
+            text += (
+                f"{len(nodes)} nodes in selection\n"
+                f"{format_long_sequence(nodes)}\n\n"
+            )
+        elif len(nodes) == 1:
+            text += f"Node: {nodes[0]}\n\n"
+
+        return text
+
+    def faces_info_text(self):
+        faces = list(self.main_window.selected_mesh_faces)
+        text = ""
+        if len(faces) > 1:
+            text += (
+                f"{len(faces)} faces in selection\n"
+                f"{format_long_sequence(faces)}\n\n"
+            )
+        elif len(faces) == 1:
+            text += f"Face: {faces[0]}\n\n"
+        
+        return text
+

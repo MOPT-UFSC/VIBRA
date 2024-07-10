@@ -11,6 +11,8 @@ from vibra.interface.viewer_3d.actors.points_actor import PointsActor
 from vibra.interface.viewer_3d.interactor_styles.selection_interactor import SelectionInteractor
 from vibra.interface.viewer_3d.actors.selection_spheres import SelectionSpheres
 from vibra.interface.viewer_3d.actors.cutting_plane_actor import CuttingPlaneActor
+from molde.utils.format_sequences import format_long_sequence
+from molde.utils import TreeInfo
 
 
 SHOW_POINTS = 0
@@ -27,6 +29,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.main_window = app().main_window
         self.view_mode = SHOW_FACES
 
+        self.main_window.selection_changed.connect(self.update_selection_info)
         # self.geometry_info = GeometryInfoBar()
 
         # replace the layout to add other usefull widgets
@@ -164,7 +167,7 @@ class GeometryRenderWidget(CommonRenderWidget):
     def selection_callback(self, obj, event):
         if not self._actors_exists():
             return
-
+        
         clicked_cell = obj.selection_picker.GetCellId()
         clicked_actor = obj.selection_picker.GetActor()
 
@@ -175,6 +178,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         if clicked_actor == self.points_actor:
             self.select_point(clicked_cell, join=ctrl_pressed, remove=alt_pressed)
+            self.main_window.set_geometry_selection(nodes=[clicked_cell], join=ctrl_pressed, remove=alt_pressed )
 
         elif clicked_actor == self.lines_actor:
             line_entity = self.main_window.project.model.mesh.lines_connectivity[clicked_cell][1]
@@ -183,12 +187,14 @@ class GeometryRenderWidget(CommonRenderWidget):
         elif (clicked_actor == self.faces_actor) and not shift_pressed:
             face_entity = self.main_window.project.model.mesh.faces_connectivity[clicked_cell][1]
             self.select_face(face_entity, join=ctrl_pressed, remove=alt_pressed)
+            self.main_window.set_geometry_selection(faces=[clicked_cell], join=ctrl_pressed, remove=alt_pressed)
 
         elif (clicked_actor == self.faces_actor) and shift_pressed:
             face_entity = self.main_window.project.model.mesh.faces_connectivity[clicked_cell][1]
             for (volume, surfaces) in self.main_window.project.model.mesh.surfaces_from_volumes.items():
                 if face_entity in surfaces:
                     self.select_volume(volume, join=ctrl_pressed, remove=alt_pressed)
+                    self.main_window.set_geometry_selection(solids=[clicked_cell], join=ctrl_pressed, remove=alt_pressed)
                     break
 
         else:
@@ -197,6 +203,7 @@ class GeometryRenderWidget(CommonRenderWidget):
                                         self.selected_lines,
                                         self.selected_faces,
                                         self.selected_volumes)
+            self.main_window.set_geometry_selection(join=ctrl_pressed, remove=alt_pressed)
 
         self.update()
 
@@ -405,3 +412,63 @@ class GeometryRenderWidget(CommonRenderWidget):
                 ]
 
         return all([actor is not None for actor in actors])
+
+    def update_selection_info(self):
+        text = ""
+        text += self.nodes_info_text()
+        text += self.faces_info_text()
+        text += self.material_info_text()
+        
+        self.set_info_text(text)
+    
+    def nodes_info_text(self):
+        nodes = list(self.main_window.selected_geometry_nodes)
+        text = ""
+
+        if len(nodes) > 1:
+            text += (
+                f"{len(nodes)} nodes in selection\n"
+                f"{format_long_sequence(nodes)}\n\n"
+            )
+        elif len(nodes) == 1:
+            text += f"Node: {nodes[0]}\n\n"
+
+        return text
+
+    def faces_info_text(self):
+        faces = list(self.main_window.selected_geometry_faces)
+        text = ""
+
+        if len(faces) > 1:
+            text += (
+                f"{len(faces)} faces in selection\n"
+                f"{format_long_sequence(faces)}\n\n"
+            )
+        elif len(faces) == 1:
+            text += f"Face: {faces[0]}\n\n"
+        
+        return text
+
+    def material_info_text(self):
+        elements = list(self.main_window.selected_geometry_faces)
+        text = ""
+
+        if len(elements) == 1:
+            material = self.main_window.project.model.properties.get_material(elements[0])
+            if material is None:
+                return text
+            
+            tree = TreeInfo("Material")
+            tree.add_item("Name", material.name)
+            tree.add_item("Density", material.density, "??")
+            tree.add_item("Young Modulus", material.young_modulus, "??")
+            tree.add_item("Poisson Ratio", material.poisson_ratio, "??")
+            tree.add_item("Thermal Expasion Coefficient", material.thermal_expansion_coefficient, "??")
+
+            text += str(tree)
+
+        return text
+        
+    def fluid_info_text(self):
+        pass
+    
