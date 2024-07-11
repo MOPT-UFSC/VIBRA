@@ -485,7 +485,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         if len(faces) > 1:
             text += (
-                f"{len(faces)} faces in selection\n"
+                f"{len(faces)} surfaces in selection\n"
                 f"{format_long_sequence(faces)}\n\n"
             )
         elif len(faces) == 1:
