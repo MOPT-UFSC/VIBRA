@@ -41,6 +41,7 @@ class AcousticPressureInput(QDialog):
         self._define_qt_variables()
         self._create_connections()
         self.load_info()
+        self.geometry_selection_callback()
         self.exec()
 
     def _reset_variables(self):
@@ -111,8 +112,7 @@ class AcousticPressureInput(QDialog):
         self.treeWidget_acoustic_pressure.itemClicked.connect(self.on_click_item)
         self.treeWidget_acoustic_pressure.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        geometry_widget = self.main_window.viewer_tabs.geometry_widget
-        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
+        self.main_window.selection_changed.connect(self.geometry_selection_callback)
 
     def tabEvent_acoustic_pressure(self):
         self.current_tab = self.tabWidget_acoustic_pressure.currentIndex()
@@ -143,7 +143,11 @@ class AcousticPressureInput(QDialog):
                 self.treeWidget_acoustic_pressure.addTopLevelItem(new)
         self.update_tabs_visibility()
 
-    def geometry_selection_callback(self, points, lines, faces):
+    def geometry_selection_callback(self):
+        faces = self.main_window.selected_geometry_faces
+        points = self.main_window.selected_geometry_nodes
+        lines = self.main_window.selected_geometry_lines
+
         if faces:
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
