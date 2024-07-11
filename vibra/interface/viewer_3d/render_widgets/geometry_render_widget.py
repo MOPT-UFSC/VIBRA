@@ -418,6 +418,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         text += self.nodes_info_text()
         text += self.faces_info_text()
         text += self.material_info_text()
+        text += self.fluid_info_text()
         
         self.set_info_text(text)
     
@@ -470,5 +471,21 @@ class GeometryRenderWidget(CommonRenderWidget):
         return text
         
     def fluid_info_text(self):
-        pass
+        elements = list(self.main_window.selected_geometry_faces)
+        text = ""
+
+        if len(elements) == 1:
+            fluid = self.main_window.project.model.properties.get_fluid(element=elements[0])
+            if fluid is None:
+                return text
+            
+            tree = TreeInfo("Fluid")
+            tree.add_item("Name", fluid.name)
+            tree.add_item("Density", fluid.fluid_density, "??")
+            tree.add_item("Temperature", fluid.temperature, "K")
+            tree.add_item("Pressure", fluid.pressure, "Pa")
+
+            text += str(tree)
+        
+        return text
     

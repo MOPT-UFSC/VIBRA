@@ -15,6 +15,7 @@ from vibra.utils.interface_functions import get_main_window
 from vibra.interface.viewer_3d.actors.selection_spheres import SelectionSpheres
 from vibra import app
 from molde.utils.format_sequences import format_long_sequence
+from molde.utils import TreeInfo
 
 SHOW_POINTS = 0
 SHOW_LINES = 1
@@ -365,6 +366,8 @@ class MeshRenderWidget(CommonRenderWidget):
         text = ""
         text += self.nodes_info_text()
         text += self.faces_info_text()
+        text += self.material_info_text()
+        text += self.fluid_info_text()
         
         self.set_info_text(text)
     
@@ -391,6 +394,45 @@ class MeshRenderWidget(CommonRenderWidget):
             )
         elif len(faces) == 1:
             text += f"Face: {faces[0]}\n\n"
+        
+        return text
+
+    def material_info_text(self):
+        elements = list(self.main_window.selected_mesh_faces)
+        text = ""
+
+        if len(elements) == 1:
+            material = self.main_window.project.model.properties.get_material(elements[0])
+            if material is None:
+                return text
+            
+            tree = TreeInfo("Material")
+            tree.add_item("Name", material.name)
+            tree.add_item("Density", material.density, "??")
+            tree.add_item("Young Modulus", material.young_modulus, "??")
+            tree.add_item("Poisson Ratio", material.poisson_ratio, "??")
+            tree.add_item("Thermal Expasion Coefficient", material.thermal_expansion_coefficient, "??")
+
+            text += str(tree)
+
+        return text
+        
+    def fluid_info_text(self):
+        elements = list(self.main_window.selected_mesh_faces)
+        text = ""
+
+        if len(elements) == 1:
+            fluid = self.main_window.project.model.properties.get_fluid(element=elements[0])
+            if fluid is None:
+                return text
+            
+            tree = TreeInfo("Fluid")
+            tree.add_item("Name", fluid.name)
+            tree.add_item("Density", fluid.fluid_density, "??")
+            tree.add_item("Temperature", fluid.temperature, "K")
+            tree.add_item("Pressure", fluid.pressure, "Pa")
+
+            text += str(tree)
         
         return text
 
