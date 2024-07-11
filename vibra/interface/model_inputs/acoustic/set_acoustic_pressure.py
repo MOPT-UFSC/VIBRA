@@ -144,8 +144,8 @@ class AcousticPressureInput(QDialog):
         self.update_tabs_visibility()
 
     def geometry_selection_callback(self):
-        faces = self.main_window.selected_geometry_faces
-        points = self.main_window.selected_geometry_nodes
+        faces = self.main_window.selected_geometry_surfaces
+        points = self.main_window.selected_geometry_points
         lines = self.main_window.selected_geometry_lines
 
         if faces:

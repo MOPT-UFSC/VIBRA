@@ -213,9 +213,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.lines_actor.clear_colors()
         self.faces_actor.clear_colors()
 
-        points = app().main_window.selected_geometry_nodes
+        points = app().main_window.selected_geometry_points
         lines = app().main_window.selected_geometry_lines
-        faces = app().main_window.selected_geometry_faces
+        faces = app().main_window.selected_geometry_surfaces
         volumes = app().main_window.selected_geometry_volumes
 
         mesh = self.main_window.project.model.mesh
@@ -466,7 +466,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.update()
     
     def _nodes_info_text(self):
-        nodes = list(self.main_window.selected_geometry_nodes)
+        nodes = list(self.main_window.selected_geometry_points)
         text = ""
 
         if len(nodes) > 1:
@@ -480,7 +480,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         return text
 
     def _faces_info_text(self):
-        faces = list(self.main_window.selected_geometry_faces)
+        faces = list(self.main_window.selected_geometry_surfaces)
         text = ""
 
         if len(faces) > 1:
@@ -494,7 +494,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         return text
 
     def _material_info_text(self):
-        elements = list(self.main_window.selected_geometry_faces)
+        elements = list(self.main_window.selected_geometry_surfaces)
         text = ""
 
         if len(elements) != 1:
@@ -517,7 +517,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         return text
         
     def _fluid_info_text(self):
-        elements = list(self.main_window.selected_geometry_faces)
+        elements = list(self.main_window.selected_geometry_surfaces)
         text = ""
 
         if len(elements) != 1:
@@ -542,7 +542,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         return text
 
     def _boundary_conditions_info_text(self):
-        elements = list(self.main_window.selected_geometry_faces)
+        elements = list(self.main_window.selected_geometry_surfaces)
         text = ""
 
         if len(elements) != 1:

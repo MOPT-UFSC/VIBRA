@@ -47,9 +47,9 @@ class MainWindow(QMainWindow):
         self.selected_mesh_nodes = set()
         self.selected_mesh_faces = set()
         self.selected_mesh_solids = set()
-        self.selected_geometry_nodes = set()
+        self.selected_geometry_points = set()
         self.selected_geometry_lines = set()
-        self.selected_geometry_faces = set()
+        self.selected_geometry_surfaces = set()
         self.selected_geometry_volumes = set()
         
         self.dialog = None
@@ -100,9 +100,9 @@ class MainWindow(QMainWindow):
             self.selected_mesh_solids = set(solids)
 
             # Clear the other type of selection
-            self.selected_geometry_nodes.clear()
+            self.selected_geometry_points.clear()
             self.selected_geometry_lines.clear()
-            self.selected_geometry_faces.clear()
+            self.selected_geometry_surfaces.clear()
             self.selected_geometry_volumes.clear()
 
         self.selection_changed.emit()
@@ -121,24 +121,24 @@ class MainWindow(QMainWindow):
             volumes = set()
 
         if join and remove:
-            self.selected_geometry_nodes ^= set(nodes)
+            self.selected_geometry_points ^= set(nodes)
             self.selected_geometry_lines ^= set(lines)
-            self.selected_geometry_faces ^= set(faces)
+            self.selected_geometry_surfaces ^= set(faces)
             self.selected_geometry_volumes ^= set(volumes)
         elif join:
-            self.selected_geometry_nodes |= set(nodes)
+            self.selected_geometry_points |= set(nodes)
             self.selected_geometry_lines |= set(lines)
-            self.selected_geometry_faces |= set(faces)
+            self.selected_geometry_surfaces |= set(faces)
             self.selected_geometry_volumes |= set(volumes)
         elif remove:
-            self.selected_geometry_nodes -= set(nodes)
+            self.selected_geometry_points -= set(nodes)
             self.selected_geometry_lines -= set(lines)
-            self.selected_geometry_faces -= set(faces)
+            self.selected_geometry_surfaces -= set(faces)
             self.selected_geometry_volumes -= set(volumes)
         else:
-            self.selected_geometry_nodes = set(nodes)
+            self.selected_geometry_points = set(nodes)
             self.selected_geometry_lines = set(lines)
-            self.selected_geometry_faces = set(faces)
+            self.selected_geometry_surfaces = set(faces)
             self.selected_geometry_volumes = set(volumes)
 
             # Clear the other type of selection
