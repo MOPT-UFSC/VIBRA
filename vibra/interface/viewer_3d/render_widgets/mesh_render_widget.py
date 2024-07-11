@@ -262,7 +262,7 @@ class MeshRenderWidget(CommonRenderWidget):
         if not self._actors_exists():
             return
         
-        self.update_selection_info()
+        self.update_info_text()
 
         self.nodes_actor.clear_colors((0, 0, 0, 0))
         self.faces_actor.clear_colors()
@@ -373,7 +373,7 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.update()
     
-    def update_selection_info(self):
+    def update_info_text(self):
         text = ""
         text += self.nodes_info_text()
         text += self.faces_info_text()
@@ -382,6 +382,7 @@ class MeshRenderWidget(CommonRenderWidget):
         text += self._boundary_conditions_info_text()
         
         self.set_info_text(text)
+        self.update()
     
     def nodes_info_text(self):
         nodes = list(self.main_window.selected_mesh_nodes)

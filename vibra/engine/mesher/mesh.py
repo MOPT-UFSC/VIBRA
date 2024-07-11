@@ -900,6 +900,138 @@ class Mesh:
         return nodes_inside_sphere, list(selected_elements)
 
 
+    def check_selected_ids(self, selected_ids, selection = "nodes", single_id = False):
+
+        try:
+
+            message = ""
+            if isinstance(selected_ids, str):
+                tokens = selected_ids.strip().split(",")
+                try:
+                    tokens.remove("")
+                except:
+                    pass
+                list_ids = list(map(int, tokens))
+
+            elif isinstance(selected_ids, list):
+                list_ids = selected_ids
+
+            elif isinstance(selected_ids, (tuple, np.ndarray)):
+                list_ids = list(selected_ids)
+
+            if selection == "nodes":
+                all_ids = list(self.nodal_coordinates[:, 0])
+
+            elif selection == "face_elements":
+                all_ids = list(self.faces_connectivity[:, 0])
+
+            elif selection == "solid_elements":
+                all_ids = list(self.solids_connectivity[:, 0])
+
+            elif selection == "lines":
+                all_ids = list(self.nodes_from_lines.keys())
+                print(all_ids)
+                print(self.nodes_from_lines)
+
+            elif selection == "surfaces":
+                all_ids = list(self.nodes_from_surfaces.keys())   
+      
+            elif selection == "volumes":
+                all_ids = list(self.nodes_from_volumes.keys())
+
+            else:
+                return
+
+            _size = len(all_ids)
+
+            if len(list_ids) == 0:
+                message = "An empty input field for the Selection ID has been detected. Please, enter a valid Selection ID to proceed."
+
+            elif len(list_ids) >= 1:
+                if single_id and len(list_ids) > 1:
+                    message = "Multiple Selected IDs"
+                else:
+                    try:
+                        for _id in list_ids:
+                            if _id not in all_ids:
+                                message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
+                                message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+                                break
+                    except Exception as error_log:
+                        message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
+                        message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+                        message += f"\n\n{str(error_log)}"
+
+        except Exception as log_error:
+            message = "Wrong input for the Selected ID's. "
+            message += f"\n\n{str(log_error)}"
+
+        if message != "":
+            window_title = "Error"
+            title = "Invalid entry to the Selection ID"
+            PrintMessageInput([window_title, title, message])
+            return True, list()
+
+        if single_id:
+            return False, list_ids[0]
+        else:
+            return False, list_ids
+
+
+    def check_input_line_id(self, selected_ids, single_id=False):
+        try:
+            message = ""
+            if isinstance(selected_ids, str):
+                tokens = selected_ids.strip().split(",")
+                try:
+                    tokens.remove("")
+                except:
+                    pass
+                list_ids = list(map(int, tokens))
+
+            elif isinstance(selected_ids, list):
+                list_ids = selected_ids
+
+            elif isinstance(selected_ids, (tuple, np.ndarray)):
+                list_ids = list(selected_ids)
+
+            line_ids = self.nodes_from_lines.keys()
+            _size = len(line_ids)
+
+            if len(list_ids) == 0:
+                message = "An empty input field for the Selected ID has been detected. Please, enter a valid Selected ID to proceed."
+
+            elif len(list_ids) >= 1:
+                if single_id and len(list_ids) > 1:
+                    message = "Multiple Selected IDs"
+                else:
+                    try:
+                        for _id in list_ids:
+                            if _id not in line_ids:
+                                message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
+                                message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+                                break
+                    except Exception as error_log:
+                        message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
+                        message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+                        message += f"\n\n{str(error_log)}"
+
+        except Exception as log_error:
+            message = "Wrong input for the Selected ID's. "
+            message += f"\n\n{str(log_error)}"
+
+        if message != "":
+            window_title = "Error"
+            title = "Invalid entry to the Selected ID"
+            PrintMessageInput([window_title, title, message])
+            return True, list()
+
+        if single_id:
+            return False, list_ids[0]
+        else:
+            return False, list_ids
+
+
     def check_input_surface_id(self, selected_ids, single_id=False):
         try:
             message = ""

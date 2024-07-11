@@ -129,6 +129,12 @@ class ViewerTabs(QTabWidget):
     def close_mesh_tabs(self):
         self.setTabVisible(2, False)
 
+    def update_info_text(self):
+        for tab in self.tabs():
+            if not hasattr(tab, "update_info_text"):
+                continue
+            tab.update_info_text()
+
     def start_cutting_mode(self):
         for tab in self.tabs():
             if not hasattr(tab, "start_cutting_mode"):

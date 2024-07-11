@@ -117,7 +117,7 @@ class ProjectFileIO:
         mesh_data = dict(
                             nodal_coordinates = self.model.mesh.nodal_coordinates,
                             nodes_from_points = self.model.mesh.nodes_from_points,
-                            nodes_from_solids = self.model.mesh.nodes_from_lines,
+                            nodes_from_lines = self.model.mesh.nodes_from_lines,
                             nodes_from_surfaces = self.model.mesh.nodes_from_surfaces,
                             nodes_from_volumes = self.model.mesh.nodes_from_volumes,
 
@@ -137,19 +137,16 @@ class ProjectFileIO:
                             surfaces_from_volumes = self.model.mesh.surfaces_from_volumes
                         )
 
-        # file_path = self.project_folder_path / self.mesh_data_filename
+        # aux_file = self.project_folder_path / self.mesh_data_filename
         # if os.path.exists(self.project_folder_path):
-        #     f = h5py.File(file_path, "w")
+        #     f = h5py.File(aux_file, "w")
         #     f.close()
-
-        # f = h5py.File(file_path, 'w')
-
-        if self.mesh_data_filename in self.vibra_file:
-            self.vibra_file.remove(self.mesh_data_filename)            
 
         with self.vibra_file.open(self.mesh_data_filename) as internal_file:
             with h5py.File(internal_file, "w") as f:
+
                 for key, data in mesh_data.items():
+
                     if "nodes" in key or "nodal" in key:
                         _key = f"nodal_data/{key}"
 
@@ -169,11 +166,13 @@ class ProjectFileIO:
                         _key = key
 
                     if isinstance(data, dict):
+
                         for _id, _values in data.items():
                             name = f"{_key}_{_id}"
                             f.create_dataset(name, data=_values, dtype=int)
 
                     else:
+
                         if key == "nodal_coordinates":
                             dtype = float 
                         else:
@@ -181,21 +180,20 @@ class ProjectFileIO:
 
                         f.create_dataset(_key, data=data, dtype=dtype)
 
-
     def read_mesh_data_from_file(self):
+
+        mesh_data = dict()
 
         # file_path = self.project_folder_path / self.mesh_data_filename 
         # if os.path.exists(file_path):
-            # f = h5py.File(file_path, 'r')
+        #     f = h5py.File(file_path, 'r')
 
-        mesh_data = dict()
+            # groups = list(f.keys())
 
         with self.vibra_file.open(self.mesh_data_filename) as internal_file:
             with h5py.File(internal_file, "r") as f:
 
-                groups = list(f.keys())
-
-                for group in groups:
+                for group in list(f.keys()):
                     for key, values in f.get(group).items():
 
                         try:
@@ -203,8 +201,6 @@ class ProjectFileIO:
 
                         except:
                             mesh_data[key] = int(values)
-
-                f.close()
 
         if mesh_data:
             return mesh_data

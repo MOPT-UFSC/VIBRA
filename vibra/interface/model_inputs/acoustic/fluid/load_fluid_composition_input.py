@@ -88,7 +88,7 @@ class LoadFluidCompositionInput(QDialog):
 
     def search_button_callback(self):
 
-        last_geometry_file = app().config.get_last_fluid_composition_folder()
+        last_geometry_file = app().config.get_last_folder_for("fluid composition folder")
         if last_geometry_file is None:
             inital_path = self.desktop_path
         else:
@@ -102,7 +102,7 @@ class LoadFluidCompositionInput(QDialog):
         if self.file_path == "":
             return True
         else:
-            app().config.write_last_fluid_composition_folder_path_in_file(self.file_path)
+            app().config.write_last_folder_path_in_file("fluid composition folder", self.file_path)
             self.lineEdit_file_path.setText(self.file_path)
 
         if self.load_composition_data_from_file():

@@ -178,6 +178,7 @@ class SetAnechoicTerminationInputs(QDialog):
 
         for face_id in self.typed_ids:
             self.project.set_specific_impedance(data, face_id)
+        self.main_window.viewer_tabs.update_info_text()
 
         app().main_window.file.write_model_properties_in_file()
 
