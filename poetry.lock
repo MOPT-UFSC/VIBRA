@@ -224,7 +224,7 @@ treelib = "^1.7.0"
 type = "git"
 url = "https://github.com/andrefpf/fileboxes.git"
 reference = "HEAD"
-resolved_reference = "a27146362723cd5a9872dc61a91fde1cc83976d8"
+resolved_reference = "a439c8e379246471c48ba8ef0193ccd594db559a"
 
 [[package]]
 name = "fonttools"

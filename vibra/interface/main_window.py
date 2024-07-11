@@ -28,11 +28,12 @@ from vibra.file.project_file_io import ProjectFileIO
 
 import qdarktheme
 
+import sys
 import logging
 import random
 from pathlib import Path
+from shutil import rmtree
 from time import sleep
-import sys
 
 
 class MainWindow(QMainWindow):
@@ -231,7 +232,20 @@ class MainWindow(QMainWindow):
         self.project_path = str(self.project_folder_path / "tmp.vibra")
         create_new_folder(user_path, "temp_vibra")
 
+    def reset_temporary_vibra_folder(self):
+        user_path = os.path.expanduser("~")
+        project_folder_path = Path(user_path) / "temp_vibra"
+        if os.path.exists(project_folder_path):
+            for filename in os.listdir(project_folder_path).copy():
+                file_path = project_folder_path / filename
+                if os.path.exists(file_path):
+                    if "." in filename:
+                        os.remove(file_path)
+                    else:
+                        rmtree(file_path)
+
     def new_project_dialog(self):
+        self.reset_temporary_vibra_folder()
         self.import_geometry_dialog()
 
     def save_project_dialog(self):
@@ -359,6 +373,12 @@ class MainWindow(QMainWindow):
     def close_dialogs(self):
         if isinstance(self.dialog, (QDialog, QWidget)):
             self.dialog.close()
+
+def create_new_folder(path, folder_name):
+    folder_path = os.path.join(path, folder_name)
+    if not os.path.exists(folder_path):
+        os.mkdir(folder_path)
+    return folder_path
 
 def create_new_folder(path, folder_name):
     folder_path = os.path.join(path, folder_name)
