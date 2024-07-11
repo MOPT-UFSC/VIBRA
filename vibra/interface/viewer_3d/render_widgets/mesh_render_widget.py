@@ -189,6 +189,14 @@ class MeshRenderWidget(CommonRenderWidget):
 
     # These pick functions can be placed into a separated class
     def _get_picked_cell_id(self, x, y):
+        '''
+        Pick the nodes, faces and solids at the same time.
+        Them select just the one that is closest to the camera.
+        
+        If the ID of a cell is lower than 1 the distance to the
+        camera is set to infinite, so it will never be selected.
+        '''
+
         picked_nodes = []
         picked_faces = []
         picked_solids = []
@@ -198,16 +206,19 @@ class MeshRenderWidget(CommonRenderWidget):
         solid_id, solid_pos = self._pick_actor(x, y, self.solids_actor)
 
         camera_position = np.array(self.renderer.GetActiveCamera().GetPosition())
-        node_distance = np.linalg.norm(camera_position - node_pos)
-        faces_distance = np.linalg.norm(camera_position - face_pos)
-        solids_distance = np.linalg.norm(camera_position - solid_pos)
-        closest = min(node_distance, faces_distance, solids_distance)
+        node_distance = np.linalg.norm(camera_position - node_pos) if node_id >= 0 else float('inf')
+        face_distance = np.linalg.norm(camera_position - face_pos) if face_id >= 0 else float('inf')
+        solid_distance = np.linalg.norm(camera_position - solid_pos) if solid_id >= 0 else float('inf')
+        closest = min(node_distance, face_distance, solid_distance)
 
-        if (closest == node_distance) and (node_id >= 0):
+        if closest == float('inf'):
+            return picked_nodes, picked_faces, picked_solids
+
+        if (closest == node_distance):
             picked_nodes.append(node_id)
-        elif (closest == faces_distance) and (face_id >= 0):
+        elif (closest == face_distance):
             picked_faces.append(face_id)
-        elif (closest == solids_distance) and (solid_id >= 0):
+        elif (closest == solid_distance):
             picked_solids.append(solid_id)
 
         return picked_nodes, picked_faces, picked_solids
