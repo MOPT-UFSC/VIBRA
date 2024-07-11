@@ -29,7 +29,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.main_window = app().main_window
         self.view_mode = SHOW_FACES
 
-        self.main_window.selection_changed.connect(self.update_selection_info)
+        self.main_window.selection_changed.connect(self.update_selection)
         # self.geometry_info = GeometryInfoBar()
 
         # replace the layout to add other usefull widgets
@@ -177,35 +177,73 @@ class GeometryRenderWidget(CommonRenderWidget):
         alt_pressed = modifiers & Qt.AltModifier
 
         if clicked_actor == self.points_actor:
-            self.select_point(clicked_cell, join=ctrl_pressed, remove=alt_pressed)
-            self.main_window.set_geometry_selection(nodes=[clicked_cell], join=ctrl_pressed, remove=alt_pressed )
+            # self.select_point(clicked_cell, join=ctrl_pressed, remove=alt_pressed)
+            self.main_window.set_geometry_selection(nodes=[clicked_cell], join=ctrl_pressed, remove=alt_pressed)
 
         elif clicked_actor == self.lines_actor:
             line_entity = self.main_window.project.model.mesh.lines_connectivity[clicked_cell][1]
-            self.select_line(line_entity, join=ctrl_pressed, remove=alt_pressed)
+            self.main_window.set_geometry_selection(lines=[line_entity], join=ctrl_pressed, remove=alt_pressed)
+            # self.select_line(line_entity, join=ctrl_pressed, remove=alt_pressed)
 
         elif (clicked_actor == self.faces_actor) and not shift_pressed:
             face_entity = self.main_window.project.model.mesh.faces_connectivity[clicked_cell][1]
-            self.select_face(face_entity, join=ctrl_pressed, remove=alt_pressed)
-            self.main_window.set_geometry_selection(faces=[clicked_cell], join=ctrl_pressed, remove=alt_pressed)
+            # self.select_face(face_entity, join=ctrl_pressed, remove=alt_pressed)
+            self.main_window.set_geometry_selection(faces=[face_entity], join=ctrl_pressed, remove=alt_pressed)
 
         elif (clicked_actor == self.faces_actor) and shift_pressed:
             face_entity = self.main_window.project.model.mesh.faces_connectivity[clicked_cell][1]
             for (volume, surfaces) in self.main_window.project.model.mesh.surfaces_from_volumes.items():
                 if face_entity in surfaces:
-                    self.select_volume(volume, join=ctrl_pressed, remove=alt_pressed)
-                    self.main_window.set_geometry_selection(solids=[clicked_cell], join=ctrl_pressed, remove=alt_pressed)
+                    # self.select_volume(volume, join=ctrl_pressed, remove=alt_pressed)
+                    self.main_window.set_geometry_selection(volumes=[volume], join=ctrl_pressed, remove=alt_pressed)
                     break
 
         else:
-            self.clear_selection()
-            self.selection_changed.emit(self.selected_points,
-                                        self.selected_lines,
-                                        self.selected_faces,
-                                        self.selected_volumes)
+            # self.clear_selection()
+            # self.selection_changed.emit(self.selected_points,
+            #                             self.selected_lines,
+            #                             self.selected_faces,
+            #                             self.selected_volumes)
             self.main_window.set_geometry_selection(join=ctrl_pressed, remove=alt_pressed)
 
         self.update()
+
+    def update_selection(self):
+        self.points_actor.clear_colors()
+        self.lines_actor.clear_colors()
+        self.faces_actor.clear_colors()
+
+        points = app().main_window.selected_geometry_nodes
+        lines = app().main_window.selected_geometry_lines
+        faces = app().main_window.selected_geometry_faces
+        volumes = app().main_window.selected_geometry_volumes
+
+        mesh = self.main_window.project.model.mesh
+
+        # Get the line elements of all selected lines
+        all_lines_elements = list()
+        for line in lines:
+            indexes = self.main_window.project.model.mesh.elements_from_line.get(line, [])
+            all_lines_elements.extend(indexes)
+
+        all_faces_elements = list()
+        # Get the face elements of all selected faces
+        for face in faces:
+            indexes = mesh.elements_from_surface.get(face, [])
+            all_faces_elements.extend(indexes)
+
+        # Get the face elements of all selected volumes
+        for volume in volumes:
+            surfaces = self.main_window.project.model.mesh.surfaces_from_volumes[volume]
+            for face in surfaces:
+                indexes = self.main_window.project.model.mesh.elements_from_surface.get(face, [])
+                all_faces_elements.extend(indexes)
+
+        self.points_actor.paint_cells(self.selection_color, points)
+        self.lines_actor.paint_cells(self.selection_color, all_lines_elements)
+        self.faces_actor.paint_cells(self.selection_color, all_faces_elements)
+
+        self.update_info_text()
 
     def clear_selection_spheres(self):
         self.selection_spheres_actor.VisibilityOff()
@@ -413,16 +451,16 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         return all([actor is not None for actor in actors])
 
-    def update_selection_info(self):
+    def update_info_text(self):
         text = ""
-        text += self.nodes_info_text()
-        text += self.faces_info_text()
-        text += self.material_info_text()
-        text += self.fluid_info_text()
+        text += self._nodes_info_text()
+        text += self._faces_info_text()
+        text += self._material_info_text()
+        text += self._fluid_info_text()
         
         self.set_info_text(text)
     
-    def nodes_info_text(self):
+    def _nodes_info_text(self):
         nodes = list(self.main_window.selected_geometry_nodes)
         text = ""
 
@@ -436,7 +474,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         return text
 
-    def faces_info_text(self):
+    def _faces_info_text(self):
         faces = list(self.main_window.selected_geometry_faces)
         text = ""
 
@@ -450,7 +488,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         
         return text
 
-    def material_info_text(self):
+    def _material_info_text(self):
         elements = list(self.main_window.selected_geometry_faces)
         text = ""
 
@@ -470,7 +508,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         return text
         
-    def fluid_info_text(self):
+    def _fluid_info_text(self):
         elements = list(self.main_window.selected_geometry_faces)
         text = ""
 
