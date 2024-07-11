@@ -237,14 +237,18 @@ class SetFluidInput(QDialog):
                     print("[Set Fluid] - {} defined at {} bodies".format(selected_fluid.name, len(self.selected_ids)))
 
             else:
+                # I am not sure if it is correct, but because we are in the "all bodies"
+                # part, we can set the property as global
+                self.main_window.project.set_fluid(selected_fluid)
 
-                volume_ids = list(self.project.model.mesh.nodes_from_volumes.keys())
-                for volume_id in volume_ids:
-                    self.main_window.project.set_fluid(selected_fluid, volume=volume_id)
+
+                # volume_ids = list(self.project.model.mesh.nodes_from_volumes.keys())
+                # for volume_id in volume_ids:
+                #     self.main_window.project.set_fluid(selected_fluid, volume=volume_id)
                 
-                surface_ids = list(self.project.model.mesh.nodes_from_surfaces.keys())
-                for surface_id in surface_ids:
-                    self.main_window.project.set_fluid(selected_fluid, surface=surface_id)
+                # surface_ids = list(self.project.model.mesh.nodes_from_surfaces.keys())
+                # for surface_id in surface_ids:
+                #     self.main_window.project.set_fluid(selected_fluid, surface=surface_id)
 
                 print("[Set Fluid] - {} defined at all bodies.".format(selected_fluid.name))
 
