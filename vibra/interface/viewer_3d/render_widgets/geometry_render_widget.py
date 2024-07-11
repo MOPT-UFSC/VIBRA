@@ -475,7 +475,7 @@ class GeometryRenderWidget(CommonRenderWidget):
                 f"{format_long_sequence(nodes)}\n\n"
             )
         elif len(nodes) == 1:
-            text += f"Node: {nodes[0]}\n\n"
+            text += f"Point: {nodes[0]}\n\n"
 
         return text
 
@@ -489,7 +489,7 @@ class GeometryRenderWidget(CommonRenderWidget):
                 f"{format_long_sequence(faces)}\n\n"
             )
         elif len(faces) == 1:
-            text += f"Face: {faces[0]}\n\n"
+            text += f"Surface: {faces[0]}\n\n"
         
         return text
 

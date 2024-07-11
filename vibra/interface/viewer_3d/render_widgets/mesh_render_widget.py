@@ -406,7 +406,7 @@ class MeshRenderWidget(CommonRenderWidget):
                 f"{format_long_sequence(faces)}\n\n"
             )
         elif len(faces) == 1:
-            text += f"Face: {faces[0]}\n\n"
+            text += f"Face element: {faces[0]}\n\n"
         
         return text
 
