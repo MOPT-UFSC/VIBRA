@@ -382,6 +382,7 @@ class MeshRenderWidget(CommonRenderWidget):
         text += self._boundary_conditions_info_text()
         
         self.set_info_text(text)
+        self.update()
     
     def nodes_info_text(self):
         nodes = list(self.main_window.selected_mesh_nodes)

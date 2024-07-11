@@ -220,6 +220,7 @@ class AcousticPressureInput(QDialog):
 
             for _id in self.typed_ids:
                 self.project.set_acoustic_pressure(data, _id)
+            self.main_window.viewer_tabs.update_info_text()
 
             app().main_window.file.write_model_properties_in_file()
 
@@ -364,6 +365,7 @@ class AcousticPressureInput(QDialog):
                             }
 
                     self.project.set_acoustic_pressure(data, _id)
+            self.main_window.viewer_tabs.update_info_text()
 
             app().main_window.file.write_model_properties_in_file()
 

@@ -463,6 +463,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         text += self._boundary_conditions_info_text()
         
         self.set_info_text(text)
+        self.update()
     
     def _nodes_info_text(self):
         nodes = list(self.main_window.selected_geometry_nodes)
