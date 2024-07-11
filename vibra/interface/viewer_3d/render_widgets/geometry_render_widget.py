@@ -499,10 +499,11 @@ class GeometryRenderWidget(CommonRenderWidget):
             
             tree = TreeInfo("Material")
             tree.add_item("Name", material.name)
-            tree.add_item("Density", material.density, "??")
-            tree.add_item("Young Modulus", material.young_modulus, "??")
-            tree.add_item("Poisson Ratio", material.poisson_ratio, "??")
-            tree.add_item("Thermal Expasion Coefficient", material.thermal_expansion_coefficient, "??")
+            tree.add_item("Identifier", material.identifier)
+            tree.add_item("Density", material.density, "kg/m3")
+            tree.add_item("Young Modulus", material.young_modulus/1e9, "GPa")
+            tree.add_item("Poisson Ratio", material.poisson_ratio, "--")
+            tree.add_item("Thermal Expasion Coefficient", material.thermal_expansion_coefficient, "1/K")
 
             text += str(tree)
 
@@ -519,9 +520,12 @@ class GeometryRenderWidget(CommonRenderWidget):
             
             tree = TreeInfo("Fluid")
             tree.add_item("Name", fluid.name)
-            tree.add_item("Density", fluid.fluid_density, "??")
-            tree.add_item("Temperature", fluid.temperature, "K")
+            tree.add_item("Identifier", fluid.identifier)
             tree.add_item("Pressure", fluid.pressure, "Pa")
+            tree.add_item("Temperature", fluid.temperature, "K")
+            tree.add_item("Density", fluid.fluid_density, "kg/m3")
+            tree.add_item("Speed of sound", fluid.speed_of_sound, "m/s")
+            tree.add_item("Molar mass", fluid.molar_mass, "kg/kmol")
 
             text += str(tree)
         
