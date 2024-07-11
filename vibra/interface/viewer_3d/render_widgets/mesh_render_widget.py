@@ -379,6 +379,7 @@ class MeshRenderWidget(CommonRenderWidget):
         text += self.faces_info_text()
         text += self.material_info_text()
         text += self.fluid_info_text()
+        text += self._boundary_conditions_info_text()
         
         self.set_info_text(text)
     
@@ -448,6 +449,34 @@ class MeshRenderWidget(CommonRenderWidget):
             tree.add_item("Molar mass", fluid.molar_mass, "kg/kmol")
 
             text += str(tree)
+        
+        return text
+    
+    def _boundary_conditions_info_text(self):
+        elements = list(self.main_window.selected_mesh_faces)
+        text = ""
+
+        if len(elements) != 1:
+            return text
+
+        acoustic_pressure = self.main_window.project.model.properties.get_acoustic_pressure(elements[0])
+        surface_velocity = self.main_window.project.model.properties.get_surface_velocity(elements[0])
+        specific_impedance = self.main_window.project.model.properties.get_specific_impedance(elements[0])
+        boundary_conditions_list = [acoustic_pressure, surface_velocity, specific_impedance]
+
+        if all(condition is None for condition in boundary_conditions_list):
+            return text
+        
+        tree = TreeInfo("Boundary Conditions")
+
+        if acoustic_pressure is not None:
+            tree.add_item("Acoustic pressure", acoustic_pressure["real_values"], "Pa")
+        if surface_velocity is not None:
+            tree.add_item("Surface velocity", surface_velocity["real_values"], "m/s")
+        if specific_impedance is not None:
+            tree.add_item("Specific impedance", specific_impedance["real_values"], "kg/m2s")
+
+        text += str(tree)
         
         return text
 
