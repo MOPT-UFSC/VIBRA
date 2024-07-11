@@ -36,7 +36,7 @@ class ExportModelResults(QFileDialog):
     def export_data_in_text_format(self, export_path, delimiter=","):
 
         for key, data in self.data.items():
-            
+
             # selection_type, selection_id = key
             # suffix = f"{selection_type}_{selection_id}"
 

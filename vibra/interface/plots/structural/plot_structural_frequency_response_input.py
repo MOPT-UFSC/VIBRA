@@ -74,17 +74,12 @@ class PlotStructuralFrequencyResponseInput(QDialog):
             text += "{}, ".format(node)
         self.lineEdit_node_id.setText(text)
 
-    def update(self):
-        self.list_node_IDs = self.opv.getListPickedPoints()
-        if self.list_node_IDs != []:
-            self.writeNodes(self.list_node_IDs)
-
     def call_plotter(self):
         if self.check_inputs():
             return
         self.join_model_data()
         self.plotter = FrequencyResponsePlotter()
-        self.plotter._set_data_to_plot(self.model_results)
+        self.plotter._set_model_results_data_to_plot(self.model_results)
 
     def call_data_exporter(self):
         if self.check_inputs():

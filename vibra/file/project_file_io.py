@@ -118,7 +118,7 @@ class ProjectFileIO:
         mesh_data = dict(
                             nodal_coordinates = self.model.mesh.nodal_coordinates,
                             nodes_from_points = self.model.mesh.nodes_from_points,
-                            nodes_from_solids = self.model.mesh.nodes_from_lines,
+                            nodes_from_lines = self.model.mesh.nodes_from_lines,
                             nodes_from_surfaces = self.model.mesh.nodes_from_surfaces,
                             nodes_from_volumes = self.model.mesh.nodes_from_volumes,
 

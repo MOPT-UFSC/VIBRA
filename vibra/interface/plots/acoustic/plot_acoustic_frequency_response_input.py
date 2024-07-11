@@ -102,9 +102,8 @@ class PlotAcousticFrequencyResponseInput(QDialog):
         elif not any([points, lines, faces]):
             self.lineEdit_selection_id.setText("")
 
-    def call_plotter(self):
+    def check_inputs(self):
 
-        lineEdit_selection_id = self.lineEdit_selection_id.text()
         index = self.comboBox_selector_filter.currentIndex()
 
         if index == 0:
@@ -116,39 +115,27 @@ class PlotAcousticFrequencyResponseInput(QDialog):
         else:
             selection = "nodes"
 
+        lineEdit_selection_id = self.lineEdit_selection_id.text()
         stop, self.typed_ids = self.mesh.check_selected_ids(lineEdit_selection_id, 
                                                             selection = selection)
 
         if stop:
             self.lineEdit_selection_id.setFocus()
+            return True
+
+    def call_plotter(self):
+
+        if self.check_inputs():
             return
 
         self.join_model_data()
         self.plotter = FrequencyResponsePlotter()
-        self.plotter._set_data_to_plot(self.model_results)
+        self.plotter._set_model_results_data_to_plot(self.model_results)
 
     def call_data_exporter(self):
-
-        lineEdit_selection_id = self.lineEdit_selection_id.text()
-        index = self.comboBox_selector_filter.currentIndex()
-
-        if index == 0:
-            selection = "surfaces"
-
-        elif index == 1:
-            selection = "lines"
-
-        else:
-            selection = "nodes"
- 
-        stop, self.typed_ids = self.mesh.check_selected_ids(lineEdit_selection_id, 
-                                                            selection = selection)
-
-        if stop:
-            self.lineEdit_selection_id.setFocus()
+        
+        if self.check_inputs():
             return
-
-        self.hide()
 
         self.join_model_data()
         self.exporter = ExportModelResults()
@@ -175,6 +162,7 @@ class PlotAcousticFrequencyResponseInput(QDialog):
 
     def join_model_data(self):
 
+        self.hide()
         index = self.comboBox_selector_filter.currentIndex()
 
         if index == 0:
@@ -189,7 +177,7 @@ class PlotAcousticFrequencyResponseInput(QDialog):
 
         for i, selected_id in enumerate(self.typed_ids):
 
-            key = (selection_type, selected_id)
+            key = (selection_type, (selected_id))
             legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
 
             self.model_results[key] = { 
@@ -204,6 +192,8 @@ class PlotAcousticFrequencyResponseInput(QDialog):
                                         "color" : self.get_color(i),
                                         "linestyle" : "-"  
                                       }
+            
+        
 
     def get_color(self, index):
         colors = [  (0,0,1), (0,0,0), (1,0,0),

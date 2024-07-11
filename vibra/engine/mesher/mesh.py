@@ -929,13 +929,15 @@ class Mesh:
                 all_ids = list(self.solids_connectivity[:, 0])
 
             elif selection == "lines":
-                all_ids = self.nodes_from_lines.keys()
+                all_ids = list(self.nodes_from_lines.keys())
+                print(all_ids)
+                print(self.nodes_from_lines)
 
             elif selection == "surfaces":
-                all_ids = self.nodes_from_surfaces.keys()      
+                all_ids = list(self.nodes_from_surfaces.keys())   
       
-            elif selection == "volumnes":
-                all_ids = self.nodes_from_volumes.keys()
+            elif selection == "volumes":
+                all_ids = list(self.nodes_from_volumes.keys())
 
             else:
                 return

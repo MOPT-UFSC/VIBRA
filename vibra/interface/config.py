@@ -186,8 +186,6 @@ class Config:
 
         return refprop_path
 
-        self.write_data_in_file(self.config_path, config)
-
     def write_data_in_file(self, path, config):
         with open(path, 'w') as config_file:
             config.write(config_file)
