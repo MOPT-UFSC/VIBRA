@@ -2,10 +2,6 @@ from PyQt5.QtWidgets import QComboBox, QLineEdit, QPushButton, QDialog
 from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt5.QtGui import QCloseEvent
 from PyQt5 import uic
-from pathlib import Path
-
-import os
-import numpy as np
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
@@ -13,9 +9,14 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 
+import os
+import numpy as np
 
-window_title1 = "Error"
-window_title2 = "Warning"
+from time import time
+from pathlib import Path
+
+window_title_1 = "Error"
+window_title_2 = "Warning"
 
 class PlotTransmissionLossInput(QDialog):
     def __init__(self, *args, **kwargs):
@@ -88,7 +89,7 @@ class PlotTransmissionLossInput(QDialog):
         self.clickable(self.lineEdit_output_surface_id).connect(self.lineEdit_2_clicked)
 
     def _config_widgets(self):
-        self.current_lineEdit = self.lineEdit_input_surface_id
+        self.current_lineEdit = self.lineEdit_output_surface_id
         self.lineEdit_input_surface_id.setFocus()
 
     def clickable(self, widget):
@@ -115,19 +116,23 @@ class PlotTransmissionLossInput(QDialog):
     def geometry_selection_callback(self, points, lines, faces):
         
         if faces:
-            
-            if len(faces) > 2:
+
+            if len(faces) > 1:
                 return
 
-            elif len(faces) == 2:
-                self.lineEdit_input_surface_id.setText(str(faces[0]))
-                self.lineEdit_output_surface_id.setText(str(faces[1]))
-
             else:
-                # text = ", ".join([str(i) for i in faces])
-                self.current_lineEdit.setText(str(faces[0]))
+                _faces = [str(i) for i in faces]
+                self.current_lineEdit.setText(_faces[0])
+
+            # if len(_faces) == 2:
+            #     self.lineEdit_input_surface_id.setText(_faces[0])
+            #     self.lineEdit_output_surface_id.setText(_faces[1])
+
+            # if len(_faces) == 1:
+            #     self.current_lineEdit.setText(_faces[0])
 
         elif not any([points, lines, faces]):
+            return
             self.current_lineEdit.setText("")
 
     def invert_selection(self):
@@ -141,7 +146,9 @@ class PlotTransmissionLossInput(QDialog):
         if self.check_inputs():
             return
 
-        self.join_model_data()
+        if self.join_model_data():
+            return
+
         self.plotter = FrequencyResponsePlotter()
         self.plotter.imported_dB_data()
         self.plotter._set_model_results_data_to_plot(self.model_results)
@@ -151,7 +158,9 @@ class PlotTransmissionLossInput(QDialog):
         if self.check_inputs():
             return
 
-        self.join_model_data()
+        if self.join_model_data():
+            return
+
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(self.model_results)
 
@@ -181,17 +190,25 @@ class PlotTransmissionLossInput(QDialog):
 
         if self.comboBox_processing_selector.currentIndex() == 0:
             plot_type = "Transmission loss"
-            self.mesh._process_face_elements_connected_to_nodes()
+    
+            list_ids = [self.input_surface_id, self.output_surface_id]
+            self.mesh._process_face_elements_connected_to_nodes(list_ids)
             self.mesh._process_nodal_areas()
+
             x_data, y_data, _ = self.project.acoustic_harmonic_solver.get_transmission_loss(self.input_surface_id, 
                                                                                             self.output_surface_id)
+
         else:
             plot_type = "Noise reduction"
             x_data, y_data = self.project.acoustic_harmonic_solver.get_noise_reduction( self.input_surface_id, 
                                                                                         self.output_surface_id )
 
         if y_data is None:
-            return
+            title = "Invalid input surface id"
+            message = "An invalid surface id has been selected at Input ID field. "
+            message += "Check if the Input ID has a surface velocity excitation to proceed."
+            PrintMessageInput([window_title_1, title, message])
+            return True
 
         self.title = f"{plot_type} - {self.analysis_method}"
         legend_label = f"{plot_type} between surfaces [{self.input_surface_id}] and [{self.output_surface_id}]"

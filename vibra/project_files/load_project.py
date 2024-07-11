@@ -43,6 +43,9 @@ class LoadProject:
         self.library_fluids = dict()
         config = self.file.read_fluid_library_from_file()
 
+        if config is None:
+            return
+
         for tag in config.sections():
 
             section = config[tag]
@@ -120,8 +123,19 @@ class LoadProject:
 
 
     def load_material_library(self):
-        self.library_materials = dict()
 
+        self.library_materials = dict()
+        config = self.file.read_fluid_library_from_file()
+
+        if config is None:
+            return
+
+        for tag in config.sections():
+
+            section = config[tag]
+            keys = config[tag].keys()
+
+            name = section['name']
 
     def load_mesh_data_from_file(self, mesh_data):
 

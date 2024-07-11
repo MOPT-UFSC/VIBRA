@@ -311,7 +311,7 @@ class AcousticHarmonicSolver:
         # Transmission loss
         surf_velocity = self.assembler.model.properties.get_surface_velocity(input_surface_id)
         if surf_velocity is None:
-            return None
+            return None, None, None
 
         real_values = np.array(surf_velocity["real_values"])
         imag_values = np.array(surf_velocity["imag_values"])
@@ -335,7 +335,7 @@ class AcousticHarmonicSolver:
         TL = W_in - W_out
 
         if 0 in self.frequencies:
-            return self.frequencies[1:], TL[1:]
+            return self.frequencies[1:], TL[1:], diff[1:]
 
         return self.frequencies, TL, diff
 
