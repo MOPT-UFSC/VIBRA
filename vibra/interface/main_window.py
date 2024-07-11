@@ -28,11 +28,12 @@ from vibra.file.project_file_io import ProjectFileIO
 
 import qdarktheme
 
+import sys
 import logging
 import random
 from pathlib import Path
+from shutil import rmtree
 from time import sleep
-import sys
 
 
 class MainWindow(QMainWindow):
@@ -320,7 +321,20 @@ class MainWindow(QMainWindow):
         self.project_path = str(self.project_folder_path / "tmp.vibra")
         create_new_folder(user_path, "temp_vibra")
 
+    def reset_temporary_vibra_folder(self):
+        user_path = os.path.expanduser("~")
+        project_folder_path = Path(user_path) / "temp_vibra"
+        if os.path.exists(project_folder_path):
+            for filename in os.listdir(project_folder_path).copy():
+                file_path = project_folder_path / filename
+                if os.path.exists(file_path):
+                    if "." in filename:
+                        os.remove(file_path)
+                    else:
+                        rmtree(file_path)
+
     def new_project_dialog(self):
+        self.reset_temporary_vibra_folder()
         self.import_geometry_dialog()
 
     def save_project_dialog(self):
@@ -343,7 +357,7 @@ class MainWindow(QMainWindow):
 
     def open_project_dialog(self):
 
-        last_path = app().config.get_last_project_folder()
+        last_path = app().config.get_last_folder_for("project folder")
         if last_path is None:
             path = os.path.expanduser("~")
         else:
@@ -359,7 +373,7 @@ class MainWindow(QMainWindow):
         if not check:
             return
 
-        app().config.write_last_project_folder_path_in_file(self.project_path)
+        app().config.write_last_folder_path_in_file("project folder", self.project_path)
 
         self.project = Project()
         self.file = ProjectFileIO(self.project_path, override=False)
@@ -368,7 +382,7 @@ class MainWindow(QMainWindow):
 
     def import_geometry_dialog(self):
 
-        last_path = app().config.get_last_geometry_folder()
+        last_path = app().config.get_last_folder_for("geometry folder")
         if last_path is None:
             path = os.path.expanduser("~")
         else:
@@ -384,7 +398,7 @@ class MainWindow(QMainWindow):
         if not check:
             return
 
-        app().config.write_last_geometry_folder_path_in_file(geometry_path)
+        app().config.write_last_folder_path_in_file("geometry folder", geometry_path)
 
         self.project = Project()
         self.create_temporary_vibra_folder()
@@ -448,6 +462,12 @@ class MainWindow(QMainWindow):
     def close_dialogs(self):
         if isinstance(self.dialog, (QDialog, QWidget)):
             self.dialog.close()
+
+def create_new_folder(path, folder_name):
+    folder_path = os.path.join(path, folder_name)
+    if not os.path.exists(folder_path):
+        os.mkdir(folder_path)
+    return folder_path
 
 def create_new_folder(path, folder_name):
     folder_path = os.path.join(path, folder_name)

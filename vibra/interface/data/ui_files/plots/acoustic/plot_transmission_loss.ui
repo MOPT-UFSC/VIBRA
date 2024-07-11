@@ -201,21 +201,24 @@
          <property name="bottomMargin">
           <number>2</number>
          </property>
-         <property name="spacing">
+         <property name="horizontalSpacing">
+          <number>6</number>
+         </property>
+         <property name="verticalSpacing">
           <number>2</number>
          </property>
          <item row="1" column="2">
           <widget class="QComboBox" name="comboBox_processing_selector">
            <property name="minimumSize">
             <size>
-             <width>166</width>
-             <height>28</height>
+             <width>168</width>
+             <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>166</width>
-             <height>28</height>
+             <width>168</width>
+             <height>30</height>
             </size>
            </property>
            <property name="font">
@@ -261,14 +264,14 @@
           <widget class="QLabel" name="label_2">
            <property name="minimumSize">
             <size>
-             <width>90</width>
-             <height>28</height>
+             <width>100</width>
+             <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>90</width>
-             <height>28</height>
+             <width>100</width>
+             <height>30</height>
             </size>
            </property>
            <property name="font">
@@ -368,13 +371,13 @@
               <property name="minimumSize">
                <size>
                 <width>40</width>
-                <height>28</height>
+                <height>30</height>
                </size>
               </property>
               <property name="maximumSize">
                <size>
                 <width>40</width>
-                <height>28</height>
+                <height>30</height>
                </size>
               </property>
               <property name="font">
@@ -417,14 +420,14 @@
           <widget class="QLabel" name="label_15">
            <property name="minimumSize">
             <size>
-             <width>90</width>
-             <height>28</height>
+             <width>100</width>
+             <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>90</width>
-             <height>28</height>
+             <width>100</width>
+             <height>30</height>
             </size>
            </property>
            <property name="font">
@@ -449,13 +452,13 @@
            <property name="minimumSize">
             <size>
              <width>120</width>
-             <height>28</height>
+             <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
              <width>120</width>
-             <height>28</height>
+             <height>30</height>
             </size>
            </property>
            <property name="font">
@@ -548,14 +551,14 @@ background-color: rgb(255,255,255)</string>
           <widget class="QPushButton" name="pushButton_plot_frequency_response">
            <property name="minimumSize">
             <size>
-             <width>100</width>
-             <height>30</height>
+             <width>120</width>
+             <height>32</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>100</width>
-             <height>30</height>
+             <width>120</width>
+             <height>32</height>
             </size>
            </property>
            <property name="font">
@@ -624,14 +627,14 @@ background-color: rgb(255,255,255)</string>
           <widget class="QLabel" name="label_10">
            <property name="minimumSize">
             <size>
-             <width>90</width>
-             <height>28</height>
+             <width>100</width>
+             <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>90</width>
-             <height>28</height>
+             <width>100</width>
+             <height>30</height>
             </size>
            </property>
            <property name="font">
@@ -680,13 +683,13 @@ background-color: rgb(255,255,255)</string>
               <property name="minimumSize">
                <size>
                 <width>40</width>
-                <height>28</height>
+                <height>30</height>
                </size>
               </property>
               <property name="maximumSize">
                <size>
                 <width>40</width>
-                <height>28</height>
+                <height>30</height>
                </size>
               </property>
               <property name="font">
@@ -730,13 +733,13 @@ background-color: rgb(255,255,255)</string>
            <property name="minimumSize">
             <size>
              <width>120</width>
-             <height>28</height>
+             <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
              <width>120</width>
-             <height>28</height>
+             <height>30</height>
             </size>
            </property>
            <property name="font">
@@ -794,6 +797,14 @@ background-color: rgb(255,255,255)</string>
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>lineEdit_output_surface_id</tabstop>
+  <tabstop>lineEdit_input_surface_id</tabstop>
+  <tabstop>comboBox_processing_selector</tabstop>
+  <tabstop>pushButton_plot_frequency_response</tabstop>
+  <tabstop>pushButton_flip_selection</tabstop>
+  <tabstop>pushButton_call_data_exporter</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

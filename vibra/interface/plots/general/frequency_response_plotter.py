@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QComboBox, QCheckBox, QDialog, QFrame, QPushButton, QRadioButton, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QComboBox, QCheckBox, QDialog, QFrame, QPushButton, QRadioButton, QSpinBox, QVBoxLayout, QWidget
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
@@ -28,14 +28,14 @@ class FrequencyResponsePlotter(QDialog):
         self._create_connections()
 
     def _load_icons(self):
-        self.vibra_icon = app().main_window.vibra_icon
-        self.setWindowIcon(self.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Frequency response plotter")
 
     def _initialize(self):
 
+        self.keep_window_open = True
         self.imported_dB = False
         self._layout = None
         self.x_data = None
@@ -44,7 +44,8 @@ class FrequencyResponsePlotter(QDialog):
         self.importer = None
         self.exporter = None
 
-        self.data_to_plot = dict()
+        self.model_results_data = dict()
+        self.imported_results_data = dict()
 
         self.title = ""
         self.font_weight = "normal"
@@ -52,7 +53,6 @@ class FrequencyResponsePlotter(QDialog):
         self.colors = [ [0,0,1],
                         [0,0,0],
                         [1,0,0],
-                        [1,0,1],
                         [0,1,1],
                         [0.75,0.75,0.75],
                         [0.5, 0.5, 0.5],
@@ -85,15 +85,21 @@ class FrequencyResponsePlotter(QDialog):
         self.radioButton_harmonic_cursor : QRadioButton
         self.pushButton_export_data : QPushButton
 
+        # QSpinBox
+        self.spinBox_vertical_lines : QSpinBox
+
         # QWidget
         self.widget_plot : QWidget
 
     def _create_connections(self):
+        #
         self.checkBox_grid.stateChanged.connect(self.plot_data_in_freq_domain)
         self.checkBox_legends.stateChanged.connect(self.plot_data_in_freq_domain)
         self.checkBox_cursor_legends.stateChanged.connect(self.plot_data_in_freq_domain)
+        #
         self.comboBox_plot_type.currentIndexChanged.connect(self._update_plot_type)
         self.comboBox_differentiate_data.currentIndexChanged.connect(self.plot_data_in_freq_domain)
+        #
         self.radioButton_real.clicked.connect(self._update_comboBox)
         self.radioButton_imaginary.clicked.connect(self._update_comboBox)
         self.radioButton_absolute.clicked.connect(self._update_comboBox)
@@ -101,8 +107,10 @@ class FrequencyResponsePlotter(QDialog):
         self.radioButton_disable_cursors.clicked.connect(self.update_cursor_controls)
         self.radioButton_cross_cursor.clicked.connect(self.update_cursor_controls)
         self.radioButton_harmonic_cursor.clicked.connect(self.update_cursor_controls)
+        #
         self.pushButton_import_data.clicked.connect(self.import_file)
         self.pushButton_export_data.clicked.connect(self.call_data_exporter)
+        #
         self._initial_config()
 
     def import_file(self):
@@ -157,9 +165,9 @@ class FrequencyResponsePlotter(QDialog):
         self.fig = self.mpl_canvas_frequency_plot.fig
     
     def call_data_exporter(self):
-        data = self.data_to_plot["model", 0]
+        self.hide()
         self.exporter = ExportModelResults()
-        self.exporter._set_data_to_export(data)
+        self.exporter._set_data_to_export(self.model_results_data)
 
     def imported_dB_data(self):
         self.imported_dB = True
@@ -173,6 +181,7 @@ class FrequencyResponsePlotter(QDialog):
         self.comboBox_differentiate_data.setDisabled(True)
 
     def load_data_to_plot(self, data):
+
         if "x_data" in data.keys():
             self.x_data = data["x_data"]
         if "y_data" in data.keys():
@@ -263,39 +272,42 @@ class FrequencyResponsePlotter(QDialog):
     def plot_data_in_freq_domain(self):
 
         self.ax.cla()
-        self.legends = []
-        self.plots = []
+        self.legends = list()
+        self.plots = list()
 
-        for _, data in self.data_to_plot.items():
-            self.load_data_to_plot(data)
-            if self.y_data is not None:
-                self.mask_x = self.x_data <= 0
-                self.mask_y = self.y_data <= 0
-                if self.aux_bool:
-                    _plot = self.call_lin_lin_plot()
-                elif True in (self.mask_x + self.mask_y):
-                    _plot = self.get_plot_considering_invalid_log_values()
-                elif "log-log" in self.plot_type:
-                    _plot = self.call_log_log_plot()
-                elif "log-y" in self.plot_type:
-                    _plot = self.call_semilog_y_plot()
-                elif "log-x" in self.plot_type:
-                    _plot = self.call_semilog_x_plot()
-                else:
-                    _plot = self.call_lin_lin_plot()
+        if self._layout is None:
+            toolbar = NavigationToolbar2QT(self.mpl_canvas_frequency_plot, self)
+            self._layout = QVBoxLayout()
+            self._layout.addWidget(toolbar)
+            self._layout.addWidget(self.mpl_canvas_frequency_plot)
+            self._layout.setContentsMargins(2, 2, 2, 2)
+            self.widget_plot.setLayout(self._layout)
 
-                self.legends.append(self.legend)
-                self.plots.append(_plot)
+        for current_data in [self.model_results_data, self.imported_results_data]:
+            for _, data in current_data.items():
 
-                if self._layout is None:
-                    toolbar = NavigationToolbar2QT(self.mpl_canvas_frequency_plot, self)
-                    self._layout = QVBoxLayout()
-                    self._layout.addWidget(toolbar)
-                    self._layout.addWidget(self.mpl_canvas_frequency_plot)
-                    self._layout.setContentsMargins(2, 2, 2, 2)
-                    self.widget_plot.setLayout(self._layout)
+                self.load_data_to_plot(data)
 
-        if len(self.plots) != 0:
+                if self.y_data is not None:
+                    self.mask_x = self.x_data <= 0
+                    self.mask_y = self.y_data <= 0
+                    if self.aux_bool:
+                        _plot = self.call_lin_lin_plot()
+                    elif True in (self.mask_x + self.mask_y):
+                        _plot = self.get_plot_considering_invalid_log_values()
+                    elif "log-log" in self.plot_type:
+                        _plot = self.call_log_log_plot()
+                    elif "log-y" in self.plot_type:
+                        _plot = self.call_semilog_y_plot()
+                    elif "log-x" in self.plot_type:
+                        _plot = self.call_semilog_x_plot()
+                    else:
+                        _plot = self.call_lin_lin_plot()
+
+                    self.legends.append(self.legend)
+                    self.plots.append(_plot)
+
+        if self.plots:
 
             if self.checkBox_legends.isChecked():
                 self.ax.legend(handles=self.plots, labels=self.legends)
@@ -402,17 +414,17 @@ class FrequencyResponsePlotter(QDialog):
 
         self.mouse_connection = self.fig.canvas.mpl_connect(s='motion_notify_event', func=self.cursor.mouse_move)
 
-    def _set_data_to_plot(self, data):
+    def _set_model_results_data_to_plot(self, data):
         if isinstance(data, dict):
-            self.data_to_plot["model", 0] = data
+            self.model_results_data = data
             self.plot_data_in_freq_domain()
-            self.exec()
+            while self.keep_window_open:
+                self.exec()
 
-    def _multiple_data_to_plot(self, data):
+    def _set_imported_results_data_to_plot(self, data):
         if isinstance(data, dict):
-            self.data_to_plot = data
+            self.imported_results_data = data
             self.plot_data_in_freq_domain()
-            self.exec()
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
 
@@ -422,5 +434,5 @@ class FrequencyResponsePlotter(QDialog):
         if self.importer is not None:
             self.importer.close()
 
-        # self.keep_window_open = False
+        self.keep_window_open = False
         return super().closeEvent(a0)

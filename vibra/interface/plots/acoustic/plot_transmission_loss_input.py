@@ -78,7 +78,7 @@ class PlotTransmissionLossInput(QDialog):
 
     def _create_connections(self):
         self.pushButton_call_data_exporter.clicked.connect(self.call_data_exporter)
-        self.pushButton_flip_selection.clicked.connect(self.flip_nodes)
+        self.pushButton_flip_selection.clicked.connect(self.invert_selection)
         self.pushButton_plot_frequency_response.clicked.connect(self.call_plotter)
         #
         geometry_widget = self.main_window.viewer_tabs.geometry_widget
@@ -111,23 +111,26 @@ class PlotTransmissionLossInput(QDialog):
 
     def lineEdit_2_clicked(self):
         self.current_lineEdit = self.lineEdit_output_surface_id
-
-    def writeNodes(self, list_node_ids):
-        node_id = list_node_ids[0]
-        self.current_lineEdit.setText(str(node_id))
     
     def geometry_selection_callback(self, points, lines, faces):
         
-        index = self.comboBox_processing_selector.currentIndex()
-        if faces and index == 0:
-            text = ", ".join([str(i) for i in faces])
-            self.current_lineEdit.setText(text)
-            self.entity_type = "surface"
+        if faces:
+            
+            if len(faces) > 2:
+                return
+
+            elif len(faces) == 2:
+                self.lineEdit_input_surface_id.setText(str(faces[0]))
+                self.lineEdit_output_surface_id.setText(str(faces[1]))
+
+            else:
+                # text = ", ".join([str(i) for i in faces])
+                self.current_lineEdit.setText(str(faces[0]))
 
         elif not any([points, lines, faces]):
             self.current_lineEdit.setText("")
 
-    def flip_nodes(self):
+    def invert_selection(self):
         temp_text_input = self.lineEdit_input_surface_id.text()
         temp_text_output = self.lineEdit_output_surface_id.text()
         self.lineEdit_input_surface_id.setText(temp_text_output)
@@ -141,7 +144,7 @@ class PlotTransmissionLossInput(QDialog):
         self.join_model_data()
         self.plotter = FrequencyResponsePlotter()
         self.plotter.imported_dB_data()
-        self.plotter._set_data_to_plot(self.model_results)
+        self.plotter._set_model_results_data_to_plot(self.model_results)
 
     def call_data_exporter(self):
 
@@ -154,16 +157,22 @@ class PlotTransmissionLossInput(QDialog):
 
     def check_inputs(self):
 
-        lineEdit_output_surface_id = self.lineEdit_output_surface_id.text()
-        self.stop, self.output_surface_id = self.mesh.check_input_surface_id(lineEdit_output_surface_id, single_id=True)
-        if self.stop:
+        lineEdit_input_surface_id = self.lineEdit_input_surface_id.text()
+        stop, self.input_surface_id = self.mesh.check_selected_ids(   lineEdit_input_surface_id, 
+                                                                        selection = "surfaces", 
+                                                                        single_id = True   )
+
+        if stop:
             self.lineEdit_output_surface_id.setFocus()
             return True
-        
-        lineEdit_input_surface_id = self.lineEdit_input_surface_id.text()
-        self.stop, self.input_surface_id = self.mesh.check_input_surface_id(lineEdit_input_surface_id, single_id=True)
-        if self.stop:
-            self.lineEdit_input_surface_id.setFocus()
+
+        lineEdit_output_surface_id = self.lineEdit_output_surface_id.text()
+        stop, self.output_surface_id = self.mesh.check_selected_ids(  lineEdit_output_surface_id, 
+                                                                        selection = "surfaces", 
+                                                                        single_id = True  )
+
+        if stop:
+            self.lineEdit_output_surface_id.setFocus()
             return True
 
     def join_model_data(self):
@@ -174,27 +183,33 @@ class PlotTransmissionLossInput(QDialog):
             plot_type = "Transmission loss"
             self.mesh._process_face_elements_connected_to_nodes()
             self.mesh._process_nodal_areas()
-            x_data, y_data, _ = self.project.acoustic_harmonic_solver.get_transmission_loss(self.input_surface_id, self.output_surface_id)
+            x_data, y_data, _ = self.project.acoustic_harmonic_solver.get_transmission_loss(self.input_surface_id, 
+                                                                                            self.output_surface_id)
         else:
             plot_type = "Noise reduction"
-            x_data, y_data = self.project.acoustic_harmonic_solver.get_noise_reduction(self.input_surface_id, self.output_surface_id)
+            x_data, y_data = self.project.acoustic_harmonic_solver.get_noise_reduction( self.input_surface_id, 
+                                                                                        self.output_surface_id )
 
         if y_data is None:
             return
 
         self.title = f"{plot_type} - {self.analysis_method}"
+        legend_label = f"{plot_type} between surfaces [{self.input_surface_id}] and [{self.output_surface_id}]"
 
-        legend_label = f"{plot_type} between [{self.output_surface_id}] and [{self.input_surface_id}]"
-        self.model_results = {  "x_data" : x_data,
-                                "y_data" : y_data,
-                                "x_label" : "Frequency [Hz]",
-                                "y_label" : plot_type,
-                                "title" : self.title,
-                                "data_information" : legend_label,
-                                "legend" : legend_label,
-                                "unit" : self.unit_label,
-                                "color" : [0,0,1],
-                                "linestyle" : "-"  }
+        key = ("surface", (self.input_surface_id, self.output_surface_id))
+
+        self.model_results[key] = { 
+                                    "x_data" : x_data,
+                                    "y_data" : y_data,
+                                    "x_label" : "Frequency [Hz]",
+                                    "y_label" : plot_type,
+                                    "title" : self.title,
+                                    "data_type" : plot_type.lower(),
+                                    "legend" : legend_label,
+                                    "unit" : self.unit_label,
+                                    "color" : [0,0,1],
+                                    "linestyle" : "-"  
+                                    }
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
