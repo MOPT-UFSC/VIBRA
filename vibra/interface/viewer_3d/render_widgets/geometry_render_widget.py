@@ -460,6 +460,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         text += self._faces_info_text()
         text += self._material_info_text()
         text += self._fluid_info_text()
+        text += self._boundary_conditions_info_text()
         
         self.set_info_text(text)
     
@@ -495,20 +496,22 @@ class GeometryRenderWidget(CommonRenderWidget):
         elements = list(self.main_window.selected_geometry_faces)
         text = ""
 
-        if len(elements) == 1:
-            material = self.main_window.project.model.properties.get_material(elements[0])
-            if material is None:
-                return text
-            
-            tree = TreeInfo("Material")
-            tree.add_item("Name", material.name)
-            tree.add_item("Identifier", material.identifier)
-            tree.add_item("Density", material.density, "kg/m3")
-            tree.add_item("Young Modulus", material.young_modulus/1e9, "GPa")
-            tree.add_item("Poisson Ratio", material.poisson_ratio, "--")
-            tree.add_item("Thermal Expasion Coefficient", material.thermal_expansion_coefficient, "1/K")
+        if len(elements) != 1:
+            return text 
+        
+        material = self.main_window.project.model.properties.get_material(elements[0])
+        if material is None:
+            return text
+        
+        tree = TreeInfo("Material")
+        tree.add_item("Name", material.name)
+        tree.add_item("Identifier", material.identifier)
+        tree.add_item("Density", material.density, "kg/m3")
+        tree.add_item("Young Modulus", material.young_modulus/1e9, "GPa")
+        tree.add_item("Poisson Ratio", material.poisson_ratio, "--")
+        tree.add_item("Thermal Expasion Coefficient", material.thermal_expansion_coefficient, "1/K")
 
-            text += str(tree)
+        text += str(tree)
 
         return text
         
@@ -516,21 +519,55 @@ class GeometryRenderWidget(CommonRenderWidget):
         elements = list(self.main_window.selected_geometry_faces)
         text = ""
 
-        if len(elements) == 1:
-            fluid = self.main_window.project.model.properties.get_fluid(element=elements[0])
-            if fluid is None:
-                return text
-            
-            tree = TreeInfo("Fluid")
-            tree.add_item("Name", fluid.name)
-            tree.add_item("Identifier", fluid.identifier)
-            tree.add_item("Pressure", fluid.pressure, "Pa")
-            tree.add_item("Temperature", fluid.temperature, "K")
-            tree.add_item("Density", fluid.fluid_density, "kg/m3")
-            tree.add_item("Speed of sound", fluid.speed_of_sound, "m/s")
+        if len(elements) != 1:
+            return text
+        
+        fluid = self.main_window.project.model.properties.get_fluid(element=elements[0])
+        if fluid is None:
+            return text
+        
+        tree = TreeInfo("Fluid")
+        tree.add_item("Name", fluid.name)
+        tree.add_item("Identifier", fluid.identifier)
+        tree.add_item("Pressure", fluid.pressure, "Pa")
+        tree.add_item("Temperature", fluid.temperature, "K")
+        tree.add_item("Density", fluid.fluid_density, "kg/m3")
+        tree.add_item("Speed of sound", fluid.speed_of_sound, "m/s")
+        if fluid.molar_mass is not None:
             tree.add_item("Molar mass", fluid.molar_mass, "kg/kmol")
 
-            text += str(tree)
+        text += str(tree)
+
+        return text
+
+    def _boundary_conditions_info_text(self):
+        elements = list(self.main_window.selected_geometry_faces)
+        text = ""
+
+        if len(elements) != 1:
+            return text
+
+        acoustic_pressure = self.main_window.project.model.properties.get_acoustic_pressure(elements[0])
+        surface_velocity = self.main_window.project.model.properties.get_surface_velocity(elements[0])
+        specific_impedance = self.main_window.project.model.properties.get_specific_impedance(elements[0])
+        boundary_conditions_list = [acoustic_pressure, surface_velocity, specific_impedance]
+
+        if all(condition is None for condition in boundary_conditions_list):
+            return text
+        
+        tree = TreeInfo("Boundary Conditions")
+
+        if acoustic_pressure is not None:
+            tree.add_item("Acoustic pressure", acoustic_pressure["real_values"][0], "Pa")
+        if surface_velocity is not None:
+            tree.add_item("Surface velocity", surface_velocity["real_values"][0], "m/s")
+        if specific_impedance is not None:
+            tree.add_item("Specific impedance", specific_impedance["real_values"][0], "kg/m2s")
+
+        text += str(tree)
         
         return text
+
+
+
     
