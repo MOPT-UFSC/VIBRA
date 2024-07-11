@@ -24,7 +24,7 @@ from vibra.interface.formatters.icons import *
 from vibra.project_files.project import Project
 from vibra.project_files.load_project import LoadProject
 
-from vibra.file.project_file_io import ProjectFileIO
+from vibra.project_files.project_file_io import ProjectFileIO
 
 import qdarktheme
 
