@@ -470,11 +470,11 @@ class MeshRenderWidget(CommonRenderWidget):
         tree = TreeInfo("Boundary Conditions")
 
         if acoustic_pressure is not None:
-            tree.add_item("Acoustic pressure", acoustic_pressure["real_values"], "Pa")
+            tree.add_item("Acoustic pressure", acoustic_pressure["real_values"][0], "Pa")
         if surface_velocity is not None:
-            tree.add_item("Surface velocity", surface_velocity["real_values"], "m/s")
+            tree.add_item("Surface velocity", surface_velocity["real_values"][0], "m/s")
         if specific_impedance is not None:
-            tree.add_item("Specific impedance", specific_impedance["real_values"], "kg/m2s")
+            tree.add_item("Specific impedance", specific_impedance["real_values"][0], "kg/m2s")
 
         text += str(tree)
         
