@@ -181,10 +181,6 @@ class ProjectFileIO:
 
                         f.create_dataset(_key, data=data, dtype=dtype)
 
-                # f.close()
-                # self.vibra_file.write_file(self.mesh_data_filename, internal_file)
-
-
     def read_mesh_data_from_file(self):
 
         mesh_data = dict()
@@ -206,8 +202,6 @@ class ProjectFileIO:
 
                         except:
                             mesh_data[key] = int(values)
-
-                f.close()
 
         if mesh_data:
             return mesh_data
