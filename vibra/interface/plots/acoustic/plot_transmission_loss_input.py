@@ -78,7 +78,7 @@ class PlotTransmissionLossInput(QDialog):
 
     def _create_connections(self):
         self.pushButton_call_data_exporter.clicked.connect(self.call_data_exporter)
-        self.pushButton_flip_selection.clicked.connect(self.flip_nodes)
+        self.pushButton_flip_selection.clicked.connect(self.invert_selection)
         self.pushButton_plot_frequency_response.clicked.connect(self.call_plotter)
         #
         geometry_widget = self.main_window.viewer_tabs.geometry_widget
@@ -111,23 +111,26 @@ class PlotTransmissionLossInput(QDialog):
 
     def lineEdit_2_clicked(self):
         self.current_lineEdit = self.lineEdit_output_surface_id
-
-    def writeNodes(self, list_node_ids):
-        node_id = list_node_ids[0]
-        self.current_lineEdit.setText(str(node_id))
     
     def geometry_selection_callback(self, points, lines, faces):
         
-        index = self.comboBox_processing_selector.currentIndex()
-        if faces and index == 0:
-            text = ", ".join([str(i) for i in faces])
-            self.current_lineEdit.setText(text)
-            self.entity_type = "surface"
+        if faces:
+            
+            if len(faces) > 2:
+                return
+
+            elif len(faces) == 2:
+                self.lineEdit_input_surface_id.setText(str(faces[0]))
+                self.lineEdit_output_surface_id.setText(str(faces[1]))
+
+            else:
+                # text = ", ".join([str(i) for i in faces])
+                self.current_lineEdit.setText(str(faces[0]))
 
         elif not any([points, lines, faces]):
             self.current_lineEdit.setText("")
 
-    def flip_nodes(self):
+    def invert_selection(self):
         temp_text_input = self.lineEdit_input_surface_id.text()
         temp_text_output = self.lineEdit_output_surface_id.text()
         self.lineEdit_input_surface_id.setText(temp_text_output)

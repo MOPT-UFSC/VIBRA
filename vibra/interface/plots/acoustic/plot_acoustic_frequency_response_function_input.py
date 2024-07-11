@@ -123,19 +123,41 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         
         index = self.comboBox_selector_filter.currentIndex()
         if faces and index == 0:
-            text = ", ".join([str(i) for i in faces])
-            self.current_lineEdit.setText(text)
-            self.entity_type = "surface"
+
+            if len(faces) > 2:
+                return
+
+            elif len(faces) == 2:
+                self.lineEdit_input_selected_id.setText(str(faces[0]))
+                self.lineEdit_output_selected_id.setText(str(faces[1]))
+
+            else:
+                self.current_lineEdit.setText(str(faces[0]))
 
         if lines and index == 1:
-            text = ", ".join([str(i) for i in lines])
-            self.current_lineEdit.setText(text)
-            self.entity_type = "line"
 
+            if len(lines) > 2:
+                return
+
+            elif len(lines) == 2:
+                self.lineEdit_input_selected_id.setText(str(lines[0]))
+                self.lineEdit_output_selected_id.setText(str(lines[1]))
+
+            else:
+                self.current_lineEdit.setText(str(lines[0]))
+
+        #TODO: change points to nodes
         if points and index == 2:
-            text = ", ".join([str(i) for i in points])
-            self.current_lineEdit.setText(text)
-            self.entity_type = "point"
+            
+            if len(points) > 2:
+                return
+
+            elif len(points) == 2:
+                self.lineEdit_input_selected_id.setText(str(points[0]))
+                self.lineEdit_output_selected_id.setText(str(points[1]))
+
+            else:
+                self.current_lineEdit.setText(str(points[0]))
 
         elif not any([points, lines, faces]):
             self.current_lineEdit.setText("")

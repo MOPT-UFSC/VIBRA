@@ -39,17 +39,19 @@ class ExportModelResults(QFileDialog):
 
             # selection_type, selection_id = key
             # suffix = f"{selection_type}_{selection_id}"
-
-            # file_name = self.lineEdit_file_name.text() + suffix + ".dat"
-            # export_path = os.path.join(self.save_path, file_name)
             
             x_data = data["x_data"]
             y_data = data["y_data"]
             unit = data["unit"]
             
-            header = f"Frequency[Hz], Real part [{unit}], Imaginary part [{unit}], Absolute [{unit}]"
-            data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T      
-    
+            if isinstance(y_data[0], complex):
+                header = f"Frequency[Hz], Real part [{unit}], Imaginary part [{unit}], Absolute [{unit}]"
+                data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T      
+            else:
+                data_type = data["data_type"]
+                header = f"Frequency[Hz], {data_type.upper()} [{unit}]"
+                data_to_export = np.array([x_data, y_data]).T
+
             np.savetxt(export_path, data_to_export, delimiter=delimiter, header=header)
 
     def export_data_in_spreadsheet_format(self, export_path):
@@ -69,7 +71,8 @@ class ExportModelResults(QFileDialog):
                     header = ["Frequency[Hz]", f"Real part [{unit}]", f"Imaginary part [{unit}]", f"Absolute [{unit}]"]
                     data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T 
                 else:
-                    header = ["Frequency[Hz]", f"Values [{unit}]"]
+                    data_type = data["data_type"]
+                    header = ["Frequency[Hz]", f"{data_type.upper()} [{unit}]"]
                     data_to_export = [x_data, y_data]
 
                 df = pd.DataFrame(data_to_export, columns=header)

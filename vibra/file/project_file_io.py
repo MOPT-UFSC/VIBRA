@@ -86,7 +86,7 @@ class ProjectFileIO:
                 if not os.path.exists(dirname):
                     os.mkdir(dirname)
 
-                self.vibra_file.read_to_path(internal_path, temp_path, encoding="iso-8859-1")
+                self.vibra_file.read_to_path(internal_path, temp_path)
                 geometry_file_paths.append(str(temp_path))
 
         return geometry_file_paths
@@ -138,77 +138,76 @@ class ProjectFileIO:
                             surfaces_from_volumes = self.model.mesh.surfaces_from_volumes
                         )
 
-        aux_file = self.project_folder_path / self.mesh_data_filename
-        if os.path.exists(self.project_folder_path):
-            f = h5py.File(aux_file, "w")
-            f.close()
+        # aux_file = self.project_folder_path / self.mesh_data_filename
+        # if os.path.exists(self.project_folder_path):
+        #     f = h5py.File(aux_file, "w")
+        #     f.close()
 
-        # aux_file = io.BytesIO()
-        with h5py.File(aux_file, "w") as f:
+        with self.vibra_file.open(self.mesh_data_filename) as internal_file:
+            with h5py.File(internal_file, "w") as f:
 
-            for key, data in mesh_data.items():
+                for key, data in mesh_data.items():
 
-                if "nodes" in key or "nodal" in key:
-                    _key = f"nodal_data/{key}"
+                    if "nodes" in key or "nodal" in key:
+                        _key = f"nodal_data/{key}"
 
-                elif "connectivity" in key:
-                    _key = f"connectivity/{key}"
+                    elif "connectivity" in key:
+                        _key = f"connectivity/{key}"
 
-                elif "map" in key:
-                    _key = f"maps/{key}"
+                    elif "map" in key:
+                        _key = f"maps/{key}"
 
-                elif "gmsh" in key:
-                    _key = f"gmsh_data/{key}"
+                    elif "gmsh" in key:
+                        _key = f"gmsh_data/{key}"
 
-                elif key == "surfaces_from_volumes":
-                    _key = f"geometry_info/{key}"
+                    elif key == "surfaces_from_volumes":
+                        _key = f"geometry_info/{key}"
 
-                else:
-                    _key = key
-
-                if isinstance(data, dict):
-
-                    for _id, _values in data.items():
-                        name = f"{_key}_{_id}"
-                        f.create_dataset(name, data=_values, dtype=int)
-
-                else:
-
-                    if key == "nodal_coordinates":
-                        dtype = float 
                     else:
-                        dtype = int
+                        _key = key
 
-                    f.create_dataset(_key, data=data, dtype=dtype)
+                    if isinstance(data, dict):
 
-        f.close()
-        # self.vibra_file.write_file(self.mesh_data_filename, aux_file)
+                        for _id, _values in data.items():
+                            name = f"{_key}_{_id}"
+                            f.create_dataset(name, data=_values, dtype=int)
+
+                    else:
+
+                        if key == "nodal_coordinates":
+                            dtype = float 
+                        else:
+                            dtype = int
+
+                        f.create_dataset(_key, data=data, dtype=dtype)
+
+                f.close()
+                self.vibra_file.write_file(self.mesh_data_filename, internal_file)
 
 
     def read_mesh_data_from_file(self):
 
         mesh_data = dict()
 
-        # aux_file = self.vibra_file.read_file(self.mesh_data_filename)
-        # with self.vibra_file.open(self.mesh_data_filename, mode = "r") as internal_file:
-        # with h5py.File(aux_file, "r") as f:
+        # file_path = self.project_folder_path / self.mesh_data_filename 
+        # if os.path.exists(file_path):
+        #     f = h5py.File(file_path, 'r')
 
-        file_path = self.project_folder_path / self.mesh_data_filename 
-        if os.path.exists(file_path):
-            f = h5py.File(file_path, 'r')
+            # groups = list(f.keys())
 
-            groups = list(f.keys())
+        with self.vibra_file.open(self.mesh_data_filename) as internal_file:
+            with h5py.File(internal_file, "r") as f:
 
-            for group in groups:
-                for key, values in f.get(group).items():
+                for group in list(f.keys()):
+                    for key, values in f.get(group).items():
 
-                    try:
-                        mesh_data[key] = np.array(values)
+                        try:
+                            mesh_data[key] = np.array(values)
 
-                    except:
-                        mesh_data[key] = int(values)
+                        except:
+                            mesh_data[key] = int(values)
 
-            f.close()
+                f.close()
 
         if mesh_data:
             return mesh_data
