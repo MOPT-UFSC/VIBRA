@@ -251,6 +251,12 @@ class ProjectFileIO:
     def read_model_setup_from_file(self):
         return self.vibra_file.read(self.project_setup_filename)
 
+    def write_material_library_in_file(self, config):
+        self.vibra_file.write(self.material_library_filename, config)
+
+    def read_material_library_from_file(self):
+        return self.vibra_file.read(self.material_library_filename)
+
     def write_fluid_library_in_file(self, config):
         self.vibra_file.write(self.fluid_library_filename, config)
 
@@ -310,6 +316,9 @@ class ProjectFileIO:
             return new_prop
 
         data = self.vibra_file.read(self.model_properties)
+
+        if data is None:
+            return dict()
 
         model_properties = dict(
                                 # global_properties = denormalize(data["global_properties"]),

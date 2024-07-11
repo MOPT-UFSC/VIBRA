@@ -155,7 +155,7 @@ def test_load_external_mesh_and_solve():
     dt = time() - t0
     print(f"Elapsed time to solve harmonic analysis: {round(dt, 4)}")
 
-    mesh._process_face_elements_connected_to_nodes()
+    mesh._process_face_elements_connected_to_nodes([1, 2])
     mesh._process_nodal_areas()
 
     freq_TL, TL_model, diff_TL = harmonic_solver.get_transmission_loss(1, 2)

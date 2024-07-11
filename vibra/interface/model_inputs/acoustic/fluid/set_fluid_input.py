@@ -32,19 +32,16 @@ class SetFluidInput(QDialog):
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
 
-        self.project = self.main_window.project
-        self.model = self.project.model
-        self.properties = self.model.properties
+        self.project = app().main_window.project
+        self.model = app().main_window.project.model
+        self.properties = app().main_window.project.model.properties
 
-        self._load_icons()
         self._config_window()
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
 
         ConfigWidgetAppearance(self, tool_tip=True)
-
-        # self._loading_info_at_start()
 
         if self.compressor_thermodynamic_state:
             if self.fluid_widget.call_refprop_interface():
@@ -54,24 +51,17 @@ class SetFluidInput(QDialog):
         while self.keep_window_open:
             self.exec()
 
-    def _load_icons(self):
-        self.icon = app().main_window.vibra_icon
-
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(self.icon)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Set fluid")
 
     def _initialize(self):
-
-        self.fluid_path = self.project.get_fluid_list_path()
-
         self.keep_window_open = True
-
+        self.complete = False
         self.fluid = None
         self.selected_column = None
-        self.complete = False
 
     def _define_qt_variables(self):
 
@@ -185,27 +175,6 @@ class SetFluidInput(QDialog):
 
         self.lineEdit_selected_id.setText(text)
 
-    # def _loading_info_at_start(self):
-
-    #     line_ids = list()
-    #     if self.cache_selected_lines:
-    #         line_ids = self.cache_selected_lines
-
-    #     elif self.opv.getListPickedLines():
-    #         line_ids = self.opv.getListPickedLines()
-
-    #     if line_ids:
-    #         self.write_ids(line_ids)
-    #         self.lineEdit_selected_id.setEnabled(True)
-    #         self.comboBox_attribution_type.setCurrentIndex(1)      
-
-    # def update(self):
-    #     line_ids = self.opv.getListPickedLines()
-    #     if line_ids:
-    #         self.write_ids(line_ids)
-    #         self.lineEdit_selected_id.setEnabled(True)
-    #         self.comboBox_attribution_type.setCurrentIndex(1)
-
     def confirm_fluid_attribution(self):
 
         selected_fluid = self.fluid_widget.get_selected_fluid()
@@ -220,9 +189,9 @@ class SetFluidInput(QDialog):
 
             if self.comboBox_attribution_type.currentIndex():
 
-                str_selected_ID = self.lineEdit_selected_id.text()
-                self.stop, self.selected_ids = self.project.model.check_input_volume_id(str_selected_ID)
-                if self.stop:
+                selected_ids = self.lineEdit_selected_id.text()
+                stop, self.selected_ids = self.project.model.mesh.check_selected_ids(selected_ids, selection = "volumes")
+                if stop:
                     return
 
                 for volume_id in self.selected_ids:
@@ -248,7 +217,6 @@ class SetFluidInput(QDialog):
 
                 print("[Set Fluid] - {} defined at all bodies.".format(selected_fluid.name))
 
-            # self.actions_to_finalize()
             app().main_window.file.write_model_properties_in_file()
             self.complete = True
             self.close()

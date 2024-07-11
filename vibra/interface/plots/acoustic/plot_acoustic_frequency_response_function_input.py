@@ -124,49 +124,41 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         index = self.comboBox_selector_filter.currentIndex()
         if faces and index == 0:
 
-            if len(faces) > 2:
+            if len(faces) > 1:
                 return
 
-            elif len(faces) == 2:
-                self.lineEdit_input_selected_id.setText(str(faces[0]))
-                self.lineEdit_output_selected_id.setText(str(faces[1]))
-
             else:
-                self.current_lineEdit.setText(str(faces[0]))
+                _faces = [str(i) for i in faces]
+                self.current_lineEdit.setText(_faces[0])
 
         if lines and index == 1:
 
-            if len(lines) > 2:
+            if len(lines) > 1:
                 return
 
-            elif len(lines) == 2:
-                self.lineEdit_input_selected_id.setText(str(lines[0]))
-                self.lineEdit_output_selected_id.setText(str(lines[1]))
-
             else:
-                self.current_lineEdit.setText(str(lines[0]))
+                _lines = [str(i) for i in lines]
+                self.current_lineEdit.setText(_lines[0])
 
         #TODO: change points to nodes
         if points and index == 2:
             
-            if len(points) > 2:
+            if len(points) > 1:
                 return
 
-            elif len(points) == 2:
-                self.lineEdit_input_selected_id.setText(str(points[0]))
-                self.lineEdit_output_selected_id.setText(str(points[1]))
-
             else:
-                self.current_lineEdit.setText(str(points[0]))
+                _points = [str(i) for i in points]
+                self.current_lineEdit.setText(_points[0])
 
-        elif not any([points, lines, faces]):
+        elif not any([points, lines, points]):
+            return
             self.current_lineEdit.setText("")
 
     def flip_nodes(self):
-        temp_text_input = self.lineEdit_input_selected_id.text()
-        temp_text_output = self.lineEdit_output_selected_id.text()
-        self.lineEdit_input_selected_id.setText(temp_text_output)
-        self.lineEdit_output_selected_id.setText(temp_text_input)
+        temp_input = self.lineEdit_input_selected_id.text()
+        temp_output = self.lineEdit_output_selected_id.text()
+        self.lineEdit_input_selected_id.setText(temp_output)
+        self.lineEdit_output_selected_id.setText(temp_input)
 
     def call_plotter(self):
 

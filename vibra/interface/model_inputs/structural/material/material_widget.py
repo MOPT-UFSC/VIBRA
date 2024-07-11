@@ -36,35 +36,43 @@ class MaterialInputs(QWidget):
         ui_path = UI_DIR / "model/setup/material/material_input_widget.ui"
         uic.loadUi(ui_path, self)
 
-        self.project = app().project
+        self.main_window = app().main_window
+        # self.main_window.set_input_widget(self)
+        self.main_window.viewer_tabs.show_geometry()
+
+        self.project = self.main_window.project
+        self.model = self.project.model
+        self.properties = self.model.properties
 
         self._initialize()
         self.define_qt_variables()
         self.create_connections()
         self.load_data_from_materials_library()
 
-    def _load_icons(self):
-        self.icon = app().main_window.vibra_icon
+    # def _config_window(self):
+    #     self.setWindowFlags(Qt.WindowStaysOnTopHint)
+    #     self.setWindowModality(Qt.WindowModal)
+    #     self.setWindowIcon(app().main_window.vibra_icon)
+    #     self.setWindowTitle("Vibra")
 
-    def _config_window(self):
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(self.icon)
-        self.setWindowTitle("Vibra")
-
-    def _add_icon_and_title(self):
-        self._load_icons()
-        self._config_window()
+    # def _add_icon_and_title(self):
+    #     self._config_window()
 
     def _initialize(self):
 
-        self.file = self.project.file
-        self.preprocessor = self.project.preprocessor
-        self.material_path = self.file.material_list_path
-
         self.row = None
         self.col = None
+
         self.list_of_materials = list()
+
+        self.material_data_keys = [
+                                    "name", 
+                                    "density", 
+                                    "young modulus", 
+                                    "poisson", 
+                                    "thermal expansion coefficient", 
+                                    "color"
+                                    ]
 
     def define_qt_variables(self):
 
@@ -108,31 +116,34 @@ class MaterialInputs(QWidget):
             self.tableWidget_material_data.horizontalHeaderItem(j).setTextAlignment(Qt.AlignCenter)
     
     def load_data_from_materials_library(self):
-        self.material_path = Path(self.material_path)
-        if not self.material_path.exists():
+
+        project_path = app().main_window.project_path
+        if not os.path.exists(project_path):
+            self.reset_library_to_default()
             return
 
-        try:
-            config = configparser.ConfigParser()
-            config.read(self.material_path)
-
-        except Exception as error_log:
-            self.title = "Error while loading the material list"
-            self.message = str(error_log)
-            PrintMessageInput([window_title_1, self.title, self.message])
-            self.close()
+        config = app().main_window.file.read_material_library_from_file()
+        if config is None:
+            self.reset_library_to_default()
+            return
 
         self.list_of_materials.clear()
-        for section in config.sections():
+
+        if not list(config.sections()):
+            self.update_table()
+            return
+
+        for tag in config.sections():
             material = Material(
-                name = config[section]['name'],
-                density = float(config[section]['density']),
-                poisson_ratio = float(config[section]['poisson']),
-                young_modulus = float(config[section]['young modulus']) * 1e9,
-                identifier = int(config[section]['identifier']), 
-                thermal_expansion_coefficient = float(config[section]['thermal expansion coefficient']), 
-                color = getColorRGB(config[section]['color'])
-            )
+                                name = config[tag]['name'],
+                                density = float(config[tag]['density']),
+                                poisson_ratio = float(config[tag]['poisson']),
+                                young_modulus = float(config[tag]['young modulus']) * 1e9,
+                                identifier = int(config[tag]['identifier']), 
+                                thermal_expansion_coefficient = float(config[tag]['thermal expansion coefficient']), 
+                                color = getColorRGB(config[tag]['color'])
+                                )
+
             self.list_of_materials.append(material)
         
         self.update_table()
@@ -144,16 +155,18 @@ class MaterialInputs(QWidget):
         self.tableWidget_material_data.setColumnCount(COLOR_COLUMN + 1)
 
         for i, material in enumerate(self.list_of_materials):
-            self.tableWidget_material_data.setItem(i, 0, QTableWidgetItem(str(material.name)))
-            self.tableWidget_material_data.setItem(i, 1, QTableWidgetItem(str(material.density)))
-            self.tableWidget_material_data.setItem(i, 2, QTableWidgetItem(f"{material.young_modulus/1e9 :.2f}"))
-            self.tableWidget_material_data.setItem(i, 3, QTableWidgetItem(str(material.poisson_ratio)))
-            self.tableWidget_material_data.setItem(i, 4, QTableWidgetItem(str(material.thermal_expansion_coefficient)))
+            if isinstance(material, Material):
 
-            item = QTableWidgetItem()
-            item.setBackground(QColor(*material.color))
-            item.setForeground(QColor(*material.color))
-            self.tableWidget_material_data.setItem(i, 5, item)
+                self.tableWidget_material_data.setItem(i, 0, QTableWidgetItem(str(material.name)))
+                self.tableWidget_material_data.setItem(i, 1, QTableWidgetItem(str(material.density)))
+                self.tableWidget_material_data.setItem(i, 2, QTableWidgetItem(f"{material.young_modulus/1e9 :.2f}"))
+                self.tableWidget_material_data.setItem(i, 3, QTableWidgetItem(str(material.poisson_ratio)))
+                self.tableWidget_material_data.setItem(i, 4, QTableWidgetItem(str(material.thermal_expansion_coefficient)))
+
+                item = QTableWidgetItem()
+                item.setBackground(QColor(*material.color))
+                item.setForeground(QColor(*material.color))
+                self.tableWidget_material_data.setItem(i, 5, item)
 
         for i in range(self.tableWidget_material_data.rowCount()):
             for j in range(self.tableWidget_material_data.columnCount()):
@@ -300,22 +313,14 @@ class MaterialInputs(QWidget):
 
             material_data = dict()
 
-            keys = [
-                    "name", 
-                    "density", 
-                    "young modulus", 
-                    "poisson", 
-                    "thermal expansion coefficient", 
-                    "color"
-                ]
-
-            for j, key in enumerate(keys):
+            for j, key in enumerate(self.material_data_keys):
                 item = self.tableWidget_material_data.item(row, j)
                 if key == "color":
                     color = item.background().color().getRgb()
                     material_data[key] = list(color)
                 else:
                     material_data[key] = item.text()
+
             material_data["identifier"] = self.new_identifier()
 
             material_name = material_data["name"]
@@ -408,26 +413,46 @@ class MaterialInputs(QWidget):
 
     def reset_library_to_default(self):
 
-        config_cache = configparser.ConfigParser()
-        config_cache.read(self.material_path)  
-        sections_cache = config_cache.sections()
+        config_cache = app().main_window.file.read_material_library_from_file()
 
-        default_material_library(self.material_path)
-        config = configparser.ConfigParser()
-        config.read(self.material_path)
+        sections_cache = list()
+        if config_cache is not None:
+            sections_cache = config_cache.sections()
 
-        material_names = []
+        default_material_library()
+
+        config = app().main_window.file.read_material_library_from_file()
+
+        material_names = list()
         for section_cache in sections_cache:
             if section_cache not in config.sections():
                 material_names.append(config_cache[section_cache]["name"])
 
-        for line_id, entity in self.preprocessor.dict_tag_to_entity.items():
-            if entity.material is not None:
-                if entity.material.name in material_names:
-                    self.project.set_material_by_lines(line_id, None)
-
+        self.reset_materials_from_bodies_and_surfaces(material_names)
         self.load_data_from_materials_library()
-        
+
+    def reset_materials_from_bodies_and_surfaces(self, material_names : list):
+
+        surfaces_to_remove_material = list()
+        volumes_to_remove_material = list()
+
+        for key, data in self.properties.volume_properties.items():
+            property, volume_id = key
+            if property == "material":
+                if isinstance(data, Material):
+                    if data.name in material_names:
+                        volumes_to_remove_material.append(volume_id)
+                        self.model.properties._remove_volume_property("material", volume_id=volume_id)
+                        surface_ids = self.model.mesh.surfaces_from_volumes[volume_id]
+                        for surface_id in surface_ids:
+                            surfaces_to_remove_material.append(surface_id)
+
+        for vol_id in volumes_to_remove_material:
+            self.model.properties._remove_volume_property("material", volume_id=vol_id)
+
+        for surf_id in surfaces_to_remove_material:
+            self.model.properties._remove_surface_property("material", surface_id=surf_id)
+
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             return

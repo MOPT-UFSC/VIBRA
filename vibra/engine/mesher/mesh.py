@@ -512,13 +512,16 @@ class Mesh:
             self.elements_from_volume[tag] = internal_indexes
 
 
-    def _process_face_elements_connected_to_nodes(self):
+    def _process_face_elements_connected_to_nodes(self, list_ids : list):
 
         self.nodes_from_face_element.clear()
         self.face_elements_connected_to_nodes.clear()
         self.surface_area_from_element_integration.clear()
 
-        for tag, connect_data in self.connectivity_from_surfaces.items():
+        for tag in list_ids:
+            connect_data = self.connectivity_from_surfaces[tag]
+
+        # for tag, connect_data in self.connectivity_from_surfaces.items():
             
             area = 0.
             for element_nodes in connect_data:
@@ -540,15 +543,6 @@ class Mesh:
         # import json
         # with open("areas_data.json", "r") as file:
         #     areas_data = json.load(file)
-
-
-    # def _process_face_elements_connected_to_nodes(self):
-    #     self.nodes_from_face_element.clear()
-    #     self.face_elements_connected_to_nodes.clear()
-    #     for el, connected_nodes in enumerate(self.faces_connectivity[:, 4:]):
-    #         self.nodes_from_face_element[el] = connected_nodes
-    #         for node in connected_nodes:
-    #             self.face_elements_connected_to_nodes[node].append(el)
 
 
     def _process_solid_elements_connected_to_nodes(self):
@@ -1185,9 +1179,6 @@ class Mesh:
             dt = time()  - t0
             print(f"Time to process - reordering (4/4): {dt}")
         logging.info("Reordering nodes (4/4)..." + ProgressStatus(100, 100))
-            
-        t0 = time()
-        # self._process_face_elements_connected_to_nodes()
         
         t0 = time()
         self._process_solid_elements_connected_to_nodes()

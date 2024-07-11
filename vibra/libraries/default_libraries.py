@@ -1,5 +1,4 @@
 import configparser
-import os
 
 from vibra import app
 
@@ -66,7 +65,7 @@ def default_material_library():
         "Thermal expansion coefficient": 1.9e-5,
     }
 
-    app().main_window.file.write_fluid_library_in_file(config)
+    app().main_window.file.write_material_library_in_file(config)
 
 
 def default_fluid_library():
@@ -165,8 +164,5 @@ def default_fluid_library():
         "Temperature": 300,
         "Pressure": 101325,
     }
-
-    # with open(path, "w") as config_file:
-    #     config.write(config_file)
 
     app().main_window.file.write_fluid_library_in_file(config)
