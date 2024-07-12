@@ -26,18 +26,23 @@ class NodesActor(vtk.vtkActor):
         points = vtk.vtkPoints()
         mapper = vtk.vtkPolyDataMapper()
         cell_colors = vtk.vtkUnsignedCharArray()
+        cell_indexes = vtk.vtkIntArray()
+        cell_indexes.SetName("cell_indexes")
 
         data.Allocate(len(self.mesh.nodal_coordinates))
         cell_colors.SetNumberOfComponents(4)
         cell_colors.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
         cell_colors.Fill(0)
+        cell_indexes.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
 
         for i, (x, y, z) in enumerate(self.get_coordinates()):
             points.InsertNextPoint(x, y, z)
             data.InsertNextCell(vtk.VTK_VERTEX, 1, [i])
+            cell_indexes.InsertValue(i, i)  # This is usefull if part of the cells are hidden
 
         data.SetPoints(points)
         data.GetCellData().SetScalars(cell_colors)
+        data.GetCellData().AddArray(cell_indexes)
         self.data = data 
 
         mapper.SetInputData(data)

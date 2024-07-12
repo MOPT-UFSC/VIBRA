@@ -120,8 +120,8 @@ class MeshRenderWidget(CommonRenderWidget):
         self.view_mode = SHOW_FACES
         self.nodes_actor.VisibilityOn()
         self.edges_actor.VisibilityOn()
-        self.faces_actor.VisibilityOff()
-        self.solids_actor.VisibilityOn()
+        self.faces_actor.VisibilityOn()
+        self.solids_actor.VisibilityOff()
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
         self.update()
     
@@ -209,7 +209,7 @@ class MeshRenderWidget(CommonRenderWidget):
         node_distance = np.linalg.norm(camera_position - node_pos) if node_id >= 0 else float('inf')
         face_distance = np.linalg.norm(camera_position - face_pos) if face_id >= 0 else float('inf')
         solid_distance = np.linalg.norm(camera_position - solid_pos) if solid_id >= 0 else float('inf')
-        node_distance *= 0.9 # Cheating a bit to prioritize the node selection
+        node_distance *= 0.98 # Cheating a bit to prioritize the node selection
         closest = min(node_distance, face_distance, solid_distance)
 
         if closest == float('inf'):
