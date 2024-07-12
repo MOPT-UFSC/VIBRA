@@ -2,9 +2,10 @@ import vtk
 
 
 class FacesActor(vtk.vtkActor):
-    def __init__(self, mesh):
+    def __init__(self, mesh, hidden_faces=None):
         self.mesh = mesh
         self.data = None
+        self.hidden_nodes = hidden_faces if hidden_faces is not None else set()
 
         self.create_geometry()
         self.configure_appearance()
@@ -16,6 +17,8 @@ class FacesActor(vtk.vtkActor):
         mapper = vtk.vtkPolyDataMapper()
         point_colors = vtk.vtkUnsignedCharArray()
         cell_colors = vtk.vtkUnsignedCharArray()
+        cell_indexes = vtk.vtkIntArray()
+        cell_indexes.SetName("cell_indexes")
         #
         nel = len(self.mesh.faces_connectivity[0, 4:])
         # face_nodes = [3, 6, 4, 8]
@@ -27,11 +30,13 @@ class FacesActor(vtk.vtkActor):
         point_colors.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
         cell_colors.SetNumberOfComponents(3)
         cell_colors.SetNumberOfTuples(len(self.mesh.faces_connectivity))
+        cell_indexes.SetNumberOfTuples(len(self.mesh.faces_connectivity))
 
         for _, x, y, z in self.mesh.nodal_coordinates:
             points.InsertNextPoint(x, y, z)
         #
-        for values in list(self.mesh.faces_connectivity[:, 4:]):
+        for i, values in enumerate(self.mesh.faces_connectivity[:, 4:]):
+            cell_indexes.InsertValue(i, i)  # This is usefull if part of the cells are hidden
             try:
                 data.InsertNextCell(vtk.VTK_TRIANGLE, nel, list(values))
             except:

@@ -7,9 +7,10 @@ from time import time
 
 
 class NodesActor(vtk.vtkActor):
-    def __init__(self, mesh):
+    def __init__(self, mesh, hidden_nodes=None):
         self.mesh = mesh
         self.data = None
+        self.hidden_nodes = hidden_nodes if hidden_nodes is not None else set()
 
         self.create_geometry()
         self.configure_appearance()
@@ -36,9 +37,9 @@ class NodesActor(vtk.vtkActor):
         cell_indexes.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
 
         for i, (x, y, z) in enumerate(self.get_coordinates()):
+            cell_indexes.InsertValue(i, i)  # This is usefull if part of the cells are hidden
             points.InsertNextPoint(x, y, z)
             data.InsertNextCell(vtk.VTK_VERTEX, 1, [i])
-            cell_indexes.InsertValue(i, i)  # This is usefull if part of the cells are hidden
 
         data.SetPoints(points)
         data.GetCellData().SetScalars(cell_colors)

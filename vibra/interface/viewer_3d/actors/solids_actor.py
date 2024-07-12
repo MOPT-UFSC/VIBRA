@@ -7,9 +7,10 @@ from time import time
 
 
 class SolidsActor(vtk.vtkActor):
-    def __init__(self, mesh):
+    def __init__(self, mesh, hidden_solids=None):
         self.mesh = mesh
         self.data = None
+        self.hidden_solids = hidden_solids if hidden_solids is not None else set()
 
         self.create_geometry()
         self.configure_appearance()
@@ -67,8 +68,8 @@ class SolidsActor(vtk.vtkActor):
             points.InsertNextPoint(x, y, z)
 
         for i, nodes in enumerate(nodes_connectivity):
-            data.InsertNextCell(cell_type, len(nodes), nodes)
             cell_indexes.InsertValue(i, i)  # This is usefull if part of the cells are hidden
+            data.InsertNextCell(cell_type, len(nodes), nodes)
 
         data.SetPoints(points)
         data.GetPointData().SetScalars(point_colors)
