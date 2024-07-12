@@ -31,8 +31,8 @@ class Config:
         config = configparser.ConfigParser()
         config.read(self.config_path)
 
-        if config.has_section("User preferences"):
-            section = config["User preferences"]
+        if config.has_section("Auxiliar paths"):
+            section = config["Auxiliar paths"]
             key = f"last {label}"
             if key in section.keys():
                 return section[key]
@@ -47,10 +47,10 @@ class Config:
             config.read(self.config_path)
             
             key = f"last {label}"
-            if config.has_section('User preferences'):
-                config["User preferences"][key] = _path
+            if config.has_section('Auxiliar paths'):
+                config["Auxiliar paths"][key] = _path
             else:
-                config["User preferences"] = {key : _path}
+                config["Auxiliar paths"] = {key : _path}
 
         except:
             return
@@ -111,12 +111,6 @@ class Config:
             section = config["User preferences"]
 
             try:
-
-                if "last project folder" in section.keys():
-                    user_preferences["last project folder"] = section["last project folder"]
-
-                if "last geometry folder" in section.keys():
-                    user_preferences["last geometry folder"] = section["last geometry folder"]
 
                 if "interface theme" in section.keys():
                     user_preferences["interface theme"] = section["interface theme"]

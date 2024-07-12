@@ -89,72 +89,63 @@ class SetMaterialInput(QDialog):
         self.material_widget = MaterialInputs()
         self.grid_layout.addWidget(self.material_widget)
 
-    def _config_widgets(self):
-        ConfigWidgetAppearance(self, tool_tip=True)
-
     def _create_connections(self):
+        #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.update_attribution_type)
+        #
         self.pushButton_attribute_material.clicked.connect(self.confirm_material_attribution)
-        # self.tableWidget_material_data.cellClicked.connect(self.on_cell_clicked)
+        self.material_widget.pushButton_reset_library.clicked.connect(self.reset_material_library_callback)
+        #
         self.tableWidget_material_data.currentCellChanged.connect(self.current_cell_changed)
-        # self.tableWidget_material_data.cellDoubleClicked.connect(self.on_cell_double_clicked)
-
-    def on_cell_clicked(self, row, col):
-        self.selected_row = row
-        self.update_material_selection()
-
-    def on_cell_double_clicked(self, row, col):
-        self.selected_row = row
-        self.confirm_material_attribution()
+        #
+        geometry_widget = self.main_window.viewer_tabs.geometry_widget
+        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
+        #
+        self.update_attribution_type()
 
     def current_cell_changed(self, current_row, current_col, previous_row, previous_col):
-        self.selected_row = current_row
+        self.selected_column = current_col
         self.update_material_selection()
 
+    def reset_material_library_callback(self):
+        self.hide()
+        self.material_widget.reset_library_callback()
+
+    def geometry_selection_callback(self, points, lines, faces, volumes):
+        """ """
+        if volumes:
+            self.comboBox_attribution_type.setCurrentIndex(1)
+            text = ", ".join([str(i) for i in volumes])
+            self.lineEdit_selected_id.setText(text)
+
+        elif not any([points, lines, faces]):
+            self.comboBox_attribution_type.setCurrentIndex(0)
+            self.lineEdit_selected_id.setText("All bodies")
+
     def update_material_selection(self):
-        if self.selected_row is None:
+
+        if self.selected_column is None:
             return
-        item = self.tableWidget_material_data.item(self.selected_row, 0)
+
+        item = self.tableWidget_material_data.item(self.selected_column, 0)
         if item is None:
             return
+
         material_name = item.text()
         self.lineEdit_selected_material_name.setText("")
         if material_name != "":
             self.lineEdit_selected_material_name.setText(material_name)
 
     def update_attribution_type(self):
+
         index = self.comboBox_attribution_type.currentIndex()
         if index == 0:
-            self.lineEdit_selected_id.setText("All lines")
-            self.lineEdit_selected_id.setEnabled(False)
-            self.comboBox_attribution_type.setCurrentIndex(0)
+            self.lineEdit_selected_id.setText("All bodies")
         elif index == 1:
-            self.write_ids(self.lines_ids)
-            self.lineEdit_selected_id.setEnabled(True)
-            self.comboBox_attribution_type.setCurrentIndex(1)
+            self.lineEdit_selected_id.setText("")
 
-    def write_ids(self, list_ids):
-        text = ""
-        for _id in list_ids:
-            text += "{}, ".format(_id)
-        self.lineEdit_selected_id.setText(text)
-
-    def update_selection(self):
-        if self.lines_ids != []:
-            self.write_ids(self.lines_ids)
-            self.lineEdit_selected_id.setEnabled(True)
-            self.comboBox_attribution_type.setCurrentIndex(1)
-        else:
-            self.lineEdit_selected_id.setText("All lines")
-            self.lineEdit_selected_id.setEnabled(False)
-            self.comboBox_attribution_type.setCurrentIndex(0)
-
-    def _loading_info_at_start(self):
-        if self.cache_selected_lines != []:
-            self.lines_ids = self.cache_selected_lines
-            self.update_selection()
-        else:
-            self.update()
+        self.lineEdit_selected_id.setEnabled(bool(index))
+        # self.comboBox_attribution_type.setCurrentIndex(index)
 
     def confirm_material_attribution(self):
 
@@ -203,7 +194,7 @@ class SetMaterialInput(QDialog):
             self.close()
 
         except Exception as error_log:
-            title = "Error detected on fluid list data"
+            title = "Error detected on material list data"
             message = str(error_log)
             PrintMessageInput([window_title_1, title, message])
             return
@@ -211,8 +202,6 @@ class SetMaterialInput(QDialog):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.confirm_material_attribution()
-        elif event.key() == Qt.Key_Delete:
-            self.material_widget.remove_selected_row()
         elif event.key() == Qt.Key_Escape:
             self.close()
 

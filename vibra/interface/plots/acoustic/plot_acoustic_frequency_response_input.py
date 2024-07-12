@@ -180,6 +180,7 @@ class PlotAcousticFrequencyResponseInput(QDialog):
             key = (selection_type, (selected_id))
             legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
 
+            print(i, self.get_color(i))
             self.model_results[key] = { 
                                         "x_data" : self.frequencies,
                                         "y_data" : self.get_response(index, selected_id),
@@ -192,18 +193,17 @@ class PlotAcousticFrequencyResponseInput(QDialog):
                                         "color" : self.get_color(i),
                                         "linestyle" : "-"  
                                       }
-            
-        
 
     def get_color(self, index):
+
         colors = [  (0,0,1), (0,0,0), (1,0,0),
-                    (1,1,0), (1,0,1), (0,1,1),
+                    (0,1,1), (1,0,1), (1,1,0),
                     (0.25,0.25,0.25)  ]
         
         if index <= 6:
             return colors[index]
         else:
-            return tuple(np.random.randint(0, 255, size=3))
+            return tuple(np.random.randint(0, 255, size=3) / 255)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

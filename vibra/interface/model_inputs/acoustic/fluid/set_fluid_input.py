@@ -108,17 +108,18 @@ class SetFluidInput(QDialog):
         self.comboBox_attribution_type.currentIndexChanged.connect(self.update_attribution_type)
         #
         self.pushButton_attribute_fluid.clicked.connect(self.confirm_fluid_attribution)
-        #
-        # self.tableWidget_fluid_data.cellClicked.connect(self.on_cell_clicked)
-        self.tableWidget_fluid_data.currentCellChanged.connect(self.current_cell_changed)
-        # self.tableWidget_fluid_data.cellDoubleClicked.connect(self.on_cell_double_clicked)
-        #
         self.fluid_widget.pushButton_reset_library.clicked.connect(self.reset_fluid_library_callback)
+        #
+        self.tableWidget_fluid_data.currentCellChanged.connect(self.current_cell_changed)
         #
         geometry_widget = self.main_window.viewer_tabs.geometry_widget
         geometry_widget.selection_changed.connect(self.geometry_selection_callback)
         #
         self.update_attribution_type()
+
+    def current_cell_changed(self, current_row, current_col, previous_row, previous_col):
+        self.selected_column = current_col
+        self.update_fluid_selection()
 
     def reset_fluid_library_callback(self):
         self.hide()
@@ -134,10 +135,6 @@ class SetFluidInput(QDialog):
         elif not any([points, lines, faces]):
             self.comboBox_attribution_type.setCurrentIndex(0)
             self.lineEdit_selected_id.setText("All bodies")
-
-    def current_cell_changed(self, current_row, current_col, previous_row, previous_col):
-        self.selected_column = current_col
-        self.update_fluid_selection()
 
     def update_fluid_selection(self):
 
@@ -163,17 +160,6 @@ class SetFluidInput(QDialog):
 
         self.lineEdit_selected_id.setEnabled(bool(index))
         # self.comboBox_attribution_type.setCurrentIndex(index)
-
-    def write_ids(self, list_ids):
-
-        if isinstance(list_ids, int):
-            list_ids = [list_ids]
-
-        text = ""
-        for _id in list_ids:
-            text += "{}, ".format(_id)
-
-        self.lineEdit_selected_id.setText(text)
 
     def confirm_fluid_attribution(self):
 
@@ -227,9 +213,13 @@ class SetFluidInput(QDialog):
             PrintMessageInput([window_title_1, title, message])
             return
 
-    def actions_to_finalize(self):
-        self.complete = True
-        self.close()
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            self.confirm_fluid_attribution()
+        # elif event.key() == Qt.Key_Delete:
+        #     self.fluid_widget.remove_selected_row()
+        elif event.key() == Qt.Key_Escape:
+            self.close()
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
