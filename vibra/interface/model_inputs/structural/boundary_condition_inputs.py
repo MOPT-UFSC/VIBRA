@@ -40,7 +40,7 @@ class BoundaryConditionInputs(QDialog):
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(self.icon)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Set boundary condition")
 
     def _reset_variables(self):

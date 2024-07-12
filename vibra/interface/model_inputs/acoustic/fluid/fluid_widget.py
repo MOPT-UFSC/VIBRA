@@ -64,7 +64,8 @@ class FluidWidget(QWidget):
         self.fluid_data_refprop = dict()
         self.fluid_name_to_refprop_data = dict()
 
-        self.fluid_data_keys = ["name",
+        self.fluid_data_keys = [
+                                "name",
                                 "identifier",
                                 "temperature",
                                 "pressure",
@@ -75,7 +76,8 @@ class FluidWidget(QWidget):
                                 "specific heat Cp",
                                 "dynamic viscosity",
                                 "molar mass",
-                                "color"]
+                                "color"
+                                ]
 
     def _define_qt_variables(self):
 
@@ -149,10 +151,10 @@ class FluidWidget(QWidget):
             keys = config[tag].keys()
 
             name = section['name']
+            identifier =  int(section['identifier'])
             fluid_density =  float(section['fluid density'])
             speed_of_sound =  float(section['speed of sound'])
             color =  get_color_rgb(section['color'])
-            identifier =  int(section['identifier'])
 
             if 'isentropic exponent' in keys:
                 isentropic_exponent = float(section['isentropic exponent'])
@@ -561,8 +563,6 @@ class FluidWidget(QWidget):
 
     def get_confirmation_to_proceed(self):
 
-        # self.hide()
-
         title = "Resetting the fluids library"
         message = "Would you like to reset the fluid library to default?"
 
@@ -617,7 +617,6 @@ class FluidWidget(QWidget):
                 if isinstance(data, Fluid):
                     if data.name in fluid_names:
                         volumes_to_remove_fluid.append(volume_id)
-                        self.model.properties._remove_volume_property("fluid", volume_id=volume_id)
                         surface_ids = self.model.mesh.surfaces_from_volumes[volume_id]
                         for surface_id in surface_ids:
                             surfaces_to_remove_fluid.append(surface_id)
@@ -627,7 +626,6 @@ class FluidWidget(QWidget):
 
         for surf_id in surfaces_to_remove_fluid:
             self.model.properties._remove_surface_property("fluid", surface_id=surf_id)
-
 
     def call_refprop_interface(self):
 

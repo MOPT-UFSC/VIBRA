@@ -142,7 +142,7 @@ class ProjectFileIO:
         #     f = h5py.File(aux_file, "w")
         #     f.close()
 
-        with self.vibra_file.open(self.mesh_data_filename) as internal_file:
+        with self.vibra_file.open(self.mesh_data_filename, "w") as internal_file:
             with h5py.File(internal_file, "w") as f:
 
                 for key, data in mesh_data.items():
