@@ -244,9 +244,40 @@ class MainWindow(QMainWindow):
                     else:
                         rmtree(file_path)
 
+    def is_temporary_vibra_folder_empty(self):
+        user_path = os.path.expanduser("~")
+        project_folder_path = Path(user_path) / "temp_vibra"
+        if os.path.exists(project_folder_path):
+            if os.listdir(project_folder_path):
+                self.project_path = str(project_folder_path / "tmp.vibra")
+                return False
+        return True
+    
     def new_project_dialog(self):
-        self.reset_temporary_vibra_folder()
-        self.import_geometry_dialog()
+        if not self.is_temporary_vibra_folder_empty():
+
+            caption = "The recovery project data has been detected in the application backup files. "
+            caption += "Would you like to try to recover the last project files?"
+
+            close = QMessageBox.question(   
+                                            self, 
+                                            "Project recovery", 
+                                            caption, 
+                                            QMessageBox.Yes | QMessageBox.No
+                                        )
+
+            if close == QMessageBox.Yes:
+                self.project = Project()
+                self.file = ProjectFileIO(self.project_path, override=False)
+                self.open_project()
+
+            else:
+                self.reset_temporary_vibra_folder()
+                self.import_geometry_dialog()
+
+        else:
+            self.import_geometry_dialog()
+
 
     def save_project_dialog(self):
         if self.project.save_path is None:
@@ -365,6 +396,7 @@ class MainWindow(QMainWindow):
 
         if close == QMessageBox.Yes:
             self.user_config.save()
+            self.reset_temporary_vibra_folder()
             sys.exit()
 
     def set_input_widget(self, dialog):
