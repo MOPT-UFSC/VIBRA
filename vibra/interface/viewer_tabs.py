@@ -3,11 +3,12 @@
 from PyQt5.QtWidgets import QLabel, QPushButton, QTabWidget, QVBoxLayout, QWidget
 from PyQt5.QtCore import QCoreApplication, pyqtSignal
 
+from molde.render_widgets import CommonRenderWidget
+
 from vibra import app
 from vibra.interface.help_widget import HelpWidget
 from vibra.interface.viewer_3d.render_widgets.acoustic_harmonic_analysis_render_widget import AcousticHarmonicAnalysisRenderWidget
 from vibra.interface.viewer_3d.render_widgets.acoustic_modal_analysis_render_widget import AcousticModalAnalysisRenderWidget
-from vibra.interface.viewer_3d.render_widgets.common_render_widget import CommonRenderWidget
 from vibra.interface.viewer_3d.render_widgets.example_render_widget import ExampleRenderWidget
 from vibra.interface.viewer_3d.render_widgets.geometry_render_widget import GeometryRenderWidget
 from vibra.interface.viewer_3d.render_widgets.mesh_render_widget import MeshRenderWidget
