@@ -27,6 +27,8 @@ class SolidsActor(vtk.vtkActor):
         mapper = vtk.vtkDataSetMapper()
         point_colors = vtk.vtkUnsignedCharArray()
         cell_colors = vtk.vtkUnsignedCharArray()
+        cell_indexes = vtk.vtkIntArray()
+        cell_indexes.SetName("cell_indexes")
 
         if self.mesh.element_type == TETRAHEDRON_4:
             cell_type = vtk.VTK_TETRA
@@ -59,16 +61,19 @@ class SolidsActor(vtk.vtkActor):
         point_colors.SetNumberOfTuples(number_of_nodes)
         cell_colors.SetNumberOfComponents(3)
         cell_colors.SetNumberOfTuples(number_of_elements)
+        cell_indexes.SetNumberOfTuples(number_of_elements)
 
         for x, y, z in self.get_coordinates():
             points.InsertNextPoint(x, y, z)
 
-        for nodes in nodes_connectivity:
+        for i, nodes in enumerate(nodes_connectivity):
             data.InsertNextCell(cell_type, len(nodes), nodes)
+            cell_indexes.InsertValue(i, i)  # This is usefull if part of the cells are hidden
 
         data.SetPoints(points)
         data.GetPointData().SetScalars(point_colors)
         data.GetCellData().SetScalars(cell_colors)
+        data.GetCellData().AddArray(cell_indexes)
 
         self.data = data
         mapper.SetInputData(self.data)

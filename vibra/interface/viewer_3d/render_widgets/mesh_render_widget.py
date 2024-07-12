@@ -120,8 +120,8 @@ class MeshRenderWidget(CommonRenderWidget):
         self.view_mode = SHOW_FACES
         self.nodes_actor.VisibilityOn()
         self.edges_actor.VisibilityOn()
-        self.faces_actor.VisibilityOn()
-        self.solids_actor.VisibilityOff()
+        self.faces_actor.VisibilityOff()
+        self.solids_actor.VisibilityOn()
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
         self.update()
     
@@ -230,7 +230,7 @@ class MeshRenderWidget(CommonRenderWidget):
         picked_solids = []
         return picked_nodes, picked_faces, picked_solids
 
-    def _pick_actor(self, x, y, target_actor):
+    def _pick_actor(self, x, y, target_actor: vtk.vtkActor):
         cell_picker = vtk.vtkCellPicker()
         cell_picker.SetTolerance(0.003)
         
@@ -240,7 +240,22 @@ class MeshRenderWidget(CommonRenderWidget):
 
         cell_id = cell_picker.GetCellId()
         position = cell_picker.GetPickPosition()
-        return cell_id, position
+
+        if cell_id < 0:
+            return cell_id, position
+        
+        # Try to get the cell_indexes array that shows the original
+        # cell array even if it is being clipped.
+        data: vtk.vtkPolyData = target_actor.GetMapper().GetInput()
+        if not data:
+            return cell_id, position
+
+        cell_indexes: vtk.vtkIntArray = data.GetCellData().GetArray("cell_indexes")
+        if not cell_indexes:
+            return cell_id, position
+
+        new_cell_id = cell_indexes.GetValue(cell_id)        
+        return new_cell_id, position
 
     def _narrow_pickability_to_actor(self, target_actor: vtk.vtkActor):
         actor: vtk.vtkActor
