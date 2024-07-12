@@ -188,7 +188,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         elif (clicked_actor == self.faces_actor) and not shift_pressed:
             face_entity = self.main_window.project.model.mesh.faces_connectivity[clicked_cell][1]
             # self.select_face(face_entity, join=ctrl_pressed, remove=alt_pressed)
-            self.main_window.set_geometry_selection(faces=[face_entity], join=ctrl_pressed, remove=alt_pressed)
+            self.main_window.set_geometry_selection(surfaces=[face_entity], join=ctrl_pressed, remove=alt_pressed)
 
         elif (clicked_actor == self.faces_actor) and shift_pressed:
             face_entity = self.main_window.project.model.mesh.faces_connectivity[clicked_cell][1]
