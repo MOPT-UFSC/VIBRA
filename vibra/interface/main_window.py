@@ -32,7 +32,7 @@ import sys
 import logging
 import random
 from pathlib import Path
-from shutil import rmtree
+from shutil import rmtree, copy
 from time import sleep
 
 
@@ -259,14 +259,14 @@ class MainWindow(QMainWindow):
             caption = "The recovery project data has been detected in the application backup files. "
             caption += "Would you like to try to recover the last project files?"
 
-            close = QMessageBox.question(   
-                                            self, 
-                                            "Project recovery", 
-                                            caption, 
-                                            QMessageBox.Yes | QMessageBox.No
-                                        )
+            obj = QMessageBox.question(   
+                                        self, 
+                                        "Project recovery", 
+                                        caption, 
+                                        QMessageBox.Yes | QMessageBox.No
+                                       )
 
-            if close == QMessageBox.Yes:
+            if obj == QMessageBox.Yes:
                 self.project = Project()
                 self.file = ProjectFileIO(self.project_path, override=False)
                 self.open_project()
@@ -277,7 +277,6 @@ class MainWindow(QMainWindow):
 
         else:
             self.import_geometry_dialog()
-
 
     def save_project_dialog(self):
         if self.project.save_path is None:
@@ -290,7 +289,7 @@ class MainWindow(QMainWindow):
                                                     self,
                                                     "Save As",
                                                     filter="Vibra File (*.vibra)",
-                                                )
+                                                 )
 
         if not check:
             return
@@ -310,7 +309,7 @@ class MainWindow(QMainWindow):
                                                                 "Open Project", 
                                                                 path, 
                                                                 filter = "Vibra File (*.vibra)"
-                                                                )
+                                                               )
 
         if not check:
             return
@@ -354,8 +353,10 @@ class MainWindow(QMainWindow):
     def save_project_as(self, path):
         path = Path(path)
         self.project.name = path.stem
-        self.project.save(path)
-        self.user_config.save()  # why not
+        self.project.save_path = path
+        self.file.write_thumbnail()
+        app().config.write_last_folder_path_in_file("project folder", path)
+        copy(self.project_path, path)
 
     def export_mesh(self):
         ExportMeshData()

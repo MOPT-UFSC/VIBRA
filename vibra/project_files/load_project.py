@@ -26,6 +26,7 @@ class LoadProject:
         self.load_mesh_setup()
         self.load_model_properties()
         self.load_analysis_setup()
+        # self.load_thumbnail()
 
 
     def load_geometry(self):
@@ -344,3 +345,8 @@ class LoadProject:
         analysis_setup = self.file.read_analysis_setup_from_file()
         app().main_window.project.set_analysis_data(analysis_setup)
         app().main_window.project.create_solver()
+
+    def load_thumbnail(self):
+        thumbnail = self.file.read_thumbnail()
+        if thumbnail is not None:
+            app().main_window.project.thumbnail = thumbnail

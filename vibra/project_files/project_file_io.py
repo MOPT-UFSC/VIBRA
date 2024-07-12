@@ -41,6 +41,7 @@ class ProjectFileIO:
         self.material_library_filename = "material_library.config"
         self.model_properties = "model_properties.json"
         self.mesh_data_filename = "mesh_data.hdf5"
+        self.thumbnail_filename = "thumbnail.png"
 
     def _default_foldernames(self):
         pass
@@ -324,3 +325,12 @@ class ProjectFileIO:
                                 )
 
         return model_properties
+    
+    def write_thumbnail(self):
+        thumbnail = app().main_window.project.thumbnail
+        if thumbnail is None:
+            return
+        self.vibra_file.write(self.thumbnail_filename, thumbnail)
+
+    def read_thumbnail(self):
+        return self.vibra_file.read(self.thumbnail_filename)
