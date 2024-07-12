@@ -1,5 +1,3 @@
-# fmt: off
-
 from PyQt5.QtWidgets import QLabel, QPushButton, QTabWidget, QVBoxLayout, QWidget
 from PyQt5.QtCore import QCoreApplication, pyqtSignal
 
@@ -40,6 +38,8 @@ class ViewerTabs(QTabWidget):
         self.show_welcome()
 
         self.tabCloseRequested.connect(self.removeTab)
+        self.currentChanged.connect(self.current_tab_changed_callback)
+        self.last_index = None
 
     def add_tabs(self):
         self.addTab(self.welcome, "Welcome!")
@@ -183,4 +183,15 @@ class ViewerTabs(QTabWidget):
         for i in range(self.count()):
             yield self.widget(i)
 
-# fmt: on
+    def current_tab_changed_callback(self, new_index):
+        if self.last_index is None:
+            self.last_index = new_index
+            return
+        
+        new_widget = self.widget(new_index)
+        if isinstance(new_widget, CommonRenderWidget):
+            last_widget = self.widget(self.last_index)
+            new_widget.copy_camera_from(last_widget)
+            # if last_widget is not a valid render the operation will be ignored
+
+        self.last_index = new_index
