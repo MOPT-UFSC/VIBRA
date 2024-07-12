@@ -970,6 +970,7 @@ class SetFluidCompositionInput(QDialog):
 
         self.fluid_data = dict()
         self.fluid_to_composition = dict()
+
         read = LoadFluidCompositionInput(file_path = self.composition_file_path)
 
         if read.complete:
