@@ -224,13 +224,13 @@
           <widget class="QLineEdit" name="lineEdit_output_selected_id">
            <property name="minimumSize">
             <size>
-             <width>120</width>
+             <width>110</width>
              <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>120</width>
+             <width>110</width>
              <height>30</height>
             </size>
            </property>
@@ -240,8 +240,7 @@
             </font>
            </property>
            <property name="styleSheet">
-            <string notr="true">color: rgb(0, 0, 255);
-background-color: rgb(255,255,255)</string>
+            <string notr="true"/>
            </property>
            <property name="text">
             <string/>
@@ -255,13 +254,13 @@ background-color: rgb(255,255,255)</string>
           <widget class="QLabel" name="label_10">
            <property name="minimumSize">
             <size>
-             <width>120</width>
+             <width>110</width>
              <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>120</width>
+             <width>110</width>
              <height>30</height>
             </size>
            </property>
@@ -461,13 +460,13 @@ background-color: rgb(255,255,255)</string>
           <widget class="QComboBox" name="comboBox_selector_filter">
            <property name="minimumSize">
             <size>
-             <width>120</width>
+             <width>110</width>
              <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>120</width>
+             <width>110</width>
              <height>30</height>
             </size>
            </property>
@@ -506,13 +505,13 @@ background-color: rgb(255,255,255)</string>
           <widget class="QLabel" name="label_2">
            <property name="minimumSize">
             <size>
-             <width>120</width>
+             <width>110</width>
              <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>120</width>
+             <width>110</width>
              <height>30</height>
             </size>
            </property>
@@ -560,13 +559,13 @@ background-color: rgb(255,255,255)</string>
            <property name="minimumSize">
             <size>
              <width>40</width>
-             <height>28</height>
+             <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
              <width>40</width>
-             <height>28</height>
+             <height>30</height>
             </size>
            </property>
            <property name="frameShape">
@@ -636,13 +635,13 @@ background-color: rgb(255,255,255)</string>
           <widget class="QLabel" name="label_15">
            <property name="minimumSize">
             <size>
-             <width>120</width>
+             <width>110</width>
              <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>120</width>
+             <width>110</width>
              <height>30</height>
             </size>
            </property>
@@ -667,13 +666,13 @@ background-color: rgb(255,255,255)</string>
           <widget class="QLineEdit" name="lineEdit_input_selected_id">
            <property name="minimumSize">
             <size>
-             <width>120</width>
+             <width>110</width>
              <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>120</width>
+             <width>110</width>
              <height>30</height>
             </size>
            </property>
@@ -686,8 +685,7 @@ background-color: rgb(255,255,255)</string>
             </font>
            </property>
            <property name="styleSheet">
-            <string notr="true">color: rgb(0, 0, 255);
-background-color: rgb(255,255,255)</string>
+            <string notr="true"/>
            </property>
            <property name="text">
             <string/>

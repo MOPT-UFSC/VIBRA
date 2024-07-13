@@ -325,6 +325,7 @@ class MainWindow(QMainWindow):
             return
 
         app().config.write_last_folder_path_in_file("project folder", project_path)
+        self.create_temporary_vibra_folder()
 
         copy(project_path, self.temp_project_file_path)
 

@@ -211,14 +211,14 @@
           <widget class="QLabel" name="label_10">
            <property name="minimumSize">
             <size>
-             <width>120</width>
-             <height>28</height>
+             <width>110</width>
+             <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>120</width>
-             <height>28</height>
+             <width>110</width>
+             <height>30</height>
             </size>
            </property>
            <property name="font">
@@ -242,14 +242,14 @@
           <widget class="QLineEdit" name="lineEdit_selection_id">
            <property name="minimumSize">
             <size>
-             <width>120</width>
-             <height>28</height>
+             <width>110</width>
+             <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>120</width>
-             <height>28</height>
+             <width>110</width>
+             <height>30</height>
             </size>
            </property>
            <property name="font">
@@ -287,13 +287,13 @@ background-color: rgb(255,255,255)</string>
            <property name="minimumSize">
             <size>
              <width>40</width>
-             <height>28</height>
+             <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
              <width>40</width>
-             <height>28</height>
+             <height>30</height>
             </size>
            </property>
            <property name="font">
@@ -445,14 +445,14 @@ background-color: rgb(255,255,255)</string>
           <widget class="QLabel" name="label_2">
            <property name="minimumSize">
             <size>
-             <width>120</width>
-             <height>28</height>
+             <width>110</width>
+             <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>120</width>
-             <height>28</height>
+             <width>110</width>
+             <height>30</height>
             </size>
            </property>
            <property name="font">
@@ -472,14 +472,14 @@ background-color: rgb(255,255,255)</string>
           <widget class="QComboBox" name="comboBox_selector_filter">
            <property name="minimumSize">
             <size>
-             <width>120</width>
-             <height>28</height>
+             <width>110</width>
+             <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>120</width>
-             <height>28</height>
+             <width>110</width>
+             <height>30</height>
             </size>
            </property>
            <property name="font">
@@ -515,13 +515,13 @@ background-color: rgb(255,255,255)</string>
            <property name="minimumSize">
             <size>
              <width>40</width>
-             <height>28</height>
+             <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
              <width>40</width>
-             <height>28</height>
+             <height>30</height>
             </size>
            </property>
            <property name="frameShape">
