@@ -124,13 +124,6 @@ class PlotTransmissionLossInput(QDialog):
                 _faces = [str(i) for i in faces]
                 self.current_lineEdit.setText(_faces[0])
 
-            # if len(_faces) == 2:
-            #     self.lineEdit_input_surface_id.setText(_faces[0])
-            #     self.lineEdit_output_surface_id.setText(_faces[1])
-
-            # if len(_faces) == 1:
-            #     self.current_lineEdit.setText(_faces[0])
-
         elif not any([points, lines, faces]):
             return
             self.current_lineEdit.setText("")

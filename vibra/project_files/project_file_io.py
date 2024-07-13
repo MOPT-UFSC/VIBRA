@@ -41,6 +41,7 @@ class ProjectFileIO:
         self.material_library_filename = "material_library.config"
         self.model_properties = "model_properties.json"
         self.mesh_data_filename = "mesh_data.hdf5"
+        self.results_data_filename = "results_data.hdf5"
         self.thumbnail_filename = "thumbnail.png"
 
     def _default_foldernames(self):
@@ -134,11 +135,6 @@ class ProjectFileIO:
                             surfaces_from_volumes = self.model.mesh.surfaces_from_volumes
                         )
 
-        # aux_file = self.project_folder_path / self.mesh_data_filename
-        # if os.path.exists(self.project_folder_path):
-        #     f = h5py.File(aux_file, "w")
-        #     f.close()
-
         with self.vibra_file.open(self.mesh_data_filename, "w") as internal_file:
             with h5py.File(internal_file, "w") as f:
 
@@ -181,12 +177,6 @@ class ProjectFileIO:
 
         mesh_data = dict()
 
-        # file_path = self.project_folder_path / self.mesh_data_filename 
-        # if os.path.exists(file_path):
-        #     f = h5py.File(file_path, 'r')
-
-            # groups = list(f.keys())
-
         with self.vibra_file.open(self.mesh_data_filename) as internal_file:
             with h5py.File(internal_file, "r") as f:
 
@@ -203,7 +193,6 @@ class ProjectFileIO:
             return mesh_data
         
         return None
-    
 
     def write_analysis_setup_in_file(self, analysis_setup):
 
@@ -329,3 +318,63 @@ class ProjectFileIO:
 
     def read_thumbnail(self):
         return self.vibra_file.read(self.thumbnail_filename)
+    
+    def write_results_data_in_file(self):
+         with self.vibra_file.open(self.results_data_filename, "w") as internal_file:
+            with h5py.File(internal_file, "w") as f:
+
+                acoustic_modal_solver = app().main_window.project.acoustic_modal_solver
+                if acoustic_modal_solver is not None:
+                    if acoustic_modal_solver.modal_shape is not None:
+                        natural_frequencies = acoustic_modal_solver.natural_frequencies
+                        modal_shape = acoustic_modal_solver.modal_shape
+                        f.create_dataset("modal_acoustic/natural_frequencies", data=natural_frequencies, dtype=float)
+                        f.create_dataset("modal_acoustic/modal_shape", data=modal_shape, dtype=float)
+                
+                structural_modal_solver = app().main_window.project.structural_modal_solver
+                if structural_modal_solver is not None:
+                    if structural_modal_solver.modal_shape is not None:
+                        natural_frequencies = structural_modal_solver.natural_frequencies
+                        modal_shape = structural_modal_solver.modal_shape
+                        f.create_dataset("modal_structural/natural_frequencies", data=natural_frequencies, dtype=float)
+                        f.create_dataset("modal_structural/modal_shape", data=modal_shape, dtype=float)
+
+                acoustic_harmonic_solver = app().main_window.project.acoustic_harmonic_solver
+                if acoustic_harmonic_solver is not None:
+                    if acoustic_harmonic_solver.solution is not None:
+                        frequencies = acoustic_harmonic_solver.frequencies
+                        solution = acoustic_harmonic_solver.solution
+                        f.create_dataset("harmonic_acoustic/frequencies", data=frequencies, dtype=float)
+                        f.create_dataset("harmonic_acoustic/solution", data=solution, dtype=complex)
+                
+                structural_harmonic_solver = app().main_window.project.structural_harmonic_solver
+                if structural_harmonic_solver is not None:
+                    if structural_harmonic_solver.solution is not None:
+                        frequencies = acoustic_harmonic_solver.frequencies
+                        solution = acoustic_harmonic_solver.solution
+                        f.create_dataset("harmonic_structural/frequencies", data=frequencies, dtype=float)
+                        f.create_dataset("harmonic_structural/solution", data=solution, dtype=complex)
+
+    def read_results_data_from_file(self):
+        
+        results_data = dict()
+
+        with self.vibra_file.open(self.results_data_filename) as internal_file:
+            with h5py.File(internal_file, "r") as f:
+
+                for group in list(f.keys()):
+                    aux = dict()
+                    for key, values in f.get(group).items():
+
+                        try:
+                            aux[key] = np.array(values)
+                        except:
+                            continue
+
+                    if aux:
+                        results_data[group] = aux
+
+        if results_data:
+            return results_data
+        
+        return None

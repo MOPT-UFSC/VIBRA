@@ -8,8 +8,10 @@ from vibra.utils.progress_status import ProgressStatus
 
 from vibra.interface.loading_bar import load_function
 
-from collections import defaultdict
 import logging
+import numpy as np
+
+from collections import defaultdict
 
 class LoadProject:
     def __init__(self):
@@ -25,19 +27,22 @@ class LoadProject:
         self.load_project_libraries()
         self.load_mesh_setup()
         self.load_model_properties()
+        
+        app().main_window.viewer_tabs.close_mesh_tabs()
+        app().main_window.viewer_tabs.show_geometry()
+        app().main_window.viewer_tabs.show_mesh()
+
         self.load_analysis_setup()
         # self.load_thumbnail()
-
+        self.load_analysis_results()
 
     def load_geometry(self):
         geometry_path = self.file.read_geometry_from_file()
         app().main_window.import_geometry(geometry_path)
 
-
     def load_project_libraries(self):
         self.load_fluid_library()
         self.load_material_library()
-
 
     def load_fluid_library(self):
 
@@ -278,16 +283,13 @@ class LoadProject:
                 mesh_data = self.file.read_mesh_data_from_file()
 
                 if mesh_data is None:
-                    generate_mesh = load_function(app().main_window.project.generate_mesh, app().main_window)
-                    generate_mesh()
+                    app().main_window.project.generate_mesh()
                     app().main_window.file.write_mesh_data_in_file()
 
                 else:
-                    load_mesh =  load_function(self.load_mesh_data_from_file, app().main_window)
-                    load_mesh(mesh_data)
+                    self.load_mesh_data_from_file(mesh_data)
 
-                update_render = load_function(self.update_render, app().main_window)
-                update_render()
+                self.update_render()
 
 
     def update_render(self):
@@ -342,7 +344,13 @@ class LoadProject:
 
 
     def load_analysis_setup(self):
+
         analysis_setup = self.file.read_analysis_setup_from_file()
+        f_min = analysis_setup["f_min"]
+        f_max = analysis_setup["f_max"]
+        f_step = analysis_setup["f_step"]
+        analysis_setup["frequencies"] = np.arange(f_min, f_max + f_step, f_step)
+
         app().main_window.project.set_analysis_data(analysis_setup)
         app().main_window.project.create_solver()
 
@@ -350,3 +358,60 @@ class LoadProject:
         thumbnail = self.file.read_thumbnail()
         if thumbnail is not None:
             app().main_window.project.thumbnail = thumbnail
+
+    def load_analysis_results(self):
+    
+        act_modal_analysis = False
+        str_modal_analysis = False
+        act_harmonic_analysis = False
+        str_harmonic_analysis = False
+
+        results_data = self.file.read_results_data_from_file()
+
+        if results_data:
+            logging.info("Loading results..." + ProgressStatus(20, 100))
+            for key, data in results_data.items():
+
+                if key == "modal_acoustic":
+                    act_modal_analysis = True
+                    app().main_window.project.acoustic_modal_solver.natural_frequencies = data["natural_frequencies"]
+                    app().main_window.project.acoustic_modal_solver.modal_shape = data["modal_shape"]
+                
+                elif key == "modal_structural":
+                    str_modal_analysis = True
+                    app().main_window.project.structural_modal_solver.natural_frequencies = data["natural_frequencies"]
+                    app().main_window.project.structural_modal_solver.modal_shape = data["modal_shape"]
+
+                elif key == "harmonic_acoustic":
+                    act_harmonic_analysis = True
+                    app().main_window.project.acoustic_harmonic_solver.frequencies = data["frequencies"]
+                    app().main_window.project.acoustic_harmonic_solver.solution = data["solution"]
+
+                elif key == "harmonic_structural":
+                    str_harmonic_analysis = True
+                    app().main_window.project.structural_harmonic_solver.frequencies = data["frequencies"]
+                    app().main_window.project.structural_harmonic_solver.solution = data["solution"]
+
+                else:
+                    continue
+            
+            logging.info("Updating analysis render..." + ProgressStatus(85, 100))
+            if act_modal_analysis:
+                app().main_window.viewer_tabs.show_acoustic_modal_analysis()
+                app().main_window.menu_widget.update_items()
+
+            elif str_modal_analysis:
+                app().main_window.viewer_tabs.show_structural_modal_analysis()
+                app().main_window.menu_widget.update_items()
+
+            elif act_harmonic_analysis:
+                app().main_window.viewer_tabs.show_acoustic_harmonic_analysis()
+                app().main_window.menu_widget.update_items()
+
+            elif str_harmonic_analysis:
+                return
+                app().main_window.viewer_tabs.show_structural_harmonic_analysis()
+                app().main_window.menu_widget.update_items()
+
+            else:
+                return

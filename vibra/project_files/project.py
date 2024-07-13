@@ -227,10 +227,12 @@ class Project:
         self.model.get_lrf_eq_data(modal=True)
         self.acoustic_assembler.process_assemble()
         self.acoustic_modal_solver.solve()
+        app().main_window.file.write_results_data_in_file()
 
     def solve_structural_modal_analysis(self):
         self.structural_assembler.process_assemble()
         self.structural_modal_solver.solve()
+        app().main_window.file.write_results_data_in_file()
 
     def solve_acoustic_harmonic_analysis(self):
         self.model.get_lrf_eq_data()
@@ -238,6 +240,7 @@ class Project:
         self.model.process_porous_material_properties(self.analysis_data["frequencies"])
         self.acoustic_assembler.process_assemble()
         self.acoustic_harmonic_solver.solve()
+        app().main_window.file.write_results_data_in_file()
 
     def long_function(self):
         for i in range(20):

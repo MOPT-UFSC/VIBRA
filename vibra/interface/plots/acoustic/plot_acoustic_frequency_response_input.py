@@ -48,8 +48,8 @@ class PlotAcousticFrequencyResponseInput(QDialog):
         if "analysis_id" in analysis_data.keys():
             if analysis_data["analysis_id"] == 3:
                 self.analysis_method = "Direct method"
-        if "frequencies" in analysis_data.keys():
-            self.frequencies = analysis_data["frequencies"]
+
+        self.frequencies = self.project.acoustic_harmonic_solver.frequencies
         self.solution = self.project.acoustic_harmonic_solver.solution
 
     def _config_window(self):
