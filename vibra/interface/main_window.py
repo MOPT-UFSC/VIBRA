@@ -285,16 +285,32 @@ class MainWindow(QMainWindow):
             self.save_project_as(self.project.save_path)
 
     def save_project_as_dialog(self):
-        path, check = QFileDialog.getSaveFileName(
-                                                    self,
-                                                    "Save As",
-                                                    filter="Vibra File (*.vibra)",
-                                                 )
+
+        last_path = app().config.get_last_folder_for("project folder")
+        if last_path is None:
+            path = os.path.expanduser("~")
+        else:
+            path = last_path
+
+        file_path, check = QFileDialog.getSaveFileName(
+                                                        self,
+                                                        "Save As",
+                                                        path,
+                                                        filter = "Vibra File (*.vibra)",
+                                                      )
 
         if not check:
             return
 
-        self.save_project_as(path)
+        self.save_project_as(file_path)
+
+    def save_project_as(self, path):
+        path = Path(path)
+        self.project.name = path.stem
+        self.project.save_path = path
+        # self.file.write_thumbnail()
+        app().config.write_last_folder_path_in_file("project folder", path)
+        copy(self.project_path, path)
 
     def open_project_dialog(self):
 
@@ -349,14 +365,6 @@ class MainWindow(QMainWindow):
 
         _geometry_path = self.file.read_geometry_from_file()
         self.import_geometry(_geometry_path)
-
-    def save_project_as(self, path):
-        path = Path(path)
-        self.project.name = path.stem
-        self.project.save_path = path
-        self.file.write_thumbnail()
-        app().config.write_last_folder_path_in_file("project folder", path)
-        copy(self.project_path, path)
 
     def export_mesh(self):
         ExportMeshData()
