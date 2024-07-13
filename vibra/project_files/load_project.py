@@ -30,8 +30,8 @@ class LoadProject:
 
 
     def load_geometry(self):
-        geometry_paths = self.file.read_geometry_from_file()
-        app().main_window.import_geometry(geometry_paths)
+        geometry_path = self.file.read_geometry_from_file()
+        app().main_window.import_geometry(geometry_path)
 
 
     def load_project_libraries(self):

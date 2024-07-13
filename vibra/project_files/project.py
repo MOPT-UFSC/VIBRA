@@ -97,10 +97,10 @@ class Project:
     def set_material_list_path(self, path):
         self.material_list_path = path
 
-    def import_geometry(self, paths):
-        self.model.set_geometry_path(paths)
+    def import_geometry(self, path : str):
+        self.model.set_geometry_path(path)
         logging.info(f"Importing geometry file...")
-        self.model.process_visual_geometry_mesh(paths)
+        self.model.process_visual_geometry_mesh(path)
 
     def set_fluid(self, fluid, **kwargs):
         self.model.set_fluid(fluid, **kwargs)

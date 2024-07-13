@@ -180,7 +180,6 @@ class PlotAcousticFrequencyResponseInput(QDialog):
             key = (selection_type, (selected_id))
             legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
 
-            print(i, self.get_color(i))
             self.model_results[key] = { 
                                         "x_data" : self.frequencies,
                                         "y_data" : self.get_response(index, selected_id),

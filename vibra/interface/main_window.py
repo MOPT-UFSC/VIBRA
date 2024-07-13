@@ -346,9 +346,9 @@ class MainWindow(QMainWindow):
 
         self.file = ProjectFileIO(self.project_path)
         self.file.write_geometry_in_file(geometry_path)
-        geometry_paths = self.file.read_geometry_from_file()
 
-        self.import_geometry(geometry_paths)
+        _geometry_path = self.file.read_geometry_from_file()
+        self.import_geometry(_geometry_path)
 
     def save_project_as(self, path):
         path = Path(path)
@@ -373,10 +373,10 @@ class MainWindow(QMainWindow):
         self.viewer_tabs.show_geometry()
         self.viewer_tabs.show_mesh()
 
-    def import_geometry(self, paths):
-        # Slow function running with loading bar
+    def import_geometry(self, path : str):
+
         import_geometry = load_function(self.project.import_geometry, self)
-        import_geometry(paths)
+        import_geometry(path)
 
         self.viewer_tabs.reset_tab_visibility()
         self.viewer_tabs.show_geometry()

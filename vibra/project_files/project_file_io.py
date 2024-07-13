@@ -49,23 +49,20 @@ class ProjectFileIO:
     def write_geometry_in_file(self, path):
 
         basename = os.path.basename(path)
-        internal_path = f"geometry_files/{basename}"
+        internal_path = f"geometry_file/{basename}"
         self.vibra_file.write_from_path(internal_path, path, encoding="iso-8859-1")
 
         try:
 
             project_setup = self.vibra_file.read(self.project_setup_filename)
             if project_setup is None:
-                project_setup = {   "geometry_filenames" : [basename],
+                project_setup = {   "geometry_filename" : basename,
                                     "mesh_setup" : dict(),
                                     "analysis_setup" : dict()   }
 
             else:
 
-                filenames = project_setup["geometry_filenames"]
-                if basename not in filenames:
-                    filenames.append(basename)
-                    project_setup["geometry_filenames"] = filenames
+                project_setup["geometry_filename"] = basename
             
             self.vibra_file.write(self.project_setup_filename, project_setup)
 
@@ -74,23 +71,21 @@ class ProjectFileIO:
 
     def read_geometry_from_file(self):
 
-        geometry_file_paths = list()
         project_setup = self.vibra_file.read(self.project_setup_filename)
 
-        if "geometry_filenames" in project_setup.keys():
-            for geom_name in project_setup["geometry_filenames"]:
+        if "geometry_filename" in project_setup.keys():
 
-                dirname = self.project_folder_path / "geometry" 
-                temp_path = dirname / geom_name
-                internal_path = f"geometry_files/{geom_name}"
+            geometry_filename = project_setup["geometry_filename"]
+            dirname = self.project_folder_path / "geometry" 
+            temp_path = dirname / geometry_filename
+            internal_path = f"geometry_file/{geometry_filename}"
 
-                if not os.path.exists(dirname):
-                    os.mkdir(dirname)
+            if not os.path.exists(dirname):
+                os.mkdir(dirname)
 
-                self.vibra_file.read_to_path(internal_path, temp_path)
-                geometry_file_paths.append(str(temp_path))
+            self.vibra_file.read_to_path(internal_path, temp_path)
 
-        return geometry_file_paths
+        return str(temp_path)
 
     def write_mesh_setup_in_file(self, mesh_setup):
 

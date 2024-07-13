@@ -72,7 +72,7 @@ class Mesh:
     @classmethod
     def from_cad(
         cls,
-        paths: list,
+        path: str,
         *,
         minimum_element_size: float = 30.0,
         maximum_element_size: float = 30.0,
@@ -98,15 +98,15 @@ class Mesh:
 
         obj = Mesh()
         obj.load_cad(
-                    paths,
-                    minimum_element_size=minimum_element_size,
-                    maximum_element_size=maximum_element_size,
-                    element_type=element_type,
-                    geometry_tolerance=geometry_tolerance,
-                    size_factor=size_factor,
-                    dimension=dimension,
-                    threads=threads,
-                    gmsh_gui=gmsh_gui,
+                    path,
+                    minimum_element_size = minimum_element_size,
+                    maximum_element_size = maximum_element_size,
+                    element_type = element_type,
+                    geometry_tolerance = geometry_tolerance,
+                    size_factor = size_factor,
+                    dimension = dimension,
+                    threads = threads,
+                    gmsh_gui = gmsh_gui,
                     mesh_refinement_parameters = mesh_refinement_parameters,
                     mesh_connection = mesh_connection,
                     )
@@ -115,7 +115,7 @@ class Mesh:
 
     def load_cad(
                     self,
-                    paths: (list | Path),
+                    path: (str | Path),
                     *,
                     minimum_element_size: float = 30.0,
                     maximum_element_size: float = 30.0,
@@ -130,13 +130,13 @@ class Mesh:
                 ):
 
         self.mesh_setup = dict(
-                                minimum_element_size=minimum_element_size,
-                                maximum_element_size=maximum_element_size,
-                                element_type=element_type,
-                                geometry_tolerance=geometry_tolerance,
-                                size_factor=size_factor,
-                                dimension=dimension,
-                                threads=threads,
+                                minimum_element_size = minimum_element_size,
+                                maximum_element_size = maximum_element_size,
+                                element_type = element_type,
+                                geometry_tolerance = geometry_tolerance,
+                                size_factor = size_factor,
+                                dimension = dimension,
+                                threads = threads,
                                 mesh_refinement_parameters = mesh_refinement_parameters,
                                 mesh_connection = mesh_connection
                                 )
@@ -156,13 +156,16 @@ class Mesh:
                             )
 
         logging.info("Loading geometry..." + ProgressStatus(10, 100))
-        if isinstance(paths, str):
-            paths = [paths]
 
-        # t0 = time()
-        for path in paths:
-            gmsh.merge(str(path))
-            # gmsh.open(str(path))
+        gmsh.open(path)
+
+        # if isinstance(path, str):
+        #     paths = [paths]
+
+        # # t0 = time()
+        # for path in paths:
+        #     gmsh.merge(str(path))
+        #     # gmsh.open(str(path))
 
         gmsh.model.occ.synchronize()
 
