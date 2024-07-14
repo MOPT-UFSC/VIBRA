@@ -282,12 +282,12 @@ class LoadProject:
 
                 mesh_data = self.file.read_mesh_data_from_file()
 
-                if mesh_data is None:
-                    app().main_window.project.generate_mesh()
-                    app().main_window.file.write_mesh_data_in_file()
+                if mesh_data:
+                    self.load_mesh_data_from_file(mesh_data)
 
                 else:
-                    self.load_mesh_data_from_file(mesh_data)
+                    app().main_window.project.generate_mesh()
+                    app().main_window.file.write_mesh_data_in_file()
 
                 self.update_render()
 
