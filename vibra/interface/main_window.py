@@ -191,10 +191,6 @@ class MainWindow(QMainWindow):
     def load_user_preferences(self):
         self.set_theme(self.user_config.theme)
 
-    def closeEvent(self, event):
-        self.close_app()
-        event.ignore()
-
     def get_user_config(self):
         return self.user_config
 
@@ -391,12 +387,18 @@ class MainWindow(QMainWindow):
         self.project.reset_solutions()
         self.project.model.properties._reset_variables()
 
+    def closeEvent(self, event):
+        self.close_app()
+        event.ignore()
+
     def close_app(self):
 
         self.close_dialogs()
-        close = QMessageBox.question(
-            self, "QUIT", "Are you sure want to close Vibra?", QMessageBox.Yes | QMessageBox.No
-        )
+        close = QMessageBox.question(   self, 
+                                        "QUIT", 
+                                        "Are you sure want to close Vibra?", 
+                                        QMessageBox.Yes | QMessageBox.No
+                                    )
 
         if close == QMessageBox.Yes:
             self.user_config.save()
@@ -409,12 +411,6 @@ class MainWindow(QMainWindow):
     def close_dialogs(self):
         if isinstance(self.dialog, (QDialog, QWidget)):
             self.dialog.close()
-
-def create_new_folder(path, folder_name):
-    folder_path = os.path.join(path, folder_name)
-    if not os.path.exists(folder_path):
-        os.mkdir(folder_path)
-    return folder_path
 
 def create_new_folder(path, folder_name):
     folder_path = os.path.join(path, folder_name)
