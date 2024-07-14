@@ -236,6 +236,7 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
 
     def join_model_data(self):
 
+        self.hide()
         index = self.comboBox_selector_filter.currentIndex()
 
         if index == 0:

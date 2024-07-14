@@ -179,6 +179,7 @@ class PlotTransmissionLossInput(QDialog):
 
     def join_model_data(self):
 
+        self.hide()
         self.model_results = dict()
 
         if self.comboBox_processing_selector.currentIndex() == 0:

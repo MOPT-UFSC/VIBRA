@@ -183,6 +183,7 @@ class MainWindow(QMainWindow):
         app().splash.update_progress(90)
         self.load_user_preferences()
         self.config_tool_tip_appearance()
+        self.create_temporary_vibra_folder()
 
         app().splash.close()
         self.showMaximized()
@@ -325,7 +326,6 @@ class MainWindow(QMainWindow):
             return
 
         app().config.write_last_folder_path_in_file("project folder", project_path)
-        self.create_temporary_vibra_folder()
 
         copy(project_path, self.temp_project_file_path)
 
@@ -359,8 +359,6 @@ class MainWindow(QMainWindow):
         app().config.write_last_folder_path_in_file("geometry folder", geometry_path)
 
         self.project = Project()
-        self.create_temporary_vibra_folder()
-
         self.file = ProjectFileIO(self.temp_project_file_path)
         self.file.write_geometry_in_file(geometry_path)
 
