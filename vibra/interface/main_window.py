@@ -396,7 +396,7 @@ class MainWindow(QMainWindow):
         self.close_dialogs()
         close = QMessageBox.question(   self, 
                                         "QUIT", 
-                                        "Would yoou like to close the application?", 
+                                        "Would you like to close the application?", 
                                         QMessageBox.Yes | QMessageBox.No
                                     )
 
