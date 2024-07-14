@@ -346,10 +346,12 @@ class LoadProject:
     def load_analysis_setup(self):
 
         analysis_setup = self.file.read_analysis_setup_from_file()
-        f_min = analysis_setup["f_min"]
-        f_max = analysis_setup["f_max"]
-        f_step = analysis_setup["f_step"]
-        analysis_setup["frequencies"] = np.arange(f_min, f_max + f_step, f_step)
+
+        if analysis_setup:
+            f_min = analysis_setup["f_min"]
+            f_max = analysis_setup["f_max"]
+            f_step = analysis_setup["f_step"]
+            analysis_setup["frequencies"] = np.arange(f_min, f_max + f_step, f_step)
 
         app().main_window.project.set_analysis_data(analysis_setup)
         app().main_window.project.create_solver()

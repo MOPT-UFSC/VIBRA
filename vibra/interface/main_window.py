@@ -48,8 +48,8 @@ class MainWindow(QMainWindow):
 
     def _initialize(self):
         self.dialog = None
-        self.user_path = os.path.expanduser("~")
-        self.temp_project_folder_path = Path(self.user_path) / "temp_vibra"
+        self.user_path = Path().home()
+        self.temp_project_folder_path = self.user_path / "temp_vibra"
         self.temp_project_file_path = str(self.temp_project_folder_path / "tmp.vibra")   
 
     def _define_qt_variables(self):
@@ -229,7 +229,7 @@ class MainWindow(QMainWindow):
         create_new_folder(self.user_path, "temp_vibra")
 
     def reset_temporary_vibra_folder(self):
-        if os.path.exists(self.temp_project_folder_path):
+        if self.temp_project_folder_path.exists():
             for filename in os.listdir(self.temp_project_folder_path).copy():
                 file_path = self.temp_project_folder_path / filename
                 if os.path.exists(file_path):
@@ -239,7 +239,7 @@ class MainWindow(QMainWindow):
                         rmtree(file_path)
 
     def is_temporary_vibra_folder_empty(self):
-        if os.path.exists(self.temp_project_folder_path):
+        if self.temp_project_folder_path.exists():
             if os.listdir(self.temp_project_folder_path):
                 return False
         return True
@@ -396,7 +396,7 @@ class MainWindow(QMainWindow):
         self.close_dialogs()
         close = QMessageBox.question(   self, 
                                         "QUIT", 
-                                        "Are you sure want to close Vibra?", 
+                                        "Would yoou like to close the application?", 
                                         QMessageBox.Yes | QMessageBox.No
                                     )
 
@@ -412,8 +412,8 @@ class MainWindow(QMainWindow):
         if isinstance(self.dialog, (QDialog, QWidget)):
             self.dialog.close()
 
-def create_new_folder(path, folder_name):
-    folder_path = os.path.join(path, folder_name)
+def create_new_folder(path : Path, folder_name : str) -> Path:
+    folder_path = path / folder_name
     if not os.path.exists(folder_path):
         os.mkdir(folder_path)
     return folder_path
