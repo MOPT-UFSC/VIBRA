@@ -177,22 +177,23 @@ class ProjectFileIO:
 
         mesh_data = dict()
 
-        with self.vibra_file.open(self.mesh_data_filename) as internal_file:
-            with h5py.File(internal_file, "r") as f:
+        try:
+            with self.vibra_file.open(self.mesh_data_filename) as internal_file:
+                with h5py.File(internal_file, "r") as f:
 
-                for group in list(f.keys()):
-                    for key, values in f.get(group).items():
+                    for group in list(f.keys()):
+                        for key, values in f.get(group).items():
 
-                        try:
-                            mesh_data[key] = np.array(values)
+                            try:
+                                mesh_data[key] = np.array(values)
 
-                        except:
-                            mesh_data[key] = int(values)
+                            except:
+                                mesh_data[key] = int(values)
 
-        if mesh_data:
-            return mesh_data
-        
-        return None
+        except:
+            return dict()
+
+        return mesh_data
 
     def write_analysis_setup_in_file(self, analysis_setup):
 
@@ -359,22 +360,24 @@ class ProjectFileIO:
         
         results_data = dict()
 
-        with self.vibra_file.open(self.results_data_filename) as internal_file:
-            with h5py.File(internal_file, "r") as f:
+        try:
 
-                for group in list(f.keys()):
-                    aux = dict()
-                    for key, values in f.get(group).items():
+            with self.vibra_file.open(self.results_data_filename) as internal_file:
+                with h5py.File(internal_file, "r") as f:
 
-                        try:
-                            aux[key] = np.array(values)
-                        except:
-                            continue
+                    for group in list(f.keys()):
+                        aux = dict()
+                        for key, values in f.get(group).items():
 
-                    if aux:
-                        results_data[group] = aux
+                            try:
+                                aux[key] = np.array(values)
+                            except:
+                                continue
 
-        if results_data:
-            return results_data
-        
-        return None
+                        if aux:
+                            results_data[group] = aux
+
+        except:
+            return dict()
+
+        return results_data
