@@ -40,13 +40,13 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.mesh_info = MeshInfoBar()
 
-        # replace the layout to add other usefull widgets
-        QObjectCleanupHandler().add(self.layout())
-        layout = QVBoxLayout()
-        layout.addWidget(self.mesh_info)
-        layout.addWidget(self.render_interactor)
-        self.setLayout(layout)
-        self.setContentsMargins(0, 0, 0, 0)
+        # # replace the layout to add other usefull widgets
+        # QObjectCleanupHandler().add(self.layout())
+        # layout = QVBoxLayout()
+        # layout.addWidget(self.mesh_info)
+        # layout.addWidget(self.render_interactor)
+        # self.setLayout(layout)
+        # self.setContentsMargins(0, 0, 0, 0)
 
         self.nodes_actor = None
         self.faces_actor = None

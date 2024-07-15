@@ -110,9 +110,9 @@ class MainWindow(QMainWindow):
 
         self.selection_changed.emit()
 
-    def set_geometry_selection(self, *, nodes=None, lines=None, surfaces=None, volumes=None, join=False, remove=True):
-        if nodes is None:
-            nodes = set()
+    def set_geometry_selection(self, *, points=None, lines=None, surfaces=None, volumes=None, join=False, remove=True):
+        if points is None:
+            points = set()
         
         if lines is None:
             lines = set()
@@ -140,22 +140,22 @@ class MainWindow(QMainWindow):
         self.set_mesh_selection(faces=mesh_faces, solids=mesh_solids, join=join, remove=remove)
 
         if join and remove:
-            self.selected_geometry_points ^= set(nodes)
+            self.selected_geometry_points ^= set(points)
             self.selected_geometry_lines ^= set(lines)
             self.selected_geometry_surfaces ^= set(surfaces)
             self.selected_geometry_volumes ^= set(volumes)
         elif join:
-            self.selected_geometry_points |= set(nodes)
+            self.selected_geometry_points |= set(points)
             self.selected_geometry_lines |= set(lines)
             self.selected_geometry_surfaces |= set(surfaces)
             self.selected_geometry_volumes |= set(volumes)
         elif remove:
-            self.selected_geometry_points -= set(nodes)
+            self.selected_geometry_points -= set(points)
             self.selected_geometry_lines -= set(lines)
             self.selected_geometry_surfaces -= set(surfaces)
             self.selected_geometry_volumes -= set(volumes)
         else:
-            self.selected_geometry_points = set(nodes)
+            self.selected_geometry_points = set(points)
             self.selected_geometry_lines = set(lines)
             self.selected_geometry_surfaces = set(surfaces)
             self.selected_geometry_volumes = set(volumes)
