@@ -625,7 +625,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if len(elements) != 1:
             return text 
         
-        material = self.main_window.project.model.properties.get_material(elements[0])
+        material = self.main_window.project.model.properties.get_material(surface=1)
         if material is None:
             return text
         
