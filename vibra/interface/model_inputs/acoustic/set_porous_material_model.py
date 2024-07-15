@@ -41,6 +41,7 @@ class SetPorousMaterialModel(QDialog):
         ConfigWidgetAppearance(self, tool_tip=True)
 
         self.load_info()
+        self.geometry_selection_callback()
 
         while self.keep_window_open:
             self.exec()
@@ -124,8 +125,7 @@ class SetPorousMaterialModel(QDialog):
 
         self.pushButton_confirm.clicked.connect(self.attribute_porous_material_to_selected_bodies)
         #
-        geometry_widget = self.main_window.viewer_tabs.geometry_widget
-        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
+        self.main_window.selection_changed.connect(self.geometry_selection_callback)
         #
         self.update_attribution_type()
 
@@ -239,8 +239,11 @@ class SetPorousMaterialModel(QDialog):
 
         self.update_tabs_visibility()
 
-    def geometry_selection_callback(self, points, lines, faces, volumes):
-        """ """
+    def geometry_selection_callback(self):
+        faces = self.main_window.selected_geometry_surfaces
+        points = self.main_window.selected_geometry_points
+        lines = self.main_window.selected_geometry_lines
+        volumes = self.main_window.selected_geometry_volumes
         if volumes:
 
             if self.comboBox_attribution_type.currentIndex() == 0:

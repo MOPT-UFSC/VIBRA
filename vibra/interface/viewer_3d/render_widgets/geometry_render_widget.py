@@ -471,7 +471,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         if len(nodes) > 1:
             text += (
-                f"{len(nodes)} nodes in selection\n"
+                f"{len(nodes)} points in selection\n"
                 f"{format_long_sequence(nodes)}\n\n"
             )
         elif len(nodes) == 1:

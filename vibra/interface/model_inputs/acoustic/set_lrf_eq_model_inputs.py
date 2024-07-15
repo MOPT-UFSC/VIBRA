@@ -48,6 +48,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         ConfigWidgetAppearance(self, tool_tip=True)
 
         self.load_lrf_data()
+        self.geometry_selection_callback()
 
         while self.keep_window_open:
             self.exec()
@@ -105,8 +106,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         #
         self.doubleSpinBox_selection_radius.valueChanged.connect(self.call_sphere_plotter)
         #
-        geometry_widget = self.main_window.viewer_tabs.geometry_widget
-        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
+        self.main_window.selection_changed.connect(self.geometry_selection_callback)
         #
         self.pushButton_confirm.clicked.connect(self.set_lrf_eq_model_data)
         self.pushButton_selection_info.clicked.connect(self.get_selection_information)
@@ -130,7 +130,11 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             self.frame_filter_options.setVisible(True)
             self.call_sphere_plotter()
 
-    def geometry_selection_callback(self, points, lines, faces, volumes):
+    def geometry_selection_callback(self):
+        faces = self.main_window.selected_geometry_surfaces
+        points = self.main_window.selected_geometry_points
+        lines = self.main_window.selected_geometry_lines
+        volumes = self.main_window.selected_geometry_volumes
 
         self.doubleSpinBox_selection_radius.setDisabled(True)
         self.pushButton_selection_info.setDisabled(True)

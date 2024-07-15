@@ -41,6 +41,7 @@ class SetAnechoicTerminationInputs(QDialog):
         ConfigWidgetAppearance(self, tool_tip=True)
 
         self.load_info()
+        self.geometry_selection_callback()
         self.exec()
 
     def _config_window(self):
@@ -87,8 +88,7 @@ class SetAnechoicTerminationInputs(QDialog):
         self.treeWidget_anechoic_termination.itemClicked.connect(self.on_click_item)
         self.treeWidget_anechoic_termination.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        geometry_widget = self.main_window.viewer_tabs.geometry_widget
-        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
+        self.main_window.selection_changed.connect(self.geometry_selection_callback)
 
     def tabEvent_callback(self):
         current_tab = self.tabWidget_anechoic_termination.currentIndex()
@@ -118,7 +118,10 @@ class SetAnechoicTerminationInputs(QDialog):
                     self.treeWidget_anechoic_termination.addTopLevelItem(new)
         self.update_tabs_visibility()
 
-    def geometry_selection_callback(self, points, lines, faces):
+    def geometry_selection_callback(self):
+        faces = self.main_window.selected_geometry_surfaces
+        points = self.main_window.selected_geometry_points
+        lines = self.main_window.selected_geometry_lines
         if faces:
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)

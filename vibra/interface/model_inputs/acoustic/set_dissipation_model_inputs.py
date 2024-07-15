@@ -41,6 +41,7 @@ class DissipationModelInput(QDialog):
         self._define_qt_variables()
         self._create_connections()
         self.load_info()
+        self.geometry_selection_callback()
 
         ConfigWidgetAppearance(self, tool_tip=True)
 
@@ -97,8 +98,7 @@ class DissipationModelInput(QDialog):
         self.treeWidget_dissipation_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_dissipation_model.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        geometry_widget = self.main_window.viewer_tabs.geometry_widget
-        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
+        self.main_window.selection_changed.connect(self.geometry_selection_callback)
         #
         self.update_attribution_type()
 
@@ -200,8 +200,12 @@ class DissipationModelInput(QDialog):
 
         self.update_tabs_visibility()
 
-    def geometry_selection_callback(self, points, lines, faces, volumes):
-        """ """
+    def geometry_selection_callback(self):
+        faces = self.main_window.selected_geometry_surfaces
+        points = self.main_window.selected_geometry_points
+        lines = self.main_window.selected_geometry_lines
+        volumes = self.main_window.selected_geometry_volumes
+        
         if volumes:
 
             if self.comboBox_attribution_type.currentIndex() == 0:
