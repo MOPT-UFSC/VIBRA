@@ -121,8 +121,8 @@ class MeshRenderWidget(CommonRenderWidget):
         self.view_mode = SHOW_FACES
         self.nodes_actor.VisibilityOn()
         self.edges_actor.VisibilityOn()
-        self.faces_actor.VisibilityOn()
-        self.solids_actor.VisibilityOff()
+        self.faces_actor.VisibilityOff()
+        self.solids_actor.VisibilityOn()
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
         self.update()
     

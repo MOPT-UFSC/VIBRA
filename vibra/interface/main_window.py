@@ -132,9 +132,12 @@ class MainWindow(QMainWindow):
 
         # Select the mesh elements associated with the selected geometry
         mesh_faces = []
+        mesh_solids = []
         for surface in surfaces:
             mesh_faces.extend(mesh.elements_from_surface.get(surface, []))
-        self.set_mesh_selection(faces=mesh_faces, join=join, remove=remove)
+        for volume in volumes:
+            mesh_solids.extend(mesh.elements_from_volume.get(volume, []))
+        self.set_mesh_selection(faces=mesh_faces, solids=mesh_solids, join=join, remove=remove)
 
         if join and remove:
             self.selected_geometry_points ^= set(nodes)
