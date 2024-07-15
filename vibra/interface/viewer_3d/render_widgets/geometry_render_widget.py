@@ -209,7 +209,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.update()
 
-    def update_selection(self, reset_camera=True):
+    def update_selection(self):
         self.points_actor.clear_colors()
         self.lines_actor.clear_colors()
         self.faces_actor.clear_colors()

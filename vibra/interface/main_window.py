@@ -123,9 +123,14 @@ class MainWindow(QMainWindow):
         if volumes is None:
             volumes = set()
 
-        # Select all the elements in mesh associated 
-        # with the selected geometry
         mesh = self.project.model.mesh
+
+        # Select the surfaces associated to the selected volumes
+        for volume in volumes:
+            volume_surfaces = mesh.surfaces_from_volumes.get(volume, [])
+            surfaces |= set(volume_surfaces)
+
+        # Select the mesh elements associated with the selected geometry
         mesh_faces = []
         for surface in surfaces:
             mesh_faces.extend(mesh.elements_from_surface.get(surface, []))
