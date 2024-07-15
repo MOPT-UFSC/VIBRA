@@ -244,12 +244,12 @@ class MainWindow(QMainWindow):
     def hide_selection_callback(self):
         self.hidden_mesh_faces |= self.selected_mesh_faces
         self.hidden_mesh_solids |= self.selected_mesh_solids
-        self.viewer_tabs.update_plots()
+        self.viewer_tabs.update_plots(reset_camera=False)
 
     def unhide_all_callback(self):
         self.hidden_mesh_faces.clear()
         self.hidden_mesh_solids.clear()
-        self.viewer_tabs.update_plots()
+        self.viewer_tabs.update_plots(reset_camera=False)
 
     def create_menu_bar(self):
         self.menu_bar = self.menuBar()

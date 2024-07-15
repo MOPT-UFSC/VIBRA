@@ -19,7 +19,7 @@ class ExampleRenderWidget(CommonRenderWidget):
         self.create_axes()
         self.update_plot()
 
-    def update_plot(self):
+    def update_plot(self, reset_camera=True):
         self.remove_actors()
 
         self.example_actor = ExampleActor()
@@ -37,7 +37,8 @@ class ExampleRenderWidget(CommonRenderWidget):
         self.symbols_actor = ArrowSymbols3(self.renderer)
         self.renderer.AddActor(self.symbols_actor)
 
-        self.renderer.ResetCamera()
+        if reset_camera:
+            self.renderer.ResetCamera()
 
     def show_points(self):
         self.example_actor.GetProperty().SetRepresentationToPoints()

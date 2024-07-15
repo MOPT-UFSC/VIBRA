@@ -58,7 +58,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.create_axes()
         self.update_plot()
 
-    def update_plot(self):
+    def update_plot(self, reset_camera=True):
         if self.main_window.project is None:
             return
 
@@ -92,7 +92,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.plane_actor.VisibilityOff()
         self.renderer.AddActor(self.plane_actor)
 
-        self.renderer.ResetCamera()
+        if reset_camera:
+            self.renderer.ResetCamera()
         self.show_faces()
 
         # This seems to be running twice and I don't know why.
@@ -208,7 +209,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.update()
 
-    def update_selection(self):
+    def update_selection(self, reset_camera=True):
         self.points_actor.clear_colors()
         self.lines_actor.clear_colors()
         self.faces_actor.clear_colors()

@@ -131,7 +131,6 @@ class SolidsActor(vtk.vtkActor):
         self.GetMapper().ScalarVisibilityOn()
 
     def paint_cells(self, color: tuple[3], volumes: tuple[int]):
-
         if self.data is None:
             return
 

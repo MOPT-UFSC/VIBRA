@@ -46,7 +46,7 @@ class CommonRenderWidget(QFrame):
         layout.addWidget(self.render_interactor)
         self.setLayout(layout)
 
-    def update_plot(self):
+    def update_plot(self, reset_camera=True):
         raise NotImplementedError("The function update_plot was not implemented")
 
     def update(self):

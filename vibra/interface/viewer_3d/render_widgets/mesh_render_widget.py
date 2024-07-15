@@ -58,7 +58,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.create_axes()
         self.update_plot()
 
-    def update_plot(self):
+    def update_plot(self, reset_camera=True):
         if self.main_window.project is None:
             return
 
@@ -95,7 +95,8 @@ class MeshRenderWidget(CommonRenderWidget):
         self.plane_actor.VisibilityOff()
         self.renderer.AddActor(self.plane_actor)
 
-        self.renderer.ResetCamera()
+        if reset_camera:
+            self.renderer.ResetCamera()
         self.show_faces()
         self.main_window.project.thumbnail = self.get_thumbnail()
 
