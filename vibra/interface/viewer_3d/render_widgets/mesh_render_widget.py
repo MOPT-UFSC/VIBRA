@@ -81,10 +81,10 @@ class MeshRenderWidget(CommonRenderWidget):
         self.nodes_actor = NodesActor(mesh)
         self.renderer.AddActor(self.nodes_actor)
 
-        self.faces_actor = FacesActor(mesh)
+        self.faces_actor = FacesActor(mesh, hidden_faces=self.main_window.hidden_mesh_faces)
         self.renderer.AddActor(self.faces_actor)
 
-        self.solids_actor = SolidsActor(mesh)
+        self.solids_actor = SolidsActor(mesh, hidden_solids=self.main_window.hidden_mesh_solids)
         self.renderer.AddActor(self.solids_actor)
 
         self.edges_actor = EdgesActor(self.solids_actor.data)
@@ -255,7 +255,7 @@ class MeshRenderWidget(CommonRenderWidget):
         if not cell_indexes:
             return cell_id, position
 
-        new_cell_id = cell_indexes.GetValue(cell_id)        
+        new_cell_id = cell_indexes.GetValue(cell_id)
         return new_cell_id, position
 
     def _narrow_pickability_to_actor(self, target_actor: vtk.vtkActor):

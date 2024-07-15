@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QDialog, QFileDialog, QFrame, QGridLayout, QMainWindow, QMessageBox
+from PyQt5.QtWidgets import QDialog, QFileDialog, QFrame, QGridLayout, QMainWindow, QMessageBox, QAction
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtCore import pyqtSignal
 
@@ -51,6 +51,9 @@ class MainWindow(QMainWindow):
         self.selected_geometry_lines = set()
         self.selected_geometry_surfaces = set()
         self.selected_geometry_volumes = set()
+
+        self.hidden_mesh_faces = set()
+        self.hidden_mesh_solids = set()
         
         self.dialog = None
         self.project = Project()
@@ -192,6 +195,16 @@ class MainWindow(QMainWindow):
         }
 
     def create_basic_layout(self):
+        self.hide_selection = QAction("Hide Selection")
+        self.hide_selection.setShortcut("ctrl+h")
+        self.hide_selection.triggered.connect(self.hide_selection_callback)
+        self.addAction(self.hide_selection)
+
+        self.unhide_all = QAction("Unhide All")
+        self.unhide_all.setShortcut("ctrl+shift+h")
+        self.unhide_all.triggered.connect(self.unhide_all_callback)
+        self.addAction(self.unhide_all)
+        
         self.menu_widget = MenuItems()
         self.analysis_filter = AnalysisFilter()
         self.status_bar = StatusBar(self)
@@ -227,6 +240,16 @@ class MainWindow(QMainWindow):
         central_widget = QWidget()
         central_widget.setLayout(grid_layout_central)
         self.setCentralWidget(central_widget)
+    
+    def hide_selection_callback(self):
+        self.hidden_mesh_faces |= self.selected_mesh_faces
+        self.hidden_mesh_solids |= self.selected_mesh_solids
+        self.viewer_tabs.update_plots()
+
+    def unhide_all_callback(self):
+        self.hidden_mesh_faces.clear()
+        self.hidden_mesh_solids.clear()
+        self.viewer_tabs.update_plots()
 
     def create_menu_bar(self):
         self.menu_bar = self.menuBar()

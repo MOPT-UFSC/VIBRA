@@ -62,14 +62,18 @@ class SolidsActor(vtk.vtkActor):
         point_colors.SetNumberOfTuples(number_of_nodes)
         cell_colors.SetNumberOfComponents(3)
         cell_colors.SetNumberOfTuples(number_of_elements)
-        cell_indexes.SetNumberOfTuples(number_of_elements)
+        cell_indexes.Allocate(number_of_elements)
 
         for x, y, z in self.get_coordinates():
             points.InsertNextPoint(x, y, z)
 
+        self.visible_indexes = dict()
         for i, nodes in enumerate(nodes_connectivity):
-            cell_indexes.InsertValue(i, i)  # This is usefull if part of the cells are hidden
+            if i in self.hidden_solids:
+                continue
             data.InsertNextCell(cell_type, len(nodes), nodes)
+            visible_index = cell_indexes.InsertNextValue(i)  # This is usefull if part of the cells are hidden
+            self.visible_indexes[i] = visible_index
 
         data.SetPoints(points)
         data.GetPointData().SetScalars(point_colors)
@@ -133,7 +137,9 @@ class SolidsActor(vtk.vtkActor):
 
         cell_colors = self.data.GetCellData().GetScalars()
         for i in volumes:
-            cell_colors.SetTuple(i, color)
+            visible_index = self.visible_indexes.get(i, -1)
+            if visible_index >= 0:
+                cell_colors.SetTuple(visible_index, color)
 
         self.data.Modified()
         self.GetMapper().SetScalarModeToUseCellData()

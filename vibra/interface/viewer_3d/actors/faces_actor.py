@@ -5,7 +5,7 @@ class FacesActor(vtk.vtkActor):
     def __init__(self, mesh, hidden_faces=None):
         self.mesh = mesh
         self.data = None
-        self.hidden_nodes = hidden_faces if hidden_faces is not None else set()
+        self.hidden_faces = hidden_faces if hidden_faces is not None else set()
 
         self.create_geometry()
         self.configure_appearance()
@@ -30,21 +30,26 @@ class FacesActor(vtk.vtkActor):
         point_colors.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
         cell_colors.SetNumberOfComponents(3)
         cell_colors.SetNumberOfTuples(len(self.mesh.faces_connectivity))
-        cell_indexes.SetNumberOfTuples(len(self.mesh.faces_connectivity))
+        cell_indexes.Allocate(len(self.mesh.faces_connectivity))
 
         for _, x, y, z in self.mesh.nodal_coordinates:
             points.InsertNextPoint(x, y, z)
         #
+        self.visible_indexes = dict()
         for i, values in enumerate(self.mesh.faces_connectivity[:, 4:]):
-            cell_indexes.InsertValue(i, i)  # This is usefull if part of the cells are hidden
+            if i in self.hidden_faces:
+                continue
             try:
                 data.InsertNextCell(vtk.VTK_TRIANGLE, nel, list(values))
+                visible_index = cell_indexes.InsertNextValue(i)  # This is usefull if part of the cells are hidden
+                self.visible_indexes[i] = visible_index
             except:
                 raise NotImplementedError("Not implemented plane element")
 
         data.SetPoints(points)
         data.GetPointData().SetScalars(point_colors)
         data.GetCellData().SetScalars(cell_colors)
+        data.GetCellData().AddArray(cell_indexes)
 
         normals_filter = vtk.vtkPolyDataNormals()
         normals_filter.AddInputData(data)
@@ -97,13 +102,14 @@ class FacesActor(vtk.vtkActor):
         self.GetMapper().ScalarVisibilityOn()
 
     def paint_cells(self, color: tuple[3], faces: tuple[int]):
-
         if self.data is None:
             return
 
         cell_colors = self.data.GetCellData().GetScalars()
         for i in faces:
-            cell_colors.SetTuple(i, color)
+            visible_index = self.visible_indexes.get(i, -1)
+            if visible_index >= 0:
+                cell_colors.SetTuple(visible_index, color)
 
         self.data.Modified()
         self.GetMapper().SetScalarModeToUseCellData()
