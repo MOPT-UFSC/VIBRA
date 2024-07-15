@@ -27,11 +27,6 @@ class LoadProject:
         self.load_project_libraries()
         self.load_mesh_setup()
         self.load_model_properties()
-        
-        app().main_window.viewer_tabs.close_mesh_tabs()
-        app().main_window.viewer_tabs.show_geometry()
-        app().main_window.viewer_tabs.show_mesh()
-
         self.load_analysis_setup()
         # self.load_thumbnail()
         self.load_analysis_results()
@@ -55,7 +50,7 @@ class LoadProject:
         for tag in config.sections():
 
             section = config[tag]
-            keys = config[tag].keys()
+            keys = section.keys()
 
             name = section['name']
             fluid_density =  float(section['fluid density'])
@@ -127,11 +122,10 @@ class LoadProject:
             
             self.library_fluids[identifier] = fluid
 
-
     def load_material_library(self):
 
         self.library_materials = dict()
-        config = self.file.read_fluid_library_from_file()
+        config = self.file.read_material_library_from_file()
 
         if config is None:
             return
@@ -139,9 +133,26 @@ class LoadProject:
         for tag in config.sections():
 
             section = config[tag]
-            keys = config[tag].keys()
+            # keys = section.keys()
 
             name = section['name']
+            identifier = int(section['identifier'])
+            density = float(section['density'])
+            poisson_ratio = float(section['poisson'])
+            young_modulus = float(section['young modulus']) * 1e9
+            thermal_expansion_coefficient = float(section['thermal expansion coefficient'])
+
+            material = Material(
+                                name = name,
+                                identifier = identifier, 
+                                density = density,
+                                poisson_ratio = poisson_ratio,
+                                young_modulus = young_modulus,
+                                thermal_expansion_coefficient = thermal_expansion_coefficient, 
+                                # color = getColorRGB(section['color'])
+                                )
+            
+            self.library_materials[identifier] = material
 
     def load_mesh_data_from_file(self, mesh_data):
 
@@ -249,10 +260,11 @@ class LoadProject:
         # logging.info("Loading mesh..." + ProgressStatus(95, 100))
         # self.model.mesh._process_element_average_coordinates()
 
-
     def load_mesh_setup(self):
+
+        app().main_window.viewer_tabs.close_mesh_tabs()
         mesh_setup = self.file.read_mesh_setup_from_file()
-        
+
         if "element_type" in mesh_setup.keys():
             if "shape_function" in mesh_setup.keys():
 
@@ -284,13 +296,13 @@ class LoadProject:
 
                 if mesh_data:
                     self.load_mesh_data_from_file(mesh_data)
-
                 else:
                     app().main_window.project.generate_mesh()
                     app().main_window.file.write_mesh_data_in_file()
 
                 self.update_render()
 
+        app().main_window.viewer_tabs.show_geometry()
 
     def update_render(self):
 
@@ -303,9 +315,10 @@ class LoadProject:
         logging.info("Updating render..." + ProgressStatus(90, 100))
         app().main_window.viewer_tabs.update_plots()
 
-
     def load_model_properties(self):
+
         _properties = self.file.read_model_properties_from_file()
+
         for key, data in _properties.items():
             if isinstance(data, dict):
                 for (property, id), prop_data in data.items():
@@ -341,7 +354,6 @@ class LoadProject:
 
                     else:
                         self.properties._set_property(property, prop_data)
-
 
     def load_analysis_setup(self):
 
