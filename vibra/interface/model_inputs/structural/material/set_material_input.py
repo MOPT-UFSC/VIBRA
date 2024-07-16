@@ -192,6 +192,7 @@ class SetMaterialInput(QDialog):
             app().main_window.file.write_model_properties_in_file()
             self.complete = True
             self.main_window.viewer_tabs.geometry_widget.update_info_text()
+            self.main_window.viewer_tabs.mesh_widget.update_info_text()
             self.close()
 
         except Exception as error_log:
