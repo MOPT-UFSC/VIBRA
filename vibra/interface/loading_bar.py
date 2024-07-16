@@ -137,7 +137,7 @@ def load_function(function, parent):
             QApplication.processEvents()
 
             # Calls the actual function
-            function(*args, **kwargs)
+            return_value = function(*args, **kwargs)
 
         finally:
             # Shows the full progress bar and closes
@@ -153,5 +153,7 @@ def load_function(function, parent):
 
             # Removes the ProgressBarLogUpdater
             logging.getLogger().removeHandler(progress_handler)
+
+        return return_value
 
     return wrapper
