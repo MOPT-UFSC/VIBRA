@@ -1,16 +1,16 @@
-
-from vibra.engine.mesher.element_type import *
-
 import vtk
 import numpy as np
 from time import time
 
+from vibra.engine.mesher.element_type import *
+from vibra import app
+
 
 class SolidsActor(vtk.vtkActor):
-    def __init__(self, mesh, hidden_solids=None):
+    def __init__(self, mesh, allow_hidding=True):
         self.mesh = mesh
         self.data = None
-        self.hidden_solids = hidden_solids if hidden_solids is not None else set()
+        self.allow_hidding = allow_hidding
 
         self.create_geometry()
         self.configure_appearance()
@@ -33,20 +33,20 @@ class SolidsActor(vtk.vtkActor):
 
         if self.mesh.element_type == TETRAHEDRON_4:
             cell_type = vtk.VTK_TETRA
-            nodes_connectivity = self.mesh.solids_connectivity[:, 4:]
+            nodes_connectivity = self.mesh.solids_connectivity
 
         elif self.mesh.element_type == TETRAHEDRON_10:
             cell_type = vtk.VTK_QUADRATIC_TETRA
-            nodes_order = (4, 5, 6, 7, 8, 9, 10, 11, 13, 12)
+            nodes_order = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 12)
             nodes_connectivity = self.mesh.solids_connectivity[:, nodes_order]
 
         elif self.mesh.element_type == HEXAHEDRON_8:
             cell_type = vtk.VTK_HEXAHEDRON
-            nodes_connectivity = self.mesh.solids_connectivity[:, 4:]
+            nodes_connectivity = self.mesh.solids_connectivity
 
         elif self.mesh.element_type == HEXAHEDRON_20:
             cell_type = vtk.VTK_QUADRATIC_HEXAHEDRON
-            nodes_order = (4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 17, 13, 20, 22, 23, 21, 14, 16, 18, 19)
+            nodes_order = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 17, 13, 20, 22, 23, 21, 14, 16, 18, 19)
             nodes_connectivity = self.mesh.solids_connectivity[:, nodes_order]
 
         else:
@@ -67,9 +67,11 @@ class SolidsActor(vtk.vtkActor):
         for x, y, z in self.get_coordinates():
             points.InsertNextPoint(x, y, z)
 
+        hidden_volumes = app().main_window.hidden_volumes if self.allow_hidding else set()
         self.visible_indexes = dict()
-        for i, nodes in enumerate(nodes_connectivity):
-            if i in self.hidden_solids:
+        # for i, nodes in enumerate(nodes_connectivity):
+        for i, volume, _, _, *nodes in nodes_connectivity:
+            if volume in hidden_volumes:
                 continue
             data.InsertNextCell(cell_type, len(nodes), nodes)
             visible_index = cell_indexes.InsertNextValue(i)  # This is usefull if part of the cells are hidden

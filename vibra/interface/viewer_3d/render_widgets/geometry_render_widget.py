@@ -89,7 +89,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.lines_actor = LinesActor(mesh)
         self.renderer.AddActor(self.lines_actor)
 
-        self.faces_actor = FacesActor(mesh, hidden_faces=self.main_window.hidden_mesh_faces)
+        self.faces_actor = FacesActor(mesh)
         self.renderer.AddActor(self.faces_actor)
 
         self.plane_actor = CuttingPlaneActor(self.faces_actor.GetBounds())

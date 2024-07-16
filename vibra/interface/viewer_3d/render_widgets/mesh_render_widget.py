@@ -83,10 +83,10 @@ class MeshRenderWidget(CommonRenderWidget):
         self.nodes_actor = NodesActor(mesh)
         self.renderer.AddActor(self.nodes_actor)
 
-        self.faces_actor = FacesActor(mesh, hidden_faces=self.main_window.hidden_mesh_faces)
+        self.faces_actor = FacesActor(mesh)
         self.renderer.AddActor(self.faces_actor)
 
-        self.solids_actor = SolidsActor(mesh, hidden_solids=self.main_window.hidden_mesh_solids)
+        self.solids_actor = SolidsActor(mesh)
         self.renderer.AddActor(self.solids_actor)
 
         self.edges_actor = EdgesActor(self.solids_actor.data)

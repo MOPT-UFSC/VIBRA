@@ -55,6 +55,9 @@ class MainWindow(QMainWindow):
         self.hidden_mesh_faces = set()
         self.hidden_mesh_solids = set()
         
+        self.hidden_surfaces = set()
+        self.hidden_volumes = set()
+
         self.dialog = None
         self.project = Project()
         self.user_config = UserConfig.load()
@@ -250,15 +253,26 @@ class MainWindow(QMainWindow):
         central_widget = QWidget()
         central_widget.setLayout(grid_layout_central)
         self.setCentralWidget(central_widget)
-    
+
     def hide_selection_callback(self):
-        self.hidden_mesh_faces |= self.selected_mesh_faces
-        self.hidden_mesh_solids |= self.selected_mesh_solids
+        selected_volume_surfaces = set()
+        visible_volume_surfaces = set()
+        mesh = self.project.model.mesh
+        for volume, surfaces in mesh.surfaces_from_volumes.items():
+            if volume in self.selected_geometry_volumes:
+                selected_volume_surfaces |= set(surfaces)
+            elif volume not in self.hidden_volumes:
+                visible_volume_surfaces |= set(surfaces)
+        surfaces_to_keep_visible = set.intersection(selected_volume_surfaces,
+                                                    visible_volume_surfaces)
+
+        self.hidden_volumes |= self.selected_geometry_volumes
+        self.hidden_surfaces |= self.selected_geometry_surfaces - surfaces_to_keep_visible
         self.viewer_tabs.update_plots(reset_camera=False)
 
     def unhide_all_callback(self):
-        self.hidden_mesh_faces.clear()
-        self.hidden_mesh_solids.clear()
+        self.hidden_surfaces.clear()
+        self.hidden_volumes.clear()
         self.viewer_tabs.update_plots(reset_camera=False)
 
     def create_menu_bar(self):

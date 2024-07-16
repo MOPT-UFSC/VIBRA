@@ -1,11 +1,11 @@
 import vtk
-
+from vibra import app
 
 class FacesActor(vtk.vtkActor):
-    def __init__(self, mesh, hidden_faces=None):
+    def __init__(self, mesh, allow_hidding=True):
         self.mesh = mesh
         self.data = None
-        self.hidden_faces = hidden_faces if hidden_faces is not None else set()
+        self.allow_hidding = allow_hidding
 
         self.create_geometry()
         self.configure_appearance()
@@ -32,12 +32,15 @@ class FacesActor(vtk.vtkActor):
         cell_colors.SetNumberOfTuples(len(self.mesh.faces_connectivity))
         cell_indexes.Allocate(len(self.mesh.faces_connectivity))
 
+
         for _, x, y, z in self.mesh.nodal_coordinates:
             points.InsertNextPoint(x, y, z)
         #
         self.visible_indexes = dict()
-        for i, values in enumerate(self.mesh.faces_connectivity[:, 4:]):
-            if i in self.hidden_faces:
+        hidden_surfaces = app().main_window.hidden_surfaces if self.allow_hidding else set()
+        # for i, values in enumerate(self.mesh.faces_connectivity[:, 4:]):
+        for i, surface, _, _, *values in self.mesh.faces_connectivity:
+            if surface in hidden_surfaces:
                 continue
             try:
                 data.InsertNextCell(vtk.VTK_TRIANGLE, nel, list(values))
