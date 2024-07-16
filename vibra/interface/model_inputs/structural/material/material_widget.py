@@ -120,7 +120,7 @@ class MaterialInputs(QWidget):
     
     def load_data_from_materials_library(self):
 
-        project_path = app().main_window.project_path
+        project_path = app().main_window.temp_project_file_path
         if not os.path.exists(project_path):
             self.reset_library_to_default()
             return

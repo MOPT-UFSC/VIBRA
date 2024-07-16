@@ -114,9 +114,7 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
             if analysis_data["analysis_id"] == 3:
                 self.analysis_method = "Direct method"
 
-        if "frequencies" in analysis_data.keys():
-            self.frequencies = analysis_data["frequencies"]
-
+        self.frequencies = self.project.acoustic_harmonic_solver.frequencies
         self.solution = self.project.acoustic_harmonic_solver.solution
 
     def geometry_selection_callback(self, points, lines, faces):
@@ -238,6 +236,7 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
 
     def join_model_data(self):
 
+        self.hide()
         index = self.comboBox_selector_filter.currentIndex()
 
         if index == 0:

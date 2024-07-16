@@ -11,23 +11,29 @@ import matplotlib.pyplot as plt
 from time import time
 
 def test_load_external_mesh_and_solve(reorder_nodes=False):
-    return
+    # return
+
     # Define the nodal coordinates and connectivity file path
-    coord_path = "data/examples/mesh/muffler/coord_muff.csv"
-    connect_path = "data/examples/mesh/muffler/connect_muff.csv"
-    
+    nodal_coordinates = np.loadtxt("data/examples/mesh/muffler/coord_muff.csv", delimiter=",")
+    connectivity = np.loadtxt("data/examples/mesh/muffler/connect_muff.csv", delimiter=",", dtype=int)
+
+    solid_connectivity = dict()
+    solid_connectivity[1, "solid285_tet4"] = connectivity
+
     mesh = Mesh()
-    mesh.import_external_nodal_coordinates(coord_path, index_zero=True)
-    mesh.import_external_connectivity(connect_path, index_zero=True, etype_tag=4, e_nodes=4)
+    mesh.import_external_nodal_coordinates(nodal_coordinates, index_zero=True)
+    mesh.import_external_connectivity(solid_connectivity, index_zero=True, etype_tag=4)
     mesh.element_type = TETRAHEDRON_4
 
     for tag, surf_data in get_faces_connectivities().items():
         mesh.elements_from_surface[tag] = surf_data["element_indexes"]
-        mesh.connectivity_from_surfaces = surf_data["connectivity"]
-    
-    if reorder_nodes:
-        mesh._process_nodes_reordering()
-        map_nodes_indexes = mesh.reordering.map_nodes_indexes
+        mesh.connectivity_from_surfaces[tag] = surf_data["connectivity"]
+        flat_data = (surf_data["connectivity"]).flatten()
+        mesh.nodes_from_surfaces[tag] = np.array([*set(flat_data)], dtype=int)
+
+    # if reorder_nodes:
+    #     mesh._process_nodes_reordering()
+    #     map_nodes_indexes = mesh.reordering.map_nodes_indexes
 
     # Define the fluid properties
     rho_0 = 1.18
@@ -98,8 +104,6 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
         cols = solution.shape[1]
 
         node = 3596
-        if reorder_nodes:
-            node = int(map_nodes_indexes[node])
         
         results = np.zeros((cols, 3), dtype=float)
         results[:, 0] = frequencies
@@ -182,7 +186,7 @@ def get_faces_connectivities():
                               [ 26, 3610, 3604, 3608 ],
                               [ 27, 3611, 3604, 3610 ]], dtype=int) - 1
     
-    nel_face1 = len(connect_face1)
+    # nel_face1 = len(connect_face1)
     
     ## Face da impedância Z4
     #connect_face2 = np.array([[1,149,195,62,85],
@@ -225,17 +229,66 @@ def get_faces_connectivities():
                               [ 126, 3601, 3603, 3596 ],
                               [ 127, 3603, 3602, 3596 ]], dtype=int) - 1
 
-    nel_face2 = len(connect_face2)
+    # nel_face2 = len(connect_face2)
 
     connectivity_from_surfaces = dict()
-    
+
     connectivity_from_surfaces[1] = {   "element_indexes" : connect_face1[:, 0],
                                         "connectivity" : connect_face1[:, 1:]   }
-    
+
     connectivity_from_surfaces[2] = {   "element_indexes" : connect_face2[:, 0],
                                         "connectivity" : connect_face2[:, 1:]   }
-    
+
     return connectivity_from_surfaces
+
+
+def get_solid_elements_connected_to_nodes(solids_connectivity : np.ndarray, node_ids = None, face_connectivity = None):
+
+    solid_elements_connected_to_nodes = dict()
+
+    if isinstance(solids_connectivity, np.ndarray):
+        solids_connectivity -= 1
+
+    if isinstance(node_ids, (np.ndarray, list)):
+        if isinstance(node_ids, list):
+            node_ids = np.array(node_ids, dtype=int)
+        selected_ids = node_ids
+        selected_ids -= 1
+
+    elif isinstance(face_connectivity, np.ndarray):
+        # esta função reordena os elementos do array em um vetor removendo os índices repetidos
+        flat_data = (face_connectivity[:, 1:]).flatten()
+        selected_ids = np.array([*set(flat_data)], dtype=int)
+        selected_ids -= 1
+
+    else:
+        print("Insert the list of 'node_ids' or the array with 'face_connectivity' to process solid elements connected to nodes")
+        return
+
+    for i, node_id in enumerate(selected_ids):
+        # t0 = time()
+        mask = np.sum(solids_connectivity[:, 1:] == node_id, axis=1) == 1
+        solid_elements_connected_to_nodes[node_id] = solids_connectivity[:, 0][mask]
+        # dt = time() - t0
+        # print(f"Loop time: {dt} s")
+
+    return solid_elements_connected_to_nodes
+
+def get_particle_velocity(elem_id):
+    # aqui deveríamos chamar a função que calcula a Vn em cada elemento
+    # seria interessante que ela retorne um array na forma [N_nodes x N_freq]
+    return 0
+
+def process_particle_velocity(solid_elements_connected_to_nodes : dict):
+
+    particle_velocity = dict()
+    for node_id, elements_from_node in solid_elements_connected_to_nodes.items():
+
+        aux = 0.
+        for element_id in elements_from_node:
+            aux += get_particle_velocity(element_id)
+        
+        particle_velocity[node_id] = aux
 
 def plot_results():
 

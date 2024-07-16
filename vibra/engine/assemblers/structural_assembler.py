@@ -1,21 +1,20 @@
+
+from vibra.engine.model import Model
+
+from vibra.engine.elements.structural_hex8_element import STRUCT_HEXAHEDRON_8
+from vibra.engine.elements.structural_hex20_element import STRUCT_HEXAHEDRON_20
+from vibra.engine.elements.structural_tet4_element import STRUCT_TETRAHEDRON_4S
+from vibra.engine.elements.structural_tet10_element import STRUCT_TETRAHEDRON_10S
+from vibra.engine.mesher.element_type import *
+
 from collections import defaultdict
 from time import time
 
 import numpy as np
 from scipy.sparse import coo_matrix, csr_matrix
 
-from vibra.engine.elements.structural_hex8_element import STRUCT_HEXAHEDRON_8
-from vibra.engine.elements.structural_hex20_element import STRUCT_HEXAHEDRON_20
-# from vibra.engine.assemblers.modal_assembler import ModalAssembler
-from vibra.engine.elements.structural_tet4_element import STRUCT_TETRAHEDRON_4S
-from vibra.engine.elements.structural_tet10_element import (
-    STRUCT_TETRAHEDRON_10S,
-)
-from vibra.engine.mesher.element_type import *
-
-
 class StructuralAssembler:
-    def __init__(self, model):
+    def __init__(self, model : Model):
         self.model = model
         self.properties = model.properties
         self.reset()
