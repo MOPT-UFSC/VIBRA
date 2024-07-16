@@ -15,7 +15,7 @@ class ClipPlaneWidget(QWidget):
         self.create_sliders()
 
     def configure_window(self):
-        self.setWindowTitle("Clip Plane")
+        self.setWindowTitle("Section Plane")
         self.setGeometry(200, 200, 400, 350)
 
         self.setWindowFlags(

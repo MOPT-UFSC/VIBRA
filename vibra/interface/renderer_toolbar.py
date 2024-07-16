@@ -85,7 +85,7 @@ class RendererToolbar(QToolBar):
         self.show_faces_action.triggered.connect(self.show_faces_callback)
 
         clip_plane_icon = load_icon(ICON_DIR / "visibility/tube_cut.png", color)
-        self.clip_plane_action = QAction(clip_plane_icon, "Clip Plane", self)
+        self.clip_plane_action = QAction(clip_plane_icon, "Section Plane", self)
         self.clip_plane_action.triggered.connect(self.clip_plane_callback)
 
     def configure_layout(self):
