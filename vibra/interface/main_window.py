@@ -32,7 +32,7 @@ import sys
 import logging
 import random
 from pathlib import Path
-from shutil import rmtree
+from shutil import rmtree, copy
 from time import sleep
 
 
@@ -62,8 +62,10 @@ class MainWindow(QMainWindow):
         self._initialize()
 
     def _initialize(self):
-        self.project_path = ""    
         self.dialog = None
+        self.user_path = Path().home()
+        self.temp_project_folder_path = self.user_path / "temp_vibra"
+        self.temp_project_file_path = str(self.temp_project_folder_path / "tmp.vibra")   
 
     def _define_qt_variables(self):
         pass
@@ -304,16 +306,13 @@ class MainWindow(QMainWindow):
         app().splash.update_progress(90)
         self.load_user_preferences()
         self.config_tool_tip_appearance()
+        self.create_temporary_vibra_folder()
 
         app().splash.close()
         self.showMaximized()
 
     def load_user_preferences(self):
         self.set_theme(self.user_config.theme)
-
-    def closeEvent(self, event):
-        self.close_app()
-        event.ignore()
 
     def get_user_config(self):
         return self.user_config
@@ -350,17 +349,12 @@ class MainWindow(QMainWindow):
         # self.viewer_3d.save_png(path)
 
     def create_temporary_vibra_folder(self):
-        user_path = os.path.expanduser("~")
-        self.project_folder_path = Path(user_path) / "temp_vibra"
-        self.project_path = str(self.project_folder_path / "tmp.vibra")
-        create_new_folder(user_path, "temp_vibra")
+        create_new_folder(self.user_path, "temp_vibra")
 
     def reset_temporary_vibra_folder(self):
-        user_path = os.path.expanduser("~")
-        project_folder_path = Path(user_path) / "temp_vibra"
-        if os.path.exists(project_folder_path):
-            for filename in os.listdir(project_folder_path).copy():
-                file_path = project_folder_path / filename
+        if self.temp_project_folder_path.exists():
+            for filename in os.listdir(self.temp_project_folder_path).copy():
+                file_path = self.temp_project_folder_path / filename
                 if os.path.exists(file_path):
                     if "." in filename:
                         os.remove(file_path)
@@ -368,11 +362,8 @@ class MainWindow(QMainWindow):
                         rmtree(file_path)
 
     def is_temporary_vibra_folder_empty(self):
-        user_path = os.path.expanduser("~")
-        project_folder_path = Path(user_path) / "temp_vibra"
-        if os.path.exists(project_folder_path):
-            if os.listdir(project_folder_path):
-                self.project_path = str(project_folder_path / "tmp.vibra")
+        if self.temp_project_folder_path.exists():
+            if os.listdir(self.temp_project_folder_path):
                 return False
         return True
     
@@ -382,16 +373,16 @@ class MainWindow(QMainWindow):
             caption = "The recovery project data has been detected in the application backup files. "
             caption += "Would you like to try to recover the last project files?"
 
-            close = QMessageBox.question(   
-                                            self, 
-                                            "Project recovery", 
-                                            caption, 
-                                            QMessageBox.Yes | QMessageBox.No
-                                        )
+            obj = QMessageBox.question(   
+                                        self, 
+                                        "Project recovery", 
+                                        caption, 
+                                        QMessageBox.Yes | QMessageBox.No
+                                       )
 
-            if close == QMessageBox.Yes:
+            if obj == QMessageBox.Yes:
                 self.project = Project()
-                self.file = ProjectFileIO(self.project_path, override=False)
+                self.file = ProjectFileIO(self.temp_project_file_path, override=False)
                 self.open_project()
 
             else:
@@ -401,7 +392,6 @@ class MainWindow(QMainWindow):
         else:
             self.import_geometry_dialog()
 
-
     def save_project_dialog(self):
         if self.project.save_path is None:
             self.save_project_as_dialog()
@@ -409,16 +399,32 @@ class MainWindow(QMainWindow):
             self.save_project_as(self.project.save_path)
 
     def save_project_as_dialog(self):
-        path, check = QFileDialog.getSaveFileName(
-                                                    self,
-                                                    "Save As",
-                                                    filter="Vibra File (*.vibra)",
-                                                )
+
+        last_path = app().config.get_last_folder_for("project folder")
+        if last_path is None:
+            path = os.path.expanduser("~")
+        else:
+            path = last_path
+
+        file_path, check = QFileDialog.getSaveFileName(
+                                                        self,
+                                                        "Save As",
+                                                        path,
+                                                        filter = "Vibra File (*.vibra)",
+                                                      )
 
         if not check:
             return
 
-        self.save_project_as(path)
+        self.save_project_as(file_path)
+
+    def save_project_as(self, path):
+        path = Path(path)
+        self.project.name = path.stem
+        self.project.save_path = path
+        # self.file.write_thumbnail()
+        app().config.write_last_folder_path_in_file("project folder", path)
+        copy(self.temp_project_file_path, path)
 
     def open_project_dialog(self):
 
@@ -428,20 +434,26 @@ class MainWindow(QMainWindow):
         else:
             path = last_path
 
-        self.project_path, check = QFileDialog.getOpenFileName( 
-                                                                self, 
-                                                                "Open Project", 
-                                                                path, 
-                                                                filter = "Vibra File (*.vibra)"
-                                                                )
+        project_path, check = QFileDialog.getOpenFileName( 
+                                                            self, 
+                                                            "Open Project", 
+                                                            path, 
+                                                            filter = "Vibra File (*.vibra)"
+                                                         )
 
         if not check:
             return
 
-        app().config.write_last_folder_path_in_file("project folder", self.project_path)
+        app().config.write_last_folder_path_in_file("project folder", project_path)
+
+        copy(project_path, self.temp_project_file_path)
 
         self.project = Project()
-        self.file = ProjectFileIO(self.project_path, override=False)
+        self.file = ProjectFileIO(self.temp_project_file_path, override=False)
+
+        path = Path(project_path)
+        self.project.name = path.stem
+        self.project.save_path = path
 
         self.open_project()
 
@@ -466,39 +478,27 @@ class MainWindow(QMainWindow):
         app().config.write_last_folder_path_in_file("geometry folder", geometry_path)
 
         self.project = Project()
-        self.create_temporary_vibra_folder()
-
-        self.file = ProjectFileIO(self.project_path)
+        self.file = ProjectFileIO(self.temp_project_file_path)
         self.file.write_geometry_in_file(geometry_path)
-        geometry_paths = self.file.read_geometry_from_file()
 
-        self.import_geometry(geometry_paths)
-
-    def save_project_as(self, path):
-        path = Path(path)
-        self.project.name = path.stem
-        self.project.save(path)
-        self.user_config.save()  # why not
+        _geometry_path = self.file.read_geometry_from_file()
+        self.import_geometry(_geometry_path)
 
     def export_mesh(self):
         ExportMeshData()
 
     def open_project(self):
-
         self.load_project = LoadProject()
-        self.load_project.load()
-
+        load = load_function(self.load_project.load, self)
+        load()
+        # self.load_project.load()
         # self.project.load()
         # self.user_config.add_recent_file(path)
 
-        self.viewer_tabs.close_mesh_tabs()
-        self.viewer_tabs.show_geometry()
-        self.viewer_tabs.show_mesh()
+    def import_geometry(self, path : str):
 
-    def import_geometry(self, paths):
-        # Slow function running with loading bar
         import_geometry = load_function(self.project.import_geometry, self)
-        import_geometry(paths)
+        import_geometry(path)
 
         self.viewer_tabs.reset_tab_visibility()
         self.viewer_tabs.show_geometry()
@@ -510,12 +510,18 @@ class MainWindow(QMainWindow):
         self.project.reset_solutions()
         self.project.model.properties._reset_variables()
 
+    def closeEvent(self, event):
+        self.close_app()
+        event.ignore()
+
     def close_app(self):
 
         self.close_dialogs()
-        close = QMessageBox.question(
-            self, "QUIT", "Are you sure want to close Vibra?", QMessageBox.Yes | QMessageBox.No
-        )
+        close = QMessageBox.question(   self, 
+                                        "QUIT", 
+                                        "Would you like to close the application?", 
+                                        QMessageBox.Yes | QMessageBox.No
+                                    )
 
         if close == QMessageBox.Yes:
             self.user_config.save()
@@ -529,14 +535,8 @@ class MainWindow(QMainWindow):
         if isinstance(self.dialog, (QDialog, QWidget)):
             self.dialog.close()
 
-def create_new_folder(path, folder_name):
-    folder_path = os.path.join(path, folder_name)
-    if not os.path.exists(folder_path):
-        os.mkdir(folder_path)
-    return folder_path
-
-def create_new_folder(path, folder_name):
-    folder_path = os.path.join(path, folder_name)
+def create_new_folder(path : Path, folder_name : str) -> Path:
+    folder_path = path / folder_name
     if not os.path.exists(folder_path):
         os.mkdir(folder_path)
     return folder_path

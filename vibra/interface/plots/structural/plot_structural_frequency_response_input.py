@@ -1,13 +1,13 @@
-from PyQt5.QtWidgets import QDialog, QLineEdit, QPushButton, QRadioButton
+from PyQt5.QtWidgets import QComboBox, QDialog, QLineEdit, QPushButton, QRadioButton
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
 
 from vibra import app, UI_DIR
-
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 
 import numpy as np
 
@@ -24,69 +24,199 @@ class PlotStructuralFrequencyResponseInput(QDialog):
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
-        self.project = self.main_window.project
-        self.model = self.project.model
-        self.properties = self.model.properties
+
+        self.project = app().main_window.project
+        self.model = app().main_window.project.model
+        self.mesh = app().main_window.project.model.mesh
+        self.properties = app().main_window.project.model.properties
 
         self._config_window()
-        self._load_icons()
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
-        self.writeNodes(self.list_node_IDs)
-        self.exec()
+
+        ConfigWidgetAppearance(self, tool_tip=True)
+
+        while self.keep_window_open:
+            self.exec()
 
     def _config_window(self):
-        self.vibra_icon = app().main_window.vibra_icon
-        self.setWindowIcon(self.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(app().main_window.vibra_icon)
 
     def _initialize(self):
+        self.keep_window_open = True
+        self.plotter = None
+        self.exporter = None
         self.dof_labels = ["Ux", "Uy", "Uz", "Rx", "Ry", "Rz"]
 
     def _define_qt_variables(self):
-        # LineEdit
-        self.lineEdit_node_id = self.findChild(QLineEdit, 'lineEdit_node_id')
-        # PushButton
-        self.pushButton_call_data_exporter = self.findChild(QPushButton, 'pushButton_call_data_exporter')
-        self.pushButton_plot_frequency_response = self.findChild(QPushButton, 'pushButton_plot_frequency_response')
-        self.pushButton_call_data_exporter.setIcon(self.export_icon)
+
+        # QComboBox
+        self.comboBox_selector_filter : QComboBox
+
+        # QLineEdit
+        self.lineEdit_selection_id : QLineEdit
+
+        # QPushButton
+        self.pushButton_call_data_exporter : QPushButton
+        self.pushButton_plot_frequency_response : QPushButton
+
         # RadioButton
-        self.radioButton_ux = self.findChild(QRadioButton, 'radioButton_ux')
-        self.radioButton_uy = self.findChild(QRadioButton, 'radioButton_uy')
-        self.radioButton_uz = self.findChild(QRadioButton, 'radioButton_uz')
-        self.radioButton_rx = self.findChild(QRadioButton, 'radioButton_rx')
-        self.radioButton_ry = self.findChild(QRadioButton, 'radioButton_ry')
-        self.radioButton_rz = self.findChild(QRadioButton, 'radioButton_rz')
+        self.radioButton_ux : QRadioButton
+        self.radioButton_uy : QRadioButton
+        self.radioButton_uz : QRadioButton
+        self.radioButton_rx : QRadioButton
+        self.radioButton_ry : QRadioButton
+        self.radioButton_rz : QRadioButton
 
     def _create_connections(self):
         self.pushButton_call_data_exporter.clicked.connect(self.call_data_exporter)
         self.pushButton_plot_frequency_response.clicked.connect(self.call_plotter)
+        geometry_widget = self.main_window.viewer_tabs.geometry_widget
+        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
     
-    def _load_icons(self):
-        self.icon = app().main_window.vibra_icon
-        self.setWindowIcon(self.icon)
+    def geometry_selection_callback(self, points, lines, faces):
+        
+        index = self.comboBox_selector_filter.currentIndex()
+        if faces and index == 0:
+            text = ", ".join([str(i) for i in faces])
+            self.lineEdit_selection_id.setText(text)
+            self.entity_type = "surface"
 
-    def writeNodes(self, list_node_ids):
-        text = ""
-        for node in list_node_ids:
-            text += "{}, ".format(node)
-        self.lineEdit_node_id.setText(text)
+        if lines and index == 1:
+            text = ", ".join([str(i) for i in lines])
+            self.lineEdit_selection_id.setText(text)
+            self.entity_type = "line"
+
+        if points and index == 2:
+            text = ", ".join([str(i) for i in points])
+            self.lineEdit_selection_id.setText(text)
+            self.entity_type = "point"
+
+        elif not any([points, lines, faces]):
+            self.lineEdit_selection_id.setText("")
+
+    def check_inputs(self):
+
+        index = self.comboBox_selector_filter.currentIndex()
+
+        if index == 0:
+            selection = "surfaces"
+
+        elif index == 1:
+            selection = "lines"
+
+        else:
+            selection = "nodes"
+
+        lineEdit_selection_id = self.lineEdit_selection_id.text()
+        stop, self.typed_ids = self.mesh.check_selected_ids(lineEdit_selection_id, 
+                                                            selection = selection)
+
+        if stop:
+            self.lineEdit_selection_id.setFocus()
+            return True
 
     def call_plotter(self):
+
         if self.check_inputs():
             return
+
         self.join_model_data()
         self.plotter = FrequencyResponsePlotter()
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
     def call_data_exporter(self):
+        
         if self.check_inputs():
             return
+
         self.join_model_data()
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(self.model_results)
+
+    def get_response(self, index, selected_id):
+
+        if index == 0:
+            rows = self.project.model.mesh.nodes_from_surfaces[selected_id]
+
+        elif index == 1:
+            rows = self.project.model.mesh.nodes_from_lines[selected_id]
+
+        else:
+            rows = selected_id
+
+        response = np.average(self.solution[rows,:], axis=0)
+
+        # if complex(0) in response:
+        #     response += 1e-12
+            # response += np.ones(len(response), dtype=float)*(1e-12)
+
+        return response
+
+    def join_model_data(self):
+
+        self.hide()
+        index = self.comboBox_selector_filter.currentIndex()
+
+        if index == 0:
+            selection_type = "surface"
+        elif index == 1:
+            selection_type = "line"
+        else:
+            selection_type = "node"
+
+        self.model_results = dict()
+        self.title = f"Acoustic frequency response - {self.analysis_method}"
+
+        for i, selected_id in enumerate(self.typed_ids):
+
+            key = (selection_type, (selected_id))
+            legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
+
+            self.model_results[key] = { 
+                                        "x_data" : self.frequencies,
+                                        "y_data" : self.get_response(index, selected_id),
+                                        "x_label" : "Frequency [Hz]",
+                                        "y_label" : "Acoustic pressure",
+                                        "title" : self.title,
+                                        "data_type" : "acoustic pressure",
+                                        "legend" : legend_label,
+                                        "unit" : self.unit_label,
+                                        "color" : self.get_color(i),
+                                        "linestyle" : "-"  
+                                      }
+
+    def get_color(self, index):
+
+        colors = [  (0,0,1), (0,0,0), (1,0,0),
+                    (0,1,1), (1,0,1), (1,1,0),
+                    (0.25,0.25,0.25)  ]
+        
+        if index <= 6:
+            return colors[index]
+        else:
+            return tuple(np.random.randint(0, 255, size=3) / 255)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            self.call_plotter()
+        elif event.key() == Qt.Key_Escape:
+            self.close()
+
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
+
+        if self.exporter is not None:
+            self.exporter.close()
+
+        if self.plotter is not None:
+            self.plotter.close()
+
+        self.keep_window_open = False
+        return super().closeEvent(a0)
+
 
     def check_inputs(self):
 
@@ -117,47 +247,3 @@ class PlotStructuralFrequencyResponseInput(QDialog):
             self.unit_label = "rad"
 
         return False
-
-    def get_response(self):
-
-        selected_id = self.typed_ids[0]
-        index = self.comboBox_selector_filter.currentIndex()
-
-        if index == 0:
-            rows = self.project.model.mesh.nodes_from_surfaces[selected_id]
-        elif index == 1:
-            rows = self.project.model.mesh.nodes_from_lines[selected_id]
-        else:
-            rows = [3670]
-            # return
-
-        # print(len(rows))
-        response = np.average(self.solution[rows,:], axis=0)
-
-        # if complex(0) in response:
-        #     response += 1e-12
-            # response += np.ones(len(response), dtype=float)*(1e-12)
-
-        return response
-    
-    def join_model_data(self):
-        self.model_results = dict()
-        self.title = "Structural frequency response - {}".format(self.analysisMethod)
-        legend_label = "Response {} at node {}".format(self.local_dof_label, self.node_ID)
-        data_information = "Structural nodal response {} at node {}".format(self.local_dof_label, self.node_ID)
-        self.model_results = {  "x_data" : self.frequencies,
-                                "y_data" : self.get_response(),
-                                "x_label" : "Frequency [Hz]",
-                                "y_label" : "Nodal response",
-                                "title" : self.title,
-                                "data_information" : data_information,
-                                "legend" : legend_label,
-                                "unit" : self.unit_label,
-                                "color" : [0,0,1],
-                                "linestyle" : "-"  }
-
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.call_plotter()
-        elif event.key() == Qt.Key_Escape:
-            self.close()

@@ -18,7 +18,7 @@ from time import time
 
 
 def test_load_external_mesh_and_solve():
-    # return
+    return
 
     # start decoding the Ansys script file (ds.dat file or input file)
 

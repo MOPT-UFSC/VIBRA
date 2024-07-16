@@ -3,9 +3,9 @@ from pathlib import Path
 from time import sleep
 
 from vibra import app
+from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-from vibra.engine.model import Model
 from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
@@ -97,10 +97,10 @@ class Project:
     def set_material_list_path(self, path):
         self.material_list_path = path
 
-    def import_geometry(self, paths):
-        self.model.set_geometry_path(paths)
+    def import_geometry(self, path : str):
+        self.model.set_geometry_path(path)
         logging.info(f"Importing geometry file...")
-        self.model.process_visual_geometry_mesh(paths)
+        self.model.process_visual_geometry_mesh(path)
 
     def set_fluid(self, fluid, **kwargs):
         self.model.set_fluid(fluid, **kwargs)
@@ -227,10 +227,12 @@ class Project:
         self.model.get_lrf_eq_data(modal=True)
         self.acoustic_assembler.process_assemble()
         self.acoustic_modal_solver.solve()
+        app().main_window.file.write_results_data_in_file()
 
     def solve_structural_modal_analysis(self):
         self.structural_assembler.process_assemble()
         self.structural_modal_solver.solve()
+        app().main_window.file.write_results_data_in_file()
 
     def solve_acoustic_harmonic_analysis(self):
         self.model.get_lrf_eq_data()
@@ -238,6 +240,7 @@ class Project:
         self.model.process_porous_material_properties(self.analysis_data["frequencies"])
         self.acoustic_assembler.process_assemble()
         self.acoustic_harmonic_solver.solve()
+        app().main_window.file.write_results_data_in_file()
 
     def long_function(self):
         for i in range(20):

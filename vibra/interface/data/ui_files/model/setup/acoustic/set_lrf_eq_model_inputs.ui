@@ -145,13 +145,13 @@
            <property name="minimumSize">
             <size>
              <width>140</width>
-             <height>30</height>
+             <height>28</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
              <width>140</width>
-             <height>30</height>
+             <height>28</height>
             </size>
            </property>
            <property name="font">
@@ -180,13 +180,13 @@ background-color: rgb(255, 255, 255);</string>
            <property name="minimumSize">
             <size>
              <width>88</width>
-             <height>30</height>
+             <height>28</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
              <width>88</width>
-             <height>30</height>
+             <height>28</height>
             </size>
            </property>
            <property name="font">

@@ -41,7 +41,7 @@ class Model:
         self.solid_structural_element = None
         self.surface_structural_element = None
 
-        self.geometry_paths = list()
+        self.geometry_path = None
 
         self.lrf_eq_data = dict()
         self.lrf_properties = dict()
@@ -49,8 +49,8 @@ class Model:
 
         self.properties = ModelProperties()
 
-    def set_geometry_path(self, paths : list):
-        self.geometry_paths = paths
+    def set_geometry_path(self, path : str):
+        self.geometry_path = path
 
     def set_properties(self, properties):
         self.properties = properties
@@ -58,12 +58,12 @@ class Model:
     def set_mesh_setup(self, mesh_setup):
         self.mesh_setup = mesh_setup
 
-    def process_visual_geometry_mesh(self, paths):
+    def process_visual_geometry_mesh(self, path : str):
 
         try:
 
-            self.mesh = Mesh.from_cad(paths, dimension=2, size_factor=0.15)
-            # self.mesh.get_model_areas(self.geometry_paths)
+            self.mesh = Mesh.from_cad(path, dimension=2, size_factor=0.15)
+            # self.mesh.get_model_areas(self.geometry_path)
             self.generated_mesh = False
 
         except Exception as error_log:
@@ -74,7 +74,7 @@ class Model:
 
     def process_mesh(self):
 
-        if len(self.geometry_paths) == 0:
+        if self.geometry_path is None:
             message = "Geometry not defined"
             context = ( "The geometry file has not been defined yet."
                         "You should to import a supported CAD file format to proceed."
@@ -89,9 +89,9 @@ class Model:
             raise IncompleteSetupError(message, context=context)
 
         # if self.mesh is None:
-        #     self.mesh = Mesh.from_cad(self.geometry_paths)
+        #     self.mesh = Mesh.from_cad(self.geometry_path)
 
-        self.mesh.load_cad(self.geometry_paths, **self.mesh_setup)
+        self.mesh.load_cad(self.geometry_path, **self.mesh_setup)
         self.generated_mesh = True
 
         logging.info("Processing mesh..." + ProgressStatus(90, 100))

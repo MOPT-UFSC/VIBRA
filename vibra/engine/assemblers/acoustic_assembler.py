@@ -1,5 +1,5 @@
 
-from vibra import app
+from vibra.engine.model import Model
 
 # 3D elements
 from vibra.engine.elements.acoustic_hex8_element import ACT_HEXAHEDRON_8C
@@ -24,7 +24,7 @@ from scipy.special import jv
 
 
 class AcousticAssembler:
-    def __init__(self, model):
+    def __init__(self, model : Model):
         self.model = model
         self.properties = model.properties
         self.reset()

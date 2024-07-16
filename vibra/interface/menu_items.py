@@ -102,7 +102,7 @@ class MenuItems(QTreeWidget):
         self._createItems()
         self._addItems()
         self._configItems()
-        self._updateItems()
+        self.update_items()
         # self.modify_analysis_items_acces(True)
         self._initial_items_acces_config()
 
@@ -551,6 +551,9 @@ class MenuItems(QTreeWidget):
         #         return
         #
 
+        self.modify_items_acoustic_results_viewer(True)
+        self.modify_items_structural_results_viewer(True)
+
         analysis = ProcessAnalysis()
 
         analysis_id = self.main_window.project.analysis_data["analysis_id"]
@@ -571,7 +574,7 @@ class MenuItems(QTreeWidget):
             solve_modal()
         else:
             raise NotImplementedError("Not implemented analysis")
-        self._updateItems()
+        self.update_items()
 
     def _initial_items_acces_config(self):
         """ """
@@ -613,6 +616,7 @@ class MenuItems(QTreeWidget):
         self.item_child_runAnalysis.setDisabled(bool_key)
 
     def modify_items_acoustic_results_viewer(self, bool_key):
+        self.item_top_resultsViewer_acoustic.setHidden(bool_key)
         self.item_child_plotAcousticModeShapes.setDisabled(bool_key)
         self.item_child_plotAcousticFrequencyResponse.setDisabled(bool_key)
         self.item_child_plotAcousticFrequencyResponseFunction.setDisabled(bool_key)
@@ -621,6 +625,7 @@ class MenuItems(QTreeWidget):
         self.item_child_plot_TL_NR.setDisabled(bool_key)
 
     def modify_items_structural_results_viewer(self, bool_key):
+        self.item_top_resultsViewer_structural.setHidden(bool_key)
         self.item_child_plotDisplacementField.setDisabled(bool_key)
         self.item_child_plotStructuralFrequencyResponse.setDisabled(bool_key)
         self.item_child_plotReactionsFrequencyResponse.setDisabled(bool_key)
@@ -650,7 +655,7 @@ class MenuItems(QTreeWidget):
                 self.item_top_acoustic_model_setup.setHidden(False)
                 self.item_top_structuralModelSetup.setHidden(False)
 
-    def _updateItems(self):
+    def update_items(self):
         """Enables and disables the Child Items on the menu after the solution is done."""
 
         self.item_top_resultsViewer_structural.setHidden(True)
@@ -676,6 +681,7 @@ class MenuItems(QTreeWidget):
 
         if analysis_id in [0, 1, 2]:
             self.item_top_resultsViewer_structural.setHidden(False)
+
         elif analysis_id in [3, 4]:
             self.item_top_resultsViewer_acoustic.setHidden(False)
             

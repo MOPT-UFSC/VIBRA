@@ -41,29 +41,28 @@ class ProjectFileIO:
         self.material_library_filename = "material_library.config"
         self.model_properties = "model_properties.json"
         self.mesh_data_filename = "mesh_data.hdf5"
+        self.results_data_filename = "results_data.hdf5"
+        self.thumbnail_filename = "thumbnail.png"
 
     def _default_foldernames(self):
         pass
 
     def write_geometry_in_file(self, path):
         basename = os.path.basename(path)
-        internal_path = f"geometry_files/{basename}"
-        self.vibra_file.write_from_path(internal_path, path)
+        internal_path = f"geometry_file/{basename}"
+        self.vibra_file.write_from_path(internal_path, path, encoding="iso-8859-1")
 
         try:
 
             project_setup = self.vibra_file.read(self.project_setup_filename)
             if project_setup is None:
-                project_setup = {   "geometry_filenames" : [basename],
+                project_setup = {   "geometry_filename" : basename,
                                     "mesh_setup" : dict(),
                                     "analysis_setup" : dict()   }
 
             else:
 
-                filenames = project_setup["geometry_filenames"]
-                if basename not in filenames:
-                    filenames.append(basename)
-                    project_setup["geometry_filenames"] = filenames
+                project_setup["geometry_filename"] = basename
             
             self.vibra_file.write(self.project_setup_filename, project_setup)
 
@@ -72,23 +71,21 @@ class ProjectFileIO:
 
     def read_geometry_from_file(self):
 
-        geometry_file_paths = list()
         project_setup = self.vibra_file.read(self.project_setup_filename)
 
-        if "geometry_filenames" in project_setup.keys():
-            for geom_name in project_setup["geometry_filenames"]:
+        if "geometry_filename" in project_setup.keys():
 
-                dirname = self.project_folder_path / "geometry" 
-                temp_path = dirname / geom_name
-                internal_path = f"geometry_files/{geom_name}"
+            geometry_filename = project_setup["geometry_filename"]
+            dirname = self.project_folder_path / "geometry" 
+            temp_path = dirname / geometry_filename
+            internal_path = f"geometry_file/{geometry_filename}"
 
-                if not os.path.exists(dirname):
-                    os.mkdir(dirname)
+            if not os.path.exists(dirname):
+                os.mkdir(dirname)
 
-                self.vibra_file.read_to_path(internal_path, temp_path)
-                geometry_file_paths.append(str(temp_path))
+            self.vibra_file.read_to_path(internal_path, temp_path)
 
-        return geometry_file_paths
+        return str(temp_path)
 
     def write_mesh_setup_in_file(self, mesh_setup):
 
@@ -137,11 +134,6 @@ class ProjectFileIO:
                             surfaces_from_volumes = self.model.mesh.surfaces_from_volumes
                         )
 
-        # aux_file = self.project_folder_path / self.mesh_data_filename
-        # if os.path.exists(self.project_folder_path):
-        #     f = h5py.File(aux_file, "w")
-        #     f.close()
-
         with self.vibra_file.open(self.mesh_data_filename, "w") as internal_file:
             with h5py.File(internal_file, "w") as f:
 
@@ -184,29 +176,23 @@ class ProjectFileIO:
 
         mesh_data = dict()
 
-        # file_path = self.project_folder_path / self.mesh_data_filename 
-        # if os.path.exists(file_path):
-        #     f = h5py.File(file_path, 'r')
+        try:
+            with self.vibra_file.open(self.mesh_data_filename) as internal_file:
+                with h5py.File(internal_file, "r") as f:
 
-            # groups = list(f.keys())
+                    for group in list(f.keys()):
+                        for key, values in f.get(group).items():
 
-        with self.vibra_file.open(self.mesh_data_filename) as internal_file:
-            with h5py.File(internal_file, "r") as f:
+                            try:
+                                mesh_data[key] = np.array(values)
 
-                for group in list(f.keys()):
-                    for key, values in f.get(group).items():
+                            except:
+                                mesh_data[key] = int(values)
 
-                        try:
-                            mesh_data[key] = np.array(values)
+        except:
+            return dict()
 
-                        except:
-                            mesh_data[key] = int(values)
-
-        if mesh_data:
-            return mesh_data
-        
-        return None
-    
+        return mesh_data
 
     def write_analysis_setup_in_file(self, analysis_setup):
 
@@ -323,3 +309,74 @@ class ProjectFileIO:
                                 )
 
         return model_properties
+    
+    def write_thumbnail(self):
+        thumbnail = app().main_window.project.thumbnail
+        if thumbnail is None:
+            return
+        self.vibra_file.write(self.thumbnail_filename, thumbnail)
+
+    def read_thumbnail(self):
+        return self.vibra_file.read(self.thumbnail_filename)
+    
+    def write_results_data_in_file(self):
+         with self.vibra_file.open(self.results_data_filename, "w") as internal_file:
+            with h5py.File(internal_file, "w") as f:
+
+                acoustic_modal_solver = app().main_window.project.acoustic_modal_solver
+                if acoustic_modal_solver is not None:
+                    if acoustic_modal_solver.modal_shape is not None:
+                        natural_frequencies = acoustic_modal_solver.natural_frequencies
+                        modal_shape = acoustic_modal_solver.modal_shape
+                        f.create_dataset("modal_acoustic/natural_frequencies", data=natural_frequencies, dtype=float)
+                        f.create_dataset("modal_acoustic/modal_shape", data=modal_shape, dtype=float)
+                
+                structural_modal_solver = app().main_window.project.structural_modal_solver
+                if structural_modal_solver is not None:
+                    if structural_modal_solver.modal_shape is not None:
+                        natural_frequencies = structural_modal_solver.natural_frequencies
+                        modal_shape = structural_modal_solver.modal_shape
+                        f.create_dataset("modal_structural/natural_frequencies", data=natural_frequencies, dtype=float)
+                        f.create_dataset("modal_structural/modal_shape", data=modal_shape, dtype=float)
+
+                acoustic_harmonic_solver = app().main_window.project.acoustic_harmonic_solver
+                if acoustic_harmonic_solver is not None:
+                    if acoustic_harmonic_solver.solution is not None:
+                        frequencies = acoustic_harmonic_solver.frequencies
+                        solution = acoustic_harmonic_solver.solution
+                        f.create_dataset("harmonic_acoustic/frequencies", data=frequencies, dtype=float)
+                        f.create_dataset("harmonic_acoustic/solution", data=solution, dtype=complex)
+                
+                structural_harmonic_solver = app().main_window.project.structural_harmonic_solver
+                if structural_harmonic_solver is not None:
+                    if structural_harmonic_solver.solution is not None:
+                        frequencies = acoustic_harmonic_solver.frequencies
+                        solution = acoustic_harmonic_solver.solution
+                        f.create_dataset("harmonic_structural/frequencies", data=frequencies, dtype=float)
+                        f.create_dataset("harmonic_structural/solution", data=solution, dtype=complex)
+
+    def read_results_data_from_file(self):
+        
+        results_data = dict()
+
+        try:
+
+            with self.vibra_file.open(self.results_data_filename) as internal_file:
+                with h5py.File(internal_file, "r") as f:
+
+                    for group in list(f.keys()):
+                        aux = dict()
+                        for key, values in f.get(group).items():
+
+                            try:
+                                aux[key] = np.array(values)
+                            except:
+                                continue
+
+                        if aux:
+                            results_data[group] = aux
+
+        except:
+            return dict()
+
+        return results_data
