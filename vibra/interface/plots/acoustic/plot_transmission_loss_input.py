@@ -8,8 +8,11 @@ from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppe
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.loading_bar import load_function
+from vibra.utils.progress_status import ProgressStatus
 
 import os
+import logging
 import numpy as np
 
 from time import time
@@ -184,13 +187,24 @@ class PlotTransmissionLossInput(QDialog):
 
         if self.comboBox_processing_selector.currentIndex() == 0:
             plot_type = "Transmission loss"
-    
-            list_ids = [self.input_surface_id, self.output_surface_id]
-            self.mesh._process_face_elements_connected_to_nodes(list_ids)
-            self.mesh._process_nodal_areas()
 
-            x_data, y_data, _ = self.project.acoustic_harmonic_solver.get_transmission_loss(self.input_surface_id, 
-                                                                                            self.output_surface_id)
+            def transmission_loss_callback():
+
+                list_ids = [self.input_surface_id, self.output_surface_id]
+
+                logging.info("Processing the transmission loss..." + ProgressStatus(10, 100))
+                self.mesh._process_face_elements_connected_to_nodes(list_ids)
+
+                logging.info("Processing the transmission loss..." + ProgressStatus(20, 100))
+                self.mesh._process_nodal_areas()
+
+                x_data, y_data, _ = self.project.acoustic_harmonic_solver.get_transmission_loss(self.input_surface_id, 
+                                                                                                self.output_surface_id)
+
+                return x_data, y_data
+
+            tl_callback = load_function(transmission_loss_callback, self.main_window)
+            x_data, y_data = tl_callback()
 
         else:
             plot_type = "Noise reduction"

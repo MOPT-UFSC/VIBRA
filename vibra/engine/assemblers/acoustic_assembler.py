@@ -391,38 +391,38 @@ class AcousticAssembler:
                         else:
                             acoustic_excitation[index] += complex_values
 
-            elif property == "volume_velocity":
+            # elif property == "volume_velocity":
 
-                real_values = np.array(data["real_values"])
-                imag_values = np.array(data["imag_values"])
-                complex_values = real_values + 1j * imag_values
-                if complex_values.shape[0] == 1:
-                    complex_values = complex_values * aux_ones
+            #     real_values = np.array(data["real_values"])
+            #     imag_values = np.array(data["imag_values"])
+            #     complex_values = real_values + 1j * imag_values
+            #     if complex_values.shape[0] == 1:
+            #         complex_values = complex_values * aux_ones
 
-                if data["nodal_attribution"]:
+            #     if data["nodal_attribution"]:
 
-                    nodes = self.model.mesh.nodes_from_surfaces[surface_id]
-                    N = len(nodes)
+            #         nodes = self.model.mesh.nodes_from_surfaces[surface_id]
+            #         N = len(nodes)
                     
-                    # # TODO: get the surface fluid property
-                    # lrf_active, rho_eff_lrf, _ = self.model.is_lrf_eq_model_active(surface_id)
-                    # pm_active, rho_eff_pm, _ = self.model.is_porous_material_model_active(surface_id)
+            #         # # TODO: get the surface fluid property
+            #         # lrf_active, rho_eff_lrf, _ = self.model.is_lrf_eq_model_active(surface_id)
+            #         # pm_active, rho_eff_pm, _ = self.model.is_porous_material_model_active(surface_id)
 
-                    # if lrf_active:
-                    #     rho = rho_eff_lrf
+            #         # if lrf_active:
+            #         #     rho = rho_eff_lrf
 
-                    # elif pm_active:
-                    #     rho = rho_eff_pm
+            #         # elif pm_active:
+            #         #     rho = rho_eff_pm
 
-                    # else:
-                    #     fluid = self.model.properties.get_fluid(surface=surface_id)
-                    #     rho = fluid.fluid_density
+            #         # else:
+            #         #     fluid = self.model.properties.get_fluid(surface=surface_id)
+            #         #     rho = fluid.fluid_density
 
-                    for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
-                        if data["averaged"]:
-                            acoustic_excitation[index] += complex_values / N
-                        else:
-                            acoustic_excitation[index] += complex_values
+            #         for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
+            #             if data["averaged"]:
+            #                 acoustic_excitation[index] += complex_values / N
+            #             else:
+            #                 acoustic_excitation[index] += complex_values
 
             elif property == "surface_velocity":
 
@@ -486,21 +486,21 @@ class AcousticAssembler:
 
                 output[indices, :] += normalized_excitation_matrix @ complex_values
         
-        connect_vv, data_vv = self.get_surface_data_for_element_integration_by_property("volume_velocity")
-        if connect_vv is not None:
-            element_2D.reorder_connect(connect_vv)
-            for i, [complex_values, _] in enumerate(data_vv.values()):
+        # connect_vv, data_vv = self.get_surface_data_for_element_integration_by_property("volume_velocity")
+        # if connect_vv is not None:
+        #     element_2D.reorder_connect(connect_vv)
+        #     for i, [complex_values, _] in enumerate(data_vv.values()):
 
-                if complex_values.shape[0] == 1:
-                    complex_values = complex_values * aux_ones
+        #         if complex_values.shape[0] == 1:
+        #             complex_values = complex_values * aux_ones
 
-                elif len(complex_values.shape) == 1:
-                    complex_values = complex_values.reshape(1,-1)
+        #         elif len(complex_values.shape) == 1:
+        #             complex_values = complex_values.reshape(1,-1)
               
-                indices = element_2D.connect_face[i, :]
-                normalized_excitation_matrix = element_2D.excitation_F(i)
+        #         indices = element_2D.connect_face[i, :]
+        #         normalized_excitation_matrix = element_2D.excitation_F(i)
 
-                output[indices, :] += normalized_excitation_matrix @ complex_values
+        #         output[indices, :] += normalized_excitation_matrix @ complex_values
         
         connect_sv, data_sv = self.get_surface_data_for_element_integration_by_property("surface_velocity")
         if connect_sv is not None:
