@@ -285,7 +285,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.plane_actor.GetProperty().SetOpacity(0.8)
         self.update()
 
-    def apply_cutting_plane(self, position, orientation):
+    def apply_cutting_plane(self, position, orientation, invert=False):
         if not self._actors_exists():
             return
 
@@ -293,6 +293,8 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
         z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
         normal = self._calculate_normal_vector(orientation)
+        if invert:
+            normal = -normal
         self.analysis_actor.apply_cut((x, y, z), normal)
 
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)

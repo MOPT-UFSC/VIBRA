@@ -154,11 +154,11 @@ class ViewerTabs(QTabWidget):
                 continue
             tab.configure_cutting_plane(position, orientation)
 
-    def apply_cutting_plane(self, position, orientation):
+    def apply_cutting_plane(self, position, orientation, invert=False):
         for tab in self.tabs():
             if not hasattr(tab, "apply_cutting_plane"):
                 continue
-            tab.apply_cutting_plane(position, orientation)
+            tab.apply_cutting_plane(position, orientation, invert)
 
     #
     def set_theme(self, theme):
