@@ -144,7 +144,7 @@ class CommonRenderWidget(QFrame):
 
         self.colorbar = vtk.vtkScalarBarActor()
         self.colorbar.SetLabelTextProperty(colorbar_label)
-        self.colorbar.SetLookupTable(lookup_table)
+        self.colorbar_actor.SetLookupTable(lookup_table)
         self.colorbar.SetWidth(0.02)
         self.colorbar.SetPosition(0.94, 0.07)
         self.colorbar.SetMaximumNumberOfColors(400)

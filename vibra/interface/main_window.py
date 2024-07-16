@@ -329,9 +329,9 @@ class MainWindow(QMainWindow):
         The input is a string "light" or "dark".
         """
         qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
-        self.viewer_tabs.set_theme(theme)
         self.user_config.theme = theme
         self.menu_widget._configItems()
+        self.theme_changed.emit(theme)
 
     def set_menu_items_visibility_state(self, state: bool):
         self.user_config.menu_items_visible = state

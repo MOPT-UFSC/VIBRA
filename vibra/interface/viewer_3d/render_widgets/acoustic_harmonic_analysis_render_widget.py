@@ -1,6 +1,8 @@
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtCore import QObjectCleanupHandler
 
+from molde.render_widgets import AnimatedRenderWidget
+
 # from vibra.interface.modal_analysis_bar import AcousticModalAnalysisBar
 from vibra.interface.analysis_bars.acoustic_analysis_bar import (
     AcousticModalAnalysisBar,
@@ -10,26 +12,28 @@ from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
     CuttingPlaneActor,
 )
 from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
-from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
-    CommonRenderWidget,
-)
+# from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
+#     CommonRenderWidget,
+# )
 from vibra.utils.interface_functions import get_main_window
 from vibra.utils.progress_status import ProgressStatus
+from vibra import app
 
 import logging
 import numpy as np
 from time import time
 
-class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
+class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         self.control_bar = AcousticModalAnalysisBar()
         self.control_bar.value_changed.connect(self.update_plot)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
         self.control_bar.phase_slider.valueChanged.connect(self.stop_animation)
         self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
+        self.main_window.theme_changed.connect(self.set_theme)
 
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
@@ -95,7 +99,6 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
         if not (0 <= index < solver.solution.shape[1]):
             return
 
-        self.update_theme()
         self.remove_actors()
 
         phase_deg = self.control_bar.phase_slider.value()
@@ -113,7 +116,7 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
 
         self.analysis_actor = AnalysisActor(mesh)
         self.analysis_actor.plot_colorbar(output_pressures, min_value, max_value)
-        self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
         self.renderer.AddActor(self.analysis_actor)
 
         self.edges_actor = EdgesActor(self.analysis_actor.data)
@@ -172,7 +175,7 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
         print(f"Elpased time to process B: {round(dt, 4)} s")
 
         t0 = time()
-        self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
         dt = time() - t0
         print(f"Elpased time to process C: {round(dt, 4)} s")
 
@@ -228,7 +231,7 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
             logging.info("Processing the animation frames..." + ProgressStatus(step, len(deg_angles)))
 
         # self.analysis_actor.plot_colorbar(self.animation_data, min_value, max_value)
-        # self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
+        # self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
         # self.update()
 
     def set_mesh_visibility(self, condition):
