@@ -16,6 +16,7 @@ VIBRA_DIR = Path(__file__).parent
 ICON_DIR = VIBRA_DIR / "interface/data/icons/"
 UI_DIR = VIBRA_DIR / "interface/data/ui_files/"
 SYMBOLS_DIR = VIBRA_DIR / "interface/data/symbols/"
+EXAMPLES_DIR = VIBRA_DIR / "interface/data/examples/"
 
 def app() -> "Application":
     return QApplication.instance()
