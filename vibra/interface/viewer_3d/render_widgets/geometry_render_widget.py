@@ -583,6 +583,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         text = ""
         text += self._nodes_info_text()
         text += self._faces_info_text()
+        text += self._volumes_info_text()
         text += self._material_info_text()
         text += self._fluid_info_text()
         text += self._boundary_conditions_info_text()
@@ -617,6 +618,20 @@ class GeometryRenderWidget(CommonRenderWidget):
             text += f"Surface: {faces[0]}\n\n"
         
         return text
+    
+    def _volumes_info_text(self):
+        volumes = list(self.main_window.selected_geometry_volumes)
+        text = ""
+
+        if len(volumes) > 1:
+            text += (
+                f"{len(volumes)} volumes in selection\n"
+                f"{format_long_sequence(volumes)}\n\n"
+            )
+        elif len(volumes) == 1:
+            text += f"Volume: {volumes[0]}\n\n"
+        
+        return text
 
     def _material_info_text(self):
         elements = list(self.main_window.selected_geometry_surfaces)
@@ -624,8 +639,8 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         if len(elements) != 1:
             return text 
-        
-        material = self.main_window.project.model.properties.get_material(surface=1)
+
+        material = self.main_window.project.model.properties.get_material(surface=elements[0])
         if material is None:
             return text
         
