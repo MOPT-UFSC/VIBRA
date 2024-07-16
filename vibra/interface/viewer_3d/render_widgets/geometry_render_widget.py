@@ -34,6 +34,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.left_clicked.connect(self.click_callback)
         self.left_released.connect(self.selection_callback)
         self.main_window.selection_changed.connect(self.update_selection)
+        self.main_window.theme_changed.connect(self.set_theme)
         # self.geometry_info = GeometryInfoBar()
 
         # # replace the layout to add other usefull widgets
@@ -74,7 +75,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
-        # self.update_theme()
         self.remove_actors()
 
         self.selection_spheres_actor = SelectionSpheres()

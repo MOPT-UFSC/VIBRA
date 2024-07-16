@@ -2,6 +2,9 @@ import numpy as np
 from PyQt5.QtCore import QObjectCleanupHandler
 from PyQt5.QtWidgets import *
 
+from molde.render_widgets import AnimatedRenderWidget
+
+
 # from vibra.interface.modal_analysis_bar import AcousticModalAnalysisBar
 from vibra.interface.analysis_bars.acoustic_analysis_bar import (
     AcousticModalAnalysisBar,
@@ -11,23 +14,26 @@ from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
     CuttingPlaneActor,
 )
 from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
-from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
-    CommonRenderWidget,
-)
+# from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
+#     CommonRenderWidget,
+# )
 from vibra.utils.interface_functions import get_main_window
 from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
+from vibra import app
 
 
-class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
+class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         self.control_bar = AcousticModalAnalysisBar()
+
         self.control_bar.value_changed.connect(self.update_deformation)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
         self.control_bar.phase_slider.valueChanged.connect(self.stop_animation)
         self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
+        self.main_window.theme_changed.connect(self.set_theme)
 
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
@@ -95,7 +101,6 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
         if not (0 <= index < solver.modal_shape.shape[1]):
             return
 
-        self.update_theme()
         self.remove_actors()
 
         phase = self.control_bar.phase_slider.value()
@@ -119,7 +124,7 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
 
         self.analysis_actor = AnalysisActor(mesh)
         self.analysis_actor.plot_colorbar(current_modal_shape, min_value, max_value)
-        self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
         self.renderer.AddActor(self.analysis_actor)
 
         self.edges_actor = EdgesActor(self.analysis_actor.data)
@@ -128,7 +133,7 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
 
         self.bounds = self.analysis_actor.GetBounds()
         scale = bounds_distance(self.bounds)
-        self.plane_actor = CuttingPlaneActor()
+        self.plane_actor = CuttingPlaneActor(self.analysis_actor.GetBounds())
         self.plane_actor.VisibilityOff()
         self.plane_actor.SetScale(scale, scale, scale)
         self.renderer.AddActor(self.plane_actor)
@@ -177,7 +182,7 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
             current_modal_shape = np.abs(current_modal_shape)
 
         self.analysis_actor.plot_colorbar(current_modal_shape, min_value, max_value)
-        self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
         self.update()
 
     def update_animation(self, frame):
@@ -213,7 +218,7 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
             current_modal_shape = np.abs(current_modal_shape)
 
         self.analysis_actor.plot_colorbar(current_modal_shape, min_value, max_value)
-        self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
         self.update()
 
     def set_mesh_visibility(self, condition):
