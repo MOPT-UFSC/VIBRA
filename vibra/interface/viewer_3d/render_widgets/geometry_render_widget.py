@@ -543,12 +543,14 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.plane_actor.configure_cutting_plane(position, orientation)
         self.update()
 
-    def apply_cutting_plane(self, position, orientation):
+    def apply_cutting_plane(self, position, orientation, invert=False):
         if not self._actors_exists():
             return
 
         xyz = self.plane_actor.calculate_x_y_z_position(position)
         normal = self.plane_actor.calculate_normal_vector(orientation)
+        if invert:
+            normal = -normal
         self.points_actor.apply_cut(xyz, normal)
         self.faces_actor.apply_cut(xyz, normal)
         self.lines_actor.apply_cut(xyz, normal)

@@ -1,6 +1,6 @@
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QGridLayout, QLabel, QProxyStyle, QSlider, QWidget
+from PyQt5.QtWidgets import QGridLayout, QLabel, QProxyStyle, QSlider, QWidget, QPushButton
 
 
 class ClipPlaneWidget(QWidget):
@@ -11,12 +11,14 @@ class ClipPlaneWidget(QWidget):
 
     def __init__(self, parent):
         super().__init__(parent)
+        self.invert_value = False
+
         self.configure_window()
         self.create_sliders()
 
     def configure_window(self):
         self.setWindowTitle("Section Plane")
-        self.setGeometry(200, 200, 400, 350)
+        self.setGeometry(200, 200, 400, 400)
 
         self.setWindowFlags(
             Qt.Window
@@ -102,6 +104,16 @@ class ClipPlaneWidget(QWidget):
         self.y_pos_tittle_value_label.setFixedWidth(50)
         self.z_pos_tittle_value_label.setFixedWidth(50)
 
+        self.reset_button = QPushButton(text="Reset")
+        self.reset_button.setFixedWidth(75)
+        self.reset_button.setFixedHeight(50)
+        self.reset_button.clicked.connect(self.reset_button_callback)
+
+
+        self.invert_button = QPushButton(text="Invert")
+        self.invert_button.setFixedWidth(75)
+        self.invert_button.setFixedHeight(50)
+        self.invert_button.clicked.connect(self.invert_button_callback)
         #
         grid_layout = QGridLayout()
         grid_layout.addWidget(self.rotation_tittle_label, 4, 1)
@@ -130,6 +142,9 @@ class ClipPlaneWidget(QWidget):
         grid_layout.addWidget(self.z_pos_slider, 3, 1)
         grid_layout.addWidget(self.z_pos_tittle_value_label, 3, 2)
 
+        grid_layout.addWidget(self.reset_button, 8, 1)
+        grid_layout.addWidget(self.invert_button, 8, 2)
+
         self.position_tittle_label.setAlignment(Qt.AlignCenter)
         self.rotation_tittle_label.setAlignment(Qt.AlignCenter)
 
@@ -147,6 +162,9 @@ class ClipPlaneWidget(QWidget):
         Ry = self.x_angle_slider.value()
         Rz = self.z_angle_slider.value()
         return Rx, Ry, Rz
+    
+    def invert(self):
+        pass
 
     def value_change_callback(self):
         self.setUpdatesEnabled(False)
@@ -164,6 +182,19 @@ class ClipPlaneWidget(QWidget):
 
     def slider_pressed_callback(self):
         self.slider_pressed.emit()
+    
+    def reset_button_callback(self):
+        self.x_pos_slider.setValue(0)
+        self.y_pos_slider.setValue(0)
+        self.z_pos_slider.setValue(0)
+        self.x_angle_slider.setValue(0)
+        self.y_angle_slider.setValue(0)
+        self.z_angle_slider.setValue(0)
+        self.slider_released.emit()
+
+    def invert_button_callback(self):
+        self.invert_value = not self.invert_value
+        self.slider_released.emit()       
 
     def closeEvent(self, event):
         self.closed.emit()

@@ -187,7 +187,7 @@ class MainWindow(QMainWindow):
     def slider_released_callback(self):
         position = self.clip_plane.get_position()
         orientation = self.clip_plane.get_rotation()
-        self.viewer_tabs.apply_cutting_plane(position, orientation)
+        self.viewer_tabs.apply_cutting_plane(position, orientation, self.clip_plane.invert_value)
 
     def disable_cut(self):
         self.viewer_tabs.stop_cutting_mode()
