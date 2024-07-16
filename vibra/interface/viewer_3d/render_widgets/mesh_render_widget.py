@@ -431,14 +431,14 @@ class MeshRenderWidget(CommonRenderWidget):
         text = ""
 
         if len(elements) == 1:
-            material = self.main_window.project.model.properties.get_material(elements[0])
+            material = self.main_window.project.model.properties.get_material(volume=1)
             if material is None:
                 return text
             
             tree = TreeInfo("Material")
             tree.add_item("Name", material.name)
             tree.add_item("Identifier", material.identifier)
-            tree.add_item("Density", material.density, "kg/m3")
+            tree.add_item("Density", material.density, "kg/m³")
             tree.add_item("Young Modulus", material.young_modulus/1e9, "GPa")
             tree.add_item("Poisson Ratio", material.poisson_ratio, "--")
             tree.add_item("Thermal Expasion Coefficient", material.thermal_expansion_coefficient, "1/K")
@@ -461,7 +461,7 @@ class MeshRenderWidget(CommonRenderWidget):
             tree.add_item("Identifier", fluid.identifier)
             tree.add_item("Pressure", fluid.pressure, "Pa")
             tree.add_item("Temperature", fluid.temperature, "K")
-            tree.add_item("Density", fluid.fluid_density, "kg/m3")
+            tree.add_item("Density", fluid.fluid_density, "kg/m³")
             tree.add_item("Speed of sound", fluid.speed_of_sound, "m/s")
             tree.add_item("Molar mass", fluid.molar_mass, "kg/kmol")
 
@@ -491,7 +491,7 @@ class MeshRenderWidget(CommonRenderWidget):
         if surface_velocity is not None:
             tree.add_item("Surface velocity", surface_velocity["real_values"][0], "m/s")
         if specific_impedance is not None:
-            tree.add_item("Specific impedance", specific_impedance["real_values"][0], "kg/m2s")
+            tree.add_item("Specific impedance", specific_impedance["real_values"][0], "kg/m²s")
 
         text += str(tree)
         
