@@ -48,6 +48,8 @@ class SetFluidInput(QDialog):
                 return
             self.load_compressor_info()
 
+        self.geometry_selection_callback()
+
         while self.keep_window_open:
             self.exec()
 
@@ -112,8 +114,7 @@ class SetFluidInput(QDialog):
         #
         self.tableWidget_fluid_data.currentCellChanged.connect(self.current_cell_changed)
         #
-        geometry_widget = self.main_window.viewer_tabs.geometry_widget
-        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
+        self.main_window.selection_changed.connect(self.geometry_selection_callback)
         #
         self.update_attribution_type()
 
@@ -125,14 +126,17 @@ class SetFluidInput(QDialog):
         self.hide()
         self.fluid_widget.reset_library_callback()
 
-    def geometry_selection_callback(self, points, lines, faces, volumes):
-        """ """
+    def geometry_selection_callback(self):
+        volumes = self.main_window.selected_geometry_volumes
+        points = self.main_window.selected_geometry_points
+        lines = self.main_window.selected_geometry_lines
+        surfaces = self.main_window.selected_geometry_surfaces
         if volumes:
             self.comboBox_attribution_type.setCurrentIndex(1)
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selected_id.setText(text)
 
-        elif not any([points, lines, faces]):
+        elif not any([points, lines, surfaces]):
             self.comboBox_attribution_type.setCurrentIndex(0)
             self.lineEdit_selected_id.setText("All bodies")
 

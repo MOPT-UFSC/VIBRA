@@ -392,16 +392,17 @@ class MeshRenderWidget(CommonRenderWidget):
     
     def update_info_text(self):
         text = ""
-        text += self.nodes_info_text()
-        text += self.faces_info_text()
-        text += self.material_info_text()
-        text += self.fluid_info_text()
+        text += self._nodes_info_text()
+        text += self._faces_info_text()
+        text += self._solids_info_text()
+        text += self._material_info_text()
+        text += self._fluid_info_text()
         text += self._boundary_conditions_info_text()
         
         self.set_info_text(text)
         self.update()
     
-    def nodes_info_text(self):
+    def _nodes_info_text(self):
         nodes = list(self.main_window.selected_mesh_nodes)
         text = ""
         if len(nodes) > 1:
@@ -414,7 +415,7 @@ class MeshRenderWidget(CommonRenderWidget):
 
         return text
 
-    def faces_info_text(self):
+    def _faces_info_text(self):
         faces = list(self.main_window.selected_mesh_faces)
         text = ""
         if len(faces) > 1:
@@ -427,12 +428,29 @@ class MeshRenderWidget(CommonRenderWidget):
         
         return text
 
-    def material_info_text(self):
+    def _solids_info_text(self):
+        solids = list(self.main_window.selected_mesh_solids)
+        text = ""
+        if len(solids) > 1:
+            text += (
+                f"{len(solids)} solids in selection\n"
+                f"{format_long_sequence(solids)}\n\n"
+            )
+        elif len(solids) == 1:
+            text += f"Solid element: {solids[0]}\n\n"
+        
+        return text
+
+    def _material_info_text(self):
         elements = list(self.main_window.selected_mesh_faces)
         text = ""
 
+        if not elements:
+            elements = list(self.main_window.selected_mesh_solids)
+
         if len(elements) == 1:
-            material = self.main_window.project.model.properties.get_material(volume=1)
+            current_solid = self.main_window.project.model.mesh.volume_from_element[elements[0]]
+            material = self.main_window.project.model.properties.get_material(volume=current_solid)
             if material is None:
                 return text
             
@@ -448,12 +466,16 @@ class MeshRenderWidget(CommonRenderWidget):
 
         return text
         
-    def fluid_info_text(self):
+    def _fluid_info_text(self):
         elements = list(self.main_window.selected_mesh_faces)
         text = ""
 
+        if not elements:
+            elements = list(self.main_window.selected_mesh_solids)
+
         if len(elements) == 1:
-            fluid = self.main_window.project.model.properties.get_fluid(element=elements[0])
+            current_solid = self.main_window.project.model.mesh.volume_from_element[elements[0]]
+            fluid = self.main_window.project.model.properties.get_fluid(volume=current_solid)
             if fluid is None:
                 return text
             
@@ -473,6 +495,9 @@ class MeshRenderWidget(CommonRenderWidget):
     def _boundary_conditions_info_text(self):
         elements = list(self.main_window.selected_mesh_faces)
         text = ""
+
+        if not elements:
+            elements = list(self.main_window.selected_mesh_solids)
 
         if len(elements) != 1:
             return text
