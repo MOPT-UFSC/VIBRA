@@ -42,11 +42,11 @@ def get_detJAC_and_invJAC(JAC):
     return detJAC, (1 / detJAC) * AUJJ
 
 
+DOF_PER_NODE = 1
+NODES_PER_ELEMENT = 4
+DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
+
 class ACT_TETRAHEDRON_4C(Element3D):
-    #
-    DOF_PER_NODE = 1
-    NODES_PER_ELEMENT = 4
-    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
 
     def __init__(self, model):
         self.model = model
@@ -102,8 +102,8 @@ class ACT_TETRAHEDRON_4C(Element3D):
         detJAC, invJAC = get_detJAC_and_invJAC(JAC)
         dphi_t = invJAC @ self.dphi
         #
-        B = np.zeros((3, self.DOFS_PER_ELEMENT), dtype=float)
-        N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
+        B = np.zeros((3, DOFS_PER_ELEMENT), dtype=float)
+        N = np.zeros((self.nint, 1, DOFS_PER_ELEMENT), dtype=float)
         #
         B[0, :] = dphi_t[0, :]
         B[1, :] = dphi_t[1, :]
@@ -119,10 +119,51 @@ class ACT_TETRAHEDRON_4C(Element3D):
             # Me += (1 / 6) * (1 / c_0**2) * N[i, :, :].T @ N[i, :, :] * (detJAC * self.wps)
 
         return Ke, Me
+    
+    def process_particle_velocity(self, el_index : int, surface_id : int, frequencies : np.ndarray, nodal_pressures : np.ndarray):
+        """
+        Process the particle velocity.
+        """
+
+        fluid = self.model.properties.get_fluid(surface=surface_id)
+        rho = fluid.fluid_density
+
+        ie = self.connectivity[el_index, 1:]
+        Pe = nodal_pressures[ie, :]
+
+        p_calc = np.array([ [0, 0, 0],
+                            [1, 0, 0],
+                            [0, 0, 1],
+                            [0, 1, 0] ], dtype=float)
+
+        ssx = p_calc[:, 0]
+        ttx = p_calc[:, 1]
+        rrx = p_calc[:, 2]
+
+        phi, dphi = shape4TC(ssx, ttx, rrx)
+
+        JAC = dphi @ self.nodal_coordinates[ie, 1:4]
+        detJAC, invJAC = get_detJAC_and_invJAC(JAC)
+        dphi_t = invJAC @ dphi
+
+        B = np.zeros((3, DOFS_PER_ELEMENT), dtype=float)
+        N = np.zeros((self.nint, 1, DOFS_PER_ELEMENT), dtype=float)
+
+        B[0, :] = dphi_t[0, :]
+        B[1, :] = dphi_t[1, :]
+        B[2, :] = dphi_t[2, :]
+
+        omega = 2 * np.pi * frequencies
+        omegas = np.array([omega, omega, omega], dtype=float)
+
+        Ve = (1 / np.sqrt(6)) * B @ Pe
+
+        return (-1j / (rho * omegas)) * Ve
 
     def reorder_connect(self):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
-        self.connectivity = self.connectivity[:, [0, 6, 4, 5, 7]]
+        if self.connectivity.shape[1] == NODES_PER_ELEMENT + 4:
+            self.connectivity = self.connectivity[:, [0, 6, 4, 5, 7]]
 
     def generate_ind_rows_cols(self, reorder=True):
         """ This method processess the dofs indices (rows and columns) for assembly"""
@@ -132,7 +173,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
         else:
             self.connectivity = self.connectivity[:, [0, 4, 5, 6, 7]]
 
-        dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
+        dofs, edofs = DOF_PER_NODE, DOFS_PER_ELEMENT
         ind_dofs = dofs * self.connectivity[:, 1:]
 
         vect_indices = ind_dofs.flatten()
