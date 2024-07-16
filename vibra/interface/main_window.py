@@ -422,7 +422,7 @@ class MainWindow(QMainWindow):
         path = Path(path)
         self.project.name = path.stem
         self.project.save_path = path
-        # self.file.write_thumbnail()
+        self.file.write_thumbnail()
         app().config.write_last_folder_path_in_file("project folder", path)
         copy(self.temp_project_file_path, path)
 
