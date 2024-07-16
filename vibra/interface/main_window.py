@@ -381,8 +381,6 @@ class MainWindow(QMainWindow):
                                        )
 
             if obj == QMessageBox.Yes:
-                self.project = Project()
-                self.file = ProjectFileIO(self.temp_project_file_path, override=False)
                 self.open_project()
 
             else:
@@ -422,7 +420,7 @@ class MainWindow(QMainWindow):
         path = Path(path)
         self.project.name = path.stem
         self.project.save_path = path
-        # self.file.write_thumbnail()
+        self.file.write_thumbnail()
         app().config.write_last_folder_path_in_file("project folder", path)
         copy(self.temp_project_file_path, path)
 
@@ -444,18 +442,13 @@ class MainWindow(QMainWindow):
         if not check:
             return
 
-        app().config.write_last_folder_path_in_file("project folder", project_path)
+        # path = Path(project_path)
+        # self.project.name = path.stem
+        # self.project.save_path = path
 
-        copy(project_path, self.temp_project_file_path)
-
-        self.project = Project()
-        self.file = ProjectFileIO(self.temp_project_file_path, override=False)
-
-        path = Path(project_path)
-        self.project.name = path.stem
-        self.project.save_path = path
-
-        self.open_project()
+        # app().config.write_last_folder_path_in_file("project folder", project_path)
+        # copy(project_path, self.temp_project_file_path)
+        self.open_project(project_path)
 
     def import_geometry_dialog(self):
 
@@ -487,7 +480,25 @@ class MainWindow(QMainWindow):
     def export_mesh(self):
         ExportMeshData()
 
-    def open_project(self):
+    def open_project(self, project_path: str | Path | None = None):
+        '''
+        This function loads a new project in a temporary folder.
+        If you pass a valid vibra file to this function, it will first copy 
+        the file to a temporary folder and then load it.
+        '''
+
+        if project_path is not None:
+            app().config.write_last_folder_path_in_file("project folder", project_path)
+            copy(project_path, self.temp_project_file_path)
+
+        self.project = Project()
+        self.file = ProjectFileIO(self.temp_project_file_path, override=False)
+
+        if project_path is not None:
+            path = Path(project_path)
+            self.project.name = path.stem
+            self.project.save_path = path
+
         self.load_project = LoadProject()
         load = load_function(self.load_project.load, self)
         load()

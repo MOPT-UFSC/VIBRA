@@ -3,7 +3,9 @@ from PyQt5.QtCore import QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon, QImage, QPixmap
 from PyQt5.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
-from vibra import app, VIBRA_DIR, ICON_DIR
+from fileboxes import Filebox
+
+from vibra import app, EXAMPLES_DIR, ICON_DIR
 from vibra.vibra_file import VibraDecoder
 
 import numpy as np
@@ -75,14 +77,18 @@ class WelcomeWidget(QWidget):
         layout.addLayout(examples_layout)
         layout.addStretch()
 
-        # number of exam
+        # Finds every file that end with ".vibra" in the examples
+        # dir and use only the last N of them to show.
         number_of_examples = 5
-        example_paths = (VIBRA_DIR / "interface/data/examples/vibra_files/").glob("*.vibra")
+        example_paths = (EXAMPLES_DIR / "vibra_files/").glob("*.vibra")
         example_paths = list(example_paths)[:number_of_examples]
 
         for path in example_paths:
-            with VibraDecoder(path) as file:
-                thumbnail = file.get_thumbnail()
+            with Filebox(path, override=False) as fb:
+                if "thumbnail.png" in fb:
+                    thumbnail = fb.read("thumbnail.png")
+                else:
+                    thumbnail = None
 
             if thumbnail is not None:
                 array = np.array(thumbnail)
@@ -93,7 +99,7 @@ class WelcomeWidget(QWidget):
 
             name = path.name
 
-            handler = partial(self.open_example_project, path)
+            handler = partial(self.main_window.open_project, path)
             item = WelcomeItem(name, icon)
             item.clicked.connect(handler)
             examples_layout.addWidget(item)
@@ -108,15 +114,15 @@ class WelcomeWidget(QWidget):
     def open_project(self):
         self.main_window.open_project_dialog()
 
-    def open_recent_project(self, path):
-        self.main_window.open_project(path)
+    # def open_recent_project(self, path):
+    #     self.main_window.open_project(path)
 
-    def open_example_project(self, path):
-        # self.main_window.project = Project.load(path)
-        self.main_window.viewer_tabs.close_mesh_tabs()
-        self.main_window.viewer_tabs.show_geometry()
-        self.main_window.viewer_tabs.show_mesh()
-        self.main_window.viewer_tabs.update_plots()
+    # def open_example_project(self, path):
+    #     # self.main_window.project = Project.load(path)
+    #     self.main_window.viewer_tabs.close_mesh_tabs()
+    #     self.main_window.viewer_tabs.show_geometry()
+    #     self.main_window.viewer_tabs.show_mesh()
+    #     self.main_window.viewer_tabs.update_plots()
 
 
 class WelcomeItem(QWidget):
