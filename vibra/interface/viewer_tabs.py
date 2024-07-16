@@ -117,10 +117,10 @@ class ViewerTabs(QTabWidget):
                 return
         self.addTab(widget, tab_text)
 
-    def update_plots(self):
+    def update_plots(self, reset_camera=True):
         for tab in self.tabs():
             if isinstance(tab, CommonRenderWidget):
-                tab.update_plot()
+                tab.update_plot(reset_camera)
 
     def close_analysis_tabs(self):
         for i in range(self.count()):

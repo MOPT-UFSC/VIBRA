@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QDialog, QFileDialog, QFrame, QGridLayout, QMainWindow, QMessageBox
+from PyQt5.QtWidgets import QDialog, QFileDialog, QFrame, QGridLayout, QMainWindow, QMessageBox, QAction
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtCore import pyqtSignal
 
@@ -51,6 +51,9 @@ class MainWindow(QMainWindow):
         self.selected_geometry_lines = set()
         self.selected_geometry_surfaces = set()
         self.selected_geometry_volumes = set()
+
+        self.hidden_mesh_faces = set()
+        self.hidden_mesh_solids = set()
         
         self.dialog = None
         self.project = Project()
@@ -107,9 +110,9 @@ class MainWindow(QMainWindow):
 
         self.selection_changed.emit()
 
-    def set_geometry_selection(self, *, nodes=None, lines=None, surfaces=None, volumes=None, join=False, remove=True):
-        if nodes is None:
-            nodes = set()
+    def set_geometry_selection(self, *, points=None, lines=None, surfaces=None, volumes=None, join=False, remove=True):
+        if points is None:
+            points = set()
         
         if lines is None:
             lines = set()
@@ -120,31 +123,39 @@ class MainWindow(QMainWindow):
         if volumes is None:
             volumes = set()
 
-        # Select all the elements in mesh associated 
-        # with the selected geometry
         mesh = self.project.model.mesh
+
+        # Select the surfaces associated to the selected volumes
+        for volume in volumes:
+            volume_surfaces = mesh.surfaces_from_volumes.get(volume, [])
+            surfaces |= set(volume_surfaces)
+
+        # Select the mesh elements associated with the selected geometry
         mesh_faces = []
+        mesh_solids = []
         for surface in surfaces:
             mesh_faces.extend(mesh.elements_from_surface.get(surface, []))
-        self.set_mesh_selection(faces=mesh_faces, join=join, remove=remove)
+        for volume in volumes:
+            mesh_solids.extend(mesh.elements_from_volume.get(volume, []))
+        self.set_mesh_selection(faces=mesh_faces, solids=mesh_solids, join=join, remove=remove)
 
         if join and remove:
-            self.selected_geometry_points ^= set(nodes)
+            self.selected_geometry_points ^= set(points)
             self.selected_geometry_lines ^= set(lines)
             self.selected_geometry_surfaces ^= set(surfaces)
             self.selected_geometry_volumes ^= set(volumes)
         elif join:
-            self.selected_geometry_points |= set(nodes)
+            self.selected_geometry_points |= set(points)
             self.selected_geometry_lines |= set(lines)
             self.selected_geometry_surfaces |= set(surfaces)
             self.selected_geometry_volumes |= set(volumes)
         elif remove:
-            self.selected_geometry_points -= set(nodes)
+            self.selected_geometry_points -= set(points)
             self.selected_geometry_lines -= set(lines)
             self.selected_geometry_surfaces -= set(surfaces)
             self.selected_geometry_volumes -= set(volumes)
         else:
-            self.selected_geometry_points = set(nodes)
+            self.selected_geometry_points = set(points)
             self.selected_geometry_lines = set(lines)
             self.selected_geometry_surfaces = set(surfaces)
             self.selected_geometry_volumes = set(volumes)
@@ -192,6 +203,16 @@ class MainWindow(QMainWindow):
         }
 
     def create_basic_layout(self):
+        self.hide_selection = QAction("Hide Selection")
+        self.hide_selection.setShortcut("ctrl+h")
+        self.hide_selection.triggered.connect(self.hide_selection_callback)
+        self.addAction(self.hide_selection)
+
+        self.unhide_all = QAction("Unhide All")
+        self.unhide_all.setShortcut("ctrl+shift+h")
+        self.unhide_all.triggered.connect(self.unhide_all_callback)
+        self.addAction(self.unhide_all)
+        
         self.menu_widget = MenuItems()
         self.analysis_filter = AnalysisFilter()
         self.status_bar = StatusBar(self)
@@ -227,6 +248,16 @@ class MainWindow(QMainWindow):
         central_widget = QWidget()
         central_widget.setLayout(grid_layout_central)
         self.setCentralWidget(central_widget)
+    
+    def hide_selection_callback(self):
+        self.hidden_mesh_faces |= self.selected_mesh_faces
+        self.hidden_mesh_solids |= self.selected_mesh_solids
+        self.viewer_tabs.update_plots(reset_camera=False)
+
+    def unhide_all_callback(self):
+        self.hidden_mesh_faces.clear()
+        self.hidden_mesh_solids.clear()
+        self.viewer_tabs.update_plots(reset_camera=False)
 
     def create_menu_bar(self):
         self.menu_bar = self.menuBar()

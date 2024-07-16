@@ -40,13 +40,13 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.mesh_info = MeshInfoBar()
 
-        # replace the layout to add other usefull widgets
-        QObjectCleanupHandler().add(self.layout())
-        layout = QVBoxLayout()
-        layout.addWidget(self.mesh_info)
-        layout.addWidget(self.render_interactor)
-        self.setLayout(layout)
-        self.setContentsMargins(0, 0, 0, 0)
+        # # replace the layout to add other usefull widgets
+        # QObjectCleanupHandler().add(self.layout())
+        # layout = QVBoxLayout()
+        # layout.addWidget(self.mesh_info)
+        # layout.addWidget(self.render_interactor)
+        # self.setLayout(layout)
+        # self.setContentsMargins(0, 0, 0, 0)
 
         self.nodes_actor = None
         self.faces_actor = None
@@ -58,7 +58,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.create_axes()
         self.update_plot()
 
-    def update_plot(self):
+    def update_plot(self, reset_camera=True):
         if self.main_window.project is None:
             return
 
@@ -81,10 +81,10 @@ class MeshRenderWidget(CommonRenderWidget):
         self.nodes_actor = NodesActor(mesh)
         self.renderer.AddActor(self.nodes_actor)
 
-        self.faces_actor = FacesActor(mesh)
+        self.faces_actor = FacesActor(mesh, hidden_faces=self.main_window.hidden_mesh_faces)
         self.renderer.AddActor(self.faces_actor)
 
-        self.solids_actor = SolidsActor(mesh)
+        self.solids_actor = SolidsActor(mesh, hidden_solids=self.main_window.hidden_mesh_solids)
         self.renderer.AddActor(self.solids_actor)
 
         self.edges_actor = EdgesActor(self.solids_actor.data)
@@ -95,7 +95,8 @@ class MeshRenderWidget(CommonRenderWidget):
         self.plane_actor.VisibilityOff()
         self.renderer.AddActor(self.plane_actor)
 
-        self.renderer.ResetCamera()
+        if reset_camera:
+            self.renderer.ResetCamera()
         self.show_faces()
         self.main_window.project.thumbnail = self.get_thumbnail()
 
@@ -120,8 +121,8 @@ class MeshRenderWidget(CommonRenderWidget):
         self.view_mode = SHOW_FACES
         self.nodes_actor.VisibilityOn()
         self.edges_actor.VisibilityOn()
-        self.faces_actor.VisibilityOn()
-        self.solids_actor.VisibilityOff()
+        self.faces_actor.VisibilityOff()
+        self.solids_actor.VisibilityOn()
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
         self.update()
     
@@ -255,7 +256,7 @@ class MeshRenderWidget(CommonRenderWidget):
         if not cell_indexes:
             return cell_id, position
 
-        new_cell_id = cell_indexes.GetValue(cell_id)        
+        new_cell_id = cell_indexes.GetValue(cell_id)
         return new_cell_id, position
 
     def _narrow_pickability_to_actor(self, target_actor: vtk.vtkActor):

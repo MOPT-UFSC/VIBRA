@@ -77,7 +77,7 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
             return
         self.control_bar.set_frequencies(solver.natural_frequencies)
 
-    def update_plot(self):
+    def update_plot(self, reset_camera=True):
         if self.main_window.project is None:
             return
 
@@ -118,7 +118,8 @@ class StructuralModalAnalysisRenderWidget(CommonRenderWidget):
 
         mesh_visibility = self.control_bar.show_mesh_button.isChecked()
         self.set_mesh_visibility(mesh_visibility)
-        self.renderer.ResetCamera()
+        if reset_camera:
+            self.renderer.ResetCamera()
         self.update()
         self.main_window.project.thumbnail = self.get_thumbnail()
 

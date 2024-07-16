@@ -1,7 +1,11 @@
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
+import vtk
+import numpy as np
 
 from molde.render_widgets import CommonRenderWidget
+from molde.utils.format_sequences import format_long_sequence
+from molde.utils import TreeInfo
 
 from vibra import app
 from vibra.interface.tabs.geometry_info_bar import GeometryInfoBar
@@ -11,8 +15,6 @@ from vibra.interface.viewer_3d.actors.points_actor import PointsActor
 from vibra.interface.viewer_3d.interactor_styles.selection_interactor import SelectionInteractor
 from vibra.interface.viewer_3d.actors.selection_spheres import SelectionSpheres
 from vibra.interface.viewer_3d.actors.cutting_plane_actor import CuttingPlaneActor
-from molde.utils.format_sequences import format_long_sequence
-from molde.utils import TreeInfo
 
 
 SHOW_POINTS = 0
@@ -29,16 +31,18 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.main_window = app().main_window
         self.view_mode = SHOW_FACES
 
+        self.left_clicked.connect(self.click_callback)
+        self.left_released.connect(self.selection_callback)
         self.main_window.selection_changed.connect(self.update_selection)
         # self.geometry_info = GeometryInfoBar()
 
-        # replace the layout to add other usefull widgets
-        QObjectCleanupHandler().add(self.layout())
-        layout = QVBoxLayout()
-        # layout.addWidget(self.geometry_info)
-        layout.addWidget(self.render_interactor)
-        self.setLayout(layout)
-        self.setContentsMargins(0, 0, 0, 0)
+        # # replace the layout to add other usefull widgets
+        # QObjectCleanupHandler().add(self.layout())
+        # layout = QVBoxLayout()
+        # # layout.addWidget(self.geometry_info)
+        # layout.addWidget(self.render_interactor)
+        # self.setLayout(layout)
+        # self.setContentsMargins(0, 0, 0, 0)
 
         self.points_actor = None
         self.lines_actor = None
@@ -51,14 +55,14 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.selected_faces = set()
         self.selected_volumes = set()
 
-        self.style = SelectionInteractor()
-        self.style.AddObserver("SelectionEvent", self.selection_callback)
-        self.render_interactor.SetInteractorStyle(self.style)
+        # self.style = SelectionInteractor()
+        # self.style.AddObserver("SelectionEvent", self.selection_callback)
+        # self.render_interactor.SetInteractorStyle(self.style)
 
         self.create_axes()
         self.update_plot()
 
-    def update_plot(self):
+    def update_plot(self, reset_camera=True):
         if self.main_window.project is None:
             return
 
@@ -85,14 +89,15 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.lines_actor = LinesActor(mesh)
         self.renderer.AddActor(self.lines_actor)
 
-        self.faces_actor = FacesActor(mesh)
+        self.faces_actor = FacesActor(mesh, hidden_faces=self.main_window.hidden_mesh_faces)
         self.renderer.AddActor(self.faces_actor)
 
         self.plane_actor = CuttingPlaneActor(self.faces_actor.GetBounds())
         self.plane_actor.VisibilityOff()
         self.renderer.AddActor(self.plane_actor)
 
-        self.renderer.ResetCamera()
+        if reset_camera:
+            self.renderer.ResetCamera()
         self.show_faces()
 
         # This seems to be running twice and I don't know why.
@@ -164,49 +169,86 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.update()
 
     #
-    def selection_callback(self, obj, event):
+    def click_callback(self, x, y):
+        self.mouse_click = (x, y)
+
+    def selection_callback(self, x, y):
         if not self._actors_exists():
             return
         
-        clicked_cell = obj.selection_picker.GetCellId()
-        clicked_actor = obj.selection_picker.GetActor()
+        mouse_moved = False
+        if mouse_moved:
+            picked_nodes, picked_line_elements, picked_face_elements = self._get_area_picked_cell_id(x, y)
+        else:
+            picked_nodes, picked_line_elements, picked_face_elements = self._get_picked_cell_id(x, y)
+
+        picked_points = picked_nodes  # they have the same index
+        picked_lines = set()
+        picked_faces = set()
+        picked_volumes = set()
+
+        mesh = self.main_window.project.model.mesh
+
+        for cell in picked_line_elements:
+            line_entity = mesh.lines_connectivity[cell][1]
+            picked_lines.add(line_entity)
+        
+        for cell in picked_face_elements:
+            face_entity = mesh.faces_connectivity[cell][1]
+            picked_faces.add(face_entity)
+            for (volume, surfaces) in mesh.surfaces_from_volumes.items():
+                if face_entity in surfaces:
+                    picked_volumes.add(volume)
 
         modifiers = QApplication.keyboardModifiers()
         ctrl_pressed = modifiers & Qt.ControlModifier
         shift_pressed = modifiers & Qt.ShiftModifier
         alt_pressed = modifiers & Qt.AltModifier
 
-        if clicked_actor == self.points_actor:
-            # self.select_point(clicked_cell, join=ctrl_pressed, remove=alt_pressed)
-            self.main_window.set_geometry_selection(nodes=[clicked_cell], join=ctrl_pressed, remove=alt_pressed)
-
-        elif clicked_actor == self.lines_actor:
-            line_entity = self.main_window.project.model.mesh.lines_connectivity[clicked_cell][1]
-            self.main_window.set_geometry_selection(lines=[line_entity], join=ctrl_pressed, remove=alt_pressed)
-            # self.select_line(line_entity, join=ctrl_pressed, remove=alt_pressed)
-
-        elif (clicked_actor == self.faces_actor) and not shift_pressed:
-            face_entity = self.main_window.project.model.mesh.faces_connectivity[clicked_cell][1]
-            # self.select_face(face_entity, join=ctrl_pressed, remove=alt_pressed)
-            self.main_window.set_geometry_selection(surfaces=[face_entity], join=ctrl_pressed, remove=alt_pressed)
-
-        elif (clicked_actor == self.faces_actor) and shift_pressed:
-            face_entity = self.main_window.project.model.mesh.faces_connectivity[clicked_cell][1]
-            for (volume, surfaces) in self.main_window.project.model.mesh.surfaces_from_volumes.items():
-                if face_entity in surfaces:
-                    # self.select_volume(volume, join=ctrl_pressed, remove=alt_pressed)
-                    self.main_window.set_geometry_selection(volumes=[volume], join=ctrl_pressed, remove=alt_pressed)
-                    break
-
-        else:
-            # self.clear_selection()
-            # self.selection_changed.emit(self.selected_points,
-            #                             self.selected_lines,
-            #                             self.selected_faces,
-            #                             self.selected_volumes)
-            self.main_window.set_geometry_selection(join=ctrl_pressed, remove=alt_pressed)
-
+        if not shift_pressed:
+            picked_volumes.clear()
+        
+        self.main_window.set_geometry_selection(
+            points=picked_points,
+            lines=picked_lines,
+            surfaces=picked_faces,
+            volumes=picked_volumes,
+            join=ctrl_pressed, remove=alt_pressed
+        )
         self.update()
+
+
+        # if clicked_actor == self.points_actor:
+        #     # self.select_point(clicked_cell, join=ctrl_pressed, remove=alt_pressed)
+        #     self.main_window.set_geometry_selection(nodes=[clicked_cell], join=ctrl_pressed, remove=alt_pressed)
+
+        # elif clicked_actor == self.lines_actor:
+        #     line_entity = self.main_window.project.model.mesh.lines_connectivity[clicked_cell][1]
+        #     self.main_window.set_geometry_selection(lines=[line_entity], join=ctrl_pressed, remove=alt_pressed)
+        #     # self.select_line(line_entity, join=ctrl_pressed, remove=alt_pressed)
+
+        # elif (clicked_actor == self.faces_actor) and not shift_pressed:
+        #     face_entity = self.main_window.project.model.mesh.faces_connectivity[clicked_cell][1]
+        #     # self.select_face(face_entity, join=ctrl_pressed, remove=alt_pressed)
+        #     self.main_window.set_geometry_selection(surfaces=[face_entity], join=ctrl_pressed, remove=alt_pressed)
+
+        # elif (clicked_actor == self.faces_actor) and shift_pressed:
+        #     face_entity = self.main_window.project.model.mesh.faces_connectivity[clicked_cell][1]
+        #     for (volume, surfaces) in self.main_window.project.model.mesh.surfaces_from_volumes.items():
+        #         if face_entity in surfaces:
+        #             # self.select_volume(volume, join=ctrl_pressed, remove=alt_pressed)
+        #             self.main_window.set_geometry_selection(volumes=[volume], join=ctrl_pressed, remove=alt_pressed)
+        #             break
+
+        # else:
+        #     # self.clear_selection()
+        #     # self.selection_changed.emit(self.selected_points,
+        #     #                             self.selected_lines,
+        #     #                             self.selected_faces,
+        #     #                             self.selected_volumes)
+        #     self.main_window.set_geometry_selection(join=ctrl_pressed, remove=alt_pressed)
+
+        # self.update()
 
     def update_selection(self):
         self.points_actor.clear_colors()
@@ -255,6 +297,89 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.selection_spheres_actor.create_geometry(all_centers, all_radius)
         self.selection_spheres_actor.VisibilityOn()
         self.update()
+
+    def _get_picked_cell_id(self, x, y):
+        '''
+        Pick the nodes, faces and solids at the same time.
+        Them select just the one that is closest to the camera.
+        
+        If the ID of a cell is lower than 1 the distance to the
+        camera is set to infinite, so it will never be selected.
+        '''
+
+        picked_nodes = []
+        picked_faces = []
+        picked_solids = []
+
+        node_id, node_pos = self._pick_actor(x, y, self.points_actor)
+        face_id, face_pos = self._pick_actor(x, y, self.lines_actor)
+        solid_id, solid_pos = self._pick_actor(x, y, self.faces_actor)
+
+        camera_position = np.array(self.renderer.GetActiveCamera().GetPosition())
+        node_distance = np.linalg.norm(camera_position - node_pos) if node_id >= 0 else float('inf')
+        face_distance = np.linalg.norm(camera_position - face_pos) if face_id >= 0 else float('inf')
+        solid_distance = np.linalg.norm(camera_position - solid_pos) if solid_id >= 0 else float('inf')
+        node_distance *= 0.98 # Cheating a bit to prioritize the node selection
+        closest = min(node_distance, face_distance, solid_distance)
+
+        if closest == float('inf'):
+            return picked_nodes, picked_faces, picked_solids
+
+        if (closest == node_distance):
+            picked_nodes.append(node_id)
+        elif (closest == face_distance):
+            picked_faces.append(face_id)
+        elif (closest == solid_distance):
+            picked_solids.append(solid_id)
+
+        return picked_nodes, picked_faces, picked_solids
+
+    def _get_area_picked_cell_id(self, x, y):
+        # Not implemented
+        picked_nodes = []
+        picked_faces = []
+        picked_solids = []
+        return picked_nodes, picked_faces, picked_solids
+
+    def _pick_actor(self, x, y, target_actor: vtk.vtkActor):
+        cell_picker = vtk.vtkCellPicker()
+        cell_picker.SetTolerance(0.003)
+        
+        pickability = self._narrow_pickability_to_actor(target_actor)
+        cell_picker.Pick(x, y, 0, self.renderer)
+        self._restore_pickability(pickability)
+
+        cell_id = cell_picker.GetCellId()
+        position = cell_picker.GetPickPosition()
+
+        if cell_id < 0:
+            return cell_id, position
+        
+        # Try to get the cell_indexes array that shows the original
+        # cell array even if it is being clipped.
+        data: vtk.vtkPolyData = target_actor.GetMapper().GetInput()
+        if not data:
+            return cell_id, position
+
+        cell_indexes: vtk.vtkIntArray = data.GetCellData().GetArray("cell_indexes")
+        if not cell_indexes:
+            return cell_id, position
+
+        new_cell_id = cell_indexes.GetValue(cell_id)
+        return new_cell_id, position
+
+    def _narrow_pickability_to_actor(self, target_actor: vtk.vtkActor):
+        actor: vtk.vtkActor
+        pickability = dict()
+        for actor in self.renderer.GetActors():
+            pickability[actor] = actor.GetPickable()
+            actor.SetPickable(actor == target_actor)
+        return pickability 
+    
+    def _restore_pickability(self, pickability: dict):
+        actor: vtk.vtkActor
+        for actor in self.renderer.GetActors():
+            actor.SetPickable(pickability[actor])
 
     ################################# TODO: Remove these commented lines
     ################################# I am just not brave enought to do it

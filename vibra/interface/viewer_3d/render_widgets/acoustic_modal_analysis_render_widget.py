@@ -70,7 +70,7 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
             return
         self.control_bar.set_frequencies(solver.natural_frequencies)
 
-    def update_plot(self):
+    def update_plot(self, reset_camera=True):
         # Remember of updating the frequencies before running this
 
         if self.main_window.project is None:
@@ -141,7 +141,8 @@ class AcousticModalAnalysisRenderWidget(CommonRenderWidget):
             self.analysis_actor.GetProperty().SetRepresentationToSurface()
             self.edges_actor.VisibilityOn()
 
-        self.renderer.ResetCamera()
+        if reset_camera:
+            self.renderer.ResetCamera()
         self.update()
         self.main_window.project.thumbnail = self.get_thumbnail()
 
