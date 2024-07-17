@@ -400,7 +400,7 @@
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>../../../icons/recent.png</normaloff>../../../icons/recent.png</iconset>
+                <normaloff>../../../icons/invert_icon.png</normaloff>../../../icons/invert_icon.png</iconset>
               </property>
               <property name="iconSize">
                <size>
