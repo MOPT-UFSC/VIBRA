@@ -74,8 +74,7 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         self.pushButton_flip_selection.clicked.connect(self.flip_nodes)
         self.pushButton_plot_frequency_response.clicked.connect(self.call_plotter)
         #
-        geometry_widget = self.main_window.viewer_tabs.geometry_widget
-        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
+        self.main_window.selection_changed.connect(self.geometry_selection_callback)
         #
         self.clickable(self.lineEdit_input_selected_id).connect(self.lineEdit_1_clicked)
         self.clickable(self.lineEdit_output_selected_id).connect(self.lineEdit_2_clicked)
@@ -117,8 +116,12 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         self.frequencies = self.project.acoustic_harmonic_solver.frequencies
         self.solution = self.project.acoustic_harmonic_solver.solution
 
-    def geometry_selection_callback(self, points, lines, faces):
+    def geometry_selection_callback(self):
         
+        faces = self.main_window.selected_geometry_surfaces
+        lines = self.main_window.selected_geometry_lines
+        nodes = self.main_window.selected_mesh_nodes
+
         index = self.comboBox_selector_filter.currentIndex()
         if faces and index == 0:
 
@@ -138,17 +141,16 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
                 _lines = [str(i) for i in lines]
                 self.current_lineEdit.setText(_lines[0])
 
-        #TODO: change points to nodes
-        if points and index == 2:
+        if nodes and index == 2:
             
-            if len(points) > 1:
+            if len(nodes) > 1:
                 return
 
             else:
-                _points = [str(i) for i in points]
-                self.current_lineEdit.setText(_points[0])
+                _nodes = [str(i) for i in nodes]
+                self.current_lineEdit.setText(_nodes[0])
 
-        elif not any([points, lines, points]):
+        elif not any([nodes, lines, nodes]):
             return
             self.current_lineEdit.setText("")
 

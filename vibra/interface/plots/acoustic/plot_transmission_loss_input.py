@@ -81,12 +81,12 @@ class PlotTransmissionLossInput(QDialog):
         self.pushButton_flip_selection : QPushButton
 
     def _create_connections(self):
+        #
         self.pushButton_call_data_exporter.clicked.connect(self.call_data_exporter)
         self.pushButton_flip_selection.clicked.connect(self.invert_selection)
         self.pushButton_plot_frequency_response.clicked.connect(self.call_plotter)
         #
-        geometry_widget = self.main_window.viewer_tabs.geometry_widget
-        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
+        self.main_window.selection_changed.connect(self.geometry_selection_callback)
         #
         self.clickable(self.lineEdit_input_surface_id).connect(self.lineEdit_1_clicked)
         self.clickable(self.lineEdit_output_surface_id).connect(self.lineEdit_2_clicked)
@@ -116,8 +116,12 @@ class PlotTransmissionLossInput(QDialog):
     def lineEdit_2_clicked(self):
         self.current_lineEdit = self.lineEdit_output_surface_id
     
-    def geometry_selection_callback(self, points, lines, faces):
-        
+    def geometry_selection_callback(self):
+
+        faces = self.main_window.selected_geometry_surfaces
+        lines = self.main_window.selected_geometry_lines
+        nodes = self.main_window.selected_mesh_nodes
+
         if faces:
 
             if len(faces) > 1:
@@ -127,9 +131,8 @@ class PlotTransmissionLossInput(QDialog):
                 _faces = [str(i) for i in faces]
                 self.current_lineEdit.setText(_faces[0])
 
-        elif not any([points, lines, faces]):
+        else:
             return
-            self.current_lineEdit.setText("")
 
     def load_input_surface_id(self):
 
