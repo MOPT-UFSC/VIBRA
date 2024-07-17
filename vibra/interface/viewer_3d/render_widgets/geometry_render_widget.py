@@ -684,15 +684,15 @@ class GeometryRenderWidget(CommonRenderWidget):
         return text
 
     def _boundary_conditions_info_text(self):
-        elements = list(self.main_window.selected_geometry_surfaces)
+        selected_faces = list(self.main_window.selected_geometry_surfaces)
         text = ""
 
-        if len(elements) != 1:
+        if len(selected_faces) != 1:
             return text
 
-        acoustic_pressure = self.main_window.project.model.properties.get_acoustic_pressure(elements[0])
-        surface_velocity = self.main_window.project.model.properties.get_surface_velocity(elements[0])
-        specific_impedance = self.main_window.project.model.properties.get_specific_impedance(elements[0])
+        acoustic_pressure = self.main_window.project.model.properties.get_acoustic_pressure(selected_faces[0])
+        surface_velocity = self.main_window.project.model.properties.get_surface_velocity(selected_faces[0])
+        specific_impedance = self.main_window.project.model.properties.get_specific_impedance(selected_faces[0])
         boundary_conditions_list = [acoustic_pressure, surface_velocity, specific_impedance]
 
         if all(condition is None for condition in boundary_conditions_list):
@@ -701,16 +701,51 @@ class GeometryRenderWidget(CommonRenderWidget):
         tree = TreeInfo("Boundary Conditions")
 
         if acoustic_pressure is not None:
-            tree.add_item("Acoustic pressure", acoustic_pressure["real_values"][0], "Pa")
+
+            real_values = np.array(acoustic_pressure["real_values"])
+            imag_values = np.array(acoustic_pressure["imag_values"])
+
+            complex_values = real_values + 1j * imag_values
+            if complex_values.shape[0] == 1:
+                values = f"{np.round(complex_values, 6)}"
+            else:
+                values = "table of values"
+
+            tree.add_item("Acoustic pressure", values, "Pa")
+
         if surface_velocity is not None:
-            tree.add_item("Surface velocity", surface_velocity["real_values"][0], "m/s")
+
+            real_values = np.array(surface_velocity["real_values"])
+            imag_values = np.array(surface_velocity["imag_values"])
+
+            complex_values = real_values + 1j * imag_values
+            if complex_values.shape[0] == 1:
+                values = f"{np.round(complex_values, 6)}"
+            else:
+                values = "table of values"
+
+            tree.add_item("Surface velocity", values, "m/s")
+
         if specific_impedance is not None:
-            tree.add_item("Specific impedance", specific_impedance["real_values"][0], "kg/m²s")
+            
+            if "anechoic_termination" in specific_impedance.keys():
+                fluid = self.main_window.project.model.properties.get_fluid(surface=selected_faces[0])
+                density = fluid.fluid_density
+                speed_of_sound = fluid.speed_of_sound
+                complex_values = np.array([density * speed_of_sound], dtype=complex)
+
+            else:
+                real_values = np.array(specific_impedance["real_values"])
+                imag_values = np.array(specific_impedance["imag_values"])
+                complex_values = real_values + 1j * imag_values
+
+            if complex_values.shape[0] == 1:
+                values = f"{np.round(complex_values, 6)}"
+            else:
+                values = "table of values"
+
+            tree.add_item("Specific impedance", values, "kg/m²s")
 
         text += str(tree)
         
         return text
-
-
-
-    

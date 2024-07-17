@@ -572,6 +572,8 @@ class Mesh:
             # t0 = time()
             mask = np.sum(self.solids_connectivity[:, 4:] == node_id, axis=1) == 1
             solid_elements_connected_to_nodes[node_id] = self.solids_connectivity[:, 0][mask]
+            if node_id in [642, 9368]:
+                print(node_id, solid_elements_connected_to_nodes[node_id])
             # dt = time() - t0
             # print(f"Loop time: {dt} s")
             logging.info("Post-processing selection..." + ProgressStatus(int(100 * i / Nel), 100))
