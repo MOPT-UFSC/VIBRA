@@ -241,7 +241,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(None)
         self.create_menu_bar()
         self.create_tool_bars()
-        self.create_status_()
+        self.create_status_bar()
 
         grid_layout_central = QGridLayout()
         grid_layout_central.addWidget(left_widget, 0, 0)
