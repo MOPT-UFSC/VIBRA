@@ -88,6 +88,16 @@ class RendererToolbar(QToolBar):
         self.clip_plane_action = QAction(clip_plane_icon, "Section Plane", self)
         self.clip_plane_action.triggered.connect(self.clip_plane_callback)
 
+        hide_icon = load_icon(ICON_DIR / "hide_icon.png", color)
+        self.hide_selection = QAction(hide_icon, "Hide Selection", self)
+        self.hide_selection.setShortcut("ctrl+h")
+        self.hide_selection.triggered.connect(self.hide_selection_callback)
+
+        unhide_all_icon = load_icon(ICON_DIR / "unhide_all_icon.png", color)
+        self.unhide_all = QAction(unhide_all_icon, "Unhide All Selection", self)
+        self.unhide_all.setShortcut("ctrl+shift+h")
+        self.unhide_all.triggered.connect(self.unhide_all_callback)
+
     def configure_layout(self):
         self.addSeparator()
         self.addAction(self.top_view_action)
@@ -103,6 +113,8 @@ class RendererToolbar(QToolBar):
         self.addAction(self.show_faces_action)
         self.addSeparator()
         self.addAction(self.clip_plane_action)
+        self.addAction(self.hide_selection)
+        self.addAction(self.unhide_all)
 
     # Callbacks
     def top_view_callback(self):
@@ -159,3 +171,9 @@ class RendererToolbar(QToolBar):
         self.parent().clip_plane.show()
         self.parent().slider_moved_callback()
         self.parent().slider_released_callback()
+
+    def hide_selection_callback(self):
+        self.parent().hide_selection_callback()
+
+    def unhide_all_callback(self):
+        self.parent().unhide_all_callback()

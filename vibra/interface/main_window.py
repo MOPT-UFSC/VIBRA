@@ -208,15 +208,10 @@ class MainWindow(QMainWindow):
         }
 
     def create_basic_layout(self):
-        self.hide_selection = QAction("Hide Selection")
-        self.hide_selection.setShortcut("ctrl+h")
-        self.hide_selection.triggered.connect(self.hide_selection_callback)
-        self.addAction(self.hide_selection)
-
-        self.unhide_all = QAction("Unhide All")
-        self.unhide_all.setShortcut("ctrl+shift+h")
-        self.unhide_all.triggered.connect(self.unhide_all_callback)
-        self.addAction(self.unhide_all)
+        # self.unhide_all = QAction("Unhide All")
+        # self.unhide_all.setShortcut("ctrl+shift+h")
+        # self.unhide_all.triggered.connect(self.unhide_all_callback)
+        # self.addAction(self.unhide_all)
         
         self.menu_widget = MenuItems()
         self.analysis_filter = AnalysisFilter()
@@ -241,7 +236,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(None)
         self.create_menu_bar()
         self.create_tool_bars()
-        self.create_status_()
+        self.create_status_bar()
 
         grid_layout_central = QGridLayout()
         grid_layout_central.addWidget(left_widget, 0, 0)
