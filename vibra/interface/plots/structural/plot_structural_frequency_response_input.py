@@ -72,30 +72,32 @@ class PlotStructuralFrequencyResponseInput(QDialog):
         self.radioButton_rz : QRadioButton
 
     def _create_connections(self):
+        #
         self.pushButton_call_data_exporter.clicked.connect(self.call_data_exporter)
         self.pushButton_plot_frequency_response.clicked.connect(self.call_plotter)
-        geometry_widget = self.main_window.viewer_tabs.geometry_widget
-        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
+        #
+        self.main_window.selection_changed.connect(self.geometry_selection_callback)
     
-    def geometry_selection_callback(self, points, lines, faces):
-        
+    def geometry_selection_callback(self):
+
+        faces = self.main_window.selected_geometry_surfaces
+        lines = self.main_window.selected_geometry_lines
+        nodes = self.main_window.selected_mesh_nodes
+
         index = self.comboBox_selector_filter.currentIndex()
         if faces and index == 0:
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
-            self.entity_type = "surface"
 
         if lines and index == 1:
             text = ", ".join([str(i) for i in lines])
             self.lineEdit_selection_id.setText(text)
-            self.entity_type = "line"
 
-        if points and index == 2:
-            text = ", ".join([str(i) for i in points])
+        if nodes and index == 2:
+            text = ", ".join([str(i) for i in nodes])
             self.lineEdit_selection_id.setText(text)
-            self.entity_type = "point"
 
-        elif not any([points, lines, faces]):
+        elif not any([nodes, lines, faces]):
             self.lineEdit_selection_id.setText("")
 
     def check_inputs(self):
