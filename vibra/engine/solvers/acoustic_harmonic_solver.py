@@ -308,7 +308,10 @@ class AcousticHarmonicSolver:
         Aeff_out = nodal_areas_out.reshape(-1, 1) * (A_out / np.sum(nodal_areas_out))
 
         logging.info("Processing the transmission loss..." + ProgressStatus(50, 100))
-        self.get_particle_velocity_from_surface(input_surface_id)
+        input_particle_velocities = self.get_particle_velocity_from_surface(input_surface_id)
+
+        logging.info("Processing the transmission loss..." + ProgressStatus(90, 100))
+        output_particle_velocities = self.get_particle_velocity_from_surface(output_surface_id)
 
         # the zero_shift constant is summed to avoid zero values either in P_input2 or P_output2 variables
         zero_shift = 1e-12
@@ -318,18 +321,20 @@ class AcousticHarmonicSolver:
         if surf_velocity is None:
             return None, None, None
 
-        real_values = np.array(surf_velocity["real_values"])
-        imag_values = np.array(surf_velocity["imag_values"])
+        # real_values = np.array(surf_velocity["real_values"])
+        # imag_values = np.array(surf_velocity["imag_values"])
+        # V_in = real_values + 1j * imag_values
 
-        V_in = real_values + 1j * imag_values
-        P_in = V_in * rho_in * c0_in# / 2
+        V_in = input_particle_velocities["Vx"]
+        # P_in = V_in * rho_in * c0_in# / 2
 
         # V_in = (-1) * Vn * (Aeff_in / A_in)
 
         # V_in = P_in / (rho_in * c0_in)
         I_in = np.real(P_in * np.conjugate(V_in)) / 2
 
-        V_out = P_out / (rho_out * c0_out)
+        V_out = output_particle_velocities["Vx"]
+        # V_out = P_out / (rho_out * c0_out)
         I_out = np.real(P_out * np.conjugate(V_out)) / 2
 
         W_in = 10*np.log10(np.sum(I_in * Aeff_in, axis=0))
@@ -355,24 +360,28 @@ class AcousticHarmonicSolver:
         node_ids = self.assembler.model.mesh.nodes_from_surfaces[surface_id]
         elements_connected_to_nodes = self.assembler.model.mesh.get_solid_elements_connected_to_nodes(node_ids)
 
-        logging.info("Processing the transmission loss..." + ProgressStatus(70, 100))
+        fluid = self.assembler.model.properties.get_fluid(surface=surface_id)
+        rho = fluid.fluid_density
 
+        run = True
         data = dict()
         for node_id, element_ids in elements_connected_to_nodes.items():
 
             Vn = 0.
             for element_id in element_ids:
-                Vn += element_3d.process_particle_velocity(element_id, surface_id, self.frequencies, self.solution)
+                if run:
+                    element_3d.velpartT4C(element_id, self.frequencies, self.solution)
+                    run = False
+                Vn += element_3d.process_particle_velocity(element_id, node_id, rho, self.frequencies, self.solution)
 
             data[node_id] = Vn / len(element_ids)
 
         ordered_nodes = np.sort(list(data.keys()))
         particle_velocity = np.zeros((len(ordered_nodes), len(self.frequencies)), dtype=complex)
 
-        logging.info("Processing the transmission loss..." + ProgressStatus(90, 100))
-
-        particle_velocities = dict()
         labels = ["Vx", "Vy", "Vz"]
+        particle_velocities = dict()
+
         for j, key in enumerate(labels):    
             for i in range(len(ordered_nodes)):
                 node_id = ordered_nodes[i]
