@@ -46,6 +46,7 @@ class PlotTransmissionLossInput(QDialog):
 
         self._config_widgets()
         self._load_analysis_data()
+        self.load_input_surface_id()
         self.exec()
 
     def _load_analysis_data(self):
@@ -56,10 +57,9 @@ class PlotTransmissionLossInput(QDialog):
                 self.analysis_method = "Direct method"
 
     def _load_icons(self):
-        self.vibra_icon = app().main_window.vibra_icon
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(self.vibra_icon)
+        self.setWindowIcon(app().main_window.vibra_icon)
 
     def _reset_variables(self):
         self.exporter = None
@@ -130,6 +130,18 @@ class PlotTransmissionLossInput(QDialog):
         elif not any([points, lines, faces]):
             return
             self.current_lineEdit.setText("")
+
+    def load_input_surface_id(self):
+
+        surface_ids = list()
+        for (property, id) in self.properties.surface_properties.keys():
+            if property == "surface_velocity":
+                if id not in surface_ids:
+                    surface_ids.append(id)
+
+        if len(surface_ids) == 1:
+            self.lineEdit_input_surface_id.setText(str(surface_ids[0]))
+            self.lineEdit_output_surface_id.setFocus()
 
     def invert_selection(self):
         temp_text_input = self.lineEdit_input_surface_id.text()

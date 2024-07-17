@@ -42,11 +42,11 @@ def get_detJAC_and_invJAC(JAC):
     return detJAC, (1 / detJAC) * AUJJ
 
 
-DOF_PER_NODE = 1
-NODES_PER_ELEMENT = 4
-DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
-
 class ACT_TETRAHEDRON_4C(Element3D):
+
+    DOF_PER_NODE = 1
+    NODES_PER_ELEMENT = 4
+    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
 
     def __init__(self, model):
         self.model = model
@@ -102,8 +102,8 @@ class ACT_TETRAHEDRON_4C(Element3D):
         detJAC, invJAC = get_detJAC_and_invJAC(JAC)
         dphi_t = invJAC @ self.dphi
         #
-        B = np.zeros((3, DOFS_PER_ELEMENT), dtype=float)
-        N = np.zeros((self.nint, 1, DOFS_PER_ELEMENT), dtype=float)
+        B = np.zeros((3, self.DOFS_PER_ELEMENT), dtype=float)
+        N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
         #
         B[0, :] = dphi_t[0, :]
         B[1, :] = dphi_t[1, :]
@@ -148,7 +148,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
         detJAC, invJAC = get_detJAC_and_invJAC(JAC)
         dphi_t = invJAC @ dphi
 
-        B = np.zeros((3, DOFS_PER_ELEMENT), dtype=float)
+        B = np.zeros((3, self.DOFS_PER_ELEMENT), dtype=float)
 
         B[0, :] = dphi_t[0, :]
         B[1, :] = dphi_t[1, :]
@@ -159,7 +159,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
 
         Ve = (1 / np.sqrt(6)) * B @ Pe
 
-        for i in range(NODES_PER_ELEMENT):
+        for i in range(self.NODES_PER_ELEMENT):
             if ie[i] == node_id:
                 return (-1j / (rho * omegas)) * Ve
 
@@ -178,8 +178,8 @@ class ACT_TETRAHEDRON_4C(Element3D):
         connect = self.connectivity
         ie = self.connectivity[el_index, 1:]
         # #
-        # print(f"element_index: {el_index}")
-        # print(f"nodes: {ie}")
+        print(f"element_index: {el_index}")
+        print(f"nodes: {ie}")
         #
         Pe = np.zeros((4), dtype=complex)
         Pe[0] = P[connect[el_index,1], 0]
@@ -251,7 +251,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
 
     def reorder_connect(self):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
-        if self.connectivity.shape[1] == NODES_PER_ELEMENT + 4:
+        if self.connectivity.shape[1] == self.NODES_PER_ELEMENT + 4:
             self.connectivity = self.connectivity[:, [0, 6, 4, 5, 7]]
 
     def generate_ind_rows_cols(self, reorder=True):
@@ -262,7 +262,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
         else:
             self.connectivity = self.connectivity[:, [0, 4, 5, 6, 7]]
 
-        dofs, edofs = DOF_PER_NODE, DOFS_PER_ELEMENT
+        dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
         ind_dofs = dofs * self.connectivity[:, 1:]
 
         vect_indices = ind_dofs.flatten()
