@@ -19,6 +19,7 @@ class FacesActor(vtk.vtkActor):
         cell_colors = vtk.vtkUnsignedCharArray()
         cell_indexes = vtk.vtkIntArray()
         cell_indexes.SetName("cell_indexes")
+        cell_colors.Fill(0)
         #
         nel = len(self.mesh.faces_connectivity[0, 4:])
         # face_nodes = [3, 6, 4, 8]
@@ -28,7 +29,7 @@ class FacesActor(vtk.vtkActor):
         data.Allocate(nel * len(self.mesh.faces_connectivity))
         point_colors.SetNumberOfComponents(3)
         point_colors.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
-        cell_colors.SetNumberOfComponents(3)
+        cell_colors.SetNumberOfComponents(4)
         cell_colors.SetNumberOfTuples(len(self.mesh.faces_connectivity))
         cell_indexes.Allocate(len(self.mesh.faces_connectivity))
 
@@ -70,27 +71,22 @@ class FacesActor(vtk.vtkActor):
         self.GetProperty().SetSpecularColor(1, 1, 1)
         self.clear_colors()
 
-    def clear_colors(self):
+    def clear_colors(self, color=(255, 255, 255, 255)):
         if self.data is None:
             return
 
-        point_colors = self.data.GetPointData().GetScalars()
         cell_colors = self.data.GetCellData().GetScalars()
-
-        r, g, b = self.GetProperty().GetColor()
-        r = int(r * 255)
-        g = int(g * 255)
-        b = int(b * 255)
-
-        point_colors.FillComponent(0, r)
-        point_colors.FillComponent(1, g)
-        point_colors.FillComponent(2, b)
+        r, g, b, a = color
 
         cell_colors.FillComponent(0, r)
         cell_colors.FillComponent(1, g)
         cell_colors.FillComponent(2, b)
+        cell_colors.FillComponent(3, a)
 
-        self.GetMapper().ScalarVisibilityOff()
+        self.data.Modified()
+        self.GetMapper().SetScalarModeToUseCellData()
+        self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
+        self.GetMapper().ScalarVisibilityOn()
 
     def paint_points(self, color, points):
         if self.data is None:
@@ -104,9 +100,12 @@ class FacesActor(vtk.vtkActor):
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
 
-    def paint_cells(self, color: tuple[3], faces: tuple[int]):
+    def paint_cells(self, color: tuple[int, int, int] | tuple[int, int, int, int], faces: tuple[int]):
         if self.data is None:
             return
+
+        if len(color) == 3:
+            color = *color, 255
 
         cell_colors = self.data.GetCellData().GetScalars()
         for i in faces:

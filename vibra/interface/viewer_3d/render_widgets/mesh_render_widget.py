@@ -83,7 +83,11 @@ class MeshRenderWidget(CommonRenderWidget):
         self.nodes_actor = NodesActor(mesh)
         self.renderer.AddActor(self.nodes_actor)
 
-        self.faces_actor = FacesActor(mesh)
+        self.faces_actor = FacesActor(mesh, allow_hidding=False)
+        self.faces_actor.GetProperty().LightingOff()
+        self.faces_actor.ForceTranslucentOn()
+        self.faces_actor.PickableOff()
+        self.faces_actor.clear_colors((0,0,0,0))
         self.renderer.AddActor(self.faces_actor)
 
         self.solids_actor = SolidsActor(mesh)
@@ -102,7 +106,37 @@ class MeshRenderWidget(CommonRenderWidget):
         self.show_faces()
         self.main_window.project.thumbnail = self.get_thumbnail()
 
-    #
+    def update_hidden_plot(self):
+        # We could just call the update_plot function,
+        # but this is much simpler and faster
+        if self.main_window.project is None:
+            return
+
+        model = self.main_window.project.model
+        if model is None:
+            return
+
+        mesh = model.mesh
+        if mesh is None:
+            return
+
+        self.renderer.RemoveActor(self.solids_actor)
+        self.solids_actor = SolidsActor(mesh)
+        self.renderer.AddActor(self.solids_actor)
+
+        self.renderer.RemoveActor(self.edges_actor)
+        self.edges_actor = EdgesActor(self.solids_actor.data)
+        self.edges_actor.GetProperty().SetColor(0, 0, 0)
+        self.renderer.AddActor(self.edges_actor)
+
+        has_hidden_part = bool(self.main_window.hidden_surfaces)
+        faces_alpha = 12 if has_hidden_part else 0
+        self.faces_actor.clear_colors((255, 255, 255, faces_alpha))
+
+        self.update()
+
+    # TODO: replace these methods to use flags
+    # Then, combinations of these visualizations will be valid    
     def show_points(self):
         self.view_mode = SHOW_POINTS
         self.nodes_actor.VisibilityOn()
@@ -123,7 +157,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.view_mode = SHOW_FACES
         self.nodes_actor.VisibilityOn()
         self.edges_actor.VisibilityOn()
-        self.faces_actor.VisibilityOff()
+        self.faces_actor.VisibilityOn()
         self.solids_actor.VisibilityOn()
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
         self.update()
@@ -205,23 +239,19 @@ class MeshRenderWidget(CommonRenderWidget):
         picked_solids = []
 
         node_id, node_pos = self._pick_actor(x, y, self.nodes_actor)
-        face_id, face_pos = self._pick_actor(x, y, self.faces_actor)
         solid_id, solid_pos = self._pick_actor(x, y, self.solids_actor)
 
         camera_position = np.array(self.renderer.GetActiveCamera().GetPosition())
         node_distance = np.linalg.norm(camera_position - node_pos) if node_id >= 0 else float('inf')
-        face_distance = np.linalg.norm(camera_position - face_pos) if face_id >= 0 else float('inf')
         solid_distance = np.linalg.norm(camera_position - solid_pos) if solid_id >= 0 else float('inf')
         node_distance *= 0.98 # Cheating a bit to prioritize the node selection
-        closest = min(node_distance, face_distance, solid_distance)
+        closest = min(node_distance, solid_distance)
 
         if closest == float('inf'):
             return picked_nodes, picked_faces, picked_solids
 
         if (closest == node_distance):
             picked_nodes.append(node_id)
-        elif (closest == face_distance):
-            picked_faces.append(face_id)
         elif (closest == solid_distance):
             picked_solids.append(solid_id)
 
@@ -283,8 +313,11 @@ class MeshRenderWidget(CommonRenderWidget):
         
         self.update_info_text()
 
+        has_hidden_part = bool(self.main_window.hidden_surfaces)
+        faces_alpha = 12 if has_hidden_part else 0
+
         self.nodes_actor.clear_colors((0, 0, 0, 0))
-        self.faces_actor.clear_colors()
+        self.faces_actor.clear_colors((255, 255, 255, faces_alpha))
         self.solids_actor.clear_colors()
 
         nodes = self.main_window.selected_mesh_nodes
