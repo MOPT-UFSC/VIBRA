@@ -78,7 +78,7 @@ class MainWindow(QMainWindow):
         self.clip_plane.slider_pressed.connect(self.slider_pressed_callback)
         self.clip_plane.value_changed.connect(self.slider_moved_callback)
         self.clip_plane.slider_released.connect(self.slider_released_callback)
-        self.clip_plane.closed.connect(self.disable_cut)
+        # self.clip_plane.closed.connect(self.disable_cut)
 
     def set_mesh_selection(self, *, nodes=None, faces=None, solids=None, join=False, remove=True):
         if nodes is None:
@@ -175,6 +175,15 @@ class MainWindow(QMainWindow):
 
     def update_geometry_information(self):
         self.status_bar.update_geometry_information()
+
+    def show_hide_section_plane_callback(self, option):
+        if option:
+            self.viewer_tabs.start_cutting_mode()
+        else:
+            self.viewer_tabs.stop_cutting_mode()
+
+    def show_config_section_plane(self):
+        pass
 
     def slider_pressed_callback(self):
         self.viewer_tabs.start_cutting_mode()
