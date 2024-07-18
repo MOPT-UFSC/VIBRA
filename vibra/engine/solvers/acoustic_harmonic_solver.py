@@ -255,11 +255,11 @@ class AcousticHarmonicSolver:
         
         """
         
-        rows_input = self.assembler.model.mesh.nodes_from_surfaces[input_surface_id]
-        rows_output = self.assembler.model.mesh.nodes_from_surfaces[output_surface_id]
+        nodes_input = self.assembler.model.mesh.nodes_from_surfaces[input_surface_id]
+        nodes_output = self.assembler.model.mesh.nodes_from_surfaces[output_surface_id]
 
-        P_in = self.solution[rows_input, :]
-        P_out = self.solution[rows_output, :]
+        P_in = self.solution[nodes_input, :]
+        P_out = self.solution[nodes_output, :]
 
         volume_out = self.assembler.model.mesh.volume_from_surface[output_surface_id][0]
         volume_in = self.assembler.model.mesh.volume_from_surface[input_surface_id][0]
@@ -279,14 +279,14 @@ class AcousticHarmonicSolver:
         logging.info("Processing the transmission loss..." + ProgressStatus(40, 100))
 
         out_data = dict()
-        nodal_areas_in = np.zeros(len(rows_input), dtype=float)
-        for i, node in enumerate(rows_input):
+        nodal_areas_in = np.zeros(len(nodes_input), dtype=float)
+        for i, node in enumerate(nodes_input):
             areas = self.assembler.model.mesh.nodal_area[node]
             nodal_areas_in[i] = sum(areas)
             out_data[node] = sum(areas)
 
-        nodal_areas_out = np.zeros(len(rows_output), dtype=float)
-        for i, node in enumerate(rows_output):
+        nodal_areas_out = np.zeros(len(nodes_output), dtype=float)
+        for i, node in enumerate(nodes_output):
             areas = self.assembler.model.mesh.nodal_area[node]
             nodal_areas_out[i] = sum(areas)
             out_data[node] = sum(areas)
@@ -340,14 +340,14 @@ class AcousticHarmonicSolver:
         W_in = 10*np.log10(np.sum(I_in * Aeff_in, axis=0))
         W_out = 10*np.log10(np.sum(I_out * Aeff_out, axis=0))
 
-        diff = 10*np.log10(np.sum(I_out * Aeff_out, axis=0)) - 10*np.log10(np.sum(I_out * A_out/len(rows_output), axis=0))
+        diff = 10*np.log10(np.sum(I_out * Aeff_out, axis=0)) - 10*np.log10(np.sum(I_out * A_out/len(nodes_output), axis=0))
 
         TL = W_in - W_out
 
-        if 0 in self.frequencies:
+        if self.frequencies[0] == 0:
             return self.frequencies[1:], TL[1:], diff[1:]
-
-        return self.frequencies, TL, diff
+        else:
+            return self.frequencies, TL, diff
 
     def get_particle_velocity_from_surface(self, surface_id):
         """
@@ -369,7 +369,7 @@ class AcousticHarmonicSolver:
 
             Vn = 0.
             for element_id in element_ids:
-                if node_id in [9368, 8350]:
+                if node_id in [8416, 9368]:
                     element_3d.velpartT4C(element_id, node_id, rho, self.frequencies, self.solution)
 
                 Vn += element_3d.process_particle_velocity(element_id, node_id, rho, self.frequencies, self.solution)

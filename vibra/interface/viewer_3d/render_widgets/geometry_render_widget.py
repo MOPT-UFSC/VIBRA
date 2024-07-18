@@ -588,8 +588,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         text += self._volumes_info_text()
         text += self._material_info_text()
         text += self._fluid_info_text()
+        text += self._porous_material_info_text()
         text += self._boundary_conditions_info_text()
-        
+
         self.set_info_text(text)
         self.update()
     
@@ -608,17 +609,22 @@ class GeometryRenderWidget(CommonRenderWidget):
         return text
 
     def _faces_info_text(self):
-        faces = list(self.main_window.selected_geometry_surfaces)
-        text = ""
 
-        if len(faces) > 1:
-            text += (
-                f"{len(faces)} surfaces in selection\n"
-                f"{format_long_sequence(faces)}\n\n"
-            )
-        elif len(faces) == 1:
-            text += f"Surface: {faces[0]}\n\n"
-        
+        text = ""
+        volumes = list(self.main_window.selected_geometry_volumes)
+
+        if len(volumes) == 0:
+
+            faces = list(self.main_window.selected_geometry_surfaces)
+            
+            if len(faces) > 1:
+                text += (
+                    f"{len(faces)} surfaces in selection\n"
+                    f"{format_long_sequence(faces)}\n\n"
+                )
+            elif len(faces) == 1:
+                text += f"Surface: {faces[0]}\n\n"
+
         return text
     
     def _volumes_info_text(self):
@@ -636,13 +642,13 @@ class GeometryRenderWidget(CommonRenderWidget):
         return text
 
     def _material_info_text(self):
-        elements = list(self.main_window.selected_geometry_surfaces)
+        volumes = list(self.main_window.selected_geometry_volumes)
         text = ""
 
-        if len(elements) != 1:
+        if len(volumes) != 1:
             return text 
 
-        material = self.main_window.project.model.properties.get_material(surface=elements[0])
+        material = self.main_window.project.model.properties.get_material(volume=volumes[0])
         if material is None:
             return text
         
@@ -650,25 +656,25 @@ class GeometryRenderWidget(CommonRenderWidget):
         tree.add_item("Name", material.name)
         tree.add_item("Identifier", material.identifier)
         tree.add_item("Density", material.density, "kg/m³")
-        tree.add_item("Young Modulus", material.young_modulus/1e9, "GPa")
-        tree.add_item("Poisson Ratio", material.poisson_ratio, "--")
-        tree.add_item("Thermal Expasion Coefficient", material.thermal_expansion_coefficient, "1/K")
+        tree.add_item("elasticity modulus", material.young_modulus/1e9, "GPa")
+        tree.add_item("Poisson ratio", material.poisson_ratio, "--")
+        tree.add_item("Thermal expasion coefficient", material.thermal_expansion_coefficient, "1/K")
 
         text += str(tree)
 
         return text
         
     def _fluid_info_text(self):
-        elements = list(self.main_window.selected_geometry_surfaces)
+        volumes = list(self.main_window.selected_geometry_volumes)
         text = ""
 
-        if len(elements) != 1:
+        if len(volumes) != 1:
             return text
-        
-        fluid = self.main_window.project.model.properties.get_fluid(element=elements[0])
+
+        fluid = self.main_window.project.model.properties.get_fluid(volume=volumes[0])
         if fluid is None:
             return text
-        
+
         tree = TreeInfo("Fluid")
         tree.add_item("Name", fluid.name)
         tree.add_item("Identifier", fluid.identifier)
@@ -676,8 +682,28 @@ class GeometryRenderWidget(CommonRenderWidget):
         tree.add_item("Temperature", fluid.temperature, "K")
         tree.add_item("Density", fluid.fluid_density, "kg/m³")
         tree.add_item("Speed of sound", fluid.speed_of_sound, "m/s")
+
         if fluid.molar_mass is not None:
             tree.add_item("Molar mass", fluid.molar_mass, "kg/kmol")
+
+        text += str(tree)
+
+        return text
+
+    def _porous_material_info_text(self):
+        volumes = list(self.main_window.selected_geometry_volumes)
+        text = ""
+
+        if len(volumes) != 1:
+            return text
+
+        pm_model = self.main_window.project.model.properties.get_porous_material_model_data(volume=volumes[0])
+        if pm_model is None:
+            return text
+
+        tree = TreeInfo("Porous material")
+        tree.add_item("Model", pm_model["model"])
+        tree.add_item("Flow resistivity", pm_model["flow_resistivity"], "kg/m³s")
 
         text += str(tree)
 

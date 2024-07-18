@@ -151,6 +151,9 @@ class ModelProperties:
     def get_specific_impedance(self, surface):
         return self._get_property("specific_impedance", surface=surface)
 
+    def get_porous_material_model_data(self, volume):
+        return self._get_property("porous_material_model", volume=volume)
+
     def set_acoustic_pressure(self, data, surface):
         self._set_property("acoustic_pressure", data, surface=surface)
 

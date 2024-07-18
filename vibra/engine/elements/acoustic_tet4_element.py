@@ -163,8 +163,8 @@ class ACT_TETRAHEDRON_4C(Element3D):
                 Ve = (-1j / (rho * omega)) * (1 / np.sqrt(6)) * (B @ Pe)
 
                 output = np.zeros((len(frequencies), 1+6), dtype=float)
-                if node_id in [8350, 9368]:
-                    if element_id in [81523]:
+                if node_id in [8416, 9368]:
+                    if element_id in [81523, 81986]:
                         print(f"Node id: {node_id}")
                         print(f"Element id: {element_id}")
                         output[:, 0] = frequencies
@@ -262,8 +262,8 @@ class ACT_TETRAHEDRON_4C(Element3D):
             # VK[:,i] = -(1j/(rho*omega))*(1/np.sqrt(6))*B @ Pe
 
         output = np.zeros((len(freq), 1+6), dtype=float)
-        if node_id in [8350, 9368]:
-            if element_id in [81523]:
+        if node_id in [8416, 9368]:
+            if element_id in [81523, 81986]:
                 print(f"Node id: {node_id}")
                 print(f"Element id: {element_id}")
                 output[:, 0] = freq

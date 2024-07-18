@@ -399,8 +399,8 @@ class MeshRenderWidget(CommonRenderWidget):
         text += self._nodes_info_text()
         text += self._faces_info_text()
         text += self._solids_info_text()
-        text += self._material_info_text()
-        text += self._fluid_info_text()
+        # text += self._material_info_text()
+        # text += self._fluid_info_text()
         # text += self._boundary_conditions_info_text()
         
         self.set_info_text(text)
@@ -417,7 +417,7 @@ class MeshRenderWidget(CommonRenderWidget):
         elif len(nodes) == 1:
             text += f"Node: {nodes[0]}\n"
             coords = self.main_window.project.model.mesh.nodal_coordinates[nodes[0], 1:]
-            text += f"Coordinates: [{round(coords[0], 6)}, {round(coords[1], 6)}, {round(coords[2], 6)}]\n\n"
+            text += f"Coordinates: [{round(coords[0], 6)}, {round(coords[1], 6)}, {round(coords[2], 6)}] (m)\n\n"
 
         return text
 
@@ -446,7 +446,7 @@ class MeshRenderWidget(CommonRenderWidget):
             element_id = solids_elem_ids[0]
             connect = self.main_window.project.model.mesh.solids_connectivity[element_id, 4:]
             text += f"Solid element: {element_id}\n"
-            text += f"Connectivity: {connect}\n\n"
+            text += f"Connectivity: {list(connect)}\n\n"
 
         return text
 
