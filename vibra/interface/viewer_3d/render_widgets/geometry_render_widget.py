@@ -48,6 +48,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.points_actor = None
         self.lines_actor = None
         self.faces_actor = None
+        self.hidden_part_actor = None
         self.selection_spheres_actor = None
 
         self.selection_color = (20, 106, 245)
@@ -78,9 +79,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.remove_actors()
 
         self.selection_spheres_actor = SelectionSpheres()
-        self.selection_spheres_actor.GetProperty().SetColor([1, 0, 0])
-        self.selection_spheres_actor.VisibilityOff()
-        self.selection_spheres_actor.PickableOff()
         self.renderer.AddActor(self.selection_spheres_actor)
 
         self.points_actor = PointsActor(mesh)
@@ -91,6 +89,15 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.faces_actor = FacesActor(mesh)
         self.renderer.AddActor(self.faces_actor)
+
+        # Add a very subtle transparent actor to represent the whole 
+        # structure even if part of it is hidden
+        has_hidden_part = bool(self.main_window.hidden_surfaces)
+        self.hidden_part_actor = FacesActor(mesh, allow_hidding=False)
+        self.hidden_part_actor.SetVisibility(has_hidden_part)
+        self.hidden_part_actor.GetProperty().SetOpacity(0.05)
+        self.hidden_part_actor.GetProperty().LightingOff()
+        self.renderer.AddActor(self.hidden_part_actor)
 
         self.plane_actor = CuttingPlaneActor(self.faces_actor.GetBounds())
         self.plane_actor.VisibilityOff()
@@ -105,6 +112,29 @@ class GeometryRenderWidget(CommonRenderWidget):
         # I will keep it like this because it is fast enough, but this
         # may be addressed in near future.
         self.main_window.project.thumbnail = self.get_thumbnail()
+    
+    def update_hidden_plot(self):
+        # We could just call the update_plot function,
+        # but this is much simpler and faster
+        if self.main_window.project is None:
+            return
+
+        model = self.main_window.project.model
+        if model is None:
+            return
+
+        mesh = model.mesh
+        if mesh is None:
+            return
+
+        self.renderer.RemoveActor(self.faces_actor)
+        self.faces_actor = FacesActor(mesh)
+        self.renderer.AddActor(self.faces_actor)
+
+        has_hidden_part = bool(self.main_window.hidden_surfaces)
+        self.hidden_part_actor.SetVisibility(has_hidden_part)
+
+        self.update()
 
     def set_theme(self, theme):
         super().set_theme(theme)
@@ -525,12 +555,14 @@ class GeometryRenderWidget(CommonRenderWidget):
         if not self._actors_exists():
             return
         self.plane_actor.VisibilityOn()
+        self.hidden_part_actor.VisibilityOn()
         self.update()
 
     def stop_cutting_mode(self):
         if not self._actors_exists():
             return
         self.plane_actor.VisibilityOff()
+        self.hidden_part_actor.VisibilityOff()
         self.points_actor.disable_cut()
         self.lines_actor.disable_cut()
         self.faces_actor.disable_cut()
@@ -564,19 +596,22 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.renderer.RemoveActor(self.points_actor)
         self.renderer.RemoveActor(self.lines_actor)
         self.renderer.RemoveActor(self.faces_actor)
+        self.renderer.RemoveActor(self.hidden_part_actor)
         self.renderer.RemoveActor(self.selection_spheres_actor)
 
         self.points_actor = None
         self.lines_actor = None
         self.faces_actor = None
+        self.hidden_part_actor = None
         self.selection_spheres_actor = None
 
     def _actors_exists(self):
-        actors = [  
+        actors = [
                     self.points_actor,
                     self.lines_actor,
                     self.faces_actor,
                     self.selection_spheres_actor,
+                    self.hidden_part_actor,
                 ]
 
         return all([actor is not None for actor in actors])
