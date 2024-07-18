@@ -204,10 +204,10 @@ class PlotTransmissionLossInput(QDialog):
 
             def transmission_loss_callback():
 
-                list_ids = [self.input_surface_id, self.output_surface_id]
+                surface_ids = [self.input_surface_id, self.output_surface_id]
 
                 logging.info("Processing the transmission loss..." + ProgressStatus(10, 100))
-                self.mesh._process_face_elements_connected_to_nodes(list_ids)
+                self.mesh._process_face_elements_connected_to_nodes(surface_ids)
 
                 logging.info("Processing the transmission loss..." + ProgressStatus(20, 100))
                 self.mesh._process_nodal_areas()

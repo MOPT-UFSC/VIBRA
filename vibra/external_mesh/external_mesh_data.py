@@ -128,8 +128,9 @@ class ExternalMeshData():
 
                         if len(connect_data) >= number_of_cols - 4:
                             body_id = connect_data[1]
-                            _connect_data = self.filter_collapsed_nodes(connect_data[10:])
-                            nodes_per_element = len(np.array([*set(_connect_data)])) - 1
+                            element_id = connect_data[10]
+                            _connect_data = self.filter_collapsed_nodes(connect_data[11:])
+                            nodes_per_element = len(_connect_data)
                             # print(body_id, nodes_per_element)
 
                         else:
@@ -137,6 +138,7 @@ class ExternalMeshData():
 
                         if nodes_per_element == 4:
                             if len(connect_data) == number_of_cols:
+                                _connect_data.insert(0, element_id)
                                 _connect_data.insert(1, body_id)
                                 _connect_data.insert(2, nodes_per_element)
                                 # print(f"solid285 - tet4: {_connect_data}")
@@ -144,6 +146,9 @@ class ExternalMeshData():
                         
                         elif nodes_per_element == 8:
                             if len(connect_data) == number_of_cols:
+                                _connect_data.insert(0, element_id)
+                                _connect_data.insert(1, body_id)
+                                _connect_data.insert(2, nodes_per_element)
                                 # print(f"solid185 - hex8: {_connect_data}")
                                 self.connectivity[body_id, "solid185_hex8"].append(_connect_data)
                         
@@ -151,9 +156,14 @@ class ExternalMeshData():
                             if len(connect_data) == number_of_cols:
                                 cache_nodes = _connect_data
                             else:
+
                                 if cache_nodes:
                                     for node_id in _connect_data:
                                         cache_nodes.append(node_id)
+
+                                    cache_nodes.insert(0, element_id)
+                                    cache_nodes.insert(1, body_id)
+                                    cache_nodes.insert(2, nodes_per_element)
                                     # print(f"solid187 - tet10: {cache_nodes}")
                                     self.connectivity[body_id, "solid187_tet10"].append(cache_nodes)    
                                     cache_nodes = list()
@@ -162,9 +172,14 @@ class ExternalMeshData():
                             if len(connect_data) == number_of_cols:
                                 cache_nodes = _connect_data
                             else:
+
                                 if cache_nodes:
                                     for node_id in _connect_data:
                                         cache_nodes.append(node_id)
+
+                                    cache_nodes.insert(0, element_id)
+                                    cache_nodes.insert(1, body_id)
+                                    cache_nodes.insert(2, nodes_per_element)
                                     # print(f"solid186 - hex20: {cache_nodes}")
                                     self.connectivity[body_id, "solid186_hex20"].append(cache_nodes)
                                     cache_nodes = list()

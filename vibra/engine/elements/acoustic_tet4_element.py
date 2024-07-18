@@ -162,121 +162,121 @@ class ACT_TETRAHEDRON_4C(Element3D):
 
                 Ve = (-1j / (rho * omega)) * (1 / np.sqrt(6)) * (B @ Pe)
 
-                output = np.zeros((len(frequencies), 1+6), dtype=float)
-                if node_id in [8416, 9368]:
-                    if element_id in [81523, 81986]:
-                        print(f"Node id: {node_id}")
-                        print(f"Element id: {element_id}")
-                        output[:, 0] = frequencies
-                        output[:, 1] = np.real(Ve[0,:])
-                        output[:, 2] = np.imag(Ve[0,:])
-                        output[:, 3] = np.real(Ve[1,:])
-                        output[:, 4] = np.imag(Ve[1,:])
-                        output[:, 5] = np.real(Ve[2,:])
-                        output[:, 6] = np.imag(Ve[2,:])
-                        fname = f"particle_velocities_Vibra_{node_id}_{element_id}.dat"
-                        np.savetxt(fname, output, delimiter=",")
+                # output = np.zeros((len(frequencies), 1+6), dtype=float)
+                # if node_id in [8416, 9368]:
+                #     if element_id in [81523, 81986]:
+                #         print(f"Node id: {node_id}")
+                #         print(f"Element id: {element_id}")
+                #         output[:, 0] = frequencies
+                #         output[:, 1] = np.real(Ve[0,:])
+                #         output[:, 2] = np.imag(Ve[0,:])
+                #         output[:, 3] = np.real(Ve[1,:])
+                #         output[:, 4] = np.imag(Ve[1,:])
+                #         output[:, 5] = np.real(Ve[2,:])
+                #         output[:, 6] = np.imag(Ve[2,:])
+                #         fname = f"particle_velocities_Vibra_{node_id}_{element_id}.dat"
+                #         np.savetxt(fname, output, delimiter=",")
 
                 return Ve
 
-    def velpartT4C(self, element_id, node_id, rho, freq, pressures):
-        """ Stiffness and mass matrices.
-        """  
-        #Connect -- Ansys ---> Gmsh
-        # connect_t  = connect.copy()
-        # connect_t[ee,1] = connect[ee,3]
-        # connect_t[ee,2] = connect[ee,1]
-        # connect_t[ee,3] = connect[ee,2]
-        # connect_t[ee,4] = connect[ee,4]
-        # connect = connect_t.copy()
-        #sugestao: mudar ordenação das funções de forma e derivadas
-        #
-        ie = self.connectivity[element_id, 1:]
-        Pe = pressures[ie, :]
+    # def velpartT4C(self, element_id, node_id, rho, freq, pressures):
+    #     """ Stiffness and mass matrices.
+    #     """  
+    #     #Connect -- Ansys ---> Gmsh
+    #     # connect_t  = connect.copy()
+    #     # connect_t[ee,1] = connect[ee,3]
+    #     # connect_t[ee,2] = connect[ee,1]
+    #     # connect_t[ee,3] = connect[ee,2]
+    #     # connect_t[ee,4] = connect[ee,4]
+    #     # connect = connect_t.copy()
+    #     #sugestao: mudar ordenação das funções de forma e derivadas
+    #     #
+    #     ie = self.connectivity[element_id, 1:]
+    #     Pe = pressures[ie, :]
 
-        # #
-        # print(f"element_index: {element_id}")
-        # print(f"nodes: {ie}")
-        #
-        # Pe = np.zeros((4, len(freq)), dtype=complex)
-        # Pe[0, :] = pressures[connect[element_id,1], :]
-        # Pe[1, :] = pressures[connect[element_id,2], :]
-        # Pe[2, :] = pressures[connect[element_id,3], :]
-        # Pe[3, :] = pressures[connect[element_id,4], :]
+    #     # #
+    #     # print(f"element_index: {element_id}")
+    #     # print(f"nodes: {ie}")
+    #     #
+    #     # Pe = np.zeros((4, len(freq)), dtype=complex)
+    #     # Pe[0, :] = pressures[connect[element_id,1], :]
+    #     # Pe[1, :] = pressures[connect[element_id,2], :]
+    #     # Pe[2, :] = pressures[connect[element_id,3], :]
+    #     # Pe[3, :] = pressures[connect[element_id,4], :]
 
-        #
-        # -------
-        ncalc = 4
-        # Seguir elem. coords. de acordo com connectiv.
-        pcalc = np.array([  [ 0, 0, 0],
-                            [ 1, 0, 0],
-                            [ 0, 0, 1],
-                            [ 0, 1, 0]  ])
-        # 
-        VK = np.zeros((3,4), dtype=complex)
-        AUJJ = np.zeros((3,3))
-        B = np.zeros((3,4))
+    #     #
+    #     # -------
+    #     ncalc = 4
+    #     # Seguir elem. coords. de acordo com connectiv.
+    #     pcalc = np.array([  [ 0, 0, 0],
+    #                         [ 1, 0, 0],
+    #                         [ 0, 0, 1],
+    #                         [ 0, 1, 0]  ])
+    #     # 
+    #     VK = np.zeros((3,4), dtype=complex)
+    #     AUJJ = np.zeros((3,3))
+    #     B = np.zeros((3,4))
 
-        # integration
-        for i in range(ncalc):
-            l1, l2, l3 = pcalc[i, 0], pcalc[i, 1], pcalc[i, 2]
-            phi, dphi = shapeT4C(l1, l2, l3)
-            dxdydz = dphi @ self.nodal_coordinates[ie, 1:4]
-            # note: dxdr, dydr, dzdr, dxds, dyds, dzds, dxdt, dydt, dzdt 
-            JAC = np.array([[dxdydz[0,0], dxdydz[0,1], dxdydz[0,2]],
-                            [dxdydz[1,0], dxdydz[1,1], dxdydz[1,2]],
-                            [dxdydz[2,0], dxdydz[2,1], dxdydz[2,2]]], dtype=float)
+    #     # integration
+    #     for i in range(ncalc):
+    #         l1, l2, l3 = pcalc[i, 0], pcalc[i, 1], pcalc[i, 2]
+    #         phi, dphi = shapeT4C(l1, l2, l3)
+    #         dxdydz = dphi @ self.nodal_coordinates[ie, 1:4]
+    #         # note: dxdr, dydr, dzdr, dxds, dyds, dzds, dxdt, dydt, dzdt 
+    #         JAC = np.array([[dxdydz[0,0], dxdydz[0,1], dxdydz[0,2]],
+    #                         [dxdydz[1,0], dxdydz[1,1], dxdydz[1,2]],
+    #                         [dxdydz[2,0], dxdydz[2,1], dxdydz[2,2]]], dtype=float)
 
-            #detJAC = np.linalg.det(JAC)
-            detJAC = (JAC[0,0] * JAC[1,1] * JAC[2,2] + 
-                    JAC[0,1] * JAC[1,2] * JAC[2,0] + 
-                    JAC[0,2] * JAC[1,0] * JAC[2,1]) - \
-                    ( JAC[2,0] * JAC[1,1] * JAC[0,2] + 
-                    JAC[2,1] * JAC[1,2] * JAC[0,0] + 
-                    JAC[2,2] * JAC[1,0] * JAC[0,1])
-            ## adj(JAC)
-            AUJJ[0,0]= 1 * ((JAC[1,1] * JAC[2,2]) - (JAC[2,1] * JAC[1,2]))
-            AUJJ[1,0]= -1 * ((JAC[1,0] * JAC[2,2]) - (JAC[1,2] * JAC[2,0]))
-            AUJJ[2,0]= 1 * ((JAC[1,0] * JAC[2,1]) - (JAC[1,1] * JAC[2,0]))
-            AUJJ[0,1]= -1 * ((JAC[0,1] * JAC[2,2]) - (JAC[0,2] * JAC[2,1]))
-            AUJJ[1,1]= 1 * ((JAC[0,0] * JAC[2,2]) - (JAC[0,2] * JAC[2,0]))
-            AUJJ[2,1]= -1 * ((JAC[0,0] * JAC[2,1]) - (JAC[0,1] * JAC[2,0]))
-            AUJJ[0,2]= 1 * ((JAC[0,1] * JAC[1,2]) - (JAC[0,2] * JAC[1,1]))
-            AUJJ[1,2]= -1 * ((JAC[0,0] * JAC[1,2]) - (JAC[0,2] * JAC[1,0]))
-            AUJJ[2,2]= 1 * ((JAC[0,0] * JAC[1,1]) - (JAC[0,1] * JAC[1,0]))
-            #Inverse Jacobian
-            iJAC = (1/detJAC) * AUJJ # np.linalg.inv(JAC) 
+    #         #detJAC = np.linalg.det(JAC)
+    #         detJAC = (JAC[0,0] * JAC[1,1] * JAC[2,2] + 
+    #                 JAC[0,1] * JAC[1,2] * JAC[2,0] + 
+    #                 JAC[0,2] * JAC[1,0] * JAC[2,1]) - \
+    #                 ( JAC[2,0] * JAC[1,1] * JAC[0,2] + 
+    #                 JAC[2,1] * JAC[1,2] * JAC[0,0] + 
+    #                 JAC[2,2] * JAC[1,0] * JAC[0,1])
+    #         ## adj(JAC)
+    #         AUJJ[0,0]= 1 * ((JAC[1,1] * JAC[2,2]) - (JAC[2,1] * JAC[1,2]))
+    #         AUJJ[1,0]= -1 * ((JAC[1,0] * JAC[2,2]) - (JAC[1,2] * JAC[2,0]))
+    #         AUJJ[2,0]= 1 * ((JAC[1,0] * JAC[2,1]) - (JAC[1,1] * JAC[2,0]))
+    #         AUJJ[0,1]= -1 * ((JAC[0,1] * JAC[2,2]) - (JAC[0,2] * JAC[2,1]))
+    #         AUJJ[1,1]= 1 * ((JAC[0,0] * JAC[2,2]) - (JAC[0,2] * JAC[2,0]))
+    #         AUJJ[2,1]= -1 * ((JAC[0,0] * JAC[2,1]) - (JAC[0,1] * JAC[2,0]))
+    #         AUJJ[0,2]= 1 * ((JAC[0,1] * JAC[1,2]) - (JAC[0,2] * JAC[1,1]))
+    #         AUJJ[1,2]= -1 * ((JAC[0,0] * JAC[1,2]) - (JAC[0,2] * JAC[1,0]))
+    #         AUJJ[2,2]= 1 * ((JAC[0,0] * JAC[1,1]) - (JAC[0,1] * JAC[1,0]))
+    #         #Inverse Jacobian
+    #         iJAC = (1/detJAC) * AUJJ # np.linalg.inv(JAC) 
             
-            dphi_t = iJAC @ dphi
+    #         dphi_t = iJAC @ dphi
             
-            for iii in range(4):
-                B[0,iii]=dphi_t[0,iii]
-                B[1,iii]=dphi_t[1,iii]
-                B[2,iii]=dphi_t[2,iii]
+    #         for iii in range(4):
+    #             B[0,iii]=dphi_t[0,iii]
+    #             B[1,iii]=dphi_t[1,iii]
+    #             B[2,iii]=dphi_t[2,iii]
 
-            #for iii in range(4):
-            #    N[0,iii]=phi[iii]
-            omega = 2 * np.pi * freq
+    #         #for iii in range(4):
+    #         #    N[0,iii]=phi[iii]
+    #         omega = 2 * np.pi * freq
 
-            VK = -(1j/(rho*omega))*(1/np.sqrt(6)) * (B @ Pe)
-            # VK[:,i] = -(1j/(rho*omega))*(1/np.sqrt(6))*B @ Pe
+    #         VK = -(1j/(rho*omega))*(1/np.sqrt(6)) * (B @ Pe)
+    #         # VK[:,i] = -(1j/(rho*omega))*(1/np.sqrt(6))*B @ Pe
 
-        output = np.zeros((len(freq), 1+6), dtype=float)
-        if node_id in [8416, 9368]:
-            if element_id in [81523, 81986]:
-                print(f"Node id: {node_id}")
-                print(f"Element id: {element_id}")
-                output[:, 0] = freq
-                output[:, 1] = np.real(VK[0,:])
-                output[:, 2] = np.imag(VK[0,:])
-                output[:, 3] = np.real(VK[1,:])
-                output[:, 4] = np.imag(VK[1,:])
-                output[:, 5] = np.real(VK[2,:])
-                output[:, 6] = np.imag(VK[2,:])
-                fname = f"particle_velocities_Olavo_{node_id}_{element_id}.dat"
-                np.savetxt(fname, output, delimiter=",")
+    #     output = np.zeros((len(freq), 1+6), dtype=float)
+    #     if node_id in [8416, 9368]:
+    #         if element_id in [81523, 81986]:
+    #             print(f"Node id: {node_id}")
+    #             print(f"Element id: {element_id}")
+    #             output[:, 0] = freq
+    #             output[:, 1] = np.real(VK[0,:])
+    #             output[:, 2] = np.imag(VK[0,:])
+    #             output[:, 3] = np.real(VK[1,:])
+    #             output[:, 4] = np.imag(VK[1,:])
+    #             output[:, 5] = np.real(VK[2,:])
+    #             output[:, 6] = np.imag(VK[2,:])
+    #             fname = f"particle_velocities_Olavo_{node_id}_{element_id}.dat"
+    #             np.savetxt(fname, output, delimiter=",")
 
-        return VK
+    #     return VK
 
     def reorder_connect(self):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""

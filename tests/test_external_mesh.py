@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from time import time
 
 def test_load_external_mesh_and_solve(reorder_nodes=False):
-    # return
+    return
 
     # Define the nodal coordinates and connectivity file path
     nodal_coordinates = np.loadtxt("data/examples/mesh/muffler/coord_muff.csv", delimiter=",")

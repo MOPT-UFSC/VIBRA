@@ -588,6 +588,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.faces_actor.apply_cut(xyz, normal)
         self.lines_actor.apply_cut(xyz, normal)
 
+        self.plane_actor.VisibilityOn()
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
 

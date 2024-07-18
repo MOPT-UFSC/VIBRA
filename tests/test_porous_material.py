@@ -18,7 +18,7 @@ from time import time
 
 
 def test_load_external_mesh_and_solve():
-    return
+    # return
 
     # start decoding the Ansys script file (ds.dat file or input file)
 
@@ -47,6 +47,8 @@ def test_load_external_mesh_and_solve():
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(external_mesh.nodal_coordinates, index_zero=True)
     mesh.import_external_connectivity(external_mesh.connectivity_arrays, index_zero=True, etype_tag=4)
+    # mesh.export_nodal_coordinates("nodal_coordinates.dat")
+    # mesh.export_solid_elements_connectivity("solids_connectivity.dat")
     mesh.element_type = TETRAHEDRON_4
 
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
