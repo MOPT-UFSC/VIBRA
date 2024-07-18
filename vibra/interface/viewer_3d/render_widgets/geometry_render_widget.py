@@ -97,6 +97,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.hidden_part_actor.SetVisibility(has_hidden_part)
         self.hidden_part_actor.GetProperty().SetOpacity(0.05)
         self.hidden_part_actor.GetProperty().LightingOff()
+        self.hidden_part_actor.PickableOff()
         self.renderer.AddActor(self.hidden_part_actor)
 
         self.plane_actor = CuttingPlaneActor(self.faces_actor.GetBounds())

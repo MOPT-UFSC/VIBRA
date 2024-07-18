@@ -16,6 +16,8 @@ from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
     CuttingPlaneActor,
 )
 from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
+from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
+
 # from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
 #     CommonRenderWidget,
 # )
@@ -51,6 +53,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.analysis_actor = None
         self.edges_actor = None
         self.plane_actor = None
+        self.hidden_part_actor = None
         self.bounds = (0, 0, 0, 0, 0, 0)
 
         self.create_axes()
@@ -111,6 +114,16 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.edges_actor = EdgesActor(self.analysis_actor.data)
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
 
+        # Add a very subtle transparent actor to represent the whole 
+        # structure even if part of it is hidden
+        has_hidden_part = bool(self.main_window.hidden_surfaces)
+        self.hidden_part_actor = FacesActor(mesh, allow_hidding=False)
+        self.hidden_part_actor.SetVisibility(has_hidden_part)
+        self.hidden_part_actor.GetProperty().SetOpacity(0.05)
+        self.hidden_part_actor.GetProperty().LightingOff()
+        self.hidden_part_actor.PickableOff()
+        self.renderer.AddActor(self.hidden_part_actor)
+
         self.plane_actor = CuttingPlaneActor(self.analysis_actor.GetBounds())
         self.plane_actor.VisibilityOff()
 
@@ -125,6 +138,10 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
             self.renderer.ResetCamera()
         self.update()
         self.main_window.project.thumbnail = self.get_thumbnail()
+
+    def update_hidden_plot(self):
+        # in this case the update_plot function is fast enough
+        self.update_plot()
 
     def update_deformations(self):
         if not self._actors_exists():
@@ -238,9 +255,11 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.renderer.RemoveActor(self.analysis_actor)
         self.renderer.RemoveActor(self.edges_actor)
         self.renderer.RemoveActor(self.plane_actor)
+        self.renderer.RemoveActor(self.hidden_part_actor)
         self.analysis_actor = None
         self.edges_actor = None
         self.plane_actor = None
+        self.hidden_part_actor = None
 
     def update_animation(self, frame):
         if not self._actors_exists():

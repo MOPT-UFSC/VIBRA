@@ -121,6 +121,12 @@ class ViewerTabs(QTabWidget):
         for tab in self.tabs():
             if isinstance(tab, CommonRenderWidget):
                 tab.update_plot(reset_camera)
+    
+    def update_hidden_plots(self):
+        for tab in self.tabs():
+            if not hasattr(tab, "update_hidden_plot"):
+                continue
+            tab.update_hidden_plot()
 
     def close_analysis_tabs(self):
         for i in range(self.count()):

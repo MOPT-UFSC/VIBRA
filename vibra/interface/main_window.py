@@ -263,12 +263,12 @@ class MainWindow(QMainWindow):
 
         self.hidden_volumes |= self.selected_geometry_volumes
         self.hidden_surfaces |= self.selected_geometry_surfaces - surfaces_to_keep_visible
-        self.viewer_tabs.update_plots(reset_camera=False)
+        self.viewer_tabs.update_hidden_plots()
 
     def unhide_all_callback(self):
         self.hidden_surfaces.clear()
         self.hidden_volumes.clear()
-        self.viewer_tabs.update_plots(reset_camera=False)
+        self.viewer_tabs.update_hidden_plots()
 
     def create_menu_bar(self):
         self.menu_bar = self.menuBar()
