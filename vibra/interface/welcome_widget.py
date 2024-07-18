@@ -6,7 +6,6 @@ from PyQt5.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidg
 from fileboxes import Filebox
 
 from vibra import app, EXAMPLES_DIR, ICON_DIR
-from vibra.vibra_file import VibraDecoder
 
 import numpy as np
 
@@ -113,16 +112,6 @@ class WelcomeWidget(QWidget):
 
     def open_project(self):
         self.main_window.open_project_dialog()
-
-    # def open_recent_project(self, path):
-    #     self.main_window.open_project(path)
-
-    # def open_example_project(self, path):
-    #     # self.main_window.project = Project.load(path)
-    #     self.main_window.viewer_tabs.close_mesh_tabs()
-    #     self.main_window.viewer_tabs.show_geometry()
-    #     self.main_window.viewer_tabs.show_mesh()
-    #     self.main_window.viewer_tabs.update_plots()
 
 
 class WelcomeItem(QWidget):
