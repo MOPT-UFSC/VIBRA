@@ -142,16 +142,12 @@ class SurfaceVelocityInput(QDialog):
         self.update_tabs_visibility()
 
     def geometry_selection_callback(self):
+
         faces = self.main_window.selected_geometry_surfaces
-        points = self.main_window.selected_geometry_points
-        lines = self.main_window.selected_geometry_lines
 
         if faces:
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
-
-        elif not any([points, lines, faces]):
-            self.lineEdit_selection_id.setText("")
 
     def check_complex_entries(self, lineEdit_real, lineEdit_imag):
         self.stop = False

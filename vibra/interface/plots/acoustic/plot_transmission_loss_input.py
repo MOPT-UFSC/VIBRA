@@ -47,6 +47,7 @@ class PlotTransmissionLossInput(QDialog):
         self._config_widgets()
         self._load_analysis_data()
         self.load_input_surface_id()
+        self.geometry_selection_callback()
         self.exec()
 
     def _load_analysis_data(self):
@@ -119,8 +120,6 @@ class PlotTransmissionLossInput(QDialog):
     def geometry_selection_callback(self):
 
         faces = self.main_window.selected_geometry_surfaces
-        lines = self.main_window.selected_geometry_lines
-        nodes = self.main_window.selected_mesh_nodes
 
         if faces:
 

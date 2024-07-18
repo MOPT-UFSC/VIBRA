@@ -201,11 +201,9 @@ class DissipationModelInput(QDialog):
         self.update_tabs_visibility()
 
     def geometry_selection_callback(self):
-        faces = self.main_window.selected_geometry_surfaces
-        points = self.main_window.selected_geometry_points
-        lines = self.main_window.selected_geometry_lines
+
         volumes = self.main_window.selected_geometry_volumes
-        
+    
         if volumes:
 
             if self.comboBox_attribution_type.currentIndex() == 0:
@@ -214,9 +212,6 @@ class DissipationModelInput(QDialog):
 
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selected_id.setText(text)
-
-        elif not any([points, lines, faces]):
-            return
 
     def check_dissipation_model_entries(self):
 

@@ -121,7 +121,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
         return Ke, Me
     
     def process_particle_velocity(  self, 
-                                    el_index : int, 
+                                    element_id : int, 
                                     node_id : int, 
                                     rho : float, 
                                     frequencies : np.ndarray, 
@@ -130,7 +130,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
         Process the particle velocity.
         """
 
-        ie = self.connectivity[el_index, 1:]
+        ie = self.connectivity[element_id, 1:]
         Pe = nodal_pressures[ie, :]
 
         p_calc = np.array([ [0, 0, 0],
@@ -138,32 +138,48 @@ class ACT_TETRAHEDRON_4C(Element3D):
                             [0, 0, 1],
                             [0, 1, 0] ], dtype=float)
 
-        ssx = p_calc[:, 0]
-        ttx = p_calc[:, 1]
-        rrx = p_calc[:, 2]
+        # ssx = p_calc[:, 0]
+        # ttx = p_calc[:, 1]
+        # rrx = p_calc[:, 2]
 
-        phi, dphi = shapeT4C(ssx, ttx, rrx)
+        for i, (ssx, ttx, rrx) in enumerate(p_calc):
 
-        JAC = dphi @ self.nodal_coordinates[ie, 1:4]
-        detJAC, invJAC = get_detJAC_and_invJAC(JAC)
-        dphi_t = invJAC @ dphi
-
-        B = np.zeros((3, self.DOFS_PER_ELEMENT), dtype=float)
-
-        B[0, :] = dphi_t[0, :]
-        B[1, :] = dphi_t[1, :]
-        B[2, :] = dphi_t[2, :]
-
-        omega = 2 * np.pi * frequencies
-        omegas = np.array([omega, omega, omega], dtype=float)
-
-        Ve = (1 / np.sqrt(6)) * B @ Pe
-
-        for i in range(self.NODES_PER_ELEMENT):
             if ie[i] == node_id:
-                return (-1j / (rho * omegas)) * Ve
+                    
+                phi, dphi = shapeT4C(ssx, ttx, rrx)
 
-    def velpartT4C(self, el_index, freq, P, rho=2.93):
+                JAC = dphi @ self.nodal_coordinates[ie, 1:4]
+                detJAC, invJAC = get_detJAC_and_invJAC(JAC)
+                dphi_t = invJAC @ dphi
+
+                B = np.zeros((3, self.DOFS_PER_ELEMENT), dtype=float)
+
+                B[0, :] = dphi_t[0, :]
+                B[1, :] = dphi_t[1, :]
+                B[2, :] = dphi_t[2, :]
+
+                omega = 2 * np.pi * frequencies
+
+                Ve = (-1j / (rho * omega)) * (1 / np.sqrt(6)) * (B @ Pe)
+
+                output = np.zeros((len(frequencies), 1+6), dtype=float)
+                if node_id in [8350, 9368]:
+                    if element_id in [81523]:
+                        print(f"Node id: {node_id}")
+                        print(f"Element id: {element_id}")
+                        output[:, 0] = frequencies
+                        output[:, 1] = np.real(Ve[0,:])
+                        output[:, 2] = np.imag(Ve[0,:])
+                        output[:, 3] = np.real(Ve[1,:])
+                        output[:, 4] = np.imag(Ve[1,:])
+                        output[:, 5] = np.real(Ve[2,:])
+                        output[:, 6] = np.imag(Ve[2,:])
+                        fname = f"particle_velocities_Vibra_{node_id}_{element_id}.dat"
+                        np.savetxt(fname, output, delimiter=",")
+
+                return Ve
+
+    def velpartT4C(self, element_id, node_id, rho, freq, pressures):
         """ Stiffness and mass matrices.
         """  
         #Connect -- Ansys ---> Gmsh
@@ -175,17 +191,19 @@ class ACT_TETRAHEDRON_4C(Element3D):
         # connect = connect_t.copy()
         #sugestao: mudar ordenação das funções de forma e derivadas
         #
-        connect = self.connectivity
-        ie = self.connectivity[el_index, 1:]
+        ie = self.connectivity[element_id, 1:]
+        Pe = pressures[ie, :]
+
         # #
-        print(f"element_index: {el_index}")
-        print(f"nodes: {ie}")
+        # print(f"element_index: {element_id}")
+        # print(f"nodes: {ie}")
         #
-        Pe = np.zeros((4), dtype=complex)
-        Pe[0] = P[connect[el_index,1], 0]
-        Pe[1] = P[connect[el_index,2], 0]
-        Pe[2] = P[connect[el_index,3], 0]
-        Pe[3] = P[connect[el_index,4], 0]
+        # Pe = np.zeros((4, len(freq)), dtype=complex)
+        # Pe[0, :] = pressures[connect[element_id,1], :]
+        # Pe[1, :] = pressures[connect[element_id,2], :]
+        # Pe[2, :] = pressures[connect[element_id,3], :]
+        # Pe[3, :] = pressures[connect[element_id,4], :]
+
         #
         # -------
         ncalc = 4
@@ -202,15 +220,12 @@ class ACT_TETRAHEDRON_4C(Element3D):
         # integration
         for i in range(ncalc):
             l1, l2, l3 = pcalc[i, 0], pcalc[i, 1], pcalc[i, 2]
-            phi, dphi = shapeT4C(l1,l2,l3)
-            dxdydz = dphi@self.nodal_coordinates[ie, 1:4]
+            phi, dphi = shapeT4C(l1, l2, l3)
+            dxdydz = dphi @ self.nodal_coordinates[ie, 1:4]
             # note: dxdr, dydr, dzdr, dxds, dyds, dzds, dxdt, dydt, dzdt 
             JAC = np.array([[dxdydz[0,0], dxdydz[0,1], dxdydz[0,2]],
                             [dxdydz[1,0], dxdydz[1,1], dxdydz[1,2]],
                             [dxdydz[2,0], dxdydz[2,1], dxdydz[2,2]]], dtype=float)
-            
-            # print(f"P_calc #{i+1}")
-            # print(JAC, "\n")
 
             #detJAC = np.linalg.det(JAC)
             detJAC = (JAC[0,0] * JAC[1,1] * JAC[2,2] + 
@@ -241,12 +256,26 @@ class ACT_TETRAHEDRON_4C(Element3D):
 
             #for iii in range(4):
             #    N[0,iii]=phi[iii]
-            omega = 2 * np.pi * freq[0]
-            if omega == 0.:
-                omega = 'bosta'          
-            VK[:,i] = -(1j/(rho*omega))*(1/np.sqrt(6))*B @ Pe
+            omega = 2 * np.pi * freq
 
-        print(VK)
+            VK = -(1j/(rho*omega))*(1/np.sqrt(6)) * (B @ Pe)
+            # VK[:,i] = -(1j/(rho*omega))*(1/np.sqrt(6))*B @ Pe
+
+        output = np.zeros((len(freq), 1+6), dtype=float)
+        if node_id in [8350, 9368]:
+            if element_id in [81523]:
+                print(f"Node id: {node_id}")
+                print(f"Element id: {element_id}")
+                output[:, 0] = freq
+                output[:, 1] = np.real(VK[0,:])
+                output[:, 2] = np.imag(VK[0,:])
+                output[:, 3] = np.real(VK[1,:])
+                output[:, 4] = np.imag(VK[1,:])
+                output[:, 5] = np.real(VK[2,:])
+                output[:, 6] = np.imag(VK[2,:])
+                fname = f"particle_velocities_Olavo_{node_id}_{element_id}.dat"
+                np.savetxt(fname, output, delimiter=",")
+
         return VK
 
     def reorder_connect(self):

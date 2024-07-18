@@ -131,6 +131,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             self.call_sphere_plotter()
 
     def geometry_selection_callback(self):
+
         faces = self.main_window.selected_geometry_surfaces
         points = self.main_window.selected_geometry_points
         lines = self.main_window.selected_geometry_lines

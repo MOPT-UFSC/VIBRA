@@ -37,6 +37,8 @@ class PlotStructuralFrequencyResponseInput(QDialog):
 
         ConfigWidgetAppearance(self, tool_tip=True)
 
+        self.geometry_selection_callback()
+
         while self.keep_window_open:
             self.exec()
 

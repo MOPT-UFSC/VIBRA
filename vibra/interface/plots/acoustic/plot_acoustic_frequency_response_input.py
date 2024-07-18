@@ -38,6 +38,7 @@ class PlotAcousticFrequencyResponseInput(QDialog):
         ConfigWidgetAppearance(self, tool_tip=True)
 
         self._load_analysis_data_and_solution()
+        self.geometry_selection_callback()
 
         while self.keep_window_open:
             self.exec()

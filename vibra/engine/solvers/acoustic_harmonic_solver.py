@@ -369,9 +369,9 @@ class AcousticHarmonicSolver:
 
             Vn = 0.
             for element_id in element_ids:
-                if run:
-                    element_3d.velpartT4C(element_id, self.frequencies, self.solution)
-                    run = False
+                if node_id in [9368, 8350]:
+                    element_3d.velpartT4C(element_id, node_id, rho, self.frequencies, self.solution)
+
                 Vn += element_3d.process_particle_velocity(element_id, node_id, rho, self.frequencies, self.solution)
 
             data[node_id] = Vn / len(element_ids)

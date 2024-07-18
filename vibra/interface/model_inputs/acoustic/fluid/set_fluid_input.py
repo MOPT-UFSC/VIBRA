@@ -127,18 +127,13 @@ class SetFluidInput(QDialog):
         self.fluid_widget.reset_library_callback()
 
     def geometry_selection_callback(self):
+
         volumes = self.main_window.selected_geometry_volumes
-        points = self.main_window.selected_geometry_points
-        lines = self.main_window.selected_geometry_lines
-        surfaces = self.main_window.selected_geometry_surfaces
+
         if volumes:
             self.comboBox_attribution_type.setCurrentIndex(1)
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selected_id.setText(text)
-
-        elif not any([points, lines, surfaces]):
-            self.comboBox_attribution_type.setCurrentIndex(0)
-            self.lineEdit_selected_id.setText("All bodies")
 
     def update_fluid_selection(self):
 
