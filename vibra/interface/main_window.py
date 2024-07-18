@@ -511,9 +511,6 @@ class MainWindow(QMainWindow):
         self.load_project = LoadProject()
         load = load_function(self.load_project.load, self)
         load()
-        # self.load_project.load()
-        # self.project.load()
-        # self.user_config.add_recent_file(path)
 
     def import_geometry(self, path : str):
 
