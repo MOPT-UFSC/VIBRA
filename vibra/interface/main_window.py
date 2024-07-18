@@ -261,7 +261,6 @@ class MainWindow(QMainWindow):
         elif self.selected_mesh_solids:
             for element in self.selected_mesh_solids:
                 volumes_to_hide.add(mesh.volume_from_element[element])
-            print(volumes_to_hide)
 
         selected_volume_surfaces = set()
         visible_volume_surfaces = set()
