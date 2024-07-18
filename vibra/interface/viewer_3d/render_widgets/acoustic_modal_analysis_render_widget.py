@@ -297,6 +297,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
             normal = -normal
         self.analysis_actor.apply_cut((x, y, z), normal)
 
+        self.plane_actor.VisibilityOn()
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
 
