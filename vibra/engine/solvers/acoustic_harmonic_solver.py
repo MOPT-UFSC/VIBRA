@@ -280,13 +280,13 @@ class AcousticHarmonicSolver:
 
         out_data = dict()
         nodal_areas_in = np.zeros(len(nodes_input), dtype=float)
-        for i, node in enumerate(nodes_input):
+        for i, node in enumerate(np.sort(nodes_input)):
             areas = self.assembler.model.mesh.nodal_area[node]
             nodal_areas_in[i] = sum(areas)
             out_data[node] = sum(areas)
 
         nodal_areas_out = np.zeros(len(nodes_output), dtype=float)
-        for i, node in enumerate(nodes_output):
+        for i, node in enumerate(np.sort(nodes_output)):
             areas = self.assembler.model.mesh.nodal_area[node]
             nodal_areas_out[i] = sum(areas)
             out_data[node] = sum(areas)
@@ -321,20 +321,20 @@ class AcousticHarmonicSolver:
         if surf_velocity is None:
             return None, None, None
 
-        # real_values = np.array(surf_velocity["real_values"])
-        # imag_values = np.array(surf_velocity["imag_values"])
-        # V_in = real_values + 1j * imag_values
+        real_values = np.array(surf_velocity["real_values"])
+        imag_values = np.array(surf_velocity["imag_values"])
+        V_in = real_values + 1j * imag_values
 
-        V_in = input_particle_velocities["Vx"]
-        # P_in = V_in * rho_in * c0_in# / 2
+        # V_in = input_particle_velocities["Vx"]
+        P_in = V_in * rho_in * c0_in# / 2
 
         # V_in = (-1) * Vn * (Aeff_in / A_in)
 
         # V_in = P_in / (rho_in * c0_in)
         I_in = np.real(P_in * np.conjugate(V_in)) / 2
 
-        V_out = output_particle_velocities["Vx"]
-        # V_out = P_out / (rho_out * c0_out)
+        # V_out = output_particle_velocities["Vx"]
+        V_out = P_out / (rho_out * c0_out)
         I_out = np.real(P_out * np.conjugate(V_out)) / 2
 
         W_in = 10*np.log10(np.sum(I_in * Aeff_in, axis=0))
@@ -363,14 +363,13 @@ class AcousticHarmonicSolver:
         fluid = self.assembler.model.properties.get_fluid(surface=surface_id)
         rho = fluid.fluid_density
 
-        run = True
         data = dict()
         for node_id, element_ids in elements_connected_to_nodes.items():
 
             Vn = 0.
             for element_id in element_ids:
-                if node_id in [8416, 9368]:
-                    element_3d.velpartT4C(element_id, node_id, rho, self.frequencies, self.solution)
+                # if node_id in [8416, 9368]:
+                #     element_3d.velpartT4C(element_id, node_id, rho, self.frequencies, self.solution)
 
                 Vn += element_3d.process_particle_velocity(element_id, node_id, rho, self.frequencies, self.solution)
 

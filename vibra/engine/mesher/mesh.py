@@ -258,6 +258,7 @@ class Mesh:
 
         if index_zero:
             connect -= 1
+            indexes -= 1    
 
         aux = np.ones(rows)
         self.solids_connectivity = np.zeros((rows, cols+1), dtype=int)
