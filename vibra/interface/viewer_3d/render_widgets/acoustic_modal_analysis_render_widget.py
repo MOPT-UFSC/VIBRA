@@ -162,17 +162,19 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
             self.analysis_actor.GetProperty().SetRepresentationToSurface()
             self.edges_actor.VisibilityOn()
 
+        if self.cutting_plane_active and self.cutting_plane_args:
+            self.start_cutting_mode()
+            self.apply_cutting_plane(*self.cutting_plane_args)
+        else:
+            self.update()
+
         if reset_camera:
             self.renderer.ResetCamera()
-        self.update()
         self.main_window.project.thumbnail = self.get_thumbnail()
 
     def update_hidden_plot(self):
         # in this case the update_plot function is fast enough
         self.update_plot(reset_camera=False)
-        if self.cutting_plane_active and self.cutting_plane_args:
-            self.start_cutting_mode()
-            self.apply_cutting_plane(*self.cutting_plane_args)
 
     def update_deformation(self):
         if not self._actors_exists():
@@ -329,6 +331,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.plane_actor.VisibilityOn()
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
+        self.plane_actor.configure_cutting_plane(position, orientation)
 
         self.update()
 

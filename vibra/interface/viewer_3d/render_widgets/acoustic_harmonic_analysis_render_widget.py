@@ -150,17 +150,20 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
             self.analysis_actor.GetProperty().SetRepresentationToSurface()
             self.edges_actor.VisibilityOn()
 
+        if self.cutting_plane_active and self.cutting_plane_args:
+            self.start_cutting_mode()
+            self.apply_cutting_plane(*self.cutting_plane_args)
+        else:
+            self.update()
+
         if reset_camera:
             self.renderer.ResetCamera()
-        self.update()
+    
         self.main_window.project.thumbnail = self.get_thumbnail()
 
     def update_hidden_plot(self):
         # in this case the update_plot function is fast enough
         self.update_plot(reset_camera=False)
-        if self.cutting_plane_active and self.cutting_plane_args:
-            self.start_cutting_mode()
-            self.apply_cutting_plane(*self.cutting_plane_args)
 
     def update_animation(self, frame):
         if not self._actors_exists():
@@ -314,7 +317,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.edges_actor.disable_cut()
         self.update()
 
-    def configure_cutting_plane(self, position, orientation):
+    def configure_cutting_plane(self, position, orientation, *args, **kwargs):
         if not self._actors_exists():
             return
 
@@ -336,6 +339,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.plane_actor.VisibilityOn()
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
+        self.plane_actor.configure_cutting_plane(position, orientation)
 
         self.update()
 
