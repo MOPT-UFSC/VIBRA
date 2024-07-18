@@ -250,19 +250,31 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
     def hide_selection_callback(self):
+        mesh = self.project.model.mesh
+
+        volumes_to_hide = set()
+        if self.selected_geometry_volumes:
+            volumes_to_hide |= self.selected_geometry_volumes
+        elif self.selected_geometry_surfaces:
+            for surface in self.selected_geometry_surfaces:
+                volumes_to_hide |= set(mesh.volume_from_surface[surface])
+        elif self.selected_mesh_solids:
+            for element in self.selected_mesh_solids:
+                volumes_to_hide.add(mesh.volume_from_element[element])
+            print(volumes_to_hide)
+
         selected_volume_surfaces = set()
         visible_volume_surfaces = set()
-        mesh = self.project.model.mesh
         for volume, surfaces in mesh.surfaces_from_volumes.items():
-            if volume in self.selected_geometry_volumes:
+            if volume in volumes_to_hide:
                 selected_volume_surfaces |= set(surfaces)
             elif volume not in self.hidden_volumes:
                 visible_volume_surfaces |= set(surfaces)
         surfaces_to_keep_visible = set.intersection(selected_volume_surfaces,
                                                     visible_volume_surfaces)
 
-        self.hidden_volumes |= self.selected_geometry_volumes
-        self.hidden_surfaces |= self.selected_geometry_surfaces - surfaces_to_keep_visible
+        self.hidden_volumes |= volumes_to_hide
+        self.hidden_surfaces |= selected_volume_surfaces - surfaces_to_keep_visible
         self.viewer_tabs.update_hidden_plots()
 
     def unhide_all_callback(self):
