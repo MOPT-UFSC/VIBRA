@@ -50,6 +50,9 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.setLayout(layout)
         self.setContentsMargins(0, 0, 0, 0)
 
+        self.cutting_plane_active = False
+        self.cutting_plane_args = tuple()
+
         self.analysis_actor = None
         self.edges_actor = None
         self.plane_actor = None
@@ -141,7 +144,10 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
 
     def update_hidden_plot(self):
         # in this case the update_plot function is fast enough
-        self.update_plot()
+        self.update_plot(reset_camera=False)
+        if self.cutting_plane_active and self.cutting_plane_args:
+            self.start_cutting_mode()
+            self.apply_cutting_plane(*self.cutting_plane_args)
 
     def update_deformations(self):
         if not self._actors_exists():
@@ -218,12 +224,17 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
     def start_cutting_mode(self):
         if not self._actors_exists():
             return
+        self.cutting_plane_active = True
         self.plane_actor.VisibilityOn()
+        self.hidden_part_actor.VisibilityOn()
 
     def stop_cutting_mode(self):
         if not self._actors_exists():
             return
+        self.cutting_plane_active = False
         self.plane_actor.VisibilityOff()
+        has_hidden_part = bool(self.main_window.hidden_surfaces)
+        self.hidden_part_actor.SetVisibility(has_hidden_part)
         self.analysis_actor.disable_cut()
         self.edges_actor.disable_cut()
         self.update()
@@ -239,6 +250,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         if not self._actors_exists():
             return
 
+        self.cutting_plane_args = (position, orientation, invert)
         xyz = self.plane_actor.calculate_x_y_z_position(position)
         normal = self.plane_actor.calculate_normal_vector(orientation)
         if invert:

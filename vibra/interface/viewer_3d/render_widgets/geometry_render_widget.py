@@ -51,6 +51,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.hidden_part_actor = None
         self.selection_spheres_actor = None
 
+        self.cutting_plane_active = False
+        self.cutting_plane_args = tuple()
+
         self.selection_color = (20, 106, 245)
         self.selected_points = set()
         self.selected_lines = set()
@@ -134,6 +137,10 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         has_hidden_part = bool(self.main_window.hidden_surfaces)
         self.hidden_part_actor.SetVisibility(has_hidden_part)
+
+        if self.cutting_plane_active and self.cutting_plane_args:
+            self.start_cutting_mode()
+            self.apply_cutting_plane(*self.cutting_plane_args)
 
         self.update()
 
@@ -555,6 +562,7 @@ class GeometryRenderWidget(CommonRenderWidget):
     def start_cutting_mode(self):
         if not self._actors_exists():
             return
+        self.cutting_plane_active = True
         self.plane_actor.VisibilityOn()
         self.hidden_part_actor.VisibilityOn()
         self.update()
@@ -562,8 +570,10 @@ class GeometryRenderWidget(CommonRenderWidget):
     def stop_cutting_mode(self):
         if not self._actors_exists():
             return
+        self.cutting_plane_active = False
+        has_hidden_part = bool(self.main_window.hidden_surfaces)
+        self.hidden_part_actor.SetVisibility(has_hidden_part)
         self.plane_actor.VisibilityOff()
-        self.hidden_part_actor.VisibilityOff()
         self.points_actor.disable_cut()
         self.lines_actor.disable_cut()
         self.faces_actor.disable_cut()
@@ -580,6 +590,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if not self._actors_exists():
             return
 
+        self.cutting_plane_args = (position, orientation, invert)
         xyz = self.plane_actor.calculate_x_y_z_position(position)
         normal = self.plane_actor.calculate_normal_vector(orientation)
         if invert:
