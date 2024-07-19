@@ -37,6 +37,9 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
         self.main_window.theme_changed.connect(self.set_theme)
 
+        self.cutting_plane_active = False
+        self.cutting_plane_args = tuple()
+
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
         layout = QVBoxLayout()
@@ -159,14 +162,19 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
             self.analysis_actor.GetProperty().SetRepresentationToSurface()
             self.edges_actor.VisibilityOn()
 
+        if self.cutting_plane_active and self.cutting_plane_args:
+            self.start_cutting_mode()
+            self.apply_cutting_plane(*self.cutting_plane_args)
+        else:
+            self.update()
+
         if reset_camera:
             self.renderer.ResetCamera()
-        self.update()
         self.main_window.project.thumbnail = self.get_thumbnail()
 
     def update_hidden_plot(self):
         # in this case the update_plot function is fast enough
-        self.update_plot()
+        self.update_plot(reset_camera=False)
 
     def update_deformation(self):
         if not self._actors_exists():
@@ -280,12 +288,17 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
     def start_cutting_mode(self):
         if not self._actors_exists():
             return
+        self.cutting_plane_active = True
         self.plane_actor.VisibilityOn()
+        self.hidden_part_actor.VisibilityOn()
 
     def stop_cutting_mode(self):
         if not self._actors_exists():
             return
+        self.cutting_plane_active = False
         self.plane_actor.VisibilityOff()
+        has_hidden_part = bool(self.main_window.hidden_surfaces)
+        self.hidden_part_actor.SetVisibility(has_hidden_part)
         self.analysis_actor.disable_cut()
 
     def configure_cutting_plane(self, position, orientation):
@@ -306,6 +319,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         if not self._actors_exists():
             return
 
+        self.cutting_plane_args = (position, orientation, invert)
         x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
         y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
         z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
@@ -317,6 +331,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.plane_actor.VisibilityOn()
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
+        self.plane_actor.configure_cutting_plane(position, orientation)
 
         self.update()
 

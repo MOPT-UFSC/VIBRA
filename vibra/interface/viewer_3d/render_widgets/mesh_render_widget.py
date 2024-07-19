@@ -39,8 +39,10 @@ class MeshRenderWidget(CommonRenderWidget):
         self.main_window.selection_changed.connect(self.update_selection)
         self.main_window.theme_changed.connect(self.set_theme)
 
+        self.cutting_plane_active = False
+        self.cutting_plane_args = tuple()
 
-        self.mesh_info = MeshInfoBar()
+        # self.mesh_info = MeshInfoBar()
 
         # # replace the layout to add other usefull widgets
         # QObjectCleanupHandler().add(self.layout())
@@ -132,6 +134,10 @@ class MeshRenderWidget(CommonRenderWidget):
         has_hidden_part = bool(self.main_window.hidden_surfaces)
         faces_alpha = 12 if has_hidden_part else 0
         self.faces_actor.clear_colors((255, 255, 255, faces_alpha))
+
+        if self.cutting_plane_active and self.cutting_plane_args:
+            self.start_cutting_mode()
+            self.apply_cutting_plane(*self.cutting_plane_args)
 
         self.update()
 
@@ -389,15 +395,20 @@ class MeshRenderWidget(CommonRenderWidget):
     def start_cutting_mode(self):
         if not self._actors_exists():
             return
+        self.cutting_plane_active = True
         self.plane_actor.VisibilityOn()
+        self.faces_actor.clear_colors((255, 255, 255, 12))
         self.update()
 
     def stop_cutting_mode(self):
         if not self._actors_exists():
             return
+        self.cutting_plane_active = False
         self.plane_actor.VisibilityOff()
+        has_hidden_part = bool(self.main_window.hidden_surfaces)
+        faces_alpha = 12 if has_hidden_part else 0
+        self.faces_actor.clear_colors((255, 255, 255, faces_alpha))
         self.solids_actor.disable_cut()
-        self.faces_actor.disable_cut()
         self.edges_actor.disable_cut()
         self.nodes_actor.disable_cut()
         self.update()
@@ -413,12 +424,13 @@ class MeshRenderWidget(CommonRenderWidget):
         if not self._actors_exists():
             return
 
+        self.cutting_plane_args = (position, orientation, invert)
         xyz = self.plane_actor.calculate_x_y_z_position(position)
         normal = self.plane_actor.calculate_normal_vector(orientation)
         if invert:
             normal = -normal
         self.solids_actor.apply_cut(xyz, normal)
-        self.faces_actor.apply_cut(xyz, normal)
+        # self.faces_actor.apply_cut(xyz, normal)
         self.edges_actor.apply_cut(xyz, normal)
         self.nodes_actor.apply_cut(xyz, normal)
 

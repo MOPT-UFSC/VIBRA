@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QAction, QToolBar
 
 from molde.render_widgets import CommonRenderWidget
 
-from vibra import ICON_DIR
+from vibra import ICON_DIR, app
 from vibra.utils.icons import load_icon
 
 from pathlib import Path
@@ -84,9 +84,14 @@ class RendererToolbar(QToolBar):
         self.show_faces_action = QAction(show_faces_icon, "Face View", self)
         self.show_faces_action.triggered.connect(self.show_faces_callback)
 
-        clip_plane_icon = load_icon(ICON_DIR / "visibility/tube_cut.png", color)
-        self.clip_plane_action = QAction(clip_plane_icon, "Section Plane", self)
-        self.clip_plane_action.triggered.connect(self.clip_plane_callback)
+        clip_plane_show_icon = load_icon(ICON_DIR / "section_plane_view.png", color)
+        self.clip_plane_show_action = QAction(clip_plane_show_icon, "Section Plane", self)
+        self.clip_plane_show_action.setCheckable(True)
+        self.clip_plane_show_action.triggered.connect(self.section_plane_show_callback)
+
+        clip_plane_config_icon = load_icon(ICON_DIR / "section_plane_config.png", color)
+        self.clip_plane_config_action = QAction(clip_plane_config_icon, "Section Plane", self)
+        self.clip_plane_config_action.triggered.connect(self.section_plane_config_callback)
 
         hide_icon = load_icon(ICON_DIR / "hide_icon.png", color)
         self.hide_selection = QAction(hide_icon, "Hide Selection", self)
@@ -94,7 +99,7 @@ class RendererToolbar(QToolBar):
         self.hide_selection.triggered.connect(self.hide_selection_callback)
 
         unhide_all_icon = load_icon(ICON_DIR / "unhide_all_icon.png", color)
-        self.unhide_all = QAction(unhide_all_icon, "Unhide All Selection", self)
+        self.unhide_all = QAction(unhide_all_icon, "Unhide All", self)
         self.unhide_all.setShortcut("ctrl+shift+h")
         self.unhide_all.triggered.connect(self.unhide_all_callback)
 
@@ -112,7 +117,9 @@ class RendererToolbar(QToolBar):
         self.addAction(self.show_lines_action)
         self.addAction(self.show_faces_action)
         self.addSeparator()
-        self.addAction(self.clip_plane_action)
+        self.addAction(self.clip_plane_show_action)
+        self.addAction(self.clip_plane_config_action)
+        self.addSeparator()
         self.addAction(self.hide_selection)
         self.addAction(self.unhide_all)
 
@@ -166,11 +173,20 @@ class RendererToolbar(QToolBar):
         widget = self.parent().viewer_tabs.currentWidget()
         if isinstance(widget, CommonRenderWidget):
             widget.show_faces()
+    
+    def section_plane_show_callback(self, option: bool):
+        if option:
+            app().main_window.slider_pressed_callback()
+            app().main_window.slider_moved_callback()
+            app().main_window.slider_released_callback()
+        else:
+            app().main_window.viewer_tabs.stop_cutting_mode()
+
+    def section_plane_config_callback(self):
+        app().main_window.clip_plane.show()
 
     def clip_plane_callback(self):
         self.parent().clip_plane.show()
-        self.parent().slider_moved_callback()
-        self.parent().slider_released_callback()
 
     def hide_selection_callback(self):
         self.parent().hide_selection_callback()
