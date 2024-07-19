@@ -20,6 +20,7 @@ from vibra.interface.renderer_toolbar import RendererToolbar
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_tabs import ViewerTabs
 from vibra.interface.formatters.icons import *
+from molde.render_widgets import CommonRenderWidget
 
 from vibra.project_files.project import Project
 from vibra.project_files.load_project import LoadProject
@@ -78,7 +79,7 @@ class MainWindow(QMainWindow):
         self.clip_plane.slider_pressed.connect(self.slider_pressed_callback)
         self.clip_plane.value_changed.connect(self.slider_moved_callback)
         self.clip_plane.slider_released.connect(self.slider_released_callback)
-        # self.clip_plane.closed.connect(self.disable_cut)
+        self.clip_plane.closed.connect(self.disable_section_plane_visibility)
 
     def set_mesh_selection(self, *, nodes=None, faces=None, solids=None, join=False, remove=True):
         if nodes is None:
@@ -198,8 +199,10 @@ class MainWindow(QMainWindow):
         orientation = self.clip_plane.get_rotation()
         self.viewer_tabs.apply_cutting_plane(position, orientation, self.clip_plane.invert_value)
 
-    def disable_cut(self):
-        self.viewer_tabs.stop_cutting_mode()
+    def disable_section_plane_visibility(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.plane_actor.VisibilityOff()
 
     def _config_window(self):
         self.setMinimumSize(1300, 700)
