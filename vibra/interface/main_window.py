@@ -200,9 +200,9 @@ class MainWindow(QMainWindow):
         self.viewer_tabs.apply_cutting_plane(position, orientation, self.clip_plane.invert_value)
 
     def disable_section_plane_visibility(self):
-        widget = self.viewer_tabs.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.plane_actor.VisibilityOff()
+        for tab in self.viewer_tabs.tabs():
+            if hasattr(tab, "plane_actor") and tab.plane_actor is not None:
+                tab.plane_actor.VisibilityOff()
 
     def _config_window(self):
         self.setMinimumSize(1300, 700)
