@@ -691,9 +691,9 @@ class FluidWidget(QWidget):
 
             if isinstance(self.parent_widget, QDialog):
 
-                line_id = self.compressor_thermodynamic_state['line_id']
+                volume_id = self.compressor_thermodynamic_state['volume_id']
                 self.parent_widget.comboBox_attribution_type.setCurrentIndex(1)
-                self.parent_widget.write_ids(line_id)
+                self.parent_widget.write_ids(volume_id)
                 self.parent_widget.lineEdit_selected_id.setDisabled(True)
                 if self.fluid_data_refprop:
                     fluid_name = self.fluid_data_refprop["name"]

@@ -5,17 +5,29 @@ from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
-#
+
 import numpy as np
 import matplotlib.pyplot as plt
 from time import time
 
+import openpyxl
+import pandas as pd
+
 def test_load_external_mesh_and_solve(reorder_nodes=False):
-    return
+    # return
 
     # Define the nodal coordinates and connectivity file path
-    nodal_coordinates = np.loadtxt("data/examples/mesh/muffler/coord_muff.csv", delimiter=",")
-    connectivity = np.loadtxt("data/examples/mesh/muffler/connect_muff.csv", delimiter=",", dtype=int)
+    nodal_coordinates = np.loadtxt("data/examples/mesh/tubo_reto/coord_tet4.csv", delimiter=",")
+    connectivity = np.loadtxt("data/examples/mesh/tubo_reto/connect_tet4.csv", delimiter=",", dtype=int)
+    
+    # rows, cols = connectivity.shape
+    # data = np.zeros((rows, cols+2), dtype=int)
+    # data[:, 0] = connectivity[:,0]
+    # data[:, 1] = np.ones(rows, dtype=int)*1
+    # data[:, 2] = np.ones(rows, dtype=int)*4
+    # data[:, 3:] = connectivity[:, 1:]
+    # np.savetxt("data/examples/mesh/tubo_reto/connect_tet4.csv", data, delimiter=",", fmt="%i")
+    # return
 
     solid_connectivity = dict()
     solid_connectivity[1, "solid285_tet4"] = connectivity
@@ -38,7 +50,7 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
     # Define the fluid properties
     rho_0 = 1.18
     c_0 = 343.0
-    mu = 1*1.8e-05
+    mu = 0*1.8e-05
     #
     fluid = Fluid(  name = "Air",
                     identifier = 1,
@@ -54,7 +66,7 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
     model.set_fluid(fluid, volume=1)
 
     # Normal surface velocity data
-    data_Vn = { "real_values" : [1],
+    data_Vn = { "real_values" : [-1],
                 "imag_values" : [0],
                 "nodal_attribution" : False,
                 "averaged" : False }
@@ -96,140 +108,124 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
     t0 = time()
     # Run harmonic analysis
     solution = harmonic_solver.solve(print_log=True)
+
+    # element_id = 5648 - 1
+    # node_id = 13 - 1
+
+    element_id = 1750 - 1
+    node_id = 1198 - 1
+
+    element_3d, _ = assembler.get_element()
+    element_3d.reorder_connect()
+
+    Vxyz = element_3d.process_particle_velocity(element_id, node_id, rho_0, frequencies, solution)
+    print(Vxyz[0, :])
+
+    elements_connected_to_nodes =  mesh.get_solid_elements_connected_to_nodes([node_id])
+    # print(elements_connected_to_nodes)
+
+    data = dict()
+    for _node_id, element_ids in elements_connected_to_nodes.items():
+        Vk = 0.
+        for _element_id in element_ids:
+            Vk += element_3d.process_particle_velocity(_element_id, _node_id, rho_0, frequencies, solution)
+        data[_node_id] = Vk / len(element_ids)
+
+    Vx = data[node_id][0, :]
+    # print(data[_node_id][0, :])
+
     dt = time() - t0
     print(f"Elapsed time to solve harmonic analysis: {round(dt, 4)}")
 
     if solution is not None:
 
-        cols = solution.shape[1]
+        # cols = solution.shape[1]       
+        # results = np.zeros((cols, 3), dtype=float)
+        # results[:, 0] = frequencies
+        # results[:, 1] = np.real(solution[node, :])
+        # results[:, 2] = np.imag(solution[node, :])
+        # filename = f"acoustic_pressure_at_node_{node}_Vibra_pardiso.dat"
+        # np.savetxt(filename, results, delimiter=",")
 
-        node = 3596
-        
-        results = np.zeros((cols, 3), dtype=float)
-        results[:, 0] = frequencies
-        results[:, 1] = np.real(solution[node, :])
-        results[:, 2] = np.imag(solution[node, :])
-        filename = f"acoustic_pressure_at_node_{node}_Vibra_pardiso.dat"
-        np.savetxt(filename, results, delimiter=",")
+        external_results = get_external_results()
 
-        results_path = "data/examples/mesh/muffler/external_results.csv"
+        data = external_results[f"pressure_node_{node_id+1}"]
 
-        data_ref = np.loadtxt(results_path, delimiter=",")
-        freq_ref = data_ref[:, 0]
-        P_ref = data_ref[:, 1] + 1j*data_ref[:, 2]
+        freq_ref = data["x_data"]
+        P_ref = data["y_data"]
 
-        error_abs = np.abs((solution[node, :] - P_ref)/((solution[node, :] + P_ref)/2))
+        # error_abs = np.abs((solution[node, :] - P_ref)/((solution[node, :] + P_ref)/2))
         # assert error_abs < 1e-1
 
         fig1, ax1 = plt.subplots()
-        ax1.semilogy(frequencies, np.abs(solution[node, :]), 'r', label='VIBRA')
+        ax1.semilogy(frequencies, np.abs(solution[node_id, :]), 'r', label='VIBRA')
         ax1.semilogy(freq_ref, np.abs(P_ref), 'k--', label='ANSYS')
-        # ax1.semilogy(freq_ref, np.abs(solution[node, :] - P_ref), 'k--', label='ANSYS')
+        # ax1.semilogy(freq_ref, np.abs(solution[node_id, :] - P_ref), 'k--', label='ANSYS')
         # ax1.semilogy(freq_ref, error_abs, 'k--', label='ANSYS')
         ax1.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Absolute', title='Harmonic Response - Outlet pressure')
         ax1.grid()
 
         fig2, ax2 = plt.subplots()
-        ax2.plot(frequencies, np.real(solution[node, :]), 'r', label='VIBRA')
+        ax2.plot(frequencies, np.real(solution[node_id, :]), 'r', label='VIBRA')
         ax2.plot(freq_ref, np.real(P_ref), 'k--', label='ANSYS')
         ax2.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Real', title='Harmonic Response - Outlet pressure')
         ax2.grid()
 
         fig3, ax3 = plt.subplots()
-        ax3.plot(frequencies, np.imag(solution[node, :]), 'r', label='VIBRA')
+        ax3.plot(frequencies, np.imag(solution[node_id, :]), 'r', label='VIBRA')
         ax3.plot(freq_ref, np.imag(P_ref), 'k--', label='ANSYS')
         ax3.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Imaginary', title='Harmonic Response - Outlet pressure')
         ax3.grid()
+
+        data = external_results[f"velocity_node_{node_id+1}"]
+
+        freq_ref = data["x_data"]
+        Vx_ref = data["y_data"]
+
+        fig4, ax4 = plt.subplots()
+        ax4.plot(frequencies, np.real(Vx), 'r', label='VIBRA')
+        ax4.plot(freq_ref, -np.real(Vx_ref), 'k--', label='ANSYS')
+        ax4.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Imaginary', title='Harmonic Response - Outlet pressure')
+        ax4.grid()
 
         plt.legend()
         plt.show()
 
 def get_faces_connectivities():
-    
-    ## Face da excitação F4
-    #connect_face1 = np.array([[1,191,197,61,84],
-    #                         [2,197,148,106,61],
-    #                         [3,192,198,197,191],
-    #                         [4,198,147,148,197]],dtype=int)
-    #nel_face1 = len(connect_face1)
-    ## Face da excitação F3
-    # connect_face1 = np.array([[1,12,8,7],
-    #                          [2,11,8,12],
-    #                          [3,11,9,8],
-    #                          [4,10,9,11]],dtype=int)
 
-    connect_face1 = np.array([[  1,  184,  183, 3611 ],
-                              [  2,  183,  182, 3609 ],
-                              [  3,  182,  181, 3609 ],
-                              [  4,  181,  180, 3607 ],
-                              [  5,  180,  179, 3607 ],
-                              [  6,  179,  178, 3605 ],
-                              [  7,  178,  177, 3605 ],
-                              [  8,  177,  189, 3606 ],
-                              [  9,  189,  188, 3606 ],
-                              [ 10,  188,  187, 3608 ],
-                              [ 11,  187,  186, 3608 ],
-                              [ 12,  186,  185, 3610 ],
-                              [ 13,  185,  184, 3610 ],
-                              [ 14,  183, 3609, 3611 ],
-                              [ 15,  181, 3607, 3609 ],
-                              [ 16,  179, 3605, 3607 ],
-                              [ 17,  177, 3606, 3605 ],
-                              [ 18,  188, 3608, 3606 ],
-                              [ 19,  186, 3610, 3608 ],
-                              [ 20,  184, 3611, 3610 ],
-                              [ 21, 3609, 3604, 3611 ],
-                              [ 22, 3607, 3604, 3609 ],
-                              [ 23, 3605, 3604, 3607 ],
-                              [ 24, 3606, 3604, 3605 ],
-                              [ 25, 3608, 3604, 3606 ],
-                              [ 26, 3610, 3604, 3608 ],
-                              [ 27, 3611, 3604, 3610 ]], dtype=int) - 1
+    connect_face1 = np.array([[1,15,16,1200],    #tubo X
+                              [2,16,17,1200],
+                              [3,17,1197,1200],
+                              [4,17,18,1197],
+                              [5,18,19,1197],
+                              [6,19,1197,1199],
+                              [7,19,20,1199],
+                              [8,11,20,1199],
+                              [9,11,12,1199],
+                              [10,12,1198,1199],
+                              [11,12,13,1198],
+                              [12,13,14,1198],
+                              [13,14,1198,1200],
+                              [14,14,15,1200],
+                              [15,1197,1198,1200],
+                              [16,1197,1198,1199]], dtype=int) - 1
     
-    # nel_face1 = len(connect_face1)
-    
-    ## Face da impedância Z4
-    #connect_face2 = np.array([[1,149,195,62,85],
-    #                         [2,195,194,63,62],
-    #                         [3,150,196,195,149],
-    #                         [4,196,193,194,195]],dtype=int)
-    #nel_face2 = len(connect_face2)
-
-    # Face da impedância Z3
-    #connect_face2 = np.array([[1,6,2,1],
-    #                          [2,5,2,6],
-    #                          [3,5,3,2],
-    #                          [4,4,3,5]],dtype=int)
-    
-    connect_face2 = np.array([[ 101,  375,  376, 3600 ],
-                              [ 102,  376,  377, 3600 ],
-                              [ 103,  377, 3598, 3600 ],
-                              [ 104,  377,  378, 3598 ],
-                              [ 105,  378,  366, 3598 ],
-                              [ 106,  366, 3597, 3598 ],
-                              [ 107,  366,  367, 3597 ],
-                              [ 108,  367,  368, 3597 ],
-                              [ 109,  368, 3599, 3597 ],
-                              [ 110,  368,  369, 3599 ],
-                              [ 111,  369,  370, 3599 ],
-                              [ 112,  370, 3601, 3599 ],
-                              [ 113,  370,  371, 3601 ],
-                              [ 114,  371,  372, 3601 ],
-                              [ 115,  372, 3603, 3601 ],
-                              [ 116,  372,  373, 3603 ],
-                              [ 117,  373, 3602, 3603 ],
-                              [ 118,  373,  374, 3602 ],
-                              [ 119,  374,  375, 3602 ],
-                              [ 120,  375, 3600, 3602 ],
-                              [ 121, 3602, 3600, 3596 ],
-                              [ 122, 3600, 3598, 3596 ],
-                              [ 123, 3598, 3597, 3596 ],
-                              [ 124, 3597, 3599, 3596 ],
-                              [ 125, 3599, 3601, 3596 ],
-                              [ 126, 3601, 3603, 3596 ],
-                              [ 127, 3603, 3602, 3596 ]], dtype=int) - 1
-
-    # nel_face2 = len(connect_face2)
+    connect_face2 = np.array([  [1,6,7,1203],   #tubo
+                                [2,7,8,1203],
+                                [3,8,1201,1203],
+                                [4,8,9,1201],
+                                [5,9,10,1201],
+                                [6,10,1201,1204],
+                                [7,1,10,1204],
+                                [8,1,2,1204],
+                                [9,2,3,1204],
+                                [10,3,1202,1204],
+                                [11,3,4,1202],
+                                [12,4,5,1202],
+                                [13,5,1202,1203],
+                                [14,5,6,1203],
+                                [15,1201,1202,1203],
+                                [16,1201,1202,1204]  ], dtype=int) - 1
 
     connectivity_from_surfaces = dict()
 
@@ -241,6 +237,26 @@ def get_faces_connectivities():
 
     return connectivity_from_surfaces
 
+
+def get_external_results():
+    imported_results = dict()
+
+    results_path = "data/examples/mesh/tubo_reto/external_results.xlsx"
+
+    wb = openpyxl.load_workbook(results_path)
+
+    sheetnames = wb.sheetnames
+    for sheetname in sheetnames:
+
+        sheet_data = pd.read_excel(results_path, 
+                                sheet_name = sheetname, 
+                                header = 0, 
+                                usecols = [0,1,2]).to_numpy()
+
+        imported_results[sheetname] = {"x_data" : sheet_data[:, 0],
+                                       "y_data" : sheet_data[:, 1] + 1j*sheet_data[:, 2]}
+        
+    return imported_results
 
 def get_solid_elements_connected_to_nodes(solids_connectivity : np.ndarray, node_ids = None, face_connectivity = None):
 
@@ -273,6 +289,22 @@ def get_solid_elements_connected_to_nodes(solids_connectivity : np.ndarray, node
         # print(f"Loop time: {dt} s")
 
     return solid_elements_connected_to_nodes
+
+def get_particle_velocity(elem_id):
+    # aqui deveríamos chamar a função que calcula a Vn em cada elemento
+    # seria interessante que ela retorne um array na forma [N_nodes x N_freq]
+    return 0
+
+def process_particle_velocity(solid_elements_connected_to_nodes : dict):
+
+    particle_velocity = dict()
+    for node_id, elements_from_node in solid_elements_connected_to_nodes.items():
+
+        aux = 0.
+        for element_id in elements_from_node:
+            aux += get_particle_velocity(element_id)
+        
+        particle_velocity[node_id] = aux
 
 def plot_results():
 

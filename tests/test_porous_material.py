@@ -18,7 +18,7 @@ from time import time
 
 
 def test_load_external_mesh_and_solve():
-    # return
+    return
 
     # start decoding the Ansys script file (ds.dat file or input file)
 
@@ -212,6 +212,10 @@ def test_load_external_mesh_and_solve():
         results_ref = data[:, 1] + 1j*data[:, 2]
 
         title = f"Harmonic response at {output_ns}"
+
+        abs_diff = np.max(np.abs((nodal_solution-results_ref)/results_ref))
+        assert abs_diff < 1e-4
+        print(f"Deviation: {100*abs_diff}")
 
         fig1, ax1 = plt.subplots()
         ax1.semilogy(frequencies, np.abs(nodal_solution), 'r', label='VIBRA')

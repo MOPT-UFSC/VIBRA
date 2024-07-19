@@ -101,10 +101,6 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
     def lineEdit_2_clicked(self):
         self.current_lineEdit = self.lineEdit_output_selected_id
 
-    def writeNodes(self, list_node_ids):
-        node_id = list_node_ids[0]
-        self.current_lineEdit.setText(str(node_id))
-
     def _load_analysis_data_and_solution(self):
 
         self.analysis_method = ""

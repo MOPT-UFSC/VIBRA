@@ -325,16 +325,16 @@ class AcousticHarmonicSolver:
         imag_values = np.array(surf_velocity["imag_values"])
         V_in = real_values + 1j * imag_values
 
-        # V_in = input_particle_velocities["Vx"]
-        P_in = V_in * rho_in * c0_in# / 2
+        # P_in = V_in * rho_in * c0_in# / 2
 
         # V_in = (-1) * Vn * (Aeff_in / A_in)
 
         # V_in = P_in / (rho_in * c0_in)
+        V_in = input_particle_velocities["Vx"]
         I_in = np.real(P_in * np.conjugate(V_in)) / 2
 
-        # V_out = output_particle_velocities["Vx"]
-        V_out = P_out / (rho_out * c0_out)
+        # V_out = P_out / (rho_out * c0_out)
+        V_out = output_particle_velocities["Vx"]
         I_out = np.real(P_out * np.conjugate(V_out)) / 2
 
         W_in = 10*np.log10(np.sum(I_in * Aeff_in, axis=0))

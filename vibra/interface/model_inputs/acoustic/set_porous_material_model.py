@@ -113,8 +113,9 @@ class SetPorousMaterialModel(QDialog):
         self.treeWidget_porous_material_model : QTreeWidget
 
     def _create_connections(self):
-
+        #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.update_attribution_type)
+        #
         self.pushButton_remove.clicked.connect(self.remove_porous_material_model)
         self.pushButton_reset.clicked.connect(self.reset_porous_material_model)
         #

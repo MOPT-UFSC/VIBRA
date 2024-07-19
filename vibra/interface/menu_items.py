@@ -20,6 +20,7 @@ from vibra.interface.model_inputs.acoustic.set_anechoic_termination_inputs impor
 from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import DissipationModelInput
 from vibra.interface.model_inputs.acoustic.set_lrf_eq_model_inputs import LowReducedFrequencyEquivalentModelInput
 from vibra.interface.model_inputs.acoustic.set_porous_material_model import SetPorousMaterialModel
+from vibra.interface.model_inputs.acoustic.set_compressor_model_input import CompressorModelInput
 #
 from vibra.interface.model_inputs.structural.boundary_condition_inputs import BoundaryConditionInputs
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_input import PlotAcousticFrequencyResponseInput
@@ -294,7 +295,7 @@ class MenuItems(QTreeWidget):
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_dissipation_model)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_porous_material_model)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_lrf_eq_model)
-        # self.item_top_acoustic_model_setup.addChild(self.item_child_add_compressor_excitation)
+        self.item_top_acoustic_model_setup.addChild(self.item_child_add_compressor_excitation)
 
         self.addTopLevelItem(self.item_top_analysis)
         self.item_top_analysis.addChild(self.item_child_selectAnalysisType)
@@ -442,7 +443,7 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_add_compressor_excitation:
             if not self.item_child_add_compressor_excitation.isDisabled():
-                pass
+                self.obj = CompressorModelInput()
 
         elif item == self.item_child_selectAnalysisType:
             if not self.item_child_selectAnalysisType.isDisabled():

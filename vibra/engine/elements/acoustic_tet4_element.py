@@ -133,49 +133,45 @@ class ACT_TETRAHEDRON_4C(Element3D):
         ie = self.connectivity[element_id, 1:]
         Pe = nodal_pressures[ie, :]
 
-        p_calc = np.array([ [0, 0, 0],
-                            [1, 0, 0],
-                            [0, 0, 1],
-                            [0, 1, 0] ], dtype=float)
-
-        # ssx = p_calc[:, 0]
-        # ttx = p_calc[:, 1]
-        # rrx = p_calc[:, 2]
+        p_calc = np.array([ [ 0, 0, 0 ],
+                            [ 1, 0, 0 ],
+                            [ 0, 1, 0 ],
+                            [ 0, 0, 1 ] ], dtype=float)
 
         for i, (ssx, ttx, rrx) in enumerate(p_calc):
 
             if ie[i] == node_id:
-                    
+
                 phi, dphi = shapeT4C(ssx, ttx, rrx)
 
                 JAC = dphi @ self.nodal_coordinates[ie, 1:4]
                 detJAC, invJAC = get_detJAC_and_invJAC(JAC)
-                dphi_t = invJAC @ dphi
+                B = invJAC @ dphi
 
-                B = np.zeros((3, self.DOFS_PER_ELEMENT), dtype=float)
-
-                B[0, :] = dphi_t[0, :]
-                B[1, :] = dphi_t[1, :]
-                B[2, :] = dphi_t[2, :]
+                # B = np.zeros((3, self.DOFS_PER_ELEMENT), dtype=float)
+                # B[0, :] = dphi_t[0, :]
+                # B[1, :] = dphi_t[1, :]
+                # B[2, :] = dphi_t[2, :]
 
                 omega = 2 * np.pi * frequencies
 
-                Ve = (-1j / (rho * omega)) * (1 / np.sqrt(6)) * (B @ Pe)
+                Ve = (-1j / (rho * omega)) * (B @ Pe)
 
-                # output = np.zeros((len(frequencies), 1+6), dtype=float)
-                # if node_id in [8416, 9368]:
-                #     if element_id in [81523, 81986]:
-                #         print(f"Node id: {node_id}")
-                #         print(f"Element id: {element_id}")
-                #         output[:, 0] = frequencies
-                #         output[:, 1] = np.real(Ve[0,:])
-                #         output[:, 2] = np.imag(Ve[0,:])
-                #         output[:, 3] = np.real(Ve[1,:])
-                #         output[:, 4] = np.imag(Ve[1,:])
-                #         output[:, 5] = np.real(Ve[2,:])
-                #         output[:, 6] = np.imag(Ve[2,:])
-                #         fname = f"particle_velocities_Vibra_{node_id}_{element_id}.dat"
-                #         np.savetxt(fname, output, delimiter=",")
+                output = np.zeros((len(frequencies), 1+6), dtype=float)
+                if node_id in [9368]:
+                    if element_id in [81523]:
+                        print(f"Node id: {node_id}")
+                        print(f"Element id: {element_id}")
+                        print(f"Pressures: {Pe[:,:4]}")
+                        output[:, 0] = frequencies
+                        output[:, 1] = np.real(Ve[0,:])
+                        output[:, 2] = np.imag(Ve[0,:])
+                        output[:, 3] = np.real(Ve[1,:])
+                        output[:, 4] = np.imag(Ve[1,:])
+                        output[:, 5] = np.real(Ve[2,:])
+                        output[:, 6] = np.imag(Ve[2,:])
+                        fname = f"particle_velocities_Vibra_{node_id}_{element_id}.dat"
+                        np.savetxt(fname, output, delimiter=",")
 
                 return Ve
 
