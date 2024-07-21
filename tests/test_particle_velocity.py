@@ -5,43 +5,54 @@ from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
+from vibra.external_mesh.external_mesh_data import ExternalMeshData
 
 import numpy as np
 import matplotlib.pyplot as plt
 from time import time
 
+import os
 import openpyxl
 import pandas as pd
 
 def test_load_external_mesh_and_solve(reorder_nodes=False):
-    # return
+    return
 
-    # Define the nodal coordinates and connectivity file path
-    nodal_coordinates = np.loadtxt("data/examples/mesh/tubo_reto/coord_tet4.csv", delimiter=",")
-    connectivity = np.loadtxt("data/examples/mesh/tubo_reto/connect_tet4.csv", delimiter=",", dtype=int)
-    
-    # rows, cols = connectivity.shape
-    # data = np.zeros((rows, cols+2), dtype=int)
-    # data[:, 0] = connectivity[:,0]
-    # data[:, 1] = np.ones(rows, dtype=int)*1
-    # data[:, 2] = np.ones(rows, dtype=int)*4
-    # data[:, 3:] = connectivity[:, 1:]
-    # np.savetxt("data/examples/mesh/tubo_reto/connect_tet4.csv", data, delimiter=",", fmt="%i")
-    # return
+    mesh_path = "validation/data/particle_velocity/mesh/ds_tubo_reto.dat"
 
-    solid_connectivity = dict()
-    solid_connectivity[1, "solid285_tet4"] = connectivity
+    if not os.path.exists(mesh_path):
+        return
+
+    # define the known 'Named selections' from model
+    named_selecion_to_tag = { 
+                                "inlet_face" : 1,
+                                "outlet_face" : 2
+                            }
+
+    t0 = time()
+    external_mesh = ExternalMeshData()
+    external_mesh.reset()
+    external_mesh.read_file(mesh_path)
+    external_mesh.set_named_selections(list(named_selecion_to_tag.keys()))
+    external_mesh.decode_mesh_data_from_file()
 
     mesh = Mesh()
-    mesh.import_external_nodal_coordinates(nodal_coordinates, index_zero=True)
-    mesh.import_external_connectivity(solid_connectivity, index_zero=True, etype_tag=4)
+    mesh.import_external_nodal_coordinates(external_mesh.nodal_coordinates, index_zero=True)
+    mesh.import_external_connectivity(external_mesh.connectivity_arrays, index_zero=True, etype_tag=4)
+    # mesh.export_nodal_coordinates("nodal_coordinates.dat")
+    # mesh.export_solid_elements_connectivity("solids_connectivity.dat")
     mesh.element_type = TETRAHEDRON_4
 
-    for tag, surf_data in get_faces_connectivities().items():
+    for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
+        tag = named_selecion_to_tag[named_selection]
         mesh.elements_from_surface[tag] = surf_data["element_indexes"]
-        mesh.connectivity_from_surfaces[tag] = surf_data["connectivity"]
-        flat_data = (surf_data["connectivity"]).flatten()
-        mesh.nodes_from_surfaces[tag] = np.array([*set(flat_data)], dtype=int)
+        mesh.connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
+        ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
+        mesh.nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
+
+        mesh.volume_from_surface[tag] = [1]
+
+    mesh.surfaces_from_volumes[1] = [1, 2]
 
     # if reorder_nodes:
     #     mesh._process_nodes_reordering()
@@ -66,7 +77,7 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
     model.set_fluid(fluid, volume=1)
 
     # Normal surface velocity data
-    data_Vn = { "real_values" : [-1],
+    data_Vn = { "real_values" : [1],
                 "imag_values" : [0],
                 "nodal_attribution" : False,
                 "averaged" : False }
@@ -78,9 +89,11 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
                 "nodal_attribution" : False,
                 "averaged" : False  }
 
-    model.set_surface_velocity(data_Vn, 1)
-    # model.set_specific_impedance(data_Z, 1)
+    model.set_surface_velocity(data_Vn, 2)
+    model.set_specific_impedance(data_Z, 1)
     model.set_specific_impedance(data_Z, 2)
+
+    # Create the acoustic assembler
     assembler = AcousticAssembler(model)
 
     # Define the analysis frequency setup
@@ -106,11 +119,12 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
     harmonic_solver = AcousticHarmonicSolver(assembler, analysis_data=analysis_data)
     
     t0 = time()
-    # Run harmonic analysis
     solution = harmonic_solver.solve(print_log=True)
+    dt = time() - t0
+    print(f"Elapsed time to solve harmonic analysis: {round(dt, 4)}")
 
-    # element_id = 5648 - 1
-    # node_id = 13 - 1
+    element_id = 5648 - 1
+    node_id = 13 - 1
 
     element_id = 1750 - 1
     node_id = 1198 - 1
@@ -118,8 +132,8 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
     element_3d, _ = assembler.get_element()
     element_3d.reorder_connect()
 
-    Vxyz = element_3d.process_particle_velocity(element_id, node_id, rho_0, frequencies, solution)
-    print(Vxyz[0, :])
+    # Vxyz = element_3d.process_particle_velocity(element_id, node_id, rho_0, frequencies, solution)
+    # print(Vxyz[0, :])
 
     elements_connected_to_nodes =  mesh.get_solid_elements_connected_to_nodes([node_id])
     # print(elements_connected_to_nodes)
@@ -184,8 +198,8 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
 
         fig4, ax4 = plt.subplots()
         ax4.plot(frequencies, np.real(Vx), 'r', label='VIBRA')
-        ax4.plot(freq_ref, -np.real(Vx_ref), 'k--', label='ANSYS')
-        ax4.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Imaginary', title='Harmonic Response - Outlet pressure')
+        ax4.plot(freq_ref, np.real(Vx_ref), 'k--', label='ANSYS')
+        ax4.set(xlabel='Frequency [Hz]', ylabel='Particle velocity [m/s] - real', title='Harmonic Response - Inlet Vx')
         ax4.grid()
 
         plt.legend()
@@ -241,17 +255,20 @@ def get_faces_connectivities():
 def get_external_results():
     imported_results = dict()
 
-    results_path = "data/examples/mesh/tubo_reto/external_results.xlsx"
+    # results_path = "validation/data/particle_velocity/results/external_results_Vn1_Z2.xlsx"
+    # results_path = "validation/data/particle_velocity/results/external_results_Vn1_Z1_Z2.xlsx"
+    # results_path = "validation/data/particle_velocity/results/external_results_Vn2_Z1.xlsx"
+    results_path = "validation/data/particle_velocity/results/external_results_Vn2_Z1_Z2.xlsx"
 
     wb = openpyxl.load_workbook(results_path)
 
     sheetnames = wb.sheetnames
     for sheetname in sheetnames:
 
-        sheet_data = pd.read_excel(results_path, 
-                                sheet_name = sheetname, 
-                                header = 0, 
-                                usecols = [0,1,2]).to_numpy()
+        sheet_data = pd.read_excel( results_path, 
+                                    sheet_name = sheetname, 
+                                    header = 0, 
+                                    usecols = [0,1,2] ).to_numpy()
 
         imported_results[sheetname] = {"x_data" : sheet_data[:, 0],
                                        "y_data" : sheet_data[:, 1] + 1j*sheet_data[:, 2]}

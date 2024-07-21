@@ -250,6 +250,64 @@ class AcousticHarmonicSolver:
         return F_eq
 
 
+    def get_particle_velocity_from_surface(self, surface_id):
+        """ Process the nodal average particle velocity to selected surface.
+            Returns the partcicle velocity in components x, y, z and normal
+        """
+
+        element_3d, element_2d = self.assembler.get_element()
+        element_3d.reorder_connect()
+
+        node_ids = self.assembler.model.mesh.nodes_from_surfaces[surface_id]
+        solid_elements_connected_to_nodes = self.assembler.model.mesh.get_solid_elements_connected_to_nodes(node_ids)
+        face_elements_connected_to_nodes = self.assembler.model.mesh.get_face_elements_connected_to_nodes(node_ids, surface_id)
+
+        fluid = self.assembler.model.properties.get_fluid(surface=surface_id)
+        rho = fluid.fluid_density
+
+        data_vp = dict()
+        data_normals = dict()
+
+        for node_id, solid_element_ids in solid_elements_connected_to_nodes.items():
+
+            n = 0.
+            face_elem_connect = face_elements_connected_to_nodes[node_id, surface_id]
+
+            for face_connect in face_elem_connect:
+                n += element_2d.get_element_face_normal(face_connect)
+                # print(node_id, face_connect, element_2d.get_element_face_normal(face_connect))
+
+            data_normals[node_id] = n / len(face_elem_connect)
+            # print(node_id, len(face_elem_connect),  data_normals[node_id])
+
+            Vk = 0.
+            for solid_element_id in solid_element_ids:
+                Vk += element_3d.process_particle_velocity(solid_element_id, node_id, rho, self.frequencies, self.solution)
+
+            data_vp[node_id] = Vk / len(solid_element_ids)
+
+        Vx = dict()
+        Vy = dict()
+        Vz = dict()
+        Vn = dict()
+        particle_velocities = dict()
+
+        ordered_nodes = np.sort(list(data_vp.keys()))
+
+        for i, _node_id in enumerate(ordered_nodes):
+            Vx[_node_id] = data_vp[_node_id][0, :]
+            Vy[_node_id] = data_vp[_node_id][1, :]
+            Vz[_node_id] = data_vp[_node_id][2, :]
+            Vn[_node_id] = data_vp[_node_id].T @ data_normals[_node_id]
+
+        particle_velocities["Vx"] = Vx
+        particle_velocities["Vy"] = Vy
+        particle_velocities["Vz"] = Vz
+        particle_velocities["Vn"] = Vn
+
+        return particle_velocities
+
+
     def get_transmission_loss(self, input_surface_id, output_surface_id):
         """ Returns the transmission loss.
         
@@ -257,6 +315,9 @@ class AcousticHarmonicSolver:
         
         nodes_input = self.assembler.model.mesh.nodes_from_surfaces[input_surface_id]
         nodes_output = self.assembler.model.mesh.nodes_from_surfaces[output_surface_id]
+
+        nodes_input = np.sort(nodes_input)
+        nodes_output = np.sort(nodes_output)
 
         P_in = self.solution[nodes_input, :]
         P_out = self.solution[nodes_output, :]
@@ -279,17 +340,23 @@ class AcousticHarmonicSolver:
         logging.info("Processing the transmission loss..." + ProgressStatus(40, 100))
 
         out_data = dict()
+        list_nodes_in = list()
         nodal_areas_in = np.zeros(len(nodes_input), dtype=float)
-        for i, node in enumerate(np.sort(nodes_input)):
+        for i, node in enumerate(nodes_input):
             areas = self.assembler.model.mesh.nodal_area[node]
             nodal_areas_in[i] = sum(areas)
             out_data[node] = sum(areas)
+            # print("input: ", i, node)
+            list_nodes_in.append(node)
 
+        list_nodes_out = list()
         nodal_areas_out = np.zeros(len(nodes_output), dtype=float)
-        for i, node in enumerate(np.sort(nodes_output)):
+        for i, node in enumerate(nodes_output):
             areas = self.assembler.model.mesh.nodal_area[node]
             nodal_areas_out[i] = sum(areas)
             out_data[node] = sum(areas)
+            # print("output: ", i, node)
+            list_nodes_out.append(node)
 
         # with open("areas_data.json", "w") as file:
         #     json.dump(out_data, file, indent=2)
@@ -313,82 +380,38 @@ class AcousticHarmonicSolver:
         logging.info("Processing the transmission loss..." + ProgressStatus(90, 100))
         output_particle_velocities = self.get_particle_velocity_from_surface(output_surface_id)
 
-        # the zero_shift constant is summed to avoid zero values either in P_input2 or P_output2 variables
-        zero_shift = 1e-12
+        ## Transmission loss
+        # surf_velocity = self.assembler.model.properties.get_surface_velocity(input_surface_id)
+        # if surf_velocity is None:
+        #     return None, None, None
 
-        # Transmission loss
-        surf_velocity = self.assembler.model.properties.get_surface_velocity(input_surface_id)
-        if surf_velocity is None:
-            return None, None, None
-
-        real_values = np.array(surf_velocity["real_values"])
-        imag_values = np.array(surf_velocity["imag_values"])
-        V_in = real_values + 1j * imag_values
+        # real_values = np.array(surf_velocity["real_values"])
+        # imag_values = np.array(surf_velocity["imag_values"])
+        # V_in = real_values + 1j * imag_values
 
         # P_in = V_in * rho_in * c0_in# / 2
 
-        # V_in = (-1) * Vn * (Aeff_in / A_in)
-
         # V_in = P_in / (rho_in * c0_in)
-        V_in = input_particle_velocities["Vx"]
-        I_in = np.real(P_in * np.conjugate(V_in)) / 2
+        # I_in = np.abs(np.real(P_in * np.conjugate(V_in)) / 2)
+        V_in = np.array(list(input_particle_velocities["Vn"].values()), dtype=complex)
+        I_in = -np.real(P_in * np.conjugate(V_in)) / 2
 
         # V_out = P_out / (rho_out * c0_out)
-        V_out = output_particle_velocities["Vx"]
+        # I_out = np.abs(np.real(P_out * np.conjugate(V_out)) / 2)
+        V_out = np.array(list(output_particle_velocities["Vn"].values()), dtype=complex)
         I_out = np.real(P_out * np.conjugate(V_out)) / 2
 
         W_in = 10*np.log10(np.sum(I_in * Aeff_in, axis=0))
         W_out = 10*np.log10(np.sum(I_out * Aeff_out, axis=0))
 
-        diff = 10*np.log10(np.sum(I_out * Aeff_out, axis=0)) - 10*np.log10(np.sum(I_out * A_out/len(nodes_output), axis=0))
-
         TL = W_in - W_out
+
+        diff = 10*np.log10(np.sum(I_out * Aeff_out, axis=0)) - 10*np.log10(np.sum(I_out * A_out/len(nodes_output), axis=0))
 
         if self.frequencies[0] == 0:
             return self.frequencies[1:], TL[1:], diff[1:]
         else:
             return self.frequencies, TL, diff
-
-    def get_particle_velocity_from_surface(self, surface_id):
-        """
-        
-        """
-
-        element_3d, _ = self.assembler.get_element()
-        element_3d.reorder_connect()
-
-        node_ids = self.assembler.model.mesh.nodes_from_surfaces[surface_id]
-        elements_connected_to_nodes = self.assembler.model.mesh.get_solid_elements_connected_to_nodes(node_ids)
-
-        fluid = self.assembler.model.properties.get_fluid(surface=surface_id)
-        rho = fluid.fluid_density
-
-        data = dict()
-        for node_id, element_ids in elements_connected_to_nodes.items():
-
-            Vn = 0.
-            for element_id in element_ids:
-                # if node_id in [8416, 9368]:
-                #     element_3d.velpartT4C(element_id, node_id, rho, self.frequencies, self.solution)
-
-                Vn += element_3d.process_particle_velocity(element_id, node_id, rho, self.frequencies, self.solution)
-
-            data[node_id] = Vn / len(element_ids)
-
-        ordered_nodes = np.sort(list(data.keys()))
-        particle_velocity = np.zeros((len(ordered_nodes), len(self.frequencies)), dtype=complex)
-
-        labels = ["Vx", "Vy", "Vz"]
-        particle_velocities = dict()
-
-        for j, key in enumerate(labels):    
-            for i in range(len(ordered_nodes)):
-                node_id = ordered_nodes[i]
-                particle_velocity[i, :] = data[node_id][j, :]
-
-            particle_velocities[key] = particle_velocity
-
-        return particle_velocities
 
     def get_noise_reduction(self, input_surface_id, output_surface_id):
         """ Returns the transmission loss.

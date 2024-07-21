@@ -155,23 +155,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
 
                 omega = 2 * np.pi * frequencies
 
-                Ve = (-1j / (rho * omega)) * (B @ Pe)
-
-                output = np.zeros((len(frequencies), 1+6), dtype=float)
-                if node_id in [9368]:
-                    if element_id in [81523]:
-                        print(f"Node id: {node_id}")
-                        print(f"Element id: {element_id}")
-                        print(f"Pressures: {Pe[:,:4]}")
-                        output[:, 0] = frequencies
-                        output[:, 1] = np.real(Ve[0,:])
-                        output[:, 2] = np.imag(Ve[0,:])
-                        output[:, 3] = np.real(Ve[1,:])
-                        output[:, 4] = np.imag(Ve[1,:])
-                        output[:, 5] = np.real(Ve[2,:])
-                        output[:, 6] = np.imag(Ve[2,:])
-                        fname = f"particle_velocities_Vibra_{node_id}_{element_id}.dat"
-                        np.savetxt(fname, output, delimiter=",")
+                Ve = -(1 / (1j * rho * omega)) * (B @ Pe)
 
                 return Ve
 
@@ -295,5 +279,5 @@ class ACT_TETRAHEDRON_4C(Element3D):
         self.ind_cols = (np.tile(ind_dofs, edofs)).flatten()
 
         return self.ind_rows, self.ind_cols
-    
+
 # fmt: on

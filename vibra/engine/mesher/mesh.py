@@ -60,6 +60,8 @@ class Mesh:
         self.nodes_from_solid_element = dict()
         self.solid_elements_center = dict()
 
+        self.nodes_out_of_face_element = dict()
+
         self.surfaces_areas = dict()
         self.bodies_volumes = dict()
         self.surface_area_from_element_integration = dict()
@@ -528,9 +530,7 @@ class Mesh:
 
         for tag in list_ids:
             connect_data = self.connectivity_from_surfaces[tag]
-
-        # for tag, connect_data in self.connectivity_from_surfaces.items():
-            
+           
             area = 0.
             for element_nodes in connect_data:
                 area += self.process_triangular_area_by_nodal_coordinates(element_nodes)
@@ -564,6 +564,29 @@ class Mesh:
         # print(f"Elapsed '_process_solid_elements_connected_to_nodes': {dt} s")
 
 
+    def get_face_elements_connected_to_nodes(self, node_ids, surface_id=None):
+
+        face_elements_connected_to_nodes = dict()
+
+        Nel = len(node_ids)
+        for i, node_id in enumerate(node_ids):
+            # t0 = time()
+            if surface_id is None:
+                mask = np.sum(self.faces_connectivity[:, 4:] == node_id, axis=1) == 1
+                face_elements_connected_to_nodes[node_id, surface_id] = self.faces_connectivity[:, 0][mask]
+            else:
+                connect_from_surface = self.connectivity_from_surfaces[surface_id]
+                mask = np.sum(connect_from_surface == node_id, axis=1) == 1
+                face_elements_connected_to_nodes[node_id, surface_id] = connect_from_surface[mask, :]
+
+            # dt = time() - t0
+            # print(f"Loop time: {dt} s")
+            text = f"Obtaining face elements connected to nodes... \nSurface [{surface_id}]"
+            logging.info(text + ProgressStatus(int(100 * i / Nel), 100))
+
+        return face_elements_connected_to_nodes
+
+
     def get_solid_elements_connected_to_nodes(self, node_ids):
 
         solid_elements_connected_to_nodes = dict()
@@ -573,11 +596,10 @@ class Mesh:
             # t0 = time()
             mask = np.sum(self.solids_connectivity[:, 4:] == node_id, axis=1) == 1
             solid_elements_connected_to_nodes[node_id] = self.solids_connectivity[:, 0][mask]
-            if node_id in [642, 9368]:
-                print(node_id, solid_elements_connected_to_nodes[node_id])
+
             # dt = time() - t0
             # print(f"Loop time: {dt} s")
-            logging.info("Post-processing selection..." + ProgressStatus(int(100 * i / Nel), 100))
+            logging.info("Obtaining solid elements connected to nodes..." + ProgressStatus(int(100 * i / Nel), 100))
 
         return solid_elements_connected_to_nodes
 
