@@ -24,35 +24,35 @@ jobs:
           draft: true
           prerelease: false
 
-      - name: download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: ./uploads/
+      # - name: download all artifacts
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     path: ./uploads/
 
-      - name: show path
-        run: ls -r ./uploads/vibra-linux
+      # - name: show path
+      #   run: ls -r ./uploads/vibra-linux
 
-      - name: upload release linux
-        id: upload-linux
-        uses: actions/upload-release-asset@v1.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./uploads/vibra-linux/vibra-linux-x64.so
-          asset_name: vibra-linux-x64.so
-          asset_content_type: application/zip
+      # - name: upload release linux
+      #   id: upload-linux
+      #   uses: actions/upload-release-asset@v1.0.1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./uploads/vibra-linux/vibra-linux-x64.so
+      #     asset_name: vibra-linux-x64.so
+      #     asset_content_type: application/zip
 
-      - name: upload release windows
-        id: upload-windows
-        uses: actions/upload-release-asset@v1.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./uploads/vibra-windows/vibra-windows-x64.exe
-          asset_name: vibra-windows-x64.exe
-          asset_content_type: application/zip                        
+      # - name: upload release windows
+      #   id: upload-windows
+      #   uses: actions/upload-release-asset@v1.0.1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./uploads/vibra-windows/vibra-windows-x64.exe
+      #     asset_name: vibra-windows-x64.exe
+      #     asset_content_type: application/zip                        
 
   build-windows:
     runs-on: windows-2019
