@@ -3,11 +3,10 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.interface.application import Application
 
-import pkg_resources
-
+from importlib.metadata import version
 # copying the version from pyproject.toml
-__version__ = pkg_resources.get_distribution('vibra').version
-__release_date__ = 'August 1st 2024'
+__version__ = version('vibra')
+__release_date__ = 'July 22th 2024'
 
 from PyQt5.QtWidgets import QApplication
 from pathlib import Path
