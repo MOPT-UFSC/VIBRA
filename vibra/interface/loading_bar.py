@@ -78,8 +78,8 @@ class LoadingWindow(QWidget):
 
     def configure_window(self):
         self.setGeometry(200, 200, 400, 150)
-        self.setWindowFlags(Qt.Window | Qt.CustomizeWindowHint | Qt.WindowTitleHint | Qt.WindowStaysOnTopHint)
         self.setWindowIcon(app().main_window.vibra_icon)
+        self.setWindowFlags(Qt.Window | Qt.CustomizeWindowHint | Qt.WindowTitleHint | Qt.WindowStaysOnTopHint | Qt.WindowMinimizeButtonHint)
         self.setWindowTitle("Vibra")
 
 
