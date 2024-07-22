@@ -26,6 +26,7 @@ from vibra.interface.model_inputs.structural.boundary_condition_inputs import Bo
 from vibra.interface.plots.acoustic.plot_acoustic_pressure_frequency_response_input import PlotAcousticPressureFrequencyResponseInput
 from vibra.interface.plots.acoustic.plot_particle_velocity_frequency_response_input import PlotParticleVelocityFrequencyResponseInput
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_input import PlotAcousticFrequencyResponseFunctionInput
+from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
 from vibra.interface.plots.acoustic.plot_transmission_loss_input import PlotTransmissionLossInput
 #
 from vibra.interface.process_analysis import ProcessAnalysis
@@ -264,6 +265,7 @@ class MenuItems(QTreeWidget):
         self.item_child_plot_acoustic_pressure_frequency_response = QTreeWidgetItem(["Plot Acoustic Pressure Frequency Response"])
         self.item_child_plot_particle_velocity_frequency_response = QTreeWidgetItem(["Plot Particle Velocity Frequency Response"])
         self.item_child_plot_acoustic_pressure_frequency_response_function = QTreeWidgetItem(["Plot Acoustic Pressure Frequency Response Function"])
+        self.item_child_plot_specific_acoustic_impedance = QTreeWidgetItem(["Plot Specific Acoustic Impedance"])
         self.item_child_plotAcousticDeltaPressures = QTreeWidgetItem(["Plot Acoustic Delta Pressures"])
         self.item_child_plot_TL_NR = QTreeWidgetItem(["Plot Transmission Loss or Attenuation"])
         #
@@ -273,6 +275,7 @@ class MenuItems(QTreeWidget):
         self.list_child_items.append(self.item_child_plot_acoustic_pressure_frequency_response)
         self.list_child_items.append(self.item_child_plot_particle_velocity_frequency_response)
         self.list_child_items.append(self.item_child_plot_acoustic_pressure_frequency_response_function)
+        self.list_child_items.append(self.item_child_plot_specific_acoustic_impedance)
         self.list_child_items.append(self.item_child_plotAcousticDeltaPressures)
         self.list_child_items.append(self.item_child_plot_TL_NR)
         #
@@ -321,6 +324,7 @@ class MenuItems(QTreeWidget):
         self.item_top_resultsViewer_acoustic.addChild(self.item_child_plot_acoustic_pressure_frequency_response)
         self.item_top_resultsViewer_acoustic.addChild(self.item_child_plot_particle_velocity_frequency_response)
         self.item_top_resultsViewer_acoustic.addChild(self.item_child_plot_acoustic_pressure_frequency_response_function)
+        self.item_top_resultsViewer_acoustic.addChild(self.item_child_plot_specific_acoustic_impedance)
         # self.item_top_resultsViewer_acoustic.addChild(self.item_child_plotAcousticDeltaPressures)
         self.item_top_resultsViewer_acoustic.addChild(self.item_child_plot_TL_NR)
 
@@ -521,9 +525,9 @@ class MenuItems(QTreeWidget):
             if not self.item_child_plot_acoustic_pressure_frequency_response_function.isDisabled():
                 PlotAcousticFrequencyResponseFunctionInput()
 
-        elif item == self.item_child_plotAcousticDeltaPressures:
-            if not self.item_child_plotAcousticDeltaPressures.isDisabled():
-                pass
+        elif item == self.item_child_plot_specific_acoustic_impedance:
+            if not self.item_child_plot_specific_acoustic_impedance.isDisabled():
+                PlotSpecificAcousticImpedanceInput()
 
         elif item == self.item_child_plot_TL_NR:
             if not self.item_child_plot_TL_NR.isDisabled():
@@ -720,20 +724,22 @@ class MenuItems(QTreeWidget):
             self.item_child_plot_particle_velocity_frequency_response.setDisabled(False)
             self.item_child_plot_acoustic_pressure_frequency_response_function.setDisabled(False)
             self.item_child_plot_acoustic_pressure_field.setDisabled(False)
+            self.item_child_plot_specific_acoustic_impedance.setDisabled(False)
             self.item_child_plotAcousticDeltaPressures.setDisabled(False)
             self.item_child_plot_TL_NR.setDisabled(False)
 
         elif analysis_id in [5, 6]:
-            self.item_child_plotStructuralFrequencyResponse.setDisabled(False)
+            self.item_child_plot_acoustic_pressure_field.setDisabled(False)
             self.item_child_plot_acoustic_pressure_frequency_response.setDisabled(False)
             self.item_child_plot_particle_velocity_frequency_response.setDisabled(False)
             self.item_child_plot_acoustic_pressure_frequency_response_function.setDisabled(False)
+            self.item_child_plot_specific_acoustic_impedance.setDisabled(False)
+            self.item_child_plotAcousticDeltaPressures.setDisabled(False)
+            self.item_child_plot_TL_NR.setDisabled(False)
+            self.item_child_plotStructuralFrequencyResponse.setDisabled(False)
             self.item_child_plotStressField.setDisabled(False)
             self.item_child_plotStressFrequencyResponse.setDisabled(False)
             self.item_child_plotDisplacementField.setDisabled(False)
-            self.item_child_plot_acoustic_pressure_field.setDisabled(False)
-            self.item_child_plotAcousticDeltaPressures.setDisabled(False)
-            self.item_child_plot_TL_NR.setDisabled(False)
             self.item_child_plotReactionsFrequencyResponse.setDisabled(False)
 
         self.update_TreeVisibility_after_solution()

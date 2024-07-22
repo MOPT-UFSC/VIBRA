@@ -30,8 +30,6 @@ from vibra.project_files.project_file_io import ProjectFileIO
 import qdarktheme
 
 import sys
-import logging
-import random
 from pathlib import Path
 from shutil import rmtree, copy
 from time import sleep

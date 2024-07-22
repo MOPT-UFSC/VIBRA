@@ -1,13 +1,13 @@
-from PyQt5.QtWidgets import QComboBox, QCheckBox, QDialog, QFrame, QPushButton, QRadioButton, QSpinBox, QVBoxLayout, QWidget
-from PyQt5.QtGui import QCloseEvent
+from PyQt5.QtWidgets import QComboBox, QCheckBox, QDialog, QFrame, QPushButton, QRadioButton, QSpinBox, QVBoxLayout, QToolButton, QWidget
+from PyQt5.QtGui import QCloseEvent, QColor
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.data_handler.import_data_to_compare import ImportDataToCompare
+from vibra.interface.formatters import icons
 from vibra.interface.plots.general.mpl_canvas import MplCanvas
-
 from vibra.interface.plots.general.advanced_cursor import AdvancedCursor
 
 import numpy as np
@@ -21,13 +21,13 @@ class FrequencyResponsePlotter(QDialog):
         ui_path = UI_DIR / "plots/general/frequency_response_plot.ui"
         uic.loadUi(ui_path, self)
 
-        self._load_icons()
+        self._config_window()
         self._initialize()
         self._initialize_canvas()
         self._define_qt_variables()
         self._create_connections()
 
-    def _load_icons(self):
+    def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
@@ -111,6 +111,7 @@ class FrequencyResponsePlotter(QDialog):
         self.pushButton_import_data.clicked.connect(self.import_file)
         self.pushButton_export_data.clicked.connect(self.call_data_exporter)
         #
+        app().main_window.theme_changed.connect(self.paint_toolbar_icons)
         self._initial_config()
 
     def import_file(self):
@@ -269,6 +270,18 @@ class FrequencyResponsePlotter(QDialog):
         else:
             return self.unit + "/s²"
 
+    def paint_toolbar_icons(self, *args, **kwargs):
+        toolbar = self.findChild(NavigationToolbar2QT)
+        if toolbar is None:
+            return
+
+        if app().main_window.user_config.theme == "dark":
+            color = QColor("#5f9af4")
+        else:
+            color = QColor("#1a73e8")
+
+        icons.change_icon_color_for_widgets(toolbar.findChildren(QToolButton), color)
+
     def plot_data_in_freq_domain(self):
 
         self.ax.cla()
@@ -277,6 +290,14 @@ class FrequencyResponsePlotter(QDialog):
 
         if self._layout is None:
             toolbar = NavigationToolbar2QT(self.mpl_canvas_frequency_plot, self)
+
+            # Paint the toolbar icons and connect the buttons to paint
+            # themselves after every click or draw events
+            self.paint_toolbar_icons()
+            for button in toolbar.findChildren(QToolButton):
+                button.clicked.connect(self.paint_toolbar_icons)                    
+            self.mpl_canvas_frequency_plot.mpl_connect("draw_event", self.paint_toolbar_icons)
+
             self._layout = QVBoxLayout()
             self._layout.addWidget(toolbar)
             self._layout.addWidget(self.mpl_canvas_frequency_plot)
