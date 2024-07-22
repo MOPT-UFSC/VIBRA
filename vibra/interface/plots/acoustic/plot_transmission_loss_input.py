@@ -37,8 +37,8 @@ class PlotTransmissionLossInput(QDialog):
         self.mesh = app().main_window.project.model.mesh
         self.properties = app().main_window.project.model.properties
 
-        self._load_icons()
-        self._reset_variables()
+        self._config_window()
+        self._initialize()
         self._define_qt_variables()
         self._create_connections()
 
@@ -57,12 +57,12 @@ class PlotTransmissionLossInput(QDialog):
             if analysis_data["analysis_id"] == 3:
                 self.analysis_method = "Direct method"
 
-    def _load_icons(self):
+    def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
 
-    def _reset_variables(self):
+    def _initialize(self):
         self.exporter = None
         self.plotter = None
         self.unit_label = "dB"
