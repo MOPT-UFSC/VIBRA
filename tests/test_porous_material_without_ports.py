@@ -15,8 +15,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from time import time
+import pytest
 
 
+@pytest.mark.slow
 def test_load_external_mesh_and_solve():
     # return
 
