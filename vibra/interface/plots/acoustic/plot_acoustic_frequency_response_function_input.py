@@ -18,7 +18,7 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "plots/acoustic/plot_acoustic_frequency_response_function.ui"
+        ui_path = UI_DIR / "plots/acoustic/plot_acoustic_pressure_frequency_response_function.ui"
         uic.loadUi(ui_path, self)
 
         self.main_window = app().main_window
@@ -71,6 +71,8 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
 
     def _create_connections(self):
         #
+        self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
+        #
         self.pushButton_call_data_exporter.clicked.connect(self.call_data_exporter)
         self.pushButton_flip_selection.clicked.connect(self.flip_nodes)
         self.pushButton_plot_frequency_response.clicked.connect(self.call_plotter)
@@ -79,6 +81,27 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         #
         self.clickable(self.lineEdit_input_selected_id).connect(self.lineEdit_1_clicked)
         self.clickable(self.lineEdit_output_selected_id).connect(self.lineEdit_2_clicked)
+
+    def update_render_according_to_selector(self):
+
+        self.geometry_selection_callback()
+
+        if self.comboBox_selector_filter.currentIndex() in [0, 1]:
+
+            if not self.main_window.viewer_tabs.isTabEnabled(2):
+                self.main_window.viewer_tabs.show_geometry()
+                return
+
+            self.main_window.viewer_tabs.setCurrentIndex(1)
+
+        else:
+
+            if self.main_window.viewer_tabs.currentIndex() != 2:
+                if not self.main_window.viewer_tabs.isTabEnabled(2):
+                    self.main_window.viewer_tabs.show_mesh()
+                    return
+
+            self.main_window.viewer_tabs.setCurrentIndex(2)
 
     def clickable(self, widget):
         class Filter(QObject):

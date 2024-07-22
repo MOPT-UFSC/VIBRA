@@ -8,17 +8,20 @@ from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppe
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.loading_bar import load_function
+from vibra.utils.progress_status import ProgressStatus
 
+import logging
 import numpy as np
 
 window_title1 = "Error"
 window_title2 = "Warning"
 
-class PlotAcousticFrequencyResponseInput(QDialog):
+class PlotParticleVelocityFrequencyResponseInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "plots/acoustic/plot_acoustic_frequency_response_input.ui"
+        ui_path = UI_DIR / "plots/acoustic/plot_particle_velocity_frequency_response_input.ui"
         uic.loadUi(ui_path, self)
 
         self.main_window = app().main_window
@@ -62,13 +65,15 @@ class PlotAcousticFrequencyResponseInput(QDialog):
     def _reset_variables(self):
         self.exporter = None
         self.plotter = None
-        self.unit_label = "Pa"
+        self.unit_label = "m/s"
         self.keep_window_open = True
+        self.particle_velocity = dict()
 
     def _define_qt_variables(self):
         # QComboBox
         self.comboBox_selector_filter : QComboBox
-        
+        self.comboBox_component_selector : QComboBox
+
         # QLineEdit
         self.lineEdit_selection_id : QLineEdit
 
@@ -78,6 +83,8 @@ class PlotAcousticFrequencyResponseInput(QDialog):
 
     def _create_connections(self):
         #
+        self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
+        #
         self.pushButton_call_data_exporter.clicked.connect(self.call_data_exporter)
         self.pushButton_plot_frequency_response.clicked.connect(self.call_plotter)
         #
@@ -86,7 +93,6 @@ class PlotAcousticFrequencyResponseInput(QDialog):
     def geometry_selection_callback(self):
 
         faces = self.main_window.selected_geometry_surfaces
-        lines = self.main_window.selected_geometry_lines
         nodes = self.main_window.selected_mesh_nodes
 
         index = self.comboBox_selector_filter.currentIndex()
@@ -94,16 +100,33 @@ class PlotAcousticFrequencyResponseInput(QDialog):
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
 
-        if lines and index == 1:
-            text = ", ".join([str(i) for i in lines])
-            self.lineEdit_selection_id.setText(text)
-
-        if nodes and index == 2:
+        elif nodes and index == 1:
             text = ", ".join([str(i) for i in nodes])
             self.lineEdit_selection_id.setText(text)
 
-        elif not any([nodes, lines, faces]):
+        else:
             self.lineEdit_selection_id.setText("")
+
+    def update_render_according_to_selector(self):
+
+        self.geometry_selection_callback()
+
+        if self.comboBox_selector_filter.currentIndex() == 0:
+
+            if not self.main_window.viewer_tabs.isTabEnabled(2):
+                self.main_window.viewer_tabs.show_geometry()
+                return
+
+            self.main_window.viewer_tabs.setCurrentIndex(1)
+
+        else:
+
+            if self.main_window.viewer_tabs.currentIndex() != 2:
+                if not self.main_window.viewer_tabs.isTabEnabled(2):
+                    self.main_window.viewer_tabs.show_mesh()
+                    return
+
+            self.main_window.viewer_tabs.setCurrentIndex(2)
 
     def check_inputs(self):
 
@@ -111,9 +134,6 @@ class PlotAcousticFrequencyResponseInput(QDialog):
 
         if index == 0:
             selection = "surfaces"
-
-        elif index == 1:
-            selection = "lines"
 
         else:
             selection = "nodes"
@@ -144,24 +164,76 @@ class PlotAcousticFrequencyResponseInput(QDialog):
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(self.model_results)
 
-    def get_response(self, index, selected_id):
-
+    def get_component_label(self):
+        index = self.comboBox_component_selector.currentIndex()
         if index == 0:
-            rows = self.project.model.mesh.nodes_from_surfaces[selected_id]
-
+            return "Vx"
         elif index == 1:
-            rows = self.project.model.mesh.nodes_from_lines[selected_id]
-
+            return "Vy"
         else:
-            rows = selected_id
+            return "Vz"
 
-        response = np.average(self.solution[rows,:], axis=0)
+    def get_response(self, selected_id):
 
-        # if complex(0) in response:
-        #     response += 1e-12
-            # response += np.ones(len(response), dtype=float)*(1e-12)
+        def function_callback():
+            
+            selection_type = self.comboBox_selector_filter.currentIndex()
+            
 
-        return response
+            if selection_type == 0:
+                particle_velocity = self.get_surface_particle_velocity(selected_id)
+
+            else:
+                particle_velocity = self.get_nodal_particle_velocity(selected_id)
+
+            logging.info("Processing particle velocity..." + ProgressStatus(95, 100))
+
+            return particle_velocity
+
+        get_particle_velocity = load_function(function_callback, self.main_window)
+
+        return get_particle_velocity()
+
+    def get_surface_particle_velocity(self, surface_id : int):
+
+        component_label = self.get_component_label()
+
+        element_3d, _ = self.project.acoustic_assembler.get_element()
+        element_3d.reorder_connect()
+
+        list_nodes = list()
+        for tag, surface_nodes in self.mesh.nodes_from_surfaces.items():
+            if self.comboBox_selector_filter.currentIndex() == 0:
+                if tag == surface_id:
+                    list_nodes.extend(surface_nodes)
+
+        self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id)
+        input_velocities = np.array(list(self.particle_velocity[component_label].values()), dtype=complex)
+
+        return np.average(input_velocities, axis=0)
+
+    def get_nodal_particle_velocity(self, node_id : int):
+
+        component_label = self.get_component_label()
+
+        if self.particle_velocity:
+            if component_label in self.particle_velocity.keys():
+                if node_id in self.particle_velocity[component_label].keys():
+                    return self.particle_velocity[component_label][node_id]
+
+        element_3d, _ = self.project.acoustic_assembler.get_element()
+        element_3d.reorder_connect()
+
+        list_nodes = list()
+        for tag, surface_nodes in self.mesh.nodes_from_surfaces.items():
+            if self.comboBox_selector_filter.currentIndex() == 1:
+                if node_id in surface_nodes:
+                    list_nodes.extend(surface_nodes)
+                    surface_id = tag
+
+        self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id)
+
+        return self.particle_velocity[component_label][node_id]
 
     def join_model_data(self):
 
@@ -170,26 +242,26 @@ class PlotAcousticFrequencyResponseInput(QDialog):
 
         if index == 0:
             selection_type = "surface"
-        elif index == 1:
-            selection_type = "line"
         else:
             selection_type = "node"
 
+        component_label = self.get_component_label()
+
         self.model_results = dict()
-        self.title = f"Acoustic frequency response - {self.analysis_method}"
+        self.title = f"Particle velocity frequency response - {self.analysis_method}"
 
         for i, selected_id in enumerate(self.typed_ids):
 
             key = (selection_type, (selected_id))
-            legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
+            legend_label = f"Particle velocity at {selection_type} [{selected_id}]"
 
             self.model_results[key] = { 
                                         "x_data" : self.frequencies,
-                                        "y_data" : self.get_response(index, selected_id),
+                                        "y_data" : self.get_response(selected_id),
                                         "x_label" : "Frequency [Hz]",
-                                        "y_label" : "Acoustic pressure",
+                                        "y_label" : f"Particle velocity {component_label}",
                                         "title" : self.title,
-                                        "data_type" : "acoustic pressure",
+                                        "data_type" : "particle velocity",
                                         "legend" : legend_label,
                                         "unit" : self.unit_label,
                                         "color" : self.get_color(i),

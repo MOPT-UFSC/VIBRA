@@ -171,6 +171,9 @@ class ProjectFileIO:
                             dtype = int
 
                         f.create_dataset(_key, data=data, dtype=dtype)
+        
+        self.vibra_file.remove(self.results_data_filename)
+
 
     def read_mesh_data_from_file(self):
 
