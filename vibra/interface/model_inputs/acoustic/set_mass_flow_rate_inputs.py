@@ -1,20 +1,20 @@
-import configparser
-import os
-from pathlib import Path
+# fmt: off
 
-import numpy as np
-from PyQt5 import uic
+from PyQt5.QtWidgets import QCheckBox, QDialog, QFileDialog, QLineEdit, QPushButton, QRadioButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QCloseEvent
+from PyQt5 import uic
 
 from vibra import app, UI_DIR
+from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
+import os
+import numpy as np
+
 window_title_1 = "Error"
 window_title_2 = "Warning"
-
 
 class MassFlowRateInput(QDialog):
     def __init__(self, *args, **kwargs):
@@ -32,7 +32,7 @@ class MassFlowRateInput(QDialog):
         self.mesh = app().main_window.project.model.mesh
         self.properties = app().main_window.project.model.properties
 
-        self._reset_variables()
+        self._initialize()
         self._config_window()
         self._define_qt_variables()
         self._create_connections()
@@ -46,7 +46,7 @@ class MassFlowRateInput(QDialog):
         self.setWindowIcon(self.main_window.vibra_icon)
         self.setWindowTitle("Set mass flow rate acoustic excitation")
 
-    def _reset_variables(self):
+    def _initialize(self):
         self.typed_ids = []
         self.remove_mass_flow_rate = False
         self.mass_flow_rate = None
@@ -54,37 +54,39 @@ class MassFlowRateInput(QDialog):
         self.new_load_path_table = ""
 
     def _define_qt_variables(self):
-        # QCheckBox objects
+
+        # QCheckBox
         self.checkBox_averaged_constant_values = self.findChild(QCheckBox, "checkBox_averaged_constant_values")
         self.checkBox_averaged_table_values = self.findChild(QCheckBox, "checkBox_averaged_table_values")
-        # QLineEdit objects
+        
+        # QLineEdit
         self.lineEdit_selection_id = self.findChild(QLineEdit, "lineEdit_selection_id")
         self.lineEdit_real_value = self.findChild(QLineEdit, "lineEdit_real_value")
         self.lineEdit_imag_value = self.findChild(QLineEdit, "lineEdit_imag_value")
         self.lineEdit_load_table_path = self.findChild(QLineEdit, "lineEdit_table_path")
-        # QPushButton objects
+        
+        # QPushButton
         self.pushButton_load_table = self.findChild(QPushButton, "pushButton_load_table")
         self.pushButton_constant_value_confirm = self.findChild(QPushButton, "pushButton_constant_value_confirm")
         self.pushButton_table_values_confirm = self.findChild(QPushButton, "pushButton_table_values_confirm")
         self.pushButton_remove_bc_confirm = self.findChild(QPushButton, "pushButton_remove_bc_confirm")
         self.pushButton_reset = self.findChild(QPushButton, "pushButton_reset")
-        # QRadioButton objects
+        
+        # QRadioButton
         self.radioButton_nodal_attribution_constant = self.findChild(QRadioButton, "radioButton_nodal_attribution_constant")
         self.radioButton_element_integration_constant = self.findChild(QRadioButton, "radioButton_element_integration_constant")
         self.radioButton_element_integration_table = self.findChild(QRadioButton, "radioButton_element_integration_table")
         self.radioButton_nodal_attribution_table = self.findChild(QRadioButton, "radioButton_nodal_attribution_table")
-        #
         self.radioButton_element_integration_constant.setDisabled(True)
         self.radioButton_element_integration_table.setDisabled(True)
-        # QSpinBox object
+        
+        # QSpinBox
         self.spinBox_skiprows = self.findChild(QSpinBox, "spinBox")
-        # QTabWidget objects
+        
+        # QTabWidget
         self.tabWidget_mass_flow_rate = self.findChild(QTabWidget, "tabWidget_mass_flow_rate")
-        self.tab_constant_values = self.tabWidget_mass_flow_rate.findChild(QWidget, "tab_constant_values")
-        self.tab_table_values = self.tabWidget_mass_flow_rate.findChild(QWidget, "tab_table_values")
-        self.tab_remove = self.tabWidget_mass_flow_rate.findChild(QWidget, "tab_remove")
-        self.current_tab = self.tabWidget_mass_flow_rate.currentIndex()
-        # QTreeWidget objects
+
+        # QTreeWidget
         self.treeWidget_mass_flow_rate = self.findChild(QTreeWidget, "treeWidget_mass_flow_rate")
         self.treeWidget_mass_flow_rate.setColumnWidth(1, 20)
         self.treeWidget_mass_flow_rate.setColumnWidth(2, 80)
@@ -117,8 +119,8 @@ class MassFlowRateInput(QDialog):
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
 
     def tabEvent_mass_flow_rate(self):
-        self.current_tab = self.tabWidget_mass_flow_rate.currentIndex()
-        if self.current_tab == 2:
+        index = self.tabWidget_mass_flow_rate.currentIndex()
+        if index == 2:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
         else:
@@ -473,7 +475,7 @@ class MassFlowRateInput(QDialog):
         text = ""
         for _id in list_ids:
             text += "{}, ".format(_id)
-        if self.current_tab != 2:
+        if self.tabWidget_mass_flow_rate.currentIndex() != 2:
             self.lineEdit_selection_id.setText(text[:-2])
 
     def update_tabs_visibility(self):
@@ -501,3 +503,5 @@ class MassFlowRateInput(QDialog):
             self.close()
         else:
             return
+
+# fmt: on

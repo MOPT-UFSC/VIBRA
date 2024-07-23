@@ -1,20 +1,20 @@
-import configparser
-import os
-from pathlib import Path
+# fmt: off
 
-import numpy as np
-from PyQt5 import uic
+from PyQt5.QtWidgets import QCheckBox, QDialog, QFileDialog, QLineEdit, QPushButton, QRadioButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QCloseEvent
+from PyQt5 import uic
 
 from vibra import app, UI_DIR
+from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
+import os
+import numpy as np
+
 window_title_1 = "Error"
 window_title_2 = "Warning"
-
 
 class SpecificImpedanceInput(QDialog):
     def __init__(self, *args, **kwargs):
@@ -270,7 +270,7 @@ class SpecificImpedanceInput(QDialog):
                 self.f_min = self.frequencies[0]
                 self.f_max = self.frequencies[-1]
                 self.f_step = self.frequencies[1] - self.frequencies[0]
-                self.project.set_frequencies(self.frequencies, self.f_min, self.f_max, self.f_step)
+                self.project.set_frequencies(self.frequencies, self.f_min, self.f_max, self.f_step, True)
 
                 # TODO: ensure that the table frequency setup governing the model setup
                 # if self.project.change_project_frequency_setup(imported_filename, list(self.frequencies)):
@@ -506,3 +506,5 @@ class SpecificImpedanceInput(QDialog):
             self.close()
         else:
             return
+
+# fmt: on

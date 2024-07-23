@@ -1,16 +1,17 @@
-import configparser
-import os
-from pathlib import Path
+# fmt: off
 
-import numpy as np
-from PyQt5 import uic
+from PyQt5.QtWidgets import QCheckBox, QDialog, QFileDialog, QLineEdit, QPushButton, QRadioButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QCloseEvent
+from PyQt5 import uic
 
 from vibra import app, UI_DIR
+from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+
+import os
+import numpy as np
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -32,13 +33,15 @@ class SurfaceVelocityInput(QDialog):
         self.mesh = app().main_window.project.model.mesh
         self.properties = app().main_window.project.model.properties
 
-        self._reset_variables()
         self._config_window()
+        self._initialize()
         self._define_qt_variables()
         self._create_connections()
         self.load_info()
         self.geometry_selection_callback()
-        self.exec()
+        
+        while self.keep_window_open:
+            self.exec()
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -46,8 +49,9 @@ class SurfaceVelocityInput(QDialog):
         self.setWindowIcon(self.main_window.vibra_icon)
         self.setWindowTitle("Set surface velocity acoustic excitation")
 
-    def _reset_variables(self):
-        self.typed_ids = []
+    def _initialize(self):
+        self.typed_ids = list()
+        self.keep_window_open = True
         self.remove_surface_velocity = False
         self.surface_velocity = None
         self.userPath = os.path.expanduser("~")
@@ -78,7 +82,7 @@ class SurfaceVelocityInput(QDialog):
         self.radioButton_element_integration_table = self.findChild(QRadioButton, "radioButton_element_integration_table")
         self.radioButton_nodal_attribution_table = self.findChild(QRadioButton, "radioButton_nodal_attribution_table")
 
-        # QSpinBox object
+        # QSpinBox
         self.spinBox_skiprows = self.findChild(QSpinBox, "spinBox")
 
         # QTabWidget
@@ -182,6 +186,7 @@ class SurfaceVelocityInput(QDialog):
             return real_F + 1j * imag_F
 
     def check_constant_values(self):
+
         lineEdit_selection_id = self.lineEdit_selection_id.text()
         self.stop, self.typed_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
@@ -261,14 +266,14 @@ class SurfaceVelocityInput(QDialog):
                 self.f_min = self.frequencies[0]
                 self.f_max = self.frequencies[-1]
                 self.f_step = self.frequencies[1] - self.frequencies[0]
-                self.project.set_frequencies(self.frequencies, self.f_min, self.f_max, self.f_step)
+                self.project.set_frequencies(self.frequencies, self.f_min, self.f_max, self.f_step, True)
 
                 # TODO: ensure that the table frequency setup governing the model setup
                 # if self.project.change_project_frequency_setup(imported_filename, list(self.frequencies)):
                 #     self.lineEdit_reset(self.lineEdit_load_table_path)
                 #     return None, None
                 # else:
-                #     self.project.set_frequencies(self.frequencies, self.f_min, self.f_max, self.f_step)
+                #     self.project.set_frequencies(self.frequencies, self.f_min, self.f_max, self.f_step, True)
 
             return imported_file, imported_filename
 
@@ -379,26 +384,32 @@ class SurfaceVelocityInput(QDialog):
         return "{}".format(value_label)
 
     def remove_bc_from_selection(self):
+
         if self.lineEdit_selection_id.text() != "":
+
             surface_properties = self.properties.surface_properties.copy()
             picked_id = int(self.lineEdit_selection_id.text())
+
             for key in surface_properties.keys():
                 property, surface_id = key
                 if property == "surface_velocity" and picked_id == surface_id:
-                    # TODO: remove imported surface velocity tables
-                    list_table_names = self.get_list_table_names_from_selected_surfaces([picked_id])
-                    self.process_table_file_removal(list_table_names)
+                    # # TODO: remove imported surface velocity tables
+                    # list_table_names = self.get_list_table_names_from_selected_surfaces([picked_id])
+                    # self.process_table_file_removal(list_table_names)
                     self.properties._remove_surface_property("surface_velocity", picked_id)
                     self.load_info()
                     self.lineEdit_selection_id.setText("")
-                    return
+                    break
 
-    def process_table_file_removal(self, list_table_names):
-        if list_table_names != []:
-            for table_name in list_table_names:
-                self.project.remove_acoustic_table_files_from_folder(
-                    table_name, "surface_velocity_files"
-                )
+            app().main_window.file.write_model_properties_in_file()
+            self.check_model_frequency_controls()
+
+    # def process_table_file_removal(self, list_table_names):
+    #     if list_table_names != []:
+    #         for table_name in list_table_names:
+    #             self.project.remove_acoustic_table_files_from_folder(
+    #                 table_name, "surface_velocity_files"
+    #             )
 
     def check_reset(self):
         surface_ids = []
@@ -408,6 +419,8 @@ class SurfaceVelocityInput(QDialog):
                 surface_ids.append(surface_id)
 
         if surface_ids:
+
+            self.hide()
 
             title = f"Resetting of all applied surface velocities"
 
@@ -420,31 +433,45 @@ class SurfaceVelocityInput(QDialog):
             if read._cancel:
                 return
 
-            _list_table_names = []
+            # _list_table_names = []
             if read._continue:
-                for key, data in self.properties.surface_properties.items():
-                    property, surface_id = key
-                    if property == "surface_velocity":
-                        if "table_name" in data.keys():
-                            table_name = data[table_name]
-                        else:
-                            table_name = None
-                        if table_name is not None:
-                            if table_name not in _list_table_names:
-                                _list_table_names.append(table_name)
+                # for key, data in self.properties.surface_properties.items():
+                #     property, surface_id = key
+                #     if property == "surface_velocity":
+                        # if "table_name" in data.keys():
+                        #     table_name = data[table_name]
+                        # else:
+                        #     table_name = None
+                        # if table_name is not None:
+                        #     if table_name not in _list_table_names:
+                        #         _list_table_names.append(table_name)
 
                 self.properties._reset_property("surface_velocity")
                 app().main_window.file.write_model_properties_in_file()
+                self.check_model_frequency_controls()
 
-                # TODO: remove imported tables
-                self.process_table_file_removal(_list_table_names)
+                # # TODO: remove imported tables
+                # self.process_table_file_removal(_list_table_names)
 
                 title = "surface velocity resetting process complete"
                 message = "All surface velocity applied to the acoustic "
                 message += "model have been removed from the model."
-                PrintMessageInput([window_title_2, title, message])
+                PrintMessageInput([window_title_2, title, message], auto_close=True)
 
                 self.close()
+
+    def check_model_frequency_controls(self):
+
+        for key, data in self.properties.surface_properties.items():
+            property, _ = key
+            if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "mass_flow_rate"]:
+                if "table_name" in data.keys():
+                    return
+
+        if isinstance(self.project.analysis_data, dict):
+            analysis_data = self.project.analysis_data
+            analysis_data["imported_table"] = False
+            self.project.set_analysis_data(analysis_data)
 
     def reset_input_fields(self):
         self.lineEdit_real_value.setText("")
@@ -497,3 +524,9 @@ class SurfaceVelocityInput(QDialog):
             self.close()
         else:
             return
+
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
+        self.keep_window_open = False
+        return super().closeEvent(a0)
+
+# fmt: on

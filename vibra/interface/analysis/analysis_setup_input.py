@@ -4,7 +4,7 @@ import numpy as np
 from PyQt5 import uic
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QTabWidget
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
@@ -112,6 +112,7 @@ class AnalysisSetupInput(QDialog):
 
         if "analysis_type" in data.keys():
             title = data["analysis_type"] + " Setup"
+
         if "analysis_method_label" in data.keys():
             subtitle = data["analysis_method_label"]
 
@@ -132,6 +133,12 @@ class AnalysisSetupInput(QDialog):
 
         if "modes" in data.keys():
             self.modes = data["modes"]
+
+        if "imported_table" in data.keys():
+            _bool = data["imported_table"]
+            self.lineEdit_fmax.setDisabled(_bool)
+            self.lineEdit_fmin.setDisabled(_bool)
+            self.lineEdit_fstep.setDisabled(_bool)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
@@ -244,15 +251,13 @@ class AnalysisSetupInput(QDialog):
         self.analysis_data["f_max"] = input_fmax
         self.analysis_data["f_step"] = input_fstep
         self.analysis_data["frequencies"] = self.frequencies
-        self.analysis_data["global_damping"] = self.global_damping
+        # self.analysis_data["global_damping"] = self.global_damping
 
         # if not self.analysis_id in [3, 4]:
         #     self.project.set_modes_sigma(self.modes)
 
         self.project.set_analysis_data(self.analysis_data)
         self.project.create_solver()
-
-        app().main_window.file.write_analysis_setup_in_file(self.analysis_data)
 
         self.complete = True
         self.close()

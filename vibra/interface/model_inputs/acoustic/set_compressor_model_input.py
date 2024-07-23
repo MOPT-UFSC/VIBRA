@@ -1,3 +1,5 @@
+# fmt: off
+
 from PyQt5.QtWidgets import QDialog, QComboBox, QLabel, QLineEdit, QPushButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
 from PyQt5.QtGui import QCloseEvent, QIcon
 from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
@@ -741,7 +743,7 @@ class CompressorModelInput(QDialog):
         if self.project.change_project_frequency_setup("Compressor excitation", list(frequencies)):
             return True
         else:
-            self.project.set_frequencies(frequencies, f_min, f_max, f_step)
+            self.project.set_frequencies(frequencies, f_min, f_max, f_step, True)
 
         self.project.create_folders_acoustic("compressor_excitation_files")
         self.new_load_path_table = get_new_path(self.compressor_excitation_tables_folder_path, basename)
@@ -1212,3 +1214,5 @@ class CompressorModelInput(QDialog):
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
         return super().closeEvent(a0)
+
+# fmt: on

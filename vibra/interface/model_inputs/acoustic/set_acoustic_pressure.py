@@ -1,16 +1,16 @@
-import configparser
-import os
-from pathlib import Path
+# fmt: off
 
-import numpy as np
 from PyQt5 import uic
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QCheckBox, QDialog, QFileDialog, QLineEdit, QPushButton, QRadioButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
 
 from vibra import app, UI_DIR
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+
+import os
+import numpy as np
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -23,11 +23,6 @@ class AcousticPressureInput(QDialog):
         ui_path = UI_DIR / "model/setup/acoustic/acoustic_pressure_input.ui"
         uic.loadUi(ui_path, self)
 
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Prescribe an acoustic pressure")
-
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
@@ -37,14 +32,20 @@ class AcousticPressureInput(QDialog):
         self.mesh = app().main_window.project.model.mesh
         self.properties = app().main_window.project.model.properties
 
-        self._reset_variables()
+        self._initialize()
         self._define_qt_variables()
         self._create_connections()
         self.load_info()
         self.geometry_selection_callback()
         self.exec()
 
-    def _reset_variables(self):
+    def _config_window(self):
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(app().main_window.vibra_icon)
+        self.setWindowTitle("Prescribe an acoustic pressure")
+
+    def _initialize(self):
         self.typed_ids = []
         self.remove_acoustic_pressure = False
         self.acoustic_pressure = None
@@ -52,37 +53,43 @@ class AcousticPressureInput(QDialog):
         self.new_load_path_table = ""
 
     def _define_qt_variables(self):
-        # QCheckBox objects
+
+        # QCheckBox
         self.checkBox_averaged_constant_values = self.findChild(QCheckBox, "checkBox_averaged_constant_values")
         self.checkBox_averaged_table_values = self.findChild(QCheckBox, "checkBox_averaged_table_values")
-        # QLineEdit objects
+
+        # QLineEdit
         self.lineEdit_selection_id = self.findChild(QLineEdit, "lineEdit_selection_id")
         self.lineEdit_real_value = self.findChild(QLineEdit, "lineEdit_real_value")
         self.lineEdit_imag_value = self.findChild(QLineEdit, "lineEdit_imag_value")
         self.lineEdit_load_table_path = self.findChild(QLineEdit, "lineEdit_table_path")
-        # QPushButton objects
+
+        # QPushButton
         self.pushButton_load_table = self.findChild(QPushButton, "pushButton_load_table")
         self.pushButton_constant_value_confirm = self.findChild(QPushButton, "pushButton_constant_value_confirm")
         self.pushButton_table_values_confirm = self.findChild(QPushButton, "pushButton_table_values_confirm")
         self.pushButton_remove_bc_confirm = self.findChild(QPushButton, "pushButton_remove_bc_confirm")
         self.pushButton_reset = self.findChild(QPushButton, "pushButton_reset")
-        # QRadioButton objects
+
+        # QRadioButton
         self.radioButton_nodal_attribution_constant = self.findChild(QRadioButton, "radioButton_nodal_attribution_constant")
         self.radioButton_element_integration_constant = self.findChild(QRadioButton, "radioButton_element_integration_constant")
         self.radioButton_element_integration_table = self.findChild(QRadioButton, "radioButton_element_integration_table")
         self.radioButton_nodal_attribution_table = self.findChild(QRadioButton, "radioButton_nodal_attribution_table")
-        #
         self.radioButton_element_integration_constant.setDisabled(True)
         self.radioButton_element_integration_table.setDisabled(True)
-        # QSpinBox object
+
+        # QSpinBox
         self.spinBox_skiprows = self.findChild(QSpinBox, "spinBox")
-        # QTabWidget objects
+
+        # QTabWidget
         self.tabWidget_acoustic_pressure = self.findChild(QTabWidget, "tabWidget_acoustic_pressure")
         self.tab_constant_values = self.tabWidget_acoustic_pressure.findChild(QWidget, "tab_constant_values")
         self.tab_table_values = self.tabWidget_acoustic_pressure.findChild(QWidget, "tab_table_values")
         self.tab_remove = self.tabWidget_acoustic_pressure.findChild(QWidget, "tab_remove")
         self.current_tab = self.tabWidget_acoustic_pressure.currentIndex()
-        # QTreeWidget objects
+
+        # QTreeWidget
         self.treeWidget_acoustic_pressure = self.findChild(QTreeWidget, "treeWidget_acoustic_pressure")
         self.treeWidget_acoustic_pressure.setColumnWidth(1, 20)
         self.treeWidget_acoustic_pressure.setColumnWidth(2, 80)
@@ -95,18 +102,10 @@ class AcousticPressureInput(QDialog):
         self.pushButton_load_table.clicked.connect(self.load_acoustic_pressure_table)
         self.pushButton_reset.clicked.connect(self.check_reset)
         #
-        self.radioButton_nodal_attribution_constant.clicked.connect(
-            self.update_controls_for_constant_value
-        )
-        self.radioButton_element_integration_constant.clicked.connect(
-            self.update_controls_for_constant_value
-        )
-        self.radioButton_nodal_attribution_table.clicked.connect(
-            self.update_controls_for_table_of_values
-        )
-        self.radioButton_element_integration_table.clicked.connect(
-            self.update_controls_for_table_of_values
-        )
+        self.radioButton_nodal_attribution_constant.clicked.connect(self.update_controls_for_constant_value)
+        self.radioButton_element_integration_constant.clicked.connect(self.update_controls_for_constant_value)
+        self.radioButton_nodal_attribution_table.clicked.connect(self.update_controls_for_table_of_values)
+        self.radioButton_element_integration_table.clicked.connect(self.update_controls_for_table_of_values)
         #
         self.tabWidget_acoustic_pressure.currentChanged.connect(self.tabEvent_acoustic_pressure)
         self.treeWidget_acoustic_pressure.itemClicked.connect(self.on_click_item)
@@ -275,16 +274,12 @@ class AcousticPressureInput(QDialog):
                 self.f_step = self.frequencies[1] - self.frequencies[0]
                 self.project.set_frequencies(self.frequencies, self.f_min, self.f_max, self.f_step)
 
-                # TODO: ensure that the table frequency setup governing the model setup
-                if self.change_project_frequency_setup(imported_filename, list(self.frequencies)):
-                    self.lineEdit_reset(self.lineEdit_load_table_path)
-                    return None, None
-                else:
-                    self.project.set_frequencies(   self.frequencies, 
-                                                    self.f_min, 
-                                                    self.f_max, 
-                                                    self.f_step
-                                                )
+                # # TODO: ensure that the table frequency setup governing the model setup
+                # if self.change_project_frequency_setup(imported_filename, list(self.frequencies)):
+                #     self.lineEdit_reset(self.lineEdit_load_table_path)
+                #     return None, None
+                # else:
+                #     self.project.set_frequencies(self.frequencies, self.f_min, self.f_max, self.f_step)
 
             return imported_values, imported_filename
 
@@ -506,7 +501,7 @@ class AcousticPressureInput(QDialog):
 
 
     def change_project_frequency_setup(self, table_name, frequencies):
-        self.list_frequencies = []
+        self.list_frequencies = list()
         analysis_data = self.main_window.project.analysis_data
         if analysis_data is not None:
             if "frequencies" in analysis_data.keys():
@@ -515,6 +510,7 @@ class AcousticPressureInput(QDialog):
 
         if frequencies is None:
             return False
+
         if isinstance(frequencies, np.ndarray):
             frequencies = list(frequencies)
         update_freqs = False
@@ -545,3 +541,4 @@ class AcousticPressureInput(QDialog):
             PrintMessageInput([window_title_2, title, message])
             return True
 
+# fmt: on

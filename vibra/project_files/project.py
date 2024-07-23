@@ -132,19 +132,26 @@ class Project:
         self.analysis_data = data
         self.acoustic_assembler.set_analysis_data(data)
         self.structural_assembler.set_analysis_data(data)
+        app().main_window.file.write_analysis_setup_in_file(data)
 
-    def set_frequencies(self, frequencies, f_min, f_max, f_step):
+    def set_frequencies(self, frequencies, f_min, f_max, f_step, imported_table):
+
         analysis_data = self.analysis_data
+
         if analysis_data is not None:
             analysis_data["frequencies"] = frequencies
             analysis_data["f_min"] = f_min
             analysis_data["f_max"] = f_max
             analysis_data["f_step"] = f_step
+            analysis_data["imported_table"] = imported_table
+
         else:
             analysis_data = {   "frequencies": frequencies,
                                 "f_min": f_min,
                                 "f_max": f_max,
-                                "f_step": f_step   }
+                                "f_step": f_step,
+                                "imported_table" : imported_table   }
+
         self.set_analysis_data(analysis_data)
 
     def update_import_table_state(self, state):

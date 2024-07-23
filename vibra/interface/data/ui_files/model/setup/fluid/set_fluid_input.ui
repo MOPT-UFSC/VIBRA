@@ -192,13 +192,13 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>200</width>
+             <width>180</width>
              <height>26</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>200</width>
+             <width>180</width>
              <height>26</height>
             </size>
            </property>
@@ -250,13 +250,13 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
            </property>
            <property name="minimumSize">
             <size>
-             <width>200</width>
+             <width>180</width>
              <height>26</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>200</width>
+             <width>180</width>
              <height>26</height>
             </size>
            </property>

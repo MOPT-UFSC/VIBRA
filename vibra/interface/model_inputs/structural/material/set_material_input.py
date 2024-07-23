@@ -5,7 +5,7 @@ from PyQt5 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
-from vibra.interface.model_inputs.structural.material.material_widget import MaterialInputs
+from vibra.interface.model_inputs.structural.material.material_widget import MaterialWidget
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 window_title_1 = "Error"
@@ -88,8 +88,12 @@ class SetMaterialInput(QDialog):
         self.tableWidget_material_data = self.findChild(QTableWidget, 'tableWidget_material_data')
 
     def _add_material_input_widget(self):
-        self.material_widget = MaterialInputs()
+        self.material_widget = MaterialWidget()
         self.grid_layout.addWidget(self.material_widget)
+        self.material_widget.pushButton_remove_column.clicked.connect(self.reset_selected_material_lineEdit)
+
+    def reset_selected_material_lineEdit(self):
+        self.lineEdit_selected_material_name.setText("")
 
     def _create_connections(self):
         #
@@ -126,7 +130,7 @@ class SetMaterialInput(QDialog):
         if self.selected_column is None:
             return
 
-        item = self.tableWidget_material_data.item(self.selected_column, 0)
+        item = self.tableWidget_material_data.item(0, self.selected_column)
         if item is None:
             return
 
