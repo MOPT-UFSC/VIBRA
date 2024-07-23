@@ -459,15 +459,15 @@ class Mesh:
         self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity, self.map_solid_elements = self._get_connectivity_array(connectivity_dim3)
 
-        np.savetxt("nodal_coordinates.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
-        np.savetxt("faces_connectivity.dat", self.faces_connectivity, delimiter=",", fmt="%i")
-        np.savetxt("solids_connectivity.dat", self.solids_connectivity, delimiter=",", fmt="%i")
+        # np.savetxt("nodal_coordinates.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
+        # np.savetxt("faces_connectivity.dat", self.faces_connectivity, delimiter=",", fmt="%i")
+        # np.savetxt("solids_connectivity.dat", self.solids_connectivity, delimiter=",", fmt="%i")
 
-        # TODO: remove as soon as possible
-        aux_zeros = np.zeros(len(self.solids_connectivity[0,4:]))
-        for i, values in enumerate(self.solids_connectivity[:,4:]):
-            if (aux_zeros == values).all():
-                print(f"Invalid node - index: {i}")
+        # # internal check for solid connectivity
+        # aux_zeros = np.zeros(len(self.solids_connectivity[0,4:]))
+        # for i, values in enumerate(self.solids_connectivity[:,4:]):
+        #     if (aux_zeros == values).all():
+        #         print(f"The solid element #{i} doesn't have valid connectivity")
 
         self._maps_lines_by_elements()
         self._maps_surfaces_by_elements()

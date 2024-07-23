@@ -255,10 +255,10 @@ def get_faces_connectivities():
 def get_external_results():
     imported_results = dict()
 
-    # results_path = "validation/data/particle_velocity/results/external_results_Vn1_Z2.xlsx"
-    # results_path = "validation/data/particle_velocity/results/external_results_Vn1_Z1_Z2.xlsx"
-    # results_path = "validation/data/particle_velocity/results/external_results_Vn2_Z1.xlsx"
-    results_path = "validation/data/particle_velocity/results/external_results_Vn2_Z1_Z2.xlsx"
+    # results_path = "validation/data/particle_velocity/results/tubo_reto/external_results_Vn1_Z2.xlsx"
+    # results_path = "validation/data/particle_velocity/results/tubo_reto/external_results_Vn1_Z1_Z2.xlsx"
+    # results_path = "validation/data/particle_velocity/results/tubo_reto/external_results_Vn2_Z1.xlsx"
+    results_path = "validation/data/particle_velocity/results/tubo_reto/external_results_Vn2_Z1_Z2.xlsx"
 
     wb = openpyxl.load_workbook(results_path)
 
