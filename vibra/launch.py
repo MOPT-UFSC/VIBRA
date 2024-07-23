@@ -1,5 +1,6 @@
-import logging, os, platform, sys, vtk
+import logging, os, platform, sys
 from PyQt5 import Qt, QtCore, QtWidgets
+from vtkmodules.vtkCommonCore import vtkObject, vtkLogger
 
 from vibra.interface.application import Application
 
@@ -57,8 +58,8 @@ def main():
 
     # disables the terrible vtk error handler and its logs
     # you may want to enable them while debugging something
-    vtk.vtkObject.GlobalWarningDisplayOff()
-    vtk.vtkLogger.SetStderrVerbosity(vtk.vtkLogger.VERBOSITY_OFF)
+    vtkObject.GlobalWarningDisplayOff()
+    vtkLogger.SetStderrVerbosity(vtkLogger.VERBOSITY_OFF)
 
     # Make the window scale evenly for every monitor
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"

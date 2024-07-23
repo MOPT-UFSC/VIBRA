@@ -7,7 +7,15 @@ from vibra.utils.progress_status import ProgressStatus
 from vibra.interface.loading_bar import load_function
 from vibra.interface.general.print_message_input import PrintMessageInput
 
-from vtk import vtkUnstructuredGrid, vtkPoints, vtkDoubleArray, vtkXMLUnstructuredGridWriter, VTK_TETRA, VTK_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_QUADRATIC_HEXAHEDRON
+from vtkmodules.vtkCommonCore import vtkPoints
+from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
+from vtkmodules.vtkCommonDataModel import (
+    vtkUnstructuredGrid,
+    VTK_TETRA,
+    VTK_HEXAHEDRON,
+    VTK_QUADRATIC_TETRA,
+    VTK_QUADRATIC_HEXAHEDRON
+)
 
 import logging
 import os
