@@ -6,8 +6,6 @@ from vibra.interface.application import Application
 
 import qdarktheme
 
-import matplotlib
-matplotlib.use("Qt5Agg")
 
 def configure_logs():
     """
