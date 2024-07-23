@@ -8,7 +8,7 @@ from scipy.sparse.linalg import spsolve
 # os.environ["OMP_THREAD_LIMIT"] = "8"
 # os.environ["OMP_NUM_THREADS"] = "4"
 # 
-from pypardiso import *
+from pypardiso.pardiso_wrapper import PyPardisoSolver
 
 from functools import cache
 
