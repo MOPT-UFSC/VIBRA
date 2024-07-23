@@ -4,7 +4,6 @@ import numpy as np
 from scipy.sparse import lil_matrix, coo_matrix, csr_matrix
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh, inv, lobpcg
 from scipy.sparse.csgraph import reverse_cuthill_mckee
-import matplotlib.pyplot as plt
 
 from vibra.utils.progress_status import ProgressStatus
 
@@ -101,6 +100,7 @@ class AcousticModalSolver:
     def plot_graph(self, graph):
         """
         """
+        import matplotlib.pyplot as plt
         plt.ion()
         plt.cla()
         plt.spy(graph, color=(0.25,0.25,0.25))

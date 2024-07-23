@@ -3,7 +3,6 @@ import os
 import json
 import numpy as np
 from scipy.sparse.linalg import spsolve
-import matplotlib.pyplot as plt
 #
 # os.environ["OMP_DYNAMIC"] = "FALSE"
 # os.environ["OMP_THREAD_LIMIT"] = "8"
@@ -441,6 +440,7 @@ class AcousticHarmonicSolver:
     def plot_graph(self, matrix):
         """
         """
+        import matplotlib.pyplot as plt
         plt.ion()
         plt.cla()
         plt.spy(matrix, color=(0.25,0.25,0.25))

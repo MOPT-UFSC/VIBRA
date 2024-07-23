@@ -7,11 +7,9 @@ from vibra import app, UI_DIR
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.data_handler.import_data_to_compare import ImportDataToCompare
 from vibra.interface.formatters import icons
-from vibra.interface.plots.general.mpl_canvas import MplCanvas
 from vibra.interface.plots.general.advanced_cursor import AdvancedCursor
 
 import numpy as np
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 
 class FrequencyResponsePlotter(QDialog):
@@ -161,6 +159,7 @@ class FrequencyResponsePlotter(QDialog):
         self.plot_data_in_freq_domain()
 
     def _initialize_canvas(self):
+        from vibra.interface.plots.general.mpl_canvas import MplCanvas
         self.mpl_canvas_frequency_plot = MplCanvas(self, width=8, height=6, dpi=110)
         self.ax = self.mpl_canvas_frequency_plot.axes
         self.fig = self.mpl_canvas_frequency_plot.fig
@@ -271,6 +270,7 @@ class FrequencyResponsePlotter(QDialog):
             return self.unit + "/s²"
 
     def paint_toolbar_icons(self, *args, **kwargs):
+        from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
         toolbar = self.findChild(NavigationToolbar2QT)
         if toolbar is None:
             return
@@ -289,6 +289,7 @@ class FrequencyResponsePlotter(QDialog):
         self.plots = list()
 
         if self._layout is None:
+            from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
             toolbar = NavigationToolbar2QT(self.mpl_canvas_frequency_plot, self)
 
             # Paint the toolbar icons and connect the buttons to paint
