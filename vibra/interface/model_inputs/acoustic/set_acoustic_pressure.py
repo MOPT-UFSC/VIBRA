@@ -8,42 +8,40 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import *
 
-from vibra import UI_DIR
-from vibra.interface.general.call_double_confirmation_input import (
-    CallDoubleConfirmationInput,
-)
+from vibra import app, UI_DIR
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.utils.interface_functions import get_main_window
 
-window_title_1 = "ERROR"
-window_title_2 = "WARNING"
+window_title_1 = "Error"
+window_title_2 = "Warning"
 
 
 class AcousticPressureInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/acoustic/acoustic_pressure_input.ui"
+        ui_path = UI_DIR / "model/setup/acoustic/acoustic_pressure_input.ui"
         uic.loadUi(ui_path, self)
 
-        icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.icon = QIcon(icon_path)
-        self.setWindowIcon(self.icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Prescribe an acoustic pressure")
 
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
-        self.project = self.main_window.project
-        self.model = self.project.model
-        self.properties = self.model.properties
+
+        self.project = app().main_window.project
+        self.model = app().main_window.project.model
+        self.mesh = app().main_window.project.model.mesh
+        self.properties = app().main_window.project.model.properties
 
         self._reset_variables()
         self._define_qt_variables()
         self._create_connections()
         self.load_info()
+        self.geometry_selection_callback()
         self.exec()
 
     def _reset_variables(self):
@@ -52,11 +50,6 @@ class AcousticPressureInput(QDialog):
         self.acoustic_pressure = None
         self.userPath = os.path.expanduser("~")
         self.new_load_path_table = ""
-        self.project_path = self.project.file.project_path
-        self.acoustic_bc_filename = self.project.file.acoustic_model_setup_filename
-        self.acoustic_bc_info_path = os.path.join(self.project_path, self.acoustic_bc_filename)
-        self.acoustic_folder_path = self.project.file.acoustic_imported_data_folder_path
-        self.acoustic_pressure_tables_folder_path = os.path.join(self.acoustic_folder_path, "acoustic_pressure_files")
 
     def _define_qt_variables(self):
         # QCheckBox objects
@@ -119,8 +112,7 @@ class AcousticPressureInput(QDialog):
         self.treeWidget_acoustic_pressure.itemClicked.connect(self.on_click_item)
         self.treeWidget_acoustic_pressure.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        geometry_widget = self.main_window.viewer_tabs.geometry_widget
-        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
+        self.main_window.selection_changed.connect(self.geometry_selection_callback)
 
     def tabEvent_acoustic_pressure(self):
         self.current_tab = self.tabWidget_acoustic_pressure.currentIndex()
@@ -151,13 +143,13 @@ class AcousticPressureInput(QDialog):
                 self.treeWidget_acoustic_pressure.addTopLevelItem(new)
         self.update_tabs_visibility()
 
-    def geometry_selection_callback(self, points, lines, faces):
+    def geometry_selection_callback(self):
+
+        faces = self.main_window.selected_geometry_surfaces
+
         if faces:
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
-
-        elif not any([points, lines, faces]):
-            self.lineEdit_selection_id.setText("")
 
     def check_complex_entries(self, lineEdit_real, lineEdit_imag):
         self.stop = False
@@ -167,7 +159,7 @@ class AcousticPressureInput(QDialog):
                 real_F = float(lineEdit_real.text())
             except Exception:
                 message = "Wrong input for real part of acoustic pressure."
-                PrintMessageInput([title, message, window_title_1])
+                PrintMessageInput([window_title_1, title, message])
                 self.lineEdit_real_value.setFocus()
                 self.stop = True
                 return
@@ -179,7 +171,7 @@ class AcousticPressureInput(QDialog):
                 imag_F = float(lineEdit_imag.text())
             except Exception:
                 message = "Wrong input for imaginary part of acoustic pressure."
-                PrintMessageInput([title, message, window_title_1])
+                PrintMessageInput([window_title_1, title, message])
                 self.lineEdit_imag_value.setFocus()
                 self.stop = True
                 return
@@ -193,7 +185,7 @@ class AcousticPressureInput(QDialog):
 
     def check_constant_values(self):
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.model.check_input_surface_id(lineEdit_selection_id)
+        self.stop, self.typed_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return
@@ -220,16 +212,17 @@ class AcousticPressureInput(QDialog):
             key_avg = self.checkBox_averaged_constant_values.isChecked()
 
             data = {
-                "real_values": real_values,
-                "imag_values": imag_values,
-                "nodal_attribution": nodal_attribution,
-                "averaged": key_avg,
-            }
+                        "real_values": real_values,
+                        "imag_values": imag_values,
+                        "nodal_attribution": nodal_attribution,
+                        "averaged": key_avg,
+                    }
 
             for _id in self.typed_ids:
                 self.project.set_acoustic_pressure(data, _id)
+            self.main_window.viewer_tabs.update_info_text()
 
-            self.properties.export_model_properties()
+            app().main_window.file.write_model_properties_in_file()
 
             print(f"[Set acoustic pressure] - defined at surface(s) {self.typed_ids}")
             # TODO: remove existing tables and update the render
@@ -239,19 +232,25 @@ class AcousticPressureInput(QDialog):
             title = "Additional inputs required"
             message = "You must inform at least one acoustic pressure\n"
             message += "before confirming the input!"
-            PrintMessageInput([title, message, window_title_1])
+            PrintMessageInput([window_title_1, title, message])
             self.lineEdit_real_value.setFocus()
 
     def load_table(self, lineEdit, direct_load=False):
+
         title = "Error reached while loading 'acoustic pressure' table"
+
         try:
+
             if direct_load:
                 self.path_imported_table = lineEdit.text()
+
             else:
                 window_label = "Choose a table to import the acoustic pressure"
-                self.path_imported_table, _ = QFileDialog.getOpenFileName(
-                    None, window_label, self.userPath, "Files (*.csv; *.dat; *.txt)"
-                )
+                self.path_imported_table, _ = QFileDialog.getOpenFileName(  None, 
+                                                                            window_label, 
+                                                                            self.userPath, 
+                                                                            "Files (*.csv; *.dat; *.txt)"
+                                                                        )
 
             if self.path_imported_table == "":
                 return None, None
@@ -264,7 +263,7 @@ class AcousticPressureInput(QDialog):
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"
                 message += " data must have three columns in the form: frequencies, real and imaginary values."
-                PrintMessageInput([title, message, window_title_1])
+                PrintMessageInput([window_title_1, title, message])
                 return None, None
 
             imported_values = imported_file[:, 1]
@@ -277,17 +276,21 @@ class AcousticPressureInput(QDialog):
                 self.project.set_frequencies(self.frequencies, self.f_min, self.f_max, self.f_step)
 
                 # TODO: ensure that the table frequency setup governing the model setup
-                # if self.project.change_project_frequency_setup(imported_filename, list(self.frequencies)):
-                #     self.lineEdit_reset(self.lineEdit_load_table_path)
-                #     return None, None
-                # else:
-                #     self.project.set_frequencies(self.frequencies, self.f_min, self.f_max, self.f_step)
+                if self.change_project_frequency_setup(imported_filename, list(self.frequencies)):
+                    self.lineEdit_reset(self.lineEdit_load_table_path)
+                    return None, None
+                else:
+                    self.project.set_frequencies(   self.frequencies, 
+                                                    self.f_min, 
+                                                    self.f_max, 
+                                                    self.f_step
+                                                )
 
             return imported_values, imported_filename
 
         except Exception as log_error:
             message = str(log_error)
-            PrintMessageInput([title, message, window_title_1])
+            PrintMessageInput([window_title_1, title, message])
             lineEdit.setFocus()
             return None, None
 
@@ -295,38 +298,37 @@ class AcousticPressureInput(QDialog):
         lineEdit.setText("")
         lineEdit.setFocus()
 
-    def save_table_file(self, entity_id, values, filename):
-        try:
-            self.project.create_folders_acoustic("acoustic_pressure_files")
+    # def save_table_file(self, entity_id, values, filename):
+    #     try:
+    #         self.project.create_folders_acoustic("acoustic_pressure_files")
 
-            real_values = np.real(values)
-            imag_values = np.imag(values)
-            abs_values = np.abs(values)
-            data = np.array([self.frequencies, real_values, imag_values, abs_values]).T
+    #         real_values = np.real(values)
+    #         imag_values = np.imag(values)
+    #         abs_values = np.abs(values)
+    #         data = np.array([self.frequencies, real_values, imag_values, abs_values]).T
 
-            header = f"Vibra - imported table for acoustic pressure @ surface {entity_id} \n"
-            header += f"\nSource filename: {filename}\n"
-            header += "\nFrequency [Hz], real[m³/s], imaginary[m³/s], absolute[m³/s]"
-            basename = f"acoustic_pressure_surface_{entity_id}.dat"
+    #         header = f"Vibra - imported table for acoustic pressure @ surface {entity_id} \n"
+    #         header += f"\nSource filename: {filename}\n"
+    #         header += "\nFrequency [Hz], real[m³/s], imaginary[m³/s], absolute[m³/s]"
+    #         basename = f"acoustic_pressure_surface_{entity_id}.dat"
 
-            new_path_table = os.path.join(self.acoustic_pressure_tables_folder_path, basename)
-            np.savetxt(new_path_table, data, delimiter=",", header=header)
-            return values, basename
+    #         new_path_table = os.path.join(self.acoustic_pressure_tables_folder_path, basename)
+    #         np.savetxt(new_path_table, data, delimiter=",", header=header)
+    #         return values, basename
 
-        except Exception as log_error:
-            title = "Error reached while saving table files"
-            message = str(log_error)
-            PrintMessageInput([title, message, window_title_1])
-            return None, None
+    #     except Exception as log_error:
+    #         title = "Error reached while saving table files"
+    #         message = str(log_error)
+    #         PrintMessageInput([window_title_1, title, message])
+    #         return None, None
 
     def load_acoustic_pressure_table(self):
-        self.imported_values, self.filename_acoustic_pressure = self.load_table(
-            self.lineEdit_load_table_path
-        )
+        self.imported_values, self.basename = self.load_table(self.lineEdit_load_table_path)
 
     def check_table_values(self):
+
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.model.check_input_surface_id(lineEdit_selection_id)
+        self.stop, self.typed_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return
@@ -337,48 +339,44 @@ class AcousticPressureInput(QDialog):
             self.properties._remove_surface_property("surface_velocity", _id)
             self.properties._remove_surface_property("compressor_excitation", _id)
 
-        list_table_names = self.get_list_table_names_from_selected_surfaces(self.typed_ids)
         if self.lineEdit_load_table_path != "":
             for _id in self.typed_ids:
-                if self.filename_acoustic_pressure is None:
-                    self.imported_values, self.filename_acoustic_pressure = self.load_table(
-                        self.lineEdit_load_table_path, direct_load=True
-                    )
+                if self.basename is None:
+                    self.imported_values, self.basename = self.load_table(  self.lineEdit_load_table_path, 
+                                                                            direct_load=True    )
+
                 if self.imported_values is None:
                     return
-                else:
-                    self.acoustic_pressure, self.basename_acoustic_pressure = self.save_table_file(
-                        _id, self.imported_values, self.filename_acoustic_pressure
-                    )
-                    if self.basename_acoustic_pressure in list_table_names:
-                        list_table_names.remove(self.basename_acoustic_pressure)
 
-                    real_values = list(np.real(self.acoustic_pressure))
-                    imag_values = list(np.imag(self.acoustic_pressure))
+                else:
+
+                    real_values = list(self.imported_values[:, 1])
+                    imag_values = list(self.imported_values[:, 2])
 
                     nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
                     key_avg = self.checkBox_averaged_constant_values.isChecked()
 
                     data = {
-                        "real_values": real_values,
-                        "imag_values": imag_values,
-                        "nodal_attribution": nodal_attribution,
-                        "averaged": key_avg,
-                        "table_name": self.basename_acoustic_pressure,
-                    }
+                                "real_values": real_values,
+                                "imag_values": imag_values,
+                                "nodal_attribution": nodal_attribution,
+                                "averaged": key_avg,
+                                "table_name": self.basename,
+                            }
 
                     self.project.set_acoustic_pressure(data, _id)
+            self.main_window.viewer_tabs.update_info_text()
 
-            self.properties.export_model_properties()
+            app().main_window.file.write_model_properties_in_file()
 
-            self.process_table_file_removal(list_table_names)
             print(f"[Set acoustic pressure] - defined at surface(s) {self.typed_ids}")
             self.close()
+
         else:
             title = "Additional inputs required"
             message = "You must inform at least one acoustic pressure\n"
             message += "table path before confirming the input!"
-            PrintMessageInput([title, message, window_title_1])
+            PrintMessageInput([window_title_1, title, message])
             self.lineEdit_load_table_path.setFocus()
 
     def get_list_table_names_from_selected_surfaces(self, list_ids):
@@ -405,20 +403,10 @@ class AcousticPressureInput(QDialog):
             for key in surface_properties.keys():
                 property, surface_id = key
                 if property == "acoustic_pressure" and picked_id == surface_id:
-                    # TODO: remove imported acoustic pressure tables
-                    list_table_names = self.get_list_table_names_from_selected_surfaces([picked_id])
-                    self.process_table_file_removal(list_table_names)
                     self.properties._remove_surface_property("acoustic_pressure", picked_id)
                     self.load_info()
                     self.lineEdit_selection_id.setText("")
                     return
-
-    def process_table_file_removal(self, list_table_names):
-        if list_table_names != []:
-            for table_name in list_table_names:
-                self.project.remove_acoustic_table_files_from_folder(
-                    table_name, "acoustic_pressure_files"
-                )
 
     def check_reset(self):
         surface_ids = []
@@ -427,44 +415,40 @@ class AcousticPressureInput(QDialog):
             if property == "acoustic_pressure":
                 surface_ids.append(surface_id)
 
-        if len(surface_ids) > 0:
-            title = f"Resetting of all applied acoustic pressures"
-            message = "Do you really want to remove the acoustic pressure applied to the following surface(s)?\n\n"
-            message += f"{surface_ids}"
-            message += (
-                "\n\nPress the Continue button to proceed with the resetting or press Cancel or "
-            )
-            message += "Close buttons to abort the current operation."
-            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
-            read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
+        if surface_ids:
 
-            if read._doNotRun:
+            title = f"Resetting of all applied acoustic pressures"
+
+            message = "Would you like to remove the acoustic pressure applied to the following surface(s)?\n\n"
+            message += f"{surface_ids}"
+            
+            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
+            read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+
+            if read._cancel:
                 return
 
             _list_table_names = []
             if read._continue:
-                for key, data in self.properties.surface_properties.items():
-                    property, surface_id = key
-                    if property == "acoustic_pressure":
-                        if "table_name" in data.keys():
-                            table_name = data[table_name]
-                        else:
-                            table_name = None
-                        if table_name is not None:
-                            if table_name not in _list_table_names:
-                                _list_table_names.append(table_name)
+                # for key, data in self.properties.surface_properties.items():
+                #     property, surface_id = key
+                #     if property == "acoustic_pressure":
+                #         if "table_name" in data.keys():
+                #             table_name = data[table_name]
+                #         else:
+                #             table_name = None
+                #         if table_name is not None:
+                #             if table_name not in _list_table_names:
+                #                 _list_table_names.append(table_name)
 
                 self.properties._reset_property("acoustic_pressure")
-                self.properties.export_model_properties()
-
-                # TODO: remove imported tables
-                self.process_table_file_removal(_list_table_names)
+                app().main_window.file.write_model_properties_in_file()
 
                 title = "acoustic pressure resetting process complete"
                 message = "All acoustic pressure applied to the acoustic "
                 message += "model have been removed from the model."
-                PrintMessageInput([title, message, window_title_2])
 
+                PrintMessageInput([window_title_2, title, message])
                 self.close()
 
     def reset_input_fields(self):
@@ -519,3 +503,45 @@ class AcousticPressureInput(QDialog):
             self.close()
         else:
             return
+
+
+    def change_project_frequency_setup(self, table_name, frequencies):
+        self.list_frequencies = []
+        analysis_data = self.main_window.project.analysis_data
+        if analysis_data is not None:
+            if "frequencies" in analysis_data.keys():
+                if isinstance(analysis_data["frequencies"], np.ndarray):
+                    self.list_frequencies = list(analysis_data["frequencies"])
+
+        if frequencies is None:
+            return False
+        if isinstance(frequencies, np.ndarray):
+            frequencies = list(frequencies)
+        update_freqs = False
+        if (
+            self.list_frequencies == []
+            or not self.properties.check_if_there_are_tables_at_the_model()
+        ):
+            update_freqs = True
+            self.list_frequencies = frequencies
+        #
+        self.main_window.project.update_import_table_state(update_freqs)
+        if self.list_frequencies == frequencies:
+            if update_freqs:
+                self.frequencies = np.array(frequencies)
+                self.f_min = self.frequencies[0]
+                self.f_max = self.frequencies[-1]
+                self.f_step = self.frequencies[1] - self.frequencies[0]
+                # self.file.add_frequency_in_file(self.f_min, self.f_max, self.f_step)
+                self.imported_table_frequency_setup = True
+            return False
+
+        else:
+            title = "Project frequency setup cannot be modified"
+            message = f"The following imported table of values has a frequency setup\n"
+            message += "different from the others already imported ones. The current\n"
+            message += "project frequency setup is not going to be modified."
+            message += f"\n\n{table_name}"
+            PrintMessageInput([window_title_2, title, message])
+            return True
+

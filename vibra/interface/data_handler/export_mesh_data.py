@@ -2,23 +2,17 @@ from PyQt5.QtWidgets import QCheckBox, QDialog, QFileDialog, QLineEdit, QPushBut
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5 import uic
-from pathlib import Path
 
-import os
-import numpy as np
-
-from vibra import UI_DIR
+from vibra import app, UI_DIR
 from vibra.interface.mesh.mesher_inputs import MesherInputs
-from vibra.interface.general.print_message_input2 import PrintMessageInput
+from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 
-from vibra.utils.interface_functions import get_main_window
+import os
+import numpy as np
+from pathlib import Path
 
-def get_icons_path(filename):
-    path = f"data/icons/{filename}"
-    if os.path.exists(path):
-        return str(Path(path))
 
 class ExportMeshData(QDialog):
     def __init__(self, *args, **kwargs):
@@ -27,7 +21,7 @@ class ExportMeshData(QDialog):
         ui_path = UI_DIR / "data_handler/export_mesh.ui"
         uic.loadUi(ui_path, self)
 
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         self.main_window.set_input_widget(self)
         
         self.project = self.main_window.project
@@ -47,13 +41,9 @@ class ExportMeshData(QDialog):
         self.exec()
 
     def _load_icons(self):
-        self.export_icon = QIcon(get_icons_path('save.png'))
-        self.vibra_icon = QIcon(get_icons_path('logo_vibra.png'))
-        self.search_icon = QIcon(get_icons_path('import.png'))
-        self.clean_icon = QIcon(get_icons_path('broom.png'))
-        self.setWindowIcon(self.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Export mesh data")
 
     def _reset_variables(self):

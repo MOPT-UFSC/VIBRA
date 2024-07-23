@@ -1,13 +1,12 @@
 from PyQt5.QtWidgets import QDialog, QComboBox, QFrame, QGridLayout, QLineEdit, QPushButton, QScrollArea, QTableWidget
-from PyQt5.QtGui import QIcon, QFont, QBrush, QColor
+from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
 
-from pulse import app, UI_DIR
-from pulse.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
-from pulse.interface.user_input.model.setup.material.material_widget import MaterialInputs
-from pulse.interface.handler.geometry_handler import GeometryHandler
-from pulse.interface.user_input.project.print_message import PrintMessageInput
+from vibra import app, UI_DIR
+from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
+from vibra.interface.model_inputs.structural.material.material_widget import MaterialInputs
+from vibra.interface.general.print_message_input import PrintMessageInput
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -29,35 +28,36 @@ class SetMaterialInput(QDialog):
         self.cache_selected_lines = kwargs.get("cache_selected_lines", list())
 
         self.main_window = app().main_window
-        self.opv = app().main_window.opv_widget
-        self.opv.setInputObject(self)
-        self.project = app().project
-        self.file = self.project.file
-        
-        self._load_icons()
+        self.main_window.set_input_widget(self)
+        self.main_window.viewer_tabs.show_geometry()
+
+        self.project = app().main_window.project
+        self.model = app().main_window.project.model
+        self.properties = app().main_window.project.model.properties
+
         self._config_window()
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
-        self._loading_info_at_start()
-        self.exec()
+        
+        ConfigWidgetAppearance(self, tool_tip=True)
 
-    def _load_icons(self):
-        self.icon = app().main_window.vibra_icon
+        self.geometry_selection_callback()
+
+        while self.keep_window_open:
+            self.exec()
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Set material")
-        self.setWindowIcon(self.icon)
 
     def _initialize(self):
-        self.selected_row = None
+        self.keep_window_open = True
+        self.complete = False
         self.material = None
-        self.preprocessor = self.project.preprocessor
-        self.before_run = self.project.get_pre_solution_model_checks()
-        self.material_path = self.project.get_material_list_path()
-        self.dict_tag_to_entity = self.preprocessor.dict_tag_to_entity
+        self.selected_column = None
 
     def _define_qt_variables(self):
 
@@ -91,81 +91,66 @@ class SetMaterialInput(QDialog):
         self.material_widget = MaterialInputs()
         self.grid_layout.addWidget(self.material_widget)
 
-    def _config_widgets(self):
-        ConfigWidgetAppearance(self, tool_tip=True)
-
     def _create_connections(self):
+        #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.update_attribution_type)
+        #
         self.pushButton_attribute_material.clicked.connect(self.confirm_material_attribution)
-        # self.tableWidget_material_data.cellClicked.connect(self.on_cell_clicked)
+        self.material_widget.pushButton_reset_library.clicked.connect(self.reset_material_library_callback)
+        #
         self.tableWidget_material_data.currentCellChanged.connect(self.current_cell_changed)
-        # self.tableWidget_material_data.cellDoubleClicked.connect(self.on_cell_double_clicked)
-
-    def on_cell_clicked(self, row, col):
-        self.selected_row = row
-        self.update_material_selection()
-
-    def on_cell_double_clicked(self, row, col):
-        self.selected_row = row
-        self.confirm_material_attribution()
+        #
+        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        #
+        self.update_attribution_type()
 
     def current_cell_changed(self, current_row, current_col, previous_row, previous_col):
-        self.selected_row = current_row
+        self.selected_column = current_col
         self.update_material_selection()
 
+    def reset_material_library_callback(self):
+        self.hide()
+        self.material_widget.reset_library_callback()
+
+    def geometry_selection_callback(self):
+
+        volumes = self.main_window.selected_geometry_volumes
+
+        if volumes:
+            self.comboBox_attribution_type.setCurrentIndex(1)
+            text = ", ".join([str(i) for i in volumes])
+            self.lineEdit_selected_id.setText(text)
+
     def update_material_selection(self):
-        if self.selected_row is None:
+
+        if self.selected_column is None:
             return
-        item = self.tableWidget_material_data.item(self.selected_row, 0)
+
+        item = self.tableWidget_material_data.item(self.selected_column, 0)
         if item is None:
             return
+
         material_name = item.text()
         self.lineEdit_selected_material_name.setText("")
         if material_name != "":
             self.lineEdit_selected_material_name.setText(material_name)
 
     def update_attribution_type(self):
+
         index = self.comboBox_attribution_type.currentIndex()
         if index == 0:
-            self.lineEdit_selected_id.setText("All lines")
-            self.lineEdit_selected_id.setEnabled(False)
-            self.comboBox_attribution_type.setCurrentIndex(0)
+            self.lineEdit_selected_id.setText("All bodies")
         elif index == 1:
-            self.write_ids(self.lines_ids)
-            self.lineEdit_selected_id.setEnabled(True)
-            self.comboBox_attribution_type.setCurrentIndex(1)
+            self.lineEdit_selected_id.setText("")
 
-    def write_ids(self, list_ids):
-        text = ""
-        for _id in list_ids:
-            text += "{}, ".format(_id)
-        self.lineEdit_selected_id.setText(text)
-
-    def update_selection(self):
-        if self.lines_ids != []:
-            self.write_ids(self.lines_ids)
-            self.lineEdit_selected_id.setEnabled(True)
-            self.comboBox_attribution_type.setCurrentIndex(1)
-        else:
-            self.lineEdit_selected_id.setText("All lines")
-            self.lineEdit_selected_id.setEnabled(False)
-            self.comboBox_attribution_type.setCurrentIndex(0)
-
-    def _loading_info_at_start(self):
-        if self.cache_selected_lines != []:
-            self.lines_ids = self.cache_selected_lines
-            self.update_selection()
-        else:
-            self.update()        
-
-    def update(self):
-        self.lines_ids = self.opv.getListPickedLines()
-        self.update_selection()
+        self.lineEdit_selected_id.setEnabled(bool(index))
+        # self.comboBox_attribution_type.setCurrentIndex(index)
 
     def confirm_material_attribution(self):
 
-        new_material = self.material_widget.get_selected_material()
-        if new_material is None:
+        selected_material = self.material_widget.get_selected_material()
+
+        if selected_material is None:
             self.title = "No materials selected"
             self.message = "Select a material in the list before confirming the material attribution."
             PrintMessageInput([window_title_1, self.title, self.message])
@@ -173,46 +158,54 @@ class SetMaterialInput(QDialog):
 
         try:
 
-            self.material = new_material
             if self.comboBox_attribution_type.currentIndex():
 
-                lineEdit = self.lineEdit_selected_id.text()
-                self.stop, self.lines_typed = self.before_run.check_input_LineID(lineEdit)
-                if self.stop:
-                    return True 
-                               
-                self.project.set_material_by_lines(self.lines_typed, self.material)
-                print("[Set Material] - {} defined in the entities {}".format(self.material.name, self.lines_typed))
-                # self.opv.changeColorEntities(self.lines_typed, self.material.getNormalizedColorRGB())
+                selected_ids = self.lineEdit_selected_id.text()
+                stop, self.selected_ids = self.project.model.mesh.check_selected_ids(selected_ids, selection = "volumes")
+                if stop:
+                    return
+
+                for volume_id in self.selected_ids:
+                    if volume_id in list(self.project.model.mesh.nodes_from_volumes.keys()):
+                        self.main_window.project.set_material(selected_material, volume=volume_id)
+                        for surface_id in self.project.model.mesh.surfaces_from_volumes[volume_id]:
+                            self.main_window.project.set_material(selected_material, surface=surface_id)
+        
+                if len(self.selected_ids) <= 20:
+                    print("[Set Material] - {} defined at bodies: {}".format(selected_material.name, self.selected_ids))
+                else:
+                    print("[Set Material] - {} defined at {} bodies".format(selected_material.name, len(self.selected_ids)))
+
             else:
-                self.project.set_material_to_all_lines(self.material)       
-                print("[Set Material] - {} defined in all entities".format(self.material.name))
-                # self.opv.changeColorEntities(entities, self.material.getNormalizedColorRGB())
-            self.actions_to_finalize()
+
+                volume_ids = list(self.project.model.mesh.nodes_from_volumes.keys())
+                for volume_id in volume_ids:
+                    self.main_window.project.set_material(selected_material, volume=volume_id)
+                
+                surface_ids = list(self.project.model.mesh.nodes_from_surfaces.keys())
+                for surface_id in surface_ids:
+                    self.main_window.project.set_material(selected_material, surface=surface_id)
+
+                print("[Set Material] - {} defined at all bodies.".format(selected_material.name))
+
+            app().main_window.file.write_model_properties_in_file()
+            self.complete = True
+            self.main_window.viewer_tabs.geometry_widget.update_info_text()
+            self.main_window.viewer_tabs.mesh_widget.update_info_text()
+            self.close()
 
         except Exception as error_log:
-            self.title = "Error detected on material list data"
-            self.message = str(error_log)
-            PrintMessageInput([window_title_1, self.title, self.message])
+            title = "Error detected on material list data"
+            message = str(error_log)
+            PrintMessageInput([window_title_1, title, message])
             return
-
-    def actions_to_finalize(self):
-        build_data = self.file.get_segment_build_data_from_file()
-        geometry_handler = GeometryHandler()
-        geometry_handler.set_length_unit(self.file.length_unit)
-        geometry_handler.process_pipeline(build_data)
-        self.close()
-
-    def load_project(self):
-        self.project.initial_load_project_actions(self.file.project_ini_file_path)
-        self.project.load_project_files()
-        app().main_window.input_widget.initial_project_action(True)
-        self.complete = True
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.confirm_material_attribution()
-        elif event.key() == Qt.Key_Delete:
-            self.material_widget.remove_selected_row()
         elif event.key() == Qt.Key_Escape:
             self.close()
+
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
+        self.keep_window_open = False
+        return super().closeEvent(a0)

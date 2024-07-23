@@ -1,6 +1,7 @@
-import numpy as np
+from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtCore import QObjectCleanupHandler
-from PyQt5.QtWidgets import *
+
+from molde.render_widgets import AnimatedRenderWidget
 
 # from vibra.interface.modal_analysis_bar import AcousticModalAnalysisBar
 from vibra.interface.analysis_bars.acoustic_analysis_bar import (
@@ -11,23 +12,29 @@ from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
     CuttingPlaneActor,
 )
 from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
-from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
-    CommonRenderWidget,
-)
+from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
+# from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
+#     CommonRenderWidget,
+# )
 from vibra.utils.interface_functions import get_main_window
-from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
+from vibra.utils.progress_status import ProgressStatus
+from vibra import app
 
+import logging
+import numpy as np
+from time import time
 
-class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
+class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         self.control_bar = AcousticModalAnalysisBar()
         self.control_bar.value_changed.connect(self.update_plot)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
         self.control_bar.phase_slider.valueChanged.connect(self.stop_animation)
         self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
+        self.main_window.theme_changed.connect(self.set_theme)
 
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
@@ -37,9 +44,13 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
         self.setLayout(layout)
         self.setContentsMargins(0, 0, 0, 0)
 
+        self.cutting_plane_active = False
+        self.cutting_plane_args = tuple()
+
         self.analysis_actor = None
         self.edges_actor = None
         self.plane_actor = None
+        self.hidden_part_actor = None
         self.bounds = (0, 0, 0, 0, 0, 0)
 
         self.create_axes()
@@ -68,9 +79,10 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
         solver = self.main_window.project.acoustic_harmonic_solver
         if solver is None:
             return
+        self.control_bar.update_selector_label()
         self.control_bar.set_frequencies(solver.frequencies)
 
-    def update_plot(self):
+    def update_plot(self, reset_camera=True):
         if self.main_window.project is None:
             return
 
@@ -83,6 +95,9 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
             return
 
         solver = self.main_window.project.acoustic_harmonic_solver
+        if solver is None:
+            return
+
         if solver.solution is None:
             return
 
@@ -90,7 +105,6 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
         if not (0 <= index < solver.solution.shape[1]):
             return
 
-        self.update_theme()
         self.remove_actors()
 
         phase_deg = self.control_bar.phase_slider.value()
@@ -108,18 +122,25 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
 
         self.analysis_actor = AnalysisActor(mesh)
         self.analysis_actor.plot_colorbar(output_pressures, min_value, max_value)
-        self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
         self.renderer.AddActor(self.analysis_actor)
 
         self.edges_actor = EdgesActor(self.analysis_actor.data)
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
         self.renderer.AddActor(self.edges_actor)
 
-        self.bounds = self.analysis_actor.GetBounds()
-        scale = bounds_distance(self.bounds)
-        self.plane_actor = CuttingPlaneActor()
+        # Add a very subtle transparent actor to represent the whole 
+        # structure even if part of it is hidden
+        has_hidden_part = bool(self.main_window.hidden_surfaces)
+        self.hidden_part_actor = FacesActor(mesh, allow_hidding=False)
+        self.hidden_part_actor.SetVisibility(has_hidden_part)
+        self.hidden_part_actor.GetProperty().SetOpacity(0.05)
+        self.hidden_part_actor.GetProperty().LightingOff()
+        self.hidden_part_actor.PickableOff()
+        self.renderer.AddActor(self.hidden_part_actor)
+
+        self.plane_actor = CuttingPlaneActor(self.analysis_actor.GetBounds())
         self.plane_actor.VisibilityOff()
-        self.plane_actor.SetScale(scale, scale, scale)
         self.renderer.AddActor(self.plane_actor)
 
         mesh_visibility = self.control_bar.show_mesh_button.isChecked()
@@ -130,9 +151,20 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
             self.analysis_actor.GetProperty().SetRepresentationToSurface()
             self.edges_actor.VisibilityOn()
 
-        self.renderer.ResetCamera()
-        self.update()
+        if self.cutting_plane_active and self.cutting_plane_args:
+            self.start_cutting_mode()
+            self.apply_cutting_plane(*self.cutting_plane_args)
+        else:
+            self.update()
+
+        if reset_camera:
+            self.renderer.ResetCamera()
+    
         self.main_window.project.thumbnail = self.get_thumbnail()
+
+    def update_hidden_plot(self):
+        # in this case the update_plot function is fast enough
+        self.update_plot(reset_camera=False)
 
     def update_animation(self, frame):
         if not self._actors_exists():
@@ -144,25 +176,89 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
 
         index = self.current_shape_index()
         if not (0 <= index < solver.solution.shape[1]):
-            return
+            return      
+        
+        t0 = time()
 
-        t = frame / (self._animation_total_frames - 1)
-        phase_deg = lerp(0, 360, t)
-
-        phi_sld = phase_deg * np.pi / 180
-        current_pressures = solver.solution[:, index].copy()
+        current_pressures = solver.solution[:, index]
         amplitudes = np.abs(current_pressures)
         phase = np.angle(current_pressures)
-        output_pressures = amplitudes * np.cos(phase + phi_sld)
+
+        phi = np.linspace(0, 2 * np.pi, self._animation_fps, endpoint=False)
+        output_pressures = amplitudes * np.cos(phase + phi[frame])
 
         min_value, max_value = solver.get_max_min_values_of_pressures(index)
         if self.control_bar.absolute_button.isChecked():
             min_value = 0
             output_pressures = np.abs(output_pressures)
+        
+        # dt = time() - t0
+        # print(f"Elapsed time to process A: {round(dt, 4)} s")
 
+        # t0 = time()
         self.analysis_actor.plot_colorbar(output_pressures, min_value, max_value)
-        self.colorbar.SetLookupTable(self.analysis_actor.lookup_table)
+        # dt = time() - t0
+        # print(f"Elapsed time to process B: {round(dt, 4)} s")
+
+        # t0 = time()
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
+        # dt = time() - t0
+        # print(f"Elapsed time to process C: {round(dt, 4)} s")
+
+        # t0 = time()
         self.update()
+        # dt = time() - t0
+        # print(f"Elapsed time to process D: {round(dt, 4)} s")
+
+    def process_animation_frames(self):
+
+        """ This method processes the animation frames for one complete 
+            animation cycle. The animation controls are frame per cycle
+            and the number cycles.
+
+        """
+
+        print("go -> process_animation_frames")
+
+        self.animation_data = dict()
+
+        if not self._actors_exists():
+            return
+
+        solver = self.main_window.project.acoustic_harmonic_solver
+        if solver.solution is None:
+            return
+
+        index = self.current_shape_index()
+        if not (0 <= index < solver.solution.shape[1]):
+            return
+
+        nodal_solution = solver.solution[:, index].copy()
+        amplitudes = np.abs(nodal_solution)
+        phase = np.angle(nodal_solution)
+        
+        deg_angles = np.linspace(0, 360, self._animation_fps, endpoint=False)
+        min_value, max_value = solver.get_max_min_values_of_pressures(index)
+
+        if self.control_bar.absolute_button.isChecked():
+            min_value = 0
+            max_value = np.max(np.abs([min_value, max_value]))
+
+        for step, deg_angle in enumerate(deg_angles):
+
+            phi = deg_angle * np.pi / 180
+            output_pressures = amplitudes * np.cos(phase + phi)
+
+            if self.control_bar.absolute_button.isChecked():
+                output_pressures = np.abs(output_pressures)
+
+            self.animation_data[deg_angle] = output_pressures
+
+            logging.info("Processing the animation frames..." + ProgressStatus(step, len(deg_angles)))
+
+        # self.analysis_actor.plot_colorbar(self.animation_data, min_value, max_value)
+        # self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
+        # self.update()
 
     def set_mesh_visibility(self, condition):
         if not self._actors_exists():
@@ -206,40 +302,45 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
     def start_cutting_mode(self):
         if not self._actors_exists():
             return
+        self.cutting_plane_active = True
         self.plane_actor.VisibilityOn()
+        self.hidden_part_actor.VisibilityOn()
+        self.update()
 
     def stop_cutting_mode(self):
         if not self._actors_exists():
             return
+        self.cutting_plane_active = False
+        has_hidden_part = bool(self.main_window.hidden_surfaces)
+        self.hidden_part_actor.SetVisibility(has_hidden_part)
         self.plane_actor.VisibilityOff()
         self.analysis_actor.disable_cut()
-
-    def configure_cutting_plane(self, position, orientation):
-        if not self._actors_exists():
-            return
-
-        x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
-        y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
-        z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
-        self.plane_actor.SetPosition(x, y, z)
-        self.plane_actor.SetOrientation(orientation)
-
-        self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
-        self.plane_actor.GetProperty().SetOpacity(0.8)
+        self.edges_actor.disable_cut()
         self.update()
 
-    def apply_cutting_plane(self, position, orientation):
+    def configure_cutting_plane(self, position, orientation, *args, **kwargs):
         if not self._actors_exists():
             return
 
-        x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
-        y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
-        z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
-        normal = self._calculate_normal_vector(orientation)
-        self.analysis_actor.apply_cut((x, y, z), normal)
+        self.plane_actor.configure_cutting_plane(position, orientation)
+        self.update()
 
+    def apply_cutting_plane(self, position, orientation, invert=False):
+        if not self._actors_exists():
+            return
+
+        self.cutting_plane_args = (position, orientation, invert)
+        xyz = self.plane_actor.calculate_x_y_z_position(position)
+        normal = self.plane_actor.calculate_normal_vector(orientation)
+        if invert:
+            normal = -normal
+        self.analysis_actor.apply_cut(xyz, normal)
+        self.edges_actor.apply_cut(xyz, normal)
+
+        self.plane_actor.VisibilityOn()
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
+        self.plane_actor.configure_cutting_plane(position, orientation)
 
         self.update()
 
@@ -247,9 +348,11 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
         self.renderer.RemoveActor(self.analysis_actor)
         self.renderer.RemoveActor(self.edges_actor)
         self.renderer.RemoveActor(self.plane_actor)
+        self.renderer.RemoveActor(self.hidden_part_actor)
         self.analysis_actor = None
         self.edges_actor = None
         self.plane_actor = None
+        self.hidden_part_actor = None 
 
     def _actors_exists(self):
         actors = [
@@ -259,12 +362,3 @@ class AcousticHarmonicAnalysisRenderWidget(CommonRenderWidget):
         ]
 
         return all([actor is not None for actor in actors])
-
-    def _calculate_normal_vector(self, orientation):
-        # https://forum.gamemaker.io/index.php?threads/solved-3d-rotations-with-a-shader-matrix-or-a-matrix-glsl-es.61064/
-
-        orientation = np.array(orientation) * np.pi / 180
-        rx, ry, rz = rotation_matrices(*orientation)
-
-        normal = rz @ rx @ ry @ np.array([1, 0, 0, 1])
-        return normal[:3]

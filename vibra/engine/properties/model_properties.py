@@ -2,9 +2,11 @@ import json
 import os
 from dataclasses import dataclass
 
+from vibra import app
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-from vibra.project_file import ProjectFile
+# from vibra.project.project_file import *
+
 
 DEFAULT_MATERIAL = Material(
     name="Steel",
@@ -53,7 +55,7 @@ class ModelProperties:
     """
 
     def __init__(self, model=None):
-        self.file = ProjectFile()
+        # self.file = ProjectFile()
         self._reset_variables()
 
     def _reset_variables(self):
@@ -68,8 +70,8 @@ class ModelProperties:
         self.global_properties["material", "global"] = DEFAULT_MATERIAL
         self.global_properties["fluid", "global"] = DEFAULT_FLUID
 
-    def get_material(self, element=None) -> Material:
-        return self._get_property("material")
+    def get_material(self, element=None, **kwargs) -> Material:
+        return self._get_property("material", **kwargs)
 
     def get_fluid(self, **kwargs) -> Fluid:
         return self._get_property("fluid", **kwargs)
@@ -148,6 +150,9 @@ class ModelProperties:
 
     def get_specific_impedance(self, surface):
         return self._get_property("specific_impedance", surface=surface)
+
+    def get_porous_material_model_data(self, volume):
+        return self._get_property("porous_material_model", volume=volume)
 
     def set_acoustic_pressure(self, data, surface):
         self._set_property("acoustic_pressure", data, surface=surface)
@@ -295,53 +300,6 @@ class ModelProperties:
         key = (property, group_id)
         if key in self.group_properties.keys():
             self.group_properties.pop(key)
-
-    # TODO: remove this
-    def as_json(self):
-        def normalize(prop: dict):
-            """
-            Sadly json doesn't accepts tuple keys,
-            so we need to convert it to a string like:
-            "property id" = value
-            """
-            return {f"{p} {i}": v for (p, i), v in prop.items()}
-
-        data = dict(
-            # global_properties = normalize(self.global_properties),
-            volume_properties=normalize(self.volume_properties),
-            surface_properties=normalize(self.surface_properties),
-            line_properties=normalize(self.line_properties),
-            element_properties=normalize(self.element_properties),
-            nodal_properties=normalize(self.nodal_properties),
-        )
-        return json.dumps(data, indent=2)
-
-    # TODO: remove this
-    def load_json(self, data: dict):
-        def denormalize(prop: dict):
-            new_prop = dict()
-            for key, val in prop.items():
-                p, i = key.split()
-                p = p.strip()
-                i = int(i)
-                new_prop[p, i] = val
-            return new_prop
-
-        self.global_properties = denormalize(data["global_properties"])
-        self.volume_properties = denormalize(data["volume_properties"])
-        self.surface_properties = denormalize(data["surface_properties"])
-        self.line_properties = denormalize(data["line_properties"])
-        self.element_properties = denormalize(data["element_properties"])
-        self.nodal_properties = denormalize(data["nodal_properties"])
-
-    def export_model_properties(self):
-        try:
-            path = os.path.join(self.file.project_path, "model_properties.json")
-            with open(path, "w") as file:
-                file.write(self.as_json())
-        except Exception as error:
-            print(str(error))
-
 
 if __name__ == "__main__":
     p = ModelProperties()

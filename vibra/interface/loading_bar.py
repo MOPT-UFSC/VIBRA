@@ -1,16 +1,11 @@
+from PyQt5.QtWidgets import QApplication, QLabel, QProgressBar, QVBoxLayout, QWidget
+from PyQt5.QtCore import Qt
+
+from vibra import app
+from vibra.utils.progress_status import ProgressStatus
+
 import logging
 from time import sleep
-
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (
-    QApplication,
-    QLabel,
-    QProgressBar,
-    QVBoxLayout,
-    QWidget,
-)
-
-from vibra.utils.progress_status import ProgressStatus
 
 
 class ProgressBarLogUpdater(logging.Handler):
@@ -51,6 +46,13 @@ class LoadingWindow(QWidget):
 
         self.customize_style()
         self.configure_window()
+        self.update_position()
+
+    def update_position(self):
+        desktop_geometry = app().desktop().screenGeometry()
+        pos_x = int((desktop_geometry.width() - self.width())/2)
+        pos_y = int((desktop_geometry.height() - self.height())/2)
+        self.setGeometry(pos_x, pos_y, self.width(), self.height())
 
     def customize_style(self):
         self.text_label.setAlignment(Qt.AlignCenter)
@@ -75,12 +77,10 @@ class LoadingWindow(QWidget):
         )
 
     def configure_window(self):
-        self.setWindowTitle("Loading")
         self.setGeometry(200, 200, 400, 150)
-
-        self.setWindowFlags(
-            Qt.Window | Qt.CustomizeWindowHint | Qt.WindowTitleHint | Qt.WindowStaysOnTopHint
-        )
+        self.setWindowIcon(app().main_window.vibra_icon)
+        self.setWindowFlags(Qt.Window | Qt.CustomizeWindowHint | Qt.WindowTitleHint | Qt.WindowStaysOnTopHint | Qt.WindowMinimizeButtonHint)
+        self.setWindowTitle("Vibra")
 
 
 def load_function(function, parent):
@@ -137,7 +137,7 @@ def load_function(function, parent):
             QApplication.processEvents()
 
             # Calls the actual function
-            function(*args, **kwargs)
+            return_value = function(*args, **kwargs)
 
         finally:
             # Shows the full progress bar and closes
@@ -153,5 +153,7 @@ def load_function(function, parent):
 
             # Removes the ProgressBarLogUpdater
             logging.getLogger().removeHandler(progress_handler)
+
+        return return_value
 
     return wrapper

@@ -1,13 +1,12 @@
 [tool.poetry]
 name = "vibra"
-version = "0.1.0a0"
+version = "0.2.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
 
 [[tool.poetry.source]]
-name = "pypi-public"
-url = "https://pypi.org/simple/"
+name = "PyPI"
 priority = "primary"
 
 [tool.poetry.dependencies]
@@ -25,6 +24,9 @@ openpyxl = "^3.1.2"
 pypardiso = {git = "https://github.com/andrejstmh/PyPardisoProject"}
 mkl = "2023.2.0"
 intel-openmp = "2023.2.0"
+h5py = "^3.11.0"
+molde = {git = "https://github.com/andrefpf/molde"}
+fileboxes = {git = "https://github.com/andrefpf/fileboxes.git"}
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"
@@ -42,3 +44,9 @@ line-length=100
 [tool.isort]
 multi_line_output = 3
 include_trailing_comma = true
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "serial",
+]

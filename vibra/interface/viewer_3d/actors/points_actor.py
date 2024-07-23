@@ -17,16 +17,10 @@ class PointsActor(vtk.vtkActor):
         cell_colors.SetNumberOfComponents(3)
         cell_colors.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
 
-        # I it a bit dumb to run over all entities,
-        # but we must have very few entities so it is ok
-        for (dim, tag), elements in self.mesh.entity_ranges.items():
-            if dim != 0:
-                continue
-
-            for element in elements:
-                _, x, y, z = self.mesh.nodal_coordinates[element]
-                points.InsertNextPoint(x, y, z)
-                data.InsertNextCell(vtk.VTK_VERTEX, 1, [element])
+        for tag, node_id in self.mesh.nodes_from_points.items():
+            _, x, y, z = self.mesh.nodal_coordinates[node_id]
+            points.InsertNextPoint(x, y, z)
+            data.InsertNextCell(vtk.VTK_VERTEX, 1, [node_id])
 
         data.SetPoints(points)
         data.GetCellData().SetScalars(cell_colors)
@@ -64,3 +58,14 @@ class PointsActor(vtk.vtkActor):
         self.GetMapper().SetScalarModeToUseCellData()
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
+
+    def apply_cut(self, origin, normal):
+        plane = vtk.vtkPlane()
+        plane.SetOrigin(origin)
+        plane.SetNormal(normal)
+        self.GetMapper().RemoveAllClippingPlanes()
+        self.GetMapper().AddClippingPlane(plane)
+    
+    def disable_cut(self):
+        self.GetMapper().RemoveAllClippingPlanes()
+

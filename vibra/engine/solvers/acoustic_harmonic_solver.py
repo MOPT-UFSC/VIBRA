@@ -1,5 +1,6 @@
 import logging
 import os
+import json
 import numpy as np
 from scipy.sparse.linalg import spsolve
 import matplotlib.pyplot as plt
@@ -9,6 +10,8 @@ import matplotlib.pyplot as plt
 # os.environ["OMP_NUM_THREADS"] = "4"
 # 
 from pypardiso import *
+
+from functools import cache
 
 from vibra.utils.progress_status import ProgressStatus
 
@@ -39,6 +42,7 @@ class AcousticHarmonicSolver:
     def load_dissipation_model(self, data):
         self.dissipation_model = data
 
+    @cache
     def get_max_min_values_of_pressures(self, column):
         """ This method returns the minimum and maximum pressure values
             of selected frequency for animation purposes.
@@ -76,6 +80,8 @@ class AcousticHarmonicSolver:
 
     def solve(self, print_log=False):
         """ """
+        self.get_max_min_values_of_pressures.cache_clear()
+
         ps = PyPardisoSolver(mtype=3)
         #
         self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
@@ -92,7 +98,8 @@ class AcousticHarmonicSolver:
         # self.plot_graph(M)
 
         freq_dependent = False
-        if self.assembler.model.lrf_properties:
+        condition = self.assembler.model.lrf_properties or self.assembler.model.porous_material_properties
+        if condition:
             freq_dependent = True
         else:
             F_eq = self.get_prescribed_pressure_model_excitation()
@@ -114,11 +121,19 @@ class AcousticHarmonicSolver:
             omega = 2 * np.pi * freq
 
             if freq_dependent:
+
                 self.assembler.assemble_global_mass_matrix(index=i)
+                self.assembler.assemble_global_stiffness_matrix(index=i)
+
                 F_eq = self.get_prescribed_pressure_model_excitation(freq_dependent=True, index=i)
+
                 M = self.assembler.mass_matrix
+                K = self.assembler.stiffness_matrix
+
                 F = Q_visc @ Q[:, i] - 1j * omega * Q[:, i] - F_eq
+
             else:
+
                 F = Q_visc @ Q[:, i] - 1j * omega * Q[:, i] - F_eq[:, i]
 
             C = C_imp[i] + C_visc
@@ -187,7 +202,7 @@ class AcousticHarmonicSolver:
         aux_ones = np.ones(nf, dtype=complex)
 
         if len(self.prescribed_values) != 0:
-            list_prescribed_values = []
+            list_prescribed_values = list()
 
             for value in self.prescribed_values:
                 if isinstance(value, complex):
@@ -233,6 +248,195 @@ class AcousticHarmonicSolver:
                 logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(100, 100))
 
         return F_eq
+
+
+    def get_particle_velocity_from_surface(self, surface_id):
+        """ Process the nodal average particle velocity to selected surface.
+            Returns the partcicle velocity in components x, y, z and normal
+        """
+
+        element_3d, element_2d = self.assembler.get_element()
+        element_3d.reorder_connect()
+
+        node_ids = self.assembler.model.mesh.nodes_from_surfaces[surface_id]
+        solid_elements_connected_to_nodes = self.assembler.model.mesh.get_solid_elements_connected_to_nodes(node_ids)
+        face_elements_connected_to_nodes = self.assembler.model.mesh.get_face_elements_connected_to_nodes(node_ids, surface_id)
+
+        fluid = self.assembler.model.properties.get_fluid(surface=surface_id)
+        rho = fluid.fluid_density
+
+        data_vp = dict()
+        data_normals = dict()
+
+        for node_id, solid_element_ids in solid_elements_connected_to_nodes.items():
+
+            n = 0.
+            face_elem_connect = face_elements_connected_to_nodes[node_id, surface_id]
+
+            for face_connect in face_elem_connect:
+                n += element_2d.get_element_face_normal(face_connect)
+                # print(node_id, face_connect, element_2d.get_element_face_normal(face_connect))
+
+            data_normals[node_id] = n / len(face_elem_connect)
+            # print(node_id, len(face_elem_connect),  data_normals[node_id])
+
+            Vk = 0.
+            for solid_element_id in solid_element_ids:
+                Vk += element_3d.process_particle_velocity(solid_element_id, node_id, rho, self.frequencies, self.solution)
+
+            data_vp[node_id] = Vk / len(solid_element_ids)
+
+        Vx = dict()
+        Vy = dict()
+        Vz = dict()
+        Vn = dict()
+        particle_velocities = dict()
+
+        ordered_nodes = np.sort(list(data_vp.keys()))
+
+        for i, _node_id in enumerate(ordered_nodes):
+            Vx[_node_id] = data_vp[_node_id][0, :]
+            Vy[_node_id] = data_vp[_node_id][1, :]
+            Vz[_node_id] = data_vp[_node_id][2, :]
+            Vn[_node_id] = data_vp[_node_id].T @ data_normals[_node_id]
+
+        particle_velocities["Vx"] = Vx
+        particle_velocities["Vy"] = Vy
+        particle_velocities["Vz"] = Vz
+        particle_velocities["Vn"] = Vn
+
+        return particle_velocities
+
+
+    def get_transmission_loss(self, input_surface_id, output_surface_id):
+        """ Returns the transmission loss.
+        
+        """
+        
+        nodes_input = self.assembler.model.mesh.nodes_from_surfaces[input_surface_id]
+        nodes_output = self.assembler.model.mesh.nodes_from_surfaces[output_surface_id]
+
+        nodes_input = np.sort(nodes_input)
+        nodes_output = np.sort(nodes_output)
+
+        P_in = self.solution[nodes_input, :]
+        P_out = self.solution[nodes_output, :]
+
+        volume_out = self.assembler.model.mesh.volume_from_surface[output_surface_id][0]
+        volume_in = self.assembler.model.mesh.volume_from_surface[input_surface_id][0]
+
+        fluid_out, _ = self.assembler.model.get_fluid(volume=volume_out)
+        fluid_in, _ = self.assembler.model.get_fluid(volume=volume_in)
+
+        rho_out = fluid_out.fluid_density
+        c0_out = fluid_out.speed_of_sound
+
+        rho_in = fluid_in.fluid_density
+        c0_in = fluid_in.speed_of_sound
+
+        A_in = self.assembler.model.mesh.surface_area_from_element_integration[input_surface_id]
+        A_out = self.assembler.model.mesh.surface_area_from_element_integration[output_surface_id]
+
+        logging.info("Processing the transmission loss..." + ProgressStatus(40, 100))
+
+        out_data = dict()
+        list_nodes_in = list()
+        nodal_areas_in = np.zeros(len(nodes_input), dtype=float)
+        for i, node in enumerate(nodes_input):
+            areas = self.assembler.model.mesh.nodal_area[node]
+            nodal_areas_in[i] = sum(areas)
+            out_data[node] = sum(areas)
+            # print("input: ", i, node)
+            list_nodes_in.append(node)
+
+        list_nodes_out = list()
+        nodal_areas_out = np.zeros(len(nodes_output), dtype=float)
+        for i, node in enumerate(nodes_output):
+            areas = self.assembler.model.mesh.nodal_area[node]
+            nodal_areas_out[i] = sum(areas)
+            out_data[node] = sum(areas)
+            # print("output: ", i, node)
+            list_nodes_out.append(node)
+
+        # with open("areas_data.json", "w") as file:
+        #     json.dump(out_data, file, indent=2)
+
+        # print("\n")
+        # for i in [177, 178, 8818]:
+        #     ratio = out_data[i] / np.sum(nodal_areas_in)
+        #     print(f"Node #{i+1} - area: {ratio*A_in} [m²]")
+
+        # print("\n")
+        # for i in [340, 341, 8904]:
+        #     ratio = out_data[i] / np.sum(nodal_areas_out)
+        #     print(f"Node #{i+1} - area: {ratio*A_out} [m²]")
+
+        Aeff_in = nodal_areas_in.reshape(-1, 1) * (A_in / np.sum(nodal_areas_in))
+        Aeff_out = nodal_areas_out.reshape(-1, 1) * (A_out / np.sum(nodal_areas_out))
+
+        logging.info("Processing the transmission loss..." + ProgressStatus(50, 100))
+        input_particle_velocities = self.get_particle_velocity_from_surface(input_surface_id)
+
+        logging.info("Processing the transmission loss..." + ProgressStatus(90, 100))
+        output_particle_velocities = self.get_particle_velocity_from_surface(output_surface_id)
+
+        ## Transmission loss
+        # surf_velocity = self.assembler.model.properties.get_surface_velocity(input_surface_id)
+        # if surf_velocity is None:
+        #     return None, None, None
+
+        # real_values = np.array(surf_velocity["real_values"])
+        # imag_values = np.array(surf_velocity["imag_values"])
+        # V_in = real_values + 1j * imag_values
+
+        # P_in = V_in * rho_in * c0_in# / 2
+
+        # V_in = P_in / (rho_in * c0_in)
+        # I_in = np.abs(np.real(P_in * np.conjugate(V_in)) / 2)
+        V_in = np.array(list(input_particle_velocities["Vn"].values()), dtype=complex)
+        I_in = -np.real(P_in * np.conjugate(V_in)) / 2
+
+        # V_out = P_out / (rho_out * c0_out)
+        # I_out = np.abs(np.real(P_out * np.conjugate(V_out)) / 2)
+        V_out = np.array(list(output_particle_velocities["Vn"].values()), dtype=complex)
+        I_out = np.real(P_out * np.conjugate(V_out)) / 2
+
+        W_in = 10*np.log10(np.sum(I_in * Aeff_in, axis=0))
+        W_out = 10*np.log10(np.sum(I_out * Aeff_out, axis=0))
+
+        TL = W_in - W_out
+
+        diff = 10*np.log10(np.sum(I_out * Aeff_out, axis=0)) - 10*np.log10(np.sum(I_out * A_out/len(nodes_output), axis=0))
+
+        if self.frequencies[0] == 0:
+            return self.frequencies[1:], TL[1:], diff[1:]
+        else:
+            return self.frequencies, TL, diff
+
+    def get_noise_reduction(self, input_surface_id, output_surface_id):
+        """ Returns the transmission loss.
+
+        """
+
+        rows_input = self.assembler.model.mesh.nodes_from_surfaces[input_surface_id]
+        rows_output = self.assembler.model.mesh.nodes_from_surfaces[output_surface_id]
+
+        P_in = np.average(self.solution[rows_input,:], axis=0)
+        P_out = np.average(self.solution[rows_output,:], axis=0)
+
+        # the zero_shift constant is summed to avoid zero values either in P_input2 or P_output2 variables
+        zero_shift = 1e-12
+
+        Prms_out2 = np.real(P_out*np.conjugate(P_out)) / 2 + zero_shift
+        Prms_in2 = np.real(P_in*np.conjugate(P_in)) / 2 + zero_shift
+
+        NR = 10*np.log10(Prms_in2/Prms_out2)
+
+        if 0 in self.frequencies:
+            return self.frequencies[1:], NR[1:]
+
+        return self.frequencies, NR
+
 
     def plot_graph(self, matrix):
         """

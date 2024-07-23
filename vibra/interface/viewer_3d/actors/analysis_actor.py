@@ -20,33 +20,6 @@ class AnalysisActor(SolidsActor):
         )
         self.update_coordinates(deformed_coordinates)
 
-    def apply_cut(self, origin, normal):
-        if self.data is None:
-            return
-
-        plane = vtk.vtkPlane()
-        plane.SetOrigin(origin)
-        plane.SetNormal(normal)
-
-        clipper = vtk.vtkExtractGeometry()
-        clipper.SetInputData(self.data)
-        clipper.SetImplicitFunction(plane)
-        clipper.Update()
-        self.clipped_data = clipper.GetOutput()
-
-        mapper = self.GetMapper()
-        mapper.InterpolateScalarsBeforeMappingOn()
-        mapper.SetInputData(self.clipped_data)
-        mapper.Modified()
-
-    def disable_cut(self):
-        if self.data is None:
-            return
-        self.clipped_data = self.data
-        mapper = self.GetMapper()
-        mapper.SetInputData(self.data)
-        mapper.Modified()
-
     def plot_colorbar(self, values, min_value, max_value):
         if self.data is None:
             return

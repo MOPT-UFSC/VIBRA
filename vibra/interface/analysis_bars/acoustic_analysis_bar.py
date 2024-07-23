@@ -5,6 +5,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+from vibra import app, ICON_DIR
 from vibra.utils.icons import load_icon
 
 
@@ -19,8 +20,8 @@ class AcousticModalAnalysisBar(QWidget):
 
         self.create_sliders()
 
-        self.play_icon = load_icon(Path("data/icons/play.png"), QColor("#0055DD"))
-        self.pause_icon = load_icon(Path("data/icons/pause.png"), QColor("#0055DD"))
+        self.play_icon = load_icon(ICON_DIR / "play.png", QColor("#0055DD"))
+        self.pause_icon = load_icon(ICON_DIR / "pause.png", QColor("#0055DD"))
         self.play_pause_button = QPushButton(self.play_icon, "")
         self.play_pause_button.setShortcut("Space")
         self.play_pause_button.setMinimumWidth(80)
@@ -57,7 +58,9 @@ class AcousticModalAnalysisBar(QWidget):
         layout.addWidget(self.play_pause_button)
         layout.addStretch()
 
-        layout.addWidget(QLabel("Mode Selector:"))
+        self.selector_label = QLabel("Selector label:")
+
+        layout.addWidget(self.selector_label)
         layout.addWidget(self.frequency_box)
         self.setLayout(layout)
 
@@ -99,3 +102,10 @@ class AcousticModalAnalysisBar(QWidget):
     def value_change_callback(self):
         self.phase_label.setText(f"({self.phase_slider.value()}°)")
         self.value_changed.emit()
+
+    def update_selector_label(self):     
+        analysis_id = app().main_window.project.analysis_data["analysis_id"]
+        if analysis_id == 4:
+            self.selector_label.setText("Mode selector:")
+        else:
+            self.selector_label.setText("Frequency selector:")

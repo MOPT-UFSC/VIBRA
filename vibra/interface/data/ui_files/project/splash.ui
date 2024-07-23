@@ -25,6 +25,10 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../../icons/logo_vibra.png</normaloff>../../icons/logo_vibra.png</iconset>
+  </property>
   <property name="styleSheet">
    <string notr="true">background-color: qlineargradient(spread:pad, x1:0.506, y1:0, x2:0.494318, y2:1, stop:0 rgba(155, 155, 155, 207), stop:0.823864 rgba(0, 0, 0, 203), stop:1 rgba(0, 0, 0, 230));</string>
   </property>
@@ -83,7 +87,7 @@
          <string/>
         </property>
         <property name="pixmap">
-         <pixmap>../../../data/icons/azul cinza.png</pixmap>
+         <pixmap>../../icons/azul cinza.png</pixmap>
         </property>
         <property name="scaledContents">
          <bool>true</bool>

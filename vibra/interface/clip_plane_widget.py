@@ -1,6 +1,6 @@
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QGridLayout, QLabel, QProxyStyle, QSlider, QWidget
+from PyQt5.QtWidgets import QGridLayout, QLabel, QProxyStyle, QSlider, QWidget, QPushButton, QVBoxLayout, QHBoxLayout
 
 
 class ClipPlaneWidget(QWidget):
@@ -11,12 +11,14 @@ class ClipPlaneWidget(QWidget):
 
     def __init__(self, parent):
         super().__init__(parent)
+        self.invert_value = False
+
         self.configure_window()
-        self.create_sliders()
+        self.create_sliders_and_buttons()
 
     def configure_window(self):
-        self.setWindowTitle("Clip Plane")
-        self.setGeometry(200, 200, 400, 350)
+        self.setWindowTitle("Section Plane")
+        self.setGeometry(200, 200, 400, 400)
 
         self.setWindowFlags(
             Qt.Window
@@ -26,9 +28,10 @@ class ClipPlaneWidget(QWidget):
             | Qt.WindowCloseButtonHint
             | Qt.FramelessWindowHint
             | Qt.WindowShadeButtonHint
+            | Qt.WindowMinimizeButtonHint
         )
 
-    def create_sliders(self):
+    def create_sliders_and_buttons(self):
         #
         self.x_angle_title_label = QLabel("Rx")
         self.y_angle_title_label = QLabel("Ry")
@@ -101,6 +104,17 @@ class ClipPlaneWidget(QWidget):
         self.y_pos_tittle_value_label.setFixedWidth(50)
         self.z_pos_tittle_value_label.setFixedWidth(50)
 
+        self.reset_button = QPushButton(text="Reset")
+        self.reset_button.setFixedWidth(90)
+        self.reset_button.setFixedHeight(35)
+        self.reset_button.setFont(QFont("Helvetica", 8, QFont.Bold))
+        self.reset_button.clicked.connect(self.reset_button_callback)
+
+        self.invert_button = QPushButton(text="Invert")
+        self.invert_button.setFixedWidth(90)
+        self.invert_button.setFixedHeight(35)
+        self.invert_button.setFont(QFont("Helvetica", 8, QFont.Bold))
+        self.invert_button.clicked.connect(self.invert_button_callback)
         #
         grid_layout = QGridLayout()
         grid_layout.addWidget(self.rotation_tittle_label, 4, 1)
@@ -129,10 +143,27 @@ class ClipPlaneWidget(QWidget):
         grid_layout.addWidget(self.z_pos_slider, 3, 1)
         grid_layout.addWidget(self.z_pos_tittle_value_label, 3, 2)
 
+        grid_layout.addWidget(self.reset_button, 8, 1)
+        grid_layout.addWidget(self.invert_button, 8, 2)
+
+        grid_container_widget = QWidget()
+        grid_container_widget.setLayout(grid_layout)
+
+        hbox_layout = QHBoxLayout()
+        hbox_layout.addWidget(self.reset_button)
+        hbox_layout.addWidget(self.invert_button)
+
+        hbox_container_widget = QWidget()
+        hbox_container_widget.setLayout(hbox_layout)
+
         self.position_tittle_label.setAlignment(Qt.AlignCenter)
         self.rotation_tittle_label.setAlignment(Qt.AlignCenter)
 
-        self.setLayout(grid_layout)
+        vbox_layout = QVBoxLayout()
+        vbox_layout.addWidget(grid_container_widget)
+        vbox_layout.addWidget(hbox_container_widget)
+
+        self.setLayout(vbox_layout)
         self.setGeometry(1450, 150, 450, 200)
 
     def get_position(self):
@@ -142,10 +173,13 @@ class ClipPlaneWidget(QWidget):
         return Px, Py, Pz
 
     def get_rotation(self):
-        Rx = self.y_angle_slider.value()
-        Ry = self.x_angle_slider.value()
+        Rx = self.x_angle_slider.value()
+        Ry = self.y_angle_slider.value()
         Rz = self.z_angle_slider.value()
         return Rx, Ry, Rz
+    
+    def invert(self):
+        pass
 
     def value_change_callback(self):
         self.setUpdatesEnabled(False)
@@ -163,6 +197,20 @@ class ClipPlaneWidget(QWidget):
 
     def slider_pressed_callback(self):
         self.slider_pressed.emit()
+    
+    def reset_button_callback(self):
+        self.x_pos_slider.setValue(0)
+        self.y_pos_slider.setValue(0)
+        self.z_pos_slider.setValue(0)
+        self.x_angle_slider.setValue(0)
+        self.y_angle_slider.setValue(0)
+        self.z_angle_slider.setValue(0)
+        self.invert_value = False
+        self.slider_released.emit()
+
+    def invert_button_callback(self):
+        self.invert_value = not self.invert_value
+        self.slider_released.emit()       
 
     def closeEvent(self, event):
         self.closed.emit()

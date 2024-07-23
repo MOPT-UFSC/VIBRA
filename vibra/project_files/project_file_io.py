@@ -1,0 +1,385 @@
+from vibra import app
+
+from vibra.engine.properties.fluid import Fluid
+from vibra.engine.properties.material import Material
+from vibra.interface.general.print_message_input import PrintMessageInput
+# from vibra.project_file import *
+
+from fileboxes import Filebox
+
+import os
+import io
+import h5py
+import numpy as np
+from pathlib import Path
+
+window_title_1 = "Error"
+window_title_2 = "Warning"
+
+
+class ProjectFileIO:
+    
+    def __init__(self, path : str, override=False):
+        super().__init__()
+
+        self.path = path
+        self.vibra_file = Filebox(Path(path), override=override)
+
+        self.model = app().main_window.project.model
+        self.properties = self.model.properties
+
+        self._initialize()
+        self._default_filenames()
+        self._default_foldernames()
+
+    def _initialize(self):
+        self.project_folder_path = Path(os.path.dirname(self.path))
+
+    def _default_filenames(self):
+        self.project_setup_filename = "project_setup.json"
+        self.fluid_library_filename = "fluid_library.config"
+        self.material_library_filename = "material_library.config"
+        self.model_properties = "model_properties.json"
+        self.mesh_data_filename = "mesh_data.hdf5"
+        self.results_data_filename = "results_data.hdf5"
+        self.thumbnail_filename = "thumbnail.png"
+
+    def _default_foldernames(self):
+        pass
+
+    def write_geometry_in_file(self, path):
+        basename = os.path.basename(path)
+        internal_path = f"geometry_file/{basename}"
+        self.vibra_file.write_from_path(internal_path, path, encoding="iso-8859-1")
+
+        try:
+
+            project_setup = self.vibra_file.read(self.project_setup_filename)
+            if project_setup is None:
+                project_setup = {   "geometry_filename" : basename,
+                                    "mesh_setup" : dict(),
+                                    "analysis_setup" : dict()   }
+
+            else:
+
+                project_setup["geometry_filename"] = basename
+            
+            self.vibra_file.write(self.project_setup_filename, project_setup)
+
+        except Exception as error_log:
+            print(str(error_log))
+
+    def read_geometry_from_file(self):
+
+        project_setup = self.vibra_file.read(self.project_setup_filename)
+
+        if "geometry_filename" in project_setup.keys():
+
+            geometry_filename = project_setup["geometry_filename"]
+            dirname = self.project_folder_path / "geometry" 
+            temp_path = dirname / geometry_filename
+            internal_path = f"geometry_file/{geometry_filename}"
+
+            if not os.path.exists(dirname):
+                os.mkdir(dirname)
+
+            self.vibra_file.read_to_path(internal_path, temp_path)
+
+        return str(temp_path)
+
+    def write_mesh_setup_in_file(self, mesh_setup):
+
+        project_setup = self.vibra_file.read(self.project_setup_filename)
+        if project_setup is None:
+            return   
+
+        project_setup["mesh_setup"] = mesh_setup           
+        self.vibra_file.write(self.project_setup_filename, project_setup)
+    
+    def read_mesh_setup_from_file(self):
+
+        mesh_setup = None
+        project_setup = self.vibra_file.read(self.project_setup_filename)
+
+        if project_setup is None:
+            return
+
+        if "mesh_setup" in project_setup.keys():
+            mesh_setup = project_setup["mesh_setup"]
+
+        return mesh_setup
+
+    def write_mesh_data_in_file(self):
+
+        mesh_data = dict(
+                            nodal_coordinates = self.model.mesh.nodal_coordinates,
+                            nodes_from_points = self.model.mesh.nodes_from_points,
+                            nodes_from_lines = self.model.mesh.nodes_from_lines,
+                            nodes_from_surfaces = self.model.mesh.nodes_from_surfaces,
+                            nodes_from_volumes = self.model.mesh.nodes_from_volumes,
+
+                            lines_connectivity = self.model.mesh.lines_connectivity,
+                            faces_connectivity = self.model.mesh.faces_connectivity,
+                            solids_connectivity = self.model.mesh.solids_connectivity,
+                            connectivity_from_surfaces = self.model.mesh.connectivity_from_surfaces,
+
+                            map_line_elements = self.model.mesh.get_array_based_elements_mapping(entity = "lines"),
+                            map_face_elements = self.model.mesh.get_array_based_elements_mapping(entity = "faces"),
+                            map_solid_elements = self.model.mesh.get_array_based_elements_mapping(entity = "solids"),
+
+                            gmsh_elements_from_lines = self.model.mesh.gmsh_elements_from_lines,
+                            gmsh_elements_from_surfaces = self.model.mesh.gmsh_elements_from_surfaces,
+                            gmsh_elements_from_volumes = self.model.mesh.gmsh_elements_from_volumes,
+
+                            surfaces_from_volumes = self.model.mesh.surfaces_from_volumes
+                        )
+
+        with self.vibra_file.open(self.mesh_data_filename, "w") as internal_file:
+            with h5py.File(internal_file, "w") as f:
+
+                for key, data in mesh_data.items():
+
+                    if "nodes" in key or "nodal" in key:
+                        _key = f"nodal_data/{key}"
+
+                    elif "connectivity" in key:
+                        _key = f"connectivity/{key}"
+
+                    elif "map" in key:
+                        _key = f"maps/{key}"
+
+                    elif "gmsh" in key:
+                        _key = f"gmsh_data/{key}"
+
+                    elif key == "surfaces_from_volumes":
+                        _key = f"geometry_info/{key}"
+
+                    else:
+                        _key = key
+
+                    if isinstance(data, dict):
+
+                        for _id, _values in data.items():
+                            name = f"{_key}_{_id}"
+                            f.create_dataset(name, data=_values, dtype=int)
+
+                    else:
+
+                        if key == "nodal_coordinates":
+                            dtype = float 
+                        else:
+                            dtype = int
+
+                        f.create_dataset(_key, data=data, dtype=dtype)
+        
+        self.vibra_file.remove(self.results_data_filename)
+
+
+    def read_mesh_data_from_file(self):
+
+        mesh_data = dict()
+
+        try:
+            with self.vibra_file.open(self.mesh_data_filename) as internal_file:
+                with h5py.File(internal_file, "r") as f:
+
+                    for group in list(f.keys()):
+                        for key, values in f.get(group).items():
+
+                            try:
+                                mesh_data[key] = np.array(values)
+
+                            except:
+                                mesh_data[key] = int(values)
+
+        except:
+            return dict()
+
+        return mesh_data
+
+    def write_analysis_setup_in_file(self, analysis_setup):
+
+        project_setup = self.vibra_file.read(self.project_setup_filename)
+        if project_setup is None:
+            return   
+
+        aux = dict()
+        for key, data in analysis_setup.items():
+            if key == "frequencies":
+                continue
+            # if isinstance(data, np.ndarray):
+            #     data = list(data)
+            aux[key] = data
+
+        project_setup["analysis_setup"] = aux         
+        self.vibra_file.write(self.project_setup_filename, project_setup)
+
+    def read_analysis_setup_from_file(self):
+
+        analysis_setup = None
+        project_setup = self.vibra_file.read(self.project_setup_filename)
+
+        if project_setup is None:
+            return
+
+        if "analysis_setup" in project_setup.keys():
+            analysis_setup = project_setup["analysis_setup"]
+
+        return analysis_setup
+
+    def write_model_setup_in_file(self, project_setup : dict):
+        self.vibra_file.write(self.project_setup_filename, project_setup)
+
+    def read_model_setup_from_file(self):
+        return self.vibra_file.read(self.project_setup_filename)
+
+    def write_material_library_in_file(self, config):
+        self.vibra_file.write(self.material_library_filename, config)
+
+    def read_material_library_from_file(self):
+        return self.vibra_file.read(self.material_library_filename)
+
+    def write_fluid_library_in_file(self, config):
+        self.vibra_file.write(self.fluid_library_filename, config)
+
+    def read_fluid_library_from_file(self):
+        return self.vibra_file.read(self.fluid_library_filename)
+
+    def write_model_properties_in_file(self):
+
+        try:
+
+            def normalize(prop: dict):
+                """
+                Sadly json doesn't accepts tuple keys,
+                so we need to convert it to a string like:
+                "property id" = value
+                """
+                output = dict()
+                for (property, tag), data in prop.items():
+
+                    key = f"{property} {tag}"
+
+                    if property in ["fluid", "material"]:
+                        if isinstance(data, (Fluid, Material)):
+                            output[key] = data.identifier
+                    else:
+                        output[key] = data
+
+                return output
+
+            data = dict(
+                        # global_properties = normalize(self.properties.global_properties),
+                        volume_properties = normalize(self.properties.volume_properties),
+                        surface_properties = normalize(self.properties.surface_properties),
+                        line_properties = normalize(self.properties.line_properties),
+                        element_properties = normalize(self.properties.element_properties),
+                        nodal_properties = normalize(self.properties.nodal_properties),
+                        )
+
+            self.vibra_file.write(self.model_properties, data)
+
+        except Exception as error_log:
+
+            title = "Error while exporting model properties"
+            message = str(error_log)
+            PrintMessageInput([window_title_1, title, message])
+
+
+    def read_model_properties_from_file(self):
+
+        def denormalize(prop: dict):
+            new_prop = dict()
+            for key, val in prop.items():
+                p, i = key.split()
+                p = p.strip()
+                i = int(i)
+                new_prop[p, i] = val
+            return new_prop
+
+        data = self.vibra_file.read(self.model_properties)
+
+        if data is None:
+            return dict()
+
+        model_properties = dict(
+                                # global_properties = denormalize(data["global_properties"]),
+                                volume_properties = denormalize(data["volume_properties"]),
+                                surface_properties = denormalize(data["surface_properties"]),
+                                line_properties = denormalize(data["line_properties"]),
+                                element_properties = denormalize(data["element_properties"]),
+                                nodal_properties = denormalize(data["nodal_properties"])
+                                )
+
+        return model_properties
+    
+    def write_thumbnail(self):
+        thumbnail = app().main_window.project.thumbnail
+        if thumbnail is None:
+            return
+        self.vibra_file.write(self.thumbnail_filename, thumbnail)
+
+    def read_thumbnail(self):
+        return self.vibra_file.read(self.thumbnail_filename)
+    
+    def write_results_data_in_file(self):
+         with self.vibra_file.open(self.results_data_filename, "w") as internal_file:
+            with h5py.File(internal_file, "w") as f:
+
+                acoustic_modal_solver = app().main_window.project.acoustic_modal_solver
+                if acoustic_modal_solver is not None:
+                    if acoustic_modal_solver.modal_shape is not None:
+                        natural_frequencies = acoustic_modal_solver.natural_frequencies
+                        modal_shape = acoustic_modal_solver.modal_shape
+                        f.create_dataset("modal_acoustic/natural_frequencies", data=natural_frequencies, dtype=float)
+                        f.create_dataset("modal_acoustic/modal_shape", data=modal_shape, dtype=float)
+                
+                structural_modal_solver = app().main_window.project.structural_modal_solver
+                if structural_modal_solver is not None:
+                    if structural_modal_solver.modal_shape is not None:
+                        natural_frequencies = structural_modal_solver.natural_frequencies
+                        modal_shape = structural_modal_solver.modal_shape
+                        f.create_dataset("modal_structural/natural_frequencies", data=natural_frequencies, dtype=float)
+                        f.create_dataset("modal_structural/modal_shape", data=modal_shape, dtype=float)
+
+                acoustic_harmonic_solver = app().main_window.project.acoustic_harmonic_solver
+                if acoustic_harmonic_solver is not None:
+                    if acoustic_harmonic_solver.solution is not None:
+                        frequencies = acoustic_harmonic_solver.frequencies
+                        solution = acoustic_harmonic_solver.solution
+                        f.create_dataset("harmonic_acoustic/frequencies", data=frequencies, dtype=float)
+                        f.create_dataset("harmonic_acoustic/solution", data=solution, dtype=complex)
+                
+                structural_harmonic_solver = app().main_window.project.structural_harmonic_solver
+                if structural_harmonic_solver is not None:
+                    if structural_harmonic_solver.solution is not None:
+                        frequencies = acoustic_harmonic_solver.frequencies
+                        solution = acoustic_harmonic_solver.solution
+                        f.create_dataset("harmonic_structural/frequencies", data=frequencies, dtype=float)
+                        f.create_dataset("harmonic_structural/solution", data=solution, dtype=complex)
+
+    def read_results_data_from_file(self):
+        
+        results_data = dict()
+
+        try:
+
+            with self.vibra_file.open(self.results_data_filename) as internal_file:
+                with h5py.File(internal_file, "r") as f:
+
+                    for group in list(f.keys()):
+                        aux = dict()
+                        for key, values in f.get(group).items():
+
+                            try:
+                                aux[key] = np.array(values)
+                            except:
+                                continue
+
+                        if aux:
+                            results_data[group] = aux
+
+        except:
+            return dict()
+
+        return results_data

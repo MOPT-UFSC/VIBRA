@@ -8,41 +8,47 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import *
 
-from vibra import UI_DIR
-from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
+from vibra import app, UI_DIR
+from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.utils.interface_functions import get_main_window
 
-window_title_1 = "ERROR"
-window_title_2 = "WARNING"
+window_title_1 = "Error"
+window_title_2 = "Warning"
 
 
 class SetAnechoicTerminationInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/acoustic/set_anechoic_termination_input.ui"
+        ui_path = UI_DIR / "model/setup/acoustic/set_anechoic_termination_input.ui"
         uic.loadUi(ui_path, self)
 
-        icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.icon = QIcon(icon_path)
-        self.setWindowIcon(self.icon)
+        self.main_window = app().main_window
+        self.project = app().main_window.project
+        self.model = app().main_window.project.model
+        self.mesh = app().main_window.project.model.mesh
+        self.properties = app().main_window.project.model.properties
+
+        self.main_window.set_input_widget(self)
+        self.main_window.viewer_tabs.show_geometry()
+
+        self._reset()
+        self._config_window()
+        self._define_qt_variables()
+        self._create_connections()
+
+        ConfigWidgetAppearance(self, tool_tip=True)
+
+        self.load_info()
+        self.geometry_selection_callback()
+        self.exec()
+
+    def _config_window(self):
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle("Set anechoic termination")
-
-        self.main_window = get_main_window()
-        self.main_window.set_input_widget(self)
-        self.main_window.viewer_tabs.show_geometry()
-        self.project = self.main_window.project
-        self.model = self.project.model
-        self.properties = self.model.properties
-
-        self._reset()
-        self._define_qt_variables()
-        self._create_connections()
-        self.load_info()
-        self.exec()
 
     def _reset(self):
         self.typed_ids = []
@@ -50,11 +56,6 @@ class SetAnechoicTerminationInputs(QDialog):
         self.anechoic_termination = None
         self.userPath = os.path.expanduser("~")
         self.new_load_path_table = ""
-        self.project_path = self.project.file.project_path
-        self.acoustic_bc_filename = self.project.file.acoustic_model_setup_filename
-        self.acoustic_bc_info_path = os.path.join(self.project_path, self.acoustic_bc_filename)
-        self.acoustic_folder_path = self.project.file.acoustic_imported_data_folder_path
-        self.anechoic_termination_tables_folder_path = os.path.join(self.acoustic_folder_path, "anechoic_termination_files")
 
     def _define_qt_variables(self):
         
@@ -87,8 +88,7 @@ class SetAnechoicTerminationInputs(QDialog):
         self.treeWidget_anechoic_termination.itemClicked.connect(self.on_click_item)
         self.treeWidget_anechoic_termination.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        geometry_widget = self.main_window.viewer_tabs.geometry_widget
-        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
+        self.main_window.selection_changed.connect(self.geometry_selection_callback)
 
     def tabEvent_callback(self):
         current_tab = self.tabWidget_anechoic_termination.currentIndex()
@@ -118,19 +118,19 @@ class SetAnechoicTerminationInputs(QDialog):
                     self.treeWidget_anechoic_termination.addTopLevelItem(new)
         self.update_tabs_visibility()
 
-    def geometry_selection_callback(self, points, lines, faces):
+    def geometry_selection_callback(self):
+
+        faces = self.main_window.selected_geometry_surfaces
+
         if faces:
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
-            self.update_volumes_from_faces()
-
-        elif not any([points, lines, faces]):
-            self.lineEdit_selection_id.setText("")       
+            self.update_volumes_from_faces()  
 
     def update_volumes_from_faces(self):
 
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.model.check_input_surface_id(lineEdit_selection_id)
+        self.stop, self.typed_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
 
         list_volumes = list()
         for face_id in self.typed_ids:            
@@ -154,7 +154,7 @@ class SetAnechoicTerminationInputs(QDialog):
     def confirm_button_pressed(self):
 
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.model.check_input_surface_id(lineEdit_selection_id)
+        self.stop, self.typed_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return
@@ -178,8 +178,9 @@ class SetAnechoicTerminationInputs(QDialog):
 
         for face_id in self.typed_ids:
             self.project.set_specific_impedance(data, face_id)
+        self.main_window.viewer_tabs.update_info_text()
 
-        self.properties.export_model_properties()
+        app().main_window.file.write_model_properties_in_file()
 
         print(f"[Set anechoic termination] - defined at surface(s) {self.typed_ids}")
         self.close()
@@ -225,16 +226,16 @@ class SetAnechoicTerminationInputs(QDialog):
             message = "Would you like to remove the all anechoic terminations from the model?"
 
             buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
-            read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
+            read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
-            if read._doNotRun:
+            if read._cancel:
                 return
 
             if read._continue:
                 for face_id in surface_ids:
                     self.properties._remove_surface_property("specific_impedance", face_id)
 
-                self.properties.export_model_properties()
+                app().main_window.file.write_model_properties_in_file()
                 self.close()
 
     def update(self):

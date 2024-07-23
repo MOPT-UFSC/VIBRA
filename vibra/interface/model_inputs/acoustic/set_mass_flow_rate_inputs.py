@@ -8,41 +8,43 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import *
 
-from vibra import UI_DIR
-from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
+from vibra import app, UI_DIR
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.utils.interface_functions import get_main_window
 
-window_title_1 = "ERROR"
-window_title_2 = "WARNING"
+window_title_1 = "Error"
+window_title_2 = "Warning"
 
 
 class MassFlowRateInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/acoustic/mass_flow_rate_input.ui"
+        ui_path = UI_DIR / "model/setup/acoustic/mass_flow_rate_input.ui"
         uic.loadUi(ui_path, self)
 
-        icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.icon = QIcon(icon_path)
-        self.setWindowIcon(self.icon)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Set mass flow rate acoustic excitation")
-
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
-        self.project = self.main_window.project
-        self.model = self.project.model
-        self.properties = self.model.properties
+
+        self.project = app().main_window.project
+        self.model = app().main_window.project.model
+        self.mesh = app().main_window.project.model.mesh
+        self.properties = app().main_window.project.model.properties
 
         self._reset_variables()
+        self._config_window()
         self._define_qt_variables()
         self._create_connections()
         self.load_info()
+        self.geometry_selection_callback()
         self.exec()
+
+    def _config_window(self):
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(self.main_window.vibra_icon)
+        self.setWindowTitle("Set mass flow rate acoustic excitation")
 
     def _reset_variables(self):
         self.typed_ids = []
@@ -50,13 +52,6 @@ class MassFlowRateInput(QDialog):
         self.mass_flow_rate = None
         self.userPath = os.path.expanduser("~")
         self.new_load_path_table = ""
-        self.project_path = self.project.file.project_path
-        self.acoustic_bc_filename = self.project.file.acoustic_model_setup_filename
-        self.acoustic_bc_info_path = os.path.join(self.project_path, self.acoustic_bc_filename)
-        self.acoustic_folder_path = self.project.file.acoustic_imported_data_folder_path
-        self.mass_flow_rate_tables_folder_path = os.path.join(
-            self.acoustic_folder_path, "mass_flow_rate_files"
-        )
 
     def _define_qt_variables(self):
         # QCheckBox objects
@@ -119,8 +114,7 @@ class MassFlowRateInput(QDialog):
         self.treeWidget_mass_flow_rate.itemClicked.connect(self.on_click_item)
         self.treeWidget_mass_flow_rate.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        geometry_widget = self.main_window.viewer_tabs.geometry_widget
-        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
+        self.main_window.selection_changed.connect(self.geometry_selection_callback)
 
     def tabEvent_mass_flow_rate(self):
         self.current_tab = self.tabWidget_mass_flow_rate.currentIndex()
@@ -151,13 +145,13 @@ class MassFlowRateInput(QDialog):
                 self.treeWidget_mass_flow_rate.addTopLevelItem(new)
         self.update_tabs_visibility()
 
-    def geometry_selection_callback(self, points, lines, faces):
+    def geometry_selection_callback(self):
+
+        faces = self.main_window.selected_geometry_surfaces
+
         if faces:
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
-
-        elif not any([points, lines, faces]):
-            self.lineEdit_selection_id.setText("")
 
     def check_complex_entries(self, lineEdit_real, lineEdit_imag):
         self.stop = False
@@ -167,7 +161,7 @@ class MassFlowRateInput(QDialog):
                 real_F = float(lineEdit_real.text())
             except Exception:
                 message = "Wrong input for real part of volume velocity."
-                PrintMessageInput([title, message, window_title_1])
+                PrintMessageInput([window_title_1, title, message])
                 self.lineEdit_real_value.setFocus()
                 self.stop = True
                 return
@@ -179,7 +173,7 @@ class MassFlowRateInput(QDialog):
                 imag_F = float(lineEdit_imag.text())
             except Exception:
                 message = "Wrong input for imaginary part of volume velocity."
-                PrintMessageInput([title, message, window_title_1])
+                PrintMessageInput([window_title_1, title, message])
                 self.lineEdit_imag_value.setFocus()
                 self.stop = True
                 return
@@ -193,7 +187,7 @@ class MassFlowRateInput(QDialog):
 
     def check_constant_values(self):
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.model.check_input_surface_id(lineEdit_selection_id)
+        self.stop, self.typed_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return
@@ -227,7 +221,7 @@ class MassFlowRateInput(QDialog):
             for _id in self.typed_ids:
                 self.project.set_mass_flow_rate(data, _id)
 
-            self.properties.export_model_properties()
+            app().main_window.file.write_model_properties_in_file()
 
             print(f"[Set Mass Flow Rate] - defined at surface(s) {self.typed_ids}")
             # TODO: remove existing tables and update the render
@@ -237,7 +231,7 @@ class MassFlowRateInput(QDialog):
             title = "Additional inputs required"
             message = "You must inform at least one volume velocity\n"
             message += "before confirming the input!"
-            PrintMessageInput([title, message, window_title_1])
+            PrintMessageInput([window_title_1, title, message])
             self.lineEdit_real_value.setFocus()
 
     def load_table(self, lineEdit, direct_load=False):
@@ -262,7 +256,7 @@ class MassFlowRateInput(QDialog):
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"
                 message += " data must have three columns in the form: frequencies, real and imaginary values."
-                PrintMessageInput([title, message, window_title_1])
+                PrintMessageInput([window_title_1, title, message])
                 return None, None
 
             imported_values = imported_file[:, 1]
@@ -285,7 +279,7 @@ class MassFlowRateInput(QDialog):
 
         except Exception as log_error:
             message = str(log_error)
-            PrintMessageInput([title, message, window_title_1])
+            PrintMessageInput([window_title_1, title, message])
             lineEdit.setFocus()
             return None, None
 
@@ -314,67 +308,61 @@ class MassFlowRateInput(QDialog):
         except Exception as log_error:
             title = "Error reached while saving table files"
             message = str(log_error)
-            PrintMessageInput([title, message, window_title_1])
+            PrintMessageInput([window_title_1, title, message])
             return None, None
 
     def load_mass_flow_rate_table(self):
-        self.imported_values, self.filename_mass_flow_rate = self.load_table(
-            self.lineEdit_load_table_path
-        )
+        self.imported_values, self.basename = self.load_table(self.lineEdit_load_table_path)
 
     def check_table_values(self):
+
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.model.check_input_surface_id(lineEdit_selection_id)
+        self.stop, self.typed_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return
 
         for _id in self.typed_ids:
             self.properties._remove_surface_property("acoustic_pressure", _id)
+            self.properties._remove_surface_property("surface_velocity", _id)
             self.properties._remove_surface_property("compressor_excitation", _id)
 
-        list_table_names = self.get_list_table_names_from_selected_surfaces(self.typed_ids)
         if self.lineEdit_load_table_path != "":
             for _id in self.typed_ids:
-                if self.filename_mass_flow_rate is None:
-                    self.imported_values, self.filename_mass_flow_rate = self.load_table(
-                        self.lineEdit_load_table_path, direct_load=True
-                    )
+                if self.basename is None:
+                    self.imported_values, self.basename = self.load_table(  self.lineEdit_load_table_path, 
+                                                                            direct_load=True  )
+
                 if self.imported_values is None:
                     return
-                else:
-                    self.mass_flow_rate, self.basename_mass_flow_rate = self.save_table_file(
-                        _id, self.imported_values, self.filename_mass_flow_rate
-                    )
-                    if self.basename_mass_flow_rate in list_table_names:
-                        list_table_names.remove(self.basename_mass_flow_rate)
 
-                    real_values = list(np.real(self.mass_flow_rate))
-                    imag_values = list(np.imag(self.mass_flow_rate))
+                else:
+                    
+                    real_values = list(self.imported_values[:, 1])
+                    imag_values = list(self.imported_values[:, 2])
 
                     nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
                     key_avg = self.checkBox_averaged_constant_values.isChecked()
 
                     data = {
-                        "real_values": real_values,
-                        "imag_values": imag_values,
-                        "nodal_attribution": nodal_attribution,
-                        "averaged": key_avg,
-                        "table_name": self.basename_mass_flow_rate,
-                    }
+                                "real_values": real_values,
+                                "imag_values": imag_values,
+                                "nodal_attribution": nodal_attribution,
+                                "averaged": key_avg,
+                                "table_name": self.basename,
+                            }
 
                     self.project.set_mass_flow_rate(data, _id)
 
-            self.properties.export_model_properties()
+            app().main_window.file.write_model_properties_in_file()
 
-            self.process_table_file_removal(list_table_names)
             print(f"[Set Volume Velocity] - defined at surface(s) {self.typed_ids}")
             self.close()
         else:
             title = "Additional inputs required"
             message = "You must inform at least one volume velocity\n"
             message += "table path before confirming the input!"
-            PrintMessageInput([title, message, window_title_1])
+            PrintMessageInput([window_title_1, title, message])
             self.lineEdit_load_table_path.setFocus()
 
     def get_list_table_names_from_selected_surfaces(self, list_ids):
@@ -423,18 +411,17 @@ class MassFlowRateInput(QDialog):
             if property == "mass_flow_rate":
                 surface_ids.append(surface_id)
 
-        if len(surface_ids) > 0:
-            title = f"Resetting of all applied volume velocities"
-            message = "Do you really want to remove the volume velocity applied to the following surface(s)?\n\n"
-            message += f"{surface_ids}"
-            message += (
-                "\n\nPress the Continue button to proceed with the resetting or press Cancel or "
-            )
-            message += "Close buttons to abort the current operation."
-            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
-            read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
+        if surface_ids:
 
-            if read._doNotRun:
+            title = f"Resetting of all applied volume velocities"
+
+            message = "Would you like to remove the volume velocity applied to the following surface(s)?\n\n"
+            message += f"{surface_ids}"
+
+            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
+            read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+
+            if read._cancel:
                 return
 
             _list_table_names = []
@@ -451,7 +438,7 @@ class MassFlowRateInput(QDialog):
                                 _list_table_names.append(table_name)
 
                 self.properties._reset_property("mass_flow_rate")
-                self.properties.export_model_properties()
+                app().main_window.file.write_model_properties_in_file()
 
                 # TODO: remove imported tables
                 self.process_table_file_removal(_list_table_names)
@@ -459,7 +446,7 @@ class MassFlowRateInput(QDialog):
                 title = "Volume velocity resetting process complete"
                 message = "All volume velocity applied to the acoustic "
                 message += "model have been removed from the model."
-                PrintMessageInput([title, message, window_title_2])
+                PrintMessageInput([window_title_2, title, message])
 
                 self.close()
 

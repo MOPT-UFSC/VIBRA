@@ -46,7 +46,7 @@ class CommonRenderWidget(QFrame):
         layout.addWidget(self.render_interactor)
         self.setLayout(layout)
 
-    def update_plot(self):
+    def update_plot(self, reset_camera=True):
         raise NotImplementedError("The function update_plot was not implemented")
 
     def update(self):
@@ -144,7 +144,7 @@ class CommonRenderWidget(QFrame):
 
         self.colorbar = vtk.vtkScalarBarActor()
         self.colorbar.SetLabelTextProperty(colorbar_label)
-        self.colorbar.SetLookupTable(lookup_table)
+        self.colorbar_actor.SetLookupTable(lookup_table)
         self.colorbar.SetWidth(0.02)
         self.colorbar.SetPosition(0.94, 0.07)
         self.colorbar.SetMaximumNumberOfColors(400)
@@ -267,3 +267,6 @@ class CommonRenderWidget(QFrame):
 
     def update_animation(self, frame):
         raise NotImplementedError('The function "update_animation" was not implemented!')
+    
+    def process_animation_frames(self):
+        raise NotImplementedError('The function "process_animation_frames" was not implemented!')

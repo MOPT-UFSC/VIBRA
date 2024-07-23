@@ -9,14 +9,9 @@ import numpy as np
 import pandas as pd
 import openpyxl
 
-from vibra import UI_DIR
+from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
 
-def get_icons_path(filename):
-    path = f"data/icons/{filename}"
-    if os.path.exists(path):
-        return str(Path(path))
-    
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
@@ -30,33 +25,28 @@ class ImportDataToCompare(QDialog):
         
         self.plotter = plotter
 
-        self._load_icons()
-        self._config_window()
-        self._reset_variables()
-        self._define_and_configure_Qt_variables()
-        self._create_connections()
-        self.exec()
+        self.main_window = app().main_window
 
-    def _load_icons(self):
-        self.import_icon = QIcon(get_icons_path('import.png'))
-        self.vibra_icon = QIcon(get_icons_path('logo_vibra.png'))
+        self._config_window()
+        self._initialize()
+        self._define_qt_variables()
+        self._create_connections()
+        self._config_widgets()
         
     def _config_window(self):    
-        self.setWindowIcon(self.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Import data to compare")
 
-    def _reset_variables(self):
+    def _initialize(self):
 
+        self.keep_window_open = True
         self.imported_data = None
 
         self.imported_results = dict()
         self.ids_to_checkBox = dict()
         self.checkButtons_state = dict()
-
-        self.userPath = os.path.expanduser('~')
-        self.imported_path = ""
 
         self.colors = [ [0,0,0],
                         [1,0,0],
@@ -66,22 +56,38 @@ class ImportDataToCompare(QDialog):
                         [0.5, 0.5, 0.5],
                         [0.25, 0.25, 0.25] ]
 
-    def _define_and_configure_Qt_variables(self):
+    def _define_qt_variables(self):
+
         # CheckBox
-        self.checkBox_skiprows = self.findChild(QCheckBox, "checkBox_skiprows")
+        self.checkBox_skiprows : QCheckBox
+
         # LineEdit
-        self.lineEdit_import_results_path = self.findChild(QLineEdit, 'lineEdit_import_results_path')
+        self.lineEdit_import_results_path : QLineEdit
         self.lineEdit_import_results_path.setDisabled(True)
+
         # PushButton
-        self.pushButton_add_imported_data_to_plot = self.findChild(QPushButton, 'pushButton_add_imported_data_to_plot')
-        self.pushButton_reset_imported_data = self.findChild(QPushButton, 'pushButton_reset_imported_data')
-        self.pushButton_search_file_to_import = self.findChild(QPushButton, 'pushButton_search_file_to_import')
-        self.pushButton_search_file_to_import.setIcon(self.import_icon)
+        self.pushButton_add_imported_data_to_plot : QPushButton
+        self.pushButton_reset_imported_data : QPushButton
+        self.pushButton_search_file_to_import : QPushButton
+
         # SpinBox
-        self.spinBox_skiprows = self.findChild(QSpinBox, 'spinBox_skiprows')
+        self.spinBox_skiprows : QSpinBox
+
         # TreeWidget
-        self.treeWidget_import_text_files = self.findChild(QTreeWidget, "treeWidget_import_text_files")
-        self.treeWidget_import_sheet_files = self.findChild(QTreeWidget, "treeWidget_import_sheet_files")
+        self.treeWidget_import_text_files : QTreeWidget
+        self.treeWidget_import_sheet_files : QTreeWidget
+
+    def _create_connections(self):
+        #
+        self.checkBox_skiprows.clicked.connect(self.update_skiprows_visibility)
+        #
+        self.pushButton_search_file_to_import.clicked.connect(self.choose_path_to_import_results)
+        self.pushButton_reset_imported_data.clicked.connect(self.reset_imported_data)
+        self.pushButton_add_imported_data_to_plot.clicked.connect(self.add_imported_data_to_plot)
+        #
+        self.update_skiprows_visibility()
+        
+    def _config_widgets(self):
 
         widths_1 = [320, 60]
         for i, width in enumerate(widths_1):
@@ -91,32 +97,34 @@ class ImportDataToCompare(QDialog):
         for i, width in enumerate(widths_2):
             self.treeWidget_import_sheet_files.setColumnWidth(i, width)
 
-    def _create_connections(self):
-        self.checkBox_skiprows.clicked.connect(self.update_skiprows_visibility)
-        self.pushButton_search_file_to_import.clicked.connect(self.choose_path_import_results)
-        self.pushButton_reset_imported_data.clicked.connect(self.reset_imported_data)
-        self.pushButton_add_imported_data_to_plot.clicked.connect(self.add_imported_data_to_plot)
-        self.update_skiprows_visibility()
-        
     def update_skiprows_visibility(self):
         self.spinBox_skiprows.setDisabled(not self.checkBox_skiprows.isChecked())
 
-    def choose_path_import_results(self):
-        if self.imported_path == "":
-            _path = self.userPath
+    def choose_path_to_import_results(self):
+
+        path = app().config.get_last_folder_for("imported data folder")
+        if path is None:
+            folder_path = os.path.expanduser("~")
         else:
-            _path = os.path.dirname(self.imported_path)
+            folder_path = path
 
-        self.imported_path, _ = QFileDialog.getOpenFileName(None, 'Open file', _path, 'Files (*.csv *.dat *.txt *.xlsx *.xls)')
-        self.import_name = os.path.basename(self.imported_path)
-        self.lineEdit_import_results_path.setText(self.imported_path)
-        
-        if self.imported_path != "":
-            if os.path.exists(self.imported_path):
-                self.import_results()
-                self.update_treeWidget_info()
+        imported_path, check = QFileDialog.getOpenFileName( None, 
+                                                            'Open file', 
+                                                            folder_path, 
+                                                            'Files (*.csv *.dat *.txt *.xlsx *.xls)' )
 
-    def import_results(self):
+        if not check:
+            return
+
+        app().config.write_last_folder_path_in_file("imported data folder", imported_path)
+
+        self.import_name = os.path.basename(imported_path)
+        self.lineEdit_import_results_path.setText(imported_path)
+
+        self.import_results(imported_path)
+        self.update_treeWidget_info()
+
+    def import_results(self, imported_path):
         
         try:
 
@@ -131,10 +139,10 @@ class ImportDataToCompare(QDialog):
             
             while run:
                 try:
-                    sufix = Path(self.imported_path).suffix
-                    filename = os.path.basename(self.imported_path)
+                    sufix = Path(imported_path).suffix
+                    filename = os.path.basename(imported_path)
                     if sufix in [".txt", ".dat", ".csv"]:
-                        loaded_data = np.loadtxt(self.imported_path, 
+                        loaded_data = np.loadtxt(imported_path, 
                                                  delimiter = ",", 
                                                  skiprows = skiprows)
                         key = self.get_data_index()
@@ -143,17 +151,17 @@ class ImportDataToCompare(QDialog):
                                                         "extension" : sufix  }
 
                     elif sufix in [".xls", ".xlsx"]:
-                        wb = openpyxl.load_workbook(self.imported_path)
+                        wb = openpyxl.load_workbook(imported_path)
                         sheetnames = wb.sheetnames
                         for sheetname in sheetnames:
 
                             try:
-                                sheet_data = pd.read_excel(self.imported_path, 
+                                sheet_data = pd.read_excel(imported_path, 
                                                         sheet_name = sheetname, 
                                                         header = skiprows, 
                                                         usecols = [0,1,2]).to_numpy()
                             except:
-                                sheet_data = pd.read_excel(self.imported_path, 
+                                sheet_data = pd.read_excel(imported_path, 
                                                         sheet_name = sheetname, 
                                                         header = skiprows, 
                                                         usecols = [0,1]).to_numpy()
@@ -182,7 +190,7 @@ class ImportDataToCompare(QDialog):
             return
         
         if message != "":
-            PrintMessageInput([title, message, window_title_1])
+            PrintMessageInput([window_title_1, title, message])
 
     def update_treeWidget_info(self):
         self.cache_checkButtons_state()
@@ -214,7 +222,8 @@ class ImportDataToCompare(QDialog):
         index = 1
         run = True
         while run:
-            if index in self.plotter.data_to_plot.keys() or index in self.imported_results.keys():
+            # if index in self.plotter.model_results_data.keys() or index in self.imported_results.keys():
+            if index in self.imported_results.keys():
                 index += 1
             else:
                 key = index
@@ -224,6 +233,7 @@ class ImportDataToCompare(QDialog):
     
     def join_imported_data(self):
         j = 0
+        imported_results_data = dict()
         for id, checkBox in self.ids_to_checkBox.items():
             temp_dict = dict()
             if checkBox.isChecked():
@@ -259,7 +269,10 @@ class ImportDataToCompare(QDialog):
                                 "color" : color,
                                 "linestyle" : "--"   }
 
-                self.plotter.data_to_plot[id] = temp_dict
+                key = (id)
+                imported_results_data[key] = temp_dict
+
+        self.plotter._set_imported_results_data_to_plot(imported_results_data)
 
     def cache_checkButtons_state(self):
         self.checkButtons_state = dict()
@@ -270,14 +283,24 @@ class ImportDataToCompare(QDialog):
         self.lineEdit_import_results_path.setText("")
         self.treeWidget_import_sheet_files.clear()
         self.treeWidget_import_text_files.clear()
-        self._reset_variables()
+        self._initialize()
 
     def add_imported_data_to_plot(self):
         self.join_imported_data()
-        self.plotter.plot_data_in_freq_domain()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.add_imported_data_to_plot()
         elif event.key() == Qt.Key_Escape:
             self.close()
+
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
+
+        # if self.exporter is not None:
+        #     self.exporter.close()
+
+        # if self.importer is not None:
+        #     self.importer.close()
+
+        self.keep_window_open = False
+        return super().closeEvent(a0)

@@ -8,7 +8,6 @@ from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.utils.interface_functions import get_main_window
 
 import configparser
 import os
@@ -24,15 +23,17 @@ class DissipationModelInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/acoustic/dissipation_model_inputs.ui"
+        ui_path = UI_DIR / "model/setup/acoustic/dissipation_model_inputs.ui"
         uic.loadUi(ui_path, self)
 
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         self.main_window.set_input_widget(self)
+        self.main_window.viewer_tabs.show_geometry()
 
-        self.project = self.main_window.project
-        self.model = self.project.model
-        self.properties = self.model.properties
+        self.project = app().main_window.project
+        self.model = app().main_window.project.model
+        self.mesh = app().main_window.project.model.mesh
+        self.properties = app().main_window.project.model.properties
 
         self._load_icons()
         self._config_window()
@@ -42,6 +43,7 @@ class DissipationModelInput(QDialog):
         self.load_info()
 
         ConfigWidgetAppearance(self, tool_tip=True)
+        self.geometry_selection_callback()
 
         while self.keep_window_open:
             self.exec()
@@ -96,8 +98,7 @@ class DissipationModelInput(QDialog):
         self.treeWidget_dissipation_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_dissipation_model.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        geometry_widget = self.main_window.viewer_tabs.geometry_widget
-        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
+        self.main_window.selection_changed.connect(self.geometry_selection_callback)
         #
         self.update_attribution_type()
 
@@ -199,18 +200,18 @@ class DissipationModelInput(QDialog):
 
         self.update_tabs_visibility()
 
-    def geometry_selection_callback(self, points, lines, faces, volumes):
-        """ """
+    def geometry_selection_callback(self):
+
+        volumes = self.main_window.selected_geometry_volumes
+    
         if volumes:
 
             if self.comboBox_attribution_type.currentIndex() == 0:
-                return
+                self.comboBox_attribution_type.setCurrentIndex(1)
+                # return
 
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selected_id.setText(text)
-
-        elif not any([points, lines, faces]):
-            return
 
     def check_dissipation_model_entries(self):
 
@@ -241,7 +242,7 @@ class DissipationModelInput(QDialog):
         if self.comboBox_attribution_type.currentIndex():
 
             lineEdit_selected_id = self.lineEdit_selected_id.text()
-            self.stop, self.typed_ids = self.check_input_volume_id(lineEdit_selected_id)
+            self.stop, self.typed_ids = self.mesh.check_input_volume_id(lineEdit_selected_id)
             if self.stop:
                 self.lineEdit_selected_id.setFocus()
                 return True
@@ -250,7 +251,7 @@ class DissipationModelInput(QDialog):
 
         else:
 
-            volume_ids = list(self.project.model.mesh.nodes_from_volumes.keys())
+            volume_ids = list(self.mesh.nodes_from_volumes.keys())
 
 
         if self.check_dissipation_model_entries():
@@ -264,64 +265,19 @@ class DissipationModelInput(QDialog):
                 }
 
         for volume_id in volume_ids:
-            if volume_id in list(self.project.model.mesh.nodes_from_volumes.keys()):
+            if volume_id in list(self.mesh.nodes_from_volumes.keys()):
                 self.project.set_dissipation_model(data, volume=volume_id)
         
         print(f"The dissipation model has been attributed to volumes: {volume_ids}")
 
         self.close()
 
-    def check_input_volume_id(self, lineEdit, single_ID=False):
-        try:
-            title = "Invalid entry to the Surface ID"
-            message = ""
-            tokens = lineEdit.strip().split(",")
-            self.volume_ids = self.project.model.mesh.nodes_from_volumes.keys()
-
-            try:
-                tokens.remove("")
-            except:
-                pass
-
-            _size = len(self.volume_ids)
-            list_ids = list(map(int, tokens))
-
-            if len(list_ids) == 0:
-                message = "An empty input field for the Surface ID has been detected. Please, enter a valid Surface ID to proceed."
-
-            elif len(list_ids) >= 1:
-                if single_ID and len(list_ids) > 1:
-                    message = "Multiple Selected IDs"
-                else:
-                    try:
-                        for _id in list_ids:
-                            if _id not in self.volume_ids:
-                                message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                                message += f"The input value(s) must be integer(s) number(s) N such that 1 <= N <= {_size}."
-                                break
-                    except Exception as error_log:
-                        message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                        message += f"The input value(s) must be integer(s) number(s) N such that 1 <= N <= {_size}."
-                        message += f"\n\n{str(error_log)}"
-
-        except Exception as log_error:
-            message = "Wrong input for the Selected ID's. "
-            message += f"\n\n{str(log_error)}"
-
-        if message != "":
-            PrintMessageInput([title, message, window_title_1])
-            return True, []
-
-        if single_ID:
-            return False, list_ids[0]
-        else:
-            return False, list_ids
-
     def check_inputs(self, lineEdit, label, only_positive=False, zero_included=True, _float=True):
+
         self.stop = False
         message = ""
+
         title = "Invalid input at dissipation model"
-        window_title = "ERROR"
         if lineEdit.text() != "":
             try:
                 if _float:
@@ -351,7 +307,7 @@ class DissipationModelInput(QDialog):
                 message = f"Insert some value at the {label} input field."
 
         if message != "":
-            PrintMessageInput([title, message, window_title])
+            PrintMessageInput([window_title_1, title, message])
             self.stop = True
             return None
         return out

@@ -31,3 +31,6 @@ class SelectionSpheres(vtk.vtkActor):
     
     def configure_appearance(self):
         self.GetProperty().SetOpacity(0.4)
+        self.GetProperty().SetColor([1, 0, 0])
+        self.VisibilityOff()
+        self.PickableOff()

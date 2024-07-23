@@ -170,6 +170,18 @@
       </property>
       <item row="3" column="0">
        <widget class="QFrame" name="frame_5">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>52</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>52</height>
+         </size>
+        </property>
         <property name="frameShape">
          <enum>QFrame::NoFrame</enum>
         </property>
@@ -189,21 +201,24 @@
          <property name="bottomMargin">
           <number>2</number>
          </property>
-         <property name="spacing">
+         <property name="horizontalSpacing">
+          <number>6</number>
+         </property>
+         <property name="verticalSpacing">
           <number>2</number>
          </property>
          <item row="1" column="2">
           <widget class="QComboBox" name="comboBox_processing_selector">
            <property name="minimumSize">
             <size>
-             <width>140</width>
-             <height>28</height>
+             <width>168</width>
+             <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>140</width>
-             <height>28</height>
+             <width>168</width>
+             <height>30</height>
             </size>
            </property>
            <property name="font">
@@ -249,14 +264,14 @@
           <widget class="QLabel" name="label_2">
            <property name="minimumSize">
             <size>
-             <width>0</width>
-             <height>28</height>
+             <width>80</width>
+             <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>140</width>
-             <height>28</height>
+             <width>80</width>
+             <height>30</height>
             </size>
            </property>
            <property name="font">
@@ -321,7 +336,10 @@
          <property name="bottomMargin">
           <number>2</number>
          </property>
-         <property name="spacing">
+         <property name="horizontalSpacing">
+          <number>6</number>
+         </property>
+         <property name="verticalSpacing">
           <number>2</number>
          </property>
          <item row="0" column="3">
@@ -353,13 +371,13 @@
               <property name="minimumSize">
                <size>
                 <width>40</width>
-                <height>28</height>
+                <height>30</height>
                </size>
               </property>
               <property name="maximumSize">
                <size>
                 <width>40</width>
-                <height>28</height>
+                <height>30</height>
                </size>
               </property>
               <property name="font">
@@ -372,15 +390,17 @@
                </font>
               </property>
               <property name="toolTip">
-               <string>Press to export the selected model result.</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; font-weight:400;&quot;&gt;Press to invert the selected IDs&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="styleSheet">
-               <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 bold 11pt &quot;MS Shell Dlg 2&quot;}
-QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 bold 11pt &quot;MS Shell Dlg 2&quot;}
-QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 bold 11pt &quot;MS Shell Dlg 2&quot;}</string>
+               <string notr="true"/>
               </property>
               <property name="text">
                <string/>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../../../icons/invert_icon.png</normaloff>../../../icons/invert_icon.png</iconset>
               </property>
               <property name="iconSize">
                <size>
@@ -400,14 +420,14 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
           <widget class="QLabel" name="label_15">
            <property name="minimumSize">
             <size>
-             <width>90</width>
-             <height>28</height>
+             <width>80</width>
+             <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>90</width>
-             <height>28</height>
+             <width>80</width>
+             <height>30</height>
             </size>
            </property>
            <property name="font">
@@ -431,14 +451,14 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
           <widget class="QLineEdit" name="lineEdit_input_surface_id">
            <property name="minimumSize">
             <size>
-             <width>100</width>
-             <height>28</height>
+             <width>120</width>
+             <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
              <width>120</width>
-             <height>28</height>
+             <height>30</height>
             </size>
            </property>
            <property name="font">
@@ -531,14 +551,14 @@ background-color: rgb(255,255,255)</string>
           <widget class="QPushButton" name="pushButton_plot_frequency_response">
            <property name="minimumSize">
             <size>
-             <width>100</width>
-             <height>30</height>
+             <width>120</width>
+             <height>32</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>100</width>
-             <height>30</height>
+             <width>120</width>
+             <height>32</height>
             </size>
            </property>
            <property name="font">
@@ -551,9 +571,7 @@ background-color: rgb(255,255,255)</string>
             </font>
            </property>
            <property name="styleSheet">
-            <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240)}
-QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100)}
-QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255)}</string>
+            <string notr="true"/>
            </property>
            <property name="text">
             <string>Plot data</string>
@@ -566,7 +584,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
         </layout>
        </widget>
       </item>
-      <item row="2" column="0">
+      <item row="0" column="0">
        <widget class="QFrame" name="frame_4">
         <property name="minimumSize">
          <size>
@@ -599,21 +617,24 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
          <property name="bottomMargin">
           <number>2</number>
          </property>
-         <property name="spacing">
+         <property name="horizontalSpacing">
+          <number>6</number>
+         </property>
+         <property name="verticalSpacing">
           <number>2</number>
          </property>
          <item row="0" column="1">
           <widget class="QLabel" name="label_10">
            <property name="minimumSize">
             <size>
-             <width>90</width>
-             <height>28</height>
+             <width>80</width>
+             <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>90</width>
-             <height>28</height>
+             <width>80</width>
+             <height>30</height>
             </size>
            </property>
            <property name="font">
@@ -662,13 +683,13 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
               <property name="minimumSize">
                <size>
                 <width>40</width>
-                <height>28</height>
+                <height>30</height>
                </size>
               </property>
               <property name="maximumSize">
                <size>
                 <width>40</width>
-                <height>28</height>
+                <height>30</height>
                </size>
               </property>
               <property name="font">
@@ -681,19 +702,17 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
                </font>
               </property>
               <property name="toolTip">
-               <string>Press to export the selected model result.</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; font-weight:400;&quot;&gt;Press to export the current transmission loss or noise reduction&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="styleSheet">
-               <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 bold 11pt &quot;MS Shell Dlg 2&quot;}
-QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 bold 11pt &quot;MS Shell Dlg 2&quot;}
-QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 bold 11pt &quot;MS Shell Dlg 2&quot;}</string>
+               <string notr="true"/>
               </property>
               <property name="text">
                <string/>
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>../../../../vibra/data/icons/save.png</normaloff>../../../../vibra/data/icons/save.png</iconset>
+                <normaloff>../../../icons/save_as.png</normaloff>../../../icons/save_as.png</iconset>
               </property>
               <property name="iconSize">
                <size>
@@ -713,14 +732,14 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
           <widget class="QLineEdit" name="lineEdit_output_surface_id">
            <property name="minimumSize">
             <size>
-             <width>100</width>
-             <height>28</height>
+             <width>120</width>
+             <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
              <width>120</width>
-             <height>28</height>
+             <height>30</height>
             </size>
            </property>
            <property name="font">
@@ -778,6 +797,14 @@ background-color: rgb(255,255,255)</string>
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>lineEdit_output_surface_id</tabstop>
+  <tabstop>lineEdit_input_surface_id</tabstop>
+  <tabstop>comboBox_processing_selector</tabstop>
+  <tabstop>pushButton_plot_frequency_response</tabstop>
+  <tabstop>pushButton_flip_selection</tabstop>
+  <tabstop>pushButton_call_data_exporter</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

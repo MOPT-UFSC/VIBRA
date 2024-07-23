@@ -1,13 +1,15 @@
 from PyQt5.QtWidgets import QLabel, QStatusBar
 
 from vibra.utils.interface_functions import get_main_window
+from vibra import app
 
 
 class StatusBar(QStatusBar):
     def __init__(self, parent):
         super().__init__(parent)
 
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
+
         self._create_qt_variables()
         self._config_widgets()
         self._config_sizes()

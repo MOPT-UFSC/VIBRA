@@ -6,7 +6,7 @@ from PyQt5 import uic
 from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.model_inputs.acoustic.fluid.load_fluid_composition_input import LoadFluidCompositionInput
-from vibra.interface.general.print_message_input2 import PrintMessageInput
+from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.utils.utils import *
 
@@ -65,14 +65,11 @@ class SetFluidCompositionInput(QDialog):
     def _initialize(self):
 
         self.selected_row = None
-
         self.keep_window_open = True
-        self.composition_file_path = ""
 
-        self.save_path = ""
+        self.composition_file_path = ""
         self.export_file_path = ""
         self.user_path = os.path.expanduser('~')
-        self.fluid_path = self.project.get_fluid_list_path()
 
         # self.isentropic_label = "ISENK"   # isentropic exponent (real gas)
         self.isentropic_label = "CP/CV"     # isentropic expansion coefficient (ideal gas)
@@ -973,6 +970,7 @@ class SetFluidCompositionInput(QDialog):
 
         self.fluid_data = dict()
         self.fluid_to_composition = dict()
+
         read = LoadFluidCompositionInput(file_path = self.composition_file_path)
 
         if read.complete:

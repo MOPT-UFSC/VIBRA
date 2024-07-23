@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QAction, QMenu
 from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
     CommonRenderWidget,
 )
+from vibra import ICON_DIR
 from vibra.utils.icons import load_icon
 
 
@@ -19,13 +20,13 @@ class ViewsMenu(QMenu):
 
     def create_actions(self):
         color = QColor("#448cff")
-        self.top_view_icon = load_icon(Path("data/icons/top.png"), color)
-        self.bottom_view_icon = load_icon(Path("data/icons/bottom.png"), color)
-        self.right_view_icon = load_icon(Path("data/icons/right.png"), color)
-        self.left_view_icon = load_icon(Path("data/icons/left.png"), color)
-        self.back_view_icon = load_icon(Path("data/icons/back.png"), color)
-        self.front_view_icon = load_icon(Path("data/icons/front.png"), color)
-        self.isometric_view_icon = load_icon(Path("data/icons/orthogonal.png"), color)
+        self.top_view_icon = load_icon(ICON_DIR / "views/top.png", color)
+        self.bottom_view_icon = load_icon(ICON_DIR / "views/bottom.png", color)
+        self.right_view_icon = load_icon(ICON_DIR / "views/right.png", color)
+        self.left_view_icon = load_icon(ICON_DIR / "views/left.png", color)
+        self.back_view_icon = load_icon(ICON_DIR / "views/back.png", color)
+        self.front_view_icon = load_icon(ICON_DIR / "views/front.png", color)
+        self.isometric_view_icon = load_icon(ICON_DIR / "views/orthogonal.png", color)
         self.top_view_action = QAction(self.top_view_icon, "Top View", self)
         self.bottom_view_action = QAction(self.bottom_view_icon, "Bottom View", self)
         self.left_view_action = QAction(self.left_view_icon, "Left View", self)

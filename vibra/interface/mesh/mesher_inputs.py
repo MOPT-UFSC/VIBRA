@@ -5,13 +5,19 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
 
-from vibra import UI_DIR
+from vibra import app, UI_DIR
+from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.engine.mesher.element_type import *
-from vibra.interface.general.print_message_input2 import PrintMessageInput
+from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_bar import load_function
-from vibra.utils.interface_functions import get_main_window
+from vibra.utils.progress_status import ProgressStatus
 
+import logging
 from pathlib import Path
+
+window_title_1 = "Error"
+window_title_2 = "Warning"
+
 
 class MesherInputs(QDialog):
     def __init__(self, **kwargs):
@@ -20,44 +26,59 @@ class MesherInputs(QDialog):
         ui_path = UI_DIR / "mesh/mesher_setup.ui"
         uic.loadUi(ui_path, self)
 
-        icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.icon = QIcon(icon_path)
-        self.setWindowIcon(self.icon)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Mesher setup")
+        self.close_after_generate = kwargs.get("close_after_generate", False)
 
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         self.main_window.set_input_widget(self)
+
         geometry_widget = self.main_window.viewer_tabs.geometry_widget
         geometry_widget.selection_changed.connect(self.geometry_selection_callback)
 
-        self.close_after_generate = kwargs.get("close_after_generate", False)
-        self.complete = False
+        self._config_window()
+        self._initialize()
         self._define_qt_variables()
         self._create_connections()
+
+        ConfigWidgetAppearance(self, tool_tip=True)
+
+        self._load_current_mesh_setup()
         self.exec()
 
+    def _initialize(self):
+        self.complete = False
+
+    def _config_window(self):
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(self.main_window.vibra_icon)
+        self.setWindowTitle("Mesher setup")
+
     def _define_qt_variables(self):
-        # QCheckbox objects
-        self.checkBox_mesh_connection = self.findChild(QCheckBox, 'checkBox_mesh_connection')
-        # QComboBox objects
-        self.comboBox_element_type = self.findChild(QComboBox, 'comboBox_element_type')
-        self.comboBox_shape_function = self.findChild(QComboBox, 'comboBox_shape_function')
+
+        # QCheckbox
+        self.checkBox_mesh_connection : QCheckBox
+
+        # QComboBox
+        self.comboBox_element_type : QComboBox
+        self.comboBox_shape_function : QComboBox
+
         # QDoubleSpinBox
-        self.doubleSpinBox_maximum_element_size_factor = self.findChild(QDoubleSpinBox, 'doubleSpinBox_maximum_element_size_factor')
-        self.doubleSpinBox_minimum_element_size_factor = self.findChild(QDoubleSpinBox, 'doubleSpinBox_minimum_element_size_factor')
-        # QLineEdit objects
-        self.lineEdit_maximum_element_size = self.findChild(QLineEdit, 'lineEdit_maximum_element_size')
-        self.lineEdit_geometry_tolerance = self.findChild(QLineEdit, 'lineEdit_geometry_tolerance')
-        self.lineEdit_refining_size = self.findChild(QLineEdit, 'lineEdit_refining_size')
-        self.lineEdit_faces_list = self.findChild(QLineEdit, 'lineEdit_faces_list')
-        # QPushButton objects
-        self.pushButton_add = self.findChild(QPushButton, 'pushButton_add')
-        self.pushButton_delete = self.findChild(QPushButton, 'pushButton_delete')
-        self.pushButton_generate_mesh = self.findChild(QPushButton, 'pushButton_generate_mesh')
-        # QTableWidget objects
-        self.tableWidget_refining_mesh_data = self.findChild(QTableWidget, 'tableWidget_refining_mesh_data')
+        self.doubleSpinBox_maximum_element_size : QDoubleSpinBox
+        self.doubleSpinBox_minimum_element_size_factor : QDoubleSpinBox
+
+        # QLineEdit
+        self.lineEdit_maximum_element_size : QLineEdit
+        self.lineEdit_geometry_tolerance : QLineEdit
+        self.lineEdit_refining_size : QLineEdit
+        self.lineEdit_faces_list : QLineEdit
+
+        # QPushButton
+        self.pushButton_add : QPushButton
+        self.pushButton_delete : QPushButton
+        self.pushButton_generate_mesh : QPushButton
+
+        # QTableWidget
+        self.tableWidget_refining_mesh_data : QTableWidget
         self._config_tableWidget_appearance()
 
     def _config_tableWidget_appearance(self):
@@ -72,21 +93,76 @@ class MesherInputs(QDialog):
     def _create_connections(self):
         self.pushButton_add.clicked.connect(self.add_button_callback)
         self.pushButton_delete.clicked.connect(self.trash_button_callback)
-        self.pushButton_generate_mesh.clicked.connect(self.pushButton_generate_mesh_callback)
+        self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
 
-    def pushButton_generate_mesh_callback(self):
+    def _load_current_mesh_setup(self):
+        mesh_setup = app().main_window.project.model.mesh_setup
+        if mesh_setup:
+            try:
+                element_type = mesh_setup["element_type"]
+                geometry_tolerance = mesh_setup["geometry_tolerance"]
+                minimum_element_size = mesh_setup["minimum_element_size"]
+                maximum_element_size = mesh_setup["maximum_element_size"]
+                size_factor = minimum_element_size / maximum_element_size
+                # TODO: finalize in future updates
+                # mesh_refinement_parameters = mesh_setup["mesh_refinement_parameters"]
+                mesh_connection = mesh_setup["mesh_connection"]
+
+                self.update_element_type(element_type)
+                
+                self.doubleSpinBox_maximum_element_size.setValue(maximum_element_size)
+                self.doubleSpinBox_minimum_element_size_factor.setValue(size_factor)
+                self.lineEdit_geometry_tolerance.setText(str(geometry_tolerance))
+                self.checkBox_mesh_connection.setChecked(mesh_connection)
+
+            except Exception as error_log:
+                print(str(error_log))
+                pass
+
+    def update_element_type(self, element_type):
+        if element_type == TETRAHEDRON_4:
+            self.comboBox_element_type.setCurrentIndex(0)
+            self.comboBox_shape_function.setCurrentIndex(0)
+        elif element_type == TETRAHEDRON_10:
+            self.comboBox_element_type.setCurrentIndex(0)
+            self.comboBox_shape_function.setCurrentIndex(1)
+        elif element_type == HEXAHEDRON_8:
+            self.comboBox_element_type.setCurrentIndex(1)
+            self.comboBox_shape_function.setCurrentIndex(0)
+        elif element_type == HEXAHEDRON_20:
+            self.comboBox_element_type.setCurrentIndex(1)
+            self.comboBox_shape_function.setCurrentIndex(1)
+        else:
+            NotImplementedError()
+
+    def generate_mesh_callback(self):
 
         if self.check_mesh_inputs():
             return
-        
+
+        condition = self.lineEdit_faces_list.text() == "" and self.lineEdit_refining_size.text() == ""
+        if condition or self.close_after_generate:
+            self.close()
+
+        self.main_window.project.reset_solutions()
         self.main_window.project.set_mesh_setup(self.mesh_setup)
+        app().main_window.file.write_mesh_setup_in_file(self.file_mesh_setup)
+
         generate_mesh = load_function(self.main_window.project.generate_mesh, self.main_window)
         generate_mesh()
-        self.main_window.viewer_tabs.show_mesh()
-        self.main_window.viewer_tabs.update_plots()
+
+        app().main_window.file.write_mesh_data_in_file()
+
+        actions_to_finalize = load_function(self.actions_to_finalize, self.main_window)
+        actions_to_finalize()
+
         self.complete = True
-        if self.close_after_generate:
-            self.close()
+
+    def actions_to_finalize(self):
+        logging.info("Updating render..." + ProgressStatus(95, 100))
+        app().main_window.viewer_tabs.show_mesh()
+        app().main_window.viewer_tabs.close_analysis_tabs()
+        app().main_window.viewer_tabs.update_plots()
 
     def trash_button_callback(self):
         current_row = self.tableWidget_refining_mesh_data.currentRow()
@@ -116,7 +192,7 @@ class MesherInputs(QDialog):
         
     def check_mesh_inputs(self):
 
-        maximum_element_size = self.doubleSpinBox_maximum_element_size_factor.value()
+        maximum_element_size = self.doubleSpinBox_maximum_element_size.value()
         min_factor = self.doubleSpinBox_minimum_element_size_factor.value()
 
         lineEdit = self.lineEdit_geometry_tolerance
@@ -138,21 +214,35 @@ class MesherInputs(QDialog):
             solid_element = HEXAHEDRON_20
         else:
             raise NotImplementedError(f"Element type not defined!")
-        
+
         connected_mesh = self.checkBox_mesh_connection.isChecked()
-        self.mesh_setup = { "element_type": solid_element,
-                            "geometry_tolerance": geometry_tolerance,
-                            "size_factor": 0,
-                            "minimum_element_size": min_factor*maximum_element_size,
-                            "maximum_element_size": maximum_element_size,
-                            "mesh_refinement_parameters": self.get_inputs_table(),
-                            "mesh_connection": connected_mesh}
- 
+        self.mesh_setup = { 
+                            "element_type" : solid_element,
+                            "geometry_tolerance" : geometry_tolerance,
+                            "size_factor" : 0,
+                            "minimum_element_size" : min_factor*maximum_element_size,
+                            "maximum_element_size" : maximum_element_size,
+                            "mesh_refinement_parameters" : self.get_inputs_table(),
+                            "mesh_connection" : connected_mesh
+                            }
+        
+        self.file_mesh_setup = { 
+                                "element_type" : _element_type,
+                                "shape_function" : _shape_function,
+                                "geometry_tolerance" : geometry_tolerance,
+                                "size_factor" : 0,
+                                "minimum_element_size" : min_factor*maximum_element_size,
+                                "maximum_element_size" : maximum_element_size,
+                                "mesh_refinement_parameters" : list(),
+                                "mesh_connection" : connected_mesh
+                                }
+
     def check_inputs(self, lineEdit, label, only_positive=True, zero_included=False, _float=True):
+
         self.stop = False
         message = ""
         title = "Invalid input at mesh setup"
-        window_title = "ERROR"
+
         if lineEdit.text() != "":
             try:
                 if _float:
@@ -182,7 +272,7 @@ class MesherInputs(QDialog):
                 message = f"Insert some value at the {label} input field."
 
         if message != "":
-            PrintMessageInput([window_title, title, message])
+            PrintMessageInput([window_title_1, title, message])
             self.stop = True
             return None
         return out
