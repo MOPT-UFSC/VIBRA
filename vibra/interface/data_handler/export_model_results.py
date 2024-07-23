@@ -7,9 +7,8 @@ from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 import os
-import openpyxl
+# import openpyxl
 import numpy as np
-import pandas as pd
 from pathlib import Path
 
 window_title_1 = "Error"
@@ -55,6 +54,7 @@ class ExportModelResults(QFileDialog):
             np.savetxt(export_path, data_to_export, delimiter=delimiter, header=header)
 
     def export_data_in_spreadsheet_format(self, export_path):
+        import pandas as pd
 
         with pd.ExcelWriter(export_path) as writer:
 
