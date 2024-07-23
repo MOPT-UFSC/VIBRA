@@ -79,6 +79,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         solver = self.main_window.project.acoustic_harmonic_solver
         if solver is None:
             return
+        self.control_bar.update_selector_label()
         self.control_bar.set_frequencies(solver.frequencies)
 
     def update_plot(self, reset_camera=True):
@@ -191,23 +192,23 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
             min_value = 0
             output_pressures = np.abs(output_pressures)
         
-        dt = time() - t0
-        print(f"Elpased time to process A: {round(dt, 4)} s")
+        # dt = time() - t0
+        # print(f"Elapsed time to process A: {round(dt, 4)} s")
 
-        t0 = time()
+        # t0 = time()
         self.analysis_actor.plot_colorbar(output_pressures, min_value, max_value)
-        dt = time() - t0
-        print(f"Elpased time to process B: {round(dt, 4)} s")
+        # dt = time() - t0
+        # print(f"Elapsed time to process B: {round(dt, 4)} s")
 
-        t0 = time()
+        # t0 = time()
         self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
-        dt = time() - t0
-        print(f"Elpased time to process C: {round(dt, 4)} s")
+        # dt = time() - t0
+        # print(f"Elapsed time to process C: {round(dt, 4)} s")
 
-        t0 = time()
+        # t0 = time()
         self.update()
-        dt = time() - t0
-        print(f"Elpased time to process D: {round(dt, 4)} s")
+        # dt = time() - t0
+        # print(f"Elapsed time to process D: {round(dt, 4)} s")
 
     def process_animation_frames(self):
 

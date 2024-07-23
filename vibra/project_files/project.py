@@ -207,11 +207,13 @@ class Project:
         self.acoustic_assembler.process_assemble()
         self.acoustic_modal_solver.solve()
         app().main_window.file.write_results_data_in_file()
+        app().main_window.advanced_results_menu.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_structural_modal_analysis(self):
         self.structural_assembler.process_assemble()
         self.structural_modal_solver.solve()
         app().main_window.file.write_results_data_in_file()
+        app().main_window.advanced_results_menu.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_acoustic_harmonic_analysis(self):
         self.model.get_lrf_eq_data()
@@ -220,6 +222,7 @@ class Project:
         self.acoustic_assembler.process_assemble()
         self.acoustic_harmonic_solver.solve()
         app().main_window.file.write_results_data_in_file()
+        app().main_window.advanced_results_menu.disable_advanced_acoustic_plots_buttons(False)
 
     def long_function(self):
         for i in range(20):

@@ -80,6 +80,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         solver = self.main_window.project.acoustic_modal_solver
         if solver is None:
             return
+        self.control_bar.update_selector_label()
         self.control_bar.set_frequencies(solver.natural_frequencies)
 
     def update_plot(self, reset_camera=True):

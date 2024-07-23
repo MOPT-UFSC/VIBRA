@@ -15,6 +15,7 @@ from vibra.interface.menus.mesher_menu import MesherMenu
 from vibra.interface.menus.project_menu import ProjectMenu
 from vibra.interface.menus.settings_menu import VisibilitySettingsMenu
 from vibra.interface.menus.view_mode_menu import ViewModeMenu
+from vibra.interface.menus.advanced_results_menu import AdvancedResultsMenu
 from vibra.interface.menus.views_menu import ViewsMenu
 from vibra.interface.renderer_toolbar import RendererToolbar
 from vibra.interface.status_bar import StatusBar
@@ -292,13 +293,23 @@ class MainWindow(QMainWindow):
         self.viewer_tabs.update_hidden_plots()
 
     def create_menu_bar(self):
+        
+        self.project_menu = ProjectMenu(self)
+        self.visibility_settings_menu = VisibilitySettingsMenu(self)
+        self.mesher_menu = MesherMenu(self)
+        # self.view_menu = ViewsMenu(self)
+        self.view_mode_menu = ViewModeMenu(self)
+        self.advanced_results_menu = AdvancedResultsMenu(self)
+        self.help_menu = HelpMenu(self)
+
         self.menu_bar = self.menuBar()
-        self.menu_bar.addMenu(ProjectMenu(self))
-        self.menu_bar.addMenu(VisibilitySettingsMenu(self))
-        self.menu_bar.addMenu(MesherMenu(self))
-        # self.menu_bar.addMenu(ViewsMenu(self))
-        self.menu_bar.addMenu(ViewModeMenu(self))
-        self.menu_bar.addMenu(HelpMenu(self))
+        self.menu_bar.addMenu(self.project_menu)
+        self.menu_bar.addMenu(self.visibility_settings_menu)
+        self.menu_bar.addMenu(self.mesher_menu)
+        # self.menu_bar.addMenu(self.view_menu)
+        self.menu_bar.addMenu(self.view_mode_menu)
+        self.menu_bar.addMenu(self.advanced_results_menu)
+        self.menu_bar.addMenu(self.help_menu)
 
     def create_status_bar(self):
         self.setStatusBar(self.status_bar)

@@ -411,6 +411,7 @@ class LoadProject:
                     act_harmonic_analysis = True
                     app().main_window.project.acoustic_harmonic_solver.frequencies = data["frequencies"]
                     app().main_window.project.acoustic_harmonic_solver.solution = data["solution"]
+                    app().main_window.advanced_results_menu.disable_advanced_acoustic_plots_buttons(False)
 
                 elif key == "harmonic_structural":
                     str_harmonic_analysis = True

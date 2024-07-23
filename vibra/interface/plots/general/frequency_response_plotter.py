@@ -334,11 +334,11 @@ class FrequencyResponsePlotter(QDialog):
                 self.ax.legend(handles=self.plots, labels=self.legends)
                 
             self.call_cursor()
-            self.ax.set_xlabel(self.x_label, fontsize = 11, fontweight = self.font_weight)
-            self.ax.set_ylabel(self.y_label, fontsize = 11, fontweight = self.font_weight)
+            self.ax.set_xlabel(self.x_label, fontsize = 10, fontweight = self.font_weight)
+            self.ax.set_ylabel(self.y_label, fontsize = 10, fontweight = self.font_weight)
             
             if self.title != "":
-                self.ax.set_title(self.title, fontsize = 12, fontweight = self.font_weight)
+                self.ax.set_title(self.title, fontsize = 11, fontweight = self.font_weight)
 
             if self.checkBox_grid.isChecked():
                 self.ax.grid()
