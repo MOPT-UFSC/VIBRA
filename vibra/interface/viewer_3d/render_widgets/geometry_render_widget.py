@@ -1,21 +1,25 @@
+import numpy as np
+from molde.render_widgets import CommonRenderWidget
+from molde.utils import TreeInfo
+from molde.utils.format_sequences import format_long_sequence
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-import vtk
-import numpy as np
-
-from molde.render_widgets import CommonRenderWidget
-from molde.utils.format_sequences import format_long_sequence
-from molde.utils import TreeInfo
+from vtkmodules.vtkCommonCore import vtkIntArray
+from vtkmodules.vtkCommonDataModel import vtkPolyData
+from vtkmodules.vtkRenderingCore import vtkActor, vtkCellPicker
 
 from vibra import app
 from vibra.interface.tabs.geometry_info_bar import GeometryInfoBar
+from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
+    CuttingPlaneActor,
+)
 from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 from vibra.interface.viewer_3d.actors.lines_actor import LinesActor
 from vibra.interface.viewer_3d.actors.points_actor import PointsActor
-from vibra.interface.viewer_3d.interactor_styles.selection_interactor import SelectionInteractor
 from vibra.interface.viewer_3d.actors.selection_spheres import SelectionSpheres
-from vibra.interface.viewer_3d.actors.cutting_plane_actor import CuttingPlaneActor
-
+from vibra.interface.viewer_3d.interactor_styles.selection_interactor import (
+    SelectionInteractor,
+)
 
 SHOW_POINTS = 0
 SHOW_LINES = 1
@@ -93,7 +97,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.faces_actor = FacesActor(mesh)
         self.renderer.AddActor(self.faces_actor)
 
-        # Add a very subtle transparent actor to represent the whole 
+        # Add a very subtle transparent actor to represent the whole
         # structure even if part of it is hidden
         has_hidden_part = bool(self.main_window.hidden_surfaces)
         self.hidden_part_actor = FacesActor(mesh, allow_hidding=False)
@@ -116,7 +120,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         # I will keep it like this because it is fast enough, but this
         # may be addressed in near future.
         self.main_window.project.thumbnail = self.get_thumbnail()
-    
+
     def update_hidden_plot(self):
         # We could just call the update_plot function,
         # but this is much simpler and faster
@@ -213,12 +217,18 @@ class GeometryRenderWidget(CommonRenderWidget):
     def selection_callback(self, x, y):
         if not self._actors_exists():
             return
-        
+
         mouse_moved = False
         if mouse_moved:
-            picked_nodes, picked_line_elements, picked_face_elements = self._get_area_picked_cell_id(x, y)
+            (
+                picked_nodes,
+                picked_line_elements,
+                picked_face_elements,
+            ) = self._get_area_picked_cell_id(x, y)
         else:
-            picked_nodes, picked_line_elements, picked_face_elements = self._get_picked_cell_id(x, y)
+            picked_nodes, picked_line_elements, picked_face_elements = self._get_picked_cell_id(
+                x, y
+            )
 
         picked_points = picked_nodes  # they have the same index
         picked_lines = set()
@@ -230,11 +240,11 @@ class GeometryRenderWidget(CommonRenderWidget):
         for cell in picked_line_elements:
             line_entity = mesh.lines_connectivity[cell][1]
             picked_lines.add(line_entity)
-        
+
         for cell in picked_face_elements:
             face_entity = mesh.faces_connectivity[cell][1]
             picked_faces.add(face_entity)
-            for (volume, surfaces) in mesh.surfaces_from_volumes.items():
+            for volume, surfaces in mesh.surfaces_from_volumes.items():
                 if face_entity in surfaces:
                     picked_volumes.add(volume)
 
@@ -245,16 +255,16 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         if not shift_pressed:
             picked_volumes.clear()
-        
+
         self.main_window.set_geometry_selection(
             points=picked_points,
             lines=picked_lines,
             surfaces=picked_faces,
             volumes=picked_volumes,
-            join=ctrl_pressed, remove=alt_pressed
+            join=ctrl_pressed,
+            remove=alt_pressed,
         )
         self.update()
-
 
         # if clicked_actor == self.points_actor:
         #     # self.select_point(clicked_cell, join=ctrl_pressed, remove=alt_pressed)
@@ -327,7 +337,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
     def clear_selection_spheres(self):
         self.selection_spheres_actor.VisibilityOff()
-    
+
     def set_selection_spheres(self, all_centers, all_radius):
         if self.selection_spheres_actor is None:
             return
@@ -337,13 +347,13 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.update()
 
     def _get_picked_cell_id(self, x, y):
-        '''
+        """
         Pick the nodes, faces and solids at the same time.
         Them select just the one that is closest to the camera.
-        
+
         If the ID of a cell is lower than 1 the distance to the
         camera is set to infinite, so it will never be selected.
-        '''
+        """
 
         picked_nodes = []
         picked_faces = []
@@ -354,20 +364,22 @@ class GeometryRenderWidget(CommonRenderWidget):
         solid_id, solid_pos = self._pick_actor(x, y, self.faces_actor)
 
         camera_position = np.array(self.renderer.GetActiveCamera().GetPosition())
-        node_distance = np.linalg.norm(camera_position - node_pos) if node_id >= 0 else float('inf')
-        face_distance = np.linalg.norm(camera_position - face_pos) if face_id >= 0 else float('inf')
-        solid_distance = np.linalg.norm(camera_position - solid_pos) if solid_id >= 0 else float('inf')
-        node_distance *= 0.98 # Cheating a bit to prioritize the node selection
+        node_distance = np.linalg.norm(camera_position - node_pos) if node_id >= 0 else float("inf")
+        face_distance = np.linalg.norm(camera_position - face_pos) if face_id >= 0 else float("inf")
+        solid_distance = (
+            np.linalg.norm(camera_position - solid_pos) if solid_id >= 0 else float("inf")
+        )
+        node_distance *= 0.98  # Cheating a bit to prioritize the node selection
         closest = min(node_distance, face_distance, solid_distance)
 
-        if closest == float('inf'):
+        if closest == float("inf"):
             return picked_nodes, picked_faces, picked_solids
 
-        if (closest == node_distance):
+        if closest == node_distance:
             picked_nodes.append(node_id)
-        elif (closest == face_distance):
+        elif closest == face_distance:
             picked_faces.append(face_id)
-        elif (closest == solid_distance):
+        elif closest == solid_distance:
             picked_solids.append(solid_id)
 
         return picked_nodes, picked_faces, picked_solids
@@ -379,10 +391,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         picked_solids = []
         return picked_nodes, picked_faces, picked_solids
 
-    def _pick_actor(self, x, y, target_actor: vtk.vtkActor):
-        cell_picker = vtk.vtkCellPicker()
+    def _pick_actor(self, x, y, target_actor: vtkActor):
+        cell_picker = vtkCellPicker()
         cell_picker.SetTolerance(0.003)
-        
+
         pickability = self._narrow_pickability_to_actor(target_actor)
         cell_picker.Pick(x, y, 0, self.renderer)
         self._restore_pickability(pickability)
@@ -392,30 +404,30 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         if cell_id < 0:
             return cell_id, position
-        
+
         # Try to get the cell_indexes array that shows the original
         # cell array even if it is being clipped.
-        data: vtk.vtkPolyData = target_actor.GetMapper().GetInput()
+        data: vtkPolyData = target_actor.GetMapper().GetInput()
         if not data:
             return cell_id, position
 
-        cell_indexes: vtk.vtkIntArray = data.GetCellData().GetArray("cell_indexes")
+        cell_indexes: vtkIntArray = data.GetCellData().GetArray("cell_indexes")
         if not cell_indexes:
             return cell_id, position
 
         new_cell_id = cell_indexes.GetValue(cell_id)
         return new_cell_id, position
 
-    def _narrow_pickability_to_actor(self, target_actor: vtk.vtkActor):
-        actor: vtk.vtkActor
+    def _narrow_pickability_to_actor(self, target_actor: vtkActor):
+        actor: vtkActor
         pickability = dict()
         for actor in self.renderer.GetActors():
             pickability[actor] = actor.GetPickable()
             actor.SetPickable(actor == target_actor)
-        return pickability 
-    
+        return pickability
+
     def _restore_pickability(self, pickability: dict):
-        actor: vtk.vtkActor
+        actor: vtkActor
         for actor in self.renderer.GetActors():
             actor.SetPickable(pickability[actor])
 
@@ -449,9 +461,9 @@ class GeometryRenderWidget(CommonRenderWidget):
     #     self.points_actor.paint_cells(self.selection_color, self.selected_points)
     #     self.update()
     #     self.selection_changed.emit(
-    #                                 self.selected_points, 
-    #                                 self.selected_lines, 
-    #                                 self.selected_faces, 
+    #                                 self.selected_points,
+    #                                 self.selected_lines,
+    #                                 self.selected_faces,
     #                                 self.selected_volumes
     #                                 )
 
@@ -471,7 +483,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
     #         if line not in self.main_window.project.model.mesh.elements_from_line.keys():
     #             return
-            
+
     #         indexes = self.main_window.project.model.mesh.elements_from_line[line]
     #         all_element_indexes.extend(indexes)
 
@@ -479,9 +491,9 @@ class GeometryRenderWidget(CommonRenderWidget):
     #     self.lines_actor.paint_cells(self.selection_color, all_element_indexes)
     #     self.update()
     #     self.selection_changed.emit(
-    #                                 self.selected_points, 
-    #                                 self.selected_lines, 
-    #                                 self.selected_faces, 
+    #                                 self.selected_points,
+    #                                 self.selected_lines,
+    #                                 self.selected_faces,
     #                                 self.selected_volumes
     #                                 )
 
@@ -510,9 +522,9 @@ class GeometryRenderWidget(CommonRenderWidget):
     #     self.faces_actor.paint_cells(self.selection_color, all_element_indexes)
     #     self.update()
     #     self.selection_changed.emit(
-    #                                 self.selected_points, 
-    #                                 self.selected_lines, 
-    #                                 self.selected_faces, 
+    #                                 self.selected_points,
+    #                                 self.selected_lines,
+    #                                 self.selected_faces,
     #                                 self.selected_volumes
     #                                 )
 
@@ -544,9 +556,9 @@ class GeometryRenderWidget(CommonRenderWidget):
     #     self.faces_actor.paint_cells(self.selection_color, all_element_indexes)
     #     self.update()
     #     self.selection_changed.emit(
-    #                                 self.selected_points, 
-    #                                 self.selected_lines, 
-    #                                 self.selected_faces, 
+    #                                 self.selected_points,
+    #                                 self.selected_lines,
+    #                                 self.selected_faces,
     #                                 self.selected_volumes
     #                                 )
 
@@ -620,12 +632,12 @@ class GeometryRenderWidget(CommonRenderWidget):
 
     def _actors_exists(self):
         actors = [
-                    self.points_actor,
-                    self.lines_actor,
-                    self.faces_actor,
-                    self.selection_spheres_actor,
-                    self.hidden_part_actor,
-                ]
+            self.points_actor,
+            self.lines_actor,
+            self.faces_actor,
+            self.selection_spheres_actor,
+            self.hidden_part_actor,
+        ]
 
         return all([actor is not None for actor in actors])
 
@@ -641,52 +653,41 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.set_info_text(text)
         self.update()
-    
+
     def _nodes_info_text(self):
         nodes = list(self.main_window.selected_geometry_points)
         text = ""
 
         if len(nodes) > 1:
-            text += (
-                f"{len(nodes)} points in selection\n"
-                f"{format_long_sequence(nodes)}\n\n"
-            )
+            text += f"{len(nodes)} points in selection\n" f"{format_long_sequence(nodes)}\n\n"
         elif len(nodes) == 1:
             text += f"Point: {nodes[0]}\n\n"
 
         return text
 
     def _faces_info_text(self):
-
         text = ""
         volumes = list(self.main_window.selected_geometry_volumes)
 
         if len(volumes) == 0:
-
             faces = list(self.main_window.selected_geometry_surfaces)
-            
+
             if len(faces) > 1:
-                text += (
-                    f"{len(faces)} surfaces in selection\n"
-                    f"{format_long_sequence(faces)}\n\n"
-                )
+                text += f"{len(faces)} surfaces in selection\n" f"{format_long_sequence(faces)}\n\n"
             elif len(faces) == 1:
                 text += f"Surface: {faces[0]}\n\n"
 
         return text
-    
+
     def _volumes_info_text(self):
         volumes = list(self.main_window.selected_geometry_volumes)
         text = ""
 
         if len(volumes) > 1:
-            text += (
-                f"{len(volumes)} volumes in selection\n"
-                f"{format_long_sequence(volumes)}\n\n"
-            )
+            text += f"{len(volumes)} volumes in selection\n" f"{format_long_sequence(volumes)}\n\n"
         elif len(volumes) == 1:
             text += f"Volume: {volumes[0]}\n\n"
-        
+
         return text
 
     def _material_info_text(self):
@@ -694,24 +695,24 @@ class GeometryRenderWidget(CommonRenderWidget):
         text = ""
 
         if len(volumes) != 1:
-            return text 
+            return text
 
         material = self.main_window.project.model.properties.get_material(volume=volumes[0])
         if material is None:
             return text
-        
+
         tree = TreeInfo("Material")
         tree.add_item("Name", material.name)
         tree.add_item("Identifier", material.identifier)
         tree.add_item("Density", material.density, "kg/m³")
-        tree.add_item("elasticity modulus", material.young_modulus/1e9, "GPa")
+        tree.add_item("elasticity modulus", material.young_modulus / 1e9, "GPa")
         tree.add_item("Poisson ratio", material.poisson_ratio, "--")
         tree.add_item("Thermal expasion coefficient", material.thermal_expansion_coefficient, "1/K")
 
         text += str(tree)
 
         return text
-        
+
     def _fluid_info_text(self):
         volumes = list(self.main_window.selected_geometry_volumes)
         text = ""
@@ -745,7 +746,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         if len(volumes) != 1:
             return text
 
-        pm_model = self.main_window.project.model.properties.get_porous_material_model_data(volume=volumes[0])
+        pm_model = self.main_window.project.model.properties.get_porous_material_model_data(
+            volume=volumes[0]
+        )
         if pm_model is None:
             return text
 
@@ -764,18 +767,23 @@ class GeometryRenderWidget(CommonRenderWidget):
         if len(selected_faces) != 1:
             return text
 
-        acoustic_pressure = self.main_window.project.model.properties.get_acoustic_pressure(selected_faces[0])
-        surface_velocity = self.main_window.project.model.properties.get_surface_velocity(selected_faces[0])
-        specific_impedance = self.main_window.project.model.properties.get_specific_impedance(selected_faces[0])
+        acoustic_pressure = self.main_window.project.model.properties.get_acoustic_pressure(
+            selected_faces[0]
+        )
+        surface_velocity = self.main_window.project.model.properties.get_surface_velocity(
+            selected_faces[0]
+        )
+        specific_impedance = self.main_window.project.model.properties.get_specific_impedance(
+            selected_faces[0]
+        )
         boundary_conditions_list = [acoustic_pressure, surface_velocity, specific_impedance]
 
         if all(condition is None for condition in boundary_conditions_list):
             return text
-        
+
         tree = TreeInfo("Boundary Conditions")
 
         if acoustic_pressure is not None:
-
             real_values = np.array(acoustic_pressure["real_values"])
             imag_values = np.array(acoustic_pressure["imag_values"])
 
@@ -788,7 +796,6 @@ class GeometryRenderWidget(CommonRenderWidget):
             tree.add_item("Acoustic pressure", values, "Pa")
 
         if surface_velocity is not None:
-
             real_values = np.array(surface_velocity["real_values"])
             imag_values = np.array(surface_velocity["imag_values"])
 
@@ -801,9 +808,10 @@ class GeometryRenderWidget(CommonRenderWidget):
             tree.add_item("Surface velocity", values, "m/s")
 
         if specific_impedance is not None:
-            
             if "anechoic_termination" in specific_impedance.keys():
-                fluid = self.main_window.project.model.properties.get_fluid(surface=selected_faces[0])
+                fluid = self.main_window.project.model.properties.get_fluid(
+                    surface=selected_faces[0]
+                )
                 density = fluid.fluid_density
                 speed_of_sound = fluid.speed_of_sound
                 complex_values = np.array([density * speed_of_sound], dtype=complex)
@@ -821,5 +829,5 @@ class GeometryRenderWidget(CommonRenderWidget):
             tree.add_item("Specific impedance", values, "kg/m²s")
 
         text += str(tree)
-        
+
         return text
