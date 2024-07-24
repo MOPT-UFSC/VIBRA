@@ -948,23 +948,23 @@ setuptools = ">=42.0.0"
 
 [[package]]
 name = "pypardiso"
-version = "0.4.1"
-description = ""
+version = "0.1.dev234+ga6c7e70"
+description = "Python interface to the Intel MKL Pardiso library to solve large sparse linear systems of equations"
 optional = false
-python-versions = "*"
+python-versions = ">=3.8"
 files = []
 develop = false
 
 [package.dependencies]
-mkl = "*"
+mkl = "!=2024.0"
 numpy = "*"
 scipy = "*"
 
 [package.source]
 type = "git"
-url = "https://github.com/andrejstmh/PyPardisoProject"
+url = "https://github.com/MOPT-UFSC/PyPardiso"
 reference = "HEAD"
-resolved_reference = "07b492f667a5582f9f23c37a46c5f3045d85cda5"
+resolved_reference = "a6c7e70309b370806015c08957b5131874c2aa50"
 
 [[package]]
 name = "pyparsing"
@@ -1297,4 +1297,4 @@ web = ["wslink (>=1.0.4)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "16fcb70d27e6cb982a28a0cae066206f4027e62398069537b9c6330e703fb6fb"
+content-hash = "4ea8074c0a4b8b699c071d673caffc56d70951359ac9db6256ac942c8234188d"
