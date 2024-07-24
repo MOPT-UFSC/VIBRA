@@ -592,7 +592,7 @@ vtk = "^9.3.0"
 type = "git"
 url = "https://github.com/andrefpf/molde"
 reference = "HEAD"
-resolved_reference = "e036dd0e5f31bad60c3d1810232a4a4c66c37690"
+resolved_reference = "67a37c1058b5bd14e11b61721f913b2427d16b64"
 
 [[package]]
 name = "mypy-extensions"
@@ -1221,6 +1221,17 @@ files = [
 six = "*"
 
 [[package]]
+name = "tuna"
+version = "0.5.11"
+description = "Visualize Python performance profiles"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "tuna-0.5.11-py3-none-any.whl", hash = "sha256:ab352a6d836014ace585ecd882148f1f7c68be9ea4bf9e9298b7127594dab2ef"},
+    {file = "tuna-0.5.11.tar.gz", hash = "sha256:d47f3e39e80af961c8df016ac97d1643c3c60b5eb451299da0ab5fe411d8866c"},
+]
+
+[[package]]
 name = "typing-extensions"
 version = "4.12.2"
 description = "Backported and Experimental Type Hints for Python 3.8+"
@@ -1286,4 +1297,4 @@ web = ["wslink (>=1.0.4)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "ca9664d64bf5b5c08c6c05cfaad2c35a8bc2259ae0ba12b6423971e6b03512e9"
+content-hash = "16fcb70d27e6cb982a28a0cae066206f4027e62398069537b9c6330e703fb6fb"

@@ -1,21 +1,24 @@
+import numpy as np
+from molde.render_widgets import CommonRenderWidget
+from molde.utils import TreeInfo
+from molde.utils.format_sequences import format_long_sequence
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-import vtk
-import numpy as np
+from vtkmodules.vtkCommonCore import vtkIntArray
+from vtkmodules.vtkCommonDataModel import vtkPolyData
+from vtkmodules.vtkRenderingCore import vtkActor, vtkCellPicker
 
-from molde.render_widgets import CommonRenderWidget
-
+from vibra import app
 from vibra.interface.tabs.mesh_info_bar import MeshInfoBar
-from vibra.interface.viewer_3d.actors.nodes_actor import NodesActor
+from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
+    CuttingPlaneActor,
+)
 from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
 from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
-from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
-from vibra.interface.viewer_3d.actors.cutting_plane_actor import CuttingPlaneActor
-from vibra.utils.interface_functions import get_main_window
+from vibra.interface.viewer_3d.actors.nodes_actor import NodesActor
 from vibra.interface.viewer_3d.actors.selection_spheres import SelectionSpheres
-from vibra import app
-from molde.utils.format_sequences import format_long_sequence
-from molde.utils import TreeInfo
+from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
+from vibra.utils.interface_functions import get_main_window
 
 SHOW_POINTS = 0
 SHOW_LINES = 1
@@ -89,7 +92,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.faces_actor.GetProperty().LightingOff()
         self.faces_actor.ForceTranslucentOn()
         self.faces_actor.PickableOff()
-        self.faces_actor.clear_colors((0,0,0,0))
+        self.faces_actor.clear_colors((0, 0, 0, 0))
         self.renderer.AddActor(self.faces_actor)
 
         self.solids_actor = SolidsActor(mesh)
@@ -146,7 +149,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.update()
 
     # TODO: replace these methods to use flags
-    # Then, combinations of these visualizations will be valid    
+    # Then, combinations of these visualizations will be valid
     def show_points(self):
         self.view_mode = SHOW_POINTS
         self.nodes_actor.VisibilityOn()
@@ -171,7 +174,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.solids_actor.VisibilityOn()
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
         self.update()
-    
+
     def show_volumes(self):
         self.view_mode = SHOW_VOLUMES
         self.nodes_actor.VisibilityOn()
@@ -231,18 +234,19 @@ class MeshRenderWidget(CommonRenderWidget):
             nodes=picked_nodes,
             faces=picked_faces,
             solids=picked_solids,
-            join=ctrl_pressed, remove=alt_pressed,
+            join=ctrl_pressed,
+            remove=alt_pressed,
         )
 
     # These pick functions can be placed into a separated class
     def _get_picked_cell_id(self, x, y):
-        '''
+        """
         Pick the nodes, faces and solids at the same time.
         Them select just the one that is closest to the camera.
-        
+
         If the ID of a cell is lower than 1 the distance to the
         camera is set to infinite, so it will never be selected.
-        '''
+        """
 
         picked_nodes = []
         picked_faces = []
@@ -252,17 +256,19 @@ class MeshRenderWidget(CommonRenderWidget):
         solid_id, solid_pos = self._pick_actor(x, y, self.solids_actor)
 
         camera_position = np.array(self.renderer.GetActiveCamera().GetPosition())
-        node_distance = np.linalg.norm(camera_position - node_pos) if node_id >= 0 else float('inf')
-        solid_distance = np.linalg.norm(camera_position - solid_pos) if solid_id >= 0 else float('inf')
-        node_distance *= 0.98 # Cheating a bit to prioritize the node selection
+        node_distance = np.linalg.norm(camera_position - node_pos) if node_id >= 0 else float("inf")
+        solid_distance = (
+            np.linalg.norm(camera_position - solid_pos) if solid_id >= 0 else float("inf")
+        )
+        node_distance *= 0.98  # Cheating a bit to prioritize the node selection
         closest = min(node_distance, solid_distance)
 
-        if closest == float('inf'):
+        if closest == float("inf"):
             return picked_nodes, picked_faces, picked_solids
 
-        if (closest == node_distance):
+        if closest == node_distance:
             picked_nodes.append(node_id)
-        elif (closest == solid_distance):
+        elif closest == solid_distance:
             picked_solids.append(solid_id)
 
         return picked_nodes, picked_faces, picked_solids
@@ -274,10 +280,10 @@ class MeshRenderWidget(CommonRenderWidget):
         picked_solids = []
         return picked_nodes, picked_faces, picked_solids
 
-    def _pick_actor(self, x, y, target_actor: vtk.vtkActor):
-        cell_picker = vtk.vtkCellPicker()
+    def _pick_actor(self, x, y, target_actor: vtkActor):
+        cell_picker = vtkCellPicker()
         cell_picker.SetTolerance(0.003)
-        
+
         pickability = self._narrow_pickability_to_actor(target_actor)
         cell_picker.Pick(x, y, 0, self.renderer)
         self._restore_pickability(pickability)
@@ -287,40 +293,40 @@ class MeshRenderWidget(CommonRenderWidget):
 
         if cell_id < 0:
             return cell_id, position
-        
+
         # Try to get the cell_indexes array that shows the original
         # cell array even if it is being clipped.
-        data: vtk.vtkPolyData = target_actor.GetMapper().GetInput()
+        data: vtkPolyData = target_actor.GetMapper().GetInput()
         if not data:
             return cell_id, position
 
-        cell_indexes: vtk.vtkIntArray = data.GetCellData().GetArray("cell_indexes")
+        cell_indexes: vtkIntArray = data.GetCellData().GetArray("cell_indexes")
         if not cell_indexes:
             return cell_id, position
 
         new_cell_id = cell_indexes.GetValue(cell_id)
         return new_cell_id, position
 
-    def _narrow_pickability_to_actor(self, target_actor: vtk.vtkActor):
-        actor: vtk.vtkActor
+    def _narrow_pickability_to_actor(self, target_actor: vtkActor):
+        actor: vtkActor
         pickability = dict()
         for actor in self.renderer.GetActors():
             pickability[actor] = actor.GetPickable()
             actor.SetPickable(actor == target_actor)
-        return pickability 
-    
+        return pickability
+
     def _restore_pickability(self, pickability: dict):
-        actor: vtk.vtkActor
+        actor: vtkActor
         for actor in self.renderer.GetActors():
             actor.SetPickable(pickability[actor])
 
     def update_selection(self):
-        '''
+        """
         Update the visualization of selected data.
-        '''
+        """
         if not self._actors_exists():
             return
-        
+
         self.update_info_text()
 
         has_hidden_part = bool(self.main_window.hidden_surfaces)
@@ -390,7 +396,12 @@ class MeshRenderWidget(CommonRenderWidget):
         self.nodes_actor = None
 
     def _actors_exists(self):
-        actors = [self.solids_actor, self.faces_actor, self.edges_actor, self.selection_spheres_actor]
+        actors = [
+            self.solids_actor,
+            self.faces_actor,
+            self.edges_actor,
+            self.selection_spheres_actor,
+        ]
         return all([actor is not None for actor in actors])
 
     def _get_info_tab(self):
@@ -443,7 +454,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.plane_actor.GetProperty().SetOpacity(0.2)
 
         self.update()
-    
+
     def update_info_text(self):
         text = ""
         text += self._nodes_info_text()
@@ -452,18 +463,15 @@ class MeshRenderWidget(CommonRenderWidget):
         # text += self._material_info_text()
         # text += self._fluid_info_text()
         # text += self._boundary_conditions_info_text()
-        
+
         self.set_info_text(text)
         self.update()
-    
+
     def _nodes_info_text(self):
         nodes = list(self.main_window.selected_mesh_nodes)
         text = ""
         if len(nodes) > 1:
-            text += (
-                f"{len(nodes)} nodes in selection\n"
-                f"{format_long_sequence(nodes)}\n\n"
-            )
+            text += f"{len(nodes)} nodes in selection\n" f"{format_long_sequence(nodes)}\n\n"
         elif len(nodes) == 1:
             text += f"Node: {nodes[0]}\n"
             coords = self.main_window.project.model.mesh.nodal_coordinates[nodes[0], 1:]
@@ -475,13 +483,10 @@ class MeshRenderWidget(CommonRenderWidget):
         faces = list(self.main_window.selected_mesh_faces)
         text = ""
         if len(faces) > 1:
-            text += (
-                f"{len(faces)} faces in selection\n"
-                f"{format_long_sequence(faces)}\n\n"
-            )
+            text += f"{len(faces)} faces in selection\n" f"{format_long_sequence(faces)}\n\n"
         elif len(faces) == 1:
             text += f"Face element: {faces[0]}\n\n"
-        
+
         return text
 
     def _solids_info_text(self):
@@ -512,19 +517,21 @@ class MeshRenderWidget(CommonRenderWidget):
             material = self.main_window.project.model.properties.get_material(volume=current_solid)
             if material is None:
                 return text
-            
+
             tree = TreeInfo("Material")
             tree.add_item("Name", material.name)
             tree.add_item("Identifier", material.identifier)
             tree.add_item("Density", material.density, "kg/m³")
-            tree.add_item("Young Modulus", material.young_modulus/1e9, "GPa")
+            tree.add_item("Young Modulus", material.young_modulus / 1e9, "GPa")
             tree.add_item("Poisson Ratio", material.poisson_ratio, "--")
-            tree.add_item("Thermal Expasion Coefficient", material.thermal_expansion_coefficient, "1/K")
+            tree.add_item(
+                "Thermal Expasion Coefficient", material.thermal_expansion_coefficient, "1/K"
+            )
 
             text += str(tree)
 
         return text
-        
+
     def _fluid_info_text(self):
         elements = list(self.main_window.selected_mesh_faces)
         text = ""
@@ -537,7 +544,7 @@ class MeshRenderWidget(CommonRenderWidget):
             fluid = self.main_window.project.model.properties.get_fluid(volume=current_solid)
             if fluid is None:
                 return text
-            
+
             tree = TreeInfo("Fluid")
             tree.add_item("Name", fluid.name)
             tree.add_item("Identifier", fluid.identifier)
@@ -548,9 +555,9 @@ class MeshRenderWidget(CommonRenderWidget):
             tree.add_item("Molar mass", fluid.molar_mass, "kg/kmol")
 
             text += str(tree)
-        
+
         return text
-    
+
     def _boundary_conditions_info_text(self):
         elements = list(self.main_window.selected_mesh_faces)
         text = ""
@@ -561,14 +568,20 @@ class MeshRenderWidget(CommonRenderWidget):
         if len(elements) != 1:
             return text
 
-        acoustic_pressure = self.main_window.project.model.properties.get_acoustic_pressure(elements[0])
-        surface_velocity = self.main_window.project.model.properties.get_surface_velocity(elements[0])
-        specific_impedance = self.main_window.project.model.properties.get_specific_impedance(elements[0])
+        acoustic_pressure = self.main_window.project.model.properties.get_acoustic_pressure(
+            elements[0]
+        )
+        surface_velocity = self.main_window.project.model.properties.get_surface_velocity(
+            elements[0]
+        )
+        specific_impedance = self.main_window.project.model.properties.get_specific_impedance(
+            elements[0]
+        )
         boundary_conditions_list = [acoustic_pressure, surface_velocity, specific_impedance]
 
         if all(condition is None for condition in boundary_conditions_list):
             return text
-        
+
         tree = TreeInfo("Boundary Conditions")
 
         if acoustic_pressure is not None:
@@ -579,6 +592,5 @@ class MeshRenderWidget(CommonRenderWidget):
             tree.add_item("Specific impedance", specific_impedance["real_values"][0], "kg/m²s")
 
         text += str(tree)
-        
-        return text
 
+        return text

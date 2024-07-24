@@ -1,7 +1,16 @@
-import vtk
+from vtkmodules.vtkCommonCore import (
+    vtkIntArray,
+    vtkPoints,
+    vtkUnsignedCharArray,
+)
+from vtkmodules.vtkCommonDataModel import vtkPlane, vtkPolyData
+from vtkmodules.vtkFiltersCore import vtkPolyDataNormals
+from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
+
 from vibra import app
 
-class FacesActor(vtk.vtkActor):
+
+class FacesActor(vtkActor):
     def __init__(self, mesh, allow_hidding=True):
         self.mesh = mesh
         self.data = None
@@ -12,18 +21,18 @@ class FacesActor(vtk.vtkActor):
 
     def create_geometry(self):
         #
-        data = vtk.vtkPolyData()
-        points = vtk.vtkPoints()
-        mapper = vtk.vtkPolyDataMapper()
-        point_colors = vtk.vtkUnsignedCharArray()
-        cell_colors = vtk.vtkUnsignedCharArray()
-        cell_indexes = vtk.vtkIntArray()
+        data = vtkPolyData()
+        points = vtkPoints()
+        mapper = vtkPolyDataMapper()
+        point_colors = vtkUnsignedCharArray()
+        cell_colors = vtkUnsignedCharArray()
+        cell_indexes = vtkIntArray()
         cell_indexes.SetName("cell_indexes")
         cell_colors.Fill(0)
         #
         nel = len(self.mesh.faces_connectivity[0, 4:])
         # face_nodes = [3, 6, 4, 8]
-        # types = [vtk.VTK_TRIANGLE, vtk.VTK_QUADRATIC_TRIANGLE, vtk.VTK_QUAD, vtk.VTK_QUADRATIC_QUAD]
+        # types = [VTK_TRIANGLE, VTK_QUADRATIC_TRIANGLE, VTK_QUAD, VTK_QUADRATIC_QUAD]
         # aux = dict(zip(face_nodes, types))
         #
         data.Allocate(nel * len(self.mesh.faces_connectivity))
@@ -32,7 +41,6 @@ class FacesActor(vtk.vtkActor):
         cell_colors.SetNumberOfComponents(4)
         cell_colors.SetNumberOfTuples(len(self.mesh.faces_connectivity))
         cell_indexes.Allocate(len(self.mesh.faces_connectivity))
-
 
         for _, x, y, z in self.mesh.nodal_coordinates:
             points.InsertNextPoint(x, y, z)
@@ -44,8 +52,10 @@ class FacesActor(vtk.vtkActor):
             if surface in hidden_surfaces:
                 continue
             try:
-                data.InsertNextCell(vtk.VTK_TRIANGLE, nel, list(values))
-                visible_index = cell_indexes.InsertNextValue(i)  # This is usefull if part of the cells are hidden
+                data.InsertNextCell(VTK_TRIANGLE, nel, list(values))
+                visible_index = cell_indexes.InsertNextValue(
+                    i
+                )  # This is usefull if part of the cells are hidden
                 self.visible_indexes[i] = visible_index
             except:
                 raise NotImplementedError("Not implemented plane element")
@@ -55,7 +65,7 @@ class FacesActor(vtk.vtkActor):
         data.GetCellData().SetScalars(cell_colors)
         data.GetCellData().AddArray(cell_indexes)
 
-        normals_filter = vtk.vtkPolyDataNormals()
+        normals_filter = vtkPolyDataNormals()
         normals_filter.AddInputData(data)
         normals_filter.Update()
 
@@ -100,7 +110,9 @@ class FacesActor(vtk.vtkActor):
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
 
-    def paint_cells(self, color: tuple[int, int, int] | tuple[int, int, int, int], faces: tuple[int]):
+    def paint_cells(
+        self, color: tuple[int, int, int] | tuple[int, int, int, int], faces: tuple[int]
+    ):
         if self.data is None:
             return
 
@@ -117,12 +129,12 @@ class FacesActor(vtk.vtkActor):
         self.GetMapper().SetScalarModeToUseCellData()
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
-    
+
     def disable_cut(self):
         self.GetMapper().RemoveAllClippingPlanes()
 
     def apply_cut(self, origin, normal):
-        plane = vtk.vtkPlane()
+        plane = vtkPlane()
         plane.SetOrigin(origin)
         plane.SetNormal(normal)
         self.GetMapper().RemoveAllClippingPlanes()

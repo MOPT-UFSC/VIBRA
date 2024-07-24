@@ -1,12 +1,18 @@
+from time import time
+
+import numpy as np
+from vtkmodules.vtkCommonCore import (
+    vtkIntArray,
+    vtkPoints,
+    vtkUnsignedCharArray,
+)
+from vtkmodules.vtkCommonDataModel import VTK_VERTEX, vtkPlane, vtkPolyData
+from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
 
 from vibra.engine.mesher.element_type import *
 
-import vtk
-import numpy as np
-from time import time
 
-
-class NodesActor(vtk.vtkActor):
+class NodesActor(vtkActor):
     def __init__(self, mesh, hidden_nodes=None):
         self.mesh = mesh
         self.data = None
@@ -23,11 +29,11 @@ class NodesActor(vtk.vtkActor):
         return self.mesh.nodal_coordinates[:, 1:]
 
     def create_geometry(self):
-        data = vtk.vtkPolyData()
-        points = vtk.vtkPoints()
-        mapper = vtk.vtkPolyDataMapper()
-        cell_colors = vtk.vtkUnsignedCharArray()
-        cell_indexes = vtk.vtkIntArray()
+        data = vtkPolyData()
+        points = vtkPoints()
+        mapper = vtkPolyDataMapper()
+        cell_colors = vtkUnsignedCharArray()
+        cell_indexes = vtkIntArray()
         cell_indexes.SetName("cell_indexes")
 
         data.Allocate(len(self.mesh.nodal_coordinates))
@@ -39,19 +45,19 @@ class NodesActor(vtk.vtkActor):
         for i, (x, y, z) in enumerate(self.get_coordinates()):
             cell_indexes.InsertValue(i, i)  # This is usefull if part of the cells are hidden
             points.InsertNextPoint(x, y, z)
-            data.InsertNextCell(vtk.VTK_VERTEX, 1, [i])
+            data.InsertNextCell(VTK_VERTEX, 1, [i])
 
         data.SetPoints(points)
         data.GetCellData().SetScalars(cell_colors)
         data.GetCellData().AddArray(cell_indexes)
-        self.data = data 
+        self.data = data
 
         mapper.SetInputData(data)
         mapper.SetScalarModeToUseCellData()
         self.SetMapper(mapper)
 
     def update_coordinates(self, coordinates):
-        points: vtk.vtkPoints
+        points: vtkPoints
         points = self.data.GetPoints()
         for i, xyz in enumerate(coordinates):
             points.SetPoint(i, xyz)
@@ -80,7 +86,9 @@ class NodesActor(vtk.vtkActor):
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
 
-    def paint_cells(self, color: tuple[int, int, int] | tuple[int, int, int, int], volumes: tuple[int]):
+    def paint_cells(
+        self, color: tuple[int, int, int] | tuple[int, int, int, int], volumes: tuple[int]
+    ):
         if self.data is None:
             return
 
@@ -95,14 +103,13 @@ class NodesActor(vtk.vtkActor):
         self.GetMapper().SetScalarModeToUseCellData()
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
-    
+
     def disable_cut(self):
         self.GetMapper().RemoveAllClippingPlanes()
 
     def apply_cut(self, origin, normal):
-        plane = vtk.vtkPlane()
+        plane = vtkPlane()
         plane.SetOrigin(origin)
         plane.SetNormal(normal)
         self.GetMapper().RemoveAllClippingPlanes()
         self.GetMapper().AddClippingPlane(plane)
-    

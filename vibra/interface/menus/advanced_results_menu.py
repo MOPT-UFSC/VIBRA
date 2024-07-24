@@ -3,8 +3,8 @@ from PyQt5.QtGui import QColor
 
 from vibra.interface.plots.acoustic.plot_particle_velocity_frequency_response_input import PlotParticleVelocityFrequencyResponseInput
 from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
+from molde.render_widgets import CommonRenderWidget
 
-from vibra.interface.viewer_3d.render_widgets.common_render_widget import CommonRenderWidget
 
 from vibra import app, ICON_DIR
 from vibra.utils.icons import load_icon

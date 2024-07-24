@@ -2,11 +2,23 @@ import logging
 from threading import Lock
 from time import time
 
-import vtk
 from PIL import Image
 from PyQt5.QtWidgets import QFrame, QStackedLayout
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from vtkmodules.util.numpy_support import vtk_to_numpy
+from vtkmodules.vtkCommonCore import vtkLookupTable
+from vtkmodules.vtkInteractionWidgets import vtkOrientationMarkerWidget
+from vtkmodules.vtkIOImage import vtkPNGWriter
+from vtkmodules.vtkRenderingAnnotation import (
+    vtkAxesActor,
+    vtkLegendScaleActor,
+    vtkScalarBarActor,
+)
+from vtkmodules.vtkRenderingCore import (
+    vtkRenderer,
+    vtkTextProperty,
+    vtkWindowToImageFilter,
+)
 
 from vibra.interface.viewer_3d.interactor_styles.arcball_camera import (
     vtkInteractorStyleArcballCamera,
@@ -24,7 +36,7 @@ class CommonRenderWidget(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.renderer = vtk.vtkRenderer()
+        self.renderer = vtkRenderer()
         self.style = vtkInteractorStyleArcballCamera()
         self.render_interactor = QVTKRenderWindowInteractor(self)
 
@@ -63,7 +75,7 @@ class CommonRenderWidget(QFrame):
             self.set_theme(main_window.user_config.theme)
 
     def get_thumbnail(self):
-        image_filter = vtk.vtkWindowToImageFilter()
+        image_filter = vtkWindowToImageFilter()
         image_filter.SetInput(self.render_interactor.GetRenderWindow())
         image_filter.Update()
 
@@ -86,15 +98,15 @@ class CommonRenderWidget(QFrame):
         return image
 
     def save_png(self, path):
-        imageFilter = vtk.vtkWindowToImageFilter()
+        imageFilter = vtkWindowToImageFilter()
         imageFilter.SetInput(self.render_interactor.GetRenderWindow())
-        writer = vtk.vtkPNGWriter()
+        writer = vtkPNGWriter()
         writer.SetFileName(path)
         writer.SetInputConnection(imageFilter.GetOutputPort())
         writer.Write()
 
     def create_axes(self):
-        axes_actor = vtk.vtkAxesActor()
+        axes_actor = vtkAxesActor()
 
         x_property = axes_actor.GetXAxisCaptionActor2D().GetCaptionTextProperty()
         y_property = axes_actor.GetYAxisCaptionActor2D().GetCaptionTextProperty()
@@ -104,14 +116,14 @@ class CommonRenderWidget(QFrame):
             i.ItalicOff()
             i.BoldOff()
 
-        self.axes = vtk.vtkOrientationMarkerWidget()
+        self.axes = vtkOrientationMarkerWidget()
         self.axes.SetOrientationMarker(axes_actor)
         self.axes.SetInteractor(self.render_interactor)
         self.axes.EnabledOn()
         self.axes.InteractiveOff()
 
     def create_scale_bar(self):
-        self.scale_bar = vtk.vtkLegendScaleActor()
+        self.scale_bar = vtkLegendScaleActor()
         self.scale_bar.AllAxesOff()
 
         title_property = self.scale_bar.GetLegendTitleProperty()
@@ -132,17 +144,17 @@ class CommonRenderWidget(QFrame):
 
     def create_color_bar(self, lookup_table=None):
         if lookup_table is None:
-            lookup_table = vtk.vtkLookupTable()
+            lookup_table = vtkLookupTable()
             lookup_table.Build()
 
-        colorbar_label = vtk.vtkTextProperty()
+        colorbar_label = vtkTextProperty()
         colorbar_label.ShadowOff()
         colorbar_label.ItalicOff()
         colorbar_label.BoldOn()
         colorbar_label.SetFontSize(12)
         colorbar_label.SetJustificationToLeft()
 
-        self.colorbar = vtk.vtkScalarBarActor()
+        self.colorbar = vtkScalarBarActor()
         self.colorbar.SetLabelTextProperty(colorbar_label)
         self.colorbar_actor.SetLookupTable(lookup_table)
         self.colorbar.SetWidth(0.02)
@@ -267,6 +279,6 @@ class CommonRenderWidget(QFrame):
 
     def update_animation(self, frame):
         raise NotImplementedError('The function "update_animation" was not implemented!')
-    
+
     def process_animation_frames(self):
         raise NotImplementedError('The function "process_animation_frames" was not implemented!')
