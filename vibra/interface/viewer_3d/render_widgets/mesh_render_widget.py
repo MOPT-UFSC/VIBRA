@@ -122,6 +122,10 @@ class MeshRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
+        if not self._actors_exists():
+            self.update_plot()
+            return
+
         self.renderer.RemoveActor(self.solids_actor)
         self.solids_actor = SolidsActor(mesh)
         self.renderer.AddActor(self.solids_actor)

@@ -131,6 +131,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
+        if not self._actors_exists():
+            self.update_plot()
+            return
+
         self.renderer.RemoveActor(self.faces_actor)
         self.faces_actor = FacesActor(mesh)
         self.renderer.AddActor(self.faces_actor)
