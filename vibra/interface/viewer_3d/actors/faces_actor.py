@@ -3,7 +3,7 @@ from vtkmodules.vtkCommonCore import (
     vtkPoints,
     vtkUnsignedCharArray,
 )
-from vtkmodules.vtkCommonDataModel import vtkPlane, vtkPolyData
+from vtkmodules.vtkCommonDataModel import vtkPlane, vtkPolyData, VTK_TRIANGLE
 from vtkmodules.vtkFiltersCore import vtkPolyDataNormals
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
 
