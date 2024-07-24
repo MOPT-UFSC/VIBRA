@@ -100,8 +100,8 @@ class SectionPlaneWidget(QDialog):
         self.relative_plane_position_z_spinbox.valueChanged.connect(self.spinbox_value_change_callback)
         #
         self.plane_rotation_x_spinbox.valueChanged.connect(self.spinbox_value_change_callback)
-        self.plane_rotation_x_spinbox.valueChanged.connect(self.spinbox_value_change_callback)
-        self.plane_rotation_x_spinbox.valueChanged.connect(self.spinbox_value_change_callback)
+        self.plane_rotation_y_spinbox.valueChanged.connect(self.spinbox_value_change_callback)
+        self.plane_rotation_z_spinbox.valueChanged.connect(self.spinbox_value_change_callback)
 
     def get_position(self, get_from : str):
         if get_from == "sliders":
