@@ -50,6 +50,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.setLayout(layout)
         self.setContentsMargins(0, 0, 0, 0)
 
+        self.show_plane_actor = True
         self.cutting_plane_active = False
         self.cutting_plane_args = tuple()
 
@@ -87,7 +88,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
             return
         self.control_bar.set_frequencies(solver.natural_frequencies)
 
-    def update_plot(self, reset_camera=True):
+    def update_plot(self, reset_camera=False):
         if self.main_window.project is None:
             return
 
@@ -109,6 +110,9 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         index = self.current_shape_index()
         if not (0 <= index < solver.modal_shape.shape[1]):
             return
+        
+        if self.plane_actor is not None:
+            self.show_plane_actor = self.plane_actor.GetVisibility()
 
         self.remove_actors()
 
@@ -141,6 +145,9 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         if self.cutting_plane_active and self.cutting_plane_args:
             self.start_cutting_mode()
             self.apply_cutting_plane(*self.cutting_plane_args)
+            if not self.show_plane_actor:
+                self.plane_actor.VisibilityOff()
+                self.update()
         else:
             self.update()
 
@@ -175,7 +182,6 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
             index, phase
         )
 
-        self.analysis_actor.disable_cut()
         self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
         self.edges_actor.extract_data(self.analysis_actor.data)
 
@@ -262,9 +268,9 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.edges_actor.apply_cut(xyz, normal)
 
         self.plane_actor.VisibilityOn()
+        self.plane_actor.configure_cutting_plane(position, orientation)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
-        self.plane_actor.configure_cutting_plane(position, orientation)
 
         self.update()
 

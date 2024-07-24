@@ -38,6 +38,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.main_window.theme_changed.connect(self.set_theme)
 
         self.cutting_plane_active = False
+        self.show_plane_actor = True
         self.cutting_plane_args = tuple()
 
         # replace the layout to add other usefull widgets
@@ -83,7 +84,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.control_bar.update_selector_label()
         self.control_bar.set_frequencies(solver.natural_frequencies)
 
-    def update_plot(self, reset_camera=True):
+    def update_plot(self, reset_camera=False):
         # Remember of updating the frequencies before running this
 
         if self.main_window.project is None:
@@ -107,6 +108,9 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         index = self.current_shape_index()
         if not (0 <= index < solver.modal_shape.shape[1]):
             return
+        
+        if self.plane_actor is not None:
+            self.show_plane_actor = self.plane_actor.GetVisibility()
 
         self.remove_actors()
 
@@ -166,6 +170,9 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         if self.cutting_plane_active and self.cutting_plane_args:
             self.start_cutting_mode()
             self.apply_cutting_plane(*self.cutting_plane_args)
+            if not self.show_plane_actor:
+                self.plane_actor.VisibilityOff()
+                self.update()
         else:
             self.update()
 
@@ -301,6 +308,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         has_hidden_part = bool(self.main_window.hidden_surfaces)
         self.hidden_part_actor.SetVisibility(has_hidden_part)
         self.analysis_actor.disable_cut()
+        self.edges_actor.disable_cut()
 
     def configure_cutting_plane(self, position, orientation):
         if not self._actors_exists():
@@ -328,11 +336,12 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         if invert:
             normal = -normal
         self.analysis_actor.apply_cut((x, y, z), normal)
+        self.edges_actor.apply_cut((x, y, z), normal)
 
         self.plane_actor.VisibilityOn()
+        self.plane_actor.configure_cutting_plane(position, orientation)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
-        self.plane_actor.configure_cutting_plane(position, orientation)
 
         self.update()
 

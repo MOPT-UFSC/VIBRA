@@ -45,6 +45,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.setContentsMargins(0, 0, 0, 0)
 
         self.cutting_plane_active = False
+        self.show_plane_actor = True
         self.cutting_plane_args = tuple()
 
         self.analysis_actor = None
@@ -82,7 +83,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.control_bar.update_selector_label()
         self.control_bar.set_frequencies(solver.frequencies)
 
-    def update_plot(self, reset_camera=True):
+    def update_plot(self, reset_camera=False):
         if self.main_window.project is None:
             return
 
@@ -104,6 +105,9 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         index = self.current_shape_index()
         if not (0 <= index < solver.solution.shape[1]):
             return
+        
+        if self.plane_actor is not None:
+            self.show_plane_actor = self.plane_actor.GetVisibility()
 
         self.remove_actors()
 
@@ -154,6 +158,9 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         if self.cutting_plane_active and self.cutting_plane_args:
             self.start_cutting_mode()
             self.apply_cutting_plane(*self.cutting_plane_args)
+            if not self.show_plane_actor:
+                self.plane_actor.VisibilityOff()
+                self.update()
         else:
             self.update()
 
@@ -303,7 +310,6 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         if not self._actors_exists():
             return
         self.cutting_plane_active = True
-        self.plane_actor.VisibilityOn()
         self.hidden_part_actor.VisibilityOn()
         self.update()
 
@@ -338,9 +344,9 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.edges_actor.apply_cut(xyz, normal)
 
         self.plane_actor.VisibilityOn()
+        self.plane_actor.configure_cutting_plane(position, orientation)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
-        self.plane_actor.configure_cutting_plane(position, orientation)
 
         self.update()
 

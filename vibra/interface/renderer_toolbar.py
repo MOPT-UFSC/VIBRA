@@ -179,10 +179,12 @@ class RendererToolbar(QToolBar):
             app().main_window.slider_pressed_callback()
             app().main_window.slider_moved_callback()
             app().main_window.slider_released_callback()
+
         else:
             app().main_window.viewer_tabs.stop_cutting_mode()
 
     def section_plane_config_callback(self):
+        self.clip_plane_show_action.setChecked(True)
         app().main_window.clip_plane.show()
 
     def clip_plane_callback(self):
