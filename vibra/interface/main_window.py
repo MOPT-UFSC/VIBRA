@@ -5,7 +5,7 @@ from PyQt5.QtCore import pyqtSignal
 from vibra import app
 from vibra.config import UserConfig
 from vibra.interface.analysis_filter_menu import AnalysisFilter
-from vibra.interface.clip_plane_widget import ClipPlaneWidget
+from vibra.interface.section_plane_widget import SectionPlaneWidget
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.exception_message import ErrorMessage
 from vibra.interface.loading_bar import load_function
@@ -75,10 +75,10 @@ class MainWindow(QMainWindow):
 
     def _create_connections(self):
         self.viewer_tabs.geometry_widget.selection_changed.connect(self.selection_changed_callback)
-        self.clip_plane.slider_pressed.connect(self.slider_pressed_callback)
-        self.clip_plane.value_changed.connect(self.slider_moved_callback)
-        self.clip_plane.slider_released.connect(self.slider_released_callback)
-        self.clip_plane.closed.connect(self.disable_section_plane_visibility)
+        self.section_plane.slider_pressed.connect(self.slider_pressed_callback)
+        self.section_plane.value_changed.connect(self.slider_moved_callback)
+        self.section_plane.slider_released.connect(self.slider_released_callback)
+        self.section_plane.closed.connect(self.disable_section_plane_visibility)
 
     def set_mesh_selection(self, *, nodes=None, faces=None, solids=None, join=False, remove=True):
         if nodes is None:
@@ -189,14 +189,14 @@ class MainWindow(QMainWindow):
         self.viewer_tabs.start_cutting_mode()
 
     def slider_moved_callback(self):
-        position = self.clip_plane.get_position()
-        orientation = self.clip_plane.get_rotation()
+        position = self.section_plane.get_position("sliders")
+        orientation = self.section_plane.get_rotation("sliders")
         self.viewer_tabs.configure_cutting_plane(position, orientation)
 
     def slider_released_callback(self):
-        position = self.clip_plane.get_position()
-        orientation = self.clip_plane.get_rotation()
-        self.viewer_tabs.apply_cutting_plane(position, orientation, self.clip_plane.invert_value)
+        position = self.section_plane.get_position("sliders")
+        orientation = self.section_plane.get_rotation("sliders")
+        self.viewer_tabs.apply_cutting_plane(position, orientation, self.section_plane.invert_value)
 
     def disable_section_plane_visibility(self):
         for tab in self.viewer_tabs.tabs():
@@ -325,7 +325,7 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(tool_tip_style)
 
     def _load_render_widgets(self):
-        self.clip_plane = ClipPlaneWidget(self)
+        self.section_plane = SectionPlaneWidget(self)
         # t0 = time()
         self.viewer_tabs = ViewerTabs(self)
         # dt = time() - t0

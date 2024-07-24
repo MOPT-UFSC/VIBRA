@@ -85,13 +85,13 @@ class RendererToolbar(QToolBar):
         self.show_faces_action.triggered.connect(self.show_faces_callback)
 
         clip_plane_show_icon = load_icon(ICON_DIR / "section_plane_view.png", color)
-        self.clip_plane_show_action = QAction(clip_plane_show_icon, "View Section Plane", self)
-        self.clip_plane_show_action.setCheckable(True)
-        self.clip_plane_show_action.triggered.connect(self.section_plane_show_callback)
+        self.section_plane_show_action = QAction(clip_plane_show_icon, "View Section Plane", self)
+        self.section_plane_show_action.setCheckable(True)
+        self.section_plane_show_action.triggered.connect(self.section_plane_show_callback)
 
         clip_plane_config_icon = load_icon(ICON_DIR / "section_plane_config.png", color)
-        self.clip_plane_config_action = QAction(clip_plane_config_icon, "Configure Section Plane", self)
-        self.clip_plane_config_action.triggered.connect(self.section_plane_config_callback)
+        self.section_plane_config_action = QAction(clip_plane_config_icon, "Configure Section Plane", self)
+        self.section_plane_config_action.triggered.connect(self.section_plane_config_callback)
 
         hide_icon = load_icon(ICON_DIR / "hide_icon.png", color)
         self.hide_selection = QAction(hide_icon, "Hide Selection", self)
@@ -117,8 +117,8 @@ class RendererToolbar(QToolBar):
         self.addAction(self.show_lines_action)
         self.addAction(self.show_faces_action)
         self.addSeparator()
-        self.addAction(self.clip_plane_show_action)
-        self.addAction(self.clip_plane_config_action)
+        self.addAction(self.section_plane_show_action)
+        self.addAction(self.section_plane_config_action)
         self.addSeparator()
         self.addAction(self.hide_selection)
         self.addAction(self.unhide_all)
@@ -184,11 +184,11 @@ class RendererToolbar(QToolBar):
             app().main_window.viewer_tabs.stop_cutting_mode()
 
     def section_plane_config_callback(self):
-        self.clip_plane_show_action.setChecked(True)
-        app().main_window.clip_plane.show()
+        self.section_plane_show_action.setChecked(True)
+        app().main_window.section_plane.show()
 
     def clip_plane_callback(self):
-        self.parent().clip_plane.show()
+        self.parent().section_plane.show()
 
     def hide_selection_callback(self):
         self.parent().hide_selection_callback()
