@@ -39,6 +39,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.left_released.connect(self.selection_callback)
         self.main_window.selection_changed.connect(self.update_selection)
         self.main_window.theme_changed.connect(self.set_theme)
+        self.main_window.section_plane.value_changed.connect(self.update_section_plane)
         # self.geometry_info = GeometryInfoBar()
 
         # # replace the layout to add other usefull widgets
@@ -54,9 +55,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.faces_actor = None
         self.hidden_part_actor = None
         self.selection_spheres_actor = None
-
-        self.cutting_plane_active = False
-        self.cutting_plane_args = tuple()
 
         self.selection_color = (20, 106, 245)
         self.selected_points = set()
@@ -146,10 +144,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         has_hidden_part = bool(self.main_window.hidden_surfaces)
         self.hidden_part_actor.SetVisibility(has_hidden_part)
 
-        if self.cutting_plane_active and self.cutting_plane_args:
-            self.start_cutting_mode()
-            self.apply_cutting_plane(*self.cutting_plane_args)
-
+        self.update_section_plane()
         self.update()
 
     def set_theme(self, theme):
@@ -435,158 +430,27 @@ class GeometryRenderWidget(CommonRenderWidget):
         for actor in self.renderer.GetActors():
             actor.SetPickable(pickability[actor])
 
-    ################################# TODO: Remove these commented lines
-    ################################# I am just not brave enought to do it
+    def update_section_plane(self):
+        section_plane = self.main_window.section_plane
 
-    # def select_point(self, new_point, *, join=False, remove=False):
-    #     self.select_multiple_points([new_point], join=join, remove=remove)
-
-    # def select_line(self, new_line, *, join=False, remove=False):
-    #     self.select_multiple_lines([new_line], join=join, remove=remove)
-
-    # def select_face(self, new_face, *, join=False, remove=False):
-    #     self.select_multiple_faces([new_face], join=join, remove=remove)
-
-    # def select_volume(self, new_volume, *, join=False, remove=False):
-    #     self.select_multiple_volumes([new_volume], join=join, remove=remove)
-
-    # def select_multiple_points(self, new_points, *, join=False, remove=False):
-    #     if self.view_mode != SHOW_POINTS:
-    #         return
-
-    #     if join:
-    #         self.selected_points |= set(new_points)
-    #     elif remove:
-    #         self.selected_points -= set(new_points)
-    #     else:
-    #         self.selected_points = set(new_points)
-
-    #     self.points_actor.clear_colors()
-    #     self.points_actor.paint_cells(self.selection_color, self.selected_points)
-    #     self.update()
-    #     self.selection_changed.emit(
-    #                                 self.selected_points,
-    #                                 self.selected_lines,
-    #                                 self.selected_faces,
-    #                                 self.selected_volumes
-    #                                 )
-
-    # def select_multiple_lines(self, new_lines, *, join=False, remove=False):
-    #     if self.view_mode != SHOW_LINES:
-    #         return
-
-    #     if join:
-    #         self.selected_lines |= set(new_lines)
-    #     elif remove:
-    #         self.selected_lines -= set(new_lines)
-    #     else:
-    #         self.selected_lines = set(new_lines)
-
-    #     all_element_indexes = list()
-    #     for line in self.selected_lines:
-
-    #         if line not in self.main_window.project.model.mesh.elements_from_line.keys():
-    #             return
-
-    #         indexes = self.main_window.project.model.mesh.elements_from_line[line]
-    #         all_element_indexes.extend(indexes)
-
-    #     self.lines_actor.clear_colors()
-    #     self.lines_actor.paint_cells(self.selection_color, all_element_indexes)
-    #     self.update()
-    #     self.selection_changed.emit(
-    #                                 self.selected_points,
-    #                                 self.selected_lines,
-    #                                 self.selected_faces,
-    #                                 self.selected_volumes
-    #                                 )
-
-    # def select_multiple_faces(self, new_faces, *, join=False, remove=False):
-    #     if self.view_mode != SHOW_FACES:
-    #         return
-
-    #     if join:
-    #         self.selected_faces |= set(new_faces)
-    #     elif remove:
-    #         self.selected_faces -= set(new_faces)
-    #     else:
-    #         self.selected_faces = set(new_faces)
-    #     self.selected_volumes.clear()
-
-    #     all_element_indexes = list()
-    #     for face in self.selected_faces:
-
-    #         if face not in self.main_window.project.model.mesh.elements_from_surface.keys():
-    #             return
-
-    #         indexes = self.main_window.project.model.mesh.elements_from_surface[face]
-    #         all_element_indexes.extend(indexes)
-
-    #     self.faces_actor.clear_colors()
-    #     self.faces_actor.paint_cells(self.selection_color, all_element_indexes)
-    #     self.update()
-    #     self.selection_changed.emit(
-    #                                 self.selected_points,
-    #                                 self.selected_lines,
-    #                                 self.selected_faces,
-    #                                 self.selected_volumes
-    #                                 )
-
-    # def select_multiple_volumes(self, new_volumes, *, join=False, remove=False):
-    #     if self.view_mode != SHOW_FACES:
-    #         return
-
-    #     if join:
-    #         self.selected_volumes |= set(new_volumes)
-    #     elif remove:
-    #         self.selected_volumes -= set(new_volumes)
-    #     else:
-    #         self.selected_volumes = set(new_volumes)
-    #     self.selected_faces.clear()
-
-    #     all_element_indexes = list()
-    #     for volume in self.selected_volumes:
-
-    #         surfaces = self.main_window.project.model.mesh.surfaces_from_volumes[volume]
-    #         for face in surfaces:
-
-    #             if face not in self.main_window.project.model.mesh.elements_from_surface.keys():
-    #                 return
-
-    #             indexes = self.main_window.project.model.mesh.elements_from_surface[face]
-    #             all_element_indexes.extend(indexes)
-
-    #     self.faces_actor.clear_colors()
-    #     self.faces_actor.paint_cells(self.selection_color, all_element_indexes)
-    #     self.update()
-    #     self.selection_changed.emit(
-    #                                 self.selected_points,
-    #                                 self.selected_lines,
-    #                                 self.selected_faces,
-    #                                 self.selected_volumes
-    #                                 )
-
-    # def clear_selection(self):
-    #     self.points_actor.clear_colors()
-    #     self.lines_actor.clear_colors()
-    #     self.faces_actor.clear_colors()
-    #     self.selected_points = set()
-    #     self.selected_lines = set()
-    #     self.selected_faces = set()
-    #     self.selected_volumes = set()
-
-    def start_cutting_mode(self):
-        if not self._actors_exists():
+        if not section_plane.cutting:
+            self._disable_section_plane()
             return
-        self.cutting_plane_active = True
-        self.plane_actor.VisibilityOn()
-        self.hidden_part_actor.VisibilityOn()
-        self.update()
 
-    def stop_cutting_mode(self):
-        if not self._actors_exists():
-            return
-        self.cutting_plane_active = False
+        position = section_plane.get_position()
+        rotation = section_plane.get_rotation()
+        inverted = section_plane.get_inverted()
+
+        if section_plane.editing:
+            self.plane_actor.configure_cutting_plane(position, rotation)
+            self.plane_actor.VisibilityOn()
+            self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
+            self.plane_actor.GetProperty().SetOpacity(0.8)
+            self.update()
+        else:
+            self._apply_section_plane(position, rotation, inverted, section_plane.isVisible())
+
+    def _disable_section_plane(self):
         has_hidden_part = bool(self.main_window.hidden_surfaces)
         self.hidden_part_actor.SetVisibility(has_hidden_part)
         self.plane_actor.VisibilityOff()
@@ -595,30 +459,21 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.faces_actor.disable_cut()
         self.update()
 
-    def configure_cutting_plane(self, position, orientation):
-        if not self._actors_exists():
-            return
-
-        self.plane_actor.configure_cutting_plane(position, orientation)
-        self.update()
-
-    def apply_cutting_plane(self, position, orientation, invert=False):
-        if not self._actors_exists():
-            return
-
-        self.cutting_plane_args = (position, orientation, invert)
+    def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
+        self.plane_actor.configure_cutting_plane(position, rotation)
         xyz = self.plane_actor.calculate_x_y_z_position(position)
-        normal = self.plane_actor.calculate_normal_vector(orientation)
-        if invert:
+        normal = self.plane_actor.calculate_normal_vector(rotation)
+        if inverted:
             normal = -normal
+
         self.points_actor.apply_cut(xyz, normal)
         self.faces_actor.apply_cut(xyz, normal)
         self.lines_actor.apply_cut(xyz, normal)
 
-        self.plane_actor.VisibilityOn()
+        self.hidden_part_actor.VisibilityOn()
+        self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
-
         self.update()
 
     def remove_actors(self):

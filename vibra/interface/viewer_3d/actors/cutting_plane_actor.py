@@ -40,9 +40,6 @@ class CuttingPlaneActor(vtkActor):
         self.SetPosition(x, y, z)
         self.SetOrientation(orientation)
 
-        self.GetProperty().SetColor(0, 0.333, 0.867)
-        self.GetProperty().SetOpacity(0.8)
-
     def calculate_x_y_z_position(self, position):
         x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
         y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)

@@ -175,23 +175,16 @@ class RendererToolbar(QToolBar):
             widget.show_faces()
     
     def section_plane_show_callback(self, option: bool):
-        if option:
-            app().main_window.slider_pressed_callback()
-            app().main_window.slider_moved_callback()
-            app().main_window.slider_released_callback()
+        app().main_window.section_plane.cutting = option
+        app().main_window.section_plane.value_changed.emit()
 
-        else:
-            app().main_window.viewer_tabs.stop_cutting_mode()
 
     def section_plane_config_callback(self):
         self.section_plane_show_action.setChecked(True)
         app().main_window.section_plane.show()
 
-    def clip_plane_callback(self):
-        self.parent().section_plane.show()
-
     def hide_selection_callback(self):
-        self.parent().hide_selection_callback()
+        app().main_window.hide_selection_callback()
 
     def unhide_all_callback(self):
-        self.parent().unhide_all_callback()
+        app().main_window.unhide_all_callback()
