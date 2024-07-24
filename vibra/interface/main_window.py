@@ -33,7 +33,7 @@ import qdarktheme
 import sys
 from pathlib import Path
 from shutil import rmtree, copy
-from time import sleep
+from time import sleep, time
 
 
 class MainWindow(QMainWindow):
@@ -116,6 +116,7 @@ class MainWindow(QMainWindow):
         self.selection_changed.emit()
 
     def set_geometry_selection(self, *, points=None, lines=None, surfaces=None, volumes=None, join=False, remove=True):
+        s = time()
         if points is None:
             points = set()
         
@@ -136,13 +137,13 @@ class MainWindow(QMainWindow):
             surfaces |= set(volume_surfaces)
 
         # Select the mesh elements associated with the selected geometry
-        mesh_faces = []
-        mesh_solids = []
-        for surface in surfaces:
-            mesh_faces.extend(mesh.elements_from_surface.get(surface, []))
-        for volume in volumes:
-            mesh_solids.extend(mesh.elements_from_volume.get(volume, []))
-        self.set_mesh_selection(faces=mesh_faces, solids=mesh_solids, join=join, remove=remove)
+        # mesh_faces = []
+        # mesh_solids = []
+        # for surface in surfaces:
+        #     mesh_faces.extend(mesh.elements_from_surface.get(surface, []))
+        # for volume in volumes:
+        #     mesh_solids.extend(mesh.elements_from_volume.get(volume, []))
+        # self.set_mesh_selection(faces=mesh_faces, solids=mesh_solids, join=join, remove=remove)
 
         if join and remove:
             self.selected_geometry_points ^= set(points)
@@ -166,6 +167,7 @@ class MainWindow(QMainWindow):
             self.selected_geometry_volumes = set(volumes)
 
         self.selection_changed.emit()
+        # print("COMBINING SELECTION", time() - s)
 
     def selection_changed_callback(self, points, lines, faces, volumes):
         self.status_bar.set_selection(points, lines, faces, volumes)
