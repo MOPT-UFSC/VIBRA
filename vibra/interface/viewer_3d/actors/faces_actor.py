@@ -3,7 +3,14 @@ from vtkmodules.vtkCommonCore import (
     vtkPoints,
     vtkUnsignedCharArray,
 )
-from vtkmodules.vtkCommonDataModel import vtkPlane, vtkPolyData, VTK_TRIANGLE
+from vtkmodules.vtkCommonDataModel import (
+    vtkPlane,
+    vtkPolyData,
+    VTK_TRIANGLE,
+    VTK_QUADRATIC_TRIANGLE,
+    VTK_QUAD,
+    VTK_QUADRATIC_QUAD
+)
 from vtkmodules.vtkFiltersCore import vtkPolyDataNormals
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
 
@@ -30,17 +37,23 @@ class FacesActor(vtkActor):
         cell_indexes.SetName("cell_indexes")
         cell_colors.Fill(0)
         #
-        nel = len(self.mesh.faces_connectivity[0, 4:])
-        # face_nodes = [3, 6, 4, 8]
-        # types = [VTK_TRIANGLE, VTK_QUADRATIC_TRIANGLE, VTK_QUAD, VTK_QUADRATIC_QUAD]
-        # aux = dict(zip(face_nodes, types))
+        nodes_per_element = len(self.mesh.faces_connectivity[0, 4:])
+        number_of_elements = len(self.mesh.faces_connectivity)
+        face_nodes = [3, 6, 4, 8]
+        types = [VTK_TRIANGLE, VTK_QUADRATIC_TRIANGLE, VTK_QUAD, VTK_QUADRATIC_QUAD]
+        aux = dict(zip(face_nodes, types))
+        try:
+            cell_type = aux[nodes_per_element]
+        except:
+            raise NotImplementedError("Not implemented plane element")
+
         #
-        data.Allocate(nel * len(self.mesh.faces_connectivity))
+        data.Allocate(nodes_per_element * number_of_elements)
         point_colors.SetNumberOfComponents(3)
         point_colors.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
         cell_colors.SetNumberOfComponents(4)
-        cell_colors.SetNumberOfTuples(len(self.mesh.faces_connectivity))
-        cell_indexes.Allocate(len(self.mesh.faces_connectivity))
+        cell_colors.SetNumberOfTuples(number_of_elements)
+        cell_indexes.Allocate(number_of_elements)
 
         for _, x, y, z in self.mesh.nodal_coordinates:
             points.InsertNextPoint(x, y, z)
@@ -51,14 +64,10 @@ class FacesActor(vtkActor):
         for i, surface, _, _, *values in self.mesh.faces_connectivity:
             if surface in hidden_surfaces:
                 continue
-            try:
-                data.InsertNextCell(VTK_TRIANGLE, nel, list(values))
-                visible_index = cell_indexes.InsertNextValue(
-                    i
-                )  # This is usefull if part of the cells are hidden
-                self.visible_indexes[i] = visible_index
-            except:
-                raise NotImplementedError("Not implemented plane element")
+            data.InsertNextCell(cell_type, nodes_per_element, list(values))
+            # This is usefull if part of the cells are hidden
+            visible_index = cell_indexes.InsertNextValue(i)
+            self.visible_indexes[i] = visible_index
 
         data.SetPoints(points)
         data.GetPointData().SetScalars(point_colors)

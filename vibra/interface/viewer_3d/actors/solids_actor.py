@@ -61,32 +61,9 @@ class SolidsActor(vtkActor):
 
         elif self.mesh.element_type == HEXAHEDRON_20:
             cell_type = VTK_QUADRATIC_HEXAHEDRON
-            nodes_order = (
-                0,
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12,
-                15,
-                17,
-                13,
-                20,
-                22,
-                23,
-                21,
-                14,
-                16,
-                18,
-                19,
-            )
+            # fmt: off
+            nodes_order = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 17, 13, 20, 22, 23, 21, 14, 16, 18, 19)
+            # fmt: on
             nodes_connectivity = self.mesh.solids_connectivity[:, nodes_order]
 
         else:
