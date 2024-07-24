@@ -951,8 +951,6 @@ class Mesh:
 
             elif selection == "lines":
                 all_ids = list(self.nodes_from_lines.keys())
-                print(all_ids)
-                print(self.nodes_from_lines)
 
             elif selection == "surfaces":
                 all_ids = list(self.nodes_from_surfaces.keys())   

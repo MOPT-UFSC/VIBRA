@@ -1140,7 +1140,7 @@ class CompressorModelInput(QDialog):
 
             self.hide()
 
-            title = f"Resetting of compressor excitations"
+            title = "Resetting of compressor excitations"
             message = "Would you like to remove all compressor excitations from the acoustic model?\n\n"
 
             buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}

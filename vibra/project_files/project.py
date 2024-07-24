@@ -25,7 +25,7 @@ class Project:
 
         self.fluid_list_path = ""
         self.material_list_path = ""
-        self.imported_table_state = False
+
         self.analysis_data = None
         self.dissipation_model = None
         #
@@ -138,24 +138,24 @@ class Project:
 
         analysis_data = self.analysis_data
 
-        if analysis_data is not None:
+        if isinstance(analysis_data, dict):
             analysis_data["frequencies"] = frequencies
             analysis_data["f_min"] = f_min
             analysis_data["f_max"] = f_max
             analysis_data["f_step"] = f_step
-            analysis_data["imported_table"] = imported_table
 
         else:
-            analysis_data = {   "frequencies": frequencies,
-                                "f_min": f_min,
-                                "f_max": f_max,
-                                "f_step": f_step,
-                                "imported_table" : imported_table   }
+            analysis_data = {   
+                            "frequencies": frequencies,
+                            "f_min": f_min,
+                            "f_max": f_max,
+                            "f_step": f_step
+                           }
+
+        if imported_table:
+            analysis_data["imported_table"] = imported_table
 
         self.set_analysis_data(analysis_data)
-
-    def update_import_table_state(self, state):
-        self.imported_table_state = state
 
     def create_solver(self):
         """ """

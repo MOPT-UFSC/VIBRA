@@ -22,7 +22,6 @@ class AnalysisSetupInput(QDialog):
 
         self.analysis_data = self.project.analysis_data
         self.analysis_id = self.analysis_data["analysis_id"]
-        self.imported_table_state = self.main_window.project.imported_table_state
 
         """
         |--------------------------------------------------------------------|
@@ -58,8 +57,8 @@ class AnalysisSetupInput(QDialog):
 
         ConfigWidgetAppearance(self)
 
-        self.update_frequency_setup_input_texts()
-        self.update_damping_input_texts()
+        self.update_frequency_setup_inputs()
+        self.update_damping_inputs()
         self.exec_()
 
     def _config_window(self):
@@ -149,7 +148,7 @@ class AnalysisSetupInput(QDialog):
     def tabEvent(self):
         self.currentTab = self.tabWidget.currentIndex()
 
-    def update_damping_input_texts(self):
+    def update_damping_inputs(self):
         if self.analysis_id not in [2, 3, 4]:
             if self.global_damping != [0, 0, 0, 0]:
                 self.lineEdit_av.setText(str(self.global_damping[0]))
@@ -157,15 +156,11 @@ class AnalysisSetupInput(QDialog):
                 self.lineEdit_ah.setText(str(self.global_damping[2]))
                 self.lineEdit_bh.setText(str(self.global_damping[3]))
 
-    def update_frequency_setup_input_texts(self):
+    def update_frequency_setup_inputs(self):
         if self.f_step != 0:
             self.lineEdit_fmin.setText(str(self.f_min))
             self.lineEdit_fmax.setText(str(self.f_max))
             self.lineEdit_fstep.setText(str(self.f_step))
-            if self.project.imported_table_state:
-                self.lineEdit_fmin.setDisabled(True)
-                self.lineEdit_fmax.setDisabled(True)
-                self.lineEdit_fstep.setDisabled(True)
 
     def check_exit(self):
         input_fmin = input_fmax = input_fstep = 0

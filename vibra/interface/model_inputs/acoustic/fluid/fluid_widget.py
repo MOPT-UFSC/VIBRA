@@ -690,6 +690,7 @@ class FluidWidget(QWidget):
         if self.compressor_thermodynamic_state:
 
             if isinstance(self.parent_widget, QDialog):
+                return
 
                 volume_id = self.compressor_thermodynamic_state['volume_id']
                 self.parent_widget.comboBox_attribution_type.setCurrentIndex(1)

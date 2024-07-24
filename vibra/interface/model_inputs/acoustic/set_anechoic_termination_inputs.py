@@ -222,8 +222,8 @@ class SetAnechoicTerminationInputs(QDialog):
 
         if len(surface_ids) > 0:
             
-            title = f"Resetting of all applied specific impedances"
-            message = "Would you like to remove the all anechoic terminations from the model?"
+            title = "Resetting of all applied specific impedances"
+            message = "Would you like to remove the all applied anechoic terminations from the model?"
 
             buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
             read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -237,19 +237,6 @@ class SetAnechoicTerminationInputs(QDialog):
 
                 app().main_window.file.write_model_properties_in_file()
                 self.close()
-
-    def update(self):
-        return
-
-    def write_ids(self, list_ids):
-
-        text = ""
-        for _id in list_ids:
-            text += "{}, ".format(_id)
-
-        current_tab = self.tabWidget_anechoic_termination.currentIndex()
-        if current_tab != 2:
-            self.lineEdit_selection_id.setText(text[:-2])
 
     def update_tabs_visibility(self):
         for key, data in self.properties.surface_properties.items():

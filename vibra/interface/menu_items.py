@@ -289,14 +289,14 @@ class MenuItems(QTreeWidget):
 
         self.addTopLevelItem(self.item_top_acoustic_model_setup)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_acoustic_pressure)
-        self.item_top_acoustic_model_setup.addChild(self.item_child_set_mass_flow_rate)
+        # self.item_top_acoustic_model_setup.addChild(self.item_child_set_mass_flow_rate)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_surface_velocity)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_anechoic_termination)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_specific_impedance)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_dissipation_model)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_porous_material_model)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_lrf_eq_model)
-        self.item_top_acoustic_model_setup.addChild(self.item_child_add_compressor_excitation)
+        # self.item_top_acoustic_model_setup.addChild(self.item_child_add_compressor_excitation)
 
         self.addTopLevelItem(self.item_top_analysis)
         self.item_top_analysis.addChild(self.item_child_selectAnalysisType)

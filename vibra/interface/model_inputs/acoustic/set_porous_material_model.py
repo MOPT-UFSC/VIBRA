@@ -149,7 +149,7 @@ class SetPorousMaterialModel(QDialog):
 
             self.hide()
 
-            title = f"Porous material model resetting"
+            title = "Porous material model resetting"
             message = "Would you like to remove the porous material model effects?"
 
             buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}

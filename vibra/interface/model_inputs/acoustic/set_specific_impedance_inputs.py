@@ -1,12 +1,13 @@
 # fmt: off
 
-from PyQt5.QtWidgets import QCheckBox, QDialog, QFileDialog, QLineEdit, QPushButton, QRadioButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
+from PyQt5.QtWidgets import QDialog, QFileDialog, QLineEdit, QPushButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCloseEvent
 from PyQt5 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
+from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
@@ -32,66 +33,53 @@ class SpecificImpedanceInput(QDialog):
         self.mesh = app().main_window.project.model.mesh
         self.properties = app().main_window.project.model.properties
         
-        self._reset_variables()
         self._config_window()
+        self._initialize()
         self._define_qt_variables()
         self._create_connections()
+        
+        ConfigWidgetAppearance(self, tool_tip=True)
+
         self.load_info()
         self.geometry_selection_callback()
-        self.exec()
+
+        while self.keep_window_open:
+            self.exec()
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(self.main_window.vibra_icon)
-        self.setWindowTitle("Set specific impedance")
+        self.setWindowTitle("Vibra")
 
-    def _reset_variables(self):
-        self.typed_ids = []
-        self.remove_specific_impedance = False
-        self.specific_impedance = None
-        self.userPath = os.path.expanduser("~")
-        self.new_load_path_table = ""
+    def _initialize(self):
+        self.typed_ids = list()
+        self.keep_window_open = True
+        self.imported_values = None
 
     def _define_qt_variables(self):
-        # QCheckBox objects
-        self.checkBox_averaged_constant_values = self.findChild(QCheckBox, "checkBox_averaged_constant_values")
-        self.checkBox_averaged_table_values = self.findChild(QCheckBox, "checkBox_averaged_table_values")
-        # self.checkBox_averaged_constant_values.setDisabled(True)
-        # self.checkBox_averaged_table_values.setDisabled(True)
-        # QLineEdit objects
-        self.lineEdit_selection_id = self.findChild(QLineEdit, "lineEdit_selection_id")
-        self.lineEdit_real_value = self.findChild(QLineEdit, "lineEdit_real_value")
-        self.lineEdit_imag_value = self.findChild(QLineEdit, "lineEdit_imag_value")
-        self.lineEdit_load_table_path = self.findChild(QLineEdit, "lineEdit_table_path")
-        # QPushButton objects
-        self.pushButton_load_table = self.findChild(QPushButton, "pushButton_load_table")
-        self.pushButton_constant_value_confirm = self.findChild(QPushButton, "pushButton_constant_value_confirm")
-        self.pushButton_table_values_confirm = self.findChild(QPushButton, "pushButton_table_values_confirm")
-        self.pushButton_remove_bc_confirm = self.findChild(QPushButton, "pushButton_remove_bc_confirm")
-        self.pushButton_reset = self.findChild(QPushButton, "pushButton_reset")
-        # QRadioButton objects
-        self.radioButton_nodal_attribution_constant = self.findChild(QRadioButton, "radioButton_nodal_attribution_constant")
-        self.radioButton_element_integration_constant = self.findChild(QRadioButton, "radioButton_element_integration_constant")
-        self.radioButton_element_integration_table = self.findChild(QRadioButton, "radioButton_element_integration_table")
-        self.radioButton_nodal_attribution_table = self.findChild(QRadioButton, "radioButton_nodal_attribution_table")
+
+        # QLineEdit
+        self.lineEdit_selection_id : QLineEdit
+        self.lineEdit_real_value : QLineEdit
+        self.lineEdit_imag_value : QLineEdit
+        self.lineEdit_table_path : QLineEdit
+
+        # QPushButton
+        self.pushButton_constant_value_confirm : QPushButton
+        self.pushButton_change_frequency_setup : QPushButton
+        self.pushButton_load_table : QPushButton
+        self.pushButton_remove_bc_confirm : QPushButton
+        self.pushButton_reset : QPushButton
+        self.pushButton_table_values_confirm : QPushButton
         #
-        self.radioButton_nodal_attribution_constant.setDisabled(True)
-        self.radioButton_nodal_attribution_table.setDisabled(True)
-        self.radioButton_element_integration_constant.setChecked(True)
-        self.radioButton_element_integration_table.setChecked(True)
-        self.update_controls_for_constant_value()
-        self.update_controls_for_table_of_values()
-        # QSpinBox object
-        self.spinBox_skiprows = self.findChild(QSpinBox, "spinBox")
-        # QTabWidget objects
-        self.tabWidget_specific_impedance = self.findChild(QTabWidget, "tabWidget_specific_impedance")
-        self.tab_constant_values = self.tabWidget_specific_impedance.findChild(QWidget, "tab_constant_values")
-        self.tab_table_values = self.tabWidget_specific_impedance.findChild(QWidget, "tab_table_values")
-        self.tab_remove = self.tabWidget_specific_impedance.findChild(QWidget, "tab_remove")
-        self.current_tab = self.tabWidget_specific_impedance.currentIndex()
-        # QTreeWidget objects
-        self.treeWidget_specific_impedance = self.findChild(QTreeWidget, "treeWidget_specific_impedance")
+        self.pushButton_change_frequency_setup.setDisabled(True)
+
+        # QTabWidget
+        self.tabWidget_specific_impedance : QTabWidget
+
+        # QTreeWidget
+        self.treeWidget_specific_impedance : QTreeWidget
         self.treeWidget_specific_impedance.setColumnWidth(1, 20)
         self.treeWidget_specific_impedance.setColumnWidth(2, 80)
 
@@ -103,22 +91,16 @@ class SpecificImpedanceInput(QDialog):
         self.pushButton_load_table.clicked.connect(self.load_specific_impedance_table)
         self.pushButton_reset.clicked.connect(self.check_reset)
         #
-        self.radioButton_nodal_attribution_constant.clicked.connect(self.update_controls_for_constant_value)
-        self.radioButton_element_integration_constant.clicked.connect(self.update_controls_for_constant_value)
-        self.radioButton_nodal_attribution_table.clicked.connect(self.update_controls_for_table_of_values)
-        self.radioButton_element_integration_table.clicked.connect(self.update_controls_for_table_of_values)
-        #
         self.tabWidget_specific_impedance.currentChanged.connect(self.tabEvent_specific_impedance)
         #
         self.treeWidget_specific_impedance.itemClicked.connect(self.on_click_item)
         self.treeWidget_specific_impedance.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
 
     def tabEvent_specific_impedance(self):
-        self.current_tab = self.tabWidget_specific_impedance.currentIndex()
-        if self.current_tab == 2:
+        index = self.tabWidget_specific_impedance.currentIndex()
+        if index == 2:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
         else:
@@ -191,6 +173,7 @@ class SpecificImpedanceInput(QDialog):
             return real_F + 1j * imag_F
 
     def check_constant_values(self):
+
         lineEdit_selection_id = self.lineEdit_selection_id.text()
         self.stop, self.typed_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
         if self.stop:
@@ -198,88 +181,83 @@ class SpecificImpedanceInput(QDialog):
             return
 
         for _id in self.typed_ids:
-            pass
             # self.properties._remove_surface_property("acoustic_pressure", _id)
+            pass
 
         specific_impedance = self.check_complex_entries(
-            self.lineEdit_real_value, self.lineEdit_imag_value
-        )
+                                                        self.lineEdit_real_value, 
+                                                        self.lineEdit_imag_value
+                                                        )
 
         if self.stop:
             return
 
         if specific_impedance is not None:
-            self.specific_impedance = specific_impedance
+
             real_values = [np.real(specific_impedance)]
             imag_values = [np.imag(specific_impedance)]
 
-            nodal_attribution = self.radioButton_nodal_attribution_constant.isChecked()
-            key_avg = self.checkBox_averaged_constant_values.isChecked()
-
-            data = {"real_values": real_values,
-                    "imag_values": imag_values,
-                    "nodal_attribution": nodal_attribution,
-                    "averaged": key_avg}
+            data = {
+                    "real_values" : real_values,
+                    "imag_values" : imag_values,
+                    "nodal_attribution" : False,
+                    "averaged" : False
+                    }
 
             for _id in self.typed_ids:
                 self.project.set_specific_impedance(data, _id)
-            self.main_window.viewer_tabs.update_info_text()
 
+            self.main_window.viewer_tabs.update_info_text()
             app().main_window.file.write_model_properties_in_file()
 
             print(f"[Set specific impedance] - defined at surface(s) {self.typed_ids}")
-            # TODO: remove existing tables and update the render
+
             self.close()
 
         else:
             title = "Additional inputs required"
-            message = "You must inform at least one specific impedance\n"
-            message += "before confirming the input!"
+            message = "You must enter the specific impedance to"
+            message += "proceed with the attribution."
             PrintMessageInput([window_title_1, title, message])
             self.lineEdit_real_value.setFocus()
 
-    def load_table(self, lineEdit, direct_load=False):
+    def load_table(self, lineEdit : QLineEdit, direct_load=False):
+
         title = "Error reached while loading 'specific impedance' table"
+
         try:
             if direct_load:
-                self.path_imported_table = lineEdit.text()
+                imported_table_path = lineEdit.text()
+
             else:
-                window_label = "Choose a table to import the specific impedance"
-                self.path_imported_table, _ = QFileDialog.getOpenFileName(
-                    None, window_label, self.userPath, "Files (*.csv; *.dat; *.txt)"
-                )
 
-            if self.path_imported_table == "":
-                return None, None
+                last_path = app().config.get_last_folder_for("imported table folder")
+                if last_path is None:
+                    path = os.path.expanduser("~")
+                else:
+                    path = last_path
 
-            imported_filename = os.path.basename(self.path_imported_table)
-            lineEdit.setText(self.path_imported_table)
+                caption = "Choose a table to import the specific impedance"
+                imported_table_path, check = QFileDialog.getOpenFileName( 
+                                                                        None, 
+                                                                        caption, 
+                                                                        path, 
+                                                                        "Files (*.csv; *.dat; *.txt)"
+                                                                        )
 
-            imported_file = np.loadtxt(self.path_imported_table, delimiter=",")
+                if not check:
+                    return None
+
+            lineEdit.setText(imported_table_path)
+            imported_file = np.loadtxt(imported_table_path, delimiter=",")
 
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"
                 message += " data must have three columns in the form: frequencies, real and imaginary values."
                 PrintMessageInput([window_title_1, title, message])
-                return None, None
+                return None
 
-            imported_values = imported_file[:, 1]
-
-            if imported_file.shape[1] >= 3:
-                self.frequencies = imported_file[:, 0]
-                self.f_min = self.frequencies[0]
-                self.f_max = self.frequencies[-1]
-                self.f_step = self.frequencies[1] - self.frequencies[0]
-                self.project.set_frequencies(self.frequencies, self.f_min, self.f_max, self.f_step, True)
-
-                # TODO: ensure that the table frequency setup governing the model setup
-                # if self.project.change_project_frequency_setup(imported_filename, list(self.frequencies)):
-                #     self.lineEdit_reset(self.lineEdit_load_table_path)
-                #     return None, None
-                # else:
-                #     self.project.set_frequencies(self.frequencies, self.f_min, self.f_max, self.f_step)
-
-            return imported_values, imported_filename
+            return imported_file
 
         except Exception as log_error:
             message = str(log_error)
@@ -287,36 +265,72 @@ class SpecificImpedanceInput(QDialog):
             lineEdit.setFocus()
             return None, None
 
-    def lineEdit_reset(self, lineEdit):
+    def change_project_frequency_setup(self, frequencies : np.ndarray):
+
+        if isinstance(frequencies, np.ndarray):
+            f_min = frequencies[0]
+            f_max = frequencies[-1]
+            f_step = frequencies[1] - frequencies[0]
+            actual_frequencies = frequencies
+            frequencies = list(frequencies)
+
+        model_frequencies = list()
+        analysis_data = self.main_window.project.analysis_data
+
+        if analysis_data is None:
+            self.project.set_frequencies(actual_frequencies, f_min, f_max, f_step, True)
+            return
+
+        else:
+
+            if "frequencies" in analysis_data.keys():
+                if isinstance(analysis_data["frequencies"], np.ndarray):
+                    model_frequencies = list(analysis_data["frequencies"])
+            
+            imported_table = False
+            if "imported_table" in analysis_data.keys():
+                imported_table = analysis_data["imported_table"]
+
+        if model_frequencies != frequencies:
+            if imported_table:
+
+                if self.are_there_other_active_tables():
+
+                    self.hide()
+                    table_path = self.lineEdit_table_path.text()
+                    table_name = os.path.basename(table_path)
+
+                    title = "Project frequency setup cannot be modified"
+                    message = f"The following imported table of values has a frequency setup "
+                    message += "different from the others already imported ones. The current "
+                    message += "project frequency setup is not going to be modified."
+                    message += f"\n\nTable name: {table_name}"
+                    PrintMessageInput([window_title_2, title, message])
+                    return True
+            
+            self.project.set_frequencies(actual_frequencies, f_min, f_max, f_step, True)
+
+    def are_there_other_active_tables(self):
+
+        for (property, surface_id), data in self.properties.surface_properties.items():
+            if surface_id in self.typed_ids:
+                if property == "specific_impedance":
+                    continue
+                else:
+                    if "table_name" in data.keys():
+                        return True
+            else:
+                if "table_name" in data.keys():
+                    return True
+
+        return False
+
+    def lineEdit_reset(self, lineEdit : QLineEdit):
         lineEdit.setText("")
         lineEdit.setFocus()
 
-    def save_table_file(self, entity_id, values, filename):
-        try:
-            self.project.create_folders_acoustic("specific_impedance_files")
-
-            real_values = np.real(values)
-            imag_values = np.imag(values)
-            abs_values = np.abs(values)
-            data = np.array([self.frequencies, real_values, imag_values, abs_values]).T
-
-            header = f"Vibra - imported table for specific impedance @ surface {entity_id} \n"
-            header += f"\nSource filename: {filename}\n"
-            header += "\nFrequency [Hz], real[m³/s], imaginary[m³/s], absolute[m³/s]"
-            basename = f"specific_impedance_surface_{entity_id}.dat"
-
-            new_path_table = os.path.join(self.specific_impedance_tables_folder_path, basename)
-            np.savetxt(new_path_table, data, delimiter=",", header=header)
-            return values, basename
-
-        except Exception as log_error:
-            title = "Error reached while saving table files"
-            message = str(log_error)
-            PrintMessageInput([window_title_1, title, message])
-            return None, None
-
     def load_specific_impedance_table(self):
-        self.imported_values, self.basename = self.load_table(self.lineEdit_load_table_path)
+        self.imported_values = self.load_table(self.lineEdit_table_path)
 
     def check_table_values(self):
 
@@ -330,37 +344,47 @@ class SpecificImpedanceInput(QDialog):
             # self.properties._remove_surface_property("acoustic_pressure", _id)
             pass
 
-        if self.lineEdit_load_table_path != "":
+        if self.lineEdit_table_path.text() != "":
+
+            if self.imported_values is None:
+                self.imported_values = self.load_table( self.lineEdit_table_path, 
+                                                        direct_load = True )
+
+            if isinstance(self.imported_values, np.ndarray):
+                if self.imported_values.shape[1] >= 3:
+
+                    frequencies = self.imported_values[:, 0]
+                    if self.change_project_frequency_setup(frequencies):
+                        self.lineEdit_table_path.setFocus()
+                        self.imported_values = None
+                        return
+                    
+            else:
+                return
+
+            if self.imported_values is None:
+                return
+
+            real_values = list(self.imported_values[:, 1])
+            imag_values = list(self.imported_values[:, 2])
+            table_path = self.lineEdit_table_path.text()
+
+            data = {
+                    "real_values": real_values,
+                    "imag_values": imag_values,
+                    "nodal_attribution": False,
+                    "averaged": False,
+                    "table_name": os.path.basename(table_path),
+                    }
+                
             for _id in self.typed_ids:
-                if self.basename is None:
-                    self.imported_values, self.basename = self.load_table(  self.lineEdit_load_table_path, 
-                                                                            direct_load=True  )
-
-                if self.imported_values is None:
-                    return
-
-                else:
-
-                    real_values = list(self.imported_values[:, 1])
-                    imag_values = list(self.imported_values[:, 2])
-
-                    nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
-                    key_avg = self.checkBox_averaged_constant_values.isChecked()
-
-                    data = {
-                                "real_values": real_values,
-                                "imag_values": imag_values,
-                                "nodal_attribution": nodal_attribution,
-                                "averaged": key_avg,
-                                "table_name": self.basename,
-                            }
-
-                    self.project.set_specific_impedance(data, _id)
+                self.project.set_specific_impedance(data, _id)
 
             self.main_window.viewer_tabs.update_info_text()
             app().main_window.file.write_model_properties_in_file()
 
             print(f"[Set specific impedance] - defined at surface(s) {self.typed_ids}")
+
             self.close()
 
         else:
@@ -368,17 +392,7 @@ class SpecificImpedanceInput(QDialog):
             message = "You must inform at least one specific impedance\n"
             message += "table path before confirming the input!"
             PrintMessageInput([window_title_1, title, message])
-            self.lineEdit_load_table_path.setFocus()
-
-    def get_list_table_names_from_selected_surfaces(self, list_ids):
-        list_table_names = []
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
-            if property == "specific_impedance":
-                if surface_id in list_ids:
-                    if "table_name" in data.keys():
-                        list_table_names.append(data["table_name"])
-        return list_table_names
+            self.lineEdit_table_path.setFocus()
 
     def text_label(self, value):
         if value.shape[0] == 1:
@@ -388,29 +402,27 @@ class SpecificImpedanceInput(QDialog):
         return "{}".format(value_label)
 
     def remove_bc_from_selection(self):
+
         if self.lineEdit_selection_id.text() != "":
+
             surface_properties = self.properties.surface_properties.copy()
             picked_id = int(self.lineEdit_selection_id.text())
+
             for key in surface_properties.keys():
                 property, surface_id = key
                 if property == "specific_impedance" and picked_id == surface_id:
-                    # TODO: remove imported specific impedance tables
-                    list_table_names = self.get_list_table_names_from_selected_surfaces([picked_id])
-                    self.process_table_file_removal(list_table_names)
+
                     self.properties._remove_surface_property("specific_impedance", picked_id)
                     self.load_info()
                     self.lineEdit_selection_id.setText("")
-                    return
+                    break
 
-    def process_table_file_removal(self, list_table_names):
-        if list_table_names != []:
-            for table_name in list_table_names:
-                self.project.remove_acoustic_table_files_from_folder(
-                    table_name, "specific_impedance_files"
-                )
+            app().main_window.file.write_model_properties_in_file()
+            self.check_model_frequency_controls()
 
     def check_reset(self):
-        surface_ids = []
+
+        surface_ids = list()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "specific_impedance":
@@ -418,10 +430,10 @@ class SpecificImpedanceInput(QDialog):
 
         if surface_ids:
 
-            title = f"Resetting of all applied specific impedances"
+            self.hide()
 
-            message = "Would you like to remove the specific impedance applied to the following surface(s)?\n\n"
-            message += f"{surface_ids}"
+            title = "Resetting applied specific impedances from model"
+            message = "Would you like to remove the all applied specific impedances from model?"
 
             buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
             read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -429,64 +441,53 @@ class SpecificImpedanceInput(QDialog):
             if read._cancel:
                 return
 
-            _list_table_names = []
             if read._continue:
-                for key, data in self.properties.surface_properties.items():
-                    property, surface_id = key
-                    if property == "specific_impedance":
-                        if "table_name" in data.keys():
-                            table_name = data[table_name]
-                        else:
-                            table_name = None
-                        if table_name is not None:
-                            if table_name not in _list_table_names:
-                                _list_table_names.append(table_name)
 
                 self.properties._reset_property("specific_impedance")
                 app().main_window.file.write_model_properties_in_file()
+                self.check_model_frequency_controls()
 
-                # TODO: remove imported tables
-                self.process_table_file_removal(_list_table_names)
-
-                title = "specific impedance resetting process complete"
+                title = "Specific impedance resetting process complete"
                 message = "All specific impedance applied to the acoustic "
                 message += "model have been removed from the model."
-                PrintMessageInput([window_title_2, title, message])
+                PrintMessageInput([window_title_2, title, message], auto_close=True)
 
                 self.close()
+
+    def change_frequency_setup(self):
+        if self.imported_values is not None:
+            self.hide()
+            obj = ChangeFrequencyDataRangeInput(self.imported_values)
+            if obj.filter_data is not None:
+                self.imported_values = obj.filter_data
+
+    def check_model_frequency_controls(self):
+
+        for key, data in self.properties.surface_properties.items():
+            property, _ = key
+            if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "mass_flow_rate"]:
+                if "table_name" in data.keys():
+                    return
+
+        if isinstance(self.project.analysis_data, dict):
+            analysis_data = self.project.analysis_data
+            analysis_data["imported_table"] = False
+            self.project.set_analysis_data(analysis_data)
 
     def reset_input_fields(self):
         self.lineEdit_real_value.setText("")
         self.lineEdit_imag_value.setText("")
-        self.lineEdit_load_table_path.setText("")
-
-    def update_controls_for_constant_value(self):
-        _bool = self.radioButton_element_integration_constant.isChecked()
-        self.checkBox_averaged_constant_values.setChecked(not _bool)
-        self.checkBox_averaged_constant_values.setDisabled(_bool)
-
-    def update_controls_for_table_of_values(self):
-        _bool = self.radioButton_element_integration_table.isChecked()
-        self.checkBox_averaged_table_values.setChecked(not _bool)
-        self.checkBox_averaged_table_values.setDisabled(_bool)
-
-    def update(self):
-        # This method should be called to update qt widgets whenever some entity has been clicked
-        return
-
-    def write_ids(self, list_ids):
-        text = ""
-        for _id in list_ids:
-            text += "{}, ".format(_id)
-        if self.current_tab != 2:
-            self.lineEdit_selection_id.setText(text[:-2])
+        self.lineEdit_table_path.setText("")
 
     def update_tabs_visibility(self):
-        surface_ids = []
+        surface_ids = list()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "specific_impedance":
-                surface_ids.append(surface_id)
+                if "anechoic_termination" in data.keys():
+                    continue
+                else:
+                    surface_ids.append(surface_id)
 
         if len(surface_ids) == 0:
             self.tabWidget_specific_impedance.setTabVisible(2, False)
@@ -506,5 +507,9 @@ class SpecificImpedanceInput(QDialog):
             self.close()
         else:
             return
+
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
+        self.keep_window_open = False
+        return super().closeEvent(a0)
 
 # fmt: on

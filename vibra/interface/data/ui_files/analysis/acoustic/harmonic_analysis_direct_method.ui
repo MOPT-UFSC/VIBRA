@@ -142,13 +142,13 @@
            <widget class="QLabel" name="label_24">
             <property name="minimumSize">
              <size>
-              <width>40</width>
+              <width>60</width>
               <height>28</height>
              </size>
             </property>
             <property name="maximumSize">
              <size>
-              <width>40</width>
+              <width>60</width>
               <height>28</height>
              </size>
             </property>
@@ -165,7 +165,7 @@
              <string>[Hz]</string>
             </property>
             <property name="alignment">
-             <set>Qt::AlignCenter</set>
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
             </property>
            </widget>
           </item>
@@ -275,13 +275,13 @@
            <widget class="QLabel" name="label_25">
             <property name="minimumSize">
              <size>
-              <width>40</width>
+              <width>60</width>
               <height>28</height>
              </size>
             </property>
             <property name="maximumSize">
              <size>
-              <width>40</width>
+              <width>60</width>
               <height>28</height>
              </size>
             </property>
@@ -298,7 +298,7 @@
              <string>[Hz]</string>
             </property>
             <property name="alignment">
-             <set>Qt::AlignCenter</set>
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
             </property>
            </widget>
           </item>
@@ -326,7 +326,7 @@
              </font>
             </property>
             <property name="text">
-             <string>Freq. min: </string>
+             <string>Freq. min:</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -357,7 +357,7 @@
              </font>
             </property>
             <property name="text">
-             <string>Freq. max: </string>
+             <string>Freq. max:</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -388,7 +388,7 @@
              </font>
             </property>
             <property name="text">
-             <string>Freq. step: </string>
+             <string>Freq. step:</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -399,13 +399,13 @@
            <widget class="QLabel" name="label_26">
             <property name="minimumSize">
              <size>
-              <width>40</width>
+              <width>60</width>
               <height>28</height>
              </size>
             </property>
             <property name="maximumSize">
              <size>
-              <width>40</width>
+              <width>60</width>
               <height>28</height>
              </size>
             </property>
@@ -422,7 +422,7 @@
              <string>[Hz]</string>
             </property>
             <property name="alignment">
-             <set>Qt::AlignCenter</set>
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
             </property>
            </widget>
           </item>
@@ -493,13 +493,13 @@
           <widget class="QPushButton" name="pushButton_confirm_close">
            <property name="minimumSize">
             <size>
-             <width>160</width>
+             <width>120</width>
              <height>32</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>160</width>
+             <width>120</width>
              <height>32</height>
             </size>
            </property>
@@ -524,13 +524,13 @@
           <widget class="QPushButton" name="pushButton_confirm_run_analysis">
            <property name="minimumSize">
             <size>
-             <width>160</width>
+             <width>120</width>
              <height>32</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>160</width>
+             <width>120</width>
              <height>32</height>
             </size>
            </property>
