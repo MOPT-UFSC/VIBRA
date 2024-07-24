@@ -491,10 +491,10 @@ class SurfaceVelocityInput(QDialog):
                 app().main_window.file.write_model_properties_in_file()
                 self.check_model_frequency_controls()
 
-                title = "Surface velocity resetting process complete"
-                message = "All surface velocity applied to the acoustic "
-                message += "model have been removed from the model."
-                PrintMessageInput([window_title_2, title, message], auto_close=True)
+                # title = "Surface velocity resetting process complete"
+                # message = "All surface velocity applied to the acoustic "
+                # message += "model have been removed from the model."
+                # PrintMessageInput([window_title_2, title, message], auto_close=True)
 
                 self.close()
 

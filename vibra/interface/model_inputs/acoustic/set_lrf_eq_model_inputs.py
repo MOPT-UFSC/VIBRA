@@ -486,10 +486,10 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
                 app().main_window.file.write_model_properties_in_file()
 
-                title = "Model resetting complete"
-                message = "All LRF equivalent model effects active on "
-                message += "the acoustic model have been removed."
-                PrintMessageInput([window_title_2, title, message], auto_close=True)
+                # title = "Model resetting complete"
+                # message = "All LRF equivalent model effects active on "
+                # message += "the acoustic model have been removed."
+                # PrintMessageInput([window_title_2, title, message], auto_close=True)
 
                 self.close()
 

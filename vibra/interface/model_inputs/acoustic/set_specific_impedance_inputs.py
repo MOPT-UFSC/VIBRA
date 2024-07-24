@@ -447,10 +447,10 @@ class SpecificImpedanceInput(QDialog):
                 app().main_window.file.write_model_properties_in_file()
                 self.check_model_frequency_controls()
 
-                title = "Specific impedance resetting process complete"
-                message = "All specific impedance applied to the acoustic "
-                message += "model have been removed from the model."
-                PrintMessageInput([window_title_2, title, message], auto_close=True)
+                # title = "Specific impedance resetting process complete"
+                # message = "All specific impedance applied to the acoustic "
+                # message += "model have been removed from the model."
+                # PrintMessageInput([window_title_2, title, message], auto_close=True)
 
                 self.close()
 

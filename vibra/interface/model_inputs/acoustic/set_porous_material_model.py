@@ -383,7 +383,7 @@ class SetPorousMaterialModel(QDialog):
 
         if input_str != "":
 
-            input_str.replace(",", ".")
+            input_str = input_str.replace(",", ".")
 
             try:
                 if _float:

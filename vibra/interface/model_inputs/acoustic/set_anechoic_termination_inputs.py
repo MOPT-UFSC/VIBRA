@@ -1,12 +1,9 @@
-import configparser
-import os
-from pathlib import Path
+# fmt: on
 
-import numpy as np
-from PyQt5 import uic
+from PyQt5.QtWidgets import QComboBox, QDialog, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QCloseEvent
+from PyQt5 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
@@ -42,29 +39,30 @@ class SetAnechoicTerminationInputs(QDialog):
 
         self.load_info()
         self.geometry_selection_callback()
-        self.exec()
+
+        while self.keep_window_open:
+            self.exec()
 
     def _config_window(self):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Set anechoic termination")
+        self.setWindowTitle("Vibra")
 
     def _reset(self):
-        self.typed_ids = []
-        self.remove_anechoic_termination = False
+        self.keep_window_open = True
         self.anechoic_termination = None
-        self.userPath = os.path.expanduser("~")
-        self.new_load_path_table = ""
 
     def _define_qt_variables(self):
         
         # QComboBox
         self.comboBox_volume_id : QComboBox
-        
+        self.comboBox_volume_id.setDisabled(True)
+
         # QLineEdit
         self.lineEdit_selection_id : QLineEdit
-        
+        self.lineEdit_selection_id.setDisabled(True)
+
         # QPushButton
         self.pushButton_confirm : QPushButton
         self.pushButton_remove_bc_confirm : QPushButton
@@ -74,7 +72,7 @@ class SetAnechoicTerminationInputs(QDialog):
         self.tabWidget_anechoic_termination : QTabWidget
         
         # QTreeWidget
-        self.treeWidget_anechoic_termination = self.findChild(QTreeWidget, "treeWidget_anechoic_termination")
+        self.treeWidget_anechoic_termination : QTreeWidget
         self.treeWidget_anechoic_termination.setColumnWidth(1, 20)
         self.treeWidget_anechoic_termination.setColumnWidth(2, 80)
 
@@ -130,10 +128,12 @@ class SetAnechoicTerminationInputs(QDialog):
     def update_volumes_from_faces(self):
 
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
+        stop, surface_ids = self.mesh.check_selected_ids(lineEdit_selection_id, selection="surfaces")
+        if stop:
+            return
 
         list_volumes = list()
-        for face_id in self.typed_ids:            
+        for face_id in surface_ids:            
             for volume_id in self.model.mesh.volume_from_surface[face_id]:
                 if volume_id not in list_volumes:
                     list_volumes.append(volume_id)
@@ -145,7 +145,7 @@ class SetAnechoicTerminationInputs(QDialog):
         if len(list_volumes) == 1:
             self.comboBox_volume_id.setDisabled(True)
         else:
-            if len(self.typed_ids) == 1:
+            if len(surface_ids) == 1:
                 self.comboBox_volume_id.setDisabled(False)
             else:
                 self.comboBox_volume_id.clear()
@@ -154,35 +154,44 @@ class SetAnechoicTerminationInputs(QDialog):
     def confirm_button_pressed(self):
 
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
-        if self.stop:
+        stop, surface_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
+        if stop:
             self.lineEdit_selection_id.setFocus()
             return
 
-        for face_id in self.typed_ids:
-            volume_ids = self.model.mesh.volume_from_surface[self.typed_ids[0]]
-            if len(volume_ids) > 1:
+        for face_id in surface_ids:
+
+            volume_ids = self.model.mesh.volume_from_surface[surface_ids[0]]
+            if len(surface_ids) > 1 and len(volume_ids) > 1:
+                
+                self.hide()
                 title = "Undefined volume"
-                message = f"The selected face ID [{face_id}] is associated to the volumes {volume_ids}. "
-                message += "The multiple selection of faces related to more than one volume is not allowed. "
+                
+                # message = f"The selected face ID [{face_id}] is associated to the volumes {volume_ids}. "
+                message = "The multiple selection of faces related to more than one volume is not allowed. "
                 message += "In this case, it is necessary to select the Face ID and the respective Volume ID "
                 message += "to proceed."
                 PrintMessageInput([window_title_2, title, message])
-                return 
 
-        volume_id = int(self.comboBox_volume_id.currentText())
+                return
 
-        data = {"anechoic_termination" : True,
-                "volume_id" : volume_id,
-                "nodal_attribution": False}
+            if self.comboBox_volume_id.currentText() == "multiple":
+                volume_id = volume_ids[0]
+            else:
+                volume_id = int(self.comboBox_volume_id.currentText())
 
-        for face_id in self.typed_ids:
+            data = {
+                    "anechoic_termination" : True,
+                    "volume_id" : volume_id,
+                    "nodal_attribution": False
+                    }
+
             self.project.set_specific_impedance(data, face_id)
-        self.main_window.viewer_tabs.update_info_text()
 
+        self.main_window.viewer_tabs.update_info_text()
         app().main_window.file.write_model_properties_in_file()
 
-        print(f"[Set anechoic termination] - defined at surface(s) {self.typed_ids}")
+        print(f"[Set anechoic termination] - defined at surface(s) {surface_ids}")
         self.close()
 
     def lineEdit_reset(self, lineEdit):
@@ -221,6 +230,8 @@ class SetAnechoicTerminationInputs(QDialog):
                     surface_ids.append(surface_id)
 
         if len(surface_ids) > 0:
+
+            self.hide()
             
             title = "Resetting of all applied specific impedances"
             message = "Would you like to remove the all applied anechoic terminations from the model?"
@@ -261,3 +272,9 @@ class SetAnechoicTerminationInputs(QDialog):
             self.close()
         else:
             return
+
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
+        self.keep_window_open = False
+        return super().closeEvent(a0)
+    
+# fmt: on
