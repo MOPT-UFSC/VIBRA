@@ -27,7 +27,6 @@ class SectionPlaneWidget(QDialog):
         self._define_qt_variables()
         self._create_connections()
         self.reset_button_callback()
-        print("INIT")
 
     def configure_window(self):
         self.setWindowFlags(
