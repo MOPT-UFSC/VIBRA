@@ -1,10 +1,13 @@
-import vtk
+from vtkmodules.vtkCommonDataModel import vtkPlane
+from vtkmodules.vtkFiltersCore import vtkExtractEdges
+from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
+from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
 
 
-class EdgesActor(vtk.vtkActor):
+class EdgesActor(vtkActor):
     def __init__(self, data):
-        self.mapper = vtk.vtkDataSetMapper()
-        self.edges_extractor = vtk.vtkExtractEdges()
+        self.mapper = vtkDataSetMapper()
+        self.edges_extractor = vtkExtractEdges()
         self.edges_extractor.UseAllPointsOn()
         self.data = None
 
@@ -17,7 +20,7 @@ class EdgesActor(vtk.vtkActor):
     def extract_data(self, data):
         if data == self.edges_extractor.GetInput():
             return
-        
+
         self.data = data
 
         self.edges_extractor.SetInputData(data)
@@ -27,12 +30,12 @@ class EdgesActor(vtk.vtkActor):
     def apply_cut(self, origin, normal):
         if self.data is None:
             return
-        
-        plane = vtk.vtkPlane()
+
+        plane = vtkPlane()
         plane.SetOrigin(origin)
         plane.SetNormal(normal)
 
-        clipper = vtk.vtkExtractGeometry()
+        clipper = vtkExtractGeometry()
         clipper.SetInputData(self.data)
         clipper.SetImplicitFunction(plane)
         clipper.ExtractInsideOff()
@@ -46,8 +49,8 @@ class EdgesActor(vtk.vtkActor):
 
     def disable_cut(self):
         if self.data is None:
-            return 
-        
+            return
+
         self.GetMapper().RemoveAllClippingPlanes()
         self.GetMapper().RemoveAllInputConnections(0)
         self.GetMapper().SetInputData(self.data)

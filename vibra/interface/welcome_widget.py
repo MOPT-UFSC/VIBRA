@@ -1,7 +1,7 @@
 
 from PyQt5.QtCore import QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon, QImage, QPixmap
-from PyQt5.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget, QBoxLayout
 
 from fileboxes import Filebox
 
@@ -66,7 +66,7 @@ class WelcomeWidget(QWidget):
         for _ in range(number_of_recent):
             buttons_layout.addWidget(WelcomeItem())
 
-    def setup_example_projects(self, layout):
+    def setup_example_projects(self, layout: QBoxLayout):
         example_label = QLabel("Example Projects", self)
         example_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(example_label)
@@ -96,16 +96,17 @@ class WelcomeWidget(QWidget):
             else:
                 icon = None
 
-            name = path.name
+            name = path.stem
 
             handler = partial(self.main_window.open_project, path)
             item = WelcomeItem(name, icon)
+            item.setToolTip(str(path))
             item.clicked.connect(handler)
             examples_layout.addWidget(item)
 
         # Complete the remaining with empty items
-        for _ in range(number_of_examples - len(example_paths)):
-            examples_layout.addWidget(WelcomeItem())
+        # for _ in range(number_of_examples - len(example_paths)):
+        #     examples_layout.addWidget(WelcomeItem())
 
     def new_project(self):
         self.main_window.new_project_dialog()
@@ -134,4 +135,5 @@ class WelcomeItem(QWidget):
         layout = QVBoxLayout()
         layout.addWidget(button)
         layout.addWidget(label)
+        layout.setAlignment(Qt.AlignCenter)
         self.setLayout(layout)

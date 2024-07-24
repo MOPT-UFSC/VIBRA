@@ -2,10 +2,7 @@ from pathlib import Path
 
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QMenu
-
-from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
-    CommonRenderWidget,
-)
+from molde.render_widgets import CommonRenderWidget
 
 from vibra import ICON_DIR
 from vibra.utils.icons import load_icon

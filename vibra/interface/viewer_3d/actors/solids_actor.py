@@ -1,12 +1,27 @@
-import vtk
-import numpy as np
 from time import time
 
-from vibra.engine.mesher.element_type import *
+import numpy as np
+from vtkmodules.vtkCommonCore import (
+    vtkIntArray,
+    vtkPoints,
+    vtkUnsignedCharArray,
+)
+from vtkmodules.vtkCommonDataModel import (
+    VTK_HEXAHEDRON,
+    VTK_QUADRATIC_HEXAHEDRON,
+    VTK_QUADRATIC_TETRA,
+    VTK_TETRA,
+    vtkPlane,
+    vtkUnstructuredGrid,
+)
+from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
+from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
+
 from vibra import app
+from vibra.engine.mesher.element_type import *
 
 
-class SolidsActor(vtk.vtkActor):
+class SolidsActor(vtkActor):
     def __init__(self, mesh, allow_hidding=True):
         self.mesh = mesh
         self.data = None
@@ -23,40 +38,42 @@ class SolidsActor(vtk.vtkActor):
         return self.mesh.nodal_coordinates[:, 1:]
 
     def create_geometry(self):
-        data = vtk.vtkUnstructuredGrid()
-        points = vtk.vtkPoints()
-        mapper = vtk.vtkDataSetMapper()
-        point_colors = vtk.vtkUnsignedCharArray()
-        cell_colors = vtk.vtkUnsignedCharArray()
-        cell_indexes = vtk.vtkIntArray()
+        data = vtkUnstructuredGrid()
+        points = vtkPoints()
+        mapper = vtkDataSetMapper()
+        point_colors = vtkUnsignedCharArray()
+        cell_colors = vtkUnsignedCharArray()
+        cell_indexes = vtkIntArray()
         cell_indexes.SetName("cell_indexes")
 
         if self.mesh.element_type == TETRAHEDRON_4:
-            cell_type = vtk.VTK_TETRA
+            cell_type = VTK_TETRA
             nodes_connectivity = self.mesh.solids_connectivity
 
         elif self.mesh.element_type == TETRAHEDRON_10:
-            cell_type = vtk.VTK_QUADRATIC_TETRA
+            cell_type = VTK_QUADRATIC_TETRA
             nodes_order = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 12)
             nodes_connectivity = self.mesh.solids_connectivity[:, nodes_order]
 
         elif self.mesh.element_type == HEXAHEDRON_8:
-            cell_type = vtk.VTK_HEXAHEDRON
+            cell_type = VTK_HEXAHEDRON
             nodes_connectivity = self.mesh.solids_connectivity
 
         elif self.mesh.element_type == HEXAHEDRON_20:
-            cell_type = vtk.VTK_QUADRATIC_HEXAHEDRON
+            cell_type = VTK_QUADRATIC_HEXAHEDRON
+            # fmt: off
             nodes_order = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 17, 13, 20, 22, 23, 21, 14, 16, 18, 19)
+            # fmt: on
             nodes_connectivity = self.mesh.solids_connectivity[:, nodes_order]
 
         else:
             raise NotImplementedError("Unknown element type")
-        
+
         number_of_nodes = self.mesh.nodal_coordinates.shape[0]
         number_of_elements = self.mesh.solids_connectivity.shape[0]
         nodes_per_element = nodes_connectivity.shape[1]
 
-        data.Allocate( number_of_elements * nodes_per_element )
+        data.Allocate(number_of_elements * nodes_per_element)
 
         point_colors.SetNumberOfComponents(3)
         point_colors.SetNumberOfTuples(number_of_nodes)
@@ -74,7 +91,9 @@ class SolidsActor(vtk.vtkActor):
             if volume in hidden_volumes:
                 continue
             data.InsertNextCell(cell_type, len(nodes), nodes)
-            visible_index = cell_indexes.InsertNextValue(i)  # This is usefull if part of the cells are hidden
+            visible_index = cell_indexes.InsertNextValue(
+                i
+            )  # This is usefull if part of the cells are hidden
             self.visible_indexes[i] = visible_index
 
         data.SetPoints(points)
@@ -146,13 +165,13 @@ class SolidsActor(vtk.vtkActor):
         self.GetMapper().SetScalarModeToUseCellData()
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
-    
+
     def apply_cut(self, origin, normal):
-        plane = vtk.vtkPlane()
+        plane = vtkPlane()
         plane.SetOrigin(origin)
         plane.SetNormal(normal)
 
-        clipper = vtk.vtkExtractGeometry()
+        clipper = vtkExtractGeometry()
         clipper.SetInputData(self.data)
         clipper.SetImplicitFunction(plane)
         clipper.ExtractInsideOff()

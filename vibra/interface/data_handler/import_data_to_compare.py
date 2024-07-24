@@ -6,8 +6,6 @@ from pathlib import Path
 
 import os
 import numpy as np
-import pandas as pd
-import openpyxl
 
 from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -125,7 +123,9 @@ class ImportDataToCompare(QDialog):
         self.update_treeWidget_info()
 
     def import_results(self, imported_path):
-        
+        import pandas as pd
+        import openpyxl
+
         try:
 
             message = ""

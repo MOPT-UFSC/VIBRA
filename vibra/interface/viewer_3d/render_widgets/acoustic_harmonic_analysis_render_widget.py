@@ -1,8 +1,12 @@
-from PyQt5.QtWidgets import QVBoxLayout
-from PyQt5.QtCore import QObjectCleanupHandler
+import logging
+from time import time
 
+import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
+from PyQt5.QtCore import QObjectCleanupHandler
+from PyQt5.QtWidgets import QVBoxLayout
 
+from vibra import app
 # from vibra.interface.modal_analysis_bar import AcousticModalAnalysisBar
 from vibra.interface.analysis_bars.acoustic_analysis_bar import (
     AcousticModalAnalysisBar,
@@ -18,11 +22,7 @@ from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 # )
 from vibra.utils.interface_functions import get_main_window
 from vibra.utils.progress_status import ProgressStatus
-from vibra import app
 
-import logging
-import numpy as np
-from time import time
 
 class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
     def __init__(self, parent=None):
@@ -133,7 +133,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
         self.renderer.AddActor(self.edges_actor)
 
-        # Add a very subtle transparent actor to represent the whole 
+        # Add a very subtle transparent actor to represent the whole
         # structure even if part of it is hidden
         has_hidden_part = bool(self.main_window.hidden_surfaces)
         self.hidden_part_actor = FacesActor(mesh, allow_hidding=False)
@@ -166,7 +166,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
 
         if reset_camera:
             self.renderer.ResetCamera()
-    
+
         self.main_window.project.thumbnail = self.get_thumbnail()
 
     def update_hidden_plot(self):
@@ -183,8 +183,8 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
 
         index = self.current_shape_index()
         if not (0 <= index < solver.solution.shape[1]):
-            return      
-        
+            return
+
         t0 = time()
 
         current_pressures = solver.solution[:, index]
@@ -198,7 +198,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         if self.control_bar.absolute_button.isChecked():
             min_value = 0
             output_pressures = np.abs(output_pressures)
-        
+
         # dt = time() - t0
         # print(f"Elapsed time to process A: {round(dt, 4)} s")
 
@@ -218,10 +218,9 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         # print(f"Elapsed time to process D: {round(dt, 4)} s")
 
     def process_animation_frames(self):
-
-        """ This method processes the animation frames for one complete 
-            animation cycle. The animation controls are frame per cycle
-            and the number cycles.
+        """This method processes the animation frames for one complete
+        animation cycle. The animation controls are frame per cycle
+        and the number cycles.
 
         """
 
@@ -243,7 +242,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         nodal_solution = solver.solution[:, index].copy()
         amplitudes = np.abs(nodal_solution)
         phase = np.angle(nodal_solution)
-        
+
         deg_angles = np.linspace(0, 360, self._animation_fps, endpoint=False)
         min_value, max_value = solver.get_max_min_values_of_pressures(index)
 
@@ -252,7 +251,6 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
             max_value = np.max(np.abs([min_value, max_value]))
 
         for step, deg_angle in enumerate(deg_angles):
-
             phi = deg_angle * np.pi / 180
             output_pressures = amplitudes * np.cos(phase + phi)
 
@@ -261,7 +259,9 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
 
             self.animation_data[deg_angle] = output_pressures
 
-            logging.info("Processing the animation frames..." + ProgressStatus(step, len(deg_angles)))
+            logging.info(
+                "Processing the animation frames..." + ProgressStatus(step, len(deg_angles))
+            )
 
         # self.analysis_actor.plot_colorbar(self.animation_data, min_value, max_value)
         # self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
@@ -358,7 +358,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.analysis_actor = None
         self.edges_actor = None
         self.plane_actor = None
-        self.hidden_part_actor = None 
+        self.hidden_part_actor = None
 
     def _actors_exists(self):
         actors = [

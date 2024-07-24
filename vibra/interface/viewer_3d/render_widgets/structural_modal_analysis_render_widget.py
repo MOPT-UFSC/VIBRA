@@ -3,11 +3,11 @@ from threading import Lock
 from time import time
 
 import numpy as np
+from molde.render_widgets import AnimatedRenderWidget
 from PyQt5.QtCore import QObjectCleanupHandler
 from PyQt5.QtWidgets import *
 
-from molde.render_widgets import AnimatedRenderWidget
-
+from vibra import app
 from vibra.interface.analysis_bars.structural_analysis_bar import (
     StructuralModalAnalysisBar,
 )
@@ -17,13 +17,11 @@ from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
 )
 from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
 from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
-
 # from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
 #     CommonRenderWidget,
 # )
 from vibra.utils.interface_functions import get_main_window
 from vibra.utils.math_functions import lerp
-from vibra import app
 
 
 class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
@@ -121,7 +119,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.edges_actor = EdgesActor(self.analysis_actor.data)
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
 
-        # Add a very subtle transparent actor to represent the whole 
+        # Add a very subtle transparent actor to represent the whole
         # structure even if part of it is hidden
         has_hidden_part = bool(self.main_window.hidden_surfaces)
         self.hidden_part_actor = FacesActor(mesh, allow_hidding=False)
