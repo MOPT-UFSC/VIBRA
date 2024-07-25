@@ -33,6 +33,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.control_bar.phase_slider.valueChanged.connect(self.stop_animation)
         self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
         self.main_window.theme_changed.connect(self.set_theme)
+        self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
         self.cutting_plane_active = False
         self.show_plane_actor = True
@@ -164,14 +165,16 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
             self.analysis_actor.GetProperty().SetRepresentationToSurface()
             self.edges_actor.VisibilityOn()
 
-        if self.cutting_plane_active and self.cutting_plane_args:
-            self.start_cutting_mode()
-            self.apply_cutting_plane(*self.cutting_plane_args)
-            if not self.show_plane_actor:
-                self.plane_actor.VisibilityOff()
-                self.update()
-        else:
-            self.update()
+        # if self.cutting_plane_active and self.cutting_plane_args:
+        #     self.start_cutting_mode()
+        #     self.apply_cutting_plane(*self.cutting_plane_args)
+        #     if not self.show_plane_actor:
+        #         self.plane_actor.VisibilityOff()
+        #         self.update()
+        # else:
+        #     self.update()
+
+        self.update_section_plane()
 
         if reset_camera:
             self.renderer.ResetCamera()
@@ -290,57 +293,104 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.edges_actor.VisibilityOff()
         self.update()
 
-    def start_cutting_mode(self):
+    def update_section_plane(self):
         if not self._actors_exists():
             return
-        self.cutting_plane_active = True
-        self.plane_actor.VisibilityOn()
-        self.hidden_part_actor.VisibilityOn()
 
-    def stop_cutting_mode(self):
-        if not self._actors_exists():
+        section_plane = self.main_window.section_plane
+
+        if not section_plane.cutting:
+            self._disable_section_plane()
             return
-        self.cutting_plane_active = False
-        self.plane_actor.VisibilityOff()
+
+        position = section_plane.get_position()
+        rotation = section_plane.get_rotation()
+        inverted = section_plane.get_inverted()
+
+        if section_plane.editing:
+            self.plane_actor.configure_cutting_plane(position, rotation)
+            self.plane_actor.VisibilityOn()
+            self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
+            self.plane_actor.GetProperty().SetOpacity(0.8)
+            self.update()
+        else:
+            self._apply_section_plane(position, rotation, inverted, section_plane.isVisible())
+
+    def _disable_section_plane(self):
         has_hidden_part = bool(self.main_window.hidden_surfaces)
         self.hidden_part_actor.SetVisibility(has_hidden_part)
+        self.plane_actor.VisibilityOff()
         self.analysis_actor.disable_cut()
         self.edges_actor.disable_cut()
-
-    def configure_cutting_plane(self, position, orientation):
-        if not self._actors_exists():
-            return
-
-        x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
-        y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
-        z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
-        self.plane_actor.SetPosition(x, y, z)
-        self.plane_actor.SetOrientation(orientation)
-
-        self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
-        self.plane_actor.GetProperty().SetOpacity(0.8)
         self.update()
 
-    def apply_cutting_plane(self, position, orientation, invert=False):
-        if not self._actors_exists():
-            return
-
-        self.cutting_plane_args = (position, orientation, invert)
-        x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
-        y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
-        z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
-        normal = self._calculate_normal_vector(orientation)
-        if invert:
+    def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
+        self.plane_actor.configure_cutting_plane(position, rotation)
+        xyz = self.plane_actor.calculate_x_y_z_position(position)
+        normal = self.plane_actor.calculate_normal_vector(rotation)
+        if inverted:
             normal = -normal
-        self.analysis_actor.apply_cut((x, y, z), normal)
-        self.edges_actor.apply_cut((x, y, z), normal)
 
-        self.plane_actor.VisibilityOn()
-        self.plane_actor.configure_cutting_plane(position, orientation)
+        self.analysis_actor.apply_cut(xyz, normal)
+        self.edges_actor.apply_cut(xyz, normal)
+
+        self.hidden_part_actor.VisibilityOn()
+        self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
-
         self.update()
+
+    # def start_cutting_mode(self):
+    #     if not self._actors_exists():
+    #         return
+    #     self.cutting_plane_active = True
+    #     self.plane_actor.VisibilityOn()
+    #     self.hidden_part_actor.VisibilityOn()
+
+    # def stop_cutting_mode(self):
+    #     if not self._actors_exists():
+    #         return
+    #     self.cutting_plane_active = False
+    #     self.plane_actor.VisibilityOff()
+    #     has_hidden_part = bool(self.main_window.hidden_surfaces)
+    #     self.hidden_part_actor.SetVisibility(has_hidden_part)
+    #     self.analysis_actor.disable_cut()
+    #     self.edges_actor.disable_cut()
+
+    # def configure_cutting_plane(self, position, orientation):
+    #     if not self._actors_exists():
+    #         return
+
+    #     x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
+    #     y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
+    #     z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
+    #     self.plane_actor.SetPosition(x, y, z)
+    #     self.plane_actor.SetOrientation(orientation)
+
+    #     self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
+    #     self.plane_actor.GetProperty().SetOpacity(0.8)
+    #     self.update()
+
+    # def apply_cutting_plane(self, position, orientation, invert=False):
+    #     if not self._actors_exists():
+    #         return
+
+    #     self.cutting_plane_args = (position, orientation, invert)
+    #     x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
+    #     y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
+    #     z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
+    #     normal = self._calculate_normal_vector(orientation)
+    #     if invert:
+    #         normal = -normal
+    #     self.analysis_actor.apply_cut((x, y, z), normal)
+    #     self.edges_actor.apply_cut((x, y, z), normal)
+
+    #     self.plane_actor.VisibilityOn()
+    #     self.plane_actor.configure_cutting_plane(position, orientation)
+    #     self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
+    #     self.plane_actor.GetProperty().SetOpacity(0.2)
+
+    #     self.update()
 
     def remove_actors(self):
         self.renderer.RemoveActor(self.analysis_actor)

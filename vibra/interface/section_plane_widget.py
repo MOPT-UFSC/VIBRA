@@ -17,7 +17,7 @@ class SectionPlaneWidget(QDialog):
         super().__init__(parent)
 
         self.editing = False
-        self.cutting = True
+        self.cutting = False
         self.invert_value = False
 
         ui_path = UI_DIR / "render/section_plane_control_widget.ui"

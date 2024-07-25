@@ -113,6 +113,8 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.renderer.ResetCamera()
         self.show_faces()
 
+        self.update_section_plane()
+
         # This seems to be running twice and I don't know why.
         # First it gets a terrible image then it gets a better one.
         # I will keep it like this because it is fast enough, but this
@@ -145,7 +147,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.hidden_part_actor.SetVisibility(has_hidden_part)
 
         self.update_section_plane()
-        self.update()
+        # self.update()
 
     def set_theme(self, theme):
         super().set_theme(theme)
@@ -431,6 +433,9 @@ class GeometryRenderWidget(CommonRenderWidget):
             actor.SetPickable(pickability[actor])
 
     def update_section_plane(self):
+        if not self._actors_exists():
+            return
+
         section_plane = self.main_window.section_plane
 
         if not section_plane.cutting:
