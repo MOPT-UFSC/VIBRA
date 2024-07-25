@@ -528,8 +528,12 @@ class MainWindow(QMainWindow):
         app().config.write_last_folder_path_in_file("geometry folder", geometry_path)
 
         self.project = Project()
+
         self.file = ProjectFileIO(self.temp_project_file_path)
         self.file.write_geometry_in_file(geometry_path)
+        self.file.remove_model_properties_from_project_file()
+        self.file.remove_mesh_data_from_project_file()
+        self.file.remove_results_data_from_project_file()
 
         _geometry_path = self.file.read_geometry_from_file()
         self.import_geometry(_geometry_path)

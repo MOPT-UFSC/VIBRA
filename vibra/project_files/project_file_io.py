@@ -74,7 +74,6 @@ class ProjectFileIO:
                 project_setup["geometry_filename"] = basename
             
             self.vibra_file.write(self.project_setup_filename, project_setup)
-            self.vibra_file.remove(self.mesh_data_filename)
 
         except Exception as error_log:
             print(str(error_log))
@@ -398,6 +397,9 @@ class ProjectFileIO:
 
         return results_data
     
+    def remove_model_properties_from_project_file(self):
+        self.vibra_file.remove(self.model_properties)
+
     def remove_mesh_data_from_project_file(self):
         self.vibra_file.remove(self.mesh_data_filename)
 

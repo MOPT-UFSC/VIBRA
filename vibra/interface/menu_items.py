@@ -651,13 +651,19 @@ class MenuItems(QTreeWidget):
         self.item_child_plotStructuralModeShapes.setDisabled(bool_key)
 
     def modify_items_access_after_geometry_importing(self):
+
         self.main_window.renderer_toolbar.setDisabled(False)
         self.modify_general_settings_items_access(False)
         self.modify_acoustic_model_setup_items_acces(False)
         self.modify_structural_model_setup_items_acces(False)
         self.modify_analysis_items_acces(False)
+
+        self.item_top_resultsViewer_structural.setHidden(True)
+        self.item_top_resultsViewer_acoustic.setHidden(True)
         self.item_top_analysis.setHidden(False)
+
         self.item_child_runAnalysis.setDisabled(True)
+        self.item_child_reset_solution.setDisabled(True)
         self.filter_analysis_type()
 
     def filter_analysis_type(self):
