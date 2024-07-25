@@ -430,6 +430,8 @@ class MainWindow(QMainWindow):
 
         if obj == QMessageBox.Yes:
             self.open_project()
+        else:
+            self.reset_temporary_vibra_folder()
 
     def new_project_dialog(self):
         self.reset_temporary_vibra_folder()
