@@ -178,9 +178,9 @@ class RendererToolbar(QToolBar):
         app().main_window.section_plane.cutting = option
         app().main_window.section_plane.value_changed.emit()
 
-
     def section_plane_config_callback(self):
         self.section_plane_show_action.setChecked(True)
+        app().main_window.section_plane.cutting = True
         app().main_window.section_plane.show()
 
     def hide_selection_callback(self):

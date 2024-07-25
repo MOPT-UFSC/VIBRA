@@ -204,4 +204,7 @@ class ViewerTabs(QTabWidget):
             new_widget.copy_camera_from(last_widget)
             # if last_widget is not a valid render the operation will be ignored
 
+        if hasattr(new_widget, "update_selection"):
+            new_widget.update_selection()
+
         self.last_index = new_index
