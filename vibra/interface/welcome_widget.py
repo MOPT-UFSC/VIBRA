@@ -56,15 +56,37 @@ class WelcomeWidget(QWidget):
         recent_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(recent_label)
 
-        buttons_layout = QHBoxLayout()
-        buttons_layout.setAlignment(Qt.AlignCenter)
-        layout.addLayout(buttons_layout)
+        recents_layout = QHBoxLayout()
+        recents_layout.setAlignment(Qt.AlignCenter)
+        layout.addLayout(recents_layout)
         layout.addStretch()
 
         number_of_recent = 5
+        recent_paths = app().config.get_recent_files()
+        recent_paths = recent_paths[-number_of_recent:]
 
-        for _ in range(number_of_recent):
-            buttons_layout.addWidget(WelcomeItem())
+        for path in reversed(recent_paths):
+            path = Path(path)
+            thumbnail = None
+            icon = None
+
+            with Filebox(path, override=False) as fb:
+                if "thumbnail.png" in fb:
+                    thumbnail = fb.read("thumbnail.png")
+
+            if thumbnail is not None:
+                array = np.array(thumbnail)
+                image = QImage(array, array.shape[1], array.shape[0], QImage.Format_RGB888)
+                icon = QIcon(QPixmap(image))
+
+            handler = partial(self.main_window.open_project, path)
+            item = WelcomeItem(path.stem, icon)
+            item.setToolTip(str(path))
+            item.clicked.connect(handler)
+            recents_layout.addWidget(item)
+
+        for _ in range(number_of_recent - len(recent_paths)):
+            recents_layout.addWidget(WelcomeItem())
 
     def setup_example_projects(self, layout: QBoxLayout):
         example_label = QLabel("Example Projects", self)
@@ -83,23 +105,21 @@ class WelcomeWidget(QWidget):
         example_paths = list(example_paths)[:number_of_examples]
 
         for path in example_paths:
+            path = Path(path)
+            thumbnail = None
+            icon = None
+
             with Filebox(path, override=False) as fb:
                 if "thumbnail.png" in fb:
                     thumbnail = fb.read("thumbnail.png")
-                else:
-                    thumbnail = None
 
             if thumbnail is not None:
                 array = np.array(thumbnail)
                 image = QImage(array, array.shape[1], array.shape[0], QImage.Format_RGB888)
                 icon = QIcon(QPixmap(image))
-            else:
-                icon = None
-
-            name = path.stem
 
             handler = partial(self.main_window.open_project, path)
-            item = WelcomeItem(name, icon)
+            item = WelcomeItem(path.stem, icon)
             item.setToolTip(str(path))
             item.clicked.connect(handler)
             examples_layout.addWidget(item)
