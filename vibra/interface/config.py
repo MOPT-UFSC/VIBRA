@@ -108,6 +108,20 @@ class Config:
             return
 
         self.write_data_in_file(self.config_path, config)
+    
+    def write_menu_items_visible_in_file(self, menu_items_visible : str):
+        try:
+            config = configparser.ConfigParser()
+            config.read(self.config_path)
+    
+            if config.has_section('User preferences'):
+                config["User preferences"]["menu_items_visible"] = str(menu_items_visible)
+            else:
+                config["User preferences"] = {"menu_items_visible" : str(menu_items_visible)}
+        except:
+            return
+
+        self.write_data_in_file(self.config_path, config)
 
     def write_colormap_in_file(self, colormap : str):
         try:
@@ -148,6 +162,9 @@ class Config:
 
                 if "interface theme" in section.keys():
                     user_preferences["interface theme"] = section["interface theme"]
+
+                if "menu_items_visible" in section.keys():
+                    user_preferences["menu_items_visible"] = section["menu_items_visible"]
 
                 if "background color" in section.keys():
                     if section["background color"] in ["light", "dark"]:

@@ -2,7 +2,7 @@ import json
 import logging
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-
+from vibra import app
 user_config_path = Path(".config.ini")
 
 
@@ -15,22 +15,30 @@ class UserConfig:
 
     @classmethod
     def load(cls):
-        path = Path(".config.json")
-
-        if not path.exists():
-            return cls()
+        obj = cls()
 
         try:
-            with open(".config.json", "r") as file:
-                data = json.load(file)
-            return cls(**data)
-        except json.decoder.JSONDecodeError as e:
-            logging.error(e)
-            return cls()
+            preferences = app().config.get_user_preferences()
+        except:
+            return obj
+
+        theme = preferences.get("interface theme")
+        menu_items_visible = preferences.get("menu_items_visible")
+
+        if theme is not None:
+            obj.theme = theme
+
+        if menu_items_visible == "True":
+            obj.menu_items_visible = True
+
+        return obj
 
     def save(self):
-        with open(".config.json", "w") as file:
-            json.dump(asdict(self), file, indent=2)
+        try:
+            app().config.write_theme_in_file(self.theme)
+            app().config.write_menu_items_visible_in_file(self.menu_items_visible)
+        except:
+            pass
 
     def add_recent_file(self, path):
         """

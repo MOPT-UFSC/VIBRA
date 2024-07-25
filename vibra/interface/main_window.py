@@ -62,6 +62,7 @@ class MainWindow(QMainWindow):
         self.hidden_surfaces = set()
         self.hidden_volumes = set()
 
+        self.file = None
         self.dialog = None
         self.project = Project()
         self.user_config = UserConfig.load()
@@ -609,9 +610,9 @@ class MainWindow(QMainWindow):
 
         condition_1 = self.project.save_path is None
         condition_2 = os.path.exists(self.temp_project_file_path)
-        condition_3 = self.file.was_the_project_folder_modified(self.project.save_path)
+        # condition_3 = self.file.was_the_project_folder_modified(self.project.save_path)
 
-        print(condition_1, condition_2, condition_3)
+        # print(condition_1, condition_2, condition_3)
 
         if condition_1 and condition_2:
             close = QMessageBox.question(   
