@@ -1,9 +1,10 @@
-from vibra.utils.utils import get_new_path
-
 import os
 import sys
 import configparser
 from pathlib import Path
+
+from vibra.utils.utils import get_new_path
+
 
 class Config:
     def __init__(self):
@@ -14,6 +15,38 @@ class Config:
         self.open_last_project = False
         self.config_path = Path().home() / ".vibra_config"
         self.load_config_file()
+    
+    def add_recent_file(self, recent_file: str | Path):
+        # try:
+        recents = self.get_recent_files()
+        recents.append(str(recent_file))
+
+        # only keep the last N files
+        recents = recents[-10:]
+
+        config = configparser.ConfigParser()
+        config.read(self.config_path)
+
+        if not config.has_section("Recents"):
+            config["Recents"] = dict()
+
+        for i, file in enumerate(recents):
+            config["Recents"][str(i)] = str(file)
+
+        self.write_data_in_file(self.config_path, config)
+
+    def get_recent_files(self) -> list:
+        config = configparser.ConfigParser()
+        config.read(self.config_path)
+
+        if not config.has_section("Recents"):
+            return list()
+
+        # only keep existing files
+        recents = [Path(file) for file in config["Recents"].values() if Path(file).exists()]
+        # avoid repetitions
+        recents = list(set(recents))
+        return recents
 
     def load_config_file(self):
         try:

@@ -477,6 +477,7 @@ class MainWindow(QMainWindow):
         self.project.name = path.stem
         self.project.save_path = path
         self.file.write_thumbnail()
+        app().config.add_recent_file(path)
         app().config.write_last_folder_path_in_file("project folder", path)
         copy(self.temp_project_file_path, path)
 
@@ -544,6 +545,7 @@ class MainWindow(QMainWindow):
         '''
 
         if project_path is not None:
+            app().config.add_recent_file(project_path)
             app().config.write_last_folder_path_in_file("project folder", project_path)
             copy(project_path, self.temp_project_file_path)
 
