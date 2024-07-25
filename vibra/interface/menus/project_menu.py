@@ -19,6 +19,7 @@ class ProjectMenu(QMenu):
         #
         self.setTitle("Project")
         self.create_actions()
+        self.create_recents_menu()
         self.create_layout()
 
     def create_actions(self):
@@ -64,11 +65,24 @@ class ProjectMenu(QMenu):
         self.theme_action.triggered.connect(self.theme_callback)
         self.exit_action.triggered.connect(self.exit_callback)
 
+    def create_recents_menu(self):
+        self.recents_menu = QMenu("Recent projects", self)
+        self.recents_menu.setIcon(self.recent_icon)
+        self.update_recents_menu()
+
+    def update_recents_menu(self):
+        self.recents_menu.clear()
+        recent_paths = app().config.get_recent_files()
+        recent_paths[-8:]
+        for path in reversed(recent_paths):
+            self.recents_menu.addAction(QAction(str(path), self))
+
     def create_layout(self):
         self.clear()
         self.addAction(self.new_project_action)
         self.addAction(self.open_project_action)
-        self.addAction(self.recent_action)
+        # self.addAction(self.recent_action)
+        self.addMenu(self.recents_menu)
         # self.addAction(self.import_geometry_action)
         self.addSeparator()
         self.addAction(self.save_action)
