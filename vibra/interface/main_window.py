@@ -24,6 +24,8 @@ from vibra.interface.viewer_tabs import ViewerTabs
 from vibra.interface.formatters.icons import *
 from molde.render_widgets import CommonRenderWidget
 
+from vibra.utils.progress_status import ProgressStatus
+
 from vibra.project_files.project import Project
 from vibra.project_files.load_project import LoadProject
 
@@ -32,6 +34,7 @@ from vibra.project_files.project_file_io import ProjectFileIO
 import qdarktheme
 
 import sys
+import logging
 from pathlib import Path
 from shutil import rmtree, copy
 from time import sleep, time
@@ -531,9 +534,19 @@ class MainWindow(QMainWindow):
 
         self.file = ProjectFileIO(self.temp_project_file_path)
         self.file.write_geometry_in_file(geometry_path)
-        self.file.remove_model_properties_from_project_file()
-        self.file.remove_mesh_data_from_project_file()
-        self.file.remove_results_data_from_project_file()
+
+        def remove_callback():
+            logging.info("Removing the model properties from project file..." + ProgressStatus(10, 100))
+            self.file.remove_model_properties_from_project_file()
+            
+            logging.info("Removing the mesh data from project file..." + ProgressStatus(40, 100))
+            self.file.remove_mesh_data_from_project_file()
+
+            logging.info("Removing the results data from project file..." + ProgressStatus(75, 100))
+            self.file.remove_results_data_from_project_file()
+
+        remove = load_function(remove_callback, self)
+        remove()
 
         _geometry_path = self.file.read_geometry_from_file()
         self.import_geometry(_geometry_path)
