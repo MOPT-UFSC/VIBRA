@@ -250,6 +250,8 @@ class GeometryRenderWidget(CommonRenderWidget):
             face_entity = mesh.faces_connectivity[cell][1]
             picked_faces.add(face_entity)
             for volume, surfaces in mesh.surfaces_from_volumes.items():
+                if volume in self.main_window.hidden_volumes:
+                    continue
                 if face_entity in surfaces:
                     picked_volumes.add(volume)
 

@@ -62,6 +62,7 @@ class MainWindow(QMainWindow):
         self.hidden_surfaces = set()
         self.hidden_volumes = set()
 
+        self.file = None
         self.dialog = None
         self.project = Project()
         self.user_config = UserConfig.load()
