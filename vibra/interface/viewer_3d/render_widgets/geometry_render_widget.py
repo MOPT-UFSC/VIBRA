@@ -216,6 +216,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.mouse_click = (x, y)
 
     def selection_callback(self, x, y):
+        # This is a optimization, may imply side effects
+        if not self.isVisible():
+            return
+
         if not self._actors_exists():
             return
 

@@ -337,6 +337,10 @@ class MeshRenderWidget(CommonRenderWidget):
         """
         Update the visualization of selected data.
         """
+        # This is a optimization, may imply side effects
+        if not self.isVisible():
+            return
+
         if not self._actors_exists():
             return
 
