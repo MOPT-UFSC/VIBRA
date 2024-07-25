@@ -604,7 +604,10 @@ class MainWindow(QMainWindow):
         self.close_dialogs()
 
         condition_1 = self.project.save_path is None
-        condition_2 = os.path.exists(self.temp_project_file_path) 
+        condition_2 = os.path.exists(self.temp_project_file_path)
+        condition_3 = self.file.was_the_project_folder_modified(self.project.save_path)
+
+        print(condition_1, condition_2, condition_3)
 
         if condition_1 and condition_2:
             close = QMessageBox.question(   

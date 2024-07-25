@@ -405,3 +405,9 @@ class ProjectFileIO:
 
     def remove_results_data_from_project_file(self):
         self.vibra_file.remove(self.results_data_filename)
+
+    def was_the_project_folder_modified(self, path : str | None):
+        if path is None:
+            return False
+        else:
+            return Filebox(Path(path)) != self.vibra_file
