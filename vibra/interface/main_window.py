@@ -596,7 +596,7 @@ class MainWindow(QMainWindow):
                                             self, 
                                             "QUIT", 
                                             "Would you like to save the project data before exit?", 
-                                            QMessageBox.Cancel | QMessageBox.No | QMessageBox.Save
+                                            QMessageBox.Cancel | QMessageBox.Discard | QMessageBox.Save
                                         )
 
             if close == QMessageBox.Cancel:
