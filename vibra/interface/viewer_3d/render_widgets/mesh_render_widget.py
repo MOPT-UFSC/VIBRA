@@ -450,7 +450,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.faces_actor.disable_cut()
         self.solids_actor.disable_cut()
         self.edges_actor.disable_cut()
-        self.hidden_part_actor.disable_cut()
         self.update()
 
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
@@ -463,7 +462,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.faces_actor.apply_cut(xyz, normal)
         self.solids_actor.apply_cut(xyz, normal)
         self.edges_actor.apply_cut(xyz, normal)
-        self.hidden_part_actor.apply_cut(xyz, normal)
 
         self.hidden_part_actor.VisibilityOn()
         self.plane_actor.SetVisibility(show_plane)
