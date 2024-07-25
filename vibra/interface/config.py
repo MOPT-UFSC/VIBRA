@@ -43,7 +43,8 @@ class Config:
             return list()
 
         # only keep existing files
-        recents = [Path(file) for file in config["Recents"].values() if Path(file).exists()]
+        recents = [Path(file) for i, file in sorted(config["Recents"].items()) 
+                   if Path(file).exists()]
         # avoid repetitions
         recents = list(set(recents))
         return recents
