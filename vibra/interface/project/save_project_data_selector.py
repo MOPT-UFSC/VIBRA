@@ -31,7 +31,7 @@ class SaveProjectDataSelector(QDialog):
 
         ConfigWidgetAppearance(self, tool_tip=True)
 
-        self.get_required_memmory()
+        self.get_required_memory()
 
         while self.keep_window_open:
             self.exec()
@@ -53,8 +53,8 @@ class SaveProjectDataSelector(QDialog):
         self.checkBox_solution_data : QCheckBox
 
         # QLineEdit
-        self.lineEdit_required_memmory : QLineEdit
-        self.lineEdit_required_memmory.setDisabled(True)
+        self.lineEdit_required_memory : QLineEdit
+        self.lineEdit_required_memory.setDisabled(True)
 
         # QPushButton
         self.pushButton_proceed : QPushButton
@@ -63,10 +63,10 @@ class SaveProjectDataSelector(QDialog):
         self.checkBox_mesh_data.stateChanged.connect(self.remove_solution_data)
         self.pushButton_proceed.clicked.connect(self.proceed_callback)
 
-    def get_required_memmory(self):
+    def get_required_memory(self):
         path = app().main_window.temp_project_file_path
         size_of_file = os.path.getsize(path) / 1e6
-        self.lineEdit_required_memmory.setText(str(round(size_of_file, 4)))
+        self.lineEdit_required_memory.setText(str(round(size_of_file, 4)))
 
     def remove_solution_data(self):
         if self.checkBox_mesh_data.isChecked():

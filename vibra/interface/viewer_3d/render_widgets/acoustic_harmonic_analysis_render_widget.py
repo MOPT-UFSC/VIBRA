@@ -81,10 +81,10 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         solver = self.main_window.project.acoustic_harmonic_solver
         if solver is None:
             return
-        self.control_bar.update_selector_label()
         self.control_bar.set_frequencies(solver.frequencies)
 
     def update_plot(self, reset_camera=False):
+
         if self.main_window.project is None:
             return
 

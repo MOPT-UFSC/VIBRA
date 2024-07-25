@@ -93,10 +93,7 @@ class ProjectMenu(QMenu):
         self.main_window.viewer_tabs.show_help()
 
     def exit_callback(self):
-        # loaded_function = load_function(self.parent().project.long_function, self)
-        # loaded_function()
-        loaded_solve = load_function(self.solve_example_analysis_callback, self)
-        loaded_solve()
+        self.main_window.close_app()
 
     def theme_callback(self):
         if self.main_window.user_config.theme == "light":
