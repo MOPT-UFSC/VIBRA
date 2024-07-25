@@ -234,13 +234,15 @@ class MenuItems(QTreeWidget):
         self.item_top_analysis = QTreeWidgetItem(["Analysis"])
         self.item_child_selectAnalysisType = QTreeWidgetItem(["Select Analysis Type"])
         self.item_child_analysisSetup = QTreeWidgetItem(["Analysis Setup"])
-        self.item_child_runAnalysis = QTreeWidgetItem(["Run Analysis (F5)"])
+        self.item_child_runAnalysis = QTreeWidgetItem(["Run Analysis"])
+        self.item_child_reset_solution = QTreeWidgetItem(["Reset Solution"])
         self.item_child_analysisSetup.setDisabled(True)
         #
         self.list_top_items.append(self.item_top_analysis)
         self.list_child_items.append(self.item_child_selectAnalysisType)
         self.list_child_items.append(self.item_child_analysisSetup)
         self.list_child_items.append(self.item_child_runAnalysis)
+        self.list_child_items.append(self.item_child_reset_solution)
         #
         self.item_top_resultsViewer_structural = QTreeWidgetItem(["Results Viewer - Structural"])
         self.item_child_plotStructuralModeShapes = QTreeWidgetItem(["Plot Structural Mode Shapes"])
@@ -302,6 +304,7 @@ class MenuItems(QTreeWidget):
         self.item_top_analysis.addChild(self.item_child_selectAnalysisType)
         self.item_top_analysis.addChild(self.item_child_analysisSetup)
         self.item_top_analysis.addChild(self.item_child_runAnalysis)
+        self.item_top_analysis.addChild(self.item_child_reset_solution)
 
         self.addTopLevelItem(self.item_top_resultsViewer_structural)
         self.item_top_resultsViewer_structural.addChild(self.item_child_plotStructuralModeShapes)
@@ -454,6 +457,7 @@ class MenuItems(QTreeWidget):
                     if analysis_type.analysis_id in [2, 4]:
                         self.run_analysis()
                         self.item_child_runAnalysis.setDisabled(False)
+                        # self.item_child_reset_solution.setDisabled(False)
 
                     else:
 
@@ -462,6 +466,7 @@ class MenuItems(QTreeWidget):
 
                         if analysis_setup.complete:
                             self.item_child_runAnalysis.setDisabled(False)
+                            # self.item_child_reset_solution.setDisabled(False)
 
                         if analysis_setup.solve_analysis:
                             self.run_analysis()
@@ -473,6 +478,10 @@ class MenuItems(QTreeWidget):
         elif item == self.item_child_runAnalysis:
             if not self.item_child_runAnalysis.isDisabled():
                 self.run_analysis()
+
+        elif item == self.item_child_reset_solution:
+            if not self.item_child_reset_solution.isDisabled():
+                self.reset_solution()
 
         elif item == self.item_child_plotStructuralModeShapes:
             if not self.item_child_plotStructuralModeShapes.isDisabled():
@@ -574,6 +583,16 @@ class MenuItems(QTreeWidget):
             raise NotImplementedError("Not implemented analysis")
         self.update_items()
 
+    def reset_solution(self):
+
+        app().main_window.project.reset_solutions()
+        app().main_window.viewer_tabs.reset_solution_tabs_visibility()
+        app().main_window.file.remove_results_data_from_project_file()
+
+        self.modify_items_acoustic_results_viewer(True)
+        self.modify_items_structural_results_viewer(True)
+        self.item_child_reset_solution.setDisabled(True)
+
     def _initial_items_acces_config(self):
         """ """
         for child_item in self.list_child_items:
@@ -612,6 +631,7 @@ class MenuItems(QTreeWidget):
     def modify_analysis_items_acces(self, bool_key):
         self.item_child_selectAnalysisType.setDisabled(bool_key)
         self.item_child_runAnalysis.setDisabled(bool_key)
+        self.item_child_reset_solution.setDisabled(bool_key)
 
     def modify_items_acoustic_results_viewer(self, bool_key):
         self.item_top_resultsViewer_acoustic.setHidden(bool_key)
@@ -676,6 +696,7 @@ class MenuItems(QTreeWidget):
 
         self.modify_items_acoustic_results_viewer(True)
         self.modify_items_structural_results_viewer(True)
+        self.item_child_reset_solution.setDisabled(False)
 
         if analysis_id in [0, 1, 2]:
             self.item_top_resultsViewer_structural.setHidden(False)

@@ -17,6 +17,7 @@ from vibra.interface.menus.settings_menu import VisibilitySettingsMenu
 from vibra.interface.menus.view_mode_menu import ViewModeMenu
 from vibra.interface.menus.advanced_results_menu import AdvancedResultsMenu
 from vibra.interface.menus.views_menu import ViewsMenu
+from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
 from vibra.interface.renderer_toolbar import RendererToolbar
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_tabs import ViewerTabs
@@ -441,23 +442,32 @@ class MainWindow(QMainWindow):
 
     def save_project_as_dialog(self):
 
-        last_path = app().config.get_last_folder_for("project folder")
-        if last_path is None:
-            path = os.path.expanduser("~")
-        else:
-            path = last_path
+        obj = SaveProjectDataSelector()
+        if obj.complete:
 
-        file_path, check = QFileDialog.getSaveFileName(
-                                                        self,
-                                                        "Save As",
-                                                        path,
-                                                        filter = "Vibra File (*.vibra)",
-                                                      )
+            last_path = app().config.get_last_folder_for("project folder")
+            if last_path is None:
+                path = os.path.expanduser("~")
+            else:
+                path = last_path
 
-        if not check:
-            return
+            file_path, check = QFileDialog.getSaveFileName(
+                                                            self,
+                                                            "Save As",
+                                                            path,
+                                                            filter = "Vibra File (*.vibra)",
+                                                        )
 
-        self.save_project_as(file_path)
+            if not check:
+                return
+
+            if obj.ignore_results_data:
+                self.file.remove_results_data_from_project_file()
+            
+            if obj.ignore_mesh_data:
+                self.file.remove_mesh_data_from_project_file()
+
+            self.save_project_as(file_path)
 
     def save_project_as(self, path):
         path = Path(path)

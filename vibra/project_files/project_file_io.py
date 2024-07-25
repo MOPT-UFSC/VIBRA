@@ -383,3 +383,9 @@ class ProjectFileIO:
             return dict()
 
         return results_data
+    
+    def remove_mesh_data_from_project_file(self):
+        self.vibra_file.remove(self.mesh_data_filename)
+
+    def remove_results_data_from_project_file(self):
+        self.vibra_file.remove(self.results_data_filename)

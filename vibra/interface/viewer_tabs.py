@@ -53,6 +53,10 @@ class ViewerTabs(QTabWidget):
         for i in range(self.count()):
             self.setTabVisible(i, False)
 
+    def reset_solution_tabs_visibility(self):
+        for index in [3, 4, 5]:
+            self.setTabVisible(index, False)
+
     def show_welcome(self):
         self.setTabVisible(0, True)
 
