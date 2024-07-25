@@ -48,23 +48,33 @@ class ProjectFileIO:
         pass
 
     def write_geometry_in_file(self, path):
+
         basename = os.path.basename(path)
         internal_path = f"geometry_file/{basename}"
+
+        try:
+            self.vibra_file.remove("geometry_file")
+        except:
+            pass
+
         self.vibra_file.write_from_path(internal_path, path, encoding="iso-8859-1")
 
         try:
 
             project_setup = self.vibra_file.read(self.project_setup_filename)
             if project_setup is None:
-                project_setup = {   "geometry_filename" : basename,
+                project_setup = {   
+                                    "geometry_filename" : basename,
                                     "mesh_setup" : dict(),
-                                    "analysis_setup" : dict()   }
+                                    "analysis_setup" : dict()   
+                                }
 
             else:
 
                 project_setup["geometry_filename"] = basename
             
             self.vibra_file.write(self.project_setup_filename, project_setup)
+            self.vibra_file.remove(self.mesh_data_filename)
 
         except Exception as error_log:
             print(str(error_log))
@@ -80,7 +90,11 @@ class ProjectFileIO:
             temp_path = dirname / geometry_filename
             internal_path = f"geometry_file/{geometry_filename}"
 
-            if not os.path.exists(dirname):
+            if os.path.exists(dirname):
+                for filename in os.listdir(dirname).copy():
+                    file_path = dirname / filename
+                    os.remove(file_path)
+            else:
                 os.mkdir(dirname)
 
             self.vibra_file.read_to_path(internal_path, temp_path)

@@ -73,20 +73,18 @@ class ViewerTabs(QTabWidget):
         self.setTabVisible(0, True)
 
     def show_geometry(self):
-        if self.isTabVisible(1):
-            self.setCurrentIndex(1)
-        else:
+        if not self.isTabVisible(1):
             self.setTabVisible(1, True)
             self.geometry_widget.update_plot()
             self.main_window.update_geometry_information()
+        self.setCurrentIndex(1)
 
     def show_mesh(self):
-        if self.isTabVisible(2):
-            self.setCurrentIndex(2)
-        else:
+        if not self.isTabVisible(2):
             self.setTabVisible(2, True)
             self.mesh_widget.update_plot()
 
+        self.setCurrentIndex(2)
         nodes, face_elements, solid_elements = self.main_window.project.model.mesh.get_mesh_info()
         self.main_window.update_mesh_information(nodes, face_elements, solid_elements)
 
