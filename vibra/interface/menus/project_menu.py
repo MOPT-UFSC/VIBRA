@@ -7,14 +7,15 @@ from vibra import ICON_DIR
 from vibra.interface.exception_message import ErrorMessage
 from vibra.interface.loading_bar import load_function
 from vibra.utils.icons import load_icon
-from vibra.utils.interface_functions import get_main_window
+# from vibra.utils.interface_functions import get_main_window
+from vibra import app
 
 
 class ProjectMenu(QMenu):
     def __init__(self, parent):
         super().__init__(parent)
         #
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         #
         self.setTitle("Project")
         self.create_actions()
@@ -42,7 +43,7 @@ class ProjectMenu(QMenu):
         self.new_project_action = QAction(self.new_project_icon, "New Project", self)
         self.open_project_action = QAction(self.load_project_icon, "Open Project", self)
         self.recent_action = QAction(self.recent_icon, "Recent", self)
-        self.import_geometry_action = QAction(self.import_geometry_icon, "Import geometry", self)
+        # self.import_geometry_action = QAction(self.import_geometry_icon, "Import geometry", self)
 
         self.save_action = QAction(self.save_icon, "Save", self)
         self.save_as_action = QAction(self.save_as_icon, "Save as", self)
@@ -53,7 +54,8 @@ class ProjectMenu(QMenu):
         self.exit_action = QAction(self.exit_icon, "Exit", self)
 
         #
-        self.import_geometry_action.triggered.connect(self.import_geometry_callback)
+        self.new_project_action.triggered.connect(self.new_project_callback)
+        # self.import_geometry_action.triggered.connect(self.import_geometry_callback)
         self.capture_image_action.triggered.connect(self.capture_image_callback)
         self.open_project_action.triggered.connect(self.open_project_callback)
         self.save_action.triggered.connect(self.save_callback)
@@ -67,7 +69,7 @@ class ProjectMenu(QMenu):
         self.addAction(self.new_project_action)
         self.addAction(self.open_project_action)
         self.addAction(self.recent_action)
-        self.addAction(self.import_geometry_action)
+        # self.addAction(self.import_geometry_action)
         self.addSeparator()
         self.addAction(self.save_action)
         self.addAction(self.save_as_action)
@@ -76,6 +78,9 @@ class ProjectMenu(QMenu):
         self.addAction(self.capture_image_action)
         self.addAction(self.theme_action)
         self.addAction(self.exit_action)
+
+    def new_project_callback(self):
+        self.main_window.new_project_dialog()
 
     def open_project_callback(self):
         self.main_window.open_project_dialog()
