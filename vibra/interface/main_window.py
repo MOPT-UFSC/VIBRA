@@ -358,6 +358,9 @@ class MainWindow(QMainWindow):
         app().splash.close()
         self.showMaximized()
 
+        if not self.is_temporary_vibra_folder_empty():
+            self.recovery_dialog()
+
     def load_user_preferences(self):
         self.set_theme(self.user_config.theme)
 
@@ -414,28 +417,23 @@ class MainWindow(QMainWindow):
                 return False
         return True
     
+    def recovery_dialog(self):
+        caption = "The recovery project data has been detected in the application backup files. "
+        caption += "Would you like to try to recover the last project files?"
+
+        obj = QMessageBox.question(   
+            self, 
+            "Project recovery", 
+            caption, 
+            QMessageBox.Yes | QMessageBox.No
+        )
+
+        if obj == QMessageBox.Yes:
+            self.open_project()
+
     def new_project_dialog(self):
-        if not self.is_temporary_vibra_folder_empty():
-
-            caption = "The recovery project data has been detected in the application backup files. "
-            caption += "Would you like to try to recover the last project files?"
-
-            obj = QMessageBox.question(   
-                                        self, 
-                                        "Project recovery", 
-                                        caption, 
-                                        QMessageBox.Yes | QMessageBox.No
-                                       )
-
-            if obj == QMessageBox.Yes:
-                self.open_project()
-
-            else:
-                self.reset_temporary_vibra_folder()
-                self.import_geometry_dialog()
-
-        else:
-            self.import_geometry_dialog()
+        self.reset_temporary_vibra_folder()
+        self.import_geometry_dialog()
 
     def save_project_dialog(self):
         if self.project.save_path is None:
