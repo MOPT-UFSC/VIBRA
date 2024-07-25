@@ -480,6 +480,7 @@ class MainWindow(QMainWindow):
         self.file.write_thumbnail()
         app().config.add_recent_file(path)
         app().config.write_last_folder_path_in_file("project folder", path)
+        self.project_menu.update_recents_menu()
         copy(self.temp_project_file_path, path)
 
     def open_project_dialog(self):
@@ -562,6 +563,7 @@ class MainWindow(QMainWindow):
         if project_path is not None:
             app().config.add_recent_file(project_path)
             app().config.write_last_folder_path_in_file("project folder", project_path)
+            self.project_menu.update_recents_menu()
             copy(project_path, self.temp_project_file_path)
 
         self.project = Project()
