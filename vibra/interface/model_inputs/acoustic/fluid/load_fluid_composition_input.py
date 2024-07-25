@@ -109,18 +109,20 @@ class LoadFluidCompositionInput(QDialog):
         self.imported_data = dict()
         self.comboBox_sheet_names.clear()
 
-        import pandas as pd
-        import openpyxl
+        from pandas import read_excel
+        from openpyxl import load_workbook
 
-        wb = openpyxl.load_workbook(self.file_path)
+        wb = load_workbook(self.file_path)
         sheetnames = wb.sheetnames
         for sheetname in sheetnames:
 
             try:
-                sheet_data = pd.read_excel( self.file_path, 
-                                            sheet_name = sheetname, 
-                                            header = 0, 
-                                            usecols = [0,1,2,3]).to_numpy()
+                sheet_data = read_excel(
+                                        self.file_path, 
+                                        sheet_name = sheetname, 
+                                        header = 0, 
+                                        usecols = [0,1,2,3]
+                                        ).to_numpy()
                 
                 self.imported_data[sheetname] = sheet_data
                 self.comboBox_sheet_names.addItem(sheetname)

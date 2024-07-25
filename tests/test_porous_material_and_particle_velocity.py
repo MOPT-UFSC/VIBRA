@@ -8,12 +8,13 @@ from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 
 import os
-import openpyxl
 import pytest
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
+
+from pandas import read_excel
+from openpyxl import load_workbook
 
 from time import time
 
@@ -464,7 +465,7 @@ def get_external_results():
     if not os.path.exists(results_path):
         return imported_results
 
-    wb = openpyxl.load_workbook(results_path)
+    wb = load_workbook(results_path)
 
     skiprows = 0
 
@@ -472,15 +473,19 @@ def get_external_results():
     for sheetname in sheetnames:
 
         try:
-            sheet_data = pd.read_excel(results_path, 
+            sheet_data = read_excel(
+                                    results_path, 
                                     sheet_name = sheetname, 
                                     header = skiprows, 
-                                    usecols = [0,1,2]).to_numpy()
+                                    usecols = [0,1,2]
+                                    ).to_numpy()
         except:
-            sheet_data = pd.read_excel(results_path, 
+            sheet_data = read_excel(
+                                    results_path, 
                                     sheet_name = sheetname, 
                                     header = skiprows, 
-                                    usecols = [0,1]).to_numpy()
+                                    usecols = [0,1]
+                                    ).to_numpy()
 
         imported_results[sheetname] = sheet_data
 

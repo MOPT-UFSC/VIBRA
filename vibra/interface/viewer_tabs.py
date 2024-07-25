@@ -41,7 +41,6 @@ class ViewerTabs(QTabWidget):
         self._configure_widget()
 
         self.last_index = None
-        
 
     def add_tabs(self):
         self.addTab(self.welcome, "Welcome!")

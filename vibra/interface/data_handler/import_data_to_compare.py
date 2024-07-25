@@ -123,8 +123,9 @@ class ImportDataToCompare(QDialog):
         self.update_treeWidget_info()
 
     def import_results(self, imported_path):
-        import pandas as pd
-        import openpyxl
+
+        from pandas import read_excel
+        from openpyxl import load_workbook
 
         try:
 
@@ -151,20 +152,24 @@ class ImportDataToCompare(QDialog):
                                                         "extension" : sufix  }
 
                     elif sufix in [".xls", ".xlsx"]:
-                        wb = openpyxl.load_workbook(imported_path)
+                        wb = load_workbook(imported_path)
                         sheetnames = wb.sheetnames
                         for sheetname in sheetnames:
 
                             try:
-                                sheet_data = pd.read_excel(imported_path, 
+                                sheet_data = read_excel(
+                                                        imported_path, 
                                                         sheet_name = sheetname, 
                                                         header = skiprows, 
-                                                        usecols = [0,1,2]).to_numpy()
+                                                        usecols = [0,1,2]
+                                                        ).to_numpy()
                             except:
-                                sheet_data = pd.read_excel(imported_path, 
+                                sheet_data = read_excel(
+                                                        imported_path, 
                                                         sheet_name = sheetname, 
                                                         header = skiprows, 
-                                                        usecols = [0,1]).to_numpy()
+                                                        usecols = [0,1]
+                                                        ).to_numpy()
 
                             key = self.get_data_index()
                             self.imported_results[key] = {  "data" : sheet_data,

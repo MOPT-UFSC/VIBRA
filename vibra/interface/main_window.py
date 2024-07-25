@@ -436,9 +436,10 @@ class MainWindow(QMainWindow):
 
     def save_project_dialog(self):
         if self.project.save_path is None:
-            self.save_project_as_dialog()
+            return self.save_project_as_dialog()
         else:
             self.save_project_as(self.project.save_path)
+        return False
 
     def save_project_as_dialog(self):
 
@@ -468,6 +469,8 @@ class MainWindow(QMainWindow):
                 self.file.remove_mesh_data_from_project_file()
 
             self.save_project_as(file_path)
+
+        return obj.complete
 
     def save_project_as(self, path):
         path = Path(path)
@@ -578,16 +581,39 @@ class MainWindow(QMainWindow):
     def close_app(self):
 
         self.close_dialogs()
-        close = QMessageBox.question(   self, 
-                                        "QUIT", 
-                                        "Would you like to close the application?", 
-                                        QMessageBox.Yes | QMessageBox.No
-                                    )
 
-        if close == QMessageBox.Yes:
-            self.user_config.save()
-            self.reset_temporary_vibra_folder()
-            sys.exit()
+        condition_1 = self.project.save_path is None
+        condition_2 = os.path.exists(self.temp_project_file_path) 
+
+        if condition_1 and condition_2:
+            close = QMessageBox.question(   
+                                            self, 
+                                            "QUIT", 
+                                            "Would you like to save the project data before exit?", 
+                                            QMessageBox.Cancel | QMessageBox.No | QMessageBox.Save
+                                        )
+
+            if close == QMessageBox.Cancel:
+                return
+
+            elif close == QMessageBox.Save:
+                if not self.save_project_dialog():
+                    return
+
+        else:
+            close = QMessageBox.question(
+                                            self, 
+                                            "QUIT", 
+                                            "Would you like to close the application?", 
+                                            QMessageBox.Yes | QMessageBox.No
+                                        )
+
+            if close == QMessageBox.No:
+                return
+
+        self.user_config.save()
+        self.reset_temporary_vibra_folder()
+        sys.exit()
 
     def set_input_widget(self, dialog):
         self.dialog = dialog
