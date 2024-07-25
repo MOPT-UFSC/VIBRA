@@ -253,6 +253,7 @@ class AnalysisSetupInput(QDialog):
 
         self.project.set_analysis_data(self.analysis_data)
         self.project.create_solver()
+        app().main_window.file.write_analysis_setup_in_file(self.analysis_data)
 
         self.complete = True
         self.close()

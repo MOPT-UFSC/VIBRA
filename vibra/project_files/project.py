@@ -132,7 +132,6 @@ class Project:
         self.analysis_data = data
         self.acoustic_assembler.set_analysis_data(data)
         self.structural_assembler.set_analysis_data(data)
-        app().main_window.file.write_analysis_setup_in_file(data)
 
     def set_frequencies(self, frequencies, f_min, f_max, f_step, imported_table):
 

@@ -94,7 +94,6 @@ class MenuItems(QTreeWidget):
         super().__init__()
 
         self.main_window = app().main_window
-        self.obj = None
 
         # self._createIcons()
         # self._configItemSizes()
@@ -393,21 +392,22 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_mesh_setup:
             if not self.item_child_mesh_setup.isDisabled():
-                self.obj = MesherInputs()
-                self.main_window.viewer_tabs.close_analysis_tabs()
-                # self.main_window.viewer_tabs.update_plots()
+                obj = MesherInputs()
+                if obj.complete:
+                    self.modify_items_access_after_geometry_importing()
+                    self.main_window.viewer_tabs.close_analysis_tabs()
 
         elif item == self.item_child_set_material:
             if not self.item_child_set_material.isDisabled():
-                self.obj = SetMaterialInput()
+                obj = SetMaterialInput()
 
         elif item == self.item_child_set_fluid:
             if not self.item_child_set_fluid.isDisabled():
-                self.obj = SetFluidInput()
+                obj = SetFluidInput()
 
         elif item == self.item_child_set_boundary_condition:
             if not self.item_child_set_boundary_condition.isDisabled():
-                self.obj = BoundaryConditionInputs()
+                obj = BoundaryConditionInputs()
 
         elif item == self.item_child_setNodalLoads:
             if not self.item_child_setNodalLoads.isDisabled():
@@ -415,39 +415,39 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_set_acoustic_pressure:
             if not self.item_child_set_acoustic_pressure.isDisabled():
-                self.obj = AcousticPressureInput()
+                obj = AcousticPressureInput()
 
         elif item == self.item_child_set_dissipation_model:
             if not self.item_child_set_dissipation_model.isDisabled():
-                self.obj = DissipationModelInput()
+                obj = DissipationModelInput()
 
         elif item == self.item_child_set_lrf_eq_model:
             if not self.item_child_set_lrf_eq_model.isDisabled():
-                self.obj = LowReducedFrequencyEquivalentModelInput()
+                obj = LowReducedFrequencyEquivalentModelInput()
 
         elif item == self.item_child_set_porous_material_model:
             if not self.item_child_set_porous_material_model.isDisabled():
-                self.obj = SetPorousMaterialModel()
+                obj = SetPorousMaterialModel()
 
         elif item == self.item_child_set_mass_flow_rate:
             if not self.item_child_set_mass_flow_rate.isDisabled():
-                self.obj = MassFlowRateInput()
+                obj = MassFlowRateInput()
 
         elif item == self.item_child_set_surface_velocity:
             if not self.item_child_set_surface_velocity.isDisabled():
-                self.obj = SurfaceVelocityInput()
+                obj = SurfaceVelocityInput()
 
         elif item == self.item_child_set_specific_impedance:
             if not self.item_child_set_specific_impedance.isDisabled():
-                self.obj = SpecificImpedanceInput()
+                obj = SpecificImpedanceInput()
 
         elif item == self.item_child_set_anechoic_termination:
             if not self.item_child_set_anechoic_termination.isDisabled():
-                self.obj = SetAnechoicTerminationInputs()
+                obj = SetAnechoicTerminationInputs()
 
         elif item == self.item_child_add_compressor_excitation:
             if not self.item_child_add_compressor_excitation.isDisabled():
-                self.obj = CompressorModelInput()
+                obj = CompressorModelInput()
 
         elif item == self.item_child_selectAnalysisType:
             if not self.item_child_selectAnalysisType.isDisabled():

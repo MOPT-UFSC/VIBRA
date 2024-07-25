@@ -501,6 +501,7 @@ class MassFlowRateInput(QDialog):
             analysis_data = self.project.analysis_data
             analysis_data["imported_table"] = False
             self.project.set_analysis_data(analysis_data)
+            app().main_window.file.write_analysis_setup_in_file(analysis_data)
 
     def reset_input_fields(self):
         self.lineEdit_real_value.setText("")

@@ -70,6 +70,7 @@ class MainWindow(QMainWindow):
 
     def _initialize(self):
         self.dialog = None
+        self.project_data_modified = False
         self.user_path = Path().home()
         self.temp_project_folder_path = self.user_path / "temp_vibra"
         self.temp_project_file_path = str(self.temp_project_folder_path / "tmp.vibra")   
@@ -446,7 +447,7 @@ class MainWindow(QMainWindow):
             return self.save_project_as_dialog()
         else:
             self.save_project_as(self.project.save_path)
-        return False
+            return True
 
     def save_project_as_dialog(self):
 
@@ -609,11 +610,10 @@ class MainWindow(QMainWindow):
 
         condition_1 = self.project.save_path is None
         condition_2 = os.path.exists(self.temp_project_file_path)
-        condition_3 = self.file.was_the_project_folder_modified(self.project.save_path)
+        condition_3 = self.project_data_modified
+        condition = (condition_1 and condition_2) or condition_3
 
-        print(condition_1, condition_2, condition_3)
-
-        if condition_1 and condition_2:
+        if condition:
             close = QMessageBox.question(   
                                             self, 
                                             "QUIT", 

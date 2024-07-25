@@ -178,5 +178,8 @@ class AnalysisTypeInput(QDialog):
 
         self.main_window.project.set_analysis_data(self.analysis_data)
         self.main_window.project.create_solver()
+        
+        if self.analysis_id in [2, 4]:
+            app().main_window.file.write_analysis_setup_in_file(self.analysis_data)
 
         self.close()
