@@ -84,7 +84,7 @@ class MainWindow(QMainWindow):
         self.section_plane.slider_released.connect(self.slider_released_callback)
         self.section_plane.closed.connect(self.disable_section_plane_visibility)
 
-    def set_mesh_selection(self, *, nodes=None, faces=None, solids=None, join=False, remove=True):
+    def set_mesh_selection(self, *, nodes=None, faces=None, solids=None, join=False, remove=False):
         if nodes is None:
             nodes = set()
 
@@ -119,7 +119,7 @@ class MainWindow(QMainWindow):
 
         self.selection_changed.emit()
 
-    def set_geometry_selection(self, *, points=None, lines=None, surfaces=None, volumes=None, join=False, remove=True):
+    def set_geometry_selection(self, *, points=None, lines=None, surfaces=None, volumes=None, join=False, remove=False):
         s = time()
         if points is None:
             points = set()
@@ -292,6 +292,10 @@ class MainWindow(QMainWindow):
         self.hidden_volumes |= volumes_to_hide
         self.hidden_surfaces |= selected_volume_surfaces - surfaces_to_keep_visible
         self.viewer_tabs.update_hidden_plots()
+
+        # Clear selection
+        self.set_mesh_selection()
+        self.set_geometry_selection()
 
     def unhide_all_callback(self):
         self.hidden_surfaces.clear()
