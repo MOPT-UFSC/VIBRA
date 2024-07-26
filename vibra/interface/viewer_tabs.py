@@ -28,7 +28,7 @@ class ViewerTabs(QTabWidget):
         self.structural_modal_analysis = StructuralModalAnalysisRenderWidget()
         self.acoustic_harmonic_analysis = AcousticHarmonicAnalysisRenderWidget()
 
-        self.welcome = WelcomeWidget()
+        self.welcome_widget = WelcomeWidget()
         self.help_widget = HelpWidget()
 
         self._configure_window()
@@ -43,7 +43,7 @@ class ViewerTabs(QTabWidget):
         self.last_index = None
 
     def add_tabs(self):
-        self.addTab(self.welcome, "Welcome!")
+        self.addTab(self.welcome_widget, "Welcome!")
         self.addTab(self.geometry_widget, "Geometry")
         self.addTab(self.mesh_widget, "Mesh")
         self.addTab(self.acoustic_modal_analysis, "Acoustic Modal Analysis")

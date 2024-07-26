@@ -364,6 +364,7 @@ class MainWindow(QMainWindow):
         app().splash.close()
         self.showMaximized()
 
+        app().processEvents()
         if not self.is_temporary_vibra_folder_empty():
             self.recovery_dialog()
 
@@ -424,6 +425,7 @@ class MainWindow(QMainWindow):
         return True
     
     def recovery_dialog(self):
+
         caption = "The recovery project data has been detected in the application backup files. "
         caption += "Would you like to try to recover the last project files?"
 

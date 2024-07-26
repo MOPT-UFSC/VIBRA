@@ -24,7 +24,7 @@ class Application(QApplication):
         # gui
         self.main_window = MainWindow()
         self.main_window.configure_main_window()
-        # self.main_window.show()
+
         self.update()
 
     def update(self):
