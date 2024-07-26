@@ -185,8 +185,14 @@ class Mesh:
         if self.mesh_connection:
             self._merge_nodes_from_adjacent_volumes()
 
-        logging.info("Generating mesh..." + ProgressStatus(25, 100))
-        gmsh.model.mesh.generate(dim=element_type.dimensions)
+        try:
+
+            logging.info("Generating mesh..." + ProgressStatus(25, 100))
+            gmsh.model.mesh.generate(dim=element_type.dimensions)
+        
+        except:
+            gmsh.finalize()
+        
         gmsh.model.mesh.removeDuplicateNodes()
 
         logging.info("Post-processing mesh..." + ProgressStatus(70, 100))
