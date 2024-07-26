@@ -7,11 +7,11 @@ os = platform.system()
 
 if os == "Windows":
     current_system_binaries = [
-        (f"{sys.prefix}/Library/bin/mkl_rt.2.dll", "./Library/bin/")
+        (f"{sys.prefix}/Library/bin/*.dll", "./Library/bin/")
     ]
 elif os == "Linux":
     current_system_binaries = [
-        (f"{sys.prefix}/lib/libmkl_rt.so.2", "./lib/")
+        (f"{sys.prefix}/lib/*.so*", "./lib/")
     ]
 else:
     current_system_binaries = []
