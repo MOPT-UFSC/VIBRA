@@ -22,6 +22,7 @@ from vibra.interface.renderer_toolbar import RendererToolbar
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_tabs import ViewerTabs
 from vibra.interface.formatters.icons import *
+from vibra.interface.general.print_message_input import PrintMessageInput
 from molde.render_widgets import CommonRenderWidget
 
 from vibra.utils.progress_status import ProgressStatus
@@ -596,17 +597,26 @@ class MainWindow(QMainWindow):
     def import_geometry(self, path : str):
 
         import_geometry = load_function(self.project.import_geometry, self)
-        import_geometry(path)
+        if import_geometry(path) == -1:
+            return
 
-        self.viewer_tabs.reset_tab_visibility()
-        self.viewer_tabs.show_geometry()
+        try:
 
-        self.renderer_toolbar.setDisabled(False)
-        self.analysis_filter.setDisabled(False)
-        self.menu_widget.modify_items_access_after_geometry_importing()
+            self.viewer_tabs.reset_tab_visibility()
+            self.viewer_tabs.show_geometry()
 
-        self.project.reset_solutions()
-        self.project.model.properties._reset_variables()
+            self.renderer_toolbar.setDisabled(False)
+            self.analysis_filter.setDisabled(False)
+            self.menu_widget.modify_items_access_after_geometry_importing()
+
+            self.project.reset_solutions()
+            self.project.model.properties._reset_variables()
+
+        except Exception as error_log:
+            window_title = "Error"
+            title = "Error while processing geometry"
+            message = str(error_log)
+            PrintMessageInput([window_title, title, message])
 
     def closeEvent(self, event):
         self.close_app()
