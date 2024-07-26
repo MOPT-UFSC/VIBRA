@@ -386,8 +386,7 @@ class MenuItems(QTreeWidget):
 
         if item == self.item_child_import_geometry:
             if not self.item_child_import_geometry.isDisabled():
-                self.main_window.import_geometry_dialog()
-                if app().main_window.file.read_geometry_from_file():
+                if self.main_window.import_geometry_dialog():
                     self.modify_items_access_after_geometry_importing()
 
         elif item == self.item_child_mesh_setup:
@@ -395,7 +394,6 @@ class MenuItems(QTreeWidget):
                 obj = MesherInputs()
                 if obj.complete:
                     self.modify_items_access_after_geometry_importing()
-                    self.main_window.viewer_tabs.close_analysis_tabs()
 
         elif item == self.item_child_set_material:
             if not self.item_child_set_material.isDisabled():

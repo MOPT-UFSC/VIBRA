@@ -490,6 +490,8 @@ class MainWindow(QMainWindow):
         app().config.write_last_folder_path_in_file("project folder", path)
         self.project_menu.update_recents_menu()
         copy(self.temp_project_file_path, path)
+        self.update_window_title(path)
+        self.project_data_modified = False
 
     def open_project_dialog(self):
 
@@ -509,12 +511,6 @@ class MainWindow(QMainWindow):
         if not check:
             return
 
-        # path = Path(project_path)
-        # self.project.name = path.stem
-        # self.project.save_path = path
-
-        # app().config.write_last_folder_path_in_file("project folder", project_path)
-        # copy(project_path, self.temp_project_file_path)
         self.open_project(project_path)
 
     def import_geometry_dialog(self):
@@ -533,7 +529,7 @@ class MainWindow(QMainWindow):
                                                             )
 
         if not check:
-            return
+            return False
 
         app().config.write_last_folder_path_in_file("geometry folder", geometry_path)
 
@@ -558,8 +554,16 @@ class MainWindow(QMainWindow):
         _geometry_path = self.file.read_geometry_from_file()
         self.import_geometry(_geometry_path)
 
+        return True
+
     def export_mesh(self):
         ExportMeshData()
+
+    def update_window_title(self, project_path : str | Path):
+        if isinstance(project_path, str):
+            project_path = Path(project_path)
+        project_name = project_path.stem
+        self.setWindowTitle(f"{project_name}")
 
     def open_project(self, project_path: str | Path | None = None):
         '''
@@ -573,6 +577,7 @@ class MainWindow(QMainWindow):
             app().config.write_last_folder_path_in_file("project folder", project_path)
             self.project_menu.update_recents_menu()
             copy(project_path, self.temp_project_file_path)
+            self.update_window_title(project_path)
 
         self.project = Project()
         self.file = ProjectFileIO(self.temp_project_file_path, override=False)

@@ -69,99 +69,80 @@ def default_material_library():
 
 
 def default_fluid_library():
-    # References:   Incropera, et al. FUNDAMENTALS OF HEAT AND MASS TRANSFER. 6th edition.
-    #               Çengel, Yunus A., Boles, Michael A. THERMODYNAMICS. 5th edition.
-    # TODO: check the fluids pressure state
+
+    # Reference: RefProp v10.0
 
     config = configparser.ConfigParser()
 
-    config["Air @293.15"] = {
-        "Name": "Air @293.15",
+    config["1"] = {
+        "Name": "Air",
         "Identifier": 1,
-        "Color": "[200,200,200]",  # Light grey
-        "Fluid density": 1.215,
-        "Speed of sound": 343.2021,
-        "Impedance": 416.9905,
-        "Isentropic exponent": 1.400,
-        "Thermal conductivity": 0.0263,
-        "Specific heat Cp": 1007,
-        "Dynamic viscosity": float(184.6e-7),
+        "Color": "[255,170,127]",  # Blue
+        "Fluid density": 1.204263,
+        "Speed of sound": 343.395034,
+        "Isentropic exponent": 1.401985,
+        "Thermal conductivity": 0.025503,
+        "Specific heat Cp": 1006.400178,
+        "Dynamic viscosity": float(1.8247e-5),
         "Temperature": 293.15,
-        "Pressure": 102222.9,
+        "Pressure": 101325,
+        "Molar mass" : 28.958601
     }
 
-    config["Air @300K"] = {
-        "Name": "Air @300K",
+    config["2"] = {
+        "Name": "Air",
         "Identifier": 2,
-        "Color": "[0,0,255]",  # Blue
-        "Fluid density": 1.1614,
-        "Speed of sound": 347.21,
-        "Impedance": 403.2496,
-        "Isentropic exponent": 1.400,
-        "Thermal conductivity": 0.0263,
-        "Specific heat Cp": 1007,
-        "Dynamic viscosity": float(184.6e-7),
-        "Temperature": 300,
+        "Color": "[255,85,255]",  # Blue
+        "Fluid density": 0.945625,
+        "Speed of sound": 387.054839,
+        "Isentropic exponent": 1.397945,
+        "Thermal conductivity": 0.031167,
+        "Specific heat Cp": 1011.477011,
+        "Dynamic viscosity": float(2.1948e-5),
+        "Temperature": 373.15,
         "Pressure": 101325,
+        "Molar mass" : 28.958601
     }
 
-    config["Air @400K"] = {
-        "Name": "Air @400K",
+    config["3"] = {
+        "Name": "Hydrogen",
         "Identifier": 3,
-        "Color": "[0,255,255]",  # light Blue
-        "Fluid density": 0.8711,
-        "Speed of sound": 400.21,
-        "Impedance": 348.629,
-        "Isentropic exponent": 1.395,
-        "Thermal conductivity": 0.0338,
-        "Specific heat Cp": 1013,
-        "Dynamic viscosity": float(230.1e-7),
-        "Temperature": 400,
+        "Color": "[116,200,255]",  # Magenta
+        "Fluid density": 0.077173,
+        "Speed of sound": 1357.568075,
+        "Isentropic exponent": 1.402898,
+        "Thermal conductivity": 0.19527,
+        "Specific heat Cp": 14367.266634,
+        "Dynamic viscosity": float(9.3092e-6),
+        "Temperature": 318.15,
         "Pressure": 101325,
     }
 
-    config["Hydrogen @300K"] = {
-        "Name": "Hydrogen @300K",
+    config["4"] = {
+        "Name": "Hydrogen",
         "Identifier": 4,
-        "Color": "[150,0,150]",  # Magenta
-        "Fluid density": 0.08078,
-        "Speed of sound": 1318.43,
-        "Impedance": 106.5027,
-        "Isentropic exponent": 1.405,
-        "Thermal conductivity": float(183e-3),
-        "Specific heat Cp": 14307,
-        "Dynamic viscosity": float(89.6e-7),
-        "Temperature": 300,
-        "Pressure": 101325,
+        "Color": "[255,102,102]",  # Magenta
+        "Fluid density": 0.767785,
+        "Speed of sound": 1365.114753,
+        "Isentropic exponent": 1.404047,
+        "Thermal conductivity": 0.1964,
+        "Specific heat Cp": 14388.94084,
+        "Dynamic viscosity": float(9.3137e-6),
+        "Temperature": 318.15,
+        "Pressure": 1013250,
     }
 
-    config["Hydrogen @400K"] = {
-        "Name": "Hydrogen @400K",
+    config["5"] = {
+        "Name": "Methane",
         "Identifier": 5,
-        "Color": "[200,125,255]",  # Magenta
-        "Fluid density": 0.06059,
-        "Speed of sound": 1518.598,
-        "Impedance": 92.0118,
-        "Isentropic exponent": 1.398,
-        "Thermal conductivity": float(226e-3),
-        "Specific heat Cp": 14476,
-        "Dynamic viscosity": float(108.2e-7),
-        "Temperature": 400,
-        "Pressure": 101325,
-    }
-
-    config["Methane @300K"] = {
-        "Name": "Methane @300K",
-        "Identifier": 6,
-        "Color": "[200,150,50]",  # Cyan
-        "Fluid density": 0.657,
-        "Speed of sound": 449.2,
-        "Impedance": 295.1244,
-        "Isentropic exponent": 1.299,
-        "Thermal conductivity": 0.0339,
-        "Specific heat Cp": 2232,
-        "Dynamic viscosity": float(110e-7),
-        "Temperature": 300,
+        "Color": "[103,255,164]",  # Cyan
+        "Fluid density": 0.66816,
+        "Speed of sound": 445.010623,
+        "Isentropic exponent": 1.308321,
+        "Thermal conductivity": 0.033271,
+        "Specific heat Cp": 2220.597802,
+        "Dynamic viscosity": float(1.0914e-5),
+        "Temperature": 293.15,
         "Pressure": 101325,
     }
 

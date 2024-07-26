@@ -13,7 +13,6 @@ from vibra.interface.loading_bar import load_function
 from vibra.utils.progress_status import ProgressStatus
 
 import logging
-from pathlib import Path
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -144,6 +143,7 @@ class MesherInputs(QDialog):
         if condition or self.close_after_generate:
             self.close()
 
+        self.main_window.viewer_tabs.close_analysis_tabs()
         self.main_window.project.reset_solutions()
         self.main_window.project.set_mesh_setup(self.mesh_setup)
         app().main_window.file.write_mesh_setup_in_file(self.file_mesh_setup)

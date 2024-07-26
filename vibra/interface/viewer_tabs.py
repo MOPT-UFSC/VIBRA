@@ -89,28 +89,25 @@ class ViewerTabs(QTabWidget):
         self.main_window.update_mesh_information(nodes, face_elements, solid_elements)
 
     def show_acoustic_modal_analysis(self):
-        if self.isTabVisible(3):
-            self.setCurrentIndex(3)
-        else:
+        if not self.isTabVisible(3):
             self.setTabVisible(3, True)
             self.acoustic_modal_analysis.update_frequencies()
             self.acoustic_modal_analysis.update_plot()
+        self.setCurrentIndex(3)
 
     def show_structural_modal_analysis(self):
-        if self.isTabVisible(4):
-            self.setCurrentIndex(4)
-        else:
+        if not self.isTabVisible(4):
             self.setTabVisible(4, True)
             self.structural_modal_analysis.update_frequencies()
             self.structural_modal_analysis.update_plot()
+        self.setCurrentIndex(4)
 
     def show_acoustic_harmonic_analysis(self):
-        if self.isTabVisible(5):
-            self.setCurrentIndex(5)
-        else:
+        if not self.isTabVisible(5):
             self.setTabVisible(5, True)
             self.acoustic_harmonic_analysis.update_frequencies()
             self.acoustic_harmonic_analysis.update_plot()
+        self.setCurrentIndex(5)
 
     # def show_example_analysis(self):
     #     if self.example_analysis_widget not in self.tabs():

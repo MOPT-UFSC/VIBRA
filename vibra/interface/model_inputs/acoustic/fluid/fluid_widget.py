@@ -60,7 +60,7 @@ class FluidWidget(QWidget):
         self.refprop = None
         self.selected_column = None
 
-        self.list_of_fluids = list()
+        self.list_of_fluids = dict()
         self.fluid_data_refprop = dict()
         self.fluid_name_to_refprop_data = dict()
 
@@ -218,7 +218,7 @@ class FluidWidget(QWidget):
                             pressure = pressure,
                             molar_mass = molar_mass  )
 
-            self.list_of_fluids.append(fluid)
+            self.list_of_fluids[identifier] = fluid
 
             aux = [temperature, pressure, key_mixture, molar_fractions]
             if aux.count(None) == 0:
@@ -238,7 +238,7 @@ class FluidWidget(QWidget):
         self.tableWidget_fluid_data.setRowCount(COLOR_ROW + 1)
         self.tableWidget_fluid_data.setColumnCount(len(self.list_of_fluids))
 
-        for j, fluid in enumerate(self.list_of_fluids):
+        for j, fluid in enumerate(self.list_of_fluids.values()):
             if isinstance(fluid, Fluid):
 
                 self.tableWidget_fluid_data.setItem( 0, j, QTableWidgetItem(str(fluid.name)))
@@ -277,8 +277,12 @@ class FluidWidget(QWidget):
 
         if selected_column >= len(self.list_of_fluids):
             return
+        
+        item = self.tableWidget_fluid_data.item(1, selected_column)
+        identifier = int(item.text())
+        fluid = self.list_of_fluids[identifier]
 
-        return self.list_of_fluids[selected_column]
+        return fluid
 
     def add_column(self):
     
@@ -319,7 +323,10 @@ class FluidWidget(QWidget):
             self.tableWidget_fluid_data.setColumnCount(current_size - 1)
             return
 
-        fluid = self.list_of_fluids[selected_column]
+        item = self.tableWidget_fluid_data.item(1, selected_column)
+        identifier = int(item.text())
+        fluid = self.list_of_fluids[identifier]
+
         self.remove_fluid_from_file(fluid)
 
     def item_changed_callback(self, item):
@@ -376,7 +383,7 @@ class FluidWidget(QWidget):
         if not column_name:
             return True
 
-        for fluid in self.list_of_fluids:
+        for fluid in self.list_of_fluids.values():
             if fluid.name == column_name:
                 return True
 
@@ -387,7 +394,7 @@ class FluidWidget(QWidget):
         item = self.tableWidget_fluid_data.item(1, column)
 
         already_used_ids = set()
-        for fluid in self.list_of_fluids:
+        for fluid in self.list_of_fluids.values():
             already_used_ids.add(fluid.identifier)
         
         if item.text() == "":
@@ -505,13 +512,14 @@ class FluidWidget(QWidget):
 
         config = app().main_window.file.read_fluid_library_from_file()
 
-        if not fluid.name in config.sections():
+        identifier = str(fluid.identifier)
+        if not identifier in config.sections():
             return
 
-        config.remove_section(fluid.name)
+        config.remove_section(identifier)
         app().main_window.file.write_fluid_library_in_file(config)
 
-        self.reset_fluids_from_bodies_and_surfaces([fluid.name])
+        self.reset_fluids_from_bodies_and_surfaces([fluid.identifier])
         self.load_data_from_fluids_library()
 
     def cell_clicked_callback(self, row, col):
@@ -541,7 +549,7 @@ class FluidWidget(QWidget):
     def new_identifier(self):
 
         already_used_ids = set()
-        for fluid in self.list_of_fluids:
+        for fluid in self.list_of_fluids.values():
             already_used_ids.add(fluid.identifier)
 
         for i in count(1):
@@ -597,16 +605,16 @@ class FluidWidget(QWidget):
 
         config = app().main_window.file.read_fluid_library_from_file()
 
-        fluid_names = list()
+        fluid_identifiers = list()
         for section_cache in sections_cache:
             if section_cache not in config.sections():
-                fluid_name = config_cache[section_cache]["name"]
-                fluid_names.append(fluid_name)
+                identifier = config_cache[section_cache]["identifier"]
+                fluid_identifiers.append(int(identifier))
 
-        self.reset_fluids_from_bodies_and_surfaces(fluid_names)
+        self.reset_fluids_from_bodies_and_surfaces(fluid_identifiers)
         self.load_data_from_fluids_library()
 
-    def reset_fluids_from_bodies_and_surfaces(self, fluid_names : list):
+    def reset_fluids_from_bodies_and_surfaces(self, fluid_identifiers : list):
 
         surfaces_to_remove_fluid = list()
         volumes_to_remove_fluid = list()
@@ -615,7 +623,7 @@ class FluidWidget(QWidget):
             property, volume_id = key
             if property == "fluid":
                 if isinstance(data, Fluid):
-                    if data.name in fluid_names:
+                    if data.identifier in fluid_identifiers:
                         volumes_to_remove_fluid.append(volume_id)
                         surface_ids = self.model.mesh.surfaces_from_volumes[volume_id]
                         for surface_id in surface_ids:
@@ -626,6 +634,8 @@ class FluidWidget(QWidget):
 
         for surf_id in surfaces_to_remove_fluid:
             self.model.properties._remove_surface_property("fluid", surface_id=surf_id)
+
+        app().main_window.file.write_model_properties_in_file()
 
     def call_refprop_interface(self):
 
