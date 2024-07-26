@@ -107,7 +107,7 @@
         <property name="font">
          <font>
           <family>MS Shell Dlg 2</family>
-          <pointsize>12</pointsize>
+          <pointsize>11</pointsize>
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -288,7 +288,7 @@
               <number>2</number>
              </property>
              <property name="topMargin">
-              <number>2</number>
+              <number>16</number>
              </property>
              <property name="rightMargin">
               <number>2</number>

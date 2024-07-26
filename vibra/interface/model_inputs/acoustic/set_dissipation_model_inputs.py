@@ -120,7 +120,7 @@ class DissipationModelInput(QDialog):
 
             self.hide()
 
-            title = f"Dissipation model resetting"
+            title = "Dissipation model resetting"
             message = "Would you like to remove the dissipation model effects?"
 
             buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}

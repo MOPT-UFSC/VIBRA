@@ -28,71 +28,86 @@ class ViewerTabs(QTabWidget):
         self.structural_modal_analysis = StructuralModalAnalysisRenderWidget()
         self.acoustic_harmonic_analysis = AcousticHarmonicAnalysisRenderWidget()
 
-        self.welcome = WelcomeWidget()
+        self.welcome_widget = WelcomeWidget()
         self.help_widget = HelpWidget()
 
-        self.configure_window()
+        self._configure_window()
 
         self.add_tabs()
         self.reset_tab_visibility()
         self.show_welcome()
 
-        self.tabCloseRequested.connect(self.removeTab)
-        self.currentChanged.connect(self.current_tab_changed_callback)
+        self._create_connections()
+        self._configure_widget()
+
         self.last_index = None
 
     def add_tabs(self):
-        self.addTab(self.welcome, "Welcome!")
+        self.addTab(self.welcome_widget, "Welcome!")
         self.addTab(self.geometry_widget, "Geometry")
         self.addTab(self.mesh_widget, "Mesh")
         self.addTab(self.acoustic_modal_analysis, "Acoustic Modal Analysis")
         self.addTab(self.structural_modal_analysis, "Structural Modal Analysis")
         self.addTab(self.acoustic_harmonic_analysis, "Acoustic Harmonic Analysis")
 
+    def hide_current_tab(self):
+        index = self.currentIndex()
+        self.setTabVisible(index, False)
+
+    def _configure_widget(self):
+        self.setTabsClosable(False)
+
+    def _create_connections(self):
+        # self.tabCloseRequested.connect(self.hide_current_tab)
+        self.currentChanged.connect(self.current_tab_changed_callback)
+
     def reset_tab_visibility(self):
         for i in range(self.count()):
             self.setTabVisible(i, False)
+
+    def reset_solution_tabs_visibility(self):
+        for index in [3, 4, 5]:
+            self.setTabVisible(index, False)
 
     def show_welcome(self):
         self.setTabVisible(0, True)
 
     def show_geometry(self):
-        if self.currentIndex() != 1:
+        if not self.isTabVisible(1):
             self.setTabVisible(1, True)
             self.geometry_widget.update_plot()
             self.main_window.update_geometry_information()
-            self.setCurrentIndex(1)
-            # self.geometry_widget.geometry_info.update_geometry_information()
+        self.setCurrentIndex(1)
 
     def show_mesh(self):
-        if self.currentIndex() != 2:
+        if not self.isTabVisible(2):
             self.setTabVisible(2, True)
             self.mesh_widget.update_plot()
-            self.setCurrentIndex(2)
 
+        self.setCurrentIndex(2)
         nodes, face_elements, solid_elements = self.main_window.project.model.mesh.get_mesh_info()
         self.main_window.update_mesh_information(nodes, face_elements, solid_elements)
 
     def show_acoustic_modal_analysis(self):
-        if self.currentIndex() != 3:
+        if not self.isTabVisible(3):
             self.setTabVisible(3, True)
             self.acoustic_modal_analysis.update_frequencies()
             self.acoustic_modal_analysis.update_plot()
-            self.setCurrentIndex(3)
+        self.setCurrentIndex(3)
 
     def show_structural_modal_analysis(self):
-        if self.currentIndex() != 4:
+        if not self.isTabVisible(4):
             self.setTabVisible(4, True)
             self.structural_modal_analysis.update_frequencies()
             self.structural_modal_analysis.update_plot()
-            self.setCurrentIndex(4)
+        self.setCurrentIndex(4)
 
     def show_acoustic_harmonic_analysis(self):
-        if self.currentIndex() != 5:
+        if not self.isTabVisible(5):
             self.setTabVisible(5, True)
             self.acoustic_harmonic_analysis.update_frequencies()
             self.acoustic_harmonic_analysis.update_plot()
-            self.setCurrentIndex(5)
+        self.setCurrentIndex(5)
 
     # def show_example_analysis(self):
     #     if self.example_analysis_widget not in self.tabs():
@@ -172,7 +187,7 @@ class ViewerTabs(QTabWidget):
             if isinstance(tab, CommonRenderWidget):
                 tab.set_theme(theme)
 
-    def configure_window(self):
+    def _configure_window(self):
         self.setStyleSheet(
             """
         QTabBar::tab {
@@ -199,5 +214,8 @@ class ViewerTabs(QTabWidget):
             last_widget = self.widget(self.last_index)
             new_widget.copy_camera_from(last_widget)
             # if last_widget is not a valid render the operation will be ignored
+
+        if hasattr(new_widget, "update_selection"):
+            new_widget.update_selection()
 
         self.last_index = new_index

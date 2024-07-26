@@ -7,7 +7,15 @@ from vibra.utils.progress_status import ProgressStatus
 from vibra.interface.loading_bar import load_function
 from vibra.interface.general.print_message_input import PrintMessageInput
 
-from vtk import vtkUnstructuredGrid, vtkPoints, vtkDoubleArray, vtkXMLUnstructuredGridWriter, VTK_TETRA, VTK_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_QUADRATIC_HEXAHEDRON
+from vtkmodules.vtkCommonCore import vtkPoints
+from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
+from vtkmodules.vtkCommonDataModel import (
+    vtkUnstructuredGrid,
+    VTK_TETRA,
+    VTK_HEXAHEDRON,
+    VTK_QUADRATIC_TETRA,
+    VTK_QUADRATIC_HEXAHEDRON
+)
 
 import logging
 import os
@@ -177,8 +185,14 @@ class Mesh:
         if self.mesh_connection:
             self._merge_nodes_from_adjacent_volumes()
 
-        logging.info("Generating mesh..." + ProgressStatus(25, 100))
-        gmsh.model.mesh.generate(dim=element_type.dimensions)
+        try:
+
+            logging.info("Generating mesh..." + ProgressStatus(25, 100))
+            gmsh.model.mesh.generate(dim=element_type.dimensions)
+        
+        except:
+            gmsh.finalize()
+        
         gmsh.model.mesh.removeDuplicateNodes()
 
         logging.info("Post-processing mesh..." + ProgressStatus(70, 100))
@@ -951,8 +965,6 @@ class Mesh:
 
             elif selection == "lines":
                 all_ids = list(self.nodes_from_lines.keys())
-                print(all_ids)
-                print(self.nodes_from_lines)
 
             elif selection == "surfaces":
                 all_ids = list(self.nodes_from_surfaces.keys())   

@@ -7,17 +7,19 @@ from vibra import ICON_DIR
 from vibra.interface.exception_message import ErrorMessage
 from vibra.interface.loading_bar import load_function
 from vibra.utils.icons import load_icon
-from vibra.utils.interface_functions import get_main_window
+# from vibra.utils.interface_functions import get_main_window
+from vibra import app
 
 
 class ProjectMenu(QMenu):
     def __init__(self, parent):
         super().__init__(parent)
         #
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         #
         self.setTitle("Project")
         self.create_actions()
+        self.create_recents_menu()
         self.create_layout()
 
     def create_actions(self):
@@ -42,7 +44,7 @@ class ProjectMenu(QMenu):
         self.new_project_action = QAction(self.new_project_icon, "New Project", self)
         self.open_project_action = QAction(self.load_project_icon, "Open Project", self)
         self.recent_action = QAction(self.recent_icon, "Recent", self)
-        self.import_geometry_action = QAction(self.import_geometry_icon, "Import geometry", self)
+        # self.import_geometry_action = QAction(self.import_geometry_icon, "Import geometry", self)
 
         self.save_action = QAction(self.save_icon, "Save", self)
         self.save_as_action = QAction(self.save_as_icon, "Save as", self)
@@ -53,7 +55,8 @@ class ProjectMenu(QMenu):
         self.exit_action = QAction(self.exit_icon, "Exit", self)
 
         #
-        self.import_geometry_action.triggered.connect(self.import_geometry_callback)
+        self.new_project_action.triggered.connect(self.new_project_callback)
+        # self.import_geometry_action.triggered.connect(self.import_geometry_callback)
         self.capture_image_action.triggered.connect(self.capture_image_callback)
         self.open_project_action.triggered.connect(self.open_project_callback)
         self.save_action.triggered.connect(self.save_callback)
@@ -62,12 +65,25 @@ class ProjectMenu(QMenu):
         self.theme_action.triggered.connect(self.theme_callback)
         self.exit_action.triggered.connect(self.exit_callback)
 
+    def create_recents_menu(self):
+        self.recents_menu = QMenu("Recent projects", self)
+        self.recents_menu.setIcon(self.recent_icon)
+        self.update_recents_menu()
+
+    def update_recents_menu(self):
+        self.recents_menu.clear()
+        recent_paths = app().config.get_recent_files()
+        recent_paths[-8:]
+        for path in reversed(recent_paths):
+            self.recents_menu.addAction(QAction(str(path), self))
+
     def create_layout(self):
         self.clear()
         self.addAction(self.new_project_action)
         self.addAction(self.open_project_action)
-        self.addAction(self.recent_action)
-        self.addAction(self.import_geometry_action)
+        # self.addAction(self.recent_action)
+        self.addMenu(self.recents_menu)
+        # self.addAction(self.import_geometry_action)
         self.addSeparator()
         self.addAction(self.save_action)
         self.addAction(self.save_as_action)
@@ -76,6 +92,9 @@ class ProjectMenu(QMenu):
         self.addAction(self.capture_image_action)
         self.addAction(self.theme_action)
         self.addAction(self.exit_action)
+
+    def new_project_callback(self):
+        self.main_window.new_project_dialog()
 
     def open_project_callback(self):
         self.main_window.open_project_dialog()
@@ -93,10 +112,7 @@ class ProjectMenu(QMenu):
         self.main_window.viewer_tabs.show_help()
 
     def exit_callback(self):
-        # loaded_function = load_function(self.parent().project.long_function, self)
-        # loaded_function()
-        loaded_solve = load_function(self.solve_example_analysis_callback, self)
-        loaded_solve()
+        self.main_window.close_app()
 
     def theme_callback(self):
         if self.main_window.user_config.theme == "light":

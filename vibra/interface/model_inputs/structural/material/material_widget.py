@@ -29,7 +29,7 @@ def getColorRGB(color):
     tokens = color.split(',')
     return list(map(int, tokens))
 
-class MaterialInputs(QWidget):
+class MaterialWidget(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

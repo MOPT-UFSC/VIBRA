@@ -8,12 +8,13 @@ from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 
 import os
-import openpyxl
 import pytest
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
+
+from pandas import read_excel
+from openpyxl import load_workbook
 
 from time import time
 
@@ -24,11 +25,9 @@ def test_load_external_mesh_and_solve():
     # return
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    if pm_model == "DB":
-        mesh_path = "validation/data/particle_velocity/mesh/silencer/ds_silencer_DB.dat"
-    elif pm_model == "JCA":
-        mesh_path = "validation/data/particle_velocity/mesh/silencer/ds_silencer_JCA.dat"
-    else:
+    mesh_path = "validation/data/particle_velocity/mesh/silencer/ds_silencer_suction_stg1.dat"
+    
+    if pm_model not in ["DB", "DBM", "JCA"]:
         return
 
     if not os.path.exists(mesh_path):
@@ -461,15 +460,12 @@ def get_porous_material_data(model="DB"):
 def get_external_results():
 
     imported_results = dict()
+    results_path = f"validation/data/particle_velocity/results/silencer/WB_results_silencer_{pm_model}_Vn1_Z1_Z2.xlsx"
 
-    if pm_model == "DB":
-        results_path = "validation/data/particle_velocity/results/silencer/WB_results_silencer_DB_Vn1_Z1_Z2.xlsx"
-    elif pm_model == "JCA":
-        results_path = "validation/data/particle_velocity/results/silencer/WB_results_silencer_JCA_Vn1_Z1_Z2.xlsx"
-    else:
+    if not os.path.exists(results_path):
         return imported_results
 
-    wb = openpyxl.load_workbook(results_path)
+    wb = load_workbook(results_path)
 
     skiprows = 0
 
@@ -477,15 +473,19 @@ def get_external_results():
     for sheetname in sheetnames:
 
         try:
-            sheet_data = pd.read_excel(results_path, 
+            sheet_data = read_excel(
+                                    results_path, 
                                     sheet_name = sheetname, 
                                     header = skiprows, 
-                                    usecols = [0,1,2]).to_numpy()
+                                    usecols = [0,1,2]
+                                    ).to_numpy()
         except:
-            sheet_data = pd.read_excel(results_path, 
+            sheet_data = read_excel(
+                                    results_path, 
                                     sheet_name = sheetname, 
                                     header = skiprows, 
-                                    usecols = [0,1]).to_numpy()
+                                    usecols = [0,1]
+                                    ).to_numpy()
 
         imported_results[sheetname] = sheet_data
 

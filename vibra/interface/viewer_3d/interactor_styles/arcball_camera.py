@@ -1,8 +1,16 @@
 import numpy as np
-import vtk
+from vtkmodules.vtkCommonColor import vtkNamedColors
+from vtkmodules.vtkCommonTransforms import vtkTransform
+from vtkmodules.vtkFiltersSources import vtkSphereSource
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera
+from vtkmodules.vtkRenderingCore import (
+    vtkActor,
+    vtkPolyDataMapper,
+    vtkPropPicker,
+)
 
 
-class vtkInteractorStyleArcballCamera(vtk.vtkInteractorStyleTrackballCamera):
+class vtkInteractorStyleArcballCamera(vtkInteractorStyleTrackballCamera):
     """
     Interactor style that rotates and zooms around the cursor.
     """
@@ -13,7 +21,7 @@ class vtkInteractorStyleArcballCamera(vtk.vtkInteractorStyleTrackballCamera):
         self._leftButtonClicked = False
         self._rightButtonClicked = False
         self._rotating = False
-        self.picker = vtk.vtkPropPicker()
+        self.picker = vtkPropPicker()
         self.is_panning = False
         self.make_rotation_sphere()
         self.create_observers()
@@ -62,7 +70,7 @@ class vtkInteractorStyleArcballCamera(vtk.vtkInteractorStyleTrackballCamera):
         if renderer is None:
             return
 
-        picker = vtk.vtkPropPicker()
+        picker = vtkPropPicker()
         picker.Pick(cursor[0], cursor[1], 0, renderer)
         pos = picker.GetPickPosition()
 
@@ -165,7 +173,7 @@ class vtkInteractorStyleArcballCamera(vtk.vtkInteractorStyleTrackballCamera):
         renderer = self.GetDefaultRenderer() or self.GetCurrentRenderer()
         camera = renderer.GetActiveCamera()
 
-        transform_camera = vtk.vtkTransform()
+        transform_camera = vtkTransform()
         transform_camera.Identity()
 
         axis = [
@@ -249,14 +257,14 @@ class vtkInteractorStyleArcballCamera(vtk.vtkInteractorStyleTrackballCamera):
         return cursor_to_center * scale * (1 - 1 / factor)
 
     def make_rotation_sphere(self):
-        colors = vtk.vtkNamedColors()
-        sphereSource = vtk.vtkSphereSource()
+        colors = vtkNamedColors()
+        sphereSource = vtkSphereSource()
         sphereSource.SetRadius(0.01)
         sphereSource.Update()
 
-        mapper = vtk.vtkPolyDataMapper()
+        mapper = vtkPolyDataMapper()
         mapper.SetInputData(sphereSource.GetOutput())
 
-        self.sphere_rotation_actor = vtk.vtkActor()
+        self.sphere_rotation_actor = vtkActor()
         self.sphere_rotation_actor.SetMapper(mapper)
         self.sphere_rotation_actor.GetProperty().SetColor(colors.GetColor3d("blue"))

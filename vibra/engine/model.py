@@ -62,15 +62,18 @@ class Model:
 
         try:
 
-            self.mesh = Mesh.from_cad(path, dimension=2, size_factor=0.15)
-            # self.mesh.get_model_areas(self.geometry_path)
+            try:
+                self.mesh = Mesh.from_cad(path, dimension=2, size_factor=0.0, minimum_element_size=10, maximum_element_size=40)
+            except:
+                self.mesh = Mesh.from_cad(path, dimension=2, size_factor=0.0, minimum_element_size=5, maximum_element_size=30)
+
             self.generated_mesh = False
 
         except Exception as error_log:
             title = "Error while processing geometry"
             message = str(error_log)
-            PrintMessageInput([window_title_1, title, message])        
-
+            PrintMessageInput([window_title_1, title, message])
+            return -1       
 
     def process_mesh(self):
 

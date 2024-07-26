@@ -4,13 +4,12 @@ from PyQt5.QtGui import *
 from PyQt5 import uic
 
 from vibra import app, UI_DIR
+from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.analysis.acoustic_harmonic_analysis_input import AcousticHarmonicAnalysisInput
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
 from vibra.interface.analysis.coupled_harmonic_analysis_input import CoupledHarmonicAnalysisInput
 from vibra.interface.analysis.structural_harmonic_analysis_input import StructuralHarmonicAnalysisInput
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
-
-from pathlib import Path
 
 
 class AnalysisTypeInput(QDialog):
@@ -22,16 +21,22 @@ class AnalysisTypeInput(QDialog):
 
         self.main_window = app().main_window
 
-        self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
-
-        self._reset_variables()
+        self._config_window()
+        self._initialize()
         self._define_qt_variables()
         self._create_connections()
+
+        ConfigWidgetAppearance(self)
+
         self.exec()
 
-    def _reset_variables(self):
+    def _config_window(self):
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(app().main_window.vibra_icon)
+        self.setWindowTitle("Vibra")
+
+    def _initialize(self):
         #
         # Analysis ID 0 ==> Structural Harmonic Analysis - Direct Method
         # Analysis ID 1 ==> Structural Harmonic Analysis - Mode Superposition Method
@@ -168,11 +173,13 @@ class AnalysisTypeInput(QDialog):
         self.complete = True
         if self.main_window.project.analysis_data is not None:
             for key, value in self.main_window.project.analysis_data.items():
-                if key in ["f_min", "f_max", "f_step", "frequencies"]:
+                if key in ["f_min", "f_max", "f_step", "frequencies", "imported_table"]:
                     self.analysis_data[key] = value
 
         self.main_window.project.set_analysis_data(self.analysis_data)
         self.main_window.project.create_solver()
-        app().main_window.file.write_analysis_setup_in_file(self.analysis_data)
+        
+        if self.analysis_id in [2, 4]:
+            app().main_window.file.write_analysis_setup_in_file(self.analysis_data)
 
         self.close()

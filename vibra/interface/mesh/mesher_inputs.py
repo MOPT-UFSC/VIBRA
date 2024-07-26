@@ -13,7 +13,6 @@ from vibra.interface.loading_bar import load_function
 from vibra.utils.progress_status import ProgressStatus
 
 import logging
-from pathlib import Path
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -137,26 +136,36 @@ class MesherInputs(QDialog):
 
     def generate_mesh_callback(self):
 
-        if self.check_mesh_inputs():
-            return
+        try:
 
-        condition = self.lineEdit_faces_list.text() == "" and self.lineEdit_refining_size.text() == ""
-        if condition or self.close_after_generate:
-            self.close()
+            if self.check_mesh_inputs():
+                return
 
-        self.main_window.project.reset_solutions()
-        self.main_window.project.set_mesh_setup(self.mesh_setup)
-        app().main_window.file.write_mesh_setup_in_file(self.file_mesh_setup)
+            condition = self.lineEdit_faces_list.text() == "" and self.lineEdit_refining_size.text() == ""
+            if condition or self.close_after_generate:
+                self.close()
 
-        generate_mesh = load_function(self.main_window.project.generate_mesh, self.main_window)
-        generate_mesh()
+            self.main_window.viewer_tabs.close_analysis_tabs()
+            self.main_window.project.reset_solutions()
+            self.main_window.project.set_mesh_setup(self.mesh_setup)
+            app().main_window.file.write_mesh_setup_in_file(self.file_mesh_setup)
 
-        app().main_window.file.write_mesh_data_in_file()
+            generate_mesh = load_function(self.main_window.project.generate_mesh, self.main_window)
+            generate_mesh()
 
-        actions_to_finalize = load_function(self.actions_to_finalize, self.main_window)
-        actions_to_finalize()
+            app().main_window.file.write_mesh_data_in_file()
 
-        self.complete = True
+            actions_to_finalize = load_function(self.actions_to_finalize, self.main_window)
+            actions_to_finalize()
+
+            self.complete = True
+
+        except Exception as error_log:
+            window_title = "Error"
+            title = "Error while processing mesh"
+            message = str(error_log)
+            PrintMessageInput([window_title, title, message])
+            self.show()
 
     def actions_to_finalize(self):
         logging.info("Updating render..." + ProgressStatus(95, 100))

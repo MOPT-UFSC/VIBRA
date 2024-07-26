@@ -3,11 +3,11 @@ from threading import Lock
 from time import time
 
 import numpy as np
+from molde.render_widgets import AnimatedRenderWidget
 from PyQt5.QtCore import QObjectCleanupHandler
 from PyQt5.QtWidgets import *
 
-from molde.render_widgets import AnimatedRenderWidget
-
+from vibra import app
 from vibra.interface.analysis_bars.structural_analysis_bar import (
     StructuralModalAnalysisBar,
 )
@@ -17,13 +17,11 @@ from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
 )
 from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
 from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
-
 # from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
 #     CommonRenderWidget,
 # )
 from vibra.utils.interface_functions import get_main_window
 from vibra.utils.math_functions import lerp
-from vibra import app
 
 
 class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
@@ -41,6 +39,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.control_bar.phase_slider.sliderPressed.connect(self.stop_animation)
         self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
         self.main_window.theme_changed.connect(self.set_theme)
+        self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
@@ -50,6 +49,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.setLayout(layout)
         self.setContentsMargins(0, 0, 0, 0)
 
+        self.show_plane_actor = True
         self.cutting_plane_active = False
         self.cutting_plane_args = tuple()
 
@@ -87,7 +87,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
             return
         self.control_bar.set_frequencies(solver.natural_frequencies)
 
-    def update_plot(self, reset_camera=True):
+    def update_plot(self, reset_camera=False):
         if self.main_window.project is None:
             return
 
@@ -109,6 +109,9 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         index = self.current_shape_index()
         if not (0 <= index < solver.modal_shape.shape[1]):
             return
+        
+        if self.plane_actor is not None:
+            self.show_plane_actor = self.plane_actor.GetVisibility()
 
         self.remove_actors()
 
@@ -117,7 +120,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.edges_actor = EdgesActor(self.analysis_actor.data)
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
 
-        # Add a very subtle transparent actor to represent the whole 
+        # Add a very subtle transparent actor to represent the whole
         # structure even if part of it is hidden
         has_hidden_part = bool(self.main_window.hidden_surfaces)
         self.hidden_part_actor = FacesActor(mesh, allow_hidding=False)
@@ -138,14 +141,19 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         mesh_visibility = self.control_bar.show_mesh_button.isChecked()
         self.set_mesh_visibility(mesh_visibility)
 
-        if self.cutting_plane_active and self.cutting_plane_args:
-            self.start_cutting_mode()
-            self.apply_cutting_plane(*self.cutting_plane_args)
-        else:
-            self.update()
+        # if self.cutting_plane_active and self.cutting_plane_args:
+        #     self.start_cutting_mode()
+        #     self.apply_cutting_plane(*self.cutting_plane_args)
+        #     if not self.show_plane_actor:
+        #         self.plane_actor.VisibilityOff()
+        #         self.update()
+        # else:
+        #     self.update()
 
         if reset_camera:
             self.renderer.ResetCamera()
+            
+        self.update_section_plane()
         self.main_window.project.thumbnail = self.get_thumbnail()
 
     def update_hidden_plot(self):
@@ -175,7 +183,6 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
             index, phase
         )
 
-        self.analysis_actor.disable_cut()
         self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
         self.edges_actor.extract_data(self.analysis_actor.data)
 
@@ -223,50 +230,97 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.edges_actor.VisibilityOff()
         self.update()
 
-    #
-    def start_cutting_mode(self):
+    def update_section_plane(self):
         if not self._actors_exists():
             return
-        self.cutting_plane_active = True
-        self.plane_actor.VisibilityOn()
-        self.hidden_part_actor.VisibilityOn()
 
-    def stop_cutting_mode(self):
-        if not self._actors_exists():
+        section_plane = self.main_window.section_plane
+
+        if not section_plane.cutting:
+            self._disable_section_plane()
             return
-        self.cutting_plane_active = False
-        self.plane_actor.VisibilityOff()
+
+        position = section_plane.get_position()
+        rotation = section_plane.get_rotation()
+        inverted = section_plane.get_inverted()
+
+        if section_plane.editing:
+            self.plane_actor.configure_cutting_plane(position, rotation)
+            self.plane_actor.VisibilityOn()
+            self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
+            self.plane_actor.GetProperty().SetOpacity(0.8)
+            self.update()
+        else:
+            self._apply_section_plane(position, rotation, inverted, section_plane.isVisible())
+
+    def _disable_section_plane(self):
         has_hidden_part = bool(self.main_window.hidden_surfaces)
         self.hidden_part_actor.SetVisibility(has_hidden_part)
+        self.plane_actor.VisibilityOff()
         self.analysis_actor.disable_cut()
         self.edges_actor.disable_cut()
         self.update()
 
-    def configure_cutting_plane(self, position, orientation):
-        if not self._actors_exists():
-            return
-
-        self.plane_actor.configure_cutting_plane(position, orientation)
-        self.update()
-
-    def apply_cutting_plane(self, position, orientation, invert=False):
-        if not self._actors_exists():
-            return
-
-        self.cutting_plane_args = (position, orientation, invert)
+    def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
+        self.plane_actor.configure_cutting_plane(position, rotation)
         xyz = self.plane_actor.calculate_x_y_z_position(position)
-        normal = self.plane_actor.calculate_normal_vector(orientation)
-        if invert:
+        normal = self.plane_actor.calculate_normal_vector(rotation)
+        if inverted:
             normal = -normal
+
         self.analysis_actor.apply_cut(xyz, normal)
         self.edges_actor.apply_cut(xyz, normal)
 
-        self.plane_actor.VisibilityOn()
+        self.hidden_part_actor.VisibilityOn()
+        self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
-        self.plane_actor.configure_cutting_plane(position, orientation)
-
         self.update()
+
+    #
+    # def start_cutting_mode(self):
+    #     if not self._actors_exists():
+    #         return
+    #     self.cutting_plane_active = True
+    #     self.plane_actor.VisibilityOn()
+    #     self.hidden_part_actor.VisibilityOn()
+
+    # def stop_cutting_mode(self):
+    #     if not self._actors_exists():
+    #         return
+    #     self.cutting_plane_active = False
+    #     self.plane_actor.VisibilityOff()
+    #     has_hidden_part = bool(self.main_window.hidden_surfaces)
+    #     self.hidden_part_actor.SetVisibility(has_hidden_part)
+    #     self.analysis_actor.disable_cut()
+    #     self.edges_actor.disable_cut()
+    #     self.update()
+
+    # def configure_cutting_plane(self, position, orientation):
+    #     if not self._actors_exists():
+    #         return
+
+    #     self.plane_actor.configure_cutting_plane(position, orientation)
+    #     self.update()
+
+    # def apply_cutting_plane(self, position, orientation, invert=False):
+    #     if not self._actors_exists():
+    #         return
+
+    #     self.cutting_plane_args = (position, orientation, invert)
+    #     xyz = self.plane_actor.calculate_x_y_z_position(position)
+    #     normal = self.plane_actor.calculate_normal_vector(orientation)
+    #     if invert:
+    #         normal = -normal
+    #     self.analysis_actor.apply_cut(xyz, normal)
+    #     self.edges_actor.apply_cut(xyz, normal)
+
+    #     self.plane_actor.VisibilityOn()
+    #     self.plane_actor.configure_cutting_plane(position, orientation)
+    #     self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
+    #     self.plane_actor.GetProperty().SetOpacity(0.2)
+
+    #     self.update()
 
     def remove_actors(self):
         self.renderer.RemoveActor(self.analysis_actor)

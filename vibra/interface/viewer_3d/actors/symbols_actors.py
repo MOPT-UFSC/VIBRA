@@ -1,5 +1,6 @@
 import numpy as np
-import vtk
+from vtkmodules.vtkFiltersSources import vtkArrowSource
+from vtkmodules.vtkRenderingCore import vtkRenderer
 
 from vibra.interface.viewer_3d.actors.symbols_common import (
     X_VECTOR,
@@ -11,7 +12,7 @@ from vibra.interface.viewer_3d.actors.symbols_common import (
 
 
 class ClampSymbols(SymbolActorCommon):
-    def __init__(self, renderer: vtk.vtkRenderer):
+    def __init__(self, renderer: vtkRenderer):
         source = self.get_source()
         positions, orientations = self.get_positions_orientations()
         super().__init__(positions, orientations, source, renderer)
@@ -40,7 +41,7 @@ class ClampSymbols(SymbolActorCommon):
 
 
 class ArrowSymbols(SymbolActorCommon):
-    def __init__(self, renderer: vtk.vtkRenderer):
+    def __init__(self, renderer: vtkRenderer):
         source = self.get_source()
         positions, orientations = self.get_positions_orientations()
         super().__init__(positions, orientations, source, renderer)
@@ -69,7 +70,7 @@ class ArrowSymbols(SymbolActorCommon):
 
 
 class ArrowSymbols2(SymbolActorCommon):
-    def __init__(self, renderer: vtk.vtkRenderer):
+    def __init__(self, renderer: vtkRenderer):
         source = self.get_source()
         positions, orientations = self.get_positions_orientations()
         super().__init__(positions, orientations, source, renderer)
@@ -77,7 +78,7 @@ class ArrowSymbols2(SymbolActorCommon):
         self.configure_appearance()
 
     def get_source(self):
-        source = vtk.vtkArrowSource()
+        source = vtkArrowSource()
         source.Update()
         return source.GetOutput()
 
@@ -103,7 +104,7 @@ class ArrowSymbols2(SymbolActorCommon):
 
 
 class ArrowSymbols3(SymbolActorCommon):
-    def __init__(self, renderer: vtk.vtkRenderer):
+    def __init__(self, renderer: vtkRenderer):
         source = self.get_source()
         positions, orientations = self.get_positions_orientations()
         super().__init__(positions, orientations, source, renderer)

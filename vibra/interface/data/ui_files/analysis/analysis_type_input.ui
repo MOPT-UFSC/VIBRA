@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>400</height>
+    <width>360</width>
+    <height>380</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -21,14 +21,14 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>400</width>
-    <height>400</height>
+    <width>360</width>
+    <height>380</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>428</width>
-    <height>400</height>
+    <width>360</width>
+    <height>380</height>
    </size>
   </property>
   <property name="contextMenuPolicy">
@@ -64,7 +64,7 @@
     <widget class="QFrame" name="frame_title">
      <property name="minimumSize">
       <size>
-       <width>380</width>
+       <width>0</width>
        <height>48</height>
       </size>
      </property>
@@ -116,8 +116,8 @@
      </property>
      <property name="minimumSize">
       <size>
-       <width>380</width>
-       <height>300</height>
+       <width>0</width>
+       <height>0</height>
       </size>
      </property>
      <property name="maximumSize">
@@ -140,13 +140,13 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>280</width>
+          <width>240</width>
           <height>36</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>300</width>
+          <width>240</width>
           <height>36</height>
          </size>
         </property>
@@ -188,13 +188,13 @@
        <widget class="QPushButton" name="pushButton_harmonic_acoustic">
         <property name="minimumSize">
          <size>
-          <width>280</width>
+          <width>240</width>
           <height>36</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>300</width>
+          <width>240</width>
           <height>36</height>
          </size>
         </property>
@@ -219,13 +219,13 @@
        <widget class="QPushButton" name="pushButton_harmonic_coupled">
         <property name="minimumSize">
          <size>
-          <width>280</width>
+          <width>240</width>
           <height>36</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>300</width>
+          <width>240</width>
           <height>36</height>
          </size>
         </property>
@@ -257,13 +257,13 @@
        <widget class="QPushButton" name="pushButton_modal_structural">
         <property name="minimumSize">
          <size>
-          <width>280</width>
+          <width>240</width>
           <height>36</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>300</width>
+          <width>240</width>
           <height>36</height>
          </size>
         </property>
@@ -288,13 +288,13 @@
        <widget class="QPushButton" name="pushButton_modal_acoustic">
         <property name="minimumSize">
          <size>
-          <width>280</width>
+          <width>240</width>
           <height>36</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>300</width>
+          <width>240</width>
           <height>36</height>
          </size>
         </property>

@@ -123,7 +123,7 @@ class SetPorousMaterialModel(QDialog):
         #
         self.treeWidget_porous_material_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_porous_material_model.itemDoubleClicked.connect(self.on_doubleclick_item)
-
+        #
         self.pushButton_confirm.clicked.connect(self.attribute_porous_material_to_selected_bodies)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
@@ -149,8 +149,8 @@ class SetPorousMaterialModel(QDialog):
 
             self.hide()
 
-            title = f"Porous material model resetting"
-            message = "Would you like to remove the porous material model effects?"
+            title = "Porous material model resetting"
+            message = "Would you like to remove the porous material effects from the model?"
 
             buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
             read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -383,7 +383,7 @@ class SetPorousMaterialModel(QDialog):
 
         if input_str != "":
 
-            input_str.replace(",", ".")
+            input_str = input_str.replace(",", ".")
 
             try:
                 if _float:

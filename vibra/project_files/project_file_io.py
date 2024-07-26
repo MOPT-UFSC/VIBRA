@@ -48,23 +48,33 @@ class ProjectFileIO:
         pass
 
     def write_geometry_in_file(self, path):
+
         basename = os.path.basename(path)
         internal_path = f"geometry_file/{basename}"
+
+        try:
+            self.vibra_file.remove("geometry_file")
+        except:
+            pass
+
         self.vibra_file.write_from_path(internal_path, path, encoding="iso-8859-1")
 
         try:
 
             project_setup = self.vibra_file.read(self.project_setup_filename)
             if project_setup is None:
-                project_setup = {   "geometry_filename" : basename,
+                project_setup = {   
+                                    "geometry_filename" : basename,
                                     "mesh_setup" : dict(),
-                                    "analysis_setup" : dict()   }
+                                    "analysis_setup" : dict()   
+                                }
 
             else:
 
                 project_setup["geometry_filename"] = basename
             
             self.vibra_file.write(self.project_setup_filename, project_setup)
+            app().main_window.project_data_modified = True
 
         except Exception as error_log:
             print(str(error_log))
@@ -80,7 +90,11 @@ class ProjectFileIO:
             temp_path = dirname / geometry_filename
             internal_path = f"geometry_file/{geometry_filename}"
 
-            if not os.path.exists(dirname):
+            if os.path.exists(dirname):
+                for filename in os.listdir(dirname).copy():
+                    file_path = dirname / filename
+                    os.remove(file_path)
+            else:
                 os.mkdir(dirname)
 
             self.vibra_file.read_to_path(internal_path, temp_path)
@@ -95,6 +109,7 @@ class ProjectFileIO:
 
         project_setup["mesh_setup"] = mesh_setup           
         self.vibra_file.write(self.project_setup_filename, project_setup)
+        app().main_window.project_data_modified = True
     
     def read_mesh_setup_from_file(self):
 
@@ -173,7 +188,7 @@ class ProjectFileIO:
                         f.create_dataset(_key, data=data, dtype=dtype)
         
         self.vibra_file.remove(self.results_data_filename)
-
+        app().main_window.project_data_modified = True
 
     def read_mesh_data_from_file(self):
 
@@ -213,6 +228,7 @@ class ProjectFileIO:
 
         project_setup["analysis_setup"] = aux         
         self.vibra_file.write(self.project_setup_filename, project_setup)
+        app().main_window.project_data_modified = True
 
     def read_analysis_setup_from_file(self):
 
@@ -229,18 +245,21 @@ class ProjectFileIO:
 
     def write_model_setup_in_file(self, project_setup : dict):
         self.vibra_file.write(self.project_setup_filename, project_setup)
+        app().main_window.project_data_modified = True
 
     def read_model_setup_from_file(self):
         return self.vibra_file.read(self.project_setup_filename)
 
     def write_material_library_in_file(self, config):
         self.vibra_file.write(self.material_library_filename, config)
+        app().main_window.project_data_modified = True
 
     def read_material_library_from_file(self):
         return self.vibra_file.read(self.material_library_filename)
 
     def write_fluid_library_in_file(self, config):
         self.vibra_file.write(self.fluid_library_filename, config)
+        app().main_window.project_data_modified = True
 
     def read_fluid_library_from_file(self):
         return self.vibra_file.read(self.fluid_library_filename)
@@ -278,6 +297,7 @@ class ProjectFileIO:
                         )
 
             self.vibra_file.write(self.model_properties, data)
+            app().main_window.project_data_modified = True
 
         except Exception as error_log:
 
@@ -318,12 +338,13 @@ class ProjectFileIO:
         if thumbnail is None:
             return
         self.vibra_file.write(self.thumbnail_filename, thumbnail)
+        app().main_window.project_data_modified = True
 
     def read_thumbnail(self):
         return self.vibra_file.read(self.thumbnail_filename)
     
     def write_results_data_in_file(self):
-         with self.vibra_file.open(self.results_data_filename, "w") as internal_file:
+        with self.vibra_file.open(self.results_data_filename, "w") as internal_file:
             with h5py.File(internal_file, "w") as f:
 
                 acoustic_modal_solver = app().main_window.project.acoustic_modal_solver
@@ -358,6 +379,8 @@ class ProjectFileIO:
                         f.create_dataset("harmonic_structural/frequencies", data=frequencies, dtype=float)
                         f.create_dataset("harmonic_structural/solution", data=solution, dtype=complex)
 
+                app().main_window.project_data_modified = True
+
     def read_results_data_from_file(self):
         
         results_data = dict()
@@ -383,3 +406,12 @@ class ProjectFileIO:
             return dict()
 
         return results_data
+    
+    def remove_model_properties_from_project_file(self):
+        self.vibra_file.remove(self.model_properties)
+
+    def remove_mesh_data_from_project_file(self):
+        self.vibra_file.remove(self.mesh_data_filename)
+
+    def remove_results_data_from_project_file(self):
+        self.vibra_file.remove(self.results_data_filename)

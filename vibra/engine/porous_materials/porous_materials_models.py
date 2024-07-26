@@ -1,7 +1,7 @@
 from vibra import app
 
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 # fmt: off
 
@@ -86,13 +86,6 @@ class PorousMaterialModels:
 
         C_eff = omega / k_eff
         rho_eff = Z_eff / C_eff
-
-        # aux = np.ones_like(Z_eff, dtype=complex)
-        # C_eff = C_0*aux
-        # rho_eff = rho_0*aux
-
-        # print(rho_eff)
-        # print(C_eff)
 
         return rho_eff, C_eff
 

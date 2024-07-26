@@ -470,7 +470,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
         if len(group_ids) + len(volume_ids):
 
-            title = f"Resetting LRF eq. model"
+            title = "Resetting LRF eq. model"
             message = "Would you like to remove all LRF equivalent model inputs defined to the acoustic model?"
 
             buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
@@ -486,10 +486,10 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
                 app().main_window.file.write_model_properties_in_file()
 
-                title = "Model resetting complete"
-                message = "All LRF equivalent model effects active on "
-                message += "the acoustic model have been removed."
-                PrintMessageInput([window_title_2, title, message], auto_close=True)
+                # title = "Model resetting complete"
+                # message = "All LRF equivalent model effects active on "
+                # message += "the acoustic model have been removed."
+                # PrintMessageInput([window_title_2, title, message], auto_close=True)
 
                 self.close()
 

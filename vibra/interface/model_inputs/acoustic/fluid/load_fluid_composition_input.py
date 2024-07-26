@@ -11,8 +11,7 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 
 import os
-import openpyxl
-import pandas as pd
+
 
 class LoadFluidCompositionInput(QDialog):
     def __init__(self, *args, **kwargs):
@@ -110,15 +109,20 @@ class LoadFluidCompositionInput(QDialog):
         self.imported_data = dict()
         self.comboBox_sheet_names.clear()
 
-        wb = openpyxl.load_workbook(self.file_path)
+        from pandas import read_excel
+        from openpyxl import load_workbook
+
+        wb = load_workbook(self.file_path)
         sheetnames = wb.sheetnames
         for sheetname in sheetnames:
 
             try:
-                sheet_data = pd.read_excel( self.file_path, 
-                                            sheet_name = sheetname, 
-                                            header = 0, 
-                                            usecols = [0,1,2,3]).to_numpy()
+                sheet_data = read_excel(
+                                        self.file_path, 
+                                        sheet_name = sheetname, 
+                                        header = 0, 
+                                        usecols = [0,1,2,3]
+                                        ).to_numpy()
                 
                 self.imported_data[sheetname] = sheet_data
                 self.comboBox_sheet_names.addItem(sheetname)

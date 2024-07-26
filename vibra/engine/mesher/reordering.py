@@ -1,7 +1,6 @@
 
 import numpy as np
 from scipy.sparse import csr_matrix, coo_matrix
-import matplotlib.pyplot as plt
 from time import time
 
 from scipy.sparse.csgraph import reverse_cuthill_mckee as rcm
@@ -196,6 +195,7 @@ class Reordering:
             return None
 
     def plot_graph(self, graph):
+        import matplotlib.pyplot as plt
         plt.ion()
         plt.cla()
         plt.spy(graph, color=(0.25,0.25,0.25))

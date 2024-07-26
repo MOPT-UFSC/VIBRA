@@ -1,17 +1,19 @@
-import vtk
+from vtkmodules.vtkCommonCore import vtkPoints, vtkUnsignedCharArray
+from vtkmodules.vtkCommonDataModel import VTK_VERTEX, vtkPlane, vtkPolyData
+from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
 
 
-class PointsActor(vtk.vtkActor):
+class PointsActor(vtkActor):
     def __init__(self, mesh):
         self.mesh = mesh
         self.create_geometry()
         self.configure_appearance()
 
     def create_geometry(self):
-        data = vtk.vtkPolyData()
-        points = vtk.vtkPoints()
-        mapper = vtk.vtkPolyDataMapper()
-        cell_colors = vtk.vtkUnsignedCharArray()
+        data = vtkPolyData()
+        points = vtkPoints()
+        mapper = vtkPolyDataMapper()
+        cell_colors = vtkUnsignedCharArray()
 
         data.Allocate(len(self.mesh.nodal_coordinates))
         cell_colors.SetNumberOfComponents(3)
@@ -20,7 +22,7 @@ class PointsActor(vtk.vtkActor):
         for tag, node_id in self.mesh.nodes_from_points.items():
             _, x, y, z = self.mesh.nodal_coordinates[node_id]
             points.InsertNextPoint(x, y, z)
-            data.InsertNextCell(vtk.VTK_VERTEX, 1, [node_id])
+            data.InsertNextCell(VTK_VERTEX, 1, [node_id])
 
         data.SetPoints(points)
         data.GetCellData().SetScalars(cell_colors)
@@ -60,12 +62,11 @@ class PointsActor(vtk.vtkActor):
         self.GetMapper().ScalarVisibilityOn()
 
     def apply_cut(self, origin, normal):
-        plane = vtk.vtkPlane()
+        plane = vtkPlane()
         plane.SetOrigin(origin)
         plane.SetNormal(normal)
         self.GetMapper().RemoveAllClippingPlanes()
         self.GetMapper().AddClippingPlane(plane)
-    
+
     def disable_cut(self):
         self.GetMapper().RemoveAllClippingPlanes()
-

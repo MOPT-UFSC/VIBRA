@@ -1,9 +1,10 @@
-from vibra.utils.utils import get_new_path
-
 import os
 import sys
 import configparser
 from pathlib import Path
+
+from vibra.utils.utils import get_new_path
+
 
 class Config:
     def __init__(self):
@@ -14,6 +15,39 @@ class Config:
         self.open_last_project = False
         self.config_path = Path().home() / ".vibra_config"
         self.load_config_file()
+    
+    def add_recent_file(self, recent_file: str | Path):
+        # try:
+        recents = self.get_recent_files()
+        recents.append(str(recent_file))
+
+        # only keep the last N files
+        recents = recents[-10:]
+
+        config = configparser.ConfigParser()
+        config.read(self.config_path)
+
+        if not config.has_section("Recents"):
+            config["Recents"] = dict()
+
+        for i, file in enumerate(recents):
+            config["Recents"][str(i)] = str(file)
+
+        self.write_data_in_file(self.config_path, config)
+
+    def get_recent_files(self) -> list:
+        config = configparser.ConfigParser()
+        config.read(self.config_path)
+
+        if not config.has_section("Recents"):
+            return list()
+
+        # only keep existing files
+        recents = [Path(file) for i, file in sorted(config["Recents"].items()) 
+                   if Path(file).exists()]
+        # avoid repetitions
+        recents = list(set(recents))
+        return recents
 
     def load_config_file(self):
         try:
@@ -74,6 +108,20 @@ class Config:
             return
 
         self.write_data_in_file(self.config_path, config)
+    
+    def write_menu_items_visible_in_file(self, menu_items_visible : str):
+        try:
+            config = configparser.ConfigParser()
+            config.read(self.config_path)
+    
+            if config.has_section('User preferences'):
+                config["User preferences"]["menu_items_visible"] = str(menu_items_visible)
+            else:
+                config["User preferences"] = {"menu_items_visible" : str(menu_items_visible)}
+        except:
+            return
+
+        self.write_data_in_file(self.config_path, config)
 
     def write_colormap_in_file(self, colormap : str):
         try:
@@ -114,6 +162,9 @@ class Config:
 
                 if "interface theme" in section.keys():
                     user_preferences["interface theme"] = section["interface theme"]
+
+                if "menu_items_visible" in section.keys():
+                    user_preferences["menu_items_visible"] = section["menu_items_visible"]
 
                 if "background color" in section.keys():
                     if section["background color"] in ["light", "dark"]:

@@ -4,7 +4,7 @@ import numpy as np
 from PyQt5 import uic
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QTabWidget
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
@@ -22,7 +22,6 @@ class AnalysisSetupInput(QDialog):
 
         self.analysis_data = self.project.analysis_data
         self.analysis_id = self.analysis_data["analysis_id"]
-        self.imported_table_state = self.main_window.project.imported_table_state
 
         """
         |--------------------------------------------------------------------|
@@ -58,8 +57,8 @@ class AnalysisSetupInput(QDialog):
 
         ConfigWidgetAppearance(self)
 
-        self.update_frequency_setup_input_texts()
-        self.update_damping_input_texts()
+        self.update_frequency_setup_inputs()
+        self.update_damping_inputs()
         self.exec_()
 
     def _config_window(self):
@@ -112,6 +111,7 @@ class AnalysisSetupInput(QDialog):
 
         if "analysis_type" in data.keys():
             title = data["analysis_type"] + " Setup"
+
         if "analysis_method_label" in data.keys():
             subtitle = data["analysis_method_label"]
 
@@ -133,6 +133,12 @@ class AnalysisSetupInput(QDialog):
         if "modes" in data.keys():
             self.modes = data["modes"]
 
+        if "imported_table" in data.keys():
+            _bool = data["imported_table"]
+            self.lineEdit_fmax.setDisabled(_bool)
+            self.lineEdit_fmin.setDisabled(_bool)
+            self.lineEdit_fstep.setDisabled(_bool)
+
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.check_run()
@@ -142,7 +148,7 @@ class AnalysisSetupInput(QDialog):
     def tabEvent(self):
         self.currentTab = self.tabWidget.currentIndex()
 
-    def update_damping_input_texts(self):
+    def update_damping_inputs(self):
         if self.analysis_id not in [2, 3, 4]:
             if self.global_damping != [0, 0, 0, 0]:
                 self.lineEdit_av.setText(str(self.global_damping[0]))
@@ -150,15 +156,11 @@ class AnalysisSetupInput(QDialog):
                 self.lineEdit_ah.setText(str(self.global_damping[2]))
                 self.lineEdit_bh.setText(str(self.global_damping[3]))
 
-    def update_frequency_setup_input_texts(self):
+    def update_frequency_setup_inputs(self):
         if self.f_step != 0:
             self.lineEdit_fmin.setText(str(self.f_min))
             self.lineEdit_fmax.setText(str(self.f_max))
             self.lineEdit_fstep.setText(str(self.f_step))
-            if self.project.imported_table_state:
-                self.lineEdit_fmin.setDisabled(True)
-                self.lineEdit_fmax.setDisabled(True)
-                self.lineEdit_fstep.setDisabled(True)
 
     def check_exit(self):
         input_fmin = input_fmax = input_fstep = 0
@@ -244,14 +246,13 @@ class AnalysisSetupInput(QDialog):
         self.analysis_data["f_max"] = input_fmax
         self.analysis_data["f_step"] = input_fstep
         self.analysis_data["frequencies"] = self.frequencies
-        self.analysis_data["global_damping"] = self.global_damping
+        # self.analysis_data["global_damping"] = self.global_damping
 
         # if not self.analysis_id in [3, 4]:
         #     self.project.set_modes_sigma(self.modes)
 
         self.project.set_analysis_data(self.analysis_data)
         self.project.create_solver()
-
         app().main_window.file.write_analysis_setup_in_file(self.analysis_data)
 
         self.complete = True
