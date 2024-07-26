@@ -24,7 +24,9 @@ a = Analysis(
     datas=[
         ("vibra/interface/data/", "vibra/interface/data/")
     ],
-    hiddenimports=[],
+    hiddenimports=[
+        "vtk"
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
