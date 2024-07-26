@@ -178,7 +178,10 @@ class PlotAcousticPressureFrequencyResponseInput(QDialog):
         else:
             rows = selected_id
 
-        response = np.average(self.solution[rows,:], axis=0)
+        if isinstance(rows, int):
+            response = self.solution[rows,:]
+        else:
+            response = np.average(self.solution[rows,:], axis=0)
 
         # if complex(0) in response:
         #     response += 1e-12

@@ -244,10 +244,14 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         else:
             rows_num = self.output_selection_id
             rows_den = self.input_selection_id
-            # return None
 
-        numerator = np.average(self.solution[rows_num,:], axis=0)
-        denominator = np.average(self.solution[rows_den,:], axis=0)
+        if isinstance(rows_num, int) and isinstance(rows_den, int):
+            numerator = self.solution[rows_num,:]
+            denominator = self.solution[rows_den,:]
+
+        else:
+            numerator = np.average(self.solution[rows_num,:], axis=0)
+            denominator = np.average(self.solution[rows_den,:], axis=0)
 
         if complex(0) in denominator:
             denominator += 1e-12

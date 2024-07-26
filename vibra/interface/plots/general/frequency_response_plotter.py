@@ -354,7 +354,7 @@ class FrequencyResponsePlotter(QDialog):
                                     color = self.color, 
                                     linestyle = self.linestyle  )
         return _plot
-    
+
     def call_semilog_x_plot(self, first_index=0):
         _plot, = self.ax.semilogx(  self.x_data[first_index:], 
                                     self.y_data[first_index:], 
