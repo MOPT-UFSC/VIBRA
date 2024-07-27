@@ -3,11 +3,13 @@ import os
 import json
 import numpy as np
 from scipy.sparse.linalg import spsolve
+from scipy.sparse import triu
 #
 # os.environ["OMP_DYNAMIC"] = "FALSE"
 # os.environ["OMP_THREAD_LIMIT"] = "8"
 # os.environ["OMP_NUM_THREADS"] = "4"
 # 
+
 from pypardiso.pardiso_wrapper import PyPardisoSolver
 
 from functools import cache
@@ -138,8 +140,15 @@ class AcousticHarmonicSolver:
             C = C_imp[i] + C_visc
             A = K - (omega**2) * M + 1j * omega * C
 
+            # ps = PyPardisoSolver(mtype=3)
+            # F = F.astype(np.cdouble)
+            # A = triu(A, "csr")
+            # ps.factorize(A)
+
             # solution[:, i] = spsolve(A, F)
             solution[:, i] = ps.solve(A, F)
+            ps.free_memory(everything=True)
+            del A, F
 
         self.solution = self._reinsert_prescribed_dofs(solution)
 
