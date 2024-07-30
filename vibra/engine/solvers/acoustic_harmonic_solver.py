@@ -83,7 +83,8 @@ class AcousticHarmonicSolver:
         """ """
         self.get_max_min_values_of_pressures.cache_clear()
 
-        ps = PyPardisoSolver(mtype=3)
+        # Note: use mtype=3 for full symmetric complex matrix and mtype=6 for upper triangular complex matrix
+        ps = PyPardisoSolver(mtype=6)
         #
         self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
         #
@@ -140,9 +141,7 @@ class AcousticHarmonicSolver:
             C = C_imp[i] + C_visc
             A = K - (omega**2) * M + 1j * omega * C
 
-            # ps = PyPardisoSolver(mtype=3)
-            # F = F.astype(np.cdouble)
-            # A = triu(A, "csr")
+            A = triu(A, format="csr")
             # ps.factorize(A)
 
             # solution[:, i] = spsolve(A, F)
