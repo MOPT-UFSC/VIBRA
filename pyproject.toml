@@ -27,6 +27,7 @@ intel-openmp = "2023.2.0"
 h5py = "^3.11.0"
 molde = {git = "https://github.com/andrefpf/molde"}
 fileboxes = {git = "https://github.com/andrefpf/fileboxes.git"}
+moviepy = "^1.0.3"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"

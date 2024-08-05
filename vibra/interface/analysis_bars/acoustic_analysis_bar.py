@@ -23,8 +23,14 @@ class AcousticModalAnalysisBar(QWidget):
         self.play_icon = load_icon(ICON_DIR / "play.png", QColor("#0055DD"))
         self.pause_icon = load_icon(ICON_DIR / "pause.png", QColor("#0055DD"))
         self.play_pause_button = QPushButton(self.play_icon, "")
+        self.play_pause_button.setToolTip("Play animation")
         self.play_pause_button.setShortcut("Space")
         self.play_pause_button.setMinimumWidth(80)
+
+        self.create_video_icon = load_icon(ICON_DIR / "create_video_icon.png", QColor("#0055DD"))
+        self.create_video_button = QPushButton(self.create_video_icon, "")
+        self.create_video_button.setToolTip("Create video")
+        self.create_video_button.setMinimumWidth(80)
 
         self.frequency_box = QComboBox()
         self.absolute_button = QRadioButton("Absolute")
@@ -56,6 +62,7 @@ class AcousticModalAnalysisBar(QWidget):
         layout.addSpacing(hspacing)
 
         layout.addWidget(self.play_pause_button)
+        layout.addWidget(self.create_video_button)
         layout.addStretch()
 
         self.selector_label = QLabel("List of results:")
@@ -70,9 +77,11 @@ class AcousticModalAnalysisBar(QWidget):
 
     def use_play_icon(self):
         self.play_pause_button.setIcon(self.play_icon)
+        self.play_pause_button.setToolTip("Play animation")
 
     def use_pause_icon(self):
         self.play_pause_button.setIcon(self.pause_icon)
+        self.play_pause_button.setToolTip("Pause animation")
 
     def set_frequencies(self, frequencies):
         self.frequency_box.clear()
