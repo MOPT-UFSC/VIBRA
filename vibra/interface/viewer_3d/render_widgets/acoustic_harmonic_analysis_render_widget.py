@@ -1,6 +1,7 @@
 import logging
 from time import time
 from moviepy.editor import ImageSequenceClip
+from PIL import Image
 
 import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
@@ -222,13 +223,19 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         # dt = time() - t0
         # print(f"Elapsed time to process D: {round(dt, 4)} s")
     
-    def generate_video(self, path):
+    def generate_video(self, path, n_loops=10):
         images = list()
 
         for i in range(self._animation_fps):
             self.update_animation(i)
             images.append(self.get_screenshot())
+        
+        frames = [np.array(img) for img in images]
 
+        clip = ImageSequenceClip(frames, fps=10)
+        clip = clip.loop(duration=clip.duration * n_loops)
+        clip.write_videofile("acoustic_harmonic_analysis_video.mp4", codec="libx264")
+        
     def process_animation_frames(self):
         """This method processes the animation frames for one complete
         animation cycle. The animation controls are frame per cycle
