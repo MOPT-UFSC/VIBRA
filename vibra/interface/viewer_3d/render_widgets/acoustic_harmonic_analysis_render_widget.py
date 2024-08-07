@@ -2,11 +2,12 @@ import logging
 from time import time
 from moviepy.editor import ImageSequenceClip
 from PIL import Image
+from pathlib import Path
 
 import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
 from PyQt5.QtCore import QObjectCleanupHandler
-from PyQt5.QtWidgets import QVBoxLayout
+from PyQt5.QtWidgets import QVBoxLayout, QFileDialog
 
 from vibra import app
 # from vibra.interface.modal_analysis_bar import AcousticModalAnalysisBar
@@ -24,6 +25,7 @@ from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 # )
 from vibra.utils.interface_functions import get_main_window
 from vibra.utils.progress_status import ProgressStatus
+from vibra import VIBRA_DIR
 
 
 class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
@@ -36,7 +38,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
         self.control_bar.phase_slider.valueChanged.connect(self.stop_animation)
         self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
-        self.control_bar.create_video_button.clicked.connect(self.generate_video)
+        self.control_bar.create_video_button.clicked.connect(self.save_video)
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
@@ -223,18 +225,35 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         # dt = time() - t0
         # print(f"Elapsed time to process D: {round(dt, 4)} s")
     
-    def generate_video(self, path, n_loops=10):
+    def generate_video(self, path, n_loops=20):
         images = list()
 
-        for i in range(self._animation_fps):
+        for i in range(self._animation_total_frames):
             self.update_animation(i)
-            images.append(self.get_screenshot())
+            screenshot = self.get_screenshot().resize([1920, 1080])
+            images.append(screenshot)
         
         frames = [np.array(img) for img in images]
+        
+        clip = ImageSequenceClip(frames, self._animation_fps)
+    
+        if Path(path).suffix == ".mp4":
+            clip = clip.loop(duration= clip.duration * n_loops)
+            clip.write_videofile(path)
+        else:
+            clip.write_gif(path)
 
-        clip = ImageSequenceClip(frames, fps=10)
-        clip = clip.loop(duration=clip.duration * n_loops)
-        clip.write_videofile("acoustic_harmonic_analysis_video.mp4", codec="libx264")
+    def save_video(self):
+        file_path, check = QFileDialog.getSaveFileName(
+                                                        self,
+                                                        "Save As",
+                                                        filter = "All Files ();; Video (*.mp4);; GIF (*.gif);;",
+                                                    )
+        
+        if not check:
+            return
+        
+        self.generate_video(file_path)
         
     def process_animation_frames(self):
         """This method processes the animation frames for one complete
