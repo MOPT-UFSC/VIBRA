@@ -224,24 +224,6 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.update()
         # dt = time() - t0
         # print(f"Elapsed time to process D: {round(dt, 4)} s")
-    
-    def generate_video(self, path, n_loops=20):
-        images = list()
-
-        for i in range(self._animation_total_frames):
-            self.update_animation(i)
-            screenshot = self.get_screenshot().resize([1920, 1080])
-            images.append(screenshot)
-        
-        frames = [np.array(img) for img in images]
-        
-        clip = ImageSequenceClip(frames, self._animation_fps)
-    
-        if Path(path).suffix == ".mp4":
-            clip = clip.loop(duration= clip.duration * n_loops)
-            clip.write_videofile(path)
-        else:
-            clip.write_gif(path)
 
     def save_video(self):
         file_path, check = QFileDialog.getSaveFileName(
@@ -254,6 +236,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
             return
         
         self.generate_video(file_path)
+    
         
     def process_animation_frames(self):
         """This method processes the animation frames for one complete

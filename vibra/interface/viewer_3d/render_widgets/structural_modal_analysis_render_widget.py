@@ -38,7 +38,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
         self.control_bar.phase_slider.sliderPressed.connect(self.stop_animation)
         self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
-        self.control_bar.create_video_button.clicked.connect(self.generate_video)
+        self.control_bar.create_video_button.clicked.connect(self.save_video)
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
@@ -358,12 +358,17 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         # self.edges_actor.extract_data(self.analysis_actor.data)
         self.update()
 
-    def generate_video(self, path):
-        images = list()
-
-        for i in range(self._animation_fps):
-            self.update_animation(i)
-            images.append(self.get_screenshot())
+    def save_video(self):
+        file_path, check = QFileDialog.getSaveFileName(
+                                                        self,
+                                                        "Save As",
+                                                        filter = "All Files ();; Video (*.mp4);; GIF (*.gif);;",
+                                                    )
+        
+        if not check:
+            return
+        
+        self.generate_video(file_path)
 
     def _actors_exists(self):
         actors = [

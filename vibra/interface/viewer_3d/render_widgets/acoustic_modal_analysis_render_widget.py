@@ -32,7 +32,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
         self.control_bar.phase_slider.valueChanged.connect(self.stop_animation)
         self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
-        self.control_bar.create_video_button.clicked.connect(self.generate_video)
+        self.control_bar.create_video_button.clicked.connect(self.save_video)
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
@@ -254,12 +254,18 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
         self.update()
 
-    def generate_video(self, path):
-        images = list()
-
-        for i in range(self._animation_fps):
-            self.update_animation(i)
-            images.append(self.get_screenshot())
+    def save_video(self):
+        file_path, check = QFileDialog.getSaveFileName(
+                                                        self,
+                                                        "Save As",
+                                                        filter = "All Files ();; Video (*.mp4);; GIF (*.gif);;",
+                                                    )
+        
+        if not check:
+            return
+        
+        self.generate_video(file_path)
+        
 
     def set_mesh_visibility(self, condition):
         if not self._actors_exists():
