@@ -3,11 +3,13 @@ import os
 import json
 import numpy as np
 from scipy.sparse.linalg import spsolve
+from scipy.sparse import triu
 #
 # os.environ["OMP_DYNAMIC"] = "FALSE"
 # os.environ["OMP_THREAD_LIMIT"] = "8"
 # os.environ["OMP_NUM_THREADS"] = "4"
 # 
+
 from pypardiso.pardiso_wrapper import PyPardisoSolver
 
 from functools import cache
@@ -81,7 +83,8 @@ class AcousticHarmonicSolver:
         """ """
         self.get_max_min_values_of_pressures.cache_clear()
 
-        ps = PyPardisoSolver(mtype=3)
+        # Note: use mtype=3 for full symmetric complex matrix and mtype=6 for upper triangular complex matrix
+        ps = PyPardisoSolver(mtype=6)
         #
         self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
         #
@@ -138,8 +141,13 @@ class AcousticHarmonicSolver:
             C = C_imp[i] + C_visc
             A = K - (omega**2) * M + 1j * omega * C
 
+            A = triu(A, format="csr")
+            # ps.factorize(A)
+
             # solution[:, i] = spsolve(A, F)
             solution[:, i] = ps.solve(A, F)
+            ps.free_memory(everything=True)
+            del A, F
 
         self.solution = self._reinsert_prescribed_dofs(solution)
 
@@ -336,6 +344,9 @@ class AcousticHarmonicSolver:
         A_in = self.assembler.model.mesh.surface_area_from_element_integration[input_surface_id]
         A_out = self.assembler.model.mesh.surface_area_from_element_integration[output_surface_id]
 
+        print(f"A_in: {A_in} [m²]")
+        print(f"A_out: {A_out} [m²]")
+
         logging.info("Processing the transmission loss..." + ProgressStatus(40, 100))
 
         out_data = dict()
@@ -379,26 +390,31 @@ class AcousticHarmonicSolver:
         logging.info("Processing the transmission loss..." + ProgressStatus(90, 100))
         output_particle_velocities = self.get_particle_velocity_from_surface(output_surface_id)
 
-        ## Transmission loss
-        # surf_velocity = self.assembler.model.properties.get_surface_velocity(input_surface_id)
-        # if surf_velocity is None:
-        #     return None, None, None
+        # Transmission loss
+        surf_velocity = self.assembler.model.properties.get_surface_velocity(input_surface_id)
+        if surf_velocity is None:
+            return None, None, None
 
-        # real_values = np.array(surf_velocity["real_values"])
-        # imag_values = np.array(surf_velocity["imag_values"])
-        # V_in = real_values + 1j * imag_values
+        real_values = np.array(surf_velocity["real_values"])
+        imag_values = np.array(surf_velocity["imag_values"])
+        V_in = real_values + 1j * imag_values
 
-        # P_in = V_in * rho_in * c0_in# / 2
+        P_in = V_in * rho_in * c0_in / 4
+        I_in = np.abs(np.real(P_in * np.conjugate(V_in)) / 2)
 
-        # V_in = P_in / (rho_in * c0_in)
-        # I_in = np.abs(np.real(P_in * np.conjugate(V_in)) / 2)
-        V_in = np.array(list(input_particle_velocities["Vn"].values()), dtype=complex)
-        I_in = -np.real(P_in * np.conjugate(V_in)) / 2
+        # V_in = np.array(list(input_particle_velocities["Vn"].values()), dtype=complex)
+        # I_in = -np.real(P_in * np.conjugate(V_in)) / 2
 
-        # V_out = P_out / (rho_out * c0_out)
-        # I_out = np.abs(np.real(P_out * np.conjugate(V_out)) / 2)
         V_out = np.array(list(output_particle_velocities["Vn"].values()), dtype=complex)
         I_out = np.real(P_out * np.conjugate(V_out)) / 2
+
+        # Vx = np.array(list(input_particle_velocities["Vx"].values()), dtype=complex)
+        # print(np.array([np.average(V_in, axis=0), np.average(Vx, axis=0)]).T)
+
+        # print(f"I_in: {np.average(I_in, axis=0)}")
+        # print(f"I_out: {np.average(I_out, axis=0)}")
+        # I_in_out = np.array([np.average(I_in, axis=0), np.average(I_out, axis=0)], dtype=float).T
+        # print(f"Sound intensities: {I_in_out}")
 
         W_in = 10*np.log10(np.sum(I_in * Aeff_in, axis=0))
         W_out = 10*np.log10(np.sum(I_out * Aeff_out, axis=0))
