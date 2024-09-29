@@ -104,8 +104,9 @@ class AcousticAssembler:
                 imag_values = np.array(data["imag_values"])
                 complex_values = real_values + 1j * imag_values
                 nodes = self.model.mesh.nodes_from_surfaces[surface_id]
+
                 for _ in nodes:
-                    global_prescribed.extend(complex_values)
+                    global_prescribed.append(complex_values)
 
         # TODO: implement same structure for lines
 
