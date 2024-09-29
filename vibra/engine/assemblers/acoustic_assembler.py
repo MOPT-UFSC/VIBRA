@@ -116,7 +116,11 @@ class AcousticAssembler:
                 if isinstance(value, complex):
                     list_prescribed_dofs.append(aux_ones * value)
                 elif isinstance(value, np.ndarray):
-                    list_prescribed_dofs.append(value[0:self.number_frequencies])
+                    if len(value) == 1:
+                       list_prescribed_dofs.append(aux_ones * value)
+                    else: 
+                        list_prescribed_dofs.append(value[0:self.number_frequencies])
+
             array_prescribed_values = np.array(list_prescribed_dofs)
 
         except Exception as _error_log:
