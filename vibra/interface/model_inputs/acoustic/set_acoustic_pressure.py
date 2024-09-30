@@ -280,7 +280,7 @@ class AcousticPressureInput(QDialog):
             lineEdit.setFocus()
             return None
 
-    def change_project_frequency_setup(self, table_name : str, frequencies : np.ndarray):
+    def change_project_frequency_setup(self, frequencies : np.ndarray):
 
         if isinstance(frequencies, np.ndarray):
             f_min = frequencies[0]

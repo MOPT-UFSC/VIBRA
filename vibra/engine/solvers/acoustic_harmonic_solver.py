@@ -209,15 +209,16 @@ class AcousticHarmonicSolver:
         aux_ones = np.ones(nf, dtype=complex)
 
         if len(self.prescribed_values) != 0:
-            list_prescribed_values = list()
 
-            for value in self.prescribed_values:
-                if isinstance(value, complex):
-                    list_prescribed_values.append(aux_ones*value)
-                elif isinstance(value, np.ndarray):
-                    list_prescribed_values.append(value)
+            # list_prescribed_values = list()
+
+            # for value in self.prescribed_values:
+            #     if isinstance(value, complex):
+            #         list_prescribed_values.append(aux_ones*value)
+            #     elif isinstance(value, np.ndarray):
+            #         list_prescribed_values.append(value)
       
-            self.array_prescribed_values = np.array(list_prescribed_values)
+            # self.array_prescribed_values = np.array(list_prescribed_values)
 
             if freq_dependent:
                 # logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(index + 10, len(self.frequencies) + 10))
