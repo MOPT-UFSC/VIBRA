@@ -345,8 +345,8 @@ class AcousticHarmonicSolver:
         A_in = self.assembler.model.mesh.surface_area_from_element_integration[input_surface_id]
         A_out = self.assembler.model.mesh.surface_area_from_element_integration[output_surface_id]
 
-        print(f"A_in: {A_in} [m²]")
-        print(f"A_out: {A_out} [m²]")
+        # print(f"A_in: {A_in} [m²]")
+        # print(f"A_out: {A_out} [m²]")
 
         logging.info("Processing the transmission loss..." + ProgressStatus(40, 100))
 

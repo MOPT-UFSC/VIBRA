@@ -48,7 +48,7 @@ class ExportModelResults(QFileDialog):
                 data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T      
             else:
                 data_type = data["data_type"]
-                header = f"Frequency[Hz], {data_type.upper()} [{unit}]"
+                header = f"Frequency[Hz], {data_type.capitalize()} [{unit}]"
                 data_to_export = np.array([x_data, y_data]).T
 
             np.savetxt(export_path, data_to_export, delimiter=delimiter, header=header)
@@ -72,8 +72,8 @@ class ExportModelResults(QFileDialog):
                     data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T 
                 else:
                     data_type = data["data_type"]
-                    header = ["Frequency[Hz]", f"{data_type.upper()} [{unit}]"]
-                    data_to_export = [x_data, y_data]
+                    header = ["Frequency[Hz]", f"{data_type.capitalize()} [{unit}]"]
+                    data_to_export = np.array([x_data, y_data]).T
 
                 df = pd.DataFrame(data_to_export, columns=header)
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
