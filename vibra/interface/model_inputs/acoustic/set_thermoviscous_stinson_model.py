@@ -66,12 +66,10 @@ class SetThermoviscousStinsonModel(QDialog):
         self.lineEdit_selected_id: QLineEdit
         self.lineEdit_width_rectangular: QLineEdit
         self.lineEdit_height_rectangular: QLineEdit
-        self.lineEdit_length_rectangular: QLineEdit
         self.lineEdit_area_rectangular: QLineEdit
 
         self.lineEdit_diameter_circular: QLineEdit
         self.lineEdit_radius_circular: QLineEdit
-        self.lineEdit_length_circular: QLineEdit
         self.lineEdit_area_circular: QLineEdit
 
         # QPushButton
@@ -268,23 +266,13 @@ class SetThermoviscousStinsonModel(QDialog):
             lineEdit.setFocus()
             return dict()
 
-        lineEdit = self.lineEdit_length_rectangular
-        length, stop = self.check_inputs(lineEdit, "Length (rectangular duct)")
-        if stop:
-            lineEdit.setFocus()
-            return dict()
-        
-        area = width * height
-        self.lineEdit_area_rectangular.setText(f"{round(area, 6)}")
-
         index = self.comboBox_section_type.currentIndex()
         section_types = ["Rectangular duct", "Quadrangular duct", "Slit duct"]
 
         thermoviscous_model_data = {
                                     "section_type" : section_types[index],
                                     "width" : width,
-                                    "height" : height,
-                                    "length" : length
+                                    "height" : height
                                     }
 
         return thermoviscous_model_data
@@ -296,21 +284,10 @@ class SetThermoviscousStinsonModel(QDialog):
         if stop:
             lineEdit.setFocus()
             return dict()
-
-        lineEdit = self.lineEdit_length_circular
-        length, stop = self.check_inputs(lineEdit, "Length (circular duct)")
-        if stop:
-            lineEdit.setFocus()
-            return dict()
         
-        area = (np.pi / 4) * (diameter**2)
-        self.lineEdit_area_circular.setText(f"{round(area, 6)}")
-        self.lineEdit_radius_circular.setText(f"{round(diameter/2, 6)}")
-
         thermoviscous_model_data = {
                                     "section_type" : "Circular duct",
-                                    "diameter" : diameter,
-                                    "length" : length
+                                    "diameter" : diameter
                                     }
 
         return thermoviscous_model_data
