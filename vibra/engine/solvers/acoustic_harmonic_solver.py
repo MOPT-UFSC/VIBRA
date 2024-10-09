@@ -98,12 +98,15 @@ class AcousticHarmonicSolver:
         # np.savetxt("mass_flow_vectors.dat", Q)
         #
         # self.plot_graph(M)
+        
+        condition_1 = self.assembler.model.lrf_properties 
+        condition_2 = self.assembler.model.porous_material_properties
+        condition_3 = self.assembler.model.thermoviscous_stinson_properties
 
-        freq_dependent = False
-        condition = self.assembler.model.lrf_properties or self.assembler.model.porous_material_properties
-        if condition:
+        if condition_1 or condition_2 or condition_3:
             freq_dependent = True
         else:
+            freq_dependent = False
             F_eq = self.get_prescribed_pressure_model_excitation()
 
         rows = K.shape[0]

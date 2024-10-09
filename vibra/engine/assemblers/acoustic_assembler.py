@@ -170,6 +170,7 @@ class AcousticAssembler:
 
                     lrf_active, rho_eff_lrf, C_eff_lrf = self.model.is_lrf_eq_model_active(surface_id)
                     pm_active, rho_eff_pm, C_eff_pm = self.model.is_porous_material_model_active(surface_id)
+                    tv_active, rho_eff_tv, C_eff_tv = self.model.is_thermoviscous_stinson_model_active(surface_id)
 
                     if lrf_active:
                         density = rho_eff_lrf
@@ -178,6 +179,10 @@ class AcousticAssembler:
                     elif pm_active:
                         density = rho_eff_pm
                         speed_of_sound = C_eff_pm
+
+                    elif tv_active:
+                        density = rho_eff_tv
+                        speed_of_sound = C_eff_tv
 
                     else:
                         fluid = self.model.properties.get_fluid(surface=surface_id)
@@ -247,8 +252,11 @@ class AcousticAssembler:
         self.data_Cvisc = np.zeros((nel, dofs, dofs), dtype=complex)
         self.data_Qvisc = np.zeros((nel, dofs, dofs), dtype=complex)
 
-        condition = self.model.lrf_properties or self.model.porous_material_properties
-        if condition:
+        condition_1 = self.model.lrf_properties 
+        condition_2 = self.model.porous_material_properties
+        condition_3 = self.model.thermoviscous_stinson_properties
+
+        if condition_1 or condition_2 or condition_3:
 
             nf = self.number_frequencies
             aux_ones = np.ones(nf, dtype=complex)
