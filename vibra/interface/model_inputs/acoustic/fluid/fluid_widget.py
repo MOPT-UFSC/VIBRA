@@ -103,6 +103,15 @@ class FluidWidget(QWidget):
         self.tableWidget_fluid_data.itemChanged.connect(self.item_changed_callback)
         self.tableWidget_fluid_data.cellDoubleClicked.connect(self.cell_double_clicked_callback)
 
+    def _config_window(self):
+        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.Dialog)
+        self.setWindowModality(Qt.ApplicationModal)
+        self.setWindowIcon(app().main_window.vibra_icon)
+        self.setWindowTitle("Vibra")
+
+    def _add_icon_and_title(self):
+        self._config_window()
+
     def config_table_of_fluid_data(self):
         return
         header = [

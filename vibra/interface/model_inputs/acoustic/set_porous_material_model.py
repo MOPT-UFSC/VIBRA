@@ -4,9 +4,15 @@ from PyQt5.QtGui import QCloseEvent
 from PyQt5 import uic
 
 from vibra import app, UI_DIR
+from vibra.interface.model_inputs.acoustic.fluid.fluid_widget import FluidWidget
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.data_handler.export_model_results import ExportModelResults
+from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+
+from vibra.engine.properties.fluid import Fluid
+from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
 
 from pathlib import Path
 import numpy as np
@@ -50,9 +56,10 @@ class SetPorousMaterialModel(QDialog):
         self.setWindowIcon(self.icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Set porous material model")
+        self.setWindowTitle("Vibra")
 
     def _initialize(self):
+        self.selected_fluid = None
         self.keep_window_open = True
         self.material_model_data = dict()
 
@@ -62,55 +69,63 @@ class SetPorousMaterialModel(QDialog):
     def _define_qt_variables(self):
 
         # QComboBox
-        self.comboBox_attribution_type : QComboBox
+        self.comboBox_attribution_type: QComboBox
 
         # QDoubleSpinBox
 
-        self.doubleSpinBox_C1_DB : QDoubleSpinBox
-        self.doubleSpinBox_C2_DB : QDoubleSpinBox
-        self.doubleSpinBox_C3_DB : QDoubleSpinBox
-        self.doubleSpinBox_C4_DB : QDoubleSpinBox
-        self.doubleSpinBox_C5_DB : QDoubleSpinBox
-        self.doubleSpinBox_C6_DB : QDoubleSpinBox
-        self.doubleSpinBox_C7_DB : QDoubleSpinBox
-        self.doubleSpinBox_C8_DB : QDoubleSpinBox
-        self.doubleSpinBox_flow_resistivity_DB : QDoubleSpinBox
+        self.doubleSpinBox_C1_DB: QDoubleSpinBox
+        self.doubleSpinBox_C2_DB: QDoubleSpinBox
+        self.doubleSpinBox_C3_DB: QDoubleSpinBox
+        self.doubleSpinBox_C4_DB: QDoubleSpinBox
+        self.doubleSpinBox_C5_DB: QDoubleSpinBox
+        self.doubleSpinBox_C6_DB: QDoubleSpinBox
+        self.doubleSpinBox_C7_DB: QDoubleSpinBox
+        self.doubleSpinBox_C8_DB: QDoubleSpinBox
+        self.doubleSpinBox_flow_resistivity_DB: QDoubleSpinBox
 
-        self.doubleSpinBox_C1_DBM : QDoubleSpinBox
-        self.doubleSpinBox_C2_DBM : QDoubleSpinBox
-        self.doubleSpinBox_C3_DBM : QDoubleSpinBox
-        self.doubleSpinBox_C4_DBM : QDoubleSpinBox
-        self.doubleSpinBox_C5_DBM : QDoubleSpinBox
-        self.doubleSpinBox_C6_DBM : QDoubleSpinBox
-        self.doubleSpinBox_C7_DBM : QDoubleSpinBox
-        self.doubleSpinBox_C8_DBM : QDoubleSpinBox
-        self.doubleSpinBox_flow_resistivity_DBM : QDoubleSpinBox
+        self.doubleSpinBox_C1_DBM: QDoubleSpinBox
+        self.doubleSpinBox_C2_DBM: QDoubleSpinBox
+        self.doubleSpinBox_C3_DBM: QDoubleSpinBox
+        self.doubleSpinBox_C4_DBM: QDoubleSpinBox
+        self.doubleSpinBox_C5_DBM: QDoubleSpinBox
+        self.doubleSpinBox_C6_DBM: QDoubleSpinBox
+        self.doubleSpinBox_C7_DBM: QDoubleSpinBox
+        self.doubleSpinBox_C8_DBM: QDoubleSpinBox
+        self.doubleSpinBox_flow_resistivity_DBM: QDoubleSpinBox
 
-        self.doubleSpinBox_porosity_JCA : QDoubleSpinBox
-        self.doubleSpinBox_tortuosity_JCA : QDoubleSpinBox
-        self.doubleSpinBox_flow_resistivity_JCA : QDoubleSpinBox
+        self.doubleSpinBox_porosity_JCA: QDoubleSpinBox
+        self.doubleSpinBox_tortuosity_JCA: QDoubleSpinBox
+        self.doubleSpinBox_flow_resistivity_JCA: QDoubleSpinBox
 
-        self.doubleSpinBox_porosity_JCAL : QDoubleSpinBox
-        self.doubleSpinBox_tortuosity_JCAL : QDoubleSpinBox
-        self.doubleSpinBox_flow_resistivity_JCAL : QDoubleSpinBox
+        self.doubleSpinBox_porosity_JCAL: QDoubleSpinBox
+        self.doubleSpinBox_tortuosity_JCAL: QDoubleSpinBox
+        self.doubleSpinBox_flow_resistivity_JCAL: QDoubleSpinBox
+
+        self.doubleSpinBox_porous_material_depth: QDoubleSpinBox
 
         # QLineEdit
-        self.lineEdit_selected_id : QLineEdit
-        self.lineEdit_thermal_characteristic_length_JCA : QLineEdit
-        self.lineEdit_viscous_characteristic_length_JCA : QLineEdit
-        self.lineEdit_thermal_characteristic_length_JCAL : QLineEdit
-        self.lineEdit_viscous_characteristic_length_JCAL : QLineEdit
+        self.lineEdit_selected_id: QLineEdit
+        self.lineEdit_selected_fluid: QLineEdit
+        self.lineEdit_fluid_density: QLineEdit
+        self.lineEdit_speed_of_sound: QLineEdit
+        self.lineEdit_thermal_characteristic_length_JCA: QLineEdit
+        self.lineEdit_viscous_characteristic_length_JCA: QLineEdit
+        self.lineEdit_thermal_characteristic_length_JCAL: QLineEdit
+        self.lineEdit_viscous_characteristic_length_JCAL: QLineEdit
 
         # QPushButton
-        self.pushButton_confirm : QPushButton
-        self.pushButton_remove : QPushButton
-        self.pushButton_reset : QPushButton
+        self.pushButton_confirm: QPushButton
+        self.pushButton_remove: QPushButton
+        self.pushButton_reset: QPushButton
+        self.pushButton_get_fluid: QPushButton
+        self.pushButton_plot_surface_impedance: QPushButton
+        self.pushButton_plot_absorption_coefficient: QPushButton
 
         # QTabWidget
-        self.tabWidget_main : QTabWidget
+        self.tabWidget_main: QTabWidget
 
         # QTreeWidget
-        self.treeWidget_porous_material_model : QTreeWidget
+        self.treeWidget_porous_material_model: QTreeWidget
 
     def _create_connections(self):
         #
@@ -125,10 +140,19 @@ class SetPorousMaterialModel(QDialog):
         self.treeWidget_porous_material_model.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.pushButton_confirm.clicked.connect(self.attribute_porous_material_to_selected_bodies)
+        self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
+        self.pushButton_plot_surface_impedance.clicked.connect(self.plot_surface_impedance)
+        self.pushButton_plot_absorption_coefficient.clicked.connect(self.plot_absorption_coefficient)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
         #
         self.update_attribution_type()
+        self.update_plot_buttons_access()
+
+    def update_plot_buttons_access(self):
+        state = self.selected_fluid is None
+        self.pushButton_plot_surface_impedance.setDisabled(state)
+        self.pushButton_plot_absorption_coefficient.setDisabled(state)
 
     def remove_porous_material_model(self):
         if self.lineEdit_selected_id.text() != "":
@@ -417,6 +441,156 @@ class SetPorousMaterialModel(QDialog):
             self.stop = True
             return None
         return out
+
+    def get_fluid_callback(self):
+        self.hide()
+        self.fluid_widget = FluidWidget()
+        self.fluid_widget._add_icon_and_title()
+        self.fluid_widget.show()
+        self.fluid_widget.pushButton_attribute_fluid.clicked.connect(self.get_selected_fluid)
+
+    def get_selected_fluid(self):
+        self.selected_fluid = self.fluid_widget.get_selected_fluid()
+        if isinstance(self.selected_fluid, Fluid):
+            self.update_plot_buttons_access()
+            self.fluid_widget.close()
+            self.lineEdit_selected_fluid.setText(self.selected_fluid.name)
+            self.lineEdit_fluid_density.setText(f"{self.selected_fluid.fluid_density}")
+            self.lineEdit_speed_of_sound.setText(f"{self.selected_fluid.speed_of_sound}")
+
+    def get_effective_properties(self, fluid):
+
+        analysis_data = app().main_window.project.analysis_data
+        if isinstance(analysis_data, dict):
+            frequencies = analysis_data.get("frequencies", None)
+
+        if frequencies is None:
+            df = 5
+            f_min = 5
+            f_max = 1400
+            frequencies = np.arange(f_min, f_max+df, df)
+
+        if frequencies[0] == 0:
+            freq = frequencies[1:]
+        else:
+            freq = frequencies
+
+        omega = 2 * np.pi * freq
+
+        model = PorousMaterialModels(self)
+        model.process_effective_properties(frequencies)
+
+        tab_index = self.tabWidget_main.currentIndex()
+
+        if tab_index == 0:
+            pm_data = self.get_Delany_Bazley_model_inputs()
+            rho_eff, C_eff = model.get_Delany_Bazley_Miki_effective_properties(omega, fluid, pm_data)
+
+        elif tab_index == 1:
+            pm_data = self.get_Delany_Bazley_Miki_model_inputs()
+            rho_eff, C_eff = model.get_Delany_Bazley_Miki_effective_properties(omega, fluid, pm_data)
+
+        elif tab_index == 2:
+            pm_data = self.get_Jhonson_Champoux_Allard_model_inputs()
+            rho_eff, C_eff = model.get_JCA_effective_properties(omega, fluid, pm_data)
+
+        elif tab_index == 3:
+            pm_data = self.get_Jhonson_Champoux_Allard_Lafarge_model_inputs()
+            rho_eff, C_eff = model.get_JCAL_effective_properties(omega, fluid, pm_data)
+
+        k_cr = omega / C_eff
+
+        return freq, rho_eff, C_eff, k_cr
+
+    def get_porous_material_surface_impedance(self, h: float, fluid: Fluid):
+
+        freq, rho_eff, C_eff, k_cr = self.get_effective_properties(fluid)
+
+        Z_pm = rho_eff * C_eff
+        Z_s = Z_pm * (1 / np.tanh(k_cr * h))
+
+        return freq, Z_s 
+
+    def get_porous_material_absorption_coefficient(self, h: float, fluid: Fluid):
+
+        Z_0 = fluid.speed_of_sound * fluid.fluid_density
+        freq, rho_eff, C_eff, k_cr = self.get_effective_properties(fluid)
+
+        Z_pm = rho_eff * C_eff
+        Z_s = Z_pm * (1 / np.tanh(k_cr * h))
+
+        R_r = (Z_s - Z_0) / (Z_s + Z_0)
+        alpha_n = 1 - np.abs(R_r)**2
+
+        return freq, alpha_n 
+
+    def get_porous_material_model(self):
+        tab_index = self.tabWidget_main.currentIndex()
+        if tab_index == 0:
+            return "Delany-Bazley"
+        elif tab_index == 1:
+            return "Delany-Bazley-Miki"
+        elif tab_index == 2:
+            return "Jhonson-Champoux-Allard"
+        elif tab_index == 3:
+            return "Jhonson-Champoux-Allard-Lafarge"
+
+    def plot_surface_impedance(self):
+
+        if self.selected_fluid is None:
+            self.get_fluid_callback()
+
+        h = self.doubleSpinBox_porous_material_depth.value()
+        freq, Z_s = self.get_porous_material_surface_impedance(h, self.selected_fluid)
+
+        pm_model = self.get_porous_material_model()
+        self.call_plotter(freq, Z_s, "surface characteristic impedance", pm_model)
+
+    def plot_absorption_coefficient(self):
+
+        if self.selected_fluid is None:
+            self.get_fluid_callback()
+
+        h = self.doubleSpinBox_porous_material_depth.value()
+        freq, alpha_n = self.get_porous_material_absorption_coefficient(h, self.selected_fluid)
+
+        pm_model = self.get_porous_material_model()
+        self.call_plotter(freq, alpha_n, "absorption coefficient", pm_model)
+
+    def join_model_data(self, x_data, y_data, label: str, pm_label: str):
+
+        self.hide()
+        self.data_to_plot = dict()
+      
+        if label == "absorption coefficient":
+            unit_label = "--"
+            y_label = "Absorption coeffient"
+        else:
+            unit_label = "Pa/m/s"
+            y_label = "Surface characteristic impedance"
+
+        legend_label = label
+        title = f"{pm_label} Porous Material Curve"
+
+        key = ("property", (None))
+
+        self.data_to_plot[key] = { 
+                                    "x_data" : x_data,
+                                    "y_data" : y_data,
+                                    "x_label" : "Frequency [Hz]",
+                                    "y_label" : y_label,
+                                    "title" : title,
+                                    "data_type" : "porous material data",
+                                    "legend" : legend_label,
+                                    "unit" : unit_label,
+                                    "color" : [0,0,1],
+                                    "linestyle" : "-"
+                                   }
+
+    def call_plotter(self, x_data, y_data, label, pm_label):
+        self.join_model_data(x_data, y_data, label, pm_label)
+        self.plotter = FrequencyResponsePlotter()
+        self.plotter._set_model_results_data_to_plot(self.data_to_plot)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
