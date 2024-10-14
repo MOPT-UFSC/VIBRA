@@ -7,7 +7,7 @@ from scipy.special import jv
 
 # fmt: off
 
-class ThermoviscousStinsonModels:
+class ThermoviscousLossModels:
 
     def __init__(self, model):
         super().__init__()
@@ -15,14 +15,14 @@ class ThermoviscousStinsonModels:
         self.model = model
         self.properties = model.properties
 
-        self.thermoviscous_stinson_model = dict()
+        self.thermoviscous_model = dict()
 
     def set_external_model(self, model):
         self.external_model = model
 
     def process_effective_properties(self, frequencies):
 
-        self.thermoviscous_stinson_model = dict()
+        self.thermoviscous_model = dict()
         if frequencies[0] == 0:
             freq = frequencies[1:]
         else:
@@ -32,7 +32,7 @@ class ThermoviscousStinsonModels:
 
         for key, data in self.properties.volume_properties.items():
             property, volume_id = key
-            if property == "thermoviscous_stinson_model":
+            if property == "thermoviscous_model":
 
                 # surfaces_from_volume = self.project.model.mesh.surfaces_from_volumes[volume_id]
                 fluid = self.properties.get_fluid(volume = volume_id)
@@ -40,20 +40,23 @@ class ThermoviscousStinsonModels:
                 if data["section_type"] in ["Rectangular duct", "Quadrangular duct"]:
                     rho_eff, C_eff = self.get_rectangular_section_effective_properties(omega, fluid, data)
 
-                if data["section_type"] in ["Slit duct"]:
-                    rho_eff, C_eff = self.get_rectangular_slit_section_effective_properties(omega, fluid, data)
+                if data["section_type"] in ["Narrow slit duct"]:
+                    rho_eff, C_eff = self.get_narrow_slit_section_effective_properties(omega, fluid, data)
 
                 elif data["section_type"] in ["Circular duct"]:
-                    rho_eff, C_eff = self.get_circular_section_effective_properties(omega, fluid, data)
+                    if data["formulation"] == "Stinson model":
+                        rho_eff, C_eff = self.get_circular_section_effective_properties_for_Stinson_model(omega, fluid, data)
+                    else:
+                        rho_eff, C_eff = self.get_circular_section_effective_properties_for_LRF_model(omega, fluid, data)
 
                 else:
                     continue
 
-                self.thermoviscous_stinson_model[volume_id] = {   
-                                                                "section_type" : data["section_type"],
-                                                                "rho_eff" : rho_eff,
-                                                                "C_eff" : C_eff   
-                                                               }
+                self.thermoviscous_model[volume_id] = {   
+                                                       "section_type" : data["section_type"],
+                                                       "rho_eff" : rho_eff,
+                                                       "C_eff" : C_eff   
+                                                       }
 
                 # data = np.array([np.arange(len(C_eff)), C_eff])
                 # np.savetxt("complex_sound.dat", data.T, delimiter=";")
@@ -78,26 +81,35 @@ class ThermoviscousStinsonModels:
 
         width = data["width"]
         height = data["height"]
-        area = width * height
+        # area = width * height
 
         # EQUAÇÕES DOS DUTOS DE SEÇÃO RETANGULAR E/OU QUADRADA
-        Y1 = np.arange(0, 501)        # contador da série ajustado para até 501
-        Y2 = np.arange(0, 501)        # contador da série ajustado para até 501
-        akn = (Y1 + 0.5)*(np.pi / width)    # constante para os modos no duto
-        bmn = (Y2 + 0.5)*(np.pi / height)    # constante para os modos no duto
-        
-        SUM_d_n = np.zeros(len(omega), dtype=complex)
-        SUM_k_n = np.zeros(len(omega), dtype=complex)
+        a = width / 2
+        b = height / 2
+        n = np.arange(0, 501)        # contador da série ajustado para até 501
+        m = np.arange(0, 501)        # contador da série ajustado para até 501
+        a_n = (n + 0.5)*(np.pi / a)    # constante para os modos no duto
+        b_m = (m + 0.5)*(np.pi / b)    # constante para os modos no duto
+
+        aux_rho = np.zeros(len(omega), dtype=complex)
+        aux_comp = np.zeros(len(omega), dtype=complex)
 
         for i, w in enumerate(omega):
-            SUM_d_n[i] = sum(1/((akn**2)*bmn**2*(akn**2+bmn**2 - 1j*w*rho_0/mu)))
-            SUM_k_n[i] = sum(1/((akn**2)*bmn**2*(akn**2+bmn**2 - 1j*w*Pr*rho_0/mu)))
+
+            sum_rho = 0.
+            sum_comp = 0.
+            for n, an in enumerate(a_n):
+                sum_rho += sum(1 / (((an*b_m)**2)*(an**2 + b_m**2 + 1j*w*rho_0/mu)))
+                sum_comp += sum(1 / (((an*b_m)**2)*(an**2 + b_m**2 + 1j*w*Pr*rho_0/mu)))
+
+            aux_rho[i] = sum_rho
+            aux_comp[i] = sum_comp
 
         # Effective complex density (thermoviscous losses in duct)
-        rho_eff = (-mu*((width)**2)*((height)**2)) / (4 * 1j * omega * SUM_d_n)
+        rho_eff = mu * (((a*b)**2) / (4*1j*omega)) * (1/aux_rho)
 
         # Effective complex bulk modulus (thermoviscous losses in duct)
-        K_eff = (mu*k_0*((width)**2)*((height)**2)) / (gamma*mu*((width)**2)*((height)**2) + 4 * 1j * (gamma-1) * Pr * rho_0 * omega * SUM_k_n)
+        K_eff = (gamma * P_0) / (gamma - (gamma-1) * ((4*1j*omega*Pr*rho_0) / (mu*(a*b)**2)) * aux_comp)
 
         # Complex speed of sound
         C_eff = np.sqrt(K_eff / rho_eff)
@@ -111,12 +123,12 @@ class ThermoviscousStinsonModels:
         return rho_eff, C_eff
 
 
-    def get_rectangular_slit_section_effective_properties(self, omega, fluid, data):
+    def get_narrow_slit_section_effective_properties(self, omega, fluid, data):
 
         C_0 = fluid.speed_of_sound
         rho_0 = fluid.fluid_density
 
-        k = omega / C_0
+        # k = omega / C_0
 
         P_0 = fluid.pressure
         rho_0 = fluid.fluid_density
@@ -125,22 +137,66 @@ class ThermoviscousStinsonModels:
         Cp = fluid.specific_heat_Cp
         mu = fluid.dynamic_viscosity
         k_t = fluid.thermal_conductivity
-        k_0 = gamma * P_0
+        # k_0 = gamma * P_0
         Pr = mu * Cp / k_t
 
-        width = data["width"]
+        # width = data["width"]
         height = data["height"]
-        area = width * height
+        # area = width * height
 
         # EQUAÇÕES DOS DUTOS TIPO FENDA
-        Gp = np.sqrt(1j * omega * rho_0 / mu)
-        Gk = np.sqrt(1j * omega * rho_0 * Pr / mu)
+        G_rho = (height / 2) * np.sqrt(1j * omega * rho_0 / mu)
+        G_bulk = (height / 2) * np.sqrt(1j * omega * rho_0 * Pr / mu)
 
-        # Effective complex density (thermoviscous losses in slit duct)
-        rho_eff = rho_0 * (1/(1-(np.tanh(height/2*Gp) / (height/2*Gp))))
+        # Effective complex density (thermoviscous losses in narrow slit duct)
+        rho_eff =  rho_0 / (1 - (np.tanh(G_rho) / G_rho))
 
-        # Effective complex bulk modulus (thermoviscous losses in slit duct)
-        K_eff = k_0*(1/(1+(gamma-1)*(np.tanh(height/2*Gk)/(height/2*Gk))))
+        # Effective complex bulk modulus (thermoviscous losses in narrow slit duct)
+        K_eff = (gamma * P_0) / (1 + (gamma-1) * (np.tanh(G_bulk) / G_bulk))
+
+        # Effective complex speed of sound
+        C_eff = np.sqrt(K_eff / rho_eff)
+        # C_eff = np.real(np.sqrt(K_eff / rho_eff)) ??
+
+        # # Complex wave number of duct
+        # kc = omega*np.sqrt(rho_eff / K_eff)
+
+        # # characteristic acoustic impedance of duct
+        # Zc = np.sqrt(K_eff * rho_eff) / area
+
+        return rho_eff, C_eff
+
+
+    def get_circular_section_effective_properties_for_Stinson_model(self, omega, fluid, data):
+
+        C_0 = fluid.speed_of_sound
+        rho_0 = fluid.fluid_density
+
+        # k = omega / C_0
+
+        P_0 = fluid.pressure
+        rho_0 = fluid.fluid_density
+        C_0 = fluid.speed_of_sound
+        gamma = fluid.isentropic_exponent
+        Cp = fluid.specific_heat_Cp
+        mu = fluid.dynamic_viscosity
+        k_t = fluid.thermal_conductivity
+        # k_0 = gamma * P_0
+        Pr = mu * Cp / k_t
+
+        diameter = data["diameter"]
+
+        radius = diameter / 2
+        area = np.pi * (diameter**2) / 4
+
+        G_rho = 1j * radius * np.sqrt(1j * omega * rho_0 / mu)
+        G_bulk = 1j * radius * np.sqrt(1j * omega * rho_0 * Pr / mu)
+
+        # Effective complex density (thermoviscous losses in duct)
+        rho_eff = rho_0 / (1 - (2 / G_rho) * (jv(1, G_rho) / jv(0, G_rho)))
+
+        # Effective complex bulk modulus (thermoviscous losses in duct)
+        K_eff = (gamma * P_0) / (1 + (gamma-1) * (2 / G_bulk) * (jv(1, G_bulk) / jv(0, G_bulk)))
 
         # Effective complex speed of sound
         C_eff = np.sqrt(K_eff / rho_eff)
@@ -153,47 +209,46 @@ class ThermoviscousStinsonModels:
         # Zc = np.sqrt(K_eff * rho_eff) / area
 
         return rho_eff, C_eff
+    
 
+    def get_circular_section_effective_properties_for_LRF_model(self, omega, fluid, data):
 
-    def get_circular_section_effective_properties(self, omega, fluid, data):
+        C_0 = fluid.speed_of_sound
+        rho_0 = fluid.fluid_density
 
-            C_0 = fluid.speed_of_sound
-            rho_0 = fluid.fluid_density
+        # k = omega / C_0
 
-            k = omega / C_0
+        P_0 = fluid.pressure
+        rho_0 = fluid.fluid_density
+        C_0 = fluid.speed_of_sound
+        gamma = fluid.isentropic_exponent
+        Cp = fluid.specific_heat_Cp
+        mu = fluid.dynamic_viscosity
+        k_t = fluid.thermal_conductivity
+        # k_0 = gamma * P_0
+        Pr = mu * Cp / k_t
 
-            P_0 = fluid.pressure
-            rho_0 = fluid.fluid_density
-            C_0 = fluid.speed_of_sound
-            gamma = fluid.isentropic_exponent
-            Cp = fluid.specific_heat_Cp
-            mu = fluid.dynamic_viscosity
-            k_t = fluid.thermal_conductivity
-            k_0 = gamma * P_0
-            Pr = mu * Cp / k_t
+        diameter = data["diameter"]
 
-            diameter = data["diameter"]
-            # length = data["length"]
-            radius = diameter / 2
-            area = np.pi * (diameter**2) / 4
+        radius = diameter / 2
+        area = np.pi * (diameter**2) / 4
+    
+        radius = diameter / 2               
+        s = radius * (np.sqrt( omega * rho_0 / mu))
 
-            # Effective complex density (thermoviscous losses in duct)
-            rho_eff = rho_0*(1-2*1j*(radius*np.sqrt(1j*omega*rho_0/mu))**-1*(jv(1, 1j*radius*np.sqrt(1j*omega*rho_0/mu))/jv(0, 1j*radius*np.sqrt(1j*omega*rho_0/mu))))**-1
+        G_rho = s * ((1j)**(3/2))
+        G_bulk = 1j * s * ((1j*Pr)**(1/2)) 
 
-            # Effective complex bulk modulus (thermoviscous losses in duct)
-            K_eff = k_0*(1 + 2*1j*(gamma-1)*(radius*np.sqrt(1j*omega*rho_0*Pr/mu))**-1*(jv(1, 1j*radius*np.sqrt(1j*omega*rho_0*Pr/mu))/jv(0, 1j*radius*np.sqrt(1j*omega*rho_0*Pr/mu))))**-1
-            
-            # Effective complex speed of sound
-            C_eff = np.sqrt(K_eff / rho_eff)
-            # C_eff = np.real(np.sqrt(K_eff / rho_eff))
+        # Effective complex density (thermoviscous losses in duct)
+        rho_eff = - rho_0 * (jv(0, G_rho)) / (jv(2, G_rho))
 
-            # # Complex wave number of duct
-            # kc = omega*np.sqrt(rho_eff / K_eff)
+        # Effective complex bulk modulus (thermoviscous losses in duct)
+        K0_eff = (P_0 * gamma) / (gamma + (gamma - 1) * jv(2, G_bulk) / jv(0, G_bulk))
 
-            # # characteristic acoustic impedance of duct
-            # Zc = np.sqrt(K_eff * rho_eff) / area
+        # Effective complex speed of sound
+        C_eff = np.sqrt(K0_eff / rho_eff)
 
-            return rho_eff, C_eff
+        return rho_eff, C_eff
 
 
 # ############### Modelo de Stinson de perdas visco-térmicas para dutos de seção transversal retangular e/ou quadrada ######

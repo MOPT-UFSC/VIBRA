@@ -50,11 +50,12 @@ class PorousMaterialModels:
                 else:
                     continue
 
-                self.porous_material_model[volume_id] = {   "model" : data["model"],
-                                                            "rho_eff" : rho_eff,
-                                                            "C_eff" : C_eff   
-                                                        }
-                
+                self.porous_material_model[volume_id] = {   
+                                                         "model" : data["model"],
+                                                         "rho_eff" : rho_eff,
+                                                         "C_eff" : C_eff   
+                                                         }
+
                 # data = np.array([np.arange(len(C_eff)), C_eff])
                 # np.savetxt("complex_sound.dat", data.T, delimiter=";")
 

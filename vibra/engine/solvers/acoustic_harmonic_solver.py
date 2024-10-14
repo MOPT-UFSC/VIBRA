@@ -101,7 +101,7 @@ class AcousticHarmonicSolver:
         
         condition_1 = self.assembler.model.lrf_properties 
         condition_2 = self.assembler.model.porous_material_properties
-        condition_3 = self.assembler.model.thermoviscous_stinson_properties
+        condition_3 = self.assembler.model.thermoviscous_model_properties
 
         if condition_1 or condition_2 or condition_3:
             freq_dependent = True

@@ -133,16 +133,15 @@ class SetPorousMaterialModel(QDialog):
         #
         self.pushButton_remove.clicked.connect(self.remove_porous_material_model)
         self.pushButton_reset.clicked.connect(self.reset_porous_material_model)
+        self.pushButton_confirm.clicked.connect(self.attribute_porous_material_to_selected_bodies)
+        self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
+        self.pushButton_plot_surface_impedance.clicked.connect(self.plot_surface_impedance)
+        self.pushButton_plot_absorption_coefficient.clicked.connect(self.plot_absorption_coefficient)
         #
         self.tabWidget_main.currentChanged.connect(self.tabEvent_porous_material_model)
         #
         self.treeWidget_porous_material_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_porous_material_model.itemDoubleClicked.connect(self.on_doubleclick_item)
-        #
-        self.pushButton_confirm.clicked.connect(self.attribute_porous_material_to_selected_bodies)
-        self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
-        self.pushButton_plot_surface_impedance.clicked.connect(self.plot_surface_impedance)
-        self.pushButton_plot_absorption_coefficient.clicked.connect(self.plot_absorption_coefficient)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
         #
@@ -478,7 +477,7 @@ class SetPorousMaterialModel(QDialog):
         omega = 2 * np.pi * freq
 
         model = PorousMaterialModels(self)
-        model.process_effective_properties(frequencies)
+        # model.process_effective_properties(frequencies)
 
         tab_index = self.tabWidget_main.currentIndex()
 

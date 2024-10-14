@@ -10,7 +10,7 @@ from vibra import app
 from vibra.interface.loading_bar import load_function
 from vibra.engine.dissipation_models.low_reduced_frequency_model import LowReducedFrequencyModel
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
-from vibra.engine.dissipation_models.thermoviscous_stinson_models import ThermoviscousStinsonModels
+from vibra.engine.dissipation_models.thermoviscous_loss_models import ThermoviscousLossModels
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.errors import IncompleteSetupError
@@ -51,7 +51,7 @@ class Model:
     def reset_dissipation_model_properties(self):
         self.lrf_properties = dict()
         self.porous_material_properties = dict()
-        self.thermoviscous_stinson_properties = dict()
+        self.thermoviscous_model_properties = dict()
 
     def set_geometry_path(self, path : str):
         self.geometry_path = path
@@ -316,30 +316,30 @@ class Model:
 
         return False, None, None
 
-    def process_thermoviscous_stinson_properties(self, frequencies):
+    def process_thermoviscous_model_properties(self, frequencies):
 
-        model = ThermoviscousStinsonModels(self)
+        model = ThermoviscousLossModels(self)
         model.process_effective_properties(frequencies)
 
-        self.thermoviscous_stinson_properties = dict()
-        for volume_id, data in model.thermoviscous_stinson_model.items():
+        self.thermoviscous_model_properties = dict()
+        for volume_id, data in model.thermoviscous_model.items():
             for element_id in self.mesh.elements_from_volume[volume_id]:
-                self.thermoviscous_stinson_properties[element_id] = data
+                self.thermoviscous_model_properties[element_id] = data
             # print(len(self.mesh.elements_from_volume[volume_id]))
 
-    def is_thermoviscous_stinson_model_active(self, surface_id):
+    def is_thermoviscous_model_active(self, surface_id):
 
         for key, data in self.properties.volume_properties.items():
             prop, volume_id = key
-            if prop == "thermoviscous_stinson_model":
+            if prop == "thermoviscous_model":
 
                 if volume_id in self.mesh.surfaces_from_volumes.keys():
                     surfaces_from_volume = self.mesh.surfaces_from_volumes[volume_id]
 
                     if surface_id in surfaces_from_volume:
                         elements = self.mesh.elements_from_volume[volume_id]
-                        rho_eff = self.thermoviscous_stinson_properties[elements[0]]["rho_eff"]
-                        C_eff = self.thermoviscous_stinson_properties[elements[0]]["C_eff"]
+                        rho_eff = self.thermoviscous_model_properties[elements[0]]["rho_eff"]
+                        C_eff = self.thermoviscous_model_properties[elements[0]]["C_eff"]
                         return True, rho_eff, C_eff
 
         return False, None, None
@@ -351,8 +351,8 @@ class Model:
     def set_porous_material_model_data(self, data, surface=None, volume=None):
         self.properties.set_porous_material_model_data(data, surface=surface, volume=volume)
 
-    def set_thermoviscous_stinson_model_data(self, data, surface=None, volume=None):
-        self.properties._set_property("thermoviscous_stinson_model", data, surface=surface, volume=volume)
+    def set_thermoviscous_model_data(self, data, surface=None, volume=None):
+        self.properties._set_property("thermoviscous_model", data, surface=surface, volume=volume)
 
     def set_lrf_eq_model_data(self, data, group=None, volume=None):
         self.properties.set_lrf_eq_model_data(data, group=group, volume=volume)

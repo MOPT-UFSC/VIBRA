@@ -170,7 +170,7 @@ class AcousticAssembler:
 
                     lrf_active, rho_eff_lrf, C_eff_lrf = self.model.is_lrf_eq_model_active(surface_id)
                     pm_active, rho_eff_pm, C_eff_pm = self.model.is_porous_material_model_active(surface_id)
-                    tv_active, rho_eff_tv, C_eff_tv = self.model.is_thermoviscous_stinson_model_active(surface_id)
+                    tv_active, rho_eff_tv, C_eff_tv = self.model.is_thermoviscous_model_active(surface_id)
 
                     if lrf_active:
                         density = rho_eff_lrf
@@ -254,7 +254,7 @@ class AcousticAssembler:
 
         condition_1 = self.model.lrf_properties 
         condition_2 = self.model.porous_material_properties
-        condition_3 = self.model.thermoviscous_stinson_properties
+        condition_3 = self.model.thermoviscous_model_properties
 
         if condition_1 or condition_2 or condition_3:
 
@@ -282,6 +282,14 @@ class AcousticAssembler:
 
                     rho_eff = self.model.porous_material_properties[el]["rho_eff"]
                     C_eff = self.model.porous_material_properties[el]["C_eff"]
+
+                    self.den_K[el, :] = 1 / (rho_eff)
+                    self.den_M[el, :] = 1 / (rho_eff * C_eff**2)
+
+                elif el in self.model.thermoviscous_model_properties.keys():
+
+                    rho_eff = self.model.thermoviscous_model_properties[el]["rho_eff"]
+                    C_eff = self.model.thermoviscous_model_properties[el]["C_eff"]
 
                     self.den_K[el, :] = 1 / (rho_eff)
                     self.den_M[el, :] = 1 / (rho_eff * C_eff**2)

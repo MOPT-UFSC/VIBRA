@@ -93,27 +93,34 @@ class LowReducedFrequencyModel:
                 freq = frequencies[1:]
             else:
                 freq = frequencies
+
+            omega = 2 * np.pi * freq
             
             for element_index, parameters in self.lrf_model_data.items():
                 aux[str(parameters)].append(element_index)
             
             for str_parameters, element_indexes in aux.items():
-                parameters = [float(str_parameter) for str_parameter in str_parameters[1:-1].split(",")]
-                diameter, c_local, rho_local, mu, gamma, Pr, pressure = parameters  
-                
-                omega = 2 * (np.pi) * freq
-                s = (diameter/2) * ((omega*rho_local/mu)**(1/2))
 
-                rho_ef = -rho_local * (jv(0, (1j**(3/2))*s)) / (jv(2, (1j**(3/2))*s))
-                K0_ef = (pressure*gamma) / (gamma + (gamma - 1) * jv(2, (1j**(3/2))*s*(Pr**(1/2))) / jv(0, (1j**(3/2))*s*(Pr**(1/2))))
-                c_ef = np.sqrt(K0_ef / rho_ef)
+                parameters = [float(str_parameter) for str_parameter in str_parameters[1:-1].split(",")]
+                diameter, C_0, rho_0, mu, gamma, Pr, P_0 = parameters  
+
+                radius = diameter / 2               
+                s = radius * (np.sqrt( omega * rho_0 / mu))
+
+                G_rho = s * ((1j)**(3/2))
+                G_bulk = 1j * s * ((1j*Pr)**(1/2)) 
+
+                rho_eff = - rho_0 * (jv(0, G_rho)) / (jv(2, G_rho))
+                K0_eff = (P_0 * gamma) / (gamma + (gamma - 1) * jv(2, G_bulk) / jv(0, G_bulk))
+
+                C_eff = np.sqrt(K0_eff / rho_eff)
 
                 if float(0) in frequencies:
-                    rho_ef = np.insert(rho_ef, 0, rho_local)
-                    c_ef = np.insert(c_ef, 0, c_local)      
-                #
+                    rho_eff = np.insert(rho_eff, 0, rho_0)
+                    C_eff = np.insert(C_eff, 0, C_0)      
+
                 for element_index in element_indexes:
                     self.low_reduced_frequency_properties[element_index] = {  
-                                                                            "rho_eff" : rho_ef,
-                                                                            "C_eff" : c_ef
+                                                                            "rho_eff" : rho_eff,
+                                                                            "C_eff" : C_eff
                                                                             }
