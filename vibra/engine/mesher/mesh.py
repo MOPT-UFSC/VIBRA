@@ -806,16 +806,16 @@ class Mesh:
 
         return solid_elements_center
 
-    def get_average_nodal_coordinates(self, surface_ids, averaged=False):
+    def get_average_nodal_coordinates(self, surface_ids: list, averaged=False):
 
         nodal_coordinates = self.nodal_coordinates
-        self.stop, self.surface_ids = self.check_input_surface_id(surface_ids)
+        stop, surface_ids = self.check_input_surface_id(surface_ids)
 
-        if self.stop:
+        if stop:
             return list()
 
         rows = list()
-        for surface_id in self.surface_ids:
+        for surface_id in surface_ids:
             if averaged:
                 for row in self.nodes_from_surfaces[surface_id]:
                     rows.append(row)

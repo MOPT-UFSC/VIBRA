@@ -82,14 +82,15 @@ class FluidWidget(QWidget):
     def _define_qt_variables(self):
 
         # QPushButton
-        self.pushButton_add_column : QPushButton
-        self.pushButton_attribute_fluid : QPushButton
-        self.pushButton_refprop : QPushButton
-        self.pushButton_remove_column : QPushButton
-        self.pushButton_reset_library : QPushButton
+        self.pushButton_add_column: QPushButton
+        self.pushButton_attribute_fluid: QPushButton
+        self.pushButton_cancel: QPushButton
+        self.pushButton_refprop: QPushButton
+        self.pushButton_remove_column: QPushButton
+        self.pushButton_reset_library: QPushButton
 
         # QTableWidget
-        self.tableWidget_fluid_data : QTableWidget
+        self.tableWidget_fluid_data: QTableWidget
         self.tableWidget_fluid_data.setStyleSheet("")
 
     def _create_connections(self):

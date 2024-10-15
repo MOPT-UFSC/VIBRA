@@ -496,6 +496,11 @@ class MainWindow(QMainWindow):
         self.update_window_title(path)
         self.project_data_modified = False
 
+        from datetime import datetime
+        message = f"The project data has been saved. \nDate: {datetime.now()}"
+        PrintMessageInput(["Vibra", "Project data stored", message], auto_close=True)
+        # print(message)
+
     def open_project_dialog(self):
 
         last_path = app().config.get_last_folder_for("project folder")

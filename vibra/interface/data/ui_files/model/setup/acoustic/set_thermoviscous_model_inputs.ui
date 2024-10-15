@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>552</width>
-    <height>683</height>
+    <width>576</width>
+    <height>660</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -58,7 +58,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Thermoviscous dissipation models</string>
+         <string>Thermoviscous loss models</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -105,8 +105,8 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>532</width>
-           <height>559</height>
+           <width>556</width>
+           <height>536</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
@@ -130,7 +130,7 @@
             <property name="minimumSize">
              <size>
               <width>400</width>
-              <height>200</height>
+              <height>168</height>
              </size>
             </property>
             <property name="maximumSize">
@@ -161,19 +161,6 @@
              <property name="bottomMargin">
               <number>6</number>
              </property>
-             <item row="0" column="6">
-              <spacer name="horizontalSpacer_6">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
              <item row="0" column="3">
               <widget class="QComboBox" name="comboBox_attribution_type">
                <property name="minimumSize">
@@ -184,7 +171,7 @@
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>16777215</width>
+                 <width>200</width>
                  <height>28</height>
                 </size>
                </property>
@@ -215,198 +202,7 @@
                </item>
               </widget>
              </item>
-             <item row="0" column="0">
-              <spacer name="horizontalSpacer_7">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="0" column="1">
-              <widget class="QLabel" name="label_12">
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>140</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <family>MS Shell Dlg 2</family>
-                 <pointsize>10</pointsize>
-                 <weight>50</weight>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>Selection ID:</string>
-               </property>
-               <property name="textFormat">
-                <enum>Qt::AutoText</enum>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="2">
-              <widget class="QComboBox" name="comboBox_filter">
-               <property name="minimumSize">
-                <size>
-                 <width>180</width>
-                 <height>26</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>180</width>
-                 <height>26</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>9</pointsize>
-                </font>
-               </property>
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose 'Elements inside sphere' to returns the elements list based on its coordinates center or 'Nodes inside sphere' to get elements connected with the nodes inside the selection sphere.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <item>
-                <property name="text">
-                 <string> Elements from volume(s)</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string> Elements inside sphere</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string> Nodes inside sphere</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QLabel" name="label_selection_type_5">
-               <property name="minimumSize">
-                <size>
-                 <width>120</width>
-                 <height>26</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>120</width>
-                 <height>26</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <family>MS Shell Dlg 2</family>
-                 <pointsize>10</pointsize>
-                 <weight>50</weight>
-                 <italic>false</italic>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>Filter type: </string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="2">
-              <widget class="QLineEdit" name="lineEdit_selected_id">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>180</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>180</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="focusPolicy">
-                <enum>Qt::ClickFocus</enum>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">QLineEdit{background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)}
-QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 120)}</string>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="2">
-              <widget class="QLineEdit" name="lineEdit_center_coordinates">
-               <property name="minimumSize">
-                <size>
-                 <width>180</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>180</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <family>MS Shell Dlg 2</family>
-                 <pointsize>10</pointsize>
-                 <weight>50</weight>
-                 <italic>false</italic>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The average coordinates center of selected surfaces in meters.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">color: rgb(0, 0, 255);
-background-color: rgb(255, 255, 255);</string>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="3">
+             <item row="3" column="3">
               <widget class="QLabel" name="label_unit_5">
                <property name="minimumSize">
                 <size>
@@ -437,17 +233,17 @@ background-color: rgb(255, 255, 255);</string>
                </property>
               </widget>
              </item>
-             <item row="2" column="1">
+             <item row="3" column="1">
               <widget class="QLabel" name="label_diameter_3">
                <property name="minimumSize">
                 <size>
-                 <width>120</width>
+                 <width>150</width>
                  <height>28</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>120</width>
+                 <width>150</width>
                  <height>28</height>
                 </size>
                </property>
@@ -468,17 +264,55 @@ background-color: rgb(255, 255, 255);</string>
                </property>
               </widget>
              </item>
-             <item row="3" column="1">
-              <widget class="QLabel" name="label_selection_type_2">
+             <item row="3" column="2">
+              <widget class="QLineEdit" name="lineEdit_center_coordinates">
                <property name="minimumSize">
                 <size>
-                 <width>120</width>
+                 <width>200</width>
                  <height>28</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>120</width>
+                 <width>200</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>MS Shell Dlg 2</family>
+                 <pointsize>10</pointsize>
+                 <weight>50</weight>
+                 <italic>false</italic>
+                 <bold>false</bold>
+                </font>
+               </property>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The average coordinates center of selected surfaces in meters.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">color: rgb(0, 0, 255);
+background-color: rgb(255, 255, 255);</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="QLabel" name="label_selection_type_2">
+               <property name="minimumSize">
+                <size>
+                 <width>150</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>150</width>
                  <height>28</height>
                 </size>
                </property>
@@ -499,19 +333,185 @@ background-color: rgb(255, 255, 255);</string>
                </property>
               </widget>
              </item>
-             <item row="3" column="2">
-              <widget class="QDoubleSpinBox" name="doubleSpinBox_selection_radius">
+             <item row="0" column="1">
+              <widget class="QLabel" name="label_12">
                <property name="minimumSize">
                 <size>
-                 <width>180</width>
+                 <width>150</width>
                  <height>28</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>180</width>
+                 <width>150</width>
                  <height>28</height>
                 </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>MS Shell Dlg 2</family>
+                 <pointsize>10</pointsize>
+                 <weight>50</weight>
+                 <bold>false</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Selection ID:</string>
+               </property>
+               <property name="textFormat">
+                <enum>Qt::AutoText</enum>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <spacer name="horizontalSpacer_7">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="2" column="2">
+              <widget class="QComboBox" name="comboBox_filter_type">
+               <property name="minimumSize">
+                <size>
+                 <width>200</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>200</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose 'Elements inside sphere' to returns the elements list based on its coordinates center or 'Nodes inside sphere' to get elements connected with the nodes inside the selection sphere.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <item>
+                <property name="text">
+                 <string> Elements inside sphere</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string> Nodes inside sphere</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item row="0" column="6">
+              <spacer name="horizontalSpacer_6">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="0" column="2">
+              <widget class="QLineEdit" name="lineEdit_selection_id">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>200</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>200</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="focusPolicy">
+                <enum>Qt::ClickFocus</enum>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QLineEdit{background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)}
+QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 120)}</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLabel" name="label_selection_type_5">
+               <property name="minimumSize">
+                <size>
+                 <width>150</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>150</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>MS Shell Dlg 2</family>
+                 <pointsize>10</pointsize>
+                 <weight>50</weight>
+                 <italic>false</italic>
+                 <bold>false</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Filter type: </string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="2">
+              <widget class="QDoubleSpinBox" name="doubleSpinBox_selection_radius">
+               <property name="minimumSize">
+                <size>
+                 <width>200</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>200</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>9</pointsize>
+                </font>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -526,14 +526,48 @@ background-color: rgb(255, 255, 255);</string>
                 <double>10000.000000000000000</double>
                </property>
                <property name="singleStep">
-                <double>0.010000000000000</double>
+                <double>0.005000000000000</double>
                </property>
                <property name="value">
-                <double>0.060000000000000</double>
+                <double>0.050000000000000</double>
                </property>
               </widget>
              </item>
-             <item row="3" column="3">
+             <item row="5" column="2">
+              <widget class="QPushButton" name="pushButton_selection_info">
+               <property name="minimumSize">
+                <size>
+                 <width>200</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>200</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>MS Shell Dlg 2</family>
+                 <pointsize>10</pointsize>
+                 <weight>50</weight>
+                 <italic>false</italic>
+                 <bold>false</bold>
+                </font>
+               </property>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Get the selection information&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="styleSheet">
+                <string notr="true"/>
+               </property>
+               <property name="text">
+                <string>Get selection info</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="3">
               <widget class="QLabel" name="label_unit">
                <property name="minimumSize">
                 <size>
@@ -561,136 +595,6 @@ background-color: rgb(255, 255, 255);</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="1">
-              <widget class="QLabel" name="label_diameter">
-               <property name="minimumSize">
-                <size>
-                 <width>120</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>120</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <family>MS Shell Dlg 2</family>
-                 <pointsize>10</pointsize>
-                 <weight>50</weight>
-                 <italic>false</italic>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>Diameter: </string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="3">
-              <widget class="QLabel" name="label_unit_2">
-               <property name="minimumSize">
-                <size>
-                 <width>36</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>36</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <family>MS Shell Dlg 2</family>
-                 <pointsize>10</pointsize>
-                 <weight>50</weight>
-                 <italic>false</italic>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string> [m]</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="2">
-              <widget class="QDoubleSpinBox" name="doubleSpinBox_diameter">
-               <property name="minimumSize">
-                <size>
-                 <width>180</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>180</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-               <property name="decimals">
-                <number>3</number>
-               </property>
-               <property name="minimum">
-                <double>0.002000000000000</double>
-               </property>
-               <property name="maximum">
-                <double>10000.000000000000000</double>
-               </property>
-               <property name="singleStep">
-                <double>0.010000000000000</double>
-               </property>
-               <property name="value">
-                <double>0.020000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="5" column="2">
-              <widget class="QPushButton" name="pushButton_selection_info">
-               <property name="minimumSize">
-                <size>
-                 <width>180</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>180</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <family>MS Shell Dlg 2</family>
-                 <pointsize>10</pointsize>
-                 <weight>50</weight>
-                 <italic>false</italic>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Get the selection information&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="styleSheet">
-                <string notr="true"/>
-               </property>
-               <property name="text">
-                <string>Get selection info</string>
                </property>
               </widget>
              </item>
@@ -767,7 +671,7 @@ background-color: rgb(255, 255, 255);</string>
                    </property>
                    <property name="maximumSize">
                     <size>
-                     <width>120</width>
+                     <width>132</width>
                      <height>16777215</height>
                     </size>
                    </property>
@@ -794,7 +698,7 @@ background-color: rgb(255, 255, 255);</string>
                    </property>
                    <property name="maximumSize">
                     <size>
-                     <width>120</width>
+                     <width>132</width>
                      <height>16777215</height>
                     </size>
                    </property>
@@ -821,7 +725,7 @@ background-color: rgb(255, 255, 255);</string>
                    </property>
                    <property name="maximumSize">
                     <size>
-                     <width>120</width>
+                     <width>132</width>
                      <height>16777215</height>
                     </size>
                    </property>
@@ -958,7 +862,7 @@ background-color: rgb(255, 255, 255);</string>
                    </property>
                    <property name="maximumSize">
                     <size>
-                     <width>120</width>
+                     <width>132</width>
                      <height>16777215</height>
                     </size>
                    </property>
@@ -1123,18 +1027,18 @@ background-color: rgb(255, 255, 255);</string>
                  <property name="spacing">
                   <number>6</number>
                  </property>
-                 <item row="3" column="5">
-                  <widget class="QLabel" name="label_19">
+                 <item row="0" column="3">
+                  <widget class="QComboBox" name="comboBox_formulation">
                    <property name="minimumSize">
                     <size>
-                     <width>40</width>
-                     <height>0</height>
+                     <width>0</width>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
-                     <width>40</width>
-                     <height>16777215</height>
+                     <width>200</width>
+                     <height>28</height>
                     </size>
                    </property>
                    <property name="font">
@@ -1142,36 +1046,16 @@ background-color: rgb(255, 255, 255);</string>
                      <pointsize>10</pointsize>
                     </font>
                    </property>
-                   <property name="text">
-                    <string>[m²]</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="1">
-                  <widget class="QLabel" name="label_7">
-                   <property name="minimumSize">
-                    <size>
-                     <width>120</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>120</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>Duct area:</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
+                   <item>
+                    <property name="text">
+                     <string> Stinson model</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string> LRF model</string>
+                    </property>
+                   </item>
                   </widget>
                  </item>
                  <item row="1" column="5">
@@ -1225,6 +1109,70 @@ background-color: rgb(255, 255, 255);</string>
                    </property>
                   </widget>
                  </item>
+                 <item row="3" column="5">
+                  <widget class="QLabel" name="label_19">
+                   <property name="minimumSize">
+                    <size>
+                     <width>40</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>40</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>[m²]</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="1">
+                  <widget class="QLabel" name="label_7">
+                   <property name="minimumSize">
+                    <size>
+                     <width>120</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>132</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Duct area:</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <spacer name="horizontalSpacer_4">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
                  <item row="1" column="1">
                   <widget class="QLabel" name="label_8">
                    <property name="minimumSize">
@@ -1235,7 +1183,7 @@ background-color: rgb(255, 255, 255);</string>
                    </property>
                    <property name="maximumSize">
                     <size>
-                     <width>120</width>
+                     <width>132</width>
                      <height>16777215</height>
                     </size>
                    </property>
@@ -1289,7 +1237,7 @@ background-color: rgb(255, 255, 255);</string>
                    </property>
                    <property name="maximumSize">
                     <size>
-                     <width>120</width>
+                     <width>132</width>
                      <height>16777215</height>
                     </size>
                    </property>
@@ -1305,19 +1253,6 @@ background-color: rgb(255, 255, 255);</string>
                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                    </property>
                   </widget>
-                 </item>
-                 <item row="1" column="0">
-                  <spacer name="horizontalSpacer_4">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
                  </item>
                  <item row="1" column="3">
                   <widget class="QLineEdit" name="lineEdit_diameter_circular">
@@ -1390,7 +1325,7 @@ background-color: rgb(255, 255, 255);</string>
                    </property>
                    <property name="maximumSize">
                     <size>
-                     <width>120</width>
+                     <width>132</width>
                      <height>16777215</height>
                     </size>
                    </property>
@@ -1405,37 +1340,6 @@ background-color: rgb(255, 255, 255);</string>
                    <property name="alignment">
                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                    </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="3">
-                  <widget class="QComboBox" name="comboBox_formulation">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>200</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <item>
-                    <property name="text">
-                     <string> Stinson model</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string> LRF model</string>
-                    </property>
-                   </item>
                   </widget>
                  </item>
                 </layout>
@@ -1487,12 +1391,24 @@ background-color: rgb(255, 255, 255);</string>
                 <property name="toolTip">
                  <string>Select a face to remove the previously attributed boundary condition.</string>
                 </property>
+                <property name="autoScroll">
+                 <bool>true</bool>
+                </property>
+                <property name="alternatingRowColors">
+                 <bool>true</bool>
+                </property>
                 <property name="indentation">
                  <number>1</number>
+                </property>
+                <property name="itemsExpandable">
+                 <bool>true</bool>
                 </property>
                 <property name="headerHidden">
                  <bool>false</bool>
                 </property>
+                <attribute name="headerDefaultSectionSize">
+                 <number>100</number>
+                </attribute>
                 <attribute name="headerHighlightSections">
                  <bool>false</bool>
                 </attribute>
@@ -1504,7 +1420,15 @@ background-color: rgb(255, 255, 255);</string>
                 </attribute>
                 <column>
                  <property name="text">
-                  <string>Volumes</string>
+                  <string>Attribution</string>
+                 </property>
+                 <property name="textAlignment">
+                  <set>AlignCenter</set>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>ID</string>
                  </property>
                  <property name="textAlignment">
                   <set>AlignCenter</set>
@@ -1643,6 +1567,12 @@ background-color: rgb(255, 255, 255);</string>
           </item>
           <item row="2" column="0">
            <widget class="QFrame" name="frame_fluid_info">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>120</height>
+             </size>
+            </property>
             <property name="frameShape">
              <enum>QFrame::NoFrame</enum>
             </property>
@@ -1963,6 +1893,12 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
           </item>
           <item row="3" column="0">
            <widget class="QFrame" name="frame_plot_buttons">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>48</height>
+             </size>
+            </property>
             <property name="frameShape">
              <enum>QFrame::NoFrame</enum>
             </property>
@@ -1970,30 +1906,6 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
              <enum>QFrame::Raised</enum>
             </property>
             <layout class="QGridLayout" name="gridLayout_19">
-             <item row="0" column="1">
-              <widget class="QPushButton" name="pushButton_plot_complex_fluid_density">
-               <property name="minimumSize">
-                <size>
-                 <width>100</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>200</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>Plot complex fluid density</string>
-               </property>
-              </widget>
-             </item>
              <item row="0" column="2">
               <widget class="QPushButton" name="pushButton_plot_complex_speed_of_sound">
                <property name="minimumSize">
@@ -2004,7 +1916,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>200</width>
+                 <width>220</width>
                  <height>28</height>
                 </size>
                </property>
@@ -2015,6 +1927,30 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                </property>
                <property name="text">
                 <string>Plot complex speed of sound</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QPushButton" name="pushButton_plot_complex_fluid_density">
+               <property name="minimumSize">
+                <size>
+                 <width>100</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>220</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>Plot complex fluid density</string>
                </property>
               </widget>
              </item>

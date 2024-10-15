@@ -1,20 +1,19 @@
-from PyQt5.QtWidgets import QComboBox, QDialog, QFrame, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PyQt5.QtWidgets import QComboBox, QDialog, QDoubleSpinBox, QFrame, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCloseEvent
 from PyQt5 import uic
 
 from vibra import app, UI_DIR
-from vibra.interface.model_inputs.acoustic.fluid.fluid_widget import FluidWidget
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
-from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.interface.general.print_message_input import PrintMessageInput
-
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.dissipation_models.thermoviscous_loss_models import ThermoviscousLossModels
+from vibra.interface.mesh.mesher_inputs import MesherInputs
+from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input_simplified import SetFluidInputSimplified
+from vibra.interface.model_inputs.acoustic.get_sphere_selection_information import GetSphereSelectionInformation
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 
-from pathlib import Path
 import numpy as np
 
 # fmt: off
@@ -47,7 +46,6 @@ class SetThermoviscousLossModel(QDialog):
         ConfigWidgetAppearance(self, tool_tip=True)
 
         self.load_info()
-        self.geometry_selection_callback()
 
         while self.keep_window_open:
             self.exec()
@@ -69,13 +67,17 @@ class SetThermoviscousLossModel(QDialog):
         self.comboBox_attribution_type: QComboBox
         self.comboBox_section_type: QComboBox
         self.comboBox_formulation: QComboBox
+        self.comboBox_filter_type: QComboBox
+
+        # QDoubleSpin
+        self.doubleSpinBox_selection_radius: QDoubleSpinBox
 
         # QFrame
         self.frame_fluid_info: QFrame
         self.frame_plot_buttons: QFrame
 
         # QLineEdit
-        self.lineEdit_selected_id: QLineEdit
+        self.lineEdit_selection_id: QLineEdit
         self.lineEdit_selected_fluid: QLineEdit
         self.lineEdit_fluid_density: QLineEdit
         self.lineEdit_speed_of_sound: QLineEdit
@@ -85,12 +87,15 @@ class SetThermoviscousLossModel(QDialog):
         self.lineEdit_diameter_circular: QLineEdit
         self.lineEdit_radius_circular: QLineEdit
         self.lineEdit_area_circular: QLineEdit
+        self.lineEdit_center_coordinates: QLineEdit
+        self.lineEdit_center_coordinates.setDisabled(True)
 
         # QPushButton
         self.pushButton_cancel: QPushButton
         self.pushButton_confirm: QPushButton
         self.pushButton_remove: QPushButton
         self.pushButton_reset: QPushButton
+        self.pushButton_selection_info: QPushButton
         self.pushButton_get_fluid: QPushButton
         self.pushButton_plot_complex_fluid_density: QPushButton
         self.pushButton_plot_complex_speed_of_sound: QPushButton
@@ -103,8 +108,10 @@ class SetThermoviscousLossModel(QDialog):
 
     def _create_connections(self):
         #
-        self.comboBox_attribution_type.currentIndexChanged.connect(self.update_attribution_type)
+        self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         self.comboBox_section_type.currentIndexChanged.connect(self.rectangular_section_type_callback)
+        #
+        self.doubleSpinBox_selection_radius.valueChanged.connect(self.call_sphere_plotter)
         #
         self.lineEdit_width_rectangular.textChanged.connect(self.update_rectangular_duct_area)
         self.lineEdit_height_rectangular.textChanged.connect(self.update_rectangular_duct_area)
@@ -115,6 +122,7 @@ class SetThermoviscousLossModel(QDialog):
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
+        self.pushButton_selection_info.clicked.connect(self.get_selection_information)
         self.pushButton_plot_complex_fluid_density.clicked.connect(self.plot_complex_fluid_density)
         self.pushButton_plot_complex_speed_of_sound.clicked.connect(self.plot_complex_speed_of_sound)
         #
@@ -125,7 +133,8 @@ class SetThermoviscousLossModel(QDialog):
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
         #
-        self.update_attribution_type()
+        self.geometry_selection_callback()
+        self.attribution_type_callback()
         self.update_plot_buttons_access()
 
     def update_plot_buttons_access(self):
@@ -134,7 +143,7 @@ class SetThermoviscousLossModel(QDialog):
         self.pushButton_plot_complex_speed_of_sound.setDisabled(state)
 
     def _config_widgets(self):
-        for i, w in enumerate([80, 160, 140]):
+        for i, w in enumerate([90, 60, 140, 140, 120]):
             self.treeWidget_thermoviscous_model.setColumnWidth(i, w)
             self.treeWidget_thermoviscous_model.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
@@ -157,10 +166,19 @@ class SetThermoviscousLossModel(QDialog):
             self.lineEdit_area_circular.setText("--")
 
     def remove_callback(self):
-        if self.lineEdit_selected_id.text() != "":
-            volume_id = int(self.lineEdit_selected_id.text())
-            self.properties._remove_volume_property("thermoviscous_model", volume_id)
+        if self.lineEdit_selection_id.text() != "":
+
+            key = self.lineEdit_selection_id.text().split(" - ")
+            selection_type = key[0]
+            selection_id = int(key[1])
+
+            if selection_type == "Volume":
+                self.properties._remove_volume_property("thermoviscous_model", selection_id)
+            else:
+                self.properties._remove_group_property("thermoviscous_model", selection_id)
+
             app().main_window.file.write_model_properties_in_file()
+            self.pushButton_remove.setDisabled(True)
             self.load_info()
 
     def reset_callback(self):
@@ -171,12 +189,18 @@ class SetThermoviscousLossModel(QDialog):
             if property == "thermoviscous_model":
                 volume_ids.append(volume_id)
 
-        if volume_ids:
+        group_ids = list()
+        for key, data in self.properties.group_properties.items():
+            property, group_id = key
+            if property == "thermoviscous_model":
+                group_ids.append(group_id)
+
+        if volume_ids or group_ids:
 
             self.hide()
 
-            title = "Porous material model resetting"
-            message = "Would you like to remove the porous material effects from the model?"
+            title = "Thermoviscous dissipation model resetting"
+            message = "Would you like to remove the thermoviscous dissipation effects from the model?"
 
             buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
             read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -189,22 +213,27 @@ class SetThermoviscousLossModel(QDialog):
                 for volume_id in volume_ids:
                     self.properties._remove_volume_property("thermoviscous_model", volume_id)
 
+                for group_id in group_ids:
+                    self.properties._remove_group_property("thermoviscous_model", group_id)
+
                 app().main_window.file.write_model_properties_in_file()
-                self.close()
+                self.load_info()
 
     def tabEvent_callback(self):
 
-        tab_index = self.tabWidget_main.currentIndex()
-
-        if tab_index == 2:
+        self.pushButton_remove.setDisabled(True)
+        if self.tabWidget_main.currentIndex() == 2:
             self.comboBox_attribution_type.setCurrentIndex(1)
             self.comboBox_attribution_type.setDisabled(True)
-            self.lineEdit_selected_id.setText("")
-            self.lineEdit_selected_id.setDisabled(True)
+            self.lineEdit_selection_id.setText("")
+            self.lineEdit_selection_id.setDisabled(True)
             self.frame_fluid_info.setDisabled(True)
             self.frame_plot_buttons.setDisabled(True)
 
         else:
+
+            if "-" in self.lineEdit_selection_id.text():
+                self.lineEdit_selection_id.setText("")
 
             self.frame_fluid_info.setDisabled(False)
             self.frame_plot_buttons.setDisabled(False)
@@ -213,13 +242,21 @@ class SetThermoviscousLossModel(QDialog):
             if self.comboBox_attribution_type.currentIndex() == 0:
                 return
 
-            self.lineEdit_selected_id.setDisabled(False)
+            self.lineEdit_selection_id.setDisabled(False)
 
     def on_click_item(self, item):
-        self.lineEdit_selected_id.setText(item.text(0))
+
+        key = f"{item.text(0)} - {item.text(1)}"
+        if item.text(0) == "Volume":
+            volume_id = int(item.text(1))
+            app().main_window.set_geometry_selection(volumes=[volume_id])
+
+        self.lineEdit_selection_id.setText(key)
+        self.pushButton_remove.setEnabled(True)
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
+        self.get_lrf_info()
 
     def rectangular_section_type_callback(self):
         condition = self.comboBox_section_type.currentIndex() in [0, 1]
@@ -231,23 +268,35 @@ class SetThermoviscousLossModel(QDialog):
             self.lineEdit_width_rectangular.setText("2*a >> 2*b")
             self.lineEdit_width_rectangular.setDisabled(True)
 
-    def update_attribution_type(self):
-        index = self.comboBox_attribution_type.currentIndex()
-        if index == 0:
-            self.lineEdit_selected_id.setText("All bodies")
-            self.lineEdit_selected_id.setEnabled(False)
-        elif index == 1:
-            self.lineEdit_selected_id.setText("")
-            self.lineEdit_selected_id.setEnabled(True)
-        # self.comboBox_attribution_type.setCurrentIndex(index)
+    def attribution_type_callback(self):
 
-    def update_tabs_visibility(self):
-        self.tabWidget_main.setTabVisible(2, False)
-        for key, data in self.properties.volume_properties.items():
-            property, volume_id = key
-            if property == "thermoviscous_model":
-                self.tabWidget_main.setTabVisible(2, True)
-                return
+        self.comboBox_filter_type.setDisabled(True)
+        self.doubleSpinBox_selection_radius.setDisabled(True)
+        self.pushButton_selection_info.setDisabled(True)
+
+        attribution_type = self.comboBox_attribution_type.currentIndex()
+        if attribution_type == 0:
+            self.lineEdit_selection_id.setText("All bodies")
+            self.lineEdit_selection_id.setEnabled(False)
+            self.hide_sphere()
+
+        elif attribution_type == 1:
+            volumes = self.main_window.selected_geometry_volumes
+            if not volumes:
+                self.lineEdit_selection_id.setText("")
+
+            self.lineEdit_selection_id.setEnabled(True)
+            self.hide_sphere()
+
+        elif attribution_type in [2, 3]:
+            surfaces = self.main_window.selected_geometry_surfaces
+            if not surfaces or self.lineEdit_selection_id.text() == "All bodies":
+                self.lineEdit_selection_id.setText("")
+
+            self.comboBox_filter_type.setEnabled(True)
+            self.doubleSpinBox_selection_radius.setEnabled(True)
+            self.pushButton_selection_info.setEnabled(True)
+            self.call_sphere_plotter()
 
     def load_info(self):
 
@@ -256,42 +305,197 @@ class SetThermoviscousLossModel(QDialog):
         for key, data in self.properties.volume_properties.items():
 
             property, volume_id = key
-
             if property == "thermoviscous_model":
+
+                section_type = ""
+                formulation = ""
 
                 model_inputs = list()
                 for key, value in data.items():
                     if key == "section_type":
                         section_type = data["section_type"]
+                    elif key == "formulation":
+                        formulation = data["formulation"]
                     else:
                         model_inputs.append(value)
 
-                new = QTreeWidgetItem([str(volume_id), section_type, str(model_inputs)])
-                for i in range(3):
+                new = QTreeWidgetItem(["Volume", str(volume_id), section_type, formulation, str(model_inputs)])
+                for i in range(5):
+                    new.setTextAlignment(i, Qt.AlignCenter)
+
+                self.treeWidget_thermoviscous_model.addTopLevelItem(new)
+
+        for key, data in self.properties.group_properties.items():
+
+            property, group_id = key
+            if property == "thermoviscous_model":
+                
+                section_type = ""
+                formulation = ""
+
+                model_inputs = list()
+                for key, value in data.items():
+                    if key == "section_type":
+                        section_type = data["section_type"]
+                    elif key == "formulation":
+                        formulation = data["formulation"]
+                    else:
+                        model_inputs.append(value)
+
+                new = QTreeWidgetItem(["Group", str(group_id), section_type, formulation, str(model_inputs)])
+                for i in range(5):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
                 self.treeWidget_thermoviscous_model.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 
+    def update_tabs_visibility(self):
+
+        for key, _ in self.properties.volume_properties.items():
+            property, _ = key
+            if property == "thermoviscous_model":
+                self.tabWidget_main.setTabVisible(2, True)
+                return
+
+        for key, _ in self.properties.group_properties.items():
+            property, _ = key
+            if property == "thermoviscous_model":
+                self.tabWidget_main.setTabVisible(2, True)
+                return
+
+        self.tabWidget_main.setTabVisible(2, False)
+        self.tabWidget_main.setCurrentIndex(0)
+
+    def highlight_mesh_elements(self, elements):
+        mesh_widget = self.main_window.viewer_tabs.mesh_widget
+        mesh_widget.select_multiple_volumes(elements)
+
     def geometry_selection_callback(self):
 
+        faces = self.main_window.selected_geometry_surfaces
         volumes = self.main_window.selected_geometry_volumes
 
         if volumes:
-
+            text = ", ".join([str(i) for i in volumes])
+            self.lineEdit_selection_id.setText(text)
             if self.comboBox_attribution_type.currentIndex() == 0:
                 self.comboBox_attribution_type.setCurrentIndex(1)
-                # return
+            self.hide_sphere()
 
-            text = ", ".join([str(i) for i in volumes])
-            self.lineEdit_selected_id.setText(text)
+        elif faces:
+            text = ", ".join([str(i) for i in faces])
+            self.lineEdit_selection_id.setText(text)
+            if self.comboBox_attribution_type.currentIndex() in [0, 1]:
+                self.comboBox_attribution_type.setCurrentIndex(2)
+            else:
+                self.call_sphere_plotter()
+
+        else:
+            self.lineEdit_selection_id.setText("")
+            self.lineEdit_center_coordinates.setText("")
+            self.hide_sphere()
+
+    def get_center_coordinates(self):
+
+        selection_id = self.lineEdit_selection_id.text()
+        selection_index = self.comboBox_attribution_type.currentIndex()
+
+        if selection_id == "" or selection_index == 0:
+            self.lineEdit_center_coordinates.setText("")
+            return list()
+
+        index = self.comboBox_attribution_type.currentIndex()
+        if index == 2:
+            averaged_selection = False
+        elif index == 3:
+            averaged_selection = True
+
+        center_coords = self.mesh.get_average_nodal_coordinates(selection_id, averaged=averaged_selection)
+        if averaged_selection:
+            try:
+                _round_center_coords = [round(value, 4) for value in center_coords[0]]
+                self.lineEdit_center_coordinates.setText(str(_round_center_coords))
+            except:
+                self.lineEdit_center_coordinates.setText("")
+                return list()
+
+        else:
+            if len(center_coords) == 1:
+                try:
+                    _round_center_coords = [round(value, 4) for value in center_coords[0]]
+                    self.lineEdit_center_coordinates.setText(str(_round_center_coords))
+                except:
+                    self.lineEdit_center_coordinates.setText("")
+                    return list()
+            else:
+                self.lineEdit_center_coordinates.setText("Multiple centers")
+
+        return center_coords
+
+    def call_sphere_plotter(self):
+
+        if self.comboBox_attribution_type.currentIndex() >= 2:
+
+            self.selection_radius = self.doubleSpinBox_selection_radius.value()
+            center_coords = self.get_center_coordinates()
+
+            if len(center_coords):
+                all_radius = [self.selection_radius for _ in center_coords]
+                geometry_widget = self.main_window.viewer_tabs.geometry_widget
+                geometry_widget.set_selection_spheres(center_coords, all_radius)
+
+                mesh_widget = self.main_window.viewer_tabs.mesh_widget
+                mesh_widget.set_selection_spheres(center_coords, all_radius)
+
+    def hide_sphere(self):
+        geometry_widget = self.main_window.viewer_tabs.geometry_widget
+        geometry_widget.clear_selection_spheres()
+        mesh_widget = self.main_window.viewer_tabs.mesh_widget
+        mesh_widget.clear_selection_spheres()
+
+    def get_selection_information(self):
+
+        selection_id = self.lineEdit_selection_id.text()
+
+        if selection_id != "":
+
+            index = self.comboBox_attribution_type.currentIndex()
+            if index >= 2:
+
+                selection_radius = self.doubleSpinBox_selection_radius.value()
+                
+                if index == 2:
+                    averaged_selection = False
+                elif index == 3:
+                    averaged_selection = True
+
+                if self.generate_mesh():
+                    return
+                
+                self.hide()
+                filter_type = self.comboBox_filter_type.currentIndex()
+
+                GetSphereSelectionInformation(  selection_id,
+                                                selection_radius,
+                                                averaged_selection,
+                                                filter_type  )
+
+                self.main_window.set_input_widget(self)
+                self.main_window.viewer_tabs.show_geometry()
+
+    def generate_mesh(self):
+        if not self.main_window.project.model.generated_mesh:
+            self.mesher = MesherInputs(close_after_generate=True)
+            if not self.mesher.complete:
+                self.mesher = None
+                return True
 
     def check_selected_bodies(self):
-        lineEdit = self.lineEdit_selected_id.text()
+        lineEdit = self.lineEdit_selection_id.text()
         self.stop, self.volume_ids = self.mesh.check_input_volume_id(lineEdit)
         if self.stop:
-            self.lineEdit_selected_id.setFocus()
+            self.lineEdit_selection_id.setFocus()
             return True
         
     def get_rectangular_duct_inputs(self):
@@ -353,32 +557,57 @@ class SetThermoviscousLossModel(QDialog):
 
     def attribute_callback(self):
 
-        index = self.tabWidget_main.currentIndex()
-        if index == 0:
+        if self.tabWidget_main.currentIndex() == 0:
             model_data = self.get_rectangular_duct_inputs()
-        elif index == 1:
+        elif self.tabWidget_main.currentIndex() == 1:
             model_data = self.get_circular_duct_inputs()
         else:
             return
 
         if model_data:
 
-            if self.comboBox_attribution_type.currentIndex():
-                if self.check_selected_bodies():
-                    return
-                volume_ids = self.volume_ids
+            attribute_type = self.comboBox_attribution_type.currentIndex()
+            if attribute_type in [0, 1]:
 
-            else:
-                volume_ids = list(self.mesh.nodes_from_volumes.keys())
+                if attribute_type == 0:
+                    volume_ids = list(self.mesh.nodes_from_volumes.keys())
+    
+                elif attribute_type == 1:
+                    if self.check_selected_bodies():
+                        return
+                    volume_ids = self.volume_ids
 
-            for volume_id in volume_ids:
-                # surfaces_from_volume = self.mesh.surfaces_from_volumes[volume_id]
-                self.project.set_thermoviscous_model(model_data, volume=volume_id)
+                for volume_id in volume_ids:
+                    # surfaces_from_volume = self.mesh.surfaces_from_volumes[volume_id]
+                    self.project.set_thermoviscous_model(model_data, volume=volume_id)
 
-            print(f"The thermoviscous Stinson model for '{model_data['section_type']}' has been attributed to the volumes {volume_ids}.")
+                print(f"The thermoviscous {model_data['formulation']} model for '{model_data['section_type']}' has been attributed to the volumes {volume_ids}.")
+
+            elif attribute_type in [2, 3]:
+
+                if attribute_type == 2:
+                    averaged_selection = False
+                else:
+                    averaged_selection = True
+
+                group_id = self.get_lrf_group_index()
+                filter_type = self.comboBox_filter_type.currentIndex()
+
+                surface_ids = self.main_window.selected_geometry_surfaces
+                self.selection_radius = self.doubleSpinBox_selection_radius.value()
+
+                model_data["surface_ids"] = list(surface_ids)
+                model_data["selection_radius"] = self.selection_radius
+                model_data["averaged"] = averaged_selection
+                model_data["filter_type"] = filter_type
+
+                self.project.set_thermoviscous_model(model_data, group=group_id)
+
+                print(f"The thermoviscous {model_data['formulation']} model for '{model_data['section_type']}' has been attributed to the group {group_id}.")
 
             app().main_window.file.write_model_properties_in_file()
-            self.close()
+            self.load_info()
+            # self.close()
 
     def check_inputs(self, lineEdit, label, _float=True):
 
@@ -415,18 +644,72 @@ class SetThermoviscousLossModel(QDialog):
         else:
             return out, False
 
+    def get_lrf_group_index(self):
+
+        keys = list()
+        for key in self.properties.group_properties.keys():
+            property, group_id = key
+            if property == "thermoviscous_model":
+                if group_id not in keys:
+                    keys.append(group_id)
+
+        index = 1
+        while index in keys:
+            index += 1
+
+        return index
+
+    def get_lrf_info(self):
+
+        selected_id = self.lineEdit_selection_id.text()
+
+        if selected_id != "":
+
+            selected_id = int(selected_id)
+
+            self.hide()
+            def get_info(data):
+                GetSphereSelectionInformation(  data["surface_ids"],
+                                                data["selection_radius"],
+                                                data["averaged"],
+                                                data["filter_type"]  )
+
+                self.main_window.set_input_widget(self)
+                self.main_window.viewer_tabs.show_geometry()
+
+            group_properties = self.properties.group_properties.copy()
+            for key, data in group_properties.items():
+                property, group_id = key
+                if property == "thermoviscous_model" and int(selected_id) == group_id:
+                    return get_info(data)
+
+            # volume_properties = self.properties.volume_properties.copy()
+            # for key, data in volume_properties.items():
+            #     property, volume_id = key
+            #     if property == "thermoviscous_model" and int(picked_id) == volume_id:
+            #         return get_info()
+
+    def hide_sphere(self):
+        geometry_widget = self.main_window.viewer_tabs.geometry_widget
+        geometry_widget.clear_selection_spheres()
+        mesh_widget = self.main_window.viewer_tabs.mesh_widget
+        mesh_widget.clear_selection_spheres()
+
+    # Plot thermoviscous effective properties
+
     def get_fluid_callback(self):
         self.hide()
-        self.fluid_widget = FluidWidget()
-        self.fluid_widget._add_icon_and_title()
-        self.fluid_widget.show()
-        self.fluid_widget.pushButton_attribute_fluid.clicked.connect(self.get_selected_fluid)
+        self.fluid_dialog = SetFluidInputSimplified()
+        self.fluid_dialog.fluid_widget.pushButton_attribute_fluid.setText("Select fluid")
+        self.fluid_dialog.pushButton_attribute_fluid.clicked.connect(self.get_selected_fluid)
+        self.fluid_dialog.exec()
+        self.main_window.set_input_widget(self)
 
     def get_selected_fluid(self):
-        self.selected_fluid = self.fluid_widget.get_selected_fluid()
+        self.selected_fluid = self.fluid_dialog.get_selected_fluid()
         if isinstance(self.selected_fluid, Fluid):
+            self.fluid_dialog.close()
             self.update_plot_buttons_access()
-            self.fluid_widget.close()
             self.lineEdit_selected_fluid.setText(self.selected_fluid.name)
             self.lineEdit_fluid_density.setText(f"{self.selected_fluid.fluid_density}")
             self.lineEdit_speed_of_sound.setText(f"{self.selected_fluid.speed_of_sound}")
@@ -558,10 +841,18 @@ class SetThermoviscousLossModel(QDialog):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.attribute_callback()
+        elif event.key() == Qt.Key_Delete:
+            self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
+        self.hide_sphere()
+        try:
+            geometry_widget = self.main_window.viewer_tabs.geometry_widget
+            geometry_widget.selection_changed.disconnect(self.geometry_selection_callback)
+        except TypeError:
+            pass  # ignore if there is nothing to disconect
         self.keep_window_open = False
         return super().closeEvent(a0)
     

@@ -59,17 +59,17 @@
       <property name="spacing">
        <number>4</number>
       </property>
-      <item row="0" column="0">
+      <item row="0" column="1">
        <widget class="QPushButton" name="pushButton_attribute_fluid">
         <property name="minimumSize">
          <size>
-          <width>160</width>
+          <width>140</width>
           <height>32</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>160</width>
+          <width>140</width>
           <height>32</height>
          </size>
         </property>
@@ -90,6 +90,40 @@
         </property>
         <property name="text">
          <string>Attribute fluid</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QPushButton" name="pushButton_cancel">
+        <property name="minimumSize">
+         <size>
+          <width>140</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>140</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>MS Shell Dlg 2</family>
+          <pointsize>10</pointsize>
+          <weight>50</weight>
+          <italic>false</italic>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Confirm material attribution&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="text">
+         <string>Cancel</string>
         </property>
        </widget>
       </item>

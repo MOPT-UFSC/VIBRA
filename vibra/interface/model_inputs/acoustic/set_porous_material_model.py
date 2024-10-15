@@ -4,11 +4,10 @@ from PyQt5.QtGui import QCloseEvent
 from PyQt5 import uic
 
 from vibra import app, UI_DIR
-from vibra.interface.model_inputs.acoustic.fluid.fluid_widget import FluidWidget
+from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input_simplified import SetFluidInputSimplified
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 
 from vibra.engine.properties.fluid import Fluid
@@ -441,18 +440,21 @@ class SetPorousMaterialModel(QDialog):
             return None
         return out
 
+    # Plot thermoviscous effective properties
+
     def get_fluid_callback(self):
         self.hide()
-        self.fluid_widget = FluidWidget()
-        self.fluid_widget._add_icon_and_title()
-        self.fluid_widget.show()
-        self.fluid_widget.pushButton_attribute_fluid.clicked.connect(self.get_selected_fluid)
+        self.fluid_dialog = SetFluidInputSimplified()
+        self.fluid_dialog.fluid_widget.pushButton_attribute_fluid.setText("Select fluid")
+        self.fluid_dialog.pushButton_attribute_fluid.clicked.connect(self.get_selected_fluid)
+        self.fluid_dialog.exec()
+        self.main_window.set_input_widget(self)
 
     def get_selected_fluid(self):
-        self.selected_fluid = self.fluid_widget.get_selected_fluid()
+        self.selected_fluid = self.fluid_dialog.get_selected_fluid()
         if isinstance(self.selected_fluid, Fluid):
+            self.fluid_dialog.close()
             self.update_plot_buttons_access()
-            self.fluid_widget.close()
             self.lineEdit_selected_fluid.setText(self.selected_fluid.name)
             self.lineEdit_fluid_density.setText(f"{self.selected_fluid.fluid_density}")
             self.lineEdit_speed_of_sound.setText(f"{self.selected_fluid.speed_of_sound}")
