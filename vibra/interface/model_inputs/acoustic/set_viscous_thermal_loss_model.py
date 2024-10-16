@@ -150,6 +150,8 @@ class SetViscousThermalLossModel(QDialog):
     def update_rectangular_duct_area(self):
         try:
             height = float(self.lineEdit_height_rectangular.text())
+            if self.comboBox_section_type.currentIndex() == 1:
+                self.lineEdit_width_rectangular.setText(f"{round(height, 6)}")
             width = float(self.lineEdit_width_rectangular.text())
             area = width * height
             self.lineEdit_area_rectangular.setText(f"{round(area, 6)}")
@@ -259,14 +261,21 @@ class SetViscousThermalLossModel(QDialog):
         self.get_lrf_info()
 
     def rectangular_section_type_callback(self):
-        condition = self.comboBox_section_type.currentIndex() in [0, 1]
-        if condition:
+
+        section_index = self.comboBox_section_type.currentIndex()
+
+        if section_index in [1, 2]:
+            self.lineEdit_width_rectangular.setDisabled(True)
+            if section_index == 2:
+                self.lineEdit_width_rectangular.setText("2*a >> 2*b")
+            else:
+                height = self.lineEdit_height_rectangular.text()
+                self.lineEdit_width_rectangular.setText(height)
+
+        else:
             self.lineEdit_width_rectangular.setDisabled(False)
             if self.lineEdit_width_rectangular.text() == "2*a >> 2*b":
-                self.lineEdit_width_rectangular.text("")
-        else:
-            self.lineEdit_width_rectangular.setText("2*a >> 2*b")
-            self.lineEdit_width_rectangular.setDisabled(True)
+                self.lineEdit_width_rectangular.setText("")
 
     def attribution_type_callback(self):
 
