@@ -213,7 +213,7 @@ class MainWindow(QMainWindow):
                 tab.plane_actor.VisibilityOff()
 
     def _config_window(self):
-        self.setMinimumSize(1300, 700)
+        self.setMinimumSize(800, 600)
         # self.showMaximized()
         self.showMinimized()
         self.vibra_icon = get_vibra_icon()
@@ -245,8 +245,8 @@ class MainWindow(QMainWindow):
 
         left_widget = QWidget()
         left_widget.setLayout(grid_layout_left)
-        # left_widget.setMinimumWidth(290)
-        left_widget.setMaximumWidth(290)
+        left_widget.setMinimumWidth(300)
+        left_widget.setMaximumWidth(360)
 
         self.vertical_line = QFrame()
         self.vertical_line.setLineWidth(4)
@@ -495,6 +495,11 @@ class MainWindow(QMainWindow):
         copy(self.temp_project_file_path, path)
         self.update_window_title(path)
         self.project_data_modified = False
+
+        from datetime import datetime
+        message = f"The project data has been saved. \nDate: {datetime.now()}"
+        PrintMessageInput(["Vibra", "Project data stored", message], auto_close=True)
+        # print(message)
 
     def open_project_dialog(self):
 

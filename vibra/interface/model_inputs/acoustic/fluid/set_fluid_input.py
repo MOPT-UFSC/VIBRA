@@ -89,7 +89,9 @@ class SetFluidInput(QDialog):
 
         # QPushButton
         self.pushButton_attribute_fluid = self.findChild(QPushButton, 'pushButton_attribute_fluid')
+        self.pushButton_cancel = self.fluid_widget.findChild(QPushButton, 'pushButton_cancel')
         self.pushButton_remove_row = self.fluid_widget.findChild(QPushButton, 'pushButton_remove_row')
+        self.pushButton_reset_library = self.fluid_widget.findChild(QPushButton, 'pushButton_reset_library')
 
         # QTableWidget
         self.tableWidget_fluid_data = self.findChild(QTableWidget, 'tableWidget_fluid_data')
@@ -110,7 +112,8 @@ class SetFluidInput(QDialog):
         self.comboBox_attribution_type.currentIndexChanged.connect(self.update_attribution_type)
         #
         self.pushButton_attribute_fluid.clicked.connect(self.confirm_fluid_attribution)
-        self.fluid_widget.pushButton_reset_library.clicked.connect(self.reset_fluid_library_callback)
+        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_reset_library.clicked.connect(self.reset_fluid_library_callback)
         #
         self.tableWidget_fluid_data.currentCellChanged.connect(self.current_cell_changed)
         #

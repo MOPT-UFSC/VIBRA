@@ -123,7 +123,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
     def process_particle_velocity(  self, 
                                     element_id : int, 
                                     node_id : int, 
-                                    rho : float, 
+                                    rho : float | np.ndarray, 
                                     frequencies : np.ndarray, 
                                     nodal_pressures : np.ndarray  ):
         """

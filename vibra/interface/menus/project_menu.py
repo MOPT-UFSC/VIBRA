@@ -65,6 +65,8 @@ class ProjectMenu(QMenu):
         self.theme_action.triggered.connect(self.theme_callback)
         self.exit_action.triggered.connect(self.exit_callback)
 
+        self.save_action.setShortcut("Ctrl+S")
+
     def create_recents_menu(self):
         self.recents_menu = QMenu("Recent projects", self)
         self.recents_menu.setIcon(self.recent_icon)

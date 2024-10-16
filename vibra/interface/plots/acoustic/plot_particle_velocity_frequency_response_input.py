@@ -207,10 +207,14 @@ class PlotParticleVelocityFrequencyResponseInput(QDialog):
                 if tag == surface_id:
                     list_nodes.extend(surface_nodes)
 
-        self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id)
-        input_velocities = np.array(list(self.particle_velocity[component_label].values()), dtype=complex)
+            rho = self.model.get_fluid_density_for_particle_velocity_calculation(surface_id, self.frequencies)
+            if rho is None:
+                return np.zeros_like(self.frequencies, dtype=complex)
 
-        return np.average(input_velocities, axis=0)
+            self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id, rho)
+            input_velocities = np.array(list(self.particle_velocity[component_label].values()), dtype=complex)
+
+            return np.average(input_velocities, axis=0)            
 
     def get_nodal_particle_velocity(self, node_id : int):
 
@@ -231,7 +235,11 @@ class PlotParticleVelocityFrequencyResponseInput(QDialog):
                     list_nodes.extend(surface_nodes)
                     surface_id = tag
 
-        self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id)
+        rho = self.model.get_fluid_density_for_particle_velocity_calculation(surface_id, self.frequencies)
+        if rho is None:
+            return np.zeros_like(self.frequencies, dtype=complex)
+        
+        self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id, rho)
 
         return self.particle_velocity[component_label][node_id]
 
