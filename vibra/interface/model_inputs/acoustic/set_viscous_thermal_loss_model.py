@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QComboBox, QDialog, QDoubleSpinBox, QFrame, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PyQt5.QtWidgets import QComboBox, QDialog, QDoubleSpinBox, QFrame, QLineEdit, QPushButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCloseEvent
 from PyQt5 import uic
@@ -100,6 +100,9 @@ class SetViscousThermalLossModel(QDialog):
         self.pushButton_plot_complex_fluid_density: QPushButton
         self.pushButton_plot_complex_speed_of_sound: QPushButton
 
+        # QSpinBox
+        self.spinBox_number_of_terms: QSpinBox
+
         # QTabWidget
         self.tabWidget_main: QTabWidget
 
@@ -143,7 +146,7 @@ class SetViscousThermalLossModel(QDialog):
         self.pushButton_plot_complex_speed_of_sound.setDisabled(state)
 
     def _config_widgets(self):
-        for i, w in enumerate([90, 60, 130, 130, 120]):
+        for i, w in enumerate([90, 60, 130, 120, 120]):
             self.treeWidget_viscous_thermal_model.setColumnWidth(i, w)
             self.treeWidget_viscous_thermal_model.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
@@ -267,12 +270,16 @@ class SetViscousThermalLossModel(QDialog):
         if section_index in [1, 2]:
             self.lineEdit_width_rectangular.setDisabled(True)
             if section_index == 2:
+                self.spinBox_number_of_terms.setDisabled(True)
                 self.lineEdit_width_rectangular.setText("2*a >> 2*b")
             else:
+                self.spinBox_number_of_terms.setEnabled(True)
                 height = self.lineEdit_height_rectangular.text()
                 self.lineEdit_width_rectangular.setText(height)
 
         else:
+
+            self.spinBox_number_of_terms.setEnabled(True)
             self.lineEdit_width_rectangular.setDisabled(False)
             if self.lineEdit_width_rectangular.text() == "2*a >> 2*b":
                 self.lineEdit_width_rectangular.setText("")
@@ -531,7 +538,8 @@ class SetViscousThermalLossModel(QDialog):
                           "formulation" : "Stinson model",
                           "section_type" : section_types[section_type],
                           "width" : width,
-                          "height" : height
+                          "height" : height,
+                          "number_of_terms" : self.spinBox_number_of_terms.value()
                           }
 
         else:

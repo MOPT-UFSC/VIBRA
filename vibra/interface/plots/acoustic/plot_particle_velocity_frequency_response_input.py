@@ -178,7 +178,7 @@ class PlotParticleVelocityFrequencyResponseInput(QDialog):
         def function_callback():
             
             selection_type = self.comboBox_selector_filter.currentIndex()
-            
+            logging.info("Processing particle velocity..." + ProgressStatus(15, 100))
 
             if selection_type == 0:
                 particle_velocity = self.get_surface_particle_velocity(selected_id)

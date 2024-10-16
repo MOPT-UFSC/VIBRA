@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>576</width>
-    <height>666</height>
+    <width>559</width>
+    <height>699</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -105,8 +105,8 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>556</width>
-           <height>542</height>
+           <width>539</width>
+           <height>575</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
@@ -661,8 +661,8 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                  <property name="spacing">
                   <number>6</number>
                  </property>
-                 <item row="1" column="1">
-                  <widget class="QLabel" name="label_3">
+                 <item row="2" column="1">
+                  <widget class="QLabel" name="label_2">
                    <property name="minimumSize">
                     <size>
                      <width>120</width>
@@ -681,7 +681,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                     </font>
                    </property>
                    <property name="text">
-                    <string>Duct height (2b):</string>
+                    <string>Duct width (2a):</string>
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -709,33 +709,6 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                    </property>
                    <property name="text">
                     <string>Duct area:</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="1">
-                  <widget class="QLabel" name="label_2">
-                   <property name="minimumSize">
-                    <size>
-                     <width>120</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>132</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>Duct width (2a):</string>
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -802,18 +775,18 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                    </property>
                   </widget>
                  </item>
-                 <item row="2" column="3">
-                  <widget class="QLineEdit" name="lineEdit_width_rectangular">
+                 <item row="1" column="1">
+                  <widget class="QLabel" name="label_3">
                    <property name="minimumSize">
                     <size>
-                     <width>0</width>
-                     <height>28</height>
+                     <width>120</width>
+                     <height>0</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
-                     <width>200</width>
-                     <height>28</height>
+                     <width>132</width>
+                     <height>16777215</height>
                     </size>
                    </property>
                    <property name="font">
@@ -821,26 +794,16 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                      <pointsize>10</pointsize>
                     </font>
                    </property>
+                   <property name="text">
+                    <string>Duct height (2b):</string>
+                   </property>
                    <property name="alignment">
-                    <set>Qt::AlignCenter</set>
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
                  <item row="2" column="0">
                   <spacer name="horizontalSpacer_3">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item row="2" column="6">
-                  <spacer name="horizontalSpacer_2">
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -879,6 +842,19 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                    </property>
                   </widget>
                  </item>
+                 <item row="2" column="6">
+                  <spacer name="horizontalSpacer_2">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
                  <item row="4" column="3">
                   <widget class="QLineEdit" name="lineEdit_area_rectangular">
                    <property name="enabled">
@@ -903,6 +879,54 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="3">
+                  <widget class="QLineEdit" name="lineEdit_width_rectangular">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>28</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>200</width>
+                     <height>28</height>
+                    </size>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="5">
+                  <widget class="QLabel" name="label_16">
+                   <property name="minimumSize">
+                    <size>
+                     <width>40</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>40</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>[m]</string>
                    </property>
                   </widget>
                  </item>
@@ -954,17 +978,17 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                    </property>
                   </widget>
                  </item>
-                 <item row="1" column="5">
-                  <widget class="QLabel" name="label_16">
+                 <item row="5" column="1">
+                  <widget class="QLabel" name="label_11">
                    <property name="minimumSize">
                     <size>
-                     <width>40</width>
+                     <width>120</width>
                      <height>0</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
-                     <width>40</width>
+                     <width>132</width>
                      <height>16777215</height>
                     </size>
                    </property>
@@ -974,7 +998,46 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                     </font>
                    </property>
                    <property name="text">
-                    <string>[m]</string>
+                    <string>Number of terms:</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="5" column="3">
+                  <widget class="QSpinBox" name="spinBox_number_of_terms">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>28</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>28</height>
+                    </size>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                   <property name="minimum">
+                    <number>1</number>
+                   </property>
+                   <property name="maximum">
+                    <number>1000</number>
+                   </property>
+                   <property name="singleStep">
+                    <number>5</number>
+                   </property>
+                   <property name="value">
+                    <number>200</number>
                    </property>
                   </widget>
                  </item>

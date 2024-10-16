@@ -75,6 +75,7 @@ class ViscousThermalLossModels:
 
         width = data["width"]
         height = data["height"]
+        number_of_terms = data["number_of_terms"]
         # area = width * height
 
         a = width / 2
@@ -82,10 +83,10 @@ class ViscousThermalLossModels:
 
         # EQUAÇÕES DOS DUTOS DE SEÇÃO RETANGULAR E/OU QUADRADA
  
-        n = np.arange(0, 101)        # contador da série ajustado para até 101
-        m = np.arange(0, 101)        # contador da série ajustado para até 101
-        a_n = (n + 0.5)*(np.pi / a)    # constante para os modos no duto
-        b_m = (m + 0.5)*(np.pi / b)    # constante para os modos no duto
+        n = np.arange(0, number_of_terms)
+        m = np.arange(0, number_of_terms)
+        a_n = (n + 0.5)*(np.pi / a)
+        b_m = (m + 0.5)*(np.pi / b)
 
         aux_rho = np.zeros(len(omega), dtype=complex)
         aux_comp = np.zeros(len(omega), dtype=complex)
