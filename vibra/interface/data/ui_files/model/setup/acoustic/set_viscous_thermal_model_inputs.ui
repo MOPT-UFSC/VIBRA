@@ -2039,6 +2039,27 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
   </layout>
  </widget>
  <tabstops>
+  <tabstop>scrollArea</tabstop>
+  <tabstop>comboBox_attribution_type</tabstop>
+  <tabstop>comboBox_filter_type</tabstop>
+  <tabstop>lineEdit_center_coordinates</tabstop>
+  <tabstop>doubleSpinBox_selection_radius</tabstop>
+  <tabstop>pushButton_selection_info</tabstop>
+  <tabstop>tabWidget_main</tabstop>
+  <tabstop>comboBox_section_type</tabstop>
+  <tabstop>lineEdit_height_rectangular</tabstop>
+  <tabstop>lineEdit_width_rectangular</tabstop>
+  <tabstop>lineEdit_area_rectangular</tabstop>
+  <tabstop>comboBox_formulation</tabstop>
+  <tabstop>lineEdit_diameter_circular</tabstop>
+  <tabstop>lineEdit_radius_circular</tabstop>
+  <tabstop>lineEdit_area_circular</tabstop>
+  <tabstop>treeWidget_viscous_thermal_model</tabstop>
+  <tabstop>pushButton_remove</tabstop>
+  <tabstop>pushButton_reset</tabstop>
+  <tabstop>pushButton_get_fluid</tabstop>
+  <tabstop>pushButton_plot_complex_fluid_density</tabstop>
+  <tabstop>pushButton_plot_complex_speed_of_sound</tabstop>
   <tabstop>pushButton_confirm</tabstop>
   <tabstop>pushButton_cancel</tabstop>
  </tabstops>

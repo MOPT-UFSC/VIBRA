@@ -40,7 +40,7 @@ class ViscousThermalLossModels:
                 if data["section_type"] in ["Rectangular duct", "Quadrangular duct"]:
                     rho_eff, C_eff = self.get_rectangular_section_effective_properties(omega, fluid, data)
 
-                if data["section_type"] in ["Narrow slit duct"]:
+                elif data["section_type"] in ["Narrow slit duct"]:
                     rho_eff, C_eff = self.get_narrow_slit_section_effective_properties(omega, fluid, data)
 
                 elif data["section_type"] in ["Circular duct"]:
@@ -57,7 +57,7 @@ class ViscousThermalLossModels:
                                                        "rho_eff" : rho_eff,
                                                        "C_eff" : C_eff   
                                                        }
-
+                
                 # data = np.array([np.arange(len(C_eff)), C_eff])
                 # np.savetxt("complex_sound.dat", data.T, delimiter=";")
 
@@ -77,11 +77,13 @@ class ViscousThermalLossModels:
         height = data["height"]
         # area = width * height
 
-        # EQUAÇÕES DOS DUTOS DE SEÇÃO RETANGULAR E/OU QUADRADA
         a = width / 2
         b = height / 2
-        n = np.arange(0, 501)        # contador da série ajustado para até 501
-        m = np.arange(0, 501)        # contador da série ajustado para até 501
+
+        # EQUAÇÕES DOS DUTOS DE SEÇÃO RETANGULAR E/OU QUADRADA
+ 
+        n = np.arange(0, 101)        # contador da série ajustado para até 101
+        m = np.arange(0, 101)        # contador da série ajustado para até 101
         a_n = (n + 0.5)*(np.pi / a)    # constante para os modos no duto
         b_m = (m + 0.5)*(np.pi / b)    # constante para os modos no duto
 
@@ -94,7 +96,7 @@ class ViscousThermalLossModels:
             sum_comp = 0.
             for n, an in enumerate(a_n):
                 sum_rho += sum(1 / (((an*b_m)**2)*(an**2 + b_m**2 + 1j*w*rho_0/mu)))
-                sum_comp += sum(1 / (((an*b_m)**2)*(an**2 + b_m**2 + 1j*w*Pr*rho_0/mu)))
+                sum_comp += sum(1 / (((an*b_m)**2)*(an**2 + b_m**2 + 1j*w*rho_0*Pr/mu)))
 
             aux_rho[i] = sum_rho
             aux_comp[i] = sum_comp
