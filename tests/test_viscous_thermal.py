@@ -136,7 +136,7 @@ def test_load_external_mesh_and_solve():
     narrow_slit_duct_data = get_viscous_thermal_model_data_for_narrow_slit_duct(0.003)
     model.set_viscous_thermal_model_data(narrow_slit_duct_data, volume=1)
 
-    # rectangular_duct_data = get_viscous_thermal_model_data_for_rectangular_duct(0.03, 0.003)
+    # rectangular_duct_data = get_viscous_thermal_model_data_for_rectangular_duct(0.03, 0.003, 200)
     # model.set_viscous_thermal_model_data(rectangular_duct_data, volume=1)
 
     major_duct_data = get_viscous_thermal_model_data_for_circular_duct(0.016)
@@ -380,13 +380,14 @@ def get_viscous_thermal_model_data_for_circular_duct(diameter: float):
 
     return data
 
-def get_viscous_thermal_model_data_for_rectangular_duct(width: float, height: float):
+def get_viscous_thermal_model_data_for_rectangular_duct(width: float, height: float, number_of_terms: int):
 
     data = {
             "formulation": "Stinson model",
             "section_type": "Rectangular duct",
             "width": width,
-            "height": height
+            "height": height,
+            "number_of_terms" : number_of_terms
             }
 
     return data
