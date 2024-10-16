@@ -168,15 +168,10 @@ class AcousticAssembler:
             if prop == property_label:
                 if not data["nodal_attribution"]:
 
-                    lrf_active, rho_eff_lrf, C_eff_lrf = self.model.is_lrf_eq_model_active(surface_id)
                     pm_active, rho_eff_pm, C_eff_pm = self.model.is_porous_material_model_active(surface_id)
-                    tv_active, rho_eff_tv, C_eff_tv = self.model.is_thermoviscous_model_active(surface_id)
+                    tv_active, rho_eff_tv, C_eff_tv = self.model.is_viscous_thermal_model_active(surface_id)
 
-                    if lrf_active:
-                        density = rho_eff_lrf
-                        speed_of_sound = C_eff_lrf
-
-                    elif pm_active:
+                    if pm_active:
                         density = rho_eff_pm
                         speed_of_sound = C_eff_pm
 
@@ -254,7 +249,7 @@ class AcousticAssembler:
 
         condition_1 = self.model.lrf_properties 
         condition_2 = self.model.porous_material_properties
-        condition_3 = self.model.thermoviscous_model_properties
+        condition_3 = self.model.viscous_thermal_model_properties
 
         if condition_1 or condition_2 or condition_3:
 
@@ -286,10 +281,10 @@ class AcousticAssembler:
                     self.den_K[el, :] = 1 / (rho_eff)
                     self.den_M[el, :] = 1 / (rho_eff * C_eff**2)
 
-                elif el in self.model.thermoviscous_model_properties.keys():
+                elif el in self.model.viscous_thermal_model_properties.keys():
 
-                    rho_eff = self.model.thermoviscous_model_properties[el]["rho_eff"]
-                    C_eff = self.model.thermoviscous_model_properties[el]["C_eff"]
+                    rho_eff = self.model.viscous_thermal_model_properties[el]["rho_eff"]
+                    C_eff = self.model.viscous_thermal_model_properties[el]["C_eff"]
 
                     self.den_K[el, :] = 1 / (rho_eff)
                     self.den_M[el, :] = 1 / (rho_eff * C_eff**2)
@@ -411,39 +406,6 @@ class AcousticAssembler:
                             acoustic_excitation[index] += complex_values / N
                         else:
                             acoustic_excitation[index] += complex_values
-
-            # elif property == "volume_velocity":
-
-            #     real_values = np.array(data["real_values"])
-            #     imag_values = np.array(data["imag_values"])
-            #     complex_values = real_values + 1j * imag_values
-            #     if complex_values.shape[0] == 1:
-            #         complex_values = complex_values * aux_ones
-
-            #     if data["nodal_attribution"]:
-
-            #         nodes = self.model.mesh.nodes_from_surfaces[surface_id]
-            #         N = len(nodes)
-                    
-            #         # # TODO: get the surface fluid property
-            #         # lrf_active, rho_eff_lrf, _ = self.model.is_lrf_eq_model_active(surface_id)
-            #         # pm_active, rho_eff_pm, _ = self.model.is_porous_material_model_active(surface_id)
-
-            #         # if lrf_active:
-            #         #     rho = rho_eff_lrf
-
-            #         # elif pm_active:
-            #         #     rho = rho_eff_pm
-
-            #         # else:
-            #         #     fluid = self.model.properties.get_fluid(surface=surface_id)
-            #         #     rho = fluid.fluid_density
-
-            #         for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
-            #             if data["averaged"]:
-            #                 acoustic_excitation[index] += complex_values / N
-            #             else:
-            #                 acoustic_excitation[index] += complex_values
 
             elif property == "surface_velocity":
 

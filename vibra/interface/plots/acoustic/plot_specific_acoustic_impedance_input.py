@@ -198,7 +198,11 @@ class PlotSpecificAcousticImpedanceInput(QDialog):
                 if tag == surface_id:
                     list_nodes.extend(surface_nodes)
 
-        self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id)
+        rho = self.model.get_fluid_density_for_particle_velocity_calculation(surface_id, self.frequencies)
+        if rho is None:
+            return np.zeros_like(self.frequencies, dtype=complex)
+
+        self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id, rho)
         particle_velocities = np.array(list(self.particle_velocity[component_label].values()), dtype=complex)
 
         node_ids = np.sort(list_nodes)
@@ -229,7 +233,11 @@ class PlotSpecificAcousticImpedanceInput(QDialog):
                     list_nodes.extend(surface_nodes)
                     surface_id = tag
 
-        self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id)
+        rho = self.model.get_fluid_density_for_particle_velocity_calculation(surface_id, self.frequencies)
+        if rho is None:
+            return np.zeros_like(self.frequencies, dtype=complex)
+
+        self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id, rho)
 
         particle_velocity = self.particle_velocity[component_label][node_id]
         pressure = self.solution[node_id, :]

@@ -20,7 +20,9 @@ class AnalysisFilter(QWidget):
         grid_main.setContentsMargins(0, 0, 0, 0)
         
         self.setLayout(grid_main)
-        self.setFixedSize(QSize(280, 70))
+        self.setMinimumWidth(300)
+        self.setMaximumWidth(360)
+        self.setFixedHeight(70)
 
     def initialize(self):
         """

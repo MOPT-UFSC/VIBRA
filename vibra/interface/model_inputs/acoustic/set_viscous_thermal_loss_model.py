@@ -5,7 +5,7 @@ from PyQt5 import uic
 
 from vibra import app, UI_DIR
 from vibra.engine.properties.fluid import Fluid
-from vibra.engine.dissipation_models.thermoviscous_loss_models import ThermoviscousLossModels
+from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
 from vibra.interface.mesh.mesher_inputs import MesherInputs
 from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input_simplified import SetFluidInputSimplified
 from vibra.interface.model_inputs.acoustic.get_sphere_selection_information import GetSphereSelectionInformation
@@ -21,11 +21,11 @@ import numpy as np
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class SetThermoviscousLossModel(QDialog):
+class SetViscousThermalLossModel(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/setup/acoustic/set_thermoviscous_model_inputs.ui"
+        ui_path = UI_DIR / "model/setup/acoustic/set_viscous_thermal_model_inputs.ui"
         uic.loadUi(ui_path, self)
 
         self.main_window = app().main_window
@@ -104,7 +104,7 @@ class SetThermoviscousLossModel(QDialog):
         self.tabWidget_main: QTabWidget
 
         # QTreeWidget
-        self.treeWidget_thermoviscous_model: QTreeWidget
+        self.treeWidget_viscous_thermal_model: QTreeWidget
 
     def _create_connections(self):
         #
@@ -128,8 +128,8 @@ class SetThermoviscousLossModel(QDialog):
         #
         self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
         #
-        self.treeWidget_thermoviscous_model.itemClicked.connect(self.on_click_item)
-        self.treeWidget_thermoviscous_model.itemDoubleClicked.connect(self.on_doubleclick_item)
+        self.treeWidget_viscous_thermal_model.itemClicked.connect(self.on_click_item)
+        self.treeWidget_viscous_thermal_model.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
         #
@@ -143,9 +143,9 @@ class SetThermoviscousLossModel(QDialog):
         self.pushButton_plot_complex_speed_of_sound.setDisabled(state)
 
     def _config_widgets(self):
-        for i, w in enumerate([90, 60, 140, 140, 120]):
-            self.treeWidget_thermoviscous_model.setColumnWidth(i, w)
-            self.treeWidget_thermoviscous_model.headerItem().setTextAlignment(i, Qt.AlignCenter)
+        for i, w in enumerate([90, 60, 130, 130, 120]):
+            self.treeWidget_viscous_thermal_model.setColumnWidth(i, w)
+            self.treeWidget_viscous_thermal_model.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def update_rectangular_duct_area(self):
         try:
@@ -173,9 +173,9 @@ class SetThermoviscousLossModel(QDialog):
             selection_id = int(key[1])
 
             if selection_type == "Volume":
-                self.properties._remove_volume_property("thermoviscous_model", selection_id)
+                self.properties._remove_volume_property("viscous_thermal_model", selection_id)
             else:
-                self.properties._remove_group_property("thermoviscous_model", selection_id)
+                self.properties._remove_group_property("viscous_thermal_model", selection_id)
 
             app().main_window.file.write_model_properties_in_file()
             self.pushButton_remove.setDisabled(True)
@@ -186,21 +186,21 @@ class SetThermoviscousLossModel(QDialog):
         volume_ids = list()
         for key, data in self.properties.volume_properties.items():
             property, volume_id = key
-            if property == "thermoviscous_model":
+            if property == "viscous_thermal_model":
                 volume_ids.append(volume_id)
 
         group_ids = list()
         for key, data in self.properties.group_properties.items():
             property, group_id = key
-            if property == "thermoviscous_model":
+            if property == "viscous_thermal_model":
                 group_ids.append(group_id)
 
         if volume_ids or group_ids:
 
             self.hide()
 
-            title = "Thermoviscous dissipation model resetting"
-            message = "Would you like to remove the thermoviscous dissipation effects from the model?"
+            title = "Viscous-thermal dissipation model resetting"
+            message = "Would you like to remove the Viscous-thermal dissipation effects from the model?"
 
             buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
             read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -211,10 +211,10 @@ class SetThermoviscousLossModel(QDialog):
             if read._continue:
 
                 for volume_id in volume_ids:
-                    self.properties._remove_volume_property("thermoviscous_model", volume_id)
+                    self.properties._remove_volume_property("viscous_thermal_model", volume_id)
 
                 for group_id in group_ids:
-                    self.properties._remove_group_property("thermoviscous_model", group_id)
+                    self.properties._remove_group_property("viscous_thermal_model", group_id)
 
                 app().main_window.file.write_model_properties_in_file()
                 self.load_info()
@@ -300,12 +300,12 @@ class SetThermoviscousLossModel(QDialog):
 
     def load_info(self):
 
-        self.treeWidget_thermoviscous_model.clear()
+        self.treeWidget_viscous_thermal_model.clear()
 
         for key, data in self.properties.volume_properties.items():
 
             property, volume_id = key
-            if property == "thermoviscous_model":
+            if property == "viscous_thermal_model":
 
                 section_type = ""
                 formulation = ""
@@ -323,12 +323,12 @@ class SetThermoviscousLossModel(QDialog):
                 for i in range(5):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-                self.treeWidget_thermoviscous_model.addTopLevelItem(new)
+                self.treeWidget_viscous_thermal_model.addTopLevelItem(new)
 
         for key, data in self.properties.group_properties.items():
 
             property, group_id = key
-            if property == "thermoviscous_model":
+            if property == "viscous_thermal_model":
                 
                 section_type = ""
                 formulation = ""
@@ -346,7 +346,7 @@ class SetThermoviscousLossModel(QDialog):
                 for i in range(5):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-                self.treeWidget_thermoviscous_model.addTopLevelItem(new)
+                self.treeWidget_viscous_thermal_model.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 
@@ -354,13 +354,13 @@ class SetThermoviscousLossModel(QDialog):
 
         for key, _ in self.properties.volume_properties.items():
             property, _ = key
-            if property == "thermoviscous_model":
+            if property == "viscous_thermal_model":
                 self.tabWidget_main.setTabVisible(2, True)
                 return
 
         for key, _ in self.properties.group_properties.items():
             property, _ = key
-            if property == "thermoviscous_model":
+            if property == "viscous_thermal_model":
                 self.tabWidget_main.setTabVisible(2, True)
                 return
 
@@ -379,7 +379,7 @@ class SetThermoviscousLossModel(QDialog):
         if volumes:
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selection_id.setText(text)
-            if self.comboBox_attribution_type.currentIndex() == 0:
+            if self.comboBox_attribution_type.currentIndex() != 1:
                 self.comboBox_attribution_type.setCurrentIndex(1)
             self.hide_sphere()
 
@@ -547,13 +547,13 @@ class SetThermoviscousLossModel(QDialog):
         else:
             formulation = "LRF model"
         
-        thermoviscous_model_data = {
+        viscous_thermal_model_data = {
                                     "formulation" : formulation,
                                     "section_type" : "Circular duct",
                                     "diameter" : diameter
                                     }
 
-        return thermoviscous_model_data
+        return viscous_thermal_model_data
 
     def attribute_callback(self):
 
@@ -579,9 +579,9 @@ class SetThermoviscousLossModel(QDialog):
 
                 for volume_id in volume_ids:
                     # surfaces_from_volume = self.mesh.surfaces_from_volumes[volume_id]
-                    self.project.set_thermoviscous_model(model_data, volume=volume_id)
+                    self.project.set_viscous_thermal_model(model_data, volume=volume_id)
 
-                print(f"The thermoviscous {model_data['formulation']} model for '{model_data['section_type']}' has been attributed to the volumes {volume_ids}.")
+                print(f"The viscous_thermal {model_data['formulation']} model for '{model_data['section_type']}' has been attributed to the volumes {volume_ids}.")
 
             elif attribute_type in [2, 3]:
 
@@ -601,9 +601,9 @@ class SetThermoviscousLossModel(QDialog):
                 model_data["averaged"] = averaged_selection
                 model_data["filter_type"] = filter_type
 
-                self.project.set_thermoviscous_model(model_data, group=group_id)
+                self.project.set_viscous_thermal_model(model_data, group=group_id)
 
-                print(f"The thermoviscous {model_data['formulation']} model for '{model_data['section_type']}' has been attributed to the group {group_id}.")
+                print(f"The viscous_thermal {model_data['formulation']} model for '{model_data['section_type']}' has been attributed to the group {group_id}.")
 
             app().main_window.file.write_model_properties_in_file()
             self.load_info()
@@ -649,7 +649,7 @@ class SetThermoviscousLossModel(QDialog):
         keys = list()
         for key in self.properties.group_properties.keys():
             property, group_id = key
-            if property == "thermoviscous_model":
+            if property == "viscous_thermal_model":
                 if group_id not in keys:
                     keys.append(group_id)
 
@@ -680,13 +680,13 @@ class SetThermoviscousLossModel(QDialog):
             group_properties = self.properties.group_properties.copy()
             for key, data in group_properties.items():
                 property, group_id = key
-                if property == "thermoviscous_model" and int(selected_id) == group_id:
+                if property == "viscous_thermal_model" and int(selected_id) == group_id:
                     return get_info(data)
 
             # volume_properties = self.properties.volume_properties.copy()
             # for key, data in volume_properties.items():
             #     property, volume_id = key
-            #     if property == "thermoviscous_model" and int(picked_id) == volume_id:
+            #     if property == "viscous_thermal_model" and int(picked_id) == volume_id:
             #         return get_info()
 
     def hide_sphere(self):
@@ -695,7 +695,7 @@ class SetThermoviscousLossModel(QDialog):
         mesh_widget = self.main_window.viewer_tabs.mesh_widget
         mesh_widget.clear_selection_spheres()
 
-    # Plot thermoviscous effective properties
+    # Plot viscous_thermal effective properties
 
     def get_fluid_callback(self):
         self.hide()
@@ -733,7 +733,7 @@ class SetThermoviscousLossModel(QDialog):
 
         omega = 2 * np.pi * freq
 
-        model = ThermoviscousLossModels(self)
+        model = ViscousThermalLossModels(self)
         # model.process_effective_properties(frequencies)
 
         tab_index = self.tabWidget_main.currentIndex()
@@ -762,7 +762,7 @@ class SetThermoviscousLossModel(QDialog):
 
         return None, None, None
 
-    def get_thermoviscous_loss_model(self):
+    def get_viscous_thermal_loss_model(self):
         tab_index = self.tabWidget_main.currentIndex()
         
         if tab_index == 0:
@@ -787,7 +787,7 @@ class SetThermoviscousLossModel(QDialog):
         if freq is None:
             return
 
-        tv_model = self.get_thermoviscous_loss_model()
+        tv_model = self.get_viscous_thermal_loss_model()
         self.call_plotter(freq, rho_eff, "complex fluid density", tv_model)
 
     def plot_complex_speed_of_sound(self):
@@ -800,7 +800,7 @@ class SetThermoviscousLossModel(QDialog):
         if freq is None:
             return
 
-        tv_model = self.get_thermoviscous_loss_model()
+        tv_model = self.get_viscous_thermal_loss_model()
         self.call_plotter(freq, C_eff, "complex speed of sound", tv_model)
 
     def join_model_data(self, x_data, y_data, label: str, section_label: str):

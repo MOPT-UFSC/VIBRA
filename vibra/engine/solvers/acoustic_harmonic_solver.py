@@ -101,7 +101,7 @@ class AcousticHarmonicSolver:
         
         condition_1 = self.assembler.model.lrf_properties 
         condition_2 = self.assembler.model.porous_material_properties
-        condition_3 = self.assembler.model.thermoviscous_model_properties
+        condition_3 = self.assembler.model.viscous_thermal_model_properties
 
         if condition_1 or condition_2 or condition_3:
             freq_dependent = True
@@ -261,7 +261,7 @@ class AcousticHarmonicSolver:
         return F_eq
 
 
-    def get_particle_velocity_from_surface(self, surface_id):
+    def get_particle_velocity_from_surface(self, surface_id: int, rho: float | np.ndarray):
         """ Process the nodal average particle velocity to selected surface.
             Returns the partcicle velocity in components x, y, z and normal
         """
@@ -273,8 +273,8 @@ class AcousticHarmonicSolver:
         solid_elements_connected_to_nodes = self.assembler.model.mesh.get_solid_elements_connected_to_nodes(node_ids)
         face_elements_connected_to_nodes = self.assembler.model.mesh.get_face_elements_connected_to_nodes(node_ids, surface_id)
 
-        fluid = self.assembler.model.properties.get_fluid(surface=surface_id)
-        rho = fluid.fluid_density
+        # fluid = self.assembler.model.properties.get_fluid(surface=surface_id)
+        # rho = fluid.fluid_density
 
         data_vp = dict()
         data_normals = dict()
@@ -388,11 +388,19 @@ class AcousticHarmonicSolver:
         Aeff_in = nodal_areas_in.reshape(-1, 1) * (A_in / np.sum(nodal_areas_in))
         Aeff_out = nodal_areas_out.reshape(-1, 1) * (A_out / np.sum(nodal_areas_out))
 
+        input_rho = self.assembler.model.get_fluid_density_for_particle_velocity_calculation(input_surface_id, self.frequencies)
+        if input_rho is None:
+            return np.zeros_like(self.frequencies, dtype=complex)
+
+        output_rho = self.assembler.model.get_fluid_density_for_particle_velocity_calculation(output_surface_id, self.frequencies)
+        if output_rho is None:
+            return np.zeros_like(self.frequencies, dtype=complex)
+
         logging.info("Processing the transmission loss..." + ProgressStatus(50, 100))
-        input_particle_velocities = self.get_particle_velocity_from_surface(input_surface_id)
+        input_particle_velocities = self.get_particle_velocity_from_surface(input_surface_id, input_rho)
 
         logging.info("Processing the transmission loss..." + ProgressStatus(90, 100))
-        output_particle_velocities = self.get_particle_velocity_from_surface(output_surface_id)
+        output_particle_velocities = self.get_particle_velocity_from_surface(output_surface_id, output_rho)
 
         # Transmission loss
         surf_velocity = self.assembler.model.properties.get_surface_velocity(input_surface_id)

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>576</width>
-    <height>660</height>
+    <height>666</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -58,7 +58,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Thermoviscous loss models</string>
+         <string>Viscous-thermal loss models</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -106,7 +106,7 @@
            <x>0</x>
            <y>0</y>
            <width>556</width>
-           <height>536</height>
+           <height>542</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
@@ -606,7 +606,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
             <property name="maximumSize">
              <size>
               <width>16777215</width>
-              <height>190</height>
+              <height>16777215</height>
              </size>
             </property>
             <property name="font">
@@ -1353,22 +1353,22 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
              </attribute>
              <layout class="QGridLayout" name="gridLayout_16">
               <property name="leftMargin">
-               <number>4</number>
+               <number>6</number>
               </property>
               <property name="topMargin">
-               <number>4</number>
+               <number>6</number>
               </property>
               <property name="rightMargin">
-               <number>4</number>
+               <number>6</number>
               </property>
               <property name="bottomMargin">
-               <number>4</number>
+               <number>6</number>
               </property>
               <property name="spacing">
-               <number>4</number>
+               <number>6</number>
               </property>
               <item row="0" column="0">
-               <widget class="QTreeWidget" name="treeWidget_thermoviscous_model">
+               <widget class="QTreeWidget" name="treeWidget_viscous_thermal_model">
                 <property name="minimumSize">
                  <size>
                   <width>320</width>
@@ -1378,7 +1378,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
-                  <height>200</height>
+                  <height>16777215</height>
                  </size>
                 </property>
                 <property name="font">
@@ -2029,7 +2029,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
          </font>
         </property>
         <property name="text">
-         <string>Cancel</string>
+         <string>Exit</string>
         </property>
        </widget>
       </item>

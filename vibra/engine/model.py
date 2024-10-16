@@ -10,7 +10,7 @@ from vibra import app
 from vibra.interface.loading_bar import load_function
 from vibra.engine.dissipation_models.low_reduced_frequency_model import LowReducedFrequencyModel
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
-from vibra.engine.dissipation_models.thermoviscous_loss_models import ThermoviscousLossModels
+from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.errors import IncompleteSetupError
@@ -51,7 +51,7 @@ class Model:
     def reset_dissipation_model_properties(self):
         self.lrf_properties = dict()
         self.porous_material_properties = dict()
-        self.thermoviscous_model_properties = dict()
+        self.viscous_thermal_model_properties = dict()
 
     def set_geometry_path(self, path : str):
         self.geometry_path = path
@@ -169,102 +169,30 @@ class Model:
         global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
         return np.array(global_dofs.flatten(), dtype=int)
 
-    # def get_lrf_eq_data(self, modal=False):
-    #     """ """
+    def get_fluid_density_for_particle_velocity_calculation(self, surface_id: int, frequencies: np.ndarray):
 
-    #     self.lrf_eq_data = dict()
-    #     self.lrf_properties = dict()
+        rho = None
+        volume_ids = self.mesh.volume_from_surface[surface_id]
 
-    #     if modal:
-    #         return
+        if len(volume_ids) == 1:
 
-    #     for key, data in self.properties.group_properties.items():
-    #         property, group_id = key
-    #         if property == "lrf_eq_model":
+            for key in self.properties.volume_properties.keys():
+                property, volume_id = key
+                if volume_id == volume_ids[0]:
+                    if property == "viscous_thermal_model":
+                        vt_model = ViscousThermalLossModels(self)
+                        vt_model.process_effective_properties(frequencies)
+                        return vt_model.effective_properties[volume_id]["rho_eff"]
 
-    #             d = data["diameter"]
-    #             surface_ids = data["surface_ids"]
-    #             selection_radius = data["selection_radius"]
-    #             averaged = data["averaged"]
-    #             filter_type = data["filter_type"]
+                    elif property == "porous_material_model":
+                        pm_model = PorousMaterialModels(self)
+                        pm_model.process_effective_properties(frequencies)
+                        return pm_model.effective_properties[volume_id]["rho_eff"]
 
-    #             post_process = load_function(self.mesh.get_elements_and_nodes_from_sphere, app().main_window)
-    #             post_process(   surface_ids, 
-    #                             selection_radius,
-    #                             averaged = averaged,
-    #                             filter_type = filter_type   )
+            fluid = self.properties.get_fluid(surface=surface_id)
+            rho = fluid.fluid_density
 
-    #             selected_elements = self.mesh.selected_elements
-
-    #             for element_id in selected_elements:
-    #                 #
-    #                 fluid, _ = self.get_fluid(element=element_id)
-    #                 c_0, rho_0, mu, gamma, Pr, P_0 = fluid.get_lrf_properties()
-    #                 properties = [d, c_0, rho_0, mu, gamma, Pr, P_0]
-    #                 #
-    #                 if element_id not in list(self.lrf_eq_data.keys()):
-    #                     #
-    #                     self.lrf_eq_data[element_id] = properties
-        
-    #     for key, data in self.properties.volume_properties.items():
-    #         property, volume_id = key
-    #         if property == "lrf_eq_model":
-    #             #
-    #             d = data["diameter"]
-    #             fluid, _ = self.get_fluid(volume=volume_id)
-    #             c_0, rho_0, mu, gamma, Pr, P_0 = fluid.get_lrf_properties()
-    #             #
-    #             properties = [d, c_0, rho_0, mu, gamma, Pr, P_0]
-    #             self.set_lrf_eq_data([volume_id], properties)
-        
-    #     return self.lrf_eq_data
-
-    # def set_lrf_eq_data(self, volume_ids, properties):
-    #     """ """
-    #     if isinstance(volume_ids, int):
-    #         volume_ids = [volume_ids]
-    #     for volume_id in volume_ids:
-    #         for element_id in self.mesh.elements_from_volume[volume_id]:
-    #             self.lrf_eq_data[element_id] = properties
-
-    # def process_lrf_properties(self, frequencies):
-    #     """ """
-
-    #     if frequencies is None:
-    #         return dict()
-
-    #     logging.info( "Processing lrf properties (2/2)..." + ProgressStatus(20, 100))
-        
-    #     aux = defaultdict(list)
-    #     self.lrf_properties = dict()
-    #     if self.lrf_eq_data:
-
-    #         if float(0) in frequencies:
-    #             freqs = frequencies[1:]
-    #         else:
-    #             freqs = frequencies
-            
-    #         for element_index, parameters in self.lrf_eq_data.items():
-    #             aux[str(parameters)].append(element_index)
-            
-    #         for str_parameters, element_indexes in aux.items():
-    #             parameters = [float(str_parameter) for str_parameter in str_parameters[1:-1].split(",")]
-    #             diameter, c_local, rho_local, mu, gamma, Pr, pressure = parameters  
-                
-    #             omegas = 2 * (np.pi) * freqs
-    #             s = (diameter/2) * ((omegas*rho_local/mu)**(1/2))
-
-    #             rho_ef = -rho_local * (jv(0, (1j**(3/2))*s)) / (jv(2, (1j**(3/2))*s))
-    #             K0_ef = (pressure*gamma) / (gamma + (gamma - 1) * jv(2, (1j**(3/2))*s*(Pr**(1/2))) / jv(0, (1j**(3/2))*s*(Pr**(1/2))))
-    #             c_ef = np.sqrt(K0_ef / rho_ef)
-
-    #             if float(0) in frequencies:
-    #                 rho_ef = np.insert(rho_ef, 0, rho_local)
-    #                 c_ef = np.insert(c_ef, 0, c_local)      
-    #             #
-    #             for element_index in element_indexes:
-    #                 self.lrf_properties[element_index] = {  "rho_eff" : rho_ef,
-    #                                                         "C_eff" : c_ef   }
+        return rho
 
     def process_lrf_properties(self, frequencies):
 
@@ -275,26 +203,13 @@ class Model:
         for element_id, data in model.low_reduced_frequency_properties.items():
             self.lrf_properties[element_id] = data
 
-    def is_lrf_eq_model_active(self, surface_id):
-        
-        _volume_id = self.mesh.volume_from_surface[surface_id]
-        for key, _ in self.properties.volume_properties.items():
-            prop, volume_id = key
-            if prop == "lrf_eq_model" and volume_id == _volume_id[0]:
-                elements = self.mesh.elements_from_volume[volume_id]
-                rho_eff = self.lrf_properties[elements[0]]["rho_eff"]
-                C_eff = self.lrf_properties[elements[0]]["C_eff"]
-                return True, rho_eff, C_eff
-
-        return False, None, None
-
     def process_porous_material_properties(self, frequencies):
 
         model = PorousMaterialModels(self)
         model.process_effective_properties(frequencies)
 
         self.porous_material_properties = dict()
-        for volume_id, data in model.porous_material_model.items():
+        for volume_id, data in model.effective_properties.items():
             for element_id in self.mesh.elements_from_volume[volume_id]:
                 self.porous_material_properties[element_id] = data
             # print(len(self.mesh.elements_from_volume[volume_id]))
@@ -316,30 +231,30 @@ class Model:
 
         return False, None, None
 
-    def process_thermoviscous_model_properties(self, frequencies):
+    def process_viscous_thermal_model_properties(self, frequencies):
 
-        model = ThermoviscousLossModels(self)
+        model = ViscousThermalLossModels(self)
         model.process_effective_properties(frequencies)
 
-        self.thermoviscous_model_properties = dict()
-        for volume_id, data in model.thermoviscous_model.items():
+        self.viscous_thermal_model_properties = dict()
+        for volume_id, data in model.effective_properties.items():
             for element_id in self.mesh.elements_from_volume[volume_id]:
-                self.thermoviscous_model_properties[element_id] = data
+                self.viscous_thermal_model_properties[element_id] = data
             # print(len(self.mesh.elements_from_volume[volume_id]))
 
-    def is_thermoviscous_model_active(self, surface_id):
+    def is_viscous_thermal_model_active(self, surface_id):
 
         for key, data in self.properties.volume_properties.items():
             prop, volume_id = key
-            if prop == "thermoviscous_model":
+            if prop == "viscous_thermal_model":
 
                 if volume_id in self.mesh.surfaces_from_volumes.keys():
                     surfaces_from_volume = self.mesh.surfaces_from_volumes[volume_id]
 
                     if surface_id in surfaces_from_volume:
                         elements = self.mesh.elements_from_volume[volume_id]
-                        rho_eff = self.thermoviscous_model_properties[elements[0]]["rho_eff"]
-                        C_eff = self.thermoviscous_model_properties[elements[0]]["C_eff"]
+                        rho_eff = self.viscous_thermal_model_properties[elements[0]]["rho_eff"]
+                        C_eff = self.viscous_thermal_model_properties[elements[0]]["C_eff"]
                         return True, rho_eff, C_eff
 
         return False, None, None
@@ -351,8 +266,8 @@ class Model:
     def set_porous_material_model_data(self, data, surface=None, volume=None):
         self.properties.set_porous_material_model_data(data, surface=surface, volume=volume)
 
-    def set_thermoviscous_model_data(self, data, group=None, volume=None):
-        self.properties._set_property("thermoviscous_model", data, group=group, volume=volume)
+    def set_viscous_thermal_model_data(self, data, group=None, volume=None):
+        self.properties._set_property("viscous_thermal_model", data, group=group, volume=volume)
 
     # def set_lrf_eq_model_data(self, data, group=None, volume=None):
     #     self.properties.set_lrf_eq_model_data(data, group=group, volume=volume)

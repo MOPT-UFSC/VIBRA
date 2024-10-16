@@ -440,7 +440,7 @@ class SetPorousMaterialModel(QDialog):
             return None
         return out
 
-    # Plot thermoviscous effective properties
+    # Plot viscous-thermal effective properties
 
     def get_fluid_callback(self):
         self.hide()
@@ -479,7 +479,6 @@ class SetPorousMaterialModel(QDialog):
         omega = 2 * np.pi * freq
 
         model = PorousMaterialModels(self)
-        # model.process_effective_properties(frequencies)
 
         tab_index = self.tabWidget_main.currentIndex()
 

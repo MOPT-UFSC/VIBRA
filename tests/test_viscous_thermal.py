@@ -133,8 +133,8 @@ def test_load_external_mesh_and_solve():
 
     # Configure the viscous-thermal models
 
-    # narrow_slit_duct_data = get_viscous_thermal_model_data_for_narrow_slit_duct(0.003)
-    # model.set_viscous_thermal_model_data(narrow_slit_duct_data, volume=1)
+    narrow_slit_duct_data = get_viscous_thermal_model_data_for_narrow_slit_duct(0.003)
+    model.set_viscous_thermal_model_data(narrow_slit_duct_data, volume=1)
 
     major_duct_data = get_viscous_thermal_model_data_for_circular_duct(0.016)
     model.set_viscous_thermal_model_data(major_duct_data, volume=2)
@@ -247,10 +247,6 @@ def test_load_external_mesh_and_solve():
 
         title = f"Harmonic response at {output_ns}"
 
-        # abs_diff = np.max(np.abs((nodal_solution-results_ref)/results_ref))
-        # print(f"Deviation: {100*abs_diff}")
-        # assert abs_diff < 1e-4
-
         fig1, ax1 = plt.subplots()
         ax1.semilogy(frequencies, np.abs(nodal_solution), 'r', label='VIBRA')
         ax1.semilogy(freq_ref, np.abs(results_ref), 'k--', label='ANSYS')
@@ -355,55 +351,19 @@ def test_load_external_mesh_and_solve():
         ax9.grid()
         ax9.legend()
 
-        # # Sound intensity at input face node
+        # Plot the transmission loss between input and output faces
 
-        # x_data_WB = velocity_at_node_4978[:, 0]
-        # Vx_4978_WB = velocity_at_node_4978[:, 1] + 1j*velocity_at_node_4978[:, 2]
-        # P_4978_WB = pressure_at_node_4978[:, 1] + 1j*pressure_at_node_4978[:, 2]
-
-        # sound_int = np.real(solution[4978-1, :] * np.conj(particle_velocity[4978-1][0, :])) / 2
-        # y_data_WB = np.real(P_4978_WB * np.conj(Vx_4978_WB)) / 2
-
-        # fig10, ax10 = plt.subplots()
-        # title = "Sound intensity at node 4978"
-        # ax10.plot(frequencies, sound_int, 'r', label='VIBRA')
-        # ax10.plot(x_data_WB, y_data_WB, 'k--', label='ANSYS')
-        # ax10.set_xlabel('Frequency [Hz]')
-        # ax10.set_ylabel(f'Sound intensity [Pa.m/s] - {type_label}')
-        # ax10.set_title(title)
-        # ax10.grid()
-        # ax10.legend()
-
-        # # Sound intensity at output face node
-
-        # x_data_WB = velocity_at_node_4885[:, 0]
-        # Vx_4885_WB = velocity_at_node_4885[:, 1] + 1j*velocity_at_node_4885[:, 2]
-        # P_4885_WB = pressure_at_node_4885[:, 1] + 1j*pressure_at_node_4885[:, 2]
-
-        # sound_int = np.real(solution[4885-1, :] * np.conj(particle_velocity[4885-1][0, :])) / 2
-        # y_data_WB = np.real(P_4885_WB * np.conj(Vx_4885_WB)) / 2
-
-        # fig11, ax11 = plt.subplots()
-        # title = "Sound intensity at node 4885"
-        # ax11.plot(frequencies, sound_int, 'r', label='VIBRA')
-        # ax11.plot(x_data_WB, y_data_WB, 'k--', label='ANSYS')
-        # ax11.set_xlabel('Frequency [Hz]')
-        # ax11.set_ylabel(f'Sound intensity [Pa.m/s] - {type_label}')
-        # ax11.set_title(title)
-        # ax11.grid()
-        # ax11.legend()
-
-        fig12, ax12 = plt.subplots()
+        fig10, ax10 = plt.subplots()
         title = "Transmission loss"
         x_data_WB = TL_data[:, 0]
         y_data_WB = TL_data[:, 1]
-        ax12.plot(freq_TL, TL_model, 'r', label='VIBRA')
-        ax12.plot(x_data_WB, data_type(y_data_WB), 'k--', label='ANSYS')
-        ax12.set_xlabel('Frequency [Hz]')
-        ax12.set_ylabel(f'Transmission loss [dB] - {type_label}')
-        ax12.set_title(title)
-        ax12.grid()
-        ax12.legend()
+        ax10.plot(freq_TL, TL_model, 'r', label='VIBRA')
+        ax10.plot(x_data_WB, data_type(y_data_WB), 'k--', label='ANSYS')
+        ax10.set_xlabel('Frequency [Hz]')
+        ax10.set_ylabel(f'Transmission loss [dB] - {type_label}')
+        ax10.set_title(title)
+        ax10.grid()
+        ax10.legend()
 
         plt.show()
 
@@ -430,8 +390,8 @@ def get_viscous_thermal_model_data_for_narrow_slit_duct(height: float):
 def get_external_results():
 
     imported_results = dict()
-    # results_path = f"validation/data/viscous_thermal/results/complete_model_results.xlsx"
-    results_path = f"validation/data/viscous_thermal/results/circular_ducts_results.xlsx"
+    results_path = f"validation/data/viscous_thermal/results/complete_model_results.xlsx"
+    # results_path = f"validation/data/viscous_thermal/results/circular_ducts_results.xlsx"
     # results_path = f"validation/data/viscous_thermal/results/only_fluid_results.xlsx"
 
     if not os.path.exists(results_path):
