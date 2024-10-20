@@ -116,8 +116,24 @@ class StatusBar(QStatusBar):
         self.solid_elements_label.setText(f"Solid elements: {solid_elements}")
         self.reset_mesh_info_visibility(key=True)
 
-    def update_geometry_information(self):
-        points, curves, surfaces, volumes = self.main_window.project.model.mesh.get_geometry_info()
+    def update_geometry_information(self, geometry_info: dict):
+
+        points = geometry_info.get("points", "--")
+        if isinstance(points, list):
+            points = len(points)
+
+        curves = geometry_info.get("curves", "--")
+        if isinstance(curves, list):
+            curves = len(curves)
+
+        surfaces = geometry_info.get("surfaces", "--")
+        if isinstance(surfaces, list):
+            surfaces = len(surfaces)
+
+        volumes = geometry_info.get("volumes", "--")
+        if isinstance(volumes, list):
+            volumes = len(volumes)
+
         self.points_label.setText(f"Points: {points}")
         self.curves_label.setText(f"Curves: {curves}")
         self.surfaces_label.setText(f"Faces: {surfaces}")

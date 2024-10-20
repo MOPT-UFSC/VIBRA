@@ -182,8 +182,8 @@ class MainWindow(QMainWindow):
     def update_mesh_information(self, nodes, face_elements, solid_elements):
         self.status_bar.update_mesh_information(nodes, face_elements, solid_elements)
 
-    def update_geometry_information(self):
-        self.status_bar.update_geometry_information()
+    def update_geometry_information(self, geometry_info: dict):
+        self.status_bar.update_geometry_information(geometry_info)
 
     def show_hide_section_plane_callback(self, option):
         if option:

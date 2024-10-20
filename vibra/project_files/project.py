@@ -212,7 +212,6 @@ class Project:
         self.structural_assembler.set_element_formulation(element)
 
     def solve_acoustic_modal_analysis(self):
-        # self.model.get_lrf_eq_data(modal=True)
         self.model.reset_dissipation_model_properties()
         self.acoustic_assembler.process_assemble()
         self.acoustic_modal_solver.solve()
@@ -226,7 +225,6 @@ class Project:
         app().main_window.advanced_results_menu.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_acoustic_harmonic_analysis(self):
-        # self.model.get_lrf_eq_data()
         self.model.reset_dissipation_model_properties()
         self.model.process_lrf_properties(self.analysis_data["frequencies"])
         self.model.process_porous_material_properties(self.analysis_data["frequencies"])

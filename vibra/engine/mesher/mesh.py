@@ -37,13 +37,16 @@ class Mesh:
         self.reset_variables()
 
     def reset_variables(self):
+
+        # self.dimension = 0
         self.reordering = None
-        self.dimension = 0
         self.element_type = DEFAULT_ELEMENT_TYPE
         self.nodal_coordinates = np.array([])
         self.lines_connectivity = np.array([])
         self.faces_connectivity = np.array([])
         self.solids_connectivity = np.array([])
+
+        self.geometry_information = defaultdict(list)
 
         self.nodes_from_points = dict()
         self.nodes_from_lines = dict()
@@ -87,7 +90,7 @@ class Mesh:
         minimum_element_size: float = 30.0,
         maximum_element_size: float = 30.0,
         element_type: ElementType = DEFAULT_ELEMENT_TYPE,
-        geometry_tolerance: float = 1e-6,
+        geometry_tolerance: float = 1e-8,
         size_factor: float = 0.5,
         dimension: int = 3,
         threads: int = 1,
@@ -130,7 +133,7 @@ class Mesh:
                     minimum_element_size: float = 30.0,
                     maximum_element_size: float = 30.0,
                     element_type: ElementType = DEFAULT_ELEMENT_TYPE,
-                    geometry_tolerance: float = 1e-6,
+                    geometry_tolerance: float = 1e-8,
                     size_factor: float = 0.50,
                     dimension: int = 3,
                     threads: int = 4,
@@ -178,8 +181,9 @@ class Mesh:
         #     # gmsh.open(str(path))
 
         gmsh.model.occ.synchronize()
+        self.get_geometry_info()
 
-        self.dimension = min(dimension, gmsh.model.getDimension())
+        # self.dimension = min(dimension, gmsh.model.getDimension())
         self.element_type = element_type
 
         if self.mesh_connection:
@@ -188,11 +192,12 @@ class Mesh:
         try:
 
             logging.info("Generating mesh..." + ProgressStatus(25, 100))
-            gmsh.model.mesh.generate(dim=element_type.dimensions)
-        
+            # gmsh.model.mesh.generate(dim=element_type.dimensions)
+            gmsh.model.mesh.generate(dim=dimension)
+
         except:
             gmsh.finalize()
-        
+
         gmsh.model.mesh.removeDuplicateNodes()
 
         logging.info("Post-processing mesh..." + ProgressStatus(70, 100))
@@ -650,11 +655,11 @@ class Mesh:
 
 
     def get_geometry_info(self):
-        points = len(self.nodes_from_points)
-        lines = len(self.nodes_from_lines)
-        surfaces = len(self.nodes_from_surfaces)
-        volumes = len(self.nodes_from_volumes)
-        return points, lines, surfaces, volumes
+        self.geometry_information.clear()
+        labels = ["points", "curves", "surfaces", "volumes"]
+        for dim, tag in gmsh.model.getEntities():
+            label = labels[dim]
+            self.geometry_information[label].append(tag)
 
 
     def get_model_areas(self, path):
