@@ -17,5 +17,7 @@ UI_DIR = VIBRA_DIR / "interface/data/ui_files/"
 SYMBOLS_DIR = VIBRA_DIR / "interface/data/symbols/"
 EXAMPLES_DIR = VIBRA_DIR / "interface/data/examples/"
 
+USER_PATH = Path().home()
+
 def app() -> "Application":
     return QApplication.instance()
