@@ -55,6 +55,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
 
         self.create_axes()
         self.create_color_bar()
+        self.create_scale_bar()
         self.update_frequencies()
         self.update_plot()
 

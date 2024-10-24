@@ -959,6 +959,7 @@ class Mesh:
             elif isinstance(selected_ids, (tuple, np.ndarray)):
                 list_ids = list(selected_ids)
 
+            all_ids = list()
             if selection == "nodes":
                 all_ids = list(self.nodal_coordinates[:, 0])
 
@@ -969,13 +970,16 @@ class Mesh:
                 all_ids = list(self.solids_connectivity[:, 0])
 
             elif selection == "lines":
-                all_ids = list(self.nodes_from_lines.keys())
+                if "curves" in self.geometry_information.keys():
+                    all_ids = self.geometry_information["curves"]
 
             elif selection == "surfaces":
-                all_ids = list(self.nodes_from_surfaces.keys())   
-      
+                if selection in self.geometry_information.keys():
+                    all_ids = self.geometry_information["surfaces"]
+
             elif selection == "volumes":
-                all_ids = list(self.nodes_from_volumes.keys())
+                if selection in self.geometry_information.keys():
+                    all_ids = self.geometry_information["volumes"]
 
             else:
                 return
@@ -1141,7 +1145,7 @@ class Mesh:
 
             elif isinstance(selected_ids, (tuple, np.ndarray)):
                 list_ids = list(selected_ids)
-            
+
             volume_ids = self.nodes_from_volumes.keys()
             _size = len(volume_ids)
 

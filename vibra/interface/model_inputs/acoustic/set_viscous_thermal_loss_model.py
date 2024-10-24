@@ -68,9 +68,11 @@ class SetViscousThermalLossModel(QDialog):
         self.comboBox_section_type: QComboBox
         self.comboBox_formulation: QComboBox
         self.comboBox_filter_type: QComboBox
+        self.comboBox_plot_type: QComboBox
 
         # QDoubleSpin
         self.doubleSpinBox_selection_radius: QDoubleSpinBox
+        self.doubleSpinBox_evaluated_depth: QDoubleSpinBox
 
         # QFrame
         self.frame_fluid_info: QFrame
@@ -97,8 +99,7 @@ class SetViscousThermalLossModel(QDialog):
         self.pushButton_reset: QPushButton
         self.pushButton_selection_info: QPushButton
         self.pushButton_get_fluid: QPushButton
-        self.pushButton_plot_complex_fluid_density: QPushButton
-        self.pushButton_plot_complex_speed_of_sound: QPushButton
+        self.pushButton_plot_data: QPushButton
 
         # QSpinBox
         self.spinBox_number_of_terms: QSpinBox
@@ -113,6 +114,7 @@ class SetViscousThermalLossModel(QDialog):
         #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         self.comboBox_section_type.currentIndexChanged.connect(self.rectangular_section_type_callback)
+        self.comboBox_plot_type.currentIndexChanged.connect(self.plot_type_callback)
         #
         self.doubleSpinBox_selection_radius.valueChanged.connect(self.call_sphere_plotter)
         #
@@ -126,8 +128,7 @@ class SetViscousThermalLossModel(QDialog):
         self.pushButton_reset.clicked.connect(self.reset_callback)
         self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
         self.pushButton_selection_info.clicked.connect(self.get_selection_information)
-        self.pushButton_plot_complex_fluid_density.clicked.connect(self.plot_complex_fluid_density)
-        self.pushButton_plot_complex_speed_of_sound.clicked.connect(self.plot_complex_speed_of_sound)
+        self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
         #
@@ -142,8 +143,15 @@ class SetViscousThermalLossModel(QDialog):
 
     def update_plot_buttons_access(self):
         state = self.selected_fluid is None
-        self.pushButton_plot_complex_fluid_density.setDisabled(state)
-        self.pushButton_plot_complex_speed_of_sound.setDisabled(state)
+        self.comboBox_plot_type.setDisabled(state)
+        self.pushButton_plot_data.setDisabled(state)
+        self.plot_type_callback()
+
+    def plot_type_callback(self):
+        if self.comboBox_plot_type.currentIndex() < 2:
+            self.doubleSpinBox_evaluated_depth.setDisabled(True)
+        else:
+            self.doubleSpinBox_evaluated_depth.setDisabled(False)
 
     def _config_widgets(self):
         for i, w in enumerate([90, 60, 130, 120, 120]):
@@ -507,13 +515,6 @@ class SetViscousThermalLossModel(QDialog):
                 self.mesher = None
                 return True
 
-    def check_selected_bodies(self):
-        lineEdit = self.lineEdit_selection_id.text()
-        self.stop, self.volume_ids = self.mesh.check_input_volume_id(lineEdit)
-        if self.stop:
-            self.lineEdit_selection_id.setFocus()
-            return True
-        
     def get_rectangular_duct_inputs(self):
 
         section_type = self.comboBox_section_type.currentIndex()
@@ -585,17 +586,20 @@ class SetViscousThermalLossModel(QDialog):
 
             attribute_type = self.comboBox_attribution_type.currentIndex()
             if attribute_type in [0, 1]:
-
+                
+                volume_ids = list()
                 if attribute_type == 0:
-                    volume_ids = list(self.mesh.nodes_from_volumes.keys())
-    
+                    if "volumes" in self.mesh.geometry_information.keys():
+                        volume_ids = self.mesh.geometry_information["volumes"]
+
                 elif attribute_type == 1:
-                    if self.check_selected_bodies():
-                        return
-                    volume_ids = self.volume_ids
+                    str_volume_ids = self.lineEdit_selection_id.text()
+                    stop, volume_ids = self.mesh.check_selected_ids(str_volume_ids, selection = "volumes", single_id = False)
+                    if stop:
+                        self.lineEdit_selection_id.setFocus()
+                        return True
 
                 for volume_id in volume_ids:
-                    # surfaces_from_volume = self.mesh.surfaces_from_volumes[volume_id]
                     self.project.set_viscous_thermal_model(model_data, volume=volume_id)
 
                 print(f"The viscous_thermal {model_data['formulation']} model for '{model_data['section_type']}' has been attributed to the volumes {volume_ids}.")
@@ -624,7 +628,6 @@ class SetViscousThermalLossModel(QDialog):
 
             app().main_window.file.write_model_properties_in_file()
             self.load_info()
-            # self.close()
 
     def check_inputs(self, lineEdit, label, _float=True):
 
@@ -733,6 +736,7 @@ class SetViscousThermalLossModel(QDialog):
 
     def get_effective_properties(self, fluid):
 
+        frequencies = None
         analysis_data = app().main_window.project.analysis_data
         if isinstance(analysis_data, dict):
             frequencies = analysis_data.get("frequencies", None)
@@ -775,9 +779,12 @@ class SetViscousThermalLossModel(QDialog):
                 else:
                     rho_eff, C_eff = model.get_circular_section_effective_properties_for_LRF_model(omega, fluid, tv_data)
 
-            return freq, rho_eff, C_eff
+            k_cr = omega / C_eff
 
-        return None, None, None
+            return freq, rho_eff, C_eff, k_cr
+            # return freq, rho_eff, C_eff
+
+        return None, None, None, None
 
     def get_viscous_thermal_loss_model(self):
         tab_index = self.tabWidget_main.currentIndex()
@@ -794,46 +801,110 @@ class SetViscousThermalLossModel(QDialog):
         elif tab_index == 1:
             return "Circular duct"
 
-    def plot_complex_fluid_density(self):
+    def plot_data_callback(self):
+        plot_key = self.comboBox_plot_type.currentIndex()
+        if plot_key == 0:
+            self.plot_effective_fluid_density()
+        elif plot_key == 1:
+            self.plot_effective_speed_of_sound()
+        elif plot_key == 2:
+            self.plot_surface_impedance()
+        else:
+            self.plot_absorption_coefficient()
+
+    def plot_effective_fluid_density(self):
 
         if self.selected_fluid is None:
             self.get_fluid_callback()
 
-        freq, rho_eff, _ = self.get_effective_properties(self.selected_fluid)
+        freq, rho_eff, _, _ = self.get_effective_properties(self.selected_fluid)
 
         if freq is None:
             return
 
         tv_model = self.get_viscous_thermal_loss_model()
-        self.call_plotter(freq, rho_eff, "complex fluid density", tv_model)
+        self.call_plotter(freq, rho_eff, "effective fluid density", tv_model)
 
-    def plot_complex_speed_of_sound(self):
+    def plot_effective_speed_of_sound(self):
 
         if self.selected_fluid is None:
             self.get_fluid_callback()
 
-        freq, _, C_eff = self.get_effective_properties(self.selected_fluid)
+        freq, _, C_eff, _ = self.get_effective_properties(self.selected_fluid)
 
         if freq is None:
             return
 
         tv_model = self.get_viscous_thermal_loss_model()
-        self.call_plotter(freq, C_eff, "complex speed of sound", tv_model)
+        self.call_plotter(freq, C_eff, "effective speed of sound", tv_model)
+
+    def plot_surface_impedance(self):
+
+        if self.selected_fluid is None:
+            self.get_fluid_callback()
+
+        h = self.spinBox_number_of_terms.value()
+        freq, Z_s = self.get_equivalent_surface_impedance(h, self.selected_fluid)
+
+        tv_model = self.get_viscous_thermal_loss_model()
+        self.call_plotter(freq, Z_s, "surface characteristic impedance", tv_model)
+
+    def plot_absorption_coefficient(self):
+
+        if self.selected_fluid is None:
+            self.get_fluid_callback()
+
+        h = self.spinBox_number_of_terms.value()
+        freq, alpha_n = self.get_equivalent_absorption_coefficient(h, self.selected_fluid)
+
+        pm_model = self.get_viscous_thermal_loss_model()
+        self.call_plotter(freq, alpha_n, "absorption coefficient", pm_model)
+
+    def get_equivalent_surface_impedance(self, h: float, fluid: Fluid):
+
+        freq, rho_eff, C_eff, k_cr = self.get_effective_properties(fluid)
+
+        Z_pm = rho_eff * C_eff
+        Z_s = Z_pm * (1 / np.tanh(k_cr * h))
+
+        return freq, Z_s 
+
+    def get_equivalent_absorption_coefficient(self, h: float, fluid: Fluid):
+
+        Z_0 = fluid.speed_of_sound * fluid.fluid_density
+        freq, rho_eff, C_eff, k_cr = self.get_effective_properties(fluid)
+
+        Z_pm = rho_eff * C_eff
+        Z_s = Z_pm * (1 / np.tanh(k_cr * h))
+
+        R_r = (Z_s - Z_0) / (Z_s + Z_0)
+        alpha_n = 1 - np.abs(R_r)**2
+
+        return freq, alpha_n
 
     def join_model_data(self, x_data, y_data, label: str, section_label: str):
 
         self.hide()
         self.data_to_plot = dict()
       
-        if label == "complex fluid density":
+        if label == "effective fluid density":
+            unit_label = "kg/m³"
+            y_label = "Effective fluid density"
+
+        elif label == "effective speed of sound":
             unit_label = "m/s"
-            y_label = "Complex fluid density"
+            y_label = "Effective speed of sound"
+      
+        elif label == "absorption coefficient":
+            unit_label = "--"
+            y_label = "Absorption coeffient"
+
         else:
-            unit_label = "m/s"
-            y_label = "Complex speed of sound"
+            unit_label = "Pa/m/s"
+            y_label = "Surface characteristic impedance"
 
         legend_label = label
-        title = f"Effective Fluid Properties for {section_label}"
+        title = f"Effective Properties for {section_label}"
 
         key = ("property", (None))
 

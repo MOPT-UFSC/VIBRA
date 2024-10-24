@@ -1992,7 +1992,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLineEdit" name="lineEdit_selected_id">
+   <widget class="QLineEdit" name="lineEdit_selection_id">
     <property name="enabled">
      <bool>true</bool>
     </property>
