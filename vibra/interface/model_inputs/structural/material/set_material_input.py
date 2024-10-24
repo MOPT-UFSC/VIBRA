@@ -72,7 +72,7 @@ class SetMaterialInput(QDialog):
         self.grid_layout.setContentsMargins(0,0,0,0)
 
         # QLineEdit
-        self.lineEdit_selected_id = self.findChild(QLineEdit, 'lineEdit_selected_id')
+        self.lineEdit_selection_id = self.findChild(QLineEdit, 'lineEdit_selection_id')
         self.lineEdit_selected_material_name = self.findChild(QLineEdit, 'lineEdit_selected_material_name')
 
         # QScrollArea
@@ -123,7 +123,7 @@ class SetMaterialInput(QDialog):
         if volumes:
             self.comboBox_attribution_type.setCurrentIndex(1)
             text = ", ".join([str(i) for i in volumes])
-            self.lineEdit_selected_id.setText(text)
+            self.lineEdit_selection_id.setText(text)
 
     def update_material_selection(self):
 
@@ -143,11 +143,11 @@ class SetMaterialInput(QDialog):
 
         index = self.comboBox_attribution_type.currentIndex()
         if index == 0:
-            self.lineEdit_selected_id.setText("All bodies")
+            self.lineEdit_selection_id.setText("All bodies")
         elif index == 1:
-            self.lineEdit_selected_id.setText("")
+            self.lineEdit_selection_id.setText("")
 
-        self.lineEdit_selected_id.setEnabled(bool(index))
+        self.lineEdit_selection_id.setEnabled(bool(index))
         # self.comboBox_attribution_type.setCurrentIndex(index)
 
     def confirm_material_attribution(self):
@@ -164,38 +164,42 @@ class SetMaterialInput(QDialog):
 
             if self.comboBox_attribution_type.currentIndex():
 
-                selected_ids = self.lineEdit_selected_id.text()
-                stop, self.selected_ids = self.project.model.mesh.check_selected_ids(selected_ids, selection = "volumes")
+                input_ids = self.lineEdit_selection_id.text()
+                stop, volume_ids = self.model.mesh.check_selected_ids(input_ids, selection = "volumes", single_id = False)
                 if stop:
-                    return
+                    self.lineEdit_selection_id.setFocus()
+                    return True
 
-                for volume_id in self.selected_ids:
-                    if volume_id in list(self.project.model.mesh.nodes_from_volumes.keys()):
-                        self.main_window.project.set_material(selected_material, volume=volume_id)
-                        for surface_id in self.project.model.mesh.surfaces_from_volumes[volume_id]:
-                            self.main_window.project.set_material(selected_material, surface=surface_id)
+                for volume_id in volume_ids:
+                    self.main_window.project.set_material(selected_material, volume=volume_id)
+                    for surface_id in self.model.mesh.surfaces_from_volumes[volume_id]:
+                        self.main_window.project.set_material(selected_material, surface=surface_id)
         
-                if len(self.selected_ids) <= 20:
-                    print("[Set Material] - {} defined at bodies: {}".format(selected_material.name, self.selected_ids))
+                if len(volume_ids) <= 20:
+                    print("[Set Material] - {} defined at bodies: {}".format(selected_material.name, volume_ids))
                 else:
-                    print("[Set Material] - {} defined at {} bodies".format(selected_material.name, len(self.selected_ids)))
+                    print("[Set Material] - {} defined at {} bodies".format(selected_material.name, len(volume_ids)))
 
             else:
 
-                volume_ids = list(self.project.model.mesh.nodes_from_volumes.keys())
+                if "volumes" in self.model.mesh.geometry_information.keys():
+                    volume_ids = self.model.mesh.geometry_information["volumes"]
+
+                if "surfaces" in self.model.mesh.geometry_information.keys():
+                    surface_ids = self.model.mesh.geometry_information["surfaces"]
+
                 for volume_id in volume_ids:
                     self.main_window.project.set_material(selected_material, volume=volume_id)
-                
-                surface_ids = list(self.project.model.mesh.nodes_from_surfaces.keys())
+
                 for surface_id in surface_ids:
                     self.main_window.project.set_material(selected_material, surface=surface_id)
 
                 print("[Set Material] - {} defined at all bodies.".format(selected_material.name))
 
             app().main_window.file.write_model_properties_in_file()
-            self.complete = True
             self.main_window.viewer_tabs.geometry_widget.update_info_text()
             self.main_window.viewer_tabs.mesh_widget.update_info_text()
+            self.complete = True
             self.close()
 
         except Exception as error_log:

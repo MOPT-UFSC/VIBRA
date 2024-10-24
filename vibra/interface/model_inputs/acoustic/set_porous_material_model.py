@@ -69,6 +69,7 @@ class SetPorousMaterialModel(QDialog):
 
         # QComboBox
         self.comboBox_attribution_type: QComboBox
+        self.comboBox_plot_type: QComboBox
 
         # QDoubleSpinBox
 
@@ -103,7 +104,7 @@ class SetPorousMaterialModel(QDialog):
         self.doubleSpinBox_porous_material_depth: QDoubleSpinBox
 
         # QLineEdit
-        self.lineEdit_selected_id: QLineEdit
+        self.lineEdit_selection_id: QLineEdit
         self.lineEdit_selected_fluid: QLineEdit
         self.lineEdit_fluid_density: QLineEdit
         self.lineEdit_speed_of_sound: QLineEdit
@@ -113,12 +114,12 @@ class SetPorousMaterialModel(QDialog):
         self.lineEdit_viscous_characteristic_length_JCAL: QLineEdit
 
         # QPushButton
+        self.pushButton_cancel: QPushButton
         self.pushButton_confirm: QPushButton
         self.pushButton_remove: QPushButton
         self.pushButton_reset: QPushButton
         self.pushButton_get_fluid: QPushButton
-        self.pushButton_plot_surface_impedance: QPushButton
-        self.pushButton_plot_absorption_coefficient: QPushButton
+        self.pushButton_plot_data: QPushButton
 
         # QTabWidget
         self.tabWidget_main: QTabWidget
@@ -129,13 +130,14 @@ class SetPorousMaterialModel(QDialog):
     def _create_connections(self):
         #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.update_attribution_type)
+        self.comboBox_plot_type.currentIndexChanged.connect(self.plot_type_callback)
         #
+        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_confirm.clicked.connect(self.attribute_callback)
         self.pushButton_remove.clicked.connect(self.remove_porous_material_model)
         self.pushButton_reset.clicked.connect(self.reset_porous_material_model)
-        self.pushButton_confirm.clicked.connect(self.attribute_porous_material_to_selected_bodies)
         self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
-        self.pushButton_plot_surface_impedance.clicked.connect(self.plot_surface_impedance)
-        self.pushButton_plot_absorption_coefficient.clicked.connect(self.plot_absorption_coefficient)
+        self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tabEvent_porous_material_model)
         #
@@ -149,12 +151,19 @@ class SetPorousMaterialModel(QDialog):
 
     def update_plot_buttons_access(self):
         state = self.selected_fluid is None
-        self.pushButton_plot_surface_impedance.setDisabled(state)
-        self.pushButton_plot_absorption_coefficient.setDisabled(state)
+        self.comboBox_plot_type.setDisabled(state)
+        self.pushButton_plot_data.setDisabled(state)
+        self.plot_type_callback()
+
+    def plot_type_callback(self):
+        if self.comboBox_plot_type.currentIndex() < 2:
+            self.doubleSpinBox_porous_material_depth.setDisabled(True)
+        else:
+            self.doubleSpinBox_porous_material_depth.setDisabled(False)
 
     def remove_porous_material_model(self):
-        if self.lineEdit_selected_id.text() != "":
-            volume_id = int(self.lineEdit_selected_id.text())
+        if self.lineEdit_selection_id.text() != "":
+            volume_id = int(self.lineEdit_selection_id.text())
             self.properties._remove_volume_property("porous_material_model", volume_id)
             app().main_window.file.write_model_properties_in_file()
             self.load_info()
@@ -193,8 +202,8 @@ class SetPorousMaterialModel(QDialog):
         tab_index = self.tabWidget_main.currentIndex()
 
         if tab_index == 4:
-            self.lineEdit_selected_id.setText("")
-            self.lineEdit_selected_id.setDisabled(True)
+            self.lineEdit_selection_id.setText("")
+            self.lineEdit_selection_id.setDisabled(True)
             self.comboBox_attribution_type.setDisabled(True)
 
         else:
@@ -203,23 +212,30 @@ class SetPorousMaterialModel(QDialog):
             if self.comboBox_attribution_type.currentIndex() == 0:
                 return
 
-            self.lineEdit_selected_id.setDisabled(False)
+            self.lineEdit_selection_id.setDisabled(False)
 
     def on_click_item(self, item):
-        self.lineEdit_selected_id.setText(item.text(0))
+
+        try:
+            str_id = item.text(0)
+            volume_id = int(str_id)
+            self.lineEdit_selection_id.setText(str_id)
+            app().main_window.set_geometry_selection(volumes=[volume_id])
+
+        except:
+            self.lineEdit_selection_id.setText("")
 
     def on_doubleclick_item(self, item):
-        self.lineEdit_selected_id.setText(item.text(0))
-        # self.remove_bc_from_selection()
+        self.on_click_item(item)
 
     def update_attribution_type(self):
         index = self.comboBox_attribution_type.currentIndex()
         if index == 0:
-            self.lineEdit_selected_id.setText("All bodies")
-            self.lineEdit_selected_id.setEnabled(False)
+            self.lineEdit_selection_id.setText("All bodies")
+            self.lineEdit_selection_id.setEnabled(False)
         elif index == 1:
-            self.lineEdit_selected_id.setText("")
-            self.lineEdit_selected_id.setEnabled(True)
+            self.lineEdit_selection_id.setText("")
+            self.lineEdit_selection_id.setEnabled(True)
         # self.comboBox_attribution_type.setCurrentIndex(index)
 
     def update_tabs_visibility(self):
@@ -273,13 +289,13 @@ class SetPorousMaterialModel(QDialog):
                 # return
 
             text = ", ".join([str(i) for i in volumes])
-            self.lineEdit_selected_id.setText(text)
+            self.lineEdit_selection_id.setText(text)
 
     def check_selected_bodies(self):
-        lineEdit = self.lineEdit_selected_id.text()
+        lineEdit = self.lineEdit_selection_id.text()
         self.stop, self.volume_ids = self.mesh.check_input_volume_id(lineEdit)
         if self.stop:
-            self.lineEdit_selected_id.setFocus()
+            self.lineEdit_selection_id.setFocus()
             return True
 
     def get_Delany_Bazley_model_inputs(self):
@@ -362,7 +378,7 @@ class SetPorousMaterialModel(QDialog):
 
         return material_model_data
 
-    def attribute_porous_material_to_selected_bodies(self):
+    def attribute_callback(self):
 
         index = self.tabWidget_main.currentIndex()
         if index == 0:
@@ -376,24 +392,28 @@ class SetPorousMaterialModel(QDialog):
         else:
             return
 
-        if model_data:
+        attribute_type = self.comboBox_attribution_type.currentIndex()
+        if attribute_type in [0, 1]:
+            
+            volume_ids = list()
+            if attribute_type == 0:
+                if "volumes" in self.mesh.geometry_information.keys():
+                    volume_ids = self.mesh.geometry_information["volumes"]
 
-            if self.comboBox_attribution_type.currentIndex():
-                if self.check_selected_bodies():
-                    return
-                volume_ids = self.volume_ids
-
-            else:
-                volume_ids = list(self.mesh.nodes_from_volumes.keys())
+            elif attribute_type == 1:
+                str_volume_ids = self.lineEdit_selection_id.text()
+                stop, volume_ids = self.mesh.check_selected_ids(str_volume_ids, selection = "volumes", single_id = False)
+                if stop:
+                    self.lineEdit_selection_id.setFocus()
+                    return True
 
             for volume_id in volume_ids:
-                # surfaces_from_volume = self.mesh.surfaces_from_volumes[volume_id]
                 self.project.set_porous_material_model(model_data, volume=volume_id)
 
             app().main_window.file.write_model_properties_in_file()
 
             print(f"The porous material model '{model_data['model']}' has been attributed to the volumes {volume_ids}")
-            self.close()
+            self.load_info()
 
     def check_inputs(self, lineEdit, label, only_positive=False, zero_included=True, _float=True):
 
@@ -461,6 +481,7 @@ class SetPorousMaterialModel(QDialog):
 
     def get_effective_properties(self, fluid):
 
+        frequencies = None
         analysis_data = app().main_window.project.analysis_data
         if isinstance(analysis_data, dict):
             frequencies = analysis_data.get("frequencies", None)
@@ -535,6 +556,43 @@ class SetPorousMaterialModel(QDialog):
         elif tab_index == 3:
             return "Jhonson-Champoux-Allard-Lafarge"
 
+    def plot_data_callback(self):
+        plot_key = self.comboBox_plot_type.currentIndex()
+        if plot_key == 0:
+            self.plot_effective_fluid_density()
+        elif plot_key == 1:
+            self.plot_effective_speed_of_sound()
+        elif plot_key == 2:
+            self.plot_surface_impedance()
+        else:
+            self.plot_absorption_coefficient()
+
+    def plot_effective_fluid_density(self):
+
+        if self.selected_fluid is None:
+            self.get_fluid_callback()
+
+        freq, rho_eff, _, _ = self.get_effective_properties(self.selected_fluid)
+
+        if freq is None:
+            return
+
+        pm_model = self.get_porous_material_model()
+        self.call_plotter(freq, rho_eff, "effective fluid density", pm_model)
+
+    def plot_effective_speed_of_sound(self):
+
+        if self.selected_fluid is None:
+            self.get_fluid_callback()
+
+        freq, _, C_eff, _ = self.get_effective_properties(self.selected_fluid)
+
+        if freq is None:
+            return
+
+        pm_model = self.get_porous_material_model()
+        self.call_plotter(freq, C_eff, "effective speed of sound", pm_model)
+
     def plot_surface_impedance(self):
 
         if self.selected_fluid is None:
@@ -561,10 +619,19 @@ class SetPorousMaterialModel(QDialog):
 
         self.hide()
         self.data_to_plot = dict()
+
+        if label == "effective fluid density":
+            unit_label = "kg/m³"
+            y_label = "Effective fluid density"
+
+        elif label == "effective speed of sound":
+            unit_label = "m/s"
+            y_label = "Effective speed of sound"
       
-        if label == "absorption coefficient":
+        elif label == "absorption coefficient":
             unit_label = "--"
             y_label = "Absorption coeffient"
+
         else:
             unit_label = "Pa/m/s"
             y_label = "Surface characteristic impedance"
@@ -594,7 +661,7 @@ class SetPorousMaterialModel(QDialog):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_porous_material_to_selected_bodies()
+            self.attribute_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
 
