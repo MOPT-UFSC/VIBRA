@@ -13,7 +13,7 @@ from vibra.interface.plots.general.frequency_response_plotter import FrequencyRe
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
 
-from pathlib import Path
+import warnings
 import numpy as np
 
 # fmt: off
@@ -479,7 +479,9 @@ class SetPorousMaterialModel(QDialog):
             self.lineEdit_fluid_density.setText(f"{self.selected_fluid.fluid_density}")
             self.lineEdit_speed_of_sound.setText(f"{self.selected_fluid.speed_of_sound}")
 
-    def get_effective_properties(self, fluid):
+    def get_effective_properties(self, fluid: Fluid):
+
+        warnings.filterwarnings('ignore')
 
         frequencies = None
         analysis_data = app().main_window.project.analysis_data
@@ -522,28 +524,6 @@ class SetPorousMaterialModel(QDialog):
         k_cr = omega / C_eff
 
         return freq, rho_eff, C_eff, k_cr
-
-    def get_porous_material_surface_impedance(self, h: float, fluid: Fluid):
-
-        freq, rho_eff, C_eff, k_cr = self.get_effective_properties(fluid)
-
-        Z_pm = rho_eff * C_eff
-        Z_s = Z_pm * (1 / np.tanh(k_cr * h))
-
-        return freq, Z_s 
-
-    def get_porous_material_absorption_coefficient(self, h: float, fluid: Fluid):
-
-        Z_0 = fluid.speed_of_sound * fluid.fluid_density
-        freq, rho_eff, C_eff, k_cr = self.get_effective_properties(fluid)
-
-        Z_pm = rho_eff * C_eff
-        Z_s = Z_pm * (1 / np.tanh(k_cr * h))
-
-        R_r = (Z_s - Z_0) / (Z_s + Z_0)
-        alpha_n = 1 - np.abs(R_r)**2
-
-        return freq, alpha_n 
 
     def get_porous_material_model(self):
         tab_index = self.tabWidget_main.currentIndex()
@@ -599,10 +579,19 @@ class SetPorousMaterialModel(QDialog):
             self.get_fluid_callback()
 
         h = self.doubleSpinBox_porous_material_depth.value()
-        freq, Z_s = self.get_porous_material_surface_impedance(h, self.selected_fluid)
+        Z_0 = self.selected_fluid.speed_of_sound * self.selected_fluid.fluid_density
+
+        freq, rho_eff, C_eff, k_cr = self.get_effective_properties(self.selected_fluid)
+
+        if freq is None:
+            return
+
+        Z_pm = rho_eff * C_eff
+        Z_s = Z_pm * (1 / np.tanh(k_cr * h))
+        Z_norm = Z_s / Z_0
 
         pm_model = self.get_porous_material_model()
-        self.call_plotter(freq, Z_s, "surface characteristic impedance", pm_model)
+        self.call_plotter(freq, Z_norm, "normalized surface impedance", pm_model)
 
     def plot_absorption_coefficient(self):
 
@@ -610,7 +599,18 @@ class SetPorousMaterialModel(QDialog):
             self.get_fluid_callback()
 
         h = self.doubleSpinBox_porous_material_depth.value()
-        freq, alpha_n = self.get_porous_material_absorption_coefficient(h, self.selected_fluid)
+        Z_0 = self.selected_fluid.speed_of_sound * self.selected_fluid.fluid_density
+
+        freq, rho_eff, C_eff, k_cr = self.get_effective_properties(self.selected_fluid)
+
+        Z_pm = rho_eff * C_eff
+        Z_s = Z_pm * (1 / np.tanh(k_cr * h))
+
+        R_r = (Z_s - Z_0) / (Z_s + Z_0)
+        alpha_n = 1 - np.abs(R_r)**2
+
+        if freq is None:
+            return
 
         pm_model = self.get_porous_material_model()
         self.call_plotter(freq, alpha_n, "absorption coefficient", pm_model)
@@ -627,14 +627,14 @@ class SetPorousMaterialModel(QDialog):
         elif label == "effective speed of sound":
             unit_label = "m/s"
             y_label = "Effective speed of sound"
-      
-        elif label == "absorption coefficient":
+
+        elif label == "normalized surface impedance":
             unit_label = "--"
-            y_label = "Absorption coeffient"
+            y_label = "Normalized surface impedance"
 
         else:
-            unit_label = "Pa/m/s"
-            y_label = "Surface characteristic impedance"
+            unit_label = "--"
+            y_label = "Absorption coeffient"
 
         legend_label = label
         title = f"{pm_label} Porous Material Curve"
