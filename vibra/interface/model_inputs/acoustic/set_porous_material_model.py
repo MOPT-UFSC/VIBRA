@@ -667,6 +667,7 @@ class SetPorousMaterialModel(QDialog):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
+        warnings.filterwarnings('default')
         return super().closeEvent(a0)
-    
+
 # fmt: on

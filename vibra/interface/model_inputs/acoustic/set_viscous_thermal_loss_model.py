@@ -937,6 +937,7 @@ class SetViscousThermalLossModel(QDialog):
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.hide_sphere()
         try:
+            warnings.filterwarnings('default')
             geometry_widget = self.main_window.viewer_tabs.geometry_widget
             geometry_widget.selection_changed.disconnect(self.geometry_selection_callback)
         except TypeError:
