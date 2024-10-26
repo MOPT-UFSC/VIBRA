@@ -23,8 +23,6 @@ class ExportModelResults(QFileDialog):
         self._initialize()
 
     def _initialize(self):
-        self.user_path = os.path.expanduser('~')
-        self.save_path = ""
         self.data = dict()
 
     def _set_data_to_export(self, data : dict):
@@ -54,6 +52,7 @@ class ExportModelResults(QFileDialog):
             np.savetxt(export_path, data_to_export, delimiter=delimiter, header=header)
 
     def export_data_in_spreadsheet_format(self, export_path):
+
         import pandas as pd
 
         with pd.ExcelWriter(export_path) as writer:

@@ -170,8 +170,10 @@ class PlotParticleVelocityFrequencyResponseInput(QDialog):
             return "Vx"
         elif index == 1:
             return "Vy"
-        else:
+        elif index == 2:
             return "Vz"
+        else:
+            return "Vn"
 
     def get_response(self, selected_id):
 

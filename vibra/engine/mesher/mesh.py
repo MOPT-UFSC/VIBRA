@@ -181,7 +181,7 @@ class Mesh:
         #     # gmsh.open(str(path))
 
         gmsh.model.occ.synchronize()
-        self.get_geometry_info()
+        # self.get_geometry_info()
 
         # self.dimension = min(dimension, gmsh.model.getDimension())
         self.element_type = element_type
@@ -194,6 +194,7 @@ class Mesh:
             logging.info("Generating mesh..." + ProgressStatus(25, 100))
             # gmsh.model.mesh.generate(dim=element_type.dimensions)
             gmsh.model.mesh.generate(dim=dimension)
+            self.get_geometry_info()
 
         except:
             gmsh.finalize()

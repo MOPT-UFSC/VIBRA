@@ -217,7 +217,7 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
                                                                         single_id = True   )
 
         if stop:
-            self.lineEdit_output_selected_id.setFocus()
+            self.lineEdit_input_selected_id.setFocus()
             return True
         
         lineEdit_output_selected_id = self.lineEdit_output_selected_id.text()
