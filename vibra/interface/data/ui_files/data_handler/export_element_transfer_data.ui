@@ -360,7 +360,7 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>../../../icons/invert_icon.png</normaloff>../../../icons/invert_icon.png</iconset>
+             <normaloff>../../icons/invert_icon.png</normaloff>../../icons/invert_icon.png</iconset>
            </property>
            <property name="iconSize">
             <size>

@@ -542,13 +542,16 @@ class Mesh:
             self.elements_from_volume[tag] = internal_indexes
 
 
-    def _process_face_elements_connected_to_nodes(self, list_ids : list):
+    def _process_face_elements_connected_to_nodes(self, selected_ids : int | list):
 
         self.nodes_from_face_element.clear()
         self.face_elements_connected_to_nodes.clear()
         self.surface_area_from_element_integration.clear()
 
-        for tag in list_ids:
+        if isinstance(selected_ids, int):
+            selected_ids = [selected_ids]
+
+        for tag in selected_ids:
             connect_data = self.connectivity_from_surfaces[tag]
            
             area = 0.

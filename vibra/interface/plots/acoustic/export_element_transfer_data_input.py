@@ -180,16 +180,19 @@ class ExportElementTransferDataInput(QDialog):
         self.join_model_data()
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(self.model_results)
+        self.pushButton_cancel.setText("Close")
 
     def get_response(self, selected_id: int, comp_label: str):
 
         def function_callback():
 
-            particle_velocity, pressure = self.get_volume_velocity_and_pressures(selected_id, comp_label)
+            logging.info("Processing area..." + ProgressStatus(25, 100))
+            self.mesh._process_face_elements_connected_to_nodes(selected_id)
 
+            particle_velocity, volume_velocity, pressure = self.get_volume_velocity_and_pressures(selected_id, comp_label)
             logging.info("Processing particle velocity..." + ProgressStatus(95, 100))
 
-            return [particle_velocity, pressure]
+            return [particle_velocity, volume_velocity, pressure]
 
         function = load_function(function_callback, app().main_window)
 
@@ -209,14 +212,14 @@ class ExportElementTransferDataInput(QDialog):
         if rho is None:
             return np.zeros_like(self.frequencies, dtype=complex)
 
-        self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id, rho)
-        particle_velocities = np.array(list(self.particle_velocity[component_label].values()), dtype=complex)
+        particle_velocities = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id, rho)
+        particle_velocities_comp = np.array(list(particle_velocities[component_label].values()), dtype=complex)
 
         node_ids = np.sort(list_nodes)
         pressures = self.solution[node_ids, :]
 
         avg_pressure = np.average(pressures, axis=0)
-        avg_particle_velocity = np.average(particle_velocities, axis=0)
+        avg_particle_velocity = np.average(particle_velocities_comp, axis=0)
 
         area = self.model.mesh.surface_area_from_element_integration[surface_id]
         volume_velocity = avg_particle_velocity * area
@@ -245,11 +248,11 @@ class ExportElementTransferDataInput(QDialog):
 
             for j, data_type in enumerate(["pvelocity", "vvelocity", "pressure"]):
 
-                if data_type == "vvelocity":
+                if data_type == "pvelocity":
                     unit_label = "m/s"
                     data_name = f"{label}_{data_type}_{v_label}_face"
 
-                elif data_type == "pvelocity":
+                elif data_type == "vvelocity":
                     unit_label = "m³/s"
                     data_name = f"{label}_{data_type}_{v_label}_face"
 
