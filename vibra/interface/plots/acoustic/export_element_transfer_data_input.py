@@ -70,7 +70,6 @@ class ExportElementTransferDataInput(QDialog):
     def _define_qt_variables(self):
 
         # QComboBox
-        self.comboBox_selector_filter : QComboBox
         self.comboBox_input_velocity_component: QComboBox
         self.comboBox_output_velocity_component: QComboBox
 
@@ -86,10 +85,8 @@ class ExportElementTransferDataInput(QDialog):
 
     def _create_connections(self):
         #
-        self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
-        #
         self.pushButton_cancel.clicked.connect(self.close)
-        self.pushButton_export_data.clicked.connect(self.call_data_exporter)
+        self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_invert_selection.clicked.connect(self.invert_selection_callback)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
@@ -99,32 +96,17 @@ class ExportElementTransferDataInput(QDialog):
 
     def geometry_selection_callback(self):
         
-        faces = self.main_window.selected_geometry_surfaces
-        lines = self.main_window.selected_geometry_lines
-        nodes = self.main_window.selected_mesh_nodes
+        selected_faces = self.main_window.selected_geometry_surfaces
 
-        index = self.comboBox_selector_filter.currentIndex()
-        if faces and index == 0:
+        if selected_faces:
 
-            if len(faces) > 1:
+            if len(selected_faces) > 1:
                 return
 
             else:
-                _faces = [str(i) for i in faces]
-                self.current_lineEdit.setText(_faces[0])
+                _selected_faces = [str(i) for i in selected_faces]
+                self.current_lineEdit.setText(_selected_faces[0])
 
-        if nodes and index == 1:
-            
-            if len(nodes) > 1:
-                return
-
-            else:
-                _nodes = [str(i) for i in nodes]
-                self.current_lineEdit.setText(_nodes[0])
-
-        elif not any([nodes, lines, nodes]):
-            return
-            self.current_lineEdit.setText("")
 
     def invert_selection_callback(self):
 
@@ -141,22 +123,11 @@ class ExportElementTransferDataInput(QDialog):
 
         self.geometry_selection_callback()
 
-        if self.comboBox_selector_filter.currentIndex() == 0:
+        if not self.main_window.viewer_tabs.isTabEnabled(2):
+            self.main_window.viewer_tabs.show_geometry()
+            return
 
-            if not self.main_window.viewer_tabs.isTabEnabled(2):
-                self.main_window.viewer_tabs.show_geometry()
-                return
-
-            self.main_window.viewer_tabs.setCurrentIndex(1)
-
-        else:
-
-            if self.main_window.viewer_tabs.currentIndex() != 2:
-                if not self.main_window.viewer_tabs.isTabEnabled(2):
-                    self.main_window.viewer_tabs.show_mesh()
-                    return
-
-            self.main_window.viewer_tabs.setCurrentIndex(2)
+        self.main_window.viewer_tabs.setCurrentIndex(1)
 
     def clickable(self, widget):
         class Filter(QObject):
@@ -180,18 +151,10 @@ class ExportElementTransferDataInput(QDialog):
         self.current_lineEdit = self.lineEdit_output_selected_id
 
     def check_inputs(self):
-
-        index = self.comboBox_selector_filter.currentIndex()
-
-        if index == 0:
-            selection = "surfaces"
-
-        else:
-            selection = "nodes"
  
         input_selected_id = self.lineEdit_input_selected_id.text()
         stop, self.input_selection_id = self.mesh.check_selected_ids(   input_selected_id, 
-                                                                        selection = selection, 
+                                                                        selection = "surfaces", 
                                                                         single_id = True   )
 
         if stop:
@@ -201,7 +164,7 @@ class ExportElementTransferDataInput(QDialog):
 
         output_selected_id = self.lineEdit_output_selected_id.text()
         stop, self.output_selection_id = self.mesh.check_selected_ids(  output_selected_id, 
-                                                                        selection = selection, 
+                                                                        selection = "surfaces", 
                                                                         single_id = True  )
 
         if stop:
@@ -209,7 +172,7 @@ class ExportElementTransferDataInput(QDialog):
             self.lineEdit_output_selected_id.selectAll()
             return True
 
-    def call_data_exporter(self):
+    def export_data_callback(self):
 
         if self.check_inputs():
             return
@@ -221,14 +184,8 @@ class ExportElementTransferDataInput(QDialog):
     def get_response(self, selected_id: int, comp_label: str):
 
         def function_callback():
-            
-            selection_type = self.comboBox_selector_filter.currentIndex()
 
-            if selection_type == 0:
-                particle_velocity, pressure = self.get_surface_particle_velocity_and_pressures(selected_id, comp_label)
-
-            else:
-                particle_velocity, pressure = self.get_nodal_particle_velocity_and_pressure(selected_id, comp_label)
+            particle_velocity, pressure = self.get_volume_velocity_and_pressures(selected_id, comp_label)
 
             logging.info("Processing particle velocity..." + ProgressStatus(95, 100))
 
@@ -238,16 +195,15 @@ class ExportElementTransferDataInput(QDialog):
 
         return function()
 
-    def get_surface_particle_velocity_and_pressures(self, surface_id : int, component_label: str):
+    def get_volume_velocity_and_pressures(self, surface_id : int, component_label: str):
 
         element_3d, _ = self.project.acoustic_assembler.get_element()
         element_3d.reorder_connect()
 
         list_nodes = list()
         for tag, surface_nodes in self.mesh.nodes_from_surfaces.items():
-            if self.comboBox_selector_filter.currentIndex() == 0:
-                if tag == surface_id:
-                    list_nodes.extend(surface_nodes)
+            if tag == surface_id:
+                list_nodes.extend(surface_nodes)
 
         rho = self.model.get_fluid_density_for_particle_velocity_calculation(surface_id, self.frequencies)
         if rho is None:
@@ -262,46 +218,14 @@ class ExportElementTransferDataInput(QDialog):
         avg_pressure = np.average(pressures, axis=0)
         avg_particle_velocity = np.average(particle_velocities, axis=0)
 
-        return avg_particle_velocity, avg_pressure
+        area = self.model.mesh.surface_area_from_element_integration[surface_id]
+        volume_velocity = avg_particle_velocity * area
 
-    def get_nodal_particle_velocity_and_pressure(self, node_id : int, component_label: str):
-
-        if self.particle_velocity:
-            if component_label in self.particle_velocity.keys():
-                if node_id in self.particle_velocity[component_label].keys():
-                    particle_velocity = self.particle_velocity[component_label][node_id]
-                    pressure = self.solution[node_id, :]
-                    return pressure / particle_velocity
-
-        element_3d, _ = self.project.acoustic_assembler.get_element()
-        element_3d.reorder_connect()
-
-        list_nodes = list()
-        for tag, surface_nodes in self.mesh.nodes_from_surfaces.items():
-            if self.comboBox_selector_filter.currentIndex() == 1:
-                if node_id in surface_nodes:
-                    list_nodes.extend(surface_nodes)
-                    surface_id = tag
-
-        rho = self.model.get_fluid_density_for_particle_velocity_calculation(surface_id, self.frequencies)
-        if rho is None:
-            return np.zeros_like(self.frequencies, dtype=complex)
-
-        self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id, rho)
-
-        particle_velocity = self.particle_velocity[component_label][node_id]
-        pressure = self.solution[node_id, :]
-
-        return particle_velocity, pressure
+        return avg_particle_velocity, volume_velocity, avg_pressure
 
     def join_model_data(self):
 
         self.hide()
-
-        if self.comboBox_selector_filter.currentIndex() == 0:
-            selection_type = "face"
-        else:
-            selection_type = "node"
 
         self.model_results = dict()
 
@@ -317,17 +241,21 @@ class ExportElementTransferDataInput(QDialog):
 
             label = labels[i]
             v_label = v_labels[v_index]
-
             data = self.get_response(selected_id, v_label)
 
-            for j, data_type in enumerate(["velocity", "pressure"]):
+            for j, data_type in enumerate(["pvelocity", "vvelocity", "pressure"]):
 
-                if data_type in "velocity":
+                if data_type == "vvelocity":
                     unit_label = "m/s"
-                    data_name = f"{label}_{data_type}_{v_label}_{selection_type}"
+                    data_name = f"{label}_{data_type}_{v_label}_face"
+
+                elif data_type == "pvelocity":
+                    unit_label = "m³/s"
+                    data_name = f"{label}_{data_type}_{v_label}_face"
+
                 else:
                     unit_label = "Pa"
-                    data_name = f"{label}_{data_type}_{selection_type}"
+                    data_name = f"{label}_{data_type}_face"     
 
                 key = (data_name, (selected_id))
 
@@ -357,7 +285,7 @@ class ExportElementTransferDataInput(QDialog):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.call_data_exporter()
+            self.export_data_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
 
