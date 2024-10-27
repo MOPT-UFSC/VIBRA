@@ -99,6 +99,7 @@ class Model:
         # if self.mesh is None:
         #     self.mesh = Mesh.from_cad(self.geometry_path)
 
+        logging.info("Processing mesh..." + ProgressStatus(80, 100))
         self.mesh.load_cad(self.geometry_path, **self.mesh_setup)
         self.generated_mesh = True
 

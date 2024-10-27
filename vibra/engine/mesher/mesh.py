@@ -194,6 +194,7 @@ class Mesh:
             logging.info("Generating mesh..." + ProgressStatus(25, 100))
             # gmsh.model.mesh.generate(dim=element_type.dimensions)
             gmsh.model.mesh.generate(dim=dimension)
+            logging.info("Generating mesh..." + ProgressStatus(60, 100))
             self.get_geometry_info()
 
         except:

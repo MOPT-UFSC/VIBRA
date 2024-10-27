@@ -443,7 +443,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Input ID: </string>
+            <string>Input surface ID: </string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -635,7 +635,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Output ID: </string>
+            <string>Output surface ID: </string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>

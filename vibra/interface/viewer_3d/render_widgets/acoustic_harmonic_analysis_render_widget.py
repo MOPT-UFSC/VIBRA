@@ -228,8 +228,6 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
 
         """
 
-        print("go -> process_animation_frames")
-
         self.animation_data = dict()
 
         if not self._actors_exists():

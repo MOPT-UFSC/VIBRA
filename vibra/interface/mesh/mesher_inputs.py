@@ -55,29 +55,30 @@ class MesherInputs(QDialog):
     def _define_qt_variables(self):
 
         # QCheckbox
-        self.checkBox_mesh_connection : QCheckBox
+        self.checkBox_mesh_connection: QCheckBox
 
         # QComboBox
-        self.comboBox_element_type : QComboBox
-        self.comboBox_shape_function : QComboBox
+        self.comboBox_element_type: QComboBox
+        self.comboBox_shape_function: QComboBox
 
         # QDoubleSpinBox
-        self.doubleSpinBox_maximum_element_size : QDoubleSpinBox
-        self.doubleSpinBox_minimum_element_size_factor : QDoubleSpinBox
+        self.doubleSpinBox_maximum_element_size: QDoubleSpinBox
+        self.doubleSpinBox_minimum_element_size_factor: QDoubleSpinBox
 
         # QLineEdit
-        self.lineEdit_maximum_element_size : QLineEdit
-        self.lineEdit_geometry_tolerance : QLineEdit
-        self.lineEdit_refining_size : QLineEdit
-        self.lineEdit_faces_list : QLineEdit
+        self.lineEdit_maximum_element_size: QLineEdit
+        self.lineEdit_geometry_tolerance: QLineEdit
+        self.lineEdit_refining_size: QLineEdit
+        self.lineEdit_faces_list: QLineEdit
 
         # QPushButton
-        self.pushButton_add : QPushButton
-        self.pushButton_delete : QPushButton
-        self.pushButton_generate_mesh : QPushButton
+        self.pushButton_add: QPushButton
+        self.pushButton_cancel: QPushButton
+        self.pushButton_delete: QPushButton
+        self.pushButton_generate_mesh: QPushButton
 
         # QTableWidget
-        self.tableWidget_refining_mesh_data : QTableWidget
+        self.tableWidget_refining_mesh_data: QTableWidget
         self._config_tableWidget_appearance()
 
     def _config_tableWidget_appearance(self):
@@ -91,6 +92,7 @@ class MesherInputs(QDialog):
 
     def _create_connections(self):
         self.pushButton_add.clicked.connect(self.add_button_callback)
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_delete.clicked.connect(self.trash_button_callback)
         self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
 
@@ -140,17 +142,29 @@ class MesherInputs(QDialog):
 
             if self.check_mesh_inputs():
                 return
+            
+            self.hide()
 
-            condition = self.lineEdit_faces_list.text() == "" and self.lineEdit_refining_size.text() == ""
-            if condition or self.close_after_generate:
-                self.close()
+            def generate_function():
 
-            self.main_window.viewer_tabs.close_analysis_tabs()
-            self.main_window.project.reset_solutions()
-            self.main_window.project.set_mesh_setup(self.mesh_setup)
-            app().main_window.file.write_mesh_setup_in_file(self.file_mesh_setup)
+                logging.info("Processing mesh..." + ProgressStatus(10, 100))
+                # condition = self.lineEdit_faces_list.text() == "" and self.lineEdit_refining_size.text() == ""
+                if self.close_after_generate:
+                # if condition or self.close_after_generate:
+                    self.close()
 
-            generate_mesh = load_function(self.main_window.project.generate_mesh, self.main_window)
+                logging.info("Processing mesh..." + ProgressStatus(20, 100))
+                app().main_window.viewer_tabs.close_analysis_tabs()
+                app().main_window.project.reset_solutions()
+
+                logging.info("Processing mesh..." + ProgressStatus(30, 100))
+                app().main_window.project.set_mesh_setup(self.mesh_setup)
+                app().main_window.file.write_mesh_setup_in_file(self.file_mesh_setup)
+
+                logging.info("Processing mesh..." + ProgressStatus(40, 100))
+                app().main_window.project.generate_mesh()
+
+            generate_mesh = load_function(generate_function, app().main_window)
             generate_mesh()
 
             app().main_window.file.write_mesh_data_in_file()
@@ -159,6 +173,7 @@ class MesherInputs(QDialog):
             actions_to_finalize()
 
             self.complete = True
+            self.pushButton_cancel.setText("Exit")
 
         except Exception as error_log:
             window_title = "Error"
