@@ -125,11 +125,13 @@ class AcousticPressureInput(QDialog):
             self.lineEdit_selection_id.setDisabled(False)
 
     def on_click_item(self, item):
-        self.lineEdit_selection_id.setText(item.text(0))
+        if item.text(0) != "":
+            surface_id = int(item.text(0))
+            self.lineEdit_selection_id.setText(item.text(0))
+            app().main_window.set_geometry_selection(surfaces=[surface_id])
 
     def on_doubleclick_item(self, item):
-        self.lineEdit_selection_id.setText(item.text(0))
-        self.remove_bc_from_selection()
+        self.on_click_item(item)
 
     def load_info(self):
         self.treeWidget_acoustic_pressure.clear()

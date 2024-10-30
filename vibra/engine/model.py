@@ -12,6 +12,7 @@ from vibra.engine.dissipation_models.low_reduced_frequency_model import LowReduc
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
 from vibra.engine.mesher.mesh import Mesh
+from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.errors import IncompleteSetupError
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -193,6 +194,19 @@ class Model:
 
             fluid = self.properties.get_fluid(surface=surface_id)
             rho = fluid.fluid_density
+        
+        elif len(volume_ids) > 1:
+
+            fluids = list()
+            for volume_id in volume_ids:
+                fluid = self.properties.get_fluid(volume=volume_id)
+                if isinstance(fluid, Fluid):
+                    if fluid not in fluids:
+                        fluids.append(fluid)
+
+            if len(fluids) == 1:
+                fluid = fluids[0]
+                rho = fluid.fluid_density
 
         return rho
 

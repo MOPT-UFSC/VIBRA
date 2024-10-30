@@ -825,7 +825,7 @@ class SetViscousThermalLossModel(QDialog):
             return
 
         tv_model = self.get_viscous_thermal_loss_model()
-        self.call_plotter(freq, rho_eff, "effective fluid density", tv_model)
+        self.plot_data_callback(freq, rho_eff, "effective fluid density", tv_model)
 
     def plot_effective_speed_of_sound(self):
 
@@ -838,7 +838,7 @@ class SetViscousThermalLossModel(QDialog):
             return
 
         tv_model = self.get_viscous_thermal_loss_model()
-        self.call_plotter(freq, C_eff, "effective speed of sound", tv_model)
+        self.plot_data_callback(freq, C_eff, "effective speed of sound", tv_model)
 
     def plot_surface_impedance(self):
 
@@ -858,7 +858,7 @@ class SetViscousThermalLossModel(QDialog):
         Z_norm = Z_s / Z_0
 
         tv_model = self.get_viscous_thermal_loss_model()
-        self.call_plotter(freq, Z_norm, "normalized surface impedance", tv_model)
+        self.plot_data_callback(freq, Z_norm, "normalized surface impedance", tv_model)
 
     def plot_absorption_coefficient(self):
 
@@ -880,7 +880,7 @@ class SetViscousThermalLossModel(QDialog):
         alpha_n = 1 - np.abs(R_r)**2
 
         pm_model = self.get_viscous_thermal_loss_model()
-        self.call_plotter(freq, alpha_n, "absorption coefficient", pm_model)
+        self.plot_data_callback(freq, alpha_n, "absorption coefficient", pm_model)
 
     def join_model_data(self, x_data, y_data, label: str, section_label: str):
 
@@ -921,7 +921,7 @@ class SetViscousThermalLossModel(QDialog):
                                     "linestyle" : "-"
                                    }
 
-    def call_plotter(self, x_data, y_data, label, pm_label):
+    def plot_data_callback(self, x_data, y_data, label, pm_label):
         self.join_model_data(x_data, y_data, label, pm_label)
         self.plotter = FrequencyResponsePlotter()
         self.plotter._set_model_results_data_to_plot(self.data_to_plot)

@@ -558,7 +558,7 @@ class SetPorousMaterialModel(QDialog):
             return
 
         pm_model = self.get_porous_material_model()
-        self.call_plotter(freq, rho_eff, "effective fluid density", pm_model)
+        self.plot_data_callback(freq, rho_eff, "effective fluid density", pm_model)
 
     def plot_effective_speed_of_sound(self):
 
@@ -571,7 +571,7 @@ class SetPorousMaterialModel(QDialog):
             return
 
         pm_model = self.get_porous_material_model()
-        self.call_plotter(freq, C_eff, "effective speed of sound", pm_model)
+        self.plot_data_callback(freq, C_eff, "effective speed of sound", pm_model)
 
     def plot_surface_impedance(self):
 
@@ -591,7 +591,7 @@ class SetPorousMaterialModel(QDialog):
         Z_norm = Z_s / Z_0
 
         pm_model = self.get_porous_material_model()
-        self.call_plotter(freq, Z_norm, "normalized surface impedance", pm_model)
+        self.plot_data_callback(freq, Z_norm, "normalized surface impedance", pm_model)
 
     def plot_absorption_coefficient(self):
 
@@ -613,7 +613,7 @@ class SetPorousMaterialModel(QDialog):
             return
 
         pm_model = self.get_porous_material_model()
-        self.call_plotter(freq, alpha_n, "absorption coefficient", pm_model)
+        self.plot_data_callback(freq, alpha_n, "absorption coefficient", pm_model)
 
     def join_model_data(self, x_data, y_data, label: str, pm_label: str):
 
@@ -654,7 +654,7 @@ class SetPorousMaterialModel(QDialog):
                                     "linestyle" : "-"
                                    }
 
-    def call_plotter(self, x_data, y_data, label, pm_label):
+    def plot_data_callback(self, x_data, y_data, label, pm_label):
         self.join_model_data(x_data, y_data, label, pm_label)
         self.plotter = FrequencyResponsePlotter()
         self.plotter._set_model_results_data_to_plot(self.data_to_plot)

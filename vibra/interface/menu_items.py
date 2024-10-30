@@ -20,6 +20,7 @@ from vibra.interface.model_inputs.acoustic.set_anechoic_termination_inputs impor
 from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import DissipationModelInput
 from vibra.interface.model_inputs.acoustic.set_porous_material_model import SetPorousMaterialModel
 from vibra.interface.model_inputs.acoustic.set_viscous_thermal_loss_model import SetViscousThermalLossModel
+from vibra.interface.model_inputs.acoustic.set_acoustic_properties_gradient_input import SetAcousticPropertiesGradientInputs
 from vibra.interface.model_inputs.acoustic.set_compressor_model_input import CompressorModelInput
 #
 from vibra.interface.model_inputs.structural.boundary_condition_inputs import BoundaryConditionInputs
@@ -215,7 +216,7 @@ class MenuItems(QTreeWidget):
         self.item_child_set_porous_material_model = QTreeWidgetItem(["Set Porous Material Model"])
         self.item_child_set_viscous_thermal_model = QTreeWidgetItem(["Set Viscous-thermal Loss Model"])
         self.item_child_add_compressor_excitation = QTreeWidgetItem(["Add Compressor Excitation"])
-
+        self.item_child_set_acoustic_properties_gradient = QTreeWidgetItem(["Set Acoustic Properties Gradient"])
         self.item_child_set_anechoic_termination.setToolTip(0, "equivalent to the long pipe boundary condition")
 
         #
@@ -229,6 +230,7 @@ class MenuItems(QTreeWidget):
         self.list_child_items.append(self.item_child_add_compressor_excitation)
         self.list_child_items.append(self.item_child_set_porous_material_model)
         self.list_child_items.append(self.item_child_set_viscous_thermal_model)
+        self.list_child_items.append(self.item_child_set_acoustic_properties_gradient)
         #
         self.item_top_analysis = QTreeWidgetItem(["Analysis"])
         self.item_child_selectAnalysisType = QTreeWidgetItem(["Select Analysis Type"])
@@ -297,6 +299,7 @@ class MenuItems(QTreeWidget):
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_dissipation_model)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_porous_material_model)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_viscous_thermal_model)
+        self.item_top_acoustic_model_setup.addChild(self.item_child_set_acoustic_properties_gradient)
         # self.item_top_acoustic_model_setup.addChild(self.item_child_add_compressor_excitation)
 
         self.addTopLevelItem(self.item_top_analysis)
@@ -426,6 +429,10 @@ class MenuItems(QTreeWidget):
         elif item == self.item_child_set_viscous_thermal_model:
             if not self.item_child_set_viscous_thermal_model.isDisabled():
                 obj = SetViscousThermalLossModel()
+
+        elif item == self.item_child_set_acoustic_properties_gradient:
+            if not self.item_child_set_acoustic_properties_gradient.isDisabled():
+                obj = SetAcousticPropertiesGradientInputs()
 
         elif item == self.item_child_set_mass_flow_rate:
             if not self.item_child_set_mass_flow_rate.isDisabled():
@@ -615,38 +622,39 @@ class MenuItems(QTreeWidget):
         self.item_child_set_boundary_condition.setDisabled(bool_key)
         self.item_child_setNodalLoads.setDisabled(bool_key)
 
-    def modify_acoustic_model_setup_items_acces(self, bool_key):
-        self.item_child_set_acoustic_pressure.setDisabled(bool_key)
-        self.item_child_set_mass_flow_rate.setDisabled(bool_key)
-        self.item_child_set_surface_velocity.setDisabled(bool_key)
-        self.item_child_set_specific_impedance.setDisabled(bool_key)
-        self.item_child_set_anechoic_termination.setDisabled(bool_key)
-        self.item_child_set_dissipation_model.setDisabled(bool_key)
-        self.item_child_set_porous_material_model.setDisabled(bool_key)
-        self.item_child_set_viscous_thermal_model.setDisabled(bool_key)
-        self.item_child_add_compressor_excitation.setDisabled(bool_key)
+    def modify_acoustic_model_setup_items_acces(self, key: bool):
+        self.item_child_set_acoustic_pressure.setDisabled(key)
+        self.item_child_set_mass_flow_rate.setDisabled(key)
+        self.item_child_set_surface_velocity.setDisabled(key)
+        self.item_child_set_specific_impedance.setDisabled(key)
+        self.item_child_set_anechoic_termination.setDisabled(key)
+        self.item_child_set_dissipation_model.setDisabled(key)
+        self.item_child_set_porous_material_model.setDisabled(key)
+        self.item_child_set_viscous_thermal_model.setDisabled(key)
+        self.item_child_set_acoustic_properties_gradient.setDisabled(key)
+        self.item_child_add_compressor_excitation.setDisabled(key)
 
-    def modify_analysis_items_acces(self, bool_key):
-        self.item_child_selectAnalysisType.setDisabled(bool_key)
-        self.item_child_runAnalysis.setDisabled(bool_key)
-        self.item_child_reset_solution.setDisabled(bool_key)
+    def modify_analysis_items_acces(self, key: bool):
+        self.item_child_selectAnalysisType.setDisabled(key)
+        self.item_child_runAnalysis.setDisabled(key)
+        self.item_child_reset_solution.setDisabled(key)
 
-    def modify_items_acoustic_results_viewer(self, bool_key):
-        self.item_top_resultsViewer_acoustic.setHidden(bool_key)
-        self.item_child_plotAcousticModeShapes.setDisabled(bool_key)
-        self.item_child_plot_acoustic_pressure_frequency_response.setDisabled(bool_key)
-        self.item_child_plot_acoustic_pressure_frequency_response_function.setDisabled(bool_key)
-        self.item_child_plot_acoustic_pressure_field.setDisabled(bool_key)
-        self.item_child_plotAcousticDeltaPressures.setDisabled(bool_key)
-        self.item_child_plot_TL_NR.setDisabled(bool_key)
+    def modify_items_acoustic_results_viewer(self, key: bool):
+        self.item_top_resultsViewer_acoustic.setHidden(key)
+        self.item_child_plotAcousticModeShapes.setDisabled(key)
+        self.item_child_plot_acoustic_pressure_frequency_response.setDisabled(key)
+        self.item_child_plot_acoustic_pressure_frequency_response_function.setDisabled(key)
+        self.item_child_plot_acoustic_pressure_field.setDisabled(key)
+        self.item_child_plotAcousticDeltaPressures.setDisabled(key)
+        self.item_child_plot_TL_NR.setDisabled(key)
 
-    def modify_items_structural_results_viewer(self, bool_key):
-        self.item_top_resultsViewer_structural.setHidden(bool_key)
-        self.item_child_plotDisplacementField.setDisabled(bool_key)
-        self.item_child_plotStructuralFrequencyResponse.setDisabled(bool_key)
-        self.item_child_plotReactionsFrequencyResponse.setDisabled(bool_key)
-        self.item_child_plotStressField.setDisabled(bool_key)
-        self.item_child_plotStructuralModeShapes.setDisabled(bool_key)
+    def modify_items_structural_results_viewer(self, key: bool):
+        self.item_top_resultsViewer_structural.setHidden(key)
+        self.item_child_plotDisplacementField.setDisabled(key)
+        self.item_child_plotStructuralFrequencyResponse.setDisabled(key)
+        self.item_child_plotReactionsFrequencyResponse.setDisabled(key)
+        self.item_child_plotStressField.setDisabled(key)
+        self.item_child_plotStructuralModeShapes.setDisabled(key)
 
     def modify_items_access_after_geometry_importing(self):
 
