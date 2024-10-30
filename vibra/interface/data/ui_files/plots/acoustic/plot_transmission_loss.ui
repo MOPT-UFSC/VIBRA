@@ -404,8 +404,8 @@
               </property>
               <property name="iconSize">
                <size>
-                <width>20</width>
-                <height>20</height>
+                <width>22</width>
+                <height>22</height>
                </size>
               </property>
               <property name="flat">
@@ -547,8 +547,8 @@ background-color: rgb(255,255,255)</string>
          <property name="spacing">
           <number>2</number>
          </property>
-         <item row="0" column="0">
-          <widget class="QPushButton" name="pushButton_plot_frequency_response">
+         <item row="0" column="1">
+          <widget class="QPushButton" name="pushButton_plot_data">
            <property name="minimumSize">
             <size>
              <width>120</width>
@@ -575,6 +575,36 @@ background-color: rgb(255,255,255)</string>
            </property>
            <property name="text">
             <string>Plot data</string>
+           </property>
+           <property name="flat">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QPushButton" name="pushButton_cancel">
+           <property name="minimumSize">
+            <size>
+             <width>120</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>120</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="text">
+            <string>Cancel</string>
            </property>
            <property name="flat">
             <bool>false</bool>
@@ -679,7 +709,7 @@ background-color: rgb(255,255,255)</string>
              <number>2</number>
             </property>
             <item row="0" column="0">
-             <widget class="QPushButton" name="pushButton_call_data_exporter">
+             <widget class="QPushButton" name="pushButton_export_data">
               <property name="minimumSize">
                <size>
                 <width>40</width>
@@ -801,9 +831,9 @@ background-color: rgb(255,255,255)</string>
   <tabstop>lineEdit_output_surface_id</tabstop>
   <tabstop>lineEdit_input_surface_id</tabstop>
   <tabstop>comboBox_processing_selector</tabstop>
-  <tabstop>pushButton_plot_frequency_response</tabstop>
+  <tabstop>pushButton_plot_data</tabstop>
   <tabstop>pushButton_flip_selection</tabstop>
-  <tabstop>pushButton_call_data_exporter</tabstop>
+  <tabstop>pushButton_export_data</tabstop>
  </tabstops>
  <resources/>
  <connections/>

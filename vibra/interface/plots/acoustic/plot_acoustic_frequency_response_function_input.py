@@ -65,17 +65,19 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         self.current_lineEdit = self.lineEdit_output_selected_id
 
         # QPushButton
-        self.pushButton_call_data_exporter : QPushButton
-        self.pushButton_plot_frequency_response : QPushButton
+        self.pushButton_export_data : QPushButton
+        self.pushButton_cancel: QPushButton
+        self.pushButton_plot_data : QPushButton
         self.pushButton_flip_selection : QPushButton
 
     def _create_connections(self):
         #
         self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
         #
-        self.pushButton_call_data_exporter.clicked.connect(self.call_data_exporter)
+        self.pushButton_export_data.clicked.connect(self.export_data_callback)
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_flip_selection.clicked.connect(self.flip_nodes)
-        self.pushButton_plot_frequency_response.clicked.connect(self.call_plotter)
+        self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
         #
@@ -180,7 +182,7 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         self.lineEdit_input_selected_id.setText(temp_output)
         self.lineEdit_output_selected_id.setText(temp_input)
 
-    def call_plotter(self):
+    def plot_data_callback(self):
 
         if self.check_inputs():
             return
@@ -189,7 +191,9 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         self.plotter = FrequencyResponsePlotter()
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
-    def call_data_exporter(self):
+        self.pushButton_cancel.setText("Exit")
+
+    def export_data_callback(self):
 
         if self.check_inputs():
             return
@@ -311,7 +315,7 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.call_plotter()
+            self.plot_data_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
 
