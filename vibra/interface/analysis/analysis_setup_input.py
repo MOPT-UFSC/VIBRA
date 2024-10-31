@@ -75,10 +75,12 @@ class AnalysisSetupInput(QDialog):
         self.f_step = 0
 
     def _define_qt_variables(self):
+
         # QLabel
         self.label_title : QLabel
         self.label_subtitle : QLabel
 
+        # QLineEdit
         if self.analysis_id == 1:
             self.lineEdit_modes : QLineEdit
 
@@ -91,9 +93,11 @@ class AnalysisSetupInput(QDialog):
         self.lineEdit_fmax : QLineEdit
         self.lineEdit_fstep : QLineEdit
 
+        # QPushButton
         self.pushButton_confirm_close : QPushButton
         self.pushButton_confirm_run_analysis : QPushButton
 
+        # QTabWidget
         self.tabWidget : QTabWidget
         self.currentTab = self.tabWidget.currentIndex()
 
