@@ -354,6 +354,7 @@ class ProcessAcousticTransferElementData(QDialog):
                 }
 
         self.project.set_surface_velocity(data, surface_id)
+        app().main_window.file.write_model_properties_in_file()
         app().main_window.set_geometry_selection(surfaces=[surface_id])
 
     def process_areas(self):
