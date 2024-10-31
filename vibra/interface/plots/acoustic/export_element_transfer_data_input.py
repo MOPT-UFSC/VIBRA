@@ -229,9 +229,11 @@ class ExportElementTransferDataInput(QDialog):
             return None
 
         if self.comboBox_excitation_surface.currentIndex() == 0:
-            area, surface_velocity = self.get_area_and_surface_velocity(self.input_selection_id)
+            excitation_id = self.input_selection_id
         else:
-            area, surface_velocity = self.get_area_and_surface_velocity(self.output_selection_id)
+            excitation_id = self.output_selection_id
+        
+        area, surface_velocity = self.get_area_and_surface_velocity(excitation_id)
 
         if area is None:
             self.hide()
@@ -243,16 +245,12 @@ class ExportElementTransferDataInput(QDialog):
             app().main_window.set_input_widget(self)
             return None
 
-        volume_velocity = surface_velocity * area
-
-        # particle_velocities = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id, rho)
-        # particle_velocities_comp = np.array(list(particle_velocities[component_label].values()), dtype=complex)
+        # Note: the negative signal ensures the assembly consistency of acoustic transfer element
+        volume_velocity = -surface_velocity * area
 
         node_ids = np.sort(surface_nodes)
         pressures = self.solution[node_ids, :]
-
         avg_pressure = np.average(pressures, axis=0)
-        # avg_particle_velocity = np.average(particle_velocities_comp, axis=0)
 
         return avg_pressure / volume_velocity
 
