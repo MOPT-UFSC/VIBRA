@@ -92,12 +92,8 @@ class ProcessAcousticTransferElementData(QDialog):
 
         selected_faces = app().main_window.selected_geometry_surfaces
 
-        if selected_faces:
-
-            if len(selected_faces) > 1:
-                return
-
-            else:
+        if len(selected_faces) == 1:
+            if isinstance(self.current_lineEdit, QLineEdit):
                 _selected_faces = [str(i) for i in selected_faces]
                 self.current_lineEdit.setText(_selected_faces[0])
 
@@ -356,7 +352,7 @@ class ProcessAcousticTransferElementData(QDialog):
 
         self.project.set_surface_velocity(data, surface_id)
         app().main_window.file.write_model_properties_in_file()
-        app().main_window.set_geometry_selection(surfaces=[surface_id])
+        # app().main_window.set_geometry_selection(surfaces=[surface_id])
 
     def process_areas(self):
 
@@ -483,10 +479,11 @@ class ProcessAcousticTransferElementData(QDialog):
             self.export_data_in_spreadsheet_format(path)
 
     def print_final_message(self):
+        window_title = "Vibra"
         title = "Data exporting finished"
         message = "The acoustic transfer element data exportation has been finished."
-        PrintMessageInput([window_title_2, title, message])
-        self.pushButton_cancel.setText("Exit")    
+        PrintMessageInput([window_title, title, message])
+        self.pushButton_cancel.setText("Exit")
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
