@@ -327,6 +327,7 @@ class ProcessAcousticTransferElementData(QDialog):
         solve_harmonic()
 
         app().main_window.viewer_tabs.show_acoustic_harmonic_analysis()
+        app().main_window.menu_widget.update_items()
         self.print_final_message()
         # self.close()
 
@@ -485,7 +486,7 @@ class ProcessAcousticTransferElementData(QDialog):
         title = "Data exporting finished"
         message = "The acoustic transfer element data exportation has been finished."
         PrintMessageInput([window_title_2, title, message])
-        self.pushButton_cancel.setText("Close")    
+        self.pushButton_cancel.setText("Exit")    
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
