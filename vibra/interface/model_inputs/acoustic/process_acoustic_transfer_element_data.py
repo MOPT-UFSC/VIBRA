@@ -436,7 +436,7 @@ class ProcessAcousticTransferElementData(QDialog):
             data_type = "transfer_function"
             y_label = "Transfer function H(f)"
 
-            data_name = f"transfer_function_H{resp_id}{excit_id}"
+            data_name = f"transfer_function_h{resp_id}{excit_id}"
             key = (data_name, (self.input_selection_id, self.output_selection_id))
 
             self.element_transfer_data[key] = { 
