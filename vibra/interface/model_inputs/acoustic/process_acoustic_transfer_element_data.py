@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QDialog, QFileDialog, QLineEdit, QPushButton
+from PyQt5.QtWidgets import QDialog, QFileDialog, QLineEdit, QPushButton, QTabWidget
 from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt5.QtGui import QCloseEvent
 from PyQt5 import uic
@@ -76,6 +76,10 @@ class ProcessAcousticTransferElementData(QDialog):
         self.pushButton_invert_selection: QPushButton
         self.pushButton_search: QPushButton
 
+        # QTabWidget
+        self.tabWidget_main: QTabWidget
+        self.tabWidget_main.setTabVisible(1, False)
+
     def _create_connections(self):
         #
         self.pushButton_cancel.clicked.connect(self.close)
@@ -132,19 +136,19 @@ class ProcessAcousticTransferElementData(QDialog):
     def _load_analysis_data(self):
 
         data = self.project.analysis_data
-        data: dict
+        if isinstance(data, dict):
 
-        if "f_min" in data.keys():
-            self.f_min = data["f_min"]
-            self.lineEdit_fmin.setText(str(self.f_min))
+            if "f_min" in data.keys():
+                self.f_min = data["f_min"]
+                self.lineEdit_fmin.setText(str(self.f_min))
 
-        if "f_max" in data.keys():
-            self.f_max = data["f_max"]
-            self.lineEdit_fmax.setText(str(self.f_max))
+            if "f_max" in data.keys():
+                self.f_max = data["f_max"]
+                self.lineEdit_fmax.setText(str(self.f_max))
 
-        if "f_step" in data.keys():
-            self.f_step = data["f_step"]
-            self.lineEdit_fstep.setText(str(self.f_step))
+            if "f_step" in data.keys():
+                self.f_step = data["f_step"]
+                self.lineEdit_fstep.setText(str(self.f_step))
 
     def search_callback(self):
 
@@ -298,6 +302,8 @@ class ProcessAcousticTransferElementData(QDialog):
                 app().main_window.viewer_tabs.update_plots()
             else:
                 return
+        
+        app().main_window.set_geometry_selection()
 
         def callback():
             for i, surface_id in enumerate([self.input_selection_id, self.output_selection_id]):
@@ -325,7 +331,6 @@ class ProcessAcousticTransferElementData(QDialog):
         app().main_window.viewer_tabs.show_acoustic_harmonic_analysis()
         app().main_window.menu_widget.update_items()
         self.print_final_message()
-        # self.close()
 
     def remove_model_excitations(self):
 
@@ -479,11 +484,13 @@ class ProcessAcousticTransferElementData(QDialog):
             self.export_data_in_spreadsheet_format(path)
 
     def print_final_message(self):
+
+        self.pushButton_cancel.setText("Exit")
+
         window_title = "Vibra"
         title = "Data exporting finished"
         message = "The acoustic transfer element data exportation has been finished."
         PrintMessageInput([window_title, title, message])
-        self.pushButton_cancel.setText("Exit")
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
