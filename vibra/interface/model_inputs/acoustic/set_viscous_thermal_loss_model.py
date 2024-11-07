@@ -758,7 +758,6 @@ class SetViscousThermalLossModel(QDialog):
         omega = 2 * np.pi * freq
 
         model = ViscousThermalLossModels(self)
-        # model.process_effective_properties(frequencies)
 
         tab_index = self.tabWidget_main.currentIndex()
 

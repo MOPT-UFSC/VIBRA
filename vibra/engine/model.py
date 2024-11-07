@@ -210,15 +210,6 @@ class Model:
 
         return rho
 
-    def process_lrf_properties(self, frequencies):
-
-        model = LowReducedFrequencyModel(self)
-        model.process_effective_properties(frequencies)
-
-        self.lrf_properties = dict()
-        for element_id, data in model.low_reduced_frequency_properties.items():
-            self.lrf_properties[element_id] = data
-
     def process_porous_material_properties(self, frequencies):
 
         model = PorousMaterialModels(self)
@@ -246,6 +237,15 @@ class Model:
                         return True, rho_eff, C_eff
 
         return False, None, None
+
+    # def process_lrf_properties(self, frequencies):
+
+    #     model = LowReducedFrequencyModel(self)
+    #     model.process_effective_properties(frequencies)
+
+    #     self.lrf_properties = dict()
+    #     for element_id, data in model.low_reduced_frequency_properties.items():
+    #         self.lrf_properties[element_id] = data
 
     def process_viscous_thermal_model_properties(self, frequencies):
 

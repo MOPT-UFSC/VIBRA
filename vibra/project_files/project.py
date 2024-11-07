@@ -226,7 +226,6 @@ class Project:
 
     def solve_acoustic_harmonic_analysis(self):
         self.model.reset_dissipation_model_properties()
-        self.model.process_lrf_properties(self.analysis_data["frequencies"])
         self.model.process_porous_material_properties(self.analysis_data["frequencies"])
         self.model.process_viscous_thermal_model_properties(self.analysis_data["frequencies"])
         self.acoustic_assembler.process_assemble()
