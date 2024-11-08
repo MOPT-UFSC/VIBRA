@@ -23,7 +23,6 @@ import gmsh
 import sys
 
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 from time import time
 
 import numpy as np
