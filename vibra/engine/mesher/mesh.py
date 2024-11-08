@@ -613,17 +613,24 @@ class Mesh:
 
     def get_solid_elements_connected_to_nodes(self, node_ids):
 
+        # t0 = time()
+
         solid_elements_connected_to_nodes = dict()
+
+        mask_0 = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= 1
+        filtered_data = self.solids_connectivity[mask_0, :]
 
         Nel = len(node_ids)
         for i, node_id in enumerate(node_ids):
-            # t0 = time()
-            mask = np.sum(self.solids_connectivity[:, 4:] == node_id, axis=1) == 1
-            solid_elements_connected_to_nodes[node_id] = self.solids_connectivity[:, 0][mask]
+            # mask = np.sum(self.solids_connectivity[:, 4:] == node_id, axis=1) == 1
+            # solid_elements_connected_to_nodes[node_id] = self.solids_connectivity[:, 0][mask]
+            mask = np.sum(filtered_data[:, 4:] == node_id, axis=1) == 1
+            solid_elements_connected_to_nodes[node_id] = filtered_data[:, 0][mask]
 
-            # dt = time() - t0
-            # print(f"Loop time: {dt} s")
             logging.info("Obtaining solid elements connected to nodes..." + ProgressStatus(int(100 * i / Nel), 100))
+
+        # dt = time() - t0
+        # print(f"Loop time: {dt} s")
 
         return solid_elements_connected_to_nodes
 
