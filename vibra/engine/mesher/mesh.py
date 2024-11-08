@@ -590,23 +590,30 @@ class Mesh:
 
     def get_face_elements_connected_to_nodes(self, node_ids, surface_id=None):
 
+        # t0 = time()
+
         face_elements_connected_to_nodes = dict()
+
+        if surface_id is None:
+            mask_0 = np.sum(np.isin(self.faces_connectivity[:, 4:], node_ids), axis=1) >= 1
+            filtered_data = self.faces_connectivity[mask_0, :]
 
         Nel = len(node_ids)
         for i, node_id in enumerate(node_ids):
-            # t0 = time()
+
             if surface_id is None:
-                mask = np.sum(self.faces_connectivity[:, 4:] == node_id, axis=1) == 1
-                face_elements_connected_to_nodes[node_id, surface_id] = self.faces_connectivity[:, 0][mask]
+                mask = np.sum(filtered_data[:, 4:] == node_id, axis=1) == 1
+                face_elements_connected_to_nodes[node_id, surface_id] = filtered_data[:, 0][mask]
             else:
                 connect_from_surface = self.connectivity_from_surfaces[surface_id]
                 mask = np.sum(connect_from_surface == node_id, axis=1) == 1
-                face_elements_connected_to_nodes[node_id, surface_id] = connect_from_surface[mask, :]
+                face_elements_connected_to_nodes[node_id, surface_id] = connect_from_surface[mask, :]                
 
-            # dt = time() - t0
-            # print(f"Loop time: {dt} s")
             text = f"Obtaining face elements connected to nodes... \nSurface [{surface_id}]"
             logging.info(text + ProgressStatus(int(100 * i / Nel), 100))
+
+        # dt = time() - t0
+        # print(f"Loop time: {dt} s")
 
         return face_elements_connected_to_nodes
 
