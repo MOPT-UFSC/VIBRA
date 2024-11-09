@@ -65,7 +65,7 @@ def test_load_external_mesh_and_solve():
         ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
         mesh.nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
 
-        mesh.volume_from_surface[tag] = [3]
+        mesh.volume_from_surface[tag] = [1]
 
     mesh.surfaces_from_volumes[1] = [1, 2]
 
