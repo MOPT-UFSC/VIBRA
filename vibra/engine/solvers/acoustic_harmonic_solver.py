@@ -129,11 +129,13 @@ class AcousticHarmonicSolver:
 
                 self.assembler.assemble_global_mass_matrix(index=i)
                 self.assembler.assemble_global_stiffness_matrix(index=i)
+                self.assembler.assemble_global_damping_matrix_2d_elements(index=i)
 
                 F_eq = self.get_prescribed_pressure_model_excitation(freq_dependent=True, index=i)
 
                 M = self.assembler.mass_matrix
                 K = self.assembler.stiffness_matrix
+                C_imp = self.assembler.damping_matrix
 
                 F = Q_visc @ Q[:, i] - 1j * omega * Q[:, i] - F_eq
 
@@ -141,7 +143,7 @@ class AcousticHarmonicSolver:
 
                 F = Q_visc @ Q[:, i] - 1j * omega * Q[:, i] - F_eq[:, i]
 
-            C = C_imp[i] + C_visc
+            C = C_imp + C_visc
             A = K - (omega**2) * M + 1j * omega * C
 
             A = triu(A, format="csr")
@@ -196,6 +198,7 @@ class AcousticHarmonicSolver:
         #
         Kr = (self.assembler.stiffness_matrix_r.toarray())[self.unprescribed_indexes, :]
         Mr = (self.assembler.mass_matrix_r.toarray())[self.unprescribed_indexes, :]
+        Cr = (self.assembler.damping_matrix_r.toarray())[self.unprescribed_indexes, :]
         Cr_visc = (self.assembler.visc_damping_matrix_r.toarray())[self.unprescribed_indexes, :]
 
         # logging.info( "Processing prescribed pressure model excitation..." + ProgressStatus(10, len(self.frequencies)))
@@ -209,24 +212,12 @@ class AcousticHarmonicSolver:
             F_eq = np.zeros((rows,cols), dtype=complex)
 
         nf = len(self.frequencies)
-        aux_ones = np.ones(nf, dtype=complex)
 
         if len(self.prescribed_values) != 0:
 
-            # list_prescribed_values = list()
-
-            # for value in self.prescribed_values:
-            #     if isinstance(value, complex):
-            #         list_prescribed_values.append(aux_ones*value)
-            #     elif isinstance(value, np.ndarray):
-            #         list_prescribed_values.append(value)
-      
-            # self.array_prescribed_values = np.array(list_prescribed_values)
-
             if freq_dependent:
+                #
                 # logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(index + 10, len(self.frequencies) + 10))
-
-                Cr = (self.assembler.damping_matrix_r[index].toarray())[self.unprescribed_indexes, :]
                 #
                 Kr_add = np.sum((Kr * self.array_prescribed_values[:, index]), axis=1)
                 Mr_add = np.sum((Mr * self.array_prescribed_values[:, index]), axis=1)
@@ -237,14 +228,12 @@ class AcousticHarmonicSolver:
                 F_Madd = (-(omega**2))*Mr_add 
                 F_Cadd = 1j*omega*Cr_add
                 F_eq = F_Kadd + F_Madd + F_Cadd
-            
+
             else:
-               
+
                 for i, freq in enumerate(self.frequencies):
                     #
                     logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(i + 10, len(self.frequencies) + 10))
-
-                    Cr = (self.assembler.damping_matrix_r[i].toarray())[self.unprescribed_indexes, :]
                     #
                     Kr_add = np.sum((Kr * self.array_prescribed_values[:, i]), axis=1)
                     Mr_add = np.sum((Mr * self.array_prescribed_values[:, i]), axis=1)

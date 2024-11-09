@@ -15,12 +15,14 @@ from vibra.engine.mesher.element_type import *
 from vibra.utils.progress_status import ProgressStatus
 
 import logging
-from collections import defaultdict
-from time import time
-
 import numpy as np
+
+from collections import defaultdict
+
 from scipy.sparse import coo_matrix, csr_matrix
 from scipy.special import jv
+from sys import getsizeof
+from time import time
 
 
 class AcousticAssembler:
@@ -296,9 +298,6 @@ class AcousticAssembler:
                     self.den_K[el, :] = aux_ones / (rho_0)
                     self.den_M[el, :] = aux_ones / (rho_0 * C_0**2)
 
-            # mesh_widget = app().main_window.viewer_tabs.mesh_widget
-            # mesh_widget.select_multiple_volumes(list_elements)
-
         else:
 
             nf = 1
@@ -321,40 +320,27 @@ class AcousticAssembler:
                 self.data_Qvisc[el, :, :] = 0 * ((4 * mu_0) / (3 * rho_0)) * Ke
 
         self.process_indexes()
+        self.get_data_to_process_damping_matrix()
 
-    def assemble_global_stiffness_matrix(self, index=0):
-        data_K = self.data_K * self.den_K[:, index].reshape(-1, 1, 1)
-        _stiffness_matrix_full = csr_matrix((data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
-        self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-        self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_indexes]
-
-    def assemble_global_mass_matrix(self, index=0):
-        data_M = self.data_M * self.den_M[:, index].reshape(-1, 1, 1)
-        _mass_matrix_full = csr_matrix((data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
-        self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-        self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_indexes]
-
-    def assemble_global_damping_matrix(self):
-
-        data_Z = dict()
-        aux_ones = np.ones(self.number_frequencies, dtype=complex)
-
+    def get_data_to_process_damping_matrix(self):
+        """
+        """
+        self.data_Cimp = dict()
+        
         _, element_2D = self.get_element()
         dofs = element_2D.DOFS_PER_ELEMENT
-        total_dofs = element_2D.DOF_PER_NODE * len(element_2D.nodal_coordinates)
+        self.total_dofs_2d = element_2D.DOF_PER_NODE * len(element_2D.nodal_coordinates)
 
-        connect, surface_data = self.get_surface_data_for_element_integration_by_property("specific_impedance")
+        self.si_connect, surface_data = self.get_surface_data_for_element_integration_by_property("specific_impedance")
 
-        if connect is None:
-            _damping_matrix_full = [csr_matrix((total_dofs, total_dofs)) for _ in range(self.number_frequencies)]
+        if self.si_connect is not None:
 
-        else:
-
-            nel = connect.shape[0]
+            nel = self.si_connect.shape[0]
             for j in range(self.number_frequencies):
-                data_Z[j] = np.zeros((nel, dofs, dofs), dtype=complex)
+                self.data_Cimp[j] = np.zeros((nel, dofs, dofs), dtype=complex)
 
-            ind_rows_Z, ind_cols_Z = element_2D.generate_ind_rows_cols(connect)
+            aux_ones = np.ones(self.number_frequencies, dtype=complex)
+            self.ind_rows_Z, self.ind_cols_Z = element_2D.generate_ind_rows_cols(self.si_connect)
 
             for i, [complex_values, _] in enumerate(surface_data.values()):
 
@@ -363,20 +349,56 @@ class AcousticAssembler:
 
                 normalized_matrix_Z = element_2D.matrices_Z(i)
                 for j in range(self.number_frequencies):
-                    data_Z[j][i, :, :] = normalized_matrix_Z / complex_values[j]
+                    self.data_Cimp[j][i, :, :] = normalized_matrix_Z / complex_values[j]
 
-            _damping_matrix_full = [csr_matrix((data_Z[j].flatten(), (ind_rows_Z, ind_cols_Z)), shape=(total_dofs, total_dofs)) for j in range(self.number_frequencies)]
+    def assemble_global_stiffness_matrix(self, index=0):
+        """
+        """
+        data_K = self.data_K * self.den_K[:, index].reshape(-1, 1, 1)
+        _stiffness_matrix_full = csr_matrix((data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
+        self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+        self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_indexes]
+        
+        size = getsizeof(_stiffness_matrix_full) / 1e6
+        print(f"Size of stiffness_matrix: {round(size, 4)} MB")
 
-        self.damping_matrix = [matrix[self.unprescribed_indexes, :][:, self.unprescribed_indexes] for matrix in _damping_matrix_full]
-        self.damping_matrix_r = [matrix[:, self.prescribed_indexes] for matrix in _damping_matrix_full]
+    def assemble_global_mass_matrix(self, index=0):
+        """
+        """
+        data_M = self.data_M * self.den_M[:, index].reshape(-1, 1, 1)
+        _mass_matrix_full = csr_matrix((data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
+        self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+        self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_indexes]
 
+        size = getsizeof(_mass_matrix_full) / 1e6
+        print(f"Size of mass_matrix: {round(size, 4)} MB")
+
+    def assemble_global_damping_matrix_3d_elements(self):
+        """
+        """
+        # assemble the viscous damping matrix
         _visc_damping_matrix_full = csr_matrix((self.data_Cvisc.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
         self.visc_damping_matrix = _visc_damping_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         self.visc_damping_matrix_r = _visc_damping_matrix_full[:, self.prescribed_indexes]
 
+        # assemble the Qviscous damping matrix
         _Qvisc_damping_matrix_full = csr_matrix((self.data_Qvisc.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
         self.Qvisc_damping_matrix = _Qvisc_damping_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         self.Qvisc_damping_matrix_r = _Qvisc_damping_matrix_full[:, self.prescribed_indexes]
+
+    def assemble_global_damping_matrix_2d_elements(self, index=0):
+        """
+        """
+        if self.si_connect is None:
+            _damping_matrix_full = csr_matrix((self.total_dofs_2d, self.total_dofs_2d))
+        else:
+            _damping_matrix_full = csr_matrix((self.data_Cimp[index].flatten(), (self.ind_rows_Z, self.ind_cols_Z)), shape=(self.total_dofs_2d, self.total_dofs_2d))
+
+        self.damping_matrix = _damping_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+        self.damping_matrix_r = _damping_matrix_full[:, self.prescribed_indexes]
+
+        size = getsizeof(_damping_matrix_full) / 1e6
+        print(f"Size of damping_matrix: {round(size, 4)} MB")
 
     def get_acoustic_excitations_by_nodal_attribution(self):
         """ This method processes the acoustic model excitations and
@@ -528,7 +550,9 @@ class AcousticAssembler:
         
         logging.info( "Assembling global mass matrix..." + ProgressStatus(70, 100))
         t0 = time()
-        self.assemble_global_damping_matrix()
+        # self.assemble_global_damping_matrix()
+        self.assemble_global_damping_matrix_3d_elements()
+        self.assemble_global_damping_matrix_2d_elements()
         dt = time() - t0
         print(f"Elapsed time to assemble the global damping matrix: {round(dt, 4)} s")
         
