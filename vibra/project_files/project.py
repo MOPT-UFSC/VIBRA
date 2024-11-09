@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from time import sleep
+from time import sleep, time
 
 from vibra import app
 from vibra.engine.model import Model
@@ -214,7 +214,10 @@ class Project:
     def solve_acoustic_modal_analysis(self):
         self.model.reset_dissipation_model_properties()
         self.acoustic_assembler.process_assemble()
+        t0 = time()
         self.acoustic_modal_solver.solve()
+        dt = time() - t0
+        print(f"Elapsed time to solve modal analysis: {round(dt, 6)}")
         app().main_window.file.write_results_data_in_file()
         app().main_window.advanced_results_menu.disable_advanced_acoustic_plots_buttons(True)
 
@@ -229,7 +232,10 @@ class Project:
         self.model.process_porous_material_properties(self.analysis_data["frequencies"])
         self.model.process_viscous_thermal_model_properties(self.analysis_data["frequencies"])
         self.acoustic_assembler.process_assemble()
+        t0 = time()
         self.acoustic_harmonic_solver.solve()
+        dt = time() - t0
+        print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)}")
         app().main_window.file.write_results_data_in_file()
         app().main_window.advanced_results_menu.disable_advanced_acoustic_plots_buttons(False)
 
