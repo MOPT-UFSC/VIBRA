@@ -122,20 +122,21 @@ class AcousticHarmonicSolver:
 
             if print_log:
                 print(f"Solution step {i} -> frequency {freq} Hz")
-            
+
             omega = 2 * np.pi * freq
 
             if freq_dependent:
+                if i > 0:
 
-                self.assembler.assemble_global_mass_matrix(index=i)
-                self.assembler.assemble_global_stiffness_matrix(index=i)
-                self.assembler.assemble_global_damping_matrix_2d_elements(index=i)
+                    self.assembler.assemble_global_mass_matrix(index=i)
+                    self.assembler.assemble_global_stiffness_matrix(index=i)
+                    self.assembler.assemble_global_damping_matrix_2d_elements(index=i)
+
+                    M = self.assembler.mass_matrix
+                    K = self.assembler.stiffness_matrix
+                    C_imp = self.assembler.damping_matrix
 
                 F_eq = self.get_prescribed_pressure_model_excitation(freq_dependent=True, index=i)
-
-                M = self.assembler.mass_matrix
-                K = self.assembler.stiffness_matrix
-                C_imp = self.assembler.damping_matrix
 
                 F = Q_visc @ Q[:, i] - 1j * omega * Q[:, i] - F_eq
 

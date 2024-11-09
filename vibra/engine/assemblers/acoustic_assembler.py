@@ -358,9 +358,6 @@ class AcousticAssembler:
         _stiffness_matrix_full = csr_matrix((data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
         self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_indexes]
-        
-        size = getsizeof(_stiffness_matrix_full) / 1e6
-        print(f"Size of stiffness_matrix: {round(size, 4)} MB")
 
     def assemble_global_mass_matrix(self, index=0):
         """
@@ -369,9 +366,6 @@ class AcousticAssembler:
         _mass_matrix_full = csr_matrix((data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
         self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_indexes]
-
-        size = getsizeof(_mass_matrix_full) / 1e6
-        print(f"Size of mass_matrix: {round(size, 4)} MB")
 
     def assemble_global_damping_matrix_3d_elements(self):
         """
@@ -396,9 +390,6 @@ class AcousticAssembler:
 
         self.damping_matrix = _damping_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         self.damping_matrix_r = _damping_matrix_full[:, self.prescribed_indexes]
-
-        size = getsizeof(_damping_matrix_full) / 1e6
-        print(f"Size of damping_matrix: {round(size, 4)} MB")
 
     def get_acoustic_excitations_by_nodal_attribution(self):
         """ This method processes the acoustic model excitations and
@@ -528,12 +519,35 @@ class AcousticAssembler:
         else:
             return output
 
+    def show_required_memory(self):
+
+        sizes = dict(
+                     size_K = getsizeof(self.data_K),
+                     size_M = getsizeof(self.data_M),
+                     size_Cvisc = getsizeof(self.data_Cvisc),
+                     size_Qvisc = getsizeof(self.data_Qvisc),
+                     size_Cimp = getsizeof(self.data_Cimp),
+                     size_ind_rows = getsizeof(self.ind_rows),
+                     size_ind_cols = getsizeof(self.ind_cols),
+                     size_ind_rows_Z = getsizeof(self.ind_rows_Z),
+                     size_ind_cols_Z = getsizeof(self.ind_cols_Z)
+                     )
+
+        total_size = 0.
+        for name, size in sizes.items():
+            size_MB = size / 1e6
+            print(f"{name} = {round(size_MB, 4)}[MB]")
+            total_size += size_MB
+
+        print(f"Total memory required: {round(total_size, 4)}[MB]\n")
+
     def process_assemble(self):
 
         logging.info( "Gathering data to assemble global matrices..." + ProgressStatus(10, 100))
         t0 = time()
         self.get_data_to_process_global_matrices()
         dt = time() - t0
+        self.show_required_memory()
         print(f"Elapsed time to process data to assemble global matrices: {round(dt, 4)} s")
         
         logging.info( "Assembling global stiffness matrix..." + ProgressStatus(50, 100))
