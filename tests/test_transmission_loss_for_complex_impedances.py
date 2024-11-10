@@ -22,7 +22,7 @@ pm_model = "DB"
 
 @pytest.mark.slow
 def test_load_external_mesh_and_solve():
-    return
+    # return
 
     # start decoding the Ansys script file (ds.dat file or input file)
     mesh_path = "validation/data/particle_velocity/mesh/silencer/ds_only_fluid_of_silencer_suction_stg1.dat"
@@ -115,6 +115,9 @@ def test_load_external_mesh_and_solve():
                 "imag_values" : [0],
                 "nodal_attribution" : False,
                 "averaged" : False }
+    
+    complex_fluid_data = get_complex_impedance_data()
+    impedance_data = complex_fluid_data["complex_impedance"]
 
     # Impedance data
     # Zo = fluid.impedance
@@ -123,9 +126,14 @@ def test_load_external_mesh_and_solve():
     #             "nodal_attribution" : False,
     #             "averaged" : False  }
 
-    data_Z = {  "anechoic_termination": True,
-                "volume_id": 1,
-                "nodal_attribution": False  }
+    data_Z = {  "real_values" : list(impedance_data[:, 1]),
+                "imag_values" : list(impedance_data[:, 2]),
+                "nodal_attribution" : False,
+                "averaged" : False  }
+
+    # data_Z = {  "anechoic_termination": True,
+    #             "volume_id": 1,
+    #             "nodal_attribution": False  }
 
     model.set_surface_velocity(data_Vn, 1)
     model.set_specific_impedance(data_Z, 1)
@@ -138,9 +146,9 @@ def test_load_external_mesh_and_solve():
     frequencies = np.arange(f_min, f_max + df, df)
 
     # Configure porous material
-    pm_data = get_porous_material_data(model=pm_model)
-    model.set_porous_material_model_data(pm_data, volume=1)
-    model.process_porous_material_properties(frequencies)
+    # pm_data = get_porous_material_data(model=pm_model)
+    # model.set_porous_material_model_data(pm_data, volume=1)
+    # model.process_porous_material_properties(frequencies)
 
     assembler = AcousticAssembler(model)
 
@@ -465,8 +473,46 @@ def get_porous_material_data(model="DB"):
 def get_external_results():
 
     imported_results = dict()
-    results_path = f"validation/data/particle_velocity/results/silencer/WB_results_silencer_only_fluid_{pm_model}_Vn1_Z1_Z2_complex.xlsx"
+    # results_path = f"validation/data/particle_velocity/results/silencer/WB_results_silencer_only_fluid_{pm_model}_Vn1_Z1_Z2_complex.xlsx"
     # results_path = f"validation/data/particle_velocity/results/silencer/WB_results_silencer_only_fluid_{pm_model}_Vn1_Z1_Z2_real.xlsx"
+    results_path = f"validation/data/particle_velocity/results/silencer/WB_results_silencer_only_fluid_Vn1_Z1_Z2_complex.xlsx"
+    # results_path = f"validation/data/particle_velocity/results/silencer/WB_results_silencer_only_fluid_Vn1_Z1_Z2_real.xlsx"
+
+    if not os.path.exists(results_path):
+        return imported_results
+
+    wb = load_workbook(results_path)
+
+    skiprows = 0
+
+    sheetnames = wb.sheetnames
+    for sheetname in sheetnames:
+
+        try:
+            sheet_data = read_excel(
+                                    results_path, 
+                                    sheet_name = sheetname, 
+                                    header = skiprows, 
+                                    usecols = [0,1,2]
+                                    ).to_numpy()
+        except:
+            sheet_data = read_excel(
+                                    results_path, 
+                                    sheet_name = sheetname, 
+                                    header = skiprows, 
+                                    usecols = [0,1]
+                                    ).to_numpy()
+
+        imported_results[sheetname] = sheet_data
+
+    return imported_results
+
+
+
+def get_complex_impedance_data():
+
+    imported_results = dict()
+    results_path = f"validation/data/particle_velocity/results/silencer/complex_fluid_properties_DB_model.xlsx"
 
     if not os.path.exists(results_path):
         return imported_results

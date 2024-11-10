@@ -158,7 +158,7 @@ class AcousticAssembler:
     def get_matrices_dropping_indexes(self):
         return self.unprescribed_indexes, self.prescribed_indexes
 
-    def get_surface_data_for_element_integration_by_property(self, property_label):
+    def get_surface_data_for_element_integration_by_property(self, property_label: str):
         """ """
         connect = None
         surface_data = dict()
@@ -547,20 +547,19 @@ class AcousticAssembler:
         t0 = time()
         self.get_data_to_process_global_matrices()
         dt = time() - t0
-        self.show_required_memory()
-        print(f"Elapsed time to process data to assemble global matrices: {round(dt, 4)} s")
+        print(f"Elapsed time to process data to assemble global matrices: {round(dt, 4)}s")
         
         logging.info( "Assembling global stiffness matrix..." + ProgressStatus(50, 100))
         t0 = time()
         self.assemble_global_stiffness_matrix()
         dt = time() - t0
-        print(f"Elapsed time to assemble the global stiffness matrix: {round(dt, 4)} s")
+        print(f"Elapsed time to assemble the global stiffness matrix: {round(dt, 4)}s")
         
         logging.info( "Assembling global mass matrix..." + ProgressStatus(60, 100))
         t0 = time()
         self.assemble_global_mass_matrix()
         dt = time() - t0
-        print(f"Elapsed time to assemble the global mass matrix: {round(dt, 4)} s")
+        print(f"Elapsed time to assemble the global mass matrix: {round(dt, 4)}s")
         
         logging.info( "Assembling global mass matrix..." + ProgressStatus(70, 100))
         t0 = time()
@@ -568,8 +567,10 @@ class AcousticAssembler:
         self.assemble_global_damping_matrix_3d_elements()
         self.assemble_global_damping_matrix_2d_elements()
         dt = time() - t0
-        print(f"Elapsed time to assemble the global damping matrix: {round(dt, 4)} s")
-        
+        print(f"Elapsed time to assemble the global damping matrix: {round(dt, 4)}s\n")
+
+        self.show_required_memory()
+
         logging.info( "Processing element related loads..." + ProgressStatus(80, 100))
         B = self.get_acoustic_excitations_by_element_integration()
         

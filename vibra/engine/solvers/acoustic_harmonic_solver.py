@@ -125,16 +125,18 @@ class AcousticHarmonicSolver:
 
             omega = 2 * np.pi * freq
 
+            if i > 0:
+                self.assembler.assemble_global_damping_matrix_2d_elements(index=i)
+                C_imp = self.assembler.damping_matrix
+
             if freq_dependent:
                 if i > 0:
 
                     self.assembler.assemble_global_mass_matrix(index=i)
                     self.assembler.assemble_global_stiffness_matrix(index=i)
-                    self.assembler.assemble_global_damping_matrix_2d_elements(index=i)
 
                     M = self.assembler.mass_matrix
                     K = self.assembler.stiffness_matrix
-                    C_imp = self.assembler.damping_matrix
 
                 F_eq = self.get_prescribed_pressure_model_excitation(freq_dependent=True, index=i)
 
@@ -211,8 +213,6 @@ class AcousticHarmonicSolver:
         else:
             cols = len(self.frequencies)
             F_eq = np.zeros((rows,cols), dtype=complex)
-
-        nf = len(self.frequencies)
 
         if len(self.prescribed_values) != 0:
 
