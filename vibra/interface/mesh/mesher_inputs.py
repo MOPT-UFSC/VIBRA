@@ -95,6 +95,8 @@ class MesherInputs(QDialog):
         self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_delete.clicked.connect(self.trash_button_callback)
         self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
+        #
+        self.main_window.selection_changed.connect(self.geometry_selection_callback)
 
     def _load_current_mesh_setup(self):
         mesh_setup = app().main_window.project.model.mesh_setup
@@ -200,10 +202,12 @@ class MesherInputs(QDialog):
         self.lineEdit_refining_size.setText("")
         self.lineEdit_faces_list.setText("")
 
-    def geometry_selection_callback(self, points, lines, faces):
-        faces_list = ", ".join([str(i) for i in faces])
-        self.lineEdit_faces_list.setText(faces_list)
-    
+    def geometry_selection_callback(self):
+        faces = self.main_window.selected_geometry_surfaces
+        if faces:
+            text = ", ".join([str(i) for i in faces])
+            self.lineEdit_faces_list.setText(text)
+
     def get_inputs_table(self):
         faces_and_refined_size_list = []
         for i in range(self.tableWidget_refining_mesh_data.rowCount()):
