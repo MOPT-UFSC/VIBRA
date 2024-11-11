@@ -67,11 +67,11 @@ class MesherInputs(QDialog):
         # QDoubleSpinBox
         self.doubleSpinBox_maximum_element_size: QDoubleSpinBox
         self.doubleSpinBox_minimum_element_size_factor: QDoubleSpinBox
+        self.doubleSpinBox_refined_element_size: QDoubleSpinBox
 
         # QLineEdit
         self.lineEdit_maximum_element_size: QLineEdit
         self.lineEdit_geometry_tolerance: QLineEdit
-        self.lineEdit_refining_size: QLineEdit
         self.lineEdit_selected_ids: QLineEdit
 
         # QPushButton
@@ -85,11 +85,19 @@ class MesherInputs(QDialog):
         self._config_tableWidget_appearance()
 
     def _config_tableWidget_appearance(self):
+
+        widths = [180, 160, 180]
         header = ["Refining mesh size [mm]", "Selection type", "Selection IDs"]
-        self.tableWidget_refining_mesh_data.setColumnCount(len(header))
-        self.tableWidget_refining_mesh_data.setHorizontalHeaderLabels(header)
+
+        for i, width in enumerate(widths):
+            self.tableWidget_refining_mesh_data.setColumnWidth(i, width)
+            self.tableWidget_refining_mesh_data.horizontalHeaderItem(i).setText(header[i])
+            self.tableWidget_refining_mesh_data.horizontalHeaderItem(i).setTextAlignment(Qt.AlignHCenter)
+
+        # self.tableWidget_refining_mesh_data.setColumnCount(len(header))
+        # self.tableWidget_refining_mesh_data.setHorizontalHeaderLabels(header)
         self.tableWidget_refining_mesh_data.setSelectionBehavior(1)
-        self.tableWidget_refining_mesh_data.resizeColumnsToContents()
+        # self.tableWidget_refining_mesh_data.resizeColumnsToContents()
         self.tableWidget_refining_mesh_data.horizontalHeader().setSectionResizeMode(0)
         self.tableWidget_refining_mesh_data.horizontalHeader().setStretchLastSection(True)
 
@@ -120,13 +128,8 @@ class MesherInputs(QDialog):
                 self.lineEdit_geometry_tolerance.setText(str(geometry_tolerance))
                 self.checkBox_mesh_connection.setChecked(mesh_connection)
 
-                if app().main_window.selected_geometry_volumes:
-                    selection_type = "volumes"
-                else:
-                    selection_type = "surfaces"
-
                 self.tableWidget_refining_mesh_data.clearContents()
-                for e_size, surface_ids in mesh_refinement_parameters:
+                for e_size, selection_type, surface_ids in mesh_refinement_parameters:
 
                     row = self.tableWidget_refining_mesh_data.rowCount()
                     rows = row + 1
@@ -230,14 +233,14 @@ class MesherInputs(QDialog):
         else:
             selected_type = "surfaces"
 
-        self.tableWidget_refining_mesh_data.setItem(row, 0, QTableWidgetItem(self.lineEdit_refining_size.text()))
+        ref_size = self.doubleSpinBox_refined_element_size.value()
+        self.tableWidget_refining_mesh_data.setItem(row, 0, QTableWidgetItem(str(ref_size)))
         self.tableWidget_refining_mesh_data.setItem(row, 1, QTableWidgetItem(selected_type))
         self.tableWidget_refining_mesh_data.setItem(row, 2, QTableWidgetItem(self.lineEdit_selected_ids.text()))
 
         for j in range(3):
             self.tableWidget_refining_mesh_data.item(row, j).setTextAlignment(Qt.AlignCenter)
 
-        self.lineEdit_refining_size.setText("")
         self.lineEdit_selected_ids.setText("")
 
     def geometry_selection_callback(self):
