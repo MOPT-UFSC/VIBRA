@@ -41,10 +41,13 @@ class MesherInputs(QDialog):
         ConfigWidgetAppearance(self, tool_tip=True)
 
         self._load_current_mesh_setup()
-        self.exec()
+
+        while self.keep_window_open:
+            self.exec()
 
     def _initialize(self):
         self.complete = False
+        self.keep_window_open = True
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -149,12 +152,6 @@ class MesherInputs(QDialog):
 
             def generate_function():
 
-                logging.info("Processing mesh..." + ProgressStatus(10, 100))
-                # condition = self.lineEdit_faces_list.text() == "" and self.lineEdit_refining_size.text() == ""
-                if self.close_after_generate:
-                # if condition or self.close_after_generate:
-                    self.close()
-
                 logging.info("Processing mesh..." + ProgressStatus(20, 100))
                 app().main_window.viewer_tabs.close_analysis_tabs()
                 app().main_window.project.reset_solutions()
@@ -182,9 +179,10 @@ class MesherInputs(QDialog):
             title = "Error while processing mesh"
             message = str(error_log)
             PrintMessageInput([window_title, title, message])
-            self.show()
 
     def actions_to_finalize(self):
+        if self.close_after_generate:
+            self.close()
         logging.info("Updating render..." + ProgressStatus(95, 100))
         app().main_window.viewer_tabs.show_mesh()
         app().main_window.viewer_tabs.close_analysis_tabs()
@@ -304,5 +302,17 @@ class MesherInputs(QDialog):
             self.stop = True
             return None
         return out
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            self.generate_mesh_callback()
+        elif event.key() == Qt.Key_Delete:
+            return
+        elif event.key() == Qt.Key_Escape:
+            self.close()
+
+    def closeEvent(self, a0):
+        self.keep_window_open = False
+        return super().closeEvent(a0)
 
 # fmt: on
