@@ -16,14 +16,14 @@ class PorousMaterialModels:
         self.model_data_for_DB = None
         self.model_data_for_DBM = None
 
-        self.porous_material_model = dict()
+        self.effective_properties = dict()
 
     def set_external_model(self, model):
         self.external_model = model
 
     def process_effective_properties(self, frequencies):
 
-        self.porous_material_model = dict()
+        self.effective_properties = dict()
         if frequencies[0] == 0:
             freq = frequencies[1:]
         else:
@@ -50,11 +50,12 @@ class PorousMaterialModels:
                 else:
                     continue
 
-                self.porous_material_model[volume_id] = {   "model" : data["model"],
-                                                            "rho_eff" : rho_eff,
-                                                            "C_eff" : C_eff   
-                                                        }
-                
+                self.effective_properties[volume_id] = {   
+                                                         "model" : data["model"],
+                                                         "rho_eff" : rho_eff,
+                                                         "C_eff" : C_eff   
+                                                         }
+
                 # data = np.array([np.arange(len(C_eff)), C_eff])
                 # np.savetxt("complex_sound.dat", data.T, delimiter=";")
 

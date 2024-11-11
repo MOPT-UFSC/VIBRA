@@ -37,13 +37,16 @@ class Mesh:
         self.reset_variables()
 
     def reset_variables(self):
+
+        # self.dimension = 0
         self.reordering = None
-        self.dimension = 0
         self.element_type = DEFAULT_ELEMENT_TYPE
         self.nodal_coordinates = np.array([])
         self.lines_connectivity = np.array([])
         self.faces_connectivity = np.array([])
         self.solids_connectivity = np.array([])
+
+        self.geometry_information = defaultdict(list)
 
         self.nodes_from_points = dict()
         self.nodes_from_lines = dict()
@@ -87,7 +90,7 @@ class Mesh:
         minimum_element_size: float = 30.0,
         maximum_element_size: float = 30.0,
         element_type: ElementType = DEFAULT_ELEMENT_TYPE,
-        geometry_tolerance: float = 1e-6,
+        geometry_tolerance: float = 1e-8,
         size_factor: float = 0.5,
         dimension: int = 3,
         threads: int = 1,
@@ -130,7 +133,7 @@ class Mesh:
                     minimum_element_size: float = 30.0,
                     maximum_element_size: float = 30.0,
                     element_type: ElementType = DEFAULT_ELEMENT_TYPE,
-                    geometry_tolerance: float = 1e-6,
+                    geometry_tolerance: float = 1e-8,
                     size_factor: float = 0.50,
                     dimension: int = 3,
                     threads: int = 4,
@@ -178,8 +181,9 @@ class Mesh:
         #     # gmsh.open(str(path))
 
         gmsh.model.occ.synchronize()
+        # self.get_geometry_info()
 
-        self.dimension = min(dimension, gmsh.model.getDimension())
+        # self.dimension = min(dimension, gmsh.model.getDimension())
         self.element_type = element_type
 
         if self.mesh_connection:
@@ -188,11 +192,14 @@ class Mesh:
         try:
 
             logging.info("Generating mesh..." + ProgressStatus(25, 100))
-            gmsh.model.mesh.generate(dim=element_type.dimensions)
-        
+            # gmsh.model.mesh.generate(dim=element_type.dimensions)
+            gmsh.model.mesh.generate(dim=dimension)
+            logging.info("Generating mesh..." + ProgressStatus(60, 100))
+            self.get_geometry_info()
+
         except:
             gmsh.finalize()
-        
+
         gmsh.model.mesh.removeDuplicateNodes()
 
         logging.info("Post-processing mesh..." + ProgressStatus(70, 100))
@@ -536,13 +543,16 @@ class Mesh:
             self.elements_from_volume[tag] = internal_indexes
 
 
-    def _process_face_elements_connected_to_nodes(self, list_ids : list):
+    def _process_face_elements_connected_to_nodes(self, selected_ids : int | list):
 
         self.nodes_from_face_element.clear()
         self.face_elements_connected_to_nodes.clear()
         self.surface_area_from_element_integration.clear()
 
-        for tag in list_ids:
+        if isinstance(selected_ids, int):
+            selected_ids = [selected_ids]
+
+        for tag in selected_ids:
             connect_data = self.connectivity_from_surfaces[tag]
            
             area = 0.
@@ -650,11 +660,11 @@ class Mesh:
 
 
     def get_geometry_info(self):
-        points = len(self.nodes_from_points)
-        lines = len(self.nodes_from_lines)
-        surfaces = len(self.nodes_from_surfaces)
-        volumes = len(self.nodes_from_volumes)
-        return points, lines, surfaces, volumes
+        self.geometry_information.clear()
+        labels = ["points", "curves", "surfaces", "volumes"]
+        for dim, tag in gmsh.model.getEntities():
+            label = labels[dim]
+            self.geometry_information[label].append(tag)
 
 
     def get_model_areas(self, path):
@@ -806,16 +816,16 @@ class Mesh:
 
         return solid_elements_center
 
-    def get_average_nodal_coordinates(self, surface_ids, averaged=False):
+    def get_average_nodal_coordinates(self, surface_ids: list, averaged=False):
 
         nodal_coordinates = self.nodal_coordinates
-        self.stop, self.surface_ids = self.check_input_surface_id(surface_ids)
+        stop, surface_ids = self.check_input_surface_id(surface_ids)
 
-        if self.stop:
+        if stop:
             return list()
 
         rows = list()
-        for surface_id in self.surface_ids:
+        for surface_id in surface_ids:
             if averaged:
                 for row in self.nodes_from_surfaces[surface_id]:
                     rows.append(row)
@@ -954,6 +964,7 @@ class Mesh:
             elif isinstance(selected_ids, (tuple, np.ndarray)):
                 list_ids = list(selected_ids)
 
+            all_ids = list()
             if selection == "nodes":
                 all_ids = list(self.nodal_coordinates[:, 0])
 
@@ -964,13 +975,16 @@ class Mesh:
                 all_ids = list(self.solids_connectivity[:, 0])
 
             elif selection == "lines":
-                all_ids = list(self.nodes_from_lines.keys())
+                if "curves" in self.geometry_information.keys():
+                    all_ids = self.geometry_information["curves"]
 
             elif selection == "surfaces":
-                all_ids = list(self.nodes_from_surfaces.keys())   
-      
+                if selection in self.geometry_information.keys():
+                    all_ids = self.geometry_information["surfaces"]
+
             elif selection == "volumes":
-                all_ids = list(self.nodes_from_volumes.keys())
+                if selection in self.geometry_information.keys():
+                    all_ids = self.geometry_information["volumes"]
 
             else:
                 return
@@ -1136,7 +1150,7 @@ class Mesh:
 
             elif isinstance(selected_ids, (tuple, np.ndarray)):
                 list_ids = list(selected_ids)
-            
+
             volume_ids = self.nodes_from_volumes.keys()
             _size = len(volume_ids)
 

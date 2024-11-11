@@ -34,7 +34,6 @@ class PrintMessageInput(QDialog):
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(self.main_window.vibra_icon)
 
     def _define_qt_variables(self):
 
@@ -87,6 +86,7 @@ class PrintMessageInput(QDialog):
         self.close()
 
     def _set_texts(self):
+
         self.title2 = f"   {self.title}   "
         self.label_title.setText(self.title2)
         self.label_message.setText(self.message)
@@ -94,11 +94,13 @@ class PrintMessageInput(QDialog):
 
         if self.window_title in ["Error", "ERROR"]:
             icon = get_error_icon(QColor(255,0,0,200))
-            self.setWindowIcon(icon)
         elif self.window_title in ["Warning", "WARNING"]:
             icon = get_warning_icon()
-            self.setWindowIcon(icon)
-        
+        else:
+            icon = app().main_window.vibra_icon
+
+        self.setWindowIcon(icon)
+
         self.adjustSize()
         self.label_message.setAlignment(Qt.AlignCenter)
         if self.auto_close:

@@ -71,22 +71,24 @@ class PlotParticleVelocityFrequencyResponseInput(QDialog):
 
     def _define_qt_variables(self):
         # QComboBox
-        self.comboBox_selector_filter : QComboBox
-        self.comboBox_component_selector : QComboBox
+        self.comboBox_selector_filter: QComboBox
+        self.comboBox_component_selector: QComboBox
 
         # QLineEdit
-        self.lineEdit_selection_id : QLineEdit
+        self.lineEdit_selection_id: QLineEdit
 
         # QPushButton
-        self.pushButton_call_data_exporter : QPushButton
-        self.pushButton_plot_frequency_response : QPushButton
+        self.pushButton_export_data: QPushButton
+        self.pushButton_cancel: QPushButton
+        self.pushButton_plot_data: QPushButton
 
     def _create_connections(self):
         #
         self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
         #
-        self.pushButton_call_data_exporter.clicked.connect(self.call_data_exporter)
-        self.pushButton_plot_frequency_response.clicked.connect(self.call_plotter)
+        self.pushButton_export_data.clicked.connect(self.export_data_callback)
+        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
     
@@ -146,7 +148,7 @@ class PlotParticleVelocityFrequencyResponseInput(QDialog):
             self.lineEdit_selection_id.setFocus()
             return True
 
-    def call_plotter(self):
+    def plot_data_callback(self):
 
         if self.check_inputs():
             return
@@ -155,7 +157,9 @@ class PlotParticleVelocityFrequencyResponseInput(QDialog):
         self.plotter = FrequencyResponsePlotter()
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
-    def call_data_exporter(self):
+        self.pushButton_cancel.setText("Exit")
+
+    def export_data_callback(self):
         
         if self.check_inputs():
             return
@@ -170,15 +174,17 @@ class PlotParticleVelocityFrequencyResponseInput(QDialog):
             return "Vx"
         elif index == 1:
             return "Vy"
-        else:
+        elif index == 2:
             return "Vz"
+        else:
+            return "Vn"
 
     def get_response(self, selected_id):
 
         def function_callback():
             
             selection_type = self.comboBox_selector_filter.currentIndex()
-            
+            logging.info("Processing particle velocity..." + ProgressStatus(15, 100))
 
             if selection_type == 0:
                 particle_velocity = self.get_surface_particle_velocity(selected_id)
@@ -207,10 +213,14 @@ class PlotParticleVelocityFrequencyResponseInput(QDialog):
                 if tag == surface_id:
                     list_nodes.extend(surface_nodes)
 
-        self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id)
-        input_velocities = np.array(list(self.particle_velocity[component_label].values()), dtype=complex)
+            rho = self.model.get_fluid_density_for_particle_velocity_calculation(surface_id, self.frequencies)
+            if rho is None:
+                return np.zeros_like(self.frequencies, dtype=complex)
 
-        return np.average(input_velocities, axis=0)
+            self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id, rho)
+            input_velocities = np.array(list(self.particle_velocity[component_label].values()), dtype=complex)
+
+            return np.average(input_velocities, axis=0)            
 
     def get_nodal_particle_velocity(self, node_id : int):
 
@@ -231,7 +241,11 @@ class PlotParticleVelocityFrequencyResponseInput(QDialog):
                     list_nodes.extend(surface_nodes)
                     surface_id = tag
 
-        self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id)
+        rho = self.model.get_fluid_density_for_particle_velocity_calculation(surface_id, self.frequencies)
+        if rho is None:
+            return np.zeros_like(self.frequencies, dtype=complex)
+        
+        self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id, rho)
 
         return self.particle_velocity[component_label][node_id]
 
@@ -281,7 +295,7 @@ class PlotParticleVelocityFrequencyResponseInput(QDialog):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.call_plotter()
+            self.plot_data_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
 

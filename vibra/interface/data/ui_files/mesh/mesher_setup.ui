@@ -115,10 +115,10 @@
             <set>Qt::AlignCenter</set>
            </property>
            <property name="decimals">
-            <number>1</number>
+            <number>2</number>
            </property>
            <property name="minimum">
-            <double>0.100000000000000</double>
+            <double>0.010000000000000</double>
            </property>
            <property name="maximum">
             <double>2000.000000000000000</double>
@@ -144,6 +144,11 @@
              <width>160</width>
              <height>16777215</height>
             </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
            </property>
            <property name="text">
             <string>Maximum element size [mm]:</string>
@@ -388,10 +393,16 @@
             <property name="text">
              <string>Refining mesh size [mm]</string>
             </property>
+            <property name="textAlignment">
+             <set>AlignCenter</set>
+            </property>
            </column>
            <column>
             <property name="text">
              <string>Face list</string>
+            </property>
+            <property name="textAlignment">
+             <set>AlignCenter</set>
             </property>
            </column>
           </widget>
@@ -420,7 +431,7 @@
          <property name="bottomMargin">
           <number>4</number>
          </property>
-         <item row="0" column="0">
+         <item row="0" column="1">
           <widget class="QPushButton" name="pushButton_generate_mesh">
            <property name="minimumSize">
             <size>
@@ -434,8 +445,40 @@
              <height>28</height>
             </size>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>Generate mesh</string>
+           </property>
+           <property name="default">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QPushButton" name="pushButton_cancel">
+           <property name="minimumSize">
+            <size>
+             <width>140</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>140</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Cancel</string>
            </property>
            <property name="default">
             <bool>true</bool>

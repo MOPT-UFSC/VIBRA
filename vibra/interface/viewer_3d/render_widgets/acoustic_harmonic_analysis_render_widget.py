@@ -62,6 +62,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
 
         self.create_axes()
         self.create_color_bar()
+        self.create_scale_bar()
         self.update_frequencies()
         self.update_plot()
 
@@ -244,8 +245,6 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         and the number cycles.
 
         """
-
-        print("go -> process_animation_frames")
 
         self.animation_data = dict()
 

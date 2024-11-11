@@ -70,7 +70,7 @@ class DissipationModelInput(QDialog):
         self.comboBox_attribution_type : QComboBox
 
         # QLineEdit
-        self.lineEdit_selected_id : QLineEdit
+        self.lineEdit_selection_id : QLineEdit
         self.lineEdit_fluid_density_complex_factor : QLineEdit
         self.lineEdit_speed_of_sound_complex_factor : QLineEdit
 
@@ -89,7 +89,7 @@ class DissipationModelInput(QDialog):
         #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.update_attribution_type)
         #
-        self.pushButton_confirm_proportional_damping.clicked.connect(self.set_dissipation_model)
+        self.pushButton_confirm_proportional_damping.clicked.connect(self.attribute_dissipation_model)
         self.pushButton_remove.clicked.connect(self.remove_dissipation_model)
         self.pushButton_reset.clicked.connect(self.reset_dissipation_model)
         #
@@ -103,8 +103,8 @@ class DissipationModelInput(QDialog):
         self.update_attribution_type()
 
     def remove_dissipation_model(self):
-        if self.lineEdit_selected_id.text() != "":
-            volume_id = int(self.lineEdit_selected_id.text())
+        if self.lineEdit_selection_id.text() != "":
+            volume_id = int(self.lineEdit_selection_id.text())
             self.properties._remove_volume_property("dissipation_model", volume_id)
             self.load_info()
 
@@ -138,27 +138,27 @@ class DissipationModelInput(QDialog):
         tab_index = self.tabWidget_dissipation_model.currentIndex()
         self.comboBox_attribution_type.setDisabled(bool(tab_index))
         if tab_index == 1:
-            self.lineEdit_selected_id.setText("")
-            self.lineEdit_selected_id.setDisabled(True)
+            self.lineEdit_selection_id.setText("")
+            self.lineEdit_selection_id.setDisabled(True)
         else:
-            self.lineEdit_selected_id.setDisabled(False)
+            self.lineEdit_selection_id.setDisabled(False)
 
     def on_click_item(self, item):
-        self.lineEdit_selected_id.setText(item.text(0))
+        self.lineEdit_selection_id.setText(item.text(0))
 
     def on_doubleclick_item(self, item):
-        self.lineEdit_selected_id.setText(item.text(0))
+        self.lineEdit_selection_id.setText(item.text(0))
         # self.remove_bc_from_selection()
 
     def update_attribution_type(self):
 
         index = self.comboBox_attribution_type.currentIndex()
         if index == 0:
-            self.lineEdit_selected_id.setText("All bodies")
+            self.lineEdit_selection_id.setText("All bodies")
         elif index == 1:
-            self.lineEdit_selected_id.setText("")
+            self.lineEdit_selection_id.setText("")
 
-        self.lineEdit_selected_id.setEnabled(bool(index))
+        self.lineEdit_selection_id.setEnabled(bool(index))
         # self.comboBox_attribution_type.setCurrentIndex(index)
 
     def update_tabs_visibility(self):
@@ -211,7 +211,7 @@ class DissipationModelInput(QDialog):
                 # return
 
             text = ", ".join([str(i) for i in volumes])
-            self.lineEdit_selected_id.setText(text)
+            self.lineEdit_selection_id.setText(text)
 
     def check_dissipation_model_entries(self):
 
@@ -237,22 +237,22 @@ class DissipationModelInput(QDialog):
         else:
             print("Not implemented dissipation model.")
 
-    def set_dissipation_model(self):
+    def attribute_dissipation_model(self):
 
-        if self.comboBox_attribution_type.currentIndex():
-
-            lineEdit_selected_id = self.lineEdit_selected_id.text()
-            self.stop, self.typed_ids = self.mesh.check_input_volume_id(lineEdit_selected_id)
-            if self.stop:
-                self.lineEdit_selected_id.setFocus()
-                return True
+        attribute_type = self.comboBox_attribution_type.currentIndex()
+        if attribute_type in [0, 1]:
             
-            volume_ids = self.typed_ids
+            volume_ids = list()
+            if attribute_type == 0:
+                if "volumes" in self.mesh.geometry_information.keys():
+                    volume_ids = self.mesh.geometry_information["volumes"]
 
-        else:
-
-            volume_ids = list(self.mesh.nodes_from_volumes.keys())
-
+            elif attribute_type == 1:
+                str_volume_ids = self.lineEdit_selection_id.text()
+                stop, volume_ids = self.mesh.check_selected_ids(str_volume_ids, selection = "volumes", single_id = False)
+                if stop:
+                    self.lineEdit_selection_id.setFocus()
+                    return True
 
         if self.check_dissipation_model_entries():
             return
@@ -265,8 +265,7 @@ class DissipationModelInput(QDialog):
                 }
 
         for volume_id in volume_ids:
-            if volume_id in list(self.mesh.nodes_from_volumes.keys()):
-                self.project.set_dissipation_model(data, volume=volume_id)
+            self.project.set_dissipation_model(data, volume=volume_id)
         
         print(f"The dissipation model has been attributed to volumes: {volume_ids}")
 

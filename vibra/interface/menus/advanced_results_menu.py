@@ -1,8 +1,10 @@
 from PyQt5.QtWidgets import QAction, QMenu
 from PyQt5.QtGui import QColor
 
+from vibra.interface.plots.acoustic.export_element_transfer_data_input import ExportElementTransferDataInput
 from vibra.interface.plots.acoustic.plot_particle_velocity_frequency_response_input import PlotParticleVelocityFrequencyResponseInput
 from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
+
 from molde.render_widgets import CommonRenderWidget
 
 
@@ -20,16 +22,24 @@ class AdvancedResultsMenu(QMenu):
         self.disable_advanced_acoustic_plots_buttons(True)
 
     def create_actions(self):
+
         color = QColor("#448cff")
         self.plot_icon = load_icon(ICON_DIR / "image-plus.png", color)
+        self.export_icon = load_icon(ICON_DIR / "exit.png", color)
+
         self.plot_particle_velocity_action = QAction(self.plot_icon, "Plot particle velocity", self)
-        self.plot_specific_acoustic_impedance_action = QAction(self.plot_icon, "Plot specific acoustic impedance", self)
         self.plot_particle_velocity_action.triggered.connect(self.plot_particle_velocity)
+
+        self.plot_specific_acoustic_impedance_action = QAction(self.plot_icon, "Plot specific acoustic impedance", self)
         self.plot_specific_acoustic_impedance_action.triggered.connect(self.plot_specific_acoustic_impedance)
+
+        self.export_element_transfer_data_action = QAction(self.export_icon, "Export element transfer data", self)
+        self.export_element_transfer_data_action.triggered.connect(self.export_element_transfer_data_callback)
 
     def create_layout(self):
         self.addAction(self.plot_particle_velocity_action)
         self.addAction(self.plot_specific_acoustic_impedance_action)
+        self.addAction(self.export_element_transfer_data_action)
 
     def plot_specific_acoustic_impedance(self):
         if app().main_window.project.acoustic_harmonic_solver.solution is None:
@@ -41,6 +51,12 @@ class AdvancedResultsMenu(QMenu):
             return
         PlotParticleVelocityFrequencyResponseInput()
 
-    def disable_advanced_acoustic_plots_buttons(self, _bool : bool):
-        self.plot_specific_acoustic_impedance_action.setDisabled(_bool)
-        self.plot_particle_velocity_action.setDisabled(_bool)
+    def export_element_transfer_data_callback(self):
+        if app().main_window.project.acoustic_harmonic_solver.solution is None:
+            return
+        ExportElementTransferDataInput()
+
+    def disable_advanced_acoustic_plots_buttons(self, disabled : bool):
+        self.plot_specific_acoustic_impedance_action.setDisabled(disabled)
+        self.plot_particle_velocity_action.setDisabled(disabled)
+        self.export_element_transfer_data_action.setDisabled(disabled)

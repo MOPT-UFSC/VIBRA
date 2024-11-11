@@ -23,14 +23,12 @@ class ExportModelResults(QFileDialog):
         self._initialize()
 
     def _initialize(self):
-        self.user_path = os.path.expanduser('~')
-        self.save_path = ""
         self.data = dict()
 
-    def _set_data_to_export(self, data : dict):
+    def _set_data_to_export(self, data : dict, **kwargs):
         self.data = data
         if data:
-            self.call_file_dialog_and_export_data()
+            self.call_file_dialog_and_export_data(**kwargs)
 
     def export_data_in_text_format(self, export_path, delimiter=","):
 
@@ -48,15 +46,38 @@ class ExportModelResults(QFileDialog):
                 data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T      
             else:
                 data_type = data["data_type"]
-                header = f"Frequency[Hz], {data_type.upper()} [{unit}]"
+                header = f"Frequency[Hz], {data_type.capitalize()} [{unit}]"
                 data_to_export = np.array([x_data, y_data]).T
 
             np.savetxt(export_path, data_to_export, delimiter=delimiter, header=header)
 
-    def export_data_in_spreadsheet_format(self, export_path):
-        import pandas as pd
+    def export_data_in_spreadsheet_format(self, export_path, **kwargs):
 
-        with pd.ExcelWriter(export_path) as writer:
+        from openpyxl import load_workbook
+        from pandas import ExcelWriter, DataFrame, read_excel
+
+        existing_data_frames = dict()
+        existing_path = kwargs.get("existing_path", "")
+
+        if Path(existing_path).exists():
+            if Path(existing_path).suffix in [".xls", ".xlsx"]:
+
+                wb = load_workbook(existing_path)
+                sheetnames = wb.sheetnames
+
+                for sheet_name in sheetnames:
+                    existing_data_frames[sheet_name] = read_excel(
+                                                                  existing_path, 
+                                                                  sheet_name = sheet_name, 
+                                                                  header = 0, 
+                                                                  usecols = [0,1,2,3]
+                                                                  )
+
+        with ExcelWriter(export_path) as writer:
+
+            for key, existing_df in existing_data_frames.items():
+                existing_df: DataFrame
+                existing_df.to_excel(writer, sheet_name=key, index=False)
 
             for key, data in self.data.items():
 
@@ -72,40 +93,47 @@ class ExportModelResults(QFileDialog):
                     data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T 
                 else:
                     data_type = data["data_type"]
-                    header = ["Frequency[Hz]", f"{data_type.upper()} [{unit}]"]
-                    data_to_export = [x_data, y_data]
+                    header = ["Frequency[Hz]", f"{data_type.capitalize()} [{unit}]"]
+                    data_to_export = np.array([x_data, y_data]).T
 
-                df = pd.DataFrame(data_to_export, columns=header)
+                df = DataFrame(data_to_export, columns=header)
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-    def call_file_dialog_and_export_data(self):
+    def call_file_dialog_and_export_data(self, **kwargs):
 
-        caption = "Export the model results"
+        existing_path = kwargs.get("existing_path", "")
 
-        path = app().config.get_last_folder_for("export data folder")
-        if path is None:
-            directory_path = os.path.expanduser("~")
+        if existing_path == "":
+
+            caption = "Export the model results"
+
+            path = app().config.get_last_folder_for("exported data folder")
+            if path is None:
+                directory_path = os.path.expanduser("~")
+            else:
+                directory_path = path
+
+            if len(self.data) == 1:
+                _filter = "Text file (*.dat);;Text file (*.txt);; Text file (*.csv);; Spreadsheet (*.xlsx)"
+            else:
+                _filter = "Spreadsheet (*.xlsx)"
+
+            file_path, check = self.getSaveFileName(self.main_window, 
+                                                    caption, 
+                                                    directory_path, 
+                                                    filter = _filter)
+
+            if not check:
+                return
+
         else:
-            directory_path = path
+            file_path = existing_path
 
-        if len(self.data) == 1:
-            _filter = "Text file (*.dat);;Text file (*.txt);; Text file (*.csv);; Spreadsheet (*.xlsx)"
-        else:
-            _filter = "Spreadsheet (*.xlsx)"
-
-        file_path, check = self.getSaveFileName(self.main_window, 
-                                                caption, 
-                                                directory_path, 
-                                                filter = _filter)
-
-        if not check:
-            return
-
-        app().config.write_last_folder_path_in_file("export data folder", file_path)
+        app().config.write_last_folder_path_in_file("exported data folder", file_path)
 
         sufix = Path(file_path).suffix      
         if sufix == ".xlsx":
-            self.export_data_in_spreadsheet_format(file_path)
+            self.export_data_in_spreadsheet_format(file_path, existing_path=existing_path)
         else:
             self.export_data_in_text_format(file_path)
 

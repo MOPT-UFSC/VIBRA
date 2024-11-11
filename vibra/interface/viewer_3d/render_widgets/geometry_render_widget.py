@@ -67,6 +67,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         # self.render_interactor.SetInteractorStyle(self.style)
 
         self.create_axes()
+        self.create_scale_bar()
         self.update_plot()
 
     def update_plot(self, reset_camera=True):

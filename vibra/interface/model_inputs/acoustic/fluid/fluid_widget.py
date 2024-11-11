@@ -82,14 +82,15 @@ class FluidWidget(QWidget):
     def _define_qt_variables(self):
 
         # QPushButton
-        self.pushButton_add_column : QPushButton
-        self.pushButton_attribute_fluid : QPushButton
-        self.pushButton_refprop : QPushButton
-        self.pushButton_remove_column : QPushButton
-        self.pushButton_reset_library : QPushButton
+        self.pushButton_add_column: QPushButton
+        self.pushButton_attribute_fluid: QPushButton
+        self.pushButton_cancel: QPushButton
+        self.pushButton_refprop: QPushButton
+        self.pushButton_remove_column: QPushButton
+        self.pushButton_reset_library: QPushButton
 
         # QTableWidget
-        self.tableWidget_fluid_data : QTableWidget
+        self.tableWidget_fluid_data: QTableWidget
         self.tableWidget_fluid_data.setStyleSheet("")
 
     def _create_connections(self):
@@ -102,6 +103,15 @@ class FluidWidget(QWidget):
         self.tableWidget_fluid_data.cellClicked.connect(self.cell_clicked_callback)
         self.tableWidget_fluid_data.itemChanged.connect(self.item_changed_callback)
         self.tableWidget_fluid_data.cellDoubleClicked.connect(self.cell_double_clicked_callback)
+
+    def _config_window(self):
+        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.Dialog)
+        self.setWindowModality(Qt.ApplicationModal)
+        self.setWindowIcon(app().main_window.vibra_icon)
+        self.setWindowTitle("Vibra")
+
+    def _add_icon_and_title(self):
+        self._config_window()
 
     def config_table_of_fluid_data(self):
         return
@@ -705,7 +715,7 @@ class FluidWidget(QWidget):
                 volume_id = self.compressor_thermodynamic_state['volume_id']
                 self.parent_widget.comboBox_attribution_type.setCurrentIndex(1)
                 self.parent_widget.write_ids(volume_id)
-                self.parent_widget.lineEdit_selected_id.setDisabled(True)
+                self.parent_widget.lineEdit_selection_id.setDisabled(True)
                 if self.fluid_data_refprop:
                     fluid_name = self.fluid_data_refprop["name"]
                     self.parent_widget.lineEdit_fluid_name.setText(fluid_name)

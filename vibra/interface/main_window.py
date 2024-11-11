@@ -182,8 +182,8 @@ class MainWindow(QMainWindow):
     def update_mesh_information(self, nodes, face_elements, solid_elements):
         self.status_bar.update_mesh_information(nodes, face_elements, solid_elements)
 
-    def update_geometry_information(self):
-        self.status_bar.update_geometry_information()
+    def update_geometry_information(self, geometry_info: dict):
+        self.status_bar.update_geometry_information(geometry_info)
 
     def show_hide_section_plane_callback(self, option):
         if option:
@@ -213,7 +213,7 @@ class MainWindow(QMainWindow):
                 tab.plane_actor.VisibilityOff()
 
     def _config_window(self):
-        self.setMinimumSize(1300, 700)
+        self.setMinimumSize(800, 600)
         # self.showMaximized()
         self.showMinimized()
         self.vibra_icon = get_vibra_icon()
@@ -245,8 +245,8 @@ class MainWindow(QMainWindow):
 
         left_widget = QWidget()
         left_widget.setLayout(grid_layout_left)
-        # left_widget.setMinimumWidth(290)
-        left_widget.setMaximumWidth(290)
+        left_widget.setMinimumWidth(300)
+        left_widget.setMaximumWidth(360)
 
         self.vertical_line = QFrame()
         self.vertical_line.setLineWidth(4)
@@ -485,16 +485,30 @@ class MainWindow(QMainWindow):
         return obj.complete
 
     def save_project_as(self, path):
-        path = Path(path)
-        self.project.name = path.stem
-        self.project.save_path = path
-        self.file.write_thumbnail()
-        app().config.add_recent_file(path)
-        app().config.write_last_folder_path_in_file("project folder", path)
-        self.project_menu.update_recents_menu()
-        copy(self.temp_project_file_path, path)
-        self.update_window_title(path)
-        self.project_data_modified = False
+
+        def save_data(path):
+            path = Path(path)
+            self.project.name = path.stem
+            self.project.save_path = path
+            self.file.write_thumbnail()
+            app().config.add_recent_file(path)
+            logging.info("Saving project data..." + ProgressStatus(10, 100))
+
+            app().config.write_last_folder_path_in_file("project folder", path)
+            self.project_menu.update_recents_menu()
+            logging.info("Saving project data..." + ProgressStatus(60, 100))
+            
+            copy(self.temp_project_file_path, path)
+            self.update_window_title(path)
+            self.project_data_modified = False
+            logging.info("The project data has been saved." + ProgressStatus(100, 100))
+
+        save_func = load_function(save_data, self)
+        save_func(path)
+
+        from datetime import datetime
+        message = f"The project data has been saved @{datetime.now()}"
+        print(message)
 
     def open_project_dialog(self):
 

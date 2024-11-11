@@ -78,15 +78,17 @@ class PlotSpecificAcousticImpedanceInput(QDialog):
         self.lineEdit_selection_id : QLineEdit
 
         # QPushButton
-        self.pushButton_call_data_exporter : QPushButton
-        self.pushButton_plot_frequency_response : QPushButton
+        self.pushButton_export_data : QPushButton
+        self.pushButton_cancel: QPushButton
+        self.pushButton_plot_data : QPushButton
 
     def _create_connections(self):
         #
         self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
         #
-        self.pushButton_call_data_exporter.clicked.connect(self.call_data_exporter)
-        self.pushButton_plot_frequency_response.clicked.connect(self.call_plotter)
+        self.pushButton_export_data.clicked.connect(self.export_data_callback)
+        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
     
@@ -146,7 +148,7 @@ class PlotSpecificAcousticImpedanceInput(QDialog):
             self.lineEdit_selection_id.setFocus()
             return True
 
-    def call_plotter(self):
+    def plot_data_callback(self):
 
         if self.check_inputs():
             return
@@ -155,7 +157,9 @@ class PlotSpecificAcousticImpedanceInput(QDialog):
         self.plotter = FrequencyResponsePlotter()
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
-    def call_data_exporter(self):
+        self.pushButton_cancel.setText("Exit")
+
+    def export_data_callback(self):
         
         if self.check_inputs():
             return
@@ -198,7 +202,11 @@ class PlotSpecificAcousticImpedanceInput(QDialog):
                 if tag == surface_id:
                     list_nodes.extend(surface_nodes)
 
-        self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id)
+        rho = self.model.get_fluid_density_for_particle_velocity_calculation(surface_id, self.frequencies)
+        if rho is None:
+            return np.zeros_like(self.frequencies, dtype=complex)
+
+        self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id, rho)
         particle_velocities = np.array(list(self.particle_velocity[component_label].values()), dtype=complex)
 
         node_ids = np.sort(list_nodes)
@@ -229,7 +237,11 @@ class PlotSpecificAcousticImpedanceInput(QDialog):
                     list_nodes.extend(surface_nodes)
                     surface_id = tag
 
-        self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id)
+        rho = self.model.get_fluid_density_for_particle_velocity_calculation(surface_id, self.frequencies)
+        if rho is None:
+            return np.zeros_like(self.frequencies, dtype=complex)
+
+        self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id, rho)
 
         particle_velocity = self.particle_velocity[component_label][node_id]
         pressure = self.solution[node_id, :]
@@ -280,7 +292,7 @@ class PlotSpecificAcousticImpedanceInput(QDialog):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.call_plotter()
+            self.plot_data_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
 

@@ -48,7 +48,7 @@ class GetSphereSelectionInformation(QDialog):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(self.main_window.vibra_icon)
-        self.setWindowTitle("Get sphere selection information")
+        self.setWindowTitle("Vibra")
 
     def _define_qt_variables(self):
 
@@ -104,10 +104,10 @@ class GetSphereSelectionInformation(QDialog):
         self.lineEdit_number_of_elements.setText(str(len(list_elements)))
         self.lineEdit_number_of_nodes.setText(str(len(list_nodes)))
 
-        self.highlight_mesh_elements(list_elements)
-
         if app().main_window.viewer_tabs.currentIndex() != 2:
             app().main_window.viewer_tabs.setCurrentIndex(2)
+
+        self.highlight_mesh_elements(list_elements)
 
     def highlight_mesh_elements(self, elements):
         mesh_widget = app().main_window.viewer_tabs.mesh_widget

@@ -107,7 +107,7 @@ class FrequencyResponsePlotter(QDialog):
         self.radioButton_harmonic_cursor.clicked.connect(self.update_cursor_controls)
         #
         self.pushButton_import_data.clicked.connect(self.import_file)
-        self.pushButton_export_data.clicked.connect(self.call_data_exporter)
+        self.pushButton_export_data.clicked.connect(self.export_data_callback)
         #
         app().main_window.theme_changed.connect(self.paint_toolbar_icons)
         self._initial_config()
@@ -164,7 +164,7 @@ class FrequencyResponsePlotter(QDialog):
         self.ax = self.mpl_canvas_frequency_plot.axes
         self.fig = self.mpl_canvas_frequency_plot.fig
     
-    def call_data_exporter(self):
+    def export_data_callback(self):
         self.hide()
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(self.model_results_data)

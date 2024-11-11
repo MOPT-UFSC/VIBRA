@@ -282,7 +282,7 @@
           </widget>
          </item>
          <item row="0" column="3">
-          <widget class="QPushButton" name="pushButton_call_data_exporter">
+          <widget class="QPushButton" name="pushButton_export_data">
            <property name="minimumSize">
             <size>
              <width>40</width>
@@ -380,8 +380,8 @@
          <property name="spacing">
           <number>2</number>
          </property>
-         <item row="0" column="0">
-          <widget class="QPushButton" name="pushButton_plot_frequency_response">
+         <item row="0" column="1">
+          <widget class="QPushButton" name="pushButton_plot_data">
            <property name="minimumSize">
             <size>
              <width>120</width>
@@ -408,6 +408,40 @@
            </property>
            <property name="text">
             <string>Plot data</string>
+           </property>
+           <property name="flat">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QPushButton" name="pushButton_cancel">
+           <property name="minimumSize">
+            <size>
+             <width>120</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>120</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>MS Shell Dlg 2</family>
+             <pointsize>10</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="text">
+            <string>Cancel</string>
            </property>
            <property name="flat">
             <bool>false</bool>
@@ -729,12 +763,12 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>../../../icons/recent.png</normaloff>../../../icons/recent.png</iconset>
+             <normaloff>../../../icons/invert_icon.png</normaloff>../../../icons/invert_icon.png</iconset>
            </property>
            <property name="iconSize">
             <size>
-             <width>20</width>
-             <height>20</height>
+             <width>22</width>
+             <height>22</height>
             </size>
            </property>
            <property name="flat">
@@ -767,9 +801,9 @@
   <tabstop>lineEdit_output_selected_id</tabstop>
   <tabstop>lineEdit_input_selected_id</tabstop>
   <tabstop>comboBox_selector_filter</tabstop>
-  <tabstop>pushButton_plot_frequency_response</tabstop>
+  <tabstop>pushButton_plot_data</tabstop>
   <tabstop>pushButton_flip_selection</tabstop>
-  <tabstop>pushButton_call_data_exporter</tabstop>
+  <tabstop>pushButton_export_data</tabstop>
  </tabstops>
  <resources/>
  <connections/>

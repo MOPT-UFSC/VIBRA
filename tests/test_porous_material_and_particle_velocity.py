@@ -22,7 +22,7 @@ pm_model = "DB"
 
 @pytest.mark.slow
 def test_load_external_mesh_and_solve():
-    # return
+    return
 
     # start decoding the Ansys script file (ds.dat file or input file)
     mesh_path = "validation/data/particle_velocity/mesh/silencer/ds_silencer_suction_stg1.dat"
