@@ -171,16 +171,7 @@ class Mesh:
 
         gmsh.open(path)
 
-        # if isinstance(path, str):
-        #     paths = [paths]
-
-        # # t0 = time()
-        # for path in paths:
-        #     gmsh.merge(str(path))
-        #     # gmsh.open(str(path))
-
         gmsh.model.occ.synchronize()
-        # self.get_geometry_info()
 
         # self.dimension = min(dimension, gmsh.model.getDimension())
         self.element_type = element_type

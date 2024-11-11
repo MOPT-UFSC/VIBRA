@@ -209,7 +209,7 @@ class MesherInputs(QDialog):
             self.lineEdit_faces_list.setText(text)
 
     def get_inputs_table(self):
-        faces_and_refined_size_list = []
+        faces_and_refined_size_list = list()
         for i in range(self.tableWidget_refining_mesh_data.rowCount()):
             mesh_text = float(self.tableWidget_refining_mesh_data.item(i,0).text())
             faces_text = self.tableWidget_refining_mesh_data.item(i,1).text()
@@ -261,7 +261,7 @@ class MesherInputs(QDialog):
                                 "size_factor" : 0,
                                 "minimum_element_size" : min_factor*maximum_element_size,
                                 "maximum_element_size" : maximum_element_size,
-                                "mesh_refinement_parameters" : list(),
+                                "mesh_refinement_parameters" : self.get_inputs_table(),
                                 "mesh_connection" : connected_mesh
                                 }
 
