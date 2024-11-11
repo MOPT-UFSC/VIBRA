@@ -1,10 +1,13 @@
 import logging
 from time import time
+from moviepy.editor import ImageSequenceClip
+from PIL import Image
+from pathlib import Path
 
 import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
 from PyQt5.QtCore import QObjectCleanupHandler
-from PyQt5.QtWidgets import QVBoxLayout
+from PyQt5.QtWidgets import QVBoxLayout, QFileDialog
 
 from vibra import app
 # from vibra.interface.modal_analysis_bar import AcousticModalAnalysisBar
@@ -22,6 +25,7 @@ from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 # )
 from vibra.utils.interface_functions import get_main_window
 from vibra.utils.progress_status import ProgressStatus
+from vibra import VIBRA_DIR
 
 
 class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
@@ -34,6 +38,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
         self.control_bar.phase_slider.valueChanged.connect(self.stop_animation)
         self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
+        self.control_bar.create_video_button.clicked.connect(self.save_video)
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
@@ -221,6 +226,19 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         # dt = time() - t0
         # print(f"Elapsed time to process D: {round(dt, 4)} s")
 
+    def save_video(self):
+        file_path, check = QFileDialog.getSaveFileName(
+                                                        self,
+                                                        "Save As",
+                                                        filter = "All Files ();; Video (*.mp4);; GIF (*.gif);;",
+                                                    )
+        
+        if not check:
+            return
+        
+        self.generate_video(file_path)
+    
+        
     def process_animation_frames(self):
         """This method processes the animation frames for one complete
         animation cycle. The animation controls are frame per cycle
