@@ -1152,6 +1152,11 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
              </item>
              <item row="0" column="3">
               <widget class="QLabel" name="label_11">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>[kg/m³.s]</string>
                </property>
@@ -1723,6 +1728,11 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
              </item>
              <item row="0" column="3">
               <widget class="QLabel" name="label_46">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>[kg/m³.s]</string>
                </property>
@@ -1927,6 +1937,11 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
              </item>
              <item row="5" column="3">
               <widget class="QLabel" name="label_22">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>[kg/m³.s]</string>
                </property>
@@ -2354,6 +2369,11 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
              </item>
              <item row="5" column="3">
               <widget class="QLabel" name="label_26">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>[kg/m³.s]</string>
                </property>

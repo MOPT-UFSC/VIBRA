@@ -46,7 +46,7 @@ class AcousticModalSolver:
 
         # self.plot_graph(K)
         logging.info("Solving the eigenproblem..." + ProgressStatus(10, 100))
-        self.eigen_values, self.eigen_vectors = eigs(K, M=M, k=self.modes, which=which, sigma=self.sigma_factor)
+        self.eigen_values, self.eigen_vectors = eigs(K, M=M, k=self.modes, which=which, sigma=self.sigma_factor, tol=1e-2)
 
         logging.info("Post-processing the solution..." + ProgressStatus(95, 100))
         positive_real = np.absolute(np.real(self.eigen_values))

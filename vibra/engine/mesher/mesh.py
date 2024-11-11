@@ -23,7 +23,6 @@ import gmsh
 import sys
 
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 from time import time
 
 import numpy as np
@@ -84,20 +83,20 @@ class Mesh:
 
     @classmethod
     def from_cad(
-        cls,
-        path: str,
-        *,
-        minimum_element_size: float = 30.0,
-        maximum_element_size: float = 30.0,
-        element_type: ElementType = DEFAULT_ELEMENT_TYPE,
-        geometry_tolerance: float = 1e-8,
-        size_factor: float = 0.5,
-        dimension: int = 3,
-        threads: int = 1,
-        gmsh_gui: bool = False,
-        mesh_refinement_parameters = None, 
-        mesh_connection = True,
-    ):
+                 cls,
+                 path: str,
+                 *,
+                 minimum_element_size: float = 30.0,
+                 maximum_element_size: float = 30.0,
+                 element_type: ElementType = DEFAULT_ELEMENT_TYPE,
+                 geometry_tolerance: float = 1e-8,
+                 size_factor: float = 0.5,
+                 dimension: int = 3,
+                 threads: int = 1,
+                 gmsh_gui: bool = False,
+                 mesh_refinement_parameters = None, 
+                 mesh_connection = True,
+                 ):
         """
         Custom constructor so you can create a mesh with this sintax:
         mesh = Mesh.from_cad(...)
@@ -111,78 +110,70 @@ class Mesh:
 
         obj = Mesh()
         obj.load_cad(
-                    path,
-                    minimum_element_size = minimum_element_size,
-                    maximum_element_size = maximum_element_size,
-                    element_type = element_type,
-                    geometry_tolerance = geometry_tolerance,
-                    size_factor = size_factor,
-                    dimension = dimension,
-                    threads = threads,
-                    gmsh_gui = gmsh_gui,
-                    mesh_refinement_parameters = mesh_refinement_parameters,
-                    mesh_connection = mesh_connection,
-                    )
+                     path,
+                     minimum_element_size = minimum_element_size,
+                     maximum_element_size = maximum_element_size,
+                     element_type = element_type,
+                     geometry_tolerance = geometry_tolerance,
+                     size_factor = size_factor,
+                     dimension = dimension,
+                     threads = threads,
+                     gmsh_gui = gmsh_gui,
+                     mesh_refinement_parameters = mesh_refinement_parameters,
+                     mesh_connection = mesh_connection,
+                     )
 
         return obj
 
     def load_cad(
-                    self,
-                    path: (str | Path),
-                    *,
-                    minimum_element_size: float = 30.0,
-                    maximum_element_size: float = 30.0,
-                    element_type: ElementType = DEFAULT_ELEMENT_TYPE,
-                    geometry_tolerance: float = 1e-8,
-                    size_factor: float = 0.50,
-                    dimension: int = 3,
-                    threads: int = 4,
-                    gmsh_gui: bool = False,
-                    mesh_refinement_parameters = None,
-                    mesh_connection = True,
-                ):
+                 self,
+                 path: (str | Path),
+                 *,
+                 minimum_element_size: float = 30.0,
+                 maximum_element_size: float = 30.0,
+                 element_type: ElementType = DEFAULT_ELEMENT_TYPE,
+                 geometry_tolerance: float = 1e-8,
+                 size_factor: float = 0.50,
+                 dimension: int = 3,
+                 threads: int = 4,
+                 gmsh_gui: bool = False,
+                 mesh_refinement_parameters = None,
+                 mesh_connection = True,
+                 ):
 
         self.mesh_setup = dict(
-                                minimum_element_size = minimum_element_size,
-                                maximum_element_size = maximum_element_size,
-                                element_type = element_type,
-                                geometry_tolerance = geometry_tolerance,
-                                size_factor = size_factor,
-                                dimension = dimension,
-                                threads = threads,
-                                mesh_refinement_parameters = mesh_refinement_parameters,
-                                mesh_connection = mesh_connection
-                                )
+                               minimum_element_size = minimum_element_size,
+                               maximum_element_size = maximum_element_size,
+                               element_type = element_type,
+                               geometry_tolerance = geometry_tolerance,
+                               size_factor = size_factor,
+                               dimension = dimension,
+                               threads = threads,
+                               mesh_refinement_parameters = mesh_refinement_parameters,
+                               mesh_connection = mesh_connection
+                               )
 
         self.mesh_connection = mesh_connection
 
         gmsh.initialize("", False)
-
-        logging.info("Configuring mesh..." + ProgressStatus(5, 100))
-        self._configure_mesh(   element_type,
-                                minimum_element_size,
-                                maximum_element_size,
-                                geometry_tolerance,
-                                size_factor,
-                                threads,
-                                mesh_refinement_parameters,
-                            )
+        gmsh.option.setNumber("General.Terminal", 0)
+        gmsh.option.setNumber("General.Verbosity", 0)
+        gmsh.option.setNumber("General.NumThreads", threads)
+        gmsh.option.setNumber("Geometry.Tolerance", geometry_tolerance)
 
         logging.info("Loading geometry..." + ProgressStatus(10, 100))
-
         gmsh.open(path)
 
-        # if isinstance(path, str):
-        #     paths = [paths]
-
-        # # t0 = time()
-        # for path in paths:
-        #     gmsh.merge(str(path))
-        #     # gmsh.open(str(path))
+        logging.info("Configuring mesh..." + ProgressStatus(20, 100))
+        self._configure_mesh(   
+                             element_type,
+                             minimum_element_size,
+                             maximum_element_size,
+                             size_factor,
+                             mesh_refinement_parameters,
+                             )
 
         gmsh.model.occ.synchronize()
-        # self.get_geometry_info()
-
         # self.dimension = min(dimension, gmsh.model.getDimension())
         self.element_type = element_type
 
@@ -190,17 +181,15 @@ class Mesh:
             self._merge_nodes_from_adjacent_volumes()
 
         try:
-
-            logging.info("Generating mesh..." + ProgressStatus(25, 100))
+            logging.info("Generating mesh..." + ProgressStatus(45, 100))
             # gmsh.model.mesh.generate(dim=element_type.dimensions)
             gmsh.model.mesh.generate(dim=dimension)
             logging.info("Generating mesh..." + ProgressStatus(60, 100))
             self.get_geometry_info()
+            gmsh.model.mesh.removeDuplicateNodes()
 
         except:
             gmsh.finalize()
-
-        gmsh.model.mesh.removeDuplicateNodes()
 
         logging.info("Post-processing mesh..." + ProgressStatus(70, 100))
         self._process_mesh()
@@ -348,15 +337,16 @@ class Mesh:
         writer.SetInputData(vtk_dataset)
         writer.Write()
 
-    def local_mesh_refine(self, lc_geral, mesh_refinement_parameters):
+
+    def local_mesh_refine(self, global_size: float | int, refinement_parameters: list):
 
         fields_list = [1]
 
         gmsh.model.mesh.field.add("Constant")
         gmsh.model.mesh.field.setNumbers(1, "SurfacesList", [])
-        gmsh.model.mesh.field.setNumber(1, "VOut", lc_geral)       
+        gmsh.model.mesh.field.setNumber(1, "VOut", global_size)       
 
-        for size, faces in mesh_refinement_parameters:
+        for size, faces in refinement_parameters:
             threshold_type = gmsh.model.mesh.field.add("Constant")
             gmsh.model.mesh.field.setNumbers(threshold_type, "SurfacesList", faces)
             gmsh.model.mesh.field.setNumber(threshold_type, "VIn", size)
@@ -371,22 +361,15 @@ class Mesh:
                         element_type,
                         minimum_element_size,
                         maximum_element_size,
-                        tolerance,
                         size_factor,
-                        threads,
-                        mesh_refinement_parameters=None
+                        refinement_parameters = list()
                         ):
-
-        gmsh.option.setNumber("General.Terminal", 0)
-        gmsh.option.setNumber("General.Verbosity", 0)
-        gmsh.option.setNumber("General.NumThreads", threads)
-        gmsh.option.setNumber("Geometry.Tolerance", tolerance)
 
         if size_factor != 0:
             gmsh.option.setNumber("Mesh.MeshSizeFactor", size_factor)
 
-        elif mesh_refinement_parameters:
-            self.local_mesh_refine(minimum_element_size, mesh_refinement_parameters)
+        elif refinement_parameters:
+            self.local_mesh_refine(minimum_element_size, refinement_parameters)
 
         else:
             gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
@@ -590,40 +573,54 @@ class Mesh:
 
     def get_face_elements_connected_to_nodes(self, node_ids, surface_id=None):
 
+        # t0 = time()
+
         face_elements_connected_to_nodes = dict()
+
+        if surface_id is None:
+            mask_0 = np.sum(np.isin(self.faces_connectivity[:, 4:], node_ids), axis=1) >= 1
+            filtered_data = self.faces_connectivity[mask_0, :]
 
         Nel = len(node_ids)
         for i, node_id in enumerate(node_ids):
-            # t0 = time()
+
             if surface_id is None:
-                mask = np.sum(self.faces_connectivity[:, 4:] == node_id, axis=1) == 1
-                face_elements_connected_to_nodes[node_id, surface_id] = self.faces_connectivity[:, 0][mask]
+                mask = np.sum(filtered_data[:, 4:] == node_id, axis=1) == 1
+                face_elements_connected_to_nodes[node_id, surface_id] = filtered_data[:, 0][mask]
             else:
                 connect_from_surface = self.connectivity_from_surfaces[surface_id]
                 mask = np.sum(connect_from_surface == node_id, axis=1) == 1
-                face_elements_connected_to_nodes[node_id, surface_id] = connect_from_surface[mask, :]
+                face_elements_connected_to_nodes[node_id, surface_id] = connect_from_surface[mask, :]                
 
-            # dt = time() - t0
-            # print(f"Loop time: {dt} s")
             text = f"Obtaining face elements connected to nodes... \nSurface [{surface_id}]"
             logging.info(text + ProgressStatus(int(100 * i / Nel), 100))
+
+        # dt = time() - t0
+        # print(f"Loop time: {dt} s")
 
         return face_elements_connected_to_nodes
 
 
     def get_solid_elements_connected_to_nodes(self, node_ids):
 
+        # t0 = time()
+
         solid_elements_connected_to_nodes = dict()
+
+        mask_0 = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= 1
+        filtered_data = self.solids_connectivity[mask_0, :]
 
         Nel = len(node_ids)
         for i, node_id in enumerate(node_ids):
-            # t0 = time()
-            mask = np.sum(self.solids_connectivity[:, 4:] == node_id, axis=1) == 1
-            solid_elements_connected_to_nodes[node_id] = self.solids_connectivity[:, 0][mask]
+            # mask = np.sum(self.solids_connectivity[:, 4:] == node_id, axis=1) == 1
+            # solid_elements_connected_to_nodes[node_id] = self.solids_connectivity[:, 0][mask]
+            mask = np.sum(filtered_data[:, 4:] == node_id, axis=1) == 1
+            solid_elements_connected_to_nodes[node_id] = filtered_data[:, 0][mask]
 
-            # dt = time() - t0
-            # print(f"Loop time: {dt} s")
             logging.info("Obtaining solid elements connected to nodes..." + ProgressStatus(int(100 * i / Nel), 100))
+
+        # dt = time() - t0
+        # print(f"Loop time: {dt} s")
 
         return solid_elements_connected_to_nodes
 

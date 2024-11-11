@@ -65,7 +65,7 @@ def test_load_external_mesh_and_solve():
         ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
         mesh.nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
 
-        mesh.volume_from_surface[tag] = [3]
+        mesh.volume_from_surface[tag] = [1]
 
     mesh.surfaces_from_volumes[1] = [1, 2]
 
@@ -175,16 +175,19 @@ def test_load_external_mesh_and_solve():
     for tag, surface_nodes in mesh.nodes_from_surfaces.items():
         list_nodes.extend(surface_nodes)
 
-    solid_elements_connected_to_nodes =  mesh.get_solid_elements_connected_to_nodes(list_nodes)
+    rho_eff_v1 = model.get_fluid_density_for_particle_velocity_calculation(1, frequencies)
+    rho_eff_v2 = model.get_fluid_density_for_particle_velocity_calculation(2, frequencies)
 
-    input_particle_velocity = harmonic_solver.get_particle_velocity_from_surface(1)
-    output_particle_velocity = harmonic_solver.get_particle_velocity_from_surface(2)
+    input_particle_velocity = harmonic_solver.get_particle_velocity_from_surface(1, rho_eff_v1)
+    output_particle_velocity = harmonic_solver.get_particle_velocity_from_surface(2, rho_eff_v2)
 
     input_velocities = np.array(list(input_particle_velocity["Vx"].values()), dtype=complex)
     output_velocities = np.array(list(output_particle_velocity["Vx"].values()), dtype=complex)
 
     input_Vx = np.average(input_velocities, axis=0)
     output_Vx = np.average(output_velocities, axis=0)
+
+    solid_elements_connected_to_nodes =  mesh.get_solid_elements_connected_to_nodes(list_nodes)
 
     particle_velocity = dict()
     for _node_id, element_ids in solid_elements_connected_to_nodes.items():

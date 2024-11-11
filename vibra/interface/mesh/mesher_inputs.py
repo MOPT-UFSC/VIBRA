@@ -41,10 +41,13 @@ class MesherInputs(QDialog):
         ConfigWidgetAppearance(self, tool_tip=True)
 
         self._load_current_mesh_setup()
-        self.exec()
+
+        while self.keep_window_open:
+            self.exec()
 
     def _initialize(self):
         self.complete = False
+        self.keep_window_open = True
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -95,6 +98,8 @@ class MesherInputs(QDialog):
         self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_delete.clicked.connect(self.trash_button_callback)
         self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
+        #
+        self.main_window.selection_changed.connect(self.geometry_selection_callback)
 
     def _load_current_mesh_setup(self):
         mesh_setup = app().main_window.project.model.mesh_setup
@@ -147,12 +152,6 @@ class MesherInputs(QDialog):
 
             def generate_function():
 
-                logging.info("Processing mesh..." + ProgressStatus(10, 100))
-                # condition = self.lineEdit_faces_list.text() == "" and self.lineEdit_refining_size.text() == ""
-                if self.close_after_generate:
-                # if condition or self.close_after_generate:
-                    self.close()
-
                 logging.info("Processing mesh..." + ProgressStatus(20, 100))
                 app().main_window.viewer_tabs.close_analysis_tabs()
                 app().main_window.project.reset_solutions()
@@ -180,9 +179,10 @@ class MesherInputs(QDialog):
             title = "Error while processing mesh"
             message = str(error_log)
             PrintMessageInput([window_title, title, message])
-            self.show()
 
     def actions_to_finalize(self):
+        if self.close_after_generate:
+            self.close()
         logging.info("Updating render..." + ProgressStatus(95, 100))
         app().main_window.viewer_tabs.show_mesh()
         app().main_window.viewer_tabs.close_analysis_tabs()
@@ -200,12 +200,14 @@ class MesherInputs(QDialog):
         self.lineEdit_refining_size.setText("")
         self.lineEdit_faces_list.setText("")
 
-    def geometry_selection_callback(self, points, lines, faces):
-        faces_list = ", ".join([str(i) for i in faces])
-        self.lineEdit_faces_list.setText(faces_list)
-    
+    def geometry_selection_callback(self):
+        faces = self.main_window.selected_geometry_surfaces
+        if faces:
+            text = ", ".join([str(i) for i in faces])
+            self.lineEdit_faces_list.setText(text)
+
     def get_inputs_table(self):
-        faces_and_refined_size_list = []
+        faces_and_refined_size_list = list()
         for i in range(self.tableWidget_refining_mesh_data.rowCount()):
             mesh_text = float(self.tableWidget_refining_mesh_data.item(i,0).text())
             faces_text = self.tableWidget_refining_mesh_data.item(i,1).text()
@@ -257,7 +259,7 @@ class MesherInputs(QDialog):
                                 "size_factor" : 0,
                                 "minimum_element_size" : min_factor*maximum_element_size,
                                 "maximum_element_size" : maximum_element_size,
-                                "mesh_refinement_parameters" : list(),
+                                "mesh_refinement_parameters" : self.get_inputs_table(),
                                 "mesh_connection" : connected_mesh
                                 }
 
@@ -300,5 +302,17 @@ class MesherInputs(QDialog):
             self.stop = True
             return None
         return out
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            self.generate_mesh_callback()
+        elif event.key() == Qt.Key_Delete:
+            return
+        elif event.key() == Qt.Key_Escape:
+            self.close()
+
+    def closeEvent(self, a0):
+        self.keep_window_open = False
+        return super().closeEvent(a0)
 
 # fmt: on

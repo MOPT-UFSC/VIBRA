@@ -111,6 +111,11 @@
              <height>26</height>
             </size>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
            </property>
@@ -147,7 +152,7 @@
            </property>
            <property name="font">
             <font>
-             <pointsize>8</pointsize>
+             <pointsize>10</pointsize>
             </font>
            </property>
            <property name="text">
@@ -168,6 +173,11 @@
              <width>160</width>
              <height>16777215</height>
             </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
            </property>
            <property name="text">
             <string>1e-6</string>
@@ -191,6 +201,11 @@
              <height>16777215</height>
             </size>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>Geometry tolerance [mm]:</string>
            </property>
@@ -204,6 +219,11 @@
              <height>26</height>
             </size>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
            </property>
@@ -214,7 +234,7 @@
             <double>0.100000000000000</double>
            </property>
            <property name="maximum">
-            <double>2.000000000000000</double>
+            <double>1.000000000000000</double>
            </property>
            <property name="singleStep">
             <double>0.100000000000000</double>
@@ -237,6 +257,11 @@
              <width>160</width>
              <height>16777215</height>
             </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
            </property>
            <property name="text">
             <string>Minimum element size factor:</string>
@@ -278,6 +303,11 @@
              <height>26</height>
             </size>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string/>
            </property>
@@ -293,6 +323,11 @@
              <width>0</width>
              <height>26</height>
             </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
            </property>
            <property name="text">
             <string/>
@@ -310,8 +345,13 @@
              <height>20</height>
             </size>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <property name="text">
-            <string>Faces list:</string>
+            <string>Selected surface IDs:</string>
            </property>
           </widget>
          </item>
@@ -323,8 +363,13 @@
              <height>20</height>
             </size>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <property name="text">
-            <string>Refined size [mm]:</string>
+            <string>Refined element size [mm]:</string>
            </property>
           </widget>
          </item>
@@ -335,6 +380,11 @@
              <width>80</width>
              <height>26</height>
             </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
            </property>
            <property name="text">
             <string>Delete</string>
@@ -351,6 +401,11 @@
              <width>80</width>
              <height>26</height>
             </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
            </property>
            <property name="text">
             <string>Add</string>
@@ -389,6 +444,12 @@
          </property>
          <item row="0" column="0">
           <widget class="QTableWidget" name="tableWidget_refining_mesh_data">
+           <attribute name="horizontalHeaderStretchLastSection">
+            <bool>true</bool>
+           </attribute>
+           <attribute name="verticalHeaderStretchLastSection">
+            <bool>false</bool>
+           </attribute>
            <column>
             <property name="text">
              <string>Refining mesh size [mm]</string>
@@ -399,7 +460,7 @@
            </column>
            <column>
             <property name="text">
-             <string>Face list</string>
+             <string>Group of selected surface IDs</string>
             </property>
             <property name="textAlignment">
              <set>AlignCenter</set>
@@ -447,7 +508,7 @@
            </property>
            <property name="font">
             <font>
-             <pointsize>8</pointsize>
+             <pointsize>10</pointsize>
             </font>
            </property>
            <property name="text">
@@ -474,7 +535,7 @@
            </property>
            <property name="font">
             <font>
-             <pointsize>8</pointsize>
+             <pointsize>10</pointsize>
             </font>
            </property>
            <property name="text">
@@ -526,6 +587,11 @@
              <height>16777215</height>
             </size>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>Element type:</string>
            </property>
@@ -545,6 +611,11 @@
              <height>16777215</height>
             </size>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>Shape function:</string>
            </property>
@@ -563,6 +634,11 @@
              <width>120</width>
              <height>16777215</height>
             </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
            </property>
            <item>
             <property name="text">
@@ -600,6 +676,11 @@
              <height>16777215</height>
             </size>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <item>
             <property name="text">
              <string> Linear</string>
@@ -619,6 +700,11 @@
              <width>0</width>
              <height>26</height>
             </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
            </property>
            <property name="text">
             <string>Merge nodes from neighbour volumes</string>
