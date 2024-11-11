@@ -164,7 +164,7 @@ class Mesh:
         logging.info("Loading geometry..." + ProgressStatus(10, 100))
         gmsh.open(path)
 
-        logging.info("Configuring mesh..." + ProgressStatus(5, 100))
+        logging.info("Configuring mesh..." + ProgressStatus(20, 100))
         self._configure_mesh(   
                              element_type,
                              minimum_element_size,
@@ -181,7 +181,7 @@ class Mesh:
             self._merge_nodes_from_adjacent_volumes()
 
         try:
-            logging.info("Generating mesh..." + ProgressStatus(25, 100))
+            logging.info("Generating mesh..." + ProgressStatus(45, 100))
             # gmsh.model.mesh.generate(dim=element_type.dimensions)
             gmsh.model.mesh.generate(dim=dimension)
             logging.info("Generating mesh..." + ProgressStatus(60, 100))
