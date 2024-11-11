@@ -72,7 +72,7 @@ class MesherInputs(QDialog):
         self.lineEdit_maximum_element_size: QLineEdit
         self.lineEdit_geometry_tolerance: QLineEdit
         self.lineEdit_refining_size: QLineEdit
-        self.lineEdit_faces_list: QLineEdit
+        self.lineEdit_selected_ids: QLineEdit
 
         # QPushButton
         self.pushButton_add: QPushButton
@@ -85,7 +85,7 @@ class MesherInputs(QDialog):
         self._config_tableWidget_appearance()
 
     def _config_tableWidget_appearance(self):
-        header = ["Refining mesh size", "Faces list"]
+        header = ["Refining mesh size [mm]", "Selection type", "Selection IDs"]
         self.tableWidget_refining_mesh_data.setColumnCount(len(header))
         self.tableWidget_refining_mesh_data.setHorizontalHeaderLabels(header)
         self.tableWidget_refining_mesh_data.setSelectionBehavior(1)
@@ -110,8 +110,7 @@ class MesherInputs(QDialog):
                 minimum_element_size = mesh_setup["minimum_element_size"]
                 maximum_element_size = mesh_setup["maximum_element_size"]
                 size_factor = minimum_element_size / maximum_element_size
-                # TODO: finalize in future updates
-                # mesh_refinement_parameters = mesh_setup["mesh_refinement_parameters"]
+                mesh_refinement_parameters = mesh_setup["mesh_refinement_parameters"]
                 mesh_connection = mesh_setup["mesh_connection"]
 
                 self.update_element_type(element_type)
@@ -121,23 +120,51 @@ class MesherInputs(QDialog):
                 self.lineEdit_geometry_tolerance.setText(str(geometry_tolerance))
                 self.checkBox_mesh_connection.setChecked(mesh_connection)
 
+                if app().main_window.selected_geometry_volumes:
+                    selection_type = "volumes"
+                else:
+                    selection_type = "surfaces"
+
+                self.tableWidget_refining_mesh_data.clearContents()
+                for e_size, surface_ids in mesh_refinement_parameters:
+
+                    row = self.tableWidget_refining_mesh_data.rowCount()
+                    rows = row + 1
+
+                    str_surface_ids = ", ".join([str(i) for i in surface_ids])
+                    self.tableWidget_refining_mesh_data.setRowCount(rows)
+
+                    self.tableWidget_refining_mesh_data.setItem(row, 0, QTableWidgetItem(str(e_size)))
+                    self.tableWidget_refining_mesh_data.setItem(row, 1, QTableWidgetItem(selection_type))
+                    self.tableWidget_refining_mesh_data.setItem(row, 2, QTableWidgetItem(str_surface_ids))
+
+                    for j in range(3):
+                        self.tableWidget_refining_mesh_data.item(row, j).setTextAlignment(Qt.AlignCenter)
+
             except Exception as error_log:
-                print(str(error_log))
-                pass
+                self.hide()
+                title = "Error while loading mesh setup"
+                message = str(error_log)
+                PrintMessageInput([window_title_1, title, message])
 
     def update_element_type(self, element_type):
+
         if element_type == TETRAHEDRON_4:
             self.comboBox_element_type.setCurrentIndex(0)
             self.comboBox_shape_function.setCurrentIndex(0)
+
         elif element_type == TETRAHEDRON_10:
             self.comboBox_element_type.setCurrentIndex(0)
             self.comboBox_shape_function.setCurrentIndex(1)
+
         elif element_type == HEXAHEDRON_8:
             self.comboBox_element_type.setCurrentIndex(1)
             self.comboBox_shape_function.setCurrentIndex(0)
+
         elif element_type == HEXAHEDRON_20:
             self.comboBox_element_type.setCurrentIndex(1)
             self.comboBox_shape_function.setCurrentIndex(1)
+
         else:
             NotImplementedError()
 
@@ -147,7 +174,7 @@ class MesherInputs(QDialog):
 
             if self.check_mesh_inputs():
                 return
-            
+
             self.hide()
 
             def generate_function():
@@ -193,28 +220,51 @@ class MesherInputs(QDialog):
         self.tableWidget_refining_mesh_data.removeRow(current_row)
 
     def add_button_callback(self):
-        a = self.tableWidget_refining_mesh_data.rowCount()
-        self.tableWidget_refining_mesh_data.setRowCount(a+1) 
-        self.tableWidget_refining_mesh_data.setItem(a, 0, QTableWidgetItem(self.lineEdit_refining_size.text()))
-        self.tableWidget_refining_mesh_data.setItem(a, 1, QTableWidgetItem(self.lineEdit_faces_list.text()))
+
+        row = self.tableWidget_refining_mesh_data.rowCount()
+        rows = row + 1
+        self.tableWidget_refining_mesh_data.setRowCount(rows)
+
+        if app().main_window.selected_geometry_volumes:
+            selected_type = "volumes"
+        else:
+            selected_type = "surfaces"
+
+        self.tableWidget_refining_mesh_data.setItem(row, 0, QTableWidgetItem(self.lineEdit_refining_size.text()))
+        self.tableWidget_refining_mesh_data.setItem(row, 1, QTableWidgetItem(selected_type))
+        self.tableWidget_refining_mesh_data.setItem(row, 2, QTableWidgetItem(self.lineEdit_selected_ids.text()))
+
+        for j in range(3):
+            self.tableWidget_refining_mesh_data.item(row, j).setTextAlignment(Qt.AlignCenter)
+
         self.lineEdit_refining_size.setText("")
-        self.lineEdit_faces_list.setText("")
+        self.lineEdit_selected_ids.setText("")
 
     def geometry_selection_callback(self):
+
         faces = self.main_window.selected_geometry_surfaces
-        if faces:
-            text = ", ".join([str(i) for i in faces])
-            self.lineEdit_faces_list.setText(text)
+        volumes = self.main_window.selected_geometry_volumes
+
+        if volumes:
+            selection = volumes
+        else:
+            selection = faces
+
+        if selection:
+            text = ", ".join([str(i) for i in selection])
+            self.lineEdit_selected_ids.setText(text)
 
     def get_inputs_table(self):
-        faces_and_refined_size_list = list()
+
+        refine_data = list()
         for i in range(self.tableWidget_refining_mesh_data.rowCount()):
-            mesh_text = float(self.tableWidget_refining_mesh_data.item(i,0).text())
-            faces_text = self.tableWidget_refining_mesh_data.item(i,1).text()
-            faces_text = [int(i) for i in faces_text.split(",")]
-            faces_and_refined_size_list.append((mesh_text,faces_text))
-        
-        return faces_and_refined_size_list
+            refine_size = float(self.tableWidget_refining_mesh_data.item(i, 0).text())
+            selection_type = self.tableWidget_refining_mesh_data.item(i, 1).text()
+            str_selection_ids = self.tableWidget_refining_mesh_data.item(i, 2).text()
+            selection_ids = [int(i) for i in str_selection_ids.split(",")]
+            refine_data.append((refine_size, selection_type, selection_ids))
+
+        return refine_data
         
     def check_mesh_inputs(self):
 
