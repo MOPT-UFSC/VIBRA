@@ -341,14 +341,19 @@ class Mesh:
     def local_mesh_refine(self, global_size: float | int, refinement_parameters: list):
 
         fields_list = [1]
-
         gmsh.model.mesh.field.add("Constant")
         gmsh.model.mesh.field.setNumbers(1, "SurfacesList", [])
-        gmsh.model.mesh.field.setNumber(1, "VOut", global_size)       
+        gmsh.model.mesh.field.setNumber(1, "VOut", global_size)
+        # TODO: vou deixar para você resolver essa parte Vitor
 
-        for size, faces in refinement_parameters:
+        for size, selection_type, selection_ids in refinement_parameters:
+
             threshold_type = gmsh.model.mesh.field.add("Constant")
-            gmsh.model.mesh.field.setNumbers(threshold_type, "SurfacesList", faces)
+            if selection_type == "surfaces":
+                gmsh.model.mesh.field.setNumbers(threshold_type, "SurfacesList", selection_ids)
+            else:
+                gmsh.model.mesh.field.setNumbers(threshold_type, "VolumesList", selection_ids)
+
             gmsh.model.mesh.field.setNumber(threshold_type, "VIn", size)
             fields_list.append(threshold_type)
 

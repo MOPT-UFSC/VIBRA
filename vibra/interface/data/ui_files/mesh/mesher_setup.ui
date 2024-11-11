@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>520</width>
+    <width>560</width>
     <height>480</height>
    </rect>
   </property>
@@ -18,7 +18,7 @@
   </property>
   <property name="maximumSize">
    <size>
-    <width>520</width>
+    <width>560</width>
     <height>480</height>
    </size>
   </property>
@@ -41,7 +41,7 @@
    <property name="spacing">
     <number>4</number>
    </property>
-   <item row="0" column="0">
+   <item row="1" column="0">
     <widget class="QFrame" name="frame">
      <property name="minimumSize">
       <size>
@@ -51,7 +51,7 @@
      </property>
      <property name="maximumSize">
       <size>
-       <width>520</width>
+       <width>16777215</width>
        <height>480</height>
       </size>
      </property>
@@ -156,7 +156,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Maximum element size [mm]:</string>
+            <string>Max. element size [mm]:</string>
            </property>
           </widget>
          </item>
@@ -264,7 +264,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Minimum element size factor:</string>
+            <string>Min. element size factor:</string>
            </property>
           </widget>
          </item>
@@ -296,7 +296,7 @@
           <number>6</number>
          </property>
          <item row="1" column="1">
-          <widget class="QLineEdit" name="lineEdit_faces_list">
+          <widget class="QLineEdit" name="lineEdit_selected_ids">
            <property name="minimumSize">
             <size>
              <width>0</width>
@@ -351,7 +351,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Selected surface IDs:</string>
+            <string>Selected IDs:</string>
            </property>
           </widget>
          </item>
@@ -447,6 +447,9 @@
            <attribute name="horizontalHeaderStretchLastSection">
             <bool>true</bool>
            </attribute>
+           <attribute name="verticalHeaderVisible">
+            <bool>false</bool>
+           </attribute>
            <attribute name="verticalHeaderStretchLastSection">
             <bool>false</bool>
            </attribute>
@@ -460,7 +463,15 @@
            </column>
            <column>
             <property name="text">
-             <string>Group of selected surface IDs</string>
+             <string>Selection type</string>
+            </property>
+            <property name="textAlignment">
+             <set>AlignCenter</set>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Surface IDs</string>
             </property>
             <property name="textAlignment">
              <set>AlignCenter</set>
@@ -707,7 +718,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Merge nodes from neighbour volumes</string>
+            <string>Merge nodes from connected volumes</string>
            </property>
            <property name="checked">
             <bool>true</bool>
@@ -715,6 +726,66 @@
           </widget>
          </item>
         </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QFrame" name="frame_6">
+     <property name="minimumSize">
+      <size>
+       <width>400</width>
+       <height>48</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>48</height>
+      </size>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <property name="lineWidth">
+      <number>1</number>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_8">
+      <property name="leftMargin">
+       <number>6</number>
+      </property>
+      <property name="topMargin">
+       <number>6</number>
+      </property>
+      <property name="rightMargin">
+       <number>6</number>
+      </property>
+      <property name="bottomMargin">
+       <number>6</number>
+      </property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="font">
+         <font>
+          <family>MS Shell Dlg 2</family>
+          <pointsize>11</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Mesh configuration</string>
+        </property>
+        <property name="textFormat">
+         <enum>Qt::AutoText</enum>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
        </widget>
       </item>
      </layout>
@@ -728,7 +799,7 @@
   <tabstop>comboBox_shape_function</tabstop>
   <tabstop>checkBox_mesh_connection</tabstop>
   <tabstop>lineEdit_refining_size</tabstop>
-  <tabstop>lineEdit_faces_list</tabstop>
+  <tabstop>lineEdit_selected_ids</tabstop>
   <tabstop>pushButton_add</tabstop>
   <tabstop>pushButton_delete</tabstop>
   <tabstop>tableWidget_refining_mesh_data</tabstop>
