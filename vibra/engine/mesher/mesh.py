@@ -83,20 +83,20 @@ class Mesh:
 
     @classmethod
     def from_cad(
-        cls,
-        path: str,
-        *,
-        minimum_element_size: float = 30.0,
-        maximum_element_size: float = 30.0,
-        element_type: ElementType = DEFAULT_ELEMENT_TYPE,
-        geometry_tolerance: float = 1e-8,
-        size_factor: float = 0.5,
-        dimension: int = 3,
-        threads: int = 1,
-        gmsh_gui: bool = False,
-        mesh_refinement_parameters = None, 
-        mesh_connection = True,
-    ):
+                 cls,
+                 path: str,
+                 *,
+                 minimum_element_size: float = 30.0,
+                 maximum_element_size: float = 30.0,
+                 element_type: ElementType = DEFAULT_ELEMENT_TYPE,
+                 geometry_tolerance: float = 1e-8,
+                 size_factor: float = 0.5,
+                 dimension: int = 3,
+                 threads: int = 1,
+                 gmsh_gui: bool = False,
+                 mesh_refinement_parameters = None, 
+                 mesh_connection = True,
+                 ):
         """
         Custom constructor so you can create a mesh with this sintax:
         mesh = Mesh.from_cad(...)
@@ -110,48 +110,48 @@ class Mesh:
 
         obj = Mesh()
         obj.load_cad(
-                    path,
-                    minimum_element_size = minimum_element_size,
-                    maximum_element_size = maximum_element_size,
-                    element_type = element_type,
-                    geometry_tolerance = geometry_tolerance,
-                    size_factor = size_factor,
-                    dimension = dimension,
-                    threads = threads,
-                    gmsh_gui = gmsh_gui,
-                    mesh_refinement_parameters = mesh_refinement_parameters,
-                    mesh_connection = mesh_connection,
-                    )
+                     path,
+                     minimum_element_size = minimum_element_size,
+                     maximum_element_size = maximum_element_size,
+                     element_type = element_type,
+                     geometry_tolerance = geometry_tolerance,
+                     size_factor = size_factor,
+                     dimension = dimension,
+                     threads = threads,
+                     gmsh_gui = gmsh_gui,
+                     mesh_refinement_parameters = mesh_refinement_parameters,
+                     mesh_connection = mesh_connection,
+                     )
 
         return obj
 
     def load_cad(
-                    self,
-                    path: (str | Path),
-                    *,
-                    minimum_element_size: float = 30.0,
-                    maximum_element_size: float = 30.0,
-                    element_type: ElementType = DEFAULT_ELEMENT_TYPE,
-                    geometry_tolerance: float = 1e-8,
-                    size_factor: float = 0.50,
-                    dimension: int = 3,
-                    threads: int = 4,
-                    gmsh_gui: bool = False,
-                    mesh_refinement_parameters = None,
-                    mesh_connection = True,
-                ):
+                 self,
+                 path: (str | Path),
+                 *,
+                 minimum_element_size: float = 30.0,
+                 maximum_element_size: float = 30.0,
+                 element_type: ElementType = DEFAULT_ELEMENT_TYPE,
+                 geometry_tolerance: float = 1e-8,
+                 size_factor: float = 0.50,
+                 dimension: int = 3,
+                 threads: int = 4,
+                 gmsh_gui: bool = False,
+                 mesh_refinement_parameters = None,
+                 mesh_connection = True,
+                 ):
 
         self.mesh_setup = dict(
-                                minimum_element_size = minimum_element_size,
-                                maximum_element_size = maximum_element_size,
-                                element_type = element_type,
-                                geometry_tolerance = geometry_tolerance,
-                                size_factor = size_factor,
-                                dimension = dimension,
-                                threads = threads,
-                                mesh_refinement_parameters = mesh_refinement_parameters,
-                                mesh_connection = mesh_connection
-                                )
+                               minimum_element_size = minimum_element_size,
+                               maximum_element_size = maximum_element_size,
+                               element_type = element_type,
+                               geometry_tolerance = geometry_tolerance,
+                               size_factor = size_factor,
+                               dimension = dimension,
+                               threads = threads,
+                               mesh_refinement_parameters = mesh_refinement_parameters,
+                               mesh_connection = mesh_connection
+                               )
 
         self.mesh_connection = mesh_connection
 
@@ -166,12 +166,12 @@ class Mesh:
 
         logging.info("Configuring mesh..." + ProgressStatus(5, 100))
         self._configure_mesh(   
-                            element_type,
-                            minimum_element_size,
-                            maximum_element_size,
-                            size_factor,
-                            mesh_refinement_parameters,
-                            )
+                             element_type,
+                             minimum_element_size,
+                             maximum_element_size,
+                             size_factor,
+                             mesh_refinement_parameters,
+                             )
 
         gmsh.model.occ.synchronize()
         # self.dimension = min(dimension, gmsh.model.getDimension())
