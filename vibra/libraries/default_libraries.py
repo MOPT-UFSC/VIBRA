@@ -116,6 +116,7 @@ def default_fluid_library():
         "Dynamic viscosity": float(9.3092e-6),
         "Temperature": 318.15,
         "Pressure": 101325,
+        "Molar mass" : 2.01588
     }
 
     config["4"] = {
@@ -130,6 +131,7 @@ def default_fluid_library():
         "Dynamic viscosity": float(9.3137e-6),
         "Temperature": 318.15,
         "Pressure": 1013250,
+        "Molar mass" : 2.01588
     }
 
     config["5"] = {
@@ -144,6 +146,7 @@ def default_fluid_library():
         "Dynamic viscosity": float(1.0914e-5),
         "Temperature": 293.15,
         "Pressure": 101325,
+        "Molar mass" : 16.0428
     }
 
     app().main_window.file.write_fluid_library_in_file(config)
