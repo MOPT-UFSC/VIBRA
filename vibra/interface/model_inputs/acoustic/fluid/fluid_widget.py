@@ -486,7 +486,7 @@ class FluidWidget(QWidget):
 
         return False
 
-    def add_fluid_to_file(self, column):
+    def add_fluid_to_file(self, column: int):
         try:
 
             fluid_data = dict()
@@ -499,7 +499,7 @@ class FluidWidget(QWidget):
                 else:
                     fluid_data[key] = item.text()
             
-            fluid_name = fluid_data["name"]
+            identifier = fluid_data["identifier"]
 
             if self.refprop is not None:
                 [key_mixture, molar_fractions] = self.fluid_setup
@@ -508,7 +508,7 @@ class FluidWidget(QWidget):
                 fluid_data['molar mass'] = round(self.fluid_data_refprop['molar mass'], 6)
 
             config = app().main_window.file.read_fluid_library_from_file()
-            config[fluid_name] = fluid_data
+            config[identifier] = fluid_data
 
             app().main_window.file.write_fluid_library_in_file(config)
 
@@ -654,6 +654,7 @@ class FluidWidget(QWidget):
 
         self.refprop = SetFluidCompositionInput(compressor_info = self.compressor_thermodynamic_state)
         if not self.refprop.complete:
+            self.refprop = None
             self.main_window.set_input_widget(self)
             return True
 
