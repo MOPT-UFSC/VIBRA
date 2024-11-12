@@ -278,7 +278,8 @@ class MesherInputs(QDialog):
 
     def remove_callback(self):
         current_row = self.tableWidget_refining_mesh_data.currentRow()
-        self.tableWidget_refining_mesh_data.removeRow(current_row)
+        if isinstance(current_row, int):
+            self.tableWidget_refining_mesh_data.removeRow(current_row)
 
     def get_inputs_table(self):
 
@@ -383,7 +384,7 @@ class MesherInputs(QDialog):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.generate_mesh_callback()
         elif event.key() == Qt.Key_Delete:
-            return
+            self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
 
