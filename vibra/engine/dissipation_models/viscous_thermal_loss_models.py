@@ -73,6 +73,10 @@ class ViscousThermalLossModels:
         k_t = fluid.thermal_conductivity
         Pr = mu * Cp / k_t
 
+        # isentropic bulk modulus
+        # K_s = gamma * P_0
+        K_s = rho_0 * C_0**2
+
         width = data["width"]
         height = data["height"]
         number_of_terms = data["number_of_terms"]
@@ -80,8 +84,6 @@ class ViscousThermalLossModels:
 
         a = width / 2
         b = height / 2
-
-        # EQUAÇÕES DOS DUTOS DE SEÇÃO RETANGULAR E/OU QUADRADA
  
         n = np.arange(0, number_of_terms)
         m = np.arange(0, number_of_terms)
@@ -106,7 +108,7 @@ class ViscousThermalLossModels:
         rho_eff = mu * (((a*b)**2) / (4*1j*omega)) * (1/aux_rho)
 
         # Effective complex bulk modulus (viscous-thermal losses in duct)
-        K_eff = (gamma * P_0) / (gamma - (gamma-1) * ((4*1j*omega*Pr*rho_0) / (mu*(a*b)**2)) * aux_comp)
+        K_eff = K_s / (gamma - (gamma-1) * ((4*1j*omega*Pr*rho_0) / (mu*(a*b)**2)) * aux_comp)
 
         # Complex speed of sound
         C_eff = np.sqrt(K_eff / rho_eff)
@@ -131,11 +133,12 @@ class ViscousThermalLossModels:
         k_t = fluid.thermal_conductivity
         Pr = mu * Cp / k_t
 
-        # width = data["width"]
-        height = data["height"]
-        # area = width * height
+        # isentropic bulk modulus
+        # K_s = gamma * P_0
+        K_s = rho_0 * C_0**2
 
-        # EQUAÇÕES DOS DUTOS TIPO FENDA
+        height = data["height"]
+
         G_rho = (height / 2) * np.sqrt(1j * omega * rho_0 / mu)
         G_bulk = (height / 2) * np.sqrt(1j * omega * rho_0 * Pr / mu)
 
@@ -143,7 +146,7 @@ class ViscousThermalLossModels:
         rho_eff =  rho_0 / (1 - (np.tanh(G_rho) / G_rho))
 
         # Effective complex bulk modulus (viscous-thermal losses in narrow slit duct)
-        K_eff = (gamma * P_0) / (1 + (gamma-1) * (np.tanh(G_bulk) / G_bulk))
+        K_eff = K_s / (1 + (gamma-1) * (np.tanh(G_bulk) / G_bulk))
 
         # Effective complex speed of sound
         C_eff = np.sqrt(K_eff / rho_eff)
@@ -169,20 +172,24 @@ class ViscousThermalLossModels:
         k_t = fluid.thermal_conductivity
         Pr = mu * Cp / k_t
 
+        # isentropic bulk modulus
+        # K_s = gamma * P_0
+        K_s = rho_0 * C_0**2
+
         diameter = data["diameter"]
 
         radius = diameter / 2
-        area = np.pi * (diameter**2) / 4
+        # area = np.pi * (diameter**2) / 4
 
-        G_rho = 1j * radius * np.sqrt(1j * omega * rho_0 / mu)
-        # G_bulk = 1j * radius * np.sqrt(1j * omega * rho_0 * Pr / mu)
-        G_bulk = 1j * radius * Pr * np.sqrt(1j * omega * rho_0 / mu)
+        G_rho = radius * np.sqrt(-1j * omega * rho_0 / mu)
+        G_bulk = radius * np.sqrt(-1j * omega * rho_0 * Pr / mu)
+        # G_bulk = radius * Pr * np.sqrt(-1j * omega * rho_0 / mu)
 
         # Effective complex density (viscous-thermal losses in duct)
         rho_eff = rho_0 / (1 - (2 / G_rho) * (jv(1, G_rho) / jv(0, G_rho)))
 
         # Effective complex bulk modulus (viscous-thermal losses in duct)
-        K_eff = (gamma * P_0) / (1 + (gamma-1) * (2 / G_bulk) * (jv(1, G_bulk) / jv(0, G_bulk)))
+        K_eff = K_s / (1 + (gamma-1) * (2 / G_bulk) * (jv(1, G_bulk) / jv(0, G_bulk)))
 
         # Effective complex speed of sound
         C_eff = np.sqrt(K_eff / rho_eff)
@@ -194,7 +201,7 @@ class ViscousThermalLossModels:
         # Zc = np.sqrt(K_eff * rho_eff) / area
 
         return rho_eff, C_eff
-    
+
 
     def get_circular_section_effective_properties_for_LRF_model(self, omega, fluid, data):
 
@@ -207,12 +214,13 @@ class ViscousThermalLossModels:
         k_t = fluid.thermal_conductivity
         Pr = mu * Cp / k_t
 
+        # isentropic bulk modulus
+        # K_s = gamma * P_0
+        K_s = rho_0 * C_0**2
+
         diameter = data["diameter"]
 
         radius = diameter / 2
-        area = np.pi * (diameter**2) / 4
-
-        radius = diameter / 2               
         s = radius * (np.sqrt( omega * rho_0 / mu))
 
         G_rho = s * ((1j)**(3/2))
@@ -222,7 +230,7 @@ class ViscousThermalLossModels:
         rho_eff = - rho_0 * (jv(0, G_rho)) / (jv(2, G_rho))
 
         # Effective complex bulk modulus (viscous-thermal losses in duct)
-        K_eff = (gamma * P_0) / (gamma + (gamma - 1) * jv(2, G_bulk) / jv(0, G_bulk))
+        K_eff = K_s / (gamma + (gamma - 1) * jv(2, G_bulk) / jv(0, G_bulk))
 
         # Effective complex speed of sound
         C_eff = np.sqrt(K_eff / rho_eff)
