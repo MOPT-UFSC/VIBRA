@@ -343,6 +343,7 @@ class Mesh:
         fields_list = [1]
         gmsh.model.mesh.field.add("Constant")
         gmsh.model.mesh.field.setNumbers(1, "SurfacesList", [])
+        gmsh.model.mesh.field.setNumbers(1, "VolumesList", [])
         gmsh.model.mesh.field.setNumber(1, "VOut", global_size)
         # TODO: vou deixar para você resolver essa parte Vitor
 
@@ -360,6 +361,7 @@ class Mesh:
         minimum_field = gmsh.model.mesh.field.add("Min")
         gmsh.model.mesh.field.setNumbers(minimum_field, "FieldsList", fields_list)
         gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
+
 
     def _configure_mesh(
                         self,

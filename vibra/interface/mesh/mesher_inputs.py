@@ -102,17 +102,51 @@ class MesherInputs(QDialog):
         self.tableWidget_refining_mesh_data.horizontalHeader().setStretchLastSection(True)
 
     def _create_connections(self):
+        #
         self.pushButton_add.clicked.connect(self.add_button_callback)
         self.pushButton_cancel.clicked.connect(self.close)
-        self.pushButton_delete.clicked.connect(self.trash_button_callback)
+        self.pushButton_delete.clicked.connect(self.remove_callback)
         self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
+        #
+        self.tableWidget_refining_mesh_data.itemClicked.connect(self.item_clicked_callback)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
 
+    def geometry_selection_callback(self):
+
+        faces = self.main_window.selected_geometry_surfaces
+        volumes = self.main_window.selected_geometry_volumes
+
+        if volumes:
+            selection = volumes
+        else:
+            selection = faces
+
+        if selection:
+            text = ", ".join([str(i) for i in selection])
+            self.lineEdit_selected_ids.setText(text)
+
+    def item_clicked_callback(self, item):
+
+        row = item.row()
+        selection_type = self.tableWidget_refining_mesh_data.item(row, 1).text()
+        str_selected_ids = self.tableWidget_refining_mesh_data.item(row, 2).text()
+        selected_ids = [int(_id) for _id in str_selected_ids.split(",")]
+
+        if selected_ids:
+            if selection_type == "volumes":
+                app().main_window.set_geometry_selection(volumes=selected_ids)
+            else:
+                app().main_window.set_geometry_selection(surfaces=selected_ids)
+
     def _load_current_mesh_setup(self):
+
         mesh_setup = app().main_window.project.model.mesh_setup
+
         if mesh_setup:
+
             try:
+
                 element_type = mesh_setup["element_type"]
                 geometry_tolerance = mesh_setup["geometry_tolerance"]
                 minimum_element_size = mesh_setup["minimum_element_size"]
@@ -211,18 +245,19 @@ class MesherInputs(QDialog):
             PrintMessageInput([window_title, title, message])
 
     def actions_to_finalize(self):
+
         if self.close_after_generate:
             self.close()
+
         logging.info("Updating render..." + ProgressStatus(95, 100))
         app().main_window.viewer_tabs.show_mesh()
         app().main_window.viewer_tabs.close_analysis_tabs()
         app().main_window.viewer_tabs.update_plots()
 
-    def trash_button_callback(self):
-        current_row = self.tableWidget_refining_mesh_data.currentRow()
-        self.tableWidget_refining_mesh_data.removeRow(current_row)
-
     def add_button_callback(self):
+
+        if self.lineEdit_selected_ids.text() == "":
+            return
 
         row = self.tableWidget_refining_mesh_data.rowCount()
         rows = row + 1
@@ -243,19 +278,9 @@ class MesherInputs(QDialog):
 
         self.lineEdit_selected_ids.setText("")
 
-    def geometry_selection_callback(self):
-
-        faces = self.main_window.selected_geometry_surfaces
-        volumes = self.main_window.selected_geometry_volumes
-
-        if volumes:
-            selection = volumes
-        else:
-            selection = faces
-
-        if selection:
-            text = ", ".join([str(i) for i in selection])
-            self.lineEdit_selected_ids.setText(text)
+    def remove_callback(self):
+        current_row = self.tableWidget_refining_mesh_data.currentRow()
+        self.tableWidget_refining_mesh_data.removeRow(current_row)
 
     def get_inputs_table(self):
 
@@ -296,15 +321,15 @@ class MesherInputs(QDialog):
 
         connected_mesh = self.checkBox_mesh_connection.isChecked()
         self.mesh_setup = { 
-                            "element_type" : solid_element,
-                            "geometry_tolerance" : geometry_tolerance,
-                            "size_factor" : 0,
-                            "minimum_element_size" : min_factor*maximum_element_size,
-                            "maximum_element_size" : maximum_element_size,
-                            "mesh_refinement_parameters" : self.get_inputs_table(),
-                            "mesh_connection" : connected_mesh
-                            }
-        
+                           "element_type" : solid_element,
+                           "geometry_tolerance" : geometry_tolerance,
+                           "size_factor" : 0,
+                           "minimum_element_size" : min_factor*maximum_element_size,
+                           "maximum_element_size" : maximum_element_size,
+                           "mesh_refinement_parameters" : self.get_inputs_table(),
+                           "mesh_connection" : connected_mesh
+                           }
+
         self.file_mesh_setup = { 
                                 "element_type" : _element_type,
                                 "shape_function" : _shape_function,
