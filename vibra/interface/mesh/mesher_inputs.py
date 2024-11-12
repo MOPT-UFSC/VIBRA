@@ -73,6 +73,7 @@ class MesherInputs(QDialog):
         self.lineEdit_maximum_element_size: QLineEdit
         self.lineEdit_geometry_tolerance: QLineEdit
         self.lineEdit_selected_ids: QLineEdit
+        self.lineEdit_selected_ids.setDisabled(True)
 
         # QPushButton
         self.pushButton_add: QPushButton
@@ -94,10 +95,7 @@ class MesherInputs(QDialog):
             self.tableWidget_refining_mesh_data.horizontalHeaderItem(i).setText(header[i])
             self.tableWidget_refining_mesh_data.horizontalHeaderItem(i).setTextAlignment(Qt.AlignHCenter)
 
-        # self.tableWidget_refining_mesh_data.setColumnCount(len(header))
-        # self.tableWidget_refining_mesh_data.setHorizontalHeaderLabels(header)
         self.tableWidget_refining_mesh_data.setSelectionBehavior(1)
-        # self.tableWidget_refining_mesh_data.resizeColumnsToContents()
         self.tableWidget_refining_mesh_data.horizontalHeader().setSectionResizeMode(0)
         self.tableWidget_refining_mesh_data.horizontalHeader().setStretchLastSection(True)
 

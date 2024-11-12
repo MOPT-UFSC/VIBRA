@@ -345,7 +345,6 @@ class Mesh:
         gmsh.model.mesh.field.setNumbers(1, "SurfacesList", [])
         gmsh.model.mesh.field.setNumbers(1, "VolumesList", [])
         gmsh.model.mesh.field.setNumber(1, "VOut", global_size)
-        # TODO: vou deixar para você resolver essa parte Vitor
 
         for size, selection_type, selection_ids in refinement_parameters:
 
@@ -376,7 +375,7 @@ class Mesh:
             gmsh.option.setNumber("Mesh.MeshSizeFactor", size_factor)
 
         elif refinement_parameters:
-            self.local_mesh_refine(minimum_element_size, refinement_parameters)
+            self.local_mesh_refine(maximum_element_size, refinement_parameters)
 
         else:
             gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
