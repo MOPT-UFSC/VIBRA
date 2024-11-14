@@ -137,7 +137,7 @@ class Mesh:
                  dimension: int = 3,
                  threads: int = 4,
                  gmsh_gui: bool = False,
-                 mesh_refinement_parameters = None,
+                 mesh_refinement_parameters = list(),
                  mesh_connection = True,
                  ):
 
@@ -346,7 +346,7 @@ class Mesh:
         gmsh.model.mesh.field.setNumbers(1, "VolumesList", [])
         gmsh.model.mesh.field.setNumber(1, "VOut", global_size)
 
-        for size, selection_type, selection_ids in refinement_parameters:
+        for selection_type, local_size, selection_ids in refinement_parameters:
 
             threshold_type = gmsh.model.mesh.field.add("Constant")
             if selection_type == "surfaces":
@@ -354,7 +354,7 @@ class Mesh:
             else:
                 gmsh.model.mesh.field.setNumbers(threshold_type, "VolumesList", selection_ids)
 
-            gmsh.model.mesh.field.setNumber(threshold_type, "VIn", size)
+            gmsh.model.mesh.field.setNumber(threshold_type, "VIn", local_size)
             fields_list.append(threshold_type)
 
         minimum_field = gmsh.model.mesh.field.add("Min")

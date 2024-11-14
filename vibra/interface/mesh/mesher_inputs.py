@@ -1,6 +1,6 @@
 # fmt: off
 
-from PyQt5.QtWidgets import QCheckBox, QComboBox, QDialog, QLineEdit, QPushButton, QDoubleSpinBox, QTableWidget, QTableWidgetItem
+from PyQt5.QtWidgets import QCheckBox, QComboBox, QDialog, QLabel, QLineEdit, QPushButton, QDoubleSpinBox, QTableWidget, QTableWidgetItem
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
@@ -13,6 +13,7 @@ from vibra.interface.loading_bar import load_function
 from vibra.utils.progress_status import ProgressStatus
 
 import logging
+from collections import defaultdict
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -48,6 +49,7 @@ class MesherInputs(QDialog):
     def _initialize(self):
         self.complete = False
         self.keep_window_open = True
+        self.mesh_refinement_data = defaultdict(list)
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -68,6 +70,9 @@ class MesherInputs(QDialog):
         self.doubleSpinBox_maximum_element_size: QDoubleSpinBox
         self.doubleSpinBox_minimum_element_size_factor: QDoubleSpinBox
         self.doubleSpinBox_refined_element_size: QDoubleSpinBox
+
+        # QLabel
+        self.label_selected_ids: QLabel
 
         # QLineEdit
         self.lineEdit_maximum_element_size: QLineEdit
@@ -93,7 +98,7 @@ class MesherInputs(QDialog):
         for i, width in enumerate(widths):
             self.tableWidget_refining_mesh_data.setColumnWidth(i, width)
             self.tableWidget_refining_mesh_data.horizontalHeaderItem(i).setText(header[i])
-            self.tableWidget_refining_mesh_data.horizontalHeaderItem(i).setTextAlignment(Qt.AlignHCenter)
+            self.tableWidget_refining_mesh_data.horizontalHeaderItem(i).setTextAlignment(Qt.AlignCenter)
 
         self.tableWidget_refining_mesh_data.setSelectionBehavior(1)
         self.tableWidget_refining_mesh_data.horizontalHeader().setSectionResizeMode(0)
@@ -117,8 +122,13 @@ class MesherInputs(QDialog):
 
         if volumes:
             selection = volumes
-        else:
+            self.label_selected_ids.setText("Selected volume IDs:")
+        elif faces:
             selection = faces
+            self.label_selected_ids.setText("Selected surface IDs:")
+        else:
+            self.lineEdit_selected_ids.setText("")
+            return
 
         if selection:
             text = ", ".join([str(i) for i in selection])
@@ -136,6 +146,66 @@ class MesherInputs(QDialog):
                 app().main_window.set_geometry_selection(volumes=selected_ids)
             else:
                 app().main_window.set_geometry_selection(surfaces=selected_ids)
+
+    def get_selected_ids(self):
+
+        if self.lineEdit_selected_ids.text() == "":
+            return list()
+        
+        selected_ids = list()
+
+        try:
+            str_selected_ids = self.lineEdit_selected_ids.text()
+            selected_ids = [int(_id) for _id in str_selected_ids.split(",")]
+        except:
+            pass
+
+        return selected_ids
+
+    def add_button_callback(self):
+
+        if self.lineEdit_selected_ids.text() == "":
+            return
+
+        if app().main_window.selected_geometry_volumes:
+            selected_type = "volumes"
+        else:
+            selected_type = "surfaces"
+
+        ref_size = self.doubleSpinBox_refined_element_size.value()
+        selected_ids = self.get_selected_ids()
+        if selected_ids:
+            self.mesh_refinement_data[(selected_type, ref_size)].extend(selected_ids)
+
+            for key, _selected_ids in self.mesh_refinement_data.copy().items():
+                if key[0] == selected_type and key[1] != ref_size:
+                    for selected_id in selected_ids:
+                        if selected_id in _selected_ids:
+                            _selected_ids.remove(selected_id)
+                            if _selected_ids:
+                                self.mesh_refinement_data[key] = _selected_ids
+                            else:
+                                self.mesh_refinement_data.pop(key)
+
+            self.update_table_data()
+
+        self.lineEdit_selected_ids.setText("")
+
+    def remove_callback(self):
+
+        current_row = self.tableWidget_refining_mesh_data.currentRow()
+
+        if isinstance(current_row, int):
+
+            ref_size = float(self.tableWidget_refining_mesh_data.item(current_row, 0).text())
+            selection_type = self.tableWidget_refining_mesh_data.item(current_row, 1).text()
+            self.tableWidget_refining_mesh_data.removeRow(current_row)
+
+            if (selection_type, ref_size) in self.mesh_refinement_data.keys():
+                self.mesh_refinement_data.pop((selection_type, ref_size))
+                self.update_table_data()
+
+        app().main_window.set_geometry_selection()
 
     def _load_current_mesh_setup(self):
 
@@ -160,27 +230,43 @@ class MesherInputs(QDialog):
                 self.lineEdit_geometry_tolerance.setText(str(geometry_tolerance))
                 self.checkBox_mesh_connection.setChecked(mesh_connection)
 
-                self.tableWidget_refining_mesh_data.clearContents()
-                for e_size, selection_type, surface_ids in mesh_refinement_parameters:
+                for selection_type, e_size, selected_ids in mesh_refinement_parameters:
+                    self.mesh_refinement_data[(selection_type, e_size)].extend(selected_ids)
 
-                    row = self.tableWidget_refining_mesh_data.rowCount()
-                    rows = row + 1
-
-                    str_surface_ids = ", ".join([str(i) for i in surface_ids])
-                    self.tableWidget_refining_mesh_data.setRowCount(rows)
-
-                    self.tableWidget_refining_mesh_data.setItem(row, 0, QTableWidgetItem(str(e_size)))
-                    self.tableWidget_refining_mesh_data.setItem(row, 1, QTableWidgetItem(selection_type))
-                    self.tableWidget_refining_mesh_data.setItem(row, 2, QTableWidgetItem(str_surface_ids))
-
-                    for j in range(3):
-                        self.tableWidget_refining_mesh_data.item(row, j).setTextAlignment(Qt.AlignCenter)
+                self.update_table_data()
 
             except Exception as error_log:
                 self.hide()
                 title = "Error while loading mesh setup"
                 message = str(error_log)
                 PrintMessageInput([window_title_1, title, message])
+
+    def update_table_data(self):
+
+        self.tableWidget_refining_mesh_data.clearContents()
+
+        try:
+
+            row = 0
+            for (_selection_type, _e_size), _selected_ids in self.mesh_refinement_data.items():
+
+                str_selected_ids = ", ".join([str(i) for i in _selected_ids])
+
+                self.tableWidget_refining_mesh_data.setRowCount(row+1)
+                self.tableWidget_refining_mesh_data.setItem(row, 0, QTableWidgetItem(str(_e_size)))
+                self.tableWidget_refining_mesh_data.setItem(row, 1, QTableWidgetItem(_selection_type))
+                self.tableWidget_refining_mesh_data.setItem(row, 2, QTableWidgetItem(str_selected_ids))
+
+                for j in range(3):
+                    self.tableWidget_refining_mesh_data.item(row, j).setTextAlignment(Qt.AlignCenter)
+
+                row += 1
+
+        except Exception as error_log:
+            self.hide()
+            title = "Error while table data"
+            message = str(error_log)
+            PrintMessageInput([window_title_1, title, message])
 
     def update_element_type(self, element_type):
 
@@ -252,44 +338,11 @@ class MesherInputs(QDialog):
         app().main_window.viewer_tabs.close_analysis_tabs()
         app().main_window.viewer_tabs.update_plots()
 
-    def add_button_callback(self):
-
-        if self.lineEdit_selected_ids.text() == "":
-            return
-
-        row = self.tableWidget_refining_mesh_data.rowCount()
-        rows = row + 1
-        self.tableWidget_refining_mesh_data.setRowCount(rows)
-
-        if app().main_window.selected_geometry_volumes:
-            selected_type = "volumes"
-        else:
-            selected_type = "surfaces"
-
-        ref_size = self.doubleSpinBox_refined_element_size.value()
-        self.tableWidget_refining_mesh_data.setItem(row, 0, QTableWidgetItem(str(ref_size)))
-        self.tableWidget_refining_mesh_data.setItem(row, 1, QTableWidgetItem(selected_type))
-        self.tableWidget_refining_mesh_data.setItem(row, 2, QTableWidgetItem(self.lineEdit_selected_ids.text()))
-
-        for j in range(3):
-            self.tableWidget_refining_mesh_data.item(row, j).setTextAlignment(Qt.AlignCenter)
-
-        self.lineEdit_selected_ids.setText("")
-
-    def remove_callback(self):
-        current_row = self.tableWidget_refining_mesh_data.currentRow()
-        if isinstance(current_row, int):
-            self.tableWidget_refining_mesh_data.removeRow(current_row)
-
-    def get_inputs_table(self):
+    def get_mesh_refinement_data(self):
 
         refine_data = list()
-        for i in range(self.tableWidget_refining_mesh_data.rowCount()):
-            refine_size = float(self.tableWidget_refining_mesh_data.item(i, 0).text())
-            selection_type = self.tableWidget_refining_mesh_data.item(i, 1).text()
-            str_selection_ids = self.tableWidget_refining_mesh_data.item(i, 2).text()
-            selection_ids = [int(i) for i in str_selection_ids.split(",")]
-            refine_data.append((refine_size, selection_type, selection_ids))
+        for (selection_type, ref_size), selected_ids in self.mesh_refinement_data.items():
+            refine_data.append((selection_type, ref_size, selected_ids))
 
         return refine_data
         
@@ -325,7 +378,7 @@ class MesherInputs(QDialog):
                            "size_factor" : 0,
                            "minimum_element_size" : min_factor*maximum_element_size,
                            "maximum_element_size" : maximum_element_size,
-                           "mesh_refinement_parameters" : self.get_inputs_table(),
+                           "mesh_refinement_parameters" : self.get_mesh_refinement_data(),
                            "mesh_connection" : connected_mesh
                            }
 
@@ -336,7 +389,7 @@ class MesherInputs(QDialog):
                                 "size_factor" : 0,
                                 "minimum_element_size" : min_factor*maximum_element_size,
                                 "maximum_element_size" : maximum_element_size,
-                                "mesh_refinement_parameters" : self.get_inputs_table(),
+                                "mesh_refinement_parameters" : self.get_mesh_refinement_data(),
                                 "mesh_connection" : connected_mesh
                                 }
 
