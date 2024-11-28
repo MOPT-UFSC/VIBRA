@@ -38,7 +38,7 @@ class FluidWidget(QWidget):
         uic.loadUi(ui_path, self)
 
         self.parent_widget = kwargs.get("parent_widget", None)
-        self.compressor_thermodynamic_state = kwargs.get("compressor_thermodynamic_state", dict())
+        self.state_properties = kwargs.get("state_properties", dict())
 
         self.main_window = app().main_window
         # self.main_window.set_input_widget(self)
@@ -83,7 +83,7 @@ class FluidWidget(QWidget):
 
         # QPushButton
         self.pushButton_add_column: QPushButton
-        self.pushButton_attribute_fluid: QPushButton
+        self.pushButton_attribute: QPushButton
         self.pushButton_cancel: QPushButton
         self.pushButton_refprop: QPushButton
         self.pushButton_remove_column: QPushButton
@@ -546,7 +546,7 @@ class FluidWidget(QWidget):
 
             selected_fluid = self.fluid_name_to_refprop_data[fluid_name]
             self.refprop = SetFluidCompositionInput(selected_fluid_to_edit = selected_fluid, 
-                                                    compressor_info = self.compressor_thermodynamic_state)
+                                                    state_properties = self.state_properties)
 
             if not self.refprop.complete:
                 self.main_window.set_input_widget(self)
@@ -652,7 +652,7 @@ class FluidWidget(QWidget):
         if isinstance(self.parent_widget, QDialog):
             self.parent_widget.hide()
 
-        self.refprop = SetFluidCompositionInput(compressor_info = self.compressor_thermodynamic_state)
+        self.refprop = SetFluidCompositionInput(state_properties = self.state_properties)
         if not self.refprop.complete:
             self.refprop = None
             self.main_window.set_input_widget(self)
@@ -708,12 +708,12 @@ class FluidWidget(QWidget):
 
     def load_compressor_info(self):
 
-        if self.compressor_thermodynamic_state:
+        if self.state_properties:
 
             if isinstance(self.parent_widget, QDialog):
                 return
 
-                volume_id = self.compressor_thermodynamic_state['volume_id']
+                volume_id = self.state_properties['volume_id']
                 self.parent_widget.comboBox_attribution_type.setCurrentIndex(1)
                 self.parent_widget.write_ids(volume_id)
                 self.parent_widget.lineEdit_selection_id.setDisabled(True)
@@ -721,7 +721,7 @@ class FluidWidget(QWidget):
                     fluid_name = self.fluid_data_refprop["name"]
                     self.parent_widget.lineEdit_fluid_name.setText(fluid_name)
 
-                connection_type_comp = self.compressor_thermodynamic_state['connection type']
+                connection_type_comp = self.state_properties['connection type']
                 connection_label = "discharge" if connection_type_comp else "suction"
                 
                 self.parent_widget.setWindowTitle(f"Set a fluid thermodynamic state at the compressor {connection_label}")
@@ -741,11 +741,11 @@ class FluidWidget(QWidget):
             pressure_lineEdit.setDisabled(True)
 
     def update_compressor_info(self):
-        if self.compressor_thermodynamic_state:
+        if self.state_properties:
             if self.refprop is not None:
                 if self.refprop.complete:
-                    self.compressor_thermodynamic_state["temperature (discharge)"] = round(self.fluid_data_refprop["temperature"], 4)
-                    self.compressor_thermodynamic_state["molar mass"] = self.fluid_data_refprop["molar mass"]
+                    self.state_properties["temperature (discharge)"] = round(self.fluid_data_refprop["temperature"], 4)
+                    self.state_properties["molar mass"] = self.fluid_data_refprop["molar mass"]
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

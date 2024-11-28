@@ -350,7 +350,7 @@
                 <property name="geometry">
                  <rect>
                   <x>0</x>
-                  <y>-384</y>
+                  <y>0</y>
                   <width>439</width>
                   <height>938</height>
                  </rect>
@@ -1849,7 +1849,7 @@
                      </widget>
                     </item>
                     <item row="5" column="2">
-                     <widget class="QComboBox" name="comboBox_pressure_unit">
+                     <widget class="QComboBox" name="comboBox_pressure_units">
                       <property name="minimumSize">
                        <size>
                         <width>120</width>
@@ -2709,8 +2709,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>448</width>
-                  <height>512</height>
+                  <width>460</width>
+                  <height>566</height>
                  </rect>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_18">
@@ -4233,7 +4233,7 @@ at suction</string>
           </spacer>
          </item>
          <item row="0" column="2">
-          <widget class="QLineEdit" name="lineEdit_selected_node_id">
+          <widget class="QLineEdit" name="lineEdit_selected_surface_id">
            <property name="minimumSize">
             <size>
              <width>160</width>
@@ -4290,7 +4290,7 @@ at suction</string>
             </font>
            </property>
            <property name="text">
-            <string>Selected node ID:</string>
+            <string>Selected surface ID:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>

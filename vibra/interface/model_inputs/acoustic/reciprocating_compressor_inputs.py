@@ -30,7 +30,8 @@ class ReciprocatingCompressorInputs(QDialog):
         uic.loadUi(ui_path, self)
 
         app().main_window.set_input_widget(self)
-        self.properties = app().project.model.properties
+        self.properties = app().main_window.project.model.properties
+        self.model = app().main_window.project.model
 
         self._config_window()
         self._initialize()
@@ -55,9 +56,7 @@ class ReciprocatingCompressorInputs(QDialog):
         self.keep_window_open = True
 
         self.aquisition_parameters_processed = False
-        self.not_update_event = False
-
-        self.before_run = app().project.get_pre_solution_model_checks()    
+        self.not_update_event = False  
 
     def _define_qt_variables(self):
 
@@ -81,7 +80,7 @@ class ReciprocatingCompressorInputs(QDialog):
         self.label_discharge_temperature_unit: QLabel
         
         # QLineEdit
-        self.lineEdit_selected_node_id: QLineEdit
+        self.lineEdit_selected_surface_id: QLineEdit
         self.lineEdit_frequency_resolution: QLineEdit
         self.lineEdit_number_of_revolutions: QLineEdit
         self.lineEdit_bore_diameter: QLineEdit
@@ -212,25 +211,31 @@ class ReciprocatingCompressorInputs(QDialog):
 
     def selection_callback(self):
 
-        selected_nodes = app().main_window.list_selected_nodes()
+        selected_surfaces = app().main_window.selected_geometry_surfaces
 
-        if len(selected_nodes) == 1:
+        if selected_surfaces:
 
-            self.lineEdit_selected_node_id.setText(str(selected_nodes[0]))
-            stop, node_id = self.check_node_id(self.lineEdit_selected_node_id)
+            surface_ids = [str(i) for i in selected_surfaces]
+            self.lineEdit_selected_surface_id.setText(surface_ids[0])
+
+            stop, surface_id = self.model.mesh.check_selected_ids(
+                                                                  self.lineEdit_selected_surface_id.text(), 
+                                                                  selection = "surfaces", 
+                                                                  single_id = True
+                                                                  )
 
             if stop:
-                self.lineEdit_selected_node_id.setFocus()
+                self.lineEdit_selected_surface_id.setFocus()
                 return True
 
-            data = self.properties._get_property("reciprocating_compressor_excitation", node_ids=node_id)
+            data = self.properties._get_property("reciprocating_compressor_excitation", surface=surface_id)
 
             if isinstance(data, dict):
                 self.update_compressor_inputs(data)
 
     def tab_event_callback(self):
 
-        self.lineEdit_selected_node_id.setText("")
+        self.lineEdit_selected_surface_id.setText("")
         self.lineEdit_connection_type.setText("")
         self.pushButton_remove.setDisabled(True)
 
@@ -368,9 +373,6 @@ class ReciprocatingCompressorInputs(QDialog):
 
     def update_compressor_inputs(self, data: dict):
 
-        node_id = self.lineEdit_selected_node_id.text()
-        self.lineEdit_selected_node_id.setText(node_id)
-
         if "connection_type" in data.keys():
             connection_type = data["connection_type"]
             if connection_type == 'suction':
@@ -481,44 +483,50 @@ class ReciprocatingCompressorInputs(QDialog):
         self.spinBox_tdc2_crank_angle.setValue(0)
         self.spinBox_capacity.setValue(100)
 
-    def check_node_id(self, lineEdit: QLineEdit):
-        
-        stop, node_id = self.before_run.check_selected_ids(
-                                                            lineEdit.text(), 
-                                                            "nodes", 
-                                                            single_id=True
-                                                           )
+    def check_surface_id(self, lineEdit: QLineEdit):
+
+        input_selected_id = lineEdit.text()
+        stop, surface_id = self.model.mesh.check_selected_ids(
+                                                            input_selected_id, 
+                                                            selection = "surfaces", 
+                                                            single_id = True
+                                                            )
 
         if stop:
+            lineEdit.setFocus()
+            lineEdit.selectAll()
             return True, None
 
-        neigh_elements = app().project.preprocessor.structural_elements_connected_to_node[node_id]
+        return stop, surface_id
 
-        if len(neigh_elements) == 1:
-            return stop, node_id
-        
-        else:
-            self.hide()
-            title = "Invalid node selected"
-            message = "The selected node does not correspond to the piping endings. "
-            message += "It is necessary to change the selection to proceed with the "
-            message += "compressor excitation attribution."
-            PrintMessageInput([window_title_1, title, message])
-            lineEdit.setText("")
-            return True, None
+        # # TODO: update this
+        # neigh_elements = self.preprocessor.structural_elements_connected_to_node[surface_id]
+
+        # if len(neigh_elements) == 1:
+        #     return stop, surface_id
+
+        # else:
+        #     self.hide()
+        #     title = "Invalid node selected"
+        #     message = "The selected node does not correspond to the piping endings. "
+        #     message += "It is necessary to change the selection to proceed with the "
+        #     message += "compressor excitation attribution."
+        #     PrintMessageInput([window_title_1, title, message])
+        #     lineEdit.setText("")
+        #     return True, None
 
     def check_input_nodes(self):
 
-        stop, node_id = self.check_node_id(self.lineEdit_selected_node_id)
+        stop, surface_id = self.check_surface_id(self.lineEdit_selected_surface_id)
 
         if stop:
-            self.lineEdit_selected_node_id.setFocus()
+            self.lineEdit_selected_surface_id.setFocus()
             return True
 
         if self.comboBox_connection_type.currentIndex() == 0:
-            self.suction_node_id = node_id
+            self.suction_surface_id = surface_id
         else:
-            self.discharge_node_id = node_id
+            self.discharge_surface_id = surface_id
 
         return False
 
@@ -754,7 +762,7 @@ class ReciprocatingCompressorInputs(QDialog):
 
     def update_analysis_setup_in_file(self, f_min, f_max, f_step):
 
-        analysis_setup = app().pulse_file.read_analysis_setup_from_file()
+        analysis_setup = app().main_window.file.read_analysis_setup_from_file()
         if analysis_setup is None:
             analysis_setup = dict()
     
@@ -762,7 +770,7 @@ class ReciprocatingCompressorInputs(QDialog):
         analysis_setup["f_max"] = f_max
         analysis_setup["f_step"] = f_step
 
-        app().pulse_file.write_analysis_setup_in_file(analysis_setup)
+        app().main_window.file.write_analysis_setup_in_file(analysis_setup)
 
     def update_state_properties_at_discharge(self):
 
@@ -809,20 +817,20 @@ class ReciprocatingCompressorInputs(QDialog):
         if self.comboBox_connection_type.currentIndex() == 0:
             flow_label = "in_flow"
             connection_type = "suction"
-            node_id = self.suction_node_id
+            surface_id = self.suction_surface_id
 
         else:
             flow_label = "out_flow"
             connection_type = "discharge"
-            node_id = self.discharge_node_id
+            surface_id = self.discharge_surface_id
 
-        line_id = app().project.model.preprocessor.get_line_from_node_id(node_id)
+        volume_id = app().main_window.project.model.mesh.volume_from_surface[surface_id]
 
         compressor_info = { 
                             "temperature_at_suction" : self.T_suction,
                             "suction_pressure" : self.P_suction,
-                            "line_id" : line_id[0],
-                            "node_id" : node_id,
+                            "surface_id" : surface_id,
+                            "volume_id" : volume_id[0],
                             "connection_type" : connection_type,
                             "isentropic_exponent" : self.parameters.get('isentropic_exponent', None),
                             "pressure_ratio" : self.parameters['pressure_ratio'],
@@ -851,9 +859,9 @@ class ReciprocatingCompressorInputs(QDialog):
 
             freq, in_flow_rate = self.compressor.process_FFT_of_volumetric_flow_rate(self.N_rev, flow_label)
 
-            table_name = f"compressor_excitation_{connection_type}_node_{node_id}"
+            table_name = f"compressor_excitation_{connection_type}_surface_{surface_id}"
 
-            node = app().project.model.preprocessor.nodes[node_id]
+            surface = app().project.model.preprocessor.nodes[surface_id]
             coords = list(np.round(node.coordinates, 5))
 
             data = {
@@ -863,17 +871,17 @@ class ReciprocatingCompressorInputs(QDialog):
                     "parameters" : self.parameters
                     }
 
-            self.remove_conflicting_excitations(node_id)
+            self.remove_conflicting_excitations(surface_id)
 
             if self.save_table_values(table_name, freq, in_flow_rate):
                 return
 
-            self.properties._set_nodal_property("reciprocating_compressor_excitation", data, node_id)
+            self.properties._set_property("reciprocating_compressor_excitation", data, surface=surface_id)
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
-        app().pulse_file.write_nodal_properties_in_file()
-        app().pulse_file.write_imported_table_data_in_file()
+        app().main_window.file.write_nodal_properties_in_file()
+        app().main_window.file.write_imported_table_data_in_file()
         app().main_window.set_selection()
         app().main_window.update_plots()
         self.load_compressor_excitation_info()
@@ -883,7 +891,7 @@ class ReciprocatingCompressorInputs(QDialog):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
         if table_names:
-            app().pulse_file.write_imported_table_data_in_file()
+            app().main_window.file.write_imported_table_data_in_file()
 
     def remove_conflicting_excitations(self, node_id: int):
         for label in ["acoustic_pressure", "volume_velocity", "reciprocating_compressor_excitation", "reciprocating_pump_excitation"]:
@@ -897,14 +905,14 @@ class ReciprocatingCompressorInputs(QDialog):
 
     def remove_callback(self):
 
-        if self.lineEdit_selected_node_id.text() == "":   
+        if self.lineEdit_selected_surface_id.text() == "":   
             title = "Empty node selection"
             message = "You should to select a node from the list "
             message += "to proceed with the removal."
             PrintMessageInput([window_title_2, title, message])
             return
             
-        node_id = int(self.lineEdit_selected_node_id.text())
+        node_id = int(self.lineEdit_selected_surface_id.text())
 
         self.remove_table_files_from_nodes(node_id)
 
@@ -959,12 +967,12 @@ class ReciprocatingCompressorInputs(QDialog):
         self.update_tabs_visibility()
 
     def on_click_item(self, item):
-        self.lineEdit_selected_node_id.setText(item.text(0))
+        self.lineEdit_selected_surface_id.setText(item.text(0))
         self.lineEdit_connection_type.setText(item.text(1))
         self.pushButton_remove.setDisabled(False)
 
     def update_tabs_visibility(self):
-        self.lineEdit_selected_node_id.setText("")
+        self.lineEdit_selected_surface_id.setText("")
         self.lineEdit_connection_type.setText("")
         self.pushButton_remove.setDisabled(True)
         self.tabWidget_compressor.setTabVisible(3, False)

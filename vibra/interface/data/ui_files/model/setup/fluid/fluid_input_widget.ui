@@ -60,7 +60,7 @@
        <number>4</number>
       </property>
       <item row="0" column="1">
-       <widget class="QPushButton" name="pushButton_attribute_fluid">
+       <widget class="QPushButton" name="pushButton_attribute">
         <property name="minimumSize">
          <size>
           <width>140</width>

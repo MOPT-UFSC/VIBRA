@@ -26,7 +26,7 @@ class SetFluidInput(QDialog):
         uic.loadUi(ui_path, self)
 
         self.cache_selected_lines = kwargs.get("cache_selected_lines", list())
-        self.compressor_thermodynamic_state = kwargs.get("compressor_thermodynamic_state", dict())
+        self.state_properties = kwargs.get("state_properties", dict())
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -43,9 +43,7 @@ class SetFluidInput(QDialog):
 
         ConfigWidgetAppearance(self, tool_tip=True)
 
-        if self.compressor_thermodynamic_state:
-            if self.fluid_widget.call_refprop_interface():
-                return
+        if self.state_properties:
             self.load_compressor_info()
 
         self.geometry_selection_callback()
@@ -88,7 +86,7 @@ class SetFluidInput(QDialog):
         self.frame_main_widget.adjustSize()
 
         # QPushButton
-        self.pushButton_attribute_fluid = self.findChild(QPushButton, 'pushButton_attribute_fluid')
+        self.pushButton_attribute = self.findChild(QPushButton, 'pushButton_attribute')
         self.pushButton_cancel = self.fluid_widget.findChild(QPushButton, 'pushButton_cancel')
         self.pushButton_remove_row = self.fluid_widget.findChild(QPushButton, 'pushButton_remove_row')
         self.pushButton_reset_library = self.fluid_widget.findChild(QPushButton, 'pushButton_reset_library')
@@ -97,7 +95,7 @@ class SetFluidInput(QDialog):
         self.tableWidget_fluid_data = self.findChild(QTableWidget, 'tableWidget_fluid_data')
 
     def _add_fluid_input_widget(self):
-        self.fluid_widget = FluidWidget(parent_widget=self, compressor_thermodynamic_state=self.compressor_thermodynamic_state)
+        self.fluid_widget = FluidWidget(parent_widget=self, state_properties=self.state_properties)
         self.grid_layout.addWidget(self.fluid_widget)
         self.fluid_widget.pushButton_remove_column.clicked.connect(self.reset_selected_fluid_lineEdit)
 
@@ -111,7 +109,7 @@ class SetFluidInput(QDialog):
         #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.update_attribution_type)
         #
-        self.pushButton_attribute_fluid.clicked.connect(self.confirm_fluid_attribution)
+        self.pushButton_attribute.clicked.connect(self.confirm_fluid_attribution)
         self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_reset_library.clicked.connect(self.reset_fluid_library_callback)
         #

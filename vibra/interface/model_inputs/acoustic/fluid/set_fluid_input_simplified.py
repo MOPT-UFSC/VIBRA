@@ -40,9 +40,6 @@ class SetFluidInputSimplified(QDialog):
 
         ConfigWidgetAppearance(self, tool_tip=True)
 
-        # while self.keep_window_open:
-        #     self.exec()
-
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
@@ -78,7 +75,7 @@ class SetFluidInputSimplified(QDialog):
         self.frame_main_widget.adjustSize()
 
         # QPushButton
-        self.pushButton_attribute_fluid = self.findChild(QPushButton, 'pushButton_attribute_fluid')
+        self.pushButton_attribute = self.findChild(QPushButton, 'pushButton_attribute')
         self.pushButton_remove_row = self.fluid_widget.findChild(QPushButton, 'pushButton_remove_row')
 
         # QTableWidget
@@ -132,3 +129,12 @@ class SetFluidInputSimplified(QDialog):
 
     def get_selected_fluid(self):
         return self.fluid_widget.get_selected_fluid()
+
+    def exec_and_keep_window_open(self):
+        self.keep_window_open = True
+        while self.keep_window_open:
+            self.exec()
+
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
+        self.keep_window_open = False
+        return super().closeEvent(a0)
