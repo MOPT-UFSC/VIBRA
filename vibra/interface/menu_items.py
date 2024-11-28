@@ -21,7 +21,7 @@ from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import D
 from vibra.interface.model_inputs.acoustic.set_porous_material_model import SetPorousMaterialModel
 from vibra.interface.model_inputs.acoustic.set_viscous_thermal_loss_model import SetViscousThermalLossModel
 from vibra.interface.model_inputs.acoustic.set_acoustic_properties_gradient_input import SetAcousticPropertiesGradientInputs
-from vibra.interface.model_inputs.acoustic.set_compressor_model_input import CompressorModelInput
+from vibra.interface.model_inputs.acoustic.reciprocating_compressor_inputs import ReciprocatingCompressorInputs
 from vibra.interface.model_inputs.acoustic.process_acoustic_transfer_element_data import ProcessAcousticTransferElementData
 #
 from vibra.interface.model_inputs.structural.boundary_condition_inputs import BoundaryConditionInputs
@@ -216,12 +216,11 @@ class MenuItems(QTreeWidget):
         self.item_child_set_specific_impedance = QTreeWidgetItem(["Set Specific Impedance"])
         self.item_child_set_porous_material_model = QTreeWidgetItem(["Set Porous Material Model"])
         self.item_child_set_viscous_thermal_model = QTreeWidgetItem(["Set Viscous-thermal Loss Model"])
-        self.item_child_add_compressor_excitation = QTreeWidgetItem(["Add Compressor Excitation"])
+        self.item_child_add_reciprocating_compressor_excitation = QTreeWidgetItem(["Add Reciprocating Compressor Excitation"]) 
         self.item_child_set_acoustic_properties_gradient = QTreeWidgetItem(["Set Acoustic Properties Gradient"])
         self.item_child_set_acoustic_transfer_element_setup = QTreeWidgetItem(["Process Acoustic Transfer Element Data"])
         #
         self.item_child_set_anechoic_termination.setToolTip(0, "equivalent to the long pipe boundary condition")
-
         #
         self.list_top_items.append(self.item_top_acoustic_model_setup)
         self.list_child_items.append(self.item_child_set_acoustic_pressure)
@@ -230,7 +229,7 @@ class MenuItems(QTreeWidget):
         self.list_child_items.append(self.item_child_set_surface_velocity)
         self.list_child_items.append(self.item_child_set_specific_impedance)
         self.list_child_items.append(self.item_child_set_anechoic_termination)
-        self.list_child_items.append(self.item_child_add_compressor_excitation)
+        self.list_child_items.append(self.item_child_add_reciprocating_compressor_excitation)
         self.list_child_items.append(self.item_child_set_porous_material_model)
         self.list_child_items.append(self.item_child_set_viscous_thermal_model)
         self.list_child_items.append(self.item_child_set_acoustic_properties_gradient)
@@ -304,7 +303,7 @@ class MenuItems(QTreeWidget):
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_porous_material_model)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_viscous_thermal_model)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_acoustic_properties_gradient)
-        # self.item_top_acoustic_model_setup.addChild(self.item_child_add_compressor_excitation)
+        self.item_top_acoustic_model_setup.addChild(self.item_child_add_reciprocating_compressor_excitation)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_acoustic_transfer_element_setup)
 
         self.addTopLevelItem(self.item_top_analysis)
@@ -455,9 +454,9 @@ class MenuItems(QTreeWidget):
             if not self.item_child_set_anechoic_termination.isDisabled():
                 obj = SetAnechoicTerminationInputs()
 
-        elif item == self.item_child_add_compressor_excitation:
-            if not self.item_child_add_compressor_excitation.isDisabled():
-                obj = CompressorModelInput()
+        elif item == self.item_child_add_reciprocating_compressor_excitation:
+            if not self.item_child_add_reciprocating_compressor_excitation.isDisabled():
+                obj = ReciprocatingCompressorInputs()
 
         elif item == self.item_child_set_acoustic_transfer_element_setup:
             if not self.item_child_set_acoustic_transfer_element_setup.isDisabled():
@@ -641,7 +640,7 @@ class MenuItems(QTreeWidget):
         self.item_child_set_porous_material_model.setDisabled(key)
         self.item_child_set_viscous_thermal_model.setDisabled(key)
         self.item_child_set_acoustic_properties_gradient.setDisabled(key)
-        self.item_child_add_compressor_excitation.setDisabled(key)
+        self.item_child_add_reciprocating_compressor_excitation.setDisabled(key)
         self.item_child_set_acoustic_transfer_element_setup.setDisabled(key)
 
     def modify_analysis_items_acces(self, key: bool):
