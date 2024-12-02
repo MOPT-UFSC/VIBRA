@@ -2,7 +2,7 @@ import numpy as np
 from vtkmodules.vtkFiltersSources import vtkArrowSource
 from vtkmodules.vtkRenderingCore import vtkRenderer
 
-from vibra.interface.viewer_3d.actors.symbols_common import (
+from vibra.interface.viewer_3d.actors.symbols.symbols_common import (
     X_VECTOR,
     Y_VECTOR,
     Z_VECTOR,
