@@ -6,12 +6,12 @@ from vibra.interface.viewer_3d.actors.symbols.symbols_common import (
     X_VECTOR,
     Y_VECTOR,
     Z_VECTOR,
-    SymbolActorCommon,
+    SymbolActorVariableSize,
     load_symbol,
 )
 
 
-class ClampSymbols(SymbolActorCommon):
+class ClampSymbols(SymbolActorVariableSize):
     def __init__(self, renderer: vtkRenderer):
         source = self.get_source()
         positions, orientations = self.get_positions_orientations()
@@ -40,7 +40,7 @@ class ClampSymbols(SymbolActorCommon):
         self.GetProperty().LightingOff()
 
 
-class ArrowSymbols(SymbolActorCommon):
+class ArrowSymbols(SymbolActorVariableSize):
     def __init__(self, renderer: vtkRenderer):
         source = self.get_source()
         positions, orientations = self.get_positions_orientations()
@@ -69,7 +69,7 @@ class ArrowSymbols(SymbolActorCommon):
         self.GetProperty().LightingOff()
 
 
-class ArrowSymbols2(SymbolActorCommon):
+class ArrowSymbols2(SymbolActorVariableSize):
     def __init__(self, renderer: vtkRenderer):
         source = self.get_source()
         positions, orientations = self.get_positions_orientations()
@@ -103,7 +103,7 @@ class ArrowSymbols2(SymbolActorCommon):
         self.GetProperty().LightingOff()
 
 
-class ArrowSymbols3(SymbolActorCommon):
+class ArrowSymbols3(SymbolActorVariableSize):
     def __init__(self, renderer: vtkRenderer):
         source = self.get_source()
         positions, orientations = self.get_positions_orientations()
