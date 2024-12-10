@@ -18,6 +18,7 @@ from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 from vibra.interface.viewer_3d.actors.nodes_actor import NodesActor
 from vibra.interface.viewer_3d.actors.selection_spheres import SelectionSpheres
 from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
+from vibra.interface.viewer_3d.actors.symbols.force_symbol import ForceSymbol
 from vibra.utils.interface_functions import get_main_window
 
 SHOW_POINTS = 0
@@ -63,6 +64,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.selection_spheres_actor = None
         self.hidden_part_actor = None
         self.plane_actor = None
+        self.force_actor = None
 
         self.create_axes()
         self.create_scale_bar()
@@ -108,6 +110,9 @@ class MeshRenderWidget(CommonRenderWidget):
         self.plane_actor = CuttingPlaneActor(self.solids_actor.GetBounds())
         self.plane_actor.VisibilityOff()
         self.renderer.AddActor(self.plane_actor)
+
+        self.force_actor = ForceSymbol(self.renderer)
+        self.renderer.AddActor(self.force_actor)
 
         # Add a very subtle transparent actor to represent the whole
         # structure even if part of it is hidden
@@ -402,6 +407,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.renderer.RemoveActor(self.nodes_actor)
         self.renderer.RemoveActor(self.selection_spheres_actor)
         self.renderer.RemoveActor(self.plane_actor)
+        self.renderer.RemoveActor(self.force_actor)
         self.renderer.RemoveActor(self.hidden_part_actor)
         self.nodes_actor = None
         self.edges_actor = None
@@ -409,6 +415,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.solids_actor = None
         self.selection_spheres_actor = None
         self.plane_actor = None
+        self.force_actor = None
         self.nodes_actor = None
         self.hidden_part_actor = None
 

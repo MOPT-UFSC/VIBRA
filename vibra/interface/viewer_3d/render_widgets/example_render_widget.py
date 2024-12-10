@@ -1,5 +1,5 @@
 from vibra.interface.viewer_3d.actors.example_actor import ExampleActor
-from vibra.interface.viewer_3d.actors.symbols_actors import (
+from vibra.interface.viewer_3d.actors.symbols.example_symbols_actors import (
     ArrowSymbols,
     ArrowSymbols2,
     ArrowSymbols3,
