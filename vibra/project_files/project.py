@@ -11,6 +11,7 @@ from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
 from vibra.utils.progress_status import ProgressStatus
 
+import numpy as np
 
 class Project:
     def __init__(self):
@@ -133,8 +134,10 @@ class Project:
 
     def set_analysis_data(self, data):
         self.analysis_data = data
-        self.acoustic_assembler.set_analysis_data(data)
-        self.structural_assembler.set_analysis_data(data)
+        # self.acoustic_assembler.set_analysis_data(data)
+        # self.structural_assembler.set_analysis_data(data)
+        self.acoustic_assembler.update_number_of_frequencies()
+        self.structural_assembler.update_number_of_frequencies()
 
     def set_frequencies(self, frequencies, f_min, f_max, f_step, imported_table):
 
@@ -229,8 +232,8 @@ class Project:
 
     def solve_acoustic_harmonic_analysis(self):
         self.model.reset_dissipation_model_properties()
-        self.model.process_porous_material_properties(self.analysis_data["frequencies"])
-        self.model.process_viscous_thermal_model_properties(self.analysis_data["frequencies"])
+        self.model.process_porous_material_properties()#self.analysis_data["frequencies"])
+        self.model.process_viscous_thermal_model_properties()#self.analysis_data["frequencies"])
         self.acoustic_assembler.process_assemble()
         t0 = time()
         self.acoustic_harmonic_solver.solve()

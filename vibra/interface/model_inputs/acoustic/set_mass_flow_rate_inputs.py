@@ -70,12 +70,12 @@ class MassFlowRateInput(QDialog):
         self.lineEdit_table_path : QLineEdit
 
         # QPushButton
-        self.pushButton_constant_value_confirm : QPushButton
+        self.pushButton_attribute : QPushButton
+        self.pushButton_cancel : QPushButton
         self.pushButton_change_frequency_setup : QPushButton
         self.pushButton_load_table : QPushButton
-        self.pushButton_remove_bc_confirm : QPushButton
+        self.pushButton_remove : QPushButton
         self.pushButton_reset : QPushButton
-        self.pushButton_table_values_confirm : QPushButton
         #
         self.pushButton_change_frequency_setup.setDisabled(True)
         
@@ -89,7 +89,7 @@ class MassFlowRateInput(QDialog):
         self.radioButton_element_integration_table.setDisabled(True)
         
         # QTabWidget
-        self.tabWidget_mass_flow_rate : QTabWidget
+        self.tabWidget_main : QTabWidget
 
         # QTreeWidget
         self.treeWidget_mass_flow_rate : QTreeWidget
@@ -98,37 +98,45 @@ class MassFlowRateInput(QDialog):
 
     def _create_connections(self):
         #
-        self.pushButton_constant_value_confirm.clicked.connect(self.check_constant_values)
-        self.pushButton_remove_bc_confirm.clicked.connect(self.remove_bc_from_selection)
-        self.pushButton_table_values_confirm.clicked.connect(self.check_table_values)
+        self.pushButton_attribute.clicked.connect(self.attribute_callback)
+        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_remove.clicked.connect(self.remove_callback)
+        self.pushButton_reset.clicked.connect(self.reset_callback)
         self.pushButton_load_table.clicked.connect(self.load_mass_flow_rate_table)
-        self.pushButton_reset.clicked.connect(self.check_reset)
         #
         self.radioButton_nodal_attribution_constant.clicked.connect(self.update_controls_for_constant_value)
         self.radioButton_element_integration_constant.clicked.connect(self.update_controls_for_constant_value)
         self.radioButton_nodal_attribution_table.clicked.connect(self.update_controls_for_table_of_values)
         self.radioButton_element_integration_table.clicked.connect(self.update_controls_for_table_of_values)
         #
-        self.tabWidget_mass_flow_rate.currentChanged.connect(self.tabEvent_mass_flow_rate)
+        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
         self.treeWidget_mass_flow_rate.itemClicked.connect(self.on_click_item)
         self.treeWidget_mass_flow_rate.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
 
-    def tabEvent_mass_flow_rate(self):
-        index = self.tabWidget_mass_flow_rate.currentIndex()
-        if index == 2:
+    def tabEvent_callback(self):
+        if self.tabWidget_main.currentIndex() == 2:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
+            self.pushButton_attribute.setDisabled(True)
         else:
             self.lineEdit_selection_id.setDisabled(False)
+            self.pushButton_attribute.setEnabled(True)
+
+    def attribute_callback(self):
+        tab_index = self.tabWidget_main.currentIndex()
+        if tab_index == 0:
+            self.check_constant_values()
+        elif tab_index == 1:
+            self.check_table_values()
 
     def on_click_item(self, item):
         self.lineEdit_selection_id.setText(item.text(0))
 
     def on_doubleclick_item(self, item):
         self.lineEdit_selection_id.setText(item.text(0))
-        self.remove_bc_from_selection()
+        self.remove_callback()
 
     def load_info(self):
         self.treeWidget_mass_flow_rate.clear()
@@ -331,11 +339,11 @@ class MassFlowRateInput(QDialog):
                     if property == "surface_velocity":
                         continue
                     else:
-                        if "table_name" in data.keys():
+                        if "table_names" in data.keys():
                             return True
 
                 else:
-                    if "table_name" in data.keys():
+                    if "table_names" in data.keys():
                         return True
 
         return False
@@ -393,7 +401,7 @@ class MassFlowRateInput(QDialog):
                     "imag_values": imag_values,
                     "nodal_attribution": nodal_attribution,
                     "averaged": key_avg,
-                    "table_name": os.path.basename(table_path),
+                    "table_names": os.path.basename(table_path),
                     }
             
             for _id in self.typed_ids:
@@ -418,8 +426,8 @@ class MassFlowRateInput(QDialog):
             property, surface_id = key
             if property == "mass_flow_rate":
                 if surface_id in list_ids:
-                    if "table_name" in data.keys():
-                        list_table_names.append(data["table_name"])
+                    if "table_names" in data.keys():
+                        list_table_names.append(data["table_names"])
         return list_table_names
 
     def text_label(self, value):
@@ -429,7 +437,7 @@ class MassFlowRateInput(QDialog):
             value_label = "Table"
         return "{}".format(value_label)
 
-    def remove_bc_from_selection(self):
+    def remove_callback(self):
 
         if self.lineEdit_selection_id.text() != "":
 
@@ -448,7 +456,7 @@ class MassFlowRateInput(QDialog):
             app().main_window.file.write_model_properties_in_file()
             self.check_model_frequency_controls()
 
-    def check_reset(self):
+    def reset_callback(self):
 
         surface_ids = list()
         for key, data in self.properties.surface_properties.items():
@@ -482,6 +490,13 @@ class MassFlowRateInput(QDialog):
 
                 self.close()
 
+    def actions_to_finalize(self):
+        self.check_model_frequency_controls()
+        self.main_window.viewer_tabs.update_info_text()
+        app().main_window.file.write_model_properties_in_file()
+        self.pushButton_cancel.setText("Exit")
+        self.load_info()
+
     def change_frequency_setup(self):
         if self.imported_values is not None:
             self.hide()
@@ -494,7 +509,7 @@ class MassFlowRateInput(QDialog):
         for key, data in self.properties.surface_properties.items():
             property, _ = key
             if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "mass_flow_rate"]:
-                if "table_name" in data.keys():
+                if "table_names" in data.keys():
                     return
 
         if isinstance(self.project.analysis_data, dict):
@@ -527,19 +542,19 @@ class MassFlowRateInput(QDialog):
                 surface_ids.append(surface_id)
 
         if len(surface_ids) == 0:
-            self.tabWidget_mass_flow_rate.setTabVisible(2, False)
+            self.tabWidget_main.setTabVisible(2, False)
         else:
-            self.tabWidget_mass_flow_rate.setTabVisible(2, True)
+            self.tabWidget_main.setTabVisible(2, True)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            if self.tabWidget_mass_flow_rate.currentIndex() == 0:
+            if self.tabWidget_main.currentIndex() == 0:
                 self.check_constant_values()
-            if self.tabWidget_mass_flow_rate.currentIndex() == 1:
+            if self.tabWidget_main.currentIndex() == 1:
                 self.check_table_values()
         elif event.key() == Qt.Key_Delete:
-            if self.tabWidget_mass_flow_rate.currentIndex() == 2:
-                self.remove_bc_from_selection()
+            if self.tabWidget_main.currentIndex() == 2:
+                self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
         else:

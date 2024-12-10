@@ -39,6 +39,12 @@ class Model:
         self.generated_mesh = False
         self.geometry_path = None
 
+        self.f_min = 1
+        self.f_max = 200
+        self.f_step = 1
+        self.frequencies = None
+        self.list_frequencies = list()
+
         self.analysis_data = None
         self.solid_acoustic_element = None
         self.surface_acoustic_element = None
@@ -119,6 +125,49 @@ class Model:
     def set_mesh(self, mesh):
         self.mesh = mesh
         self.generated_mesh = True
+
+    def set_frequency_setup(self, analysis_setup: dict):
+
+        self.frequencies = None
+        self.f_min = analysis_setup.get("f_min", None)
+        self.f_max = analysis_setup.get("f_max", None)
+        self.f_step = analysis_setup.get("f_step", None)
+
+        if "frequencies" in analysis_setup.keys():
+            self.frequencies = analysis_setup.get("frequencies", None)
+
+        elif (self.f_min, self.f_max, self.f_step).count(None) != 3:
+            self.frequencies = np.arange(self.f_min, self.f_max + self.f_step, self.f_step)
+
+    def change_analysis_frequency_setup(self, frequencies: list | np.ndarray | None):
+
+        if frequencies is None:
+            return False
+
+        if isinstance(frequencies, np.ndarray):
+            frequencies = list(frequencies)
+
+        condition_1 = self.list_frequencies == list() 
+        condition_2 = not self.properties.check_if_there_are_tables_at_the_model()
+
+        if condition_1 or condition_2:
+
+            f_min = frequencies[0]
+            f_max = frequencies[-1]
+            f_step = frequencies[1] - frequencies[0]
+
+            frequency_setup = { "f_min" : f_min,
+                                "f_max" : f_max,
+                                "f_step" : f_step }
+
+            self.set_frequency_setup(frequency_setup)
+
+            self.list_frequencies = frequencies
+
+            return False
+
+        if self.list_frequencies != frequencies:
+            return True
 
     def get_volume(self, **kwargs):
         """ This method returns the volume based on kwargs. """
@@ -210,7 +259,9 @@ class Model:
 
         return rho
 
-    def process_porous_material_properties(self, frequencies):
+    def process_porous_material_properties(self):
+
+        frequencies = self.frequencies
 
         model = PorousMaterialModels(self)
         model.process_effective_properties(frequencies)
@@ -247,7 +298,9 @@ class Model:
     #     for element_id, data in model.low_reduced_frequency_properties.items():
     #         self.lrf_properties[element_id] = data
 
-    def process_viscous_thermal_model_properties(self, frequencies):
+    def process_viscous_thermal_model_properties(self):
+
+        frequencies = self.frequencies
 
         model = ViscousThermalLossModels(self)
         model.process_effective_properties(frequencies)

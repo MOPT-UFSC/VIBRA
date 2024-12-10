@@ -69,13 +69,13 @@ class FluidWidget(QWidget):
                                 "identifier",
                                 "temperature",
                                 "pressure",
-                                "fluid density",
-                                "speed of sound",
-                                "isentropic exponent",
-                                "thermal conductivity",
-                                "specific heat Cp",
-                                "dynamic viscosity",
-                                "molar mass",
+                                "fluid_density",
+                                "speed_of_sound",
+                                "isentropic_exponent",
+                                "thermal_conductivity",
+                                "specific_heat_Cp",
+                                "dynamic_viscosity",
+                                "molar_mass",
                                 "color"
                                 ]
 
@@ -162,27 +162,27 @@ class FluidWidget(QWidget):
 
             name = section['name']
             identifier =  int(section['identifier'])
-            fluid_density =  float(section['fluid density'])
-            speed_of_sound =  float(section['speed of sound'])
+            fluid_density =  float(section['fluid_density'])
+            speed_of_sound =  float(section['speed_of_sound'])
             color =  get_color_rgb(section['color'])
 
-            if 'isentropic exponent' in keys:
-                isentropic_exponent = float(section['isentropic exponent'])
+            if 'isentropic_exponent' in keys:
+                isentropic_exponent = float(section['isentropic_exponent'])
             else:
                 isentropic_exponent = ""
 
-            if 'thermal conductivity' in keys:
-                thermal_conductivity = float(section['thermal conductivity'])
+            if 'thermal_conductivity' in keys:
+                thermal_conductivity = float(section['thermal_conductivity'])
             else:
                 thermal_conductivity = ""
 
-            if 'specific heat Cp' in keys:
-                specific_heat_Cp = float(section['specific heat Cp'])
+            if 'specific_heat_Cp' in keys:
+                specific_heat_Cp = float(section['specific_heat_Cp'])
             else:
                 specific_heat_Cp = ""
 
-            if 'dynamic viscosity' in keys:
-                dynamic_viscosity = float(section['dynamic viscosity'])
+            if 'dynamic_viscosity' in keys:
+                dynamic_viscosity = float(section['dynamic_viscosity'])
             else:
                 dynamic_viscosity = ""
             
@@ -196,22 +196,22 @@ class FluidWidget(QWidget):
             else:
                 pressure = None
 
-            if 'key mixture' in keys:
-                key_mixture = section['key mixture']
+            if 'key_mixture' in keys:
+                key_mixture = section['key_mixture']
             else:
                 key_mixture = None
 
-            if 'molar fractions' in keys:
-                str_molar_fractions = section['molar fractions']
+            if 'molar_fractions' in keys:
+                str_molar_fractions = section['molar_fractions']
                 molar_fractions = get_list_of_values_from_string(str_molar_fractions, int_values=False)
             else:
                 molar_fractions = None
 
-            if 'molar mass' in keys:
-                if section['molar mass'] == "None":
+            if 'molar_mass' in keys:
+                if section['molar_mass'] == "None":
                     molar_mass = None
                 else:
-                    molar_mass = float(section['molar mass'])
+                    molar_mass = float(section['molar_mass'])
             else:
                 molar_mass = None
 
@@ -281,13 +281,14 @@ class FluidWidget(QWidget):
         return selected_items[-1].column()
 
     def get_selected_fluid(self) -> Fluid | None:
+
         selected_column = self.get_selected_column()
         if selected_column < 0:
             return
 
         if selected_column >= len(self.list_of_fluids):
             return
-        
+
         item = self.tableWidget_fluid_data.item(1, selected_column)
         identifier = int(item.text())
         fluid = self.list_of_fluids[identifier]
@@ -447,13 +448,13 @@ class FluidWidget(QWidget):
         prop_labels = {
                         2 : "temperature", 
                         3 : "pressure",
-                        4 : "density",
-                        5 : "speed of sound",
-                        6 : "isentropic exponent",
-                        7 : "thermal conductivity",
-                        8 : "specific heat Cp",
-                        9 : "dynamic viscosity",
-                       10 : "molar mass"
+                        4 : "fluid_density",
+                        5 : "speed_of_sound",
+                        6 : "isentropic_exponent",
+                        7 : "thermal_conductivity",
+                        8 : "specific_heat_Cp",
+                        9 : "dynamic_viscosity",
+                       10 : "molar_mass"
                     }
 
         if row not in prop_labels.keys():
@@ -503,9 +504,9 @@ class FluidWidget(QWidget):
 
             if self.refprop is not None:
                 [key_mixture, molar_fractions] = self.fluid_setup
-                fluid_data['key mixture'] = key_mixture
-                fluid_data['molar fractions'] = molar_fractions
-                fluid_data['molar mass'] = round(self.fluid_data_refprop['molar mass'], 6)
+                fluid_data['key_mixture'] = key_mixture
+                fluid_data['molar_fractions'] = molar_fractions
+                fluid_data['molar_mass'] = round(self.fluid_data_refprop['molar_mass'], 6)
 
             config = app().main_window.file.read_fluid_library_from_file()
             config[identifier] = fluid_data
@@ -745,7 +746,7 @@ class FluidWidget(QWidget):
             if self.refprop is not None:
                 if self.refprop.complete:
                     self.state_properties["temperature (discharge)"] = round(self.fluid_data_refprop["temperature"], 4)
-                    self.state_properties["molar mass"] = self.fluid_data_refprop["molar mass"]
+                    self.state_properties["molar_mass"] = self.fluid_data_refprop["molar_mass"]
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

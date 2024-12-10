@@ -27,10 +27,9 @@ from molde.render_widgets import CommonRenderWidget
 
 from vibra.utils.progress_status import ProgressStatus
 
-from vibra.project_files.project import Project
 from vibra.project_files.load_project import LoadProject
-
-from vibra.project_files.project_file_io import ProjectFileIO
+from vibra.project_files.project import Project
+from vibra.project_files.project_file import ProjectFile
 
 import qdarktheme
 
@@ -552,7 +551,7 @@ class MainWindow(QMainWindow):
 
         self.project = Project()
 
-        self.file = ProjectFileIO(self.temp_project_file_path)
+        self.file = ProjectFile(self.temp_project_file_path)
         self.file.write_geometry_in_file(geometry_path)
 
         def remove_callback():
@@ -597,7 +596,7 @@ class MainWindow(QMainWindow):
             self.update_window_title(project_path)
 
         self.project = Project()
-        self.file = ProjectFileIO(self.temp_project_file_path, override=False)
+        self.file = ProjectFile(self.temp_project_file_path, override=False)
 
         if project_path is not None:
             path = Path(project_path)

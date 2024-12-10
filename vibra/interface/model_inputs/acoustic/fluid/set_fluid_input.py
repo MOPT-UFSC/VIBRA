@@ -109,7 +109,7 @@ class SetFluidInput(QDialog):
         #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.update_attribution_type)
         #
-        self.pushButton_attribute.clicked.connect(self.confirm_fluid_attribution)
+        self.pushButton_attribute.clicked.connect(self.attribute_callback)
         self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_reset_library.clicked.connect(self.reset_fluid_library_callback)
         #
@@ -161,7 +161,7 @@ class SetFluidInput(QDialog):
         self.lineEdit_selection_id.setEnabled(bool(index))
         # self.comboBox_attribution_type.setCurrentIndex(index)
 
-    def confirm_fluid_attribution(self):
+    def attribute_callback(self):
 
         selected_fluid = self.fluid_widget.get_selected_fluid()
 
@@ -221,7 +221,7 @@ class SetFluidInput(QDialog):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.confirm_fluid_attribution()
+            self.attribute_callback()
         # elif event.key() == Qt.Key_Delete:
         #     self.fluid_widget.remove_selected_row()
         elif event.key() == Qt.Key_Escape:

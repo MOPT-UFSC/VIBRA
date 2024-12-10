@@ -39,6 +39,8 @@ class AcousticHarmonicSolver:
                 self.analysis_type = "acoustic"
                 if "frequencies" in analysis_data.keys():
                     self.frequencies = analysis_data["frequencies"]
+                else:
+                    self.frequencies = self.assembler.model.frequencies
 
     def load_dissipation_model(self, data):
         self.dissipation_model = data

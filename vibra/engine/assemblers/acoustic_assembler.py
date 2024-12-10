@@ -29,6 +29,7 @@ class AcousticAssembler:
     def __init__(self, model : Model):
         self.model = model
         self.properties = model.properties
+
         self.reset()
 
     def reset(self):
@@ -59,17 +60,8 @@ class AcousticAssembler:
     def set_element_formulation(self, element):
         self.element = element
 
-    def set_analysis_data(self, data):
-        self.analysis_data = data
-        if "frequencies" in data.keys():
-            self.frequencies = data["frequencies"]
-            self.update_number_of_frequencies()
-
-    def set_frequencies(self, frequencies):
-        self.frequencies = frequencies
-        self.update_number_of_frequencies()
-
     def update_number_of_frequencies(self):
+        self.frequencies = self.model.frequencies
         if self.frequencies is None:
             self.number_frequencies = 1
         else:
@@ -102,9 +94,12 @@ class AcousticAssembler:
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "acoustic_pressure":
-                real_values = np.array(data["real_values"])
-                imag_values = np.array(data["imag_values"])
-                complex_values = real_values + 1j * imag_values
+                if "values" in data.keys():
+                    complex_values = data["values"]
+                else:
+                    real_values = np.array(data["real_values"])
+                    imag_values = np.array(data["imag_values"])
+                    complex_values = real_values + 1j * imag_values
                 nodes = self.model.mesh.nodes_from_surfaces[surface_id]
 
                 for _ in nodes:
@@ -165,6 +160,8 @@ class AcousticAssembler:
         aux_connect = dict()
         all_indexes = list()
 
+        aux_ones = np.ones((1, self.number_frequencies), dtype=complex)
+
         for key, data in self.properties.surface_properties.items():
             prop, surface_id = key
             if prop == property_label:
@@ -187,23 +184,25 @@ class AcousticAssembler:
                         speed_of_sound = fluid.speed_of_sound
 
                     if "anechoic_termination" in data.keys():
-
-                        Zc = density * speed_of_sound
-
-                        if isinstance(Zc, float):
-                            real_values = np.array([Zc], dtype=float)
-                            imag_values = np.array([0], dtype=float)
-
-                        else:
-                            real_values = np.real(Zc)
-                            imag_values = np.imag(Zc)
+                        _complex_values = density * speed_of_sound
 
                     else:
+                        if "values" in data.keys():
+                            _complex_values = data["values"][0]
 
-                        real_values = np.array(data["real_values"], dtype=float)
-                        imag_values = np.array(data["imag_values"], dtype=float)
+                    if isinstance(_complex_values, complex | float):
+                        complex_values = _complex_values * aux_ones
 
-                    complex_values = real_values + 1j*imag_values
+                    elif isinstance(_complex_values, np.ndarray):
+
+                        if _complex_values.shape[0] == 1:
+                            complex_values = _complex_values * aux_ones
+
+                        elif len(_complex_values.shape) == 1:
+                            complex_values = _complex_values.reshape(1,-1)
+
+                        else:
+                            complex_values = _complex_values
 
                     surface_elements = list(self.model.mesh.elements_from_surface[surface_id])
                     all_indexes.extend(surface_elements)
@@ -339,17 +338,11 @@ class AcousticAssembler:
             for j in range(self.number_frequencies):
                 self.data_Cimp[j] = np.zeros((nel, dofs, dofs), dtype=complex)
 
-            aux_ones = np.ones(self.number_frequencies, dtype=complex)
             self.ind_rows_Z, self.ind_cols_Z = element_2D.generate_ind_rows_cols(self.si_connect)
-
             for i, [complex_values, _] in enumerate(surface_data.values()):
-
-                if complex_values.shape[0] == 1:
-                    complex_values = complex_values * aux_ones
-
                 normalized_matrix_Z = element_2D.matrices_Z(i)
                 for j in range(self.number_frequencies):
-                    self.data_Cimp[j][i, :, :] = normalized_matrix_Z / complex_values[j]
+                    self.data_Cimp[j][i, :, :] = normalized_matrix_Z / complex_values[0, j]
 
     def assemble_global_stiffness_matrix(self, index=0):
         """
@@ -396,18 +389,22 @@ class AcousticAssembler:
             returns the output data in the form of mass flow rate.
         """
 
-        aux_ones = np.ones(self.number_frequencies, dtype=complex)
+        aux_ones = np.ones((1, self.number_frequencies), dtype=complex)
         acoustic_excitation = defaultdict(float)
 
         for (property, surface_id), data in self.properties.surface_properties.items():
             if property == "mass_flow_rate":
 
-                real_values = np.array(data["real_values"])
-                imag_values = np.array(data["imag_values"])
-
-                complex_values = real_values + 1j * imag_values
-                if complex_values.shape[0] == 1:
-                    complex_values = complex_values * aux_ones
+                _complex_values = data["values"][0]
+                if isinstance(_complex_values, complex):
+                    complex_values = _complex_values * aux_ones
+                elif isinstance(_complex_values, np.ndarray):
+                    if _complex_values.shape[0] == 1:
+                        complex_values = _complex_values * aux_ones
+                    elif len(_complex_values.shape) == 1:
+                        complex_values = _complex_values.reshape(1,-1)
+                    else:
+                        complex_values = _complex_values
 
                 if data["nodal_attribution"]:
 
@@ -420,13 +417,19 @@ class AcousticAssembler:
                         else:
                             acoustic_excitation[index] += complex_values
 
-            elif property == "surface_velocity":
+            elif property in ["surface_velocity", "reciprocating_compressor_excitation"]:
 
-                real_values = np.array(data["real_values"])
-                imag_values = np.array(data["imag_values"])
-                complex_values = real_values + 1j * imag_values
-                if complex_values.shape[0] == 1:
-                    complex_values = complex_values * aux_ones
+                _complex_values = data["values"][0]
+                if isinstance(_complex_values, complex):
+                    complex_values = _complex_values * aux_ones
+
+                elif isinstance(_complex_values, np.ndarray):
+                    if _complex_values.shape[0] == 1:
+                        complex_values = _complex_values * aux_ones
+                    elif len(_complex_values.shape) == 1:
+                        complex_values = _complex_values.reshape(1,-1)
+                    else:
+                        complex_values = _complex_values
 
                 if data["nodal_attribution"]:
 
@@ -440,7 +443,7 @@ class AcousticAssembler:
                             acoustic_excitation[index] += (complex_values * area) / N
                         else:
                             acoustic_excitation[index] += complex_values * area
-        
+
         element_3D, _ = self.get_element()
         total_dofs = element_3D.DOF_PER_NODE * len(element_3D.nodal_coordinates)
         output = np.zeros((total_dofs, self.number_frequencies), dtype=complex)
@@ -449,12 +452,12 @@ class AcousticAssembler:
             indexes = list(acoustic_excitation.keys())
             excitation = list(acoustic_excitation.values())
             output[indexes, :] = np.array(excitation)
-        
+
         if self.prescribed_indexes:
             return output[self.unprescribed_indexes, :]
         else:
             return output
-        
+
     def get_acoustic_excitations_by_element_integration(self):
 
         """ This method processes the acoustic model excitations and
@@ -464,24 +467,17 @@ class AcousticAssembler:
         _, element_2D = self.get_element()
         total_dofs = element_2D.DOF_PER_NODE * len(element_2D.nodal_coordinates)
         output = np.zeros((total_dofs, self.number_frequencies), dtype=complex)
-        aux_ones = np.ones((1, self.number_frequencies), dtype=complex)
 
         connect_mf, data_mf = self.get_surface_data_for_element_integration_by_property("mass_flow_rate")
         if connect_mf is not None:
             element_2D.reorder_connect(connect_mf)
             for i, [complex_values, _] in enumerate(data_mf.values()):
 
-                if complex_values.shape[0] == 1:
-                    complex_values = complex_values * aux_ones
-
-                elif len(complex_values.shape) == 1:
-                    complex_values = complex_values.reshape(1,-1)
-
                 indices = element_2D.connect_face[i, :]
                 normalized_excitation_matrix = element_2D.excitation_F(i)
 
                 output[indices, :] += normalized_excitation_matrix @ complex_values
-        
+
         # connect_vv, data_vv = self.get_surface_data_for_element_integration_by_property("volume_velocity")
         # if connect_vv is not None:
         #     element_2D.reorder_connect(connect_vv)
@@ -498,21 +494,18 @@ class AcousticAssembler:
 
         #         output[indices, :] += normalized_excitation_matrix @ complex_values
         
-        connect_sv, data_sv = self.get_surface_data_for_element_integration_by_property("surface_velocity")
-        if connect_sv is not None:
-            element_2D.reorder_connect(connect_sv)
-            for i, [complex_values, source_factor] in enumerate(data_sv.values()):
+        for excitation_label in ["surface_velocity", "reciprocating_compressor_excitation"]:
 
-                if complex_values.shape[0] == 1:
-                    complex_values = complex_values * aux_ones
+            connect_sv, data_sv = self.get_surface_data_for_element_integration_by_property(excitation_label)
 
-                elif len(complex_values.shape) == 1:
-                    complex_values = complex_values.reshape(1,-1)
+            if connect_sv is not None:
+                element_2D.reorder_connect(connect_sv)
+                for i, [complex_values, source_factor] in enumerate(data_sv.values()):
 
-                indices = element_2D.connect_face[i, :]
-                normalized_excitation_matrix = source_factor * element_2D.excitation_F(i)
+                    indices = element_2D.connect_face[i, :]
+                    normalized_excitation_matrix = source_factor * element_2D.excitation_F(i)
 
-                output[indices, :] += normalized_excitation_matrix @ complex_values
+                    output[indices, :] += normalized_excitation_matrix @ complex_values
 
         if self.prescribed_indexes:
             return output[self.unprescribed_indexes, :]

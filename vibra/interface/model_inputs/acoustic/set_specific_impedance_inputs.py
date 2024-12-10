@@ -66,17 +66,17 @@ class SpecificImpedanceInput(QDialog):
         self.lineEdit_table_path : QLineEdit
 
         # QPushButton
-        self.pushButton_constant_value_confirm : QPushButton
+        self.pushButton_attribute : QPushButton
+        self.pushButton_cancel : QPushButton
         self.pushButton_change_frequency_setup : QPushButton
         self.pushButton_load_table : QPushButton
-        self.pushButton_remove_bc_confirm : QPushButton
+        self.pushButton_remove : QPushButton
         self.pushButton_reset : QPushButton
-        self.pushButton_table_values_confirm : QPushButton
         #
         self.pushButton_change_frequency_setup.setDisabled(True)
 
         # QTabWidget
-        self.tabWidget_specific_impedance : QTabWidget
+        self.tabWidget_main : QTabWidget
 
         # QTreeWidget
         self.treeWidget_specific_impedance : QTreeWidget
@@ -85,26 +85,27 @@ class SpecificImpedanceInput(QDialog):
 
     def _create_connections(self):
         #
-        self.pushButton_constant_value_confirm.clicked.connect(self.check_constant_values)
-        self.pushButton_remove_bc_confirm.clicked.connect(self.remove_bc_from_selection)
-        self.pushButton_table_values_confirm.clicked.connect(self.check_table_values)
+        self.pushButton_attribute.clicked.connect(self.attribute_callback)
+        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_load_table.clicked.connect(self.load_specific_impedance_table)
-        self.pushButton_reset.clicked.connect(self.check_reset)
+        self.pushButton_reset.clicked.connect(self.reset_callback)
         #
-        self.tabWidget_specific_impedance.currentChanged.connect(self.tabEvent_specific_impedance)
+        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
         #
         self.treeWidget_specific_impedance.itemClicked.connect(self.on_click_item)
         self.treeWidget_specific_impedance.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
 
-    def tabEvent_specific_impedance(self):
-        index = self.tabWidget_specific_impedance.currentIndex()
-        if index == 2:
+    def tabEvent_callback(self):
+        if self.tabWidget_main.currentIndex() == 2:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
+            self.pushButton_attribute.setDisabled(True)
         else:
             self.lineEdit_selection_id.setDisabled(False)
+            self.pushButton_attribute.setEnabled(True)
 
     def on_click_item(self, item):
         if item.text(0) != "":
@@ -141,6 +142,13 @@ class SpecificImpedanceInput(QDialog):
         if faces:
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
+
+    def attribute_callback(self):
+        tab_index = self.tabWidget_main.currentIndex()
+        if tab_index == 0:
+            self.check_constant_values()
+        elif tab_index == 1:
+            self.check_table_values()
 
     def check_complex_entries(self, lineEdit_real, lineEdit_imag):
         self.stop = False
@@ -209,12 +217,9 @@ class SpecificImpedanceInput(QDialog):
             for _id in self.typed_ids:
                 self.project.set_specific_impedance(data, _id)
 
-            self.main_window.viewer_tabs.update_info_text()
-            app().main_window.file.write_model_properties_in_file()
+            self.actions_to_finalize()
 
             print(f"[Set specific impedance] - defined at surface(s) {self.typed_ids}")
-
-            self.close()
 
         else:
             title = "Additional inputs required"
@@ -319,10 +324,10 @@ class SpecificImpedanceInput(QDialog):
                 if property == "specific_impedance":
                     continue
                 else:
-                    if "table_name" in data.keys():
+                    if "table_names" in data.keys():
                         return True
             else:
-                if "table_name" in data.keys():
+                if "table_names" in data.keys():
                     return True
 
         return False
@@ -376,18 +381,15 @@ class SpecificImpedanceInput(QDialog):
                     "imag_values": imag_values,
                     "nodal_attribution": False,
                     "averaged": False,
-                    "table_name": os.path.basename(table_path),
+                    "table_names": os.path.basename(table_path),
                     }
                 
             for _id in self.typed_ids:
                 self.project.set_specific_impedance(data, _id)
 
-            self.main_window.viewer_tabs.update_info_text()
-            app().main_window.file.write_model_properties_in_file()
+            self.actions_to_finalize()
 
             print(f"[Set specific impedance] - defined at surface(s) {self.typed_ids}")
-
-            self.close()
 
         else:
             title = "Additional inputs required"
@@ -403,7 +405,7 @@ class SpecificImpedanceInput(QDialog):
             value_label = "Table"
         return "{}".format(value_label)
 
-    def remove_bc_from_selection(self):
+    def remove_callback(self):
 
         if self.lineEdit_selection_id.text() != "":
 
@@ -419,10 +421,9 @@ class SpecificImpedanceInput(QDialog):
                     self.lineEdit_selection_id.setText("")
                     break
 
-            app().main_window.file.write_model_properties_in_file()
-            self.check_model_frequency_controls()
+            self.actions_to_finalize()
 
-    def check_reset(self):
+    def reset_callback(self):
 
         surface_ids = list()
         for key, data in self.properties.surface_properties.items():
@@ -444,17 +445,15 @@ class SpecificImpedanceInput(QDialog):
                 return
 
             if read._continue:
-
                 self.properties._reset_property("specific_impedance")
-                app().main_window.file.write_model_properties_in_file()
-                self.check_model_frequency_controls()
+                self.actions_to_finalize()
 
-                # title = "Specific impedance resetting process complete"
-                # message = "All specific impedance applied to the acoustic "
-                # message += "model have been removed from the model."
-                # PrintMessageInput([window_title_2, title, message], auto_close=True)
-
-                self.close()
+    def actions_to_finalize(self):
+        self.check_model_frequency_controls()
+        self.main_window.viewer_tabs.update_info_text()
+        app().main_window.file.write_model_properties_in_file()
+        self.pushButton_cancel.setText("Exit")
+        self.load_info()
 
     def change_frequency_setup(self):
         if self.imported_values is not None:
@@ -467,8 +466,8 @@ class SpecificImpedanceInput(QDialog):
 
         for key, data in self.properties.surface_properties.items():
             property, _ = key
-            if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "mass_flow_rate"]:
-                if "table_name" in data.keys():
+            if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
+                if "table_names" in data.keys():
                     return
 
         if isinstance(self.project.analysis_data, dict):
@@ -493,19 +492,16 @@ class SpecificImpedanceInput(QDialog):
                     surface_ids.append(surface_id)
 
         if len(surface_ids) == 0:
-            self.tabWidget_specific_impedance.setTabVisible(2, False)
+            self.tabWidget_main.setTabVisible(2, False)
         else:
-            self.tabWidget_specific_impedance.setTabVisible(2, True)
+            self.tabWidget_main.setTabVisible(2, True)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            if self.tabWidget_specific_impedance.currentIndex() == 0:
-                self.check_constant_values()
-            if self.tabWidget_specific_impedance.currentIndex() == 1:
-                self.check_table_values()
+            self.attribute_callback()
         elif event.key() == Qt.Key_Delete:
-            if self.tabWidget_specific_impedance.currentIndex() == 2:
-                self.remove_bc_from_selection()
+            if self.tabWidget_main.currentIndex() == 2:
+                self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
         else:

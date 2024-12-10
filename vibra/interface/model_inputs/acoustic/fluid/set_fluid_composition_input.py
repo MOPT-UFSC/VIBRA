@@ -41,7 +41,7 @@ class SetFluidCompositionInput(QDialog):
         self._config_widgets()
 
         if self.state_properties:
-            self.check_state_properties()
+            self.check_state_properties(self.state_properties)
 
         self.update_remainig_composition()
         if self.default_library_gases():
@@ -74,20 +74,20 @@ class SetFluidCompositionInput(QDialog):
         # self.isentropic_label = "ISENK"   # isentropic exponent (real gas)
         self.isentropic_label = "CP/CV"     # isentropic expansion coefficient (ideal gas)
 
-        self.map_properties = { "D" : "fluid density",
-                                "CP" : "specific heat Cp",
-                                "CV" : "specific heat Cv",
-                                self.isentropic_label : "isentropic exponent",
-                                "W" : "speed of sound",
-                                "VIS" : "dynamic viscosity",
-                                "TCX" : "thermal conductivity",
-                                "PRANDTL" : "Prandtl number",
-                                "TD" : "thermal diffusivity",
-                                "KV" : "kinematic viscosity",
-                                "M" : "molar mass",
-                                "BS" : "adiabatic bulk modulus",
-                                "KKT" : "isothermal bulk modulus",
-                                "Z" : "compressibility factor"  }
+        self.map_properties = { "D" : "fluid_density",
+                                "CP" : "specific_heat_Cp",
+                                "CV" : "specific_heat_Cv",
+                                self.isentropic_label : "isentropic_exponent",
+                                "W" : "speed_of_sound",
+                                "VIS" : "dynamic_viscosity",
+                                "TCX" : "thermal_conductivity",
+                                "PRANDTL" : "Prandtl_number",
+                                "TD" : "thermal_diffusivity",
+                                "KV" : "kinematic_viscosity",
+                                "M" : "molar_mass",
+                                "BS" : "adiabatic_bulk_modulus",
+                                "KKT" : "isothermal_bulk_modulus",
+                                "Z" : "compressibility_factor"  }
 
         self.selected_fluid = ""
         self.unit_temperature = "K"
@@ -565,7 +565,7 @@ class SetFluidCompositionInput(QDialog):
                     temperature_K = self.T_discharge
                     pressure_Pa = self.P_discharge
 
-                    if self.connection_label == "discharge":
+                    if self.connection_type == "discharge":
                         count = 0
                         criteria = 100
                         cache_temperatures = [temperature_K]
@@ -618,9 +618,9 @@ class SetFluidCompositionInput(QDialog):
                         else:
                             self.fluid_properties[self.map_properties[key_prop]] = read.Output[0]
 
-                self.fluid_properties["impedance"] = round(self.fluid_properties["fluid density"]*self.fluid_properties["speed of sound"],6)
+                self.fluid_properties["impedance"] = round(self.get_acoustic_impedance(self.fluid_properties), 6)
                 self.fluid_setup = [fluids_string, molar_fractions]
-                
+
                 self.process_errors()
                 # if self.process_errors():
                 #     return
@@ -643,6 +643,11 @@ class SetFluidCompositionInput(QDialog):
         if message != "":
             PrintMessageInput([window_title_1, title, message])
 
+    def get_acoustic_impedance(self, fluid_properties: dict):
+        fluid_density = fluid_properties["fluid_density"]
+        speed_of_sound = fluid_properties["speed_of_sound"]
+        return fluid_density * speed_of_sound
+
     def process_errors(self):
         if len(self.errors) != 0:
             title = "Error while processing fluid properties"
@@ -658,13 +663,13 @@ class SetFluidCompositionInput(QDialog):
             if self.state_properties["connection type"] == 1:
                 title = "Fluid properties convergence"
                 message = "The following fluid properties were obtained after completing the iterative updating process:"
-                message += f"\n\nTemperature (discharge) = {round(self.fluid_properties['temperature'],4)} [K]"
-                message += f"\nIsentropic exponent = {round(self.fluid_properties['isentropic exponent'],6)} [-]"
+                message += f"\n\nTemperature (discharge) = {round(self.fluid_properties['temperature'], 4)} [K]"
+                message += f"\nIsentropic exponent = {round(self.fluid_properties['isentropic_exponent'], 6)} [-]"
                 message += "\n\nReference fluid properties:"
                 message += f"\n\nTemperature (suction) = {self.state_properties['temperature (suction)']} [K]"
                 message += f"\nPressure (suction) = {self.state_properties['pressure (suction)']} [Pa]"
-                message += f"\nPressure (discharge) = {round(self.state_properties['pressure (discharge)'],4)} [Pa]"
-                message += f"\nMolar mass = {round(self.fluid_properties['molar mass'],6)} [kg/mol]"   
+                message += f"\nPressure (discharge) = {round(self.state_properties['pressure (discharge)'], 4)} [Pa]"
+                message += f"\nMolar mass = {round(self.fluid_properties['molar_mass'],6)} [kg/mol]"   
                 PrintMessageInput([window_title_2, title, message])
 
     def check_temperature_value(self, lineEdit_temperature):

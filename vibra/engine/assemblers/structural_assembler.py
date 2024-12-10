@@ -44,13 +44,12 @@ class StructuralAssembler:
     def set_element_formulation(self, element):
         self.element = element
 
-    def set_analysis_data(self, data):
-        self.analysis_data = data
-        if "frequencies" in data.keys():
-            self.frequencies = data["frequencies"]
-
-    def set_frequencies(self, frequencies):
-        self.frequencies = frequencies
+    def update_number_of_frequencies(self):
+        self.frequencies = self.model.frequencies
+        if self.frequencies is None:
+            self.number_frequencies = 1
+        else:
+            self.number_frequencies = len(self.frequencies)
 
     def is_assembled(self):
         return (self.stiffness_matrix is not None) and (self.mass_matrix is not None)

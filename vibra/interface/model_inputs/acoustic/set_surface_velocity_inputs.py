@@ -71,12 +71,12 @@ class SurfaceVelocityInput(QDialog):
         self.lineEdit_table_path : QLineEdit
 
         # QPushButton
-        self.pushButton_constant_value_confirm : QPushButton
+        self.pushButton_attribute : QPushButton
+        self.pushButton_cancel : QPushButton
         self.pushButton_change_frequency_setup : QPushButton
         self.pushButton_load_table : QPushButton
-        self.pushButton_remove_bc_confirm : QPushButton
+        self.pushButton_remove : QPushButton
         self.pushButton_reset : QPushButton
-        self.pushButton_table_values_confirm : QPushButton
         #
         self.pushButton_change_frequency_setup.setDisabled(True)
 
@@ -90,7 +90,7 @@ class SurfaceVelocityInput(QDialog):
         self.radioButton_element_integration_table.setChecked(True)
 
         # QTabWidget
-        self.tabWidget_surface_velocity : QTabWidget
+        self.tabWidget_main : QTabWidget
 
         # QTreeWidget
         self.treeWidget_surface_velocity : QTreeWidget
@@ -99,12 +99,12 @@ class SurfaceVelocityInput(QDialog):
 
     def _create_connections(self):
         #
+        self.pushButton_attribute.clicked.connect(self.attribute_callback)
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_change_frequency_setup.clicked.connect(self.change_frequency_setup)
-        self.pushButton_constant_value_confirm.clicked.connect(self.check_constant_values)
-        self.pushButton_remove_bc_confirm.clicked.connect(self.remove_bc_from_selection)
-        self.pushButton_table_values_confirm.clicked.connect(self.check_table_values)
         self.pushButton_load_table.clicked.connect(self.load_surface_velocity_table)
-        self.pushButton_reset.clicked.connect(self.check_reset)
+        self.pushButton_remove.clicked.connect(self.remove_callback)
+        self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         self.radioButton_nodal_attribution_constant.clicked.connect(self.update_controls_for_constant_value)
         self.radioButton_element_integration_constant.clicked.connect(self.update_controls_for_constant_value)
@@ -114,45 +114,11 @@ class SurfaceVelocityInput(QDialog):
         self.update_controls_for_constant_value()
         self.update_controls_for_table_of_values()
         #
-        self.tabWidget_surface_velocity.currentChanged.connect(self.tabEvent_surface_velocity)
+        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
         self.treeWidget_surface_velocity.itemClicked.connect(self.on_click_item)
         self.treeWidget_surface_velocity.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
-
-    def tabEvent_surface_velocity(self):
-        if self.tabWidget_surface_velocity.currentIndex() == 2:
-            self.lineEdit_selection_id.setText("")
-            self.lineEdit_selection_id.setDisabled(True)
-        else:
-            self.lineEdit_selection_id.setDisabled(False)
-
-    def on_click_item(self, item):
-        if item.text(0) != "":
-            surface_id = int(item.text(0))
-            self.lineEdit_selection_id.setText(item.text(0))
-            app().main_window.set_geometry_selection(surfaces=[surface_id])
-
-    def on_doubleclick_item(self, item):
-        self.on_click_item(item)
-
-    def load_info(self):
-        self.treeWidget_surface_velocity.clear()
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
-            if property == "surface_velocity":
-                real_values = np.array(data["real_values"])
-                imag_values = np.array(data["imag_values"])
-                complex_values = real_values + 1j * imag_values
-                if len(complex_values) == 1:
-                    str_value = str(self.text_label(complex_values))
-                else:
-                    str_value = "Table of values"
-                new = QTreeWidgetItem([str(surface_id), str_value])
-                new.setTextAlignment(0, Qt.AlignCenter)
-                new.setTextAlignment(1, Qt.AlignCenter)
-                self.treeWidget_surface_velocity.addTopLevelItem(new)
-        self.update_tabs_visibility()
 
     def geometry_selection_callback(self):
 
@@ -162,9 +128,24 @@ class SurfaceVelocityInput(QDialog):
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
 
+    def tabEvent_callback(self):
+        if self.tabWidget_main.currentIndex() == 2:
+            self.lineEdit_selection_id.setText("")
+            self.lineEdit_selection_id.setDisabled(True)
+            self.pushButton_attribute.setDisabled(True)
+        else:
+            self.lineEdit_selection_id.setDisabled(False)
+            self.pushButton_attribute.setEnabled(True)
+
+    def attribute_callback(self):
+        tab_index = self.tabWidget_main.currentIndex()
+        if tab_index == 0:
+            self.check_constant_values()
+        elif tab_index == 1:
+            self.check_table_values()
+
     def check_complex_entries(self, lineEdit_real, lineEdit_imag):
 
-        stop = False
         title = "Invalid entry to the surface velocity"
         if lineEdit_real.text() != "":
             try:
@@ -173,7 +154,6 @@ class SurfaceVelocityInput(QDialog):
                 message = "Wrong input for real part of surface velocity."
                 PrintMessageInput([window_title_1, title, message])
                 self.lineEdit_real_value.setFocus()
-                stop = True
                 return
         else:
             real_F = 0
@@ -185,7 +165,6 @@ class SurfaceVelocityInput(QDialog):
                 message = "Wrong input for imaginary part of surface velocity."
                 PrintMessageInput([window_title_1, title, message])
                 self.lineEdit_imag_value.setFocus()
-                stop = True
                 return
         else:
             imag_F = 0
@@ -230,11 +209,9 @@ class SurfaceVelocityInput(QDialog):
             for _id in self.typed_ids:
                 self.project.set_surface_velocity(data, _id)
 
-            self.main_window.viewer_tabs.update_info_text()
-            app().main_window.file.write_model_properties_in_file()
+            self.actions_to_finalize()
 
             print(f"[Set surface Velocity] - defined at surface(s) {self.typed_ids}")
-            self.close()
 
         else:
             title = "Additional inputs required"
@@ -288,74 +265,115 @@ class SurfaceVelocityInput(QDialog):
             lineEdit.setFocus()
             return None
 
-    def change_project_frequency_setup(self):
+    def save_table_values(self, table_name: str, imported_values: np.ndarray):
 
-        frequencies = self.imported_values[:, 0]
+        frequencies = imported_values[:, 0]
 
-        if isinstance(frequencies, np.ndarray):
-            f_min = frequencies[0]
-            f_max = frequencies[-1]
-            f_step = frequencies[1] - frequencies[0]
-            actual_frequencies = frequencies
-            frequencies = list(frequencies)
+        f_min = frequencies[0]
+        f_max = frequencies[-1]
+        f_step = frequencies[1] - frequencies[0] 
 
-        analysis_data = self.main_window.project.analysis_data
-        if analysis_data is None:
-            self.project.set_frequencies(actual_frequencies, f_min, f_max, f_step, True)
-            return
+        if app().main_window.project.model.change_analysis_frequency_setup(list(frequencies)):
 
-        else:
+            self.hide()
+            title = "Project frequency setup cannot be modified"
+            message = "The following imported table of values has a frequency setup "
+            message += "different from the others already imported ones. The current "
+            message += "project frequency setup is not going to be modified."
+            message += f"\n\n{table_name}"
+            PrintMessageInput([window_title_1, title, message])
+            return True
 
-            imported_table = False
-            model_frequencies = list()
-            if "frequencies" in analysis_data.keys():
-                if isinstance(analysis_data["frequencies"], np.ndarray):
-                    model_frequencies = list(analysis_data["frequencies"])
-            
-                if "imported_table" in analysis_data.keys():
-                    imported_table = analysis_data["imported_table"]
+        self.update_analysis_setup_in_file(f_min, f_max, f_step)
 
-        if model_frequencies != frequencies:
-            if imported_table:
+        real_values = imported_values[:, 1]
+        imag_values = imported_values[:, 2]
+        data = np.array([frequencies, real_values, imag_values], dtype=float).T
 
-                if self.are_there_other_active_tables():
-
-                    self.hide()
-                    table_path = self.lineEdit_table_path.text()
-                    table_name = os.path.basename(table_path)
-
-                    title = "Project frequency setup cannot be modified"
-                    message = f"The following imported table of values has a frequency setup "
-                    message += "different from the others already imported ones. The current "
-                    message += "project frequency setup is not going to be modified."
-                    message += f"\n\nTable name: {table_name}"
-                    PrintMessageInput([window_title_2, title, message])
-                    return True
-            
-            self.project.set_frequencies(actual_frequencies, f_min, f_max, f_step, True)
-
-    def are_there_other_active_tables(self):
-
-        lineEdit_selection_id = self.lineEdit_selection_id.text()
-        stop, self.typed_ids = self.mesh.check_selected_ids(lineEdit_selection_id, selection="surfaces")
-        if stop:
-            self.lineEdit_selection_id.setFocus()
-            return
-
-        for (property, surface_id), data in self.properties.surface_properties.items():
-            if isinstance(data, dict):
-                if surface_id in self.typed_ids:
-                    if property == "surface_velocity":
-                        continue
-                    else:
-                        if "table_name" in data.keys():
-                            return True
-
-                else:
-                    if "table_name" in data.keys():
-                        return True
+        self.properties.add_imported_tables("acoustic", table_name, data)
 
         return False
+
+    def update_analysis_setup_in_file(self, f_min, f_max, f_step):
+
+        analysis_setup = app().main_window.file.read_analysis_setup_from_file()
+        if analysis_setup is None:
+            analysis_setup = dict()
+
+        analysis_setup["f_min"] = f_min
+        analysis_setup["f_max"] = f_max
+        analysis_setup["f_step"] = f_step
+
+        app().main_window.file.write_analysis_setup_in_file(analysis_setup)
+
+    # def change_project_frequency_setup(self):
+
+    #     frequencies = self.imported_values[:, 0]
+
+    #     if isinstance(frequencies, np.ndarray):
+    #         f_min = frequencies[0]
+    #         f_max = frequencies[-1]
+    #         f_step = frequencies[1] - frequencies[0]
+    #         actual_frequencies = frequencies
+    #         frequencies = list(frequencies)
+
+    #     analysis_data = self.main_window.project.analysis_data
+    #     if analysis_data is None:
+    #         self.project.set_frequencies(actual_frequencies, f_min, f_max, f_step, True)
+    #         return
+
+    #     else:
+
+    #         imported_table = False
+    #         model_frequencies = list()
+    #         if "frequencies" in analysis_data.keys():
+    #             if isinstance(analysis_data["frequencies"], np.ndarray):
+    #                 model_frequencies = list(analysis_data["frequencies"])
+            
+    #             if "imported_table" in analysis_data.keys():
+    #                 imported_table = analysis_data["imported_table"]
+
+    #     if model_frequencies != frequencies:
+    #         if imported_table:
+
+    #             if self.are_there_other_active_tables():
+
+    #                 self.hide()
+    #                 table_path = self.lineEdit_table_path.text()
+    #                 table_name = os.path.basename(table_path)
+
+    #                 title = "Project frequency setup cannot be modified"
+    #                 message = f"The following imported table of values has a frequency setup "
+    #                 message += "different from the others already imported ones. The current "
+    #                 message += "project frequency setup is not going to be modified."
+    #                 message += f"\n\nTable name: {table_name}"
+    #                 PrintMessageInput([window_title_2, title, message])
+    #                 return True
+            
+    #         self.project.set_frequencies(actual_frequencies, f_min, f_max, f_step, True)
+
+    # def are_there_other_active_tables(self):
+
+    #     lineEdit_selection_id = self.lineEdit_selection_id.text()
+    #     stop, self.typed_ids = self.mesh.check_selected_ids(lineEdit_selection_id, selection="surfaces")
+    #     if stop:
+    #         self.lineEdit_selection_id.setFocus()
+    #         return
+
+    #     for (property, surface_id), data in self.properties.surface_properties.items():
+    #         if isinstance(data, dict):
+    #             if surface_id in self.typed_ids:
+    #                 if property == "surface_velocity":
+    #                     continue
+    #                 else:
+    #                     if "table_names" in data.keys():
+    #                         return True
+
+    #             else:
+    #                 if "table_names" in data.keys():
+    #                     return True
+
+    #     return False
 
     def lineEdit_reset(self, lineEdit : QLineEdit):
         lineEdit.setText("")
@@ -388,40 +406,39 @@ class SurfaceVelocityInput(QDialog):
 
             if isinstance(self.imported_values, np.ndarray):
                 if self.imported_values.shape[1] >= 3:
-                    if self.change_project_frequency_setup():
+                    table_name = f"surface_velocity_surface_{_id}"
+                    if self.save_table_values(table_name, self.imported_values):
+                    # if self.change_project_frequency_setup():
                         self.lineEdit_table_path.setFocus()
                         self.imported_values = None
                         return
-                    
+
             else:
                 return
 
             if self.imported_values is None:
                 return
 
-            real_values = list(self.imported_values[:, 1])
-            imag_values = list(self.imported_values[:, 2])
+            complex_values = self.imported_values[:, 1] + 1j*self.imported_values[:, 2]
 
-            nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
-            key_avg = self.checkBox_averaged_constant_values.isChecked()
             table_path = self.lineEdit_table_path.text()
+            key_avg = self.checkBox_averaged_constant_values.isChecked()
+            nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
 
             data = {
-                    "real_values": real_values,
-                    "imag_values": imag_values,
-                    "nodal_attribution": nodal_attribution,
+                    "table_names": [table_name],
+                    "table_paths" : [table_path],
+                    "values" : [complex_values],                   
                     "averaged": key_avg,
-                    "table_name": os.path.basename(table_path),
+                    "nodal_attribution": nodal_attribution,
                     }
-            
+
             for _id in self.typed_ids:
                 self.project.set_surface_velocity(data, _id)
 
-            self.main_window.viewer_tabs.update_info_text()
-            app().main_window.file.write_model_properties_in_file()
+            self.actions_to_finalize()
 
             print(f"[Set surface Velocity] - defined at surface(s) {self.typed_ids}")
-            self.close()
 
         else:
             title = "Additional inputs required"
@@ -436,8 +453,8 @@ class SurfaceVelocityInput(QDialog):
             property, surface_id = key
             if property == "velocity_surface":
                 if surface_id in list_ids:
-                    if "table_name" in data.keys():
-                        list_table_names.append(data["table_name"])
+                    if "table_names" in data.keys():
+                        list_table_names.append(data["table_names"])
         return list_table_names
 
     def text_label(self, value):
@@ -447,7 +464,7 @@ class SurfaceVelocityInput(QDialog):
             value_label = "Table"
         return "{}".format(value_label)
 
-    def remove_bc_from_selection(self):
+    def remove_callback(self):
 
         if self.lineEdit_selection_id.text() != "":
 
@@ -463,10 +480,9 @@ class SurfaceVelocityInput(QDialog):
                     self.lineEdit_selection_id.setText("")
                     break
 
-            app().main_window.file.write_model_properties_in_file()
-            self.check_model_frequency_controls()
+            self.actions_to_finalize()
 
-    def check_reset(self):
+    def reset_callback(self):
 
         surface_ids = list()
         for key, data in self.properties.surface_properties.items():
@@ -490,15 +506,15 @@ class SurfaceVelocityInput(QDialog):
             if read._continue:
 
                 self.properties._reset_property("surface_velocity")
-                app().main_window.file.write_model_properties_in_file()
-                self.check_model_frequency_controls()
 
-                # title = "Surface velocity resetting process complete"
-                # message = "All surface velocity applied to the acoustic "
-                # message += "model have been removed from the model."
-                # PrintMessageInput([window_title_2, title, message], auto_close=True)
+                self.actions_to_finalize()
 
-                self.close()
+    def actions_to_finalize(self):
+        self.check_model_frequency_controls()
+        self.main_window.viewer_tabs.update_info_text()
+        app().main_window.file.write_model_properties_in_file()
+        self.pushButton_cancel.setText("Exit")
+        self.load_info()
 
     def change_frequency_setup(self):
         if self.imported_values is not None:
@@ -511,8 +527,8 @@ class SurfaceVelocityInput(QDialog):
 
         for key, data in self.properties.surface_properties.items():
             property, _ = key
-            if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "mass_flow_rate"]:
-                if "table_name" in data.keys():
+            if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
+                if "table_names" in data.keys():
                     return
 
         if isinstance(self.project.analysis_data, dict):
@@ -544,19 +560,44 @@ class SurfaceVelocityInput(QDialog):
                 surface_ids.append(surface_id)
 
         if len(surface_ids) == 0:
-            self.tabWidget_surface_velocity.setTabVisible(2, False)
+            self.tabWidget_main.setTabVisible(2, False)
         else:
-            self.tabWidget_surface_velocity.setTabVisible(2, True)
+            self.tabWidget_main.setTabVisible(2, True)
+
+    def on_click_item(self, item):
+        if item.text(0) != "":
+            surface_id = int(item.text(0))
+            self.lineEdit_selection_id.setText(item.text(0))
+            app().main_window.set_geometry_selection(surfaces=[surface_id])
+
+    def on_doubleclick_item(self, item):
+        self.on_click_item(item)
+
+    def load_info(self):
+        self.treeWidget_surface_velocity.clear()
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "surface_velocity":
+                real_values = np.array(data["real_values"])
+                imag_values = np.array(data["imag_values"])
+                complex_values = real_values + 1j * imag_values
+                if len(complex_values) == 1:
+                    str_value = str(self.text_label(complex_values))
+                else:
+                    str_value = "Table of values"
+                new = QTreeWidgetItem([str(surface_id), str_value])
+                new.setTextAlignment(0, Qt.AlignCenter)
+                new.setTextAlignment(1, Qt.AlignCenter)
+                self.treeWidget_surface_velocity.addTopLevelItem(new)
+
+        self.update_tabs_visibility()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            if self.tabWidget_surface_velocity.currentIndex() == 0:
-                self.check_constant_values()
-            if self.tabWidget_surface_velocity.currentIndex() == 1:
-                self.check_table_values()
+            self.attribute_callback()
         elif event.key() == Qt.Key_Delete:
-            if self.tabWidget_surface_velocity.currentIndex() == 2:
-                self.remove_bc_from_selection()
+            if self.tabWidget_main.currentIndex() == 2:
+                self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
         else:

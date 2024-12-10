@@ -58,23 +58,23 @@ class LoadProject:
             color =  get_color_rgb(section['color'])
             identifier =  int(section['identifier'])
 
-            if 'isentropic exponent' in keys:
-                isentropic_exponent = float(section['isentropic exponent'])
+            if 'isentropic_exponent' in keys:
+                isentropic_exponent = float(section['isentropic_exponent'])
             else:
                 isentropic_exponent = ""
 
-            if 'thermal conductivity' in keys:
-                thermal_conductivity = float(section['thermal conductivity'])
+            if 'thermal_conductivity' in keys:
+                thermal_conductivity = float(section['thermal_conductivity'])
             else:
                 thermal_conductivity = ""
 
-            if 'specific heat Cp' in keys:
-                specific_heat_Cp = float(section['specific heat Cp'])
+            if 'specific_heat_Cp' in keys:
+                specific_heat_Cp = float(section['specific_heat_Cp'])
             else:
                 specific_heat_Cp = ""
 
-            if 'dynamic viscosity' in keys:
-                dynamic_viscosity = float(section['dynamic viscosity'])
+            if 'dynamic_viscosity' in keys:
+                dynamic_viscosity = float(section['dynamic_viscosity'])
             else:
                 dynamic_viscosity = ""
             
@@ -88,22 +88,22 @@ class LoadProject:
             else:
                 pressure = None
 
-            # if 'key mixture' in keys:
-            #     key_mixture = section['key mixture']
+            # if 'key_mixture' in keys:
+            #     key_mixture = section['key_mixture']
             # else:
             #     key_mixture = None
 
-            # if 'molar fractions' in keys:
-            #     str_molar_fractions = section['molar fractions']
+            # if 'molar_fractions' in keys:
+            #     str_molar_fractions = section['molar_fractions']
             #     molar_fractions = get_list_of_values_from_string(str_molar_fractions, int_values=False)
             # else:
             #     molar_fractions = None
 
-            if 'molar mass' in keys:
-                if section['molar mass'] == "None":
+            if 'molar_mass' in keys:
+                if section['molar_mass'] == "None":
                     molar_mass = None
                 else:
-                    molar_mass = float(section['molar mass'])
+                    molar_mass = float(section['molar_mass'])
             else:
                 molar_mass = None
 
@@ -119,7 +119,7 @@ class LoadProject:
                             temperature = temperature,
                             pressure = pressure,
                             molar_mass = molar_mass  )
-            
+
             self.library_fluids[identifier] = fluid
 
     def load_material_library(self):
@@ -137,10 +137,10 @@ class LoadProject:
 
             name = section['name']
             identifier = int(section['identifier'])
-            density = float(section['density'])
+            density = float(section['material_density'])
             poisson_ratio = float(section['poisson'])
-            young_modulus = float(section['young modulus']) * 1e9
-            thermal_expansion_coefficient = float(section['thermal expansion coefficient'])
+            young_modulus = float(section['young_modulus']) * 1e9
+            thermal_expansion_coefficient = float(section['thermal_expansion_coefficient'])
 
             material = Material(
                                 name = name,

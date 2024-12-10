@@ -10,7 +10,7 @@ from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.print_message_input import PrintMessageInput
 
-window_title_1 = "Error"
+window_title = "Error"
 
 
 class AnalysisSetupInput(QDialog):
@@ -48,6 +48,8 @@ class AnalysisSetupInput(QDialog):
 
         uic.loadUi(ui_path, self)
 
+        self.model = app().main_window.project.model
+
         self._config_window()
         self._reset_variables()
         self._load_analysis_data()
@@ -59,7 +61,9 @@ class AnalysisSetupInput(QDialog):
 
         self.update_frequency_setup_inputs()
         self.update_damping_inputs()
-        self.exec_()
+
+        while self.keep_window_open:
+            self.exec()
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -68,6 +72,7 @@ class AnalysisSetupInput(QDialog):
         self.setWindowTitle("Analysis setup")
 
     def _reset_variables(self):
+        self.keep_window_open = True
         self.complete = False
         self.solve_analysis = False
         self.frequencies = []
@@ -102,7 +107,7 @@ class AnalysisSetupInput(QDialog):
         self.currentTab = self.tabWidget.currentIndex()
 
     def _create_connections(self):
-        self.pushButton_confirm_close.clicked.connect(self.check_exit)
+        self.pushButton_confirm_close.clicked.connect(self.enter_setup_callback)
         self.pushButton_confirm_run_analysis.clicked.connect(self.check_run)
         self.tabWidget.currentChanged.connect(self.tabEvent)
 
@@ -161,103 +166,114 @@ class AnalysisSetupInput(QDialog):
                 self.lineEdit_bh.setText(str(self.global_damping[3]))
 
     def update_frequency_setup_inputs(self):
-        if self.f_step != 0:
-            self.lineEdit_fmin.setText(str(self.f_min))
-            self.lineEdit_fmax.setText(str(self.f_max))
-            self.lineEdit_fstep.setText(str(self.f_step))
 
-    def check_exit(self):
-        input_fmin = input_fmax = input_fstep = 0
+        if (self.model.f_min, self.model.f_max, self.model.f_step).count(None):
+            f_min = 0
+            f_max = 200
+            f_step = 1
+
+        else:
+            f_min = self.model.f_min
+            f_max = self.model.f_max
+            f_step = self.model.f_step
+
+        if f_step != 0:
+
+            self.lineEdit_fmin.setText(str(round(f_min, 6)))
+            self.lineEdit_fmax.setText(str(round(f_max, 6)))
+            self.lineEdit_fstep.setText(str(round(f_step, 6)))
+
+            if app().main_window.project.model.properties.check_if_there_are_tables_at_the_model():
+                self.lineEdit_fmin.setDisabled(True)
+                self.lineEdit_fmax.setDisabled(True)
+                self.lineEdit_fstep.setDisabled(True)            
+
+    def enter_setup_callback(self):
+
+        analysis_setup = app().main_window.file.read_analysis_setup_from_file()
+        if analysis_setup is None:
+            analysis_setup = dict()
+
+        analysis_setup["analysis_id"] = self.analysis_id
+
+        f_min = f_max = f_step = 0.
+
         if self.analysis_id not in [2, 4]:
-            if self.analysis_id == 1:
-                self.modes = self.check_inputs(self.lineEdit_modes, "'number of modes'")
+
+            if self.analysis_id in [1, 6]:
+                number_of_modes = self.check_inputs(self.lineEdit_modes, "'number of modes'")
                 if self.stop:
                     self.lineEdit_modes.setFocus()
                     return True
 
-            input_fmin = self.check_inputs(self.lineEdit_fmin, "'minimum frequency'", zero_included=False, _float=True)
+            f_min = self.check_inputs(self.lineEdit_fmin, "'minimum frequency'", zero_included=True, _float=True)
             if self.stop:
                 self.lineEdit_fmin.setFocus()
                 return True
 
-            input_fmax = self.check_inputs(self.lineEdit_fmax, "'maximum frequency'", _float=True)
+            f_max = self.check_inputs(self.lineEdit_fmax, "'maximum frequency'", _float=True)
             if self.stop:
                 self.lineEdit_fmax.setFocus()
                 return True
 
-            input_fstep = self.check_inputs(self.lineEdit_fstep, "'frequency resolution (df)'", _float=True)
+            f_step = self.check_inputs(self.lineEdit_fstep, "'frequency resolution (df)'", _float=True)
             if self.stop:
                 self.lineEdit_fstep.setFocus()
                 return True
 
-            if input_fmax < input_fmin + input_fstep:
+            if f_max < f_min + f_step:
+                self.hide()
                 title = "Invalid frequency setup"
                 message = "The maximum frequency (fmax) must be greater than \n"
                 message += "the sum between minimum frequency (fmin) and \n"
                 message += "frequency resolution (df)."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([window_title, title, message])
                 return True
+            
+            analysis_setup["f_min"] = f_min
+            analysis_setup["f_max"] = f_max
+            analysis_setup["f_step"] = f_step
 
         alpha_v = beta_v = alpha_h = beta_h = 0.0
+        
+        if self.analysis_id in [0, 1, 5, 6]:    
 
-        if self.analysis_id in [0, 1, 5, 6]:
-            alpha_v = self.check_inputs(
-                self.lineEdit_av,
-                "'proportional viscous damping (alpha_v)'",
-                zero_included=True,
-                _float=True,
-            )
+            alpha_v = self.check_inputs(self.lineEdit_av, "'proportional viscous damping (alpha_v)'", zero_included=True, _float=True)
             if self.stop:
                 self.lineEdit_av.setFocus()
                 return True
 
-            beta_v = self.check_inputs(
-                self.lineEdit_bv,
-                "'proportional viscous damping (beta_v)'",
-                zero_included=True,
-                _float=True,
-            )
+            beta_v = self.check_inputs(self.lineEdit_bv, "'proportional viscous damping (beta_v)'", zero_included=True,  _float=True)
             if self.stop:
                 self.lineEdit_bv.setFocus()
                 return True
 
-            alpha_h = self.check_inputs(
-                self.lineEdit_ah,
-                "'proportional hysteretic damping (alpha_h)'",
-                zero_included=True,
-                _float=True,
-            )
+            alpha_h = self.check_inputs(self.lineEdit_ah, "'proportional hysteretic damping (alpha_h)'", zero_included=True, _float=True)
             if self.stop:
                 self.lineEdit_ah.setFocus()
                 return True
 
-            beta_h = self.check_inputs(
-                self.lineEdit_bh,
-                "'proportional hysteretic damping (beta_h)'",
-                zero_included=True,
-                _float=True,
-            )
+            beta_h = self.check_inputs(self.lineEdit_bh, "'proportional hysteretic damping (beta_h)'", zero_included=True,  _float=True)
             if self.stop:
                 self.lineEdit_bh.setFocus()
                 return True
 
-        self.global_damping = [alpha_v, beta_v, alpha_h, beta_h]
+        global_damping = [alpha_v, beta_v, alpha_h, beta_h]
+        analysis_setup["global_damping"] = global_damping
+        # self.model.set_global_damping(analysis_setup)
 
-        # TODO: in the future it will be necessary check all existing tables to avoid frequencies "misalignments"
-        self.frequencies = np.arange(input_fmin, input_fmax + input_fstep, input_fstep)
+        if app().main_window.project.model.properties.check_if_there_are_tables_at_the_model():
+            self.frequencies = self.model.frequencies
+        else:
+            self.model.set_frequency_setup(analysis_setup)
 
-        self.analysis_data["f_min"] = input_fmin
-        self.analysis_data["f_max"] = input_fmax
-        self.analysis_data["f_step"] = input_fstep
-        self.analysis_data["frequencies"] = self.frequencies
-        # self.analysis_data["global_damping"] = self.global_damping
+        if self.analysis_id in [1, 6]:
+            analysis_setup["modes"] = number_of_modes
 
-        # if not self.analysis_id in [3, 4]:
-        #     self.project.set_modes_sigma(self.modes)
+        app().main_window.file.write_analysis_setup_in_file(analysis_setup)
 
         self.project.set_analysis_data(self.analysis_data)
         self.project.create_solver()
-        app().main_window.file.write_analysis_setup_in_file(self.analysis_data)
 
         self.complete = True
         self.close()
@@ -296,12 +312,17 @@ class AnalysisSetupInput(QDialog):
                 message = f"Insert some value at the {label} input field."
 
         if message != "":
-            PrintMessageInput([window_title_1, title, message])
+            self.hide()
+            PrintMessageInput([window_title, title, message])
             self.stop = True
             return None
         return out
 
     def check_run(self):
-        if self.check_exit():
+        if self.enter_setup_callback():
             return
         self.solve_analysis = True
+
+    def closeEvent(self, a0):
+        self.keep_window_open = False
+        return super().closeEvent(a0)

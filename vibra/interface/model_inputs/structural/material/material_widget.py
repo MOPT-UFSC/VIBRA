@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QDialog, QFrame, QLabel, QLineEdit, QPushButton, QRadioButton, QTableWidget, QTableWidgetItem, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
-from PyQt5.QtGui import QCloseEvent, QIcon, QFont, QBrush, QColor
+from PyQt5.QtWidgets import QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QWidget
+from PyQt5.QtGui import QCloseEvent, QColor
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
 
@@ -68,10 +68,10 @@ class MaterialWidget(QWidget):
         self.material_data_keys = [
                                     "name",
                                     "identifier",
-                                    "density",
-                                    "young modulus",
+                                    "material_density",
+                                    "young_modulus",
                                     "poisson",
-                                    "thermal expansion coefficient",
+                                    "thermal_expansion_coefficient",
                                     "color"
                                     ]
 
@@ -140,10 +140,10 @@ class MaterialWidget(QWidget):
             material = Material(
                                 name = config[tag]['name'],
                                 identifier = int(config[tag]['identifier']), 
-                                density = float(config[tag]['density']),
+                                density = float(config[tag]['material_density']),
                                 poisson_ratio = float(config[tag]['poisson']),
-                                young_modulus = float(config[tag]['young modulus']) * 1e9,
-                                thermal_expansion_coefficient = float(config[tag]['thermal expansion coefficient']), 
+                                young_modulus = float(config[tag]['young_modulus']) * 1e9,
+                                thermal_expansion_coefficient = float(config[tag]['thermal_expansion_coefficient']), 
                                 color = getColorRGB(config[tag]['color'])
                                 )
 
@@ -335,21 +335,21 @@ class MaterialWidget(QWidget):
 
         if item is None:
             return True
-        
+
         row = item.row()
         if row == COLOR_ROW:
             return
-    
+
         prop_labels = {
-                        2 : "density", 
-                        3 : "young modulus",
+                        2 : "material_density", 
+                        3 : "young_modulus",
                         4 : "poisson",
-                        5 : "thermal expansion coefficient"
+                        5 : "thermal_expansion_coefficient"
                     }
-        
+
         if row not in prop_labels.keys():
             return True
-        
+
         if item.text() == "":
             return True
 
@@ -374,7 +374,7 @@ class MaterialWidget(QWidget):
             PrintMessageInput([window_title_1, title, message])
             item.setText("")
             return True
-        
+
         return False
 
     def cell_clicked_callback(self, row, col):

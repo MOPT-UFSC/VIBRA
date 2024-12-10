@@ -30,16 +30,18 @@ class ReciprocatingCompressorInputs(QDialog):
         uic.loadUi(ui_path, self)
 
         app().main_window.set_input_widget(self)
-        self.properties = app().main_window.project.model.properties
+
         self.model = app().main_window.project.model
+        self.properties = app().main_window.project.model.properties
 
         self._config_window()
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
         self._config_widget()
-        self.selection_callback()
+
         self.load_compressor_excitation_info()
+        self.selection_callback()
 
         while self.keep_window_open:
             self.exec()
@@ -359,7 +361,7 @@ class ReciprocatingCompressorInputs(QDialog):
 
     def get_aquisition_parameters(self, parameters: dict):
 
-        frequencies = app().project.model.frequencies
+        frequencies = app().main_window.project.model.frequencies
         rotational_speed = parameters["rotational_speed"]
 
         f_min = frequencies[0]
@@ -497,25 +499,22 @@ class ReciprocatingCompressorInputs(QDialog):
             lineEdit.selectAll()
             return True, None
 
-        return stop, surface_id
+        volumes_from_surface = self.model.mesh.volume_from_surface[surface_id]
 
-        # # TODO: update this
-        # neigh_elements = self.preprocessor.structural_elements_connected_to_node[surface_id]
+        if len(volumes_from_surface) == 1:
+            return stop, surface_id
 
-        # if len(neigh_elements) == 1:
-        #     return stop, surface_id
+        else:
+            self.hide()
+            title = "Invalid surface selected"
+            message = "The selected surface does not correspond to the piping endings. "
+            message += "It is necessary to change the selection to proceed with the "
+            message += "compressor excitation attribution."
+            PrintMessageInput([window_title_1, title, message])
+            lineEdit.setText("")
+            return True, None
 
-        # else:
-        #     self.hide()
-        #     title = "Invalid node selected"
-        #     message = "The selected node does not correspond to the piping endings. "
-        #     message += "It is necessary to change the selection to proceed with the "
-        #     message += "compressor excitation attribution."
-        #     PrintMessageInput([window_title_1, title, message])
-        #     lineEdit.setText("")
-        #     return True, None
-
-    def check_input_nodes(self):
+    def check_input_surfaces(self):
 
         stop, surface_id = self.check_surface_id(self.lineEdit_selected_surface_id)
 
@@ -739,7 +738,7 @@ class ReciprocatingCompressorInputs(QDialog):
         f_max = frequencies[-1]
         f_step = frequencies[1] - frequencies[0] 
 
-        if app().project.model.change_analysis_frequency_setup(list(frequencies)):
+        if app().main_window.project.model.change_analysis_frequency_setup(list(frequencies)):
 
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
@@ -806,7 +805,7 @@ class ReciprocatingCompressorInputs(QDialog):
 
     def attribute_callback(self):
 
-        if self.check_input_nodes():
+        if self.check_input_surfaces():
             return
 
         if self.check_all_parameters():
@@ -824,7 +823,7 @@ class ReciprocatingCompressorInputs(QDialog):
             connection_type = "discharge"
             surface_id = self.discharge_surface_id
 
-        volume_id = app().main_window.project.model.mesh.volume_from_surface[surface_id]
+        volume_id = self.model.mesh.volume_from_surface[surface_id]
 
         compressor_info = { 
                             "temperature_at_suction" : self.T_suction,
@@ -848,6 +847,7 @@ class ReciprocatingCompressorInputs(QDialog):
         else:
             if read.fluid_widget.refprop is not None:
                 if read.fluid_widget.refprop.complete:
+
                     self.parameters["molar_mass"] = round(read.fluid_widget.fluid_data_refprop["molar_mass"], 6)
                     self.parameters['isentropic_exponent'] = round(read.fluid_widget.fluid_data_refprop["isentropic_exponent"], 6)
                     self.parameters['fluid_properties_source'] = "refprop"
@@ -857,33 +857,36 @@ class ReciprocatingCompressorInputs(QDialog):
             self.parameters['points_per_revolution'] = self.compressor.number_points
             self.compressor.process_state_properties_in_SI_units(self.parameters)
 
-            freq, in_flow_rate = self.compressor.process_FFT_of_volumetric_flow_rate(self.N_rev, flow_label)
+            self.model.mesh._process_face_elements_connected_to_nodes(surface_id)
+            surface_area = self.model.mesh.surface_area_from_element_integration[surface_id]
+
+            freq, flow_rate = self.compressor.process_FFT_of_volumetric_flow_rate(self.N_rev, flow_label)
+            surface_velocity = flow_rate / surface_area
 
             table_name = f"compressor_excitation_{connection_type}_surface_{surface_id}"
 
-            surface = app().project.model.preprocessor.nodes[surface_id]
-            coords = list(np.round(node.coordinates, 5))
-
             data = {
-                    "coords" : coords,
                     "connection_type" : connection_type,
                     "table_names" : [table_name],
-                    "parameters" : self.parameters
+                    "parameters" : self.parameters,
+                    "values" : [surface_velocity],
+                    "nodal_attribution" : False,
+                    "averaged" : False
                     }
 
             self.remove_conflicting_excitations(surface_id)
 
-            if self.save_table_values(table_name, freq, in_flow_rate):
+            if self.save_table_values(table_name, freq, surface_velocity):
                 return
 
             self.properties._set_property("reciprocating_compressor_excitation", data, surface=surface_id)
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
-        app().main_window.file.write_nodal_properties_in_file()
+        app().main_window.file.write_model_properties_in_file()
         app().main_window.file.write_imported_table_data_in_file()
-        app().main_window.set_selection()
-        app().main_window.update_plots()
+        app().main_window.set_geometry_selection()
+        # app().main_window.update_plots()
         self.load_compressor_excitation_info()
         self.pushButton_cancel.setText("Exit")
 
@@ -893,30 +896,30 @@ class ReciprocatingCompressorInputs(QDialog):
         if table_names:
             app().main_window.file.write_imported_table_data_in_file()
 
-    def remove_conflicting_excitations(self, node_id: int):
-        for label in ["acoustic_pressure", "volume_velocity", "reciprocating_compressor_excitation", "reciprocating_pump_excitation"]:
-            table_names = self.properties.get_nodal_related_table_names(label, node_id)
-            self.properties._remove_nodal_property(label, node_id)
+    def remove_conflicting_excitations(self, surface_id: int):
+        for label in ["acoustic_pressure", "surface_velocity", "mass_flow_rate", "reciprocating_compressor_excitation", "reciprocating_pump_excitation"]:
+            table_names = self.properties.get_surface_related_table_names(label, surface_id)
+            self.properties._remove_surface_property(label, surface_id)
             self.process_table_file_removal(table_names)
 
-    def remove_table_files_from_nodes(self, node_ids : list):
-        table_names = self.properties.get_nodal_related_table_names("reciprocating_compressor_excitation", node_ids)
+    def remove_table_files_from_surfaces(self, surface_id : list):
+        table_names = self.properties.get_surface_related_table_names("reciprocating_compressor_excitation", surface_id)
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
 
         if self.lineEdit_selected_surface_id.text() == "":   
-            title = "Empty node selection"
-            message = "You should to select a node from the list "
+            title = "Empty surface selection"
+            message = "You should to select a surface from the list "
             message += "to proceed with the removal."
             PrintMessageInput([window_title_2, title, message])
             return
             
-        node_id = int(self.lineEdit_selected_surface_id.text())
+        surface_id = int(self.lineEdit_selected_surface_id.text())
 
-        self.remove_table_files_from_nodes(node_id)
+        self.remove_table_files_from_surfaces(surface_id)
 
-        self.properties._remove_nodal_property("reciprocating_compressor_excitation", node_id)
+        self.properties._remove_surface_property("reciprocating_compressor_excitation", surface_id)
         self.actions_to_finalize()
 
     def reset_callback(self):
@@ -934,31 +937,31 @@ class ReciprocatingCompressorInputs(QDialog):
 
         if read._continue:
 
-            node_ids = list()
+            surface_ids = list()
 
-            for (property, *args) in self.properties.nodal_properties.keys():
+            for (property, *args) in self.properties.surface_properties.keys():
                 if property == "reciprocating_compressor_excitation":
 
-                    node_id = args[0]
-                    node_ids.append(node_id)
+                    surface_id = args[0]
+                    surface_ids.append(surface_id)
 
-            for node_id in node_ids:
-                self.remove_table_files_from_nodes(node_id)
+            for surface_id in surface_ids:
+                self.remove_table_files_from_surfaces(surface_id)
 
-            self.properties._reset_nodal_property("reciprocating_compressor_excitation")
+            self.properties._reset_surface_property("reciprocating_compressor_excitation")
             self.actions_to_finalize()
 
     def load_compressor_excitation_info(self):
 
         self.treeWidget_compressor_excitation.clear()
 
-        for (property, *args), data in self.properties.nodal_properties.items():
+        for (property, *args), data in self.properties.surface_properties.items():
             if property == "reciprocating_compressor_excitation":
                 
-                node_id = args[0]
+                surface_id = args[0]
                 connection_type = data["connection_type"]
 
-                new = QTreeWidgetItem([str(node_id), connection_type])
+                new = QTreeWidgetItem([str(surface_id), connection_type])
                 for i in range(2):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
@@ -976,7 +979,7 @@ class ReciprocatingCompressorInputs(QDialog):
         self.lineEdit_connection_type.setText("")
         self.pushButton_remove.setDisabled(True)
         self.tabWidget_compressor.setTabVisible(3, False)
-        for (property, *_) in self.properties.nodal_properties.keys():
+        for (property, *_) in self.properties.surface_properties.keys():
             if property == "reciprocating_compressor_excitation":
                 self.tabWidget_compressor.setCurrentIndex(0)
                 self.tabWidget_compressor.setTabVisible(3, True)

@@ -1,4 +1,5 @@
 import json
+import numpy as np
 import os
 from dataclasses import dataclass
 
@@ -55,10 +56,14 @@ class ModelProperties:
     """
 
     def __init__(self, model=None):
-        # self.file = ProjectFile()
+
         self._reset_variables()
 
     def _reset_variables(self):
+
+        self.acoustic_imported_tables = dict()
+        self.structural_imported_tables = dict()
+
         self.global_properties = dict()
         self.group_properties = dict()
         self.volume_properties = dict()
@@ -169,26 +174,66 @@ class ModelProperties:
     def set_specific_impedance(self, data, surface):
         self._set_property("specific_impedance", data, surface=surface)
 
-    def _set_property(self, property: str, value, node=None, element=None, line=None, surface=None, volume=None, group=None):
+    def _set_property(self, property: str, data: dict | Fluid | Material, node=None, element=None, line=None, surface=None, volume=None, group=None):
         """
-        Sets a value to a property by node, element, line, surface or volume
+        Sets a data to a property by node, element, line, surface or volume
         if any of these exists. Otherwise sets the property as global.
 
         """
+
+        if isinstance(data, dict):
+
+            tables_values = list()
+            group_label = self.get_data_group_label(property)
+
+            if "real_values" in data.keys() and "imag_values" in data.keys():
+                for i, a in enumerate(data["real_values"]):
+                    if a is None:
+                        tables_values.append(None)
+                    else:
+                        b = data["imag_values"][i]
+                        tables_values.append(a + 1j*b)
+
+            if "table_names" in data.keys():
+
+                if group_label == "acoustic":
+                    imported_tables = self.acoustic_imported_tables
+                else:
+                    imported_tables = self.structural_imported_tables
+
+                for i, table_name in enumerate(data["table_names"]):
+
+                    if table_name is None:
+                        tables_values.append(None)
+                        continue
+
+                    if table_name in imported_tables.keys():
+                        data_array = imported_tables[table_name]
+                        values = data_array[:, 1] + 1j*data_array[:, 2]
+                        tables_values.append(values)
+
+            data["values"] = tables_values
+
         if node is not None:
-            self.nodal_properties[property, node] = node
+            self.nodal_properties[property, node] = data
+
         elif volume is not None:
-            self.volume_properties[property, volume] = value
+            self.volume_properties[property, volume] = data
+
         elif surface is not None:
-            self.surface_properties[property, surface] = value
+            self.surface_properties[property, surface] = data
+
         elif line is not None:
-            self.line_properties[property, line] = value
+            self.line_properties[property, line] = data
+
         elif element is not None:
-            self.element_properties[property, element] = value
+            self.element_properties[property, element] = data
+
         elif group is not None:
-            self.group_properties[property, group] = value
+            self.group_properties[property, group] = data
+
         else:
-            self.global_properties[property, "global"] = value
+            self.global_properties[property, "global"] = data
 
     def _get_property(self, property: str, node=None, element=None, line=None, surface=None, volume=None):
         """
@@ -233,7 +278,7 @@ class ModelProperties:
         for data_dict in data_dicts:
             for data in data_dict.values():
                 if isinstance(data, dict):
-                    if "table_name" in data.keys():
+                    if "table_names" in data.keys():
                         return True
         else:
             return False
@@ -300,6 +345,66 @@ class ModelProperties:
         key = (property, group_id)
         if key in self.group_properties.keys():
             self.group_properties.pop(key)
+
+    def add_imported_tables(self, group_label: str, table_name: str, data: np.ndarray | list | tuple):
+        """
+        """
+        if group_label == "acoustic":
+            self.acoustic_imported_tables[table_name] = data
+        elif group_label == "structural":
+            self.structural_imported_tables[table_name] = data
+
+    def remove_imported_tables(self, group_label: str, table_name: str):
+        """
+        """
+        if group_label == "acoustic":
+            if table_name in self.acoustic_imported_tables.keys():
+                self.acoustic_imported_tables.pop(table_name)
+
+        elif group_label == "structural":
+            if table_name in self.structural_imported_tables.keys():
+                self.structural_imported_tables.pop(table_name)
+
+    def get_data_group_label(self, property : str):
+
+        acoustic_labels = [ 
+                            "acoustic_pressure",
+                            "volume_velocity",
+                            "mass_flow_rate",
+                            "specific_impedance",
+                            "radiation_impedance",
+                            "reciprocating_compressor_excitation",
+                            "reciprocating_pump_excitation",
+                            "acoustic_transfer_element"
+                           ]
+
+        if property in acoustic_labels:
+            return "acoustic"
+        else:
+            return "structural"
+
+    def get_surface_related_table_names(self, property : str, surface_ids : int | list) -> list:
+        """
+        """
+        table_names = list()
+        if isinstance(surface_ids, int):
+            test_key = (property, surface_ids)
+
+        elif isinstance(surface_ids, list) and len(surface_ids) == 2:
+            test_key = (property, surface_ids[0], surface_ids[1])
+
+        else:
+            return table_names
+
+        if test_key in self.nodal_properties.keys():
+            data = self.nodal_properties[test_key]
+
+            if "table_names" in data.keys():
+                for table_name in data["table_names"]:
+                    if table_name is not None:
+                        table_names.append(table_name)
+
+        return table_names
 
 if __name__ == "__main__":
     p = ModelProperties()

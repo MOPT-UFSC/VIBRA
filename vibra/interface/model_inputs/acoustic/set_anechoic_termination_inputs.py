@@ -54,7 +54,7 @@ class SetAnechoicTerminationInputs(QDialog):
         self.anechoic_termination = None
 
     def _define_qt_variables(self):
-        
+
         # QComboBox
         self.comboBox_volume_id : QComboBox
         self.comboBox_volume_id.setDisabled(True)
@@ -64,13 +64,14 @@ class SetAnechoicTerminationInputs(QDialog):
         self.lineEdit_selection_id.setDisabled(True)
 
         # QPushButton
-        self.pushButton_confirm : QPushButton
-        self.pushButton_remove_bc_confirm : QPushButton
+        self.pushButton_attribute : QPushButton
+        self.pushButton_cancel : QPushButton
+        self.pushButton_remove : QPushButton
         self.pushButton_reset : QPushButton
 
         # QTabWidget
-        self.tabWidget_anechoic_termination : QTabWidget
-        
+        self.tabWidget_main : QTabWidget
+
         # QTreeWidget
         self.treeWidget_anechoic_termination : QTreeWidget
         self.treeWidget_anechoic_termination.setColumnWidth(1, 20)
@@ -78,45 +79,25 @@ class SetAnechoicTerminationInputs(QDialog):
 
     def _create_connections(self):
         #
-        self.pushButton_confirm.clicked.connect(self.confirm_button_pressed)
-        self.pushButton_remove_bc_confirm.clicked.connect(self.remove_bc_from_selection)
-        self.pushButton_reset.clicked.connect(self.check_reset)
+        self.pushButton_attribute.clicked.connect(self.attribute_callback)
+        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_remove.clicked.connect(self.remove_callback)
+        self.pushButton_reset.clicked.connect(self.reset_callback)
         #
-        self.tabWidget_anechoic_termination.currentChanged.connect(self.tabEvent_callback)
+        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
         self.treeWidget_anechoic_termination.itemClicked.connect(self.on_click_item)
         self.treeWidget_anechoic_termination.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
 
     def tabEvent_callback(self):
-        current_tab = self.tabWidget_anechoic_termination.currentIndex()
-        if current_tab == 2:
+        if self.tabWidget_main.currentIndex() == 1:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
+            self.pushButton_attribute.setDisabled(True)
         else:
             self.lineEdit_selection_id.setDisabled(False)
-
-    def on_click_item(self, item):
-        if item.text(0) != "":
-            surface_id = int(item.text(0))
-            self.lineEdit_selection_id.setText(item.text(0))
-            app().main_window.set_geometry_selection(surfaces=[surface_id])
-
-    def on_doubleclick_item(self, item):
-        self.on_click_item(item)
-
-    def load_info(self):
-        self.treeWidget_anechoic_termination.clear()
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
-            if property == "specific_impedance":
-                if "anechoic_termination" in data.keys():
-                    volume_id = data["volume_id"]
-                    new = QTreeWidgetItem([str(surface_id), str(volume_id)])
-                    new.setTextAlignment(0, Qt.AlignCenter)
-                    new.setTextAlignment(1, Qt.AlignCenter)
-                    self.treeWidget_anechoic_termination.addTopLevelItem(new)
-        self.update_tabs_visibility()
+            self.pushButton_attribute.setEnabled(True)
 
     def geometry_selection_callback(self):
 
@@ -153,7 +134,7 @@ class SetAnechoicTerminationInputs(QDialog):
                 self.comboBox_volume_id.clear()
                 self.comboBox_volume_id.addItem("multiple")
 
-    def confirm_button_pressed(self):
+    def attribute_callback(self):
 
         lineEdit_selection_id = self.lineEdit_selection_id.text()
         stop, surface_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
@@ -190,11 +171,9 @@ class SetAnechoicTerminationInputs(QDialog):
 
             self.project.set_specific_impedance(data, face_id)
 
-        self.main_window.viewer_tabs.update_info_text()
-        app().main_window.file.write_model_properties_in_file()
+        self.actions_to_finalize()
 
         print(f"[Set anechoic termination] - defined at surface(s) {surface_ids}")
-        self.close()
 
     def lineEdit_reset(self, lineEdit):
         lineEdit.setText("")
@@ -206,11 +185,11 @@ class SetAnechoicTerminationInputs(QDialog):
             property, surface_id = key
             if property == "specific_impedance":
                 if surface_id in list_ids:
-                    if "table_name" in data.keys():
-                        list_table_names.append(data["table_name"])
+                    if "table_names" in data.keys():
+                        list_table_names.append(data["table_names"])
         return list_table_names
 
-    def remove_bc_from_selection(self):
+    def remove_callback(self):
         if self.lineEdit_selection_id.text() != "":
             surface_properties = self.properties.surface_properties.copy()
             picked_id = int(self.lineEdit_selection_id.text())
@@ -219,12 +198,12 @@ class SetAnechoicTerminationInputs(QDialog):
                 if property == "specific_impedance" and picked_id == surface_id:
                     if "anechoic_termination" in data.keys():
                         self.properties._remove_surface_property("specific_impedance", picked_id)
-                        self.load_info()
-                        self.lineEdit_selection_id.setText("")
+                        self.actions_to_finalize()
                         return
 
-    def check_reset(self):
-        surface_ids = []
+    def reset_callback(self):
+
+        surface_ids = list()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "specific_impedance":
@@ -248,28 +227,68 @@ class SetAnechoicTerminationInputs(QDialog):
                 for face_id in surface_ids:
                     self.properties._remove_surface_property("specific_impedance", face_id)
 
-                app().main_window.file.write_model_properties_in_file()
-                self.close()
+                self.actions_to_finalize()
+
+    def check_model_frequency_controls(self):
+
+        for key, data in self.properties.surface_properties.items():
+            property, _ = key
+            if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
+                if "table_names" in data.keys():
+                    return
+
+        if isinstance(self.project.analysis_data, dict):
+            analysis_data = self.project.analysis_data
+            analysis_data["imported_table"] = False
+            self.project.set_analysis_data(analysis_data)
+            app().main_window.file.write_analysis_setup_in_file(analysis_data)
+
+    def actions_to_finalize(self):
+        self.check_model_frequency_controls()
+        self.main_window.viewer_tabs.update_info_text()
+        app().main_window.file.write_model_properties_in_file()
+        self.pushButton_cancel.setText("Exit")
+        self.load_info()
 
     def update_tabs_visibility(self):
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "specific_impedance":
                 if "anechoic_termination" in data.keys():
-                    self.tabWidget_anechoic_termination.setTabVisible(1, True)
+                    self.tabWidget_main.setTabVisible(1, True)
                     return
 
-        self.tabWidget_anechoic_termination.setTabVisible(1, False)
+        self.tabWidget_main.setTabVisible(1, False)
+
+    def on_click_item(self, item):
+        if item.text(0) != "":
+            surface_id = int(item.text(0))
+            self.lineEdit_selection_id.setText(item.text(0))
+            app().main_window.set_geometry_selection(surfaces=[surface_id])
+
+    def on_doubleclick_item(self, item):
+        self.on_click_item(item)
+
+    def load_info(self):
+        self.treeWidget_anechoic_termination.clear()
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "specific_impedance":
+                if "anechoic_termination" in data.keys():
+                    volume_id = data["volume_id"]
+                    new = QTreeWidgetItem([str(surface_id), str(volume_id)])
+                    new.setTextAlignment(0, Qt.AlignCenter)
+                    new.setTextAlignment(1, Qt.AlignCenter)
+                    self.treeWidget_anechoic_termination.addTopLevelItem(new)
+        self.update_tabs_visibility()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            if self.tabWidget_anechoic_termination.currentIndex() == 0:
-                self.confirm_button_pressed()
-            if self.tabWidget_anechoic_termination.currentIndex() == 1:
-                self.check_table_values()
+            if self.tabWidget_main.currentIndex() == 0:
+                self.attribute_callback()
         elif event.key() == Qt.Key_Delete:
-            if self.tabWidget_anechoic_termination.currentIndex() == 2:
-                self.remove_bc_from_selection()
+            if self.tabWidget_main.currentIndex() == 1:
+                self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
         else:
