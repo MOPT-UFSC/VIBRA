@@ -84,23 +84,28 @@ class RendererToolbar(QToolBar):
         self.show_faces_action = QAction(show_faces_icon, "Face View", self)
         self.show_faces_action.triggered.connect(self.show_faces_callback)
 
-        clip_plane_show_icon = load_icon(ICON_DIR / "section_plane_view.png", color)
+        invert_symbols_visibility_icon = load_icon(ICON_DIR / "visibility/show_symbols.png", color)
+        self.invert_symbols_visibility_action = QAction(invert_symbols_visibility_icon, "Invert Symbols Visibility", self)
+        self.invert_symbols_visibility_action.setCheckable(True)
+        self.invert_symbols_visibility_action.triggered.connect(self.invert_symbols_visibility_callback)
+
+        clip_plane_show_icon = load_icon(ICON_DIR / "visibility/section_plane_view.png", color)
         self.section_plane_show_action = QAction(clip_plane_show_icon, "View Section Plane", self)
         self.section_plane_show_action.setCheckable(True)
         self.section_plane_show_action.triggered.connect(self.section_plane_show_callback)
 
-        clip_plane_config_icon = load_icon(ICON_DIR / "section_plane_config.png", color)
+        clip_plane_config_icon = load_icon(ICON_DIR / "visibility/section_plane_config.png", color)
         self.section_plane_config_action = QAction(clip_plane_config_icon, "Configure Section Plane", self)
         self.section_plane_config_action.triggered.connect(self.section_plane_config_callback)
 
-        hide_icon = load_icon(ICON_DIR / "hide_icon.png", color)
+        hide_icon = load_icon(ICON_DIR / "visibility/hide_icon.png", color)
         self.hide_selection = QAction(hide_icon, "Hide Selection", self)
-        self.hide_selection.setShortcut("ctrl+h")
+        self.hide_selection.setShortcut("Ctrl + H")
         self.hide_selection.triggered.connect(self.hide_selection_callback)
 
-        unhide_all_icon = load_icon(ICON_DIR / "unhide_all_icon.png", color)
+        unhide_all_icon = load_icon(ICON_DIR / "visibility/unhide_all_icon.png", color)
         self.unhide_all = QAction(unhide_all_icon, "Unhide All", self)
-        self.unhide_all.setShortcut("ctrl+shift+h")
+        self.unhide_all.setShortcut("Ctrl + Shift + H")
         self.unhide_all.triggered.connect(self.unhide_all_callback)
 
     def configure_layout(self):
@@ -116,6 +121,7 @@ class RendererToolbar(QToolBar):
         self.addAction(self.show_points_action)
         self.addAction(self.show_lines_action)
         self.addAction(self.show_faces_action)
+        self.addAction(self.invert_symbols_visibility_action)
         self.addSeparator()
         self.addAction(self.section_plane_show_action)
         self.addAction(self.section_plane_config_action)
@@ -160,20 +166,34 @@ class RendererToolbar(QToolBar):
             widget.set_isometric_view()
 
     def show_points_callback(self):
-        widget = self.parent().viewer_tabs.currentWidget()
+        widget = app().main_window.viewer_tabs.currentWidget()
         if isinstance(widget, CommonRenderWidget):
             widget.show_points()
 
     def show_lines_callback(self):
-        widget = self.parent().viewer_tabs.currentWidget()
+        widget = app().main_window.viewer_tabs.currentWidget()
         if isinstance(widget, CommonRenderWidget):
             widget.show_lines()
 
     def show_faces_callback(self):
-        widget = self.parent().viewer_tabs.currentWidget()
+        widget = app().main_window.viewer_tabs.currentWidget()
         if isinstance(widget, CommonRenderWidget):
             widget.show_faces()
-    
+
+    def invert_symbols_visibility_callback(self):
+
+        symbols_actor = app().main_window.viewer_tabs.mesh_widget.symbols_actor
+
+        if symbols_actor is None:
+            return
+
+        if symbols_actor.GetVisibility():
+            symbols_actor.VisibilityOff()
+        else:
+            symbols_actor.VisibilityOn()
+
+        app().main_window.viewer_tabs.mesh_widget.update()
+
     def section_plane_show_callback(self, option: bool):
         app().main_window.section_plane.cutting = option
         app().main_window.section_plane.value_changed.emit()

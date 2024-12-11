@@ -9,10 +9,10 @@ from vibra.interface.viewer_3d.actors.symbols.symbols_common import (
 
 from vibra import app
 
-class ForceSymbol(SymbolActorFixedSize):
+class SymbolsActor(SymbolActorFixedSize):
     def __init__(self, renderer: vtkRenderer):
 
-        self.model = app().main_window.project.model
+        self.model = app().project.model
         self.mesh = self.model.mesh
 
         source = self.get_source()

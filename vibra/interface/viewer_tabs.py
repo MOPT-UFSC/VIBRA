@@ -19,8 +19,8 @@ class ViewerTabs(QTabWidget):
         super(QWidget, self).__init__(parent)
 
         self.main_window = app().main_window
-        self.project = app().main_window.project
-        self.user_config = app().main_window.user_config
+        self.project = app().project
+        self.user_config = app().user_config
 
         self.geometry_widget = GeometryRenderWidget()
         self.mesh_widget = MeshRenderWidget()
@@ -83,7 +83,7 @@ class ViewerTabs(QTabWidget):
             self.setTabVisible(2, True)
             self.mesh_widget.update_plot()
         self.setCurrentIndex(2)
-        nodes, face_elements, solid_elements = self.main_window.project.model.mesh.get_mesh_info()
+        nodes, face_elements, solid_elements = app().project.model.mesh.get_mesh_info()
         self.main_window.update_mesh_information(nodes, face_elements, solid_elements)
 
     def show_acoustic_modal_analysis(self):
