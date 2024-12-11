@@ -74,7 +74,7 @@ class LowReducedFrequencyModel:
                     self.lrf_model_data[element_id] = properties
 
 
-    def process_effective_properties(self, frequencies):
+    def process_effective_properties(self, frequencies: np.ndarray):
         """ """
 
         if frequencies is None:

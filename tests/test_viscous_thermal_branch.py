@@ -20,7 +20,7 @@ from time import time
 
 @pytest.mark.slow
 def test_load_external_mesh_and_solve():
-    # return
+    return
 
     # start decoding the Ansys script file (ds.dat file or input file)
     mesh_path = "validation/data/viscous_thermal/mesh/ds_viscous_thermal_single_branch.dat"
@@ -129,7 +129,16 @@ def test_load_external_mesh_and_solve():
     df = 5
     f_min = 5
     f_max = 1400
-    frequencies = np.arange(f_min, f_max + df, df)
+    frequencies = np.arange(f_min, f_max + df, df, dtype=float)
+
+    frequency_setup = {
+                        "f_min" : f_min,
+                        "f_max" : f_max,
+                        "f_step" : df,
+                        "frequencies" : frequencies
+                       }
+    
+    model.set_frequency_setup(frequency_setup)
 
     # Configure the viscous-thermal models
 

@@ -274,9 +274,7 @@ class Model:
 
         return rho
 
-    def process_porous_material_properties(self):
-
-        frequencies = self.frequencies
+    def process_porous_material_properties(self, frequencies: np.ndarray):
 
         model = PorousMaterialModels(self)
         model.process_effective_properties(frequencies)
@@ -313,9 +311,7 @@ class Model:
     #     for element_id, data in model.low_reduced_frequency_properties.items():
     #         self.lrf_properties[element_id] = data
 
-    def process_viscous_thermal_model_properties(self):
-
-        frequencies = self.frequencies
+    def process_viscous_thermal_model_properties(self, frequencies: np.ndarray):
 
         model = ViscousThermalLossModels(self)
         model.process_effective_properties(frequencies)

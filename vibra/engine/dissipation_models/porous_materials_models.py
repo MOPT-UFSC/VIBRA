@@ -21,7 +21,7 @@ class PorousMaterialModels:
     def set_external_model(self, model):
         self.external_model = model
 
-    def process_effective_properties(self, frequencies):
+    def process_effective_properties(self, frequencies: np.ndarray):
 
         self.effective_properties = dict()
         if frequencies[0] == 0:

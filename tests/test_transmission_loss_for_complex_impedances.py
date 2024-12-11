@@ -145,6 +145,15 @@ def test_load_external_mesh_and_solve():
     f_max = 1400
     frequencies = np.arange(f_min, f_max + df, df)
 
+    frequency_setup = {
+                        "f_min" : f_min,
+                        "f_max" : f_max,
+                        "f_step" : df,
+                        "frequencies" : frequencies
+                       }
+    
+    model.set_frequency_setup(frequency_setup)
+
     # Configure porous material
     # pm_data = get_porous_material_data(model=pm_model)
     # model.set_porous_material_model_data(pm_data, volume=1)
