@@ -154,9 +154,9 @@ class AnalysisSetupInput(QDialog):
     def update_frequency_setup_inputs(self):
 
         if (self.model.f_min, self.model.f_max, self.model.f_step).count(None):
-            f_min = 1
-            f_max = 200
-            f_step = 1
+            f_min = 2
+            f_max = 600
+            f_step = 2
 
         else:
 
@@ -164,8 +164,8 @@ class AnalysisSetupInput(QDialog):
             f_max = self.model.f_max
             f_step = self.model.f_step
 
-            if f_min == 0:
-                f_min = f_step
+            # if f_min == 0:
+            #     f_min = f_step
 
         if f_step:
 

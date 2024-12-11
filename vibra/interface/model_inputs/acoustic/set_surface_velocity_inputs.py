@@ -596,8 +596,7 @@ class SurfaceVelocityInput(QDialog):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.attribute_callback()
         elif event.key() == Qt.Key_Delete:
-            if self.tabWidget_main.currentIndex() == 2:
-                self.remove_callback()
+            self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
         else:

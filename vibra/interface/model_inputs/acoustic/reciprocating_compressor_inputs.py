@@ -910,19 +910,13 @@ class ReciprocatingCompressorInputs(QDialog):
 
     def remove_callback(self):
 
-        if self.lineEdit_selected_surface_id.text() == "":   
-            title = "Empty surface selection"
-            message = "You should to select a surface from the list "
-            message += "to proceed with the removal."
-            PrintMessageInput([window_title_2, title, message])
-            return
-            
-        surface_id = int(self.lineEdit_selected_surface_id.text())
+        if self.lineEdit_selected_surface_id.text() != "":   
 
-        self.remove_table_files_from_surfaces(surface_id)
+            surface_id = int(self.lineEdit_selected_surface_id.text())
+            self.remove_table_files_from_surfaces(surface_id)
 
-        self.properties._remove_surface_property("reciprocating_compressor_excitation", surface_id)
-        self.actions_to_finalize()
+            self.properties._remove_surface_property("reciprocating_compressor_excitation", surface_id)
+            self.actions_to_finalize()
 
     def reset_callback(self):
 
@@ -1145,6 +1139,8 @@ class ReciprocatingCompressorInputs(QDialog):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.attribute_callback()
+        elif event.key() == Qt.Key_Delete:
+            self.remove_callback()
         if event.key() == Qt.Key_Escape:
             self.close()
 

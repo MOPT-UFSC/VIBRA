@@ -84,10 +84,10 @@ class RendererToolbar(QToolBar):
         self.show_faces_action = QAction(show_faces_icon, "Face View", self)
         self.show_faces_action.triggered.connect(self.show_faces_callback)
 
-        invert_symbols_visibility_icon = load_icon(ICON_DIR / "visibility/show_symbols.png", color)
-        self.invert_symbols_visibility_action = QAction(invert_symbols_visibility_icon, "Invert Symbols Visibility", self)
-        self.invert_symbols_visibility_action.setCheckable(True)
-        self.invert_symbols_visibility_action.triggered.connect(self.invert_symbols_visibility_callback)
+        hide_show_symbols_icon = load_icon(ICON_DIR / "visibility/show_symbols.png", color)
+        self.hide_show_symbols_action = QAction(hide_show_symbols_icon, "Hide/Show Symbols", self)
+        self.hide_show_symbols_action.setCheckable(True)
+        self.hide_show_symbols_action.triggered.connect(self.hide_show_symbols_callback)
 
         clip_plane_show_icon = load_icon(ICON_DIR / "visibility/section_plane_view.png", color)
         self.section_plane_show_action = QAction(clip_plane_show_icon, "View Section Plane", self)
@@ -121,7 +121,7 @@ class RendererToolbar(QToolBar):
         self.addAction(self.show_points_action)
         self.addAction(self.show_lines_action)
         self.addAction(self.show_faces_action)
-        self.addAction(self.invert_symbols_visibility_action)
+        self.addAction(self.hide_show_symbols_action)
         self.addSeparator()
         self.addAction(self.section_plane_show_action)
         self.addAction(self.section_plane_config_action)
@@ -180,7 +180,7 @@ class RendererToolbar(QToolBar):
         if isinstance(widget, CommonRenderWidget):
             widget.show_faces()
 
-    def invert_symbols_visibility_callback(self):
+    def hide_show_symbols_callback(self):
 
         symbols_actor = app().main_window.viewer_tabs.mesh_widget.symbols_actor
 

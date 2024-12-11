@@ -39,9 +39,9 @@ class Model:
         self.generated_mesh = False
         self.geometry_path = None
 
-        self.f_min = 1
-        self.f_max = 200
-        self.f_step = 1
+        self.f_min = 2
+        self.f_max = 600
+        self.f_step = 2
         self.frequencies = None
         self.frequency_setup = dict()
         self.list_frequencies = list()

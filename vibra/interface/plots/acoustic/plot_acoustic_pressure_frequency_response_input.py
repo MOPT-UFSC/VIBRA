@@ -187,9 +187,9 @@ class PlotAcousticPressureFrequencyResponseInput(QDialog):
         else:
             response = np.average(self.solution[rows,:], axis=0)
 
-        # if complex(0) in response:
-        #     response += 1e-12
-            # response += np.ones(len(response), dtype=float)*(1e-12)
+        if complex(0) in response:
+            response += 1e-12
+        #     response += np.ones(len(response), dtype=float)*(1e-12)
 
         return response
 
@@ -213,9 +213,11 @@ class PlotAcousticPressureFrequencyResponseInput(QDialog):
             key = (selection_type, (selected_id))
             legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
 
+            y_data = self.get_response(index, selected_id)
+
             self.model_results[key] = { 
                                         "x_data" : self.frequencies,
-                                        "y_data" : self.get_response(index, selected_id),
+                                        "y_data" : y_data,
                                         "x_label" : "Frequency [Hz]",
                                         "y_label" : "Acoustic pressure",
                                         "title" : self.title,

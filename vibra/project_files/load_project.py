@@ -26,6 +26,7 @@ class LoadProject:
         self.load_geometry()
         self.load_project_libraries()
         self.load_mesh_setup()
+        self.load_imported_table_data_from_file()
         self.load_model_properties()
         self.load_analysis_setup()
         # self.load_thumbnail()
@@ -314,6 +315,16 @@ class LoadProject:
 
         logging.info("Updating render..." + ProgressStatus(90, 100))
         app().main_window.viewer_tabs.update_plots()
+
+    def load_imported_table_data_from_file(self):
+
+        imported_tables = app().file.read_imported_table_data_from_file()
+
+        if "acoustic" in imported_tables.keys():
+            app().project.model.properties.acoustic_imported_tables = imported_tables["acoustic"]
+
+        if "structural" in imported_tables.keys():
+            app().project.model.properties.structural_imported_tables = imported_tables["structural"]
 
     def load_model_properties(self):
 

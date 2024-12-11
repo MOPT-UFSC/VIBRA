@@ -366,6 +366,12 @@ class FrequencyResponsePlotter(QDialog):
         return _plot
 
     def call_lin_lin_plot(self):
+
+        if self.comboBox_plot_type.currentIndex() != 2:
+            self.comboBox_plot_type.blockSignals(True)
+            self.comboBox_plot_type.setCurrentIndex(2)
+            self.comboBox_plot_type.blockSignals(False)
+
         _plot, = self.ax.plot(  self.x_data, 
                                 self.y_data, 
                                 linewidth = 1,
@@ -382,7 +388,7 @@ class FrequencyResponsePlotter(QDialog):
         return _plot
     
     def get_plot_considering_invalid_log_values(self):
-        
+
         if "log-log" in self.plot_type:
         
             if True in self.mask_y[1:] or True in self.mask_x[1:]:
@@ -394,7 +400,7 @@ class FrequencyResponsePlotter(QDialog):
                     _plot = self.call_log_log_plot(first_index=0)
 
         elif "log-x" in self.plot_type:
-            
+
             if True in self.mask_x[1:]:
                 _plot = self.call_lin_lin_plot()
             else:
@@ -402,9 +408,9 @@ class FrequencyResponsePlotter(QDialog):
                     _plot = self.call_semilog_x_plot(first_index=1)
                 else:
                     _plot = self.call_semilog_x_plot(first_index=0)
-        
+
         elif "log-y" in self.plot_type:
-        
+
             if True in self.mask_y[1:]:
                 _plot = self.call_lin_lin_plot()
             else:
@@ -412,7 +418,7 @@ class FrequencyResponsePlotter(QDialog):
                     _plot = self.call_semilog_y_plot(first_index=1)
                 else:
                     _plot = self.call_semilog_y_plot(first_index=0)
-        
+
         else:
         
             _plot = self.call_lin_lin_plot()

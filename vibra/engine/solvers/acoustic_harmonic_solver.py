@@ -226,10 +226,10 @@ class AcousticHarmonicSolver:
                 Mr_add = np.sum((Mr * self.array_prescribed_values[:, index]), axis=1)
                 Cr_add = np.sum(((Cr + Cr_visc) * self.array_prescribed_values[:, index]), axis=1)
                 #
-                omega = 2*np.pi*self.frequencies[index]
+                omega = 2 * np.pi * self.frequencies[index]
                 F_Kadd = Kr_add
-                F_Madd = (-(omega**2))*Mr_add 
-                F_Cadd = 1j*omega*Cr_add
+                F_Madd = -(omega**2) * Mr_add 
+                F_Cadd = 1j * omega * Cr_add
                 F_eq = F_Kadd + F_Madd + F_Cadd
 
             else:
@@ -242,10 +242,10 @@ class AcousticHarmonicSolver:
                     Mr_add = np.sum((Mr * self.array_prescribed_values[:, i]), axis=1)
                     Cr_add = np.sum(((Cr + Cr_visc) * self.array_prescribed_values[:, i]), axis=1)
                     #
-                    omega = 2*np.pi*freq
+                    omega = 2 * np.pi * freq
                     F_Kadd = Kr_add
-                    F_Madd = (-(omega**2))*Mr_add 
-                    F_Cadd = 1j*omega*Cr_add
+                    F_Madd = -(omega**2) * Mr_add 
+                    F_Cadd = 1j * omega * Cr_add
                     F_eq[:, i] = F_Kadd + F_Madd + F_Cadd
 
                 logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(100, 100))

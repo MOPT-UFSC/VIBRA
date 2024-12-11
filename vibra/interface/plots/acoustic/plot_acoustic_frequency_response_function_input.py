@@ -260,7 +260,10 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         if complex(0) in denominator:
             denominator += 1e-12
 
-        response = numerator/denominator
+        response = numerator / denominator
+
+        if complex(0) in response:
+            response += 1e-12
 
         return response
 

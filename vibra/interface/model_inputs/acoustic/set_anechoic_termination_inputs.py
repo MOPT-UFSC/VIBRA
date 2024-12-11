@@ -190,9 +190,12 @@ class SetAnechoicTerminationInputs(QDialog):
         return list_table_names
 
     def remove_callback(self):
+
         if self.lineEdit_selection_id.text() != "":
+
             surface_properties = self.properties.surface_properties.copy()
             picked_id = int(self.lineEdit_selection_id.text())
+
             for key, data in surface_properties.items():
                 property, surface_id = key
                 if property == "specific_impedance" and picked_id == surface_id:
@@ -286,8 +289,7 @@ class SetAnechoicTerminationInputs(QDialog):
             if self.tabWidget_main.currentIndex() == 0:
                 self.attribute_callback()
         elif event.key() == Qt.Key_Delete:
-            if self.tabWidget_main.currentIndex() == 1:
-                self.remove_callback()
+            self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
         else:
