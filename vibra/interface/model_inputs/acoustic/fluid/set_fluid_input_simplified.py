@@ -29,9 +29,9 @@ class SetFluidInputSimplified(QDialog):
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
 
-        self.project = app().main_window.project
-        self.model = app().main_window.project.model
-        self.properties = app().main_window.project.model.properties
+        self.project = app().project
+        self.model = app().project.model
+        self.properties = app().project.model.properties
 
         self._config_window()
         self._initialize()

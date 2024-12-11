@@ -35,10 +35,10 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
         
-        self.project = app().main_window.project
-        self.model = app().main_window.project.model
-        self.mesh = app().main_window.project.model.mesh
-        self.properties = app().main_window.project.model.properties
+        self.project = app().project
+        self.model = app().project.model
+        self.mesh = app().project.model.mesh
+        self.properties = app().project.model.properties
 
         self._config_window()
         self._initialize()
@@ -236,7 +236,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
                 self.main_window.viewer_tabs.show_geometry()
 
     def generate_mesh(self):
-        if not self.main_window.project.model.generated_mesh:
+        if not app().project.model.generated_mesh:
             self.mesher = MesherInputs(close_after_generate=True)
             if not self.mesher.complete:
                 self.mesher = None
@@ -340,7 +340,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
             for _id in self.surface_ids:
                 self.project.set_lrf_eq_model_data(data, group=group_id)
         
-        app().main_window.file.write_model_properties_in_file()
+        app().file.write_model_properties_in_file()
         
         self.load_lrf_data()
         # self.close()
@@ -484,7 +484,7 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
                 if len(group_ids) + len(volume_ids) > 0:
                     self.properties._reset_property("lrf_eq_model")
 
-                app().main_window.file.write_model_properties_in_file()
+                app().file.write_model_properties_in_file()
 
                 # title = "Model resetting complete"
                 # message = "All LRF equivalent model effects active on "

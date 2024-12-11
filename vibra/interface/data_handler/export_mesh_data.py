@@ -24,7 +24,7 @@ class ExportMeshData(QDialog):
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
         
-        self.project = self.main_window.project
+        self.project = app().project
         self.model = self.project.model
         self.mesh = self.project.model.mesh
         self.properties = self.model.properties
@@ -122,7 +122,7 @@ class ExportMeshData(QDialog):
             return
 
     def generate_mesh(self):
-        if not self.main_window.project.model.generated_mesh:
+        if not app().project.model.generated_mesh:
             self.mesher = MesherInputs(close_after_generate=True)
             if not self.mesher.complete:
                 self.mesher = None

@@ -65,7 +65,7 @@ def default_material_library():
         "thermal_expansion_coefficient" : 1.9e-5,
     }
 
-    app().main_window.file.write_material_library_in_file(config)
+    app().file.write_material_library_in_file(config)
 
 
 def default_fluid_library():
@@ -149,4 +149,4 @@ def default_fluid_library():
         "molar_mass" : 16.0428
     }
 
-    app().main_window.file.write_fluid_library_in_file(config)
+    app().file.write_fluid_library_in_file(config)

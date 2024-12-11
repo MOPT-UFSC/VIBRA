@@ -33,10 +33,10 @@ class SetViscousThermalLossModel(QDialog):
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
 
-        self.project = app().main_window.project
-        self.model = app().main_window.project.model
-        self.mesh = app().main_window.project.model.mesh
-        self.properties = app().main_window.project.model.properties
+        self.project = app().project
+        self.model = app().project.model
+        self.mesh = app().project.model.mesh
+        self.properties = app().project.model.properties
 
         self._initialize()
         self._config_window()
@@ -191,7 +191,7 @@ class SetViscousThermalLossModel(QDialog):
             else:
                 self.properties._remove_group_property("viscous_thermal_model", selection_id)
 
-            app().main_window.file.write_model_properties_in_file()
+            app().file.write_model_properties_in_file()
             self.pushButton_remove.setDisabled(True)
             self.load_info()
 
@@ -230,7 +230,7 @@ class SetViscousThermalLossModel(QDialog):
                 for group_id in group_ids:
                     self.properties._remove_group_property("viscous_thermal_model", group_id)
 
-                app().main_window.file.write_model_properties_in_file()
+                app().file.write_model_properties_in_file()
                 self.load_info()
 
     def tabEvent_callback(self):
@@ -404,6 +404,7 @@ class SetViscousThermalLossModel(QDialog):
         if volumes:
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selection_id.setText(text)
+            self.lineEdit_center_coordinates.setText("---")
             if self.comboBox_attribution_type.currentIndex() != 1:
                 self.comboBox_attribution_type.setCurrentIndex(1)
             self.hide_sphere()
@@ -439,8 +440,8 @@ class SetViscousThermalLossModel(QDialog):
         center_coords = self.mesh.get_average_nodal_coordinates(selection_id, averaged=averaged_selection)
         if averaged_selection:
             try:
-                _round_center_coords = [round(value, 4) for value in center_coords[0]]
-                self.lineEdit_center_coordinates.setText(str(_round_center_coords))
+                str_center_coords = f"{center_coords[0][0]: .4f}, {center_coords[0][1]: .4f}, {center_coords[0][2]: .4f}"
+                self.lineEdit_center_coordinates.setText(str_center_coords)
             except:
                 self.lineEdit_center_coordinates.setText("")
                 return list()
@@ -448,8 +449,8 @@ class SetViscousThermalLossModel(QDialog):
         else:
             if len(center_coords) == 1:
                 try:
-                    _round_center_coords = [round(value, 4) for value in center_coords[0]]
-                    self.lineEdit_center_coordinates.setText(str(_round_center_coords))
+                    str_center_coords = f"{center_coords[0][0]: .4f}, {center_coords[0][1]: .4f}, {center_coords[0][2]: .4f}"
+                    self.lineEdit_center_coordinates.setText(str_center_coords)
                 except:
                     self.lineEdit_center_coordinates.setText("")
                     return list()
@@ -510,7 +511,7 @@ class SetViscousThermalLossModel(QDialog):
                 self.main_window.viewer_tabs.show_geometry()
 
     def generate_mesh(self):
-        if not self.main_window.project.model.generated_mesh:
+        if not app().project.model.generated_mesh:
             self.mesher = MesherInputs(close_after_generate=True)
             if not self.mesher.complete:
                 self.mesher = None
@@ -627,7 +628,7 @@ class SetViscousThermalLossModel(QDialog):
 
                 print(f"The viscous_thermal {model_data['formulation']} model for '{model_data['section_type']}' has been attributed to the group {group_id}.")
 
-            app().main_window.file.write_model_properties_in_file()
+            app().file.write_model_properties_in_file()
             self.load_info()
 
     def check_inputs(self, lineEdit, label, _float=True):
@@ -740,7 +741,7 @@ class SetViscousThermalLossModel(QDialog):
         warnings.filterwarnings('ignore')
 
         frequencies = None
-        analysis_data = app().main_window.project.analysis_data
+        analysis_data = app().project.analysis_data
         if isinstance(analysis_data, dict):
             frequencies = analysis_data.get("frequencies", None)
 

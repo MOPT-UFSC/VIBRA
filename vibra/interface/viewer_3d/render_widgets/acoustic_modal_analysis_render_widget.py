@@ -78,7 +78,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         return self.control_bar.frequency_box.currentIndex()
 
     def update_frequencies(self):
-        solver = self.main_window.project.acoustic_modal_solver
+        solver = app().project.acoustic_modal_solver
         if solver is None:
             return
         self.control_bar.set_frequencies(solver.natural_frequencies)
@@ -86,10 +86,10 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
     def update_plot(self, reset_camera=False):
         # Remember of updating the frequencies before running this
 
-        if self.main_window.project is None:
+        if app().project is None:
             return
 
-        model = self.main_window.project.model
+        model = app().project.model
         if model is None:
             return
 
@@ -97,7 +97,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         if mesh is None:
             return
 
-        solver = self.main_window.project.acoustic_modal_solver
+        solver = app().project.acoustic_modal_solver
         if solver is None:
             return
 
@@ -179,7 +179,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
 
         if reset_camera:
             self.renderer.ResetCamera()
-        self.main_window.project.thumbnail = self.get_thumbnail()
+        app().project.thumbnail = self.get_thumbnail()
 
     def update_hidden_plot(self):
         # in this case the update_plot function is fast enough
@@ -189,7 +189,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         if not self._actors_exists():
             return
 
-        solver = self.main_window.project.acoustic_modal_solver
+        solver = app().project.acoustic_modal_solver
         if solver.modal_shape is None:
             return
 
@@ -223,7 +223,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         if not self._actors_exists():
             return
 
-        solver = self.main_window.project.acoustic_modal_solver
+        solver = app().project.acoustic_modal_solver
         if solver.modal_shape is None:
             return
 

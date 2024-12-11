@@ -1,11 +1,15 @@
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QApplication
 
-from vibra import ICON_DIR, UI_DIR
+from vibra import TEMP_PROJECT_FILE
+from vibra.config import UserConfig
 from vibra.interface.config import Config
 from vibra.interface.main_window import MainWindow
 from vibra.interface.splash_screen import SplashScreen
 
+from vibra.project_files.load_project import LoadProject
+from vibra.project_files.project import Project
+from vibra.project_files.project_file import ProjectFile
 
 class Application(QApplication):
     selection_changed = pyqtSignal()
@@ -20,6 +24,11 @@ class Application(QApplication):
 
         # global params
         self.config = Config()
+        self.user_config = UserConfig.load()
+
+        self.file = ProjectFile(TEMP_PROJECT_FILE)
+        self.project = Project()
+        self.load_project = LoadProject()
 
         # gui
         self.main_window = MainWindow()

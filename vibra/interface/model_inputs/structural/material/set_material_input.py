@@ -31,9 +31,9 @@ class SetMaterialInput(QDialog):
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
 
-        self.project = app().main_window.project
-        self.model = app().main_window.project.model
-        self.properties = app().main_window.project.model.properties
+        self.project = app().project
+        self.model = app().project.model
+        self.properties = app().project.model.properties
 
         self._config_window()
         self._initialize()
@@ -171,9 +171,9 @@ class SetMaterialInput(QDialog):
                     return True
 
                 for volume_id in volume_ids:
-                    self.main_window.project.set_material(selected_material, volume=volume_id)
+                    app().project.set_material(selected_material, volume=volume_id)
                     for surface_id in self.model.mesh.surfaces_from_volumes[volume_id]:
-                        self.main_window.project.set_material(selected_material, surface=surface_id)
+                        app().project.set_material(selected_material, surface=surface_id)
         
                 if len(volume_ids) <= 20:
                     print("[Set Material] - {} defined at bodies: {}".format(selected_material.name, volume_ids))
@@ -189,14 +189,14 @@ class SetMaterialInput(QDialog):
                     surface_ids = self.model.mesh.geometry_information["surfaces"]
 
                 for volume_id in volume_ids:
-                    self.main_window.project.set_material(selected_material, volume=volume_id)
+                    app().project.set_material(selected_material, volume=volume_id)
 
                 for surface_id in surface_ids:
-                    self.main_window.project.set_material(selected_material, surface=surface_id)
+                    app().project.set_material(selected_material, surface=surface_id)
 
                 print("[Set Material] - {} defined at all bodies.".format(selected_material.name))
 
-            app().main_window.file.write_model_properties_in_file()
+            app().file.write_model_properties_in_file()
             self.main_window.viewer_tabs.geometry_widget.update_info_text()
             self.main_window.viewer_tabs.mesh_widget.update_info_text()
             self.complete = True

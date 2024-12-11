@@ -32,8 +32,8 @@ class ReciprocatingCompressorInputs(QDialog):
         app().main_window.set_input_widget(self)
         app().main_window.viewer_tabs.show_geometry()
 
-        self.model = app().main_window.project.model
-        self.properties = app().main_window.project.model.properties
+        self.model = app().project.model
+        self.properties = app().project.model.properties
 
         self._config_window()
         self._initialize()
@@ -362,7 +362,7 @@ class ReciprocatingCompressorInputs(QDialog):
 
     def get_aquisition_parameters(self, parameters: dict):
 
-        frequencies = app().main_window.project.model.frequencies
+        frequencies = app().project.model.frequencies
         rotational_speed = parameters["rotational_speed"]
 
         f_min = frequencies[0]
@@ -736,7 +736,7 @@ class ReciprocatingCompressorInputs(QDialog):
 
     def save_table_values(self, table_name: str, frequencies: np.ndarray, complex_values: np.ndarray):
 
-        if app().main_window.project.model.change_analysis_frequency_setup(list(frequencies)):
+        if app().project.model.change_analysis_frequency_setup(list(frequencies)):
             self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
@@ -758,7 +758,7 @@ class ReciprocatingCompressorInputs(QDialog):
 
     def update_analysis_setup_in_file(self, frequencies: np.ndarray):
 
-        analysis_setup = app().main_window.file.read_analysis_setup_from_file()
+        analysis_setup = app().file.read_analysis_setup_from_file()
         if analysis_setup is None:
             analysis_setup = dict()
 
@@ -770,8 +770,8 @@ class ReciprocatingCompressorInputs(QDialog):
         analysis_setup["f_max"] = float(f_max)
         analysis_setup["f_step"] = float(f_step)
 
-        app().main_window.project.set_analysis_data(analysis_setup)
-        app().main_window.file.write_analysis_setup_in_file(analysis_setup)
+        app().project.set_analysis_data(analysis_setup)
+        app().file.write_analysis_setup_in_file(analysis_setup)
 
     def update_state_properties_at_discharge(self):
 
@@ -885,8 +885,8 @@ class ReciprocatingCompressorInputs(QDialog):
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
-        app().main_window.file.write_model_properties_in_file()
-        app().main_window.file.write_imported_table_data_in_file()
+        app().file.write_model_properties_in_file()
+        app().file.write_imported_table_data_in_file()
         app().main_window.set_geometry_selection()
         # app().main_window.update_plots()
         self.load_compressor_excitation_info()
@@ -896,7 +896,7 @@ class ReciprocatingCompressorInputs(QDialog):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
         if table_names:
-            app().main_window.file.write_imported_table_data_in_file()
+            app().file.write_imported_table_data_in_file()
 
     def remove_conflicting_excitations(self, surface_id: int):
         for label in ["acoustic_pressure", "surface_velocity", "mass_flow_rate", "reciprocating_compressor_excitation", "reciprocating_pump_excitation"]:

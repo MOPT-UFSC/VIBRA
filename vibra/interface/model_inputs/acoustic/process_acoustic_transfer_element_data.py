@@ -30,10 +30,10 @@ class ProcessAcousticTransferElementData(QDialog):
         app().main_window.set_input_widget(self)
         app().main_window.viewer_tabs.show_geometry()
 
-        self.project = app().main_window.project
-        self.model = app().main_window.project.model
-        self.mesh = app().main_window.project.model.mesh
-        self.properties = app().main_window.project.model.properties
+        self.project = app().project
+        self.model = app().project.model
+        self.mesh = app().project.model.mesh
+        self.properties = app().project.model.properties
 
         self._config_window()
         self._reset_variables()
@@ -273,9 +273,9 @@ class ProcessAcousticTransferElementData(QDialog):
         if self.check_frequency_entries():
             return True
 
-        app().main_window.project.set_analysis_data(self.analysis_data)
-        app().main_window.project.create_solver()
-        app().main_window.file.write_analysis_setup_in_file(self.analysis_data)
+        app().project.set_analysis_data(self.analysis_data)
+        app().project.create_solver()
+        app().file.write_analysis_setup_in_file(self.analysis_data)
 
     def process_data_callback(self):
         """
@@ -295,7 +295,7 @@ class ProcessAcousticTransferElementData(QDialog):
         if self.configure_analysis():
             return   
 
-        if not app().main_window.project.model.generated_mesh:
+        if not app().project.model.generated_mesh:
             obj = MesherInputs()
             if obj.complete:
                 app().main_window.viewer_tabs.close_analysis_tabs()
@@ -356,7 +356,7 @@ class ProcessAcousticTransferElementData(QDialog):
                 }
 
         self.project.set_surface_velocity(data, surface_id)
-        app().main_window.file.write_model_properties_in_file()
+        app().file.write_model_properties_in_file()
         # app().main_window.set_geometry_selection(surfaces=[surface_id])
 
     def process_areas(self):

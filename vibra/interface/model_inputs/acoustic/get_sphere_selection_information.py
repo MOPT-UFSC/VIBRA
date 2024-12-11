@@ -28,10 +28,10 @@ class GetSphereSelectionInformation(QDialog):
         if not app().main_window.viewer_tabs.isVisible():
             return
 
-        self.project = app().main_window.project
-        self.model = app().main_window.project.model
-        self.mesh = app().main_window.project.model.mesh
-        self.properties = app().main_window.project.model.properties
+        self.project = app().project
+        self.model = app().project.model
+        self.mesh = app().project.model.mesh
+        self.properties = app().project.model.properties
 
         self.selection_id = selection_id
         self.selection_radius = selection_radius

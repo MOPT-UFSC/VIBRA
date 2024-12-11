@@ -3,7 +3,7 @@ from PyQt5.QtGui import QIcon, QColor, QBrush, QFont
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
 
-from vibra import app, UI_DIR
+from vibra import app, UI_DIR, TEMP_PROJECT_FILE
 from vibra.interface.formatters.icons import *
 
 from vibra.interface.general.pick_color_input import PickColorInput
@@ -44,7 +44,7 @@ class FluidWidget(QWidget):
         # self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
 
-        self.project = self.main_window.project
+        self.project = app().project
         self.model = self.project.model
         self.properties = self.model.properties
 
@@ -138,12 +138,11 @@ class FluidWidget(QWidget):
 
     def load_data_from_fluids_library(self):
 
-        project_path = app().main_window.temp_project_file_path
-        if not os.path.exists(project_path):
+        if not os.path.exists(TEMP_PROJECT_FILE):
             self.reset_library_to_default()
             return
 
-        config = app().main_window.file.read_fluid_library_from_file()
+        config = app().file.read_fluid_library_from_file()
         if config is None:
             self.reset_library_to_default()
             return
@@ -509,10 +508,10 @@ class FluidWidget(QWidget):
                 fluid_data['molar_fractions'] = molar_fractions
                 fluid_data['molar_mass'] = round(self.fluid_data_refprop['molar_mass'], 6)
 
-            config = app().main_window.file.read_fluid_library_from_file()
+            config = app().file.read_fluid_library_from_file()
             config[identifier] = fluid_data
 
-            app().main_window.file.write_fluid_library_in_file(config)
+            app().file.write_fluid_library_in_file(config)
 
         except Exception as error_log:
             title = "Error while writing fluid data in file"
@@ -522,14 +521,14 @@ class FluidWidget(QWidget):
 
     def remove_fluid_from_file(self, fluid : Fluid):
 
-        config = app().main_window.file.read_fluid_library_from_file()
+        config = app().file.read_fluid_library_from_file()
 
         identifier = str(fluid.identifier)
         if not identifier in config.sections():
             return
 
         config.remove_section(identifier)
-        app().main_window.file.write_fluid_library_in_file(config)
+        app().file.write_fluid_library_in_file(config)
 
         self.reset_fluids_from_bodies_and_surfaces([fluid.identifier])
         self.load_data_from_fluids_library()
@@ -607,7 +606,7 @@ class FluidWidget(QWidget):
 
     def reset_library_to_default(self):
 
-        config_cache = app().main_window.file.read_fluid_library_from_file()
+        config_cache = app().file.read_fluid_library_from_file()
 
         sections_cache = list()
         if config_cache is not None:
@@ -615,7 +614,7 @@ class FluidWidget(QWidget):
 
         default_fluid_library()
 
-        config = app().main_window.file.read_fluid_library_from_file()
+        config = app().file.read_fluid_library_from_file()
 
         fluid_identifiers = list()
         for section_cache in sections_cache:
@@ -647,7 +646,7 @@ class FluidWidget(QWidget):
         for surf_id in surfaces_to_remove_fluid:
             self.model.properties._remove_surface_property("fluid", surface_id=surf_id)
 
-        app().main_window.file.write_model_properties_in_file()
+        app().file.write_model_properties_in_file()
 
     def call_refprop_interface(self):
 

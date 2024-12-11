@@ -84,17 +84,17 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         return self.control_bar.frequency_box.currentIndex()
 
     def update_frequencies(self):
-        solver = self.main_window.project.acoustic_harmonic_solver
+        solver = app().project.acoustic_harmonic_solver
         if solver is None:
             return
         self.control_bar.set_frequencies(solver.frequencies)
 
     def update_plot(self, reset_camera=False):
 
-        if self.main_window.project is None:
+        if app().project is None:
             return
 
-        model = self.main_window.project.model
+        model = app().project.model
         if model is None:
             return
 
@@ -102,7 +102,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         if mesh is None:
             return
 
-        solver = self.main_window.project.acoustic_harmonic_solver
+        solver = app().project.acoustic_harmonic_solver
         if solver is None:
             return
 
@@ -176,7 +176,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
 
         self.update_section_plane()
 
-        self.main_window.project.thumbnail = self.get_thumbnail()
+        app().project.thumbnail = self.get_thumbnail()
 
     def update_hidden_plot(self):
         # in this case the update_plot function is fast enough
@@ -186,7 +186,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         if not self._actors_exists():
             return
 
-        solver = self.main_window.project.acoustic_harmonic_solver
+        solver = app().project.acoustic_harmonic_solver
         if solver.solution is None:
             return
 
@@ -251,7 +251,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         if not self._actors_exists():
             return
 
-        solver = self.main_window.project.acoustic_harmonic_solver
+        solver = app().project.acoustic_harmonic_solver
         if solver.solution is None:
             return
 

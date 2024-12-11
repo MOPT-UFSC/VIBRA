@@ -335,10 +335,10 @@ class MenuItems(QTreeWidget):
 
         borderRole = Qt.UserRole + 1
 
-        if self.main_window.user_config.theme == "light":
+        if app().user_config.theme == "light":
             # textTopBrush = QBrush(QColor(0,0,0))
             borderPen = QPen(QColor(0, 0, 0))
-        elif self.main_window.user_config.theme == "dark":
+        elif app().user_config.theme == "dark":
             # textTopBrush = QBrush(QColor(255,255,255))
             borderPen = QPen(QColor(255, 255, 255))
 
@@ -542,7 +542,7 @@ class MenuItems(QTreeWidget):
 
     def generate_mesh(self):
         """ """
-        generate_mesh = load_function(self.main_window.project.generate_mesh, self.main_window)
+        generate_mesh = load_function(app().project.generate_mesh, self.main_window)
         generate_mesh()
         self.main_window.viewer_tabs.show_mesh()
         self.generate_mesh_action.setDisabled(True)
@@ -550,7 +550,7 @@ class MenuItems(QTreeWidget):
 
     def run_analysis(self):
         """ """
-        if not self.main_window.project.model.generated_mesh:
+        if not app().project.model.generated_mesh:
             obj = MesherInputs()
             if obj.complete:
                 self.main_window.viewer_tabs.close_analysis_tabs()
@@ -558,10 +558,10 @@ class MenuItems(QTreeWidget):
             else:
                 return
         #
-        if self.main_window.project.analysis_data is None:
+        if app().project.analysis_data is None:
             return
         #
-        # if not self.main_window.project.model.generated_mesh:
+        # if not app().project.model.generated_mesh:
         #     try:
         #         self.generate_mesh()
         #     except IncompleteSetupError or IncompleteMeshSetup as error:
@@ -576,7 +576,7 @@ class MenuItems(QTreeWidget):
 
         analysis = ProcessAnalysis()
 
-        analysis_id = self.main_window.project.analysis_data["analysis_id"]
+        analysis_id = app().project.analysis_data["analysis_id"]
         #
         if analysis_id == 2:
             solve_modal = load_function(analysis.process_structural_modal_analysis, 
@@ -598,9 +598,9 @@ class MenuItems(QTreeWidget):
 
     def reset_solution(self):
 
-        app().main_window.project.reset_solutions()
+        app().project.reset_solutions()
         app().main_window.viewer_tabs.reset_solution_tabs_visibility()
-        app().main_window.file.remove_results_data_from_project_file()
+        app().file.remove_results_data_from_project_file()
 
         self.modify_items_acoustic_results_viewer(True)
         self.modify_items_structural_results_viewer(True)
@@ -700,20 +700,20 @@ class MenuItems(QTreeWidget):
         self.item_top_resultsViewer_structural.setHidden(True)
         self.item_top_resultsViewer_acoustic.setHidden(True)
 
-        if self.main_window.project.analysis_data is None:
+        if app().project.analysis_data is None:
             return
 
-        analysis_id = self.main_window.project.analysis_data["analysis_id"]
+        analysis_id = app().project.analysis_data["analysis_id"]
 
-        # if self.main_window.project.analysis_id in [None, 2,4]:
+        # if app().project.analysis_id in [None, 2,4]:
         #     self.item_child_analysisSetup.setDisabled(True)
         # else:
         #     self.item_child_analysisSetup.setDisabled(False)
 
-        # if self.main_window.project.analysis_id is not None and self.main_window.project.setup_analysis_complete:
+        # if app().project.analysis_id is not None and app().project.setup_analysis_complete:
         #     self.item_child_runAnalysis.setDisabled(False)
 
-        # if self.main_window.project.get_structural_solution() is not None or self.main_window.project.get_acoustic_solution() is not None:
+        # if app().project.get_structural_solution() is not None or app().project.get_acoustic_solution() is not None:
 
         self.modify_items_acoustic_results_viewer(True)
         self.modify_items_structural_results_viewer(True)
@@ -774,7 +774,7 @@ class MenuItems(QTreeWidget):
         self.collapseItem(self.item_top_generalSettings)
         self.collapseItem(self.item_top_structuralModelSetup)
         self.collapseItem(self.item_top_acoustic_model_setup)
-        analysis_id = self.main_window.project.analysis_data["analysis_id"]
+        analysis_id = app().project.analysis_data["analysis_id"]
 
         if analysis_id in [0, 1, 2]:
             self.item_top_resultsViewer_structural.setHidden(False)

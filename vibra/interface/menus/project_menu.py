@@ -117,11 +117,11 @@ class ProjectMenu(QMenu):
         self.main_window.close_app()
 
     def theme_callback(self):
-        if self.main_window.user_config.theme == "light":
+        if app().user_config.theme == "light":
             self.main_window.set_theme("dark")
             self.theme_action.setIcon(self.theme_sun_icon)
 
-        elif self.main_window.user_config.theme == "dark":
+        elif app().user_config.theme == "dark":
             self.main_window.set_theme("light")
             self.theme_action.setIcon(self.theme_moon_icon)
 
@@ -141,7 +141,7 @@ class ProjectMenu(QMenu):
     #
     def solve_example_analysis_callback(self):
         try:
-            self.main_window.project.solve_modal_acoustic()
+            app().project.solve_modal_acoustic()
         except NotImplementedError as e:
             ErrorMessage(e)
         else:

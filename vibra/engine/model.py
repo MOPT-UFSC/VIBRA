@@ -148,9 +148,9 @@ class Model:
                 return
 
         self.frequency_setup = {
-                                "f_min" : analysis_setup["f_min"],
-                                "f_max" : analysis_setup["f_max"],
-                                "f_step" : analysis_setup["f_step"],
+                                "f_min" : self.f_min,
+                                "f_max" : self.f_max,
+                                "f_step" : self.f_step,
                                 "frequencies" : self.frequencies
                                 }
 

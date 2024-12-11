@@ -18,7 +18,7 @@ class AnalysisSetupInput(QDialog):
         super().__init__(*args, **kwargs)
 
         self.main_window = app().main_window
-        self.project = self.main_window.project
+        self.project = app().project
 
         self.analysis_data = self.project.analysis_data
         self.analysis_id = self.analysis_data["analysis_id"]
@@ -48,19 +48,19 @@ class AnalysisSetupInput(QDialog):
 
         uic.loadUi(ui_path, self)
 
-        self.model = app().main_window.project.model
+        self.model = app().project.model
 
         self._config_window()
         self._reset_variables()
 
         self._define_qt_variables()
         self._create_connections()
-        self._update_fmin()
 
         ConfigWidgetAppearance(self)
 
         self.update_frequency_setup_inputs()
         self.update_damping_inputs()
+        # self._update_fmin()
 
         while self.keep_window_open:
             self.exec()
@@ -116,7 +116,7 @@ class AnalysisSetupInput(QDialog):
 
     # def _load_analysis_data(self):
 
-    #     analysis_setup = app().main_window.file.read_analysis_setup_from_file()
+    #     analysis_setup = app().file.read_analysis_setup_from_file()
     #     if analysis_setup is None:
     #         return
         
@@ -154,14 +154,18 @@ class AnalysisSetupInput(QDialog):
     def update_frequency_setup_inputs(self):
 
         if (self.model.f_min, self.model.f_max, self.model.f_step).count(None):
-            f_min = 0
+            f_min = 1
             f_max = 200
             f_step = 1
 
         else:
+
             f_min = self.model.f_min
             f_max = self.model.f_max
             f_step = self.model.f_step
+
+            if f_min == 0:
+                f_min = f_step
 
         if f_step:
 
@@ -169,15 +173,15 @@ class AnalysisSetupInput(QDialog):
             self.lineEdit_fmax.setText(str(round(f_max, 6)))
             self.lineEdit_fstep.setText(str(round(f_step, 6)))
 
-            key = app().main_window.project.model.properties.check_if_there_are_tables_at_the_model()
+            key = app().project.model.properties.check_if_there_are_tables_at_the_model()
 
             self.lineEdit_fmin.setDisabled(key)
             self.lineEdit_fmax.setDisabled(key)
-            self.lineEdit_fstep.setDisabled(key)            
+            self.lineEdit_fstep.setDisabled(key)        
 
     def enter_setup_callback(self):
 
-        analysis_setup = app().main_window.file.read_analysis_setup_from_file()
+        analysis_setup = app().file.read_analysis_setup_from_file()
         if analysis_setup is None:
             analysis_setup = dict()
 
@@ -249,7 +253,7 @@ class AnalysisSetupInput(QDialog):
         analysis_setup["global_damping"] = global_damping
         # self.model.set_global_damping(analysis_setup)
 
-        if app().main_window.project.model.properties.check_if_there_are_tables_at_the_model():
+        if app().project.model.properties.check_if_there_are_tables_at_the_model():
             self.frequencies = self.model.frequencies
         else:
             self.model.set_frequency_setup(analysis_setup)
@@ -257,9 +261,9 @@ class AnalysisSetupInput(QDialog):
         if self.analysis_id in [1, 6]:
             analysis_setup["modes"] = number_of_modes
 
-        app().main_window.file.write_analysis_setup_in_file(analysis_setup)
+        app().file.write_analysis_setup_in_file(analysis_setup)
 
-        self.project.set_analysis_data(self.analysis_data)
+        self.project.set_analysis_data(analysis_setup)
         self.project.create_solver()
 
         self.complete = True

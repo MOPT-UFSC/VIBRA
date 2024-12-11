@@ -32,10 +32,10 @@ class SetPorousMaterialModel(QDialog):
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
 
-        self.project = app().main_window.project
-        self.model = app().main_window.project.model
-        self.mesh = app().main_window.project.model.mesh
-        self.properties = app().main_window.project.model.properties
+        self.project = app().project
+        self.model = app().project.model
+        self.mesh = app().project.model.mesh
+        self.properties = app().project.model.properties
 
         self._initialize()
         self._load_icons()
@@ -165,7 +165,7 @@ class SetPorousMaterialModel(QDialog):
         if self.lineEdit_selection_id.text() != "":
             volume_id = int(self.lineEdit_selection_id.text())
             self.properties._remove_volume_property("porous_material_model", volume_id)
-            app().main_window.file.write_model_properties_in_file()
+            app().file.write_model_properties_in_file()
             self.load_info()
 
     def reset_porous_material_model(self):
@@ -194,7 +194,7 @@ class SetPorousMaterialModel(QDialog):
                 for volume_id in volume_ids:
                     self.properties._remove_volume_property("porous_material_model", volume_id)
 
-                app().main_window.file.write_model_properties_in_file()
+                app().file.write_model_properties_in_file()
                 self.close()
 
     def tabEvent_porous_material_model(self):
@@ -410,7 +410,7 @@ class SetPorousMaterialModel(QDialog):
             for volume_id in volume_ids:
                 self.project.set_porous_material_model(model_data, volume=volume_id)
 
-            app().main_window.file.write_model_properties_in_file()
+            app().file.write_model_properties_in_file()
 
             print(f"The porous material model '{model_data['model']}' has been attributed to the volumes {volume_ids}")
             self.load_info()
@@ -484,7 +484,7 @@ class SetPorousMaterialModel(QDialog):
         warnings.filterwarnings('ignore')
 
         frequencies = None
-        analysis_data = app().main_window.project.analysis_data
+        analysis_data = app().project.analysis_data
         if isinstance(analysis_data, dict):
             frequencies = analysis_data.get("frequencies", None)
 

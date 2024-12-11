@@ -5,6 +5,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+from vibra import app
 from vibra.utils.interface_functions import get_main_window
 
 
@@ -12,8 +13,7 @@ class GeometryInfoBar(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.main_window = get_main_window()
-        self.project = self.main_window.project
+        self.project = app().project
         self.mesh = self.project.model.mesh
 
         self.number_of_points = ""
@@ -72,7 +72,7 @@ class GeometryInfoBar(QWidget):
         self.label_number_of_volumes.setMaximumSize(160, height)
 
     def update_geometry_information(self):
-        points, curves, surfaces, volumes = self.main_window.project.model.mesh.get_geometry_info()
+        points, curves, surfaces, volumes = app().project.model.mesh.get_geometry_info()
         self.label_number_of_points.setText(f"Points: {points}")
         self.label_number_of_curves.setText(f"Curves: {curves}")
         self.label_number_of_surfaces.setText(f"Surfaces: {surfaces}")

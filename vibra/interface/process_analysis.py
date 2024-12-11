@@ -6,7 +6,7 @@ class ProcessAnalysis:
         super().__init__()
 
         self.main_window = app().main_window
-        self.project = app().main_window.project
+        self.project = app().project
 
     def process_acoustic_modal_analysis(self):
         try:

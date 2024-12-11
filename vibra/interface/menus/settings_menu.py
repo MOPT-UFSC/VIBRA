@@ -61,5 +61,5 @@ class VisibilitySettingsMenu(QMenu):
             self.theme_action.setIcon(self.theme_moon_icon)
 
     def load_user_preference_state(self):
-        self.bool_state = not self.main_window.user_config.menu_items_visible
+        self.bool_state = not app().user_config.menu_items_visible
         self.call_show_or_hide_menu_items()

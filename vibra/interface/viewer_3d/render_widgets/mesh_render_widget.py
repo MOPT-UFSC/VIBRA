@@ -18,7 +18,7 @@ from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 from vibra.interface.viewer_3d.actors.nodes_actor import NodesActor
 from vibra.interface.viewer_3d.actors.selection_spheres import SelectionSpheres
 from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
-from vibra.interface.viewer_3d.actors.symbols.force_symbol import ForceSymbol
+from vibra.interface.viewer_3d.actors.symbols.symbols_actor import SymbolsActor
 from vibra.utils.interface_functions import get_main_window
 
 SHOW_POINTS = 0
@@ -64,17 +64,17 @@ class MeshRenderWidget(CommonRenderWidget):
         self.selection_spheres_actor = None
         self.hidden_part_actor = None
         self.plane_actor = None
-        self.force_actor = None
+        self.symbols_actor = None
 
         self.create_axes()
         self.create_scale_bar()
         self.update_plot()
 
     def update_plot(self, reset_camera=True):
-        if self.main_window.project is None:
+        if app().project is None:
             return
 
-        model = self.main_window.project.model
+        model = app().project.model
         if model is None:
             return
 
@@ -111,8 +111,8 @@ class MeshRenderWidget(CommonRenderWidget):
         self.plane_actor.VisibilityOff()
         self.renderer.AddActor(self.plane_actor)
 
-        self.force_actor = ForceSymbol(self.renderer)
-        self.renderer.AddActor(self.force_actor)
+        self.symbols_actor = SymbolsActor(self.renderer)
+        self.renderer.AddActor(self.symbols_actor)
 
         # Add a very subtle transparent actor to represent the whole
         # structure even if part of it is hidden
@@ -129,15 +129,15 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.update_section_plane()
         self.show_faces()
-        self.main_window.project.thumbnail = self.get_thumbnail()
+        app().project.thumbnail = self.get_thumbnail()
 
     def update_hidden_plot(self):
         # We could just call the update_plot function,
         # but this is much simpler and faster
-        if self.main_window.project is None:
+        if app().project is None:
             return
 
-        model = self.main_window.project.model
+        model = app().project.model
         if model is None:
             return
 
@@ -407,7 +407,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.renderer.RemoveActor(self.nodes_actor)
         self.renderer.RemoveActor(self.selection_spheres_actor)
         self.renderer.RemoveActor(self.plane_actor)
-        self.renderer.RemoveActor(self.force_actor)
+        self.renderer.RemoveActor(self.symbols_actor)
         self.renderer.RemoveActor(self.hidden_part_actor)
         self.nodes_actor = None
         self.edges_actor = None
@@ -415,7 +415,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.solids_actor = None
         self.selection_spheres_actor = None
         self.plane_actor = None
-        self.force_actor = None
+        self.symbols_actor = None
         self.nodes_actor = None
         self.hidden_part_actor = None
 
@@ -548,7 +548,7 @@ class MeshRenderWidget(CommonRenderWidget):
             text += f"{len(nodes)} nodes in selection\n" f"{format_long_sequence(nodes)}\n\n"
         elif len(nodes) == 1:
             text += f"Node: {nodes[0]}\n"
-            coords = self.main_window.project.model.mesh.nodal_coordinates[nodes[0], 1:]
+            coords = app().project.model.mesh.nodal_coordinates[nodes[0], 1:]
             text += f"Coordinates: [{round(coords[0], 6)}, {round(coords[1], 6)}, {round(coords[2], 6)}] (m)\n\n"
 
         return text
@@ -573,7 +573,7 @@ class MeshRenderWidget(CommonRenderWidget):
             )
         elif len(solids_elem_ids) == 1:
             element_id = solids_elem_ids[0]
-            connect = self.main_window.project.model.mesh.solids_connectivity[element_id, 4:]
+            connect = app().project.model.mesh.solids_connectivity[element_id, 4:]
             text += f"Solid element: {element_id}\n"
             text += f"Connectivity: {list(connect)}\n\n"
 
@@ -587,8 +587,8 @@ class MeshRenderWidget(CommonRenderWidget):
             elements = list(self.main_window.selected_mesh_solids)
 
         if len(elements) == 1:
-            current_solid = self.main_window.project.model.mesh.volume_from_element[elements[0]]
-            material = self.main_window.project.model.properties.get_material(volume=current_solid)
+            current_solid = app().project.model.mesh.volume_from_element[elements[0]]
+            material = app().project.model.properties.get_material(volume=current_solid)
             if material is None:
                 return text
 
@@ -614,8 +614,8 @@ class MeshRenderWidget(CommonRenderWidget):
             elements = list(self.main_window.selected_mesh_solids)
 
         if len(elements) == 1:
-            current_solid = self.main_window.project.model.mesh.volume_from_element[elements[0]]
-            fluid = self.main_window.project.model.properties.get_fluid(volume=current_solid)
+            current_solid = app().project.model.mesh.volume_from_element[elements[0]]
+            fluid = app().project.model.properties.get_fluid(volume=current_solid)
             if fluid is None:
                 return text
 
@@ -642,13 +642,13 @@ class MeshRenderWidget(CommonRenderWidget):
         if len(elements) != 1:
             return text
 
-        acoustic_pressure = self.main_window.project.model.properties.get_acoustic_pressure(
+        acoustic_pressure = app().project.model.properties.get_acoustic_pressure(
             elements[0]
         )
-        surface_velocity = self.main_window.project.model.properties.get_surface_velocity(
+        surface_velocity = app().project.model.properties.get_surface_velocity(
             elements[0]
         )
-        specific_impedance = self.main_window.project.model.properties.get_specific_impedance(
+        specific_impedance = app().project.model.properties.get_specific_impedance(
             elements[0]
         )
         boundary_conditions_list = [acoustic_pressure, surface_velocity, specific_impedance]

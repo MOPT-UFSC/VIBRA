@@ -21,7 +21,7 @@ class AcousticModalAnalysisInput(QDialog):
         uic.loadUi(ui_path, self)
 
         self.main_window = app().main_window
-        self.project = self.main_window.project
+        self.project = app().project
 
         self.setWindowIcon(app().main_window.vibra_icon)
 

@@ -17,10 +17,10 @@ class LoadProject:
     def __init__(self):
         super().__init__()
 
-        self.file = app().main_window.file
-        self.model = app().main_window.project.model
-        self.properties = self.model.properties
-
+    def initialize(self):
+        self.file = app().file
+        self.model = app().project.model
+        self.properties = app().project.model.properties
 
     def load(self):
         self.load_geometry()
@@ -154,7 +154,7 @@ class LoadProject:
             
             self.library_materials[identifier] = material
 
-    def load_mesh_data_from_file(self, mesh_data):
+    def load_mesh_data_from_file(self, mesh_data: dict):
 
         logging.info("Loading mesh..." + ProgressStatus(20, 100))
 
@@ -289,16 +289,16 @@ class LoadProject:
                 mesh_setup["element_type"] = solid_element
                 mesh_setup.pop("shape_function")
 
-                app().main_window.project.reset_solutions()
-                app().main_window.project.set_mesh_setup(mesh_setup)
+                app().project.reset_solutions()
+                app().project.set_mesh_setup(mesh_setup)
 
                 mesh_data = self.file.read_mesh_data_from_file()
 
                 if mesh_data:
                     self.load_mesh_data_from_file(mesh_data)
                 else:
-                    app().main_window.project.generate_mesh()
-                    app().main_window.file.write_mesh_data_in_file()
+                    app().project.generate_mesh()
+                    app().file.write_mesh_data_in_file()
 
                 self.update_render()
 
@@ -376,13 +376,13 @@ class LoadProject:
             if ([f_min, f_max, f_step]).count(None) == 0:
                 analysis_setup["frequencies"] = np.arange(f_min, f_max + f_step, f_step)
 
-        app().main_window.project.set_analysis_data(analysis_setup)
-        app().main_window.project.create_solver()
+        app().project.set_analysis_data(analysis_setup)
+        app().project.create_solver()
 
     def load_thumbnail(self):
         thumbnail = self.file.read_thumbnail()
         if thumbnail is not None:
-            app().main_window.project.thumbnail = thumbnail
+            app().project.thumbnail = thumbnail
 
     def load_analysis_results(self):
     
@@ -399,24 +399,24 @@ class LoadProject:
 
                 if key == "modal_acoustic":
                     act_modal_analysis = True
-                    app().main_window.project.acoustic_modal_solver.natural_frequencies = data["natural_frequencies"]
-                    app().main_window.project.acoustic_modal_solver.modal_shape = data["modal_shape"]
+                    app().project.acoustic_modal_solver.natural_frequencies = data["natural_frequencies"]
+                    app().project.acoustic_modal_solver.modal_shape = data["modal_shape"]
                 
                 elif key == "modal_structural":
                     str_modal_analysis = True
-                    app().main_window.project.structural_modal_solver.natural_frequencies = data["natural_frequencies"]
-                    app().main_window.project.structural_modal_solver.modal_shape = data["modal_shape"]
+                    app().project.structural_modal_solver.natural_frequencies = data["natural_frequencies"]
+                    app().project.structural_modal_solver.modal_shape = data["modal_shape"]
 
                 elif key == "harmonic_acoustic":
                     act_harmonic_analysis = True
-                    app().main_window.project.acoustic_harmonic_solver.frequencies = data["frequencies"]
-                    app().main_window.project.acoustic_harmonic_solver.solution = data["solution"]
+                    app().project.acoustic_harmonic_solver.frequencies = data["frequencies"]
+                    app().project.acoustic_harmonic_solver.solution = data["solution"]
                     app().main_window.advanced_results_menu.disable_advanced_acoustic_plots_buttons(False)
 
                 elif key == "harmonic_structural":
                     str_harmonic_analysis = True
-                    app().main_window.project.structural_harmonic_solver.frequencies = data["frequencies"]
-                    app().main_window.project.structural_harmonic_solver.solution = data["solution"]
+                    app().project.structural_harmonic_solver.frequencies = data["frequencies"]
+                    app().project.structural_harmonic_solver.solution = data["solution"]
 
                 else:
                     continue

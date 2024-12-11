@@ -2,8 +2,8 @@ from PyQt5.QtWidgets import QDialog, QFileDialog, QFrame, QGridLayout, QMainWind
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtCore import pyqtSignal
 
-from vibra import app
-from vibra.config import UserConfig
+from vibra import *
+# from vibra.config import UserConfig
 from vibra.interface.analysis_filter_menu import AnalysisFilter
 from vibra.interface.section_plane_widget import SectionPlaneWidget
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
@@ -62,10 +62,7 @@ class MainWindow(QMainWindow):
         self.hidden_surfaces = set()
         self.hidden_volumes = set()
 
-        self.file = None
         self.dialog = None
-        self.project = Project()
-        self.user_config = UserConfig.load()
 
         self._initialize()
 
@@ -73,8 +70,6 @@ class MainWindow(QMainWindow):
         self.dialog = None
         self.project_data_modified = False
         self.user_path = Path().home()
-        self.temp_project_folder_path = self.user_path / "temp_vibra"
-        self.temp_project_file_path = str(self.temp_project_folder_path / "tmp.vibra")   
 
     def _define_qt_variables(self):
         pass
@@ -135,7 +130,7 @@ class MainWindow(QMainWindow):
         if volumes is None:
             volumes = set()
 
-        mesh = self.project.model.mesh
+        mesh = app().project.model.mesh
 
         # Select the surfaces associated to the selected volumes
         for volume in volumes:
@@ -269,7 +264,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
     def hide_selection_callback(self):
-        mesh = self.project.model.mesh
+        mesh = app().project.model.mesh
 
         volumes_to_hide = set()
         if self.selected_geometry_volumes:
@@ -369,13 +364,10 @@ class MainWindow(QMainWindow):
             self.recovery_dialog()
 
     def load_user_preferences(self):
-        self.set_theme(self.user_config.theme)
+        self.set_theme(app().user_config.theme)
 
     def get_user_config(self):
-        return self.user_config
-
-    def get_project(self):
-        return self.project
+        return app().user_config
 
     # External functions that may be usefull
     def set_theme(self, theme: str):
@@ -386,12 +378,12 @@ class MainWindow(QMainWindow):
         The input is a string "light" or "dark".
         """
         qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
-        self.user_config.theme = theme
+        app().user_config.theme = theme
         self.menu_widget._configItems()
         self.theme_changed.emit(theme)
 
     def set_menu_items_visibility_state(self, state: bool):
-        self.user_config.menu_items_visible = state
+        app().user_config.menu_items_visible = state
 
     def capture_image(self):
         path, check = QFileDialog.getSaveFileName(
@@ -409,9 +401,9 @@ class MainWindow(QMainWindow):
         create_new_folder(self.user_path, "temp_vibra")
 
     def reset_temporary_vibra_folder(self):
-        if self.temp_project_folder_path.exists():
-            for filename in os.listdir(self.temp_project_folder_path).copy():
-                file_path = self.temp_project_folder_path / filename
+        if TEMP_PROJECT_DIR.exists():
+            for filename in os.listdir(TEMP_PROJECT_DIR).copy():
+                file_path = TEMP_PROJECT_DIR / filename
                 if os.path.exists(file_path):
                     if "." in filename:
                         os.remove(file_path)
@@ -419,11 +411,11 @@ class MainWindow(QMainWindow):
                         rmtree(file_path)
 
     def is_temporary_vibra_folder_empty(self):
-        if self.temp_project_folder_path.exists():
-            if os.listdir(self.temp_project_folder_path):
+        if TEMP_PROJECT_DIR.exists():
+            if os.listdir(TEMP_PROJECT_DIR):
                 return False
         return True
-    
+
     def recovery_dialog(self):
 
         caption = "The recovery project data has been detected in the application backup files. "
@@ -446,10 +438,10 @@ class MainWindow(QMainWindow):
         self.import_geometry_dialog()
 
     def save_project_dialog(self):
-        if self.project.save_path is None:
+        if app().project.save_path is None:
             return self.save_project_as_dialog()
         else:
-            self.save_project_as(self.project.save_path)
+            self.save_project_as(app().project.save_path)
             return True
 
     def save_project_as_dialog(self):
@@ -474,10 +466,10 @@ class MainWindow(QMainWindow):
                 return
 
             if obj.ignore_results_data:
-                self.file.remove_results_data_from_project_file()
+                app().file.remove_results_data_from_project_file()
             
             if obj.ignore_mesh_data:
-                self.file.remove_mesh_data_from_project_file()
+                app().file.remove_mesh_data_from_project_file()
 
             self.save_project_as(file_path)
 
@@ -487,9 +479,9 @@ class MainWindow(QMainWindow):
 
         def save_data(path):
             path = Path(path)
-            self.project.name = path.stem
-            self.project.save_path = path
-            self.file.write_thumbnail()
+            app().project.name = path.stem
+            app().project.save_path = path
+            app().file.write_thumbnail()
             app().config.add_recent_file(path)
             logging.info("Saving project data..." + ProgressStatus(10, 100))
 
@@ -497,7 +489,7 @@ class MainWindow(QMainWindow):
             self.project_menu.update_recents_menu()
             logging.info("Saving project data..." + ProgressStatus(60, 100))
             
-            copy(self.temp_project_file_path, path)
+            copy(TEMP_PROJECT_FILE, path)
             self.update_window_title(path)
             self.project_data_modified = False
             logging.info("The project data has been saved." + ProgressStatus(100, 100))
@@ -549,25 +541,26 @@ class MainWindow(QMainWindow):
 
         app().config.write_last_folder_path_in_file("geometry folder", geometry_path)
 
-        self.project = Project()
+        app().project.reset_variables()
+        app().project.reset_solutions()
 
-        self.file = ProjectFile(self.temp_project_file_path)
-        self.file.write_geometry_in_file(geometry_path)
+        # self.file = ProjectFile(TEMP_PROJECT_FILE)
+        app().file.write_geometry_in_file(geometry_path)
 
         def remove_callback():
             logging.info("Removing the model properties from project file..." + ProgressStatus(10, 100))
-            self.file.remove_model_properties_from_project_file()
+            app().file.remove_model_properties_from_project_file()
             
             logging.info("Removing the mesh data from project file..." + ProgressStatus(40, 100))
-            self.file.remove_mesh_data_from_project_file()
+            app().file.remove_mesh_data_from_project_file()
 
             logging.info("Removing the results data from project file..." + ProgressStatus(75, 100))
-            self.file.remove_results_data_from_project_file()
+            app().file.remove_results_data_from_project_file()
 
         remove = load_function(remove_callback, self)
         remove()
 
-        _geometry_path = self.file.read_geometry_from_file()
+        _geometry_path = app().file.read_geometry_from_file()
         self.import_geometry(_geometry_path)
 
         return True
@@ -592,24 +585,27 @@ class MainWindow(QMainWindow):
             app().config.add_recent_file(project_path)
             app().config.write_last_folder_path_in_file("project folder", project_path)
             self.project_menu.update_recents_menu()
-            copy(project_path, self.temp_project_file_path)
+            copy(project_path, TEMP_PROJECT_FILE)
             self.update_window_title(project_path)
 
-        self.project = Project()
-        self.file = ProjectFile(self.temp_project_file_path, override=False)
+        app().project.reset_variables()
+        app().project.reset_solutions()
+
+        # self.file = ProjectFile(TEMP_PROJECT_FILE, override=False)
 
         if project_path is not None:
             path = Path(project_path)
-            self.project.name = path.stem
-            self.project.save_path = path
+            app().project.name = path.stem
+            app().project.save_path = path
 
-        self.load_project = LoadProject()
-        load = load_function(self.load_project.load, self)
+        # self.load_project = LoadProject()
+        app().load_project.initialize()
+        load = load_function(app().load_project.load, self)
         load()
 
     def import_geometry(self, path : str):
 
-        import_geometry = load_function(self.project.import_geometry, self)
+        import_geometry = load_function(app().project.import_geometry, self)
         if import_geometry(path) == -1:
             return
 
@@ -622,8 +618,8 @@ class MainWindow(QMainWindow):
             self.analysis_filter.setDisabled(False)
             self.menu_widget.modify_items_access_after_geometry_importing()
 
-            self.project.reset_solutions()
-            self.project.model.properties._reset_variables()
+            app().project.reset_solutions()
+            app().project.model.properties._reset_variables()
 
         except Exception as error_log:
             window_title = "Error"
@@ -639,8 +635,8 @@ class MainWindow(QMainWindow):
 
         self.close_dialogs()
 
-        condition_1 = self.project.save_path is None
-        condition_2 = os.path.exists(self.temp_project_file_path)
+        condition_1 = app().project.save_path is None
+        condition_2 = os.path.exists(TEMP_PROJECT_FILE)
         condition_3 = self.project_data_modified
         condition = (condition_1 and condition_2) or condition_3
 
@@ -670,7 +666,7 @@ class MainWindow(QMainWindow):
             if close == QMessageBox.No:
                 return
 
-        self.user_config.save()
+        app().user_config.save()
         self.reset_temporary_vibra_folder()
         sys.exit()
 

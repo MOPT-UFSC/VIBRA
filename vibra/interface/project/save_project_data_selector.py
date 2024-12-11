@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCloseEvent
 from PyQt5 import uic
 
-from vibra import app, UI_DIR
+from vibra import app, UI_DIR, TEMP_PROJECT_FILE
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 
 import os
@@ -64,8 +64,7 @@ class SaveProjectDataSelector(QDialog):
         self.pushButton_proceed.clicked.connect(self.proceed_callback)
 
     def get_required_memory(self):
-        path = app().main_window.temp_project_file_path
-        size_of_file = os.path.getsize(path) / 1e6
+        size_of_file = os.path.getsize(TEMP_PROJECT_FILE) / 1e6
         self.lineEdit_required_memory.setText(str(round(size_of_file, 4)))
 
     def remove_solution_data(self):

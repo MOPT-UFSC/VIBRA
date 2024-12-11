@@ -25,7 +25,7 @@ class BoundaryConditionInputs(QDialog):
         uic.loadUi(ui_path, self)
 
         self.main_window = app().main_window
-        self.project = self.main_window.project
+        self.project = app().project
         self.model = self.project.model
 
         self.main_window.set_input_widget(self)

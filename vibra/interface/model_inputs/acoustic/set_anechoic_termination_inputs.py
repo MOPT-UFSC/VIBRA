@@ -22,10 +22,10 @@ class SetAnechoicTerminationInputs(QDialog):
         uic.loadUi(ui_path, self)
 
         self.main_window = app().main_window
-        self.project = app().main_window.project
-        self.model = app().main_window.project.model
-        self.mesh = app().main_window.project.model.mesh
-        self.properties = app().main_window.project.model.properties
+        self.project = app().project
+        self.model = app().project.model
+        self.mesh = app().project.model.mesh
+        self.properties = app().project.model.properties
 
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
@@ -240,12 +240,12 @@ class SetAnechoicTerminationInputs(QDialog):
         if isinstance(self.project.analysis_data, dict):
             analysis_data = self.project.analysis_data
             self.project.set_analysis_data(analysis_data)
-            app().main_window.file.write_analysis_setup_in_file(analysis_data)
+            app().file.write_analysis_setup_in_file(analysis_data)
 
     def actions_to_finalize(self):
         self.check_model_frequency_controls()
         self.main_window.viewer_tabs.update_info_text()
-        app().main_window.file.write_model_properties_in_file()
+        app().file.write_model_properties_in_file()
         self.pushButton_cancel.setText("Exit")
         self.load_info()
 

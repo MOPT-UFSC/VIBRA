@@ -71,10 +71,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.update_plot()
 
     def update_plot(self, reset_camera=True):
-        if self.main_window.project is None:
+        if app().project is None:
             return
 
-        model = self.main_window.project.model
+        model = app().project.model
         if model is None:
             return
 
@@ -120,15 +120,15 @@ class GeometryRenderWidget(CommonRenderWidget):
         # First it gets a terrible image then it gets a better one.
         # I will keep it like this because it is fast enough, but this
         # may be addressed in near future.
-        self.main_window.project.thumbnail = self.get_thumbnail()
+        app().project.thumbnail = self.get_thumbnail()
 
     def update_hidden_plot(self):
         # We could just call the update_plot function,
         # but this is much simpler and faster
-        if self.main_window.project is None:
+        if app().project is None:
             return
 
-        model = self.main_window.project.model
+        model = app().project.model
         if model is None:
             return
 
@@ -241,7 +241,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         picked_faces = set()
         picked_volumes = set()
 
-        mesh = self.main_window.project.model.mesh
+        mesh = app().project.model.mesh
 
         for cell in picked_line_elements:
             line_entity = mesh.lines_connectivity[cell][1]
@@ -279,18 +279,18 @@ class GeometryRenderWidget(CommonRenderWidget):
         #     self.main_window.set_geometry_selection(nodes=[clicked_cell], join=ctrl_pressed, remove=alt_pressed)
 
         # elif clicked_actor == self.lines_actor:
-        #     line_entity = self.main_window.project.model.mesh.lines_connectivity[clicked_cell][1]
+        #     line_entity = app().project.model.mesh.lines_connectivity[clicked_cell][1]
         #     self.main_window.set_geometry_selection(lines=[line_entity], join=ctrl_pressed, remove=alt_pressed)
         #     # self.select_line(line_entity, join=ctrl_pressed, remove=alt_pressed)
 
         # elif (clicked_actor == self.faces_actor) and not shift_pressed:
-        #     face_entity = self.main_window.project.model.mesh.faces_connectivity[clicked_cell][1]
+        #     face_entity = app().project.model.mesh.faces_connectivity[clicked_cell][1]
         #     # self.select_face(face_entity, join=ctrl_pressed, remove=alt_pressed)
         #     self.main_window.set_geometry_selection(surfaces=[face_entity], join=ctrl_pressed, remove=alt_pressed)
 
         # elif (clicked_actor == self.faces_actor) and shift_pressed:
-        #     face_entity = self.main_window.project.model.mesh.faces_connectivity[clicked_cell][1]
-        #     for (volume, surfaces) in self.main_window.project.model.mesh.surfaces_from_volumes.items():
+        #     face_entity = app().project.model.mesh.faces_connectivity[clicked_cell][1]
+        #     for (volume, surfaces) in app().project.model.mesh.surfaces_from_volumes.items():
         #         if face_entity in surfaces:
         #             # self.select_volume(volume, join=ctrl_pressed, remove=alt_pressed)
         #             self.main_window.set_geometry_selection(volumes=[volume], join=ctrl_pressed, remove=alt_pressed)
@@ -316,12 +316,12 @@ class GeometryRenderWidget(CommonRenderWidget):
         faces = app().main_window.selected_geometry_surfaces
         volumes = app().main_window.selected_geometry_volumes
 
-        mesh = self.main_window.project.model.mesh
+        mesh = app().project.model.mesh
 
         # Get the line elements of all selected lines
         all_lines_elements = list()
         for line in lines:
-            indexes = self.main_window.project.model.mesh.elements_from_line.get(line, [])
+            indexes = app().project.model.mesh.elements_from_line.get(line, [])
             all_lines_elements.extend(indexes)
 
         all_faces_elements = list()
@@ -332,9 +332,9 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         # Get the face elements of all selected volumes
         for volume in volumes:
-            surfaces = self.main_window.project.model.mesh.surfaces_from_volumes[volume]
+            surfaces = app().project.model.mesh.surfaces_from_volumes[volume]
             for face in surfaces:
-                indexes = self.main_window.project.model.mesh.elements_from_surface.get(face, [])
+                indexes = app().project.model.mesh.elements_from_surface.get(face, [])
                 all_faces_elements.extend(indexes)
 
         self.points_actor.paint_cells(self.selection_color, points)
@@ -568,7 +568,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if len(volumes) != 1:
             return text
 
-        material = self.main_window.project.model.properties.get_material(volume=volumes[0])
+        material = app().project.model.properties.get_material(volume=volumes[0])
         if material is None:
             return text
 
@@ -591,7 +591,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if len(volumes) != 1:
             return text
 
-        fluid = self.main_window.project.model.properties.get_fluid(volume=volumes[0])
+        fluid = app().project.model.properties.get_fluid(volume=volumes[0])
         if fluid is None:
             return text
 
@@ -617,7 +617,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if len(volumes) != 1:
             return text
 
-        pm_model = self.main_window.project.model.properties.get_porous_material_model_data(
+        pm_model = app().project.model.properties.get_porous_material_model_data(
             volume=volumes[0]
         )
         if pm_model is None:
@@ -638,13 +638,13 @@ class GeometryRenderWidget(CommonRenderWidget):
         if len(selected_faces) != 1:
             return text
 
-        acoustic_pressure = self.main_window.project.model.properties.get_acoustic_pressure(
+        acoustic_pressure = app().project.model.properties.get_acoustic_pressure(
             selected_faces[0]
         )
-        surface_velocity = self.main_window.project.model.properties.get_surface_velocity(
+        surface_velocity = app().project.model.properties.get_surface_velocity(
             selected_faces[0]
         )
-        specific_impedance = self.main_window.project.model.properties.get_specific_impedance(
+        specific_impedance = app().project.model.properties.get_specific_impedance(
             selected_faces[0]
         )
         boundary_conditions_list = [acoustic_pressure, surface_velocity, specific_impedance]
@@ -680,7 +680,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         if specific_impedance is not None:
             if "anechoic_termination" in specific_impedance.keys():
-                fluid = self.main_window.project.model.properties.get_fluid(
+                fluid = app().project.model.properties.get_fluid(
                     surface=selected_faces[0]
                 )
                 density = fluid.fluid_density

@@ -209,7 +209,7 @@ class MesherInputs(QDialog):
 
     def _load_current_mesh_setup(self):
 
-        mesh_setup = app().main_window.project.model.mesh_setup
+        mesh_setup = app().project.model.mesh_setup
 
         if mesh_setup:
 
@@ -302,19 +302,19 @@ class MesherInputs(QDialog):
 
                 logging.info("Processing mesh..." + ProgressStatus(20, 100))
                 app().main_window.viewer_tabs.close_analysis_tabs()
-                app().main_window.project.reset_solutions()
+                app().project.reset_solutions()
 
                 logging.info("Processing mesh..." + ProgressStatus(30, 100))
-                app().main_window.project.set_mesh_setup(self.mesh_setup)
-                app().main_window.file.write_mesh_setup_in_file(self.file_mesh_setup)
+                app().project.set_mesh_setup(self.mesh_setup)
+                app().file.write_mesh_setup_in_file(self.file_mesh_setup)
 
                 logging.info("Processing mesh..." + ProgressStatus(40, 100))
-                app().main_window.project.generate_mesh()
+                app().project.generate_mesh()
 
             generate_mesh = load_function(generate_function, app().main_window)
             generate_mesh()
 
-            app().main_window.file.write_mesh_data_in_file()
+            app().file.write_mesh_data_in_file()
 
             actions_to_finalize = load_function(self.actions_to_finalize, self.main_window)
             actions_to_finalize()

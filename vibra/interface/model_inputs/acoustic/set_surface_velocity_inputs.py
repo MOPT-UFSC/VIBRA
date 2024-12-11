@@ -29,10 +29,10 @@ class SurfaceVelocityInput(QDialog):
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
 
-        self.project = app().main_window.project
-        self.model = app().main_window.project.model
-        self.mesh = app().main_window.project.model.mesh
-        self.properties = app().main_window.project.model.properties
+        self.project = app().project
+        self.model = app().project.model
+        self.mesh = app().project.model.mesh
+        self.properties = app().project.model.properties
 
         self._config_window()
         self._initialize()
@@ -269,7 +269,7 @@ class SurfaceVelocityInput(QDialog):
 
         frequencies = imported_values[:, 0]
 
-        if app().main_window.project.model.change_analysis_frequency_setup(list(frequencies)):
+        if app().project.model.change_analysis_frequency_setup(list(frequencies)):
             self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
@@ -292,7 +292,7 @@ class SurfaceVelocityInput(QDialog):
 
     def update_analysis_setup_in_file(self, frequencies: np.ndarray):
 
-        analysis_setup = app().main_window.file.read_analysis_setup_from_file()
+        analysis_setup = app().file.read_analysis_setup_from_file()
         if analysis_setup is None:
             analysis_setup = dict()
 
@@ -304,8 +304,8 @@ class SurfaceVelocityInput(QDialog):
         analysis_setup["f_max"] = float(f_max)
         analysis_setup["f_step"] = float(f_step)
 
-        app().main_window.project.set_analysis_data(analysis_setup)
-        app().main_window.file.write_analysis_setup_in_file(analysis_setup)
+        app().project.set_analysis_data(analysis_setup)
+        app().file.write_analysis_setup_in_file(analysis_setup)
 
     # def change_project_frequency_setup(self):
 
@@ -318,7 +318,7 @@ class SurfaceVelocityInput(QDialog):
     #         actual_frequencies = frequencies
     #         frequencies = list(frequencies)
 
-    #     analysis_data = self.main_window.project.analysis_data
+    #     analysis_data = app().project.analysis_data
     #     if analysis_data is None:
     #         self.project.set_frequencies(actual_frequencies, f_min, f_max, f_step, True)
     #         return
@@ -513,7 +513,7 @@ class SurfaceVelocityInput(QDialog):
     def actions_to_finalize(self):
         self.check_model_frequency_controls()
         self.main_window.viewer_tabs.update_info_text()
-        app().main_window.file.write_model_properties_in_file()
+        app().file.write_model_properties_in_file()
         self.pushButton_cancel.setText("Exit")
         self.load_info()
 
@@ -535,7 +535,7 @@ class SurfaceVelocityInput(QDialog):
         if isinstance(self.project.analysis_data, dict):
             analysis_data = self.project.analysis_data
             self.project.set_analysis_data(analysis_data)
-            app().main_window.file.write_analysis_setup_in_file(analysis_data)
+            app().file.write_analysis_setup_in_file(analysis_data)
 
     def reset_input_fields(self):
         self.lineEdit_real_value.setText("")

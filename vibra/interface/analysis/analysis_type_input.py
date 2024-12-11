@@ -171,15 +171,15 @@ class AnalysisTypeInput(QDialog):
     def finalize(self):
 
         self.complete = True
-        if app().main_window.project.analysis_data is not None:
-            for key, value in app().main_window.project.analysis_data.items():
+        if app().project.analysis_data is not None:
+            for key, value in app().project.analysis_data.items():
                 if key in ["f_min", "f_max", "f_step", "frequencies"]:
                     self.analysis_data[key] = value
 
-        app().main_window.project.set_analysis_data(self.analysis_data)
-        app().main_window.project.create_solver()
+        app().project.set_analysis_data(self.analysis_data)
+        app().project.create_solver()
 
         if self.analysis_id in [2, 4]:
-            app().main_window.file.write_analysis_setup_in_file(self.analysis_data)
+            app().file.write_analysis_setup_in_file(self.analysis_data)
 
         self.close()

@@ -42,17 +42,17 @@ class AdvancedResultsMenu(QMenu):
         self.addAction(self.export_element_transfer_data_action)
 
     def plot_specific_acoustic_impedance(self):
-        if app().main_window.project.acoustic_harmonic_solver.solution is None:
+        if app().project.acoustic_harmonic_solver.solution is None:
             return
         PlotSpecificAcousticImpedanceInput()
 
     def plot_particle_velocity(self):
-        if app().main_window.project.acoustic_harmonic_solver.solution is None:
+        if app().project.acoustic_harmonic_solver.solution is None:
             return
         PlotParticleVelocityFrequencyResponseInput()
 
     def export_element_transfer_data_callback(self):
-        if app().main_window.project.acoustic_harmonic_solver.solution is None:
+        if app().project.acoustic_harmonic_solver.solution is None:
             return
         ExportElementTransferDataInput()
 

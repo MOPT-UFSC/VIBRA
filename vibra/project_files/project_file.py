@@ -25,9 +25,6 @@ class ProjectFile:
         self.path = path
         self.filebox = Filebox(Path(path), override=override)
 
-        self.model = app().main_window.project.model
-        self.properties = self.model.properties
-
         self._initialize()
         self._default_filenames()
         self._default_foldernames()
@@ -127,27 +124,29 @@ class ProjectFile:
 
     def write_mesh_data_in_file(self):
 
+        mesh = app().project.model.mesh
+
         mesh_data = dict(
-                            nodal_coordinates = self.model.mesh.nodal_coordinates,
-                            nodes_from_points = self.model.mesh.nodes_from_points,
-                            nodes_from_lines = self.model.mesh.nodes_from_lines,
-                            nodes_from_surfaces = self.model.mesh.nodes_from_surfaces,
-                            nodes_from_volumes = self.model.mesh.nodes_from_volumes,
+                            nodal_coordinates = mesh.nodal_coordinates,
+                            nodes_from_points = mesh.nodes_from_points,
+                            nodes_from_lines = mesh.nodes_from_lines,
+                            nodes_from_surfaces = mesh.nodes_from_surfaces,
+                            nodes_from_volumes = mesh.nodes_from_volumes,
 
-                            lines_connectivity = self.model.mesh.lines_connectivity,
-                            faces_connectivity = self.model.mesh.faces_connectivity,
-                            solids_connectivity = self.model.mesh.solids_connectivity,
-                            connectivity_from_surfaces = self.model.mesh.connectivity_from_surfaces,
+                            lines_connectivity = mesh.lines_connectivity,
+                            faces_connectivity = mesh.faces_connectivity,
+                            solids_connectivity = mesh.solids_connectivity,
+                            connectivity_from_surfaces = mesh.connectivity_from_surfaces,
 
-                            map_line_elements = self.model.mesh.get_array_based_elements_mapping(entity = "lines"),
-                            map_face_elements = self.model.mesh.get_array_based_elements_mapping(entity = "faces"),
-                            map_solid_elements = self.model.mesh.get_array_based_elements_mapping(entity = "solids"),
+                            map_line_elements = mesh.get_array_based_elements_mapping(entity = "lines"),
+                            map_face_elements = mesh.get_array_based_elements_mapping(entity = "faces"),
+                            map_solid_elements = mesh.get_array_based_elements_mapping(entity = "solids"),
 
-                            gmsh_elements_from_lines = self.model.mesh.gmsh_elements_from_lines,
-                            gmsh_elements_from_surfaces = self.model.mesh.gmsh_elements_from_surfaces,
-                            gmsh_elements_from_volumes = self.model.mesh.gmsh_elements_from_volumes,
+                            gmsh_elements_from_lines = mesh.gmsh_elements_from_lines,
+                            gmsh_elements_from_surfaces = mesh.gmsh_elements_from_surfaces,
+                            gmsh_elements_from_volumes = mesh.gmsh_elements_from_volumes,
 
-                            surfaces_from_volumes = self.model.mesh.surfaces_from_volumes
+                            surfaces_from_volumes = mesh.surfaces_from_volumes
                         )
 
         with self.filebox.open(self.mesh_data_filename, "w") as internal_file:
@@ -303,13 +302,14 @@ class ProjectFile:
 
                 return output
 
+            properties = app().project.model.properties
             data = dict(
-                        # global_properties = normalize(self.properties.global_properties),
-                        volume_properties = normalize(self.properties.volume_properties),
-                        surface_properties = normalize(self.properties.surface_properties),
-                        line_properties = normalize(self.properties.line_properties),
-                        element_properties = normalize(self.properties.element_properties),
-                        nodal_properties = normalize(self.properties.nodal_properties),
+                        # global_properties = normalize(properties.global_properties),
+                        volume_properties = normalize(properties.volume_properties),
+                        surface_properties = normalize(properties.surface_properties),
+                        line_properties = normalize(properties.line_properties),
+                        element_properties = normalize(properties.element_properties),
+                        nodal_properties = normalize(properties.nodal_properties),
                         )
 
             self.filebox.write(self.model_properties, data)
@@ -351,8 +351,8 @@ class ProjectFile:
     def write_imported_table_data_in_file(self):
 
         self.filebox.remove(self.imported_table_data_filename)
-        acoustic_imported_tables = app().main_window.project.model.properties.acoustic_imported_tables
-        structural_imported_tables = app().main_window.project.model.properties.structural_imported_tables
+        acoustic_imported_tables = app().project.model.properties.acoustic_imported_tables
+        structural_imported_tables = app().project.model.properties.structural_imported_tables
 
         # print(acoustic_imported_tables)
         # print(structural_imported_tables)
@@ -376,8 +376,6 @@ class ProjectFile:
 
                             data_name = f"{group_label}/{table_name}"
                             f.create_dataset(data_name, data=data_array, dtype=float)
-                            # print(data_name, data_array.shape)
-                            # print("arquivo foi atualizado")
 
                     app().main_window.project_data_modified = True
 
@@ -406,7 +404,7 @@ class ProjectFile:
         return tables_data
 
     def write_thumbnail(self):
-        thumbnail = app().main_window.project.thumbnail
+        thumbnail = app().project.thumbnail
         if thumbnail is None:
             return
         self.filebox.write(self.thumbnail_filename, thumbnail)
@@ -419,7 +417,7 @@ class ProjectFile:
         with self.filebox.open(self.results_data_filename, "w") as internal_file:
             with h5py.File(internal_file, "w") as f:
 
-                acoustic_modal_solver = app().main_window.project.acoustic_modal_solver
+                acoustic_modal_solver = app().project.acoustic_modal_solver
                 if acoustic_modal_solver is not None:
                     if acoustic_modal_solver.modal_shape is not None:
                         natural_frequencies = acoustic_modal_solver.natural_frequencies
@@ -427,7 +425,7 @@ class ProjectFile:
                         f.create_dataset("modal_acoustic/natural_frequencies", data=natural_frequencies, dtype=float)
                         f.create_dataset("modal_acoustic/modal_shape", data=modal_shape, dtype=float)
                 
-                structural_modal_solver = app().main_window.project.structural_modal_solver
+                structural_modal_solver = app().project.structural_modal_solver
                 if structural_modal_solver is not None:
                     if structural_modal_solver.modal_shape is not None:
                         natural_frequencies = structural_modal_solver.natural_frequencies
@@ -435,7 +433,7 @@ class ProjectFile:
                         f.create_dataset("modal_structural/natural_frequencies", data=natural_frequencies, dtype=float)
                         f.create_dataset("modal_structural/modal_shape", data=modal_shape, dtype=float)
 
-                acoustic_harmonic_solver = app().main_window.project.acoustic_harmonic_solver
+                acoustic_harmonic_solver = app().project.acoustic_harmonic_solver
                 if acoustic_harmonic_solver is not None:
                     if acoustic_harmonic_solver.solution is not None:
                         frequencies = acoustic_harmonic_solver.frequencies
@@ -443,7 +441,7 @@ class ProjectFile:
                         f.create_dataset("harmonic_acoustic/frequencies", data=frequencies, dtype=float)
                         f.create_dataset("harmonic_acoustic/solution", data=solution, dtype=complex)
                 
-                structural_harmonic_solver = app().main_window.project.structural_harmonic_solver
+                structural_harmonic_solver = app().project.structural_harmonic_solver
                 if structural_harmonic_solver is not None:
                     if structural_harmonic_solver.solution is not None:
                         frequencies = acoustic_harmonic_solver.frequencies

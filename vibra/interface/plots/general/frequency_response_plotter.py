@@ -270,12 +270,14 @@ class FrequencyResponsePlotter(QDialog):
             return self.unit + "/s²"
 
     def paint_toolbar_icons(self, *args, **kwargs):
+
         from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
+
         toolbar = self.findChild(NavigationToolbar2QT)
         if toolbar is None:
             return
 
-        if app().main_window.user_config.theme == "dark":
+        if app().user_config.theme == "dark":
             color = QColor("#5f9af4")
         else:
             color = QColor("#1a73e8")
