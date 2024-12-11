@@ -213,7 +213,7 @@ class ProjectFile:
 
         return mesh_data
 
-    def write_analysis_setup_in_file(self, analysis_setup):
+    def write_analysis_setup_in_file(self, analysis_setup: dict):
 
         project_setup = self.filebox.read(self.project_setup_filename)
         if project_setup is None:

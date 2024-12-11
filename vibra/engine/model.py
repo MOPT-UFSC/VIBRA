@@ -43,6 +43,7 @@ class Model:
         self.f_max = 200
         self.f_step = 1
         self.frequencies = None
+        self.frequency_setup = dict()
         self.list_frequencies = list()
 
         self.analysis_data = None
@@ -128,6 +129,8 @@ class Model:
 
     def set_frequency_setup(self, analysis_setup: dict):
 
+        self.frequency_setup.clear()
+
         self.frequencies = None
         self.f_min = analysis_setup.get("f_min", None)
         self.f_max = analysis_setup.get("f_max", None)
@@ -136,8 +139,20 @@ class Model:
         if "frequencies" in analysis_setup.keys():
             self.frequencies = analysis_setup.get("frequencies", None)
 
-        elif (self.f_min, self.f_max, self.f_step).count(None) != 3:
-            self.frequencies = np.arange(self.f_min, self.f_max + self.f_step, self.f_step)
+        elif (self.f_min, self.f_max, self.f_step).count(None) == 0:
+
+            try:
+                self.frequencies = np.arange(self.f_min, self.f_max + self.f_step, self.f_step)
+            except:
+                self.frequencies = None
+                return
+
+        self.frequency_setup = {
+                                "f_min" : analysis_setup["f_min"],
+                                "f_max" : analysis_setup["f_max"],
+                                "f_step" : analysis_setup["f_step"],
+                                "frequencies" : self.frequencies
+                                }
 
     def change_analysis_frequency_setup(self, frequencies: list | np.ndarray | None):
 
@@ -152,15 +167,15 @@ class Model:
 
         if condition_1 or condition_2:
 
-            f_min = frequencies[0]
-            f_max = frequencies[-1]
-            f_step = frequencies[1] - frequencies[0]
+            # f_min = frequencies[0]
+            # f_max = frequencies[-1]
+            # f_step = frequencies[1] - frequencies[0]
 
-            frequency_setup = { "f_min" : f_min,
-                                "f_max" : f_max,
-                                "f_step" : f_step }
+            # frequency_setup = { "f_min" : float(f_min),
+            #                     "f_max" : float(f_max),
+            #                     "f_step" : float(f_step) }
 
-            self.set_frequency_setup(frequency_setup)
+            # self.set_frequency_setup(frequency_setup)
 
             self.list_frequencies = frequencies
 

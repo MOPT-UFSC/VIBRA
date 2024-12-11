@@ -80,6 +80,8 @@ class Mesh:
         self.volume_from_surface = defaultdict(list)
         self.face_elements_connected_to_nodes = defaultdict(list)
 
+        self.principal_diagonal = None
+
 
     @classmethod
     def from_cad(
@@ -482,6 +484,7 @@ class Mesh:
         self._maps_lines_by_elements()
         self._maps_surfaces_by_elements()
         self._maps_volumes_by_elements()
+        self.get_principal_diagonal_structure_parallelepiped()
 
 
     def _maps_lines_by_elements(self):
@@ -847,6 +850,18 @@ class Mesh:
                     center_coords.append(avg_coords)
 
         return center_coords
+
+
+    def get_principal_diagonal_structure_parallelepiped(self):
+        """
+        This method updates the principal structure diagonal parallelepiped attribute. 
+        
+        """
+        nodal_coordinates = self.nodal_coordinates.copy()
+        x_min, y_min, z_min = np.min(nodal_coordinates[:,1:], axis=0)
+        x_max, y_max, z_max = np.max(nodal_coordinates[:,1:], axis=0)
+        self.principal_diagonal = np.sqrt((x_max-x_min)**2 + (y_max-y_min)**2 + (z_max-z_min)**2)
+        # print('The base length is: {}[m]'.format(round(self.principal_diagonal,6)))
 
 
     def get_elements_and_nodes_from_sphere(self, surface_ids, selection_radius, averaged=False, filter_type=0, export_data=False):

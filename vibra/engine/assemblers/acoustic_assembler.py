@@ -536,6 +536,8 @@ class AcousticAssembler:
 
     def process_assemble(self):
 
+        self.update_number_of_frequencies()
+
         logging.info( "Gathering data to assemble global matrices..." + ProgressStatus(10, 100))
         t0 = time()
         self.get_data_to_process_global_matrices()

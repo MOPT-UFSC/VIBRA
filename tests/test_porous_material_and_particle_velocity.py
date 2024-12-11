@@ -143,7 +143,6 @@ def test_load_external_mesh_and_solve():
     assembler = AcousticAssembler(model)
 
     # Set the analysis frequency setup
-    # assembler.set_frequencies(frequencies)
     assembler.process_assemble()
     
     # t0 = time()

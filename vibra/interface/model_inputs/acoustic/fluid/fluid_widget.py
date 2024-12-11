@@ -339,6 +339,7 @@ class FluidWidget(QWidget):
         fluid = self.list_of_fluids[identifier]
 
         self.remove_fluid_from_file(fluid)
+        self.pushButton_cancel.setText("Exit")
 
     def item_changed_callback(self, item):
 

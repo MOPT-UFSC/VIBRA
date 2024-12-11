@@ -132,35 +132,9 @@ class Project:
     def set_lrf_eq_model_data(self, data, group=None, volume=None):
         self.model.set_lrf_eq_model_data(data, group=group, volume=volume)
 
-    def set_analysis_data(self, data):
+    def set_analysis_data(self, data: dict):
         self.analysis_data = data
-        # self.acoustic_assembler.set_analysis_data(data)
-        # self.structural_assembler.set_analysis_data(data)
-        self.acoustic_assembler.update_number_of_frequencies()
-        self.structural_assembler.update_number_of_frequencies()
-
-    def set_frequencies(self, frequencies, f_min, f_max, f_step, imported_table):
-
-        analysis_data = self.analysis_data
-
-        if isinstance(analysis_data, dict):
-            analysis_data["frequencies"] = frequencies
-            analysis_data["f_min"] = f_min
-            analysis_data["f_max"] = f_max
-            analysis_data["f_step"] = f_step
-
-        else:
-            analysis_data = {   
-                            "frequencies": frequencies,
-                            "f_min": f_min,
-                            "f_max": f_max,
-                            "f_step": f_step
-                           }
-
-        if imported_table:
-            analysis_data["imported_table"] = imported_table
-
-        self.set_analysis_data(analysis_data)
+        self.model.set_frequency_setup(data)
 
     def create_solver(self):
         """ """

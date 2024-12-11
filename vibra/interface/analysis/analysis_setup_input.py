@@ -52,7 +52,7 @@ class AnalysisSetupInput(QDialog):
 
         self._config_window()
         self._reset_variables()
-        self._load_analysis_data()
+
         self._define_qt_variables()
         self._create_connections()
         self._update_fmin()
@@ -86,7 +86,7 @@ class AnalysisSetupInput(QDialog):
         self.label_subtitle : QLabel
 
         # QLineEdit
-        if self.analysis_id == 1:
+        if self.analysis_id in [1, 6]:
             self.lineEdit_modes : QLineEdit
 
         self.lineEdit_av : QLineEdit
@@ -104,58 +104,44 @@ class AnalysisSetupInput(QDialog):
 
         # QTabWidget
         self.tabWidget : QTabWidget
-        self.currentTab = self.tabWidget.currentIndex()
 
     def _create_connections(self):
+        #
         self.pushButton_confirm_close.clicked.connect(self.enter_setup_callback)
         self.pushButton_confirm_run_analysis.clicked.connect(self.check_run)
-        self.tabWidget.currentChanged.connect(self.tabEvent)
 
     def _update_fmin(self):
         df = self.lineEdit_fstep.text()
         self.lineEdit_fmin.setText(df)
 
-    def _load_analysis_data(self):
-        data = self.project.analysis_data
+    # def _load_analysis_data(self):
 
-        if "analysis_type" in data.keys():
-            title = data["analysis_type"] + " Setup"
+    #     analysis_setup = app().main_window.file.read_analysis_setup_from_file()
+    #     if analysis_setup is None:
+    #         return
+        
+    #     if "analysis_id" in analysis_setup.keys():
 
-        if "analysis_method_label" in data.keys():
-            subtitle = data["analysis_method_label"]
+    #         analysis_id = analysis_setup["analysis_id"]
 
-        self.label_title.setText(title)
-        self.label_subtitle.setText(subtitle)
+    #         if analysis_id in [0, 1]:
+    #             title = "Structural Harmonic Analysis Setup"
+    #         elif analysis_id == 2:
+    #             title = "Structural Modal Analysis"
+    #         elif analysis_id == 3:
+    #             title = "Acoustic Harmonic Analysis Setup"
+    #         elif analysis_id == 4:
+    #             title = "Acoustic Modal Analysis"
+    #         elif analysis_id in [5, 6]:
+    #             title = "Coupled Harmonic Analysis Setup"
 
-        if "f_min" in data.keys():
-            self.f_min = data["f_min"]
+    #         if analysis_id in [0, 3, 5]:
+    #             subtitle = "Direct Method"
+    #         elif analysis_id in [1, 6]:
+    #             subtitle = "Mode Superposition Method"
 
-        if "f_max" in data.keys():
-            self.f_max = data["f_max"]
-
-        if "f_step" in data.keys():
-            self.f_step = data["f_step"]
-
-        if "global_damping" in data.keys():
-            self.global_damping = data["global_damping"]
-
-        if "modes" in data.keys():
-            self.modes = data["modes"]
-
-        if "imported_table" in data.keys():
-            _bool = data["imported_table"]
-            self.lineEdit_fmax.setDisabled(_bool)
-            self.lineEdit_fmin.setDisabled(_bool)
-            self.lineEdit_fstep.setDisabled(_bool)
-
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.check_run()
-        elif event.key() == Qt.Key_Escape:
-            self.close()
-
-    def tabEvent(self):
-        self.currentTab = self.tabWidget.currentIndex()
+    #     self.label_title.setText(title)
+    #     self.label_subtitle.setText(subtitle)
 
     def update_damping_inputs(self):
         if self.analysis_id not in [2, 3, 4]:
@@ -177,16 +163,17 @@ class AnalysisSetupInput(QDialog):
             f_max = self.model.f_max
             f_step = self.model.f_step
 
-        if f_step != 0:
+        if f_step:
 
             self.lineEdit_fmin.setText(str(round(f_min, 6)))
             self.lineEdit_fmax.setText(str(round(f_max, 6)))
             self.lineEdit_fstep.setText(str(round(f_step, 6)))
 
-            if app().main_window.project.model.properties.check_if_there_are_tables_at_the_model():
-                self.lineEdit_fmin.setDisabled(True)
-                self.lineEdit_fmax.setDisabled(True)
-                self.lineEdit_fstep.setDisabled(True)            
+            key = app().main_window.project.model.properties.check_if_there_are_tables_at_the_model()
+
+            self.lineEdit_fmin.setDisabled(key)
+            self.lineEdit_fmax.setDisabled(key)
+            self.lineEdit_fstep.setDisabled(key)            
 
     def enter_setup_callback(self):
 
@@ -326,3 +313,9 @@ class AnalysisSetupInput(QDialog):
     def closeEvent(self, a0):
         self.keep_window_open = False
         return super().closeEvent(a0)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            self.check_run()
+        elif event.key() == Qt.Key_Escape:
+            self.close()

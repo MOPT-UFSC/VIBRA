@@ -53,8 +53,8 @@ class LoadProject:
             keys = section.keys()
 
             name = section['name']
-            fluid_density =  float(section['fluid density'])
-            speed_of_sound =  float(section['speed of sound'])
+            fluid_density =  float(section['fluid_density'])
+            speed_of_sound =  float(section['speed_of_sound'])
             color =  get_color_rgb(section['color'])
             identifier =  int(section['identifier'])
 
@@ -324,14 +324,14 @@ class LoadProject:
                 for (property, id), prop_data in data.items():
 
                     if property == "fluid":
-                        fluid_id = prop_data
+                        fluid_id = prop_data["fluid_id"]
                         if fluid_id not in self.library_fluids.keys():
                             continue
                         else:
                             prop_data = self.library_fluids[fluid_id]
 
                     elif property == "material":
-                        material_id = prop_data
+                        material_id = prop_data["material_id"]
                         if material_id not in self.library_materials.keys():
                             continue
                         else:

@@ -1730,7 +1730,7 @@
                       </property>
                       <property name="icon">
                        <iconset>
-                        <normaloff>../../../../icons/common/broom.png</normaloff>../../../../icons/common/broom.png</iconset>
+                        <normaloff>../../../../icons/broom.png</normaloff>../../../../icons/broom.png</iconset>
                       </property>
                       <property name="iconSize">
                        <size>

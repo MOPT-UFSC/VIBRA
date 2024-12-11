@@ -239,7 +239,6 @@ class SetAnechoicTerminationInputs(QDialog):
 
         if isinstance(self.project.analysis_data, dict):
             analysis_data = self.project.analysis_data
-            analysis_data["imported_table"] = False
             self.project.set_analysis_data(analysis_data)
             app().main_window.file.write_analysis_setup_in_file(analysis_data)
 

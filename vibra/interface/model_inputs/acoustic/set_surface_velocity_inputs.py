@@ -269,12 +269,7 @@ class SurfaceVelocityInput(QDialog):
 
         frequencies = imported_values[:, 0]
 
-        f_min = frequencies[0]
-        f_max = frequencies[-1]
-        f_step = frequencies[1] - frequencies[0] 
-
         if app().main_window.project.model.change_analysis_frequency_setup(list(frequencies)):
-
             self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
@@ -284,26 +279,32 @@ class SurfaceVelocityInput(QDialog):
             PrintMessageInput([window_title_1, title, message])
             return True
 
-        self.update_analysis_setup_in_file(f_min, f_max, f_step)
+        self.update_analysis_setup_in_file(frequencies)
 
-        real_values = imported_values[:, 1]
-        imag_values = imported_values[:, 2]
+        real_values = self.imported_values[:, 1]
+        imag_values = self.imported_values[:, 2]
+
         data = np.array([frequencies, real_values, imag_values], dtype=float).T
 
         self.properties.add_imported_tables("acoustic", table_name, data)
 
         return False
 
-    def update_analysis_setup_in_file(self, f_min, f_max, f_step):
+    def update_analysis_setup_in_file(self, frequencies: np.ndarray):
 
         analysis_setup = app().main_window.file.read_analysis_setup_from_file()
         if analysis_setup is None:
             analysis_setup = dict()
 
-        analysis_setup["f_min"] = f_min
-        analysis_setup["f_max"] = f_max
-        analysis_setup["f_step"] = f_step
+        f_min = frequencies[0]
+        f_max = frequencies[-1]
+        f_step = frequencies[1] - frequencies[0] 
 
+        analysis_setup["f_min"] = float(f_min)
+        analysis_setup["f_max"] = float(f_max)
+        analysis_setup["f_step"] = float(f_step)
+
+        app().main_window.project.set_analysis_data(analysis_setup)
         app().main_window.file.write_analysis_setup_in_file(analysis_setup)
 
     # def change_project_frequency_setup(self):
@@ -533,7 +534,6 @@ class SurfaceVelocityInput(QDialog):
 
         if isinstance(self.project.analysis_data, dict):
             analysis_data = self.project.analysis_data
-            analysis_data["imported_table"] = False
             self.project.set_analysis_data(analysis_data)
             app().main_window.file.write_analysis_setup_in_file(analysis_data)
 

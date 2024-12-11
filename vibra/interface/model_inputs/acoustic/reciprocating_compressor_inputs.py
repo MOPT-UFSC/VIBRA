@@ -30,6 +30,7 @@ class ReciprocatingCompressorInputs(QDialog):
         uic.loadUi(ui_path, self)
 
         app().main_window.set_input_widget(self)
+        app().main_window.viewer_tabs.show_geometry()
 
         self.model = app().main_window.project.model
         self.properties = app().main_window.project.model.properties
@@ -236,10 +237,10 @@ class ReciprocatingCompressorInputs(QDialog):
                 self.update_compressor_inputs(data)
 
     def tab_event_callback(self):
-
-        self.lineEdit_selected_surface_id.setText("")
-        self.lineEdit_connection_type.setText("")
+        # self.lineEdit_selected_surface_id.setText("")
+        # self.lineEdit_connection_type.setText("")
         self.pushButton_remove.setDisabled(True)
+        return
 
         if self.tabWidget_compressor.currentIndex() == 2:
             self.pushButton_cancel.setDisabled(True)
@@ -717,13 +718,14 @@ class ReciprocatingCompressorInputs(QDialog):
 
         if np.remainder(T_selected, T_rev) == 0:
             T = T_selected
-            df = 1/T
+            df = 1 / T
+
         else:
             i = 0
-            df = 1/(T_rev)
+            df = 1 / T_rev
             while df > df_selected:
                 i += 1
-                df = 1/(i*T_rev)
+                df = 1 / (i*T_rev)
 
         self.N_rev = i
 
@@ -734,12 +736,8 @@ class ReciprocatingCompressorInputs(QDialog):
 
     def save_table_values(self, table_name: str, frequencies: np.ndarray, complex_values: np.ndarray):
 
-        f_min = frequencies[0]
-        f_max = frequencies[-1]
-        f_step = frequencies[1] - frequencies[0] 
-
         if app().main_window.project.model.change_analysis_frequency_setup(list(frequencies)):
-
+            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -748,27 +746,31 @@ class ReciprocatingCompressorInputs(QDialog):
             PrintMessageInput([window_title_1, title, message])
             return True
 
-        self.update_analysis_setup_in_file(f_min, f_max, f_step)
+        self.update_analysis_setup_in_file(frequencies)
 
         real_values = np.real(complex_values)
         imag_values = np.imag(complex_values)
-
         data = np.array([frequencies, real_values, imag_values], dtype=float).T
 
         self.properties.add_imported_tables("acoustic", table_name, data)
 
         return False
 
-    def update_analysis_setup_in_file(self, f_min, f_max, f_step):
+    def update_analysis_setup_in_file(self, frequencies: np.ndarray):
 
         analysis_setup = app().main_window.file.read_analysis_setup_from_file()
         if analysis_setup is None:
             analysis_setup = dict()
-    
-        analysis_setup["f_min"] = f_min
-        analysis_setup["f_max"] = f_max
-        analysis_setup["f_step"] = f_step
 
+        f_min = frequencies[0]
+        f_max = frequencies[-1]
+        f_step = frequencies[1] - frequencies[0] 
+
+        analysis_setup["f_min"] = float(f_min)
+        analysis_setup["f_max"] = float(f_max)
+        analysis_setup["f_step"] = float(f_step)
+
+        app().main_window.project.set_analysis_data(analysis_setup)
         app().main_window.file.write_analysis_setup_in_file(analysis_setup)
 
     def update_state_properties_at_discharge(self):
@@ -970,20 +972,26 @@ class ReciprocatingCompressorInputs(QDialog):
         self.update_tabs_visibility()
 
     def on_click_item(self, item):
-        self.lineEdit_selected_surface_id.setText(item.text(0))
-        self.lineEdit_connection_type.setText(item.text(1))
-        self.pushButton_remove.setDisabled(False)
+        if item.text(0) != "":
+            surface_id = int(item.text(0))
+            self.lineEdit_selected_surface_id.setText(item.text(0))
+            self.lineEdit_connection_type.setText(item.text(1))
+            app().main_window.set_geometry_selection(surfaces=[surface_id])
+            self.pushButton_remove.setDisabled(False)
 
     def update_tabs_visibility(self):
+
         self.lineEdit_selected_surface_id.setText("")
         self.lineEdit_connection_type.setText("")
         self.pushButton_remove.setDisabled(True)
-        self.tabWidget_compressor.setTabVisible(3, False)
+        self.tabWidget_compressor.setTabVisible(2, False)
+
         for (property, *_) in self.properties.surface_properties.keys():
             if property == "reciprocating_compressor_excitation":
                 self.tabWidget_compressor.setCurrentIndex(0)
-                self.tabWidget_compressor.setTabVisible(3, True)
+                self.tabWidget_compressor.setTabVisible(2, True)
                 return
+
         self.tabWidget_compressor.setCurrentIndex(0)
 
     def spinBox_event_number_of_points(self):

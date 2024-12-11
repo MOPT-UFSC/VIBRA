@@ -185,6 +185,9 @@ class StructuralAssembler:
             self.mass_matrix = _mass_matrix_full
 
     def process_assemble(self):
+
+        self.update_number_of_frequencies()
+
         self.assemble_mass_and_stiffness_global_matrices()
         # A = self.get_structural_excitations_by_nodal_attribution()
         # B = self.get_structural_excitations_by_element_integration()

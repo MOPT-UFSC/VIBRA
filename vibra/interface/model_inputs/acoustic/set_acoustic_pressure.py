@@ -269,12 +269,7 @@ class AcousticPressureInput(QDialog):
 
         frequencies = imported_values[:, 0]
 
-        f_min = frequencies[0]
-        f_max = frequencies[-1]
-        f_step = frequencies[1] - frequencies[0] 
-
         if app().main_window.project.model.change_analysis_frequency_setup(list(frequencies)):
-
             self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
@@ -284,94 +279,33 @@ class AcousticPressureInput(QDialog):
             PrintMessageInput([window_title_1, title, message])
             return True
 
-        self.update_analysis_setup_in_file(f_min, f_max, f_step)
+        self.update_analysis_setup_in_file(frequencies)
 
-        real_values = imported_values[:, 1]
-        imag_values = imported_values[:, 2]
+        real_values = self.imported_values[:, 1]
+        imag_values = self.imported_values[:, 2]
+
         data = np.array([frequencies, real_values, imag_values], dtype=float).T
 
         self.properties.add_imported_tables("acoustic", table_name, data)
 
         return False
 
-    def update_analysis_setup_in_file(self, f_min, f_max, f_step):
+    def update_analysis_setup_in_file(self, frequencies: np.ndarray):
 
         analysis_setup = app().main_window.file.read_analysis_setup_from_file()
         if analysis_setup is None:
             analysis_setup = dict()
 
-        analysis_setup["f_min"] = f_min
-        analysis_setup["f_max"] = f_max
-        analysis_setup["f_step"] = f_step
+        f_min = frequencies[0]
+        f_max = frequencies[-1]
+        f_step = frequencies[1] - frequencies[0] 
 
+        analysis_setup["f_min"] = float(f_min)
+        analysis_setup["f_max"] = float(f_max)
+        analysis_setup["f_step"] = float(f_step)
+
+        app().main_window.project.set_analysis_data(analysis_setup)
         app().main_window.file.write_analysis_setup_in_file(analysis_setup)
-
-    # def change_project_frequency_setup(self, frequencies : np.ndarray):
-
-    #     if isinstance(frequencies, np.ndarray):
-    #         f_min = frequencies[0]
-    #         f_max = frequencies[-1]
-    #         f_step = frequencies[1] - frequencies[0]
-    #         actual_frequencies = frequencies
-    #         frequencies = list(frequencies)
-
-    #     analysis_data = self.main_window.project.analysis_data
-    #     if analysis_data is None:
-    #         self.project.set_frequencies(actual_frequencies, f_min, f_max, f_step, True)
-    #         return
-
-    #     else:
-
-    #         imported_table = False
-    #         model_frequencies = list()
-    #         if "frequencies" in analysis_data.keys():
-    #             if isinstance(analysis_data["frequencies"], np.ndarray):
-    #                 model_frequencies = list(analysis_data["frequencies"])
-            
-    #             if "imported_table" in analysis_data.keys():
-    #                 imported_table = analysis_data["imported_table"]
-
-    #     if model_frequencies != frequencies:
-    #         if imported_table:
-
-    #             if self.are_there_other_active_tables():
-
-    #                 self.hide()
-    #                 table_path = self.lineEdit_table_path.text()
-    #                 table_name = os.path.basename(table_path)
-
-    #                 title = "Project frequency setup cannot be modified"
-    #                 message = f"The following imported table of values has a frequency setup "
-    #                 message += "different from the others already imported ones. The current "
-    #                 message += "project frequency setup is not going to be modified."
-    #                 message += f"\n\nTable name: {table_name}"
-    #                 PrintMessageInput([window_title_2, title, message])
-    #                 return True
-            
-    #         self.project.set_frequencies(actual_frequencies, f_min, f_max, f_step, True)
-
-    # def are_there_other_active_tables(self):
-
-    #     lineEdit_selection_id = self.lineEdit_selection_id.text()
-    #     stop, self.typed_ids = self.mesh.check_selected_ids(lineEdit_selection_id, selection="surfaces")
-    #     if stop:
-    #         self.lineEdit_selection_id.setFocus()
-    #         return
-
-    #     for (property, surface_id), data in self.properties.surface_properties.items():
-    #         if isinstance(data, dict):
-    #             if surface_id in self.typed_ids:
-    #                 if property == "acoustic_pressure":
-    #                     continue
-    #                 else:
-    #                     if "table_names" in data.keys():
-    #                         return True
-
-    #             else:
-    #                 if "table_names" in data.keys():
-    #                     return True
-
-    #     return False
 
     def load_acoustic_pressure_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
@@ -400,7 +334,6 @@ class AcousticPressureInput(QDialog):
                 if self.imported_values.shape[1] >= 3:
                     table_name = f"precribed_pressure_surface_{_id}"
                     if self.save_table_values(table_name, self.imported_values):
-                    # if self.change_project_frequency_setup():
                         self.lineEdit_table_path.setFocus()
                         self.imported_values = None
                         return
@@ -529,7 +462,6 @@ class AcousticPressureInput(QDialog):
 
         if isinstance(self.project.analysis_data, dict):
             analysis_data = self.project.analysis_data
-            analysis_data["imported_table"] = False
             self.project.set_analysis_data(analysis_data)
             app().main_window.file.write_analysis_setup_in_file(analysis_data)
 
