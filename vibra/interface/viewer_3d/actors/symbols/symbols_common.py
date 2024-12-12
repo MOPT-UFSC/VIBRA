@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from vtkmodules.vtkCommonCore import vtkFloatArray, vtkPoints
 from vtkmodules.vtkCommonDataModel import vtkPolyData
 from vtkmodules.vtkFiltersCore import vtkGlyph3D
@@ -22,7 +24,55 @@ Y_VECTOR = (0, 1, 0)
 Z_VECTOR = (0, 0, 1)
 
 
-class SymbolActorCommon(vtkActor):
+@dataclass
+class SymbolTranform:
+    position: tuple[float, float, float]
+    orientation: tuple[float, float, float]
+    size: float = 1
+
+
+class SymbolActorFixedSize(vtkActor):
+    def __init__(
+        self,
+        transforms: list[SymbolTranform],
+        source: vtkPolyData,
+    ):
+        points = vtkPoints()
+        polydata = vtkPolyData()
+        for t in transforms:
+            x, y, z = t.position
+            points.InsertNextPoint(x, y, z)
+        polydata.SetPoints(points)
+
+        directions_array = vtkFloatArray()
+        directions_array.SetName("directions")
+        directions_array.SetNumberOfComponents(3)
+        for t in transforms:
+            x, y, z = t.orientation
+            directions_array.InsertNextTuple3(x, y, z)
+        polydata.GetPointData().AddArray(directions_array)
+
+        sizes_array = vtkFloatArray()
+        sizes_array.SetName("sizes")
+        for t in transforms:
+            sizes_array.InsertNextValue(t.size)
+        polydata.GetPointData().SetScalars(sizes_array)
+
+        glyph = vtkGlyph3D()
+        glyph.SetInputData(polydata)
+        glyph.SetSourceData(source)
+        glyph.SetScaleModeToScaleByScalar()
+        glyph.SetVectorModeToUseVector()
+        glyph.SetInputArrayToProcess(0, 0, 0, 0, "sizes")
+        glyph.SetInputArrayToProcess(1, 0, 0, 0, "directions")
+
+        mapper = vtkPolyDataMapper()
+        mapper.SetInputConnection(glyph.GetOutputPort())
+        mapper.ScalarVisibilityOff()
+        self.SetMapper(mapper)
+
+
+class SymbolActorVariableSize(vtkActor):
     def __init__(
         self,
         positions: list[tuple],
