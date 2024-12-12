@@ -5,6 +5,8 @@
 
 # Local directory
 output_data/
+measured_data/
+temporary_data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
