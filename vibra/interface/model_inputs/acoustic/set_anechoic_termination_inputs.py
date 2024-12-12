@@ -65,7 +65,7 @@ class SetAnechoicTerminationInputs(QDialog):
 
         # QPushButton
         self.pushButton_attribute : QPushButton
-        self.pushButton_cancel : QPushButton
+        self.pushButton_exit : QPushButton
         self.pushButton_remove : QPushButton
         self.pushButton_reset : QPushButton
 
@@ -80,7 +80,7 @@ class SetAnechoicTerminationInputs(QDialog):
     def _create_connections(self):
         #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
@@ -249,7 +249,6 @@ class SetAnechoicTerminationInputs(QDialog):
         self.check_model_frequency_controls()
         self.main_window.viewer_tabs.update_info_text()
         app().file.write_model_properties_in_file()
-        self.pushButton_cancel.setText("Exit")
         self.load_info()
 
     def update_tabs_visibility(self):

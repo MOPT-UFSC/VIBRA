@@ -349,9 +349,6 @@ class Model:
     def set_viscous_thermal_model_data(self, data, group=None, volume=None):
         self.properties._set_property("viscous_thermal_model", data, group=group, volume=volume)
 
-    # def set_lrf_eq_model_data(self, data, group=None, volume=None):
-    #     self.properties.set_lrf_eq_model_data(data, group=group, volume=volume)
-
     def set_structural_boundary_condition(self, data, line, surface):
         self.properties.set_structural_boundary_condition(data, line, surface)
 

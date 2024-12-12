@@ -82,7 +82,7 @@ class MesherInputs(QDialog):
 
         # QPushButton
         self.pushButton_add: QPushButton
-        self.pushButton_cancel: QPushButton
+        self.pushButton_exit: QPushButton
         self.pushButton_delete: QPushButton
         self.pushButton_generate_mesh: QPushButton
 
@@ -107,7 +107,7 @@ class MesherInputs(QDialog):
     def _create_connections(self):
         #
         self.pushButton_add.clicked.connect(self.add_button_callback)
-        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_delete.clicked.connect(self.remove_callback)
         self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
         #
@@ -320,7 +320,6 @@ class MesherInputs(QDialog):
             actions_to_finalize()
 
             self.complete = True
-            self.pushButton_cancel.setText("Exit")
 
         except Exception as error_log:
             window_title = "Error"

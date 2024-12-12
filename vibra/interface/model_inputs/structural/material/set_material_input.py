@@ -78,16 +78,17 @@ class SetMaterialInput(QDialog):
         # QScrollArea
         self.scrollArea_table_of_materials : QScrollArea
         self.scrollArea_table_of_materials.setLayout(self.grid_layout)
-        self._add_material_input_widget()
+        self._add_material_widget()
         self.scrollArea_table_of_materials.adjustSize()
 
         # QPushButtonget_comboBox_index
-        self.pushButton_attribute_material = self.findChild(QPushButton, 'pushButton_attribute_material')
+        self.pushButton_attribute = self.findChild(QPushButton, 'pushButton_attribute')
+        self.pushButton_exit = self.findChild(QPushButton, 'pushButton_exit')
 
         # QTableWidget
         self.tableWidget_material_data = self.findChild(QTableWidget, 'tableWidget_material_data')
 
-    def _add_material_input_widget(self):
+    def _add_material_widget(self):
         self.material_widget = MaterialWidget()
         self.grid_layout.addWidget(self.material_widget)
         self.material_widget.pushButton_remove_column.clicked.connect(self.reset_selected_material_lineEdit)
@@ -99,7 +100,8 @@ class SetMaterialInput(QDialog):
         #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.update_attribution_type)
         #
-        self.pushButton_attribute_material.clicked.connect(self.confirm_material_attribution)
+        self.pushButton_attribute.clicked.connect(self.attribute_callback)
+        self.pushButton_exit.clicked.connect(self.close)
         self.material_widget.pushButton_reset_library.clicked.connect(self.reset_material_library_callback)
         #
         self.tableWidget_material_data.currentCellChanged.connect(self.current_cell_changed)
@@ -150,7 +152,7 @@ class SetMaterialInput(QDialog):
         self.lineEdit_selection_id.setEnabled(bool(index))
         # self.comboBox_attribution_type.setCurrentIndex(index)
 
-    def confirm_material_attribution(self):
+    def attribute_callback(self):
 
         selected_material = self.material_widget.get_selected_material()
 
@@ -210,7 +212,7 @@ class SetMaterialInput(QDialog):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.confirm_material_attribution()
+            self.attribute_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
 

@@ -129,9 +129,6 @@ class Project:
     def set_viscous_thermal_model(self, data, **kwargs):
         self.model.set_viscous_thermal_model_data(data, **kwargs)
 
-    def set_lrf_eq_model_data(self, data, group=None, volume=None):
-        self.model.set_lrf_eq_model_data(data, group=group, volume=volume)
-
     def set_analysis_data(self, data: dict):
         self.analysis_data = data
         self.model.set_frequency_setup(data)

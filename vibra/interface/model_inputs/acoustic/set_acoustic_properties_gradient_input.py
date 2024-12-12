@@ -88,7 +88,7 @@ class SetAcousticPropertiesGradientInputs(QDialog):
         self.lineEdit_end_pressure: QLineEdit
 
         # QPushButton
-        self.pushButton_cancel: QPushButton
+        self.pushButton_exit: QPushButton
         self.pushButton_confirm: QPushButton
         self.pushButton_remove: QPushButton
         self.pushButton_reset: QPushButton
@@ -105,7 +105,7 @@ class SetAcousticPropertiesGradientInputs(QDialog):
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         self.comboBox_refinement_regions.currentIndexChanged.connect(self.refinement_regions_callback)
         #
-        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_confirm.clicked.connect(self.attribute_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)

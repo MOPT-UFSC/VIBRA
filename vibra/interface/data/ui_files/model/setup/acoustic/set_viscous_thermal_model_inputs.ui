@@ -2224,7 +2224,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
        </widget>
       </item>
       <item row="0" column="0">
-       <widget class="QPushButton" name="pushButton_cancel">
+       <widget class="QPushButton" name="pushButton_exit">
         <property name="minimumSize">
          <size>
           <width>100</width>
@@ -2274,7 +2274,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
   <tabstop>pushButton_get_fluid</tabstop>
   <tabstop>pushButton_plot_data</tabstop>
   <tabstop>pushButton_confirm</tabstop>
-  <tabstop>pushButton_cancel</tabstop>
+  <tabstop>pushButton_exit</tabstop>
  </tabstops>
  <resources/>
  <connections/>

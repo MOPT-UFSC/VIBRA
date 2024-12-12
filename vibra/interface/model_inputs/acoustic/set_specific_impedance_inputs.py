@@ -67,7 +67,7 @@ class SpecificImpedanceInput(QDialog):
 
         # QPushButton
         self.pushButton_attribute : QPushButton
-        self.pushButton_cancel : QPushButton
+        self.pushButton_exit : QPushButton
         self.pushButton_change_frequency_setup : QPushButton
         self.pushButton_load_table : QPushButton
         self.pushButton_remove : QPushButton
@@ -86,7 +86,7 @@ class SpecificImpedanceInput(QDialog):
     def _create_connections(self):
         #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_load_table.clicked.connect(self.load_specific_impedance_table)
         self.pushButton_reset.clicked.connect(self.reset_callback)
@@ -433,7 +433,6 @@ class SpecificImpedanceInput(QDialog):
         self.check_model_frequency_controls()
         self.main_window.viewer_tabs.update_info_text()
         app().file.write_model_properties_in_file()
-        self.pushButton_cancel.setText("Exit")
         self.load_info()
 
     def change_frequency_setup(self):

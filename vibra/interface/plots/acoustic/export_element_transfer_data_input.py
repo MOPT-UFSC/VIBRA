@@ -81,14 +81,14 @@ class ExportElementTransferDataInput(QDialog):
         self.current_lineEdit = self.lineEdit_output_selected_id
 
         # QPushButton
-        self.pushButton_cancel: QPushButton
+        self.pushButton_exit: QPushButton
         self.pushButton_export_data: QPushButton
         self.pushButton_invert_selection: QPushButton
         self.pushButton_search: QPushButton
 
     def _create_connections(self):
         #
-        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_invert_selection.clicked.connect(self.invert_selection_callback)
         self.pushButton_search.clicked.connect(self.search_callback)
@@ -205,7 +205,6 @@ class ExportElementTransferDataInput(QDialog):
         if self.model_results:
             existing_path = self.lineEdit_spreadsheet_path.text()
             self.exporter._set_data_to_export(self.model_results, existing_path=existing_path)
-            self.pushButton_cancel.setText("Close")
 
     def process_areas(self):
 

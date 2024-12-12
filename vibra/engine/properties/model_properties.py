@@ -99,9 +99,6 @@ class ModelProperties:
     def set_porous_material_model_data(self, data, **kwargs):
         self._set_property("porous_material_model", data, **kwargs)
 
-    # def set_lrf_eq_model_data(self, data, group=None, volume=None):
-    #     self._set_property("lrf_eq_model", data, group=group, volume=volume)
-
     def get_fluid_density(self, fluid, **kwargs):
         rho_0 = fluid.fluid_density
         dissipation_model = self.get_dissipation_model(**kwargs)

@@ -94,7 +94,7 @@ class SetViscousThermalLossModel(QDialog):
         self.lineEdit_center_coordinates.setDisabled(True)
 
         # QPushButton
-        self.pushButton_cancel: QPushButton
+        self.pushButton_exit: QPushButton
         self.pushButton_confirm: QPushButton
         self.pushButton_remove: QPushButton
         self.pushButton_reset: QPushButton
@@ -123,7 +123,7 @@ class SetViscousThermalLossModel(QDialog):
         self.lineEdit_height_rectangular.textChanged.connect(self.update_rectangular_duct_area)
         self.lineEdit_diameter_circular.textChanged.connect(self.update_circular_duct_area)
         #
-        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_confirm.clicked.connect(self.attribute_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)

@@ -34,15 +34,13 @@ class FluidWidget(QWidget):
     def __init__(self, *argas, **kwargs):
         super().__init__()
         
-        ui_path = UI_DIR  / "model/setup/fluid/fluid_input_widget.ui"
+        ui_path = UI_DIR  / "model/setup/fluid/fluid_widget.ui"
         uic.loadUi(ui_path, self)
 
         self.parent_widget = kwargs.get("parent_widget", None)
         self.state_properties = kwargs.get("state_properties", dict())
 
-        self.main_window = app().main_window
-        # self.main_window.set_input_widget(self)
-        self.main_window.viewer_tabs.show_geometry()
+        app().main_window.viewer_tabs.show_geometry()
 
         self.project = app().project
         self.model = self.project.model
@@ -84,7 +82,7 @@ class FluidWidget(QWidget):
         # QPushButton
         self.pushButton_add_column: QPushButton
         self.pushButton_attribute: QPushButton
-        self.pushButton_cancel: QPushButton
+        self.pushButton_exit: QPushButton
         self.pushButton_refprop: QPushButton
         self.pushButton_remove_column: QPushButton
         self.pushButton_reset_library: QPushButton
@@ -338,7 +336,6 @@ class FluidWidget(QWidget):
         fluid = self.list_of_fluids[identifier]
 
         self.remove_fluid_from_file(fluid)
-        self.pushButton_cancel.setText("Exit")
 
     def item_changed_callback(self, item):
 
@@ -550,7 +547,7 @@ class FluidWidget(QWidget):
                                                     state_properties = self.state_properties)
 
             if not self.refprop.complete:
-                self.main_window.set_input_widget(self)
+                app().main_window.set_input_widget(self)
                 return
 
             self.selected_column = col
@@ -656,7 +653,7 @@ class FluidWidget(QWidget):
         self.refprop = SetFluidCompositionInput(state_properties = self.state_properties)
         if not self.refprop.complete:
             self.refprop = None
-            self.main_window.set_input_widget(self)
+            app().main_window.set_input_widget(self)
             return True
 
         self.after_getting_fluid_properties_from_refprop()

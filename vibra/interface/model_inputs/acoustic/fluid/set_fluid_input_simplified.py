@@ -71,7 +71,7 @@ class SetFluidInputSimplified(QDialog):
         # QScrollArea
         self.scrollArea_table_of_fluids : QScrollArea
         self.scrollArea_table_of_fluids.setLayout(self.grid_layout)
-        self._add_fluid_input_widget()
+        self._add_fluid_widget()
         self.frame_main_widget.adjustSize()
 
         # QPushButton
@@ -82,10 +82,10 @@ class SetFluidInputSimplified(QDialog):
         self.tableWidget_fluid_data = self.findChild(QTableWidget, 'tableWidget_fluid_data')
 
     def _create_connections(self):
-        self.fluid_widget.pushButton_cancel.clicked.connect(self.close)
+        self.fluid_widget.pushButton_exit.clicked.connect(self.close)
         self.tableWidget_fluid_data.currentCellChanged.connect(self.current_cell_changed)
 
-    def _add_fluid_input_widget(self):
+    def _add_fluid_widget(self):
         self.fluid_widget = FluidWidget(parent_widget=self)
         self.grid_layout.addWidget(self.fluid_widget)
         self.fluid_widget.pushButton_remove_column.clicked.connect(self.reset_selected_fluid_lineEdit)

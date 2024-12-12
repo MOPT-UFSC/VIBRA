@@ -114,7 +114,7 @@ class SetPorousMaterialModel(QDialog):
         self.lineEdit_viscous_characteristic_length_JCAL: QLineEdit
 
         # QPushButton
-        self.pushButton_cancel: QPushButton
+        self.pushButton_exit: QPushButton
         self.pushButton_confirm: QPushButton
         self.pushButton_remove: QPushButton
         self.pushButton_reset: QPushButton
@@ -132,7 +132,7 @@ class SetPorousMaterialModel(QDialog):
         self.comboBox_attribution_type.currentIndexChanged.connect(self.update_attribution_type)
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_type_callback)
         #
-        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_confirm.clicked.connect(self.attribute_callback)
         self.pushButton_remove.clicked.connect(self.remove_porous_material_model)
         self.pushButton_reset.clicked.connect(self.reset_porous_material_model)

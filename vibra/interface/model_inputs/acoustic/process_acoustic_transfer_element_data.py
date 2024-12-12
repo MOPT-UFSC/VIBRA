@@ -71,7 +71,7 @@ class ProcessAcousticTransferElementData(QDialog):
         self.current_lineEdit = self.lineEdit_output_selected_id
 
         # QPushButton
-        self.pushButton_cancel: QPushButton
+        self.pushButton_exit: QPushButton
         self.pushButton_process_data: QPushButton
         self.pushButton_invert_selection: QPushButton
         self.pushButton_search: QPushButton
@@ -82,7 +82,7 @@ class ProcessAcousticTransferElementData(QDialog):
 
     def _create_connections(self):
         #
-        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_process_data.clicked.connect(self.process_data_callback)
         self.pushButton_invert_selection.clicked.connect(self.invert_selection_callback)
         self.pushButton_search.clicked.connect(self.search_callback)
@@ -485,7 +485,7 @@ class ProcessAcousticTransferElementData(QDialog):
 
     def print_final_message(self):
 
-        self.pushButton_cancel.setText("Exit")
+        self.pushButton_exit.setText("Exit")
 
         window_title = "Vibra"
         title = "Data exporting finished"

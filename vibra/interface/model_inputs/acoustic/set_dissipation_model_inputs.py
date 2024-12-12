@@ -58,7 +58,6 @@ class DissipationModelInput(QDialog):
         self.setWindowTitle("Set the dissipation model")
 
     def _initialize(self):
-        self.typed_ids = []
         self.model = ""
         self.speed_of_sound_factor = 0
         self.fluid_density_factor = 0
@@ -75,7 +74,8 @@ class DissipationModelInput(QDialog):
         self.lineEdit_speed_of_sound_complex_factor : QLineEdit
 
         # QPushButton
-        self.pushButton_confirm_proportional_damping : QPushButton
+        self.pushButton_confirm : QPushButton
+        self.pushButton_exit : QPushButton
         self.pushButton_remove : QPushButton
         self.pushButton_reset : QPushButton
 
@@ -89,9 +89,10 @@ class DissipationModelInput(QDialog):
         #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.update_attribution_type)
         #
-        self.pushButton_confirm_proportional_damping.clicked.connect(self.attribute_dissipation_model)
-        self.pushButton_remove.clicked.connect(self.remove_dissipation_model)
-        self.pushButton_reset.clicked.connect(self.reset_dissipation_model)
+        self.pushButton_confirm.clicked.connect(self.attribute_callback)
+        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_remove.clicked.connect(self.remove_callback)
+        self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         self.tabWidget_dissipation_model.currentChanged.connect(self.tabEvent_dissipation_model)
         #
@@ -102,13 +103,15 @@ class DissipationModelInput(QDialog):
         #
         self.update_attribution_type()
 
-    def remove_dissipation_model(self):
+    def remove_callback(self):
+
         if self.lineEdit_selection_id.text() != "":
+
             volume_id = int(self.lineEdit_selection_id.text())
             self.properties._remove_volume_property("dissipation_model", volume_id)
             self.load_info()
 
-    def reset_dissipation_model(self):
+    def reset_callback(self):
 
         volume_ids = list()
         for key, data in self.properties.volume_properties.items():
@@ -237,7 +240,7 @@ class DissipationModelInput(QDialog):
         else:
             print("Not implemented dissipation model.")
 
-    def attribute_dissipation_model(self):
+    def attribute_callback(self):
 
         attribute_type = self.comboBox_attribution_type.currentIndex()
         if attribute_type in [0, 1]:
@@ -310,6 +313,16 @@ class DissipationModelInput(QDialog):
             self.stop = True
             return None
         return out
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            self.attribute_callback()
+        elif event.key() == Qt.Key_Delete:
+            self.remove_callback()
+        elif event.key() == Qt.Key_Escape:
+            self.close()
+        else:
+            return
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False

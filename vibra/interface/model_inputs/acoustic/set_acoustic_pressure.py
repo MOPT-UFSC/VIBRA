@@ -72,7 +72,7 @@ class AcousticPressureInput(QDialog):
 
         # QPushButton
         self.pushButton_attribute : QPushButton
-        self.pushButton_cancel : QPushButton
+        self.pushButton_exit : QPushButton
         self.pushButton_change_frequency_setup : QPushButton
         self.pushButton_load_table : QPushButton
         self.pushButton_remove : QPushButton
@@ -100,7 +100,7 @@ class AcousticPressureInput(QDialog):
     def _create_connections(self):
         #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_load_table.clicked.connect(self.load_acoustic_pressure_table)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
@@ -442,7 +442,6 @@ class AcousticPressureInput(QDialog):
         self.check_model_frequency_controls()
         self.main_window.viewer_tabs.update_info_text()
         app().file.write_model_properties_in_file()
-        self.pushButton_cancel.setText("Exit")
         self.load_info()
 
     def change_frequency_setup(self):
@@ -519,8 +518,7 @@ class AcousticPressureInput(QDialog):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.attribute_callback()
         elif event.key() == Qt.Key_Delete:
-            if self.tabWidget_main.currentIndex() == 2:
-                self.remove_callback()
+            self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
         else:

@@ -3,7 +3,7 @@ from PyQt5.QtGui import QCloseEvent, QColor
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
 
-from vibra import app, UI_DIR
+from vibra import app, UI_DIR, TEMP_PROJECT_FILE
 from vibra.interface.formatters.icons import *
 
 from vibra.interface.general.pick_color_input import PickColorInput
@@ -33,12 +33,10 @@ class MaterialWidget(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/setup/material/material_input_widget.ui"
+        ui_path = UI_DIR / "model/setup/material/material_widget.ui"
         uic.loadUi(ui_path, self)
 
-        self.main_window = app().main_window
-        # self.main_window.set_input_widget(self)
-        self.main_window.viewer_tabs.show_geometry()
+        app().main_window.viewer_tabs.show_geometry()
 
         self.project = app().project
         self.model = self.project.model
@@ -78,7 +76,8 @@ class MaterialWidget(QWidget):
     def define_qt_variables(self):
 
         # QPushButton
-        self.pushButton_attribute_material : QPushButton
+        self.pushButton_attribute : QPushButton
+        self.pushButton_exit : QPushButton
         self.pushButton_add_column : QPushButton
         self.pushButton_remove_column : QPushButton
         self.pushButton_reset_library : QPushButton

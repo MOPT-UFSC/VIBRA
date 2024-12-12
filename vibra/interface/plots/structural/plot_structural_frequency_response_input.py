@@ -63,7 +63,7 @@ class PlotStructuralFrequencyResponseInput(QDialog):
 
         # QPushButton
         self.pushButton_export_data : QPushButton
-        self.pushButton_cancel: QPushButton
+        self.pushButton_exit: QPushButton
         self.pushButton_plot_data : QPushButton
 
         # RadioButton
@@ -77,7 +77,7 @@ class PlotStructuralFrequencyResponseInput(QDialog):
     def _create_connections(self):
         #
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
-        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
@@ -133,8 +133,6 @@ class PlotStructuralFrequencyResponseInput(QDialog):
         self.join_model_data()
         self.plotter = FrequencyResponsePlotter()
         self.plotter._set_model_results_data_to_plot(self.model_results)
-
-        self.pushButton_cancel.setText("Exit")
 
     def export_data_callback(self):
         

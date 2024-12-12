@@ -72,8 +72,8 @@ class SurfaceVelocityInput(QDialog):
 
         # QPushButton
         self.pushButton_attribute : QPushButton
-        self.pushButton_cancel : QPushButton
         self.pushButton_change_frequency_setup : QPushButton
+        self.pushButton_exit : QPushButton
         self.pushButton_load_table : QPushButton
         self.pushButton_remove : QPushButton
         self.pushButton_reset : QPushButton
@@ -100,7 +100,7 @@ class SurfaceVelocityInput(QDialog):
     def _create_connections(self):
         #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_change_frequency_setup.clicked.connect(self.change_frequency_setup)
         self.pushButton_load_table.clicked.connect(self.load_surface_velocity_table)
         self.pushButton_remove.clicked.connect(self.remove_callback)
@@ -514,7 +514,7 @@ class SurfaceVelocityInput(QDialog):
         self.check_model_frequency_controls()
         self.main_window.viewer_tabs.update_info_text()
         app().file.write_model_properties_in_file()
-        self.pushButton_cancel.setText("Exit")
+        app().main_window.viewer_tabs.update_plots()
         self.load_info()
 
     def change_frequency_setup(self):

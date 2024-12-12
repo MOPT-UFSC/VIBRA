@@ -66,7 +66,7 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
 
         # QPushButton
         self.pushButton_export_data : QPushButton
-        self.pushButton_cancel: QPushButton
+        self.pushButton_exit: QPushButton
         self.pushButton_plot_data : QPushButton
         self.pushButton_flip_selection : QPushButton
 
@@ -75,7 +75,7 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
         #
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
-        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_flip_selection.clicked.connect(self.flip_nodes)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
@@ -190,8 +190,6 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         self.join_model_data()
         self.plotter = FrequencyResponsePlotter()
         self.plotter._set_model_results_data_to_plot(self.model_results)
-
-        self.pushButton_cancel.setText("Exit")
 
     def export_data_callback(self):
 
