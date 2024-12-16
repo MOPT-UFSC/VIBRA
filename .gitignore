@@ -7,6 +7,7 @@
 output_data/
 measured_data/
 temporary_data/
+exported_mesh_files/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
