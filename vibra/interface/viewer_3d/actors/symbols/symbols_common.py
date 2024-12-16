@@ -37,9 +37,14 @@ class SymbolActorFixedSize(vtkActor):
         transforms: list[SymbolTranform],
         source: vtkPolyData,
     ):
+        self._transforms = transforms
+        self._source = source
+        self.build()
+
+    def build(self):
         points = vtkPoints()
         polydata = vtkPolyData()
-        for t in transforms:
+        for t in self._transforms:
             x, y, z = t.position
             points.InsertNextPoint(x, y, z)
         polydata.SetPoints(points)
@@ -47,20 +52,20 @@ class SymbolActorFixedSize(vtkActor):
         directions_array = vtkFloatArray()
         directions_array.SetName("directions")
         directions_array.SetNumberOfComponents(3)
-        for t in transforms:
+        for t in self._transforms:
             x, y, z = t.orientation
             directions_array.InsertNextTuple3(x, y, z)
         polydata.GetPointData().AddArray(directions_array)
 
         sizes_array = vtkFloatArray()
         sizes_array.SetName("sizes")
-        for t in transforms:
+        for t in self._transforms:
             sizes_array.InsertNextValue(t.size)
         polydata.GetPointData().SetScalars(sizes_array)
 
         glyph = vtkGlyph3D()
         glyph.SetInputData(polydata)
-        glyph.SetSourceData(source)
+        glyph.SetSourceData(self._source)
         glyph.SetScaleModeToScaleByScalar()
         glyph.SetVectorModeToUseVector()
         glyph.SetInputArrayToProcess(0, 0, 0, 0, "sizes")
@@ -70,6 +75,7 @@ class SymbolActorFixedSize(vtkActor):
         mapper.SetInputConnection(glyph.GetOutputPort())
         mapper.ScalarVisibilityOff()
         self.SetMapper(mapper)
+        self.Modified()
 
 
 class SymbolActorVariableSize(vtkActor):
