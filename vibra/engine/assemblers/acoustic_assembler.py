@@ -94,16 +94,19 @@ class AcousticAssembler:
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "acoustic_pressure":
+
                 if "values" in data.keys():
                     complex_values = data["values"]
                 else:
                     real_values = np.array(data["real_values"])
                     imag_values = np.array(data["imag_values"])
                     complex_values = real_values + 1j * imag_values
+                
                 nodes = self.model.mesh.nodes_from_surfaces[surface_id]
 
                 for _ in nodes:
-                    global_prescribed.append(complex_values)
+                    for _complex_values in complex_values:
+                        global_prescribed.append(_complex_values)
 
         # TODO: implement same structure for lines
 
@@ -163,6 +166,7 @@ class AcousticAssembler:
         aux_ones = np.ones((1, self.number_frequencies), dtype=complex)
 
         for key, data in self.properties.surface_properties.items():
+
             prop, surface_id = key
             if prop == property_label:
                 if not data["nodal_attribution"]:

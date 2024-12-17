@@ -105,21 +105,6 @@ class Project:
     def set_structural_boundary_condition(self, data, line, surface):
         self.model.set_structural_boundary_condition(data, line, surface)
 
-    def set_acoustic_pressure(self, data, surface):
-        self.model.set_acoustic_pressure(data, surface)
-
-    def set_mass_flow_rate(self, data, surface):
-        self.model.set_mass_flow_rate(data, surface)
-
-    def set_volume_velocity(self, data, surface):
-        self.model.set_volume_velocity(data, surface)
-
-    def set_surface_velocity(self, data, surface):
-        self.model.set_surface_velocity(data, surface)
-
-    def set_specific_impedance(self, data, surface):
-        self.model.set_specific_impedance(data, surface)
-
     def set_dissipation_model(self, data, volume):
         self.model.set_dissipation_model_data(data, volume=volume)
 

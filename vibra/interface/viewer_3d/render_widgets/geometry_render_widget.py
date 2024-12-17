@@ -1,3 +1,5 @@
+# fmt: off
+
 import numpy as np
 from molde.render_widgets import CommonRenderWidget
 from molde.utils import TreeInfo
@@ -655,50 +657,66 @@ class GeometryRenderWidget(CommonRenderWidget):
         tree = TreeInfo("Boundary Conditions")
 
         if acoustic_pressure is not None:
-            real_values = np.array(acoustic_pressure["real_values"])
-            imag_values = np.array(acoustic_pressure["imag_values"])
 
-            complex_values = real_values + 1j * imag_values
-            if complex_values.shape[0] == 1:
-                values = f"{np.round(complex_values, 6)}"
-            else:
+            if "real_values" in acoustic_pressure.keys():
+                real_values = np.array(acoustic_pressure["real_values"])
+                imag_values = np.array(acoustic_pressure["imag_values"])
+                complex_values = real_values + 1j * imag_values
+
+            elif "values" in acoustic_pressure.keys():
+                complex_values = acoustic_pressure["values"]
+
+            if "table_names" in acoustic_pressure.keys():
                 values = "table of values"
+            else:
+                values = f"{np.round(complex_values, 6)}"
 
             tree.add_item("Acoustic pressure", values, "Pa")
 
         if surface_velocity is not None:
-            real_values = np.array(surface_velocity["real_values"])
-            imag_values = np.array(surface_velocity["imag_values"])
 
-            complex_values = real_values + 1j * imag_values
-            if complex_values.shape[0] == 1:
-                values = f"{np.round(complex_values, 6)}"
-            else:
+            if "real_values" in surface_velocity.keys():
+                real_values = np.array(surface_velocity["real_values"])
+                imag_values = np.array(surface_velocity["imag_values"])
+                complex_values = real_values + 1j * imag_values
+
+            elif "values" in surface_velocity.keys():
+                complex_values = surface_velocity["values"]
+
+            if "table_names" in surface_velocity.keys():
                 values = "table of values"
+            else:
+                values = f"{np.round(complex_values, 6)}"
 
             tree.add_item("Surface velocity", values, "m/s")
 
         if specific_impedance is not None:
             if "anechoic_termination" in specific_impedance.keys():
-                fluid = app().project.model.properties.get_fluid(
-                    surface=selected_faces[0]
-                )
+                fluid = app().project.model.properties.get_fluid(surface=selected_faces[0])
                 density = fluid.fluid_density
                 speed_of_sound = fluid.speed_of_sound
                 complex_values = np.array([density * speed_of_sound], dtype=complex)
 
-            else:
+            elif "real_values" in specific_impedance.keys():
                 real_values = np.array(specific_impedance["real_values"])
                 imag_values = np.array(specific_impedance["imag_values"])
                 complex_values = real_values + 1j * imag_values
 
-            if complex_values.shape[0] == 1:
-                values = f"{np.round(complex_values, 6)}"
-            else:
+            elif "values" in specific_impedance.keys():
+                complex_values = specific_impedance["values"]
+
+            if "table_names" in specific_impedance.keys():
                 values = "table of values"
+            else:
+                values = f"{np.round(complex_values, 6)}"
 
             tree.add_item("Specific impedance", values, "kg/m²s")
+
+            if "anechoic_termination" in specific_impedance.keys():
+                tree.add_item("Impedance type", "anechoic (non-reflexive)")
 
         text += str(tree)
 
         return text
+
+# fmt: on

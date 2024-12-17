@@ -355,7 +355,8 @@ class ProcessAcousticTransferElementData(QDialog):
                 "averaged": False,
                 }
 
-        self.project.set_surface_velocity(data, surface_id)
+        self.properties._set_property("surface_velocity", data, surface=surface_id)
+
         app().file.write_model_properties_in_file()
         # app().main_window.set_geometry_selection(surfaces=[surface_id])
 
@@ -484,8 +485,6 @@ class ProcessAcousticTransferElementData(QDialog):
             self.export_data_in_spreadsheet_format(path)
 
     def print_final_message(self):
-
-        self.pushButton_exit.setText("Exit")
 
         window_title = "Vibra"
         title = "Data exporting finished"

@@ -141,8 +141,10 @@ class SetAnechoicTerminationInputs(QDialog):
         if stop:
             self.lineEdit_selection_id.setFocus()
             return
+        
+        self.remove_conflicting_excitations(surface_ids)
 
-        for face_id in surface_ids:
+        for surface_id in surface_ids:
 
             volume_ids = self.model.mesh.volume_from_surface[surface_ids[0]]
             if len(surface_ids) > 1 and len(volume_ids) > 1:
@@ -169,68 +171,79 @@ class SetAnechoicTerminationInputs(QDialog):
                     "nodal_attribution": False
                     }
 
-            self.project.set_specific_impedance(data, face_id)
+            self.properties._set_property("specific_impedance", data, surface=surface_id)
 
         self.actions_to_finalize()
 
         print(f"[Set anechoic termination] - defined at surface(s) {surface_ids}")
 
-    def lineEdit_reset(self, lineEdit):
-        lineEdit.setText("")
-        lineEdit.setFocus()
+    def process_table_file_removal(self, table_names: list):
+        for table_name in table_names:
+            self.properties.remove_imported_tables("acoustic", table_name)
+        if table_names:
+            app().file.write_imported_table_data_in_file()
 
-    def get_list_table_names_from_selected_surfaces(self, list_ids):
-        list_table_names = []
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
-            if property == "specific_impedance":
-                if surface_id in list_ids:
-                    if "table_names" in data.keys():
-                        list_table_names.append(data["table_names"])
-        return list_table_names
+    def remove_conflicting_excitations(self, surface_ids: int | list):
+
+        if isinstance(surface_ids, int):
+            surface_ids = [surface_ids]
+
+        labels = ["specific_impedance"]
+
+        for surface_id in surface_ids:
+            for label in labels:
+                table_names = self.properties.get_surface_related_table_names(label, surface_id)
+                self.properties._remove_surface_property(label, surface_id)
+                self.process_table_file_removal(table_names)
+
+    def remove_table_files_from_surfaces(self, surface_id : list):
+        table_names = self.properties.get_surface_related_table_names("specific_impedance", surface_id)
+        self.process_table_file_removal(table_names)
 
     def remove_callback(self):
 
         if self.lineEdit_selection_id.text() != "":
 
-            surface_properties = self.properties.surface_properties.copy()
-            picked_id = int(self.lineEdit_selection_id.text())
+            surface_id = int(self.lineEdit_selection_id.text())
+            self.remove_table_files_from_surfaces(surface_id)
 
-            for key, data in surface_properties.items():
-                property, surface_id = key
-                if property == "specific_impedance" and picked_id == surface_id:
-                    if "anechoic_termination" in data.keys():
-                        self.properties._remove_surface_property("specific_impedance", picked_id)
-                        self.actions_to_finalize()
-                        return
+            self.properties._remove_surface_property("specific_impedance", surface_id)
+            self.actions_to_finalize()
 
     def reset_callback(self):
 
-        surface_ids = list()
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
-            if property == "specific_impedance":
-                if "anechoic_termination" in data.keys():
-                    surface_ids.append(surface_id)
+        self.hide()
 
-        if len(surface_ids) > 0:
+        title = "Anechoic termination resetting"
+        message = "Would you like to remove the all applied anechoic termination from model?"
 
-            self.hide()
-            
-            title = "Resetting of all applied specific impedances"
-            message = "Would you like to remove the all applied anechoic terminations from the model?"
+        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
-            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
-            read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+        if read._cancel:
+            return
 
-            if read._cancel:
-                return
+        if read._continue:
 
-            if read._continue:
-                for face_id in surface_ids:
-                    self.properties._remove_surface_property("specific_impedance", face_id)
+            surface_ids = list()
+            for (property, *args), data in self.properties.surface_properties.items():
+                if property == "specific_impedance":
+                    if "anechoic_termination" in data.keys():
+                        surface_id = args[0]
+                        surface_ids.append(surface_id)
 
-                self.actions_to_finalize()
+            self.remove_table_files_from_surfaces(surface_ids)
+
+            self.properties._reset_property("specific_impedance")
+            self.actions_to_finalize()
+
+    def actions_to_finalize(self):
+        self.load_info()
+        self.check_model_frequency_controls()
+        self.main_window.viewer_tabs.update_info_text()
+        app().file.write_model_properties_in_file()
+        app().file.write_imported_table_data_in_file()
+        app().main_window.viewer_tabs.mesh_widget.symbols_actor.build()
 
     def check_model_frequency_controls(self):
 
@@ -244,12 +257,6 @@ class SetAnechoicTerminationInputs(QDialog):
             analysis_data = self.project.analysis_data
             self.project.set_analysis_data(analysis_data)
             app().file.write_analysis_setup_in_file(analysis_data)
-
-    def actions_to_finalize(self):
-        self.check_model_frequency_controls()
-        self.main_window.viewer_tabs.update_info_text()
-        app().file.write_model_properties_in_file()
-        self.load_info()
 
     def update_tabs_visibility(self):
         for key, data in self.properties.surface_properties.items():

@@ -156,21 +156,6 @@ class ModelProperties:
     def get_porous_material_model_data(self, volume):
         return self._get_property("porous_material_model", volume=volume)
 
-    def set_acoustic_pressure(self, data, surface):
-        self._set_property("acoustic_pressure", data, surface=surface)
-
-    def set_mass_flow_rate(self, data, surface):
-        self._set_property("mass_flow_rate", data, surface=surface)
-
-    def set_volume_velocity(self, data, surface):
-        self._set_property("volume_velocity", data, surface=surface)
-
-    def set_surface_velocity(self, data, surface):
-        self._set_property("surface_velocity", data, surface=surface)
-
-    def set_specific_impedance(self, data, surface):
-        self._set_property("specific_impedance", data, surface=surface)
-
     def _set_property(self, property: str, data: dict | Fluid | Material, node=None, element=None, line=None, surface=None, volume=None, group=None):
         """
         Sets a data to a property by node, element, line, surface or volume
@@ -284,13 +269,15 @@ class ModelProperties:
         """
         Clears all instances of a specific property from the structure.
         """
-        data_dicts = [  self.nodal_properties,
-                        self.element_properties,
-                        self.line_properties,
-                        self.surface_properties,
-                        self.volume_properties,
-                        self.group_properties,
-                        self.global_properties  ]
+        data_dicts = [  
+                      self.nodal_properties,
+                      self.element_properties,
+                      self.line_properties,
+                      self.surface_properties,
+                      self.volume_properties,
+                      self.group_properties,
+                      self.global_properties
+                      ]
 
         for data in data_dicts:
             keys_to_remove = []
@@ -366,7 +353,7 @@ class ModelProperties:
 
         acoustic_labels = [ 
                             "acoustic_pressure",
-                            "volume_velocity",
+                            "surface_velocity",
                             "mass_flow_rate",
                             "specific_impedance",
                             "radiation_impedance",
@@ -387,14 +374,17 @@ class ModelProperties:
         if isinstance(surface_ids, int):
             test_key = (property, surface_ids)
 
+        elif isinstance(surface_ids, list) and len(surface_ids) == 1:
+            test_key = (property, surface_ids[0])
+
         elif isinstance(surface_ids, list) and len(surface_ids) == 2:
             test_key = (property, surface_ids[0], surface_ids[1])
 
         else:
             return table_names
 
-        if test_key in self.nodal_properties.keys():
-            data = self.nodal_properties[test_key]
+        if test_key in self.surface_properties.keys():
+            data = self.surface_properties[test_key]
 
             if "table_names" in data.keys():
                 for table_name in data["table_names"]:

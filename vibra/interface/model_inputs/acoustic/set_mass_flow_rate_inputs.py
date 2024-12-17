@@ -53,9 +53,8 @@ class MassFlowRateInput(QDialog):
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
-        self.typed_ids = list()
-        self.keep_window_open = True
         self.imported_values = None
+        self.keep_window_open = True
 
     def _define_qt_variables(self):
 
@@ -143,13 +142,20 @@ class MassFlowRateInput(QDialog):
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "mass_flow_rate":
-                real_values = np.array(data["real_values"])
-                imag_values = np.array(data["imag_values"])
-                complex_values = real_values + 1j * imag_values
-                new = QTreeWidgetItem([str(surface_id), str(self.text_label(complex_values))])
+
+                if "table_names" in data.keys():
+                    str_value = "Table of values"
+                else:
+                    real_values = np.array(data["real_values"])
+                    imag_values = np.array(data["imag_values"])
+                    complex_values = real_values + 1j * imag_values
+                    str_value = str(complex_values)
+
+                new = QTreeWidgetItem([str(surface_id), str_value])
                 new.setTextAlignment(0, Qt.AlignCenter)
                 new.setTextAlignment(1, Qt.AlignCenter)
                 self.treeWidget_mass_flow_rate.addTopLevelItem(new)
+
         self.update_tabs_visibility()
 
     def geometry_selection_callback(self):
@@ -193,48 +199,36 @@ class MassFlowRateInput(QDialog):
     def check_constant_values(self):
 
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        stop, self.typed_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
+        stop, surface_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
         if stop:
             self.lineEdit_selection_id.setFocus()
             return
 
-        for _id in self.typed_ids:
-            self.properties._remove_surface_property("acoustic_pressure", _id)
-            self.properties._remove_surface_property("surface_velocity", _id)
-            self.properties._remove_surface_property("compressor_excitation", _id)
+        self.remove_conflicting_excitations(surface_ids)
 
         mass_flow_rate = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
 
-        if mass_flow_rate is None:
-            title = "Additional inputs required"
-            message = "You must inform at least one mass flow rate\n"
-            message += "before confirming the input!"
-            PrintMessageInput([window_title_1, title, message])
-            self.lineEdit_real_value.setFocus()
-            return
+        if isinstance(mass_flow_rate, complex):
 
-        self.mass_flow_rate = mass_flow_rate
-        real_values = [np.real(mass_flow_rate)]
-        imag_values = [np.imag(mass_flow_rate)]
+            real_values = [np.real(mass_flow_rate)]
+            imag_values = [np.imag(mass_flow_rate)]
 
-        nodal_attribution = self.radioButton_nodal_attribution_constant.isChecked()
-        key_avg = self.checkBox_averaged_constant_values.isChecked()
+            nodal_attribution = self.radioButton_nodal_attribution_constant.isChecked()
+            key_avg = self.checkBox_averaged_constant_values.isChecked()
 
-        data = {
-                "real_values": real_values,
-                "imag_values": imag_values,
-                "nodal_attribution": nodal_attribution,
-                "averaged": key_avg,
-                }
+            data = {
+                    "real_values": real_values,
+                    "imag_values": imag_values,
+                    "nodal_attribution": nodal_attribution,
+                    "averaged": key_avg,
+                    }
 
-        for _id in self.typed_ids:
-            self.project.set_mass_flow_rate(data, _id)
+            for surface_id in surface_ids:
+                self.properties._set_property("mass_flow_rate", data, surface=surface_id)
 
-        self.main_window.viewer_tabs.update_info_text()
-        app().file.write_model_properties_in_file()
+            self.actions_to_finalize()
 
-        print(f"[Set Mass Flow Rate] - defined at surface(s) {self.typed_ids}")
-        self.close()
+            print(f"[Set Mass Flow Rate] - defined at surface(s) {surface_ids}")
             
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
@@ -283,9 +277,11 @@ class MassFlowRateInput(QDialog):
 
     def save_table_values(self, table_name: str, imported_values: np.ndarray):
 
-        frequencies = imported_values[:, 0]
+        mask = imported_values[:, 0] > 0
+        _imported_values = imported_values[mask, :]
+        _frequencies = _imported_values[:, 0]
 
-        if app().project.model.change_analysis_frequency_setup(list(frequencies)):
+        if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
             self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
@@ -295,12 +291,12 @@ class MassFlowRateInput(QDialog):
             PrintMessageInput([window_title_1, title, message])
             return True
 
-        self.update_analysis_setup_in_file(frequencies)
+        self.update_analysis_setup_in_file(_frequencies)
 
-        real_values = self.imported_values[:, 1]
-        imag_values = self.imported_values[:, 2]
+        real_values = _imported_values[:, 1]
+        imag_values = _imported_values[:, 2]
 
-        data = np.array([frequencies, real_values, imag_values], dtype=float).T
+        data = np.array([_frequencies, real_values, imag_values], dtype=float).T
 
         self.properties.add_imported_tables("acoustic", table_name, data)
 
@@ -323,25 +319,18 @@ class MassFlowRateInput(QDialog):
         app().project.set_analysis_data(analysis_setup)
         app().file.write_analysis_setup_in_file(analysis_setup)
 
-    def lineEdit_reset(self, lineEdit : QLineEdit):
-        lineEdit.setText("")
-        lineEdit.setFocus()
-
     def load_mass_flow_rate_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
 
     def check_table_values(self):
 
         lineEdit_selection_id = self.lineEdit_selection_id.text()
-        stop, self.typed_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
+        stop, surface_ids = self.mesh.check_selected_ids(lineEdit_selection_id, selection="surfaces")
         if stop:
             self.lineEdit_selection_id.setFocus()
             return
 
-        for _id in self.typed_ids:
-            self.properties._remove_surface_property("acoustic_pressure", _id)
-            self.properties._remove_surface_property("surface_velocity", _id)
-            self.properties._remove_surface_property("compressor_excitation", _id)
+        self.remove_conflicting_excitations(surface_ids)
 
         if self.lineEdit_table_path.text() != "":
 
@@ -349,43 +338,43 @@ class MassFlowRateInput(QDialog):
                 self.imported_values = self.load_table( self.lineEdit_table_path, 
                                                         direct_load = True )
 
-            if isinstance(self.imported_values, np.ndarray):
-                if self.imported_values.shape[1] >= 3:
-                    table_name = f"surface_velocity_surface_{_id}"
-                    if self.save_table_values(table_name, self.imported_values):
-                        self.lineEdit_table_path.setFocus()
-                        self.imported_values = None
-                        return
+            for surface_id in surface_ids:
 
-            else:
-                return
+                if isinstance(self.imported_values, np.ndarray):
+                    if self.imported_values.shape[1] >= 3:
 
-            if self.imported_values is None:
-                return
+                        table_name = f"surface_velocity_at_surface_{surface_id}"
+                        if self.save_table_values(table_name, self.imported_values):
+                            self.lineEdit_table_path.setFocus()
+                            self.imported_values = None
+                            return
 
-            real_values = list(self.imported_values[:, 1])
-            imag_values = list(self.imported_values[:, 2])
+                else:
+                    return
 
-            nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
-            key_avg = self.checkBox_averaged_constant_values.isChecked()
-            table_path = self.lineEdit_table_path.text()
+                if self.imported_values is None:
+                    return
 
-            data = {
-                    "real_values": real_values,
-                    "imag_values": imag_values,
-                    "nodal_attribution": nodal_attribution,
-                    "averaged": key_avg,
-                    "table_names": os.path.basename(table_path),
-                    }
-            
-            for _id in self.typed_ids:
-                self.project.set_mass_flow_rate(data, _id)
+                real_values = list(self.imported_values[:, 1])
+                imag_values = list(self.imported_values[:, 2])
 
-            self.main_window.viewer_tabs.update_info_text()
-            app().file.write_model_properties_in_file()
+                nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
+                key_avg = self.checkBox_averaged_constant_values.isChecked()
+                table_path = self.lineEdit_table_path.text()
 
-            print(f"[Set Volume Velocity] - defined at surface(s) {self.typed_ids}")
-            self.close()
+                data = {
+                        "real_values": real_values,
+                        "imag_values": imag_values,
+                        "nodal_attribution": nodal_attribution,
+                        "averaged": key_avg,
+                        "table_names": os.path.basename(table_path),
+                        }
+
+                self.properties._set_property("mass_flow_rate", data, surface=surface_id)
+
+            self.actions_to_finalize()
+
+            print(f"[Set Volume Velocity] - defined at surface(s) {surface_ids}")
 
         else:
             title = "Additional inputs required"
@@ -394,81 +383,77 @@ class MassFlowRateInput(QDialog):
             PrintMessageInput([window_title_1, title, message])
             self.lineEdit_table_path.setFocus()
 
-    def get_list_table_names_from_selected_surfaces(self, list_ids):
-        list_table_names = list()
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
-            if property == "mass_flow_rate":
-                if surface_id in list_ids:
-                    if "table_names" in data.keys():
-                        list_table_names.append(data["table_names"])
-        return list_table_names
+    def process_table_file_removal(self, table_names: list):
+        for table_name in table_names:
+            self.properties.remove_imported_tables("acoustic", table_name)
+        if table_names:
+            app().file.write_imported_table_data_in_file()
 
-    def text_label(self, value):
-        if value.shape[0] == 1:
-            value_label = str(value)
-        else:
-            value_label = "Table"
-        return "{}".format(value_label)
+    def remove_conflicting_excitations(self, surface_ids: int | list):
+
+        if isinstance(surface_ids, int):
+            surface_ids = [surface_ids]
+
+        labels = [
+                  "acoustic_pressure",
+                  "surface_velocity",
+                  "reciprocating_compressor_excitation",
+                  "reciprocating_pump_excitation"
+                  ]
+
+        for surface_id in surface_ids:
+            for label in labels:
+                table_names = self.properties.get_surface_related_table_names(label, surface_id)
+                self.properties._remove_surface_property(label, surface_id)
+                self.process_table_file_removal(table_names)
+
+    def remove_table_files_from_surfaces(self, surface_id : list):
+        table_names = self.properties.get_surface_related_table_names("mass_flow_rate", surface_id)
+        self.process_table_file_removal(table_names)
 
     def remove_callback(self):
 
         if self.lineEdit_selection_id.text() != "":
 
-            surface_properties = self.properties.surface_properties.copy()
-            picked_id = int(self.lineEdit_selection_id.text())
+            surface_id = int(self.lineEdit_selection_id.text())
+            self.remove_table_files_from_surfaces(surface_id)
 
-            for key in surface_properties.keys():
-                property, surface_id = key
-                if property == "mass_flow_rate" and picked_id == surface_id:
-
-                    self.properties._remove_surface_property("mass_flow_rate", picked_id)
-                    self.load_info()
-                    self.lineEdit_selection_id.setText("")
-                    break
-
-            app().file.write_model_properties_in_file()
-            self.check_model_frequency_controls()
+            self.properties._remove_surface_property("mass_flow_rate", surface_id)
+            self.actions_to_finalize()
 
     def reset_callback(self):
 
-        surface_ids = list()
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
-            if property == "mass_flow_rate":
-                surface_ids.append(surface_id)
+        self.hide()
 
-        if surface_ids:
+        title = "Specific impedance resetting"
+        message = "Would you like to remove the all applied specific impedances from model?"
 
-            self.hide()
+        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
-            title = "Resetting of all applied mass flow rates"
-            message = "Would you like to remove the all applied mass flow rates from model?"
+        if read._cancel:
+            return
 
-            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
-            read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+        if read._continue:
 
-            if read._cancel:
-                return
+            surface_ids = list()
+            for (property, *args), data in self.properties.surface_properties.items():
+                if property == "mass_flow_rate":
+                    surface_id = args[0]
+                    surface_ids.append(surface_id)
 
-            if read._continue:
+            self.remove_table_files_from_surfaces(surface_ids)
 
-                self.properties._reset_property("mass_flow_rate")
-                app().file.write_model_properties_in_file()
-                self.check_model_frequency_controls()
-
-                title = "Volume velocity resetting process complete"
-                message = "All mass flow rate applied to the acoustic "
-                message += "model have been removed from the model."
-                PrintMessageInput([window_title_2, title, message])
-
-                self.close()
+            self.properties._reset_property("mass_flow_rate")
+            self.actions_to_finalize()
 
     def actions_to_finalize(self):
+        self.load_info()
         self.check_model_frequency_controls()
         self.main_window.viewer_tabs.update_info_text()
         app().file.write_model_properties_in_file()
-        self.load_info()
+        app().file.write_imported_table_data_in_file()
+        app().main_window.viewer_tabs.mesh_widget.symbols_actor.build()
 
     def change_frequency_setup(self):
         if self.imported_values is not None:
@@ -481,7 +466,7 @@ class MassFlowRateInput(QDialog):
 
         for key, data in self.properties.surface_properties.items():
             property, _ = key
-            if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "mass_flow_rate"]:
+            if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "mass_flow_rate", "reciprocating_compressor_excitation"]:
                 if "table_names" in data.keys():
                     return
 

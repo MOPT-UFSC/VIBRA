@@ -135,9 +135,9 @@ def test_load_external_mesh_and_solve():
     #             "volume_id": 1,
     #             "nodal_attribution": False  }
 
-    model.set_surface_velocity(data_Vn, 1)
-    model.set_specific_impedance(data_Z, 1)
-    model.set_specific_impedance(data_Z, 2)
+    model.properties._set_property("surface_velocity", data_Vn, 1)
+    model.properties._set_property("specific_impedance", data_Z, 1)
+    model.properties._set_property("specific_impedance", data_Z, 2)
 
     # Define the analysis frequency setup
     df = 5

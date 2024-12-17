@@ -54,9 +54,8 @@ class ChangeFrequencyDataRangeInput(QDialog):
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
-        self.typed_ids = list()
-        self.keep_window_open = True
         self.filter_data = None
+        self.keep_window_open = True
 
     def _define_qt_variables(self):
 

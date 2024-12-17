@@ -354,18 +354,3 @@ class Model:
 
     def set_structural_load(self, data, line, surface):
         self.properties.set_structural_load(data, line, surface)
-
-    def set_acoustic_pressure(self, data, surface):
-        self.properties.set_acoustic_pressure(data, surface)
-
-    def set_mass_flow_rate(self, data, surface):
-        self.properties.set_mass_flow_rate(data, surface)
-
-    def set_volume_velocity(self, data, surface):
-        self.properties.set_volume_velocity(data, surface)
-
-    def set_surface_velocity(self, data, surface):
-        self.properties.set_surface_velocity(data, surface)
-
-    def set_specific_impedance(self, data, surface):
-        self.properties.set_specific_impedance(data, surface)

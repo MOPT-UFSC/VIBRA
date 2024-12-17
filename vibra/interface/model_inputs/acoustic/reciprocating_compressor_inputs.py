@@ -865,32 +865,34 @@ class ReciprocatingCompressorInputs(QDialog):
             freq, flow_rate = self.compressor.process_FFT_of_volumetric_flow_rate(self.N_rev, flow_label)
             surface_velocity = flow_rate / surface_area
 
+            _freq = freq[1:]
+            _surface_velocity = surface_velocity[1:]
+
             table_name = f"compressor_excitation_{connection_type}_surface_{surface_id}"
 
             data = {
                     "connection_type" : connection_type,
                     "table_names" : [table_name],
                     "parameters" : self.parameters,
-                    "values" : [surface_velocity],
+                    "values" : [_surface_velocity],
                     "nodal_attribution" : False,
                     "averaged" : False
                     }
 
             self.remove_conflicting_excitations(surface_id)
 
-            if self.save_table_values(table_name, freq, surface_velocity):
+            if self.save_table_values(table_name, _freq, _surface_velocity):
                 return
 
             self.properties._set_property("reciprocating_compressor_excitation", data, surface=surface_id)
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
+        self.load_compressor_excitation_info()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
         app().main_window.set_geometry_selection()
         # app().main_window.update_plots()
-        self.load_compressor_excitation_info()
-        self.pushButton_exit.setText("Exit")
 
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
@@ -934,17 +936,15 @@ class ReciprocatingCompressorInputs(QDialog):
         if read._continue:
 
             surface_ids = list()
-
             for (property, *args) in self.properties.surface_properties.keys():
                 if property == "reciprocating_compressor_excitation":
 
                     surface_id = args[0]
                     surface_ids.append(surface_id)
 
-            for surface_id in surface_ids:
-                self.remove_table_files_from_surfaces(surface_id)
+            self.remove_table_files_from_surfaces(surface_ids)
 
-            self.properties._reset_surface_property("reciprocating_compressor_excitation")
+            self.properties._reset_property("reciprocating_compressor_excitation")
             self.actions_to_finalize()
 
     def load_compressor_excitation_info(self):

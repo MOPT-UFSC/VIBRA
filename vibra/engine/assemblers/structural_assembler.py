@@ -74,8 +74,8 @@ class StructuralAssembler:
         get_unprescribed_indexes : Indexes of the structural free degrees of freedom.
         """
 
-        global_prescribed = []
-        list_prescribed_dofs = []
+        global_prescribed = list()
+        list_prescribed_dofs = list()
         if self.frequencies is None:
             number_frequencies = 1
         else:
