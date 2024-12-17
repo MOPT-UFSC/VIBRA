@@ -131,6 +131,11 @@ class MeshRenderWidget(CommonRenderWidget):
         self.show_faces()
         app().project.thumbnail = self.get_thumbnail()
 
+    def update_symbols(self):
+        self.renderer.RemoveActor(self.symbols_actor)
+        self.symbols_actor = SymbolsActor(self.renderer)
+        self.renderer.AddActor(self.symbols_actor)
+
     def update_hidden_plot(self):
         # We could just call the update_plot function,
         # but this is much simpler and faster
