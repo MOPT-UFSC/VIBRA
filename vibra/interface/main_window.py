@@ -32,7 +32,7 @@ from vibra.project_files.load_project import LoadProject
 
 from vibra.project_files.project_file_io import ProjectFileIO
 
-import qdarktheme
+from molde import stylesheets
 
 import sys
 import logging
@@ -386,7 +386,8 @@ class MainWindow(QMainWindow):
 
         The input is a string "light" or "dark".
         """
-        qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
+        # qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
+        stylesheets.set_theme(theme)
         self.user_config.theme = theme
         self.menu_widget._configItems()
         self.theme_changed.emit(theme)

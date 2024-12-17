@@ -52,7 +52,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.edges_actor = None
         self.plane_actor = None
         self.hidden_part_actor = None
-        self.bounds = (0, 0, 0, 0, 0, 0)
+        self._bounds = (0, 0, 0, 0, 0, 0)
 
         self.create_axes()
         self.create_color_bar()
@@ -151,7 +151,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.hidden_part_actor.PickableOff()
         self.renderer.AddActor(self.hidden_part_actor)
 
-        self.bounds = self.analysis_actor.GetBounds()
+        self._bounds = self.analysis_actor.GetBounds()
         scale = bounds_distance(self.bounds)
         self.plane_actor = CuttingPlaneActor(self.analysis_actor.GetBounds())
         self.plane_actor.VisibilityOff()

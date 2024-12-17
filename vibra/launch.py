@@ -5,8 +5,6 @@ from traceback import format_tb
 from vibra import USER_PATH
 from vibra.interface.application import Application
 
-import qdarktheme
-
 
 def custom_exception_hooks(exc_type, exc_value, exc_traceback):
     if issubclass(exc_type, KeyboardInterrupt):
@@ -87,7 +85,6 @@ def main():
         sys.argv.append("--platform")
         sys.argv.append("windows:dpiawareness=0")
 
-    qdarktheme.enable_hi_dpi()
     app = Application(sys.argv)
     sys.exit(app.exec_())
 
