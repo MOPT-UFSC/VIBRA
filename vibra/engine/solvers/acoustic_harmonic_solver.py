@@ -311,11 +311,11 @@ class AcousticHarmonicSolver:
         return particle_velocities
 
 
-    def get_transmission_loss(self, input_surface_id, output_surface_id):
+    def get_transmission_loss(self, input_surface_id: int, output_surface_id: int):
         """ Returns the transmission loss.
         
         """
-        
+
         nodes_input = self.assembler.model.mesh.nodes_from_surfaces[input_surface_id]
         nodes_output = self.assembler.model.mesh.nodes_from_surfaces[output_surface_id]
 
@@ -382,11 +382,11 @@ class AcousticHarmonicSolver:
 
         input_rho = self.assembler.model.get_fluid_density_for_particle_velocity_calculation(input_surface_id, self.frequencies)
         if input_rho is None:
-            return np.zeros_like(self.frequencies, dtype=complex)
+            return None, None, None
 
         output_rho = self.assembler.model.get_fluid_density_for_particle_velocity_calculation(output_surface_id, self.frequencies)
         if output_rho is None:
-            return np.zeros_like(self.frequencies, dtype=complex)
+            return None, None, None
 
         logging.info("Processing the transmission loss..." + ProgressStatus(50, 100))
         input_particle_velocities = self.get_particle_velocity_from_surface(input_surface_id, input_rho)
@@ -395,16 +395,24 @@ class AcousticHarmonicSolver:
         output_particle_velocities = self.get_particle_velocity_from_surface(output_surface_id, output_rho)
 
         # Transmission loss
-        surf_velocity = self.assembler.model.properties.get_surface_velocity(input_surface_id)
+        surf_velocity = self.assembler.model.properties._get_property("surface_velocity", surface=input_surface_id)
+
         if surf_velocity is None:
             return None, None, None
 
-        real_values = np.array(surf_velocity["real_values"])
-        imag_values = np.array(surf_velocity["imag_values"])
-        V_in = real_values + 1j * imag_values
+        # real_values = np.array(surf_velocity["real_values"])
+        # imag_values = np.array(surf_velocity["imag_values"])
+        # V_in = real_values + 1j * imag_values
 
-        P_in = V_in * rho_in * c0_in / 4
-        I_in = np.abs(np.real(P_in * np.conjugate(V_in)) / 2)
+        # P_in = V_in * rho_in * c0_in / 4
+        # I_in = np.abs(np.real(P_in * np.conjugate(V_in)) / 2)
+
+        V_in = np.array(list(input_particle_velocities["Vn"].values()), dtype=complex)
+
+        P_upstream = (P_in + rho_in * c0_in * V_in) / 2
+        V_upstream = P_upstream / (rho_in * c0_in)
+
+        I_in = np.real(P_upstream * np.conjugate(V_upstream)) / 2
 
         # V_in = np.array(list(input_particle_velocities["Vn"].values()), dtype=complex)
         # I_in = -np.real(P_in * np.conjugate(V_in)) / 2
@@ -420,8 +428,8 @@ class AcousticHarmonicSolver:
         # I_in_out = np.array([np.average(I_in, axis=0), np.average(I_out, axis=0)], dtype=float).T
         # print(f"Sound intensities: {I_in_out}")
 
-        W_in = 10*np.log10(np.sum(I_in * Aeff_in, axis=0))
-        W_out = 10*np.log10(np.sum(I_out * Aeff_out, axis=0))
+        W_in = 10 * np.log10(np.sum(I_in * Aeff_in, axis=0))
+        W_out = 10 * np.log10(np.sum(I_out * Aeff_out, axis=0))
 
         TL = W_in - W_out
 
