@@ -4,8 +4,8 @@ from time import time
 
 import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
-from PyQt5.QtCore import QObjectCleanupHandler
-from PyQt5.QtWidgets import *
+from PySide6.QtCore import QObjectCleanupHandler
+from PySide6.QtWidgets import *
 
 from vibra import app
 from vibra.interface.analysis_bars.structural_analysis_bar import (

@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QComboBox, QDialog, QLineEdit, QPushButton, QFileDialog
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QCloseEvent
-from PyQt5 import uic
+from PySide6.QtWidgets import QComboBox, QDialog, QLineEdit, QPushButton, QFileDialog
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
+from PySide6 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance

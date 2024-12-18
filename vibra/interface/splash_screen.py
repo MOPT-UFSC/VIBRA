@@ -1,7 +1,7 @@
-from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QLabel, QProgressBar, QSplashScreen
-from PyQt5 import uic
+from PySide6.QtCore import Signal, Qt
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QApplication, QLabel, QProgressBar, QSplashScreen
+from PySide6 import uic
 
 from vibra import ICON_DIR, UI_DIR
 

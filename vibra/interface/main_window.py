@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QDialog, QFileDialog, QFrame, QGridLayout, QMainWindow, QMessageBox, QAction
-from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtCore import pyqtSignal
+from PySide6.QtWidgets import QDialog, QFileDialog, QFrame, QGridLayout, QMainWindow, QMessageBox
+from PySide6.QtGui import QAction
+from PySide6.QtCore import Signal
 
 from vibra import app
 from vibra.config import UserConfig
@@ -42,9 +42,9 @@ from time import sleep, time
 
 
 class MainWindow(QMainWindow):
-    theme_changed = pyqtSignal(str)
-    visualization_changed = pyqtSignal()
-    selection_changed = pyqtSignal()
+    theme_changed = Signal(str)
+    visualization_changed = Signal()
+    selection_changed = Signal()
 
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)

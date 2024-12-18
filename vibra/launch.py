@@ -68,7 +68,7 @@ def main():
                 $ python pulse.py
 
         Todo:
-            Fix the HighDPI part to not blurry the screen. See more by searching "PyQt5 HighDPI".
+            Fix the HighDPI part to not blurry the screen. See more by searching "PySide6 HighDPI".
     """
     
     configure_logs()

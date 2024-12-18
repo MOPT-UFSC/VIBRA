@@ -2,8 +2,8 @@ import numpy as np
 from molde.render_widgets import CommonRenderWidget
 from molde.utils import TreeInfo
 from molde.utils.format_sequences import format_long_sequence
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
+from PySide6.QtCore import *
+from PySide6.QtWidgets import *
 from vtkmodules.vtkCommonCore import vtkIntArray
 from vtkmodules.vtkCommonDataModel import vtkPolyData
 from vtkmodules.vtkRenderingCore import vtkActor, vtkCellPicker
@@ -28,7 +28,7 @@ SHOW_VOLUMES = 3
 
 
 class MeshRenderWidget(CommonRenderWidget):
-    selection_changed = pyqtSignal(list, list, list)
+    selection_changed = Signal(list, list, list)
 
     def __init__(self, parent=None):
         super().__init__(parent)

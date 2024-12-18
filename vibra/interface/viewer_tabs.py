@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QLabel, QPushButton, QTabWidget, QVBoxLayout, QWidget
-from PyQt5.QtCore import QCoreApplication, pyqtSignal
+from PySide6.QtWidgets import QLabel, QPushButton, QTabWidget, QVBoxLayout, QWidget
+from PySide6.QtCore import QCoreApplication, Signal
 
 from molde.render_widgets import CommonRenderWidget
 

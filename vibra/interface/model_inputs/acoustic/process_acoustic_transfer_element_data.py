@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QDialog, QFileDialog, QLineEdit, QPushButton, QTabWidget
-from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
-from PyQt5.QtGui import QCloseEvent
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog, QFileDialog, QLineEdit, QPushButton, QTabWidget
+from PySide6.QtCore import Qt, QEvent, QObject, Signal
+from PySide6.QtGui import QCloseEvent
+from PySide6 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.mesh.mesher_inputs import MesherInputs
@@ -114,7 +114,7 @@ class ProcessAcousticTransferElementData(QDialog):
 
     def clickable(self, widget):
         class Filter(QObject):
-            clicked = pyqtSignal()
+            clicked = Signal()
 
             def eventFilter(self, obj, event):
                 if obj == widget and event.type() == QEvent.MouseButtonRelease and obj.rect().contains(event.pos()):

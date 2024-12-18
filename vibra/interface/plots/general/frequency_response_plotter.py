@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QComboBox, QCheckBox, QDialog, QFrame, QPushButton, QRadioButton, QSpinBox, QVBoxLayout, QToolButton, QWidget
-from PyQt5.QtGui import QCloseEvent, QColor
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QComboBox, QCheckBox, QDialog, QFrame, QPushButton, QRadioButton, QSpinBox, QVBoxLayout, QToolButton, QWidget
+from PySide6.QtGui import QCloseEvent, QColor
+from PySide6.QtCore import Qt
+from PySide6 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.data_handler.export_model_results import ExportModelResults

@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QDialog, QLabel, QPushButton
-from PyQt5.QtGui import QIcon, QFont
-from PyQt5.QtCore import Qt, QRect
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog, QLabel, QPushButton
+from PySide6.QtGui import QIcon, QFont
+from PySide6.QtCore import Qt, QRect
+from PySide6 import uic
 
 from vibra import app, UI_DIR, __version__
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance

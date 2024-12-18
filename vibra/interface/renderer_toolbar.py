@@ -1,6 +1,6 @@
 
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QAction, QToolBar
+from PySide6.QtGui import QColor, QAction
+from PySide6.QtWidgets import QToolBar
 
 from molde.render_widgets import CommonRenderWidget
 

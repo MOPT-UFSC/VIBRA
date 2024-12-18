@@ -1,10 +1,10 @@
 from math import pi
 from pathlib import Path
 
-from PyQt5 import uic
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PySide6 import uic
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
 
 from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput

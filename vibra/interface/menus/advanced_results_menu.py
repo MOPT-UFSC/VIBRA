@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QAction, QMenu
-from PyQt5.QtGui import QColor
+from PySide6.QtWidgets import QMenu
+from PySide6.QtGui import QColor, QAction
 
 from vibra.interface.plots.acoustic.export_element_transfer_data_input import ExportElementTransferDataInput
 from vibra.interface.plots.acoustic.plot_particle_velocity_frequency_response_input import PlotParticleVelocityFrequencyResponseInput

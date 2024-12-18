@@ -1,18 +1,18 @@
 from pathlib import Path
 
-from PyQt5 import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PySide6 import *
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
 
 from vibra import ICON_DIR
 from vibra.utils.icons import load_icon
 
 
 class StructuralModalAnalysisBar(QWidget):
-    slider_pressed = pyqtSignal()
-    slider_released = pyqtSignal()
-    value_changed = pyqtSignal()
+    slider_pressed = Signal()
+    slider_released = Signal()
+    value_changed = Signal()
 
     def __init__(self):
         super().__init__()

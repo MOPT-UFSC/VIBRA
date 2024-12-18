@@ -8,7 +8,7 @@ from importlib.metadata import version
 __version__ = version('vibra')
 __release_date__ = 'July 22th 2024'
 
-from PyQt5.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 from pathlib import Path
 
 VIBRA_DIR = Path(__file__).parent

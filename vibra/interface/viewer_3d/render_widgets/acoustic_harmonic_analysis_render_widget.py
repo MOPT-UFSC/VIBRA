@@ -6,8 +6,8 @@ from pathlib import Path
 
 import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
-from PyQt5.QtCore import QObjectCleanupHandler
-from PyQt5.QtWidgets import QVBoxLayout, QFileDialog
+from PySide6.QtCore import QObjectCleanupHandler
+from PySide6.QtWidgets import QVBoxLayout, QFileDialog
 
 from vibra import app
 # from vibra.interface.modal_analysis_bar import AcousticModalAnalysisBar

@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QAction, QMenu
+from PySide6.QtGui import QColor, QAction
+from PySide6.QtWidgets import QMenu
 
 from vibra import ICON_DIR
 from vibra.utils.icons import load_icon

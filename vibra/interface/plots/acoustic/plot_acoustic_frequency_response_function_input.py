@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QComboBox, QLineEdit, QPushButton, QDialog
-from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
-from PyQt5.QtGui import QCloseEvent
-from PyQt5 import uic
+from PySide6.QtWidgets import QComboBox, QLineEdit, QPushButton, QDialog
+from PySide6.QtCore import Qt, QEvent, QObject, Signal
+from PySide6.QtGui import QCloseEvent
+from PySide6 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
@@ -107,7 +107,7 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
 
     def clickable(self, widget):
         class Filter(QObject):
-            clicked = pyqtSignal()
+            clicked = Signal()
 
             def eventFilter(self, obj, event):
                 if obj == widget and event.type() == QEvent.MouseButtonRelease and obj.rect().contains(event.pos()):

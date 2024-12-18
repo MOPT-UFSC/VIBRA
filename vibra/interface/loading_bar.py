@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QApplication, QLabel, QProgressBar, QVBoxLayout, QWidget
-from PyQt5.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QLabel, QProgressBar, QVBoxLayout, QWidget
+from PySide6.QtCore import Qt
 
 from vibra import app
 from vibra.utils.progress_status import ProgressStatus

@@ -1,17 +1,17 @@
-from PyQt5.QtWidgets import QDialog, QSlider, QSpinBox, QPushButton, QWidget
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QFont
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog, QSlider, QSpinBox, QPushButton, QWidget
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QFont
+from PySide6 import uic
 
 from vibra import app, UI_DIR
 
 class SectionPlaneWidget(QDialog):
-    value_changed = pyqtSignal()
-    closed = pyqtSignal()
+    value_changed = Signal()
+    closed = Signal()
 
     # Remove
-    slider_released = pyqtSignal()
-    slider_pressed = pyqtSignal()
+    slider_released = Signal()
+    slider_pressed = Signal()
 
     def __init__(self, parent):
         super().__init__(parent)

@@ -1,9 +1,10 @@
 import os
 from pathlib import Path
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+# TODO: import only the necessary modules
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
 
 from vibra import app, ICON_DIR
 from vibra.interface.analysis.analysis_setup_input import AnalysisSetupInput

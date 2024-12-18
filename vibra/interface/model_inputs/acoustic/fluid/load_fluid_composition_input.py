@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QComboBox, QDialog, QFileDialog, QLabel, QLineEdit, QPushButton
-from PyQt5.QtGui import QCloseEvent, QIcon
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QComboBox, QDialog, QFileDialog, QLabel, QLineEdit, QPushButton
+from PySide6.QtGui import QCloseEvent, QIcon
+from PySide6.QtCore import Qt
+from PySide6 import uic
 from pathlib import Path
 
 from vibra import app, UI_DIR

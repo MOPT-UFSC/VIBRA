@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QDialog, QPushButton, QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QWidget
-from PyQt5.QtGui import QIcon, QColor, QBrush, QFont
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog, QPushButton, QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QWidget
+from PySide6.QtGui import QIcon, QColor, QBrush, QFont
+from PySide6.QtCore import Qt
+from PySide6 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.icons import *

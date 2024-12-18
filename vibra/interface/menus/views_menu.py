@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QAction, QMenu
+from PySide6.QtGui import QColor, QAction
+from PySide6.QtWidgets import QMenu
 from molde.render_widgets import CommonRenderWidget
 
 from vibra import ICON_DIR

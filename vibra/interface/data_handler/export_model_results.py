@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QDialog, QFileDialog, QLabel, QLineEdit, QPushButton
-from PyQt5.QtGui import * 
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog, QFileDialog, QLabel, QLineEdit, QPushButton
+from PySide6.QtGui import * 
+from PySide6.QtCore import Qt
+from PySide6 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput

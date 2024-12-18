@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QDialog, QFrame, QLabel, QProgressBar, QPushButton
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog, QFrame, QLabel, QProgressBar, QPushButton
+from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt, QTimer
+from PySide6 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.icons import *

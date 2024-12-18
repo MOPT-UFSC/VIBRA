@@ -1,10 +1,10 @@
 from pathlib import Path
 
 import numpy as np
-from PyQt5 import uic
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QTabWidget
+from PySide6 import uic
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QTabWidget
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
