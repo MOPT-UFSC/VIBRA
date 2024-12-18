@@ -307,6 +307,21 @@ class AcousticHarmonicSolver:
         particle_velocities["Vy"] = Vy
         particle_velocities["Vz"] = Vz
         particle_velocities["Vn"] = Vn
+        particle_velocities["nodal_normals"] = data_normals
+
+        self.assembler.model.mesh.set_nodal_normals_data(data_normals)
+        node_ids = np.sort(node_ids)
+
+        ## Only for validation purposes
+        output_data = np.zeros((len(node_ids), 4), dtype=float)
+        output_data[:, 0] = node_ids
+
+        for row, node_id in enumerate(node_ids):
+            output_data[row, 1:] =  self.assembler.model.mesh.nodal_normals_data[node_id]
+
+        fname = f"nodal_normals_data_surface_{surface_id}.dat"
+        header = "Node index || x-axis component [m] || y-axis component [m] || z-axis component [m]"
+        np.savetxt(fname, output_data, fmt=["%i", "%.16f", "%.16f", "%.16f"], delimiter=",", header=header)
 
         return particle_velocities
 
@@ -324,6 +339,8 @@ class AcousticHarmonicSolver:
 
         P_in = self.solution[nodes_input, :]
         P_out = self.solution[nodes_output, :]
+
+        nf = len(self.frequencies)
 
         volume_out = self.assembler.model.mesh.volume_from_surface[output_surface_id][0]
         volume_in = self.assembler.model.mesh.volume_from_surface[input_surface_id][0]
@@ -355,6 +372,9 @@ class AcousticHarmonicSolver:
             # print("input: ", i, node)
             list_nodes_in.append(node)
 
+        _nodal_areas_in = np.array([nodes_input, nodal_areas_in]).T
+        np.savetxt("input_nodal_areas.dat", _nodal_areas_in, fmt=["%i", "%.16f"], delimiter=",", header="Node index || Nodal area [m2]")
+
         list_nodes_out = list()
         nodal_areas_out = np.zeros(len(nodes_output), dtype=float)
         for i, node in enumerate(nodes_output):
@@ -366,6 +386,9 @@ class AcousticHarmonicSolver:
 
         # with open("areas_data.json", "w") as file:
         #     json.dump(out_data, file, indent=2)
+
+        _nodal_areas_out = np.array([nodes_output, nodal_areas_out]).T
+        np.savetxt("output_nodal_areas.dat", _nodal_areas_out, fmt=["%i", "%.16f"], delimiter=",", header="Node index || Nodal area [m2]")
 
         # print("\n")
         # for i in [177, 178, 8818]:
@@ -389,10 +412,10 @@ class AcousticHarmonicSolver:
             return None, None, None
 
         logging.info("Processing the transmission loss..." + ProgressStatus(50, 100))
-        input_particle_velocities = self.get_particle_velocity_from_surface(input_surface_id, input_rho)
+        input_pv_data = self.get_particle_velocity_from_surface(input_surface_id, input_rho)
 
         logging.info("Processing the transmission loss..." + ProgressStatus(90, 100))
-        output_particle_velocities = self.get_particle_velocity_from_surface(output_surface_id, output_rho)
+        output_pv_data = self.get_particle_velocity_from_surface(output_surface_id, output_rho)
 
         # Transmission loss
         surf_velocity = self.assembler.model.properties._get_property("surface_velocity", surface=input_surface_id)
@@ -404,23 +427,23 @@ class AcousticHarmonicSolver:
         # imag_values = np.array(surf_velocity["imag_values"])
         # V_in = real_values + 1j * imag_values
 
-        # P_in = V_in * rho_in * c0_in / 4
-        # I_in = np.abs(np.real(P_in * np.conjugate(V_in)) / 2)
+        # P_in = V_in * rho_in * c0_in / 2
+        # I_in = np.abs(np.real(P_in * np.conjugate(V_in / 2)) / 2)
 
-        V_in = np.array(list(input_particle_velocities["Vn"].values()), dtype=complex)
+        V_in = np.array(list(input_pv_data["Vn"].values()), dtype=complex)
 
-        P_upstream = (P_in + rho_in * c0_in * V_in) / 2
-        V_upstream = P_upstream / (rho_in * c0_in)
+        P_downstream = (P_in + rho_in * c0_in * V_in) / 2
+        V_downstream = P_downstream / (rho_in * c0_in)
 
-        I_in = np.real(P_upstream * np.conjugate(V_upstream)) / 2
+        I_in = np.real(P_downstream * np.conjugate(V_downstream)) / 2
 
-        # V_in = np.array(list(input_particle_velocities["Vn"].values()), dtype=complex)
+        # V_in = np.array(list(input_pv_data["Vn"].values()), dtype=complex)
         # I_in = -np.real(P_in * np.conjugate(V_in)) / 2
 
-        V_out = np.array(list(output_particle_velocities["Vn"].values()), dtype=complex)
+        V_out = np.array(list(output_pv_data["Vn"].values()), dtype=complex)
         I_out = np.real(P_out * np.conjugate(V_out)) / 2
 
-        # Vx = np.array(list(input_particle_velocities["Vx"].values()), dtype=complex)
+        # Vx = np.array(list(input_pv_data["Vx"].values()), dtype=complex)
         # print(np.array([np.average(V_in, axis=0), np.average(Vx, axis=0)]).T)
 
         # print(f"I_in: {np.average(I_in, axis=0)}")

@@ -17,6 +17,8 @@ class SymbolsActor(SymbolActorFixedSize):
 
         source = self.get_source()
         self.transforms = self.get_transforms()
+        self.show_nodal_normals()
+
         super().__init__(self.transforms, source)
 
         self.configure_appearance()
@@ -56,18 +58,20 @@ class SymbolsActor(SymbolActorFixedSize):
 
         return transforms
 
-    def show_arrows(self, node_ids: list, orientations: list[float, float, float]):
+    def show_nodal_normals(self):
 
         try:
             scale = self.mesh.principal_diagonal / 20
         except:
             return
 
-        nodal_coords = self.mesh.nodal_coordinates[node_ids, 1:]
+        self.transforms.clear()
 
-        for i, coords in enumerate(nodal_coords):
-            shifted_coords = coords + (0/20) * orientations[i]
-            t = SymbolTranform(position=shifted_coords, orientation = orientations[i], size = scale)
+        for node_id, normal_vector in self.mesh.nodal_normals_data.items():
+
+            coords = self.mesh.nodal_coordinates[node_id, 1:]
+            shifted_coords = coords + (1/100) * normal_vector
+            t = SymbolTranform(position=shifted_coords, orientation = normal_vector, size = scale)
             self.transforms.append(t)
 
     def configure_appearance(self):

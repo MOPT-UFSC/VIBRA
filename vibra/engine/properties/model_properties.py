@@ -170,13 +170,17 @@ class ModelProperties:
 
             if "real_values" in data.keys() and "imag_values" in data.keys():
                 for i, a in enumerate(data["real_values"]):
+
                     if a is None:
                         tables_values.append(None)
                     else:
-                        b = data["imag_values"][i]
+                        b = data["imag_values"][i]                
                         tables_values.append(a + 1j*b)
 
-            if "table_names" in data.keys():
+            elif "values" in data.keys():
+                tables_values = data["values"]
+
+            elif "table_names" in data.keys():
 
                 if group_label == "acoustic":
                     imported_tables = self.acoustic_imported_tables
@@ -191,7 +195,7 @@ class ModelProperties:
 
                     if table_name in imported_tables.keys():
                         data_array = imported_tables[table_name]
-                        values = data_array[:, 1] + 1j*data_array[:, 2]
+                        values = data_array[:, 1] + 1j * data_array[:, 2]
                         tables_values.append(values)
 
             data["values"] = tables_values

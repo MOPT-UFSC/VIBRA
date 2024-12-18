@@ -80,6 +80,8 @@ class Mesh:
         self.volume_from_surface = defaultdict(list)
         self.face_elements_connected_to_nodes = defaultdict(list)
 
+        self.nodal_normals_data = dict()
+
         self.principal_diagonal = None
 
 
@@ -850,6 +852,11 @@ class Mesh:
                     center_coords.append(avg_coords)
 
         return center_coords
+    
+
+    def set_nodal_normals_data(self, normals_data: dict):
+        for node_id, nodal_normal in normals_data.items():
+            self.nodal_normals_data[node_id] = nodal_normal
 
 
     def get_principal_diagonal_structure_parallelepiped(self):

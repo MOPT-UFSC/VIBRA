@@ -22,7 +22,7 @@ pm_model = "DB"
 
 @pytest.mark.slow
 def test_load_external_mesh_and_solve():
-    return
+    # return
 
     # start decoding the Ansys script file (ds.dat file or input file)
     mesh_path = "validation/data/particle_velocity/mesh/silencer/ds_only_fluid_of_silencer_suction_stg1.dat"
@@ -115,19 +115,21 @@ def test_load_external_mesh_and_solve():
                 "imag_values" : [0],
                 "nodal_attribution" : False,
                 "averaged" : False }
-    
-    complex_fluid_data = get_complex_impedance_data()
-    impedance_data = complex_fluid_data["complex_impedance"]
 
-    # Impedance data
+    # Impedance data - constant value
+
     # Zo = fluid.impedance
     # data_Z = {  "real_values" : [Zo],
     #             "imag_values" : [0],
     #             "nodal_attribution" : False,
     #             "averaged" : False  }
 
-    data_Z = {  "real_values" : list(impedance_data[:, 1]),
-                "imag_values" : list(impedance_data[:, 2]),
+    # Impedance data - table of values
+
+    complex_fluid_data = get_complex_impedance_data()
+    impedance_data = complex_fluid_data["complex_impedance"]
+
+    data_Z = {  "values" : [impedance_data[:, 1] + 1j * impedance_data[:, 2]],
                 "nodal_attribution" : False,
                 "averaged" : False  }
 
@@ -154,7 +156,7 @@ def test_load_external_mesh_and_solve():
     
     model.set_frequency_setup(frequency_setup)
 
-    # Configure porous material
+    ## Configure porous material
     # pm_data = get_porous_material_data(model=pm_model)
     # model.set_porous_material_model_data(pm_data, volume=1)
     # model.process_porous_material_properties(frequencies)

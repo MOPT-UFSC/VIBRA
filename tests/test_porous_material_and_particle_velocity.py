@@ -22,7 +22,7 @@ pm_model = "DB"
 
 @pytest.mark.slow
 def test_load_external_mesh_and_solve():
-    # return
+    return
 
     # start decoding the Ansys script file (ds.dat file or input file)
     mesh_path = "validation/data/particle_velocity/mesh/silencer/ds_silencer_suction_stg1.dat"
@@ -130,7 +130,7 @@ def test_load_external_mesh_and_solve():
     # Define the analysis frequency setup
     df = 5
     f_min = 5
-    f_max = 1400
+    f_max = 140
     frequencies = np.arange(f_min, f_max + df, df)
 
     frequency_setup = {

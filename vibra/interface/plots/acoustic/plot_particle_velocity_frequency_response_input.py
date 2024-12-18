@@ -150,12 +150,15 @@ class PlotParticleVelocityFrequencyResponseInput(QDialog):
 
     def plot_data_callback(self):
 
+        self.mesh.nodal_normals_data.clear()
+
         if self.check_inputs():
             return
 
         self.join_model_data()
         self.plotter = FrequencyResponsePlotter()
         self.plotter._set_model_results_data_to_plot(self.model_results)
+        app().main_window.viewer_tabs.mesh_widget.update_symbols()
 
     def export_data_callback(self):
         
@@ -218,7 +221,7 @@ class PlotParticleVelocityFrequencyResponseInput(QDialog):
             self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id, rho)
             input_velocities = np.array(list(self.particle_velocity[component_label].values()), dtype=complex)
 
-            return np.average(input_velocities, axis=0)            
+            return np.average(input_velocities, axis=0)
 
     def get_nodal_particle_velocity(self, node_id : int):
 
