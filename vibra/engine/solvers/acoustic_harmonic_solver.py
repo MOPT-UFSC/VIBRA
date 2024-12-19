@@ -101,11 +101,10 @@ class AcousticHarmonicSolver:
         #
         # self.plot_graph(M)
         
-        condition_1 = self.assembler.model.lrf_properties 
-        condition_2 = self.assembler.model.porous_material_properties
-        condition_3 = self.assembler.model.viscous_thermal_model_properties
+        condition_1 = self.assembler.model.porous_material_properties
+        condition_2 = self.assembler.model.viscous_thermal_model_properties
 
-        if condition_1 or condition_2 or condition_3:
+        if condition_1 or condition_2:
             freq_dependent = True
         else:
             freq_dependent = False
@@ -310,18 +309,17 @@ class AcousticHarmonicSolver:
         particle_velocities["nodal_normals"] = data_normals
 
         self.assembler.model.mesh.set_nodal_normals_data(data_normals)
-        node_ids = np.sort(node_ids)
 
         ## Only for validation purposes
-        output_data = np.zeros((len(node_ids), 4), dtype=float)
-        output_data[:, 0] = node_ids
+        # output_data = np.zeros((len(ordered_nodes), 4), dtype=float)
+        # output_data[:, 0] = ordered_nodes
 
-        for row, node_id in enumerate(node_ids):
-            output_data[row, 1:] =  self.assembler.model.mesh.nodal_normals_data[node_id]
+        # for row, node_id in enumerate(ordered_nodes):
+        #     output_data[row, 1:] =  self.assembler.model.mesh.nodal_normals_data[node_id]
 
-        fname = f"nodal_normals_data_surface_{surface_id}.dat"
-        header = "Node index || x-axis component [m] || y-axis component [m] || z-axis component [m]"
-        np.savetxt(fname, output_data, fmt=["%i", "%.16f", "%.16f", "%.16f"], delimiter=",", header=header)
+        # fname = f"nodal_normals_data_surface_{surface_id}.dat"
+        # header = "Node index || x-axis component [m] || y-axis component [m] || z-axis component [m]"
+        # np.savetxt(fname, output_data, fmt=["%i", "%.16f", "%.16f", "%.16f"], delimiter=",", header=header)
 
         return particle_velocities
 
@@ -362,33 +360,33 @@ class AcousticHarmonicSolver:
 
         logging.info("Processing the transmission loss..." + ProgressStatus(40, 100))
 
-        out_data = dict()
-        list_nodes_in = list()
+        # out_data = dict()
+        # list_nodes_in = list()
         nodal_areas_in = np.zeros(len(nodes_input), dtype=float)
         for i, node in enumerate(nodes_input):
             areas = self.assembler.model.mesh.nodal_area[node]
             nodal_areas_in[i] = sum(areas)
-            out_data[node] = sum(areas)
+            # out_data[node] = sum(areas)
             # print("input: ", i, node)
-            list_nodes_in.append(node)
+            # list_nodes_in.append(node)
 
-        _nodal_areas_in = np.array([nodes_input, nodal_areas_in]).T
-        np.savetxt("input_nodal_areas.dat", _nodal_areas_in, fmt=["%i", "%.16f"], delimiter=",", header="Node index || Nodal area [m2]")
+        # _nodal_areas_in = np.array([nodes_input, nodal_areas_in]).T
+        # np.savetxt("input_nodal_areas.dat", _nodal_areas_in, fmt=["%i", "%.16f"], delimiter=",", header="Node index || Nodal area [m2]")
 
-        list_nodes_out = list()
+        # list_nodes_out = list()
         nodal_areas_out = np.zeros(len(nodes_output), dtype=float)
         for i, node in enumerate(nodes_output):
             areas = self.assembler.model.mesh.nodal_area[node]
             nodal_areas_out[i] = sum(areas)
-            out_data[node] = sum(areas)
+            # out_data[node] = sum(areas)
             # print("output: ", i, node)
-            list_nodes_out.append(node)
+            # list_nodes_out.append(node)
 
         # with open("areas_data.json", "w") as file:
         #     json.dump(out_data, file, indent=2)
 
-        _nodal_areas_out = np.array([nodes_output, nodal_areas_out]).T
-        np.savetxt("output_nodal_areas.dat", _nodal_areas_out, fmt=["%i", "%.16f"], delimiter=",", header="Node index || Nodal area [m2]")
+        # _nodal_areas_out = np.array([nodes_output, nodal_areas_out]).T
+        # np.savetxt("output_nodal_areas.dat", _nodal_areas_out, fmt=["%i", "%.16f"], delimiter=",", header="Node index || Nodal area [m2]")
 
         # print("\n")
         # for i in [177, 178, 8818]:
@@ -419,26 +417,37 @@ class AcousticHarmonicSolver:
 
         # Transmission loss
         surf_velocity = self.assembler.model.properties._get_property("surface_velocity", surface=input_surface_id)
+        if isinstance(surf_velocity, dict):
+            if "real_values" in surf_velocity.keys():
+                real_values = np.array(surf_velocity["real_values"])
+                imag_values = np.array(surf_velocity["imag_values"])
+                V_in = real_values + 1j * imag_values
+            else:
+                return None, None, None
 
-        if surf_velocity is None:
+        specific_impedance = self.assembler.model.properties._get_property("specific_impedance", surface=input_surface_id)
+        if isinstance(specific_impedance, dict):
+            if "real_values" in specific_impedance.keys():
+                real_values = np.array(specific_impedance["real_values"])
+                imag_values = np.array(specific_impedance["imag_values"])
+                Zo_in = real_values + 1j * imag_values
+            else:
+                Zo_in = specific_impedance["values"]
+        else:
             return None, None, None
 
-        # real_values = np.array(surf_velocity["real_values"])
-        # imag_values = np.array(surf_velocity["imag_values"])
-        # V_in = real_values + 1j * imag_values
+        ## INPUT SOUND INTENSITY CALCULATION
 
-        # P_in = V_in * rho_in * c0_in / 2
-        # I_in = np.abs(np.real(P_in * np.conjugate(V_in / 2)) / 2)
+        P_downstream = V_in * Zo_in / 2
+        V_downstream = P_downstream / Zo_in
+        I_in = np.abs(np.real(P_downstream * np.conjugate(V_downstream)) / 2)
 
-        V_in = np.array(list(input_pv_data["Vn"].values()), dtype=complex)
+        # V_in = -np.array(list(input_pv_data["Vn"].values()), dtype=complex)
+        # P_downstream = (P_in + Zo_in * V_in) / 2
+        # V_downstream = P_downstream / Zo_in
+        # I_in = np.real(P_downstream * np.conjugate(V_downstream)) / 2
 
-        P_downstream = (P_in + rho_in * c0_in * V_in) / 2
-        V_downstream = P_downstream / (rho_in * c0_in)
-
-        I_in = np.real(P_downstream * np.conjugate(V_downstream)) / 2
-
-        # V_in = np.array(list(input_pv_data["Vn"].values()), dtype=complex)
-        # I_in = -np.real(P_in * np.conjugate(V_in)) / 2
+        ## OUTPUT SOUND INTENSITY CALCULATION
 
         V_out = np.array(list(output_pv_data["Vn"].values()), dtype=complex)
         I_out = np.real(P_out * np.conjugate(V_out)) / 2
@@ -451,17 +460,18 @@ class AcousticHarmonicSolver:
         # I_in_out = np.array([np.average(I_in, axis=0), np.average(I_out, axis=0)], dtype=float).T
         # print(f"Sound intensities: {I_in_out}")
 
+        # Aeff_in = A_in * np.ones((len(nodes_input), 1), dtype=float) / len(nodes_input)
+        # Aeff_out = A_out * np.ones((len(nodes_output), 1), dtype=float) / len(nodes_output)
+
         W_in = 10 * np.log10(np.sum(I_in * Aeff_in, axis=0))
         W_out = 10 * np.log10(np.sum(I_out * Aeff_out, axis=0))
 
         TL = W_in - W_out
 
-        diff = 10*np.log10(np.sum(I_out * Aeff_out, axis=0)) - 10*np.log10(np.sum(I_out * A_out/len(nodes_output), axis=0))
-
         if self.frequencies[0] == 0:
-            return self.frequencies[1:], TL[1:], diff[1:]
+            return self.frequencies[1:], TL[1:]
         else:
-            return self.frequencies, TL, diff
+            return self.frequencies, TL
 
     def get_noise_reduction(self, input_surface_id, output_surface_id):
         """ Returns the transmission loss.

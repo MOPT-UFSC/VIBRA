@@ -217,8 +217,10 @@ class PlotTransmissionLossInput(QDialog):
                 logging.info("Processing the transmission loss..." + ProgressStatus(20, 100))
                 self.mesh._process_nodal_areas()
 
-                x_data, y_data, _ = self.project.acoustic_harmonic_solver.get_transmission_loss(self.input_surface_id, 
-                                                                                                self.output_surface_id)
+                x_data, y_data = self.project.acoustic_harmonic_solver.get_transmission_loss(
+                                                                                            self.input_surface_id, 
+                                                                                            self.output_surface_id
+                                                                                            )
 
                 return x_data, y_data
 

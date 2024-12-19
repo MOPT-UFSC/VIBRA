@@ -252,11 +252,10 @@ class AcousticAssembler:
         self.data_Cvisc = np.zeros((nel, dofs, dofs), dtype=complex)
         self.data_Qvisc = np.zeros((nel, dofs, dofs), dtype=complex)
 
-        condition_1 = self.model.lrf_properties 
-        condition_2 = self.model.porous_material_properties
-        condition_3 = self.model.viscous_thermal_model_properties
+        condition_1 = self.model.porous_material_properties
+        condition_2 = self.model.viscous_thermal_model_properties
 
-        if condition_1 or condition_2 or condition_3:
+        if condition_1 or condition_2:
 
             nf = self.number_frequencies
             aux_ones = np.ones(nf, dtype=complex)
@@ -270,15 +269,7 @@ class AcousticAssembler:
                 self.data_K[el, :, :] = Ke
                 self.data_M[el, :, :] = Me
 
-                if el in self.model.lrf_properties.keys():
-
-                    rho_eff = self.model.porous_material_properties[el]["rho_eff"]
-                    C_eff = self.model.lrf_properties[el]["C_eff"]
-
-                    self.den_K[el, :] = 1 / (rho_eff)
-                    self.den_M[el, :] = 1 / (rho_eff * C_eff**2)
-
-                elif el in self.model.porous_material_properties.keys():
+                if el in self.model.porous_material_properties.keys():
 
                     rho_eff = self.model.porous_material_properties[el]["rho_eff"]
                     C_eff = self.model.porous_material_properties[el]["C_eff"]
@@ -296,10 +287,13 @@ class AcousticAssembler:
 
                 else:
 
-                    rho_0, C_0, mu_0 = self.model.get_fluid_properties(element=el)
+                    rho_0, C_0, mu_0 = self.model.get_fluid_properties(proportional_damping=True, element=el)
 
                     self.den_K[el, :] = aux_ones / (rho_0)
                     self.den_M[el, :] = aux_ones / (rho_0 * C_0**2)
+
+                    # self.data_Cvisc[el, :, :] = ((4 * mu_0) / (3 * rho_0 * C_0**2)) * Ke
+                    # self.data_Qvisc[el, :, :] = 0 * ((4 * mu_0) / (3 * rho_0)) * Ke
 
         else:
 
