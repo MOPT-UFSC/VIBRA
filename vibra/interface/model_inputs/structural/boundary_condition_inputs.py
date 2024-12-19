@@ -3,7 +3,6 @@ from math import pi
 from pathlib import Path
 
 import numpy as np
-from PySide6 import uic
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
@@ -12,6 +11,8 @@ from vibra import app, UI_DIR
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 # from pulse.utils import remove_bc_from_file, os.path.join
 from vibra.interface.general.print_message_input import PrintMessageInput
+
+from molde import load_ui
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -22,7 +23,7 @@ class BoundaryConditionInputs(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "model/setup/structural/boundary_condition_input.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self)
 
         self.main_window = app().main_window
         self.project = self.main_window.project

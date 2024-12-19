@@ -1,22 +1,23 @@
 from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QApplication, QLabel, QProgressBar, QSplashScreen
-from PySide6 import uic
 
 from vibra import ICON_DIR, UI_DIR
+
+from molde import load_ui
 
 from time import time
 
 class SplashScreen(QSplashScreen):
     def __init__(self, parent):
-        super(QSplashScreen, self).__init__()
+        super(SplashScreen, self).__init__()
 
         ui_path = UI_DIR / "project/splash.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self)
 
         self._config_widget()
         self._define_qt_variables()
-        self.update_position(parent)
+        # self.update_position(parent)
         self.update_progress(5)
 
     def _config_widget(self):

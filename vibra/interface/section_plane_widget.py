@@ -1,9 +1,10 @@
 from PySide6.QtWidgets import QDialog, QSlider, QSpinBox, QPushButton, QWidget
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
-from PySide6 import uic
 
 from vibra import app, UI_DIR
+from molde import load_ui
+
 
 class SectionPlaneWidget(QDialog):
     value_changed = Signal()
@@ -21,7 +22,7 @@ class SectionPlaneWidget(QDialog):
         self.invert_value = False
 
         ui_path = UI_DIR / "render/section_plane_control_widget.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self)
 
         self.configure_window()
         self._define_qt_variables()

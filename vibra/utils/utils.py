@@ -1,4 +1,3 @@
-
 from pathlib import Path
 
 def get_list_of_values_from_string(input_string, int_values=True):

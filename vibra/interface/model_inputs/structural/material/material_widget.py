@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import QDialog, QFrame, QLabel, QLineEdit, QPushButton, QRadioButton, QTableWidget, QTableWidgetItem, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
 from PySide6.QtGui import QCloseEvent, QIcon, QFont, QBrush, QColor
 from PySide6.QtCore import Qt
-from PySide6 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.icons import *
@@ -12,6 +11,7 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 
 from vibra.libraries.default_libraries import default_material_library
 from vibra.engine.properties.material import Material
+from molde import load_ui
 
 import configparser
 from itertools import count
@@ -34,7 +34,7 @@ class MaterialWidget(QWidget):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "model/setup/material/material_input_widget.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self)
 
         self.main_window = app().main_window
         # self.main_window.set_input_widget(self)

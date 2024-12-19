@@ -16,7 +16,7 @@ from vibra.interface.welcome_widget import WelcomeWidget
 
 class ViewerTabs(QTabWidget):
     def __init__(self, parent):
-        super(QWidget, self).__init__(parent)
+        super().__init__(parent)
 
         self.main_window = app().main_window
         self.project = app().main_window.project

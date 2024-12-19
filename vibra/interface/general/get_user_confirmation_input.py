@@ -1,11 +1,11 @@
 from PySide6.QtWidgets import QDialog, QLabel, QPushButton
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtCore import Qt, QRect
-from PySide6 import uic
 
 from vibra import app, UI_DIR, __version__
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
-from vibra.interface.formatters.icons import * 
+from vibra.interface.formatters.icons import *
+from molde import load_ui
 
 
 class GetUserConfirmationInput(QDialog):
@@ -13,7 +13,7 @@ class GetUserConfirmationInput(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "messages/get_user_confirmation.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)

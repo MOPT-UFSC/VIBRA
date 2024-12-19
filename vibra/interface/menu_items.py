@@ -133,14 +133,14 @@ class MenuItems(QTreeWidget):
         self.font_top_Items.setPointSize(10)
         self.font_top_Items.setBold(True)
         self.font_top_Items.setItalic(False)
-        self.font_top_Items.setWeight(60)
+        self.font_top_Items.setWeight(QFont.Weight(60))
 
         self.font_child_Items = QFont()
         # self.font_child_Items.setFamily("Segoe UI")
         self.font_child_Items.setPointSize(9)
         # self.font_child_Items.setBold(False)
         # self.font_child_Items.setItalic(True)
-        self.font_child_Items.setWeight(50)
+        self.font_child_Items.setWeight(QFont.Weight(50))
 
     def _createColorsBrush(self):
         """Create Color objects that define the color of the text and/or background of the items."""
@@ -171,7 +171,7 @@ class MenuItems(QTreeWidget):
         self.setHeaderHidden(True)
         self.setTabKeyNavigation(True)
         self.setRootIsDecorated(True)
-        self.setFrameShape(1)
+        self.setFrameShape(QFrame.Shape(1))
         # self.setFrameShadow(3)
         self.setLineWidth(2)
         # self.setIndentation(20)

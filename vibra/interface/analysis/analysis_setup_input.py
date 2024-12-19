@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import numpy as np
-from PySide6 import uic
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QTabWidget
@@ -9,6 +8,7 @@ from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QTabWidge
 from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.print_message_input import PrintMessageInput
+from molde import load_ui
 
 window_title_1 = "Error"
 
@@ -46,7 +46,7 @@ class AnalysisSetupInput(QDialog):
         else:
             return
 
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self)
 
         self._config_window()
         self._reset_variables()

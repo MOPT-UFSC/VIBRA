@@ -1,12 +1,12 @@
 from PySide6.QtWidgets import QDialog, QFrame, QLabel, QProgressBar, QPushButton
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import Qt, QTimer
-from PySide6 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.icons import *
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 
+from molde import load_ui
 from time import sleep, time 
 
 class PrintMessageInput(QDialog):
@@ -14,7 +14,7 @@ class PrintMessageInput(QDialog):
         super().__init__()
 
         ui_path = UI_DIR / "messages/print_message.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self)
 
         self.auto_close = kwargs.get("auto_close", False)
         self.window_title, self.title, self.message = text_info

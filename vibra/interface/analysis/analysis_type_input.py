@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import QDialog, QPushButton
 from PySide6.QtCore import *
 from PySide6.QtGui import *
-from PySide6 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
@@ -10,6 +9,7 @@ from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModal
 from vibra.interface.analysis.coupled_harmonic_analysis_input import CoupledHarmonicAnalysisInput
 from vibra.interface.analysis.structural_harmonic_analysis_input import StructuralHarmonicAnalysisInput
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
+from molde import load_ui
 
 
 class AnalysisTypeInput(QDialog):
@@ -17,7 +17,7 @@ class AnalysisTypeInput(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "analysis/analysis_type_input.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self)
 
         self.main_window = app().main_window
 

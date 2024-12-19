@@ -1,18 +1,18 @@
 from pathlib import Path
 
-from PySide6 import uic
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
 from vibra import app, UI_DIR
+from molde import load_ui
 
 class AcousticHarmonicAnalysisInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "analysis/acoustic/acoustic_harmonic_analysis_input.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self)
 
         self.setWindowIcon(app().main_window.vibra_icon)
 

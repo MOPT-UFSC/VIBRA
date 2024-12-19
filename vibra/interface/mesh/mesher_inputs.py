@@ -3,7 +3,6 @@
 from PySide6.QtWidgets import QCheckBox, QComboBox, QDialog, QLabel, QLineEdit, QPushButton, QDoubleSpinBox, QTableWidget, QTableWidgetItem
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import Qt
-from PySide6 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
@@ -14,6 +13,7 @@ from vibra.utils.progress_status import ProgressStatus
 
 import logging
 from collections import defaultdict
+from molde import load_ui
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -24,7 +24,7 @@ class MesherInputs(QDialog):
         super().__init__()
 
         ui_path = UI_DIR / "mesh/mesher_setup.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self)
 
         self.close_after_generate = kwargs.get("close_after_generate", False)
 

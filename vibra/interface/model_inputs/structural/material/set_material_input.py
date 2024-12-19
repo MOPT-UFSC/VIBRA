@@ -1,12 +1,12 @@
 from PySide6.QtWidgets import QDialog, QComboBox, QFrame, QGridLayout, QLineEdit, QPushButton, QScrollArea, QTableWidget
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
-from PySide6 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.model_inputs.structural.material.material_widget import MaterialWidget
 from vibra.interface.general.print_message_input import PrintMessageInput
+from molde import load_ui
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -23,7 +23,7 @@ class SetMaterialInput(QDialog):
         super().__init__()
 
         ui_path = UI_DIR / "model/setup/material/set_material.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self)
 
         self.cache_selected_lines = kwargs.get("cache_selected_lines", list())
 

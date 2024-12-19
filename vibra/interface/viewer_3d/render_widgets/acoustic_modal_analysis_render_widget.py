@@ -1,6 +1,6 @@
 import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
-from PySide6.QtCore import QObjectCleanupHandler
+# from PySide6.QtCore import QObjectCleanupHandler
 from PySide6.QtWidgets import *
 
 from vibra import app
@@ -41,7 +41,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.cutting_plane_args = tuple()
 
         # replace the layout to add other usefull widgets
-        QObjectCleanupHandler().add(self.layout())
+        # QObjectCleanupHandler().add(self.layout())
         layout = QVBoxLayout()
         layout.addWidget(self.control_bar)
         layout.addWidget(self.render_interactor)
