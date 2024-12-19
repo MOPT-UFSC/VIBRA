@@ -76,4 +76,4 @@ class SymbolsActor(SymbolActorFixedSize):
 
     def configure_appearance(self):
         self.GetProperty().SetColor(1, 0, 0)
-        self.GetProperty().LightingOff()
+        # self.GetProperty().LightingOff()
