@@ -130,7 +130,7 @@ def test_load_external_mesh_and_solve():
     # Define the analysis frequency setup
     df = 5
     f_min = 5
-    f_max = 140
+    f_max = 1400
     frequencies = np.arange(f_min, f_max + df, df)
 
     frequency_setup = {
@@ -216,7 +216,7 @@ def test_load_external_mesh_and_solve():
     mesh._process_face_elements_connected_to_nodes([1, 2])
     mesh._process_nodal_areas()
 
-    freq_TL, TL_model, diff_TL = harmonic_solver.get_transmission_loss(1, 2)
+    freq_TL, TL_model = harmonic_solver.get_transmission_loss(1, 2)
 
     dt = time() - t0
     print(f"Elapsed time to post-process data: {round(dt, 4)}")
@@ -407,7 +407,7 @@ def test_load_external_mesh_and_solve():
         ax12.set_ylabel(f'Transmission loss [dB] - {type_label}')
         ax12.set_title(title)
         ax12.grid()
-        ax10.legend()
+        ax12.legend()
 
         plt.show()
 

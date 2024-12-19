@@ -118,20 +118,20 @@ def test_load_external_mesh_and_solve():
 
     # Impedance data - constant value
 
-    # Zo = fluid.impedance
-    # data_Z = {  "real_values" : [Zo],
-    #             "imag_values" : [0],
-    #             "nodal_attribution" : False,
-    #             "averaged" : False  }
+    Zo = fluid.impedance
+    data_Z = {  "real_values" : [Zo],
+                "imag_values" : [0],
+                "nodal_attribution" : False,
+                "averaged" : False  }
 
     # Impedance data - table of values
 
-    complex_fluid_data = get_complex_impedance_data()
-    impedance_data = complex_fluid_data["complex_impedance"]
+    # complex_fluid_data = get_complex_impedance_data()
+    # impedance_data = complex_fluid_data["complex_impedance"]
 
-    data_Z = {  "values" : [impedance_data[:, 1] + 1j * impedance_data[:, 2]],
-                "nodal_attribution" : False,
-                "averaged" : False  }
+    # data_Z = {  "values" : [impedance_data[:, 1] + 1j * impedance_data[:, 2]],
+    #             "nodal_attribution" : False,
+    #             "averaged" : False  }
 
     # data_Z = {  "anechoic_termination": True,
     #             "volume_id": 1,
@@ -228,7 +228,10 @@ def test_load_external_mesh_and_solve():
     mesh._process_face_elements_connected_to_nodes([1, 2])
     mesh._process_nodal_areas()
 
-    freq_TL, TL_model, diff_TL = harmonic_solver.get_transmission_loss(1, 2)
+    freq_TL, TL_model = harmonic_solver.get_transmission_loss(1, 2)
+
+    # mask = TL_model <= 0
+    # TL_model[mask] = np.zeros(sum(mask), dtype=float)
 
     dt = time() - t0
     print(f"Elapsed time to post-process data: {round(dt, 4)}")
@@ -416,10 +419,10 @@ def test_load_external_mesh_and_solve():
         ax12.plot(freq_TL, TL_model, 'r', label='VIBRA')
         ax12.plot(x_data_WB, data_type(y_data_WB), 'k--', label='ANSYS')
         ax12.set_xlabel('Frequency [Hz]')
-        ax12.set_ylabel(f'Transmission loss [dB] - {type_label}')
+        ax12.set_ylabel(f'Transmission loss [dB]')
         ax12.set_title(title)
         ax12.grid()
-        ax10.legend()
+        ax12.legend()
 
         plt.show()
 
@@ -485,8 +488,8 @@ def get_external_results():
     imported_results = dict()
     # results_path = f"validation/data/particle_velocity/results/silencer/WB_results_silencer_only_fluid_{pm_model}_Vn1_Z1_Z2_complex.xlsx"
     # results_path = f"validation/data/particle_velocity/results/silencer/WB_results_silencer_only_fluid_{pm_model}_Vn1_Z1_Z2_real.xlsx"
-    results_path = f"validation/data/particle_velocity/results/silencer/WB_results_silencer_only_fluid_Vn1_Z1_Z2_complex.xlsx"
-    # results_path = f"validation/data/particle_velocity/results/silencer/WB_results_silencer_only_fluid_Vn1_Z1_Z2_real.xlsx"
+    # results_path = f"validation/data/particle_velocity/results/silencer/WB_results_silencer_only_fluid_Vn1_Z1_Z2_complex.xlsx"
+    results_path = f"validation/data/particle_velocity/results/silencer/WB_results_silencer_only_fluid_Vn1_Z1_Z2_real.xlsx"
 
     if not os.path.exists(results_path):
         return imported_results
