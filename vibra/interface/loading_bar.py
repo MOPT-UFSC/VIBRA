@@ -46,10 +46,10 @@ class LoadingWindow(QWidget):
 
         self.customize_style()
         self.configure_window()
-        # self.update_position()
+        self.update_position()
 
     def update_position(self):
-        desktop_geometry = app().desktop().screenGeometry()
+        desktop_geometry = app().primaryScreen().geometry()
         pos_x = int((desktop_geometry.width() - self.width())/2)
         pos_y = int((desktop_geometry.height() - self.height())/2)
         self.setGeometry(pos_x, pos_y, self.width(), self.height())

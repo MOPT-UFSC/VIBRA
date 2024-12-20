@@ -10,14 +10,14 @@ from time import time
 
 class SplashScreen(QSplashScreen):
     def __init__(self, parent):
-        super(SplashScreen, self).__init__()
+        super().__init__()
 
         ui_path = UI_DIR / "project/splash.ui"
         load_ui(ui_path, self)
 
         self._config_widget()
         self._define_qt_variables()
-        # self.update_position(parent)
+        self.update_position(parent)
         self.update_progress(5)
 
     def _config_widget(self):
@@ -25,13 +25,16 @@ class SplashScreen(QSplashScreen):
         self.progressBar.setStyleSheet( """  QProgressBar{background-color : rgba(255, 255, 255, 0); border-radius: 6px; border-style: ridge; border-width: 0px;}
                                              QProgressBar::chunk {background-color : rgb(45, 110, 190); border-radius: 6px; border-style: ridge; border-width: 0px;}
                                         """)
+    
+        self.label.setPixmap(QPixmap(ICON_DIR / "azul cinza.png"))
 
     def _define_qt_variables(self):
         self.label_loading : QLabel
         self.progressBar : QProgressBar
+        self.label: QLabel
 
     def update_position(self, app):
-        desktop_geometry = app.desktop().screenGeometry()
+        desktop_geometry = app.primaryScreen().geometry()
         pos_x = int((desktop_geometry.width() - self.width())/2)
         pos_y = int((desktop_geometry.height() - self.height())/2)
         self.setGeometry(pos_x, pos_y, self.width(), self.height())
