@@ -141,3 +141,5 @@ dmypy.json
 .pyre/
 
 !data/examples/tables/*.dat
+!validation/transmission_loss/results/Zo_complex/*.dat
+!validation/transmission_loss/results/Zo_real/*.dat
