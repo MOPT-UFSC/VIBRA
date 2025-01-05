@@ -282,22 +282,22 @@ def test_load_external_mesh_and_solve():
         # Print the nodal results deviations
 
         abs_diff_node_6463 = np.abs((input_pressures_WB[6463] - solution[6463-1, :]) / (input_pressures_WB[6463]))
-        print(f"\nDeviation of pressure (node 6463): {100 * np.max(abs_diff_node_6463)}")
+        print(f"\nDeviation of pressure (node 6463): {100 * np.max(abs_diff_node_6463)} %")
 
         abs_diff_node_6531 = np.abs((output_pressures_WB[6531] - solution[6531-1, :]) / (output_pressures_WB[6531]))
-        print(f"Deviation of pressure (node 6531): {100 * np.max(abs_diff_node_6531)}")
+        print(f"Deviation of pressure (node 6531): {100 * np.max(abs_diff_node_6531)} %")
 
         abs_diff_node_6463 = np.abs((input_velocities_WB[6463] - particle_velocity[6463-1][0, :]) / (input_velocities_WB[6463]))
-        print(f"Deviation of particle velocity (node 6463): {100 * np.max(abs_diff_node_6463)}")
+        print(f"Deviation of particle velocity (node 6463): {100 * np.max(abs_diff_node_6463)} %")
 
         abs_diff_node_6531 = np.abs((output_velocities_WB[6531] - particle_velocity[6531-1][0, :]) / (output_velocities_WB[6531]))
-        print(f"Deviation of particle velocity (node 6531): {100 * np.max(abs_diff_node_6531)}")
-        
+        print(f"Deviation of particle velocity (node 6531): {100 * np.max(abs_diff_node_6531)} %")
+
         abs_diff_input_face = np.abs((input_pressure - input_pressure_WB) / input_pressure_WB)
-        print(f"Deviation (input face): {100 * np.max(abs_diff_input_face)}")
+        print(f"Deviation (input face): {100 * np.max(abs_diff_input_face)} %")
 
         abs_diff_output_face = np.abs((output_pressure - output_pressure_WB) / output_pressure_WB)
-        print(f"Deviation (output face): {100 * np.max(abs_diff_output_face)}")
+        print(f"Deviation (output face): {100 * np.max(abs_diff_output_face)} %")
 
         # assert abs_diff < 1e-4
 
@@ -423,14 +423,14 @@ def test_load_external_mesh_and_solve():
         # y_data = np.abs(TL_WB_evaluated - TL_model)
         # ind = np.argmax(y_data)
 
-        # print(x_data[ind])
+        # print(x_data[ind], np.max(y_data))
         # print(np.array([x_data, y_data]).T)
 
         fig13, ax13 = plt.subplots()
         title = "Transmission loss"
         ax13.plot(freq_TL, TL_model, 'r', label='VIBRA')
-        ax13.plot(freq_WB_direct, data_type(TL_WB_direct), 'k--', label='ANSYS')
-        ax13.plot(freq_WB_evaluated, data_type(TL_WB_evaluated), 'b--', label='ANSYS (ext.)')
+        ax13.plot(freq_WB_direct, TL_WB_direct, 'k--', label='ANSYS')
+        ax13.plot(freq_WB_evaluated, TL_WB_evaluated, 'b--', label='ANSYS (ext.)')
         ax13.set_xlabel('Frequency [Hz]')
         ax13.set_ylabel(f'Transmission loss [dB]')
         ax13.set_title(title)
