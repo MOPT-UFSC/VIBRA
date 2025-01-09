@@ -360,12 +360,10 @@ class AcousticHarmonicSolver:
 
         logging.info("Processing the transmission loss..." + ProgressStatus(40, 100))
 
-        out_data = dict()
         nodal_areas_in = np.zeros(len(nodes_input), dtype=float)
         for i, node in enumerate(nodes_input):
             areas = model.mesh.nodal_area[node]
             nodal_areas_in[i] = sum(areas)
-            out_data[node] = sum(areas)
 
         # _nodal_areas_in = np.array([nodes_input, nodal_areas_in * (A_in / np.sum(nodal_areas_in))]).T
         # np.savetxt(f"nodal_areas_surface_{input_surface_id}.dat", _nodal_areas_in, fmt=["%i", "%.16f"], delimiter=",", header="Node index || Nodal area [m2]")
@@ -374,7 +372,6 @@ class AcousticHarmonicSolver:
         for i, node in enumerate(nodes_output):
             areas = model.mesh.nodal_area[node]
             nodal_areas_out[i] = sum(areas)
-            out_data[node] = sum(areas)
 
         # _nodal_areas_out = np.array([nodes_output, nodal_areas_out * (A_out / np.sum(nodal_areas_out))]).T
         # np.savetxt(f"nodal_areas_surface_{output_surface_id}.dat", _nodal_areas_out, fmt=["%i", "%.16f"], delimiter=",", header="Node index || Nodal area [m2]")
@@ -466,7 +463,7 @@ class AcousticHarmonicSolver:
         if self.frequencies[0] == 0:
             return self.frequencies[1:], TL[1:]
         else:
-            return self.frequencies, TL
+            return self.frequencies, TL#, Aeff_in, Aeff_out
 
     def get_noise_reduction(self, input_surface_id, output_surface_id):
         """ Returns the transmission loss.

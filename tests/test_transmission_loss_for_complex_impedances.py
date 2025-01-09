@@ -260,6 +260,16 @@ def test_load_external_mesh_and_solve():
 
         WB_pressure_data = load_nodal_pressures()
         WB_particle_velocities_data = load_particle_velocities()
+        # WB_nodal_area_data = load_nodal_area()
+    
+        # _, nodal_area_input = WB_nodal_area_data["input_face"]
+        # _, nodal_area_output = WB_nodal_area_data["output_face"]
+
+        # NA_in = np.array(list(nodal_area_input.values()), dtype=float).reshape(-1, 1)
+        # NA_out = np.array(list(nodal_area_output.values()), dtype=float).reshape(-1, 1)
+
+        # print(np.max(np.abs(NA_in-Aef_in)))
+        # print(np.max(np.abs(NA_out-Aef_out)))
 
         freq_WB, _, input_velocities_WB = WB_particle_velocities_data["Vx", "input_face"]
         input_velocity_WB = np.average(list(input_velocities_WB.values()), axis=0)
@@ -415,9 +425,10 @@ def test_load_external_mesh_and_solve():
         # Transmission loss
 
         freq_WB_evaluated, TL_WB_evaluated = process_external_TL(model)
-
-        freq_WB_direct = TL_data[:, 0]
-        TL_WB_direct = TL_data[:, 1]
+        
+        mask = TL_data[:, 0] <= f_max
+        freq_WB_direct = TL_data[:, 0][mask]
+        TL_WB_direct = TL_data[:, 1][mask]
 
         # x_data = freq_WB_direct
         # y_data = np.abs(TL_WB_evaluated - TL_model)
@@ -601,11 +612,15 @@ def process_external_TL(model):
     freq_WB, _, particle_velocity_input = WB_particle_velocity_data["Vx", "input_face"]
     freq_WB, _, particle_velocity_output = WB_particle_velocity_data["Vx", "output_face"]
 
-    keys_na = list(nodal_area_output.keys())
-    keys_pr = list(pressures_output.keys())
-    keys_pv = list(particle_velocity_output.keys())
+    keys_na_in = list(nodal_area_input.keys())
+    keys_pr_in = list(pressures_input.keys())
+    keys_pv_in = list(particle_velocity_input.keys())
 
-    if keys_na == keys_pr == keys_pv:
+    keys_na_out = list(nodal_area_output.keys())
+    keys_pr_out = list(pressures_output.keys())
+    keys_pv_out = list(particle_velocity_output.keys())
+
+    if (keys_na_in == keys_pr_in == keys_pv_in) and (keys_na_out == keys_pr_out == keys_pv_out):
 
         surf_velocity = model.properties._get_property("surface_velocity", surface=input_surface_id)
         if isinstance(surf_velocity, dict):
@@ -657,7 +672,6 @@ def process_external_TL(model):
 
         # P_downstream = (P_in + Zo_in * Vx_in) / 2
         # V_downstream = P_downstream / Zo_in
-        # I_in = np.real(P_downstream * np.conjugate(V_downstream)) / 2
 
         I_in = np.real(P_downstream * np.conjugate(V_downstream)) / 2
         NA_in = np.array(list(nodal_area_input.values()), dtype=float).reshape(-1, 1)
@@ -670,9 +684,6 @@ def process_external_TL(model):
 
         W_in = 10 * np.log10(np.sum(I_in * NA_in, axis=0) / 1e-12)
         W_out = 10 * np.log10(np.sum(I_out * NA_out, axis=0) / 1e-12)
-
-        # W_in = 10 * np.log10(np.average(I_in, axis=0) * A_in)
-        # W_out = 10 * np.log10(np.average(I_out, axis=0) * A_out)
 
         # print(f"Incident power: {W_in}[dB]")
 
