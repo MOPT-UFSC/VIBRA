@@ -46,7 +46,10 @@ class PlotTransmissionLossInput(QDialog):
 
         self._config_widgets()
         self._load_analysis_data()
-        self.load_input_surface_id()
+
+        if self.load_input_surface_id():
+            return
+
         self.geometry_selection_callback()
         self.exec()
 
@@ -146,6 +149,15 @@ class PlotTransmissionLossInput(QDialog):
         if len(surface_ids) == 1:
             self.lineEdit_input_surface_id.setText(str(surface_ids[0]))
             self.lineEdit_output_surface_id.setFocus()
+        else:
+            self.close()
+            title = "Surface velocity not detected"
+            message = "The surface velocity excitation was not detected in the model settings, therefore, "
+            message += "the transmission loss calculation has been aborted. To calculate the transmission loss properly, "
+            message += " it is recommended that the surface velocity be applied at the input face also "
+            message += "the specific impedances be applied in both input and output faces."
+            PrintMessageInput([window_title_1, title, message])
+            return True
 
     def invert_selection(self):
         temp_text_input = self.lineEdit_input_surface_id.text()

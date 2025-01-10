@@ -400,8 +400,12 @@ class AcousticHarmonicSolver:
                 real_values = np.array(surf_velocity["real_values"])
                 imag_values = np.array(surf_velocity["imag_values"])
                 V_in = real_values + 1j * imag_values
-            else:
-                return None, None
+
+            elif "values" in surf_velocity.keys():
+                V_in = surf_velocity["values"]
+
+        else:
+            return None, None
 
         specific_impedance = model.properties._get_property("specific_impedance", surface=input_surface_id)
         if isinstance(specific_impedance, dict):
@@ -430,7 +434,7 @@ class AcousticHarmonicSolver:
 
                 Zo_in = density * speed_of_sound
 
-            else:
+            elif "values" in surf_velocity.keys():
                 Zo_in = specific_impedance["values"]
 
         else:

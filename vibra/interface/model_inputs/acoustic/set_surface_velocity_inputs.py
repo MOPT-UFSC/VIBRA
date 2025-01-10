@@ -127,6 +127,45 @@ class SurfaceVelocityInput(QDialog):
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
 
+            if len(faces) == 1:
+                surface_id = list(faces)[0]
+                self.load_property_data(surface_id)
+
+    def load_property_data(self, surface_id: int):
+
+        if self.tabWidget_main.currentIndex() == 2:
+            return
+
+        data = self.model.properties._get_property("surface_velocity", surface=surface_id)
+
+        if isinstance(data, dict):
+
+            nodal_attribution = data.get("nodal_attribution", None)
+            averaged = data.get("averaged", None)
+
+            self.checkBox_averaged_constant_values.setEnabled(nodal_attribution)
+            self.checkBox_averaged_table_values.setEnabled(nodal_attribution)
+
+            if nodal_attribution:
+
+                self.radioButton_nodal_attribution_constant.setChecked(True)
+                self.radioButton_nodal_attribution_table.setChecked(True)
+                if "averaged" in data.keys():
+                    self.checkBox_averaged_constant_values.setChecked(averaged)
+                    self.checkBox_averaged_table_values.setChecked(averaged)
+
+            else:
+                self.radioButton_element_integration_constant.setChecked(True)
+                self.radioButton_element_integration_table.setChecked(True)
+
+            if "table_paths" in data.keys():
+                self.tabWidget_main.setCurrentIndex(1)
+                self.lineEdit_table_path.setText(data["table_paths"][0])
+            else:
+                self.tabWidget_main.setCurrentIndex(0)
+                self.lineEdit_real_value.setText(str(data["real_values"][0]))
+                self.lineEdit_imag_value.setText(str(data["imag_values"][0]))
+
     def tabEvent_callback(self):
         if self.tabWidget_main.currentIndex() == 2:
             self.lineEdit_selection_id.setText("")

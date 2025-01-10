@@ -387,7 +387,8 @@ class AcousticAssembler:
             returns the output data in the form of mass flow rate.
         """
 
-        aux_ones = np.ones((1, self.number_frequencies), dtype=complex)
+        # aux_ones = np.ones((1, self.number_frequencies), dtype=complex)
+        aux_ones = np.ones((self.number_frequencies), dtype=complex)
         acoustic_excitation = defaultdict(float)
 
         for (property, surface_id), data in self.properties.surface_properties.items():
@@ -419,9 +420,12 @@ class AcousticAssembler:
 
                 _complex_values = data["values"][0]
                 if isinstance(_complex_values, complex):
+                    # print("complex")
                     complex_values = _complex_values * aux_ones
 
+                #TODO: check compressor excitation
                 elif isinstance(_complex_values, np.ndarray):
+                    print("array")
                     if _complex_values.shape[0] == 1:
                         complex_values = _complex_values * aux_ones
                     elif len(_complex_values.shape) == 1:
@@ -434,6 +438,7 @@ class AcousticAssembler:
                     nodes = self.model.mesh.nodes_from_surfaces[surface_id]
                     N = len(nodes)
 
+                    self.model.mesh._process_face_elements_connected_to_nodes(surface_id)
                     area = self.model.mesh.surface_area_from_element_integration[surface_id]
 
                     for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
