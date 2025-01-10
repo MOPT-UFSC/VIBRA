@@ -42,11 +42,11 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
 
         # replace the layout to add other usefull widgets
         # QObjectCleanupHandler().add(self.layout())
-        layout = QVBoxLayout()
-        layout.addWidget(self.control_bar)
-        layout.addWidget(self.render_interactor)
-        self.setLayout(layout)
-        self.setContentsMargins(0, 0, 0, 0)
+        # layout = QVBoxLayout()
+        # layout.addWidget(self.control_bar)
+        # layout.addWidget(self.render_interactor)
+        # self.setLayout(layout)
+        # self.setContentsMargins(0, 0, 0, 0)
 
         self.analysis_actor = None
         self.edges_actor = None
