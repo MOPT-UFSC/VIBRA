@@ -59,10 +59,6 @@ class AcousticPressureInput(QDialog):
 
     def _define_qt_variables(self):
 
-        # QCheckBox
-        self.checkBox_averaged_constant_values : QCheckBox
-        self.checkBox_averaged_table_values : QCheckBox
-
         # QLineEdit
         self.lineEdit_selection_id : QLineEdit
         self.lineEdit_real_value : QLineEdit
@@ -78,15 +74,6 @@ class AcousticPressureInput(QDialog):
         self.pushButton_reset : QPushButton
         #
         self.pushButton_change_frequency_setup.setDisabled(True)
-
-        # QRadioButton
-        self.radioButton_nodal_attribution_constant : QRadioButton
-        self.radioButton_element_integration_constant : QRadioButton
-        self.radioButton_element_integration_table : QRadioButton
-        self.radioButton_nodal_attribution_table : QRadioButton
-        #
-        self.radioButton_element_integration_constant.setDisabled(True)
-        self.radioButton_element_integration_table.setDisabled(True)
 
         # QTabWidget
         self.tabWidget_main : QTabWidget
@@ -104,11 +91,6 @@ class AcousticPressureInput(QDialog):
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
-        self.radioButton_nodal_attribution_constant.clicked.connect(self.update_controls_for_constant_value)
-        self.radioButton_element_integration_constant.clicked.connect(self.update_controls_for_constant_value)
-        self.radioButton_nodal_attribution_table.clicked.connect(self.update_controls_for_table_of_values)
-        self.radioButton_element_integration_table.clicked.connect(self.update_controls_for_table_of_values)
-        #
         self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
         self.treeWidget_acoustic_pressure.itemClicked.connect(self.on_click_item)
         self.treeWidget_acoustic_pressure.itemDoubleClicked.connect(self.on_doubleclick_item)
@@ -122,6 +104,27 @@ class AcousticPressureInput(QDialog):
         if faces:
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
+
+            if len(faces) == 1:
+                surface_id = list(faces)[0]
+                self.load_property_data(surface_id)
+
+    def load_property_data(self, surface_id: int):
+
+        if self.tabWidget_main.currentIndex() == 2:
+            return
+
+        data = self.model.properties._get_property("acoustic_pressure", surface=surface_id)
+
+        if isinstance(data, dict):
+
+            if "table_paths" in data.keys():
+                self.tabWidget_main.setCurrentIndex(1)
+                self.lineEdit_table_path.setText(data["table_paths"][0])
+            else:
+                self.tabWidget_main.setCurrentIndex(0)
+                self.lineEdit_real_value.setText(str(data["real_values"][0]))
+                self.lineEdit_imag_value.setText(str(data["imag_values"][0]))
 
     def tabEvent_callback(self):
         if self.tabWidget_main.currentIndex() == 2:
@@ -191,14 +194,11 @@ class AcousticPressureInput(QDialog):
             real_values = [np.real(acoustic_pressure)]
             imag_values = [np.imag(acoustic_pressure)]
 
-            nodal_attribution = self.radioButton_nodal_attribution_constant.isChecked()
-            key_avg = self.checkBox_averaged_constant_values.isChecked()
-
             data = {
                     "real_values": real_values,
                     "imag_values": imag_values,
-                    "nodal_attribution": nodal_attribution,
-                    "averaged": key_avg,
+                    # "nodal_attribution": True,
+                    # "averaged": True,
                     }
 
             for surface_id in surface_ids:
@@ -341,17 +341,14 @@ class AcousticPressureInput(QDialog):
                     return
 
                 complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
-
                 table_path = self.lineEdit_table_path.text()
-                key_avg = self.checkBox_averaged_constant_values.isChecked()
-                nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
 
                 data = {
                         "table_names": [table_name],
                         "table_paths" : [table_path],
                         "values" : [complex_values],                   
-                        "averaged": key_avg,
-                        "nodal_attribution": nodal_attribution,
+                        # "averaged": True,
+                        # "nodal_attribution": True,
                         }
 
                 self.properties._set_property("acoustic_pressure", data, surface=surface_id)
@@ -465,16 +462,6 @@ class AcousticPressureInput(QDialog):
         self.lineEdit_real_value.setText("")
         self.lineEdit_imag_value.setText("")
         self.lineEdit_table_path.setText("")
-
-    def update_controls_for_constant_value(self):
-        _bool = self.radioButton_element_integration_constant.isChecked()
-        self.checkBox_averaged_constant_values.setChecked(not _bool)
-        self.checkBox_averaged_constant_values.setDisabled(_bool)
-
-    def update_controls_for_table_of_values(self):
-        _bool = self.radioButton_element_integration_table.isChecked()
-        self.checkBox_averaged_table_values.setChecked(not _bool)
-        self.checkBox_averaged_table_values.setDisabled(_bool)
 
     def update_tabs_visibility(self):
         surface_ids = list()
