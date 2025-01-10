@@ -683,7 +683,7 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>../../../../../../OpenPulse/pulse/interface/data/icons/common/new_file.png</normaloff>../../../../../../OpenPulse/pulse/interface/data/icons/common/new_file.png</iconset>
+             <normaloff>../../icons/new_file.png</normaloff>../../icons/new_file.png</iconset>
            </property>
            <property name="iconSize">
             <size>
