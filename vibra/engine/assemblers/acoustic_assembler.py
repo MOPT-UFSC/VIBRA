@@ -391,6 +391,8 @@ class AcousticAssembler:
         aux_ones = np.ones((self.number_frequencies), dtype=complex)
         acoustic_excitation = defaultdict(float)
 
+        self.model.set_acoustic_element(self.get_element())
+
         for (property, surface_id), data in self.properties.surface_properties.items():
             if property == "mass_flow_rate":
 
@@ -452,6 +454,7 @@ class AcousticAssembler:
         output = np.zeros((total_dofs, self.number_frequencies), dtype=complex)
 
         if acoustic_excitation:
+            print("entrei -> acoustic_excitation")
             indexes = list(acoustic_excitation.keys())
             excitation = list(acoustic_excitation.values())
             output[indexes, :] = np.array(excitation)

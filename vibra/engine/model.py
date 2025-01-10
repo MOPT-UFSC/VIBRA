@@ -219,7 +219,7 @@ class Model:
     def set_structural_element(self, element):
         self.solid_structural_element, self.surface_structural_element = element
 
-    def get_acoustic_global_dofs_from_nodes(self, nodes):
+    def get_acoustic_global_dofs_from_nodes(self, nodes: np.ndarray):
         if self.solid_acoustic_element is None:
             return list()
         _dofs_per_node = self.solid_acoustic_element.DOF_PER_NODE
