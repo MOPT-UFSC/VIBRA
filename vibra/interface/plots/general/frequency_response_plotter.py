@@ -271,9 +271,9 @@ class FrequencyResponsePlotter(QDialog):
 
     def paint_toolbar_icons(self, *args, **kwargs):
 
-        from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
+        from vibra.interface.plots.general.custom_navigation_toolbar import CustomNavigationToolbar
 
-        toolbar = self.findChild(NavigationToolbar2QT)
+        toolbar = self.findChild(CustomNavigationToolbar)
         if toolbar is None:
             return
 
@@ -291,8 +291,8 @@ class FrequencyResponsePlotter(QDialog):
         self.plots = list()
 
         if self._layout is None:
-            from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-            toolbar = NavigationToolbar2QT(self.mpl_canvas_frequency_plot, self)
+            from vibra.interface.plots.general.custom_navigation_toolbar import CustomNavigationToolbar
+            toolbar = CustomNavigationToolbar(self.mpl_canvas_frequency_plot, self)
 
             # Paint the toolbar icons and connect the buttons to paint
             # themselves after every click or draw events
