@@ -11,7 +11,7 @@ from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
 
 class CuttingPlaneActor(vtkActor):
     def __init__(self, bounds):
-        self.bounds = bounds
+        self._bounds = bounds
         self.create_geometry()
         self.configure_appearance()
         self.calculate_scale()
@@ -34,16 +34,16 @@ class CuttingPlaneActor(vtkActor):
         self.PickableOff()
 
     def configure_cutting_plane(self, position, orientation):
-        x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
-        y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
-        z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
+        x = lerp(self._bounds[0], self._bounds[1], position[0] / 100)
+        y = lerp(self._bounds[2], self._bounds[3], position[1] / 100)
+        z = lerp(self._bounds[4], self._bounds[5], position[2] / 100)
         self.SetPosition(x, y, z)
         self.SetOrientation(orientation)
 
     def calculate_x_y_z_position(self, position):
-        x = lerp(self.bounds[0], self.bounds[1], position[0] / 100)
-        y = lerp(self.bounds[2], self.bounds[3], position[1] / 100)
-        z = lerp(self.bounds[4], self.bounds[5], position[2] / 100)
+        x = lerp(self._bounds[0], self._bounds[1], position[0] / 100)
+        y = lerp(self._bounds[2], self._bounds[3], position[1] / 100)
+        z = lerp(self._bounds[4], self._bounds[5], position[2] / 100)
         return x, y, z
 
     def calculate_normal_vector(self, orientation):
@@ -56,5 +56,5 @@ class CuttingPlaneActor(vtkActor):
         return normal[:3]
 
     def calculate_scale(self):
-        scale = bounds_distance(self.bounds)
+        scale = bounds_distance(self._bounds)
         self.SetScale(scale, scale, scale)
