@@ -360,7 +360,11 @@ class MainWindow(QMainWindow):
         self.showMaximized()
 
         app().processEvents()
-        if not self.is_temporary_vibra_folder_empty():
+
+        if len(sys.argv) > 1:
+            self.open_project(Path(sys.argv[1]))
+
+        elif not self.is_temporary_vibra_folder_empty():
             self.recovery_dialog()
 
     def load_user_preferences(self):
