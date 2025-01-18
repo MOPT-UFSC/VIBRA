@@ -60,7 +60,6 @@ class Mesh:
         self.elements_from_surface = dict()
         self.elements_from_volume = dict()
         self.face_element_thickness = dict()
-        self.surface_thickness = dict()
 
         self.line_from_element = dict()
         self.surface_from_element = dict()
@@ -661,6 +660,11 @@ class Mesh:
             area = np.linalg.norm(np.cross(AB, BC)) / 2
 
         return area
+
+
+    def set_face_element_thickness(self, surface_id: int, data: dict):
+        for face_element in self.elements_from_surface[surface_id]:
+            self.face_element_thickness[face_element] = data
 
 
     def get_mesh_info(self):

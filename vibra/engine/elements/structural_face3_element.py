@@ -317,12 +317,11 @@ class STRUCT_FACE_3(Element2D):
         #
         Ke = np.zeros([self.DOFS_PER_ELEMENT, self.DOFS_PER_ELEMENT], dtype=float)
         Me = np.zeros([self.DOFS_PER_ELEMENT, self.DOFS_PER_ELEMENT], dtype=float)
-
         #
         ie = self.connectivity[el_index, 1:]
         Db, Dm = self.get_constitutive_model(ie, model_type="linear-isotropic")
         rho = self.material.density
-        t = 0.005
+        t = self.model.mesh.face_element_thickness[el_index]["surface_thickness"]
         #
         nodal_coords = self.nodal_coordinates[ie, 1:4]
         x_loc, y_loc, T = local_coord(nodal_coords)

@@ -344,3 +344,9 @@ class Model:
 
     def set_structural_load(self, data, line, surface):
         self.properties.set_structural_load(data, line, surface)
+
+    def process_surface_thickness(self):
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "surface_thickness":
+                self.mesh.set_face_element_thickness(surface_id, data)
