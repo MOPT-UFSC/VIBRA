@@ -24,6 +24,7 @@ from vibra.interface.model_inputs.acoustic.set_acoustic_properties_gradient_inpu
 from vibra.interface.model_inputs.acoustic.reciprocating_compressor_inputs import ReciprocatingCompressorInputs
 from vibra.interface.model_inputs.acoustic.process_acoustic_transfer_element_data import ProcessAcousticTransferElementData
 #
+from vibra.interface.model_inputs.structural.surface_thickness_inputs import SurfaceThicknessInput
 from vibra.interface.model_inputs.structural.boundary_condition_inputs import BoundaryConditionInputs
 from vibra.interface.plots.acoustic.plot_acoustic_pressure_frequency_response_input import PlotAcousticPressureFrequencyResponseInput
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_input import PlotAcousticFrequencyResponseFunctionInput
@@ -200,10 +201,12 @@ class MenuItems(QTreeWidget):
         self.list_child_items.append(self.item_child_set_fluid)
         #
         self.item_top_structuralModelSetup = QTreeWidgetItem(["Structural Model Setup"])
+        self.item_child_set_surface_thickness = QTreeWidgetItem(["Set Surface Thickness"])
         self.item_child_set_boundary_condition = QTreeWidgetItem(["Set Boundary Conditions"])
         self.item_child_setNodalLoads = QTreeWidgetItem(["Set Loads"])
         #
         self.list_top_items.append(self.item_top_structuralModelSetup)
+        self.list_child_items.append(self.item_child_set_surface_thickness)
         self.list_child_items.append(self.item_child_set_boundary_condition)
         self.list_child_items.append(self.item_child_setNodalLoads)
         #
@@ -290,6 +293,7 @@ class MenuItems(QTreeWidget):
         self.item_top_generalSettings.addChild(self.item_child_mesh_setup)
 
         self.addTopLevelItem(self.item_top_structuralModelSetup)
+        self.item_top_structuralModelSetup.addChild(self.item_child_set_surface_thickness)
         self.item_top_structuralModelSetup.addChild(self.item_child_set_boundary_condition)
         self.item_top_structuralModelSetup.addChild(self.item_child_setNodalLoads)
 
@@ -409,6 +413,10 @@ class MenuItems(QTreeWidget):
         elif item == self.item_child_set_fluid:
             if not self.item_child_set_fluid.isDisabled():
                 obj = SetFluidInput()
+
+        elif item == self.item_child_set_surface_thickness:
+            if not self.item_child_set_surface_thickness.isDisabled():
+                obj = SurfaceThicknessInput()
 
         elif item == self.item_child_set_boundary_condition:
             if not self.item_child_set_boundary_condition.isDisabled():
@@ -615,20 +623,21 @@ class MenuItems(QTreeWidget):
         self.item_top_acoustic_model_setup.setHidden(True)
         self.item_top_analysis.setHidden(True)
 
-    def modify_geometry_item_access(self, bool_key):
-        self.item_child_import_geometry.setDisabled(bool_key)
-        self.item_child_mesh_setup.setDisabled(bool_key)
+    def modify_geometry_item_access(self, key: bool):
+        self.item_child_import_geometry.setDisabled(key)
+        self.item_child_mesh_setup.setDisabled(key)
 
-    def modify_general_settings_items_access(self, bool_key):
-        self.item_child_import_geometry.setDisabled(bool_key)
-        self.item_child_mesh_setup.setDisabled(bool_key)
-        self.item_child_set_material.setDisabled(bool_key)
-        self.item_child_set_fluid.setDisabled(bool_key)
+    def modify_general_settings_items_access(self, key: bool):
+        self.item_child_import_geometry.setDisabled(key)
+        self.item_child_mesh_setup.setDisabled(key)
+        self.item_child_set_material.setDisabled(key)
+        self.item_child_set_fluid.setDisabled(key)
         self.item_child_generate_mesh.setDisabled(True)
 
-    def modify_structural_model_setup_items_acces(self, bool_key):
-        self.item_child_set_boundary_condition.setDisabled(bool_key)
-        self.item_child_setNodalLoads.setDisabled(bool_key)
+    def modify_structural_model_setup_items_acces(self, key: bool):
+        self.item_child_set_surface_thickness.setDisabled(key)
+        self.item_child_set_boundary_condition.setDisabled(key)
+        self.item_child_setNodalLoads.setDisabled(key)
 
     def modify_acoustic_model_setup_items_acces(self, key: bool):
         self.item_child_set_acoustic_pressure.setDisabled(key)

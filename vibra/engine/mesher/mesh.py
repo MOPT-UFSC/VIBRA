@@ -59,6 +59,8 @@ class Mesh:
         self.elements_from_line = dict()
         self.elements_from_surface = dict()
         self.elements_from_volume = dict()
+        self.face_element_thickness = dict()
+        self.surface_thickness = dict()
 
         self.line_from_element = dict()
         self.surface_from_element = dict()
@@ -508,6 +510,7 @@ class Mesh:
     def _maps_surfaces_by_elements(self):
         self.surface_from_element.clear()
         self.elements_from_surface.clear()
+        self.face_element_thickness.clear()
         for tag, gmsh_indexes in self.gmsh_elements_from_surfaces.items():
 
             n = len(gmsh_indexes)
