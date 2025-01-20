@@ -5,49 +5,31 @@ import numpy as np
 from vibra.engine.elements.surface_elements import Element2D
 from numba import njit
 
-def get_detJAC_and_invJAC(JAC):
+def get_detJAC_and_invJAC(JAC: np.ndarray):
     """ """
 
-    detJAC = (
-        JAC[:, 0, 0] * JAC[:, 1, 1] * JAC[:, 2, 2]
-        + JAC[:, 0, 1] * JAC[:, 1, 2] * JAC[:, 2, 0]
-        + JAC[:, 0, 2] * JAC[:, 1, 0] * JAC[:, 2, 1]
-    ) - (
-        JAC[:, 2, 0] * JAC[:, 1, 1] * JAC[:, 0, 2]
-        + JAC[:, 2, 1] * JAC[:, 1, 2] * JAC[:, 0, 0]
-        + JAC[:, 2, 2] * JAC[:, 1, 0] * JAC[:, 0, 1]
-    )
-    detJAC = detJAC.reshape(-1, 1, 1)
-    # adj(JAC)
-    AUJJ = np.zeros((detJAC.shape[0], 3, 3), dtype=float)
-    AUJJ[:, 0, 0] = 1 * ((JAC[:, 1, 1] * JAC[:, 2, 2]) - (JAC[:, 2, 1] * JAC[:, 1, 2]))
-    AUJJ[:, 1, 0] = -1 * ((JAC[:, 1, 0] * JAC[:, 2, 2]) - (JAC[:, 1, 2] * JAC[:, 2, 0]))
-    AUJJ[:, 2, 0] = 1 * ((JAC[:, 1, 0] * JAC[:, 2, 1]) - (JAC[:, 1, 1] * JAC[:, 2, 0]))
-    AUJJ[:, 0, 1] = -1 * ((JAC[:, 0, 1] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 1]))
-    AUJJ[:, 1, 1] = 1 * ((JAC[:, 0, 0] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 0]))
-    AUJJ[:, 2, 1] = -1 * ((JAC[:, 0, 0] * JAC[:, 2, 1]) - (JAC[:, 0, 1] * JAC[:, 2, 0]))
-    AUJJ[:, 0, 2] = 1 * ((JAC[:, 0, 1] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 1]))
-    AUJJ[:, 1, 2] = -1 * ((JAC[:, 0, 0] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 0]))
-    AUJJ[:, 2, 2] = 1 * ((JAC[:, 0, 0] * JAC[:, 1, 1]) - (JAC[:, 0, 1] * JAC[:, 1, 0]))
+    detJAC = JAC[0, 0] * JAC[1, 1] - JAC[0, 1] * JAC[1, 0]
+    AUJJ = np.array([[ JAC[1, 1], -JAC[0, 1]], 
+                     [-JAC[1, 0],  JAC[0, 0]]], dtype=float)
 
     return detJAC, (1 / detJAC) * AUJJ
 
-def local_coord(nodal_coords: np.ndarray):
+def get_local_coordinates(nodal_coords: np.ndarray):
 
     x = nodal_coords[:, 0]
     y = nodal_coords[:, 1]
     z = nodal_coords[:, 2]
 
     # X vector
-    v_x = np.array([x[1] - x[0], y[1] - y[0], z[1] - z[0]])
+    v_x = np.array([x[1] - x[0], y[1] - y[0], z[1] - z[0]], dtype=float)
     v_x = v_x / np.linalg.norm(v_x)
 
     # Auxiliary vector
-    v_r = np.array([x[2] - x[0], y[2] - y[0], z[2] - z[0]])
-    v_r = v_r / np.linalg.norm(v_r)
+    v_a = np.array([x[2] - x[0], y[2] - y[0], z[2] - z[0]], dtype=float)
+    v_a = v_a / np.linalg.norm(v_a)
 
     # Z vector
-    v_z = np.cross(v_x, v_r)
+    v_z = np.cross(v_x, v_a)
     v_z /= np.linalg.norm(v_z)
     # v_z = np.array([v_x[1]*v_r[2] - v_x[2]*v_r[1], v_x[2]*v_r[0] - v_x[0]*v_r[2], v_x[0]*v_r[1] - v_x[1]*v_r[0]])
     # v_z = v_z / np.linalg.norm(v_z)
@@ -58,22 +40,26 @@ def local_coord(nodal_coords: np.ndarray):
     # v_y = np.array([v_z[1] * v_x[2] - v_z[2] * v_x[1], v_z[2] * v_x[0] - v_z[0] * v_x[2], v_z[0] * v_x[1] - v_z[1] * v_x[0]])
     # v_y = v_y / np.linalg.norm(v_y)
 
+    # Element area calculation
+    area = np.linalg.norm(v_z) / 2
+
     # Direction cosines
-    dcos = np.array([v_x, v_y, v_z])
+    dir_cossines = np.array([v_x, v_y, v_z], dtype=float)
 
     # Transformation to local coordinate system
-    t1 = np.column_stack((x, y, z))@dcos.T
-    x_loc, y_loc = t1[:, 0] - t1[0, 0], t1[:, 1] - t1[0, 1]
+    # coords_lcs = np.column_stack((x, y, z)) @ dir_cossines.T
+    coords_lcs = nodal_coords @ dir_cossines.T
+    x_loc = coords_lcs[:, 0] - coords_lcs[0, 0]
+    y_loc = coords_lcs[:, 1] - coords_lcs[0, 1]
 
     # Transformation matrix
-    Tp = np.zeros([6, 6], dtype=float)
-    T = np.zeros([18, 18], dtype=float)
+    Tp = np.zeros((6, 6), dtype=float)
+    T = np.zeros((18, 18), dtype=float)
 
-    Tp[0:3, 0:3] = Tp[3:6, 3:6] = dcos
+    Tp[0:3, 0:3] = Tp[3:6, 3:6] = dir_cossines
     T[0:6, 0:6] = T[6:12, 6:12] = T[12:18, 12:18] = Tp
 
-    return x_loc, y_loc, T
-
+    return x_loc, y_loc, area, T
 
 def batoz_constants(x_loc: np.array, y_loc: np.array):
     """
@@ -108,7 +94,6 @@ def batoz_constants(x_loc: np.array, y_loc: np.array):
                             [    -6*y_23 / l_23,     -6*y_31 / l_31,     -6*y_12 / l_12]], dtype=float)
 
     return batoz_const, area
-
 
 @njit
 def batoz_shape_functions(r, s, batoz_const):
@@ -175,7 +160,6 @@ def batoz_shape_functions(r, s, batoz_const):
 
     return H_xr, H_yr, H_xs, H_ys
 
-
 @njit
 def allman_constants(rho, thick, area, x_loc, y_loc):
 # def allman_constants(rho, thick, area, x_12, x_23, x_31, y_12, y_23, y_31):
@@ -230,8 +214,10 @@ class STRUCT_FACE_3(Element2D):
     def __init__(self, model):
         self.model = model
         self.initialize_variables()
-        self.define_integration_points()
+        self.define_integration_points_for_bending()
+        self.define_integration_points_for_membrane()
         # self.process_shape_functions_and_derivatives()
+        self.process_shape_functions_and_derivatives_for_membrane()
 
     def initialize_variables(self):
         """ """
@@ -242,72 +228,85 @@ class STRUCT_FACE_3(Element2D):
         self.number_of_nodes = len(self.nodal_coordinates)
         self.number_of_elements = len(self.connectivity)
 
-    def define_integration_points(self):
+    def define_integration_points_for_bending(self):
         """ """
-        # integration points
-        self.nint = 3
-        # con = 1 / np.sqrt(3)
-        # self.wps = 1
 
-        # self.pint = np.array(
-        #     [
-        #         [-con, -con, -con],
-        #         [con, -con, -con],
-        #         [con, con, -con],
-        #         [-con, con, -con],
-        #         [-con, -con, con],
-        #         [con, -con, con],
-        #         [con, con, con],
-        #         [-con, con, con],
-        #     ]
-        # )
+        # integration points
+        self.nint_bend = 3
 
         # Integration points
-        self.pint = np.array([[1/2, 1/2], 
-                              [  0, 1/2], 
-                              [1/2,   0]], dtype=float)
+        self.pint_bend = np.array([ [1/2, 1/2], 
+                                    [  0, 1/2], 
+                                    [1/2,   0] ], dtype=float)
 
-        self.weight_sq = (1/3) ** 2
+        self.weight_bend = (1/3) ** 2
 
+    def define_integration_points_for_membrane(self):
+        """ """
+        # integration points
+        self.nint_memb = 3
 
-    def process_shape_functions_and_derivatives(self, x_loc: np.ndarray, y_loc: np.ndarray):
-        """This method processes the shape functions and their
-        derivatives for all integration points.
+        # Integration points
+        self.pint_memb = np.array([ [1/6, 1/6], 
+                                    [4/6, 1/6], 
+                                    [1/6, 4/6] ], dtype=float)
+        
+        self.weight_memb = 1 / 3
+
+    def process_shape_functions_and_derivatives_for_bending(self, x_loc: np.ndarray, y_loc: np.ndarray):
+        """ This method processes the shape functions and their
+            derivatives for all integration points.
         """
 
         batoz_cte, area = batoz_constants(x_loc, y_loc)
 
-        r = np.repeat(self.pint[:, 0], self.nint)
-        s = np.repeat(self.pint[:, 1], self.nint)
+        r = np.repeat(self.pint_bend[:, 0], self.nint_bend)
+        s = np.repeat(self.pint_bend[:, 1], self.nint_bend)
 
         # Batoz shape functions
         H_xr, H_yr, H_xs, H_ys = batoz_shape_functions(r, s, batoz_cte)
 
-        H = np.stack([H_xr, H_yr, H_xs, H_ys], axis=0)
+        return np.stack([H_xr, H_yr, H_xs, H_ys], axis=0)
 
-        return x_loc, y_loc, area, H
+    def process_shape_functions_and_derivatives_for_membrane(self):
+        """ This method processes the shape functions and their
+            derivatives for all integration points.
+        """
+
+        r = self.pint_memb[:, 0]
+        s = self.pint_memb[:, 1]
+
+        # Shape functions for each integration point
+        self.phi_memb = np.column_stack((1 - r - s, r, s), dtype=float)
+
+        # Derivatives of shape functions
+        self.dphi_memb = np.array([ [-1, -1], 
+                                    [ 1,  0], 
+                                    [ 0,  1] ], dtype=float)
 
     def get_constitutive_model(self, el_index, model_type="linear-isotropic"):
         """This methdo returns the material constitutive model."""
         self.material = self.model.properties.get_material(element=el_index)
         E = self.material.young_modulus
         nu = self.material.poisson_ratio
+        rho = self.material.density
         t = self.model.mesh.surface_thickness
         # print(self.material.density, self.material.young_modulus, self.material.poisson_ratio)
 
         if model_type == "linear-isotropic":
+
             # Constititive model - Linear isotropic material
 
             # Elasticity matrix - bending
-            Db = (E * t ** 3 / (12 * (1 - nu ** 2))) * np.array([   [ 1, nu, 0],
-                                                                    [nu,  1, 0],
-                                                                    [ 0,  0, (1 - nu) / 2]   ], dtype=float)
+            Db = (E * t ** 3 / (12 * (1 - nu ** 2))) * np.array([[ 1, nu, 0],
+                                                                 [nu,  1, 0],
+                                                                 [ 0,  0, (1 - nu) / 2]], dtype=float)
             # Elasticity matrix - membrane
-            Dm = (E / (1 - nu ** 2)) * np.array([   [ 1, nu, 0],
-                                                    [nu,  1, 0],
-                                                    [ 0,  0, (1 - nu) / 2]   ], dtype=float)
+            Dm = (E / (1 - nu ** 2)) * np.array([[ 1, nu, 0],
+                                                 [nu,  1, 0],
+                                                 [ 0,  0, (1 - nu) / 2]], dtype=float)
 
-            return Db, Dm
+            return Db, Dm, rho
 
     def elementary_matrices(self, el_index):
         """This method returns elementary stiffness and mass matrices for HEXAHEDRON-8 nodes.
@@ -315,84 +314,73 @@ class STRUCT_FACE_3(Element2D):
         """
 
         #
-        Ke = np.zeros([self.DOFS_PER_ELEMENT, self.DOFS_PER_ELEMENT], dtype=float)
-        Me = np.zeros([self.DOFS_PER_ELEMENT, self.DOFS_PER_ELEMENT], dtype=float)
-        #
         ie = self.connectivity[el_index, 1:]
-        Db, Dm = self.get_constitutive_model(ie, model_type="linear-isotropic")
-        rho = self.material.density
+        Db, Dm, rho = self.get_constitutive_model(ie, model_type="linear-isotropic")
         t = self.model.mesh.face_element_thickness[el_index]["surface_thickness"]
         #
         nodal_coords = self.nodal_coordinates[ie, 1:4]
-        x_loc, y_loc, T = local_coord(nodal_coords)
-        area, H = self.process_shape_functions_and_derivatives(x_loc, y_loc)
+        x_loc, y_loc, area, T = get_local_coordinates(nodal_coords)
+        H = self.process_shape_functions_and_derivatives_for_bending(x_loc, y_loc)
 
-        # BENDING MATRICES
+        # Processing the bending matrices
         
         # Deformation matrix
-        B = (1/(2*area)) * np.array([    (y_loc[2] - y_loc[0]) * H[0] + (y_loc[0] - y_loc[1]) * H[2],
-                                        -(x_loc[2] - x_loc[0]) * H[1] - (x_loc[0] - x_loc[1]) * H[3],
-                                        -(x_loc[2] - x_loc[0]) * H[0] - (x_loc[0] - x_loc[1]) * H[2] + (y_loc[2] - y_loc[0]) * H[1] + (y_loc[0] - y_loc[1]) * H[3]], dtype=float)
+        B = (1 / (2 * area)) * np.array([    (y_loc[2] - y_loc[0]) * H[0] + (y_loc[0] - y_loc[1]) * H[2],
+                                            -(x_loc[2] - x_loc[0]) * H[1] - (x_loc[0] - x_loc[1]) * H[3],
+                                            -(x_loc[2] - x_loc[0]) * H[0] - (x_loc[0] - x_loc[1]) * H[2] + (y_loc[2] - y_loc[0]) * H[1] + (y_loc[0] - y_loc[1]) * H[3]], dtype=float)
 
         # Numerical integration
-        K_bend = area * self.weight_sq * np.sum((np.einsum('nmp,mqp->nqp', np.einsum('mnp,nq->mqp', np.swapaxes(B, 1, 0), Db), B)), axis=2)
+        K_bend = area * self.weight_bend * np.sum((np.einsum('nmp,mqp->nqp', np.einsum('mnp,nq->mqp', np.swapaxes(B, 1, 0), Db), B)), axis=2)
 
         # Allman (1996) mass matrix
         Bw, Bwa, NN, NNa, NaN, NaNa = allman_constants(rho, t, area, x_loc, y_loc)
-        M_bend = Bw.T @ NN @ Bw + Bw.T @ NNa @ Bwa + Bwa.T @ NaN @ Bw + Bwa.T @ NaNa @ Bwa
+        M_bend = Bw.T @ (NN @ Bw + NNa @ Bwa) + Bwa.T @ (NaN @ Bw + NaNa @ Bwa)
+        # M_bend = Bw.T @ NN @ Bw + Bw.T @ NNa @ Bwa + Bwa.T @ NaN @ Bw + Bwa.T @ NaNa @ Bwa
 
         # Indexing to global element matrices
         index = [2, 3, 4, 8, 9, 10, 14, 15, 16]
-        K_elem[np.ix_(index, index)] = K_bend
-        M_elem[np.ix_(index, index)] = M_bend
+        Ke[np.ix_(index, index)] = K_bend
+        Me[np.ix_(index, index)] = M_bend
 
-        # MEMBRANE MATRICES
+        # Processing the membrane matrices
 
         # Jacobian matrix
-        J = np.array([[x_loc[1] - x_loc[0], y_loc[1] - y_loc[0]], 
-                      [x_loc[2] - x_loc[0], y_loc[2] - y_loc[0]]])
+        JAC = np.array([[x_loc[1] - x_loc[0], y_loc[1] - y_loc[0]], 
+                        [x_loc[2] - x_loc[0], y_loc[2] - y_loc[0]]], dtype=float)
 
-        detJ = J[0, 0]*J[1, 1] - J[0, 1]*J[1, 0]
-        Jinv = (1 / detJ) * np.array([[ J[1, 1], -J[0, 1]], 
-                                      [-J[1, 0],  J[0, 0]]])
-
-        # Derivatives of shape functions
-        dN_rs = np.array([[-1, -1], 
-                          [ 1,  0], 
-                          [ 0,  1]])
-        dN_xy = (Jinv @ dN_rs.T).T
+        detJAC, invJAC = get_detJAC_and_invJAC(JAC)
+        dphi_t = (invJAC @ self.dphi_memb.T).T
 
         # Element deformation matrix
-        B = np.array([  [dN_xy[0, 0], 0, dN_xy[1, 0], 0, dN_xy[2, 0], 0],
-                        [0, dN_xy[0, 1], 0, dN_xy[1, 1], 0, dN_xy[2, 1]],
-                        [dN_xy[0, 1], dN_xy[0, 0], dN_xy[1, 1], dN_xy[1, 0], dN_xy[2, 1], dN_xy[2, 0]]  ], dtype=float)
+        B = np.array([  [dphi_t[0, 0], 0, dphi_t[1, 0], 0, dphi_t[2, 0], 0],
+                        [0, dphi_t[0, 1], 0, dphi_t[1, 1], 0, dphi_t[2, 1]],
+                        [dphi_t[0, 1], dphi_t[0, 0], dphi_t[1, 1], dphi_t[1, 0], dphi_t[2, 1], dphi_t[2, 0]]  ], dtype=float)
 
         # Element membrane stiffness matrix
-        K_memb = 0.5 * detJ * t * B.T @ Dm @ B
+        K_memb = 0.5 * detJAC * t * B.T @ Dm @ B
 
-        # Integration points for mass matrix
-        coord_int = np.array([[1/6, 1/6], 
-                              [4/6, 1/6], 
-                              [1/6, 4/6]])
-        r, s = coord_int[:, 0], coord_int[:, 1]
-        weight = 1 / 3
+        N = np.zeros((self.nint_memb, 2, self.DOFS_PER_ELEMENT), dtype=float)
+        N[:, 0, 0::2] = self.phi_memb 
+        N[:, 1, 1::2] = self.phi_memb
 
-        # Shape functions for each integration point
-        psi = np.column_stack((1 - r - s, r, s))
-        N = np.zeros((len(coord_int), 2, 6))
-        N[:, 0, ::2] = psi 
-        N[:, 1, 1::2] = psi
+        # # Product N.T @ N for each integration point
+        # NTN = np.einsum('nij,njk->nik', N.transpose(0, 2, 1), N)
 
-        # Product N.T @ N for each integration point
-        NTN = np.einsum('nij,njk->nik', N.transpose(0, 2, 1), N)
+        # # Element membrane mass matrix
+        # M_memb = 0.5 * weight * detJAC * rho * t * NTN.sum(axis=0)
 
-        # Element membrane mass matrix
-        M_memb = 0.5 * weight * np.linalg.det(J) * rho * t * NTN.sum(axis=0)
+        M_memb = 0.
+        for i in range(self.nint_memb):
+            M_memb += 0.5 * rho * t * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.weight_memb)
+
+        #
+        Ke = np.zeros([self.DOFS_PER_ELEMENT, self.DOFS_PER_ELEMENT], dtype=float)
+        Me = np.zeros([self.DOFS_PER_ELEMENT, self.DOFS_PER_ELEMENT], dtype=float)
 
         # Indexing to global element matrices
         index = [0, 1, 6, 7, 12, 13]
-        K_elem[np.ix_(index, index)] = K_memb
-        M_elem[np.ix_(index, index)] = M_memb
+        Ke[np.ix_(index, index)] = K_memb
+        Me[np.ix_(index, index)] = M_memb
 
         # DRILLING DOF
 
@@ -401,18 +389,14 @@ class STRUCT_FACE_3(Element2D):
         # drill = np.max(np.diagonal(K_elem))/1000
         # drill = np.min(np.diag(K_bend))
         drill = 1e-5
-        K_elem[np.ix_(index, index)] = drill
-        M_elem[np.ix_(index, index)] = 1e-18
+        Ke[np.ix_(index, index)] = drill
+        Me[np.ix_(index, index)] = 1e-18
 
         # TRANSFORMATION TO GLOBAL COORDINATE SYSTEM
+        Ke_gcs = T.T @ Ke @ T
+        Me_gcs = T.T @ Me @ T
 
-        # Matrices
-        K_elem_loc = K_elem
-        M_elem_loc = M_elem
-        K_elem = T.T @ K_elem @ T
-        M_elem = T.T @ M_elem @ T
-
-        return K_elem, M_elem
+        return Ke_gcs, Me_gcs
 
         # #
         # JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
@@ -494,3 +478,14 @@ class STRUCT_FACE_3(Element2D):
         return self.ind_rows, self.ind_cols
 
 #fmt: on
+
+if __name__ == "__main__":
+
+    nodal_coords = np.array([[1.0, 0.0, 0.0],
+                             [0.0, 1.0, 0.0],
+                             [0.0, 0.0, 1.0]], dtype=float)
+
+    x_loc, y_loc, T = get_local_coordinates(nodal_coords)
+
+    print(f"=> x coordinates (lcs): {x_loc}")
+    print(f"=> y coordinates (lcs): {y_loc}")
