@@ -19,7 +19,6 @@ from vibra.interface.viewer_3d.actors.nodes_actor import NodesActor
 from vibra.interface.viewer_3d.actors.selection_spheres import SelectionSpheres
 from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
 from vibra.interface.viewer_3d.actors.symbols.symbols_actor import SymbolsActor
-from vibra.utils.interface_functions import get_main_window
 
 SHOW_POINTS = 0
 SHOW_LINES = 1

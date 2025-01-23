@@ -23,7 +23,6 @@ from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 # from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
 #     CommonRenderWidget,
 # )
-from vibra.utils.interface_functions import get_main_window
 from vibra.utils.progress_status import ProgressStatus
 from vibra import VIBRA_DIR
 
