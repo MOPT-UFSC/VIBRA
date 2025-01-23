@@ -25,6 +25,7 @@ from vibra.interface.formatters.icons import *
 from vibra.interface.general.print_message_input import PrintMessageInput
 from molde.render_widgets import CommonRenderWidget
 
+from vibra.utils.interface_utils import VisualizationFilter
 from vibra.utils.progress_status import ProgressStatus
 
 from vibra.project_files.load_project import LoadProject
@@ -47,6 +48,8 @@ class MainWindow(QMainWindow):
 
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
+
+        self.visualization_filter = VisualizationFilter.all_true()
 
         self.selected_mesh_nodes = set()
         self.selected_mesh_faces = set()
@@ -680,6 +683,13 @@ class MainWindow(QMainWindow):
     def close_dialogs(self):
         if isinstance(self.dialog, (QDialog, QWidget)):
             self.dialog.close()
+
+    def _configure_visualization(self, **kwargs):
+        self.visualization_filter = VisualizationFilter(**kwargs)
+        self._update_visualization()
+
+    def _update_visualization(self):
+        self.visualization_changed.emit()
 
 def create_new_folder(path : Path, folder_name : str) -> Path:
     folder_path = path / folder_name
