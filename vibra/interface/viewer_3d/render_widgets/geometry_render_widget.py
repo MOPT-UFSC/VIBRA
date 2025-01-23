@@ -128,9 +128,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         if not self._actors_exists():
             return
 
+        visualization = app().main_window.visualization_filter
         faces_opacity = 1 if visualization.faces else 0.1
 
-        visualization = app().main_window.visualization_filter
         self.points_actor.SetVisibility(visualization.points)
         self.lines_actor.SetVisibility(visualization.lines)
         self.faces_actor.GetProperty().SetOpacity(faces_opacity)
