@@ -124,6 +124,22 @@ class GeometryRenderWidget(CommonRenderWidget):
         # may be addressed in near future.
         app().project.thumbnail = self.get_thumbnail()
 
+    def visualization_changed_callback(self):
+        if not self._actors_exists():
+            return
+
+        faces_opacity = 1 if visualization.faces else 0.1
+
+        visualization = app().main_window.visualization_filter
+        self.points_actor.SetVisibility(visualization.points)
+        self.lines_actor.SetVisibility(visualization.lines)
+        self.faces_actor.GetProperty().SetOpacity(faces_opacity)
+
+        self.points_actor.SetPickable(visualization.faces)
+        self.lines_actor.SetPickable(visualization.faces)
+        self.faces_actor.SetPickable(visualization.faces)
+        self.update()
+
     def update_hidden_plot(self):
         # We could just call the update_plot function,
         # but this is much simpler and faster
