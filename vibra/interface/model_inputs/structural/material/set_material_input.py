@@ -145,7 +145,7 @@ class SetMaterialInput(QDialog):
 
         index = self.comboBox_attribution_type.currentIndex()
         if index == 0:
-            self.lineEdit_selection_id.setText("All bodies")
+            self.lineEdit_selection_id.setText("All bodies/faces")
         elif index == 1:
             self.lineEdit_selection_id.setText("")
 
@@ -183,10 +183,12 @@ class SetMaterialInput(QDialog):
                     print("[Set Material] - {} defined at {} bodies".format(selected_material.name, len(volume_ids)))
 
             else:
-
+                
+                volume_ids = list()
                 if "volumes" in self.model.mesh.geometry_information.keys():
                     volume_ids = self.model.mesh.geometry_information["volumes"]
 
+                surface_ids = list()
                 if "surfaces" in self.model.mesh.geometry_information.keys():
                     surface_ids = self.model.mesh.geometry_information["surfaces"]
 

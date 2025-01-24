@@ -52,6 +52,7 @@ class StructuralModalSolver:
         positive_real = np.absolute(np.real(self.eigen_values))
         natural_frequencies = np.sqrt(positive_real) / (2 * np.pi)
         modal_shape = np.real(self.eigen_vectors)
+        # print(f"\nNatural frequencies: \n {natural_frequencies.reshape(-1, 1)}")
 
         index_order = np.argsort(natural_frequencies)
         natural_frequencies = natural_frequencies[index_order]
@@ -90,17 +91,27 @@ class StructuralModalSolver:
         array
             Solution of all the degrees of freedom.
         """
-        rows = solution.shape[0] + len(self.prescribed_indexes)
+        rows = self.assembler.n_dofs
+        # rows = solution.shape[0] + len(self.prescribed_indexes)
         cols = solution.shape[1]
 
         full_solution = np.zeros((rows, cols), dtype=complex)
-        full_solution[self.unprescribed_indexes, :] = solution
+
+        if len(self.assembler.shell_dofs):
+            disp_dofs = self.assembler.displacement_dofs
+            shell_dofs = self.assembler.shell_dofs
+            full_solution[shell_dofs, :] = solution
+            full_solution = full_solution[disp_dofs, :]
+
+        else:
+            full_solution[self.unprescribed_indexes, :] = solution
 
         if len(self.prescribed_indexes) > 0:
             if modal_analysis:
                 full_solution[self.prescribed_indexes, :] = np.zeros((len(self.prescribed_values), cols))
             else:
                 full_solution[self.prescribed_indexes, :] = self.array_prescribed_values[:, 0:cols]
+
         return np.real(full_solution)
 
 # fmt: on

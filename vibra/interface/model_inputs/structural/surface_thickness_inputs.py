@@ -1,6 +1,6 @@
 # fmt: off
 
-from PyQt5.QtWidgets import QComboBox, QDialog, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
+from PyQt5.QtWidgets import QAction, QComboBox, QDialog, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCloseEvent
 from PyQt5 import uic
@@ -61,6 +61,7 @@ class SurfaceThicknessInput(QDialog):
 
         # QComboBox
         self.comboBox_thickness_offset : QComboBox
+        self.comboBox_attribution_type: QComboBox
 
         # QLineEdit
         self.lineEdit_selection_id : QLineEdit
@@ -80,6 +81,8 @@ class SurfaceThicknessInput(QDialog):
 
     def _create_connections(self):
         #
+        self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
+        #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
@@ -89,8 +92,9 @@ class SurfaceThicknessInput(QDialog):
         self.treeWidget_surface_thickness.itemClicked.connect(self.on_click_item)
         self.treeWidget_surface_thickness.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
+        self.attribution_type_callback()
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
-    
+
     def geometry_selection_callback(self):
 
         faces = app().main_window.selected_geometry_surfaces
@@ -130,13 +134,27 @@ class SurfaceThicknessInput(QDialog):
             self.lineEdit_selection_id.setDisabled(False)
             self.pushButton_attribute.setEnabled(True)
 
+    def attribution_type_callback(self):
+
+        index = self.comboBox_attribution_type.currentIndex()
+        if index == 0:
+            self.lineEdit_selection_id.setText("All surfaces")
+        elif index == 1:
+            self.lineEdit_selection_id.setText("")
+
+        self.lineEdit_selection_id.setEnabled(bool(index))
+
     def attribute_callback(self):
 
-        lineEdit_selection_id = self.lineEdit_selection_id.text()
-        stop, surface_ids = self.mesh.check_selected_ids(lineEdit_selection_id, selection="surfaces")
-        if stop:
-            self.lineEdit_selection_id.setFocus()
-            return
+        if self.comboBox_attribution_type.currentIndex() == 0:
+            surface_ids = self.model.mesh.geometry_information["surfaces"]
+        
+        else:
+            lineEdit_selection_id = self.lineEdit_selection_id.text()
+            stop, surface_ids = self.mesh.check_selected_ids(lineEdit_selection_id, selection="surfaces")
+            if stop:
+                self.lineEdit_selection_id.setFocus()
+                return
 
         surface_thickness = self.check_input_parameters(self.lineEdit_surface_thickness, "Surface thickness")
 
@@ -248,9 +266,9 @@ class SurfaceThicknessInput(QDialog):
                 surface_ids.append(surface_id)
 
         if len(surface_ids) == 0:
-            self.tabWidget_main.setTabVisible(2, False)
+            self.tabWidget_main.setTabVisible(1, False)
         else:
-            self.tabWidget_main.setTabVisible(2, True)
+            self.tabWidget_main.setTabVisible(1, True)
 
     def on_click_item(self, item):
         if item.text(0) != "":

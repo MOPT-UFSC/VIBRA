@@ -96,7 +96,10 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
 
     def get_constitutive_model(self, el_index, model_type="linear-isotropic"):
         """This methdo returns the material constitutive model."""
-        self.material = self.model.properties.get_material(element=el_index)
+
+        volume_id = self.model.mesh.volume_from_element[el_index]
+        self.material = self.model.properties.get_material(volume=volume_id)
+
         vv = self.material.poisson_ratio
         E = self.material.young_modulus
         # print(self.material.density, self.material.young_modulus, self.material.poisson_ratio)
@@ -122,11 +125,10 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         This is not a p-u mixed fomulation. Do not compare with SOLID285.
         """
         #
-        ie = self.connectivity[el_index, 1:]
-
-        const_mat = self.get_constitutive_model(ie, model_type="linear-isotropic")
+        const_mat = self.get_constitutive_model(el_index, model_type="linear-isotropic")
         rho = self.material.density
         #
+        ie = self.connectivity[el_index, 1:]
         JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
         detJAC, invJAC = get_detJAC_and_invJAC(JAC)
         dphi_t = invJAC @ self.dphi

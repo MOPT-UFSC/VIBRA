@@ -75,7 +75,7 @@ class ModelProperties:
         self.global_properties["material", "global"] = DEFAULT_MATERIAL
         self.global_properties["fluid", "global"] = DEFAULT_FLUID
 
-    def get_material(self, element=None, **kwargs) -> Material:
+    def get_material(self, **kwargs) -> Material:
         return self._get_property("material", **kwargs)
 
     def get_fluid(self, **kwargs) -> Fluid:

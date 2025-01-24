@@ -474,8 +474,8 @@ class Mesh:
         self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity, self.map_solid_elements = self._get_connectivity_array(connectivity_dim3)
 
-        # np.savetxt("nodal_coordinates.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
-        # np.savetxt("faces_connectivity.dat", self.faces_connectivity, delimiter=",", fmt="%i")
+        np.savetxt("nodal_coordinates.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
+        np.savetxt("faces_connectivity.dat", self.faces_connectivity, delimiter=",", fmt="%i")
         # np.savetxt("solids_connectivity.dat", self.solids_connectivity, delimiter=",", fmt="%i")
 
         # # internal check for solid connectivity
