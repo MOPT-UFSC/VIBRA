@@ -100,6 +100,9 @@ class SurfaceThicknessInput(QDialog):
         faces = app().main_window.selected_geometry_surfaces
 
         if faces:
+
+            self.comboBox_attribution_type.setCurrentIndex(1)
+
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
 
