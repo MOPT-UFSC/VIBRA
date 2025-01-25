@@ -10,10 +10,12 @@ from vibra.engine.elements.structural_tet10_element import STRUCT_TETRAHEDRON_10
 from vibra.engine.elements.structural_face3_element import STRUCT_FACE_3
 
 from vibra.engine.mesher.element_type import *
+from vibra.utils.progress_status import ProgressStatus
 
 from collections import defaultdict
 from time import time
 
+import logging
 import numpy as np
 from scipy.sparse import coo_matrix, csr_matrix
 
@@ -138,7 +140,7 @@ class StructuralAssembler:
     def get_unprescribed_indexes(self):
 
         element_3D, _ = self.get_element()
-        total_dofs = element_3D.DOF_PER_NODE * len(element_3D.nodal_coordinates)
+        total_dofs = element_3D.DOFS_PER_NODE * len(element_3D.nodal_coordinates)
         all_indexes = np.arange(total_dofs, dtype=int)
         # prescribed_indexes = self.get_prescribed_indexes()
 
@@ -172,8 +174,8 @@ class StructuralAssembler:
             if property == "surface_thickness":
                 active_nodes_list.extend(self.model.mesh.nodes_from_surfaces[surface_id])
 
-        shell_local_dofs = np.arange(element_2D.DOF_PER_NODE)
-        rotation_local_dofs = shell_local_dofs[int(element_2D.DOF_PER_NODE / 2):]
+        shell_local_dofs = np.arange(element_2D.DOFS_PER_NODE)
+        rotation_local_dofs = shell_local_dofs[int(element_2D.DOFS_PER_NODE / 2):]
 
         number_of_surface_nodes = 0
         active_dofs = np.array([])
@@ -181,23 +183,23 @@ class StructuralAssembler:
 
         if active_nodes_list:
             active_nodes = np.array([*set(active_nodes_list)], dtype=int)
-            active_dofs = element_2D.DOF_PER_NODE * active_nodes.reshape(-1, 1) + shell_local_dofs 
+            active_dofs = element_2D.DOFS_PER_NODE * active_nodes.reshape(-1, 1) + shell_local_dofs 
             active_dofs = np.sort(active_dofs.flatten())
 
-            # active_rotation_dofs = element_2D.DOF_PER_NODE * active_nodes.reshape(-1, 1) + rotations_dofs
-            rotation_dofs = element_2D.DOF_PER_NODE * nodes_from_surfaces.reshape(-1, 1) + rotation_local_dofs
+            # active_rotation_dofs = element_2D.DOFS_PER_NODE * active_nodes.reshape(-1, 1) + rotations_dofs
+            rotation_dofs = element_2D.DOFS_PER_NODE * nodes_from_surfaces.reshape(-1, 1) + rotation_local_dofs
             # rotation_dofs = np.sort(rotation_dofs.flatten())
             number_of_surface_nodes = len(nodes_from_surfaces)
 
         number_of_nodes = len(element_3D.nodal_coordinates)
-        n_dofs = number_of_nodes * element_3D.DOF_PER_NODE + number_of_surface_nodes * int(element_2D.DOF_PER_NODE / 2)
+        n_dofs = number_of_nodes * element_3D.DOFS_PER_NODE + number_of_surface_nodes * int(element_2D.DOFS_PER_NODE / 2)
 
         self.process_displacement_and_rotation_dofs(n_dofs, rotation_dofs)
         # print(len(active_nodes), number_of_surface_nodes, number_of_nodes, n_dofs)
 
         return active_dofs, n_dofs
 
-    def assemble_mass_and_stiffness_global_matrices(self):
+    def get_data_to_process_global_matrices(self):
         """
         Calculates global matrices.
         """
@@ -205,12 +207,12 @@ class StructuralAssembler:
         self.data_K = np.array([], dtype=float)
         self.data_M = np.array([], dtype=float)
 
-        ind_cols = np.array([], dtype=int)
-        ind_rows = np.array([], dtype=int)
+        self.ind_cols = np.array([], dtype=int)
+        self.ind_rows = np.array([], dtype=int)
 
         element_3D, element_2D = self.get_element()
         self.shell_dofs, self.n_dofs = self.process_nodes_from_face_elements_with_thickness(element_2D, element_3D)
-        # total_dofs = element_2D.DOF_PER_NODE * len(element_3D.nodal_coordinates)
+        # total_dofs = element_2D.DOFS_PER_NODE * len(element_3D.nodal_coordinates)
 
         # rows_se, cols_se = element_3D.generate_ind_rows_cols()
         # ind_rows = np.append(ind_rows, rows_se)
@@ -218,7 +220,7 @@ class StructuralAssembler:
 
         # dofs = element_3D.DOFS_PER_ELEMENT
         # nel = len(element_3D.connectivity)
-        # # total_dofs = element_3D.DOF_PER_NODE * len(element_3D.nodal_coordinates)
+        # # total_dofs = element_3D.DOFS_PER_NODE * len(element_3D.nodal_coordinates)
 
         # data_K_se = np.zeros((nel, dofs, dofs), dtype=float)
         # data_M_se = np.zeros((nel, dofs, dofs), dtype=float)
@@ -239,8 +241,8 @@ class StructuralAssembler:
             dofs = element_2D.DOFS_PER_ELEMENT
             nel = len(element_2D.connectivity)
 
-            ind_rows = np.append(ind_rows, rows_fe)
-            ind_cols = np.append(ind_cols, cols_fe)
+            self.ind_rows = np.append(self.ind_rows, rows_fe)
+            self.ind_cols = np.append(self.ind_cols, cols_fe)
             # np.savetxt("indexes.dat", np.array([ind_rows, ind_cols], dtype=int).T, fmt="%i")
 
             data_K_fe = np.zeros((nel, dofs, dofs), dtype=float)
@@ -265,8 +267,10 @@ class StructuralAssembler:
             self.data_K = np.append(self.data_K, data_K_fe.flatten())
             self.data_M = np.append(self.data_M, data_M_fe.flatten())
 
-        _stiffness_matrix_full = csr_matrix((self.data_K, (ind_rows, ind_cols)), shape=(self.n_dofs, self.n_dofs))
-        _mass_matrix_full = csr_matrix((self.data_M, (ind_rows, ind_cols)), shape=(self.n_dofs, self.n_dofs))
+    def assemble_global_matrices(self):
+
+        _stiffness_matrix_full = csr_matrix((self.data_K, (self.ind_rows, self.ind_cols)), shape=(self.n_dofs, self.n_dofs))
+        _mass_matrix_full = csr_matrix((self.data_M, (self.ind_rows, self.ind_cols)), shape=(self.n_dofs, self.n_dofs))
 
         if len(self.shell_dofs):
             _stiffness_matrix_full = _stiffness_matrix_full[self.shell_dofs, :][:, self.shell_dofs]
@@ -281,16 +285,24 @@ class StructuralAssembler:
         else:
             self.mass_matrix = _mass_matrix_full
             self.stiffness_matrix = _stiffness_matrix_full
-            # np.savetxt("stiffness_matrix_global_test.dat", _stiffness_matrix_full.toarray(), delimiter=",")
-            # np.savetxt("mass_matrix_global_test.dat", _mass_matrix_full.toarray(), delimiter=",")
-            # print(np.linalg.det(_stiffness_matrix_full.toarray()), np.linalg.det(_mass_matrix_full.toarray()))
 
     def process_assemble(self):
 
         self.update_number_of_frequencies()
         self.model.process_surface_thickness()
 
-        self.assemble_mass_and_stiffness_global_matrices()
+        logging.info( "Gathering data to assemble global matrices..." + ProgressStatus(10, 100))
+        t0 = time()
+        self.get_data_to_process_global_matrices()
+        dt = time() - t0
+        print(f"Elapsed time to process data to assemble global matrices: {round(dt, 4)} [s]")
+
+        logging.info( "Assembling global matrices..." + ProgressStatus(50, 100))
+        t0 = time()
+        self.assemble_global_matrices()
+        dt = time() - t0
+        print(f"Elapsed time to assemble the global stiffness matrix: {round(dt, 4)} [s]")
+
         # A = self.get_structural_excitations_by_nodal_attribution()
         # B = self.get_structural_excitations_by_element_integration()
         # self.flow_mass_vectors = A + B

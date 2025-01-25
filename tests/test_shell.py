@@ -23,10 +23,8 @@ from openpyxl import load_workbook
 
 from time import time
 
-pm_model = "DB"
-
 @pytest.mark.slow
-def test_load_external_mesh_and_solve():
+def test_structural_modal_analysis_for_shell():
     # return
 
     # nodal_coordinates = np.array([[0, 0.0, 0.0, 0.0],
@@ -123,7 +121,7 @@ def test_load_external_mesh_and_solve():
     assembler.process_assemble()
     
     # Define the analysis type and load setup
-    analysis_data = {"analysis_id" : 2, "modes" : 20, "sigma_factor" : 1e-2}
+    analysis_data = {"analysis_id" : 2, "modes" : 40, "sigma_factor" : 1e-2}
     modal_solver = StructuralModalSolver(assembler, analysis_data=analysis_data)
 
     # Run modal analysis

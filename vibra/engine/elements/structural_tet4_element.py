@@ -44,8 +44,8 @@ def get_detJAC_and_invJAC(JAC):
 class STRUCT_TETRAHEDRON_4S(Element3D):
     #
     NODES_PER_ELEMENT = 4
-    DOF_PER_NODE = 3
-    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
+    DOFS_PER_NODE = 3
+    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
 
     def __init__(self, model):
         #
@@ -166,7 +166,7 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         """This method processess the dofs indices (rows and columns) for assembly"""
 
         self.reorder_connect()
-        dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
+        dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT
         ind_dofs = (np.array([  dofs * self.connectivity[:, 1] - 1,
                                 dofs * self.connectivity[:, 1],
                                 dofs * self.connectivity[:, 1] + 1,

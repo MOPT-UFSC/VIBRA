@@ -222,7 +222,7 @@ class Model:
     def get_acoustic_global_dofs_from_nodes(self, nodes: np.ndarray):
         if self.solid_acoustic_element is None:
             return list()
-        _dofs_per_node = self.solid_acoustic_element.DOF_PER_NODE
+        _dofs_per_node = self.solid_acoustic_element.DOFS_PER_NODE
         _nodes = nodes.reshape(-1, 1)
         global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
         return np.array(global_dofs.flatten(), dtype=int)
@@ -230,7 +230,7 @@ class Model:
     def get_structural_global_dofs_from_nodes(self, nodes):
         if self.solid_structural_element is None:
             return list()
-        _dofs_per_node = self.solid_structural_element.DOF_PER_NODE
+        _dofs_per_node = self.solid_structural_element.DOFS_PER_NODE
         _nodes = nodes.reshape(-1, 1)
         global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
         return np.array(global_dofs.flatten(), dtype=int)

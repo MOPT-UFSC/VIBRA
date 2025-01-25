@@ -132,8 +132,8 @@ def get_detJAC_and_invJAC_3D(JAC):
 class ACT_HEXAHEDRON_20C(Element3D):
     #
     NODES_PER_ELEMENT = 20
-    DOF_PER_NODE = 1
-    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
+    DOFS_PER_NODE = 1
+    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
 
     def __init__(self, model):
         self.model = model
@@ -367,7 +367,7 @@ class ACT_HEXAHEDRON_20C(Element3D):
         """This method processess the dofs indices (rows and columns) for assembly"""
 
         self.reorder_connect()
-        dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT_3D
+        dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT_3D
         ind_dofs = dofs * self.connectivity[:, 1:]
 
         vect_indices = ind_dofs.flatten()

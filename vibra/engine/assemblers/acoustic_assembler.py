@@ -144,7 +144,7 @@ class AcousticAssembler:
 
     def get_unprescribed_indexes(self):
         element_3D, _ = self.get_element()
-        total_dofs = element_3D.DOF_PER_NODE * len(element_3D.nodal_coordinates)
+        total_dofs = element_3D.DOFS_PER_NODE * len(element_3D.nodal_coordinates)
         all_indexes = np.arange(total_dofs, dtype=int)
         prescribed_indexes = self.get_prescribed_indexes()
         return np.delete(all_indexes, prescribed_indexes)
@@ -245,7 +245,7 @@ class AcousticAssembler:
 
         dofs = element_3D.DOFS_PER_ELEMENT
         nel = len(element_3D.connectivity)
-        self.total_dofs = element_3D.DOF_PER_NODE * len(element_3D.nodal_coordinates)
+        self.total_dofs = element_3D.DOFS_PER_NODE * len(element_3D.nodal_coordinates)
 
         self.data_K = np.zeros((nel, dofs, dofs), dtype=complex)
         self.data_M = np.zeros((nel, dofs, dofs), dtype=complex)
@@ -326,7 +326,7 @@ class AcousticAssembler:
         
         _, element_2D = self.get_element()
         dofs = element_2D.DOFS_PER_ELEMENT
-        self.total_dofs_2d = element_2D.DOF_PER_NODE * len(element_2D.nodal_coordinates)
+        self.total_dofs_2d = element_2D.DOFS_PER_NODE * len(element_2D.nodal_coordinates)
 
         self.si_connect, surface_data = self.get_surface_data_for_element_integration_by_property("specific_impedance")
 
@@ -450,7 +450,7 @@ class AcousticAssembler:
                             acoustic_excitation[index] += complex_values * area
 
         element_3D, _ = self.get_element()
-        total_dofs = element_3D.DOF_PER_NODE * len(element_3D.nodal_coordinates)
+        total_dofs = element_3D.DOFS_PER_NODE * len(element_3D.nodal_coordinates)
         output = np.zeros((total_dofs, self.number_frequencies), dtype=complex)
 
         if acoustic_excitation:
@@ -471,7 +471,7 @@ class AcousticAssembler:
         """
 
         _, element_2D = self.get_element()
-        total_dofs = element_2D.DOF_PER_NODE * len(element_2D.nodal_coordinates)
+        total_dofs = element_2D.DOFS_PER_NODE * len(element_2D.nodal_coordinates)
         output = np.zeros((total_dofs, self.number_frequencies), dtype=complex)
 
         connect_mf, data_mf = self.get_surface_data_for_element_integration_by_property("mass_flow_rate")

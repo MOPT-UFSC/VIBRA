@@ -5,14 +5,6 @@ import numpy as np
 from vibra.engine.elements.surface_elements import Element2D
 from numba import njit
 
-def get_detJAC_and_invJAC(JAC: np.ndarray):
-    """ """
-
-    detJAC = JAC[0, 0] * JAC[1, 1] - JAC[0, 1] * JAC[1, 0]
-    AUJJ = np.array([[ JAC[1, 1], -JAC[0, 1]], 
-                     [-JAC[1, 0],  JAC[0, 0]]], dtype=float)
-
-    return detJAC, (1 / detJAC) * AUJJ
 
 def get_local_coordinates(nodal_coords: np.ndarray):
 
@@ -57,7 +49,7 @@ def get_local_coordinates(nodal_coords: np.ndarray):
 
     return x_loc, y_loc, area, T
 
-def batoz_constants(x_loc: np.array, y_loc: np.array):
+def get_batoz_constants(x_loc: np.ndarray, y_loc: np.ndarray):
     """
         Constants (Batoz) - shape: (4, 3)
 
@@ -67,9 +59,6 @@ def batoz_constants(x_loc: np.array, y_loc: np.array):
                                      tk0, tk1, tk2]
 
     """
-
-    # # Element area
-    # area = ((x_loc[2] - x_loc[0]) * (y_loc[0] - y_loc[1]) - (x_loc[0] - x_loc[1]) * (y_loc[2] - y_loc[0])) / 2
 
     # Useful constants
     x_12, x_23, x_31 = x_loc[0] - x_loc[1], x_loc[1] - x_loc[2], x_loc[2] - x_loc[0]
@@ -89,10 +78,10 @@ def batoz_constants(x_loc: np.array, y_loc: np.array):
                             [  3*y_23**2 / l_23,   3*y_31**2 / l_31,   3*y_12**2 / l_12],
                             [    -6*y_23 / l_23,     -6*y_31 / l_31,     -6*y_12 / l_12]], dtype=float)
 
-    return batoz_const#, area
+    return batoz_const
 
 # @njit
-def batoz_shape_functions(r, s, batoz_const):
+def get_batoz_shape_functions(r, s, batoz_const):
 
     pk0, pk1, pk2 = batoz_const[0, 0], batoz_const[0, 1], batoz_const[0, 2]
     qk0, qk1, qk2 = batoz_const[1, 0], batoz_const[1, 1], batoz_const[1, 2]
@@ -157,8 +146,7 @@ def batoz_shape_functions(r, s, batoz_const):
     return H_xr, H_yr, H_xs, H_ys
 
 # @njit
-def allman_constants(rho, thick, area, x_loc, y_loc):
-# def allman_constants(rho, thick, area, x_12, x_23, x_31, y_12, y_23, y_31):
+def get_allman_constants(rho, thick, area, x_loc, y_loc):
 
     # Auxiliary constants
     x_12, x_23, x_31 = x_loc[0] - x_loc[1], x_loc[1] - x_loc[2], x_loc[2] - x_loc[0]
@@ -201,11 +189,21 @@ def allman_constants(rho, thick, area, x_loc, y_loc):
     return Bw, Bwa, NN, NNa, NaN, NaNa
 
 
+def get_detJAC_and_invJAC(JAC: np.ndarray):
+    """ """
+
+    detJAC = JAC[0, 0] * JAC[1, 1] - JAC[0, 1] * JAC[1, 0]
+    AUJJ = np.array([[ JAC[1, 1], -JAC[0, 1]], 
+                     [-JAC[1, 0],  JAC[0, 0]]], dtype=float)
+
+    return detJAC, (1 / detJAC) * AUJJ
+
+
 class STRUCT_FACE_3(Element2D):
 
     NODES_PER_ELEMENT = 3
-    DOF_PER_NODE = 6
-    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
+    DOFS_PER_NODE = 6
+    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
 
     def __init__(self, model):
         self.model = model
@@ -254,13 +252,13 @@ class STRUCT_FACE_3(Element2D):
             derivatives for all integration points.
         """
 
-        batoz_cte = batoz_constants(x_loc, y_loc)
+        batoz_cte = get_batoz_constants(x_loc, y_loc)
 
         r = np.repeat(self.pint_bend[:, 0], self.nint_bend)
         s = np.repeat(self.pint_bend[:, 1], self.nint_bend)
 
         # Batoz shape functions
-        H_xr, H_yr, H_xs, H_ys = batoz_shape_functions(r, s, batoz_cte)
+        H_xr, H_yr, H_xs, H_ys = get_batoz_shape_functions(r, s, batoz_cte)
 
         return np.stack([H_xr, H_yr, H_xs, H_ys], axis=0)
 
@@ -306,8 +304,7 @@ class STRUCT_FACE_3(Element2D):
             return Db, Dm, rho
 
     def elementary_matrices(self, el_index: int, t: float):
-        """This method returns elementary stiffness and mass matrices for HEXAHEDRON-8 nodes.
-        ANSYS SOLID45 w/o extra diplacements (very simple)
+        """This method returns elementary stiffness and mass matrices for TRIANGLE-3 nodes.
 
         """
 
@@ -320,29 +317,24 @@ class STRUCT_FACE_3(Element2D):
         Db, Dm, rho = self.get_constitutive_model(el_index, t, model_type="linear-isotropic")
 
         # Processing the bending matrices
+        b_11 =  (y_loc[2] - y_loc[0]) * H[0] + (y_loc[0] - y_loc[1]) * H[2]
+        b_12 = -(x_loc[2] - x_loc[0]) * H[1] - (x_loc[0] - x_loc[1]) * H[3]
+        b_13 = -(x_loc[2] - x_loc[0]) * H[0] - (x_loc[0] - x_loc[1]) * H[2] + (y_loc[2] - y_loc[0]) * H[1] + (y_loc[0] - y_loc[1]) * H[3]
 
         # Deformation matrix
-        B = (1 / (2 * area)) * np.array([    (y_loc[2] - y_loc[0]) * H[0] + (y_loc[0] - y_loc[1]) * H[2],
-                                            -(x_loc[2] - x_loc[0]) * H[1] - (x_loc[0] - x_loc[1]) * H[3],
-                                            -(x_loc[2] - x_loc[0]) * H[0] - (x_loc[0] - x_loc[1]) * H[2] + (y_loc[2] - y_loc[0]) * H[1] + (y_loc[0] - y_loc[1]) * H[3]], dtype=float)
+        B = (1 / (2 * area)) * np.array([b_11, b_12, b_13], dtype=float)
 
         # Numerical integration
         K_bend = area * self.weight_bend * np.sum((np.einsum('nmp,mqp->nqp', np.einsum('mnp,nq->mqp', np.swapaxes(B, 1, 0), Db), B)), axis=2)
 
+        # TODO: update the numerical integration
+        # K_bend = 0.
+        # for i in range(self.nint_bend**2):
+        #     K_bend += area * B[:,:, i].T @ Db @ B[:, :, i] * self.weight_bend
+
         # Allman (1996) mass matrix
-        Bw, Bwa, NN, NNa, NaN, NaNa = allman_constants(rho, t, area, x_loc, y_loc)
+        Bw, Bwa, NN, NNa, NaN, NaNa = get_allman_constants(rho, t, area, x_loc, y_loc)
         M_bend = Bw.T @ (NN @ Bw + NNa @ Bwa) + Bwa.T @ (NaN @ Bw + NaNa @ Bwa)
-        # M_bend = Bw.T @ NN @ Bw + Bw.T @ NNa @ Bwa + Bwa.T @ NaN @ Bw + Bwa.T @ NaNa @ Bwa
-
-        Ke = np.zeros([self.DOFS_PER_ELEMENT, self.DOFS_PER_ELEMENT], dtype=float)
-        Me = np.zeros([self.DOFS_PER_ELEMENT, self.DOFS_PER_ELEMENT], dtype=float)
-
-        # Indexing to global element matrices
-        index = [2, 3, 4, 8, 9, 10, 14, 15, 16]
-        Ke[np.ix_(index, index)] = K_bend
-        Me[np.ix_(index, index)] = M_bend
-
-        # print(M_bend)
 
         # Processing the membrane matrices
 
@@ -351,47 +343,57 @@ class STRUCT_FACE_3(Element2D):
                         [x_loc[2] - x_loc[0], y_loc[2] - y_loc[0]]], dtype=float)
 
         detJAC, invJAC = get_detJAC_and_invJAC(JAC)
-        dphi_t = (invJAC @ self.dphi_memb.T).T
+        dphi_t = invJAC @ self.dphi_memb.T
 
         # Element deformation matrix
-        B = np.array([[dphi_t[0, 0],            0, dphi_t[1, 0],            0, dphi_t[2, 0],            0],
-                      [           0, dphi_t[0, 1],            0, dphi_t[1, 1],            0, dphi_t[2, 1]],
-                      [dphi_t[0, 1], dphi_t[0, 0], dphi_t[1, 1], dphi_t[1, 0], dphi_t[2, 1], dphi_t[2, 0]]], dtype=float)
+        B = np.array([[dphi_t[0, 0],            0, dphi_t[0, 1],            0, dphi_t[0, 2],            0],
+                      [           0, dphi_t[1, 0],            0, dphi_t[1, 1],            0, dphi_t[1, 2]],
+                      [dphi_t[1, 0], dphi_t[0, 0], dphi_t[1, 1], dphi_t[0, 1], dphi_t[1, 2], dphi_t[0, 2]]], dtype=float)
+        
+        # B = np.array([[dphi_t[0, 0],            0, dphi_t[1, 0]],
+        #               [           0, dphi_t[1, 0], dphi_t[0, 0]],
+        #               [dphi_t[0, 1],            0, dphi_t[1, 1]],
+        #               [           0, dphi_t[1, 1], dphi_t[0, 1]],
+        #               [dphi_t[0, 2],            0, dphi_t[1, 2]],
+        #               [           0, dphi_t[1, 2], dphi_t[0, 2]]], dtype=float).T
+
+        # B = np.zeros((self.nint_memb, self.DOFS_PER_NODE), dtype=float)
+        # B[0, 0::2] = B[2, 1::2] = dphi_t[0, :]
+        # B[1, 1::2] = B[2, 0::2] = dphi_t[1, :]
 
         # Element membrane stiffness matrix
         K_memb = 0.5 * detJAC * t * B.T @ Dm @ B
 
-        N = np.zeros((self.nint_memb, 2, 6))
-        N[:, 0, ::2] = self.phi_memb
+        N = np.zeros((self.nint_memb, 2, self.DOFS_PER_NODE))
+        N[:, 0, 0::2] = self.phi_memb
         N[:, 1, 1::2] = self.phi_memb
 
-        # Product N.T @ N for each integration point
-        NTN = np.einsum('nij,njk->nik', N.transpose(0, 2, 1), N)
+        M_memb = 0.
+        for i in range(self.nint_memb):
+            M_memb += 0.5 * rho * t * N[i, :, :].T @ N[i, :, :] * (detJAC * self.weight_memb)
 
-        # Element membrane mass matrix
-        M_memb = 0.5 * self.weight_memb * detJAC * rho * t * NTN.sum(axis=0)
+        # # Product N.T @ N for each integration point
+        # NTN = np.einsum('nij,njk->nik', N.transpose(0, 2, 1), N)
 
-        # N = np.zeros((self.nint_memb, 2, self.DOFS_PER_ELEMENT), dtype=float)
-        # N[:, 0, 0::6] = self.phi_memb 
-        # N[:, 1, 1::6] = self.phi_memb
+        # # Element membrane mass matrix
+        # M_memb = 0.5 * self.weight_memb * detJAC * rho * t * NTN.sum(axis=0)
 
-        # M_memb = 0.
-        # for i in range(self.nint_memb):
-        #     M_memb += 0.5 * rho * t * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.weight_memb)
+        Ke = np.zeros([self.DOFS_PER_ELEMENT, self.DOFS_PER_ELEMENT], dtype=float)
+        Me = np.zeros([self.DOFS_PER_ELEMENT, self.DOFS_PER_ELEMENT], dtype=float)
 
-        # Indexing to global element matrices
+        # Indexing bend to global element matrices
+        index = [2, 3, 4, 8, 9, 10, 14, 15, 16]
+        Ke[np.ix_(index, index)] = K_bend
+        Me[np.ix_(index, index)] = M_bend
+
+        # Indexing membrane to global element matrices
         index = [0, 1, 6, 7, 12, 13]
         Ke[np.ix_(index, index)] = K_memb
         Me[np.ix_(index, index)] = M_memb
 
-        # DRILLING DOF
-
-        # Insertion of drilling dof
+        # Indexing drilling dofs
         index = [5, 11, 17]
-        # drill = np.max(np.diagonal(K_elem))/1000
-        # drill = np.min(np.diag(K_bend))
-        drill = 1e-5
-        Ke[np.ix_(index, index)] = drill
+        Ke[np.ix_(index, index)] = 1e-5  # drill
         Me[np.ix_(index, index)] = 1e-18
 
         # TRANSFORMATION TO GLOBAL COORDINATE SYSTEM
@@ -438,7 +440,7 @@ class STRUCT_FACE_3(Element2D):
         """This method processess the dofs indices (rows and columns) for assembly"""
 
         self.reorder_connect()
-        dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
+        dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT
 
         ind_dofs = (
             np.array([  dofs * self.connectivity[:, 1] + 0,
@@ -474,8 +476,7 @@ class STRUCT_FACE_3(Element2D):
 
 
 def elementary_matrices(nodal_coords: np.ndarray):
-    """This method returns elementary stiffness and mass matrices for HEXAHEDRON-8 nodes.
-    ANSYS SOLID45 w/o extra diplacements (very simple)
+    """ For validation purposes.
     """
 
     E = 2e11
@@ -517,28 +518,30 @@ def elementary_matrices(nodal_coords: np.ndarray):
 
     #
     x_loc, y_loc, area, T = get_local_coordinates(nodal_coords)
-    batoz_cte = batoz_constants(x_loc, y_loc)
+    batoz_cte = get_batoz_constants(x_loc, y_loc)
 
     r = np.repeat(pint_bend[:, 0], nint_bend)
     s = np.repeat(pint_bend[:, 1], nint_bend)
 
     # Batoz shape functions
-    H_xr, H_yr, H_xs, H_ys = batoz_shape_functions(r, s, batoz_cte)
+    H_xr, H_yr, H_xs, H_ys = get_batoz_shape_functions(r, s, batoz_cte)
 
     H = np.stack([H_xr, H_yr, H_xs, H_ys], axis=0)
 
     # Processing the bending matrices
 
+    b_11 =  (y_loc[2] - y_loc[0]) * H[0] + (y_loc[0] - y_loc[1]) * H[2]
+    b_12 = -(x_loc[2] - x_loc[0]) * H[1] - (x_loc[0] - x_loc[1]) * H[3]
+    b_13 = -(x_loc[2] - x_loc[0]) * H[0] - (x_loc[0] - x_loc[1]) * H[2] + (y_loc[2] - y_loc[0]) * H[1] + (y_loc[0] - y_loc[1]) * H[3]
+
     # Deformation matrix
-    B = (1 / (2 * area)) * np.array([    (y_loc[2] - y_loc[0]) * H[0] + (y_loc[0] - y_loc[1]) * H[2],
-                                        -(x_loc[2] - x_loc[0]) * H[1] - (x_loc[0] - x_loc[1]) * H[3],
-                                        -(x_loc[2] - x_loc[0]) * H[0] - (x_loc[0] - x_loc[1]) * H[2] + (y_loc[2] - y_loc[0]) * H[1] + (y_loc[0] - y_loc[1]) * H[3]], dtype=float)
+    B = (1 / (2 * area)) * np.array([b_11, b_12, b_13], dtype=float)
 
     # Numerical integration
     K_bend = area * weight_bend * np.sum((np.einsum('nmp,mqp->nqp', np.einsum('mnp,nq->mqp', np.swapaxes(B, 1, 0), Db), B)), axis=2)
 
     # Allman (1996) mass matrix
-    Bw, Bwa, NN, NNa, NaN, NaNa = allman_constants(rho, t, area, x_loc, y_loc)
+    Bw, Bwa, NN, NNa, NaN, NaNa = get_allman_constants(rho, t, area, x_loc, y_loc)
     M_bend = Bw.T @ (NN @ Bw + NNa @ Bwa) + Bwa.T @ (NaN @ Bw + NaNa @ Bwa)
     # M_bend = Bw.T @ NN @ Bw + Bw.T @ NNa @ Bwa + Bwa.T @ NaN @ Bw + Bwa.T @ NaNa @ Bwa
 
@@ -549,10 +552,9 @@ def elementary_matrices(nodal_coords: np.ndarray):
     index = [2, 3, 4, 8, 9, 10, 14, 15, 16]
     Ke[np.ix_(index, index)] = K_bend
     Me[np.ix_(index, index)] = M_bend
-    print(M_bend)
 
-    np.savetxt("M_bend_Vibra.dat", M_bend, delimiter=",")
-    np.savetxt("K_bend_Vibra.dat", K_bend, delimiter=",")
+    # np.savetxt("M_bend_Vibra.dat", M_bend, delimiter=",")
+    # np.savetxt("K_bend_Vibra.dat", K_bend, delimiter=",")
 
     # Processing the membrane matrices
     r = pint_memb[:, 0]

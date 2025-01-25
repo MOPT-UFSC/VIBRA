@@ -288,15 +288,15 @@ class Mesh:
     def export_nodal_coordinates(self, filename):
         fmt = ["%i", "%.16f", "%.16f", "%.16f"]
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
-        np.savetxt(filename, self.nodal_coordinates, delimiter=";", header=header, fmt=fmt)
+        np.savetxt(filename, self.nodal_coordinates, delimiter=",", header=header, fmt=fmt)
 
     def export_face_elements_connectivity(self, filename):
         header = "Index || Element ID || Face ID || Element type ID || Connected Node IDs"
-        np.savetxt(filename, self.faces_connectivity, delimiter=";", header=header, fmt="%i")
+        np.savetxt(filename, self.faces_connectivity, delimiter=",", header=header, fmt="%i")
 
     def export_solid_elements_connectivity(self, filename):
         header = "Index || Solid ID || Element type ID || Element ID || Connected Node IDs"
-        np.savetxt(filename, self.solids_connectivity, delimiter=";", header=header, fmt="%i")
+        np.savetxt(filename, self.solids_connectivity, delimiter=",", header=header, fmt="%i")
 
     def export_vtu_file(self, filename):
         """ This methods exports vtu file. """

@@ -44,9 +44,9 @@ def get_detJAC_and_invJAC(JAC):
 
 class ACT_TETRAHEDRON_4C(Element3D):
 
-    DOF_PER_NODE = 1
+    DOFS_PER_NODE = 1
     NODES_PER_ELEMENT = 4
-    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
+    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
 
     def __init__(self, model):
         self.model = model
@@ -271,7 +271,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
         else:
             self.connectivity = self.connectivity[:, [0, 4, 5, 6, 7]]
 
-        dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
+        dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT
         ind_dofs = dofs * self.connectivity[:, 1:]
 
         vect_indices = ind_dofs.flatten()
