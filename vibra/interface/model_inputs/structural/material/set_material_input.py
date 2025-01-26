@@ -121,10 +121,21 @@ class SetMaterialInput(QDialog):
     def geometry_selection_callback(self):
 
         volumes = self.main_window.selected_geometry_volumes
+        surfaces = self.main_window.selected_geometry_surfaces
 
         if volumes:
-            self.comboBox_attribution_type.setCurrentIndex(1)
-            text = ", ".join([str(i) for i in volumes])
+            selected_ids = volumes
+            self.comboBox_attribution_type.setCurrentIndex(4)
+            
+        elif surfaces:
+            selected_ids = surfaces
+            self.comboBox_attribution_type.setCurrentIndex(3)
+        
+        else:
+            selected_ids = set()
+
+        if len(selected_ids):
+            text = ", ".join([str(i) for i in selected_ids])
             self.lineEdit_selection_id.setText(text)
 
     def update_material_selection(self):
@@ -147,10 +158,14 @@ class SetMaterialInput(QDialog):
         if index == 0:
             self.lineEdit_selection_id.setText("All bodies/faces")
         elif index == 1:
+            self.lineEdit_selection_id.setText("All faces")
+        else:
             self.lineEdit_selection_id.setText("")
 
-        self.lineEdit_selection_id.setEnabled(bool(index))
-        # self.comboBox_attribution_type.setCurrentIndex(index)
+        if index in [0, 1]:
+            self.lineEdit_selection_id.setEnabled(False)
+        else:
+            self.lineEdit_selection_id.setEnabled(True)
 
     def attribute_callback(self):
 
@@ -161,44 +176,63 @@ class SetMaterialInput(QDialog):
             self.message = "Select a material in the list before confirming the material attribution."
             PrintMessageInput([window_title_1, self.title, self.message])
             return
+        
+        attribution_type = self.comboBox_attribution_type.currentIndex()
 
         try:
 
-            if self.comboBox_attribution_type.currentIndex():
+            if attribution_type in [0, 1]:
 
-                input_ids = self.lineEdit_selection_id.text()
-                stop, volume_ids = self.model.mesh.check_selected_ids(input_ids, selection = "volumes", single_id = False)
-                if stop:
-                    self.lineEdit_selection_id.setFocus()
-                    return True
+                if attribution_type == 0:
+                    volume_ids = list()
+                    if "volumes" in self.model.mesh.geometry_information.keys():
+                        volume_ids = self.model.mesh.geometry_information["volumes"]
 
-                for volume_id in volume_ids:
-                    app().project.set_material(selected_material, volume=volume_id)
-                    for surface_id in self.model.mesh.surfaces_from_volumes[volume_id]:
-                        app().project.set_material(selected_material, surface=surface_id)
-        
-                if len(volume_ids) <= 20:
-                    print("[Set Material] - {} defined at bodies: {}".format(selected_material.name, volume_ids))
-                else:
-                    print("[Set Material] - {} defined at {} bodies".format(selected_material.name, len(volume_ids)))
-
-            else:
-                
-                volume_ids = list()
-                if "volumes" in self.model.mesh.geometry_information.keys():
-                    volume_ids = self.model.mesh.geometry_information["volumes"]
+                    for volume_id in volume_ids:
+                        app().project.set_material(selected_material, volume=volume_id)
 
                 surface_ids = list()
                 if "surfaces" in self.model.mesh.geometry_information.keys():
                     surface_ids = self.model.mesh.geometry_information["surfaces"]
 
-                for volume_id in volume_ids:
-                    app().project.set_material(selected_material, volume=volume_id)
-
                 for surface_id in surface_ids:
                     app().project.set_material(selected_material, surface=surface_id)
 
-                print("[Set Material] - {} defined at all bodies.".format(selected_material.name))
+            elif attribution_type in [2, 4]:
+
+                input_ids = self.lineEdit_selection_id.text()
+                volume_ids = self.model.mesh.check_selected_ids(
+                                                                input_ids, 
+                                                                selection = "volumes", 
+                                                                single_id = False
+                                                                )
+
+                if volume_ids is None:
+                    self.lineEdit_selection_id.setFocus()
+                    return True
+
+                for volume_id in volume_ids:
+                    app().project.set_material(selected_material, volume=volume_id)
+
+                    if attribution_type == 4:
+                        for surface_id in self.model.mesh.surfaces_from_volumes[volume_id]:
+                            app().project.set_material(selected_material, surface=surface_id)
+
+            elif attribution_type == 3:
+
+                input_ids = self.lineEdit_selection_id.text()
+                surface_ids = self.model.mesh.check_selected_ids(
+                                                                 input_ids, 
+                                                                 selection = "surfaces", 
+                                                                 single_id = False
+                                                                 )
+
+                if surface_ids is None:
+                    self.lineEdit_selection_id.setFocus()
+                    return True
+
+                for surface_id in surface_ids:
+                    app().project.set_material(selected_material, surface=surface_id)
 
             app().file.write_model_properties_in_file()
             self.main_window.viewer_tabs.geometry_widget.update_info_text()
