@@ -1019,7 +1019,7 @@ class Mesh:
                     all_ids = self.geometry_information["volumes"]
 
             else:
-                return
+                return None
 
             _size = len(all_ids)
 
@@ -1049,12 +1049,12 @@ class Mesh:
             window_title = "Error"
             title = "Invalid entry to the Selection ID"
             PrintMessageInput([window_title, title, message])
-            return True, list()
+            return None
 
         if single_id:
-            return False, list_ids[0]
+            return list_ids[0]
         else:
-            return False, list_ids
+            return list_ids
 
 
     def check_input_line_id(self, selected_ids, single_id=False):

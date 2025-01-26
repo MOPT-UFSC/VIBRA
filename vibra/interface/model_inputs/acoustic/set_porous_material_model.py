@@ -401,9 +401,14 @@ class SetPorousMaterialModel(QDialog):
                     volume_ids = self.mesh.geometry_information["volumes"]
 
             elif attribute_type == 1:
-                str_volume_ids = self.lineEdit_selection_id.text()
-                stop, volume_ids = self.mesh.check_selected_ids(str_volume_ids, selection = "volumes", single_id = False)
-                if stop:
+                input_ids = self.lineEdit_selection_id.text()
+                volume_ids = self.mesh.check_selected_ids(
+                                                          input_ids, 
+                                                          selection = "volumes", 
+                                                          single_id = False
+                                                          )
+
+                if volume_ids is None:
                     self.lineEdit_selection_id.setFocus()
                     return True
 

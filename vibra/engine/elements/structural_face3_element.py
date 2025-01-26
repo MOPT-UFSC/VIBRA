@@ -83,22 +83,26 @@ def get_batoz_constants(x_loc: np.ndarray, y_loc: np.ndarray):
 # @njit
 def get_batoz_shape_functions(r, s, batoz_const):
 
+    N = len(r)
+
     pk0, pk1, pk2 = batoz_const[0, 0], batoz_const[0, 1], batoz_const[0, 2]
     qk0, qk1, qk2 = batoz_const[1, 0], batoz_const[1, 1], batoz_const[1, 2]
     rk0, rk1, rk2 = batoz_const[2, 0], batoz_const[2, 1], batoz_const[2, 2]
     tk0, tk1, tk2 = batoz_const[3, 0], batoz_const[3, 1], batoz_const[3, 2]
 
     # Initialization in numba format
-    H_xr = np.zeros((9, len(r)), dtype=float)
-    H_yr = np.zeros((9, len(r)), dtype=float)
-    H_xs = np.zeros((9, len(r)), dtype=float) 
-    H_ys = np.zeros((9, len(r)), dtype=float)
+    H_xr = np.zeros((9, N), dtype=float)
+    H_yr = np.zeros((9, N), dtype=float)
+    H_xs = np.zeros((9, N), dtype=float) 
+    H_ys = np.zeros((9, N), dtype=float)
 
     # Loop over each integration point
-    for ii, r_ii in enumerate(r):
+    for ii in range(N):
 
         # Precompute repeated terms
+        r_ii = r[ii]
         s_ii = s[ii]
+
         r_2 = 1 - 2 * r_ii
         s_2 = 1 - 2 * s_ii
 
@@ -210,7 +214,6 @@ class STRUCT_FACE_3(Element2D):
         self.initialize_variables()
         self.define_integration_points_for_bending()
         self.define_integration_points_for_membrane()
-        # self.process_shape_functions_and_derivatives()
         self.process_shape_functions_and_derivatives_for_membrane()
 
     def initialize_variables(self):
@@ -223,7 +226,7 @@ class STRUCT_FACE_3(Element2D):
         self.number_of_elements = len(self.connectivity)
 
     def define_integration_points_for_bending(self):
-        """ """
+        """ This method computes the integration points for the bending effects. """
 
         # integration points
         self.nint_bend = 3
@@ -236,7 +239,8 @@ class STRUCT_FACE_3(Element2D):
         self.weight_bend = (1/3) ** 2
 
     def define_integration_points_for_membrane(self):
-        """ """
+        """ This method computes the integration points for the membrane effects. """
+
         # integration points
         self.nint_memb = 3
 
@@ -244,12 +248,12 @@ class STRUCT_FACE_3(Element2D):
         self.pint_memb = np.array([ [1/6, 1/6], 
                                     [4/6, 1/6], 
                                     [1/6, 4/6] ], dtype=float)
-        
+
         self.weight_memb = 1 / 3
 
     def process_shape_functions_and_derivatives_for_bending(self, x_loc: np.ndarray, y_loc: np.ndarray):
-        """ This method processes the shape functions and their
-            derivatives for all integration points.
+        """ This method computes the shape functions and their
+            derivatives for bending effects over all integration points.
         """
 
         batoz_cte = get_batoz_constants(x_loc, y_loc)
@@ -263,8 +267,8 @@ class STRUCT_FACE_3(Element2D):
         return np.stack([H_xr, H_yr, H_xs, H_ys], axis=0)
 
     def process_shape_functions_and_derivatives_for_membrane(self):
-        """ This method processes the shape functions and their
-            derivatives for all integration points.
+        """ This method computes the shape functions and their
+            derivatives for membrane effects over all integration points.
         """
 
         r = self.pint_memb[:, 0]

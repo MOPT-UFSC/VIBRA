@@ -110,9 +110,13 @@ class SetAnechoicTerminationInputs(QDialog):
 
     def update_volumes_from_faces(self):
 
-        lineEdit_selection_id = self.lineEdit_selection_id.text()
-        stop, surface_ids = self.mesh.check_selected_ids(lineEdit_selection_id, selection="surfaces")
-        if stop:
+        input_ids = self.lineEdit_selection_id.text()
+        surface_ids = self.mesh.check_selected_ids(
+                                                   input_ids, 
+                                                   selection = "surfaces"
+                                                   )
+
+        if surface_ids is None:
             return
 
         list_volumes = list()

@@ -324,9 +324,13 @@ class MassFlowRateInput(QDialog):
 
     def check_table_values(self):
 
-        lineEdit_selection_id = self.lineEdit_selection_id.text()
-        stop, surface_ids = self.mesh.check_selected_ids(lineEdit_selection_id, selection="surfaces")
-        if stop:
+        input_ids = self.lineEdit_selection_id.text()
+        surface_ids = self.mesh.check_selected_ids(
+                                                   input_ids, 
+                                                   selection = "surfaces"
+                                                   )
+
+        if surface_ids is None:
             self.lineEdit_selection_id.setFocus()
             return
 

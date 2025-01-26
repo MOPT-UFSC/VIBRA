@@ -221,13 +221,14 @@ class ReciprocatingCompressorInputs(QDialog):
             surface_ids = [str(i) for i in selected_surfaces]
             self.lineEdit_selected_surface_id.setText(surface_ids[0])
 
-            stop, surface_id = self.model.mesh.check_selected_ids(
-                                                                  self.lineEdit_selected_surface_id.text(), 
-                                                                  selection = "surfaces", 
-                                                                  single_id = True
-                                                                  )
+            input_ids = self.lineEdit_selected_surface_id.text()
+            surface_id = self.model.mesh.check_selected_ids(
+                                                            input_ids, 
+                                                            selection = "surfaces", 
+                                                            single_id = True
+                                                            )
 
-            if stop:
+            if surface_id is None:
                 self.lineEdit_selected_surface_id.setFocus()
                 return True
 
@@ -488,22 +489,22 @@ class ReciprocatingCompressorInputs(QDialog):
 
     def check_surface_id(self, lineEdit: QLineEdit):
 
-        input_selected_id = lineEdit.text()
-        stop, surface_id = self.model.mesh.check_selected_ids(
-                                                            input_selected_id, 
-                                                            selection = "surfaces", 
-                                                            single_id = True
-                                                            )
+        input_ids = lineEdit.text()
+        surface_id = self.model.mesh.check_selected_ids(
+                                                        input_ids, 
+                                                        selection = "surfaces", 
+                                                        single_id = True
+                                                        )
 
-        if stop:
+        if surface_id is None:
             lineEdit.setFocus()
             lineEdit.selectAll()
-            return True, None
+            return None
 
         volumes_from_surface = self.model.mesh.volume_from_surface[surface_id]
 
         if len(volumes_from_surface) == 1:
-            return stop, surface_id
+            return surface_id
 
         else:
             self.hide()
@@ -513,13 +514,13 @@ class ReciprocatingCompressorInputs(QDialog):
             message += "compressor excitation attribution."
             PrintMessageInput([window_title_1, title, message])
             lineEdit.setText("")
-            return True, None
+            return None
 
     def check_input_surfaces(self):
 
-        stop, surface_id = self.check_surface_id(self.lineEdit_selected_surface_id)
+        surface_id = self.check_surface_id(self.lineEdit_selected_surface_id)
 
-        if stop:
+        if surface_id is None:
             self.lineEdit_selected_surface_id.setFocus()
             return True
 

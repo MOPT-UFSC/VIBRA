@@ -193,21 +193,25 @@ class PlotTransmissionLossInput(QDialog):
 
     def check_inputs(self):
 
-        lineEdit_input_surface_id = self.lineEdit_input_surface_id.text()
-        stop, self.input_surface_id = self.mesh.check_selected_ids(   lineEdit_input_surface_id, 
-                                                                        selection = "surfaces", 
-                                                                        single_id = True   )
+        input_surface_id = self.lineEdit_input_surface_id.text()
+        self.input_surface_id = self.mesh.check_selected_ids(   
+                                                             input_surface_id, 
+                                                             selection = "surfaces", 
+                                                             single_id = True
+                                                             )
 
-        if stop:
+        if self.input_surface_id is None:
             self.lineEdit_output_surface_id.setFocus()
             return True
 
-        lineEdit_output_surface_id = self.lineEdit_output_surface_id.text()
-        stop, self.output_surface_id = self.mesh.check_selected_ids(  lineEdit_output_surface_id, 
-                                                                        selection = "surfaces", 
-                                                                        single_id = True  )
+        output_surface_id = self.lineEdit_output_surface_id.text()
+        self.output_surface_id = self.mesh.check_selected_ids(  
+                                                              output_surface_id, 
+                                                              selection = "surfaces", 
+                                                              single_id = True
+                                                              )
 
-        if stop:
+        if self.output_surface_id is None:
             self.lineEdit_output_surface_id.setFocus()
             return True
 

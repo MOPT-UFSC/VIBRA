@@ -176,21 +176,25 @@ class ExportElementTransferDataInput(QDialog):
     def check_inputs(self):
  
         input_selected_id = self.lineEdit_input_selected_id.text()
-        stop, self.input_selection_id = self.mesh.check_selected_ids(   input_selected_id, 
-                                                                        selection = "surfaces", 
-                                                                        single_id = True   )
+        self.input_selection_id = self.mesh.check_selected_ids(   
+                                                               input_selected_id, 
+                                                               selection = "surfaces", 
+                                                               single_id = True
+                                                               )
 
-        if stop:
+        if self.input_selection_id is None:
             self.lineEdit_input_selected_id.setFocus()
             self.lineEdit_input_selected_id.selectAll()
             return True
 
         output_selected_id = self.lineEdit_output_selected_id.text()
-        stop, self.output_selection_id = self.mesh.check_selected_ids(  output_selected_id, 
-                                                                        selection = "surfaces", 
-                                                                        single_id = True  )
+        self.output_selection_id = self.mesh.check_selected_ids(  
+                                                                output_selected_id, 
+                                                                selection = "surfaces", 
+                                                                single_id = True
+                                                                )
 
-        if stop:
+        if self.output_selection_id is None:
             self.lineEdit_output_selected_id.setFocus()
             self.lineEdit_output_selected_id.selectAll()
             return True

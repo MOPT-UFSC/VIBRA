@@ -117,11 +117,13 @@ class PlotStructuralFrequencyResponseInput(QDialog):
         else:
             selection = "nodes"
 
-        lineEdit_selection_id = self.lineEdit_selection_id.text()
-        stop, self.typed_ids = self.mesh.check_selected_ids(lineEdit_selection_id, 
-                                                            selection = selection)
+        input_ids = self.lineEdit_selection_id.text()
+        self.typed_ids = self.mesh.check_selected_ids(  
+                                                      input_ids, 
+                                                      selection = selection
+                                                      )
 
-        if stop:
+        if self.typed_ids is None:
             self.lineEdit_selection_id.setFocus()
             return True
 

@@ -213,21 +213,25 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         else:
             selection = "nodes"
  
-        lineEdit_input_selected_id = self.lineEdit_input_selected_id.text()
-        stop, self.input_selection_id = self.mesh.check_selected_ids(   lineEdit_input_selected_id, 
-                                                                        selection = selection, 
-                                                                        single_id = True   )
+        selected_input_id = self.lineEdit_input_selected_id.text()
+        self.input_selection_id = self.mesh.check_selected_ids(   
+                                                               selected_input_id, 
+                                                               selection = selection, 
+                                                               single_id = True
+                                                               )
 
-        if stop:
+        if self.input_selection_id is None:
             self.lineEdit_input_selected_id.setFocus()
             return True
-        
-        lineEdit_output_selected_id = self.lineEdit_output_selected_id.text()
-        stop, self.output_selection_id = self.mesh.check_selected_ids(  lineEdit_output_selected_id, 
-                                                                        selection = selection, 
-                                                                        single_id = True  )
 
-        if stop:
+        selected_output_id = self.lineEdit_output_selected_id.text()
+        self.output_selection_id = self.mesh.check_selected_ids(  
+                                                                selected_output_id, 
+                                                                selection = selection, 
+                                                                single_id = True
+                                                                )
+
+        if self.output_selection_id is None:
             self.lineEdit_output_selected_id.setFocus()
             return True
 
