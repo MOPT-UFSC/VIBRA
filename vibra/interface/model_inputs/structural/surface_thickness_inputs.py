@@ -1,7 +1,7 @@
 # fmt: off
 
 from PyQt5.QtWidgets import QAction, QComboBox, QDialog, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QEvent, QObject
 from PyQt5.QtGui import QCloseEvent
 from PyQt5 import uic
 
@@ -38,6 +38,7 @@ class SurfaceThicknessInput(QDialog):
         self._define_qt_variables()
         self._create_connections()
         self._config_widgets()
+        self.filter_tab_scroll_by_wheel(self.tabWidget_main)
 
         ConfigWidgetAppearance(self, tool_tip=True)
 
@@ -116,6 +117,19 @@ class SurfaceThicknessInput(QDialog):
             self.treeWidget_surface_thickness.setColumnWidth(i, width)
             self.treeWidget_surface_thickness.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
+    def filter_tab_scroll_by_wheel(self, widget: QTabWidget | QWidget):
+        class Filter(QObject):
+
+            def eventFilter(self, obj, event):
+                if obj == widget and event.type() == QEvent.Wheel:
+                    print("The mouse wheel has been scrolled!")
+                    return True
+                else:
+                    return False
+
+        filter = Filter(widget)
+        widget.installEventFilter(filter)
+
     def load_property_data(self, surface_id: int):
 
         if self.tabWidget_main.currentIndex() == 1:
@@ -153,9 +167,13 @@ class SurfaceThicknessInput(QDialog):
             surface_ids = self.model.mesh.geometry_information["surfaces"]
         
         else:
-            lineEdit_selection_id = self.lineEdit_selection_id.text()
-            stop, surface_ids = self.mesh.check_selected_ids(lineEdit_selection_id, selection="surfaces")
-            if stop:
+            input_ids = self.lineEdit_selection_id.text()
+            surface_ids = self.mesh.check_selected_ids(
+                                                       input_ids, 
+                                                       selection = "surfaces"
+                                                       )
+
+            if surface_ids is None:
                 self.lineEdit_selection_id.setFocus()
                 return
 
