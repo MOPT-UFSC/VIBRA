@@ -126,9 +126,25 @@ class MeshRenderWidget(CommonRenderWidget):
         if reset_camera:
             self.renderer.ResetCamera()
 
+        self.visualization_changed_callback()
         self.update_section_plane()
         self.show_faces()
         app().project.thumbnail = self.get_thumbnail()
+
+    def visualization_changed_callback(self):
+        if not self._actors_exists():
+            return
+
+        visualization = app().main_window.visualization_filter
+        has_hidden_part = bool(self.main_window.hidden_surfaces)
+
+        self.nodes_actor.SetVisibility(visualization.points)
+        self.edges_actor.SetVisibility(visualization.lines)
+        self.faces_actor.SetVisibility(visualization.faces)
+        self.solids_actor.SetVisibility(visualization.solids)
+        self.hidden_part_actor.SetVisibility(has_hidden_part)
+
+        self.update()
 
     def update_symbols(self):
         self.renderer.RemoveActor(self.symbols_actor)
@@ -174,6 +190,7 @@ class MeshRenderWidget(CommonRenderWidget):
     # TODO: replace these methods to use flags
     # Then, combinations of these visualizations will be valid
     def show_points(self):
+        return
         self.view_mode = SHOW_POINTS
         self.nodes_actor.VisibilityOn()
         self.edges_actor.VisibilityOff()
@@ -182,6 +199,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.update()
 
     def show_lines(self):
+        return
         self.view_mode = SHOW_LINES
         self.nodes_actor.VisibilityOn()
         self.edges_actor.VisibilityOn()
@@ -190,6 +208,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.update()
 
     def show_faces(self):
+        return
         self.view_mode = SHOW_FACES
         self.nodes_actor.VisibilityOn()
         self.edges_actor.VisibilityOn()
@@ -199,6 +218,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.update()
 
     def show_volumes(self):
+        return
         self.view_mode = SHOW_VOLUMES
         self.nodes_actor.VisibilityOn()
         self.edges_actor.VisibilityOn()
