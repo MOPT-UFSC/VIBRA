@@ -7,7 +7,7 @@ from vibra.engine.elements.structural_hex8_element import STRUCT_HEXAHEDRON_8
 from vibra.engine.elements.structural_hex20_element import STRUCT_HEXAHEDRON_20
 from vibra.engine.elements.structural_tet4_element import STRUCT_TETRAHEDRON_4S
 from vibra.engine.elements.structural_tet10_element import STRUCT_TETRAHEDRON_10S
-from vibra.engine.elements.structural_face3_element import STRUCT_FACE_3
+from vibra.engine.elements.structural_tria3_element import STRUCT_TRIANGULAR_3
 
 from vibra.engine.mesher.element_type import *
 from vibra.utils.progress_status import ProgressStatus
@@ -34,16 +34,21 @@ class StructuralAssembler:
         self.unprescribed_indexes = []
 
     def get_element(self):
+
         element_type = self.model.mesh.element_type
 
         if element_type == TETRAHEDRON_4:
-            return STRUCT_TETRAHEDRON_4S(self.model), STRUCT_FACE_3(self.model)
+            return STRUCT_TETRAHEDRON_4S(self.model), STRUCT_TRIANGULAR_3(self.model)
+
         elif element_type == TETRAHEDRON_10:
             return STRUCT_TETRAHEDRON_10S(self.model), None
+
         elif element_type == HEXAHEDRON_8:
             return STRUCT_HEXAHEDRON_8(self.model), None
+
         elif element_type == HEXAHEDRON_20:
             return STRUCT_HEXAHEDRON_20(self.model), None
+
         else:
             raise NotImplementedError(f"Element type is not supported yet.")
 

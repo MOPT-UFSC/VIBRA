@@ -38,7 +38,6 @@ class SurfaceThicknessInput(QDialog):
         self._define_qt_variables()
         self._create_connections()
         self._config_widgets()
-        self.filter_tab_scroll_by_wheel(self.tabWidget_main)
 
         ConfigWidgetAppearance(self, tool_tip=True)
 
@@ -113,16 +112,19 @@ class SurfaceThicknessInput(QDialog):
 
     def _config_widgets(self):
         #
+        self.filter_tab_scroll_by_wheel()
+        #
         for i, width in enumerate([80, 120, 110]):
             self.treeWidget_surface_thickness.setColumnWidth(i, width)
             self.treeWidget_surface_thickness.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
-    def filter_tab_scroll_by_wheel(self, widget: QTabWidget | QWidget):
+    def filter_tab_scroll_by_wheel(self):
+
+        widget = self.tabWidget_main.tabBar()
         class Filter(QObject):
 
             def eventFilter(self, obj, event):
                 if obj == widget and event.type() == QEvent.Wheel:
-                    print("The mouse wheel has been scrolled!")
                     return True
                 else:
                     return False
@@ -197,6 +199,9 @@ class SurfaceThicknessInput(QDialog):
         self.actions_to_finalize()
 
         print(f"The surface thickness has been assigned to surface(s) {surface_ids}")
+
+        if self.comboBox_attribution_type.currentIndex() == 0:
+            self.close()
 
     def check_input_parameters(self, lineEdit: QLineEdit, label: str, _float=True):
 
