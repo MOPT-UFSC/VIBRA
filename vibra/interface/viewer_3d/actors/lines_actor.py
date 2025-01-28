@@ -1,3 +1,5 @@
+from molde.colors import color_names
+
 from vtkmodules.vtkCommonCore import vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import (
     VTK_LINE,
@@ -42,17 +44,13 @@ class LinesActor(vtkActor):
         self.SetMapper(mapper)
 
     def configure_appearance(self):
-        self.GetProperty().SetLineWidth(3)
+        self.GetProperty().SetLineWidth(6)
         self.clear_colors()
 
     def clear_colors(self):
         data = self.GetMapper().GetInput()
         cell_colors = data.GetCellData().GetScalars()
-
-        r, g, b = self.GetProperty().GetColor()
-        r = int(r * 255)
-        g = int(g * 255)
-        b = int(b * 255)
+        r, g, b = color_names.GRAY_3.to_rgb()
 
         cell_colors.FillComponent(0, r)
         cell_colors.FillComponent(1, g)
