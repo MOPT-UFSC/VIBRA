@@ -20,8 +20,9 @@ from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
 from ..actors.edges_actor import EdgesActor
 from ..actors.faces_actor import FacesActor
 from ..actors.nodes_actor import NodesActor
-from ..actors.selection_spheres import SelectionSpheres
 from ..actors.solids_actor import SolidsActor
+from ..actors.fake_solids_actor import FakeSolidsActor
+from ..actors.selection_spheres import SelectionSpheres
 from ..actors.symbols.symbols_actor import SymbolsActor
 from ..actors.ghost_actor import GhostActor
 
@@ -76,7 +77,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.nodes_actor = NodesActor(mesh)
         self.faces_actor = FacesActor(mesh)
         self.edges_actor = EdgesActor(self.faces_actor.data)
-        self.solids_actor: SolidsActor | FacesActor = FacesActor(mesh)
+        self.solids_actor: SolidsActor | FakeSolidsActor = FakeSolidsActor(mesh)
         # self.solids_actor: SolidsActor | FacesActor = SolidsActor(mesh)
         self.symbols_actor = SymbolsActor(self.renderer)
         self.selection_spheres_actor = SelectionSpheres()
@@ -374,11 +375,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.nodes_actor.clear_colors((0, 0, 0, 0))
         self.faces_actor.clear_colors((255, 255, 255, 255))
         # self.solids_actor.clear_colors()
-
-        if isinstance(self.solids_actor, FacesActor):
-            self.solids_actor.set_color((0, 255, 255))
-        else:
-            self.solids_actor.set_color((255, 255, 0))
 
         nodes = self.main_window.selected_mesh_nodes
         faces = self.main_window.selected_mesh_faces
