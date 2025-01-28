@@ -64,10 +64,11 @@ class FacesActor(vtkActor):
         for i, surface, _, _, *values in self.mesh.faces_connectivity:
             if surface in hidden_surfaces:
                 continue
-            data.InsertNextCell(cell_type, nodes_per_element, list(values))
+
             # This is usefull if part of the cells are hidden
             visible_index = cell_indexes.InsertNextValue(i)
             self.visible_indexes[i] = visible_index
+            data.InsertNextCell(cell_type, nodes_per_element, list(values))
 
         data.SetPoints(points)
         data.GetPointData().SetScalars(point_colors)
@@ -94,13 +95,16 @@ class FacesActor(vtkActor):
         if self.data is None:
             return
 
-        cell_colors = self.data.GetCellData().GetScalars()
-        r, g, b, a = color
+        self.set_color(color)
 
-        cell_colors.FillComponent(0, r)
-        cell_colors.FillComponent(1, g)
-        cell_colors.FillComponent(2, b)
-        cell_colors.FillComponent(3, a)
+    def set_color(self, color: tuple[int, int, int, int] | tuple[int, int, int]):
+        # TODO: Use this function instead of clear colors directly
+
+        cell_colors = self.data.GetCellData().GetScalars()
+        cell_colors.Fill(255)
+
+        for component, value in enumerate(color):
+            cell_colors.FillComponent(component, value)
 
         self.data.Modified()
         self.GetMapper().SetScalarModeToUseCellData()
@@ -120,7 +124,9 @@ class FacesActor(vtkActor):
         self.GetMapper().ScalarVisibilityOn()
 
     def paint_cells(
-        self, color: tuple[int, int, int] | tuple[int, int, int, int], faces: tuple[int]
+        self,
+        color: tuple[int, int, int] | tuple[int, int, int, int],
+        faces: tuple[int],
     ):
         if self.data is None:
             return
