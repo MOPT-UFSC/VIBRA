@@ -1,6 +1,8 @@
 #fmt: off
 
+import sys
 import numpy as np
+np.set_printoptions(precision=18)#threshold=sys.maxsize)
 
 from vibra.engine.elements.surface_elements import Element2D
 from numba import njit
@@ -160,7 +162,7 @@ def get_allman_constants(rho, thick, area, x_loc, y_loc):
     # Precompute repeated terms
     x_12, x_23, x_31 = 0.5*x_12, 0.5*x_23, 0.5*x_31
     y_21, y_32, y_13 = -0.5*y_12, -0.5*y_23, -0.5*y_31
-    premult = rho*thick*area
+    # premult = rho * thick * area
 
     # Allman matrices
     Bw = np.array([[1, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -203,7 +205,7 @@ def get_detJAC_and_invJAC(JAC: np.ndarray):
     return detJAC, (1 / detJAC) * AUJJ
 
 
-class STRUCT_FACE_3(Element2D):
+class STRUCT_TRIANGULAR_3(Element2D):
 
     NODES_PER_ELEMENT = 3
     DOFS_PER_NODE = 6
@@ -557,8 +559,8 @@ def elementary_matrices(nodal_coords: np.ndarray):
     Ke[np.ix_(index, index)] = K_bend
     Me[np.ix_(index, index)] = M_bend
 
-    # np.savetxt("M_bend_Vibra.dat", M_bend, delimiter=",")
-    # np.savetxt("K_bend_Vibra.dat", K_bend, delimiter=",")
+    np.savetxt("K_bend_Vibra.dat", K_bend, delimiter=",")
+    np.savetxt("M_bend_Vibra.dat", M_bend, delimiter=",")
 
     # Processing the membrane matrices
     r = pint_memb[:, 0]
@@ -579,6 +581,11 @@ def elementary_matrices(nodal_coords: np.ndarray):
     detJAC, invJAC = get_detJAC_and_invJAC(JAC)
     dphi_t = (invJAC @ dphi_memb.T).T
 
+    # print(JAC)
+    # print(detJAC)
+    # print(invJAC)
+    # print(dphi_t)
+
     # Element deformation matrix
     B = np.array([[dphi_t[0, 0],            0, dphi_t[1, 0],            0, dphi_t[2, 0],            0],
                   [           0, dphi_t[0, 1],            0, dphi_t[1, 1],            0, dphi_t[2, 1]],
@@ -586,6 +593,8 @@ def elementary_matrices(nodal_coords: np.ndarray):
 
     # Element membrane stiffness matrix
     K_memb = 0.5 * detJAC * t * B.T @ Dm @ B
+
+    # print(K_memb)
 
     N = np.zeros((nint_memb, 2, 6))
     N[:, 0, ::2] = phi_memb
@@ -604,6 +613,9 @@ def elementary_matrices(nodal_coords: np.ndarray):
     # M_memb = 0.
     # for i in range(self.nint_memb):
     #     M_memb += 0.5 * rho * t * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.weight_memb)
+
+    np.savetxt("K_memb_Vibra.dat", K_memb, delimiter=",")
+    np.savetxt("M_memb_Vibra.dat", M_memb, delimiter=",")
 
     # Indexing to global element matrices
     index = [0, 1, 6, 7, 12, 13]
@@ -634,13 +646,15 @@ def elementary_matrices(nodal_coords: np.ndarray):
 
 if __name__ == "__main__":
 
+    from vibra import PROJECT_DIR
+
     nodal_coords = np.array([[1.0, 0.0, 0.0],
                              [0.0, 1.0, 0.0],
                              [0.0, 0.0, 1.0]], dtype=float)
 
-    nodal_coords = np.array([[0.0, 0.0, 0.0],
-                             [1.0, 0.0, 0.0],
-                             [0.0, 1.0, 0.0]], dtype=float)
+    # nodal_coords = np.array([[0.0, 0.0, 0.0],
+    #                          [1.0, 0.0, 0.0],
+    #                          [0.0, 1.0, 0.0]], dtype=float)
 
     # nodal_coords = np.array([[0.0, 0.0, 0.0],
     #                          [0.5, 0.0, 0.0],
@@ -656,22 +670,42 @@ if __name__ == "__main__":
     print(f"=> y coordinates (lcs): {y_loc}")
     print(f"element area: {area} [m²]")
 
-    # edofs = 18
-    # ind_dofs = np.arange(18).reshape(-1, edofs)
-    # vect_indexes = ind_dofs.flatten()
-
-    # ind_rows = (np.tile(vect_indexes, (edofs, 1))).T
-    # ind_cols = np.tile(ind_dofs, (edofs,1))
-
     Ke, Me = elementary_matrices(nodal_coords)
-    np.savetxt("elementar_stiffness_matrix.dat", Ke, delimiter=",")
-    np.savetxt("elementar_mass_matrix.dat", Me, delimiter=",")
+    np.savetxt("Ke_Vibra.dat", Ke, delimiter=",")
+    np.savetxt("Me_Vibra.dat", Me, delimiter=",")
 
-    Ke_base = np.loadtxt("elementar_stiffness_matrix_base.dat", delimiter=",")
-    Me_base = np.loadtxt("elementar_mass_matrix_base.dat", delimiter=",")
+    Ke_ref = np.loadtxt(PROJECT_DIR / "validation\data\structural\shell_element\dkt_cst\Ke_ref.dat", delimiter=",")
+    Me_ref = np.loadtxt(PROJECT_DIR / "validation\data\structural\shell_element\dkt_cst\Me_ref.dat", delimiter=",")
 
-    diff_K = np.abs(Ke - Ke_base)
-    diff_M = np.abs(Me - Me_base)
+    diff_K = np.abs(Ke - Ke_ref)
+    diff_M = np.abs(Me - Me_ref)
 
     print(f"Max. diff_K: {np.sum(diff_K)}")
     print(f"Max. diff_M: {np.sum(diff_M)}")
+
+    np.savetxt("diff_K.dat", diff_K, delimiter=",")
+    np.savetxt("diff_M.dat", diff_M, delimiter=",")
+
+    K_bend_ref = np.loadtxt(PROJECT_DIR / "validation\data\structural\shell_element\dkt_cst\K_bend_ref.dat", delimiter=",")
+    M_bend_ref = np.loadtxt(PROJECT_DIR / "validation\data\structural\shell_element\dkt_cst\M_bend_ref.dat", delimiter=",")
+
+    K_memb_ref = np.loadtxt(PROJECT_DIR / "validation\data\structural\shell_element\dkt_cst\K_memb_ref.dat", delimiter=",")
+    M_memb_ref = np.loadtxt(PROJECT_DIR / "validation\data\structural\shell_element\dkt_cst\M_memb_ref.dat", delimiter=",")
+
+    K_bend_Vibra = np.loadtxt(PROJECT_DIR / "K_bend_Vibra.dat", delimiter=",")
+    M_bend_Vibra = np.loadtxt(PROJECT_DIR / "M_bend_Vibra.dat", delimiter=",")
+
+    K_memb_Vibra = np.loadtxt(PROJECT_DIR / "K_memb_Vibra.dat", delimiter=",")
+    M_memb_Vibra = np.loadtxt(PROJECT_DIR / "M_memb_Vibra.dat", delimiter=",")
+
+    diff_K_bend = np.abs(K_bend_ref - K_bend_Vibra)
+    diff_M_bend = np.abs(M_bend_ref - M_bend_Vibra)
+
+    diff_K_memb = np.abs(K_memb_ref - K_memb_Vibra)
+    diff_M_memb = np.abs(M_memb_ref - M_memb_Vibra)
+
+    print(np.max(diff_K_bend))
+    print(np.max(diff_M_bend))
+
+    print(np.max(diff_K_memb))
+    print(np.max(diff_M_memb))

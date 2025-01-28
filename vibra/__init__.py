@@ -12,6 +12,8 @@ from PyQt5.QtWidgets import QApplication
 from pathlib import Path
 
 VIBRA_DIR = Path(__file__).parent
+PROJECT_DIR = Path(__file__).parents[1]
+
 ICON_DIR = VIBRA_DIR / "interface/data/icons/"
 UI_DIR = VIBRA_DIR / "interface/data/ui_files/"
 SYMBOLS_DIR = VIBRA_DIR / "interface/data/symbols/"
