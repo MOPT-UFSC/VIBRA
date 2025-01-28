@@ -112,25 +112,9 @@ class SurfaceThicknessInput(QDialog):
 
     def _config_widgets(self):
         #
-        self.filter_tab_scroll_by_wheel()
-        #
         for i, width in enumerate([80, 120, 110]):
             self.treeWidget_surface_thickness.setColumnWidth(i, width)
             self.treeWidget_surface_thickness.headerItem().setTextAlignment(i, Qt.AlignCenter)
-
-    def filter_tab_scroll_by_wheel(self):
-
-        widget = self.tabWidget_main.tabBar()
-        class Filter(QObject):
-
-            def eventFilter(self, obj, event):
-                if obj == widget and event.type() == QEvent.Wheel:
-                    return True
-                else:
-                    return False
-
-        filter = Filter(widget)
-        widget.installEventFilter(filter)
 
     def load_property_data(self, surface_id: int):
 
