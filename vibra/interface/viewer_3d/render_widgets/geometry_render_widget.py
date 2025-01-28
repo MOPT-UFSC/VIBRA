@@ -211,10 +211,13 @@ class GeometryRenderWidget(CommonRenderWidget):
                 picked_line_elements,
                 picked_face_elements,
             ) = self._get_area_picked_cell_id(x, y)
+
         else:
-            picked_nodes, picked_line_elements, picked_face_elements = self._get_picked_cell_id(
-                x, y
-            )
+            (
+                picked_nodes,
+                picked_line_elements,
+                picked_face_elements,
+            ) = self._get_picked_cell_id(x, y)
 
         picked_points = picked_nodes  # they have the same index
         picked_lines = set()
