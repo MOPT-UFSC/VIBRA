@@ -35,7 +35,7 @@ class FluidWidget(QWidget):
         super().__init__()
         
         ui_path = UI_DIR  / "model/setup/fluid/fluid_input_widget.ui"
-        load_ui(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
 
         self.parent_widget = kwargs.get("parent_widget", None)
         self.compressor_thermodynamic_state = kwargs.get("compressor_thermodynamic_state", dict())

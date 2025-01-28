@@ -22,7 +22,7 @@ class SectionPlaneWidget(QDialog):
         self.invert_value = False
 
         ui_path = UI_DIR / "render/section_plane_control_widget.ui"
-        load_ui(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
 
         self.configure_window()
         self._define_qt_variables()

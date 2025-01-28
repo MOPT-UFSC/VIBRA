@@ -23,7 +23,7 @@ class BoundaryConditionInputs(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "model/setup/structural/boundary_condition_input.ui"
-        load_ui(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
 
         self.main_window = app().main_window
         self.project = self.main_window.project

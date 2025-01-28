@@ -20,7 +20,7 @@ class SetAnechoicTerminationInputs(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "model/setup/acoustic/set_anechoic_termination_input.ui"
-        load_ui(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
 
         self.main_window = app().main_window
         self.project = app().main_window.project

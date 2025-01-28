@@ -12,7 +12,7 @@ class CoupledHarmonicAnalysisInput(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "analysis/coupled/coupled_harmonic_analysis_input.ui"
-        load_ui(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
 
         self.setWindowIcon(app().main_window.vibra_icon)
 

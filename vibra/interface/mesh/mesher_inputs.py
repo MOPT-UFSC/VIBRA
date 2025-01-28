@@ -24,7 +24,7 @@ class MesherInputs(QDialog):
         super().__init__()
 
         ui_path = UI_DIR / "mesh/mesher_setup.ui"
-        load_ui(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
 
         self.close_after_generate = kwargs.get("close_after_generate", False)
 

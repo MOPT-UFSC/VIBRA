@@ -23,7 +23,7 @@ class PlotParticleVelocityFrequencyResponseInput(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "plots/acoustic/plot_particle_velocity_frequency_response_input.ui"
-        load_ui(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)

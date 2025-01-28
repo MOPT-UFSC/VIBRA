@@ -46,7 +46,7 @@ class AnalysisSetupInput(QDialog):
         else:
             return
 
-        load_ui(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
 
         self._config_window()
         self._reset_variables()

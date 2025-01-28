@@ -26,7 +26,7 @@ class ProcessAcousticTransferElementData(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "model/setup/acoustic/process_acoustic_transfer_element_data.ui"
-        load_ui(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
 
         app().main_window.set_input_widget(self)
         app().main_window.viewer_tabs.show_geometry()

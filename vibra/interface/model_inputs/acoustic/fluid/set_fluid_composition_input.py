@@ -20,7 +20,7 @@ class SetFluidCompositionInput(QDialog):
         super().__init__()
 
         ui_path = UI_DIR / "model/setup/fluid/set_fluid_composition_input.ui"
-        load_ui(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
 
         self.selected_fluid_to_edit = kwargs.get("selected_fluid_to_edit", None)
         self.compressor_info = kwargs.get("compressor_info", dict())
