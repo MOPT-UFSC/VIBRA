@@ -124,10 +124,10 @@ class SolidsActor(vtkActor):
         point_colors = self.data.GetPointData().GetScalars()
         cell_colors = self.data.GetCellData().GetScalars()
 
-        r, g, b = self.GetProperty().GetColor()
-        r = int(r * 255)
-        g = int(g * 255)
-        b = int(b * 255)
+        # r, g, b = self.GetProperty().GetColor()
+        r = 255
+        g = 0
+        b = 255
 
         point_colors.FillComponent(0, r)
         point_colors.FillComponent(1, g)
