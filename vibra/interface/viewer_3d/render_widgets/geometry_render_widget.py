@@ -1,5 +1,3 @@
-# fmt: off
-
 import numpy as np
 from molde.render_widgets import CommonRenderWidget
 from molde.utils import TreeInfo
@@ -15,13 +13,12 @@ from vibra.interface.tabs.geometry_info_bar import GeometryInfoBar
 from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
     CuttingPlaneActor,
 )
-from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
-from vibra.interface.viewer_3d.actors.lines_actor import LinesActor
-from vibra.interface.viewer_3d.actors.points_actor import PointsActor
-from vibra.interface.viewer_3d.actors.selection_spheres import SelectionSpheres
-from vibra.interface.viewer_3d.interactor_styles.selection_interactor import (
-    SelectionInteractor,
-)
+from ..actors.faces_actor import FacesActor
+from ..actors.lines_actor import LinesActor
+from ..actors.points_actor import PointsActor
+from ..actors.selection_spheres import SelectionSpheres
+from ..actors.ghost_actor import GhostActor
+
 
 SHOW_POINTS = 0
 SHOW_LINES = 1
@@ -42,86 +39,51 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.main_window.selection_changed.connect(self.update_selection)
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
-        # self.geometry_info = GeometryInfoBar()
-
-        # # replace the layout to add other usefull widgets
-        # QObjectCleanupHandler().add(self.layout())
-        # layout = QVBoxLayout()
-        # # layout.addWidget(self.geometry_info)
-        # layout.addWidget(self.render_interactor)
-        # self.setLayout(layout)
-        # self.setContentsMargins(0, 0, 0, 0)
 
         self.points_actor = None
         self.lines_actor = None
         self.faces_actor = None
-        self.hidden_part_actor = None
+        self.ghost_actor = None
         self.selection_spheres_actor = None
-
         self.selection_color = (20, 106, 245)
-        self.selected_points = set()
-        self.selected_lines = set()
-        self.selected_faces = set()
-        self.selected_volumes = set()
-
-        # self.style = SelectionInteractor()
-        # self.style.AddObserver("SelectionEvent", self.selection_callback)
-        # self.render_interactor.SetInteractorStyle(self.style)
 
         self.create_axes()
         self.create_scale_bar()
         self.update_plot()
 
     def update_plot(self, reset_camera=True):
-        if app().project is None:
-            return
-
-        model = app().project.model
-        if model is None:
-            return
-
-        mesh = model.mesh
+        mesh = app().project.model.mesh
         if mesh is None:
             return
 
-        self.remove_actors()
-
-        self.selection_spheres_actor = SelectionSpheres()
-        self.renderer.AddActor(self.selection_spheres_actor)
+        self.remove_all_actors()
 
         self.points_actor = PointsActor(mesh)
-        self.renderer.AddActor(self.points_actor)
-
         self.lines_actor = LinesActor(mesh)
-        self.renderer.AddActor(self.lines_actor)
-
         self.faces_actor = FacesActor(mesh)
-        self.renderer.AddActor(self.faces_actor)
+        self.selection_spheres_actor = SelectionSpheres()
 
-        # Add a very subtle transparent actor to represent the whole
-        # structure even if part of it is hidden
         has_hidden_part = bool(self.main_window.hidden_surfaces)
-        self.hidden_part_actor = FacesActor(mesh, allow_hidding=False)
-        self.hidden_part_actor.SetVisibility(has_hidden_part)
-        self.hidden_part_actor.GetProperty().SetOpacity(0.05)
-        self.hidden_part_actor.GetProperty().LightingOff()
-        self.hidden_part_actor.PickableOff()
-        self.renderer.AddActor(self.hidden_part_actor)
+        self.ghost_actor = GhostActor(mesh)
+        self.ghost_actor.SetVisibility(has_hidden_part)
 
         self.plane_actor = CuttingPlaneActor(self.faces_actor.GetBounds())
         self.plane_actor.VisibilityOff()
-        self.renderer.AddActor(self.plane_actor)
+
+        self.add_actors(
+            self.points_actor,
+            self.lines_actor,
+            self.faces_actor,
+            self.selection_spheres_actor,
+            self.ghost_actor,
+            self.plane_actor,
+        )
 
         if reset_camera:
             self.renderer.ResetCamera()
-        self.show_faces()
 
+        self.visualization_changed_callback()
         self.update_section_plane()
-
-        # This seems to be running twice and I don't know why.
-        # First it gets a terrible image then it gets a better one.
-        # I will keep it like this because it is fast enough, but this
-        # may be addressed in near future.
         app().project.thumbnail = self.get_thumbnail()
 
     def visualization_changed_callback(self):
@@ -163,7 +125,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.renderer.AddActor(self.faces_actor)
 
         has_hidden_part = bool(self.main_window.hidden_surfaces)
-        self.hidden_part_actor.SetVisibility(has_hidden_part)
+        self.ghost_actor.SetVisibility(has_hidden_part)
 
         self.update_section_plane()
         # self.update()
@@ -291,38 +253,6 @@ class GeometryRenderWidget(CommonRenderWidget):
             remove=alt_pressed,
         )
         self.update()
-
-        # if clicked_actor == self.points_actor:
-        #     # self.select_point(clicked_cell, join=ctrl_pressed, remove=alt_pressed)
-        #     self.main_window.set_geometry_selection(nodes=[clicked_cell], join=ctrl_pressed, remove=alt_pressed)
-
-        # elif clicked_actor == self.lines_actor:
-        #     line_entity = app().project.model.mesh.lines_connectivity[clicked_cell][1]
-        #     self.main_window.set_geometry_selection(lines=[line_entity], join=ctrl_pressed, remove=alt_pressed)
-        #     # self.select_line(line_entity, join=ctrl_pressed, remove=alt_pressed)
-
-        # elif (clicked_actor == self.faces_actor) and not shift_pressed:
-        #     face_entity = app().project.model.mesh.faces_connectivity[clicked_cell][1]
-        #     # self.select_face(face_entity, join=ctrl_pressed, remove=alt_pressed)
-        #     self.main_window.set_geometry_selection(surfaces=[face_entity], join=ctrl_pressed, remove=alt_pressed)
-
-        # elif (clicked_actor == self.faces_actor) and shift_pressed:
-        #     face_entity = app().project.model.mesh.faces_connectivity[clicked_cell][1]
-        #     for (volume, surfaces) in app().project.model.mesh.surfaces_from_volumes.items():
-        #         if face_entity in surfaces:
-        #             # self.select_volume(volume, join=ctrl_pressed, remove=alt_pressed)
-        #             self.main_window.set_geometry_selection(volumes=[volume], join=ctrl_pressed, remove=alt_pressed)
-        #             break
-
-        # else:
-        #     # self.clear_selection()
-        #     # self.selection_changed.emit(self.selected_points,
-        #     #                             self.selected_lines,
-        #     #                             self.selected_faces,
-        #     #                             self.selected_volumes)
-        #     self.main_window.set_geometry_selection(join=ctrl_pressed, remove=alt_pressed)
-
-        # self.update()
 
     def update_selection(self):
         self.points_actor.clear_colors()
@@ -482,7 +412,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
     def _disable_section_plane(self):
         has_hidden_part = bool(self.main_window.hidden_surfaces)
-        self.hidden_part_actor.SetVisibility(has_hidden_part)
+        self.ghost_actor.SetVisibility(has_hidden_part)
         self.plane_actor.VisibilityOff()
         self.points_actor.disable_cut()
         self.lines_actor.disable_cut()
@@ -500,35 +430,26 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.faces_actor.apply_cut(xyz, normal)
         self.lines_actor.apply_cut(xyz, normal)
 
-        self.hidden_part_actor.VisibilityOn()
+        self.ghost_actor.VisibilityOn()
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
         self.update()
 
-    def remove_actors(self):
-        self.renderer.RemoveActor(self.points_actor)
-        self.renderer.RemoveActor(self.lines_actor)
-        self.renderer.RemoveActor(self.faces_actor)
-        self.renderer.RemoveActor(self.hidden_part_actor)
-        self.renderer.RemoveActor(self.selection_spheres_actor)
-
-        self.points_actor = None
-        self.lines_actor = None
+    def remove_all_actors(self):
+        super().remove_all_actors()
+        self.nodes_actor = None
+        self.edges_actor = None
         self.faces_actor = None
-        self.hidden_part_actor = None
+        self.solids_actor = None
         self.selection_spheres_actor = None
+        self.plane_actor = None
+        self.symbols_actor = None
+        self.nodes_actor = None
+        self.ghost_actor = None
 
     def _actors_exists(self):
-        actors = [
-            self.points_actor,
-            self.lines_actor,
-            self.faces_actor,
-            self.selection_spheres_actor,
-            self.hidden_part_actor,
-        ]
-
-        return all([actor is not None for actor in actors])
+        return len(self._widget_actors) > 0
 
     def update_info_text(self):
         text = ""
@@ -734,5 +655,3 @@ class GeometryRenderWidget(CommonRenderWidget):
         text += str(tree)
 
         return text
-
-# fmt: on

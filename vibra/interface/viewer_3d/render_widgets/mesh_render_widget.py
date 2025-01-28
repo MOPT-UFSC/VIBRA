@@ -13,12 +13,15 @@ from vibra.interface.tabs.mesh_info_bar import MeshInfoBar
 from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
     CuttingPlaneActor,
 )
-from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
-from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
-from vibra.interface.viewer_3d.actors.nodes_actor import NodesActor
-from vibra.interface.viewer_3d.actors.selection_spheres import SelectionSpheres
-from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
-from vibra.interface.viewer_3d.actors.symbols.symbols_actor import SymbolsActor
+
+from ..actors.edges_actor import EdgesActor
+from ..actors.faces_actor import FacesActor
+from ..actors.nodes_actor import NodesActor
+from ..actors.selection_spheres import SelectionSpheres
+from ..actors.solids_actor import SolidsActor
+from ..actors.symbols.symbols_actor import SymbolsActor
+from ..actors.ghost_actor import GhostActor
+
 
 SHOW_POINTS = 0
 SHOW_LINES = 1
@@ -46,22 +49,12 @@ class MeshRenderWidget(CommonRenderWidget):
         self.cutting_plane_active = False
         self.cutting_plane_args = tuple()
 
-        # self.mesh_info = MeshInfoBar()
-
-        # # replace the layout to add other usefull widgets
-        # QObjectCleanupHandler().add(self.layout())
-        # layout = QVBoxLayout()
-        # layout.addWidget(self.mesh_info)
-        # layout.addWidget(self.render_interactor)
-        # self.setLayout(layout)
-        # self.setContentsMargins(0, 0, 0, 0)
-
         self.nodes_actor = None
         self.faces_actor = None
         self.solids_actor = None
         self.edges_actor = None
         self.selection_spheres_actor = None
-        self.hidden_part_actor = None
+        self.ghost_actor = None
         self.plane_actor = None
         self.symbols_actor = None
 
@@ -70,65 +63,40 @@ class MeshRenderWidget(CommonRenderWidget):
         self.update_plot()
 
     def update_plot(self, reset_camera=True):
-        if app().project is None:
-            return
-
-        model = app().project.model
-        if model is None:
-            return
-
-        mesh = model.mesh
+        mesh = app().project.model.mesh
         if mesh is None:
             return
 
-        self.remove_actors()
-
-        self.selection_spheres_actor = SelectionSpheres()
-        self.selection_spheres_actor.GetProperty().SetColor([1, 0, 0])
-        self.selection_spheres_actor.VisibilityOff()
-        self.selection_spheres_actor.PickableOff()
-        self.renderer.AddActor(self.selection_spheres_actor)
+        self.remove_all_actors()
 
         self.nodes_actor = NodesActor(mesh)
-        self.renderer.AddActor(self.nodes_actor)
-
-        self.faces_actor = FacesActor(mesh, allow_hidding=False)
-        self.faces_actor.GetProperty().LightingOff()
-        self.faces_actor.ForceTranslucentOn()
-        self.faces_actor.PickableOff()
-        self.faces_actor.clear_colors((0, 0, 0, 0))
-        self.renderer.AddActor(self.faces_actor)
-
+        self.faces_actor = FacesActor(mesh)
+        self.edges_actor = EdgesActor(self.faces_actor.data)
         self.solids_actor = SolidsActor(mesh)
-        self.renderer.AddActor(self.solids_actor)
-
-        self.edges_actor = EdgesActor(self.solids_actor.data)
-        self.edges_actor.GetProperty().SetColor(0, 0, 0)
-        self.renderer.AddActor(self.edges_actor)
-
-        self.plane_actor = CuttingPlaneActor(self.solids_actor.GetBounds())
-        self.plane_actor.VisibilityOff()
-        self.renderer.AddActor(self.plane_actor)
-
         self.symbols_actor = SymbolsActor(self.renderer)
-        self.renderer.AddActor(self.symbols_actor)
+        self.selection_spheres_actor = SelectionSpheres()
 
-        # Add a very subtle transparent actor to represent the whole
-        # structure even if part of it is hidden
         has_hidden_part = bool(self.main_window.hidden_surfaces)
-        self.hidden_part_actor = FacesActor(mesh, allow_hidding=False)
-        self.hidden_part_actor.SetVisibility(has_hidden_part)
-        self.hidden_part_actor.GetProperty().SetOpacity(0.05)
-        self.hidden_part_actor.GetProperty().LightingOff()
-        self.hidden_part_actor.PickableOff()
-        self.renderer.AddActor(self.hidden_part_actor)
+        self.ghost_actor = GhostActor(mesh)
+        self.ghost_actor.SetVisibility(has_hidden_part)
+
+        self.plane_actor = CuttingPlaneActor(self.faces_actor.GetBounds())
+        self.plane_actor.VisibilityOff()
+
+        self.add_actors(
+            self.nodes_actor,
+            self.edges_actor,
+            self.faces_actor,
+            self.ghost_actor,
+            self.plane_actor,
+            self.symbols_actor,
+        )
 
         if reset_camera:
             self.renderer.ResetCamera()
 
         self.visualization_changed_callback()
         self.update_section_plane()
-        self.show_faces()
         app().project.thumbnail = self.get_thumbnail()
 
     def visualization_changed_callback(self):
@@ -142,7 +110,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor.SetVisibility(visualization.lines)
         self.faces_actor.SetVisibility(visualization.faces)
         self.solids_actor.SetVisibility(visualization.solids)
-        self.hidden_part_actor.SetVisibility(has_hidden_part)
+        self.ghost_actor.SetVisibility(has_hidden_part)
 
         self.update()
 
@@ -152,6 +120,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.renderer.AddActor(self.symbols_actor)
 
     def update_hidden_plot(self):
+        return 
         # We could just call the update_plot function,
         # but this is much simpler and faster
         if app().project is None:
@@ -179,7 +148,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.renderer.AddActor(self.edges_actor)
 
         has_hidden_part = bool(self.main_window.hidden_surfaces)
-        self.hidden_part_actor.SetVisibility(has_hidden_part)
+        self.ghost_actor.SetVisibility(has_hidden_part)
 
         # has_hidden_part = bool(self.main_window.hidden_surfaces)
         # faces_alpha = 12 if has_hidden_part else 0
@@ -229,6 +198,7 @@ class MeshRenderWidget(CommonRenderWidget):
 
     def set_theme(self, theme):
         super().set_theme(theme)
+        return
 
         try:
             if not self._actors_exists():
@@ -263,6 +233,8 @@ class MeshRenderWidget(CommonRenderWidget):
         if not self._actors_exists():
             return
 
+        print("hello world")
+
         mouse_moved = False
         if mouse_moved:
             picked_nodes, picked_faces, picked_solids = self._get_area_picked_cell_id(x, y)
@@ -295,22 +267,39 @@ class MeshRenderWidget(CommonRenderWidget):
         picked_faces = []
         picked_solids = []
 
+        camera_position = np.array(self.renderer.GetActiveCamera().GetPosition())
         node_id, node_pos = self._pick_actor(x, y, self.nodes_actor)
+        face_id, face_pos = self._pick_actor(x, y, self.nodes_actor)
         solid_id, solid_pos = self._pick_actor(x, y, self.solids_actor)
 
-        camera_position = np.array(self.renderer.GetActiveCamera().GetPosition())
-        node_distance = np.linalg.norm(camera_position - node_pos) if node_id >= 0 else float("inf")
-        solid_distance = (
-            np.linalg.norm(camera_position - solid_pos) if solid_id >= 0 else float("inf")
+        node_distance = (
+            np.linalg.norm(camera_position - node_pos) 
+            if node_id >= 0 else float("inf")
         )
-        node_distance *= 0.98  # Cheating a bit to prioritize the node selection
-        closest = min(node_distance, solid_distance)
+
+        face_distance = (
+            np.linalg.norm(camera_position - face_pos) 
+            if face_id >= 0 else float("inf")
+        )
+
+        solid_distance = (
+            np.linalg.norm(camera_position - solid_pos) 
+            if solid_id >= 0 else float("inf")
+        )
+
+        node_distance *= 0.96  # Cheating a bit to prioritize the node selection
+        face_distance *= 0.98  # Cheating a bit to prioritize the face selection
+        closest = min(node_distance, face_distance, solid_distance)
 
         if closest == float("inf"):
             return picked_nodes, picked_faces, picked_solids
 
         if closest == node_distance:
             picked_nodes.append(node_id)
+
+        elif closest == face_distance:
+            picked_faces.append(face_id)
+
         elif closest == solid_distance:
             picked_solids.append(solid_id)
 
@@ -377,7 +366,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.update_info_text()
 
         self.nodes_actor.clear_colors((0, 0, 0, 0))
-        self.faces_actor.clear_colors((255, 255, 255, 0))
+        self.faces_actor.clear_colors((255, 255, 255, 255))
         self.solids_actor.clear_colors()
 
         nodes = self.main_window.selected_mesh_nodes
@@ -423,16 +412,8 @@ class MeshRenderWidget(CommonRenderWidget):
         self.selection_spheres_actor.VisibilityOn()
         self.update()
 
-    def remove_actors(self):
-        self.renderer.RemoveActor(self.nodes_actor)
-        self.renderer.RemoveActor(self.edges_actor)
-        self.renderer.RemoveActor(self.faces_actor)
-        self.renderer.RemoveActor(self.solids_actor)
-        self.renderer.RemoveActor(self.nodes_actor)
-        self.renderer.RemoveActor(self.selection_spheres_actor)
-        self.renderer.RemoveActor(self.plane_actor)
-        self.renderer.RemoveActor(self.symbols_actor)
-        self.renderer.RemoveActor(self.hidden_part_actor)
+    def remove_all_actors(self):
+        super().remove_all_actors()
         self.nodes_actor = None
         self.edges_actor = None
         self.faces_actor = None
@@ -441,9 +422,10 @@ class MeshRenderWidget(CommonRenderWidget):
         self.plane_actor = None
         self.symbols_actor = None
         self.nodes_actor = None
-        self.hidden_part_actor = None
+        self.ghost_actor = None
 
     def _actors_exists(self):
+        return len(self._widget_actors) > 0
         actors = [
             self.solids_actor,
             self.faces_actor,
@@ -476,11 +458,16 @@ class MeshRenderWidget(CommonRenderWidget):
             self.plane_actor.GetProperty().SetOpacity(0.8)
             self.update()
         else:
-            self._apply_section_plane(position, rotation, inverted, section_plane.isVisible())
+            self._apply_section_plane(
+                position,
+                rotation,
+                inverted,
+                section_plane.isVisible(),
+            )
 
     def _disable_section_plane(self):
         has_hidden_part = bool(self.main_window.hidden_surfaces)
-        self.hidden_part_actor.SetVisibility(has_hidden_part)
+        self.ghost_actor.SetVisibility(has_hidden_part)
         self.plane_actor.VisibilityOff()
 
         self.faces_actor.disable_cut()
@@ -499,7 +486,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.solids_actor.apply_cut(xyz, normal)
         self.edges_actor.apply_cut(xyz, normal)
 
-        self.hidden_part_actor.VisibilityOn()
+        self.ghost_actor.VisibilityOn()
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
