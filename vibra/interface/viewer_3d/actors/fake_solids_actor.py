@@ -1,7 +1,6 @@
-from .faces_actor import FacesActor
-
 from vtkmodules.vtkCommonCore import vtkIntArray
 
+from .faces_actor import FacesActor
 
 def cell2d_to_cell3d(cell2d: int) -> int:
     if cell2d in [759, 1009]:
@@ -23,7 +22,7 @@ class FakeSolidsActor(FacesActor):
 
         for i in range(cell_indexes.GetNumberOfTuples()):
             cell2d = cell_indexes.GetValue(i)
-            cell3d = cell2d_to_cell3d(cell2d)
+            cell3d = self.mesh.face_to_solid_element.get(cell2d, -1)
             cell_indexes.SetValue(i, cell3d)
     
     def configure_appearance(self):
@@ -33,5 +32,6 @@ class FakeSolidsActor(FacesActor):
     def paint_cells(self, color, solids: list[int]):
         faces = []
         for solid in solids:
-            faces.extend(cell3d_to_cell2d(solid))
+            face_elements = self.mesh.solid_to_face_elements.get(solid, [])
+            faces.extend(face_elements)
         return super().paint_cells(color, faces)
