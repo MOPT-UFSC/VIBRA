@@ -14,8 +14,8 @@ class ColorTable(vtkLookupTable):
         max_value=None,
         colormap="jet",
     ):
-        self.set_colormap(colormap)
         self.set_data(values_vector, min_value, max_value)
+        self.set_colormap(colormap)
 
     def set_data(
         self,
@@ -23,7 +23,7 @@ class ColorTable(vtkLookupTable):
         min_value: int | None = None,
         max_value: int | None = None,
     ):
-        self.values_vector = np.ndarray(values_vector)
+        self.values_vector = values_vector
 
         if min_value is None:
             self.min_value: float = np.min(self.values_vector)

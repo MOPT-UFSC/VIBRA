@@ -188,7 +188,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.edges_actor.extract_data(self.analysis_actor.data)
 
         self.analysis_actor.plot_colorbar(color_scalars, min_value, max_value)
-        self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
     def set_mesh_visibility(self, condition):

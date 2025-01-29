@@ -132,7 +132,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
 
         self.analysis_actor = AnalysisActor(mesh)
         self.analysis_actor.plot_colorbar(output_pressures, min_value, max_value)
-        self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.renderer.AddActor(self.analysis_actor)
 
         self.edges_actor = EdgesActor(self.analysis_actor.data)
@@ -216,7 +216,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         # print(f"Elapsed time to process B: {round(dt, 4)} s")
 
         # t0 = time()
-        self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         # dt = time() - t0
         # print(f"Elapsed time to process C: {round(dt, 4)} s")
 
@@ -283,7 +283,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
             )
 
         # self.analysis_actor.plot_colorbar(self.animation_data, min_value, max_value)
-        # self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
+        # self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         # self.update()
 
     def set_mesh_visibility(self, condition):

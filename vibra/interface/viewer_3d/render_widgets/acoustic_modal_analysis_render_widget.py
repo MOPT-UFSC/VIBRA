@@ -133,7 +133,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
 
         self.analysis_actor = AnalysisActor(mesh)
         self.analysis_actor.plot_colorbar(current_modal_shape, min_value, max_value)
-        self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.renderer.AddActor(self.analysis_actor)
 
         self.edges_actor = EdgesActor(self.analysis_actor.data)
@@ -215,7 +215,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
             current_modal_shape = np.abs(current_modal_shape)
 
         self.analysis_actor.plot_colorbar(current_modal_shape, min_value, max_value)
-        self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
     def update_animation(self, frame):
@@ -251,7 +251,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
             current_modal_shape = np.abs(current_modal_shape)
 
         self.analysis_actor.plot_colorbar(current_modal_shape, min_value, max_value)
-        self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
     def save_video(self):

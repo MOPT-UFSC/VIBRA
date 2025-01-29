@@ -1,15 +1,14 @@
 import numpy as np
-from vtkmodules.vtkCommonCore import vtkLookupTable
+from vtkmodules.vtkCommonCore import vtkUnsignedCharArray
 
 from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
+from ..coloring.color_table import ColorTable
 
 
 class AnalysisActor(SolidsActor):
     def __init__(self, mesh):
         super().__init__(mesh)
-
-        self.lookup_table = vtkLookupTable()
-        self.lookup_table.SetHueRange(2 / 3, 0)
+        self.color_table: ColorTable | None = None
         self.clipped_data = self.data
 
     def apply_deformation(self, displacements, phase, magnification_factor):
@@ -24,15 +23,11 @@ class AnalysisActor(SolidsActor):
         if self.data is None:
             return
 
-        self.lookup_table.SetTableRange(min_value, max_value)
-        self.lookup_table.Build()
+        self.color_table = ColorTable(values, min_value, max_value)
+        point_colors: vtkUnsignedCharArray = self.data.GetPointData().GetScalars()
 
-        point_colors = self.data.GetPointData().GetScalars()
         for i, val in enumerate(values):
-            color = [0, 0, 0]
-            # yes, vtk uses it as a f****** python pointer instead of returning a tuple...
-            self.lookup_table.GetColor(val, color)
-            color = [int(i * 255) for i in color]
+            color = self.color_table.get_color(val)
             point_colors.SetTuple(i, color)
 
         self.data.Modified()
