@@ -50,7 +50,7 @@ class LinesActor(vtkActor):
     def clear_colors(self):
         data = self.GetMapper().GetInput()
         cell_colors = data.GetCellData().GetScalars()
-        r, g, b = color_names.GRAY_3.to_rgb()
+        r, g, b = color_names.BLACK.to_rgb()
 
         cell_colors.FillComponent(0, r)
         cell_colors.FillComponent(1, g)
