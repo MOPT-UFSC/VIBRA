@@ -486,6 +486,7 @@ class Mesh:
         self._maps_lines_by_elements()
         self._maps_surfaces_by_elements()
         self._maps_volumes_by_elements()
+        self._maps_face_elements_to_solid_elements()
         self.get_principal_diagonal_structure_parallelepiped()
 
 
@@ -570,7 +571,6 @@ class Mesh:
         # with open("areas_data.json", "r") as file:
         #     areas_data = json.load(file)
 
-
     def _process_solid_elements_connected_to_nodes(self):
         # t0 = time()
 
@@ -580,6 +580,27 @@ class Mesh:
 
         # dt = time() - t0
         # print(f"Elapsed '_process_solid_elements_connected_to_nodes': {dt} s")
+
+
+    def _maps_face_elements_to_solid_elements(self):
+
+        self.face_to_solid_element = dict()
+        self.solid_to_face_elements = defaultdict(list)
+
+        if len(self.solids_connectivity) == 0:
+            return
+
+        nodes_per_face_element = len(self.faces_connectivity[0, 4:])
+        node_ids = np.array([*set(self.faces_connectivity[:, 4:].flatten())], dtype=int)
+
+        mask_0 = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= nodes_per_face_element
+        filtered_data = self.solids_connectivity[mask_0, :]
+
+        for elf_id, _, _, _, *face_nodes in self.faces_connectivity:
+            mask_1 = np.sum(np.isin(filtered_data[:, 4:], face_nodes), axis=1) == nodes_per_face_element
+            els_id = filtered_data[mask_1, 0][0]
+            self.face_to_solid_element[elf_id] = els_id
+            self.solid_to_face_elements[els_id].append(elf_id)
 
 
     def get_face_elements_connected_to_nodes(self, node_ids, surface_id=None):
