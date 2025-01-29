@@ -526,7 +526,6 @@ class Mesh:
 
 
     def _maps_volumes_by_elements(self):
-        print("hi", len(self.solids_connectivity))
         self.volume_from_element.clear()
         self.elements_from_volume.clear()
         for tag, gmsh_indexes in self.gmsh_elements_from_volumes.items():
@@ -592,7 +591,6 @@ class Mesh:
         self.solid_to_face_elements = defaultdict(list)
 
         if len(self.solids_connectivity) == 0:
-            print("no solids")
             return
 
         nodes_per_face_element = len(self.faces_connectivity[0, 4:])
