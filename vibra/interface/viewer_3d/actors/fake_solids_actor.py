@@ -25,8 +25,7 @@ class FakeSolidsActor(FacesActor):
             cell3d = self.mesh.face_to_solid_element.get(cell2d, -1)
             cell_indexes.SetValue(i, cell3d)
     
-    def configure_appearance(self):
-        super().configure_appearance()
+    def clear_colors(self):
         self.set_color((255, 255, 0))
     
     def paint_cells(self, color, solids: list[int]):

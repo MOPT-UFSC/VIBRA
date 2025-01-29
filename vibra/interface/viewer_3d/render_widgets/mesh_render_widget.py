@@ -74,11 +74,12 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.remove_all_actors()
 
+        # TODO: load the mesh directly inside the actors
         self.nodes_actor = NodesActor(mesh)
         self.faces_actor = FacesActor(mesh)
         self.edges_actor = EdgesActor(self.faces_actor.data)
         self.solids_actor: SolidsActor | FakeSolidsActor = FakeSolidsActor(mesh)
-        # self.solids_actor: SolidsActor | FacesActor = SolidsActor(mesh)
+        # self.solids_actor: SolidsActor | FakeSolidsActor = SolidsActor(mesh)
         self.symbols_actor = SymbolsActor(self.renderer)
         self.selection_spheres_actor = SelectionSpheres()
 
@@ -374,7 +375,7 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.nodes_actor.clear_colors((0, 0, 0, 0))
         self.faces_actor.clear_colors((255, 255, 255, 255))
-        # self.solids_actor.clear_colors()
+        self.solids_actor.clear_colors()
 
         nodes = self.main_window.selected_mesh_nodes
         faces = self.main_window.selected_mesh_faces
