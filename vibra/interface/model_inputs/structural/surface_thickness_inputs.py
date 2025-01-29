@@ -1,7 +1,7 @@
 # fmt: off
 
-from PyQt5.QtWidgets import QAction, QComboBox, QDialog, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
-from PyQt5.QtCore import Qt, QEvent, QObject
+from PyQt5.QtWidgets import QComboBox, QDialog, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCloseEvent
 from PyQt5 import uic
 
@@ -10,9 +10,6 @@ from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppe
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-
-# import os
-# import numpy as np
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -294,7 +291,7 @@ class SurfaceThicknessInput(QDialog):
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "surface_thickness":
-                
+
                 surface_thickness = data["surface_thickness"]
                 thickness_offset = data["thickness_offset"]
 
@@ -303,9 +300,6 @@ class SurfaceThicknessInput(QDialog):
                     new.setTextAlignment(col, Qt.AlignCenter)
 
                 self.treeWidget_surface_thickness.addTopLevelItem(new)
-        
-        # for col in range(3):
-        #     self.treeWidget_surface_thickness.resizeColumnToContents(col)
 
         self.update_tabs_visibility()
 
