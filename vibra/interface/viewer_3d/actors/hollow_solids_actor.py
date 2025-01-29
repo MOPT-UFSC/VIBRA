@@ -1,21 +1,13 @@
 from vtkmodules.vtkCommonCore import vtkIntArray
 
+from vibra import app
 from .faces_actor import FacesActor
-
-def cell2d_to_cell3d(cell2d: int) -> int:
-    if cell2d in [759, 1009]:
-        return 4574
-    return 0
-
-
-def cell3d_to_cell2d(cell3d: int) -> int:
-    if cell3d == 4574:
-        return [759, 1009]
-    else:
-        return [763, 1013]
 
 
 class HollowSolidsActor(FacesActor):
+    def __init__(self, mesh, allow_hidding=True):
+        super().__init__(mesh, allow_hidding, update_normals=False)
+
     def create_geometry(self):
         super().create_geometry()
         cell_indexes: vtkIntArray = self.data.GetCellData().GetArray("cell_indexes")
@@ -25,6 +17,12 @@ class HollowSolidsActor(FacesActor):
             cell3d = self.mesh.face_to_solid_element.get(cell2d, -1)
             cell_indexes.SetValue(i, cell3d)
     
+    def update_coordinates(self, coordinates):
+        points = self.data.GetPoints()
+        for i, xyz in enumerate(coordinates):
+            points.SetPoint(i, xyz)
+        points.Modified()
+
     def clear_colors(self):
         self.set_color((255, 255, 0))
     

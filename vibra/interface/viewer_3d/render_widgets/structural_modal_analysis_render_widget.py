@@ -187,7 +187,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
         self.edges_actor.extract_data(self.analysis_actor.data)
 
-        self.analysis_actor.set_color_table(color_scalars, min_value, max_value)
+        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
@@ -354,7 +354,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         magnification_factor = self.control_bar.magnification_factor_slider.value()
 
         self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
-        self.analysis_actor.set_color_table(color_scalars, min_value, max_value)
+        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value)
         # self.edges_actor.extract_data(self.analysis_actor.data)
         self.update()
 

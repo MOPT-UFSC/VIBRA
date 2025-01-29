@@ -15,6 +15,7 @@ from vibra.interface.analysis_bars.acoustic_analysis_bar import (
     AcousticModalAnalysisBar,
 )
 from vibra.interface.viewer_3d.actors.analysis_actor import AnalysisActor
+from vibra.interface.viewer_3d.actors.hollow_analysis_actor import HollowAnalysisActor
 from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
     CuttingPlaneActor,
 )
@@ -131,7 +132,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
             output_pressures = np.abs(output_pressures)
 
         self.analysis_actor = AnalysisActor(mesh)
-        self.analysis_actor.set_color_table(output_pressures, min_value, max_value)
+        self.analysis_actor.plot_color_bar(output_pressures, min_value, max_value)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.renderer.AddActor(self.analysis_actor)
 
@@ -211,7 +212,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         # print(f"Elapsed time to process A: {round(dt, 4)} s")
 
         # t0 = time()
-        self.analysis_actor.set_color_table(output_pressures, min_value, max_value)
+        self.analysis_actor.plot_color_bar(output_pressures, min_value, max_value)
         # dt = time() - t0
         # print(f"Elapsed time to process B: {round(dt, 4)} s")
 
@@ -282,7 +283,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
                 "Processing the animation frames..." + ProgressStatus(step, len(deg_angles))
             )
 
-        # self.analysis_actor.set_color_table(self.animation_data, min_value, max_value)
+        # self.analysis_actor.plot_color_bar(self.animation_data, min_value, max_value)
         # self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         # self.update()
 

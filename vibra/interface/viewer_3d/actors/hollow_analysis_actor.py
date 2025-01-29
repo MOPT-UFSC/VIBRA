@@ -1,12 +1,11 @@
 import numpy as np
 from vtkmodules.vtkCommonCore import vtkUnsignedCharArray
 
-from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
 from ..coloring.color_table import ColorTable
+from .hollow_solids_actor import HollowSolidsActor
 
 
-class AnalysisActor(SolidsActor):
-
+class HollowAnalysisActor(HollowSolidsActor):
     def apply_deformation(self, displacements, phase, magnification_factor):
         max_abs = np.max(np.linalg.norm(displacements, axis=0))
         u_def = displacements * np.cos(phase * np.pi / 180)
