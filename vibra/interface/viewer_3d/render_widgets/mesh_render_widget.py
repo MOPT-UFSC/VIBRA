@@ -477,6 +477,15 @@ class MeshRenderWidget(CommonRenderWidget):
         self.update()
 
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
+        mesh = app().project.model.mesh
+        if mesh is None:
+            return
+
+        if isinstance(self.solids_actor, FakeSolidsActor):
+            self.remove_actors(self.solids_actor)
+            self.solids_actor = SolidsActor(mesh)
+            self.add_actors(self.solids_actor)
+
         self.plane_actor.configure_cutting_plane(position, rotation)
         xyz = self.plane_actor.calculate_x_y_z_position(position)
         normal = self.plane_actor.calculate_normal_vector(rotation)
