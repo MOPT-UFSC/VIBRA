@@ -21,7 +21,7 @@ from ..actors.edges_actor import EdgesActor
 from ..actors.faces_actor import FacesActor
 from ..actors.nodes_actor import NodesActor
 from ..actors.solids_actor import SolidsActor
-from ..actors.fake_solids_actor import FakeSolidsActor
+from ..actors.hollow_solids_actor import HollowSolidsActor
 from ..actors.selection_spheres import SelectionSpheres
 from ..actors.symbols.symbols_actor import SymbolsActor
 from ..actors.ghost_actor import GhostActor
@@ -78,8 +78,8 @@ class MeshRenderWidget(CommonRenderWidget):
         self.nodes_actor = NodesActor(mesh)
         self.faces_actor = FacesActor(mesh)
         self.edges_actor = EdgesActor(self.faces_actor.data)
-        self.solids_actor: SolidsActor | FakeSolidsActor = FakeSolidsActor(mesh)
-        # self.solids_actor: SolidsActor | FakeSolidsActor = SolidsActor(mesh)
+        self.solids_actor: SolidsActor | HollowSolidsActor = HollowSolidsActor(mesh)
+        # self.solids_actor: SolidsActor | HollowSolidsActor = SolidsActor(mesh)
         self.symbols_actor = SymbolsActor(self.renderer)
         self.selection_spheres_actor = SelectionSpheres()
 
@@ -481,7 +481,7 @@ class MeshRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
-        if isinstance(self.solids_actor, FakeSolidsActor):
+        if isinstance(self.solids_actor, HollowSolidsActor):
             self.remove_actors(self.solids_actor)
             self.solids_actor = SolidsActor(mesh)
             self.add_actors(self.solids_actor)

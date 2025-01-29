@@ -15,7 +15,7 @@ def cell3d_to_cell2d(cell3d: int) -> int:
         return [763, 1013]
 
 
-class FakeSolidsActor(FacesActor):
+class HollowSolidsActor(FacesActor):
     def create_geometry(self):
         super().create_geometry()
         cell_indexes: vtkIntArray = self.data.GetCellData().GetArray("cell_indexes")
