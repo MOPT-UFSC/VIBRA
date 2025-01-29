@@ -606,10 +606,6 @@ class Mesh:
             els_id = filtered_data[mask_1, 0][0]
             self.face_to_solid_element[elf_id] = els_id
             self.solid_to_face_elements[els_id].append(elf_id)
-        
-        from pprint import pprint
-        pprint(self.solid_to_face_elements)
-
 
     def get_face_elements_connected_to_nodes(self, node_ids, surface_id=None):
 
