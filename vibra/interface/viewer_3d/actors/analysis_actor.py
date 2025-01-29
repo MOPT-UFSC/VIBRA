@@ -19,7 +19,7 @@ class AnalysisActor(SolidsActor):
         )
         self.update_coordinates(deformed_coordinates)
 
-    def plot_colorbar(self, values, min_value, max_value):
+    def set_color_table(self, values, min_value, max_value):
         if self.data is None:
             return
 

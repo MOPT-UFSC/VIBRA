@@ -131,7 +131,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
             output_pressures = np.abs(output_pressures)
 
         self.analysis_actor = AnalysisActor(mesh)
-        self.analysis_actor.plot_colorbar(output_pressures, min_value, max_value)
+        self.analysis_actor.set_color_table(output_pressures, min_value, max_value)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.renderer.AddActor(self.analysis_actor)
 
@@ -211,7 +211,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         # print(f"Elapsed time to process A: {round(dt, 4)} s")
 
         # t0 = time()
-        self.analysis_actor.plot_colorbar(output_pressures, min_value, max_value)
+        self.analysis_actor.set_color_table(output_pressures, min_value, max_value)
         # dt = time() - t0
         # print(f"Elapsed time to process B: {round(dt, 4)} s")
 
@@ -282,7 +282,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
                 "Processing the animation frames..." + ProgressStatus(step, len(deg_angles))
             )
 
-        # self.analysis_actor.plot_colorbar(self.animation_data, min_value, max_value)
+        # self.analysis_actor.set_color_table(self.animation_data, min_value, max_value)
         # self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         # self.update()
 

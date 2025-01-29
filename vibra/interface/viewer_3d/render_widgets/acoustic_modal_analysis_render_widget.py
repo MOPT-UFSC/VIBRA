@@ -132,7 +132,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
             current_modal_shape = np.abs(current_modal_shape)
 
         self.analysis_actor = AnalysisActor(mesh)
-        self.analysis_actor.plot_colorbar(current_modal_shape, min_value, max_value)
+        self.analysis_actor.set_color_table(current_modal_shape, min_value, max_value)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.renderer.AddActor(self.analysis_actor)
 
@@ -214,7 +214,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         if self.control_bar.absolute_button.isChecked():
             current_modal_shape = np.abs(current_modal_shape)
 
-        self.analysis_actor.plot_colorbar(current_modal_shape, min_value, max_value)
+        self.analysis_actor.set_color_table(current_modal_shape, min_value, max_value)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
@@ -250,7 +250,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         if self.control_bar.absolute_button.isChecked():
             current_modal_shape = np.abs(current_modal_shape)
 
-        self.analysis_actor.plot_colorbar(current_modal_shape, min_value, max_value)
+        self.analysis_actor.set_color_table(current_modal_shape, min_value, max_value)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
