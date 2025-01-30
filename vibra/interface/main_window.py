@@ -1,66 +1,228 @@
-import logging
-import random
 from pathlib import Path
-from time import sleep
-import sys
+from vibra import UI_DIR
 
 import qdarktheme
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import *
+from PyQt5 import uic
 
-from vibra import app
-
-from vibra.config import UserConfig
-from vibra.interface.analysis_filter_menu import AnalysisFilter
-from vibra.interface.clip_plane_widget import ClipPlaneWidget
-from vibra.interface.data_handler.export_mesh_data import ExportMeshData
+from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.exception_message import ErrorMessage
 from vibra.interface.loading_bar import load_function
-from vibra.interface.menu_items import MenuItems
-from vibra.interface.menus.help_menu import HelpMenu
-from vibra.interface.menus.mesher_menu import MesherMenu
-from vibra.interface.menus.project_menu import ProjectMenu
-from vibra.interface.menus.settings_menu import VisibilitySettingsMenu
-from vibra.interface.menus.view_mode_menu import ViewModeMenu
-from vibra.interface.menus.views_menu import ViewsMenu
-from vibra.interface.renderer_toolbar import RendererToolbar
-from vibra.interface.status_bar import StatusBar
-from vibra.interface.viewer_tabs import ViewerTabs
-from vibra.interface.formatters.icons import *
-from vibra.project import Project
-
 from vibra.utils.icons import load_icon
+from vibra.interface.clip_plane_widget import ClipPlaneWidget
+from vibra.project import Project
+from vibra.interface.viewer_tabs import ViewerTabs
+from vibra.config import UserConfig
+from vibra.interface.status_bar import StatusBar
+from vibra.interface.menu_items import MenuItems
+from vibra.interface.data_handler.export_mesh_data import ExportMeshData
+from vibra.interface.model_inputs.acoustic.fluid.fluid_widget import FluidWidget
+from vibra.interface.material_widget import MaterialWidget
+from vibra.interface.mesh.mesher_inputs import MesherInputs
+from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
+    CommonRenderWidget,
+)
+from vibra.utils.enumerators import Workspace
+from vibra import app
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, parent=None):
-        QMainWindow.__init__(self, parent)
-        
-        self.dialog = None
+    def __init__(self):
+        super(MainWindow, self).__init__()
+
+        ui_path = UI_DIR / 'main_window.ui'
+        uic.loadUi(ui_path, self)
+
         self.project = Project()
         self.user_config = UserConfig.load()
         self.status_bar = StatusBar(self)
+        self.menu_items = MenuItems()
 
     def _define_qt_variables(self):
-        pass
+        '''
+        This function is doing nothing. Every variable was
+        already defined in the UI file.
 
-    def _create_connections(self):
-        self.viewer_tabs.geometry_widget.selection_changed.connect(self.selection_changed_callback)
+        Despite that, it is nice to list the variables to
+        help future maintainers and the code editor with
+        type inference.
+        '''
+        
+        # QAction
+        self.action_new_project: QAction
+        self.action_open_project: QAction
+        self.action_reset_project: QAction
+        self.action_top_view: QAction
+        self.action_bottom_view: QAction
+        self.action_right_view: QAction
+        self.action_left_view: QAction
+        self.action_front_view: QAction
+        self.action_back_view: QAction
+        self.action_isometric_view: QAction
+        self.action_node_view: QAction
+        self.action_line_view: QAction
+        self.action_face_view: QAction
+        self.action_clip_plane: QAction
+        self.action_zoom_to_fit: QAction
+        self.action_action_symbols: QAction
+        self.action_structural_workspace: QAction
+        self.action_acoustic_workspace: QAction
+        self.action_coupled_workspace: QAction
+
+        #QSplitter
+        self.splitter: QSplitter
+
+        #QStacked
+        self.stacked_setup: QStackedWidget
+
+        # QMenu
+        self.menu_project: QMenu
+        self.menu_settings: QMenu
+        self.menu_model_setup: QMenu
+        self.menu_view_mode: QMenu
+        self.menu_help: QMenu
+
+        # QToolBar
+        self.tool_bar: QToolBar
+    
+    def _connect_actions(self):
+        '''
+        Instead of connecting every action manually, one by one,
+        this function loops through every action and connects it
+        to a function ending with "_callback".
+
+        For example an action named "action_new" will be connected to 
+        the function named "action_new_callback" if it exists.
+        '''
+        for action in self.findChildren(QAction):
+            function_name = action.objectName() + "_callback"
+            function_exists = hasattr(self, function_name)
+            if not function_exists:
+                continue
+
+            function = getattr(self, function_name)
+            if callable(function):
+                action.triggered.connect(function)
+    
+    def _config_window(self):
+        self.setMinimumSize(1300, 700)
+        self.showMaximized()
+        self.setWindowIcon(load_icon(Path("data/icons/logo_vibra.png"), QColor("#448cff")))
+        self.setWindowTitle("Vibra")
+        self.splitter.addWidget(self.viewer_tabs)
+        self.splitter.setSizes([100, 400])
+        self.setStatusBar(self.status_bar)
+        self.stacked_setup.addWidget(self.menu_items)
+        self.stacked_setup.setCurrentWidget(self.menu_items)
+        self.dialog = None 
+
+        # for qdarktheme
+        self.custom_colors = {
+            "[dark]": {
+                "toolbar.background": "#202124",
+            }
+        }
+    
+    # External functions that may be usefull
+    def set_theme(self, theme: str):
+        """
+        Changes Qt stylesheets using qdarktheme library and the
+        renderer background colors.
+
+        The input is a string "light" or "dark".
+        """
+        qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
+        self.viewer_tabs.set_theme(theme)
+        self.user_config.theme = theme
+        self.menu_items._configItems()
+
+        if theme == "dark":
+            icon_color = QColor("#5f9af4")
+        elif theme == "light":
+            icon_color = QColor("#1a73e8")
+
+        widgets = self.findChildren((QAction, QAbstractButton))
+        change_icon_color_for_widgets(widgets, icon_color)
+
+    def load_user_preferences(self):
+        self.set_theme(self.user_config.theme)
+    
+    def _load_render_widgets(self):
+        self.viewer_tabs = ViewerTabs(self, self.project, self.user_config)
+
+    def configure_window(self):
+        self._config_window()
+        self._connect_actions()
+        self.load_user_preferences()
+        self._create_workspaces_toolbar()
+    
+    def configure_main_window(self):
+
+        app().splash.update_progress(10)
+        self._load_render_widgets()
+
+        app().splash.update_progress(30)
+        self._config_window()
+
+        app().splash.update_progress(60)
+        self._define_qt_variables()
+        self._connect_actions()
+
+        app().splash.update_progress(90)
+        self.load_user_preferences()
+        self.config_tool_tip_appearance()
+        self._create_workspaces_toolbar()
+
+        app().splash.close()
+        self.showMaximized()
+    
+    def closeEvent(self, event):
+        self.close_app()
+        event.ignore()
+    
+    def config_tool_tip_appearance(self):
+        tool_tip_style = "QToolTip { color: rgb(0, 0, 0); background-color: rgb(255, 255, 255) }"
+        self.setStyleSheet(tool_tip_style)
+    
+    def _create_workspaces_toolbar(self):
+        actions = {
+            Workspace.STRUCTURAL_SETUP: self.action_structural_workspace,
+            Workspace.ACOUSTIC_SETUP: self.action_acoustic_workspace,
+            Workspace.COUPLED: self.action_coupled_workspace
+        }
+
+        self.combo_box_workspaces = QComboBox()
+        self.combo_box_workspaces.setMinimumSize(170, 26)
+
+        # iterating sorted items make the icons appear in the same 
+        # order as defined in the Workspace enumerator
+        for _, action in sorted(actions.items()):
+            self.combo_box_workspaces.addItem(action.text())
+
+        self.combo_box_workspaces.currentIndexChanged.connect(self.update_combobox_indexes)
+        self.combo_box_workspaces.currentIndexChanged.connect(lambda x: actions[x].trigger())
+        self.tool_bar.addWidget(self.combo_box_workspaces)
+
+        self.combo_box_workspaces.currentIndexChanged.connect(self.menu_items.filter_analysis_type)
+    
+    def update_combobox_indexes(self):
+        pass
+    
+    def update_geometry_information(self):
+        self.status_bar.update_geometry_information()
+    
+    def update_mesh_information(self, nodes, face_elements, solid_elements):
+        self.status_bar.update_mesh_information(nodes, face_elements, solid_elements)
+    
+    def action_clip_plane_callback(self):
+        self.clip_plane = ClipPlaneWidget(self)
+
         self.clip_plane.slider_pressed.connect(self.slider_pressed_callback)
         self.clip_plane.value_changed.connect(self.slider_moved_callback)
         self.clip_plane.slider_released.connect(self.slider_released_callback)
         self.clip_plane.closed.connect(self.disable_cut)
-
-    def selection_changed_callback(self, points, lines, faces, volumes):
-        self.status_bar.set_selection(points, lines, faces, volumes)
-
-    def update_mesh_information(self, nodes, face_elements, solid_elements):
-        self.status_bar.update_mesh_information(nodes, face_elements, solid_elements)
-
-    def update_geometry_information(self):
-        self.status_bar.update_geometry_information()
-
+    
     def slider_pressed_callback(self):
         self.viewer_tabs.start_cutting_mode()
 
@@ -76,158 +238,67 @@ class MainWindow(QMainWindow):
 
     def disable_cut(self):
         self.viewer_tabs.stop_cutting_mode()
+    
+    def action_theme_callback(self):
+        color = QColor("#448cff")
 
-    def _config_window(self):
-        self.setMinimumSize(1300, 700)
-        # self.showMaximized()
-        self.showMinimized()
-        self.vibra_icon = get_vibra_icon()
-        self.setWindowIcon(self.vibra_icon)
-        self.setWindowTitle("Vibra")
+        self.new_project_icon = load_icon(Path("data/icons/new_file.png"), color)
+        self.theme_sun_icon = load_icon(Path("data/icons/sun_icon.png"), color)
+        self.theme_moon_icon = load_icon(Path("data/icons/moon_icon.png"), color)
 
-        # for qdarktheme
-        self.custom_colors = {
-            "[dark]": {
-                "toolbar.background": "#202124",
-            }
-        }
+        if self.user_config.theme == "light":
+            self.set_theme("dark")
+            self.action_theme.setIcon(self.theme_sun_icon)
 
-    def create_basic_layout(self):
-        self.menu_widget = MenuItems()
-        self.analysis_filter = AnalysisFilter()
+        elif self.user_config.theme == "dark":
+            self.set_theme("light")
+            self.action_theme.setIcon(self.theme_moon_icon)
+    
+    def action_show_menu_items_callback(self):
+        visible = self.stacked_setup.isVisible()
+        if visible:
+            text = "Show menu items"
+        else:
+            text = "Hide menu items"
 
-        grid_layout_left = QGridLayout()
-        grid_layout_left.addWidget(self.analysis_filter, 0, 0)
-        grid_layout_left.addWidget(self.menu_widget, 1, 0)
-        grid_layout_left.setContentsMargins(0, 0, 0, 0)
-        grid_layout_left.setVerticalSpacing(0)
-
-        left_widget = QWidget()
-        left_widget.setLayout(grid_layout_left)
-        # left_widget.setMinimumWidth(290)
-        left_widget.setMaximumWidth(290)
-
-        self.vertical_line = QFrame()
-        self.vertical_line.setLineWidth(4)
-        self.vertical_line.setFrameShape(QFrame.VLine)
-        self.vertical_line.setFrameShadow(QFrame.Sunken)
-
-        self.setCentralWidget(None)
-        self.create_menu_bar()
-        self.create_tool_bars()
-        self.create_status_bar()
-
-        grid_layout_central = QGridLayout()
-        grid_layout_central.addWidget(left_widget, 0, 0)
-        grid_layout_central.addWidget(self.vertical_line, 0, 1)
-        grid_layout_central.addWidget(self.viewer_tabs, 0, 2)
-        grid_layout_central.setContentsMargins(0, 0, 0, 0)
-        grid_layout_central.setHorizontalSpacing(0)
-
-        central_widget = QWidget()
-        central_widget.setLayout(grid_layout_central)
-        self.setCentralWidget(central_widget)
-
-    def create_menu_bar(self):
-        self.menu_bar = self.menuBar()
-        self.menu_bar.addMenu(ProjectMenu(self))
-        self.menu_bar.addMenu(VisibilitySettingsMenu(self))
-        self.menu_bar.addMenu(MesherMenu(self))
-        # self.menu_bar.addMenu(ViewsMenu(self))
-        self.menu_bar.addMenu(ViewModeMenu(self))
-        self.menu_bar.addMenu(HelpMenu(self))
-
-    def create_status_bar(self):
-        self.setStatusBar(self.status_bar)
-
-    def create_tool_bars(self):
-        self.renderer_toolbar = RendererToolbar(self, self.viewer_tabs)
-        self.addToolBar(self.renderer_toolbar)
-        self.renderer_toolbar.setDisabled(True)
-        self.analysis_filter.setDisabled(True)
-
-    def config_tool_tip_appearance(self):
-        tool_tip_style = "QToolTip { color: rgb(0, 0, 0); background-color: rgb(255, 255, 255) }"
-        self.setStyleSheet(tool_tip_style)
-
-    def _load_render_widgets(self):
-        self.clip_plane = ClipPlaneWidget(self)
-        # t0 = time()
-        self.viewer_tabs = ViewerTabs(self, self.project, self.user_config)
-        # dt = time() - t0
-        # print(f"elapsed time to load class: {round(dt, 4)}")
-
-    def configure_main_window(self):
-
-        app().splash.update_progress(10)
-        self._config_window()
-
-        app().splash.update_progress(30)
-        self._load_render_widgets()
-
-        app().splash.update_progress(60)
-        self._define_qt_variables()
-        self._create_connections()
-        self.create_basic_layout()
-
-        app().splash.update_progress(90)
-        self.load_user_preferences()
-        self.config_tool_tip_appearance()
-
-        app().splash.close()
-        self.showMaximized()
-
-    def load_user_preferences(self):
-        self.set_theme(self.user_config.theme)
-
-    def closeEvent(self, event):
-        self.close_app()
-        event.ignore()
-
-    def get_user_config(self):
-        return self.user_config
-
-    def get_project(self):
-        return self.project
-
-    # External functions that may be usefull
-    def set_theme(self, theme: str):
-        """
-        Changes Qt stylesheets using qdarktheme library and the
-        renderer background colors.
-
-        The input is a string "light" or "dark".
-        """
-        qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
-        self.viewer_tabs.set_theme(theme)
-        self.user_config.theme = theme
-        self.menu_widget._configItems()
+        self.set_menu_items_visibility_state(visible)
+        self.action_show_menu_items.setText(text)
+        self.stacked_setup.setVisible(not visible)
 
     def set_menu_items_visibility_state(self, state: bool):
         self.user_config.menu_items_visible = state
-
-    def capture_image(self):
-        path, check = QFileDialog.getSaveFileName(
-            self,
-            "PNG",
-            filter="PNG (*.png)",
+    
+    def action_open_project_callback(self):
+        self.open_project_dialog()
+    
+    def open_project_dialog(self):
+        path, check = QFileDialog.getOpenFileName(
+            self, "Open Project", filter="Vibra File (*.vibra)"
         )
 
         if not check:
             return
 
-        # self.viewer_3d.save_png(path)
+        self.open_project(path)
 
-    def new_project_dialog(self):
-        self.project = Project()
-        self.import_geometry_dialog()
+    def open_project(self, path):
+        path = Path(path)
+        self.project = Project.load(path)
+        # self.user_config.add_recent_file(path)
+
+        self.viewer_tabs.close_mesh_tabs()
+        self.viewer_tabs.show_geometry()
+        self.viewer_tabs.show_mesh()
+    
+    def action_save_callback(self):
+      self.save_project_dialog()
 
     def save_project_dialog(self):
         if self.project.save_path is None:
             self.save_project_as_dialog()
         else:
             self.save_project_as(self.project.save_path)
-
+    
     def save_project_as_dialog(self):
         path, check = QFileDialog.getSaveFileName(
             self,
@@ -239,16 +310,22 @@ class MainWindow(QMainWindow):
             return
 
         self.save_project_as(path)
+    
+    def save_project_as(self, path):
+        path = Path(path)
+        self.project.name = path.stem
+        self.project.save(path)
+        self.user_config.save()  # why not
+    
+    def action_save_as_callback(self):
+        self.save_project_as_dialog()
 
-    def open_project_dialog(self):
-        path, check = QFileDialog.getOpenFileName(
-            self, "Open Project", filter="Vibra File (*.vibra)"
-        )
-
-        if not check:
-            return
-
-        self.open_project(path)
+    def new_project_dialog(self):
+        self.project = Project()
+        self.import_geometry_dialog()
+    
+    def action_import_geometry_callback(self):
+        self.import_geometry_dialog()
 
     def import_geometry_dialog(self):
         path, check = QFileDialog.getOpenFileName(
@@ -261,25 +338,7 @@ class MainWindow(QMainWindow):
             return
 
         self.import_geometry(path)
-
-    def save_project_as(self, path):
-        path = Path(path)
-        self.project.name = path.stem
-        self.project.save(path)
-        self.user_config.save()  # why not
-
-    def export_mesh(self):
-        ExportMeshData()
-
-    def open_project(self, path):
-        path = Path(path)
-        self.project = Project.load(path)
-        # self.user_config.add_recent_file(path)
-
-        self.viewer_tabs.close_mesh_tabs()
-        self.viewer_tabs.show_geometry()
-        self.viewer_tabs.show_mesh()
-
+    
     def import_geometry(self, path):
         # Slow function running with loading bar
         import_geometry = load_function(self.project.import_geometry, self)
@@ -288,10 +347,119 @@ class MainWindow(QMainWindow):
         self.viewer_tabs.close_mesh_tabs()
         self.viewer_tabs.show_geometry()
 
-        self.renderer_toolbar.setDisabled(False)
-        self.analysis_filter.setDisabled(False)
-        self.menu_widget.modify_items_access_after_geometry_importing()
+        self.tool_bar.setDisabled(False)
+        #self.analysis_filter.setDisabled(False)  don't know where it is
+        self.menu_items.modify_items_access_after_geometry_importing()
 
+    
+    def action_export_mesh_callback(self):
+        self.export_mesh()
+    
+    def export_mesh(self):
+        ExportMeshData()
+    
+    def set_input_widget(self, dialog):
+        self.dialog = dialog
+
+    def action_capture_image_callback(self):
+        self.capture_image()
+    
+    def capture_image(self):
+        path, check = QFileDialog.getSaveFileName(
+            self,
+            "PNG",
+            filter="PNG (*.png)",
+        )
+
+        if not check:
+            return
+
+        # self.viewer_3d.save_png(path)
+    
+    def action_exit_callback(self):
+        loaded_solve = load_function(self.solve_example_analysis_callback, self)
+        loaded_solve()
+
+    def solve_example_analysis_callback(self):
+        try:
+            self.project.solve_modal_acoustic()
+        except NotImplementedError as e:
+            ErrorMessage(e)
+        else:
+            self.viewer_tabs.show_acoustic_modal_analysis()
+    
+    def action_set_fluid_callback(self):
+        FluidWidget()
+    
+    def action_set_material_callback(self):
+        MaterialWidget()
+    
+    def action_mesher_setup_callback(self):
+        mesher = MesherInputs()
+        if mesher.complete:
+            self.project.set_mesh_setup(mesher.mesh_setup)
+            #self.generate_mesh_action.setDisabled(False)
+            self.menu_items.item_child_generate_mesh.setDisabled(False)
+
+    def action_face_view_callback(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.show_faces()
+    
+    def action_line_view_callback(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.show_lines()
+    
+    def action_node_view_callback(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.show_points()
+    
+    def action_about_vibra_callback(self):
+        self.viewer_tabs.show_help()
+    
+    def action_top_view_callback(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_top_view()
+    
+    def action_bottom_view_callback(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_bottom_view()
+    
+    def action_right_view_callback(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_right_view()
+        
+    def action_left_view_callback(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_left_view()
+        
+    def action_front_view_callback(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_front_view()
+        
+    def action_back_view_callback(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_back_view()
+        
+    def action_isometric_view_callback(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_isometric_view()
+
+    def action_zoom_to_fit_callback(self):
+        widget = self.viewer_tabs.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.renderer.ResetCamera()
+            widget.update()
+        
     def close_app(self):
         close = QMessageBox.question(
             self, "QUIT", "Are you sure want to close Vibra?", QMessageBox.Yes | QMessageBox.No
@@ -299,7 +467,14 @@ class MainWindow(QMainWindow):
 
         if close == QMessageBox.Yes:
             self.user_config.save()
-            sys.exit()
+            exit()
+        
+    def get_current_workspace(self):
+        workspace = self.combo_box_workspaces.currentIndex()
+        return workspace
+        
+    def get_project(self):
+        return self.project
 
     def process_acoustic_modal_analysis(self):
         try:
@@ -324,6 +499,3 @@ class MainWindow(QMainWindow):
             ErrorMessage(e)
         else:
             self.viewer_tabs.show_acoustic_harmonic_analysis()
-
-    def set_input_widget(self, dialog):
-        self.dialog = dialog
