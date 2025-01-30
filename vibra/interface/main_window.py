@@ -184,25 +184,25 @@ class MainWindow(QMainWindow):
 
     def show_hide_section_plane_callback(self, option):
         if option:
-            self.viewer_tabs.start_cutting_mode()
+            self.viewer_tabs.start_section_mode()
         else:
-            self.viewer_tabs.stop_cutting_mode()
+            self.viewer_tabs.stop_section_mode()
 
     def show_config_section_plane(self):
         pass
 
     def slider_pressed_callback(self):
-        self.viewer_tabs.start_cutting_mode()
+        self.viewer_tabs.start_section_mode()
 
     def slider_moved_callback(self):
         position = self.section_plane.get_position("sliders")
         orientation = self.section_plane.get_rotation("sliders")
-        self.viewer_tabs.configure_cutting_plane(position, orientation)
+        self.viewer_tabs.configure_section_plane(position, orientation)
 
     def slider_released_callback(self):
         position = self.section_plane.get_position("sliders")
         orientation = self.section_plane.get_rotation("sliders")
-        self.viewer_tabs.apply_cutting_plane(position, orientation, self.section_plane.invert_value)
+        self.viewer_tabs.apply_section_plane(position, orientation, self.section_plane.invert_value)
 
     def disable_section_plane_visibility(self):
         for tab in self.viewer_tabs.tabs():

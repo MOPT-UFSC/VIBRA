@@ -10,8 +10,8 @@ from vtkmodules.vtkRenderingCore import vtkActor, vtkCellPicker
 
 from vibra import app
 from vibra.interface.tabs.geometry_info_bar import GeometryInfoBar
-from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
-    CuttingPlaneActor,
+from vibra.interface.viewer_3d.actors.section_plane_actor import (
+    SectionPlaneActor,
 )
 from ..actors.faces_actor import FacesActor
 from ..actors.lines_actor import LinesActor
@@ -67,7 +67,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.ghost_actor = GhostActor(mesh)
         self.ghost_actor.SetVisibility(has_hidden_part)
 
-        self.plane_actor = CuttingPlaneActor(self.faces_actor.GetBounds())
+        self.plane_actor = SectionPlaneActor(self.faces_actor.GetBounds())
         self.plane_actor.VisibilityOff()
 
         self.add_actors(
@@ -405,7 +405,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         inverted = section_plane.get_inverted()
 
         if section_plane.editing:
-            self.plane_actor.configure_cutting_plane(position, rotation)
+            self.plane_actor.configure_section_plane(position, rotation)
             self.plane_actor.VisibilityOn()
             self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
             self.plane_actor.GetProperty().SetOpacity(0.8)
@@ -423,7 +423,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.update()
 
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
-        self.plane_actor.configure_cutting_plane(position, rotation)
+        self.plane_actor.configure_section_plane(position, rotation)
         xyz = self.plane_actor.calculate_x_y_z_position(position)
         normal = self.plane_actor.calculate_normal_vector(rotation)
         if inverted:

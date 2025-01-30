@@ -13,8 +13,8 @@ from vtkmodules.vtkRenderingCore import vtkActor, vtkCellPicker
 
 from vibra import app
 from vibra.interface.tabs.mesh_info_bar import MeshInfoBar
-from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
-    CuttingPlaneActor,
+from vibra.interface.viewer_3d.actors.section_plane_actor import (
+    SectionPlaneActor,
 )
 
 from ..actors.edges_actor import EdgesActor
@@ -51,8 +51,8 @@ class MeshRenderWidget(CommonRenderWidget):
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
-        self.cutting_plane_active = False
-        self.cutting_plane_args = tuple()
+        self.section_plane_active = False
+        self.section_plane_args = tuple()
 
         self.nodes_actor = None
         self.faces_actor = None
@@ -87,7 +87,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.ghost_actor = GhostActor(mesh)
         self.ghost_actor.SetVisibility(has_hidden_part)
 
-        self.plane_actor = CuttingPlaneActor(self.faces_actor.GetBounds())
+        self.plane_actor = SectionPlaneActor(self.faces_actor.GetBounds())
         self.plane_actor.VisibilityOff()
 
         self.add_actors(
@@ -453,7 +453,7 @@ class MeshRenderWidget(CommonRenderWidget):
         inverted = section_plane.get_inverted()
 
         if section_plane.editing:
-            self.plane_actor.configure_cutting_plane(position, rotation)
+            self.plane_actor.configure_section_plane(position, rotation)
             self.plane_actor.VisibilityOn()
             self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
             self.plane_actor.GetProperty().SetOpacity(0.8)
@@ -486,7 +486,7 @@ class MeshRenderWidget(CommonRenderWidget):
             self.solids_actor = SolidsActor(mesh)
             self.add_actors(self.solids_actor)
 
-        self.plane_actor.configure_cutting_plane(position, rotation)
+        self.plane_actor.configure_section_plane(position, rotation)
         xyz = self.plane_actor.calculate_x_y_z_position(position)
         normal = self.plane_actor.calculate_normal_vector(rotation)
         if inverted:
@@ -502,18 +502,18 @@ class MeshRenderWidget(CommonRenderWidget):
         self.plane_actor.GetProperty().SetOpacity(0.2)
         self.update()
 
-    # def start_cutting_mode(self):
+    # def start_section_mode(self):
     #     if not self._actors_exists():
     #         return
-    #     self.cutting_plane_active = True
+    #     self.section_plane_active = True
     #     self.plane_actor.VisibilityOn()
     #     self.faces_actor.clear_colors((255, 255, 255, 12))
     #     self.update()
 
-    # def stop_cutting_mode(self):
+    # def stop_section_mode(self):
     #     if not self._actors_exists():
     #         return
-    #     self.cutting_plane_active = False
+    #     self.section_plane_active = False
     #     self.plane_actor.VisibilityOff()
     #     has_hidden_part = bool(self.main_window.hidden_surfaces)
     #     faces_alpha = 12 if has_hidden_part else 0
@@ -523,18 +523,18 @@ class MeshRenderWidget(CommonRenderWidget):
     #     self.nodes_actor.disable_cut()
     #     self.update()
 
-    # def configure_cutting_plane(self, position, orientation):
+    # def configure_section_plane(self, position, orientation):
     #     if not self._actors_exists():
     #         return
 
-    #     self.plane_actor.configure_cutting_plane(position, orientation)
+    #     self.plane_actor.configure_section_plane(position, orientation)
     #     self.update()
 
-    # def apply_cutting_plane(self, position, orientation, invert=False):
+    # def apply_section_plane(self, position, orientation, invert=False):
     #     if not self._actors_exists():
     #         return
 
-    #     self.cutting_plane_args = (position, orientation, invert)
+    #     self.section_plane_args = (position, orientation, invert)
     #     xyz = self.plane_actor.calculate_x_y_z_position(position)
     #     normal = self.plane_actor.calculate_normal_vector(orientation)
     #     if invert:

@@ -9,7 +9,7 @@ from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
 from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
 
 
-class CuttingPlaneActor(vtkActor):
+class SectionPlaneActor(vtkActor):
     def __init__(self, bounds):
         self._bounds = bounds
         self.create_geometry()
@@ -33,7 +33,7 @@ class CuttingPlaneActor(vtkActor):
         self.GetProperty().LightingOff()
         self.PickableOff()
 
-    def configure_cutting_plane(self, position, orientation):
+    def configure_section_plane(self, position, orientation):
         x = lerp(self._bounds[0], self._bounds[1], position[0] / 100)
         y = lerp(self._bounds[2], self._bounds[3], position[1] / 100)
         z = lerp(self._bounds[4], self._bounds[5], position[2] / 100)
