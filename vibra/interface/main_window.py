@@ -79,10 +79,6 @@ class MainWindow(QMainWindow):
 
     def _create_connections(self):
         self.viewer_tabs.geometry_widget.selection_changed.connect(self.selection_changed_callback)
-        self.section_plane.slider_pressed.connect(self.slider_pressed_callback)
-        self.section_plane.value_changed.connect(self.slider_moved_callback)
-        self.section_plane.slider_released.connect(self.slider_released_callback)
-        self.section_plane.closed.connect(self.disable_section_plane_visibility)
 
     def set_mesh_selection(self, *, nodes=None, faces=None, solids=None, join=False, remove=False):
         if nodes is None:
@@ -194,15 +190,15 @@ class MainWindow(QMainWindow):
     def slider_pressed_callback(self):
         self.viewer_tabs.start_section_mode()
 
-    def slider_moved_callback(self):
-        position = self.section_plane.get_position("sliders")
-        orientation = self.section_plane.get_rotation("sliders")
-        self.viewer_tabs.configure_section_plane(position, orientation)
+    # def slider_moved_callback(self):
+    #     position = self.section_plane.get_position("sliders")
+    #     orientation = self.section_plane.get_rotation("sliders")
+    #     self.viewer_tabs.configure_section_plane(position, orientation)
 
-    def slider_released_callback(self):
-        position = self.section_plane.get_position("sliders")
-        orientation = self.section_plane.get_rotation("sliders")
-        self.viewer_tabs.apply_section_plane(position, orientation, self.section_plane.invert_value)
+    # def slider_released_callback(self):
+    #     position = self.section_plane.get_position("sliders")
+    #     orientation = self.section_plane.get_rotation("sliders")
+    #     self.viewer_tabs.apply_section_plane(position, orientation, self.section_plane.invert_value)
 
     def disable_section_plane_visibility(self):
         for tab in self.viewer_tabs.tabs():
@@ -265,6 +261,13 @@ class MainWindow(QMainWindow):
         central_widget = QWidget()
         central_widget.setLayout(grid_layout_central)
         self.setCentralWidget(central_widget)
+
+    def action_section_plane_callback(self, condition):
+        if condition:
+            self.section_plane.show()
+        else:
+            self.section_plane.keep_section_plane = False
+            self.section_plane.close()
 
     def hide_selection_callback(self):
         mesh = app().project.model.mesh
@@ -330,16 +333,16 @@ class MainWindow(QMainWindow):
         self.renderer_toolbar.setDisabled(True)
         self.analysis_filter.setDisabled(True)
 
+        # Gambiarra temporária 30/01/2025
+        self.action_section_plane = self.renderer_toolbar.action_section_plane
+
     def config_tool_tip_appearance(self):
         tool_tip_style = "QToolTip { color: rgb(0, 0, 0); background-color: rgb(255, 255, 255) }"
         self.setStyleSheet(tool_tip_style)
 
     def _load_render_widgets(self):
         self.section_plane = SectionPlaneWidget(self)
-        # t0 = time()
         self.viewer_tabs = ViewerTabs(self)
-        # dt = time() - t0
-        # print(f"elapsed time to load class: {round(dt, 4)}")
 
     def configure_main_window(self):
 

@@ -21,9 +21,10 @@ from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 #     CommonRenderWidget,
 # )
 from vibra.utils.math_functions import lerp
+from .common_analysis_render_widget import CommonAnalysisRenderWidget
 
 
-class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
+class StructuralModalAnalysisRenderWidget(CommonAnalysisRenderWidget):
     # many parts of this class is shared by AcousticModalAnalysisRenderWidget
     # and probably with other analysis classes, so it may be a good idea to
     # make a superclass that controls all the common stuff.
@@ -56,7 +57,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.analysis_actor = None
         self.edges_actor = None
         self.plane_actor = None
-        self.hidden_part_actor = None
+        self.ghost_actor = None
         self.bounds = (0, 0, 0, 0, 0, 0)
 
         self.create_axes()
@@ -124,12 +125,12 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         # Add a very subtle transparent actor to represent the whole
         # structure even if part of it is hidden
         has_hidden_part = bool(self.main_window.hidden_surfaces)
-        self.hidden_part_actor = FacesActor(mesh, allow_hidding=False)
-        self.hidden_part_actor.SetVisibility(has_hidden_part)
-        self.hidden_part_actor.GetProperty().SetOpacity(0.05)
-        self.hidden_part_actor.GetProperty().LightingOff()
-        self.hidden_part_actor.PickableOff()
-        self.renderer.AddActor(self.hidden_part_actor)
+        self.ghost_actor = FacesActor(mesh, allow_hidding=False)
+        self.ghost_actor.SetVisibility(has_hidden_part)
+        self.ghost_actor.GetProperty().SetOpacity(0.05)
+        self.ghost_actor.GetProperty().LightingOff()
+        self.ghost_actor.PickableOff()
+        self.renderer.AddActor(self.ghost_actor)
 
         self.plane_actor = SectionPlaneActor(self.analysis_actor.GetBounds())
         self.plane_actor.VisibilityOff()
@@ -231,52 +232,52 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.edges_actor.VisibilityOff()
         self.update()
 
-    def update_section_plane(self):
-        if not self._actors_exists():
-            return
+    # def update_section_plane(self):
+    #     if not self._actors_exists():
+    #         return
 
-        section_plane = self.main_window.section_plane
+    #     section_plane = self.main_window.section_plane
 
-        if not section_plane.cutting:
-            self._disable_section_plane()
-            return
+    #     if not section_plane.cutting:
+    #         self._disable_section_plane()
+    #         return
 
-        position = section_plane.get_position()
-        rotation = section_plane.get_rotation()
-        inverted = section_plane.get_inverted()
+    #     position = section_plane.get_position()
+    #     rotation = section_plane.get_rotation()
+    #     inverted = section_plane.get_inverted()
 
-        if section_plane.editing:
-            self.plane_actor.configure_section_plane(position, rotation)
-            self.plane_actor.VisibilityOn()
-            self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
-            self.plane_actor.GetProperty().SetOpacity(0.8)
-            self.update()
-        else:
-            self._apply_section_plane(position, rotation, inverted, section_plane.isVisible())
+    #     if section_plane.editing:
+    #         self.plane_actor.configure_section_plane(position, rotation)
+    #         self.plane_actor.VisibilityOn()
+    #         self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
+    #         self.plane_actor.GetProperty().SetOpacity(0.8)
+    #         self.update()
+    #     else:
+    #         self._apply_section_plane(position, rotation, inverted)
 
-    def _disable_section_plane(self):
-        has_hidden_part = bool(self.main_window.hidden_surfaces)
-        self.hidden_part_actor.SetVisibility(has_hidden_part)
-        self.plane_actor.VisibilityOff()
-        self.analysis_actor.disable_cut()
-        self.edges_actor.disable_cut()
-        self.update()
+    # def _disable_section_plane(self):
+    #     has_hidden_part = bool(self.main_window.hidden_surfaces)
+    #     self.ghost_actor.SetVisibility(has_hidden_part)
+    #     self.plane_actor.VisibilityOff()
+    #     self.analysis_actor.disable_cut()
+    #     self.edges_actor.disable_cut()
+    #     self.update()
 
-    def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
-        self.plane_actor.configure_section_plane(position, rotation)
-        xyz = self.plane_actor.calculate_xyz_position(position)
-        normal = self.plane_actor.calculate_normal_vector(rotation)
-        if inverted:
-            normal = -normal
+    # def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
+    #     self.plane_actor.configure_section_plane(position, rotation)
+    #     xyz = self.plane_actor.calculate_xyz_position(position)
+    #     normal = self.plane_actor.calculate_normal_vector(rotation)
+    #     if inverted:
+    #         normal = -normal
 
-        self.analysis_actor.apply_cut(xyz, normal)
-        self.edges_actor.apply_cut(xyz, normal)
+    #     self.analysis_actor.apply_cut(xyz, normal)
+    #     self.edges_actor.apply_cut(xyz, normal)
 
-        self.hidden_part_actor.VisibilityOn()
-        self.plane_actor.SetVisibility(show_plane)
-        self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
-        self.plane_actor.GetProperty().SetOpacity(0.2)
-        self.update()
+    #     self.ghost_actor.VisibilityOn()
+    #     self.plane_actor.SetVisibility(show_plane)
+    #     self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
+    #     self.plane_actor.GetProperty().SetOpacity(0.2)
+    #     self.update()
 
     #
     # def start_section_mode(self):
@@ -284,7 +285,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
     #         return
     #     self.section_plane_active = True
     #     self.plane_actor.VisibilityOn()
-    #     self.hidden_part_actor.VisibilityOn()
+    #     self.ghost_actor.VisibilityOn()
 
     # def stop_section_mode(self):
     #     if not self._actors_exists():
@@ -292,7 +293,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
     #     self.section_plane_active = False
     #     self.plane_actor.VisibilityOff()
     #     has_hidden_part = bool(self.main_window.hidden_surfaces)
-    #     self.hidden_part_actor.SetVisibility(has_hidden_part)
+    #     self.ghost_actor.SetVisibility(has_hidden_part)
     #     self.analysis_actor.disable_cut()
     #     self.edges_actor.disable_cut()
     #     self.update()
@@ -327,11 +328,11 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.renderer.RemoveActor(self.analysis_actor)
         self.renderer.RemoveActor(self.edges_actor)
         self.renderer.RemoveActor(self.plane_actor)
-        self.renderer.RemoveActor(self.hidden_part_actor)
+        self.renderer.RemoveActor(self.ghost_actor)
         self.analysis_actor = None
         self.edges_actor = None
         self.plane_actor = None
-        self.hidden_part_actor = None
+        self.ghost_actor = None
 
     def update_animation(self, frame):
         if not self._actors_exists():
