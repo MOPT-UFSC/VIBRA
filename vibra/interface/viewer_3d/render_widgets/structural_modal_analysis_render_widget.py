@@ -13,6 +13,7 @@ from vibra.interface.analysis_bars.structural_analysis_bar import (
 )
 from ..actors.ghost_actor import GhostActor
 from ..actors.analysis_actor import AnalysisActor
+from ..actors.hollow_analysis_actor import HollowAnalysisActor
 from ..actors.section_plane_actor import (
     SectionPlaneActor,
 )
@@ -118,7 +119,7 @@ class StructuralModalAnalysisRenderWidget(CommonAnalysisRenderWidget):
 
         self.remove_actors()
 
-        self.analysis_actor = AnalysisActor(mesh)
+        self.analysis_actor = HollowAnalysisActor(mesh)
 
         self.edges_actor = EdgesActor(self.analysis_actor.data)
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
