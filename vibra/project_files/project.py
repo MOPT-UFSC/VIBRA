@@ -178,13 +178,13 @@ class Project:
         dt = time() - t0
         print(f"Elapsed time to solve modal analysis: {round(dt, 6)} [s]")
         app().file.write_results_data_in_file()
-        app().main_window.advanced_results_menu.disable_advanced_acoustic_plots_buttons(True)
+        app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_structural_modal_analysis(self):
         self.structural_assembler.process_assemble()
         self.structural_modal_solver.solve()
         app().file.write_results_data_in_file()
-        app().main_window.advanced_results_menu.disable_advanced_acoustic_plots_buttons(True)
+        app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_acoustic_harmonic_analysis(self):
         self.model.reset_dissipation_model_properties()
@@ -196,7 +196,7 @@ class Project:
         dt = time() - t0
         print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
         app().file.write_results_data_in_file()
-        app().main_window.advanced_results_menu.disable_advanced_acoustic_plots_buttons(False)
+        app().main_window.disable_advanced_acoustic_plots_buttons(False)
 
     def long_function(self):
         for i in range(20):

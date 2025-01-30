@@ -16,7 +16,6 @@ from vibra.interface.menus.mesher_menu import MesherMenu
 from vibra.interface.menus.project_menu import ProjectMenu
 from vibra.interface.menus.settings_menu import VisibilitySettingsMenu
 from vibra.interface.menus.view_mode_menu import ViewModeMenu
-from vibra.interface.menus.advanced_results_menu import AdvancedResultsMenu
 from vibra.interface.menus.views_menu import ViewsMenu
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
 from vibra.interface.renderer_toolbar import RendererToolbar
@@ -32,6 +31,10 @@ from vibra.utils.icons import load_icon
 from vibra.project_files.load_project import LoadProject
 from vibra.project_files.project import Project
 from vibra.project_files.project_file import ProjectFile
+
+from vibra.interface.plots.acoustic.export_element_transfer_data_input import ExportElementTransferDataInput
+from vibra.interface.plots.acoustic.plot_particle_velocity_frequency_response_input import PlotParticleVelocityFrequencyResponseInput
+from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
 
 import qdarktheme
 
@@ -143,10 +146,6 @@ class MainWindow(QMainWindow):
                 action.triggered.connect(function)
 
     def create_basic_layout(self):
-        # self.unhide_all = QAction("Unhide All")
-        # self.unhide_all.setShortcut("ctrl+shift+h")
-        # self.unhide_all.triggered.connect(self.unhide_all_callback)
-        # self.addAction(self.unhide_all)
         
         self.menu_widget = MenuItems()
         self.analysis_filter = AnalysisFilter()
@@ -169,8 +168,7 @@ class MainWindow(QMainWindow):
         self.vertical_line.setFrameShadow(QFrame.Sunken)
 
         self.setCentralWidget(None)
-        # self.create_menu_bar()
-        # self.create_tool_bars()
+        self.create_recents_menu()
         self.create_status_bar()
 
         grid_layout_central = QGridLayout()
@@ -374,6 +372,21 @@ class MainWindow(QMainWindow):
 
         self.selection_changed.emit()
         # print("COMBINING SELECTION", time() - s)
+    
+    def create_recents_menu(self):
+        color = QColor("#448cff") 
+        self.recent_icon = load_icon(ICON_DIR / "recent.png", color)
+
+        self.recents_menu = QMenu("Recent projects", self)
+        self.recents_menu.setIcon(self.recent_icon)
+        self.update_recents_menu()
+    
+    def update_recents_menu(self):
+        self.recents_menu.clear()
+        recent_paths = app().config.get_recent_files()
+        recent_paths[-8:]
+        for path in reversed(recent_paths):
+            self.recents_menu.addAction(QAction(str(path), self))
 
     def selection_changed_callback(self, points, lines, faces, volumes):
         self.status_bar.set_selection(points, lines, faces, volumes)
@@ -760,7 +773,7 @@ class MainWindow(QMainWindow):
         if project_path is not None:
             app().config.add_recent_file(project_path)
             app().config.write_last_folder_path_in_file("project folder", project_path)
-            self.project_menu.update_recents_menu()
+            self.update_recents_menu()
             copy(project_path, TEMP_PROJECT_FILE)
             self.update_window_title(project_path)
 
@@ -961,6 +974,27 @@ class MainWindow(QMainWindow):
     def close_dialogs(self):
         if isinstance(self.dialog, (QDialog, QWidget)):
             self.dialog.close()
+
+
+    def plot_specific_acoustic_impedance(self):
+            if app().project.acoustic_harmonic_solver.solution is None:
+                return
+            PlotSpecificAcousticImpedanceInput()
+
+    def plot_particle_velocity(self):
+        if app().project.acoustic_harmonic_solver.solution is None:
+            return
+        PlotParticleVelocityFrequencyResponseInput()
+
+    def export_element_transfer_data_callback(self):
+        if app().project.acoustic_harmonic_solver.solution is None:
+            return
+        ExportElementTransferDataInput()
+
+    def disable_advanced_acoustic_plots_buttons(self, disabled : bool):
+        self.plot_specific_acoustic_impedance_action.setDisabled(disabled)
+        self.plot_particle_velocity_action.setDisabled(disabled)
+        self.export_element_transfer_data_action.setDisabled(disabled)
 
 def create_new_folder(path : Path, folder_name : str) -> Path:
     folder_path = path / folder_name
