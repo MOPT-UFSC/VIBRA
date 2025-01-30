@@ -43,7 +43,7 @@
    </layout>
   </widget>
   <widget class="QStatusBar" name="status_bar"/>
-  <widget class="QToolBar" name="tool_bar">
+  <widget class="QToolBar" name="renderer_toolbar">
    <property name="windowTitle">
     <string>toolBar</string>
    </property>
@@ -248,7 +248,7 @@
   <action name="action_theme">
    <property name="icon">
     <iconset>
-     <normaloff>../../../data/icons/sun_icon.png</normaloff>../../../data/icons/sun_icon.png</iconset>
+     <normaloff>../icons/sun_icon.png</normaloff>../icons/sun_icon.png</iconset>
    </property>
    <property name="text">
     <string>Theme</string>

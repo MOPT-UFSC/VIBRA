@@ -27,6 +27,7 @@ from molde.render_widgets import CommonRenderWidget
 
 from vibra.utils.progress_status import ProgressStatus
 from vibra.utils.icons import load_icon
+from vibra.utils.enumerators import Workspace
 
 from vibra.project_files.load_project import LoadProject
 from vibra.project_files.project import Project
@@ -88,7 +89,6 @@ class MainWindow(QMainWindow):
         help future maintainers and the code editor with
         type inference.
         '''
-        
         # QAction
         self.action_new_project: QAction
         self.action_open_project: QAction
@@ -170,6 +170,8 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(None)
         self.create_recents_menu()
         self.create_status_bar()
+        self._create_workspaces_toolbar()
+
 
         grid_layout_central = QGridLayout()
         grid_layout_central.addWidget(left_widget, 0, 0)
@@ -213,7 +215,7 @@ class MainWindow(QMainWindow):
         """
         qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
         self.viewer_tabs.set_theme(theme)
-        self.user_config.theme = theme
+        app().user_config.theme = theme
         self.menu_items._configItems()
 
         if theme == "dark":
@@ -225,16 +227,14 @@ class MainWindow(QMainWindow):
         change_icon_color_for_widgets(widgets, icon_color)
 
     def load_user_preferences(self):
-        self.set_theme(self.user_config.theme)
+        self.set_theme(app().user_config.theme)
     
     def _load_render_widgets(self):
-        self.viewer_tabs = ViewerTabs(self, self.project, self.user_config)
+        self.viewer_tabs = ViewerTabs(self, self.project, app().user_config)
 
     def configure_window(self):
         self._config_window()
         self._connect_actions()
-        self.load_user_preferences()
-        self._create_workspaces_toolbar()
     
     def closeEvent(self, event):
         self.close_app()
@@ -244,26 +244,26 @@ class MainWindow(QMainWindow):
         tool_tip_style = "QToolTip { color: rgb(0, 0, 0); background-color: rgb(255, 255, 255) }"
         self.setStyleSheet(tool_tip_style)
     
-    # def _create_workspaces_toolbar(self):
-    #     actions = {
-    #         Workspace.STRUCTURAL_SETUP: self.action_structural_workspace,
-    #         Workspace.ACOUSTIC_SETUP: self.action_acoustic_workspace,
-    #         Workspace.COUPLED: self.action_coupled_workspace
-    #     }
+    def _create_workspaces_toolbar(self):
+        actions = {
+            Workspace.STRUCTURAL_SETUP: self.action_structural_workspace,
+            Workspace.ACOUSTIC_SETUP: self.action_acoustic_workspace,
+            Workspace.COUPLED: self.action_coupled_workspace
+        }
 
-    #     self.combo_box_workspaces = QComboBox()
-    #     self.combo_box_workspaces.setMinimumSize(170, 26)
+        self.combo_box_workspaces = QComboBox()
+        self.combo_box_workspaces.setMinimumSize(170, 26)
 
-    #     # iterating sorted items make the icons appear in the same 
-    #     # order as defined in the Workspace enumerator
-    #     for _, action in sorted(actions.items()):
-    #         self.combo_box_workspaces.addItem(action.text())
+        # iterating sorted items make the icons appear in the same 
+        # order as defined in the Workspace enumerator
+        for _, action in sorted(actions.items()):
+            self.combo_box_workspaces.addItem(action.text())
 
-    #     self.combo_box_workspaces.currentIndexChanged.connect(self.update_combobox_indexes)
-    #     self.combo_box_workspaces.currentIndexChanged.connect(lambda x: actions[x].trigger())
-    #     self.tool_bar.addWidget(self.combo_box_workspaces)
+        self.combo_box_workspaces.currentIndexChanged.connect(self.update_combobox_indexes)
+        self.combo_box_workspaces.currentIndexChanged.connect(lambda x: actions[x].trigger())
+        self.renderer_toolbar.addWidget(self.combo_box_workspaces)
 
-    #     self.combo_box_workspaces.currentIndexChanged.connect(self.menu_items.filter_analysis_type)
+        self.combo_box_workspaces.currentIndexChanged.connect(self.menu_widget.filter_analysis_type)
     
     def update_combobox_indexes(self):
         pass
@@ -425,9 +425,9 @@ class MainWindow(QMainWindow):
     def action_theme_callback(self):
         color = QColor("#448cff")
 
-        self.new_project_icon = load_icon(Path("data/icons/new_file.png"), color)
-        self.theme_sun_icon = load_icon(Path("data/icons/sun_icon.png"), color)
-        self.theme_moon_icon = load_icon(Path("data/icons/moon_icon.png"), color)
+        self.new_project_icon = load_icon(Path(ICON_DIR / "new_file.png"), color)
+        self.theme_sun_icon = load_icon(Path(ICON_DIR / "sun_icon.png"), color)
+        self.theme_moon_icon = load_icon(Path(ICON_DIR / "moon_icon.png"), color)
 
     def disable_section_plane_visibility(self):
         for tab in self.viewer_tabs.tabs():
@@ -446,7 +446,7 @@ class MainWindow(QMainWindow):
         self.stacked_setup.setVisible(not visible)
 
     def set_menu_items_visibility_state(self, state: bool):
-        self.user_config.menu_items_visible = state
+        app().user_config.menu_items_visible = state
     
     def action_open_project_callback(self):
         self.open_project_dialog()
@@ -514,7 +514,7 @@ class MainWindow(QMainWindow):
     def configure_main_window(self):
 
         app().splash.update_progress(10)
-        self._config_window()
+        self.configure_window()
 
         app().splash.update_progress(30)
         self._load_render_widgets()
