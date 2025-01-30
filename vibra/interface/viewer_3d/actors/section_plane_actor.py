@@ -40,7 +40,7 @@ class SectionPlaneActor(vtkActor):
         self.SetPosition(x, y, z)
         self.SetOrientation(orientation)
 
-    def calculate_x_y_z_position(self, position):
+    def calculate_xyz_position(self, position):
         x = lerp(self._bounds[0], self._bounds[1], position[0] / 100)
         y = lerp(self._bounds[2], self._bounds[3], position[1] / 100)
         z = lerp(self._bounds[4], self._bounds[5], position[2] / 100)

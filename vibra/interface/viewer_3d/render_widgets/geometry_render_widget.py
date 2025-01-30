@@ -424,7 +424,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
         self.plane_actor.configure_section_plane(position, rotation)
-        xyz = self.plane_actor.calculate_x_y_z_position(position)
+        xyz = self.plane_actor.calculate_xyz_position(position)
         normal = self.plane_actor.calculate_normal_vector(rotation)
         if inverted:
             normal = -normal
