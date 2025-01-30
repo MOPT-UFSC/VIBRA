@@ -51,7 +51,7 @@
      <height>26</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menu_project">
+   <widget class="QMenu" name="project_menu">
     <property name="title">
      <string>Project</string>
     </property>
@@ -96,7 +96,7 @@
     </property>
     <addaction name="action_about_vibra"/>
    </widget>
-   <addaction name="menu_project"/>
+   <addaction name="project_menu"/>
    <addaction name="menu_settings"/>
    <addaction name="menu_model_setup"/>
    <addaction name="menu_view_mode"/>
@@ -129,14 +129,18 @@
    <addaction name="action_node_view"/>
    <addaction name="action_line_view"/>
    <addaction name="action_face_view"/>
-   <addaction name="action_clip_plane"/>
-   <addaction name="action_symbols"/>
+   <addaction name="hide_show_symbols_action"/>
    <addaction name="separator"/>
+   <addaction name="section_plane_show_action"/>
+   <addaction name="section_plane_config_action"/>
+   <addaction name="separator"/>
+   <addaction name="hide_selection"/>
+   <addaction name="unhide_all"/>
   </widget>
   <action name="action_new_project">
    <property name="icon">
     <iconset>
-     <normaloff>../../../data/icons/new_file.png</normaloff>../../../data/icons/new_file.png</iconset>
+     <normaloff>../icons/new_file.png</normaloff>../icons/new_file.png</iconset>
    </property>
    <property name="text">
     <string>New project</string>
@@ -145,7 +149,7 @@
   <action name="action_open_project">
    <property name="icon">
     <iconset>
-     <normaloff>../../../data/icons/import.png</normaloff>../../../data/icons/import.png</iconset>
+     <normaloff>../icons/import.png</normaloff>../icons/import.png</iconset>
    </property>
    <property name="text">
     <string>Open Project</string>
@@ -271,7 +275,7 @@
   <action name="action_reset_project">
    <property name="icon">
     <iconset>
-     <normaloff>../../../data/icons/reset-image (2).png</normaloff>../../../data/icons/reset-image (2).png</iconset>
+     <normaloff>../icons/recent.png</normaloff>../icons/recent.png</iconset>
    </property>
    <property name="text">
     <string>Reset Project</string>
@@ -280,7 +284,7 @@
   <action name="action_top_view">
    <property name="icon">
     <iconset>
-     <normaloff>../../../data/icons/top.png</normaloff>../../../data/icons/top.png</iconset>
+     <normaloff>../icons/views/top.png</normaloff>../icons/views/top.png</iconset>
    </property>
    <property name="text">
     <string>Top View</string>
@@ -289,7 +293,7 @@
   <action name="action_bottom_view">
    <property name="icon">
     <iconset>
-     <normaloff>../../../data/icons/bottom.png</normaloff>../../../data/icons/bottom.png</iconset>
+     <normaloff>../icons/views/bottom.png</normaloff>../icons/views/bottom.png</iconset>
    </property>
    <property name="text">
     <string>Bottom View</string>
@@ -298,7 +302,7 @@
   <action name="action_right_view">
    <property name="icon">
     <iconset>
-     <normaloff>../../../data/icons/right.png</normaloff>../../../data/icons/right.png</iconset>
+     <normaloff>../icons/views/right.png</normaloff>../icons/views/right.png</iconset>
    </property>
    <property name="text">
     <string>Right View</string>
@@ -307,7 +311,7 @@
   <action name="action_left_view">
    <property name="icon">
     <iconset>
-     <normaloff>../../../data/icons/left.png</normaloff>../../../data/icons/left.png</iconset>
+     <normaloff>../icons/views/left.png</normaloff>../icons/views/left.png</iconset>
    </property>
    <property name="text">
     <string>Left View</string>
@@ -316,7 +320,7 @@
   <action name="action_front_view">
    <property name="icon">
     <iconset>
-     <normaloff>../../../data/icons/front.png</normaloff>../../../data/icons/front.png</iconset>
+     <normaloff>../icons/views/front.png</normaloff>../icons/views/front.png</iconset>
    </property>
    <property name="text">
     <string>Front View</string>
@@ -325,7 +329,7 @@
   <action name="action_back_view">
    <property name="icon">
     <iconset>
-     <normaloff>../../../data/icons/back.png</normaloff>../../../data/icons/back.png</iconset>
+     <normaloff>../icons/views/back.png</normaloff>../icons/views/back.png</iconset>
    </property>
    <property name="text">
     <string>Back View</string>
@@ -334,7 +338,7 @@
   <action name="action_isometric_view">
    <property name="icon">
     <iconset>
-     <normaloff>../../../data/icons/orthogonal.png</normaloff>../../../data/icons/orthogonal.png</iconset>
+     <normaloff>../icons/views/orthogonal.png</normaloff>../icons/views/orthogonal.png</iconset>
    </property>
    <property name="text">
     <string>Isometric View</string>
@@ -343,7 +347,7 @@
   <action name="action_node_view">
    <property name="icon">
     <iconset>
-     <normaloff>../../../data/icons/nodes.png</normaloff>../../../data/icons/nodes.png</iconset>
+     <normaloff>../icons/visibility/nodes.png</normaloff>../icons/visibility/nodes.png</iconset>
    </property>
    <property name="text">
     <string>Node View</string>
@@ -352,7 +356,7 @@
   <action name="action_line_view">
    <property name="icon">
     <iconset>
-     <normaloff>../../../data/icons/lines.png</normaloff>../../../data/icons/lines.png</iconset>
+     <normaloff>../icons/visibility/lines.png</normaloff>../icons/visibility/lines.png</iconset>
    </property>
    <property name="text">
     <string>Line View</string>
@@ -361,25 +365,25 @@
   <action name="action_face_view">
    <property name="icon">
     <iconset>
-     <normaloff>../../../data/icons/faces.png</normaloff>../../../data/icons/faces.png</iconset>
+     <normaloff>../icons/visibility/faces.png</normaloff>../icons/visibility/faces.png</iconset>
    </property>
    <property name="text">
     <string>Face View</string>
    </property>
   </action>
-  <action name="action_clip_plane">
+  <action name="section_plane_show_action">
    <property name="icon">
     <iconset>
-     <normaloff>../../../data/icons/tube_cut.png</normaloff>../../../data/icons/tube_cut.png</iconset>
+     <normaloff>../icons/visibility/section_plane_view.png</normaloff>../icons/visibility/section_plane_view.png</iconset>
    </property>
    <property name="text">
     <string>Clip Plane</string>
    </property>
   </action>
-  <action name="action_symbols">
+  <action name="hide_show_symbols_action">
    <property name="icon">
     <iconset>
-     <normaloff>../../../data/icons/show_symbols.png</normaloff>../../../data/icons/show_symbols.png</iconset>
+     <normaloff>../icons/visibility/show_symbols.png</normaloff>../icons/visibility/show_symbols.png</iconset>
    </property>
    <property name="text">
     <string>Symbols</string>
@@ -388,7 +392,7 @@
   <action name="action_zoom_to_fit">
    <property name="icon">
     <iconset>
-     <normaloff>../../../../data/icons/zoom_icon.png</normaloff>../../../../data/icons/zoom_icon.png</iconset>
+     <normaloff>../icons/views/zoom_icon.png</normaloff>../icons/views/zoom_icon.png</iconset>
    </property>
    <property name="text">
     <string>Zoom To Fit</string>
@@ -407,6 +411,33 @@
   <action name="action_coupled_workspace">
    <property name="text">
     <string>Coupled Workspace</string>
+   </property>
+  </action>
+  <action name="hide_selection">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/visibility/hide_icon.png</normaloff>../icons/visibility/hide_icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Hide Selection</string>
+   </property>
+  </action>
+  <action name="unhide_all">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/visibility/unhide_all_icon.png</normaloff>../icons/visibility/unhide_all_icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Unhide Selection</string>
+   </property>
+  </action>
+  <action name="section_plane_config_action">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/visibility/section_plane_config.png</normaloff>../icons/visibility/section_plane_config.png</iconset>
+   </property>
+   <property name="text">
+    <string>Configure Section Plane</string>
    </property>
   </action>
  </widget>
