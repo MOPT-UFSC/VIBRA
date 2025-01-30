@@ -1,132 +1,114 @@
-from pathlib import Path
-
+from PyQt5.QtWidgets import QDialog, QFrame, QLabel, QProgressBar, QPushButton
+from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5 import uic
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont, QIcon
-from PyQt5.QtWidgets import QDialog, QFrame, QLabel, QPushButton
 
-from vibra import UI_DIR
+from vibra import app, UI_DIR
+from vibra.interface.formatters.icons import *
+from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
+
+from time import sleep, time 
 
 class PrintMessageInput(QDialog):
-    def __init__(self, text_info, justify=True, opv=None, fontsizes=[13, 12], *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, text_info, *args, **kwargs):
+        super().__init__()
 
-        ui_path = UI_DIR / "general/print_messages.ui"
+        ui_path = UI_DIR / "messages/print_message.ui"
         uic.loadUi(ui_path, self)
 
-        self.pushButton_close = self.findChild(QPushButton, "pushButton_close")
-        self.pushButton_close.clicked.connect(self.message_close)
+        self.auto_close = kwargs.get("auto_close", False)
+        self.window_title, self.title, self.message = text_info
 
-        self.frame_message = self.findChild(QFrame, "frame_message")
+        self.main_window = app().main_window
 
-        path = str(Path("data/icons/logo_vibra.png"))
-        self.icon = QIcon(path)
-        self.setWindowIcon(self.icon)
+        self._config_window()
+        self._define_qt_variables()
+        self._create_connections()
 
+        ConfigWidgetAppearance(self)
+
+        self._config_widgets()
+        self._set_texts()
+        self.exec()
+
+    def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        if opv is not None:
-            opv.setInputObject(self)
 
-        self.title_fontsize, self.message_fontsize = fontsizes
+    def _define_qt_variables(self):
 
-        self.label_title = self.findChild(QLabel, "label_title")
-        self.label_message = self.findChild(QLabel, "label_message")
+        # QFrame
+        self.frame_button : QFrame
+        self.frame_message : QFrame
+        self.frame_progress_bar : QFrame
+        self.frame_title : QFrame
+
+        # QLabel
+        self.label_title : QLabel
+        self.label_message : QLabel
+
+        # QProgressBar
+        self.progress_bar_timer : QProgressBar
+
+        # QPushButton
+        self.pushButton_close : QPushButton
+
+        # QTimer
+        self.timer = QTimer()
+
+    def _create_connections(self):
+        self.pushButton_close.clicked.connect(self.message_close)
+        self.timer.timeout.connect(self.update_progress_bar)
+
+    def _config_widgets(self):
+
+        if self.auto_close:
+            self.frame_button.setVisible(False)
+        else:
+            self.frame_progress_bar.setVisible(False)
 
         self.pushButton_close.setVisible(True)
-        self.create_font_title()
-        self.create_font_message()
-        self.label_title.setFont(self.font_title)
-        self.label_message.setFont(self.font_message)
-        self.label_message.setWordWrap(True)
-        self.label_message.setMargin(20)
-        self.label_message.setAlignment(Qt.AlignCenter)
-
-        self.text_info = text_info
-        message = self.preprocess_big_strings(self.text_info[1])
-        self.config_sizes(message)
-
-        self.label_title.setText(text_info[0])
-        self.label_message.setText(message)
-
-        if len(text_info) > 2:
-            self.setWindowTitle(text_info[2])
-
-        if justify:
-            self.label_message.setAlignment(Qt.AlignJustify | Qt.AlignVCenter)
-
-        self.exec_()
 
     def message_close(self):
+        self.timer.stop()
         self.close()
 
-    def create_font_title(self):
-        self.font_title = QFont()
-        self.font_title.setFamily("Arial")
-        self.font_title.setPointSize(self.title_fontsize)
-        self.font_title.setBold(True)
-        self.font_title.setItalic(False)
-        self.font_title.setWeight(75)
+    def update_progress_bar(self):
+        self.timer.stop()
+        t0 = time()
+        elapsed_time = 0
+        duration = 2.5
+        while elapsed_time <= duration:
+            sleep(0.1)
+            elapsed_time = time() - t0
+            value = int(100*(elapsed_time/duration))
+            self.progress_bar_timer.setValue(value)
+        self.close()
 
-    def create_font_message(self):
-        self.font_message = QFont()
-        self.font_message.setFamily("Arial")
-        self.font_message.setPointSize(self.message_fontsize)
-        self.font_message.setBold(True)
-        self.font_message.setItalic(False)
-        self.font_message.setWeight(75)
+    def _set_texts(self):
 
-    def config_message_font(self):
-        font = QFont()
-        font.setPointSize(17)
-        font.setBold(True)
-        # font.setItalic(True)
-        font.setFamily("Arial")
-        # font.setWeight(60)
-        self.label_message.setFont(font)
-        self.label_message.setStyleSheet("color:blue")
+        self.title2 = f"   {self.title}   "
+        self.label_title.setText(self.title2)
+        self.label_message.setText(self.message)
+        self.setWindowTitle(self.window_title)
 
-    def config_title_font(self):
-        font = QFont()
-        font.setPointSize(19)
-        font.setBold(True)
-        font.setItalic(True)
-        font.setFamily("Arial")
-        # font.setWeight(60)
-        self.label_title.setFont(font)
-        self.label_title.setStyleSheet("color:black")
-
-    def preprocess_big_strings(self, text):
-        message = ""
-        list_words = text.split(" ")
-        for word in list_words:
-            if len(word) > 60:
-                while len(word) > 60:
-                    message += word[0:60] + " "
-                    word = word[60:]
-                message += word + " "
-            else:
-                message += word + " "
-        return message
-
-    def config_sizes(self, message):
-        if 0 < len(message) < 200:
-            height = 300
-            width = 600
-        elif 200 <= len(message) < 400:
-            height = 360
-            width = 600
-        elif 400 <= len(message) < 800:
-            height = 420
-            width = 600
-        elif 800 <= len(message) < 1000:
-            height = 500
-            width = 600
+        if self.window_title in ["Error", "ERROR"]:
+            icon = get_error_icon(QColor(255,0,0,200))
+        elif self.window_title in ["Warning", "WARNING"]:
+            icon = get_warning_icon()
         else:
-            height = 600
-            width = 600
+            icon = app().main_window.vibra_icon
 
-        self.setMinimumWidth(width)
-        self.setMinimumHeight(height)
-        self.setMaximumWidth(width)
-        self.setMaximumHeight(height)
+        self.setWindowIcon(icon)
+
+        self.adjustSize()
+        self.label_message.setAlignment(Qt.AlignCenter)
+        if self.auto_close:
+            self.timer.timeout.connect(self.message_close)
+            self.timer.start(50) 
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            self.message_close()
+        elif event.key() == Qt.Key_Escape:
+            self.close()

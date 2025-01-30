@@ -1,12 +1,32 @@
-import logging, os, platform, sys, vtk
-from PyQt5 import Qt, QtCore, QtWidgets
+import logging, os, platform, sys
+from vtkmodules.vtkCommonCore import vtkObject, vtkLogger
+from traceback import format_tb
 
+from vibra import USER_PATH
 from vibra.interface.application import Application
 
 import qdarktheme
 
-import matplotlib
-matplotlib.use("Qt5Agg")
+
+def custom_exception_hooks(exc_type, exc_value, exc_traceback):
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.exit()
+
+    # Logs unhandled errors for future checks 
+    logging.error("Unhandled error", exc_info=(exc_type, exc_value, exc_traceback))
+    
+    try:
+        from vibra.interface.general.print_message_input import PrintMessageInput
+        PrintMessageInput([
+            "Unhandled error",
+            f"{exc_type.__name__}: {exc_value}",
+            "\n".join(format_tb(exc_traceback, limit=-1))
+        ])
+    except Exception as e:
+        logging.exception(e)
+
+sys.excepthook = custom_exception_hooks
+
 
 def configure_logs():
     """
@@ -20,7 +40,7 @@ def configure_logs():
     are shown to users.
     """
     file_formatter = logging.Formatter("%(asctime)s \t | %(levelname)s \t | %(message)s")
-    file_handler = logging.FileHandler("logs.log", "w+")
+    file_handler = logging.FileHandler(USER_PATH / ".vibra.log", "w+")
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(file_formatter)
 
@@ -57,8 +77,8 @@ def main():
 
     # disables the terrible vtk error handler and its logs
     # you may want to enable them while debugging something
-    vtk.vtkObject.GlobalWarningDisplayOff()
-    vtk.vtkLogger.SetStderrVerbosity(vtk.vtkLogger.VERBOSITY_OFF)
+    vtkObject.GlobalWarningDisplayOff()
+    vtkLogger.SetStderrVerbosity(vtkLogger.VERBOSITY_OFF)
 
     # Make the window scale evenly for every monitor
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"

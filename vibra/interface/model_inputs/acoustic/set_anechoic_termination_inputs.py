@@ -1,109 +1,281 @@
-import configparser
-import os
-from pathlib import Path
+# fmt: on
 
-import numpy as np
-from PyQt5 import uic
+from PyQt5.QtWidgets import QComboBox, QDialog, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QCloseEvent
+from PyQt5 import uic
 
-from vibra import UI_DIR
-from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
+from vibra import app, UI_DIR
+from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.utils.interface_functions import get_main_window
 
-window_title_1 = "ERROR"
-window_title_2 = "WARNING"
+window_title_1 = "Error"
+window_title_2 = "Warning"
 
 
 class SetAnechoicTerminationInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/acoustic/set_anechoic_termination_input.ui"
+        ui_path = UI_DIR / "model/setup/acoustic/set_anechoic_termination_input.ui"
         uic.loadUi(ui_path, self)
 
-        icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.icon = QIcon(icon_path)
-        self.setWindowIcon(self.icon)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Set anechoic termination")
+        self.main_window = app().main_window
+        self.project = app().project
+        self.model = app().project.model
+        self.mesh = app().project.model.mesh
+        self.properties = app().project.model.properties
 
-        self.main_window = get_main_window()
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
-        self.project = self.main_window.project
-        self.model = self.project.model
-        self.properties = self.model.properties
 
         self._reset()
+        self._config_window()
         self._define_qt_variables()
         self._create_connections()
+
+        ConfigWidgetAppearance(self, tool_tip=True)
+
         self.load_info()
-        self.exec()
+        self.geometry_selection_callback()
+
+        while self.keep_window_open:
+            self.exec()
+
+    def _config_window(self):
+        self.setWindowIcon(app().main_window.vibra_icon)
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModal)
+        self.setWindowTitle("Vibra")
 
     def _reset(self):
-        self.typed_ids = []
-        self.remove_anechoic_termination = False
+        self.keep_window_open = True
         self.anechoic_termination = None
-        self.userPath = os.path.expanduser("~")
-        self.new_load_path_table = ""
-        self.project_path = self.project.file.project_path
-        self.acoustic_bc_filename = self.project.file.acoustic_model_setup_filename
-        self.acoustic_bc_info_path = os.path.join(self.project_path, self.acoustic_bc_filename)
-        self.acoustic_folder_path = self.project.file.acoustic_imported_data_folder_path
-        self.anechoic_termination_tables_folder_path = os.path.join(self.acoustic_folder_path, "anechoic_termination_files")
 
     def _define_qt_variables(self):
-        
+
         # QComboBox
         self.comboBox_volume_id : QComboBox
-        
+        self.comboBox_volume_id.setDisabled(True)
+
         # QLineEdit
         self.lineEdit_selection_id : QLineEdit
-        
+        self.lineEdit_selection_id.setDisabled(True)
+
         # QPushButton
-        self.pushButton_confirm : QPushButton
-        self.pushButton_remove_bc_confirm : QPushButton
+        self.pushButton_attribute : QPushButton
+        self.pushButton_exit : QPushButton
+        self.pushButton_remove : QPushButton
         self.pushButton_reset : QPushButton
 
         # QTabWidget
-        self.tabWidget_anechoic_termination : QTabWidget
-        
+        self.tabWidget_main : QTabWidget
+
         # QTreeWidget
-        self.treeWidget_anechoic_termination = self.findChild(QTreeWidget, "treeWidget_anechoic_termination")
+        self.treeWidget_anechoic_termination : QTreeWidget
         self.treeWidget_anechoic_termination.setColumnWidth(1, 20)
         self.treeWidget_anechoic_termination.setColumnWidth(2, 80)
 
     def _create_connections(self):
         #
-        self.pushButton_confirm.clicked.connect(self.confirm_button_pressed)
-        self.pushButton_remove_bc_confirm.clicked.connect(self.remove_bc_from_selection)
-        self.pushButton_reset.clicked.connect(self.check_reset)
+        self.pushButton_attribute.clicked.connect(self.attribute_callback)
+        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_remove.clicked.connect(self.remove_callback)
+        self.pushButton_reset.clicked.connect(self.reset_callback)
         #
-        self.tabWidget_anechoic_termination.currentChanged.connect(self.tabEvent_callback)
+        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
         self.treeWidget_anechoic_termination.itemClicked.connect(self.on_click_item)
         self.treeWidget_anechoic_termination.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        geometry_widget = self.main_window.viewer_tabs.geometry_widget
-        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
+        self.main_window.selection_changed.connect(self.geometry_selection_callback)
 
     def tabEvent_callback(self):
-        current_tab = self.tabWidget_anechoic_termination.currentIndex()
-        if current_tab == 2:
+        if self.tabWidget_main.currentIndex() == 1:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
+            self.pushButton_attribute.setDisabled(True)
         else:
             self.lineEdit_selection_id.setDisabled(False)
+            self.pushButton_attribute.setEnabled(True)
+
+    def geometry_selection_callback(self):
+
+        faces = self.main_window.selected_geometry_surfaces
+
+        if faces:
+            text = ", ".join([str(i) for i in faces])
+            self.lineEdit_selection_id.setText(text)
+            self.update_volumes_from_faces()  
+
+    def update_volumes_from_faces(self):
+
+        lineEdit_selection_id = self.lineEdit_selection_id.text()
+        stop, surface_ids = self.mesh.check_selected_ids(lineEdit_selection_id, selection="surfaces")
+        if stop:
+            return
+
+        list_volumes = list()
+        for face_id in surface_ids:            
+            for volume_id in self.model.mesh.volume_from_surface[face_id]:
+                if volume_id not in list_volumes:
+                    list_volumes.append(volume_id)
+
+        self.comboBox_volume_id.clear()
+        for vol_id in list_volumes:
+            self.comboBox_volume_id.addItem(str(vol_id))
+        
+        if len(list_volumes) == 1:
+            self.comboBox_volume_id.setDisabled(True)
+        else:
+            if len(surface_ids) == 1:
+                self.comboBox_volume_id.setDisabled(False)
+            else:
+                self.comboBox_volume_id.clear()
+                self.comboBox_volume_id.addItem("multiple")
+
+    def attribute_callback(self):
+
+        lineEdit_selection_id = self.lineEdit_selection_id.text()
+        stop, surface_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
+        if stop:
+            self.lineEdit_selection_id.setFocus()
+            return
+        
+        self.remove_conflicting_excitations(surface_ids)
+
+        for surface_id in surface_ids:
+
+            volume_ids = self.model.mesh.volume_from_surface[surface_ids[0]]
+            if len(surface_ids) > 1 and len(volume_ids) > 1:
+                
+                self.hide()
+                title = "Undefined volume"
+                
+                # message = f"The selected face ID [{face_id}] is associated to the volumes {volume_ids}. "
+                message = "The multiple selection of faces related to more than one volume is not allowed. "
+                message += "In this case, it is necessary to select the Face ID and the respective Volume ID "
+                message += "to proceed."
+                PrintMessageInput([window_title_2, title, message])
+
+                return
+
+            if self.comboBox_volume_id.currentText() == "multiple":
+                volume_id = volume_ids[0]
+            else:
+                volume_id = int(self.comboBox_volume_id.currentText())
+
+            data = {
+                    "anechoic_termination" : True,
+                    "volume_id" : volume_id,
+                    "nodal_attribution": False
+                    }
+
+            self.properties._set_property("specific_impedance", data, surface=surface_id)
+
+        self.actions_to_finalize()
+
+        print(f"[Set anechoic termination] - defined at surface(s) {surface_ids}")
+
+    def process_table_file_removal(self, table_names: list):
+        for table_name in table_names:
+            self.properties.remove_imported_tables("acoustic", table_name)
+        if table_names:
+            app().file.write_imported_table_data_in_file()
+
+    def remove_conflicting_excitations(self, surface_ids: int | list):
+
+        if isinstance(surface_ids, int):
+            surface_ids = [surface_ids]
+
+        labels = ["specific_impedance"]
+
+        for surface_id in surface_ids:
+            for label in labels:
+                table_names = self.properties.get_surface_related_table_names(label, surface_id)
+                self.properties._remove_surface_property(label, surface_id)
+                self.process_table_file_removal(table_names)
+
+    def remove_table_files_from_surfaces(self, surface_id : list):
+        table_names = self.properties.get_surface_related_table_names("specific_impedance", surface_id)
+        self.process_table_file_removal(table_names)
+
+    def remove_callback(self):
+
+        if self.lineEdit_selection_id.text() != "":
+
+            surface_id = int(self.lineEdit_selection_id.text())
+            self.remove_table_files_from_surfaces(surface_id)
+
+            self.properties._remove_surface_property("specific_impedance", surface_id)
+            self.actions_to_finalize()
+
+    def reset_callback(self):
+
+        self.hide()
+
+        title = "Anechoic termination resetting"
+        message = "Would you like to remove the all applied anechoic termination from model?"
+
+        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+
+        if read._cancel:
+            return
+
+        if read._continue:
+
+            surface_ids = list()
+            for (property, *args), data in self.properties.surface_properties.items():
+                if property == "specific_impedance":
+                    if "anechoic_termination" in data.keys():
+                        surface_id = args[0]
+                        surface_ids.append(surface_id)
+
+            self.remove_table_files_from_surfaces(surface_ids)
+
+            self.properties._reset_property("specific_impedance")
+            self.actions_to_finalize()
+
+    def actions_to_finalize(self):
+        self.load_info()
+        self.check_model_frequency_controls()
+        self.main_window.viewer_tabs.update_info_text()
+        app().file.write_model_properties_in_file()
+        app().file.write_imported_table_data_in_file()
+        app().main_window.viewer_tabs.mesh_widget.symbols_actor.build()
+
+    def check_model_frequency_controls(self):
+
+        for key, data in self.properties.surface_properties.items():
+            property, _ = key
+            if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
+                if "table_names" in data.keys():
+                    return
+
+        if isinstance(self.project.analysis_data, dict):
+            analysis_data = self.project.analysis_data
+            self.project.set_analysis_data(analysis_data)
+            app().file.write_analysis_setup_in_file(analysis_data)
+
+    def update_tabs_visibility(self):
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "specific_impedance":
+                if "anechoic_termination" in data.keys():
+                    self.tabWidget_main.setTabVisible(1, True)
+                    return
+
+        self.tabWidget_main.setTabVisible(1, False)
 
     def on_click_item(self, item):
-        self.lineEdit_selection_id.setText(item.text(0))
+        if item.text(0) != "":
+            surface_id = int(item.text(0))
+            self.lineEdit_selection_id.setText(item.text(0))
+            app().main_window.set_geometry_selection(surfaces=[surface_id])
 
     def on_doubleclick_item(self, item):
-        self.lineEdit_selection_id.setText(item.text(0))
-        self.remove_bc_from_selection()
+        self.on_click_item(item)
 
     def load_info(self):
         self.treeWidget_anechoic_termination.clear()
@@ -118,158 +290,19 @@ class SetAnechoicTerminationInputs(QDialog):
                     self.treeWidget_anechoic_termination.addTopLevelItem(new)
         self.update_tabs_visibility()
 
-    def geometry_selection_callback(self, points, lines, faces):
-        if faces:
-            text = ", ".join([str(i) for i in faces])
-            self.lineEdit_selection_id.setText(text)
-            self.update_volumes_from_faces()
-
-        elif not any([points, lines, faces]):
-            self.lineEdit_selection_id.setText("")       
-
-    def update_volumes_from_faces(self):
-
-        lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.model.check_input_surface_id(lineEdit_selection_id)
-
-        list_volumes = list()
-        for face_id in self.typed_ids:            
-            for volume_id in self.model.mesh.volume_from_surface[face_id]:
-                if volume_id not in list_volumes:
-                    list_volumes.append(volume_id)
-
-        self.comboBox_volume_id.clear()
-        for vol_id in list_volumes:
-            self.comboBox_volume_id.addItem(str(vol_id))
-        
-        if len(list_volumes) == 1:
-            self.comboBox_volume_id.setDisabled(True)
-        else:
-            if len(self.typed_ids) == 1:
-                self.comboBox_volume_id.setDisabled(False)
-            else:
-                self.comboBox_volume_id.clear()
-                self.comboBox_volume_id.addItem("multiple")
-
-    def confirm_button_pressed(self):
-
-        lineEdit_selection_id = self.lineEdit_selection_id.text()
-        self.stop, self.typed_ids = self.model.check_input_surface_id(lineEdit_selection_id)
-        if self.stop:
-            self.lineEdit_selection_id.setFocus()
-            return
-
-        for face_id in self.typed_ids:
-            volume_ids = self.model.mesh.volume_from_surface[self.typed_ids[0]]
-            if len(volume_ids) > 1:
-                title = "Undefined volume"
-                message = f"The selected face ID [{face_id}] is associated to the volumes {volume_ids}. "
-                message += "The multiple selection of faces related to more than one volume is not allowed. "
-                message += "In this case, it is necessary to select the Face ID and the respective Volume ID "
-                message += "to proceed."
-                PrintMessageInput([window_title_2, title, message])
-                return 
-
-        volume_id = int(self.comboBox_volume_id.currentText())
-
-        data = {"anechoic_termination" : True,
-                "volume_id" : volume_id,
-                "nodal_attribution": False}
-
-        for face_id in self.typed_ids:
-            self.project.set_specific_impedance(data, face_id)
-
-        self.properties.export_model_properties()
-
-        print(f"[Set anechoic termination] - defined at surface(s) {self.typed_ids}")
-        self.close()
-
-    def lineEdit_reset(self, lineEdit):
-        lineEdit.setText("")
-        lineEdit.setFocus()
-
-    def get_list_table_names_from_selected_surfaces(self, list_ids):
-        list_table_names = []
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
-            if property == "specific_impedance":
-                if surface_id in list_ids:
-                    if "table_name" in data.keys():
-                        list_table_names.append(data["table_name"])
-        return list_table_names
-
-    def remove_bc_from_selection(self):
-        if self.lineEdit_selection_id.text() != "":
-            surface_properties = self.properties.surface_properties.copy()
-            picked_id = int(self.lineEdit_selection_id.text())
-            for key, data in surface_properties.items():
-                property, surface_id = key
-                if property == "specific_impedance" and picked_id == surface_id:
-                    if "anechoic_termination" in data.keys():
-                        self.properties._remove_surface_property("specific_impedance", picked_id)
-                        self.load_info()
-                        self.lineEdit_selection_id.setText("")
-                        return
-
-    def check_reset(self):
-        surface_ids = []
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
-            if property == "specific_impedance":
-                if "anechoic_termination" in data.keys():
-                    surface_ids.append(surface_id)
-
-        if len(surface_ids) > 0:
-            
-            title = f"Resetting of all applied specific impedances"
-            message = "Would you like to remove the all anechoic terminations from the model?"
-
-            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
-            read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
-
-            if read._doNotRun:
-                return
-
-            if read._continue:
-                for face_id in surface_ids:
-                    self.properties._remove_surface_property("specific_impedance", face_id)
-
-                self.properties.export_model_properties()
-                self.close()
-
-    def update(self):
-        return
-
-    def write_ids(self, list_ids):
-
-        text = ""
-        for _id in list_ids:
-            text += "{}, ".format(_id)
-
-        current_tab = self.tabWidget_anechoic_termination.currentIndex()
-        if current_tab != 2:
-            self.lineEdit_selection_id.setText(text[:-2])
-
-    def update_tabs_visibility(self):
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
-            if property == "specific_impedance":
-                if "anechoic_termination" in data.keys():
-                    self.tabWidget_anechoic_termination.setTabVisible(1, True)
-                    return
-
-        self.tabWidget_anechoic_termination.setTabVisible(1, False)
-
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            if self.tabWidget_anechoic_termination.currentIndex() == 0:
-                self.confirm_button_pressed()
-            if self.tabWidget_anechoic_termination.currentIndex() == 1:
-                self.check_table_values()
+            if self.tabWidget_main.currentIndex() == 0:
+                self.attribute_callback()
         elif event.key() == Qt.Key_Delete:
-            if self.tabWidget_anechoic_termination.currentIndex() == 2:
-                self.remove_bc_from_selection()
+            self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
         else:
             return
+
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
+        self.keep_window_open = False
+        return super().closeEvent(a0)
+    
+# fmt: on

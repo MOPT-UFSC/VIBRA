@@ -5,6 +5,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+from vibra import app
 from vibra.utils.interface_functions import get_main_window
 
 
@@ -12,8 +13,7 @@ class MeshInfoBar(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.main_window = get_main_window()
-        self.project = self.main_window.project
+        self.project = app().project
         self.mesh = self.project.model.mesh
 
         if self.mesh is None:

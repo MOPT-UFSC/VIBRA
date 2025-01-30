@@ -1,16 +1,18 @@
-import vtk
+from vtkmodules.vtkFiltersCore import vtkAppendPolyData, vtkPolyDataNormals
+from vtkmodules.vtkFiltersSources import vtkConeSource, vtkSphereSource
+from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
 
 
-class ExampleActor(vtk.vtkActor):
+class ExampleActor(vtkActor):
     def __init__(self):
         self.create_geometry()
         self.configure_appearance()
 
     def create_geometry(self):
-        head = vtk.vtkSphereSource()
-        body = vtk.vtkSphereSource()
-        legs = vtk.vtkSphereSource()
-        nose = vtk.vtkConeSource()
+        head = vtkSphereSource()
+        body = vtkSphereSource()
+        legs = vtkSphereSource()
+        nose = vtkConeSource()
 
         head.SetCenter(0, 4.5, 0)
         body.SetCenter(0, 2.5, 0)
@@ -33,18 +35,18 @@ class ExampleActor(vtk.vtkActor):
         legs.Update()
         nose.Update()
 
-        append_filter = vtk.vtkAppendPolyData()
+        append_filter = vtkAppendPolyData()
         append_filter.AddInputData(head.GetOutput())
         append_filter.AddInputData(body.GetOutput())
         append_filter.AddInputData(legs.GetOutput())
         append_filter.AddInputData(nose.GetOutput())
         append_filter.Update()
 
-        normals_filter = vtk.vtkPolyDataNormals()
+        normals_filter = vtkPolyDataNormals()
         normals_filter.AddInputData(append_filter.GetOutput())
         normals_filter.Update()
 
-        mapper = vtk.vtkPolyDataMapper()
+        mapper = vtkPolyDataMapper()
         mapper.SetInputData(normals_filter.GetOutput())
         self.SetMapper(mapper)
 

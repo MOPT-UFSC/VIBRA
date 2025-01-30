@@ -45,8 +45,6 @@ def process_external_model():
     modal_solver = AcousticModalSolver(modal_assembler)
     natural_frequencies, modal_shape = modal_solver.solve()
 
-    print(natural_frequencies)
-
 
 if __name__ == "__main__":
     process_external_model()

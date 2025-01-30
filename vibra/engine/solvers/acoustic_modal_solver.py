@@ -4,7 +4,6 @@ import numpy as np
 from scipy.sparse import lil_matrix, coo_matrix, csr_matrix
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh, inv, lobpcg
 from scipy.sparse.csgraph import reverse_cuthill_mckee
-import matplotlib.pyplot as plt
 
 from vibra.utils.progress_status import ProgressStatus
 
@@ -40,20 +39,16 @@ class AcousticModalSolver:
     def solve(self, K=[], M=[], which="LM", normalize=True, harmonic_analysis=False):
         """
         """
-        
-        if K != [] and M != []:
-            KT = K
-            MT = M
-        else:
-            KT = self.assembler.stiffness_matrix
-            MT = self.assembler.mass_matrix
 
-        # self.plot_graph(KT)
+        if K == [] and M == []:
+            K = self.assembler.stiffness_matrix
+            M = self.assembler.mass_matrix
 
+        # self.plot_graph(K)
         logging.info("Solving the eigenproblem..." + ProgressStatus(10, 100))
-        self.eigen_values, self.eigen_vectors = eigs(KT, M=MT, k=self.modes, which=which, sigma=self.sigma_factor)
+        self.eigen_values, self.eigen_vectors = eigs(K, M=M, k=self.modes, which=which, sigma=self.sigma_factor, tol=1e-2)
 
-        logging.info("Extracting information from solution..." + ProgressStatus(95, 100))
+        logging.info("Post-processing the solution..." + ProgressStatus(95, 100))
         positive_real = np.absolute(np.real(self.eigen_values))
         natural_frequencies = np.sqrt(positive_real) / (2 * np.pi)
         modal_shape = np.real(self.eigen_vectors)
@@ -61,6 +56,9 @@ class AcousticModalSolver:
         index_order = np.argsort(natural_frequencies)
         natural_frequencies = natural_frequencies[index_order]
         modal_shape = modal_shape[:, index_order]
+
+        self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
+        self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_values()
 
         self.natural_frequencies = natural_frequencies
         self.modal_shape = modal_shape
@@ -102,6 +100,7 @@ class AcousticModalSolver:
     def plot_graph(self, graph):
         """
         """
+        import matplotlib.pyplot as plt
         plt.ion()
         plt.cla()
         plt.spy(graph, color=(0.25,0.25,0.25))

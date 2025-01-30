@@ -92,10 +92,23 @@
           <number>4</number>
          </property>
          <item row="0" column="0">
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="1">
           <widget class="QCheckBox" name="checkBox_nodal_coordinates">
            <property name="maximumSize">
             <size>
-             <width>232</width>
+             <width>260</width>
              <height>16777215</height>
             </size>
            </property>
@@ -112,11 +125,11 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="0">
-          <widget class="QCheckBox" name="checkBox_solid_elements_connectivity">
+         <item row="1" column="1">
+          <widget class="QCheckBox" name="checkBox_face_elements_connectivity">
            <property name="maximumSize">
             <size>
-             <width>232</width>
+             <width>260</width>
              <height>16777215</height>
             </size>
            </property>
@@ -126,18 +139,18 @@
             </font>
            </property>
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The solid elements connectivity data will be exported to the &amp;quot;solid_elements_connectivity.dat&amp;quot; file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The face elements connectivity data will be exported to the &amp;quot;face_elements_connectivity.dat&amp;quot; file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
-            <string>Solid elements connectivity</string>
+            <string>Face elements connectivity</string>
            </property>
           </widget>
          </item>
-         <item row="4" column="0">
+         <item row="4" column="1">
           <widget class="QCheckBox" name="checkBox_export_vtu_file">
            <property name="maximumSize">
             <size>
-             <width>232</width>
+             <width>260</width>
              <height>16777215</height>
             </size>
            </property>
@@ -154,11 +167,11 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
-          <widget class="QCheckBox" name="checkBox_face_elements_connectivity">
+         <item row="2" column="1">
+          <widget class="QCheckBox" name="checkBox_solid_elements_connectivity">
            <property name="maximumSize">
             <size>
-             <width>232</width>
+             <width>260</width>
              <height>16777215</height>
             </size>
            </property>
@@ -168,12 +181,25 @@
             </font>
            </property>
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The face elements connectivity data will be exported to the &amp;quot;face_elements_connectivity.dat&amp;quot; file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The solid elements connectivity data will be exported to the &amp;quot;solid_elements_connectivity.dat&amp;quot; file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
-            <string>Face elements connectivity</string>
+            <string>Solid elements connectivity</string>
            </property>
           </widget>
+         </item>
+         <item row="0" column="2">
+          <spacer name="horizontalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
          </item>
         </layout>
        </widget>
@@ -211,18 +237,20 @@
          <property name="bottomMargin">
           <number>4</number>
          </property>
-         <item row="0" column="0">
-          <widget class="QFrame" name="frame_6">
-           <property name="frameShape">
-            <enum>QFrame::NoFrame</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Raised</enum>
-           </property>
-          </widget>
-         </item>
          <item row="0" column="1">
           <widget class="QPushButton" name="pushButton_export_mesh">
+           <property name="minimumSize">
+            <size>
+             <width>120</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>120</width>
+             <height>30</height>
+            </size>
+           </property>
            <property name="font">
             <font>
              <pointsize>10</pointsize>
@@ -236,13 +264,30 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="2">
-          <widget class="QFrame" name="frame_7">
-           <property name="frameShape">
-            <enum>QFrame::NoFrame</enum>
+         <item row="0" column="0">
+          <widget class="QPushButton" name="pushButton_exit">
+           <property name="minimumSize">
+            <size>
+             <width>120</width>
+             <height>30</height>
+            </size>
            </property>
-           <property name="frameShadow">
-            <enum>QFrame::Raised</enum>
+           <property name="maximumSize">
+            <size>
+             <width>120</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Exit</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -281,6 +326,18 @@
          </property>
          <item row="0" column="0">
           <widget class="QLineEdit" name="lineEdit_folder_path">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>30</height>
+            </size>
+           </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
            </property>
@@ -288,13 +345,35 @@
          </item>
          <item row="0" column="1">
           <widget class="QPushButton" name="pushButton_search_folder">
+           <property name="minimumSize">
+            <size>
+             <width>40</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>40</width>
+             <height>30</height>
+            </size>
+           </property>
            <property name="font">
             <font>
              <pointsize>10</pointsize>
             </font>
            </property>
            <property name="text">
-            <string> Folder</string>
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset>
+             <normaloff>../../icons/import.png</normaloff>../../icons/import.png</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
            </property>
            <property name="autoDefault">
             <bool>false</bool>

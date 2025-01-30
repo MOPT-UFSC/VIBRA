@@ -1,4 +1,4 @@
-import vtk
+from vtkmodules.vtkRenderingCore import vtkCellPicker
 
 from vibra.interface.viewer_3d.interactor_styles.arcball_camera import (
     vtkInteractorStyleArcballCamera,
@@ -16,8 +16,8 @@ class SelectionInteractor(vtkInteractorStyleArcballCamera):
 
     def __init__(self):
         super().__init__()
-        self.selection_picker = vtk.vtkCellPicker()
-        self.hover_picker = vtk.vtkCellPicker()
+        self.selection_picker = vtkCellPicker()
+        self.hover_picker = vtkCellPicker()
         self.selection_picker.SetTolerance(0.002)
 
     def left_button_press_event(self, obj, event):

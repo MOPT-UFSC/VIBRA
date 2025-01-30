@@ -14,9 +14,7 @@ class AcousticHarmonicAnalysisInput(QDialog):
         ui_path = UI_DIR / "analysis/acoustic/acoustic_harmonic_analysis_input.ui"
         uic.loadUi(ui_path, self)
 
-        icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.icon = QIcon(icon_path)
-        self.setWindowIcon(self.icon)
+        self.setWindowIcon(app().main_window.vibra_icon)
 
         self.index = 0
 

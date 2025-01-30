@@ -1,13 +1,12 @@
 from vibra.interface.viewer_3d.actors.example_actor import ExampleActor
-from vibra.interface.viewer_3d.actors.symbols_actors import (
+from vibra.interface.viewer_3d.actors.symbols.example_symbols_actors import (
     ArrowSymbols,
     ArrowSymbols2,
     ArrowSymbols3,
     ClampSymbols,
 )
-from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
-    CommonRenderWidget,
-)
+from molde.render_widgets import CommonRenderWidget
+
 
 
 class ExampleRenderWidget(CommonRenderWidget):
@@ -19,7 +18,7 @@ class ExampleRenderWidget(CommonRenderWidget):
         self.create_axes()
         self.update_plot()
 
-    def update_plot(self):
+    def update_plot(self, reset_camera=True):
         self.remove_actors()
 
         self.example_actor = ExampleActor()
@@ -37,7 +36,8 @@ class ExampleRenderWidget(CommonRenderWidget):
         self.symbols_actor = ArrowSymbols3(self.renderer)
         self.renderer.AddActor(self.symbols_actor)
 
-        self.renderer.ResetCamera()
+        if reset_camera:
+            self.renderer.ResetCamera()
 
     def show_points(self):
         self.example_actor.GetProperty().SetRepresentationToPoints()

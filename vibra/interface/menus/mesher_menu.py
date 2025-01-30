@@ -3,10 +3,9 @@ from pathlib import Path
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QMenu
 
+from vibra import app, ICON_DIR
 from vibra.interface.loading_bar import load_function
-# from vibra.interface.material_widget import MaterialWidget
 from vibra.interface.mesh.mesher_inputs import MesherInputs
-# from vibra.interface.model_inputs.structural.material_inputs import MaterialInput
 # from vibra.interface.set_fluid_widget import FluidWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_functions import get_main_window
@@ -15,7 +14,7 @@ from vibra.utils.interface_functions import get_main_window
 class MesherMenu(QMenu):
     def __init__(self, parent):
         super().__init__(parent)
-        self.main_window = get_main_window()
+
         self.setTitle("Model setup")
         self.setObjectName("model_setup_menu")
         self.create_and_connect_actions()
@@ -23,8 +22,7 @@ class MesherMenu(QMenu):
 
     def create_and_connect_actions(self):
         color = QColor("#448cff")
-        #
-        self.new_project_icon = load_icon(Path("data/icons/new_file.png"), color)
+        self.new_project_icon = load_icon(ICON_DIR / "new_file.png", color)
         #
         self.set_fluid_action = QAction(self.new_project_icon, "Set fluid", self)
         self.set_material_action = QAction(self.new_project_icon, "Set material", self)
@@ -48,18 +46,15 @@ class MesherMenu(QMenu):
     # def call_fluid_configurator(self):
     #     FluidWidget()
 
-    # def call_material_configurator(self):
-    #     MaterialWidget()
-
     def call_mesher_inputs(self):
         mesher = MesherInputs()
         if mesher.complete:
-            self.parent().project.set_mesh_setup(mesher.mesh_setup)
+            app().project.set_mesh_setup(mesher.mesh_setup)
             self.generate_mesh_action.setDisabled(False)
-            self.main_window.menu_widget.item_child_generate_mesh.setDisabled(False)
+            app().main_window.menu_widget.item_child_generate_mesh.setDisabled(False)
 
     def call_generate_mesh(self):
-        generate_mesh = load_function(self.main_window.project.generate_mesh, self.main_window)
+        generate_mesh = load_function(app().project.generate_mesh, app().main_window)
         generate_mesh()
-        self.main_window.viewer_tabs.show_mesh()
-        self.main_window.viewer_tabs.update_plots()
+        app().main_window.viewer_tabs.show_mesh()
+        app().main_window.viewer_tabs.update_plots()

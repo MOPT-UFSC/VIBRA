@@ -1,10 +1,13 @@
 import json
+import numpy as np
 import os
 from dataclasses import dataclass
 
+from vibra import app
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-from vibra.project_file import ProjectFile
+# from vibra.project.project_file import *
+
 
 DEFAULT_MATERIAL = Material(
     name="Steel",
@@ -53,10 +56,14 @@ class ModelProperties:
     """
 
     def __init__(self, model=None):
-        self.file = ProjectFile()
+
         self._reset_variables()
 
     def _reset_variables(self):
+
+        self.acoustic_imported_tables = dict()
+        self.structural_imported_tables = dict()
+
         self.global_properties = dict()
         self.group_properties = dict()
         self.volume_properties = dict()
@@ -68,8 +75,8 @@ class ModelProperties:
         self.global_properties["material", "global"] = DEFAULT_MATERIAL
         self.global_properties["fluid", "global"] = DEFAULT_FLUID
 
-    def get_material(self, element=None) -> Material:
-        return self._get_property("material")
+    def get_material(self, element=None, **kwargs) -> Material:
+        return self._get_property("material", **kwargs)
 
     def get_fluid(self, **kwargs) -> Fluid:
         return self._get_property("fluid", **kwargs)
@@ -91,9 +98,6 @@ class ModelProperties:
 
     def set_porous_material_model_data(self, data, **kwargs):
         self._set_property("porous_material_model", data, **kwargs)
-
-    def set_lrf_eq_model_data(self, data, group=None, volume=None):
-        self._set_property("lrf_eq_model", data, group=group, volume=volume)
 
     def get_fluid_density(self, fluid, **kwargs):
         rho_0 = fluid.fluid_density
@@ -149,41 +153,73 @@ class ModelProperties:
     def get_specific_impedance(self, surface):
         return self._get_property("specific_impedance", surface=surface)
 
-    def set_acoustic_pressure(self, data, surface):
-        self._set_property("acoustic_pressure", data, surface=surface)
+    def get_porous_material_model_data(self, volume):
+        return self._get_property("porous_material_model", volume=volume)
 
-    def set_mass_flow_rate(self, data, surface):
-        self._set_property("mass_flow_rate", data, surface=surface)
-
-    def set_volume_velocity(self, data, surface):
-        self._set_property("volume_velocity", data, surface=surface)
-
-    def set_surface_velocity(self, data, surface):
-        self._set_property("surface_velocity", data, surface=surface)
-
-    def set_specific_impedance(self, data, surface):
-        self._set_property("specific_impedance", data, surface=surface)
-
-    def _set_property(self, property: str, value, node=None, element=None, line=None, surface=None, volume=None, group=None):
+    def _set_property(self, property: str, data: dict | Fluid | Material, node=None, element=None, line=None, surface=None, volume=None, group=None):
         """
-        Sets a value to a property by node, element, line, surface or volume
+        Sets a data to a property by node, element, line, surface or volume
         if any of these exists. Otherwise sets the property as global.
 
         """
+
+        if isinstance(data, dict):
+
+            tables_values = list()
+            group_label = self.get_data_group_label(property)
+
+            if "real_values" in data.keys() and "imag_values" in data.keys():
+                for i, a in enumerate(data["real_values"]):
+
+                    if a is None:
+                        tables_values.append(None)
+                    else:
+                        b = data["imag_values"][i]                
+                        tables_values.append(a + 1j*b)
+
+            elif "values" in data.keys():
+                tables_values = data["values"]
+
+            elif "table_names" in data.keys():
+
+                if group_label == "acoustic":
+                    imported_tables = self.acoustic_imported_tables
+                else:
+                    imported_tables = self.structural_imported_tables
+
+                for i, table_name in enumerate(data["table_names"]):
+
+                    if table_name is None:
+                        tables_values.append(None)
+                        continue
+
+                    if table_name in imported_tables.keys():
+                        data_array = imported_tables[table_name]
+                        values = data_array[:, 1] + 1j * data_array[:, 2]
+                        tables_values.append(values)
+
+            data["values"] = tables_values
+
         if node is not None:
-            self.nodal_properties[property, node] = node
+            self.nodal_properties[property, node] = data
+
         elif volume is not None:
-            self.volume_properties[property, volume] = value
+            self.volume_properties[property, volume] = data
+
         elif surface is not None:
-            self.surface_properties[property, surface] = value
+            self.surface_properties[property, surface] = data
+
         elif line is not None:
-            self.line_properties[property, line] = value
+            self.line_properties[property, line] = data
+
         elif element is not None:
-            self.element_properties[property, element] = value
+            self.element_properties[property, element] = data
+
         elif group is not None:
-            self.group_properties[property, group] = value
+            self.group_properties[property, group] = data
+
         else:
-            self.global_properties[property, "global"] = value
+            self.global_properties[property, "global"] = data
 
     def _get_property(self, property: str, node=None, element=None, line=None, surface=None, volume=None):
         """
@@ -228,7 +264,7 @@ class ModelProperties:
         for data_dict in data_dicts:
             for data in data_dict.values():
                 if isinstance(data, dict):
-                    if "table_name" in data.keys():
+                    if "table_names" in data.keys():
                         return True
         else:
             return False
@@ -237,13 +273,15 @@ class ModelProperties:
         """
         Clears all instances of a specific property from the structure.
         """
-        data_dicts = [  self.nodal_properties,
-                        self.element_properties,
-                        self.line_properties,
-                        self.surface_properties,
-                        self.volume_properties,
-                        self.group_properties,
-                        self.global_properties  ]
+        data_dicts = [  
+                      self.nodal_properties,
+                      self.element_properties,
+                      self.line_properties,
+                      self.surface_properties,
+                      self.volume_properties,
+                      self.group_properties,
+                      self.global_properties
+                      ]
 
         for data in data_dicts:
             keys_to_remove = []
@@ -296,52 +334,68 @@ class ModelProperties:
         if key in self.group_properties.keys():
             self.group_properties.pop(key)
 
-    # TODO: remove this
-    def as_json(self):
-        def normalize(prop: dict):
-            """
-            Sadly json doesn't accepts tuple keys,
-            so we need to convert it to a string like:
-            "property id" = value
-            """
-            return {f"{p} {i}": v for (p, i), v in prop.items()}
+    def add_imported_tables(self, group_label: str, table_name: str, data: np.ndarray | list | tuple):
+        """
+        """
+        if group_label == "acoustic":
+            self.acoustic_imported_tables[table_name] = data
+        elif group_label == "structural":
+            self.structural_imported_tables[table_name] = data
 
-        data = dict(
-            # global_properties = normalize(self.global_properties),
-            volume_properties=normalize(self.volume_properties),
-            surface_properties=normalize(self.surface_properties),
-            line_properties=normalize(self.line_properties),
-            element_properties=normalize(self.element_properties),
-            nodal_properties=normalize(self.nodal_properties),
-        )
-        return json.dumps(data, indent=2)
+    def remove_imported_tables(self, group_label: str, table_name: str):
+        """
+        """
+        if group_label == "acoustic":
+            if table_name in self.acoustic_imported_tables.keys():
+                self.acoustic_imported_tables.pop(table_name)
 
-    # TODO: remove this
-    def load_json(self, data: dict):
-        def denormalize(prop: dict):
-            new_prop = dict()
-            for key, val in prop.items():
-                p, i = key.split()
-                p = p.strip()
-                i = int(i)
-                new_prop[p, i] = val
-            return new_prop
+        elif group_label == "structural":
+            if table_name in self.structural_imported_tables.keys():
+                self.structural_imported_tables.pop(table_name)
 
-        self.global_properties = denormalize(data["global_properties"])
-        self.volume_properties = denormalize(data["volume_properties"])
-        self.surface_properties = denormalize(data["surface_properties"])
-        self.line_properties = denormalize(data["line_properties"])
-        self.element_properties = denormalize(data["element_properties"])
-        self.nodal_properties = denormalize(data["nodal_properties"])
+    def get_data_group_label(self, property : str):
 
-    def export_model_properties(self):
-        try:
-            path = os.path.join(self.file.project_path, "model_properties.json")
-            with open(path, "w") as file:
-                file.write(self.as_json())
-        except Exception as error:
-            print(str(error))
+        acoustic_labels = [ 
+                            "acoustic_pressure",
+                            "surface_velocity",
+                            "mass_flow_rate",
+                            "specific_impedance",
+                            "radiation_impedance",
+                            "reciprocating_compressor_excitation",
+                            "reciprocating_pump_excitation",
+                            "acoustic_transfer_element"
+                           ]
 
+        if property in acoustic_labels:
+            return "acoustic"
+        else:
+            return "structural"
+
+    def get_surface_related_table_names(self, property : str, surface_ids : int | list) -> list:
+        """
+        """
+        table_names = list()
+        if isinstance(surface_ids, int):
+            test_key = (property, surface_ids)
+
+        elif isinstance(surface_ids, list) and len(surface_ids) == 1:
+            test_key = (property, surface_ids[0])
+
+        elif isinstance(surface_ids, list) and len(surface_ids) == 2:
+            test_key = (property, surface_ids[0], surface_ids[1])
+
+        else:
+            return table_names
+
+        if test_key in self.surface_properties.keys():
+            data = self.surface_properties[test_key]
+
+            if "table_names" in data.keys():
+                for table_name in data["table_names"]:
+                    if table_name is not None:
+                        table_names.append(table_name)
+
+        return table_names
 
 if __name__ == "__main__":
     p = ModelProperties()

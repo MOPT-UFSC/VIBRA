@@ -1,9 +1,10 @@
-from vibra.utils.utils import get_new_path
-
 import os
 import sys
 import configparser
 from pathlib import Path
+
+from vibra.utils.utils import get_new_path
+
 
 class Config:
     def __init__(self):
@@ -14,6 +15,39 @@ class Config:
         self.open_last_project = False
         self.config_path = Path().home() / ".vibra_config"
         self.load_config_file()
+    
+    def add_recent_file(self, recent_file: str | Path):
+        # try:
+        recents = self.get_recent_files()
+        recents.append(str(recent_file))
+
+        # only keep the last N files
+        recents = recents[-10:]
+
+        config = configparser.ConfigParser()
+        config.read(self.config_path)
+
+        if not config.has_section("Recents"):
+            config["Recents"] = dict()
+
+        for i, file in enumerate(recents):
+            config["Recents"][str(i)] = str(file)
+
+        self.write_data_in_file(self.config_path, config)
+
+    def get_recent_files(self) -> list:
+        config = configparser.ConfigParser()
+        config.read(self.config_path)
+
+        if not config.has_section("Recents"):
+            return list()
+
+        # only keep existing files
+        recents = [Path(file) for i, file in sorted(config["Recents"].items()) 
+                   if Path(file).exists()]
+        # avoid repetitions
+        recents = list(set(recents))
+        return recents
 
     def load_config_file(self):
         try:
@@ -26,38 +60,36 @@ class Config:
             if self.config_path.exists():
                 os.remove(self.config_path)
 
-    def get_last_project_folder(self):
+    def get_last_folder_for(self, label : str):
 
         config = configparser.ConfigParser()
         config.read(self.config_path)
 
-        if config.has_section("User preferences"):
-            section = config["User preferences"]
-            if "last project folder" in section.keys():
-                return section["last project folder"]
+        if config.has_section("Recent paths"):
+            section = config["Recent paths"]
+            key = f"last {label}"
+            if key in section.keys():
+                return section[key]
+
         return None
 
-    def get_last_geometry_folder(self):
+    def write_last_folder_path_in_file(self, label : str, project_path : str):
+        try:
 
-        config = configparser.ConfigParser()
-        config.read(self.config_path)
+            _path = os.path.dirname(project_path)
+            config = configparser.ConfigParser()
+            config.read(self.config_path)
+            
+            key = f"last {label}"
+            if config.has_section('Recent paths'):
+                config["Recent paths"][key] = _path
+            else:
+                config["Recent paths"] = {key : _path}
 
-        if config.has_section("User preferences"):
-            section = config["User preferences"]
-            if "last geometry folder" in section.keys():
-                return section["last geometry folder"]
-        return None
-    
-    def get_last_fluid_composition_folder(self):
+        except:
+            return
 
-        config = configparser.ConfigParser()
-        config.read(self.config_path)
-
-        if config.has_section("User preferences"):
-            section = config["User preferences"]
-            if "last fluid composition" in section.keys():
-                return section["last fluid composition"]
-        return None
+        self.write_data_in_file(self.config_path, config)
 
     def write_theme_in_file(self, theme : str):
         try:
@@ -75,41 +107,21 @@ class Config:
         except:
             return
 
-        self.write_data_in_file(self.config_path, config) 
-
-    def write_last_geometry_folder_path_in_file(self, geometry_path : str):
+        self.write_data_in_file(self.config_path, config)
+    
+    def write_menu_items_visible_in_file(self, menu_items_visible : str):
         try:
-
-            _path = os.path.dirname(geometry_path)
             config = configparser.ConfigParser()
             config.read(self.config_path)
-
+    
             if config.has_section('User preferences'):
-                config["User preferences"]["last geometry folder"] = _path
+                config["User preferences"]["menu_items_visible"] = str(menu_items_visible)
             else:
-                config["User preferences"] = {"last geometry folder" : _path}
-
+                config["User preferences"] = {"menu_items_visible" : str(menu_items_visible)}
         except:
             return
 
-        self.write_data_in_file(self.config_path, config) 
-
-    def write_last_fluid_composition_folder_path_in_file(self, fluid_composition_path : str):
-        try:
-
-            _path = os.path.dirname(fluid_composition_path)
-            config = configparser.ConfigParser()
-            config.read(self.config_path)
-
-            if config.has_section('User preferences'):
-                config["User preferences"]["last fluid composition"] = _path
-            else:
-                config["User preferences"] = {"last fluid composition" : _path}
-
-        except:
-            return
-
-        self.write_data_in_file(self.config_path, config) 
+        self.write_data_in_file(self.config_path, config)
 
     def write_colormap_in_file(self, colormap : str):
         try:
@@ -148,14 +160,11 @@ class Config:
 
             try:
 
-                if "last project folder" in section.keys():
-                    user_preferences["last project folder"] = section["last project folder"]
-
-                if "last geometry folder" in section.keys():
-                    user_preferences["last geometry folder"] = section["last geometry folder"]
-
                 if "interface theme" in section.keys():
                     user_preferences["interface theme"] = section["interface theme"]
+
+                if "menu_items_visible" in section.keys():
+                    user_preferences["menu_items_visible"] = section["menu_items_visible"]
 
                 if "background color" in section.keys():
                     if section["background color"] in ["light", "dark"]:
@@ -221,8 +230,6 @@ class Config:
                 refprop_path = section["refprop path"]
 
         return refprop_path
-
-        self.write_data_in_file(self.config_path, config)
 
     def write_data_in_file(self, path, config):
         with open(path, 'w') as config_file:

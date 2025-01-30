@@ -103,7 +103,7 @@
         <property name="font">
          <font>
           <family>MS Shell Dlg 2</family>
-          <pointsize>12</pointsize>
+          <pointsize>11</pointsize>
           <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
@@ -206,75 +206,86 @@
              <number>2</number>
             </property>
             <item row="0" column="4">
-             <widget class="QFrame" name="frame_13">
-              <property name="frameShape">
-               <enum>QFrame::NoFrame</enum>
+             <widget class="QPushButton" name="pushButton_reset_imported_data">
+              <property name="minimumSize">
+               <size>
+                <width>72</width>
+                <height>30</height>
+               </size>
               </property>
-              <property name="frameShadow">
-               <enum>QFrame::Raised</enum>
+              <property name="maximumSize">
+               <size>
+                <width>72</width>
+                <height>30</height>
+               </size>
               </property>
-              <layout class="QGridLayout" name="gridLayout_6">
-               <property name="leftMargin">
-                <number>2</number>
-               </property>
-               <property name="topMargin">
-                <number>2</number>
-               </property>
-               <property name="rightMargin">
-                <number>2</number>
-               </property>
-               <property name="bottomMargin">
-                <number>2</number>
-               </property>
-               <property name="spacing">
-                <number>2</number>
-               </property>
-               <item row="0" column="0">
-                <widget class="QPushButton" name="pushButton_reset_imported_data">
-                 <property name="minimumSize">
-                  <size>
-                   <width>72</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>72</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="sizeIncrement">
-                  <size>
-                   <width>0</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <family>MS Shell Dlg 2</family>
-                   <pointsize>11</pointsize>
-                   <weight>75</weight>
-                   <italic>false</italic>
-                   <bold>true</bold>
-                  </font>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 bold 11pt &quot;MS Shell Dlg 2&quot;}
-QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 bold 11pt &quot;MS Shell Dlg 2&quot;}
-QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 bold 11pt &quot;MS Shell Dlg 2&quot;}</string>
-                 </property>
-                 <property name="text">
-                  <string>Reset</string>
-                 </property>
-                 <property name="iconSize">
-                  <size>
-                   <width>20</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </widget>
-               </item>
-              </layout>
+              <property name="sizeIncrement">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <family>MS Shell Dlg 2</family>
+                <pointsize>10</pointsize>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true"/>
+              </property>
+              <property name="text">
+               <string>Reset</string>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>20</width>
+                <height>20</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="5">
+             <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="3">
+             <widget class="QSpinBox" name="spinBox_skiprows">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>72</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+              <property name="maximum">
+               <number>10</number>
+              </property>
              </widget>
             </item>
             <item row="0" column="1">
@@ -319,7 +330,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
               <property name="font">
                <font>
                 <family>MS Shell Dlg 2</family>
-                <pointsize>11</pointsize>
+                <pointsize>10</pointsize>
                 <weight>50</weight>
                 <italic>false</italic>
                 <bold>false</bold>
@@ -333,42 +344,18 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
               </property>
              </widget>
             </item>
-            <item row="0" column="3">
-             <widget class="QSpinBox" name="spinBox_skiprows">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>72</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>11</pointsize>
-               </font>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-              <property name="maximum">
-               <number>10</number>
-              </property>
-             </widget>
-            </item>
             <item row="0" column="0">
-             <widget class="QFrame" name="frame_14">
-              <property name="frameShape">
-               <enum>QFrame::NoFrame</enum>
+             <spacer name="horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
               </property>
-              <property name="frameShadow">
-               <enum>QFrame::Raised</enum>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
               </property>
-             </widget>
+             </spacer>
             </item>
            </layout>
           </widget>
@@ -620,7 +607,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
               <property name="font">
                <font>
                 <family>MS Shell Dlg 2</family>
-                <pointsize>11</pointsize>
+                <pointsize>10</pointsize>
                 <weight>50</weight>
                 <italic>false</italic>
                 <bold>false</bold>
@@ -653,7 +640,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
               </property>
               <property name="font">
                <font>
-                <pointsize>8</pointsize>
+                <pointsize>9</pointsize>
                 <weight>50</weight>
                 <italic>false</italic>
                 <bold>false</bold>
@@ -663,8 +650,7 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
                <enum>Qt::LeftToRight</enum>
               </property>
               <property name="styleSheet">
-               <string notr="true">background-color: rgb(255, 255, 255);
-color: rgb(0, 0, 255);</string>
+               <string notr="true"/>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -701,12 +687,14 @@ color: rgb(0, 0, 255);</string>
                </font>
               </property>
               <property name="styleSheet">
-               <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 bold 11pt &quot;MS Shell Dlg 2&quot;}
-QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 bold 11pt &quot;MS Shell Dlg 2&quot;}
-QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 bold 11pt &quot;MS Shell Dlg 2&quot;}</string>
+               <string notr="true"/>
               </property>
               <property name="text">
                <string/>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../../icons/import.png</normaloff>../../icons/import.png</iconset>
               </property>
               <property name="iconSize">
                <size>
@@ -716,21 +704,23 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
               </property>
              </widget>
             </item>
-            <item row="0" column="3">
-             <widget class="QFrame" name="frame_32">
-              <property name="frameShape">
-               <enum>QFrame::NoFrame</enum>
-              </property>
-              <property name="frameShadow">
-               <enum>QFrame::Raised</enum>
-              </property>
-             </widget>
-            </item>
            </layout>
           </widget>
          </item>
          <item row="4" column="0">
           <widget class="QFrame" name="frame_add_imported_data">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>48</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>48</height>
+            </size>
+           </property>
            <property name="frameShape">
             <enum>QFrame::NoFrame</enum>
            </property>
@@ -753,17 +743,17 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
             <property name="spacing">
              <number>2</number>
             </property>
-            <item row="0" column="0">
+            <item row="0" column="1">
              <widget class="QPushButton" name="pushButton_add_imported_data_to_plot">
               <property name="minimumSize">
                <size>
-                <width>0</width>
+                <width>180</width>
                 <height>32</height>
                </size>
               </property>
               <property name="maximumSize">
                <size>
-                <width>240</width>
+                <width>180</width>
                 <height>32</height>
                </size>
               </property>
@@ -776,19 +766,60 @@ QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-s
               <property name="font">
                <font>
                 <family>MS Shell Dlg 2</family>
-                <pointsize>11</pointsize>
-                <weight>75</weight>
+                <pointsize>10</pointsize>
+                <weight>50</weight>
                 <italic>false</italic>
-                <bold>true</bold>
+                <bold>false</bold>
                </font>
               </property>
               <property name="styleSheet">
-               <string notr="true">QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); font: 75 bold 11pt &quot;MS Shell Dlg 2&quot;}
-QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100); font: 75 bold 11pt &quot;MS Shell Dlg 2&quot;}
-QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 3px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255); font: 75 bold 11pt &quot;MS Shell Dlg 2&quot;}</string>
+               <string notr="true"/>
               </property>
               <property name="text">
                <string>Add imported data</string>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>20</width>
+                <height>20</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QPushButton" name="pushButton_exit">
+              <property name="minimumSize">
+               <size>
+                <width>180</width>
+                <height>32</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>180</width>
+                <height>32</height>
+               </size>
+              </property>
+              <property name="sizeIncrement">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <family>MS Shell Dlg 2</family>
+                <pointsize>10</pointsize>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true"/>
+              </property>
+              <property name="text">
+               <string>Exit</string>
               </property>
               <property name="iconSize">
                <size>

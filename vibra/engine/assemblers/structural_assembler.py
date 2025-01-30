@@ -1,21 +1,20 @@
+
+from vibra.engine.model import Model
+
+from vibra.engine.elements.structural_hex8_element import STRUCT_HEXAHEDRON_8
+from vibra.engine.elements.structural_hex20_element import STRUCT_HEXAHEDRON_20
+from vibra.engine.elements.structural_tet4_element import STRUCT_TETRAHEDRON_4S
+from vibra.engine.elements.structural_tet10_element import STRUCT_TETRAHEDRON_10S
+from vibra.engine.mesher.element_type import *
+
 from collections import defaultdict
 from time import time
 
 import numpy as np
 from scipy.sparse import coo_matrix, csr_matrix
 
-from vibra.engine.elements.structural_hex8_element import STRUCT_HEXAHEDRON_8
-from vibra.engine.elements.structural_hex20_element import STRUCT_HEXAHEDRON_20
-# from vibra.engine.assemblers.modal_assembler import ModalAssembler
-from vibra.engine.elements.structural_tet4_element import STRUCT_TETRAHEDRON_4S
-from vibra.engine.elements.structural_tet10_element import (
-    STRUCT_TETRAHEDRON_10S,
-)
-from vibra.engine.mesher.element_type import *
-
-
 class StructuralAssembler:
-    def __init__(self, model):
+    def __init__(self, model : Model):
         self.model = model
         self.properties = model.properties
         self.reset()
@@ -45,13 +44,12 @@ class StructuralAssembler:
     def set_element_formulation(self, element):
         self.element = element
 
-    def set_analysis_data(self, data):
-        self.analysis_data = data
-        if "frequencies" in data.keys():
-            self.frequencies = data["frequencies"]
-
-    def set_frequencies(self, frequencies):
-        self.frequencies = frequencies
+    def update_number_of_frequencies(self):
+        self.frequencies = self.model.frequencies
+        if self.frequencies is None:
+            self.number_frequencies = 1
+        else:
+            self.number_frequencies = len(self.frequencies)
 
     def is_assembled(self):
         return (self.stiffness_matrix is not None) and (self.mass_matrix is not None)
@@ -76,8 +74,8 @@ class StructuralAssembler:
         get_unprescribed_indexes : Indexes of the structural free degrees of freedom.
         """
 
-        global_prescribed = []
-        list_prescribed_dofs = []
+        global_prescribed = list()
+        list_prescribed_dofs = list()
         if self.frequencies is None:
             number_frequencies = 1
         else:
@@ -187,6 +185,9 @@ class StructuralAssembler:
             self.mass_matrix = _mass_matrix_full
 
     def process_assemble(self):
+
+        self.update_number_of_frequencies()
+
         self.assemble_mass_and_stiffness_global_matrices()
         # A = self.get_structural_excitations_by_nodal_attribution()
         # B = self.get_structural_excitations_by_element_integration()

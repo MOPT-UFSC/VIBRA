@@ -5,6 +5,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+from vibra import app, ICON_DIR
 from vibra.utils.icons import load_icon
 
 
@@ -19,11 +20,17 @@ class AcousticModalAnalysisBar(QWidget):
 
         self.create_sliders()
 
-        self.play_icon = load_icon(Path("data/icons/play.png"), QColor("#0055DD"))
-        self.pause_icon = load_icon(Path("data/icons/pause.png"), QColor("#0055DD"))
+        self.play_icon = load_icon(ICON_DIR / "play.png", QColor("#0055DD"))
+        self.pause_icon = load_icon(ICON_DIR / "pause.png", QColor("#0055DD"))
         self.play_pause_button = QPushButton(self.play_icon, "")
+        self.play_pause_button.setToolTip("Play animation")
         self.play_pause_button.setShortcut("Space")
         self.play_pause_button.setMinimumWidth(80)
+
+        self.create_video_icon = load_icon(ICON_DIR / "create_video_icon.png", QColor("#0055DD"))
+        self.create_video_button = QPushButton(self.create_video_icon, "")
+        self.create_video_button.setToolTip("Create video")
+        self.create_video_button.setMinimumWidth(80)
 
         self.frequency_box = QComboBox()
         self.absolute_button = QRadioButton("Absolute")
@@ -55,9 +62,12 @@ class AcousticModalAnalysisBar(QWidget):
         layout.addSpacing(hspacing)
 
         layout.addWidget(self.play_pause_button)
+        layout.addWidget(self.create_video_button)
         layout.addStretch()
 
-        layout.addWidget(QLabel("Mode Selector:"))
+        self.selector_label = QLabel("List of results:")
+
+        layout.addWidget(self.selector_label)
         layout.addWidget(self.frequency_box)
         self.setLayout(layout)
 
@@ -67,9 +77,11 @@ class AcousticModalAnalysisBar(QWidget):
 
     def use_play_icon(self):
         self.play_pause_button.setIcon(self.play_icon)
+        self.play_pause_button.setToolTip("Play animation")
 
     def use_pause_icon(self):
         self.play_pause_button.setIcon(self.pause_icon)
+        self.play_pause_button.setToolTip("Pause animation")
 
     def set_frequencies(self, frequencies):
         self.frequency_box.clear()
@@ -77,8 +89,17 @@ class AcousticModalAnalysisBar(QWidget):
         if frequencies is None:
             return
 
+        analysis_data = app().project.analysis_data
+        if analysis_data is None:
+            return
+
+        if analysis_data["analysis_id"] == 4:
+            prefix = "Mode"
+        else:
+            prefix = "Frequency"
+
         for i, freq in enumerate(frequencies):
-            self.frequency_box.addItem(f" Mode {i + 1}: {round(freq, 6)} Hz")
+            self.frequency_box.addItem(f" {prefix} {i + 1}: {round(freq, 6)} Hz")
 
     def create_sliders(self):
         self.phase_label = QLabel("value")

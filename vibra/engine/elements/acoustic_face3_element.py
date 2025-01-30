@@ -281,3 +281,21 @@ class ACT_FACE_3(Element2D):
             Ze += -(1/2) * (rho/impedance) * N.T@N * (detJAC * wps)
 
         return Ze
+    
+    
+    def get_element_face_normal(self, connect):
+        
+        # ie = self.faces_connectivity[element_id, 4:]
+        coords = self.nodal_coordinates[connect, 1:]
+
+        P1 = coords[0, :]
+        P2 = coords[1, :]
+        P3 = coords[2, :]
+
+        P2P1 = np.array(P2 - P1)
+        P3P1 = np.array(P3 - P1)
+
+        cross = np.cross(P2P1, P3P1)
+        normal = cross / np.linalg.norm(cross)
+
+        return normal

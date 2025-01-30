@@ -5,6 +5,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+from vibra import ICON_DIR
 from vibra.utils.icons import load_icon
 
 
@@ -19,11 +20,17 @@ class StructuralModalAnalysisBar(QWidget):
 
         self.create_sliders()
 
-        self.play_icon = load_icon(Path("data/icons/play.png"), QColor("#0055DD"))
-        self.pause_icon = load_icon(Path("data/icons/pause.png"), QColor("#0055DD"))
+        self.play_icon = load_icon(ICON_DIR / "play.png", QColor("#0055DD"))
+        self.pause_icon = load_icon(ICON_DIR / "pause.png", QColor("#0055DD"))
         self.play_pause_button = QPushButton(self.play_icon, "")
         self.play_pause_button.setShortcut("Space")
+        self.play_pause_button.setToolTip("Play animation")
         self.play_pause_button.setMinimumWidth(80)
+
+        self.create_video_icon = load_icon(ICON_DIR / "create_video_icon.png", QColor("#0055DD"))
+        self.create_video_button = QPushButton(self.create_video_icon, "")
+        self.create_video_button.setToolTip("Create video")
+        self.create_video_button.setMinimumWidth(80)
 
         self.frequency_box = QComboBox()
         self.response_ux_button = QRadioButton("Real Ux")
@@ -66,6 +73,7 @@ class StructuralModalAnalysisBar(QWidget):
         config_layout.addWidget(self.update_coloring)
         config_layout.addStretch()
         config_layout.addWidget(self.play_pause_button)
+        config_layout.addWidget(self.create_video_button)
 
         buttons_layout = QVBoxLayout()
         buttons_layout.addLayout(plot_layout)
@@ -97,9 +105,11 @@ class StructuralModalAnalysisBar(QWidget):
 
     def use_play_icon(self):
         self.play_pause_button.setIcon(self.play_icon)
+        self.play_pause_button.setToolTip("Play animation")
 
     def use_pause_icon(self):
         self.play_pause_button.setIcon(self.pause_icon)
+        self.play_pause_button.setToolTip("Pause animation")
 
     def create_sliders(self):
         #

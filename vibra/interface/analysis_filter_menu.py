@@ -2,14 +2,14 @@ from PyQt5.QtCore import Qt, QSize
 # from PyQt5.QtGui import *
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QFrame, QLabel, QComboBox
 
-from vibra.utils.interface_functions import get_main_window
+from vibra import app
 
 
 class AnalysisFilter(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.main_window = get_main_window()
+        self.main_window = app().main_window
         self.initialize()
 
         grid_main = QHBoxLayout()
@@ -20,7 +20,9 @@ class AnalysisFilter(QWidget):
         grid_main.setContentsMargins(0, 0, 0, 0)
         
         self.setLayout(grid_main)
-        self.setFixedSize(QSize(280, 70))
+        self.setMinimumWidth(300)
+        self.setMaximumWidth(360)
+        self.setFixedHeight(70)
 
     def initialize(self):
         """

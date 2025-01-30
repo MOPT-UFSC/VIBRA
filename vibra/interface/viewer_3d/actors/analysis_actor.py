@@ -1,5 +1,5 @@
 import numpy as np
-import vtk
+from vtkmodules.vtkCommonCore import vtkLookupTable
 
 from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
 
@@ -8,7 +8,7 @@ class AnalysisActor(SolidsActor):
     def __init__(self, mesh):
         super().__init__(mesh)
 
-        self.lookup_table = vtk.vtkLookupTable()
+        self.lookup_table = vtkLookupTable()
         self.lookup_table.SetHueRange(2 / 3, 0)
         self.clipped_data = self.data
 
@@ -19,33 +19,6 @@ class AnalysisActor(SolidsActor):
             self.mesh.nodal_coordinates[:, 1:] + (magnification_factor / max_abs) * u_def
         )
         self.update_coordinates(deformed_coordinates)
-
-    def apply_cut(self, origin, normal):
-        if self.data is None:
-            return
-
-        plane = vtk.vtkPlane()
-        plane.SetOrigin(origin)
-        plane.SetNormal(normal)
-
-        clipper = vtk.vtkExtractGeometry()
-        clipper.SetInputData(self.data)
-        clipper.SetImplicitFunction(plane)
-        clipper.Update()
-        self.clipped_data = clipper.GetOutput()
-
-        mapper = self.GetMapper()
-        mapper.InterpolateScalarsBeforeMappingOn()
-        mapper.SetInputData(self.clipped_data)
-        mapper.Modified()
-
-    def disable_cut(self):
-        if self.data is None:
-            return
-        self.clipped_data = self.data
-        mapper = self.GetMapper()
-        mapper.SetInputData(self.data)
-        mapper.Modified()
 
     def plot_colorbar(self, values, min_value, max_value):
         if self.data is None:

@@ -19,7 +19,7 @@ class GetUserConfirmationInput(QDialog):
         self.main_window.set_input_widget(self)
         self.main_window.viewer_tabs.show_geometry()
 
-        self.project = self.main_window.project
+        self.project = app().project
         self.model = self.project.model
         self.properties = self.model.properties
 

@@ -20,3 +20,8 @@ poetry run pytest
 ```
 poetry run black
 ```
+## Generate Installer
+```
+poetry run pyinstaller vibra.spec --noconfirm
+ISCC.exe /O"dist" /F"vibra-setup" "vibra.iss"
+```

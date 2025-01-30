@@ -8,50 +8,40 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from vibra import UI_DIR
-from vibra.interface.general.call_double_confirmation_input import CallDoubleConfirmationInput
+from vibra import app, UI_DIR
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 # from pulse.utils import remove_bc_from_file, os.path.join
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.utils.interface_functions import get_main_window
+
+window_title_1 = "Error"
+window_title_2 = "Warning"
 
 
 class BoundaryConditionInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/structural/boundary_condition_input.ui"
+        ui_path = UI_DIR / "model/setup/structural/boundary_condition_input.ui"
         uic.loadUi(ui_path, self)
 
-        icon_path = str(Path("data/icons/logo_vibra.png"))
-        self.icon = QIcon(icon_path)
-        self.setWindowIcon(self.icon)
-        self.setWindowTitle("Set boundary condition")
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
-
-        self.main_window = get_main_window()
-        self.main_window.set_input_widget(self)
-        self.main_window.viewer_tabs.show_geometry()
-        self.project = self.main_window.project
+        self.main_window = app().main_window
+        self.project = app().project
         self.model = self.project.model
 
+        self.main_window.set_input_widget(self)
+        self.main_window.viewer_tabs.show_geometry()
+
         self._reset_variables()
+        self._config_window()
         self._define_qt_variables()
         self._create_connections()
         self.exec()
 
-        # self.opv = opv
-        # self.opv.setInputObject(self)
-
-        # self.before_run = project.get_pre_solution_model_checks()
-
-        # self.userPath = os.path.expanduser('~')
-        # self.new_load_path_table = ""
-        # self.imported_filename = ""
-        # self.structural_bc_info_path = project.file._node_structural_path
-        # self.structural_folder_path = self.project.file._structural_imported_data_folder_path
-        # self.prescribed_dofs_files_folder_path = os.path.join(self.structural_folder_path, "prescribed_dofs_files")
-        # self.nodes = self.preprocessor.nodes
+    def _config_window(self):
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(app().main_window.vibra_icon)
+        self.setWindowTitle("Set boundary condition")
 
     def _reset_variables(self):
         self.complete = False
@@ -185,10 +175,9 @@ class BoundaryConditionInputs(QDialog):
             try:
                 _real = float(lineEdit_real.text())
             except Exception:
-                window_title = "ERROR"
                 title = f"Invalid entry to the {label}"
                 message = f"Wrong input for real part of {label}."
-                PrintMessageInput([title, message, window_title])
+                PrintMessageInput([window_title_1, title, message])
                 lineEdit_real.setFocus()
                 self.stop = True
                 return
@@ -199,10 +188,9 @@ class BoundaryConditionInputs(QDialog):
             try:
                 _imag = float(lineEdit_imag.text())
             except Exception:
-                window_title = "ERROR"
                 title = f"Invalid entry to the {label}"
                 message = f"Wrong input for imaginary part of {label}."
-                PrintMessageInput([title, message, window_title])
+                PrintMessageInput([window_title_1, title, message])
                 lineEdit_imag.setFocus()
                 self.stop = True
                 return
@@ -283,7 +271,7 @@ class BoundaryConditionInputs(QDialog):
             title = "Additional inputs required"
             message = "You must inform at least one prescribed dof\n"
             message += "before confirming the input!"
-            PrintMessageInput([title, message, window_title])
+            PrintMessageInput([window_title_1, title, message])
 
     def load_table(self, lineEdit, dof_label, direct_load=False):
         window_title = "ERROR"
@@ -307,7 +295,7 @@ class BoundaryConditionInputs(QDialog):
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum \n"
                 message += "data must have frequencies, real and imaginary columns."
-                PrintMessageInput([title, message, window_title])
+                PrintMessageInput([window_title_1, title, message])
                 lineEdit.setFocus()
                 return None, None
 
@@ -334,7 +322,7 @@ class BoundaryConditionInputs(QDialog):
 
         except Exception as log_error:
             message = str(log_error)
-            PrintMessageInput([title, message, window_title])
+            PrintMessageInput([window_title_1, title, message])
             lineEdit.setFocus()
             return None, None
 
@@ -532,7 +520,7 @@ class BoundaryConditionInputs(QDialog):
                 title = "Additional inputs required"
                 message = "You must inform at least one prescribed dof\n"
                 message += "table path before confirming the input!"
-                PrintMessageInput([title, message, window_title])
+                PrintMessageInput([window_title_1, title, message])
                 return
 
             for basename in self.basenames:
@@ -620,13 +608,12 @@ class BoundaryConditionInputs(QDialog):
         self.process_table_file_removal(list_table_names)
 
     def reset_all(self):
+
         title = "Remove all prescribed dofs from structural model"
-        message = (
-            "Do you really want to remove all prescribed dofs from the structural model?\n\n\n"
-        )
-        message += "Press the Continue button to proceed with removal or press Cancel or Close buttons to abort the current operation."
+        message = "Would you like to remove all prescribed dofs from the structural model?"
+
         buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
-        read = CallDoubleConfirmationInput(title, message, buttons_config=buttons_config)
+        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
         if read._continue:
             self.basenames = []
@@ -703,6 +690,6 @@ class BoundaryConditionInputs(QDialog):
     #     message += f"the frequency setup from previously imported tables.\n"
     #     message += f"All imported tables must have the same frequency\n"
     #     message += f"setup to avoid errors in the model processing."
-    #     PrintMessageInput([title, message, window_title])
+    #     PrintMessageInput([window_title_1, title, message])
     #     lineEdit.setText("")
     #     lineEdit.setFocus()

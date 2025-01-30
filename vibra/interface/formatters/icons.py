@@ -1,13 +1,14 @@
-import os
-import numpy as np
-from PIL import Image
-from pathlib import Path
+
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap, QImage
 from PyQt5.QtCore import QSize
 
 from vibra import ICON_DIR
 
+import os
+import numpy as np
+from PIL import Image
+from pathlib import Path
 
 def get_icons_path(filename):
     path = ICON_DIR / filename

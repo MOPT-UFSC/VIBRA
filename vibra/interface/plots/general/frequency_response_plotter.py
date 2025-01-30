@@ -1,24 +1,16 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QComboBox, QCheckBox, QDialog, QFrame, QPushButton, QRadioButton, QSpinBox, QVBoxLayout, QToolButton, QWidget
+from PyQt5.QtGui import QCloseEvent, QColor
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
-from pathlib import Path
 
-import os
-import numpy as np
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-
-from vibra import UI_DIR
+from vibra import app, UI_DIR
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.data_handler.import_data_to_compare import ImportDataToCompare
-from vibra.interface.plots.general.mpl_canvas import MplCanvas
-
+from vibra.interface.formatters import icons
 from vibra.interface.plots.general.advanced_cursor import AdvancedCursor
 
-def get_icons_path(filename):
-    path = f"data/icons/{filename}"
-    if os.path.exists(path):
-        return str(Path(path))
+import numpy as np
+
 
 class FrequencyResponsePlotter(QDialog):
     def __init__(self, *args, **kwargs):
@@ -27,29 +19,31 @@ class FrequencyResponsePlotter(QDialog):
         ui_path = UI_DIR / "plots/general/frequency_response_plot.ui"
         uic.loadUi(ui_path, self)
 
-        self._load_icons()
+        self._config_window()
         self._initialize()
         self._initialize_canvas()
         self._define_qt_variables()
         self._create_connections()
 
-    def _load_icons(self):
-        self.vibra_icon = QIcon(get_icons_path('logo_vibra.png'))
-        self.export_icon = QIcon(get_icons_path('send_to_disk.png'))
-        self.setWindowIcon(self.vibra_icon)
+    def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Frequency response plotter")
 
     def _initialize(self):
 
+        self.keep_window_open = True
         self.imported_dB = False
         self._layout = None
         self.x_data = None
         self.y_data = None
-        self.importer = None
 
-        self.data_to_plot = dict()
+        self.importer = None
+        self.exporter = None
+
+        self.model_results_data = dict()
+        self.imported_results_data = dict()
 
         self.title = ""
         self.font_weight = "normal"
@@ -57,7 +51,6 @@ class FrequencyResponsePlotter(QDialog):
         self.colors = [ [0,0,1],
                         [0,0,0],
                         [1,0,0],
-                        [1,0,1],
                         [0,1,1],
                         [0.75,0.75,0.75],
                         [0.5, 0.5, 0.5],
@@ -90,15 +83,21 @@ class FrequencyResponsePlotter(QDialog):
         self.radioButton_harmonic_cursor : QRadioButton
         self.pushButton_export_data : QPushButton
 
+        # QSpinBox
+        self.spinBox_vertical_lines : QSpinBox
+
         # QWidget
         self.widget_plot : QWidget
 
     def _create_connections(self):
+        #
         self.checkBox_grid.stateChanged.connect(self.plot_data_in_freq_domain)
         self.checkBox_legends.stateChanged.connect(self.plot_data_in_freq_domain)
         self.checkBox_cursor_legends.stateChanged.connect(self.plot_data_in_freq_domain)
+        #
         self.comboBox_plot_type.currentIndexChanged.connect(self._update_plot_type)
         self.comboBox_differentiate_data.currentIndexChanged.connect(self.plot_data_in_freq_domain)
+        #
         self.radioButton_real.clicked.connect(self._update_comboBox)
         self.radioButton_imaginary.clicked.connect(self._update_comboBox)
         self.radioButton_absolute.clicked.connect(self._update_comboBox)
@@ -106,15 +105,17 @@ class FrequencyResponsePlotter(QDialog):
         self.radioButton_disable_cursors.clicked.connect(self.update_cursor_controls)
         self.radioButton_cross_cursor.clicked.connect(self.update_cursor_controls)
         self.radioButton_harmonic_cursor.clicked.connect(self.update_cursor_controls)
+        #
         self.pushButton_import_data.clicked.connect(self.import_file)
-        self.pushButton_export_data.clicked.connect(self.call_data_exporter)
+        self.pushButton_export_data.clicked.connect(self.export_data_callback)
+        #
+        app().main_window.theme_changed.connect(self.paint_toolbar_icons)
         self._initial_config()
 
     def import_file(self):
         if self.importer is None:
             self.importer = ImportDataToCompare(self)
-        else:
-            self.importer.exec()
+        self.importer.exec()
 
     def _initial_config(self):
         self.aux_bool = False
@@ -158,14 +159,15 @@ class FrequencyResponsePlotter(QDialog):
         self.plot_data_in_freq_domain()
 
     def _initialize_canvas(self):
+        from vibra.interface.plots.general.mpl_canvas import MplCanvas
         self.mpl_canvas_frequency_plot = MplCanvas(self, width=8, height=6, dpi=110)
         self.ax = self.mpl_canvas_frequency_plot.axes
         self.fig = self.mpl_canvas_frequency_plot.fig
     
-    def call_data_exporter(self):
-        data = self.data_to_plot["model", 0]
+    def export_data_callback(self):
+        self.hide()
         self.exporter = ExportModelResults()
-        self.exporter._set_data_to_export(data)
+        self.exporter._set_data_to_export(self.model_results_data)
 
     def imported_dB_data(self):
         self.imported_dB = True
@@ -179,6 +181,7 @@ class FrequencyResponsePlotter(QDialog):
         self.comboBox_differentiate_data.setDisabled(True)
 
     def load_data_to_plot(self, data):
+
         if "x_data" in data.keys():
             self.x_data = data["x_data"]
         if "y_data" in data.keys():
@@ -266,52 +269,79 @@ class FrequencyResponsePlotter(QDialog):
         else:
             return self.unit + "/s²"
 
+    def paint_toolbar_icons(self, *args, **kwargs):
+
+        from vibra.interface.plots.general.custom_navigation_toolbar import CustomNavigationToolbar
+
+        toolbar = self.findChild(CustomNavigationToolbar)
+        if toolbar is None:
+            return
+
+        if app().user_config.theme == "dark":
+            color = QColor("#5f9af4")
+        else:
+            color = QColor("#1a73e8")
+
+        icons.change_icon_color_for_widgets(toolbar.findChildren(QToolButton), color)
+
     def plot_data_in_freq_domain(self):
 
         self.ax.cla()
-        self.legends = []
-        self.plots = []
+        self.legends = list()
+        self.plots = list()
 
-        for _, data in self.data_to_plot.items():
-            self.load_data_to_plot(data)
-            if self.y_data is not None:
-                self.mask_x = self.x_data <= 0
-                self.mask_y = self.y_data <= 0
-                if self.aux_bool:
-                    _plot = self.call_lin_lin_plot()
-                elif True in (self.mask_x + self.mask_y):
-                    _plot = self.get_plot_considering_invalid_log_values()
-                elif "log-log" in self.plot_type:
-                    _plot = self.call_log_log_plot()
-                elif "log-y" in self.plot_type:
-                    _plot = self.call_semilog_y_plot()
-                elif "log-x" in self.plot_type:
-                    _plot = self.call_semilog_x_plot()
-                else:
-                    _plot = self.call_lin_lin_plot()
+        if self._layout is None:
+            from vibra.interface.plots.general.custom_navigation_toolbar import CustomNavigationToolbar
+            toolbar = CustomNavigationToolbar(self.mpl_canvas_frequency_plot, self)
 
-                self.legends.append(self.legend)
-                self.plots.append(_plot)
+            # Paint the toolbar icons and connect the buttons to paint
+            # themselves after every click or draw events
+            self.paint_toolbar_icons()
+            for button in toolbar.findChildren(QToolButton):
+                button.clicked.connect(self.paint_toolbar_icons)                    
+            self.mpl_canvas_frequency_plot.mpl_connect("draw_event", self.paint_toolbar_icons)
 
-                if self._layout is None:
-                    toolbar = NavigationToolbar2QT(self.mpl_canvas_frequency_plot, self)
-                    self._layout = QVBoxLayout()
-                    self._layout.addWidget(toolbar)
-                    self._layout.addWidget(self.mpl_canvas_frequency_plot)
-                    self._layout.setContentsMargins(2, 2, 2, 2)
-                    self.widget_plot.setLayout(self._layout)
+            self._layout = QVBoxLayout()
+            self._layout.addWidget(toolbar)
+            self._layout.addWidget(self.mpl_canvas_frequency_plot)
+            self._layout.setContentsMargins(2, 2, 2, 2)
+            self.widget_plot.setLayout(self._layout)
 
-        if len(self.plots) != 0:
+        for current_data in [self.model_results_data, self.imported_results_data]:
+            for _, data in current_data.items():
+
+                self.load_data_to_plot(data)
+
+                if self.y_data is not None:
+                    self.mask_x = self.x_data <= 0
+                    self.mask_y = self.y_data <= 0
+                    if self.aux_bool:
+                        _plot = self.call_lin_lin_plot()
+                    elif True in (self.mask_x + self.mask_y):
+                        _plot = self.get_plot_considering_invalid_log_values()
+                    elif "log-log" in self.plot_type:
+                        _plot = self.call_log_log_plot()
+                    elif "log-y" in self.plot_type:
+                        _plot = self.call_semilog_y_plot()
+                    elif "log-x" in self.plot_type:
+                        _plot = self.call_semilog_x_plot()
+                    else:
+                        _plot = self.call_lin_lin_plot()
+
+                    self.legends.append(self.legend)
+                    self.plots.append(_plot)
+
+        if self.plots:
 
             if self.checkBox_legends.isChecked():
                 self.ax.legend(handles=self.plots, labels=self.legends)
                 
             self.call_cursor()
-            self.ax.set_xlabel(self.x_label, fontsize = 11, fontweight = self.font_weight)
-            self.ax.set_ylabel(self.y_label, fontsize = 11, fontweight = self.font_weight)
+            self.ax.set_xlabel(self.x_label, fontsize = 10, fontweight = self.font_weight)
+            self.ax.set_ylabel(self.y_label, fontsize = 10, fontweight = self.font_weight)
             
             if self.title != "":
-                self.ax.set_title(self.title, fontsize = 12, fontweight = self.font_weight)
+                self.ax.set_title(self.title, fontsize = 11, fontweight = self.font_weight)
 
             if self.checkBox_grid.isChecked():
                 self.ax.grid()
@@ -326,7 +356,7 @@ class FrequencyResponsePlotter(QDialog):
                                     color = self.color, 
                                     linestyle = self.linestyle  )
         return _plot
-    
+
     def call_semilog_x_plot(self, first_index=0):
         _plot, = self.ax.semilogx(  self.x_data[first_index:], 
                                     self.y_data[first_index:], 
@@ -336,6 +366,12 @@ class FrequencyResponsePlotter(QDialog):
         return _plot
 
     def call_lin_lin_plot(self):
+
+        if self.comboBox_plot_type.currentIndex() != 2:
+            self.comboBox_plot_type.blockSignals(True)
+            self.comboBox_plot_type.setCurrentIndex(2)
+            self.comboBox_plot_type.blockSignals(False)
+
         _plot, = self.ax.plot(  self.x_data, 
                                 self.y_data, 
                                 linewidth = 1,
@@ -352,7 +388,7 @@ class FrequencyResponsePlotter(QDialog):
         return _plot
     
     def get_plot_considering_invalid_log_values(self):
-        
+
         if "log-log" in self.plot_type:
         
             if True in self.mask_y[1:] or True in self.mask_x[1:]:
@@ -364,7 +400,7 @@ class FrequencyResponsePlotter(QDialog):
                     _plot = self.call_log_log_plot(first_index=0)
 
         elif "log-x" in self.plot_type:
-            
+
             if True in self.mask_x[1:]:
                 _plot = self.call_lin_lin_plot()
             else:
@@ -372,9 +408,9 @@ class FrequencyResponsePlotter(QDialog):
                     _plot = self.call_semilog_x_plot(first_index=1)
                 else:
                     _plot = self.call_semilog_x_plot(first_index=0)
-        
+
         elif "log-y" in self.plot_type:
-        
+
             if True in self.mask_y[1:]:
                 _plot = self.call_lin_lin_plot()
             else:
@@ -382,7 +418,7 @@ class FrequencyResponsePlotter(QDialog):
                     _plot = self.call_semilog_y_plot(first_index=1)
                 else:
                     _plot = self.call_semilog_y_plot(first_index=0)
-        
+
         else:
         
             _plot = self.call_lin_lin_plot()
@@ -408,14 +444,25 @@ class FrequencyResponsePlotter(QDialog):
 
         self.mouse_connection = self.fig.canvas.mpl_connect(s='motion_notify_event', func=self.cursor.mouse_move)
 
-    def _set_data_to_plot(self, data):
+    def _set_model_results_data_to_plot(self, data):
         if isinstance(data, dict):
-            self.data_to_plot["model", 0] = data
+            self.model_results_data = data
             self.plot_data_in_freq_domain()
-            self.exec()
+            while self.keep_window_open:
+                self.exec()
 
-    def _multiple_data_to_plot(self, data):
+    def _set_imported_results_data_to_plot(self, data):
         if isinstance(data, dict):
-            self.data_to_plot = data
+            self.imported_results_data = data
             self.plot_data_in_freq_domain()
-            self.exec()
+
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
+
+        if self.exporter is not None:
+            self.exporter.close()
+
+        if self.importer is not None:
+            self.importer.close()
+
+        self.keep_window_open = False
+        return super().closeEvent(a0)

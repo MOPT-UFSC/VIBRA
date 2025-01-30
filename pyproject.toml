@@ -1,18 +1,17 @@
 [tool.poetry]
 name = "vibra"
-version = "0.1.0a0"
+version = "0.2.4"
 description = ""
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
 
 [[tool.poetry.source]]
-name = "pypi-public"
-url = "https://pypi.org/simple/"
+name = "PyPI"
 priority = "primary"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
-numpy = "^1.24.2"
+numpy = ">=1.26"
 pyqt5 = "^5.15.9"
 pyqt5-qt5 = "5.15.2"
 vtk = "^9.2.6"
@@ -22,15 +21,24 @@ ctrefprop = "^0.10.2"
 scipy = "^1.11.1"
 pandas = "^2.1.0"
 openpyxl = "^3.1.2"
-pypardiso = {git = "https://github.com/andrejstmh/PyPardisoProject"}
 mkl = "2023.2.0"
 intel-openmp = "2023.2.0"
+h5py = "^3.11.0"
+moviepy = "^1.0.3"
+pypardiso-mopt = "^0.1.0"
+molde = "^0.1.0"
+fileboxes = "^0.1.3"
+numba = "^0.60.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"
 pytest = "^7.2.2"
 isort = "^5.12.0"
 pyinstaller = "^6.8.0"
+tuna = "^0.5.11"
+
+[tool.poetry.scripts]
+vibra = "vibra.launch:main"
 
 [build-system]
 requires = ["poetry-core"]
@@ -42,3 +50,9 @@ line-length=100
 [tool.isort]
 multi_line_output = 3
 include_trailing_comma = true
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "serial",
+]
