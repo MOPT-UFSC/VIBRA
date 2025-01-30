@@ -52,6 +52,7 @@ class CommonAnalysisRenderWidget(AnimatedRenderWidget):
             return
 
         section_plane = app().main_window.section_plane
+
         if not section_plane.cutting:
             self._disable_section_plane()
             return
@@ -67,6 +68,7 @@ class CommonAnalysisRenderWidget(AnimatedRenderWidget):
             self.plane_actor.GetProperty().SetOpacity(0.8)
         else:
             self._apply_section_plane(position, rotation, inverted)
+            self.ghost_actor.VisibilityOn()
             self.plane_actor.SetVisibility(not section_plane.keep_section_plane)
             self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
             self.plane_actor.GetProperty().SetOpacity(0.2)

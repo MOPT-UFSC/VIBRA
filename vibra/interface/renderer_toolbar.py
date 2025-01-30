@@ -92,7 +92,7 @@ class RendererToolbar(QToolBar):
         clip_plane_show_icon = load_icon(ICON_DIR / "visibility/section_plane_view.png", color)
         self.section_plane_show_action = QAction(clip_plane_show_icon, "View Section Plane", self)
         self.section_plane_show_action.setCheckable(True)
-        self.section_plane_show_action.triggered.connect(self.section_plane_show_callback)
+        # self.section_plane_show_action.triggered.connect(self.section_plane_show_callback)
 
         clip_plane_config_icon = load_icon(ICON_DIR / "visibility/section_plane_config.png", color)
         self.action_section_plane = QAction(clip_plane_config_icon, "Configure Section Plane", self)
