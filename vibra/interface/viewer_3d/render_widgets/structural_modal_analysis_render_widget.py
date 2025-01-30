@@ -11,12 +11,13 @@ from vibra import app
 from vibra.interface.analysis_bars.structural_analysis_bar import (
     StructuralModalAnalysisBar,
 )
-from vibra.interface.viewer_3d.actors.analysis_actor import AnalysisActor
-from vibra.interface.viewer_3d.actors.section_plane_actor import (
+from ..actors.ghost_actor import GhostActor
+from ..actors.analysis_actor import AnalysisActor
+from ..actors.section_plane_actor import (
     SectionPlaneActor,
 )
-from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
-from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
+from ..actors.edges_actor import EdgesActor
+from ..actors.faces_actor import FacesActor
 # from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
 #     CommonRenderWidget,
 # )
@@ -111,7 +112,7 @@ class StructuralModalAnalysisRenderWidget(CommonAnalysisRenderWidget):
         index = self.current_shape_index()
         if not (0 <= index < solver.modal_shape.shape[1]):
             return
-        
+
         if self.plane_actor is not None:
             self.show_plane_actor = self.plane_actor.GetVisibility()
 
@@ -125,11 +126,8 @@ class StructuralModalAnalysisRenderWidget(CommonAnalysisRenderWidget):
         # Add a very subtle transparent actor to represent the whole
         # structure even if part of it is hidden
         has_hidden_part = bool(self.main_window.hidden_surfaces)
-        self.ghost_actor = FacesActor(mesh, allow_hidding=False)
+        self.ghost_actor = GhostActor(mesh)
         self.ghost_actor.SetVisibility(has_hidden_part)
-        self.ghost_actor.GetProperty().SetOpacity(0.05)
-        self.ghost_actor.GetProperty().LightingOff()
-        self.ghost_actor.PickableOff()
         self.renderer.AddActor(self.ghost_actor)
 
         self.plane_actor = SectionPlaneActor(self.analysis_actor.GetBounds())
@@ -154,7 +152,7 @@ class StructuralModalAnalysisRenderWidget(CommonAnalysisRenderWidget):
 
         if reset_camera:
             self.renderer.ResetCamera()
-            
+
         self.update_section_plane()
         app().project.thumbnail = self.get_thumbnail()
 
@@ -181,11 +179,10 @@ class StructuralModalAnalysisRenderWidget(CommonAnalysisRenderWidget):
 
         phase = self.control_bar.phase_slider.value()
         magnification_factor = self.control_bar.magnification_factor_slider.value()
-        displacements, color_scalars, min_value, max_value = self._calculate_displacements(
-            index, phase
-        )
+        displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
 
         self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
+        self.ghost_actor.apply_deformation(displacements, phase, magnification_factor)
         self.edges_actor.extract_data(self.analysis_actor.data)
 
         self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value)
@@ -355,6 +352,7 @@ class StructuralModalAnalysisRenderWidget(CommonAnalysisRenderWidget):
         magnification_factor = self.control_bar.magnification_factor_slider.value()
 
         self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
+        self.ghost_actor.apply_deformation(displacements, phase, magnification_factor)
         self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value)
         # self.edges_actor.extract_data(self.analysis_actor.data)
         self.update()
@@ -365,10 +363,10 @@ class StructuralModalAnalysisRenderWidget(CommonAnalysisRenderWidget):
                                                         "Save As",
                                                         filter = "All Files ();; Video (*.mp4);; GIF (*.gif);;",
                                                     )
-        
+
         if not check:
             return
-        
+
         self.generate_video(file_path)
 
     def _actors_exists(self):
