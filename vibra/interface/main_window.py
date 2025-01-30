@@ -216,7 +216,7 @@ class MainWindow(QMainWindow):
         qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
         self.viewer_tabs.set_theme(theme)
         app().user_config.theme = theme
-        self.menu_items._configItems()
+        self.menu_widget._configItems()
 
         if theme == "dark":
             icon_color = QColor("#5f9af4")
@@ -425,9 +425,16 @@ class MainWindow(QMainWindow):
     def action_theme_callback(self):
         color = QColor("#448cff")
 
-        self.new_project_icon = load_icon(Path(ICON_DIR / "new_file.png"), color)
         self.theme_sun_icon = load_icon(Path(ICON_DIR / "sun_icon.png"), color)
         self.theme_moon_icon = load_icon(Path(ICON_DIR / "moon_icon.png"), color)
+
+        if app().user_config.theme == "light":
+            self.set_theme("dark")
+            self.action_theme.setIcon(self.theme_sun_icon)
+
+        elif app().user_config.theme == "dark":
+            self.set_theme("light")
+            self.action_theme.setIcon(self.theme_moon_icon)
 
     def disable_section_plane_visibility(self):
         for tab in self.viewer_tabs.tabs():
@@ -545,19 +552,6 @@ class MainWindow(QMainWindow):
 
     def get_user_config(self):
         return app().user_config
-
-    # External functions that may be usefull
-    def set_theme(self, theme: str):
-        """
-        Changes Qt stylesheets using qdarktheme library and the
-        renderer background colors.
-
-        The input is a string "light" or "dark".
-        """
-        qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
-        app().user_config.theme = theme
-        self.menu_widget._configItems()
-        self.theme_changed.emit(theme)
 
     def set_menu_items_visibility_state(self, state: bool):
         app().user_config.menu_items_visible = state
