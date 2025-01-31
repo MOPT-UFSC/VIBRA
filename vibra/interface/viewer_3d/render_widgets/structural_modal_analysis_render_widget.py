@@ -14,33 +14,28 @@ from vibra.interface.analysis_bars.structural_analysis_bar import (
 from ..actors.ghost_actor import GhostActor
 from ..actors.analysis_actor import AnalysisActor
 from ..actors.hollow_analysis_actor import HollowAnalysisActor
-from ..actors.section_plane_actor import (
-    SectionPlaneActor,
-)
+from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.edges_actor import EdgesActor
 from ..actors.faces_actor import FacesActor
-# from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
-#     CommonRenderWidget,
-# )
 from vibra.utils.math_functions import lerp
 from .common_analysis_render_widget import CommonAnalysisRenderWidget
 
 
 class StructuralModalAnalysisRenderWidget(CommonAnalysisRenderWidget):
-    # many parts of this class is shared by AcousticModalAnalysisRenderWidget
-    # and probably with other analysis classes, so it may be a good idea to
-    # make a superclass that controls all the common stuff.
+    # Some parts of the common functions are already implemented
+    # inside CommonAnalysisRenderWidget, but there are still room
+    # for improvement.
 
     def __init__(self, parent=None):
         super().__init__(parent)
 
         self.main_window = app().main_window
         self.control_bar = StructuralModalAnalysisBar()
-        self.control_bar.value_changed.connect(self.update_deformations)
+        self.control_bar.value_changed.connect(self.update_color_and_deformation)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
         self.control_bar.phase_slider.sliderPressed.connect(self.stop_animation)
         self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
-        self.control_bar.create_video_button.clicked.connect(self.save_video)
+        self.control_bar.create_video_button.clicked.connect(self.export_animation_to_file)
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
@@ -56,10 +51,10 @@ class StructuralModalAnalysisRenderWidget(CommonAnalysisRenderWidget):
         self.section_plane_active = False
         self.section_plane_args = tuple()
 
-        self.analysis_actor = None
-        self.edges_actor = None
-        self.plane_actor = None
-        self.ghost_actor = None
+        self.analysis_actor: AnalysisActor | HollowAnalysisActor = None
+        self.edges_actor: EdgesActor = None
+        self.plane_actor: SectionPlaneActor = None
+        self.ghost_actor: GhostActor = None
         self.bounds = (0, 0, 0, 0, 0, 0)
 
         self.create_axes()
@@ -67,12 +62,6 @@ class StructuralModalAnalysisRenderWidget(CommonAnalysisRenderWidget):
         self.create_scale_bar()
         self.update_frequencies()
         self.update_plot()
-
-    def toggle_animation(self, *args, **kwargs):
-        if self.playing_animation:
-            self.stop_animation()
-        else:
-            self.start_animation()
 
     def start_animation(self):
         super().start_animation()
@@ -91,18 +80,7 @@ class StructuralModalAnalysisRenderWidget(CommonAnalysisRenderWidget):
             return
         self.control_bar.set_frequencies(solver.natural_frequencies)
 
-    def update_plot(self, reset_camera=False):
-        if app().project is None:
-            return
-
-        model = app().project.model
-        if model is None:
-            return
-
-        mesh = model.mesh
-        if mesh is None:
-            return
-
+    def update_plot(self, *args, **kwargs):
         solver = app().project.structural_modal_solver
         if solver is None:
             return
@@ -114,54 +92,12 @@ class StructuralModalAnalysisRenderWidget(CommonAnalysisRenderWidget):
         if not (0 <= index < solver.modal_shape.shape[1]):
             return
 
-        if self.plane_actor is not None:
-            self.show_plane_actor = self.plane_actor.GetVisibility()
-
-        self.remove_actors()
-
-        self.analysis_actor = HollowAnalysisActor(mesh)
-
-        self.edges_actor = EdgesActor(self.analysis_actor.data)
-        self.edges_actor.GetProperty().SetColor(0, 0, 0)
-
-        # Add a very subtle transparent actor to represent the whole
-        # structure even if part of it is hidden
-        has_hidden_part = bool(self.main_window.hidden_surfaces)
-        self.ghost_actor = GhostActor(mesh)
-        self.ghost_actor.SetVisibility(has_hidden_part)
-        self.renderer.AddActor(self.ghost_actor)
-
-        self.plane_actor = SectionPlaneActor(self.analysis_actor.GetBounds())
-        self.plane_actor.VisibilityOff()
-
-        self.update_deformations()
-        self.renderer.AddActor(self.analysis_actor)
-        self.renderer.AddActor(self.edges_actor)
-        self.renderer.AddActor(self.plane_actor)
-
-        mesh_visibility = self.control_bar.show_mesh_button.isChecked()
-        self.set_mesh_visibility(mesh_visibility)
-
-        # if self.section_plane_active and self.section_plane_args:
-        #     self.start_section_mode()
-        #     self.apply_section_plane(*self.section_plane_args)
-        #     if not self.show_plane_actor:
-        #         self.plane_actor.VisibilityOff()
-        #         self.update()
-        # else:
-        #     self.update()
-
-        if reset_camera:
-            self.renderer.ResetCamera()
-
-        self.update_section_plane()
-        app().project.thumbnail = self.get_thumbnail()
+        super().update_plot(*args, **kwargs)
 
     def update_hidden_plot(self):
-        # in this case the update_plot function is fast enough
         self.update_plot(reset_camera=False)
 
-    def update_deformations(self):
+    def update_color_and_deformation(self):
         if not self._actors_exists():
             return
 
@@ -201,136 +137,13 @@ class StructuralModalAnalysisRenderWidget(CommonAnalysisRenderWidget):
 
     #
     def show_points(self):
-        if not self._actors_exists():
-            return
-
-        self.control_bar.show_mesh_button.setChecked(False)
-        self.analysis_actor.VisibilityOn()
-        self.analysis_actor.GetProperty().SetRepresentationToPoints()
-        self.edges_actor.VisibilityOff()
-        self.update()
+        return
 
     def show_lines(self):
-        if not self._actors_exists():
-            return
-
-        self.control_bar.show_mesh_button.setChecked(True)
-        self.analysis_actor.VisibilityOn()
-        self.analysis_actor.GetProperty().SetRepresentationToSurface()
-        self.edges_actor.VisibilityOn()
-        self.update()
+        return
 
     def show_faces(self):
-        if not self._actors_exists():
-            return
-
-        self.control_bar.show_mesh_button.setChecked(False)
-        self.analysis_actor.VisibilityOn()
-        self.analysis_actor.GetProperty().SetRepresentationToSurface()
-        self.edges_actor.VisibilityOff()
-        self.update()
-
-    # def update_section_plane(self):
-    #     if not self._actors_exists():
-    #         return
-
-    #     section_plane = self.main_window.section_plane
-
-    #     if not section_plane.cutting:
-    #         self._disable_section_plane()
-    #         return
-
-    #     position = section_plane.get_position()
-    #     rotation = section_plane.get_rotation()
-    #     inverted = section_plane.get_inverted()
-
-    #     if section_plane.editing:
-    #         self.plane_actor.configure_section_plane(position, rotation)
-    #         self.plane_actor.VisibilityOn()
-    #         self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
-    #         self.plane_actor.GetProperty().SetOpacity(0.8)
-    #         self.update()
-    #     else:
-    #         self._apply_section_plane(position, rotation, inverted)
-
-    # def _disable_section_plane(self):
-    #     has_hidden_part = bool(self.main_window.hidden_surfaces)
-    #     self.ghost_actor.SetVisibility(has_hidden_part)
-    #     self.plane_actor.VisibilityOff()
-    #     self.analysis_actor.disable_cut()
-    #     self.edges_actor.disable_cut()
-    #     self.update()
-
-    # def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
-    #     self.plane_actor.configure_section_plane(position, rotation)
-    #     xyz = self.plane_actor.calculate_xyz_position(position)
-    #     normal = self.plane_actor.calculate_normal_vector(rotation)
-    #     if inverted:
-    #         normal = -normal
-
-    #     self.analysis_actor.apply_cut(xyz, normal)
-    #     self.edges_actor.apply_cut(xyz, normal)
-
-    #     self.ghost_actor.VisibilityOn()
-    #     self.plane_actor.SetVisibility(show_plane)
-    #     self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
-    #     self.plane_actor.GetProperty().SetOpacity(0.2)
-    #     self.update()
-
-    #
-    # def start_section_mode(self):
-    #     if not self._actors_exists():
-    #         return
-    #     self.section_plane_active = True
-    #     self.plane_actor.VisibilityOn()
-    #     self.ghost_actor.VisibilityOn()
-
-    # def stop_section_mode(self):
-    #     if not self._actors_exists():
-    #         return
-    #     self.section_plane_active = False
-    #     self.plane_actor.VisibilityOff()
-    #     has_hidden_part = bool(self.main_window.hidden_surfaces)
-    #     self.ghost_actor.SetVisibility(has_hidden_part)
-    #     self.analysis_actor.disable_cut()
-    #     self.edges_actor.disable_cut()
-    #     self.update()
-
-    # def configure_section_plane(self, position, orientation):
-    #     if not self._actors_exists():
-    #         return
-
-    #     self.plane_actor.configure_section_plane(position, orientation)
-    #     self.update()
-
-    # def apply_section_plane(self, position, orientation, invert=False):
-    #     if not self._actors_exists():
-    #         return
-
-    #     self.section_plane_args = (position, orientation, invert)
-    #     xyz = self.plane_actor.calculate_xyz_position(position)
-    #     normal = self.plane_actor.calculate_normal_vector(orientation)
-    #     if invert:
-    #         normal = -normal
-    #     self.analysis_actor.apply_cut(xyz, normal)
-    #     self.edges_actor.apply_cut(xyz, normal)
-
-    #     self.plane_actor.VisibilityOn()
-    #     self.plane_actor.configure_section_plane(position, orientation)
-    #     self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
-    #     self.plane_actor.GetProperty().SetOpacity(0.2)
-
-    #     self.update()
-
-    def remove_actors(self):
-        self.renderer.RemoveActor(self.analysis_actor)
-        self.renderer.RemoveActor(self.edges_actor)
-        self.renderer.RemoveActor(self.plane_actor)
-        self.renderer.RemoveActor(self.ghost_actor)
-        self.analysis_actor = None
-        self.edges_actor = None
-        self.plane_actor = None
-        self.ghost_actor = None
+        return
 
     def update_animation(self, frame):
         if not self._actors_exists():
@@ -347,9 +160,7 @@ class StructuralModalAnalysisRenderWidget(CommonAnalysisRenderWidget):
         # Map the frames from 0 to 1
         t = frame / (self._animation_total_frames - 1)
         phase = lerp(0, 360, t)
-        displacements, color_scalars, min_value, max_value = self._calculate_displacements(
-            index, phase
-        )
+        displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
         magnification_factor = self.control_bar.magnification_factor_slider.value()
 
         self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
@@ -357,27 +168,6 @@ class StructuralModalAnalysisRenderWidget(CommonAnalysisRenderWidget):
         self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value)
         # self.edges_actor.extract_data(self.analysis_actor.data)
         self.update()
-
-    def save_video(self):
-        file_path, check = QFileDialog.getSaveFileName(
-                                                        self,
-                                                        "Save As",
-                                                        filter = "All Files ();; Video (*.mp4);; GIF (*.gif);;",
-                                                    )
-
-        if not check:
-            return
-
-        self.generate_video(file_path)
-
-    def _actors_exists(self):
-        actors = [
-            self.analysis_actor,
-            self.edges_actor,
-            self.plane_actor,
-        ]
-
-        return all([actor is not None for actor in actors])
 
     def _calculate_displacements(self, index, phase):
         solver = app().project.structural_modal_solver

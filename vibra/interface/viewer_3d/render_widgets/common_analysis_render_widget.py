@@ -1,9 +1,12 @@
+from PyQt5.QtWidgets import QFileDialog
+
 from molde.render_widgets import AnimatedRenderWidget
 
 from vibra import app
 from ..actors.edges_actor import EdgesActor
 from ..actors.ghost_actor import GhostActor
 from ..actors.section_plane_actor import SectionPlaneActor
+from ..actors.analysis_actor import AnalysisActor
 from ..actors.hollow_analysis_actor import HollowAnalysisActor
 from ..coloring.color_table import ColorTable
 
@@ -16,7 +19,7 @@ class CommonAnalysisRenderWidget(AnimatedRenderWidget):
         self.create_color_bar()
         self.create_scale_bar()
 
-    def update_plot(self):
+    def update_plot(self, reset_camera=False):
         mesh = app().project.model.mesh
         if mesh is None:
             return
@@ -28,6 +31,8 @@ class CommonAnalysisRenderWidget(AnimatedRenderWidget):
         self.ghost_actor = GhostActor(mesh)
         self.plane_actor = SectionPlaneActor(self.analysis_actor.GetBounds())
 
+        self.update_color_and_deformation()
+
         self.add_actors(
             self.analysis_actor,
             self.edges_actor,
@@ -37,12 +42,16 @@ class CommonAnalysisRenderWidget(AnimatedRenderWidget):
 
         has_hidden_part = bool(app().main_window.hidden_surfaces)
         self.ghost_actor.SetVisibility(has_hidden_part)
+        self.plane_actor.VisibilityOff()
+
+        if reset_camera:
+            self.renderer.ResetCamera()
+
+        self.update_section_plane()
+        app().project.thumbnail = self.get_thumbnail()
 
     def update_color_and_deformation(self):
-        color_table = ColorTable()
-
-        self.analysis_actor.set_color_table(color_table)
-        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
+        pass
 
     def _actors_exists(self):
         return len(self._widget_actors) > 0
@@ -75,6 +84,18 @@ class CommonAnalysisRenderWidget(AnimatedRenderWidget):
 
         self.update()
 
+    def export_animation_to_file(self):
+        file_path, check = QFileDialog.getSaveFileName(
+            self,
+            "Save As",
+            filter="All Files ();; Video (*.mp4);; GIF (*.gif);;",
+        )
+
+        if not check:
+            return
+
+        self.save_video(file_path)
+
     def _disable_section_plane(self):
         has_hidden_part = bool(app().main_window.hidden_surfaces)
         self.ghost_actor.SetVisibility(has_hidden_part)
@@ -84,6 +105,15 @@ class CommonAnalysisRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def _apply_section_plane(self, position, rotation, inverted):
+        if isinstance(self.solids_actor, HollowAnalysisActor):
+            mesh = app().project.model.mesh
+            if mesh is None:
+                return
+
+            self.remove_actors(self.solids_actor)
+            self.solids_actor = AnalysisActor(mesh)
+            self.add_actors(self.solids_actor)
+
         self.plane_actor.configure_section_plane(position, rotation)
         xyz = self.plane_actor.calculate_xyz_position(position)
         normal = self.plane_actor.calculate_normal_vector(rotation)
