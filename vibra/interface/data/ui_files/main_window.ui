@@ -64,7 +64,6 @@
    <addaction name="separator"/>
    <addaction name="action_new_project"/>
    <addaction name="action_open_project"/>
-   <addaction name="action_reset_project"/>
    <addaction name="separator"/>
    <addaction name="action_top_view"/>
    <addaction name="action_bottom_view"/>
@@ -82,8 +81,8 @@
    <addaction name="separator"/>
    <addaction name="action_section_plane"/>
    <addaction name="separator"/>
-   <addaction name="hide_selection"/>
-   <addaction name="unhide_all"/>
+   <addaction name="action_hide_selection"/>
+   <addaction name="action_unhide_all"/>
    <addaction name="separator"/>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -113,6 +112,7 @@
      <string>Visibility settings</string>
     </property>
     <addaction name="action_show_menu_items"/>
+    <addaction name="action_theme"/>
    </widget>
    <widget class="QMenu" name="menu_view_mode">
     <property name="title">
@@ -226,7 +226,7 @@
   <action name="action_show_menu_items">
    <property name="icon">
     <iconset>
-     <normaloff>../../../data/icons/new_file.png</normaloff>../../../data/icons/new_file.png</iconset>
+     <normaloff>../icons/new_file.png</normaloff>../icons/new_file.png</iconset>
    </property>
    <property name="text">
     <string>Hide menu items</string>
@@ -409,7 +409,7 @@
     <string>Coupled Workspace</string>
    </property>
   </action>
-  <action name="hide_selection">
+  <action name="action_hide_selection">
    <property name="icon">
     <iconset>
      <normaloff>../icons/visibility/hide_icon.png</normaloff>../icons/visibility/hide_icon.png</iconset>
@@ -418,7 +418,7 @@
     <string>Hide Selection</string>
    </property>
   </action>
-  <action name="unhide_all">
+  <action name="action_unhide_all">
    <property name="icon">
     <iconset>
      <normaloff>../icons/visibility/unhide_all_icon.png</normaloff>../icons/visibility/unhide_all_icon.png</iconset>
@@ -479,6 +479,15 @@
    </property>
    <property name="text">
     <string>Generate Mesh</string>
+   </property>
+  </action>
+  <action name="action_theme">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/sun_icon.png</normaloff>../icons/sun_icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Theme</string>
    </property>
   </action>
  </widget>

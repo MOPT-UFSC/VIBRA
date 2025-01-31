@@ -74,6 +74,7 @@ class MainWindow(QMainWindow):
         self.hidden_volumes = set()
 
         self.dialog = None
+        self.show_menu_items = True
 
         self._initialize()
 
@@ -94,7 +95,6 @@ class MainWindow(QMainWindow):
         # QAction
         self.action_new_project: QAction
         self.action_open_project: QAction
-        self.action_reset_project: QAction
         self.action_save: QAction
         self.action_save_as: QAction
         self.action_export_mesh: QAction
@@ -102,7 +102,7 @@ class MainWindow(QMainWindow):
         self.action_capture_image: QAction
         self.action_theme: QAction
         self.action_exit: QAction
-        self.show_menu_items: QAction
+        self.action_show_menu_items: QAction
         self.action_bottom_view: QAction
         self.action_right_view: QAction
         self.action_left_view: QAction
@@ -288,14 +288,10 @@ class MainWindow(QMainWindow):
         self.status_bar.update_mesh_information(nodes, face_elements, solid_elements)
     
     def action_section_plane_callback(self):
-        self.section_plane = SectionPlaneWidget(self)
+        self.section_plane.show()
 
     def _create_connections(self):
         self.viewer_tabs.geometry_widget.selection_changed.connect(self.selection_changed_callback)
-        self.section_plane.slider_pressed.connect(self.slider_pressed_callback)
-        self.section_plane.value_changed.connect(self.slider_moved_callback)
-        self.section_plane.slider_released.connect(self.slider_released_callback)
-        self.section_plane.closed.connect(self.disable_section_plane_visibility)
 
     def set_mesh_selection(self, *, nodes=None, faces=None, solids=None, join=False, remove=False):
         if nodes is None:
@@ -419,22 +415,6 @@ class MainWindow(QMainWindow):
         else:
             self.viewer_tabs.stop_cutting_mode()
 
-    def show_config_section_plane(self):
-        pass
-
-    def slider_pressed_callback(self):
-        self.viewer_tabs.start_cutting_mode()
-
-    def slider_moved_callback(self):
-        position = self.section_plane.get_position("sliders")
-        orientation = self.section_plane.get_rotation("sliders")
-        self.viewer_tabs.configure_cutting_plane(position, orientation)
-
-    def slider_released_callback(self):
-        position = self.section_plane.get_position("sliders")
-        orientation = self.section_plane.get_rotation("sliders")
-        self.viewer_tabs.apply_cutting_plane(position, orientation, self.section_plane.invert_value)
-
     def disable_cut(self):
         self.viewer_tabs.stop_cutting_mode()
     
@@ -451,22 +431,19 @@ class MainWindow(QMainWindow):
         elif app().user_config.theme == "dark":
             self.set_theme("light")
             self.action_theme.setIcon(self.theme_moon_icon)
-
-    def disable_section_plane_visibility(self):
-        for tab in self.viewer_tabs.tabs():
-            if hasattr(tab, "plane_actor") and tab.plane_actor is not None:
-                tab.plane_actor.VisibilityOff()
     
     def action_show_menu_items_callback(self):
-        visible = self.stacked_setup.isVisible()
-        if visible:
+        if self.show_menu_items:
             text = "Show menu items"
         else:
             text = "Hide menu items"
 
-        self.set_menu_items_visibility_state(visible)
+        self.set_menu_items_visibility_state(self.show_menu_items)
         self.action_show_menu_items.setText(text)
-        self.stacked_setup.setVisible(not visible)
+        self.show_menu_items = not self.show_menu_items
+        self.menu_widget.setVisible(self.show_menu_items)
+        self.vertical_line.setVisible(self.show_menu_items)
+        self.analysis_filter.setVisible(self.show_menu_items)
 
     def set_menu_items_visibility_state(self, state: bool):
         app().user_config.menu_items_visible = state
@@ -481,7 +458,7 @@ class MainWindow(QMainWindow):
         path, check = QFileDialog.getOpenFileName(
             self, "Open Project", filter="Vibra File (*.vibra)")
 
-    def hide_selection_callback(self):
+    def action_hide_selection_callback(self):
         mesh = app().project.model.mesh
 
         volumes_to_hide = set()
@@ -512,7 +489,7 @@ class MainWindow(QMainWindow):
         self.set_mesh_selection()
         self.set_geometry_selection()
 
-    def unhide_all_callback(self):
+    def action_unhide_all_callback(self):
         self.hidden_surfaces.clear()
         self.hidden_volumes.clear()
         self.viewer_tabs.update_hidden_plots()
@@ -526,10 +503,7 @@ class MainWindow(QMainWindow):
 
     def _load_render_widgets(self):
         self.section_plane = SectionPlaneWidget(self)
-        # t0 = time()
         self.viewer_tabs = ViewerTabs(self)
-        # dt = time() - t0
-        # print(f"elapsed time to load class: {round(dt, 4)}")
 
     def configure_main_window(self):
 
@@ -923,6 +897,20 @@ class MainWindow(QMainWindow):
         if isinstance(widget, CommonRenderWidget):
             widget.renderer.ResetCamera()
             widget.update()
+    
+    def action_hide_show_symbols_callback(self):
+
+        symbols_actor = self.viewer_tabs.mesh_widget.symbols_actor
+
+        if symbols_actor is None:
+            return
+
+        if symbols_actor.GetVisibility():
+            symbols_actor.VisibilityOff()
+        else:
+            symbols_actor.VisibilityOn()
+
+        self.viewer_tabs.mesh_widget.update()
         
     def close_app(self):
 
@@ -973,17 +961,17 @@ class MainWindow(QMainWindow):
     def get_current_workspace(self):
         return self.analysis_filter.comboBox_analysis_selector.currentIndex()
 
-    def plot_specific_acoustic_impedance(self):
+    def action_plot_specific_acoustic_impedance_callback(self):
             if app().project.acoustic_harmonic_solver.solution is None:
                 return
             PlotSpecificAcousticImpedanceInput()
 
-    def plot_particle_velocity(self):
+    def action_plot_particle_velocity_callback(self):
         if app().project.acoustic_harmonic_solver.solution is None:
             return
         PlotParticleVelocityFrequencyResponseInput()
 
-    def export_element_transfer_data_callback(self):
+    def action_export_element_transfer_data_callback(self):
         if app().project.acoustic_harmonic_solver.solution is None:
             return
         ExportElementTransferDataInput()
