@@ -101,13 +101,11 @@
     </property>
     <addaction name="action_new_project"/>
     <addaction name="action_open_project"/>
-    <addaction name="separator"/>
     <addaction name="action_save"/>
     <addaction name="action_save_as"/>
     <addaction name="action_export_mesh"/>
     <addaction name="separator"/>
     <addaction name="action_capture_image"/>
-    <addaction name="actionTheme"/>
     <addaction name="action_exit"/>
    </widget>
    <widget class="QMenu" name="menu_settings">
@@ -115,7 +113,6 @@
      <string>Visibility settings</string>
     </property>
     <addaction name="action_show_menu_items"/>
-    <addaction name="action_theme"/>
    </widget>
    <widget class="QMenu" name="menu_view_mode">
     <property name="title">
@@ -233,15 +230,6 @@
    </property>
    <property name="text">
     <string>Hide menu items</string>
-   </property>
-  </action>
-  <action name="action_theme">
-   <property name="icon">
-    <iconset>
-     <normaloff>../icons/sun_icon.png</normaloff>../icons/sun_icon.png</iconset>
-   </property>
-   <property name="text">
-    <string>Theme</string>
    </property>
   </action>
   <action name="action_set_fluid">
@@ -448,7 +436,7 @@
     <string>Configure Section Plane</string>
    </property>
   </action>
-  <action name="actionTheme">
+  <action name="action_theme_2">
    <property name="icon">
     <iconset>
      <normaloff>../icons/sun_icon.png</normaloff>../icons/sun_icon.png</iconset>

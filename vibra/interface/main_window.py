@@ -395,6 +395,7 @@ class MainWindow(QMainWindow):
         self.update_recents_menu()
 
         self.menu_project.insertMenu(self.action_save, self.recents_menu)
+        self.menu_project.insertSeparator(self.action_save)
     
     def update_recents_menu(self):
         self.recents_menu.clear()
@@ -854,8 +855,7 @@ class MainWindow(QMainWindow):
         # self.viewer_3d.save_png(path)
     
     def action_exit_callback(self):
-        loaded_solve = load_function(self.solve_example_analysis_callback, self)
-        loaded_solve()
+        self.close_app()
 
     def solve_example_analysis_callback(self):
         try:
