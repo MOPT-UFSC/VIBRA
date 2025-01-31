@@ -80,7 +80,7 @@ class WelcomeWidget(QWidget):
                 icon = QIcon(QPixmap(image))
 
             handler = partial(self.main_window.open_project, path)
-            item = WelcomeItem(path.stem, icon)
+            item = WelcomeItem(path.stem, icon, False)
             item.setToolTip(str(path))
             item.clicked.connect(handler)
             recents_layout.addWidget(item)
@@ -119,7 +119,7 @@ class WelcomeWidget(QWidget):
                 icon = QIcon(QPixmap(image))
 
             handler = partial(self.main_window.open_project, path)
-            item = WelcomeItem(path.stem, icon)
+            item = WelcomeItem(path.stem, icon, False)
             item.setToolTip(str(path))
             item.clicked.connect(handler)
             examples_layout.addWidget(item)

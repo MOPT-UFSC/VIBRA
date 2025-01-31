@@ -78,7 +78,7 @@
    <addaction name="action_node_view"/>
    <addaction name="action_line_view"/>
    <addaction name="action_face_view"/>
-   <addaction name="hide_show_symbols_action"/>
+   <addaction name="action_hide_show_symbols"/>
    <addaction name="separator"/>
    <addaction name="section_plane_show_action"/>
    <addaction name="section_plane_config_action"/>
@@ -152,8 +152,8 @@
    <addaction name="menu_settings"/>
    <addaction name="menu_model_setup"/>
    <addaction name="menu_view_mode"/>
-   <addaction name="menu_help"/>
    <addaction name="advanced_results_menu"/>
+   <addaction name="menu_help"/>
   </widget>
   <action name="action_new_project">
    <property name="icon">
@@ -398,7 +398,7 @@
     <string>Clip Plane</string>
    </property>
   </action>
-  <action name="hide_show_symbols_action">
+  <action name="action_hide_show_symbols">
    <property name="icon">
     <iconset>
      <normaloff>../icons/visibility/show_symbols.png</normaloff>../icons/visibility/show_symbols.png</iconset>

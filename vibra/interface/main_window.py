@@ -100,12 +100,12 @@ class MainWindow(QMainWindow):
         self.action_front_view: QAction
         self.action_back_view: QAction
         self.action_isometric_view: QAction
+        self.action_zoom_to_fit: QAction
         self.action_node_view: QAction
         self.action_line_view: QAction
         self.action_face_view: QAction
-        self.action_clip_plane: QAction
-        self.action_zoom_to_fit: QAction
-        self.action_action_symbols: QAction
+        self.action_hide_show_symbols: QAction
+        self.action_section_plane: QAction
         self.action_structural_workspace: QAction
         self.action_acoustic_workspace: QAction
         self.action_coupled_workspace: QAction

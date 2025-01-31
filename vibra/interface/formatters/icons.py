@@ -69,6 +69,7 @@ def change_icon_color(icon: QIcon, color: QColor):
 
 def change_icon_color_for_widgets(widgets: list[QWidget], color: QColor):
     for widget in widgets:
+        print(hasattr(widget, "should_paint"), widget)
         if not hasattr(widget, "icon") or not callable(widget.icon):
             continue
         
