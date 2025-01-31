@@ -9,6 +9,7 @@ from vibra.interface.analysis_bars.acoustic_analysis_bar import (
     AcousticModalAnalysisBar,
 )
 from vibra.interface.viewer_3d.actors.analysis_actor import AnalysisActor
+from vibra.interface.viewer_3d.actors.hollow_analysis_actor import HollowAnalysisActor
 from vibra.interface.viewer_3d.actors.section_plane_actor import (
     SectionPlaneActor,
 )
@@ -110,7 +111,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         if self.plane_actor is not None:
             self.show_plane_actor = self.plane_actor.GetVisibility()
 
-        self.remove_actors()
+        self.remove_all_actors()
 
         phase = self.control_bar.phase_slider.value()
 
@@ -131,7 +132,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         if self.control_bar.absolute_button.isChecked():
             current_modal_shape = np.abs(current_modal_shape)
 
-        self.analysis_actor = AnalysisActor(mesh)
+        self.analysis_actor = HollowAnalysisActor(mesh)
         self.analysis_actor.plot_color_bar(current_modal_shape, min_value, max_value)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.renderer.AddActor(self.analysis_actor)
@@ -338,6 +339,15 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
+        if isinstance(self.analysis_actor, HollowAnalysisActor):
+            mesh = app().project.model.mesh
+            if mesh is None:
+                return
+
+            self.remove_actors(self.analysis_actor)
+            self.analysis_actor = AnalysisActor(mesh)
+            self.add_actors(self.analysis_actor)
+
         self.plane_actor.configure_section_plane(position, rotation)
         xyz = self.plane_actor.calculate_xyz_position(position)
         normal = self.plane_actor.calculate_normal_vector(rotation)
@@ -405,7 +415,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
 
     #     self.update()
 
-    def remove_actors(self):
+    def remove_all_actors(self):
         self.renderer.RemoveActor(self.analysis_actor)
         self.renderer.RemoveActor(self.edges_actor)
         self.renderer.RemoveActor(self.plane_actor)

@@ -111,9 +111,9 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         if self.plane_actor is not None:
             self.show_plane_actor = self.plane_actor.GetVisibility()
 
-        self.remove_actors()
+        self.remove_all_actors()
 
-        self.analysis_actor = AnalysisActor(mesh)
+        self.analysis_actor = HollowAnalysisActor(mesh)
 
         self.edges_actor = EdgesActor(self.analysis_actor.data)
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
@@ -251,6 +251,15 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
+        if isinstance(self.analysis_actor, HollowAnalysisActor):
+            mesh = app().project.model.mesh
+            if mesh is None:
+                return
+
+            self.remove_actors(self.analysis_actor)
+            self.analysis_actor = AnalysisActor(mesh)
+            self.add_actors(self.analysis_actor)
+
         self.plane_actor.configure_section_plane(position, rotation)
         xyz = self.plane_actor.calculate_xyz_position(position)
         normal = self.plane_actor.calculate_normal_vector(rotation)
@@ -311,7 +320,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
 
     #     self.update()
 
-    def remove_actors(self):
+    def remove_all_actors(self):
         self.renderer.RemoveActor(self.analysis_actor)
         self.renderer.RemoveActor(self.edges_actor)
         self.renderer.RemoveActor(self.plane_actor)
