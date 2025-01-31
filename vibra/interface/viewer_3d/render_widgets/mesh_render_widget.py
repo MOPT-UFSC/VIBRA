@@ -128,6 +128,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.add_actors(self.symbols_actor)
 
     def update_hidden_plot(self):
+        self.update_plot(reset_camera=False)
         return 
         # We could just call the update_plot function,
         # but this is much simpler and faster
@@ -477,11 +478,11 @@ class MeshRenderWidget(CommonRenderWidget):
         self.update()
 
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
-        mesh = app().project.model.mesh
-        if mesh is None:
-            return
-
         if isinstance(self.solids_actor, HollowSolidsActor):
+            mesh = app().project.model.mesh
+            if mesh is None:
+                return
+
             self.remove_actors(self.solids_actor)
             self.solids_actor = SolidsActor(mesh)
             self.add_actors(self.solids_actor)
