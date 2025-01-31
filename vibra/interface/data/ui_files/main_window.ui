@@ -80,8 +80,7 @@
    <addaction name="action_face_view"/>
    <addaction name="action_hide_show_symbols"/>
    <addaction name="separator"/>
-   <addaction name="section_plane_show_action"/>
-   <addaction name="section_plane_config_action"/>
+   <addaction name="action_section_plane"/>
    <addaction name="separator"/>
    <addaction name="hide_selection"/>
    <addaction name="unhide_all"/>
@@ -118,14 +117,6 @@
     <addaction name="action_show_menu_items"/>
     <addaction name="action_theme"/>
    </widget>
-   <widget class="QMenu" name="menu_model_setup">
-    <property name="title">
-     <string>Model setup</string>
-    </property>
-    <addaction name="action_set_fluid"/>
-    <addaction name="action_set_material"/>
-    <addaction name="action_mesher_setup"/>
-   </widget>
    <widget class="QMenu" name="menu_view_mode">
     <property name="title">
      <string>View mode</string>
@@ -144,13 +135,12 @@
     <property name="title">
      <string>Advanced Results</string>
     </property>
-    <addaction name="plot_particle_velocity_action"/>
-    <addaction name="plot_specific_acoustic_impedance_action"/>
-    <addaction name="export_element_transfer_data_action"/>
+    <addaction name="action_plot_particle_velocity"/>
+    <addaction name="action_plot_specific_acoustic_impedance"/>
+    <addaction name="action_export_element_transfer_data"/>
    </widget>
    <addaction name="project_menu"/>
    <addaction name="menu_settings"/>
-   <addaction name="menu_model_setup"/>
    <addaction name="menu_view_mode"/>
    <addaction name="advanced_results_menu"/>
    <addaction name="menu_help"/>
@@ -257,7 +247,7 @@
   <action name="action_set_fluid">
    <property name="icon">
     <iconset>
-     <normaloff>../../../data/icons/new_file.png</normaloff>../../../data/icons/new_file.png</iconset>
+     <normaloff>../icons/new_file.png</normaloff>../icons/new_file.png</iconset>
    </property>
    <property name="text">
     <string>Set fluid</string>
@@ -266,7 +256,7 @@
   <action name="action_set_material">
    <property name="icon">
     <iconset>
-     <normaloff>../../../data/icons/new_file.png</normaloff>../../../data/icons/new_file.png</iconset>
+     <normaloff>../icons/new_file.png</normaloff>../icons/new_file.png</iconset>
    </property>
    <property name="text">
     <string>Set material</string>
@@ -275,7 +265,7 @@
   <action name="action_mesher_setup">
    <property name="icon">
     <iconset>
-     <normaloff>../../../data/icons/new_file.png</normaloff>../../../data/icons/new_file.png</iconset>
+     <normaloff>../icons/new_file.png</normaloff>../icons/new_file.png</iconset>
    </property>
    <property name="text">
     <string>Mesher setup</string>
@@ -449,7 +439,7 @@
     <string>Unhide Selection</string>
    </property>
   </action>
-  <action name="section_plane_config_action">
+  <action name="action_section_plane">
    <property name="icon">
     <iconset>
      <normaloff>../icons/visibility/section_plane_config.png</normaloff>../icons/visibility/section_plane_config.png</iconset>
@@ -467,7 +457,7 @@
     <string>Theme</string>
    </property>
   </action>
-  <action name="plot_particle_velocity_action">
+  <action name="action_plot_particle_velocity">
    <property name="icon">
     <iconset>
      <normaloff>../icons/image-plus.png</normaloff>../icons/image-plus.png</iconset>
@@ -476,7 +466,7 @@
     <string>Plot particle velocity</string>
    </property>
   </action>
-  <action name="plot_specific_acoustic_impedance_action">
+  <action name="action_plot_specific_acoustic_impedance">
    <property name="icon">
     <iconset>
      <normaloff>../icons/image-plus.png</normaloff>../icons/image-plus.png</iconset>
@@ -485,13 +475,22 @@
     <string>Plot specific acoustic impedance</string>
    </property>
   </action>
-  <action name="export_element_transfer_data_action">
+  <action name="action_export_element_transfer_data">
    <property name="icon">
     <iconset>
      <normaloff>../icons/exit.png</normaloff>../icons/exit.png</iconset>
    </property>
    <property name="text">
     <string>Export element transfer data</string>
+   </property>
+  </action>
+  <action name="action_generate_mesh">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/new_file.png</normaloff>../icons/new_file.png</iconset>
+   </property>
+   <property name="text">
+    <string>Generate Mesh</string>
    </property>
   </action>
  </widget>

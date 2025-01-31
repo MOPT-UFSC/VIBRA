@@ -25,6 +25,8 @@ from vibra.interface.formatters.icons import *
 from vibra.interface.general.print_message_input import PrintMessageInput
 from molde.render_widgets import CommonRenderWidget
 
+from vibra.interface.mesh.mesher_inputs import MesherInputs
+
 from vibra.utils.progress_status import ProgressStatus
 from vibra.utils.icons import load_icon
 from vibra.utils.enumerators import Workspace
@@ -93,7 +95,14 @@ class MainWindow(QMainWindow):
         self.action_new_project: QAction
         self.action_open_project: QAction
         self.action_reset_project: QAction
+        self.action_save: QAction
+        self.action_save_as: QAction
+        self.action_export_mesh: QAction
         self.action_top_view: QAction
+        self.action_capture_image: QAction
+        self.action_theme: QAction
+        self.action_exit: QAction
+        self.show_menu_items: QAction
         self.action_bottom_view: QAction
         self.action_right_view: QAction
         self.action_left_view: QAction
@@ -106,6 +115,9 @@ class MainWindow(QMainWindow):
         self.action_face_view: QAction
         self.action_hide_show_symbols: QAction
         self.action_section_plane: QAction
+        self.action_plot_particle_velocity: QAction
+        self.action_plot_specific_acoustic_impedance: QAction
+        self.action_export_element_transfer_data: QAction
         self.action_structural_workspace: QAction
         self.action_acoustic_workspace: QAction
         self.action_coupled_workspace: QAction
@@ -119,12 +131,12 @@ class MainWindow(QMainWindow):
         # QMenu
         self.menu_project: QMenu
         self.menu_settings: QMenu
-        self.menu_model_setup: QMenu
         self.menu_view_mode: QMenu
+        self.menu_advanced_results: QMenu
         self.menu_help: QMenu
 
         # QToolBar
-        self.tool_bar: QToolBar
+        self.renderer_toolbar: QToolBar
     
     def _connect_actions(self):
         '''
@@ -172,7 +184,6 @@ class MainWindow(QMainWindow):
         self.create_status_bar()
         self._create_workspaces_toolbar()
 
-
         grid_layout_central = QGridLayout()
         grid_layout_central.addWidget(left_widget, 0, 0)
         grid_layout_central.addWidget(self.vertical_line, 0, 1)
@@ -183,10 +194,12 @@ class MainWindow(QMainWindow):
         central_widget = QWidget()
         central_widget.setLayout(grid_layout_central)
         self.setCentralWidget(central_widget)
+
+        self.renderer_toolbar.setDisabled(True)
+        self.analysis_filter.setDisabled(True)
     
     def _config_window(self):
         self.setMinimumSize(800, 600)
-        # self.showMaximized()
         self.showMinimized()
         self.vibra_icon = get_vibra_icon()
         self.setWindowIcon(self.vibra_icon)
@@ -500,12 +513,6 @@ class MainWindow(QMainWindow):
 
     def create_status_bar(self):
         self.setStatusBar(self.status_bar)
-
-    # def create_tool_bars(self):
-    #     self.renderer_toolbar = RendererToolbar(self, self.viewer_tabs)
-    #     self.addToolBar(self.renderer_toolbar)
-    #     self.renderer_toolbar.setDisabled(True)
-    #     self.analysis_filter.setDisabled(True)
 
     def config_tool_tip_appearance(self):
         tool_tip_style = "QToolTip { color: rgb(0, 0, 0); background-color: rgb(255, 255, 255) }"
@@ -851,11 +858,11 @@ class MainWindow(QMainWindow):
         else:
             self.viewer_tabs.show_acoustic_modal_analysis()
     
-    # def action_set_fluid_callback(self):
-    #     FluidWidget()
+    def action_set_fluid_callback(self):
+        FluidWidget()
     
-    # def action_set_material_callback(self):
-    #     MaterialWidget()
+    def action_set_material_callback(self):
+        MaterialWidget()
     
     # def action_mesher_setup_callback(self):
     #     mesher = MesherInputs()
@@ -968,7 +975,9 @@ class MainWindow(QMainWindow):
     def close_dialogs(self):
         if isinstance(self.dialog, (QDialog, QWidget)):
             self.dialog.close()
-
+    
+    def get_current_workspace(self):
+        return self.analysis_filter.comboBox_analysis_selector.currentIndex()
 
     def plot_specific_acoustic_impedance(self):
             if app().project.acoustic_harmonic_solver.solution is None:
@@ -986,9 +995,9 @@ class MainWindow(QMainWindow):
         ExportElementTransferDataInput()
 
     def disable_advanced_acoustic_plots_buttons(self, disabled : bool):
-        self.plot_specific_acoustic_impedance_action.setDisabled(disabled)
-        self.plot_particle_velocity_action.setDisabled(disabled)
-        self.export_element_transfer_data_action.setDisabled(disabled)
+        self.action_plot_specific_acoustic_impedance.setDisabled(disabled)
+        self.action_plot_particle_velocity.setDisabled(disabled)
+        self.action_export_element_transfer_data.setDisabled(disabled)
 
 def create_new_folder(path : Path, folder_name : str) -> Path:
     folder_path = path / folder_name
