@@ -393,6 +393,8 @@ class MainWindow(QMainWindow):
         self.recents_menu = QMenu("Recent projects", self)
         self.recents_menu.setIcon(self.recent_icon)
         self.update_recents_menu()
+
+        self.menu_project.insertMenu(self.action_save, self.recents_menu)
     
     def update_recents_menu(self):
         self.recents_menu.clear()
@@ -467,6 +469,9 @@ class MainWindow(QMainWindow):
 
     def set_menu_items_visibility_state(self, state: bool):
         app().user_config.menu_items_visible = state
+    
+    def action_new_project_callback(self):
+        self.new_project_dialog()
     
     def action_open_project_callback(self):
         self.open_project_dialog()
@@ -820,7 +825,9 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         self.close_app()
         event.ignore()
-
+    
+    def action_save_as_callback(self):
+        self.save_project_as_dialog()
     
     def action_export_mesh_callback(self):
         self.export_mesh()
@@ -858,19 +865,6 @@ class MainWindow(QMainWindow):
         else:
             self.viewer_tabs.show_acoustic_modal_analysis()
     
-    def action_set_fluid_callback(self):
-        FluidWidget()
-    
-    def action_set_material_callback(self):
-        MaterialWidget()
-    
-    # def action_mesher_setup_callback(self):
-    #     mesher = MesherInputs()
-    #     if mesher.complete:
-    #         self.project.set_mesh_setup(mesher.mesh_setup)
-    #         #self.generate_mesh_action.setDisabled(False)
-    #         self.menu_items.item_child_generate_mesh.setDisabled(False)
-
     def action_face_view_callback(self):
         widget = self.viewer_tabs.currentWidget()
         if isinstance(widget, CommonRenderWidget):

@@ -95,7 +95,7 @@
      <height>26</height>
     </rect>
    </property>
-   <widget class="QMenu" name="project_menu">
+   <widget class="QMenu" name="menu_project">
     <property name="title">
      <string>Project</string>
     </property>
@@ -139,7 +139,7 @@
     <addaction name="action_plot_specific_acoustic_impedance"/>
     <addaction name="action_export_element_transfer_data"/>
    </widget>
-   <addaction name="project_menu"/>
+   <addaction name="menu_project"/>
    <addaction name="menu_settings"/>
    <addaction name="menu_view_mode"/>
    <addaction name="advanced_results_menu"/>
