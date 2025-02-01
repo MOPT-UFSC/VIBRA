@@ -428,6 +428,9 @@
    </property>
   </action>
   <action name="action_section_plane">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normaloff>../icons/visibility/section_plane_config.png</normaloff>../icons/visibility/section_plane_config.png</iconset>

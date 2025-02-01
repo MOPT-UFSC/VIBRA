@@ -10,8 +10,8 @@ from vtkmodules.vtkRenderingCore import vtkActor, vtkCellPicker
 
 from vibra import app
 from vibra.interface.tabs.mesh_info_bar import MeshInfoBar
-from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
-    CuttingPlaneActor,
+from vibra.interface.viewer_3d.actors.section_plane_actor import (
+    SectionPlaneActor,
 )
 from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
 from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
@@ -44,8 +44,8 @@ class MeshRenderWidget(CommonRenderWidget):
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
-        self.cutting_plane_active = False
-        self.cutting_plane_args = tuple()
+        self.section_plane_active = False
+        self.section_plane_args = tuple()
 
         # self.mesh_info = MeshInfoBar()
 
@@ -107,7 +107,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
         self.renderer.AddActor(self.edges_actor)
 
-        self.plane_actor = CuttingPlaneActor(self.solids_actor.GetBounds())
+        self.plane_actor = SectionPlaneActor(self.solids_actor.GetBounds())
         self.plane_actor.VisibilityOff()
         self.renderer.AddActor(self.plane_actor)
 
@@ -451,13 +451,14 @@ class MeshRenderWidget(CommonRenderWidget):
         inverted = section_plane.get_inverted()
 
         if section_plane.editing:
-            self.plane_actor.configure_cutting_plane(position, rotation)
+            self.plane_actor.configure_section_plane(position, rotation)
             self.plane_actor.VisibilityOn()
             self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
             self.plane_actor.GetProperty().SetOpacity(0.8)
             self.update()
         else:
-            self._apply_section_plane(position, rotation, inverted, section_plane.isVisible())
+            show_plane = not section_plane.keep_section_plane
+            self._apply_section_plane(position, rotation, inverted, show_plane)
 
     def _disable_section_plane(self):
         has_hidden_part = bool(self.main_window.hidden_surfaces)
@@ -470,7 +471,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.update()
 
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
-        self.plane_actor.configure_cutting_plane(position, rotation)
+        self.plane_actor.configure_section_plane(position, rotation)
         xyz = self.plane_actor.calculate_x_y_z_position(position)
         normal = self.plane_actor.calculate_normal_vector(rotation)
         if inverted:

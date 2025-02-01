@@ -289,6 +289,7 @@ class MainWindow(QMainWindow):
     
     def action_section_plane_callback(self):
         self.section_plane.show()
+        self.action_section_plane.setChecked(True)
 
     def _create_connections(self):
         self.viewer_tabs.geometry_widget.selection_changed.connect(self.selection_changed_callback)
