@@ -499,7 +499,7 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_plotStructuralModeShapes:
             if not self.item_child_plotStructuralModeShapes.isDisabled():
-                self.main_window.viewer_tabs.show_structural_modal_analysis()
+                self.main_window.configure_structural_modal_analysis_render_widget()
 
         elif item == self.item_child_plotDisplacementField:
             if not self.item_child_plotDisplacementField.isDisabled():
@@ -523,11 +523,11 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_plotAcousticModeShapes:
             if not self.item_child_plotAcousticModeShapes.isDisabled():
-                self.main_window.viewer_tabs.show_acoustic_modal_analysis()
+                self.main_window.configure_acoustic_modal_analysis_render_widget()
 
         elif item == self.item_child_plot_acoustic_pressure_field:
             if not self.item_child_plot_acoustic_pressure_field.isDisabled():
-                self.main_window.viewer_tabs.show_acoustic_harmonic_analysis()
+                self.main_window.configure_acoustic_harmonic_analysis_render_widget()
 
         elif item == self.item_child_plot_acoustic_pressure_frequency_response:
             if not self.item_child_plot_acoustic_pressure_frequency_response.isDisabled():
@@ -545,7 +545,7 @@ class MenuItems(QTreeWidget):
         """ """
         generate_mesh = load_function(app().project.generate_mesh, self.main_window)
         generate_mesh()
-        self.main_window.viewer_tabs.show_mesh()
+        self.main_window.action_mesh_workspace_callback()
         self.generate_mesh_action.setDisabled(True)
         self.item_child_generate_mesh.setDisabled(True)
 
@@ -554,8 +554,7 @@ class MenuItems(QTreeWidget):
         if not app().project.model.generated_mesh:
             obj = MesherInputs()
             if obj.complete:
-                self.main_window.viewer_tabs.close_analysis_tabs()
-                self.main_window.viewer_tabs.update_plots()
+                self.main_window.update_plots()
             else:
                 return
         #

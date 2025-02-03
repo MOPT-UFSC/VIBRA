@@ -29,7 +29,7 @@ class SetMaterialInput(QDialog):
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
-        self.main_window.viewer_tabs.show_geometry()
+        self.main_window.action_model_workspace_callback()
 
         self.project = app().project
         self.model = app().project.model
@@ -199,8 +199,8 @@ class SetMaterialInput(QDialog):
                 print("[Set Material] - {} defined at all bodies.".format(selected_material.name))
 
             app().file.write_model_properties_in_file()
-            self.main_window.viewer_tabs.geometry_widget.update_info_text()
-            self.main_window.viewer_tabs.mesh_widget.update_info_text()
+            self.main_window.geometry_widget.update_info_text()
+            self.main_window.mesh_widget.update_info_text()
             self.complete = True
             self.close()
 

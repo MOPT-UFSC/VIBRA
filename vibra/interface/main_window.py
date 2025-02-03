@@ -957,7 +957,7 @@ class MainWindow(QMainWindow):
     
     def action_hide_show_symbols_callback(self):
 
-        symbols_actor = self.viewer_tabs.mesh_widget.symbols_actor
+        symbols_actor = self.mesh_widget.symbols_actor
 
         if symbols_actor is None:
             return
@@ -967,7 +967,7 @@ class MainWindow(QMainWindow):
         else:
             symbols_actor.VisibilityOn()
 
-        self.viewer_tabs.mesh_widget.update()
+        self.mesh_widget.update()
         
     def close_app(self):
 

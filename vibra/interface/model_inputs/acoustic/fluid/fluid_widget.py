@@ -40,7 +40,7 @@ class FluidWidget(QWidget):
         self.parent_widget = kwargs.get("parent_widget", None)
         self.state_properties = kwargs.get("state_properties", dict())
 
-        app().main_window.viewer_tabs.show_geometry()
+        app().main_window.action_model_workspace_callback()
 
         self.project = app().project
         self.model = self.project.model

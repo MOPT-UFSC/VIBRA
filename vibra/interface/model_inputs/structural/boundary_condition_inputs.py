@@ -29,7 +29,7 @@ class BoundaryConditionInputs(QDialog):
         self.model = self.project.model
 
         self.main_window.set_input_widget(self)
-        self.main_window.viewer_tabs.show_geometry()
+        self.main_window.action_model_workspace_callback()
 
         self._reset_variables()
         self._config_window()

@@ -31,7 +31,7 @@ class MesherInputs(QDialog):
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
 
-        geometry_widget = self.main_window.viewer_tabs.geometry_widget
+        geometry_widget = self.main_window.geometry_widget
         geometry_widget.selection_changed.connect(self.geometry_selection_callback)
 
         self._config_window()
@@ -301,7 +301,6 @@ class MesherInputs(QDialog):
             def generate_function():
 
                 logging.info("Processing mesh..." + ProgressStatus(20, 100))
-                app().main_window.viewer_tabs.close_analysis_tabs()
                 app().project.reset_solutions()
 
                 logging.info("Processing mesh..." + ProgressStatus(30, 100))
@@ -333,9 +332,8 @@ class MesherInputs(QDialog):
             self.close()
 
         logging.info("Updating render..." + ProgressStatus(95, 100))
-        app().main_window.viewer_tabs.show_mesh()
-        app().main_window.viewer_tabs.close_analysis_tabs()
-        app().main_window.viewer_tabs.update_plots()
+        app().main_window.action_model_workspace_callback()
+        app().main_window.update_plots()
 
     def get_mesh_refinement_data(self):
 
