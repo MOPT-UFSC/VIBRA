@@ -532,7 +532,7 @@ class MainWindow(QMainWindow):
 
         self.hidden_volumes |= volumes_to_hide
         self.hidden_surfaces |= selected_volume_surfaces - surfaces_to_keep_visible
-        self.viewer_tabs.update_hidden_plots()
+        self.update_hidden_plots()
 
         # Clear selection
         self.set_mesh_selection()
@@ -544,7 +544,7 @@ class MainWindow(QMainWindow):
     def action_unhide_all_callback(self):
         self.hidden_surfaces.clear()
         self.hidden_volumes.clear()
-        self.viewer_tabs.update_hidden_plots()
+        self.update_hidden_plots()
 
     def create_status_bar(self):
         self.setStatusBar(self.status_bar)
@@ -1032,6 +1032,12 @@ class MainWindow(QMainWindow):
         if app().project.acoustic_harmonic_solver.solution is None:
             return
         ExportElementTransferDataInput()
+    
+    def update_hidden_plots(self):
+        for i in range(self.render_widgets_stack.count()):
+            widget = self.render_widgets_stack.widget(i)
+            if hasattr(widget, "update_hidden_plot"):
+                widget.update_hidden_plot()
 
     def disable_advanced_acoustic_plots_buttons(self, disabled : bool):
         self.action_plot_specific_acoustic_impedance.setDisabled(disabled)
