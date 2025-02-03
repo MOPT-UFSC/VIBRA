@@ -1,11 +1,12 @@
 #fmt: off
 
+from vibra.engine.elements.surface_elements import Element2D
+from vibra.engine.properties.material import Material
+
 import sys
 import numpy as np
-np.set_printoptions(precision=18)#threshold=sys.maxsize)
-
-from vibra.engine.elements.surface_elements import Element2D
 from numba import njit
+np.set_printoptions(precision=18)#threshold=sys.maxsize)
 
 
 def get_local_coordinates(nodal_coords: np.ndarray):
@@ -284,11 +285,12 @@ class STRUCT_TRIANGULAR_3(Element2D):
                                     [ 1,  0], 
                                     [ 0,  1] ], dtype=float)
 
-    def get_constitutive_model(self, el_index: int, t: float, model_type="linear-isotropic"):
+    def get_constitutive_model(self, material: Material, t: float, model_type="linear-isotropic"):
         """This methdo returns the material constitutive model."""
 
-        surface_id = self.model.mesh.surface_from_element[el_index]
-        self.material = self.model.properties.get_material(surface=surface_id)
+        self.material = material
+        # surface_id = self.model.mesh.surface_from_element[el_index]
+        # self.material = self.model.properties.get_material(surface=surface_id)
         E = self.material.young_modulus
         nu = self.material.poisson_ratio
         rho = self.material.density
@@ -309,7 +311,7 @@ class STRUCT_TRIANGULAR_3(Element2D):
 
             return Db, Dm, rho
 
-    def elementary_matrices(self, el_index: int, t: float):
+    def elementary_matrices(self, el_index: int, material: Material, t: float):
         """This method returns elementary stiffness and mass matrices for TRIANGLE-3 nodes.
 
         """
@@ -320,7 +322,7 @@ class STRUCT_TRIANGULAR_3(Element2D):
         x_loc, y_loc, area, T = get_local_coordinates(nodal_coords)
         H = self.process_shape_functions_and_derivatives_for_bending(x_loc, y_loc)
 
-        Db, Dm, rho = self.get_constitutive_model(el_index, t, model_type="linear-isotropic")
+        Db, Dm, rho = self.get_constitutive_model(material, t, model_type="linear-isotropic")
 
         # Processing the bending matrices
         b_11 =  (y_loc[2] - y_loc[0]) * H[0] + (y_loc[0] - y_loc[1]) * H[2]

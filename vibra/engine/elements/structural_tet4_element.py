@@ -1,6 +1,7 @@
 import numpy as np
 
 from vibra.engine.elements.solid_elements import Element3D
+from vibra.engine.properties.material import Material
 # fmt: off
 
 def shapeT4C(ssx, ttx, rrx):
@@ -94,11 +95,12 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
                               [-1, 1, 0, 0], 
                               [-1, 0, 1, 0]], dtype=float)
 
-    def get_constitutive_model(self, el_index, model_type="linear-isotropic"):
+    def get_constitutive_model(self, material: Material, model_type="linear-isotropic"):
         """This methdo returns the material constitutive model."""
 
-        volume_id = self.model.mesh.volume_from_element[el_index]
-        self.material = self.model.properties.get_material(volume=volume_id)
+        self.material = material
+        # volume_id = self.model.mesh.volume_from_element[el_index]
+        # self.material = self.model.properties.get_material(volume=volume_id)
 
         vv = self.material.poisson_ratio
         E = self.material.young_modulus
@@ -120,12 +122,12 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
 
             return tempc * const_law
 
-    def elementary_matrices(self, el_index):
+    def elementary_matrices(self, el_index: int, material: Material):
         """Stiffness and mass matrices.
         This is not a p-u mixed fomulation. Do not compare with SOLID285.
         """
         #
-        const_mat = self.get_constitutive_model(el_index, model_type="linear-isotropic")
+        const_mat = self.get_constitutive_model(material, model_type="linear-isotropic")
         rho = self.material.density
         #
         ie = self.connectivity[el_index, 1:]

@@ -219,25 +219,30 @@ class StructuralAssembler:
         self.shell_dofs, self.n_dofs = self.process_nodes_from_face_elements_with_thickness(element_2D, element_3D)
         # total_dofs = element_2D.DOFS_PER_NODE * len(element_3D.nodal_coordinates)
 
-        # rows_se, cols_se = element_3D.generate_ind_rows_cols()
-        # ind_rows = np.append(ind_rows, rows_se)
-        # ind_cols = np.append(ind_cols, cols_se)
+        rows_se, cols_se = element_3D.generate_ind_rows_cols()
+        self.ind_rows = np.append(self.ind_rows, rows_se)
+        self.ind_cols = np.append(self.ind_cols, cols_se)
 
-        # dofs = element_3D.DOFS_PER_ELEMENT
-        # nel = len(element_3D.connectivity)
-        # # total_dofs = element_3D.DOFS_PER_NODE * len(element_3D.nodal_coordinates)
+        dofs = element_3D.DOFS_PER_ELEMENT
+        nel = len(element_3D.connectivity)
+        # total_dofs = element_3D.DOFS_PER_NODE * len(element_3D.nodal_coordinates)
 
-        # data_K_se = np.zeros((nel, dofs, dofs), dtype=float)
-        # data_M_se = np.zeros((nel, dofs, dofs), dtype=float)
+        data_K_se = np.zeros((nel, dofs, dofs), dtype=float)
+        data_M_se = np.zeros((nel, dofs, dofs), dtype=float)
 
-        # # loop for solid elements
-        # for el_index in range(nel):
-        #     Ke, Me = element_3D.elementary_matrices(el_index)
-        #     data_K_se[el_index, :, :] = Ke
-        #     data_M_se[el_index, :, :] = Me
+        # loop for solid elements
+        for el_index, vol_id, *_ in self.model.mesh.solids_connectivity:
 
-        # self.data_K = np.append(self.data_K, data_K_se.flatten())
-        # self.data_M = np.append(self.data_M, data_M_se.flatten())
+            material = self.model.properties._get_property("material", volume=vol_id)
+            if material is None:
+                continue
+
+            Ke, Me = element_3D.elementary_matrices(el_index, material)
+            data_K_se[el_index, :, :] = Ke
+            data_M_se[el_index, :, :] = Me
+
+        self.data_K = np.append(self.data_K, data_K_se.flatten())
+        self.data_M = np.append(self.data_M, data_M_se.flatten())
 
         if len(self.shell_dofs):
 
@@ -253,18 +258,28 @@ class StructuralAssembler:
             data_K_fe = np.zeros((nel, dofs, dofs), dtype=float)
             data_M_fe = np.zeros((nel, dofs, dofs), dtype=float)
 
-            # loop for solid elements
-            for el_index in range(nel):
+            # loop for face elements
+            for el_index, surf_id, *_ in self.model.mesh.faces_connectivity:
 
-                s_data = self.model.mesh.face_element_thickness.get(el_index, None)
-                if s_data is None:
+                material = self.model.properties._get_property("material", surface=surf_id)
+                if material is None:
                     continue
 
-                t = s_data.get("surface_thickness", None)
-                if t is None:
+                surface_data = self.model.properties._get_property("surface_thickness", surface=surf_id)
+                if surface_data is None:
                     continue
+                else:
+                    t = surface_data["surface_thickness"]
+ 
+                # s_data = self.model.mesh.face_element_thickness.get(el_index, None)
+                # if s_data is None:
+                #     continue
 
-                Ke, Me = element_2D.elementary_matrices(el_index, t)
+                # t = s_data.get("surface_thickness", None)
+                # if t is None:
+                #     continue
+
+                Ke, Me = element_2D.elementary_matrices(el_index, material, t)
 
                 data_K_fe[el_index, :, :] = Ke
                 data_M_fe[el_index, :, :] = Me

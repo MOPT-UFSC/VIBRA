@@ -12,7 +12,6 @@ class VisibilitySettingsMenu(QMenu):
     def __init__(self, parent):
         super().__init__(parent)
 
-        self.main_window = get_main_window()
         self.setTitle("Visibility settings")
         self.create_and_connect_actions()
         self.create_layout()
@@ -44,20 +43,20 @@ class VisibilitySettingsMenu(QMenu):
         else:
             text = "Hide menu items"
 
-        self.main_window.set_menu_items_visibility_state(self.bool_state)
+        app().main_window.set_menu_items_visibility_state(self.bool_state)
         self.show_or_hide_menu_items_action.setText(text)
         self.bool_state = not self.bool_state
-        self.main_window.menu_widget.setVisible(self.bool_state)
-        self.main_window.vertical_line.setVisible(self.bool_state)
-        self.main_window.analysis_filter.setVisible(self.bool_state)
+        app().main_window.menu_widget.setVisible(self.bool_state)
+        app().main_window.vertical_line.setVisible(self.bool_state)
+        app().main_window.analysis_filter.setVisible(self.bool_state)
 
     def theme_callback(self):
-        if self.parent().user_config.theme == "light":
-            self.parent().set_theme("dark")
+        if app().user_config.theme == "light":
+            app().main_window.set_theme("dark")
             self.theme_action.setIcon(self.theme_sun_icon)
 
-        elif self.parent().user_config.theme == "dark":
-            self.parent().set_theme("light")
+        elif app().user_config.theme == "dark":
+            app().main_window.set_theme("light")
             self.theme_action.setIcon(self.theme_moon_icon)
 
     def load_user_preference_state(self):

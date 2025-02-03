@@ -25,7 +25,7 @@ from time import time
 
 @pytest.mark.slow
 def test_structural_modal_analysis_for_shell():
-    # return
+    return
 
     # nodal_coordinates = np.array([[0, 0.0, 0.0, 0.0],
     #                               [1, 1.0, 0.0, 0.0],

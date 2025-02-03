@@ -519,6 +519,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         text += self._nodes_info_text()
         text += self._faces_info_text()
         text += self._volumes_info_text()
+        text += self._surface_thickness_info_text()
         text += self._material_info_text()
         text += self._fluid_info_text()
         text += self._porous_material_info_text()
@@ -562,15 +563,43 @@ class GeometryRenderWidget(CommonRenderWidget):
             text += f"Volume: {volumes[0]}\n\n"
 
         return text
+    
+    def _surface_thickness_info_text(self):
 
-    def _material_info_text(self):
-        volumes = list(self.main_window.selected_geometry_volumes)
+        surfaces = list(self.main_window.selected_geometry_surfaces)
         text = ""
 
-        if len(volumes) != 1:
+        if len(surfaces) == 1:
+            surface_data = app().project.model.properties._get_property("surface_thickness", surface=surfaces[0])
+        else:
+            return text
+        
+        if surface_data is None:
+            return text
+        
+        tree = TreeInfo("Shell data")
+        tree.add_item("Thickness", surface_data["surface_thickness"], "m")
+        tree.add_item("Offset", surface_data["thickness_offset"])
+        
+        text += str(tree)
+
+        return text
+
+    def _material_info_text(self):
+
+        volumes = list(self.main_window.selected_geometry_volumes)
+        surfaces = list(self.main_window.selected_geometry_surfaces)
+
+        text = ""
+        if len(volumes) != 1 and len(surfaces) != 1:
             return text
 
-        material = app().project.model.properties.get_material(volume=volumes[0])
+        elif len(volumes) == 1:
+            material = app().project.model.properties.get_material(volume=volumes[0])
+        
+        elif len(surfaces) == 1:
+            material = app().project.model.properties.get_material(surface=surfaces[0])
+
         if material is None:
             return text
 
@@ -587,13 +616,20 @@ class GeometryRenderWidget(CommonRenderWidget):
         return text
 
     def _fluid_info_text(self):
-        volumes = list(self.main_window.selected_geometry_volumes)
-        text = ""
 
-        if len(volumes) != 1:
+        volumes = list(self.main_window.selected_geometry_volumes)
+        surfaces = list(self.main_window.selected_geometry_surfaces)
+
+        text = ""
+        if len(volumes) != 1 or len(surfaces) != 1:
             return text
 
-        fluid = app().project.model.properties.get_fluid(volume=volumes[0])
+        elif len(volumes) == 1:
+            fluid = app().project.model.properties.get_fluid(volume=volumes[0])
+        
+        elif len(surfaces) == 1:
+            fluid = app().project.model.properties.get_fluid(surface=surfaces[0])
+
         if fluid is None:
             return text
 

@@ -72,8 +72,8 @@ class ModelProperties:
         self.element_properties = dict()
         self.nodal_properties = dict()
 
-        self.global_properties["material", "global"] = DEFAULT_MATERIAL
-        self.global_properties["fluid", "global"] = DEFAULT_FLUID
+        # self.global_properties["material", "global"] = DEFAULT_MATERIAL
+        # self.global_properties["fluid", "global"] = DEFAULT_FLUID
 
     def get_material(self, **kwargs) -> Material:
         return self._get_property("material", **kwargs)

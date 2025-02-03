@@ -25,7 +25,7 @@ from vibra.interface.model_inputs.acoustic.reciprocating_compressor_inputs impor
 from vibra.interface.model_inputs.acoustic.process_acoustic_transfer_element_data import ProcessAcousticTransferElementData
 #
 from vibra.interface.model_inputs.structural.surface_thickness_inputs import SurfaceThicknessInput
-from vibra.interface.model_inputs.structural.boundary_condition_inputs import BoundaryConditionInputs
+from vibra.interface.model_inputs.structural.prescribed_dofs_inputs import PrescribedDofsInputs
 from vibra.interface.plots.acoustic.plot_acoustic_pressure_frequency_response_input import PlotAcousticPressureFrequencyResponseInput
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_input import PlotAcousticFrequencyResponseFunctionInput
 from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
@@ -420,7 +420,7 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_set_boundary_condition:
             if not self.item_child_set_boundary_condition.isDisabled():
-                obj = BoundaryConditionInputs()
+                obj = PrescribedDofsInputs()
 
         elif item == self.item_child_setNodalLoads:
             if not self.item_child_setNodalLoads.isDisabled():
