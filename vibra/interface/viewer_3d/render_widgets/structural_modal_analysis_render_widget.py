@@ -256,9 +256,10 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
             if mesh is None:
                 return
 
-            self.remove_actors(self.analysis_actor)
-            self.analysis_actor = AnalysisActor(mesh)
-            self.add_actors(self.analysis_actor)
+            if mesh.solids_connectivity.size > 0:
+                self.remove_actors(self.analysis_actor)
+                self.analysis_actor = AnalysisActor(mesh)
+                self.add_actors(self.analysis_actor)
 
         self.plane_actor.configure_section_plane(position, rotation)
         xyz = self.plane_actor.calculate_xyz_position(position)
