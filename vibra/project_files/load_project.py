@@ -249,10 +249,7 @@ class LoadProject:
 
         logging.info("Loading mesh..." + ProgressStatus(80, 100))
 
-        self.model.mesh._maps_lines_by_elements()
-        self.model.mesh._maps_surfaces_by_elements()
-        self.model.mesh._maps_volumes_by_elements()
-
+        self.model.mesh.create_element_mappings()
         self.model.generated_mesh = True
 
         logging.info("Loading mesh..." + ProgressStatus(95, 100))

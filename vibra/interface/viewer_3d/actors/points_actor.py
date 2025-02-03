@@ -1,3 +1,5 @@
+from molde.colors import color_names
+
 from vtkmodules.vtkCommonCore import vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import VTK_VERTEX, vtkPlane, vtkPolyData
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
@@ -32,17 +34,14 @@ class PointsActor(vtkActor):
 
     def configure_appearance(self):
         self.GetProperty().RenderPointsAsSpheresOn()
-        self.GetProperty().SetPointSize(6)
+        self.GetProperty().SetPointSize(15)
+        self.GetProperty().LightingOff()
         self.clear_colors()
 
     def clear_colors(self):
         data = self.GetMapper().GetInput()
         cell_colors = data.GetCellData().GetScalars()
-
-        r, g, b = self.GetProperty().GetColor()
-        r = int(r * 255)
-        g = int(g * 255)
-        b = int(b * 255)
+        r, g, b = color_names.YELLOW_5.to_rgb()
 
         cell_colors.FillComponent(0, r)
         cell_colors.FillComponent(1, g)

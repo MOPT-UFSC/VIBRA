@@ -5,13 +5,13 @@ from PyQt5.QtWidgets import QAction, QMenu
 
 from vibra import app, ICON_DIR
 from vibra.utils.icons import load_icon
-from vibra.utils.interface_functions import get_main_window
 
 
 class VisibilitySettingsMenu(QMenu):
     def __init__(self, parent):
         super().__init__(parent)
 
+        self.main_window = app().main_window
         self.setTitle("Visibility settings")
         self.create_and_connect_actions()
         self.create_layout()

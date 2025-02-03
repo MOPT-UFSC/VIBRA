@@ -92,11 +92,12 @@ class RendererToolbar(QToolBar):
         clip_plane_show_icon = load_icon(ICON_DIR / "visibility/section_plane_view.png", color)
         self.section_plane_show_action = QAction(clip_plane_show_icon, "View Section Plane", self)
         self.section_plane_show_action.setCheckable(True)
-        self.section_plane_show_action.triggered.connect(self.section_plane_show_callback)
+        # self.section_plane_show_action.triggered.connect(self.section_plane_show_callback)
 
         clip_plane_config_icon = load_icon(ICON_DIR / "visibility/section_plane_config.png", color)
-        self.section_plane_config_action = QAction(clip_plane_config_icon, "Configure Section Plane", self)
-        self.section_plane_config_action.triggered.connect(self.section_plane_config_callback)
+        self.action_section_plane = QAction(clip_plane_config_icon, "Configure Section Plane", self)
+        self.action_section_plane.setCheckable(True)
+        self.action_section_plane.triggered.connect(self.section_plane_config_callback)
 
         hide_icon = load_icon(ICON_DIR / "visibility/hide_icon.png", color)
         self.hide_selection = QAction(hide_icon, "Hide Selection", self)
@@ -123,8 +124,8 @@ class RendererToolbar(QToolBar):
         self.addAction(self.show_faces_action)
         self.addAction(self.hide_show_symbols_action)
         self.addSeparator()
-        self.addAction(self.section_plane_show_action)
-        self.addAction(self.section_plane_config_action)
+        # self.addAction(self.section_plane_show_action)
+        self.addAction(self.action_section_plane)
         self.addSeparator()
         self.addAction(self.hide_selection)
         self.addAction(self.unhide_all)
@@ -194,14 +195,12 @@ class RendererToolbar(QToolBar):
 
         app().main_window.viewer_tabs.mesh_widget.update()
 
-    def section_plane_show_callback(self, option: bool):
-        app().main_window.section_plane.cutting = option
-        app().main_window.section_plane.value_changed.emit()
+    # def section_plane_show_callback(self, option: bool):
+    #     app().main_window.section_plane.cutting = option
+    #     app().main_window.section_plane.value_changed.emit()
 
-    def section_plane_config_callback(self):
-        self.section_plane_show_action.setChecked(True)
-        app().main_window.section_plane.cutting = True
-        app().main_window.section_plane.show()
+    def section_plane_config_callback(self, condition):
+        app().main_window.action_section_plane_callback(condition)
 
     def hide_selection_callback(self):
         app().main_window.hide_selection_callback()

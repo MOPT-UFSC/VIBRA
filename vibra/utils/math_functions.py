@@ -4,6 +4,8 @@ import numpy as np
 def lerp(a, b, t):
     return a + (b - a) * t
 
+def remap(x, in_min, in_max, out_min, out_max):
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
 def bounds_distance(bounds):
     x0, x1, y0, y1, z0, z1 = bounds

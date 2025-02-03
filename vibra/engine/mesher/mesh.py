@@ -483,7 +483,10 @@ class Mesh:
         # for i, values in enumerate(self.solids_connectivity[:,4:]):
         #     if (aux_zeros == values).all():
         #         print(f"The solid element #{i} doesn't have valid connectivity")
+        
+        self.create_element_mappings()
 
+    def create_element_mappings(self):
         self._maps_lines_by_elements()
         self._maps_surfaces_by_elements()
         self._maps_volumes_by_elements()
@@ -603,7 +606,6 @@ class Mesh:
             els_id = filtered_data[mask_1, 0][0]
             self.face_to_solid_element[elf_id] = els_id
             self.solid_to_face_elements[els_id].append(elf_id)
-
 
     def get_face_elements_connected_to_nodes(self, node_ids, surface_id=None):
 

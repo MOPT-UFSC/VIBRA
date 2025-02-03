@@ -15,15 +15,15 @@ from vibra.interface.analysis_bars.acoustic_analysis_bar import (
     AcousticModalAnalysisBar,
 )
 from vibra.interface.viewer_3d.actors.analysis_actor import AnalysisActor
-from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
-    CuttingPlaneActor,
+from vibra.interface.viewer_3d.actors.hollow_analysis_actor import HollowAnalysisActor
+from vibra.interface.viewer_3d.actors.section_plane_actor import (
+    SectionPlaneActor,
 )
 from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
 from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 # from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
 #     CommonRenderWidget,
 # )
-from vibra.utils.interface_functions import get_main_window
 from vibra.utils.progress_status import ProgressStatus
 from vibra import VIBRA_DIR
 
@@ -50,9 +50,9 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.setLayout(layout)
         self.setContentsMargins(0, 0, 0, 0)
 
-        self.cutting_plane_active = False
+        self.section_plane_active = False
         self.show_plane_actor = True
-        self.cutting_plane_args = tuple()
+        self.section_plane_args = tuple()
 
         self.analysis_actor = None
         self.edges_actor = None
@@ -116,7 +116,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         if self.plane_actor is not None:
             self.show_plane_actor = self.plane_actor.GetVisibility()
 
-        self.remove_actors()
+        self.remove_all_actors()
 
         phase_deg = self.control_bar.phase_slider.value()
         phi_sld = phase_deg * np.pi / 180
@@ -131,9 +131,9 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
             min_value = 0
             output_pressures = np.abs(output_pressures)
 
-        self.analysis_actor = AnalysisActor(mesh)
-        self.analysis_actor.plot_colorbar(output_pressures, min_value, max_value)
-        self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
+        self.analysis_actor = HollowAnalysisActor(mesh)
+        self.analysis_actor.plot_color_bar(output_pressures, min_value, max_value)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.renderer.AddActor(self.analysis_actor)
 
         self.edges_actor = EdgesActor(self.analysis_actor.data)
@@ -150,7 +150,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.hidden_part_actor.PickableOff()
         self.renderer.AddActor(self.hidden_part_actor)
 
-        self.plane_actor = CuttingPlaneActor(self.analysis_actor.GetBounds())
+        self.plane_actor = SectionPlaneActor(self.analysis_actor.GetBounds())
         self.plane_actor.VisibilityOff()
         self.renderer.AddActor(self.plane_actor)
 
@@ -162,9 +162,9 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
             self.analysis_actor.GetProperty().SetRepresentationToSurface()
             self.edges_actor.VisibilityOn()
 
-        # if self.cutting_plane_active and self.cutting_plane_args:
-        #     self.start_cutting_mode()
-        #     self.apply_cutting_plane(*self.cutting_plane_args)
+        # if self.section_plane_active and self.section_plane_args:
+        #     self.start_section_mode()
+        #     self.apply_section_plane(*self.section_plane_args)
         #     if not self.show_plane_actor:
         #         self.plane_actor.VisibilityOff()
         #         self.update()
@@ -212,12 +212,12 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         # print(f"Elapsed time to process A: {round(dt, 4)} s")
 
         # t0 = time()
-        self.analysis_actor.plot_colorbar(output_pressures, min_value, max_value)
+        self.analysis_actor.plot_color_bar(output_pressures, min_value, max_value)
         # dt = time() - t0
         # print(f"Elapsed time to process B: {round(dt, 4)} s")
 
         # t0 = time()
-        self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         # dt = time() - t0
         # print(f"Elapsed time to process C: {round(dt, 4)} s")
 
@@ -283,8 +283,8 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
                 "Processing the animation frames..." + ProgressStatus(step, len(deg_angles))
             )
 
-        # self.analysis_actor.plot_colorbar(self.animation_data, min_value, max_value)
-        # self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
+        # self.analysis_actor.plot_color_bar(self.animation_data, min_value, max_value)
+        # self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         # self.update()
 
     def set_mesh_visibility(self, condition):
@@ -341,7 +341,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         inverted = section_plane.get_inverted()
 
         if section_plane.editing:
-            self.plane_actor.configure_cutting_plane(position, rotation)
+            self.plane_actor.configure_section_plane(position, rotation)
             self.plane_actor.VisibilityOn()
             self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
             self.plane_actor.GetProperty().SetOpacity(0.8)
@@ -358,8 +358,17 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
-        self.plane_actor.configure_cutting_plane(position, rotation)
-        xyz = self.plane_actor.calculate_x_y_z_position(position)
+        if isinstance(self.analysis_actor, HollowAnalysisActor):
+            mesh = app().project.model.mesh
+            if mesh is None:
+                return
+
+            self.remove_actors(self.analysis_actor)
+            self.analysis_actor = AnalysisActor(mesh)
+            self.add_actors(self.analysis_actor)
+
+        self.plane_actor.configure_section_plane(position, rotation)
+        xyz = self.plane_actor.calculate_xyz_position(position)
         normal = self.plane_actor.calculate_normal_vector(rotation)
         if inverted:
             normal = -normal
@@ -373,17 +382,17 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.plane_actor.GetProperty().SetOpacity(0.2)
         self.update()
 
-    # def start_cutting_mode(self):
+    # def start_section_mode(self):
     #     if not self._actors_exists():
     #         return
-    #     self.cutting_plane_active = True
+    #     self.section_plane_active = True
     #     self.hidden_part_actor.VisibilityOn()
     #     self.update()
 
-    # def stop_cutting_mode(self):
+    # def stop_section_mode(self):
     #     if not self._actors_exists():
     #         return
-    #     self.cutting_plane_active = False
+    #     self.section_plane_active = False
     #     has_hidden_part = bool(self.main_window.hidden_surfaces)
     #     self.hidden_part_actor.SetVisibility(has_hidden_part)
     #     self.plane_actor.VisibilityOff()
@@ -391,19 +400,19 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
     #     self.edges_actor.disable_cut()
     #     self.update()
 
-    # def configure_cutting_plane(self, position, orientation, *args, **kwargs):
+    # def configure_section_plane(self, position, orientation, *args, **kwargs):
     #     if not self._actors_exists():
     #         return
 
-    #     self.plane_actor.configure_cutting_plane(position, orientation)
+    #     self.plane_actor.configure_section_plane(position, orientation)
     #     self.update()
 
-    # def apply_cutting_plane(self, position, orientation, invert=False):
+    # def apply_section_plane(self, position, orientation, invert=False):
     #     if not self._actors_exists():
     #         return
 
-    #     self.cutting_plane_args = (position, orientation, invert)
-    #     xyz = self.plane_actor.calculate_x_y_z_position(position)
+    #     self.section_plane_args = (position, orientation, invert)
+    #     xyz = self.plane_actor.calculate_xyz_position(position)
     #     normal = self.plane_actor.calculate_normal_vector(orientation)
     #     if invert:
     #         normal = -normal
@@ -411,13 +420,13 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
     #     self.edges_actor.apply_cut(xyz, normal)
 
     #     self.plane_actor.VisibilityOn()
-    #     self.plane_actor.configure_cutting_plane(position, orientation)
+    #     self.plane_actor.configure_section_plane(position, orientation)
     #     self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
     #     self.plane_actor.GetProperty().SetOpacity(0.2)
 
     #     self.update()
 
-    def remove_actors(self):
+    def remove_all_actors(self):
         self.renderer.RemoveActor(self.analysis_actor)
         self.renderer.RemoveActor(self.edges_actor)
         self.renderer.RemoveActor(self.plane_actor)

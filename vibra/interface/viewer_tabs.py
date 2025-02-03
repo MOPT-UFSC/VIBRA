@@ -155,29 +155,29 @@ class ViewerTabs(QTabWidget):
                 continue
             tab.update_info_text()
 
-    def start_cutting_mode(self):
+    def start_section_mode(self):
         for tab in self.tabs():
-            if not hasattr(tab, "start_cutting_mode"):
+            if not hasattr(tab, "start_section_mode"):
                 continue
-            tab.start_cutting_mode()
+            tab.start_section_mode()
 
-    def stop_cutting_mode(self):
+    def stop_section_mode(self):
         for tab in self.tabs():
-            if not hasattr(tab, "stop_cutting_mode"):
+            if not hasattr(tab, "stop_section_mode"):
                 continue
-            tab.stop_cutting_mode()
+            tab.stop_section_mode()
 
-    def configure_cutting_plane(self, position, orientation):
+    def configure_section_plane(self, position, orientation):
         for tab in self.tabs():
-            if not hasattr(tab, "configure_cutting_plane"):
+            if not hasattr(tab, "configure_section_plane"):
                 continue
-            tab.configure_cutting_plane(position, orientation)
+            tab.configure_section_plane(position, orientation)
 
-    def apply_cutting_plane(self, position, orientation, invert=False):
+    def apply_section_plane(self, position, orientation, invert=False):
         for tab in self.tabs():
-            if not hasattr(tab, "apply_cutting_plane"):
+            if not hasattr(tab, "apply_section_plane"):
                 continue
-            tab.apply_cutting_plane(position, orientation, invert)
+            tab.apply_section_plane(position, orientation, invert)
 
     #
     def set_theme(self, theme):
