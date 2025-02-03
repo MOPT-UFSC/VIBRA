@@ -26,7 +26,7 @@ class SpecificImpedanceInput(QDialog):
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
-        self.main_window.viewer_tabs.show_geometry()
+        self.main_window.action_model_workspace_callback()
 
         self.project = app().project
         self.model = app().project.model
@@ -435,10 +435,10 @@ class SpecificImpedanceInput(QDialog):
     def actions_to_finalize(self):
         self.load_info()
         self.check_model_frequency_controls()
-        self.main_window.viewer_tabs.update_info_text()
+        self.main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
-        app().main_window.viewer_tabs.mesh_widget.symbols_actor.build()
+        app().main_window.mesh_widget.symbols_actor.build()
 
     def change_frequency_setup(self):
         if self.imported_values is not None:

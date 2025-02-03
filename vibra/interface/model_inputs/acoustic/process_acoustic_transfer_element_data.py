@@ -28,7 +28,7 @@ class ProcessAcousticTransferElementData(QDialog):
         uic.loadUi(ui_path, self)
 
         app().main_window.set_input_widget(self)
-        app().main_window.viewer_tabs.show_geometry()
+        app().main_window.action_model_workspace_callback()
 
         self.project = app().project
         self.model = app().project.model
@@ -298,8 +298,7 @@ class ProcessAcousticTransferElementData(QDialog):
         if not app().project.model.generated_mesh:
             obj = MesherInputs()
             if obj.complete:
-                app().main_window.viewer_tabs.close_analysis_tabs()
-                app().main_window.viewer_tabs.update_plots()
+                app().main_window.update_plots()
             else:
                 return
         
@@ -328,7 +327,7 @@ class ProcessAcousticTransferElementData(QDialog):
         solve_harmonic = load_function(callback, app().main_window)
         solve_harmonic()
 
-        app().main_window.viewer_tabs.show_acoustic_harmonic_analysis()
+        app().main_window.configure_acoustic_harmonic_analysis_render_widget()
         app().main_window.menu_widget.update_items()
         self.print_final_message()
 

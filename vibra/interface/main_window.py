@@ -450,20 +450,29 @@ class MainWindow(QMainWindow):
     def configure_acoustic_modal_analysis_render_widget(self):
         self.acoustic_modal_analysis.update_frequencies()
         self.acoustic_modal_analysis.update_plot()
+        self.render_widgets_stack.setCurrentWidget(self.acoustic_modal_analysis)
     
     def configure_structural_modal_analysis_render_widget(self):
         self.structural_modal_analysis.update_frequencies()
         self.structural_modal_analysis.update_plot()
+        self.render_widgets_stack.setCurrentWidget(self.structural_modal_analysis)
     
     def configure_acoustic_harmonic_analysis_render_widget(self):
         self.acoustic_harmonic_analysis.update_frequencies()
         self.acoustic_harmonic_analysis.update_plot()
+        self.render_widgets_stack.setCurrentWidget(self.acoustic_harmonic_analysis)
     
     def update_plots(self, reset_camera=True):
         for i in range(self.render_widgets_stack.count()):
             widget = self.render_widgets_stack.widget(i)
             if isinstance(widget, CommonRenderWidget):
                 widget.update_plot(reset_camera)
+    
+    def update_info_text(self):
+        for i in range(self.render_widgets_stack.count()):
+            widget = self.render_widgets_stack.widget(i)
+            if hasattr(widget, "update_info_text"):
+                widget.update_info_text()
         
     def action_model_workspace_callback(self):
         self.action_model_workspace.setEnabled(False)

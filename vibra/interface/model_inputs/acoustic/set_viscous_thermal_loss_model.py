@@ -31,7 +31,7 @@ class SetViscousThermalLossModel(QDialog):
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
-        self.main_window.viewer_tabs.show_geometry()
+        self.main_window.action_model_workspace_callback()
 
         self.project = app().project
         self.model = app().project.model
@@ -393,7 +393,7 @@ class SetViscousThermalLossModel(QDialog):
         self.tabWidget_main.setCurrentIndex(0)
 
     def highlight_mesh_elements(self, elements):
-        mesh_widget = self.main_window.viewer_tabs.mesh_widget
+        mesh_widget = self.main_window.mesh_widget
         mesh_widget.select_multiple_volumes(elements)
 
     def geometry_selection_callback(self):
@@ -468,16 +468,16 @@ class SetViscousThermalLossModel(QDialog):
 
             if len(center_coords):
                 all_radius = [self.selection_radius for _ in center_coords]
-                geometry_widget = self.main_window.viewer_tabs.geometry_widget
+                geometry_widget = self.main_window.geometry_widget
                 geometry_widget.set_selection_spheres(center_coords, all_radius)
 
-                mesh_widget = self.main_window.viewer_tabs.mesh_widget
+                mesh_widget = self.main_window.mesh_widget
                 mesh_widget.set_selection_spheres(center_coords, all_radius)
 
     def hide_sphere(self):
-        geometry_widget = self.main_window.viewer_tabs.geometry_widget
+        geometry_widget = self.main_window.geometry_widget
         geometry_widget.clear_selection_spheres()
-        mesh_widget = self.main_window.viewer_tabs.mesh_widget
+        mesh_widget = self.main_window.mesh_widget
         mesh_widget.clear_selection_spheres()
 
     def get_selection_information(self):
@@ -508,7 +508,7 @@ class SetViscousThermalLossModel(QDialog):
                                                 filter_type  )
 
                 self.main_window.set_input_widget(self)
-                self.main_window.viewer_tabs.show_geometry()
+                self.main_window.action_model_workspace_callback()
 
     def generate_mesh(self):
         if not app().project.model.generated_mesh:
@@ -697,7 +697,7 @@ class SetViscousThermalLossModel(QDialog):
                                                 data["filter_type"]  )
 
                 self.main_window.set_input_widget(self)
-                self.main_window.viewer_tabs.show_geometry()
+                self.main_window.action_model_workspace_callback()
 
             group_properties = self.properties.group_properties.copy()
             for key, data in group_properties.items():
@@ -712,9 +712,9 @@ class SetViscousThermalLossModel(QDialog):
             #         return get_info()
 
     def hide_sphere(self):
-        geometry_widget = self.main_window.viewer_tabs.geometry_widget
+        geometry_widget = self.main_window.geometry_widget
         geometry_widget.clear_selection_spheres()
-        mesh_widget = self.main_window.viewer_tabs.mesh_widget
+        mesh_widget = self.main_window.mesh_widget
         mesh_widget.clear_selection_spheres()
 
     # Plot viscous_thermal effective properties
@@ -938,7 +938,7 @@ class SetViscousThermalLossModel(QDialog):
         self.hide_sphere()
         try:
             warnings.filterwarnings('default')
-            geometry_widget = self.main_window.viewer_tabs.geometry_widget
+            geometry_widget = self.main_window.geometry_widget
             geometry_widget.selection_changed.disconnect(self.geometry_selection_callback)
         except TypeError:
             pass  # ignore if there is nothing to disconect
