@@ -263,7 +263,6 @@ class LoadProject:
 
     def load_mesh_setup(self):
 
-        app().main_window.viewer_tabs.close_mesh_tabs()
         mesh_setup = self.file.read_mesh_setup_from_file()
 
         if "element_type" in mesh_setup.keys():
@@ -303,18 +302,15 @@ class LoadProject:
 
                 self.update_render()
 
-        app().main_window.viewer_tabs.show_geometry()
+        app().main_window.action_model_workspace_callback()
 
     def update_render(self):
 
         logging.info("Updating render..." + ProgressStatus(20, 100))
-        app().main_window.viewer_tabs.show_mesh()
-
-        logging.info("Updating render..." + ProgressStatus(40, 100))
-        app().main_window.viewer_tabs.close_analysis_tabs()
+        app().main_window.configure_mesh_information()
 
         logging.info("Updating render..." + ProgressStatus(90, 100))
-        app().main_window.viewer_tabs.update_plots()
+        app().main_window.update_plots()
 
     def load_imported_table_data_from_file(self):
 
@@ -434,15 +430,15 @@ class LoadProject:
             
             logging.info("Updating analysis render..." + ProgressStatus(85, 100))
             if act_modal_analysis:
-                app().main_window.viewer_tabs.show_acoustic_modal_analysis()
+                app().main_window.configure_acoustic_modal_analysis_render_widget()
                 app().main_window.menu_widget.update_items()
 
             elif str_modal_analysis:
-                app().main_window.viewer_tabs.show_structural_modal_analysis()
+                app().main_window.configure_structural_modal_analysis_render_widget()
                 app().main_window.menu_widget.update_items()
 
             elif act_harmonic_analysis:
-                app().main_window.viewer_tabs.show_acoustic_harmonic_analysis()
+                app().main_window.configure_acoustic_harmonic_analysis_render_widget()
                 app().main_window.menu_widget.update_items()
 
             elif str_harmonic_analysis:

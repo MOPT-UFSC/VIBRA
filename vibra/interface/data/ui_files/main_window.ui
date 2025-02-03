@@ -23,7 +23,7 @@
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <widget class="QStackedWidget" name="stacked_setup">
+      <widget class="QStackedWidget" name="render_widgets_stack">
        <property name="currentIndex">
         <number>0</number>
        </property>
@@ -84,6 +84,9 @@
    <addaction name="action_hide_selection"/>
    <addaction name="action_unhide_all"/>
    <addaction name="separator"/>
+   <addaction name="action_model_workspace"/>
+   <addaction name="action_mesh_workspace"/>
+   <addaction name="action_results_workspace"/>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -491,6 +494,33 @@
    </property>
    <property name="text">
     <string>Theme</string>
+   </property>
+  </action>
+  <action name="action_model_workspace">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/model.png</normaloff>../icons/model.png</iconset>
+   </property>
+   <property name="text">
+    <string>Model Workspace</string>
+   </property>
+  </action>
+  <action name="action_mesh_workspace">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/mesh.png</normaloff>../icons/mesh.png</iconset>
+   </property>
+   <property name="text">
+    <string>Mesh Workspace</string>
+   </property>
+  </action>
+  <action name="action_results_workspace">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/results.png</normaloff>../icons/results.png</iconset>
+   </property>
+   <property name="text">
+    <string>Results Workspace</string>
    </property>
   </action>
  </widget>
