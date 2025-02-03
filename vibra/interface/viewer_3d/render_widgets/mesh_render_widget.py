@@ -483,9 +483,10 @@ class MeshRenderWidget(CommonRenderWidget):
             if mesh is None:
                 return
 
-            self.remove_actors(self.solids_actor)
-            self.solids_actor = SolidsActor(mesh)
-            self.add_actors(self.solids_actor)
+            if mesh.solids_connectivity.size > 0:
+                self.remove_actors(self.solids_actor)
+                self.solids_actor = SolidsActor(mesh)
+                self.add_actors(self.solids_actor)
 
         self.plane_actor.configure_section_plane(position, rotation)
         xyz = self.plane_actor.calculate_xyz_position(position)
