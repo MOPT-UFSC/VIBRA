@@ -457,6 +457,7 @@ class GeometryRenderWidget(CommonRenderWidget):
     def update_info_text(self):
         text = ""
         text += self._nodes_info_text()
+        text += self._lines_info_text()
         text += self._faces_info_text()
         text += self._volumes_info_text()
         text += self._surface_thickness_info_text()
@@ -476,6 +477,17 @@ class GeometryRenderWidget(CommonRenderWidget):
             text += f"{len(nodes)} points in selection\n" f"{format_long_sequence(nodes)}\n\n"
         elif len(nodes) == 1:
             text += f"Point: {nodes[0]}\n\n"
+
+        return text
+
+    def _lines_info_text(self):
+        lines = list(self.main_window.selected_geometry_lines)
+        text = ""
+
+        if len(lines) > 1:
+            text += f"{len(lines)} lines in selection\n" f"{format_long_sequence(lines)}\n\n"
+        elif len(lines) == 1:
+            text += f"Line: {lines[0]}\n\n"
 
         return text
 
