@@ -12,6 +12,7 @@ from vibra.interface.loading_bar import load_function
 from vibra.interface.menu_items import MenuItems
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
 from vibra.interface.status_bar import StatusBar
+from vibra.interface.analysis_toolbar import AnalysisToolbar
 from vibra.interface.viewer_tabs import ViewerTabs
 from vibra.interface.formatters.icons import *
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -166,6 +167,7 @@ class MainWindow(QMainWindow):
         self.menu_widget = MenuItems()
         self.analysis_filter = AnalysisFilter()
         self.status_bar = StatusBar(self)
+        self.analysis_toolbar = AnalysisToolbar()
 
         grid_layout_left = QGridLayout()
         grid_layout_left.addWidget(self.analysis_filter, 0, 0)
@@ -207,6 +209,10 @@ class MainWindow(QMainWindow):
         self.render_widgets_stack.addWidget(self.welcome_widget)
         self.render_widgets_stack.currentChanged.connect(self.render_changed_callback)
 
+        self.addToolBar(self.analysis_toolbar)
+        self.insertToolBarBreak(self.analysis_toolbar)
+
+        self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)
         self.analysis_filter.setDisabled(True)
     
@@ -240,6 +246,7 @@ class MainWindow(QMainWindow):
         """
         qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
         app().user_config.theme = theme
+        self.set_renderers_theme(theme)
         self.menu_widget._configItems()
 
         if theme == "dark":
@@ -249,6 +256,12 @@ class MainWindow(QMainWindow):
 
         widgets = self.findChildren((QAction, QAbstractButton))
         change_icon_color_for_widgets(widgets, icon_color)
+    
+    def set_renderers_theme(self, theme: str):
+        for i in range(self.render_widgets_stack.count()):
+            widget = self.render_widgets_stack.widget(i)
+            if hasattr(widget, "set_theme"):
+                widget.set_theme(theme)
 
     def load_user_preferences(self):
         self.set_theme(app().user_config.theme)
@@ -450,17 +463,17 @@ class MainWindow(QMainWindow):
     def configure_acoustic_modal_analysis_render_widget(self):
         self.acoustic_modal_analysis.update_frequencies()
         self.acoustic_modal_analysis.update_plot()
-        self.render_widgets_stack.setCurrentWidget(self.acoustic_modal_analysis)
+        # self.render_widgets_stack.setCurrentWidget(self.acoustic_modal_analysis)
     
     def configure_structural_modal_analysis_render_widget(self):
         self.structural_modal_analysis.update_frequencies()
         self.structural_modal_analysis.update_plot()
-        self.render_widgets_stack.setCurrentWidget(self.structural_modal_analysis)
+        # self.render_widgets_stack.setCurrentWidget(self.structural_modal_analysis)
     
     def configure_acoustic_harmonic_analysis_render_widget(self):
         self.acoustic_harmonic_analysis.update_frequencies()
         self.acoustic_harmonic_analysis.update_plot()
-        self.render_widgets_stack.setCurrentWidget(self.acoustic_harmonic_analysis)
+        # self.render_widgets_stack.setCurrentWidget(self.acoustic_harmonic_analysis)
     
     def update_plots(self, reset_camera=True):
         for i in range(self.render_widgets_stack.count()):
@@ -503,8 +516,6 @@ class MainWindow(QMainWindow):
             self.action_mesh_workspace.setEnabled(True)
 
         self.render_widgets_stack.setCurrentWidget(self.acoustic_harmonic_analysis)
-    
-
 
     def action_new_project_callback(self):
         self.new_project_dialog()
@@ -852,6 +863,7 @@ class MainWindow(QMainWindow):
 
             self.renderer_toolbar.setDisabled(False)
             self.analysis_filter.setDisabled(False)
+            self.analysis_toolbar.setDisabled(False)
             self.menu_widget.modify_items_access_after_geometry_importing()
 
             app().project.reset_solutions()
@@ -921,7 +933,11 @@ class MainWindow(QMainWindow):
             widget.show_points()
     
     def action_about_vibra_callback(self):
-        self.viewer_tabs.show_help()
+        self.render_widgets_stack.setCurrentWidget(self.help_widget)
+
+        self.action_model_workspace.setDisabled(False)
+        self.action_mesh_workspace.setDisabled(False)
+        self.action_results_workspace.setDisabled(False)
     
     def action_top_view_callback(self):
         widget = self.render_widgets_stack.currentWidget()

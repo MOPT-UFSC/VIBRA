@@ -265,7 +265,7 @@
   <action name="action_about_vibra">
    <property name="icon">
     <iconset>
-     <normaloff>../../../data/icons/help.png</normaloff>../../../data/icons/help.png</iconset>
+     <normaloff>../icons/help.png</normaloff>../icons/help.png</iconset>
    </property>
    <property name="text">
     <string>About Vibra</string>

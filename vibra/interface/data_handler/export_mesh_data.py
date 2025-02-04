@@ -33,7 +33,7 @@ class ExportMeshData(QDialog):
         if self.mesh is None:
             return
         else:
-            self.main_window.viewer_tabs.show_mesh()
+            self.main_window.action_mesh_workspace_callback()
 
         self._configure_window()
         self._reset_variables()
