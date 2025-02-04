@@ -460,20 +460,26 @@ class MainWindow(QMainWindow):
         nodes, face_elements, solid_elements = app().project.model.mesh.get_mesh_info()
         self.update_mesh_information(nodes, face_elements, solid_elements)
     
-    def configure_acoustic_modal_analysis_render_widget(self):
+    def configure_acoustic_modal_analysis_render_widget(self, show_renderer_widget=False):
         self.acoustic_modal_analysis.update_frequencies()
         self.acoustic_modal_analysis.update_plot()
-        # self.render_widgets_stack.setCurrentWidget(self.acoustic_modal_analysis)
+        
+        if show_renderer_widget:
+            self.render_widgets_stack.setCurrentWidget(self.acoustic_modal_analysis)
     
-    def configure_structural_modal_analysis_render_widget(self):
+    def configure_structural_modal_analysis_render_widget(self, show_render_widget=False):
         self.structural_modal_analysis.update_frequencies()
         self.structural_modal_analysis.update_plot()
-        # self.render_widgets_stack.setCurrentWidget(self.structural_modal_analysis)
-    
-    def configure_acoustic_harmonic_analysis_render_widget(self):
+
+        if show_render_widget:
+            self.render_widgets_stack.setCurrentWidget(self.structural_modal_analysis)
+
+    def configure_acoustic_harmonic_analysis_render_widget(self, show_render_widget=False):
         self.acoustic_harmonic_analysis.update_frequencies()
         self.acoustic_harmonic_analysis.update_plot()
-        # self.render_widgets_stack.setCurrentWidget(self.acoustic_harmonic_analysis)
+
+        if show_render_widget:
+            self.render_widgets_stack.setCurrentWidget(self.acoustic_harmonic_analysis)
     
     def update_plots(self, reset_camera=True):
         for i in range(self.render_widgets_stack.count()):
@@ -864,6 +870,7 @@ class MainWindow(QMainWindow):
             self.renderer_toolbar.setDisabled(False)
             self.analysis_filter.setDisabled(False)
             self.analysis_toolbar.setDisabled(False)
+            self.analysis_toolbar.pushButton_run_analysis.setDisabled(True)
             self.menu_widget.modify_items_access_after_geometry_importing()
 
             app().project.reset_solutions()

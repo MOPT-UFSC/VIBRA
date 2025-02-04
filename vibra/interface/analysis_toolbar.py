@@ -15,6 +15,8 @@ class AnalysisToolbar(QToolBar):
     def __init__(self):
         super().__init__()
 
+        self.main_window = app().main_window
+
         self._load_icons()
         self._define_qt_variables()
         self._configure_layout()
@@ -120,7 +122,7 @@ class AnalysisToolbar(QToolBar):
         self.combo_box_analysis_domain.addItem("Acoustic")
     
     def run_analysis(self):
-        ...
+        self.main_window.menu_widget.run_analysis()
 
     def configure_analysis(self):
         analysis_type = self.combo_box_analysis_type.currentText()
@@ -131,27 +133,88 @@ class AnalysisToolbar(QToolBar):
                 self.harmonic_structural()
             elif physical_domain == "Acoustic":
                 self.harmonic_acoustic()
-    
+        elif analysis_type == "Modal":
+            if physical_domain == "Structural":
+                self.modal_structural()
+            elif physical_domain == "Acoustic":
+                self.modal_acoustic()
+
     def harmonic_structural(self):
         select = StructuralHarmonicAnalysisInput()
-        if select.index == -1:
-            return
-
         method_id = select.index
-
+        analysis_type_label = "Structural Harmonic Analysis"
         if method_id == 0:
             analysis_id = 0
+            analysis_method_label = "Direct Method"
         else:
             analysis_id = 1
-        
-        return
-
-        app().project.set_analysis_id(analysis_id)
-
-        app().project.reset_solution()
-        if app().main_window.input_ui.analysis_setup():
-            self.update_run_analysis_button()
+            analysis_method_label = "Mode Superposition Method"
+        #
+        analysis_data = {
+            "analysis_id": analysis_id,
+            "analysis_type": analysis_type_label,
+            "analysis_method_label": analysis_method_label,
+        }
+        self.finalize(analysis_data, analysis_id)
     
     def harmonic_acoustic(self):
-        ...
+        method_id = 0
+        analysis_id = 3
+        analysis_type_label = "Acoustic Harmonic Analysis"
+        analysis_method_label = "Direct Method"
+        #
+        analysis_data = {
+            "analysis_id": analysis_id,
+            "analysis_type": analysis_type_label,
+            "analysis_method_label": analysis_method_label,
+        }
+        self.finalize(analysis_data, analysis_id)
+    
+    def modal_structural(self):
+        modal = StructuralModalAnalysisInput()
+        if modal.modes is None:
+            return
+        modes = modal.modes
+        sigma_factor = modal.sigma_factor
+        analysis_id = 2
+        analysis_type_label = "Structural Modal Analysis"
+        if modal.complete:
+            analysis_data = {
+                "analysis_id": analysis_id,
+                "analysis_type": analysis_type_label,
+                "modes": modes,
+                "sigma_factor": sigma_factor,
+            }
+            self.finalize(analysis_data, analysis_id)
+            self.pushButton_run_analysis.setDisabled(False)
+
+    def modal_acoustic(self):
+        modal = AcousticModalAnalysisInput()
+        if modal.modes is None:
+            return
+        modes = modal.modes
+        sigma_factor = modal.sigma_factor
+        analysis_id = 4
+        analysis_type_label = "Acoustic Modal Analysis"
+        if modal.complete:
+            analysis_data = {
+                "analysis_id": analysis_id,
+                "analysis_type": analysis_type_label,
+                "modes": modes,
+                "sigma_factor": sigma_factor,
+            }
+            self.finalize(analysis_data, analysis_id)
+            self.pushButton_run_analysis.setDisabled(False)
+    
+    def finalize(self, analysis_data: dict, analysis_id: int):
+        if app().project.analysis_data is not None:
+            for key, value in app().project.analysis_data.items():
+                if key in ["f_min", "f_max", "f_step", "frequencies"]:
+                    analysis_data[key] = value
+
+        app().project.set_analysis_data(analysis_data)
+        app().project.create_solver()
+
+        if analysis_id in [2, 4]:
+            app().file.write_analysis_setup_in_file(analysis_data)
 

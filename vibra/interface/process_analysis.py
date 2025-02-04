@@ -22,7 +22,7 @@ class ProcessAnalysis:
         except NotImplementedError as e:
             ErrorMessage(e)
         else:
-            self.main_window.viewer_tabs.show_structural_modal_analysis()
+            self.main_window.configure_structural_modal_analysis_render_widget(True)
 
     def process_acoustic_harmonic_analysis(self):
         try:
