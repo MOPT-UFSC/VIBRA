@@ -24,6 +24,7 @@ class SurfaceThicknessInput(QDialog):
 
         app().main_window.set_input_widget(self)
         app().main_window.viewer_tabs.show_geometry()
+        app().main_window.unhide_all_callback()
 
         self.project = app().project
         self.model = app().project.model
@@ -36,7 +37,7 @@ class SurfaceThicknessInput(QDialog):
         self._create_connections()
         self._config_widgets()
 
-        ConfigWidgetAppearance(self, tool_tip=True)
+        # ConfigWidgetAppearance(self, tool_tip=True)
 
         self.load_info()
         self.geometry_selection_callback()
@@ -258,6 +259,25 @@ class SurfaceThicknessInput(QDialog):
         app().file.write_imported_table_data_in_file()
         # app().main_window.viewer_tabs.mesh_widget.symbols_actor.build()
 
+    def process_surfaces_according_with_thickness_setup(self):
+
+        surfaces_to_hide = list()
+        surface_ids = self.model.mesh.geometry_information["surfaces"]
+
+        for surface_id in surface_ids:
+            surface_data = self.properties._get_property("surface_thickness", surface=surface_id)
+            if surface_data is None:
+                surfaces_to_hide.append(surface_id)
+
+        if surfaces_to_hide:
+
+            if len(surface_ids) == len(surfaces_to_hide):
+                return
+
+            for _surface_id in surfaces_to_hide:
+                app().main_window.hidden_surfaces.add(_surface_id)
+                app().main_window.viewer_tabs.update_hidden_plots()
+
     def change_frequency_setup(self):
         if self.imported_values is not None:
             self.hide()
@@ -315,6 +335,7 @@ class SurfaceThicknessInput(QDialog):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
+        self.process_surfaces_according_with_thickness_setup()
         return super().closeEvent(a0)
 
 # fmt: on
