@@ -19,14 +19,15 @@ import numpy as np
 
 from collections import defaultdict
 
-from scipy.sparse import coo_matrix, csr_matrix
-from scipy.special import jv
+from scipy.sparse import csr_matrix
 from sys import getsizeof
 from time import time
 
 
 class AcousticAssembler:
     def __init__(self, model : Model):
+        self.ind_rows_Z = np.array([])
+        self.ind_cols_Z = np.array([])
         self.model = model
         self.properties = model.properties
 

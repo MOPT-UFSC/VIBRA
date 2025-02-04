@@ -21,6 +21,7 @@ __pycache__/
 *.json
 
 # Distribution / packaging
+.idea/
 .vscode/
 .Python
 build/
