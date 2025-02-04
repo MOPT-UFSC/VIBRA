@@ -8,7 +8,7 @@ from vibra.interface.analysis.structural_harmonic_analysis_input import Structur
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
 from vibra.interface.analysis.analysis_type_input import AnalysisTypeInput
 
-from vibra import ICON_DIR
+from vibra import ICON_DIR, app
 
 
 class AnalysisToolbar(QToolBar):
@@ -126,7 +126,32 @@ class AnalysisToolbar(QToolBar):
         analysis_type = self.combo_box_analysis_type.currentText()
         physical_domain = self.combo_box_analysis_domain.currentText()
 
-        self.analysis_type_input = AnalysisTypeInput()
+        if analysis_type == "Harmonic":
+            if physical_domain == "Structural":
+                self.harmonic_structural()
+            elif physical_domain == "Acoustic":
+                self.harmonic_acoustic()
+    
+    def harmonic_structural(self):
+        select = StructuralHarmonicAnalysisInput()
+        if select.index == -1:
+            return
 
-        if analysis_type == "Harmonic" and physical_domain == "Structural":
-            self.analysis_type_input.harmonic_structural()
+        method_id = select.index
+
+        if method_id == 0:
+            analysis_id = 0
+        else:
+            analysis_id = 1
+        
+        return
+
+        app().project.set_analysis_id(analysis_id)
+
+        app().project.reset_solution()
+        if app().main_window.input_ui.analysis_setup():
+            self.update_run_analysis_button()
+    
+    def harmonic_acoustic(self):
+        ...
+
