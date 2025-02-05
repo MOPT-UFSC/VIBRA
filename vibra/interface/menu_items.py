@@ -202,12 +202,12 @@ class MenuItems(QTreeWidget):
         #
         self.item_top_structuralModelSetup = QTreeWidgetItem(["Structural Model Setup"])
         self.item_child_set_surface_thickness = QTreeWidgetItem(["Set Surface Thickness"])
-        self.item_child_set_boundary_condition = QTreeWidgetItem(["Set Boundary Conditions"])
+        self.item_child_set_prescribed_dofs = QTreeWidgetItem(["Set Prescribed DOFs"])
         self.item_child_setNodalLoads = QTreeWidgetItem(["Set Loads"])
         #
         self.list_top_items.append(self.item_top_structuralModelSetup)
         self.list_child_items.append(self.item_child_set_surface_thickness)
-        self.list_child_items.append(self.item_child_set_boundary_condition)
+        self.list_child_items.append(self.item_child_set_prescribed_dofs)
         self.list_child_items.append(self.item_child_setNodalLoads)
         #
         self.item_top_acoustic_model_setup = QTreeWidgetItem(["Acoustic Model Setup"])
@@ -294,7 +294,7 @@ class MenuItems(QTreeWidget):
 
         self.addTopLevelItem(self.item_top_structuralModelSetup)
         self.item_top_structuralModelSetup.addChild(self.item_child_set_surface_thickness)
-        self.item_top_structuralModelSetup.addChild(self.item_child_set_boundary_condition)
+        self.item_top_structuralModelSetup.addChild(self.item_child_set_prescribed_dofs)
         self.item_top_structuralModelSetup.addChild(self.item_child_setNodalLoads)
 
         self.addTopLevelItem(self.item_top_acoustic_model_setup)
@@ -418,8 +418,8 @@ class MenuItems(QTreeWidget):
             if not self.item_child_set_surface_thickness.isDisabled():
                 obj = SurfaceThicknessInput()
 
-        elif item == self.item_child_set_boundary_condition:
-            if not self.item_child_set_boundary_condition.isDisabled():
+        elif item == self.item_child_set_prescribed_dofs:
+            if not self.item_child_set_prescribed_dofs.isDisabled():
                 obj = PrescribedDofsInputs()
 
         elif item == self.item_child_setNodalLoads:
@@ -636,7 +636,7 @@ class MenuItems(QTreeWidget):
 
     def modify_structural_model_setup_items_acces(self, key: bool):
         self.item_child_set_surface_thickness.setDisabled(key)
-        self.item_child_set_boundary_condition.setDisabled(key)
+        self.item_child_set_prescribed_dofs.setDisabled(key)
         self.item_child_setNodalLoads.setDisabled(key)
 
     def modify_acoustic_model_setup_items_acces(self, key: bool):

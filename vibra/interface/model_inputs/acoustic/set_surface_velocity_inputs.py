@@ -434,12 +434,12 @@ class SurfaceVelocityInput(QDialog):
 
         for surface_id in surface_ids:
             for label in labels:
-                table_names = self.properties.get_surface_related_table_names(label, surface_id)
+                table_names = self.properties.get_property_related_table_names(label, surface_id, "surface")
                 self.properties._remove_surface_property(label, surface_id)
                 self.process_table_file_removal(table_names)
 
     def remove_table_files_from_surfaces(self, surface_id : int | list):
-        table_names = self.properties.get_surface_related_table_names("surface_velocity", surface_id)
+        table_names = self.properties.get_property_related_table_names("surface_velocity", surface_id, "surface")
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):

@@ -164,7 +164,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
             return
 
         phase = self.control_bar.phase_slider.value()
-        magnification_factor = self.control_bar.magnification_factor_slider.value()
+        magnification_factor = self.control_bar.magnification_factor_slider.value() / 2
         displacements, color_scalars, min_value, max_value = self._calculate_displacements(
             index, phase
         )

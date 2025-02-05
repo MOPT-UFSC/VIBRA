@@ -39,7 +39,7 @@ class PrescribedDofsInputs(QDialog):
 
         self._config_widgets()
         self.geometry_selection_callback()
-        self.load_info()
+        self.load_model_info()
 
         while self.keep_window_open:
             self.exec()
@@ -53,9 +53,6 @@ class PrescribedDofsInputs(QDialog):
     def _initialize(self):
 
         self.keep_window_open = True
-
-        # self.list_Nones = [None, None, None]
-        self.list_Nones = [None, None, None, None, None, None]
         self.dofs_labels = np.array(['Ux','Uy','Uz','Rx','Ry','Rz'])
 
         self.reset_table_variables()
@@ -94,9 +91,33 @@ class PrescribedDofsInputs(QDialog):
 
         # QComboBox
         self.comboBox_angular_data_type: QComboBox
+        self.comboBox_attribution_type: QComboBox
         self.comboBox_element_type: QComboBox
         self.comboBox_linear_data_type: QComboBox
-        self.comboBox_selection_type: QComboBox
+
+        # QLabel
+        self.label_Ux_constant: QLabel
+        self.label_Uy_constant: QLabel
+        self.label_Uz_constant: QLabel
+        self.label_Rx_constant: QLabel
+        self.label_Ry_constant: QLabel
+        self.label_Rz_constant: QLabel
+        #
+        self.label_Ux_unit: QLabel
+        self.label_Uy_unit: QLabel
+        self.label_Uz_unit: QLabel
+        self.label_Rx_unit: QLabel
+        self.label_Ry_unit: QLabel
+        self.label_Rz_unit: QLabel
+        #
+        self.label_linear: QLabel
+        self.label_angular: QLabel
+        self.label_Ux_table: QLabel
+        self.label_Uy_table: QLabel
+        self.label_Uz_table: QLabel
+        self.label_Rx_table: QLabel
+        self.label_Ry_table: QLabel
+        self.label_Rz_table: QLabel
 
         # QLineEdit
         self.lineEdit_selection_id: QLineEdit
@@ -144,27 +165,35 @@ class PrescribedDofsInputs(QDialog):
         self.treeWidget_prescribed_dofs: QTreeWidget
 
     def _create_list_lineEdits(self):
-        self.list_lineEdit_constant_values = [  [self.lineEdit_real_ux, self.lineEdit_imag_ux],
-                                                [self.lineEdit_real_uy, self.lineEdit_imag_uy],
-                                                [self.lineEdit_real_uz, self.lineEdit_imag_uz],
-                                                [self.lineEdit_real_rx, self.lineEdit_imag_rx],
-                                                [self.lineEdit_real_ry, self.lineEdit_imag_ry],
-                                                [self.lineEdit_real_rz, self.lineEdit_imag_rz]  ]
 
-        self.list_lineEdit_table_values = [ self.lineEdit_path_table_ux,
-                                            self.lineEdit_path_table_uy,
-                                            self.lineEdit_path_table_uz,
-                                            self.lineEdit_path_table_rx,
-                                            self.lineEdit_path_table_ry,
-                                            self.lineEdit_path_table_rz ]
+        self.list_lineEdit_constant_values = [  
+                                              [self.lineEdit_real_ux, self.lineEdit_imag_ux],
+                                              [self.lineEdit_real_uy, self.lineEdit_imag_uy],
+                                              [self.lineEdit_real_uz, self.lineEdit_imag_uz],
+                                              [self.lineEdit_real_rx, self.lineEdit_imag_rx],
+                                              [self.lineEdit_real_ry, self.lineEdit_imag_ry],
+                                              [self.lineEdit_real_rz, self.lineEdit_imag_rz],
+                                              [self.lineEdit_real_alldofs, self.lineEdit_imag_alldofs],
+                                              ]
+
+        self.list_lineEdit_table_values = [ 
+                                           self.lineEdit_path_table_ux,
+                                           self.lineEdit_path_table_uy,
+                                           self.lineEdit_path_table_uz,
+                                           self.lineEdit_path_table_rx,
+                                           self.lineEdit_path_table_ry,
+                                           self.lineEdit_path_table_rz,
+                                           ]
 
     def _config_widgets(self):
         #
-        for i, w in enumerate([80, 60]):
+        for i, w in enumerate([60, 100, 160]):
             self.treeWidget_prescribed_dofs.setColumnWidth(i, w)
             self.treeWidget_prescribed_dofs.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
+        #
+        self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
         #
         self.pushButton_exit.clicked.connect(self.close)
@@ -185,15 +214,16 @@ class PrescribedDofsInputs(QDialog):
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
 
-
     def geometry_selection_callback(self):
 
         self.reset_input_fields()
         faces = app().main_window.selected_geometry_surfaces
+        lines = app().main_window.selected_geometry_lines
+        nodes = app().main_window.selected_mesh_nodes
 
         if faces:
 
-            # self.comboBox_attribution_type.setCurrentIndex(1)
+            self.comboBox_attribution_type.setCurrentIndex(0)
 
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
@@ -202,26 +232,75 @@ class PrescribedDofsInputs(QDialog):
                 surface_id = list(faces)[0]
 
                 data = self.properties._get_property("prescribed_dofs", surface=surface_id)
-                if isinstance(data, dict):
+                self.update_input_fields(data)
 
-                    values = data.get("values", None)
+        elif lines:
+            
+            self.comboBox_attribution_type.setCurrentIndex(1)
 
-                    if "table_paths" in data.keys():
-                        table_paths = data["table_paths"]
-                        for index, lineEdit_table in enumerate(self.list_lineEdit_table_values):
-                            table_path = table_paths[index]
-                            if table_path is not None:                   
-                                lineEdit_table.setText(table_path)
+            text = ", ".join([str(i) for i in lines])
+            self.lineEdit_selection_id.setText(text)
 
-                    else:
-                        for index, [lineEdit_real, lineEdit_imag] in enumerate(self.list_lineEdit_constant_values):
-                            if values[index] is not None:
-                                lineEdit_real.setText(str(np.real(values[index])))
-                                lineEdit_imag.setText(str(np.imag(values[index])))
+            if len(lines) == 1:
+                line_id = list(lines)[0]
+
+                data = self.properties._get_property("prescribed_dofs", line=line_id)
+                self.update_input_fields(data)
+
+        elif nodes:
+            
+            self.comboBox_attribution_type.setCurrentIndex(2)
+
+            text = ", ".join([str(i) for i in nodes])
+            self.lineEdit_selection_id.setText(text)
+
+            if len(nodes) == 1:
+                node_id = list(nodes)[0]
+
+                data = self.properties._get_property("prescribed_dofs", node=node_id)
+                self.update_input_fields(data)
+
+    def update_input_fields(self, data: dict):
+
+        if isinstance(data, dict):
+
+            values = data.get("values", None)
+
+            if "table_paths" in data.keys():
+                table_paths = data["table_paths"]
+                for index, lineEdit_table in enumerate(self.list_lineEdit_table_values):
+                    table_path = table_paths[index]
+                    if table_path is not None:                   
+                        lineEdit_table.setText(table_path)
+
+            else:
+                for index, [lineEdit_real, lineEdit_imag] in enumerate(self.list_lineEdit_constant_values):
+                    if index <= 5 and values[index] is not None:
+                        lineEdit_real.setText(str(np.real(values[index])))
+                        lineEdit_imag.setText(str(np.imag(values[index])))
+
+    def attribution_type_callback(self):
+        if self.comboBox_attribution_type.currentIndex() == 2:
+            app().main_window.viewer_tabs.show_mesh()
+        else:
+            app().main_window.viewer_tabs.show_geometry()
 
     def element_type_callback(self):
 
         key = self.comboBox_element_type.currentIndex() == 0
+
+        self.label_Rx_constant.setEnabled(key)
+        self.label_Ry_constant.setEnabled(key)
+        self.label_Rz_constant.setEnabled(key)
+
+        self.label_Rx_unit.setEnabled(key)
+        self.label_Ry_unit.setEnabled(key)
+        self.label_Rz_unit.setEnabled(key)
+
+        self.label_angular.setEnabled(key)
+        self.label_Rx_table.setEnabled(key)
+        self.label_Ry_table.setEnabled(key)
+        self.label_Rz_table.setEnabled(key)
 
         self.lineEdit_real_rx.setEnabled(key)
         self.lineEdit_real_ry.setEnabled(key)
@@ -234,6 +313,8 @@ class PrescribedDofsInputs(QDialog):
         self.pushButton_load_rx_table.setEnabled(key)
         self.pushButton_load_ry_table.setEnabled(key)
         self.pushButton_load_rz_table.setEnabled(key)
+
+        self.comboBox_angular_data_type.setEnabled(key)
 
     def check_complex_entries(self, real_input: str, imag_input: str, label: str):
 
@@ -283,14 +364,32 @@ class PrescribedDofsInputs(QDialog):
     def constant_values_attribution(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids = self.model.mesh.check_selected_ids(
+        attribution_type = self.comboBox_attribution_type.currentIndex()
+
+        if attribution_type == 0:
+            selection = "surfaces"
+
+        elif attribution_type == 1:
+            selection = "lines"
+
+        else:
+            selection = "nodes"
+
+        selected_ids = self.model.mesh.check_selected_ids(
                                                          input_ids, 
-                                                         selection = "surfaces"
+                                                         selection = selection
                                                          )
 
-        if surface_ids is None:
+        if selected_ids is None:
             self.lineEdit_selection_id.setFocus()
             return
+
+        self.remove_conflicting_excitations(selected_ids, selection)
+
+        if self.comboBox_element_type.currentIndex() == 0:
+            element_type = "2d_element"
+        else:
+            element_type = "3d_element"
 
         if self.lineEdit_real_alldofs.text() != "" or self.lineEdit_imag_alldofs.text() != "":
             stop, prescribed_dofs = self.check_complex_entries(self.lineEdit_real_alldofs.text(), self.lineEdit_imag_alldofs.text(), "all_dofs")
@@ -311,7 +410,6 @@ class PrescribedDofsInputs(QDialog):
             if stop:
                 return
 
-            element_type = "solid_element"
             prescribed_dofs = [ux, uy, uz]
 
             if self.comboBox_element_type.currentIndex() == 0:
@@ -327,21 +425,18 @@ class PrescribedDofsInputs(QDialog):
                 stop, rz= self.check_complex_entries(self.lineEdit_real_rz.text(), self.lineEdit_imag_rz.text(), "rz")
                 if stop:
                     return
-                
-                element_type = "face_element"
+
                 prescribed_dofs.extend([rx, ry, rz])
 
-        condition_1 = self.comboBox_element_type.currentIndex() == 0 and prescribed_dofs.count(None) == 6
-        condition_2 = self.comboBox_element_type.currentIndex() == 1 and prescribed_dofs.count(None) == 3
+        condition_1 = self.comboBox_element_type.currentIndex() == 0 and prescribed_dofs.count(None) < 6
+        condition_2 = self.comboBox_element_type.currentIndex() == 1 and prescribed_dofs.count(None) < 3
 
         if condition_1 or condition_2:
-
-            self.remove_conflicting_excitations(surface_ids)
 
             real_values = [value if value is None else np.real(value) for value in prescribed_dofs]
             imag_values = [value if value is None else np.imag(value) for value in prescribed_dofs]
 
-            for surface_id in surface_ids:
+            for selected_id in selected_ids:
 
                 data = {
                         "element_type" : element_type,
@@ -350,16 +445,23 @@ class PrescribedDofsInputs(QDialog):
                         "imag_values" : imag_values
                         }
 
-                self.model.properties._set_property("prescribed_dofs", data, surface=surface_id)
+                if attribution_type == 0:
+                    self.model.properties._set_property("prescribed_dofs", data, surface=selected_id)
+
+                elif attribution_type == 1:
+                    self.model.properties._set_property("prescribed_dofs", data, line=selected_id)
+
+                elif attribution_type == 2:
+                    self.model.properties._set_property("prescribed_dofs", data, node=selected_id)
 
             self.actions_to_finalize()
 
-            print(f"[Set Prescribed DOF] - defined at surface(s) {surface_ids}")  
+            print(f"[Set Prescribed DOF] - defined at surface(s) {selected_ids}")  
 
         else:
             title = "Additional inputs required"
-            message = "You must inform at least one prescribed dof\n"
-            message += "before confirming the input!"
+            message = "It is necessary to enter at least one prescribed dof "
+            message += "before confirming the property assignment."
             PrintMessageInput([window_title_1, title, message])
 
     def load_table(self, lineEdit : QLineEdit, dof_label : str, direct_load = False):
@@ -545,16 +647,32 @@ class PrescribedDofsInputs(QDialog):
     def table_values_attribution(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids = self.model.mesh.check_selected_ids(
+        attribution_type = self.comboBox_attribution_type.currentIndex()
+
+        if attribution_type == 0:
+            selection = "surfaces"
+
+        elif attribution_type == 1:
+            selection = "lines"
+
+        else:
+            selection = "nodes"
+
+        selected_ids = self.model.mesh.check_selected_ids(
                                                          input_ids, 
-                                                         selection = "surfaces"
+                                                         selection = selection
                                                          )
 
-        if surface_ids is None:
+        if selected_ids is None:
             self.lineEdit_selection_id.setFocus()
             return
 
-        self.remove_conflicting_excitations(surface_ids)
+        self.remove_conflicting_excitations(selected_ids, selection)
+
+        if self.comboBox_element_type.currentIndex() == 0:
+            element_type = "2d_element"
+        else:
+            element_type = "3d_element"
 
         if self.ux_table_path is None:
             self.ux_table_values, self.ux_table_path = self.load_table(self.lineEdit_path_table_ux, "Ux", direct_load = True)
@@ -574,18 +692,17 @@ class PrescribedDofsInputs(QDialog):
         if self.rz_table_path is None:
             self.rz_table_values, self.rz_table_path = self.load_table(self.lineEdit_path_table_rz, "Rz", direct_load = True)
 
-        for surface_id in surface_ids:
+        for selected_id in selected_ids:
             
             if self.ux_table_values is not None:
-                self.ux_table_name, self.ux_array = self.integrate_and_save_table_files("Ux", surface_id, self.ux_table_values, self.ux_table_path, linear = True)
+                self.ux_table_name, self.ux_array = self.integrate_and_save_table_files("Ux", selected_id, self.ux_table_values, self.ux_table_path, linear = True)
 
             if self.uy_table_values is not None:
-                self.uy_table_name, self.uy_array = self.integrate_and_save_table_files("Uy", surface_id, self.uy_table_values, self.uy_table_path, linear = True)
+                self.uy_table_name, self.uy_array = self.integrate_and_save_table_files("Uy", selected_id, self.uy_table_values, self.uy_table_path, linear = True)
 
             if self.uz_table_values is not None:
-                self.uz_table_name, self.uz_array = self.integrate_and_save_table_files("Uz", surface_id, self.uz_table_values, self.uz_table_path, linear = True)
+                self.uz_table_name, self.uz_array = self.integrate_and_save_table_files("Uz", selected_id, self.uz_table_values, self.uz_table_path, linear = True)
 
-            element_type = "solid_element"
             table_names = [self.ux_table_name, self.uy_table_name, self.uz_table_name]
             table_paths = [self.ux_table_path, self.uy_table_path, self.uz_table_path]
             prescribed_dofs = [self.ux_table_values, self.uy_table_values, self.uz_table_values]
@@ -593,15 +710,14 @@ class PrescribedDofsInputs(QDialog):
             if self.comboBox_element_type.currentIndex() == 0:
 
                 if self.rx_table_values is not None:
-                    self.rx_table_name, self.rx_array = self.integrate_and_save_table_files("Rx", surface_id, self.rx_table_values, self.rx_table_path, angular = True)
+                    self.rx_table_name, self.rx_array = self.integrate_and_save_table_files("Rx", selected_id, self.rx_table_values, self.rx_table_path, angular = True)
 
                 if self.ry_table_values is not None:
-                    self.ry_table_name, self.rx_array = self.integrate_and_save_table_files("Ry", surface_id, self.ry_table_values, self.ry_table_path, angular = True)
+                    self.ry_table_name, self.rx_array = self.integrate_and_save_table_files("Ry", selected_id, self.ry_table_values, self.ry_table_path, angular = True)
 
                 if self.rz_table_values is not None:
-                    self.rz_table_name, self.rx_array = self.integrate_and_save_table_files("Rz", surface_id, self.rz_table_values, self.rz_table_path, angular = True)
+                    self.rz_table_name, self.rx_array = self.integrate_and_save_table_files("Rz", selected_id, self.rz_table_values, self.rz_table_path, angular = True)
 
-                element_type = "face_element"
                 table_names.extend([self.rx_table_name, self.ry_table_name, self.rz_table_name])
                 table_paths.extend([self.rx_table_path, self.ry_table_path, self.rz_table_path])
                 prescribed_dofs.extend([self.rx_table_values, self.ry_table_values, self.rz_table_values])
@@ -611,8 +727,8 @@ class PrescribedDofsInputs(QDialog):
 
             if condition_1 or condition_2:
                 title = "Additional inputs required"
-                message = "You must inform at least one prescribed dof "
-                message += "table path before confirming the input!"
+                message = "It is necessary to enter at least one prescribed dof "
+                message += "before confirming the property assignment."
                 PrintMessageInput([window_title_1, title, message]) 
                 return 
 
@@ -623,11 +739,18 @@ class PrescribedDofsInputs(QDialog):
                     "values" : prescribed_dofs
                     }
 
-            self.properties._set_property("prescribed_dofs", data, surface=surface_id)
+            if attribution_type == 0:
+                self.model.properties._set_property("prescribed_dofs", data, surface=selected_id)
+
+            elif attribution_type == 1:
+                self.model.properties._set_property("prescribed_dofs", data, line=selected_id)
+
+            elif attribution_type == 2:
+                self.model.properties._set_property("prescribed_dofs", data, node=selected_id)
 
         self.actions_to_finalize()
 
-        print(f"[Set Prescribed DOF] - defined at node(s) {surface_ids}")
+        print(f"[Set Prescribed DOF] - defined at {selection}(s) {selected_ids}")
 
     def attribute_callback(self):
         index = self.tabWidget_main.currentIndex()
@@ -656,7 +779,7 @@ class PrescribedDofsInputs(QDialog):
 
         return text
 
-    def load_info(self):
+    def load_model_info(self):
 
         self.treeWidget_prescribed_dofs.clear()
         for (property, *args), data in self.properties.surface_properties.items():
@@ -664,20 +787,57 @@ class PrescribedDofsInputs(QDialog):
             if property == "prescribed_dofs":
                 values = data["values"]
                 constrained_dofs_mask = [False if value is None else True for value in values]
-                new = QTreeWidgetItem([str(args[0]), str(self.text_label(constrained_dofs_mask))])
-                new.setTextAlignment(0, Qt.AlignCenter)
-                new.setTextAlignment(1, Qt.AlignCenter)
+                new = QTreeWidgetItem([str(args[0]), "Surface", str(self.text_label(constrained_dofs_mask))])
+                for i in range(3):
+                    new.setTextAlignment(i, Qt.AlignCenter)
+
+                self.treeWidget_prescribed_dofs.addTopLevelItem(new)
+
+        for (property, *args), data in self.properties.line_properties.items():
+
+            if property == "prescribed_dofs":
+                values = data["values"]
+                constrained_dofs_mask = [False if value is None else True for value in values]
+                new = QTreeWidgetItem([str(args[0]), "Line", str(self.text_label(constrained_dofs_mask))])
+                for i in range(3):
+                    new.setTextAlignment(i, Qt.AlignCenter)
+
+                self.treeWidget_prescribed_dofs.addTopLevelItem(new)
+
+        for (property, *args), data in self.properties.nodal_properties.items():
+
+            if property == "prescribed_dofs":
+                values = data["values"]
+                constrained_dofs_mask = [False if value is None else True for value in values]
+                new = QTreeWidgetItem([str(args[0]), "Node", str(self.text_label(constrained_dofs_mask))])
+                for i in range(3):
+                    new.setTextAlignment(i, Qt.AlignCenter)
+
                 self.treeWidget_prescribed_dofs.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 
     def update_tabs_visibility(self):
+
         for (property, _) in self.properties.surface_properties.keys():
             if property == "prescribed_dofs":
                 self.tabWidget_main.setTabVisible(2, True)
                 return
 
+        for (property, _) in self.properties.line_properties.keys():
+            if property == "prescribed_dofs":
+                self.tabWidget_main.setTabVisible(2, True)
+                return
+
+        for (property, _) in self.properties.nodal_properties.keys():
+            if property == "prescribed_dofs":
+                self.tabWidget_main.setTabVisible(2, True)
+                return
+
         self.tabWidget_main.setTabVisible(2, False)
+        self.tabWidget_main.setCurrentIndex(0)
+        self.lineEdit_real_alldofs.setFocus()
+        app().main_window.set_geometry_selection()
 
     def tab_event_callback(self):
 
@@ -687,57 +847,105 @@ class PrescribedDofsInputs(QDialog):
             self.pushButton_attribute.setDisabled(True)
 
         else:
+
+            text = self.lineEdit_selection_id.text()
+            if " - " in text:
+                selected_id = text.split(" - ")[1]
+                self.lineEdit_selection_id.setText(selected_id)
+
             self.lineEdit_selection_id.setDisabled(False)
             self.pushButton_attribute.setEnabled(True)
 
     def on_click_item(self, item):
+
+        selected_id = item.text(0)
+        selection = item.text(1)
         self.pushButton_remove.setDisabled(False)
-        if item.text(0) != "":
-            surface_id = int(item.text(0))
-            self.lineEdit_selection_id.setText(item.text(0))
-            app().main_window.set_geometry_selection(surfaces=[surface_id])
+
+        if selection != "":
+
+            text = f"{selection} - {selected_id}"
+
+            if selection == "Surface":
+                app().main_window.set_geometry_selection(surfaces = [int(selected_id)])
+
+            elif selection == "Line":
+                app().main_window.set_geometry_selection(lines = [int(selected_id)])
+
+            elif selection == "Node":
+                app().main_window.set_mesh_selection(nodes=[int(selected_id)])
+
+            if selection == "Node":
+                self.main_window.viewer_tabs.show_mesh()
+
+            else:
+                self.main_window.viewer_tabs.show_geometry()
+
+            self.lineEdit_selection_id.setText(text)
 
     def on_double_click_item(self, item):
         self.on_click_item(item)
 
     def process_table_file_removal(self, table_names: list):
+
         for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
+            self.properties.remove_imported_tables("structural", table_name)
+
         if table_names:
             app().file.write_imported_table_data_in_file()
 
-    def remove_conflicting_excitations(self, surface_ids: int | list):
+    def remove_conflicting_excitations(self, selected_ids: int | list, selection: str):
 
-        if isinstance(surface_ids, int):
-            surface_ids = [surface_ids]
+        if isinstance(selected_ids, int):
+            selected_ids = [selected_ids]
 
-        labels = ["prescribed_dofs", "external_load"]
+        if selection == "surfaces":
+            remove_function = self.properties._remove_surface_property
 
-        for surface_id in surface_ids:
-            for label in labels:
-                table_names = self.properties.get_surface_related_table_names(label, surface_id)
-                self.properties._remove_surface_property(label, surface_id)
+        elif selection == "lines":
+            remove_function = self.properties._remove_line_property
+
+        elif selection == "nodes":
+            remove_function = self.properties._remove_nodal_property
+
+        properties = ["prescribed_dofs", "external_load"]
+
+        for selected_id in selected_ids:
+            for property in properties:
+                table_names = self.properties.get_property_related_table_names(property, selected_id, selection)
+                remove_function(property, selected_id)
                 self.process_table_file_removal(table_names)
 
-    def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_surface_related_table_names("acoustic_pressure", surface_id)
+    def remove_table_files_from(self, selected_id : list, selection: str):
+        table_names = self.properties.get_property_related_table_names("acoustic_pressure", selected_id, selection)
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
 
-        if self.lineEdit_selection_id.text() != "":
+        text = self.lineEdit_selection_id.text()
 
-            surface_id = int(self.lineEdit_selection_id.text())
+        if text != "" and " - " in text:
 
-            self.properties._remove_surface_property("surface_thickness", surface_id)
+            selection, _selected_id = text.split(" - ")
+            selected_id = int(_selected_id)
+
+            if selection == "Surface":
+                self.properties._remove_surface_property("prescribed_dofs", selected_id)
+
+            elif selection == "Line":
+                self.properties._remove_line_property("prescribed_dofs", selected_id)
+
+            elif selection == "Node":
+                self.properties._remove_nodal_property("prescribed_dofs", selected_id)
+
             self.actions_to_finalize()
 
     def reset_callback(self):
 
         self.hide()
 
-        title = "Surface thickness resetting"
-        message = "Would you like to remove the all applied surface thickness from model?"
+        title = "Prescribed DOFs resetting"
+        message = "Would you like to remove the all prescribed DOFs from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -747,18 +955,24 @@ class PrescribedDofsInputs(QDialog):
 
         if read._continue:
 
-            surface_ids = list()
             for (property, *args) in self.properties.surface_properties.keys():
-                if property == "surface_thickness":
+                if property == "prescribed_dofs":
+                    self.remove_table_files_from(args[0], "surfaces")
 
-                    surface_id = args[0]
-                    surface_ids.append(surface_id)
+            for (property, *args) in self.properties.line_properties.keys():
+                if property == "prescribed_dofs":
+                    self.remove_table_files_from(args[0], "lines")
 
-            self.properties._reset_property("surface_thickness")
+            for (property, *args) in self.properties.nodal_properties.keys():
+                if property == "prescribed_dofs":
+                    self.remove_table_files_from(args[0], "nodes")
+
+            self.properties._reset_property("prescribed_dofs")
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
-        self.load_info()
+        self.load_model_info()
+        self.reset_input_fields()
         app().main_window.viewer_tabs.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
@@ -785,16 +999,21 @@ class PrescribedDofsInputs(QDialog):
             app().file.write_analysis_setup_in_file(analysis_data)
 
     def reset_input_fields(self):
+
         self.lineEdit_selection_id.setText("")
-        for [lineEdit_real, lineEdit_imag] in self.list_lineEdit_constant_values:
+
+        for lineEdit_real, lineEdit_imag in self.list_lineEdit_constant_values:
             lineEdit_real.setText("")
             lineEdit_imag.setText("")
+
         for lineEdit_table in self.list_lineEdit_table_values:
             lineEdit_table.setText("")
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.attribute_callback()
+        elif event.key() == Qt.Key_Delete:
+            self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
 

@@ -341,7 +341,7 @@
           </widget>
          </item>
          <item row="0" column="3">
-          <widget class="QComboBox" name="comboBox_selection_type">
+          <widget class="QComboBox" name="comboBox_attribution_type">
            <property name="minimumSize">
             <size>
              <width>0</width>
@@ -487,7 +487,7 @@
                  <number>6</number>
                 </property>
                 <item row="3" column="1">
-                 <widget class="QLabel" name="label_6">
+                 <widget class="QLabel" name="label_Ux_constant">
                   <property name="minimumSize">
                    <size>
                     <width>70</width>
@@ -773,7 +773,7 @@
                  </widget>
                 </item>
                 <item row="6" column="4">
-                 <widget class="QLabel" name="label_16">
+                 <widget class="QLabel" name="label_Rx_unit">
                   <property name="minimumSize">
                    <size>
                     <width>50</width>
@@ -803,7 +803,7 @@
                  </widget>
                 </item>
                 <item row="7" column="4">
-                 <widget class="QLabel" name="label_17">
+                 <widget class="QLabel" name="label_Ry_unit">
                   <property name="minimumSize">
                    <size>
                     <width>50</width>
@@ -833,7 +833,7 @@
                  </widget>
                 </item>
                 <item row="8" column="4">
-                 <widget class="QLabel" name="label_19">
+                 <widget class="QLabel" name="label_Rz_unit">
                   <property name="minimumSize">
                    <size>
                     <width>50</width>
@@ -956,7 +956,7 @@
                  </widget>
                 </item>
                 <item row="5" column="4">
-                 <widget class="QLabel" name="label_15">
+                 <widget class="QLabel" name="label_Uz_unit">
                   <property name="minimumSize">
                    <size>
                     <width>50</width>
@@ -1049,7 +1049,7 @@
                  </widget>
                 </item>
                 <item row="4" column="1">
-                 <widget class="QLabel" name="label_7">
+                 <widget class="QLabel" name="label_Uy_constant">
                   <property name="minimumSize">
                    <size>
                     <width>70</width>
@@ -1176,7 +1176,7 @@
                  </widget>
                 </item>
                 <item row="5" column="1">
-                 <widget class="QLabel" name="label_8">
+                 <widget class="QLabel" name="label_Uz_constant">
                   <property name="minimumSize">
                    <size>
                     <width>70</width>
@@ -1207,7 +1207,7 @@
                  </widget>
                 </item>
                 <item row="4" column="4">
-                 <widget class="QLabel" name="label_14">
+                 <widget class="QLabel" name="label_Uy_unit">
                   <property name="minimumSize">
                    <size>
                     <width>50</width>
@@ -1238,7 +1238,7 @@
                  </widget>
                 </item>
                 <item row="3" column="4">
-                 <widget class="QLabel" name="label_13">
+                 <widget class="QLabel" name="label_Ux_unit">
                   <property name="minimumSize">
                    <size>
                     <width>50</width>
@@ -2075,7 +2075,7 @@
                  <number>6</number>
                 </property>
                 <item row="0" column="4">
-                 <widget class="QLabel" name="label_9">
+                 <widget class="QLabel" name="label_angular">
                   <property name="font">
                    <font>
                     <pointsize>10</pointsize>
@@ -2127,7 +2127,7 @@
                  </widget>
                 </item>
                 <item row="0" column="1">
-                 <widget class="QLabel" name="label_5">
+                 <widget class="QLabel" name="label_linear">
                   <property name="font">
                    <font>
                     <pointsize>10</pointsize>
@@ -2292,7 +2292,15 @@
                   </attribute>
                   <column>
                    <property name="text">
-                    <string>Nodes</string>
+                    <string>ID</string>
+                   </property>
+                   <property name="textAlignment">
+                    <set>AlignCenter</set>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>Selection type</string>
                    </property>
                    <property name="textAlignment">
                     <set>AlignCenter</set>

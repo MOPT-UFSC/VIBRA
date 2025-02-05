@@ -903,12 +903,12 @@ class ReciprocatingCompressorInputs(QDialog):
 
     def remove_conflicting_excitations(self, surface_id: int):
         for label in ["acoustic_pressure", "surface_velocity", "mass_flow_rate", "reciprocating_compressor_excitation", "reciprocating_pump_excitation"]:
-            table_names = self.properties.get_surface_related_table_names(label, surface_id)
+            table_names = self.properties.get_property_related_table_names(label, surface_id, "surface")
             self.properties._remove_surface_property(label, surface_id)
             self.process_table_file_removal(table_names)
 
     def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_surface_related_table_names("reciprocating_compressor_excitation", surface_id)
+        table_names = self.properties.get_property_related_table_names("reciprocating_compressor_excitation", surface_id, "surface")
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):

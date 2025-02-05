@@ -227,12 +227,21 @@ class Model:
         global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
         return np.array(global_dofs.flatten(), dtype=int)
 
-    def get_structural_global_dofs_from_nodes(self, nodes):
-        if self.solid_structural_element is None:
-            return list()
-        _dofs_per_node = self.solid_structural_element.DOFS_PER_NODE
-        _nodes = nodes.reshape(-1, 1)
-        global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
+    def get_structural_global_dofs_from_nodes(self, nodes: np.ndarray, element_type: str):
+
+        if element_type == "2d_element":
+            if self.surface_structural_element is None:
+                return list()
+            dofs_per_node = self.surface_structural_element.DOFS_PER_NODE
+
+        else:
+            if self.solid_structural_element is None:
+                return list()
+            dofs_per_node = self.solid_structural_element.DOFS_PER_NODE
+
+        local_dofs = np.arange(dofs_per_node)
+        global_dofs = dofs_per_node * nodes.reshape(-1, 1) + local_dofs
+
         return np.array(global_dofs.flatten(), dtype=int)
 
     def get_fluid_density_for_particle_velocity_calculation(self, surface_id: int, frequencies: np.ndarray):

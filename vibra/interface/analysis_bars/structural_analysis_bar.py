@@ -125,7 +125,7 @@ class StructuralModalAnalysisBar(QWidget):
         self.magnification_factor_slider.valueChanged.connect(self.value_change_callback)
         self.magnification_factor_slider.sliderPressed.connect(self.slider_pressed.emit)
         self.magnification_factor_slider.sliderReleased.connect(self.slider_released.emit)
-        self.magnification_factor_label.setText(f"({self.magnification_factor_slider.value()}x)")
+        self.magnification_factor_label.setText(f"({self.magnification_factor_slider.value()/2}x)")
         #
         self.phase_label = QLabel("value")
         self.phase_label.setFixedWidth(60)
@@ -143,6 +143,6 @@ class StructuralModalAnalysisBar(QWidget):
         #
 
     def value_change_callback(self):
-        self.magnification_factor_label.setText(f"({self.magnification_factor_slider.value()}x)")
+        self.magnification_factor_label.setText(f"({self.magnification_factor_slider.value()/2}x)")
         self.phase_label.setText(f"({self.phase_slider.value()}°)")
         self.value_changed.emit()

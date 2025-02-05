@@ -99,19 +99,25 @@ class StructuralModalSolver:
 
         if len(self.assembler.shell_dofs):
             disp_dofs = self.assembler.displacement_dofs
-            shell_dofs = self.assembler.shell_dofs
-            full_solution[shell_dofs, :] = solution
+            unprescribed_shell_dofs = self.assembler.unprescribed_shell_dofs
+            full_solution[unprescribed_shell_dofs, :] = solution
             full_solution = full_solution[disp_dofs, :]
 
         else:
             full_solution[self.unprescribed_indexes, :] = solution
 
-        if len(self.prescribed_indexes) > 0:
-            if modal_analysis:
-                full_solution[self.prescribed_indexes, :] = np.zeros((len(self.prescribed_values), cols))
-            else:
-                full_solution[self.prescribed_indexes, :] = self.array_prescribed_values[:, 0:cols]
+        if modal_analysis:
+            return np.real(full_solution)
 
-        return np.real(full_solution)
+        if len(self.prescribed_indexes) > 0:
+
+            # if modal_analysis:
+            #     print("sai aqui mesmo")
+            #     return np.real(full_solution)
+            
+            #     full_solution[self.prescribed_indexes, :] = np.zeros((len(self.prescribed_values), cols))
+            # else:
+            full_solution[self.prescribed_indexes, :] = self.array_prescribed_values[:, 0:cols]
+            return full_solution
 
 # fmt: on

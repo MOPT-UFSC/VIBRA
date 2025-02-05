@@ -371,24 +371,33 @@ class ModelProperties:
         else:
             return "structural"
 
-    def get_surface_related_table_names(self, property : str, surface_ids : int | list) -> list:
+    def get_property_related_table_names(self, property : str, selected_ids : int | list, selection: str) -> list:
         """
         """
         table_names = list()
-        if isinstance(surface_ids, int):
-            test_key = (property, surface_ids)
+        if isinstance(selected_ids, int):
+            test_key = (property, selected_ids)
 
-        elif isinstance(surface_ids, list) and len(surface_ids) == 1:
-            test_key = (property, surface_ids[0])
+        elif isinstance(selected_ids, list) and len(selected_ids) == 1:
+            test_key = (property, selected_ids[0])
 
-        elif isinstance(surface_ids, list) and len(surface_ids) == 2:
-            test_key = (property, surface_ids[0], surface_ids[1])
+        elif isinstance(selected_ids, list) and len(selected_ids) == 2:
+            test_key = (property, selected_ids[0], selected_ids[1])
 
         else:
             return table_names
 
-        if test_key in self.surface_properties.keys():
-            data = self.surface_properties[test_key]
+        if selection == "surfaces":
+            _properties = self.surface_properties
+        elif selection == "lines":
+            _properties = self.line_properties
+        elif selection == "nodes":
+            _properties = self.nodal_properties
+        else:
+            return table_names
+
+        if test_key in _properties.keys():
+            data = _properties[test_key]
 
             if "table_names" in data.keys():
                 for table_name in data["table_names"]:

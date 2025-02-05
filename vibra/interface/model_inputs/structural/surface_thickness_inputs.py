@@ -259,25 +259,6 @@ class SurfaceThicknessInput(QDialog):
         app().file.write_imported_table_data_in_file()
         # app().main_window.viewer_tabs.mesh_widget.symbols_actor.build()
 
-    def process_surfaces_according_with_thickness_setup(self):
-
-        surfaces_to_hide = list()
-        surface_ids = self.model.mesh.geometry_information["surfaces"]
-
-        for surface_id in surface_ids:
-            surface_data = self.properties._get_property("surface_thickness", surface=surface_id)
-            if surface_data is None:
-                surfaces_to_hide.append(surface_id)
-
-        if surfaces_to_hide:
-
-            if len(surface_ids) == len(surfaces_to_hide):
-                return
-
-            for _surface_id in surfaces_to_hide:
-                app().main_window.hidden_surfaces.add(_surface_id)
-                app().main_window.viewer_tabs.update_hidden_plots()
-
     def change_frequency_setup(self):
         if self.imported_values is not None:
             self.hide()
@@ -322,6 +303,25 @@ class SurfaceThicknessInput(QDialog):
                 self.treeWidget_surface_thickness.addTopLevelItem(new)
 
         self.update_tabs_visibility()
+
+    def process_surfaces_according_with_thickness_setup(self):
+
+        surfaces_to_hide = list()
+        surface_ids = self.model.mesh.geometry_information["surfaces"]
+
+        for surface_id in surface_ids:
+            surface_data = self.properties._get_property("surface_thickness", surface=surface_id)
+            if surface_data is None:
+                surfaces_to_hide.append(surface_id)
+
+        if surfaces_to_hide:
+
+            if len(surface_ids) == len(surfaces_to_hide):
+                return
+
+            for _surface_id in surfaces_to_hide:
+                app().main_window.hidden_surfaces.add(_surface_id)
+                app().main_window.viewer_tabs.update_hidden_plots()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
