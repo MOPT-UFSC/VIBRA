@@ -219,7 +219,9 @@ class GeometryRenderWidget(CommonRenderWidget):
                 picked_face_elements,
             ) = self._get_picked_cell_id(x, y)
 
-        picked_points = picked_nodes  # they have the same index
+        # points are a subset of the nodes, but its index is 1-based
+        picked_points = {i+1 for i in picked_nodes}
+
         picked_lines = set()
         picked_faces = set()
         picked_volumes = set()
@@ -269,6 +271,10 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         mesh = app().project.model.mesh
 
+        # the cells are 0-indexed
+        # but the points are 1-indexed
+        point_cells = {i-1 for i in points}
+
         # Get the line elements of all selected lines
         all_lines_elements = list()
         for line in lines:
@@ -288,7 +294,7 @@ class GeometryRenderWidget(CommonRenderWidget):
                 indexes = app().project.model.mesh.elements_from_surface.get(face, [])
                 all_faces_elements.extend(indexes)
 
-        self.points_actor.paint_cells(self.selection_color, points)
+        self.points_actor.paint_cells(self.selection_color, point_cells)
         self.lines_actor.paint_cells(self.selection_color, all_lines_elements)
         self.faces_actor.paint_cells(self.selection_color, all_faces_elements)
 
