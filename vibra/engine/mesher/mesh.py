@@ -1075,6 +1075,10 @@ class Mesh:
             elif selection == "solid_elements":
                 all_ids = list(self.solids_connectivity[:, 0])
 
+            elif selection == "points":
+                if selection in self.geometry_information.keys():
+                    all_ids = self.geometry_information["points"]
+
             elif selection == "lines":
                 if "curves" in self.geometry_information.keys():
                     all_ids = self.geometry_information["curves"]

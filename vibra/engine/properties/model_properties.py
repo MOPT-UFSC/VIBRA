@@ -69,6 +69,7 @@ class ModelProperties:
         self.volume_properties = dict()
         self.surface_properties = dict()
         self.line_properties = dict()
+        self.point_properties = dict()
         self.element_properties = dict()
         self.nodal_properties = dict()
 
@@ -156,7 +157,7 @@ class ModelProperties:
     def get_porous_material_model_data(self, volume):
         return self._get_property("porous_material_model", volume=volume)
 
-    def _set_property(self, property: str, data: dict | Fluid | Material, node=None, element=None, line=None, surface=None, volume=None, group=None):
+    def _set_property(self, property: str, data: dict | Fluid | Material, node=None, element=None, point=None, line=None, surface=None, volume=None, group=None):
         """
         Sets a data to a property by node, element, line, surface or volume
         if any of these exists. Otherwise sets the property as global.
@@ -212,6 +213,9 @@ class ModelProperties:
         elif line is not None:
             self.line_properties[property, line] = data
 
+        elif point is not None:
+            self.point_properties[property, point] = data
+
         elif element is not None:
             self.element_properties[property, element] = data
 
@@ -221,7 +225,7 @@ class ModelProperties:
         else:
             self.global_properties[property, "global"] = data
 
-    def _get_property(self, property: str, node=None, element=None, line=None, surface=None, volume=None):
+    def _get_property(self, property: str, node=None, element=None, point=None, line=None, surface=None, volume=None):
         """
         Finds the value that corresponds to the property needed.
         Checks node, element, entity, volume and global data by
@@ -233,6 +237,9 @@ class ModelProperties:
 
         if (property, element) in self.element_properties:
             return self.element_properties[property, element]
+
+        if (property, point) in self.point_properties:
+            return self.point_properties[property, point]
 
         if (property, line) in self.line_properties:
             return self.line_properties[property, line]

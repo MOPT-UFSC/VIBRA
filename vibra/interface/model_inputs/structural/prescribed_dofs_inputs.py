@@ -218,6 +218,7 @@ class PrescribedDofsInputs(QDialog):
         self.reset_input_fields()
         faces = app().main_window.selected_geometry_surfaces
         lines = app().main_window.selected_geometry_lines
+        points = app().main_window.selected_geometry_points
         nodes = app().main_window.selected_mesh_nodes
 
         if faces:
@@ -229,7 +230,6 @@ class PrescribedDofsInputs(QDialog):
 
             if len(faces) == 1:
                 surface_id = list(faces)[0]
-
                 data = self.properties._get_property("prescribed_dofs", surface=surface_id)
                 self.update_input_fields(data)
 
@@ -242,20 +242,30 @@ class PrescribedDofsInputs(QDialog):
 
             if len(lines) == 1:
                 line_id = list(lines)[0]
-
                 data = self.properties._get_property("prescribed_dofs", line=line_id)
+                self.update_input_fields(data)
+
+        elif points:
+            
+            self.comboBox_attribution_type.setCurrentIndex(2)
+
+            text = ", ".join([str(i) for i in points])
+            self.lineEdit_selection_id.setText(text)
+
+            if len(points) == 1:
+                point_id = list(points)[0]
+                data = self.properties._get_property("prescribed_dofs", point=point_id)
                 self.update_input_fields(data)
 
         elif nodes:
             
-            self.comboBox_attribution_type.setCurrentIndex(2)
+            self.comboBox_attribution_type.setCurrentIndex(3)
 
             text = ", ".join([str(i) for i in nodes])
             self.lineEdit_selection_id.setText(text)
 
             if len(nodes) == 1:
                 node_id = list(nodes)[0]
-
                 data = self.properties._get_property("prescribed_dofs", node=node_id)
                 self.update_input_fields(data)
 
@@ -283,7 +293,7 @@ class PrescribedDofsInputs(QDialog):
                         lineEdit_imag.setText(str(np.imag(values[index])))
 
     def attribution_type_callback(self):
-        if self.comboBox_attribution_type.currentIndex() == 2:
+        if self.comboBox_attribution_type.currentIndex() == 3:
             app().main_window.viewer_tabs.show_mesh()
         else:
             app().main_window.viewer_tabs.show_geometry()
@@ -375,6 +385,9 @@ class PrescribedDofsInputs(QDialog):
         elif attribution_type == 1:
             selection = "lines"
 
+        elif attribution_type == 2:
+            selection = "points"
+
         else:
             selection = "nodes"
 
@@ -455,6 +468,9 @@ class PrescribedDofsInputs(QDialog):
                     self.model.properties._set_property("prescribed_dofs", data, line=selected_id)
 
                 elif attribution_type == 2:
+                    self.model.properties._set_property("prescribed_dofs", data, point=selected_id)
+
+                elif attribution_type == 3:
                     self.model.properties._set_property("prescribed_dofs", data, node=selected_id)
 
             self.actions_to_finalize()
@@ -576,7 +592,7 @@ class PrescribedDofsInputs(QDialog):
         if self.rz_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_rz)
 
-    def integrate_and_save_table_files(self, dof_label: str, node_id: int, values: np.ndarray, linear=False, angular=False):
+    def integrate_and_save_table_files(self, dof_label: str, selected_id: int, selection: str, values: np.ndarray, linear=False, angular=False):
 
         if self.frequencies[0] == 0:
             self.frequencies[0] = float(1e-6)
@@ -592,7 +608,7 @@ class PrescribedDofsInputs(QDialog):
         if self.frequencies[0] == float(1e-6):
             self.frequencies[0] = 0
 
-        table_name = f"prescribed_dof_{dof_label}_node_{node_id}"
+        table_name = f"prescribed_dof_{dof_label}_from_{selection[:-1]}_{selected_id}"
 
         real_values = np.real(values)
         imag_values = np.imag(values)
@@ -658,6 +674,9 @@ class PrescribedDofsInputs(QDialog):
         elif attribution_type == 1:
             selection = "lines"
 
+        elif attribution_type == 2:
+            selection = "points"
+
         else:
             selection = "nodes"
 
@@ -698,13 +717,13 @@ class PrescribedDofsInputs(QDialog):
         for selected_id in selected_ids:
             
             if self.ux_table_values is not None:
-                self.ux_table_name, self.ux_array = self.integrate_and_save_table_files("Ux", selected_id, self.ux_table_values, self.ux_table_path, linear = True)
+                self.ux_table_name, self.ux_array = self.integrate_and_save_table_files("Ux", selected_id, selection, self.ux_table_values, self.ux_table_path, linear = True)
 
             if self.uy_table_values is not None:
-                self.uy_table_name, self.uy_array = self.integrate_and_save_table_files("Uy", selected_id, self.uy_table_values, self.uy_table_path, linear = True)
+                self.uy_table_name, self.uy_array = self.integrate_and_save_table_files("Uy", selected_id, selection, self.uy_table_values, self.uy_table_path, linear = True)
 
             if self.uz_table_values is not None:
-                self.uz_table_name, self.uz_array = self.integrate_and_save_table_files("Uz", selected_id, self.uz_table_values, self.uz_table_path, linear = True)
+                self.uz_table_name, self.uz_array = self.integrate_and_save_table_files("Uz", selected_id, selection, self.uz_table_values, self.uz_table_path, linear = True)
 
             table_names = [self.ux_table_name, self.uy_table_name, self.uz_table_name]
             table_paths = [self.ux_table_path, self.uy_table_path, self.uz_table_path]
@@ -713,13 +732,13 @@ class PrescribedDofsInputs(QDialog):
             if self.comboBox_element_type.currentIndex() == 0:
 
                 if self.rx_table_values is not None:
-                    self.rx_table_name, self.rx_array = self.integrate_and_save_table_files("Rx", selected_id, self.rx_table_values, self.rx_table_path, angular = True)
+                    self.rx_table_name, self.rx_array = self.integrate_and_save_table_files("Rx", selected_id, selection, self.rx_table_values, self.rx_table_path, angular = True)
 
                 if self.ry_table_values is not None:
-                    self.ry_table_name, self.rx_array = self.integrate_and_save_table_files("Ry", selected_id, self.ry_table_values, self.ry_table_path, angular = True)
+                    self.ry_table_name, self.rx_array = self.integrate_and_save_table_files("Ry", selected_id, selection, self.ry_table_values, self.ry_table_path, angular = True)
 
                 if self.rz_table_values is not None:
-                    self.rz_table_name, self.rx_array = self.integrate_and_save_table_files("Rz", selected_id, self.rz_table_values, self.rz_table_path, angular = True)
+                    self.rz_table_name, self.rx_array = self.integrate_and_save_table_files("Rz", selected_id, selection, self.rz_table_values, self.rz_table_path, angular = True)
 
                 table_names.extend([self.rx_table_name, self.ry_table_name, self.rz_table_name])
                 table_paths.extend([self.rx_table_path, self.ry_table_path, self.rz_table_path])
@@ -749,6 +768,9 @@ class PrescribedDofsInputs(QDialog):
                 self.model.properties._set_property("prescribed_dofs", data, line=selected_id)
 
             elif attribution_type == 2:
+                self.model.properties._set_property("prescribed_dofs", data, point=selected_id)
+
+            elif attribution_type == 3:
                 self.model.properties._set_property("prescribed_dofs", data, node=selected_id)
 
         self.actions_to_finalize()

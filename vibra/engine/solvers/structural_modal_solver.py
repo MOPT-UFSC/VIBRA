@@ -91,17 +91,18 @@ class StructuralModalSolver:
         array
             Solution of all the degrees of freedom.
         """
+
         rows = self.assembler.n_dofs
-        # rows = solution.shape[0] + len(self.prescribed_indexes)
         cols = solution.shape[1]
 
         full_solution = np.zeros((rows, cols), dtype=complex)
 
-        if len(self.assembler.shell_dofs):
+        if len(self.assembler.active_2d_element_dofs):
             disp_dofs = self.assembler.displacement_dofs
             unprescribed_shell_dofs = self.assembler.unprescribed_shell_dofs
             full_solution[unprescribed_shell_dofs, :] = solution
             full_solution = full_solution[disp_dofs, :]
+            print("reinsert dofs -> ", len(disp_dofs))
 
         else:
             full_solution[self.unprescribed_indexes, :] = solution
@@ -110,13 +111,6 @@ class StructuralModalSolver:
             return np.real(full_solution)
 
         if len(self.prescribed_indexes) > 0:
-
-            # if modal_analysis:
-            #     print("sai aqui mesmo")
-            #     return np.real(full_solution)
-            
-            #     full_solution[self.prescribed_indexes, :] = np.zeros((len(self.prescribed_values), cols))
-            # else:
             full_solution[self.prescribed_indexes, :] = self.array_prescribed_values[:, 0:cols]
             return full_solution
 

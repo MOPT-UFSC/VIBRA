@@ -371,6 +371,11 @@
            </item>
            <item>
             <property name="text">
+             <string>Selected points</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
              <string>Selected nodes</string>
             </property>
            </item>

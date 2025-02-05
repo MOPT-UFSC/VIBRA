@@ -109,6 +109,14 @@ class StructuralAssembler:
                 for _ in nodes:
                     global_prescribed.extend(values)
 
+        for key, data in self.properties.point_properties.items():
+            property, point_id = key
+            if property == "prescribed_dofs":
+                values = data["values"]
+                nodes = self.model.mesh.nodes_from_points[point_id]
+                for _ in nodes:
+                    global_prescribed.extend(values)
+
         for key, data in self.properties.nodal_properties.items():
             property, _ = key
             if property == "prescribed_dofs":
@@ -147,6 +155,13 @@ class StructuralAssembler:
                 for index in self.model.get_structural_global_dofs_from_nodes(nodes, element_type):
                     _prescribed_indexes.append(index)
 
+        for (property, point_id), data in self.properties.point_properties.items():
+            if property == "prescribed_dofs":
+                element_type = data["element_type"]
+                nodes = self.model.mesh.nodes_from_points[point_id]
+                for index in self.model.get_structural_global_dofs_from_nodes(nodes, element_type):
+                    _prescribed_indexes.append(index)
+
         for (property, node_id), data in self.properties.nodal_properties.items():
             if property == "prescribed_dofs":
                 element_type = data["element_type"]
@@ -156,16 +171,13 @@ class StructuralAssembler:
         return _prescribed_indexes
 
     def get_unprescribed_indexes(self):
-
-        # reorder indexes and removes the duplicated ones
         prescribed_indexes = np.array([*set(self.prescribed_indexes)], dtype=int)
-
         return np.delete(self.all_dofs, prescribed_indexes)
 
     def get_matrices_dropping_indexes(self):
         return self.unprescribed_indexes, self.prescribed_indexes
 
-    def get_total_degrees_of_freedom(self, element_2D, element_3D):
+    def get_all_degrees_of_freedom(self, element_2D, element_3D, active_2d_dofs):
 
         nodes_from_2d_elements = np.array([*set(self.model.mesh.faces_connectivity[:, 4:].flatten())], dtype=int)
         nodes_from_3d_elements = np.array([*set(self.model.mesh.solids_connectivity[:, 4:].flatten())], dtype=int)
@@ -178,28 +190,41 @@ class StructuralAssembler:
         dofs_from_3d_elements = element_3D.DOFS_PER_NODE * nodes_from_3d_elements.reshape(-1, 1) + local_dofs_3d
         rotation_dofs_from_2d_elements = element_2D.DOFS_PER_NODE * nodes_from_2d_elements.reshape(-1, 1) + rotation_local_dofs_2d
 
-        total_dofs_apd = np.append(dofs_from_2d_elements.flatten(), dofs_from_3d_elements.flatten())
-        total_dofs = np.array([*set(total_dofs_apd)], dtype=int)
+        self.dofs_from_2d_elements = dofs_from_2d_elements.flatten()
+        self.dofs_from_3d_elements = dofs_from_3d_elements.flatten()
+        self.rotation_dofs_from_2d_elements = rotation_dofs_from_2d_elements.flatten()
 
-        return total_dofs, nodes_from_2d_elements, rotation_dofs_from_2d_elements.flatten()
+        print(f"dofs_from_2d_elements: {len(self.dofs_from_2d_elements)}")
+        print(f"dofs_from_3d_elements: {len(self.dofs_from_3d_elements)}")
+        print(f"rotation_dofs_from_2d_elements: {len(self.rotation_dofs_from_2d_elements)}")
 
-    def process_displacement_and_rotation_dofs(self, all_dofs: np.ndarray, rotation_dofs: np.ndarray):
+        internal_dofs_from_3d_elements = np.array([])
 
-        self.rotation_dofs = np.sort(rotation_dofs)
+        if len(active_2d_dofs):
 
-        if len(self.rotation_dofs):
-            self.displacement_dofs = np.delete(all_dofs, self.rotation_dofs)
+            if len(nodes_from_3d_elements):
+                shift = int((np.max(dofs_from_2d_elements) + 1) / 2)
+                internal_nodes = np.delete(nodes_from_3d_elements, nodes_from_2d_elements)
+                internal_dofs_from_3d_elements = element_3D.DOFS_PER_NODE * internal_nodes.reshape(-1, 1) + local_dofs_3d + shift
+                internal_dofs_from_3d_elements = internal_dofs_from_3d_elements.flatten()
+
+            total_dofs_apd = np.append(self.dofs_from_2d_elements, internal_dofs_from_3d_elements)
+            all_dofs = np.array([*set(total_dofs_apd)], dtype=int)
+            self.displacement_dofs = np.delete(all_dofs, self.rotation_dofs_from_2d_elements)
+            print(f"total_dofs_apd: {len(total_dofs_apd)}")
+            print(f"all_dofs: {len(all_dofs)}")
+            print(f"displacement_dofs: {len(self.displacement_dofs)}")
+            print(f"internal_dofs_from_3d_elements: {len(internal_dofs_from_3d_elements)}")
+            return all_dofs
 
         else:
-            self.displacement_dofs = all_dofs.copy()
 
-        # np.savetxt("displacement_dofs.dat", self.displacement_dofs.reshape(-1, 1), delimiter=",", fmt="%i")
-        # np.savetxt("rotation_dofs.dat", self.rotation_dofs.reshape(-1, 1), delimiter=",", fmt="%i")
+            print(">> passei aqui")
+
+            self.displacement_dofs = self.dofs_from_3d_elements.copy()
+            return self.dofs_from_3d_elements
 
     def process_face_elements_with_thickness(self, element_2D, element_3D):
-
-        self.all_dofs, _, rotation_dofs_from_2d_elements = self.get_total_degrees_of_freedom(element_2D, element_3D)
-        # print(f"nodes from surfaces: {nodes_from_surfaces}")
 
         active_nodes_list = list()
         for key in self.model.properties.surface_properties.keys():
@@ -207,19 +232,15 @@ class StructuralAssembler:
             if property == "surface_thickness":
                 active_nodes_list.extend(self.model.mesh.nodes_from_surfaces[surface_id])
 
+        active_dofs = np.array([])
         if active_nodes_list:
             shell_local_dofs = np.arange(element_2D.DOFS_PER_NODE)
             active_nodes = np.array([*set(active_nodes_list)], dtype=int)
             active_dofs = element_2D.DOFS_PER_NODE * active_nodes.reshape(-1, 1) + shell_local_dofs 
             active_dofs = np.sort(active_dofs.flatten())
 
-        else:
-
-            active_dofs = np.array([])
-            rotation_dofs_from_2d_elements = np.array([])
-
-        self.process_displacement_and_rotation_dofs(self.all_dofs, rotation_dofs_from_2d_elements)
-        # print(len(active_nodes), number_of_surface_nodes, number_of_nodes, n_dofs)
+        self.all_dofs = self.get_all_degrees_of_freedom(element_2D, element_3D, active_dofs)
+        # print(f"nodes from surfaces: {nodes_from_surfaces}")
 
         return active_dofs, len(self.all_dofs)
 
@@ -235,7 +256,7 @@ class StructuralAssembler:
         self.ind_rows = np.array([], dtype=int)
 
         element_3D, element_2D = self.get_element()
-        self.shell_dofs, self.n_dofs = self.process_face_elements_with_thickness(element_2D, element_3D)
+        self.active_2d_element_dofs, self.n_dofs = self.process_face_elements_with_thickness(element_2D, element_3D)
         # total_dofs = element_2D.DOFS_PER_NODE * len(element_3D.nodal_coordinates)
 
         rows_se, cols_se = element_3D.generate_ind_rows_cols()
@@ -263,7 +284,7 @@ class StructuralAssembler:
         self.data_K = np.append(self.data_K, data_K_se.flatten())
         self.data_M = np.append(self.data_M, data_M_se.flatten())
 
-        if len(self.shell_dofs):
+        if len(self.active_2d_element_dofs):
 
             rows_fe, cols_fe = element_2D.generate_ind_rows_cols()
 
@@ -287,8 +308,8 @@ class StructuralAssembler:
                 surface_data = self.model.properties._get_property("surface_thickness", surface=surf_id)
                 if surface_data is None:
                     continue
-                else:
-                    t = surface_data["surface_thickness"]
+
+                t = surface_data["surface_thickness"]
  
                 # s_data = self.model.mesh.face_element_thickness.get(el_index, None)
                 # if s_data is None:
@@ -313,16 +334,17 @@ class StructuralAssembler:
 
         self.process_indexes()
 
-        if len(self.shell_dofs):
-            self.unprescribed_shell_dofs = np.intersect1d(self.unprescribed_indexes, self.shell_dofs)
+        if len(self.active_2d_element_dofs):
+            self.unprescribed_shell_dofs = np.intersect1d(self.unprescribed_indexes, self.active_2d_element_dofs)
             self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_shell_dofs, :][:, self.unprescribed_shell_dofs]
             self.mass_matrix = _mass_matrix_full[self.unprescribed_shell_dofs, :][:, self.unprescribed_shell_dofs]
 
-            # self.mass_matrix = _mass_matrix_full
-            # self.stiffness_matrix = _stiffness_matrix_full
-
         else:
 
+            # self.unprescribed_indexes = self.dofs_from_3d_elements
+            self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+            self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+            
             if self.prescribed_indexes:
                 self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
                 self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
