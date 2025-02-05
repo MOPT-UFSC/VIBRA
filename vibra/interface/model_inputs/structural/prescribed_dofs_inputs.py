@@ -53,7 +53,6 @@ class PrescribedDofsInputs(QDialog):
     def _initialize(self):
 
         self.keep_window_open = True
-        self.dofs_labels = np.array(['Ux','Uy','Uz','Rx','Ry','Rz'])
 
         self.reset_table_variables()
 
@@ -275,7 +274,11 @@ class PrescribedDofsInputs(QDialog):
 
             else:
                 for index, [lineEdit_real, lineEdit_imag] in enumerate(self.list_lineEdit_constant_values):
-                    if index <= 5 and values[index] is not None:
+
+                    if data["element_type"] == "3d_element" and index >= 3:
+                        continue
+                    
+                    elif index <= 5 and values[index] is not None:
                         lineEdit_real.setText(str(np.real(values[index])))
                         lineEdit_imag.setText(str(np.imag(values[index])))
 
@@ -761,9 +764,15 @@ class PrescribedDofsInputs(QDialog):
 
     def text_label(self, mask):
 
-        text = ""
-        labels = self.dofs_labels[mask]
+        if len(mask) == 6:
+            dofs_labels = np.array(['Ux','Uy','Uz','Rx','Ry','Rz'])
 
+        elif len(mask) == 3:
+            dofs_labels = np.array(['Ux','Uy','Uz'])
+
+        labels = dofs_labels[mask]
+
+        text = ""
         if list(mask).count(True) == 6:
             text = "[{}, {}, {}, {}, {}, {}]".format(*labels)
         elif list(mask).count(True) == 5:
