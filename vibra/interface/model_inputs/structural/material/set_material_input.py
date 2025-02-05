@@ -98,7 +98,7 @@ class SetMaterialInput(QDialog):
 
     def _create_connections(self):
         #
-        self.comboBox_attribution_type.currentIndexChanged.connect(self.update_attribution_type)
+        self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
         self.pushButton_exit.clicked.connect(self.close)
@@ -108,7 +108,7 @@ class SetMaterialInput(QDialog):
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
         #
-        self.update_attribution_type()
+        self.attribution_type_callback()
 
     def current_cell_changed(self, current_row, current_col, previous_row, previous_col):
         self.selected_column = current_col
@@ -125,11 +125,11 @@ class SetMaterialInput(QDialog):
 
         if volumes:
             selected_ids = volumes
-            self.comboBox_attribution_type.setCurrentIndex(4)
+            self.comboBox_attribution_type.setCurrentIndex(3)
             
         elif surfaces:
             selected_ids = surfaces
-            self.comboBox_attribution_type.setCurrentIndex(3)
+            self.comboBox_attribution_type.setCurrentIndex(4)
         
         else:
             selected_ids = set()
@@ -152,17 +152,19 @@ class SetMaterialInput(QDialog):
         if material_name != "":
             self.lineEdit_selected_material_name.setText(material_name)
 
-    def update_attribution_type(self):
+    def attribution_type_callback(self):
 
         index = self.comboBox_attribution_type.currentIndex()
         if index == 0:
             self.lineEdit_selection_id.setText("All bodies/faces")
         elif index == 1:
+            self.lineEdit_selection_id.setText("All bodies")
+        elif index == 2:
             self.lineEdit_selection_id.setText("All faces")
         else:
             self.lineEdit_selection_id.setText("")
 
-        if index in [0, 1]:
+        if index in [0, 1, 2]:
             self.lineEdit_selection_id.setEnabled(False)
         else:
             self.lineEdit_selection_id.setEnabled(True)
@@ -181,9 +183,9 @@ class SetMaterialInput(QDialog):
 
         try:
 
-            if attribution_type in [0, 1]:
+            if attribution_type in [0, 1, 2]:
 
-                if attribution_type == 0:
+                if attribution_type in [0, 1]:
                     volume_ids = list()
                     if "volumes" in self.model.mesh.geometry_information.keys():
                         volume_ids = self.model.mesh.geometry_information["volumes"]
@@ -198,7 +200,7 @@ class SetMaterialInput(QDialog):
                 for surface_id in surface_ids:
                     app().project.set_material(selected_material, surface=surface_id)
 
-            elif attribution_type in [2, 4]:
+            elif attribution_type in [3, 5]:
 
                 input_ids = self.lineEdit_selection_id.text()
                 volume_ids = self.model.mesh.check_selected_ids(
@@ -214,11 +216,11 @@ class SetMaterialInput(QDialog):
                 for volume_id in volume_ids:
                     app().project.set_material(selected_material, volume=volume_id)
 
-                    if attribution_type == 4:
+                    if attribution_type == 5:
                         for surface_id in self.model.mesh.surfaces_from_volumes[volume_id]:
                             app().project.set_material(selected_material, surface=surface_id)
 
-            elif attribution_type == 3:
+            elif attribution_type == 4:
 
                 input_ids = self.lineEdit_selection_id.text()
                 surface_ids = self.model.mesh.check_selected_ids(
