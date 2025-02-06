@@ -6,14 +6,14 @@ def compute_structural_modal_field(
     index: int,
     phase: float,
     update_coloring: bool = False,
-    sum_response: bool = False,
+    response_abs: bool = False,
     response_ux: bool = False,
     response_uy: bool = False,
     response_uz: bool = False,
 ):
     current_modal_shape = modal_shape[:, index].reshape(-1, 3).copy()
 
-    if sum_response:
+    if response_abs:
         values_1 = np.linalg.norm(current_modal_shape, axis=1).copy()
         displacements = current_modal_shape.copy()
 
@@ -38,7 +38,7 @@ def compute_structural_modal_field(
     if update_coloring:
         mod_values = displacements * np.cos(phase * np.pi / 180)
 
-        if sum_response:
+        if response_abs:
             values_2 = np.linalg.norm(mod_values, axis=1).copy()
 
         elif response_ux:
@@ -51,7 +51,7 @@ def compute_structural_modal_field(
             values_2 = mod_values[:, 2]
 
         values_2 /= max_abs
-        if not sum_response:
+        if not response_abs:
             if np.abs(min_value) != np.abs(max_value):
                 min_value = -np.max(np.abs([min_value, max_value]))
                 max_value = np.max(np.abs([min_value, max_value]))
