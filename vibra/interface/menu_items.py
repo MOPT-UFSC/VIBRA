@@ -26,6 +26,7 @@ from vibra.interface.model_inputs.acoustic.process_acoustic_transfer_element_dat
 #
 from vibra.interface.model_inputs.structural.surface_thickness_inputs import SurfaceThicknessInput
 from vibra.interface.model_inputs.structural.prescribed_dofs_inputs import PrescribedDofsInputs
+from vibra.interface.model_inputs.structural.structural_external_loads_inputs import StructuralExternalLoadsInputs
 from vibra.interface.plots.acoustic.plot_acoustic_pressure_frequency_response_input import PlotAcousticPressureFrequencyResponseInput
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_input import PlotAcousticFrequencyResponseFunctionInput
 from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
@@ -203,12 +204,12 @@ class MenuItems(QTreeWidget):
         self.item_top_structuralModelSetup = QTreeWidgetItem(["Structural Model Setup"])
         self.item_child_set_surface_thickness = QTreeWidgetItem(["Set Surface Thickness"])
         self.item_child_set_prescribed_dofs = QTreeWidgetItem(["Set Prescribed DOFs"])
-        self.item_child_setNodalLoads = QTreeWidgetItem(["Set Loads"])
+        self.item_child_set_external_loads = QTreeWidgetItem(["Set External Loads"])
         #
         self.list_top_items.append(self.item_top_structuralModelSetup)
         self.list_child_items.append(self.item_child_set_surface_thickness)
         self.list_child_items.append(self.item_child_set_prescribed_dofs)
-        self.list_child_items.append(self.item_child_setNodalLoads)
+        self.list_child_items.append(self.item_child_set_external_loads)
         #
         self.item_top_acoustic_model_setup = QTreeWidgetItem(["Acoustic Model Setup"])
         self.item_child_set_dissipation_model = QTreeWidgetItem(["Set Dissipation Model"])
@@ -295,7 +296,7 @@ class MenuItems(QTreeWidget):
         self.addTopLevelItem(self.item_top_structuralModelSetup)
         self.item_top_structuralModelSetup.addChild(self.item_child_set_surface_thickness)
         self.item_top_structuralModelSetup.addChild(self.item_child_set_prescribed_dofs)
-        self.item_top_structuralModelSetup.addChild(self.item_child_setNodalLoads)
+        self.item_top_structuralModelSetup.addChild(self.item_child_set_external_loads)
 
         self.addTopLevelItem(self.item_top_acoustic_model_setup)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_acoustic_pressure)
@@ -422,9 +423,9 @@ class MenuItems(QTreeWidget):
             if not self.item_child_set_prescribed_dofs.isDisabled():
                 obj = PrescribedDofsInputs()
 
-        elif item == self.item_child_setNodalLoads:
-            if not self.item_child_setNodalLoads.isDisabled():
-                pass
+        elif item == self.item_child_set_external_loads:
+            if not self.item_child_set_external_loads.isDisabled():
+                obj = StructuralExternalLoadsInputs()
 
         elif item == self.item_child_set_acoustic_pressure:
             if not self.item_child_set_acoustic_pressure.isDisabled():
@@ -637,7 +638,7 @@ class MenuItems(QTreeWidget):
     def modify_structural_model_setup_items_acces(self, key: bool):
         self.item_child_set_surface_thickness.setDisabled(key)
         self.item_child_set_prescribed_dofs.setDisabled(key)
-        self.item_child_setNodalLoads.setDisabled(key)
+        self.item_child_set_external_loads.setDisabled(key)
 
     def modify_acoustic_model_setup_items_acces(self, key: bool):
         self.item_child_set_acoustic_pressure.setDisabled(key)
