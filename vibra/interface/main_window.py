@@ -521,7 +521,15 @@ class MainWindow(QMainWindow):
         if not self.action_mesh_workspace.isEnabled():
             self.action_mesh_workspace.setEnabled(True)
 
-        self.render_widgets_stack.setCurrentWidget(self.acoustic_harmonic_analysis)
+        render_widget = None
+        if app().project.last_analysis == "Modal Acoustic":
+            render_widget = self.acoustic_modal_analysis
+        elif app().project.last_analysis == "Modal Structural":
+            render_widget = self.structural_modal_analysis
+        elif app().project.last_analysis == "Harmonic Acoustic":
+            render_widget = self.acoustic_harmonic_analysis
+        
+        self.render_widgets_stack.setCurrentWidget(render_widget)
 
     def action_new_project_callback(self):
         self.new_project_dialog()
@@ -740,7 +748,7 @@ class MainWindow(QMainWindow):
             logging.info("Saving project data..." + ProgressStatus(10, 100))
 
             app().config.write_last_folder_path_in_file("project folder", path)
-            self.project_menu.update_recents_menu()
+            self.update_recents_menu()
             logging.info("Saving project data..." + ProgressStatus(60, 100))
             
             copy(TEMP_PROJECT_FILE, path)
@@ -1075,6 +1083,30 @@ class MainWindow(QMainWindow):
         self.action_plot_specific_acoustic_impedance.setDisabled(disabled)
         self.action_plot_particle_velocity.setDisabled(disabled)
         self.action_export_element_transfer_data.setDisabled(disabled)
+    
+    def process_acoustic_modal_analysis(self):
+        try:
+            self.project.solve_acoustic_modal_analysis()
+        except NotImplementedError as e:
+            ErrorMessage(e)
+        else:
+            self.configure_acoustic_modal_analysis_render_widget(True)
+
+    def process_structural_modal_analysis(self):
+        try:
+            self.project.solve_structural_modal_analysis()
+        except NotImplementedError as e:
+            ErrorMessage(e)
+        else:
+            self.configure_structural_modal_analysis_render_widget(True)
+    
+    def process_acoustic_harmonic_analysis(self):
+        try:
+            self.project.solve_acoustic_harmonic_analysis()
+        except NotImplementedError as e:
+            ErrorMessage(e)
+        else:
+            self.configure_acoustic_harmonic_analysis_render_widget(True)
 
 def create_new_folder(path : Path, folder_name : str) -> Path:
     folder_path = path / folder_name

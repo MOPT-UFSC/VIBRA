@@ -570,7 +570,7 @@ class AcousticAssembler:
         dt = time() - t0
         print(f"Elapsed time to assemble the global damping matrix: {round(dt, 4)} [s]\n")
 
-        self.show_required_memory()
+        # self.show_required_memory()
 
         logging.info( "Processing element related loads..." + ProgressStatus(80, 100))
         B = self.get_acoustic_excitations_by_element_integration()

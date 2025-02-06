@@ -39,6 +39,8 @@ class Project:
         self.structural_modal_solver = None
         self.acoustic_harmonic_solver = None
         self.structural_harmonic_solver = None
+        #
+        self.last_analysis = None
 
     def reset_solutions(self):
 
@@ -137,16 +139,19 @@ class Project:
             elif data["analysis_id"] == 2:
                 self.set_structural_element_to_model()
                 self.structural_modal_solver = StructuralModalSolver(self.structural_assembler, analysis_data=data)
+                self.last_analysis = "Modal Structural"
            
             # acoustic harmonic analysis
             elif data["analysis_id"] == 3:
                 self.set_acoustic_element_to_model()
                 self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_assembler, analysis_data=data)
+                self.last_analysis = "Harmonic Acoustic"
             
             # acoustic modal analysis
             elif data["analysis_id"] == 4:
                 self.set_acoustic_element_to_model()
                 self.acoustic_modal_solver = AcousticModalSolver(self.acoustic_assembler, analysis_data=data)
+                self.last_analysis = "Modal Acoustic"
             
             # couled harmonic analysis (direct method)
             elif data["analysis_id"] == 5:
@@ -177,12 +182,14 @@ class Project:
         self.acoustic_modal_solver.solve()
         dt = time() - t0
         print(f"Elapsed time to solve modal analysis: {round(dt, 6)} [s]")
+        app().project.last_analysis = "Modal Acoustic"
         app().file.write_results_data_in_file()
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_structural_modal_analysis(self):
         self.structural_assembler.process_assemble()
         self.structural_modal_solver.solve()
+        app().project.last_analysis = "Modal Structural"
         app().file.write_results_data_in_file()
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
@@ -194,6 +201,7 @@ class Project:
         t0 = time()
         self.acoustic_harmonic_solver.solve()
         dt = time() - t0
+        app().project.last_analysis = "Harmonic Acoustic"
         print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
         app().file.write_results_data_in_file()
         app().main_window.disable_advanced_acoustic_plots_buttons(False)

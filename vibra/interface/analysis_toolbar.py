@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QToolBar, QComboBox, QLabel, QPushButton, QWidget
 from PyQt5.QtGui import QIcon, QFont
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtCore import Qt, QSize, pyqtSignal
 
 from vibra.interface.analysis.acoustic_harmonic_analysis_input import AcousticHarmonicAnalysisInput
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
@@ -10,8 +10,25 @@ from vibra.interface.analysis.analysis_type_input import AnalysisTypeInput
 
 from vibra import ICON_DIR, app
 
+from typing import Literal
+
+AnalysisType = Literal[
+    "",
+    "Harmonic",
+    "Modal"
+]
+
+PhysicalDomain = Literal[
+    "",
+    "Structural",
+    "Acoustic"
+]
+
 
 class AnalysisToolbar(QToolBar):
+
+    analysis_finished = pyqtSignal()
+
     def __init__(self):
         super().__init__()
 
@@ -48,6 +65,7 @@ class AnalysisToolbar(QToolBar):
     def _create_connections(self):
         self.pushButton_run_analysis.clicked.connect(self.run_analysis)
         self.pushButton_configure_analysis.clicked.connect(self.configure_analysis)
+        self.analysis_finished.connect(self.update_pushbutton_run_analysis)
 
     def _configure_appearance(self):
         self.setMinimumHeight(40)
@@ -121,12 +139,15 @@ class AnalysisToolbar(QToolBar):
         self.combo_box_analysis_domain.addItem("Structural")
         self.combo_box_analysis_domain.addItem("Acoustic")
     
+    def update_pushbutton_run_analysis(self):
+        self.pushButton_run_analysis.setDisabled(False)
+    
     def run_analysis(self):
         self.main_window.menu_widget.run_analysis()
 
     def configure_analysis(self):
-        analysis_type = self.combo_box_analysis_type.currentText()
-        physical_domain = self.combo_box_analysis_domain.currentText()
+        analysis_type : AnalysisType = self.combo_box_analysis_type.currentText()
+        physical_domain : PhysicalDomain = self.combo_box_analysis_domain.currentText()
 
         if analysis_type == "Harmonic":
             if physical_domain == "Structural":
@@ -156,6 +177,7 @@ class AnalysisToolbar(QToolBar):
             "analysis_method_label": analysis_method_label,
         }
         self.finalize(analysis_data, analysis_id)
+        self.analysis_finished.emit()
     
     def harmonic_acoustic(self):
         method_id = 0
@@ -169,6 +191,7 @@ class AnalysisToolbar(QToolBar):
             "analysis_method_label": analysis_method_label,
         }
         self.finalize(analysis_data, analysis_id)
+        self.analysis_finished.emit()
     
     def modal_structural(self):
         modal = StructuralModalAnalysisInput()
@@ -186,7 +209,8 @@ class AnalysisToolbar(QToolBar):
                 "sigma_factor": sigma_factor,
             }
             self.finalize(analysis_data, analysis_id)
-            self.pushButton_run_analysis.setDisabled(False)
+            self.analysis_finished.emit()
+
 
     def modal_acoustic(self):
         modal = AcousticModalAnalysisInput()
@@ -204,8 +228,8 @@ class AnalysisToolbar(QToolBar):
                 "sigma_factor": sigma_factor,
             }
             self.finalize(analysis_data, analysis_id)
-            self.pushButton_run_analysis.setDisabled(False)
-    
+            self.analysis_finished.emit()
+
     def finalize(self, analysis_data: dict, analysis_id: int):
         if app().project.analysis_data is not None:
             for key, value in app().project.analysis_data.items():
@@ -215,6 +239,6 @@ class AnalysisToolbar(QToolBar):
         app().project.set_analysis_data(analysis_data)
         app().project.create_solver()
 
-        if analysis_id in [2, 4]:
+        if analysis_id in [2, 3, 4]:
             app().file.write_analysis_setup_in_file(analysis_data)
 
