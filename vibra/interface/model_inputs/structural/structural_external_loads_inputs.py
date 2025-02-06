@@ -35,7 +35,7 @@ class StructuralExternalLoadsInputs(QDialog):
         self._create_connections()
 
         self._config_widgets()
-        self.geometMy_selection_callback()
+        self.geometry_selection_callback()
         self.load_model_info()
 
         while self.keep_window_open:
@@ -45,7 +45,7 @@ class StructuralExternalLoadsInputs(QDialog):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Set boundary condition")
+        self.setWindowTitle("Set structural external loads")
 
     def _initialize(self):
 
@@ -86,10 +86,8 @@ class StructuralExternalLoadsInputs(QDialog):
     def _define_qt_variables(self):
 
         # QComboBox
-        self.comboBox_angular_data_type: QComboBox
         self.comboBox_attribution_type: QComboBox
         self.comboBox_element_type: QComboBox
-        self.comboBox_linear_data_type: QComboBox
 
         # QLabel
         self.label_Fx_constant: QLabel
@@ -106,8 +104,6 @@ class StructuralExternalLoadsInputs(QDialog):
         self.label_My_unit: QLabel
         self.label_Mz_unit: QLabel
         #
-        self.label_linear: QLabel
-        self.label_angular: QLabel
         self.label_Fx_table: QLabel
         self.label_Fy_table: QLabel
         self.label_Fz_table: QLabel
@@ -123,7 +119,6 @@ class StructuralExternalLoadsInputs(QDialog):
         self.lineEdit_real_Mx: QLineEdit
         self.lineEdit_real_My: QLineEdit
         self.lineEdit_real_Mz: QLineEdit
-        self.lineEdit_real_alldofs: QLineEdit
         #
         self.lineEdit_imag_Fx: QLineEdit
         self.lineEdit_imag_Fy: QLineEdit
@@ -132,7 +127,6 @@ class StructuralExternalLoadsInputs(QDialog):
         self.lineEdit_imag_My: QLineEdit
         self.lineEdit_imag_Mz: QLineEdit
         #
-        self.lineEdit_imag_alldofs: QLineEdit
         self.lineEdit_path_table_Fx: QLineEdit
         self.lineEdit_path_table_Fy: QLineEdit
         self.lineEdit_path_table_Fz: QLineEdit
@@ -207,14 +201,14 @@ class StructuralExternalLoadsInputs(QDialog):
         self.treeWidget_structural_loads.itemClicked.connect(self.on_click_item)
         self.treeWidget_structural_loads.itemDoubleClicked.connect(self.on_double_click_item)
         #
-        app().main_window.selection_changed.connect(self.geometMy_selection_callback)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
 
-    def geometMy_selection_callback(self):
+    def geometry_selection_callback(self):
 
         self.reset_input_fields()
-        faces = app().main_window.selected_geometMy_surfaces
-        lines = app().main_window.selected_geometMy_lines
-        points = app().main_window.selected_geometMy_points
+        faces = app().main_window.selected_geometry_surfaces
+        lines = app().main_window.selected_geometry_lines
+        points = app().main_window.selected_geometry_points
         nodes = app().main_window.selected_mesh_nodes
 
         if faces:
@@ -226,7 +220,7 @@ class StructuralExternalLoadsInputs(QDialog):
 
             if len(faces) == 1:
                 surface_id = list(faces)[0]
-                data = self.properties._get_property("prescribed_dofs", surface=surface_id)
+                data = self.properties._get_property("external_loads", surface=surface_id)
                 self.update_input_fields(data)
 
         elif lines:
@@ -238,7 +232,7 @@ class StructuralExternalLoadsInputs(QDialog):
 
             if len(lines) == 1:
                 line_id = list(lines)[0]
-                data = self.properties._get_property("prescribed_dofs", line=line_id)
+                data = self.properties._get_property("external_loads", line=line_id)
                 self.update_input_fields(data)
 
         elif points:
@@ -250,7 +244,7 @@ class StructuralExternalLoadsInputs(QDialog):
 
             if len(points) == 1:
                 point_id = list(points)[0]
-                data = self.properties._get_property("prescribed_dofs", point=point_id)
+                data = self.properties._get_property("external_loads", point=point_id)
                 self.update_input_fields(data)
 
         elif nodes:
@@ -262,7 +256,7 @@ class StructuralExternalLoadsInputs(QDialog):
 
             if len(nodes) == 1:
                 node_id = list(nodes)[0]
-                data = self.properties._get_property("prescribed_dofs", node=node_id)
+                data = self.properties._get_property("external_loads", node=node_id)
                 self.update_input_fields(data)
 
     def update_input_fields(self, data: dict):
@@ -306,7 +300,6 @@ class StructuralExternalLoadsInputs(QDialog):
         self.label_My_unit.setEnabled(key)
         self.label_Mz_unit.setEnabled(key)
 
-        self.label_angular.setEnabled(key)
         self.label_Mx_table.setEnabled(key)
         self.label_My_table.setEnabled(key)
         self.label_Mz_table.setEnabled(key)
@@ -322,8 +315,6 @@ class StructuralExternalLoadsInputs(QDialog):
         self.pushButton_load_Mx_table.setEnabled(key)
         self.pushButton_load_My_table.setEnabled(key)
         self.pushButton_load_Mz_table.setEnabled(key)
-
-        self.comboBox_angular_data_type.setEnabled(key)
 
     def check_complex_entries(self, real_input: str, imag_input: str, label: str):
 
@@ -403,71 +394,64 @@ class StructuralExternalLoadsInputs(QDialog):
         else:
             element_type = "3d_element"
 
-        if self.lineEdit_real_alldofs.text() != "" or self.lineEdit_imag_alldofs.text() != "":
-            stop, prescribed_dofs = self.check_complex_entries(self.lineEdit_real_alldofs.text(), self.lineEdit_imag_alldofs.text(), "all_dofs")
+        stop, Fx= self.check_complex_entries(self.lineEdit_real_Fx.text(), self.lineEdit_imag_Fx.text(), "Fx")
+        if stop:
+            return
+
+        stop, Fy= self.check_complex_entries(self.lineEdit_real_Fy.text(), self.lineEdit_imag_Fy.text(), "Fy")
+        if stop:
+            return
+
+        stop, Fz= self.check_complex_entries(self.lineEdit_real_Fz.text(), self.lineEdit_imag_Fz.text(), "Fz")
+        if stop:
+            return
+
+        external_loads = [Fx, Fy, Fz]
+
+        if self.comboBox_element_type.currentIndex() == 0:
+            
+            stop, rx= self.check_complex_entries(self.lineEdit_real_Mx.text(), self.lineEdit_imag_Mx.text(), "rx")
             if stop:
                 return
 
-        else:
-
-            stop, Fx= self.check_complex_entries(self.lineEdit_real_Fx.text(), self.lineEdit_imag_Fx.text(), "Fx")
+            stop, ry= self.check_complex_entries(self.lineEdit_real_My.text(), self.lineEdit_imag_My.text(), "ry")
             if stop:
                 return
 
-            stop, Fy= self.check_complex_entries(self.lineEdit_real_Fy.text(), self.lineEdit_imag_Fy.text(), "Fy")
+            stop, Mz= self.check_complex_entries(self.lineEdit_real_Mz.text(), self.lineEdit_imag_Mz.text(), "Mz")
             if stop:
                 return
 
-            stop, Fz= self.check_complex_entries(self.lineEdit_real_Fz.text(), self.lineEdit_imag_Fz.text(), "Fz")
-            if stop:
-                return
+            external_loads.extend([rx, ry, Mz])
 
-            prescribed_dofs = [Fx, Fy, Fz]
-
-            if self.comboBox_element_type.currentIndex() == 0:
-             
-                stop, rx= self.check_complex_entries(self.lineEdit_real_Mx.text(), self.lineEdit_imag_Mx.text(), "rx")
-                if stop:
-                    return
-
-                stop, ry= self.check_complex_entries(self.lineEdit_real_My.text(), self.lineEdit_imag_My.text(), "ry")
-                if stop:
-                    return
-
-                stop, Mz= self.check_complex_entries(self.lineEdit_real_Mz.text(), self.lineEdit_imag_Mz.text(), "Mz")
-                if stop:
-                    return
-
-                prescribed_dofs.extend([rx, ry, Mz])
-
-        condition_1 = self.comboBox_element_type.currentIndex() == 0 and prescribed_dofs.count(None) < 6
-        condition_2 = self.comboBox_element_type.currentIndex() == 1 and prescribed_dofs.count(None) < 3
+        condition_1 = self.comboBox_element_type.currentIndex() == 0 and external_loads.count(None) < 6
+        condition_2 = self.comboBox_element_type.currentIndex() == 1 and external_loads.count(None) < 3
 
         if condition_1 or condition_2:
 
-            real_values = [value if value is None else np.real(value) for value in prescribed_dofs]
-            imag_values = [value if value is None else np.imag(value) for value in prescribed_dofs]
+            real_values = [value if value is None else np.real(value) for value in external_loads]
+            imag_values = [value if value is None else np.imag(value) for value in external_loads]
 
             for selected_id in selected_ids:
 
                 data = {
                         "element_type" : element_type,
-                        "values" : prescribed_dofs,
+                        "values" : external_loads,
                         "real_values" : real_values,
                         "imag_values" : imag_values
                         }
 
                 if attribution_type == 0:
-                    self.properties._set_property("prescribed_dofs", data, surface=selected_id)
+                    self.properties._set_property("external_loads", data, surface=selected_id)
 
                 elif attribution_type == 1:
-                    self.properties._set_property("prescribed_dofs", data, line=selected_id)
+                    self.properties._set_property("external_loads", data, line=selected_id)
 
                 elif attribution_type == 2:
-                    self.properties._set_property("prescribed_dofs", data, point=selected_id)
+                    self.properties._set_property("external_loads", data, point=selected_id)
 
                 elif attribution_type == 3:
-                    self.properties._set_property("prescribed_dofs", data, node=selected_id)
+                    self.properties._set_property("external_loads", data, node=selected_id)
 
             self.actions_to_finalize()
             # print(f"[Set Prescribed DOF] - defined at surface(s) {selected_ids}")
@@ -573,12 +557,12 @@ class StructuralExternalLoadsInputs(QDialog):
             self.lineEdit_reset(self.lineEdit_path_table_Fz)
             
     def load_Mx_table(self):
-        self.Mx_table_values, self.Mx_table_path = self.load_table(self.lineEdit_path_table_Mx, "Rx")
+        self.Mx_table_values, self.Mx_table_path = self.load_table(self.lineEdit_path_table_Mx, "Mx")
         if self.Mx_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Mx)
             
     def load_My_table(self):
-        self.My_table_values, self.My_table_path = self.load_table(self.lineEdit_path_table_My, "Ry")
+        self.My_table_values, self.My_table_path = self.load_table(self.lineEdit_path_table_My, "My")
         if self.My_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_My)
             
@@ -587,18 +571,10 @@ class StructuralExternalLoadsInputs(QDialog):
         if self.Mz_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Mz)
 
-    def integrate_and_save_table_files(self, dof_label: str, selected_id: int, selection: str, values: np.ndarray, linear=False, angular=False):
+    def save_table_files(self, dof_label: str, selected_id: int, selection: str, values: np.ndarray):
 
         if self.frequencies[0] == 0:
             self.frequencies[0] = float(1e-6)
-
-        if linear:
-            index_lin = self.comboBox_linear_data_type.currentIndex()
-            values /= ((1j*2*np.pi*self.frequencies)**index_lin)
-
-        if angular:
-            index_ang = self.comboBox_angular_data_type.currentIndex()
-            values /= ((1j*2*np.pi*self.frequencies)**index_ang)
 
         if self.frequencies[0] == float(1e-6):
             self.frequencies[0] = 0
@@ -701,10 +677,10 @@ class StructuralExternalLoadsInputs(QDialog):
             self.Fz_table_values, self.Fz_table_path = self.load_table(self.lineEdit_path_table_Fz, "Fz", direct_load = True)
 
         if self.Mx_table_path is None:
-            self.Mx_table_values, self.Mx_table_path = self.load_table(self.lineEdit_path_table_Mx, "Rx", direct_load = True)
+            self.Mx_table_values, self.Mx_table_path = self.load_table(self.lineEdit_path_table_Mx, "Mx", direct_load = True)
 
         if self.My_table_path is None:
-            self.My_table_values, self.My_table_path = self.load_table(self.lineEdit_path_table_My, "Ry", direct_load = True)
+            self.My_table_values, self.My_table_path = self.load_table(self.lineEdit_path_table_My, "My", direct_load = True)
 
         if self.Mz_table_path is None:
             self.Mz_table_values, self.Mz_table_path = self.load_table(self.lineEdit_path_table_Mz, "Mz", direct_load = True)
@@ -712,32 +688,32 @@ class StructuralExternalLoadsInputs(QDialog):
         for selected_id in selected_ids:
             
             if self.Fx_table_values is not None:
-                self.Fx_table_name, self.Fx_array = self.integrate_and_save_table_files("Fx", selected_id, selection, self.Fx_table_values, self.Fx_table_path, linear = True)
+                self.Fx_table_name, self.Fx_array = self.save_table_files("Fx", selected_id, selection, self.Fx_table_values, self.Fx_table_path)
 
             if self.Fy_table_values is not None:
-                self.Fy_table_name, self.Fy_array = self.integrate_and_save_table_files("Fy", selected_id, selection, self.Fy_table_values, self.Fy_table_path, linear = True)
+                self.Fy_table_name, self.Fy_array = self.save_table_files("Fy", selected_id, selection, self.Fy_table_values, self.Fy_table_path)
 
             if self.Fz_table_values is not None:
-                self.Fz_table_name, self.Fz_array = self.integrate_and_save_table_files("Fz", selected_id, selection, self.Fz_table_values, self.Fz_table_path, linear = True)
+                self.Fz_table_name, self.Fz_array = self.save_table_files("Fz", selected_id, selection, self.Fz_table_values, self.Fz_table_path)
 
             table_names = [self.Fx_table_name, self.Fy_table_name, self.Fz_table_name]
             table_paths = [self.Fx_table_path, self.Fy_table_path, self.Fz_table_path]
-            prescribed_dofs = [self.Fx_table_values, self.Fy_table_values, self.Fz_table_values]
+            external_loads = [self.Fx_table_values, self.Fy_table_values, self.Fz_table_values]
 
             if self.comboBox_element_type.currentIndex() == 0:
 
                 if self.Mx_table_values is not None:
-                    self.Mx_table_name, self.Mx_array = self.integrate_and_save_table_files("Rx", selected_id, selection, self.Mx_table_values, self.Mx_table_path, angular = True)
+                    self.Mx_table_name, self.Mx_array = self.save_table_files("Mx", selected_id, selection, self.Mx_table_values, self.Mx_table_path)
 
                 if self.My_table_values is not None:
-                    self.My_table_name, self.Mx_array = self.integrate_and_save_table_files("Ry", selected_id, selection, self.My_table_values, self.My_table_path, angular = True)
+                    self.My_table_name, self.Mx_array = self.save_table_files("My", selected_id, selection, self.My_table_values, self.My_table_path)
 
                 if self.Mz_table_values is not None:
-                    self.Mz_table_name, self.Mx_array = self.integrate_and_save_table_files("Mz", selected_id, selection, self.Mz_table_values, self.Mz_table_path, angular = True)
+                    self.Mz_table_name, self.Mx_array = self.save_table_files("Mz", selected_id, selection, self.Mz_table_values, self.Mz_table_path)
 
                 table_names.extend([self.Mx_table_name, self.My_table_name, self.Mz_table_name])
                 table_paths.extend([self.Mx_table_path, self.My_table_path, self.Mz_table_path])
-                prescribed_dofs.extend([self.Mx_table_values, self.My_table_values, self.Mz_table_values])
+                external_loads.extend([self.Mx_table_values, self.My_table_values, self.Mz_table_values])
 
             condition_1 = self.comboBox_element_type.currentIndex() == 0 and table_names.count(None) == 6
             condition_2 = self.comboBox_element_type.currentIndex() == 1 and table_names.count(None) == 3
@@ -753,20 +729,20 @@ class StructuralExternalLoadsInputs(QDialog):
                     "element_type" : element_type,
                     "table_names" : table_names,
                     "table_paths" : table_paths,
-                    "values" : prescribed_dofs
+                    "values" : external_loads
                     }
 
             if attribution_type == 0:
-                self.properties._set_property("prescribed_dofs", data, surface=selected_id)
+                self.properties._set_property("external_loads", data, surface=selected_id)
 
             elif attribution_type == 1:
-                self.properties._set_property("prescribed_dofs", data, line=selected_id)
+                self.properties._set_property("external_loads", data, line=selected_id)
 
             elif attribution_type == 2:
-                self.properties._set_property("prescribed_dofs", data, point=selected_id)
+                self.properties._set_property("external_loads", data, point=selected_id)
 
             elif attribution_type == 3:
-                self.properties._set_property("prescribed_dofs", data, node=selected_id)
+                self.properties._set_property("external_loads", data, node=selected_id)
 
         self.actions_to_finalize()
         # print(f"[Set Prescribed DOF] - defined at {selection}(s) {selected_ids}")
@@ -781,7 +757,7 @@ class StructuralExternalLoadsInputs(QDialog):
     def text_label(self, mask):
 
         if len(mask) == 6:
-            dofs_labels = np.array(['Fx','Fy','Fz','Rx','Ry','Mz'])
+            dofs_labels = np.array(['Fx','Fy','Fz','Mx','My','Mz'])
 
         elif len(mask) == 3:
             dofs_labels = np.array(['Fx','Fy','Fz'])
@@ -809,7 +785,7 @@ class StructuralExternalLoadsInputs(QDialog):
         self.treeWidget_structural_loads.clear()
         for (property, *args), data in self.properties.surface_properties.items():
 
-            if property == "prescribed_dofs":
+            if property == "external_loads":
                 values = data["values"]
                 constrained_dofs_mask = [False if value is None else True for value in values]
                 new = QTreeWidgetItem([str(args[0]), "Surface", str(self.text_label(constrained_dofs_mask))])
@@ -820,7 +796,7 @@ class StructuralExternalLoadsInputs(QDialog):
 
         for (property, *args), data in self.properties.line_properties.items():
 
-            if property == "prescribed_dofs":
+            if property == "external_loads":
                 values = data["values"]
                 constrained_dofs_mask = [False if value is None else True for value in values]
                 new = QTreeWidgetItem([str(args[0]), "Line", str(self.text_label(constrained_dofs_mask))])
@@ -831,7 +807,7 @@ class StructuralExternalLoadsInputs(QDialog):
 
         for (property, *args), data in self.properties.point_properties.items():
 
-            if property == "prescribed_dofs":
+            if property == "external_loads":
                 values = data["values"]
                 constrained_dofs_mask = [False if value is None else True for value in values]
                 new = QTreeWidgetItem([str(args[0]), "Point", str(self.text_label(constrained_dofs_mask))])
@@ -842,7 +818,7 @@ class StructuralExternalLoadsInputs(QDialog):
 
         for (property, *args), data in self.properties.nodal_properties.items():
 
-            if property == "prescribed_dofs":
+            if property == "external_loads":
                 values = data["values"]
                 constrained_dofs_mask = [False if value is None else True for value in values]
                 new = QTreeWidgetItem([str(args[0]), "Node", str(self.text_label(constrained_dofs_mask))])
@@ -856,29 +832,29 @@ class StructuralExternalLoadsInputs(QDialog):
     def update_tabs_visibility(self):
 
         for (property, _) in self.properties.surface_properties.keys():
-            if property == "prescribed_dofs":
+            if property == "external_loads":
                 self.tabWidget_main.setTabVisible(2, True)
                 return
 
         for (property, _) in self.properties.line_properties.keys():
-            if property == "prescribed_dofs":
+            if property == "external_loads":
                 self.tabWidget_main.setTabVisible(2, True)
                 return
 
         for (property, _) in self.properties.point_properties.keys():
-            if property == "prescribed_dofs":
+            if property == "external_loads":
                 self.tabWidget_main.setTabVisible(2, True)
                 return
 
         for (property, _) in self.properties.nodal_properties.keys():
-            if property == "prescribed_dofs":
+            if property == "external_loads":
                 self.tabWidget_main.setTabVisible(2, True)
                 return
 
         self.tabWidget_main.setTabVisible(2, False)
         self.tabWidget_main.setCurrentIndex(0)
-        self.lineEdit_real_alldofs.setFocus()
-        app().main_window.set_geometMy_selection()
+        self.lineEdit_real_Fx.setFocus()
+        app().main_window.set_geometry_selection()
 
     def tab_event_callback(self):
 
@@ -908,13 +884,13 @@ class StructuralExternalLoadsInputs(QDialog):
             text = f"{selection} - {selected_id}"
 
             if selection == "Surface":
-                app().main_window.set_geometMy_selection(surfaces = [int(selected_id)])
+                app().main_window.set_geometry_selection(surfaces = [int(selected_id)])
 
             elif selection == "Line":
-                app().main_window.set_geometMy_selection(lines = [int(selected_id)])
+                app().main_window.set_geometry_selection(lines = [int(selected_id)])
 
             elif selection == "Point":
-                app().main_window.set_geometMy_selection(points = [int(selected_id)])
+                app().main_window.set_geometry_selection(points = [int(selected_id)])
 
             elif selection == "Node":
                 app().main_window.set_mesh_selection(nodes=[int(selected_id)])
@@ -955,7 +931,7 @@ class StructuralExternalLoadsInputs(QDialog):
         elif selection == "nodes":
             remove_function = self.properties._remove_nodal_property
 
-        properties = ["prescribed_dofs", "external_load"]
+        properties = ["external_loads", "external_load"]
 
         for selected_id in selected_ids:
             for property in properties:
@@ -964,7 +940,7 @@ class StructuralExternalLoadsInputs(QDialog):
                 self.process_table_file_removal(table_names)
 
     def remove_table_files_from(self, selected_id : list, selection: str):
-        table_names = self.properties.get_property_related_table_names("prescribed_dofs", selected_id, selection)
+        table_names = self.properties.get_property_related_table_names("external_loads", selected_id, selection)
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
@@ -977,16 +953,16 @@ class StructuralExternalLoadsInputs(QDialog):
             selected_id = int(_selected_id)
 
             if selection == "Surface":
-                self.properties._remove_surface_property("prescribed_dofs", selected_id)
+                self.properties._remove_surface_property("external_loads", selected_id)
 
             elif selection == "Line":
-                self.properties._remove_line_property("prescribed_dofs", selected_id)
+                self.properties._remove_line_property("external_loads", selected_id)
 
             elif selection == "Point":
-                self.properties._remove_point_property("prescribed_dofs", selected_id)
+                self.properties._remove_point_property("external_loads", selected_id)
 
             elif selection == "Node":
-                self.properties._remove_nodal_property("prescribed_dofs", selected_id)
+                self.properties._remove_nodal_property("external_loads", selected_id)
 
             self.actions_to_finalize()
 
@@ -1006,22 +982,22 @@ class StructuralExternalLoadsInputs(QDialog):
         if read._continue:
 
             for (property, *args) in self.properties.surface_properties.keys():
-                if property == "prescribed_dofs":
+                if property == "external_loads":
                     self.remove_table_files_from(args[0], "surfaces")
 
             for (property, *args) in self.properties.line_properties.keys():
-                if property == "prescribed_dofs":
+                if property == "external_loads":
                     self.remove_table_files_from(args[0], "lines")
 
             for (property, *args) in self.properties.point_properties.keys():
-                if property == "prescribed_dofs":
+                if property == "external_loads":
                     self.remove_table_files_from(args[0], "points")
 
             for (property, *args) in self.properties.nodal_properties.keys():
-                if property == "prescribed_dofs":
+                if property == "external_loads":
                     self.remove_table_files_from(args[0], "nodes")
 
-            self.properties._reset_property("prescribed_dofs")
+            self.properties._reset_property("external_loads")
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
@@ -1043,7 +1019,7 @@ class StructuralExternalLoadsInputs(QDialog):
 
         for key, data in self.properties.surface_properties.items():
             property, _ = key
-            if property in ["prescribed_dofs", "external_loads"]:
+            if property in ["external_loads", "external_loads"]:
                 if "table_names" in data.keys():
                     return
 

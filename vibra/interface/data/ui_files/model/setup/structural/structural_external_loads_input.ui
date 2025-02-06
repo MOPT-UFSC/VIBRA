@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>460</width>
-    <height>520</height>
+    <height>507</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -22,13 +22,13 @@
   <property name="minimumSize">
    <size>
     <width>460</width>
-    <height>520</height>
+    <height>480</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>460</width>
-    <height>520</height>
+    <height>507</height>
    </size>
   </property>
   <property name="font">
@@ -523,7 +523,7 @@
                  </widget>
                 </item>
                 <item row="4" column="4">
-                 <widget class="QLabel" name="label_Uy_unit">
+                 <widget class="QLabel" name="label_Fy_unit">
                   <property name="minimumSize">
                    <size>
                     <width>50</width>
@@ -554,7 +554,7 @@
                  </widget>
                 </item>
                 <item row="3" column="4">
-                 <widget class="QLabel" name="label_Ux_unit">
+                 <widget class="QLabel" name="label_Fx_unit">
                   <property name="minimumSize">
                    <size>
                     <width>50</width>
@@ -616,7 +616,7 @@
                  </widget>
                 </item>
                 <item row="5" column="1">
-                 <widget class="QLabel" name="label_Uz_constant">
+                 <widget class="QLabel" name="label_Fz_constant">
                   <property name="minimumSize">
                    <size>
                     <width>70</width>
@@ -800,7 +800,7 @@
                  </widget>
                 </item>
                 <item row="4" column="1">
-                 <widget class="QLabel" name="label_Uy_constant">
+                 <widget class="QLabel" name="label_Fy_constant">
                   <property name="minimumSize">
                    <size>
                     <width>70</width>
@@ -862,7 +862,7 @@
                  </widget>
                 </item>
                 <item row="5" column="4">
-                 <widget class="QLabel" name="label_Uz_unit">
+                 <widget class="QLabel" name="label_Fz_unit">
                   <property name="minimumSize">
                    <size>
                     <width>50</width>
@@ -893,7 +893,7 @@
                  </widget>
                 </item>
                 <item row="3" column="1">
-                 <widget class="QLabel" name="label_Ux_constant">
+                 <widget class="QLabel" name="label_Fx_constant">
                   <property name="minimumSize">
                    <size>
                     <width>70</width>
@@ -924,7 +924,7 @@
                  </widget>
                 </item>
                 <item row="8" column="4">
-                 <widget class="QLabel" name="label_Rz_unit">
+                 <widget class="QLabel" name="label_Mz_unit">
                   <property name="minimumSize">
                    <size>
                     <width>50</width>
@@ -1014,7 +1014,7 @@
                  </widget>
                 </item>
                 <item row="7" column="4">
-                 <widget class="QLabel" name="label_Ry_unit">
+                 <widget class="QLabel" name="label_My_unit">
                   <property name="minimumSize">
                    <size>
                     <width>50</width>
@@ -1044,7 +1044,7 @@
                  </widget>
                 </item>
                 <item row="6" column="4">
-                 <widget class="QLabel" name="label_Rx_unit">
+                 <widget class="QLabel" name="label_Mx_unit">
                   <property name="minimumSize">
                    <size>
                     <width>50</width>
@@ -1074,7 +1074,7 @@
                  </widget>
                 </item>
                 <item row="7" column="1">
-                 <widget class="QLabel" name="label_Ry_constant">
+                 <widget class="QLabel" name="label_My_constant">
                   <property name="minimumSize">
                    <size>
                     <width>70</width>
@@ -1101,7 +1101,7 @@
                  </widget>
                 </item>
                 <item row="8" column="1">
-                 <widget class="QLabel" name="label_Rz_constant">
+                 <widget class="QLabel" name="label_Mz_constant">
                   <property name="minimumSize">
                    <size>
                     <width>70</width>
@@ -1128,7 +1128,7 @@
                  </widget>
                 </item>
                 <item row="6" column="1">
-                 <widget class="QLabel" name="label_Rx_constant">
+                 <widget class="QLabel" name="label_Mx_constant">
                   <property name="minimumSize">
                    <size>
                     <width>70</width>
@@ -1351,6 +1351,32 @@
               <number>2</number>
              </property>
              <item row="2" column="0">
+              <spacer name="verticalSpacer_6">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="0" column="0">
+              <spacer name="verticalSpacer_4">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="1" column="0">
               <widget class="QFrame" name="frame_9">
                <property name="frameShape">
                 <enum>QFrame::NoFrame</enum>
@@ -1436,7 +1462,7 @@
                  </widget>
                 </item>
                 <item row="4" column="0">
-                 <widget class="QLabel" name="label_Ry_table">
+                 <widget class="QLabel" name="label_My_table">
                   <property name="enabled">
                    <bool>true</bool>
                   </property>
@@ -1466,7 +1492,7 @@
                  </widget>
                 </item>
                 <item row="5" column="0">
-                 <widget class="QLabel" name="label_Rz_table">
+                 <widget class="QLabel" name="label_Mz_table">
                   <property name="enabled">
                    <bool>true</bool>
                   </property>
@@ -1651,7 +1677,7 @@
                  </widget>
                 </item>
                 <item row="0" column="0">
-                 <widget class="QLabel" name="label_Ux_table">
+                 <widget class="QLabel" name="label_Fx_table">
                   <property name="enabled">
                    <bool>true</bool>
                   </property>
@@ -1703,7 +1729,7 @@
                  </widget>
                 </item>
                 <item row="3" column="0">
-                 <widget class="QLabel" name="label_Rx_table">
+                 <widget class="QLabel" name="label_Mx_table">
                   <property name="enabled">
                    <bool>true</bool>
                   </property>
@@ -1755,7 +1781,7 @@
                  </widget>
                 </item>
                 <item row="1" column="0">
-                 <widget class="QLabel" name="label_Uy_table">
+                 <widget class="QLabel" name="label_Fy_table">
                   <property name="enabled">
                    <bool>true</bool>
                   </property>
@@ -1846,7 +1872,7 @@
                  </widget>
                 </item>
                 <item row="2" column="0">
-                 <widget class="QLabel" name="label_Uz_table">
+                 <widget class="QLabel" name="label_Fz_table">
                   <property name="enabled">
                    <bool>true</bool>
                   </property>
@@ -1913,193 +1939,6 @@
                 </item>
                </layout>
               </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QFrame" name="frame_16">
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>48</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>48</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="frameShape">
-                <enum>QFrame::NoFrame</enum>
-               </property>
-               <property name="frameShadow">
-                <enum>QFrame::Raised</enum>
-               </property>
-               <layout class="QGridLayout" name="gridLayout_19">
-                <property name="leftMargin">
-                 <number>6</number>
-                </property>
-                <property name="topMargin">
-                 <number>0</number>
-                </property>
-                <property name="rightMargin">
-                 <number>6</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>0</number>
-                </property>
-                <property name="horizontalSpacing">
-                 <number>6</number>
-                </property>
-                <item row="0" column="4">
-                 <widget class="QLabel" name="label_angular">
-                  <property name="font">
-                   <font>
-                    <pointsize>10</pointsize>
-                   </font>
-                  </property>
-                  <property name="text">
-                   <string>Angular:</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="0">
-                 <spacer name="horizontalSpacer_8">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item row="0" column="2">
-                 <widget class="QComboBox" name="comboBox_linear_data_type">
-                  <property name="font">
-                   <font>
-                    <pointsize>10</pointsize>
-                   </font>
-                  </property>
-                  <item>
-                   <property name="text">
-                    <string> Displacement</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string> Velocity</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string> Acceleration</string>
-                   </property>
-                  </item>
-                 </widget>
-                </item>
-                <item row="0" column="1">
-                 <widget class="QLabel" name="label_linear">
-                  <property name="font">
-                   <font>
-                    <pointsize>10</pointsize>
-                   </font>
-                  </property>
-                  <property name="text">
-                   <string>Linear:</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="6">
-                 <spacer name="horizontalSpacer_12">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item row="0" column="3">
-                 <spacer name="horizontalSpacer_3">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item row="0" column="5">
-                 <widget class="QComboBox" name="comboBox_angular_data_type">
-                  <property name="font">
-                   <font>
-                    <pointsize>10</pointsize>
-                   </font>
-                  </property>
-                  <item>
-                   <property name="text">
-                    <string> Displacement</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string> Velocity</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string> Acceleration</string>
-                   </property>
-                  </item>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <spacer name="verticalSpacer_4">
-               <property name="orientation">
-                <enum>Qt::Vertical</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>40</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="3" column="0">
-              <spacer name="verticalSpacer_6">
-               <property name="orientation">
-                <enum>Qt::Vertical</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>40</height>
-                </size>
-               </property>
-              </spacer>
              </item>
             </layout>
            </widget>
