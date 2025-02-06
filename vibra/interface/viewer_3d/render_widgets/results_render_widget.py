@@ -1,4 +1,5 @@
 from typing import Literal
+from PyQt5.QtWidgets import QFileDialog
 
 from molde.render_widgets import AnimatedRenderWidget
 
@@ -104,4 +105,67 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def update_section_plane(self):
-        pass
+        if not self._actors_exists():
+            return
+
+        section_plane = app().main_window.section_plane
+
+        if not section_plane.cutting:
+            self._disable_section_plane()
+            return
+
+        position = section_plane.get_position()
+        rotation = section_plane.get_rotation()
+        inverted = section_plane.get_inverted()
+
+        if section_plane.editing:
+            self.plane_actor.configure_section_plane(position, rotation)
+            self.plane_actor.VisibilityOn()
+            self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
+            self.plane_actor.GetProperty().SetOpacity(0.8)
+        else:
+            self._apply_section_plane(position, rotation, inverted)
+            self.ghost_actor.VisibilityOn()
+            self.plane_actor.SetVisibility(not section_plane.keep_section_plane)
+            self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
+            self.plane_actor.GetProperty().SetOpacity(0.2)
+
+        self.update()
+
+    def export_animation_to_file(self):
+        file_path, check = QFileDialog.getSaveFileName(
+            self,
+            "Save As",
+            filter="All Files ();; Video (*.mp4);; GIF (*.gif);;",
+        )
+
+        if not check:
+            return
+
+        self.save_video(file_path)
+
+    def _disable_section_plane(self):
+        has_hidden_part = bool(app().main_window.hidden_surfaces)
+        self.ghost_actor.SetVisibility(has_hidden_part)
+        self.plane_actor.VisibilityOff()
+        self.analysis_actor.disable_cut()
+        self.edges_actor.disable_cut()
+        self.update()
+
+    def _apply_section_plane(self, position, rotation, inverted):
+        if isinstance(self.solids_actor, HollowAnalysisActor):
+            mesh = app().project.model.mesh
+            self.remove_actors(self.solids_actor)
+            self.solids_actor = AnalysisActor(mesh)
+            self.add_actors(self.solids_actor)
+
+        xyz, normal = self.plane_actor.configure_section_plane(position, rotation)
+        if inverted:
+            normal = -normal
+
+        self.analysis_actor.apply_cut(xyz, normal)
+        self.edges_actor.apply_cut(xyz, normal)
+        self.update()
+
+    def _actors_exists(self):
+        return len(self._widget_actors) > 0

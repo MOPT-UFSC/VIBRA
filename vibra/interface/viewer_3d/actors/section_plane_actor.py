@@ -34,11 +34,11 @@ class SectionPlaneActor(vtkActor):
         self.PickableOff()
 
     def configure_section_plane(self, position, orientation):
-        x = lerp(self._bounds[0], self._bounds[1], position[0] / 100)
-        y = lerp(self._bounds[2], self._bounds[3], position[1] / 100)
-        z = lerp(self._bounds[4], self._bounds[5], position[2] / 100)
-        self.SetPosition(x, y, z)
+        xyz = self.calculate_xyz_position(position)
+        normal = self.calculate_normal_vector(orientation)
+        self.SetPosition(xyz)
         self.SetOrientation(orientation)
+        return xyz, normal
 
     def calculate_xyz_position(self, position):
         x = lerp(self._bounds[0], self._bounds[1], position[0] / 100)
