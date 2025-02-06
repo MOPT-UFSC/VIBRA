@@ -52,11 +52,11 @@ class VisibilitySettingsMenu(QMenu):
         self.main_window.analysis_filter.setVisible(self.bool_state)
 
     def theme_callback(self):
-        if self.parent().user_config.theme == "light":
+        if app().user_config.theme == "light":
             self.parent().set_theme("dark")
             self.theme_action.setIcon(self.theme_sun_icon)
 
-        elif self.parent().user_config.theme == "dark":
+        elif app().user_config.theme == "dark":
             self.parent().set_theme("light")
             self.theme_action.setIcon(self.theme_moon_icon)
 
