@@ -268,6 +268,7 @@ class AnalysisSetupInput(QDialog):
 
         self.complete = True
         self.close()
+        app().main_window.analysis_toolbar.update_pushbutton_run_analysis()
         return False
 
     def check_inputs(self, lineEdit, label, only_positive=True, zero_included=False, _float=False):
@@ -312,6 +313,7 @@ class AnalysisSetupInput(QDialog):
     def check_run(self):
         if self.enter_setup_callback():
             return
+        app().main_window.analysis_toolbar.pushButton_run_analysis.click()
         self.solve_analysis = True
 
     def closeEvent(self, a0):

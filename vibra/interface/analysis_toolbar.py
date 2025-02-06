@@ -6,7 +6,7 @@ from vibra.interface.analysis.acoustic_harmonic_analysis_input import AcousticHa
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
 from vibra.interface.analysis.structural_harmonic_analysis_input import StructuralHarmonicAnalysisInput
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
-from vibra.interface.analysis.analysis_type_input import AnalysisTypeInput
+from vibra.interface.analysis.analysis_setup_input import AnalysisSetupInput
 
 from vibra import ICON_DIR, app
 
@@ -66,6 +66,8 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_run_analysis.clicked.connect(self.run_analysis)
         self.pushButton_configure_analysis.clicked.connect(self.configure_analysis)
         self.analysis_finished.connect(self.update_pushbutton_run_analysis)
+        self.combo_box_analysis_domain.currentTextChanged.connect(lambda: self.update_pushbutton_run_analysis(True))
+        self.combo_box_analysis_type.currentTextChanged.connect(lambda: self.update_pushbutton_run_analysis(True))
 
     def _configure_appearance(self):
         self.setMinimumHeight(40)
@@ -139,8 +141,8 @@ class AnalysisToolbar(QToolBar):
         self.combo_box_analysis_domain.addItem("Structural")
         self.combo_box_analysis_domain.addItem("Acoustic")
     
-    def update_pushbutton_run_analysis(self):
-        self.pushButton_run_analysis.setDisabled(False)
+    def update_pushbutton_run_analysis(self, disable=False):
+        self.pushButton_run_analysis.setDisabled(disable)
     
     def run_analysis(self):
         self.main_window.menu_widget.run_analysis()
@@ -149,6 +151,8 @@ class AnalysisToolbar(QToolBar):
     def configure_analysis(self):
         analysis_type : AnalysisType = self.combo_box_analysis_type.currentText()
         physical_domain : PhysicalDomain = self.combo_box_analysis_domain.currentText()
+
+        self.pushButton_run_analysis.setDisabled(True)
 
         if analysis_type == "Harmonic":
             if physical_domain == "Structural":
@@ -160,6 +164,7 @@ class AnalysisToolbar(QToolBar):
                 self.modal_structural()
             elif physical_domain == "Acoustic":
                 self.modal_acoustic()
+        
 
     def harmonic_structural(self):
         select = StructuralHarmonicAnalysisInput()
@@ -192,7 +197,7 @@ class AnalysisToolbar(QToolBar):
             "analysis_method_label": analysis_method_label,
         }
         self.finalize(analysis_data, analysis_id)
-        self.analysis_finished.emit()
+        harmonic = AnalysisSetupInput()
     
     def modal_structural(self):
         modal = StructuralModalAnalysisInput()
@@ -210,7 +215,6 @@ class AnalysisToolbar(QToolBar):
                 "sigma_factor": sigma_factor,
             }
             self.finalize(analysis_data, analysis_id)
-            self.analysis_finished.emit()
 
     def modal_acoustic(self):
         modal = AcousticModalAnalysisInput()
@@ -228,7 +232,6 @@ class AnalysisToolbar(QToolBar):
                 "sigma_factor": sigma_factor,
             }
             self.finalize(analysis_data, analysis_id)
-            self.analysis_finished.emit()
 
     def finalize(self, analysis_data: dict, analysis_id: int):
         if app().project.analysis_data is not None:

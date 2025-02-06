@@ -11,7 +11,7 @@ class AcousticHarmonicAnalysisInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "analysis/acoustic/acoustic_harmonic_analysis_input.ui"
+        ui_path = UI_DIR / "analysis/acoustic/harmonic_analysis_direct_method.ui"
         uic.loadUi(ui_path, self)
 
         self.setWindowIcon(app().main_window.vibra_icon)
