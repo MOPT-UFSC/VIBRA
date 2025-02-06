@@ -182,6 +182,11 @@ class StructuralAssembler:
         nodes_from_2d_elements = np.array([*set(self.model.mesh.faces_connectivity[:, 4:].flatten())], dtype=int)
         nodes_from_3d_elements = np.array([*set(self.model.mesh.solids_connectivity[:, 4:].flatten())], dtype=int)
 
+        # nodes_ref = self.model.mesh.nodal_coordinates[:, 0].astype(int)
+        # nos_ruins = np.delete(nodes_ref, nodes_from_2d_elements)#.reshape(-1, 1)
+        # from vibra import app
+        # app().main_window.set_mesh_selection(nodes=list(nos_ruins))
+
         local_dofs_2d = np.arange(element_2D.DOFS_PER_NODE)
         local_dofs_3d = np.arange(element_3D.DOFS_PER_NODE)
         rotation_local_dofs_2d = local_dofs_2d[int(element_2D.DOFS_PER_NODE / 2):]
@@ -194,9 +199,9 @@ class StructuralAssembler:
         self.dofs_from_3d_elements = dofs_from_3d_elements.flatten()
         self.rotation_dofs_from_2d_elements = rotation_dofs_from_2d_elements.flatten()
 
-        print(f"dofs_from_2d_elements: {len(self.dofs_from_2d_elements)}")
-        print(f"dofs_from_3d_elements: {len(self.dofs_from_3d_elements)}")
-        print(f"rotation_dofs_from_2d_elements: {len(self.rotation_dofs_from_2d_elements)}")
+        # print(f"dofs_from_2d_elements: {len(self.dofs_from_2d_elements)}")
+        # print(f"dofs_from_3d_elements: {len(self.dofs_from_3d_elements)}")
+        # print(f"rotation_dofs_from_2d_elements: {len(self.rotation_dofs_from_2d_elements)}")
 
         internal_dofs_from_3d_elements = np.array([])
 
@@ -211,15 +216,13 @@ class StructuralAssembler:
             total_dofs_apd = np.append(self.dofs_from_2d_elements, internal_dofs_from_3d_elements)
             all_dofs = np.array([*set(total_dofs_apd)], dtype=int)
             self.displacement_dofs = np.delete(all_dofs, self.rotation_dofs_from_2d_elements)
-            print(f"total_dofs_apd: {len(total_dofs_apd)}")
-            print(f"all_dofs: {len(all_dofs)}")
-            print(f"displacement_dofs: {len(self.displacement_dofs)}")
-            print(f"internal_dofs_from_3d_elements: {len(internal_dofs_from_3d_elements)}")
+            # print(f"total_dofs_apd: {len(total_dofs_apd)}")
+            # print(f"all_dofs: {len(all_dofs)}")
+            # print(f"displacement_dofs: {len(self.displacement_dofs)}")
+            # print(f"internal_dofs_from_3d_elements: {len(internal_dofs_from_3d_elements)}")
             return all_dofs
 
         else:
-
-            print(">> passei aqui")
 
             self.displacement_dofs = self.dofs_from_3d_elements.copy()
             return self.dofs_from_3d_elements
@@ -284,6 +287,8 @@ class StructuralAssembler:
         self.data_K = np.append(self.data_K, data_K_se.flatten())
         self.data_M = np.append(self.data_M, data_M_se.flatten())
 
+        aux_nodes = list()
+
         if len(self.active_2d_element_dofs):
 
             rows_fe, cols_fe = element_2D.generate_ind_rows_cols()
@@ -299,7 +304,7 @@ class StructuralAssembler:
             data_M_fe = np.zeros((nel, dofs, dofs), dtype=float)
 
             # loop for face elements
-            for el_index, surf_id, *_ in self.model.mesh.faces_connectivity:
+            for el_index, surf_id, _, _, *connect_nodes in self.model.mesh.faces_connectivity:
 
                 material = self.model.properties._get_property("material", surface=surf_id)
                 if material is None:
@@ -321,11 +326,21 @@ class StructuralAssembler:
 
                 Ke, Me = element_2D.elementary_matrices(el_index, material, t)
 
+                if np.sum(Ke) == 0.:
+
+                    for node_id in connect_nodes:
+                        if node_id not in aux_nodes:
+                            aux_nodes.append(node_id)
+
                 data_K_fe[el_index, :, :] = Ke
                 data_M_fe[el_index, :, :] = Me
 
             self.data_K = np.append(self.data_K, data_K_fe.flatten())
             self.data_M = np.append(self.data_M, data_M_fe.flatten())
+
+            if aux_nodes:
+                from vibra import app
+                app().main_window.set_mesh_selection(nodes=aux_nodes)
 
     def assemble_global_matrices(self):
 

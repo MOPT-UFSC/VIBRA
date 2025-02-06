@@ -27,15 +27,18 @@ def get_local_coordinates(nodal_coords: np.ndarray):
     # y vector
     v_y = np.cross(v_z, v_x)
 
+    # Element area calculation
+    area = np.linalg.norm(v_z) / 2
+
+    if area == 0:
+        return None, None, 0., None
+
     n_x = v_x / np.linalg.norm(v_x)
     n_y = v_y / np.linalg.norm(v_y)
     n_z = v_z / np.linalg.norm(v_z)
 
     # Direction cosines
     dir_cossines = np.array([n_x, n_y, n_z], dtype=float)
-
-    # Element area calculation
-    area = np.linalg.norm(v_z) / 2
 
     # Transformation to local coordinate system
     # coords_lcs = np.column_stack((x, y, z)) @ dir_cossines.T
@@ -316,10 +319,19 @@ class STRUCT_TRIANGULAR_3(Element2D):
 
         """
 
-        #
+        Ke = np.zeros([self.DOFS_PER_ELEMENT, self.DOFS_PER_ELEMENT], dtype=float)
+        Me = np.zeros([self.DOFS_PER_ELEMENT, self.DOFS_PER_ELEMENT], dtype=float)
+
         ie = self.connectivity[el_index, 1:]
         nodal_coords = self.nodal_coordinates[ie, 1:4]
         x_loc, y_loc, area, T = get_local_coordinates(nodal_coords)
+
+        if area == 0:
+            message = f"The element #{el_index} has invalid connectivity.\n"
+            message += f"Connectivity: {ie}\n"
+            print(message)
+            return Ke, Me
+
         H = self.process_shape_functions_and_derivatives_for_bending(x_loc, y_loc)
 
         Db, Dm, rho = self.get_constitutive_model(material, t, model_type="linear-isotropic")
@@ -385,9 +397,6 @@ class STRUCT_TRIANGULAR_3(Element2D):
 
         # # Element membrane mass matrix
         # M_memb = 0.5 * self.weight_memb * detJAC * rho * t * NTN.sum(axis=0)
-
-        Ke = np.zeros([self.DOFS_PER_ELEMENT, self.DOFS_PER_ELEMENT], dtype=float)
-        Me = np.zeros([self.DOFS_PER_ELEMENT, self.DOFS_PER_ELEMENT], dtype=float)
 
         # Indexing bend to global element matrices
         index = [2, 3, 4, 8, 9, 10, 14, 15, 16]
