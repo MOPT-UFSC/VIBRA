@@ -23,8 +23,8 @@ class HollowSolidsActor(FacesActor):
             points.SetPoint(i, xyz)
         points.Modified()
 
-    def clear_colors(self):
-        self.set_color((255, 255, 0))
+    # def clear_colors(self):
+    #     self.set_color((255, 255, 0))
     
     def paint_cells(self, color, solids: list[int]):
         faces = []
@@ -32,3 +32,9 @@ class HollowSolidsActor(FacesActor):
             face_elements = self.mesh.solid_to_face_elements.get(solid, [])
             faces.extend(face_elements)
         return super().paint_cells(color, faces)
+
+    def configure_appearance(self):
+        super().configure_appearance()
+        # Change the specular color to purple to differentiate
+        # from the massive solids actor
+        self.GetProperty().SetSpecularColor(1, 0, 1)
