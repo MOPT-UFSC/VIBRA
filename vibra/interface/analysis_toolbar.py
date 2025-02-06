@@ -144,6 +144,7 @@ class AnalysisToolbar(QToolBar):
     
     def run_analysis(self):
         self.main_window.menu_widget.run_analysis()
+        self.main_window.menu_widget.filter_analysis_type()
 
     def configure_analysis(self):
         analysis_type : AnalysisType = self.combo_box_analysis_type.currentText()
@@ -210,7 +211,6 @@ class AnalysisToolbar(QToolBar):
             }
             self.finalize(analysis_data, analysis_id)
             self.analysis_finished.emit()
-
 
     def modal_acoustic(self):
         modal = AcousticModalAnalysisInput()

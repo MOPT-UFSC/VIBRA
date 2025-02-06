@@ -365,9 +365,6 @@ class LoadProject:
     def load_analysis_setup(self):
 
         analysis_setup = self.file.read_analysis_setup_from_file()
-        print("Analysis Setup:")
-        print(analysis_setup)
-        print()
 
         if analysis_setup:
 
@@ -402,34 +399,35 @@ class LoadProject:
         str_harmonic_analysis = False
 
         results_data = self.file.read_results_data_from_file()
-        print("Results data")
-        print(results_data)
-        print()
 
         if results_data:
             logging.info("Loading results..." + ProgressStatus(20, 100))
             for key, data in results_data.items():
 
                 if key == "modal_acoustic":
-                        act_modal_analysis = True
-                        app().project.acoustic_modal_solver.natural_frequencies = data["natural_frequencies"]
-                        app().project.acoustic_modal_solver.modal_shape = data["modal_shape"]
+                        if app().project.acoustic_modal_solver is not None:
+                            act_modal_analysis = True
+                            app().project.acoustic_modal_solver.natural_frequencies = data["natural_frequencies"]
+                            app().project.acoustic_modal_solver.modal_shape = data["modal_shape"]
                     
                 elif key == "modal_structural":
-                        str_modal_analysis = True
-                        app().project.structural_modal_solver.natural_frequencies = data["natural_frequencies"]
-                        app().project.structural_modal_solver.modal_shape = data["modal_shape"]
+                        if app().project.structural_modal_solver is not None:
+                            str_modal_analysis = True
+                            app().project.structural_modal_solver.natural_frequencies = data["natural_frequencies"]
+                            app().project.structural_modal_solver.modal_shape = data["modal_shape"]
 
                 elif key == "harmonic_acoustic":
-                        act_harmonic_analysis = True
-                        app().project.acoustic_harmonic_solver.frequencies = data["frequencies"]
-                        app().project.acoustic_harmonic_solver.solution = data["solution"]
-                        app().main_window.disable_advanced_acoustic_plots_buttons(False)
+                        if app().project.acoustic_harmonic_solver is not None:
+                            act_harmonic_analysis = True
+                            app().project.acoustic_harmonic_solver.frequencies = data["frequencies"]
+                            app().project.acoustic_harmonic_solver.solution = data["solution"]
+                            app().main_window.disable_advanced_acoustic_plots_buttons(False)
 
                 elif key == "harmonic_structural":
-                        str_harmonic_analysis = True
-                        app().project.structural_harmonic_solver.frequencies = data["frequencies"]
-                        app().project.structural_harmonic_solver.solution = data["solution"]
+                        if app().project.structural_harmonic_solver is not None:
+                            str_harmonic_analysis = True
+                            app().project.structural_harmonic_solver.frequencies = data["frequencies"]
+                            app().project.structural_harmonic_solver.solution = data["solution"]
                 else:
                     continue
             

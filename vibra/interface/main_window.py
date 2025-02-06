@@ -165,12 +165,10 @@ class MainWindow(QMainWindow):
     def create_basic_layout(self):
         
         self.menu_widget = MenuItems()
-        self.analysis_filter = AnalysisFilter()
         self.status_bar = StatusBar(self)
         self.analysis_toolbar = AnalysisToolbar()
 
         grid_layout_left = QGridLayout()
-        grid_layout_left.addWidget(self.analysis_filter, 0, 0)
         grid_layout_left.addWidget(self.menu_widget, 1, 0)
         grid_layout_left.setContentsMargins(0, 0, 0, 0)
         grid_layout_left.setVerticalSpacing(0)
@@ -214,7 +212,6 @@ class MainWindow(QMainWindow):
 
         self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)
-        self.analysis_filter.setDisabled(True)
     
     def _config_window(self):
         self.setMinimumSize(800, 600)
@@ -451,7 +448,6 @@ class MainWindow(QMainWindow):
         self.show_menu_items = not self.show_menu_items
         self.menu_widget.setVisible(self.show_menu_items)
         self.vertical_line.setVisible(self.show_menu_items)
-        self.analysis_filter.setVisible(self.show_menu_items)
 
     def set_menu_items_visibility_state(self, state: bool):
         app().user_config.menu_items_visible = state
@@ -466,6 +462,12 @@ class MainWindow(QMainWindow):
         
         if show_renderer_widget:
             self.render_widgets_stack.setCurrentWidget(self.acoustic_modal_analysis)
+            
+            self.action_results_workspace.setEnabled(False)
+            if not self.action_model_workspace.isEnabled():
+                self.action_model_workspace.setEnabled(True)
+            if not self.action_mesh_workspace.isEnabled():
+                self.action_mesh_workspace.setEnabled(True)
     
     def configure_structural_modal_analysis_render_widget(self, show_render_widget=False):
         self.structural_modal_analysis.update_frequencies()
@@ -474,12 +476,24 @@ class MainWindow(QMainWindow):
         if show_render_widget:
             self.render_widgets_stack.setCurrentWidget(self.structural_modal_analysis)
 
+            self.action_results_workspace.setEnabled(False)
+            if not self.action_model_workspace.isEnabled():
+                self.action_model_workspace.setEnabled(True)
+            if not self.action_mesh_workspace.isEnabled():
+                self.action_mesh_workspace.setEnabled(True)
+
     def configure_acoustic_harmonic_analysis_render_widget(self, show_render_widget=False):
         self.acoustic_harmonic_analysis.update_frequencies()
         self.acoustic_harmonic_analysis.update_plot()
 
         if show_render_widget:
             self.render_widgets_stack.setCurrentWidget(self.acoustic_harmonic_analysis)
+
+            self.action_results_workspace.setEnabled(False)
+            if not self.action_model_workspace.isEnabled():
+                self.action_model_workspace.setEnabled(True)
+            if not self.action_mesh_workspace.isEnabled():
+                self.action_mesh_workspace.setEnabled(True)
     
     def update_plots(self, reset_camera=True):
         for i in range(self.render_widgets_stack.count()):
@@ -876,7 +890,6 @@ class MainWindow(QMainWindow):
             self.action_model_workspace_callback()
 
             self.renderer_toolbar.setDisabled(False)
-            self.analysis_filter.setDisabled(False)
             self.analysis_toolbar.setDisabled(False)
             self.analysis_toolbar.pushButton_run_analysis.setDisabled(True)
             self.menu_widget.modify_items_access_after_geometry_importing()
@@ -1054,9 +1067,6 @@ class MainWindow(QMainWindow):
     def close_dialogs(self):
         if isinstance(self.dialog, (QDialog, QWidget)):
             self.dialog.close()
-    
-    def get_current_workspace(self):
-        return self.analysis_filter.comboBox_analysis_selector.currentIndex()
 
     def action_plot_specific_acoustic_impedance_callback(self):
             if app().project.acoustic_harmonic_solver.solution is None:

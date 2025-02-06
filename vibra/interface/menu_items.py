@@ -685,7 +685,7 @@ class MenuItems(QTreeWidget):
         if not self.item_top_analysis.isHidden():
             self.item_top_acoustic_model_setup.setHidden(True)
             self.item_top_structuralModelSetup.setHidden(True)
-            index = self.main_window.get_current_workspace()
+            index = self.main_window.analysis_toolbar.combo_box_analysis_domain.currentIndex()
             if index == Workspace.ACOUSTIC_SETUP:# self.main_window.analysis_filter.radio_button_acoustic.isChecked():
                 self.item_top_acoustic_model_setup.setHidden(False)
             elif index == Workspace.STRUCTURAL_SETUP:# self.main_window.analysis_filter.radio_button_structural.isChecked():
