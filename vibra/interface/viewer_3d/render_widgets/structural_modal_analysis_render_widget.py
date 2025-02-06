@@ -164,10 +164,8 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
             return
 
         phase = self.control_bar.phase_slider.value()
-        magnification_factor = self.control_bar.magnification_factor_slider.value() / 2
-        displacements, color_scalars, min_value, max_value = self._calculate_displacements(
-            index, phase
-        )
+        magnification_factor = self.control_bar.magnification_factor_slider.value() / 16
+        displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
 
         self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
         self.edges_actor.extract_data(self.analysis_actor.data)
@@ -346,10 +344,8 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         # Map the frames from 0 to 1
         t = frame / (self._animation_total_frames - 1)
         phase = lerp(0, 360, t)
-        displacements, color_scalars, min_value, max_value = self._calculate_displacements(
-            index, phase
-        )
-        magnification_factor = self.control_bar.magnification_factor_slider.value()
+        displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
+        magnification_factor = self.control_bar.magnification_factor_slider.value() / 16
 
         self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
         self.ghost_actor.apply_deformation(displacements, phase, magnification_factor)

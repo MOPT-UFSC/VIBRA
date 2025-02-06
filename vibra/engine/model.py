@@ -74,9 +74,9 @@ class Model:
         try:
 
             try:
-                self.mesh = Mesh.from_cad(path, dimension=2, size_factor=0.0, minimum_element_size=10, maximum_element_size=40)
+                self.mesh = Mesh.from_cad(path, dimension=2, size_factor=0.0, minimum_element_size=10, maximum_element_size=30)
             except:
-                self.mesh = Mesh.from_cad(path, dimension=2, size_factor=0.0, minimum_element_size=5, maximum_element_size=20)
+                self.mesh = Mesh.from_cad(path, dimension=2, size_factor=0.0, minimum_element_size=5, maximum_element_size=10)
 
             self.generated_mesh = False
             app().main_window.update_geometry_information(self.mesh.geometry_information)

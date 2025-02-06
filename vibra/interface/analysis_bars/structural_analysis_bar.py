@@ -112,21 +112,21 @@ class StructuralModalAnalysisBar(QWidget):
         self.play_pause_button.setToolTip("Pause animation")
 
     def create_sliders(self):
-        #
+
         self.magnification_factor_label = QLabel("value")
         self.magnification_factor_label.setFixedWidth(60)
         self.magnification_factor_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         self.magnification_factor_slider = QSlider(Qt.Orientation.Horizontal)
         self.magnification_factor_slider.setMinimum(0)
-        self.magnification_factor_slider.setMaximum(4)
-        self.magnification_factor_slider.setValue(2)
+        self.magnification_factor_slider.setMaximum(32)
+        self.magnification_factor_slider.setValue(16)
         self.magnification_factor_slider.setSingleStep(1)
         self.magnification_factor_slider.setMaximumWidth(200)
         self.magnification_factor_slider.valueChanged.connect(self.value_change_callback)
         self.magnification_factor_slider.sliderPressed.connect(self.slider_pressed.emit)
         self.magnification_factor_slider.sliderReleased.connect(self.slider_released.emit)
-        self.magnification_factor_label.setText(f"({self.magnification_factor_slider.value()/2}x)")
-        #
+        self.magnification_factor_label.setText(f"({self.magnification_factor_slider.value() / 16}x)")
+
         self.phase_label = QLabel("value")
         self.phase_label.setFixedWidth(60)
         self.phase_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
@@ -140,9 +140,8 @@ class StructuralModalAnalysisBar(QWidget):
         self.phase_slider.sliderPressed.connect(self.slider_pressed.emit)
         self.phase_slider.sliderReleased.connect(self.slider_released.emit)
         self.phase_label.setText(f"({self.phase_slider.value()}°)")
-        #
 
     def value_change_callback(self):
-        self.magnification_factor_label.setText(f"({self.magnification_factor_slider.value()/2}x)")
+        self.magnification_factor_label.setText(f"({self.magnification_factor_slider.value() / 16}x)")
         self.phase_label.setText(f"({self.phase_slider.value()}°)")
         self.value_changed.emit()
