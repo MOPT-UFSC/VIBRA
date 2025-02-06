@@ -72,6 +72,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         app().project.thumbnail = self.get_thumbnail()
 
     def update_color_and_deformation(self):
+        displacements = None
+
         if self.current_analysis == "structural_modal":
             data = compute_structural_modal_field(
                 app().project.structural_modal_solver.modal_shape,
@@ -86,19 +88,26 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 self.current_frequency_index,
                 self.current_phase,
             )
-        
+            color_scalars, min_value, max_value = data
+
         elif self.current_analysis == "acoustic_harmonic":
             data = compute_acoustic_harmonic_field(
                 app().project.acoustic_harmonic_solver.solution,
                 self.current_frequency_index,
                 self.current_phase,
             )
-        
+            color_scalars, min_value, max_value = data
+
         else:
             raise ValueError(f"Unknown analysis: {self.current_analysis}")
 
-        self.analysis_actor.apply_deformation(displacements, self.current_phase, self.magnification_factor)
-        self.edges_actor.extract_data(self.analysis_actor.data)
+        if displacements is not None:
+            self.analysis_actor.apply_deformation(
+                displacements,
+                self.current_phase,
+                self.magnification_factor,
+            )
+            self.edges_actor.extract_data(self.analysis_actor.data)
 
         self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
