@@ -13,6 +13,7 @@ from vtkmodules.vtkCommonDataModel import (
 )
 from vtkmodules.vtkFiltersCore import vtkPolyDataNormals
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
+from vtkmodules.util.numpy_support import numpy_to_vtk
 
 from vibra import app
 
@@ -58,8 +59,8 @@ class FacesActor(vtkActor):
         cell_colors.SetNumberOfTuples(number_of_elements)
         cell_indexes.Allocate(number_of_elements)
 
-        for x, y, z in self.mesh.nodal_coordinates[:, 1:]:
-            points.InsertNextPoint(x, y, z)
+        coordinates = self.mesh.nodal_coordinates[:, 1:]
+        points.SetData(numpy_to_vtk(coordinates))
 
         self.visible_indexes = dict()
         hidden_surfaces = app().main_window.hidden_surfaces if self.allow_hidding else set()
