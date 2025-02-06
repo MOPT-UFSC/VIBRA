@@ -474,8 +474,7 @@ class PrescribedDofsInputs(QDialog):
                     self.model.properties._set_property("prescribed_dofs", data, node=selected_id)
 
             self.actions_to_finalize()
-
-            print(f"[Set Prescribed DOF] - defined at surface(s) {selected_ids}")  
+            # print(f"[Set Prescribed DOF] - defined at surface(s) {selected_ids}")
 
         else:
             title = "Additional inputs required"
@@ -774,8 +773,7 @@ class PrescribedDofsInputs(QDialog):
                 self.model.properties._set_property("prescribed_dofs", data, node=selected_id)
 
         self.actions_to_finalize()
-
-        print(f"[Set Prescribed DOF] - defined at {selection}(s) {selected_ids}")
+        # print(f"[Set Prescribed DOF] - defined at {selection}(s) {selected_ids}")
 
     def attribute_callback(self):
         index = self.tabWidget_main.currentIndex()
@@ -835,6 +833,17 @@ class PrescribedDofsInputs(QDialog):
 
                 self.treeWidget_prescribed_dofs.addTopLevelItem(new)
 
+        for (property, *args), data in self.properties.point_properties.items():
+
+            if property == "prescribed_dofs":
+                values = data["values"]
+                constrained_dofs_mask = [False if value is None else True for value in values]
+                new = QTreeWidgetItem([str(args[0]), "Point", str(self.text_label(constrained_dofs_mask))])
+                for i in range(3):
+                    new.setTextAlignment(i, Qt.AlignCenter)
+
+                self.treeWidget_prescribed_dofs.addTopLevelItem(new)
+
         for (property, *args), data in self.properties.nodal_properties.items():
 
             if property == "prescribed_dofs":
@@ -860,6 +869,11 @@ class PrescribedDofsInputs(QDialog):
                 self.tabWidget_main.setTabVisible(2, True)
                 return
 
+        for (property, _) in self.properties.point_properties.keys():
+            if property == "prescribed_dofs":
+                self.tabWidget_main.setTabVisible(2, True)
+                return
+
         for (property, _) in self.properties.nodal_properties.keys():
             if property == "prescribed_dofs":
                 self.tabWidget_main.setTabVisible(2, True)
@@ -872,7 +886,7 @@ class PrescribedDofsInputs(QDialog):
 
     def tab_event_callback(self):
 
-        if self.tabWidget_main.currentIndex() == 2:
+        if self.tabWidget_main.currentIndex() == 3:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
             self.pushButton_attribute.setDisabled(True)
@@ -902,6 +916,9 @@ class PrescribedDofsInputs(QDialog):
 
             elif selection == "Line":
                 app().main_window.set_geometry_selection(lines = [int(selected_id)])
+
+            elif selection == "Point":
+                app().main_window.set_geometry_selection(points = [int(selected_id)])
 
             elif selection == "Node":
                 app().main_window.set_mesh_selection(nodes=[int(selected_id)])
@@ -936,6 +953,9 @@ class PrescribedDofsInputs(QDialog):
         elif selection == "lines":
             remove_function = self.properties._remove_line_property
 
+        elif selection == "points":
+            remove_function = self.properties._remove_point_property
+
         elif selection == "nodes":
             remove_function = self.properties._remove_nodal_property
 
@@ -948,7 +968,7 @@ class PrescribedDofsInputs(QDialog):
                 self.process_table_file_removal(table_names)
 
     def remove_table_files_from(self, selected_id : list, selection: str):
-        table_names = self.properties.get_property_related_table_names("acoustic_pressure", selected_id, selection)
+        table_names = self.properties.get_property_related_table_names("prescribed_dofs", selected_id, selection)
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
@@ -965,6 +985,9 @@ class PrescribedDofsInputs(QDialog):
 
             elif selection == "Line":
                 self.properties._remove_line_property("prescribed_dofs", selected_id)
+
+            elif selection == "Point":
+                self.properties._remove_point_property("prescribed_dofs", selected_id)
 
             elif selection == "Node":
                 self.properties._remove_nodal_property("prescribed_dofs", selected_id)
@@ -993,6 +1016,10 @@ class PrescribedDofsInputs(QDialog):
             for (property, *args) in self.properties.line_properties.keys():
                 if property == "prescribed_dofs":
                     self.remove_table_files_from(args[0], "lines")
+
+            for (property, *args) in self.properties.point_properties.keys():
+                if property == "prescribed_dofs":
+                    self.remove_table_files_from(args[0], "points")
 
             for (property, *args) in self.properties.nodal_properties.keys():
                 if property == "prescribed_dofs":

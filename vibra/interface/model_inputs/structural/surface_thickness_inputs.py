@@ -180,7 +180,7 @@ class SurfaceThicknessInput(QDialog):
 
         self.actions_to_finalize()
 
-        print(f"The surface thickness has been assigned to surface(s) {surface_ids}")
+        # print(f"The surface thickness has been assigned to surface(s) {surface_ids}")
 
         if self.comboBox_attribution_type.currentIndex() == 0:
             self.close()
@@ -321,7 +321,8 @@ class SurfaceThicknessInput(QDialog):
 
             for _surface_id in surfaces_to_hide:
                 app().main_window.hidden_surfaces.add(_surface_id)
-                app().main_window.viewer_tabs.update_hidden_plots()
+    
+            app().main_window.viewer_tabs.update_hidden_plots()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

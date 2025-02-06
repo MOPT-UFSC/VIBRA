@@ -22,9 +22,9 @@ class PointsActor(vtkActor):
         cell_colors.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
 
         for tag, node_id in self.mesh.nodes_from_points.items():
-            _, x, y, z = self.mesh.nodal_coordinates[node_id]
+            _, x, y, z = self.mesh.nodal_coordinates[node_id[0]]
             points.InsertNextPoint(x, y, z)
-            data.InsertNextCell(VTK_VERTEX, 1, [node_id])
+            data.InsertNextCell(VTK_VERTEX, 1, [node_id[0]])
 
         data.SetPoints(points)
         data.GetCellData().SetScalars(cell_colors)

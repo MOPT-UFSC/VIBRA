@@ -281,13 +281,14 @@ class ModelProperties:
         Clears all instances of a specific property from the structure.
         """
         data_dicts = [  
+                      self.volume_properties,
+                      self.surface_properties,
+                      self.line_properties,
+                      self.point_properties,
+                      self.group_properties,
+                      self.global_properties,
                       self.nodal_properties,
                       self.element_properties,
-                      self.line_properties,
-                      self.surface_properties,
-                      self.volume_properties,
-                      self.group_properties,
-                      self.global_properties
                       ]
 
         for data in data_dicts:
@@ -316,6 +317,12 @@ class ModelProperties:
         key = (property, element_id)
         if key in self.element_properties.keys():
             self.element_properties.pop(key)
+
+    def _remove_point_property(self, property: str, point_id: int):
+        """Remove a point property at specific point_id."""
+        key = (property, point_id)
+        if key in self.point_properties.keys():
+            self.point_properties.pop(key)
 
     def _remove_line_property(self, property: str, line_id: int):
         """Remove a line property at specific line_id."""

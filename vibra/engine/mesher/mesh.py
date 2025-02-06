@@ -179,6 +179,7 @@ class Mesh:
                              mesh_refinement_parameters,
                              )
 
+        # gmsh.model.occ.removeAllDuplicates()
         gmsh.model.occ.synchronize()
         # self.dimension = min(dimension, gmsh.model.getDimension())
         self.element_type = element_type
@@ -216,9 +217,11 @@ class Mesh:
     def _merge_nodes_from_adjacent_volumes(self):
         """ This method merges all nodes from adjacent volumes.
         """
+        # lines_list = gmsh.model.getEntities(1)
         volumes_list = gmsh.model.getEntities(3)
+        # gmsh.model.occ.fragment(lines_list, lines_list)
         gmsh.model.occ.fragment(volumes_list, volumes_list)
-        gmsh.model.occ.synchronize() 
+        gmsh.model.occ.synchronize()
 
     def import_nodes_coordinates(self, filename):
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
@@ -451,7 +454,7 @@ class Mesh:
                                               }
 
             if dim == 0:  # Points
-                self.nodes_from_points[tag] = int(element_nodes[0]) - 1
+                self.nodes_from_points[tag] = np.array([int(element_nodes[0]) - 1], dtype=int)
 
             elif dim == 1:  # Lines
                 connectivity_dim1[dim, tag] = elements_data
