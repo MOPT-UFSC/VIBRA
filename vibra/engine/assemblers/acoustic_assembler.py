@@ -322,8 +322,11 @@ class AcousticAssembler:
     def get_data_to_process_damping_matrix(self):
         """
         """
+
         self.data_Cimp = dict()
-        
+        self.ind_rows_Z = np.array([])
+        self.ind_cols_Z = np.array([])
+
         _, element_2D = self.get_element()
         dofs = element_2D.DOFS_PER_ELEMENT
         self.total_dofs_2d = element_2D.DOFS_PER_NODE * len(element_2D.nodal_coordinates)
