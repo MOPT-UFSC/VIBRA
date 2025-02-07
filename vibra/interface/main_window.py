@@ -896,7 +896,6 @@ class MainWindow(QMainWindow):
             self.renderer_toolbar.setDisabled(False)
             self.analysis_toolbar.setDisabled(False)
             self.analysis_toolbar.pushButton_run_analysis.setDisabled(True)
-            self.menu_widget.modify_items_access_after_geometry_importing()
 
             app().project.reset_solutions()
             app().project.model.properties._reset_variables()
