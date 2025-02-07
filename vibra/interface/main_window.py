@@ -516,6 +516,7 @@ class MainWindow(QMainWindow):
             self.action_results_workspace.setEnabled(True)
 
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
+        self.menu_widget.modify_items_access_after_geometry_importing()
     
     def action_mesh_workspace_callback(self):
         self.action_mesh_workspace.setEnabled(False)
@@ -526,24 +527,27 @@ class MainWindow(QMainWindow):
             self.action_results_workspace.setEnabled(True)
 
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
+        self.menu_widget.modify_items_access_after_geometry_importing()
     
     def action_results_workspace_callback(self):
-        self.action_results_workspace.setEnabled(False)
+        if app().project.last_analysis is not None:
+            self.action_results_workspace.setEnabled(False)
 
-        if not self.action_model_workspace.isEnabled():
-            self.action_model_workspace.setEnabled(True)
-        if not self.action_mesh_workspace.isEnabled():
-            self.action_mesh_workspace.setEnabled(True)
+            if not self.action_model_workspace.isEnabled():
+                self.action_model_workspace.setEnabled(True)
+            if not self.action_mesh_workspace.isEnabled():
+                self.action_mesh_workspace.setEnabled(True)
 
-        render_widget = None
-        if app().project.last_analysis == "Modal Acoustic":
-            render_widget = self.acoustic_modal_analysis
-        elif app().project.last_analysis == "Modal Structural":
-            render_widget = self.structural_modal_analysis
-        elif app().project.last_analysis == "Harmonic Acoustic":
-            render_widget = self.acoustic_harmonic_analysis
-        
-        self.render_widgets_stack.setCurrentWidget(render_widget)
+            render_widget = None
+            if app().project.last_analysis == "Modal Acoustic":
+                render_widget = self.acoustic_modal_analysis
+            elif app().project.last_analysis == "Modal Structural":
+                render_widget = self.structural_modal_analysis
+            elif app().project.last_analysis == "Harmonic Acoustic":
+                render_widget = self.acoustic_harmonic_analysis
+            
+            self.render_widgets_stack.setCurrentWidget(render_widget)
+            self.menu_widget.update_items()
 
     def action_new_project_callback(self):
         self.new_project_dialog()

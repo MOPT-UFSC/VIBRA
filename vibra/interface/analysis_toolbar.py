@@ -47,6 +47,7 @@ class AnalysisToolbar(QToolBar):
     def _load_icons(self):
         self.settings_icon = QIcon(str(ICON_DIR / "settings.png"))
         self.solution_icon = QIcon(str(ICON_DIR / "go_next.png"))
+        self.reset_icon = QIcon(str(ICON_DIR / "reset_icon.png"))
 
     def _define_qt_variables(self):
 
@@ -61,11 +62,14 @@ class AnalysisToolbar(QToolBar):
         # QPushButton
         self.pushButton_run_analysis = QPushButton(self)
         self.pushButton_configure_analysis = QPushButton(self)
+        self.pushButton_reset_solution = QPushButton(self)
     
     def _create_connections(self):
         self.pushButton_run_analysis.clicked.connect(self.run_analysis)
         self.pushButton_configure_analysis.clicked.connect(self.configure_analysis)
+        self.pushButton_reset_solution.clicked.connect(self.reset_solution)
         self.analysis_finished.connect(self.update_pushbutton_run_analysis)
+        self.analysis_finished.connect(self.update_pushbutton_reset_solution)
         self.combo_box_analysis_domain.currentTextChanged.connect(lambda: self.update_pushbutton_run_analysis(True))
         self.combo_box_analysis_type.currentTextChanged.connect(lambda: self.update_pushbutton_run_analysis(True))
 
@@ -111,6 +115,8 @@ class AnalysisToolbar(QToolBar):
         self.addWidget(self.pushButton_configure_analysis)
         self.addWidget(self.get_spacer())
         self.addWidget(self.pushButton_run_analysis)
+        self.addWidget(self.get_spacer())
+        self.addWidget(self.pushButton_reset_solution)
         #
         self.adjustSize()
 
@@ -133,6 +139,13 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_run_analysis.setCursor(Qt.PointingHandCursor)
         self.pushButton_run_analysis.setToolTip("Run the analysis")
         self.pushButton_run_analysis.setDisabled(True)
+
+        self.pushButton_reset_solution.setFixedSize(50, 30)
+        self.pushButton_reset_solution.setIcon(self.reset_icon)
+        self.pushButton_reset_solution.setIconSize(QSize(20, 20))
+        self.pushButton_reset_solution.setCursor(Qt.PointingHandCursor)
+        self.pushButton_reset_solution.setToolTip("Reset Solution")
+        self.pushButton_reset_solution.setDisabled(True)
     
     def _load_analysis_types(self):
         self.combo_box_analysis_type.addItem("Harmonic")
@@ -144,9 +157,20 @@ class AnalysisToolbar(QToolBar):
     def update_pushbutton_run_analysis(self, disable=False):
         self.pushButton_run_analysis.setDisabled(disable)
     
+    def update_pushbutton_reset_solution(self):
+        self.pushButton_reset_solution.setDisabled(False)
+    
     def run_analysis(self):
         self.main_window.menu_widget.run_analysis()
-        self.main_window.menu_widget.filter_analysis_type()
+    
+    def reset_solution(self):
+        app().project.reset_solutions()
+        app().file.remove_results_data_from_project_file()
+        
+        self.pushButton_reset_solution.setDisabled(True)
+        self.pushButton_run_analysis.setDisabled(True)
+        app().main_window.action_model_workspace_callback()
+        app().project.last_analysis = None
 
     def configure_analysis(self):
         analysis_type : AnalysisType = self.combo_box_analysis_type.currentText()
