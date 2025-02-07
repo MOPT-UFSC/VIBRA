@@ -405,6 +405,8 @@ class ModelProperties:
             _properties = self.surface_properties
         elif selection == "lines":
             _properties = self.line_properties
+        elif selection == "points":
+            _properties = self.point_properties
         elif selection == "nodes":
             _properties = self.nodal_properties
         else:

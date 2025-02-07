@@ -337,10 +337,10 @@ class PrescribedDofsInputs(QDialog):
                 _real = float(real_input)
 
             except Exception:
+                self.hide()
                 title = f"Invalid entry to the {label}"
                 message = f"Wrong input for real part of {label}."
                 PrintMessageInput([window_title_1, title, message])
-                real_input.setFocus()
                 return True, None
 
         _imag = None
@@ -349,10 +349,10 @@ class PrescribedDofsInputs(QDialog):
                 _imag = float(imag_input)
 
             except Exception:
+                self.hide()
                 title = f"Invalid entry to the {label}"
                 message = f"Wrong input for imaginary part of {label}."
                 PrintMessageInput([window_title_1, title, message])
-                imag_input.setFocus()
                 return True, None
 
         if _real is None and _imag is None:
@@ -399,7 +399,8 @@ class PrescribedDofsInputs(QDialog):
         if selected_ids is None:
             self.lineEdit_selection_id.setFocus()
             return
-
+        
+        self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
 
         if self.comboBox_element_type.currentIndex() == 0:
@@ -688,6 +689,7 @@ class PrescribedDofsInputs(QDialog):
             self.lineEdit_selection_id.setFocus()
             return
 
+        self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
 
         if self.comboBox_element_type.currentIndex() == 0:
@@ -774,6 +776,98 @@ class PrescribedDofsInputs(QDialog):
 
         self.actions_to_finalize()
         # print(f"[Set Prescribed DOF] - defined at {selection}(s) {selected_ids}")
+
+    def remove_duplicated_attributions(self, selected_ids: list, selection: str):
+
+        table_names = list()
+        nodes_to_remove = list()
+        for selected_id in selected_ids:
+
+            if selection == "surfaces":
+
+                nodes_from_surface = self.model.mesh.nodes_from_surfaces[selected_id]
+                for (property, node_id) in self.properties.nodal_properties.keys():
+                    if property == "prescribed_dofs" and node_id in nodes_from_surface:
+                        if node_id not in nodes_to_remove:
+                            nodes_to_remove.append(node_id)
+
+                for line_id in app().project.model.mesh.lines_from_surface[selected_id]:
+                    data = self.properties._get_property("prescribed_dofs", line=line_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_line_property("prescribed_dofs", line_id)
+                        table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", line_id, "lines"))
+
+                    for point_id in app().project.model.mesh.points_from_line[line_id]:
+                        data = self.properties._get_property("prescribed_dofs", point=point_id)
+                        if isinstance(data, dict):
+                            self.properties._remove_point_property("prescribed_dofs", point_id)
+                            table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", point_id, "points"))
+
+            elif selection == "lines":
+
+                nodes_from_line = self.model.mesh.nodes_from_lines[selected_id]
+                for (property, node_id) in self.properties.nodal_properties.keys():
+                    if property == "prescribed_dofs" and node_id in nodes_from_line:
+                        if node_id not in nodes_to_remove:
+                            nodes_to_remove.append(node_id)
+
+                for surface_id in app().project.model.mesh.surface_from_line[selected_id]:
+                    data = self.properties._get_property("prescribed_dofs", surface=surface_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_surface_property("prescribed_dofs", surface_id)
+                        table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", surface_id, "surfaces"))
+
+                for point_id in app().project.model.mesh.points_from_line[selected_id]:
+                    data = self.properties._get_property("prescribed_dofs", point=point_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_point_property("prescribed_dofs", point_id)
+                        table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", point_id, "points"))
+
+            elif selection == "points":
+
+                nodes_from_point = self.model.mesh.nodes_from_points[selected_id]
+                for (property, node_id) in self.properties.nodal_properties.keys():
+                    if property == "prescribed_dofs" and node_id in nodes_from_point:
+                        if node_id not in nodes_to_remove:
+                            nodes_to_remove.append(node_id)
+
+                for line_id in app().project.model.mesh.line_from_point[selected_id]:
+                    data = self.properties._get_property("prescribed_dofs", line=line_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_line_property("prescribed_dofs", line_id)
+                        table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", line_id, "lines"))
+
+                    for surface_id in self.model.mesh.surface_from_line[line_id]:
+                        data = self.properties._get_property("prescribed_dofs", surface=surface_id)
+                        if isinstance(data, dict):
+                            self.properties._remove_surface_property("prescribed_dofs", surface_id)
+                            table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", surface_id, "surfaces"))
+
+            elif selection == "nodes":
+
+                point_id = selected_id + 1
+                data = self.properties._get_property("prescribed_dofs", point=point_id)
+                if isinstance(data, dict):
+                    self.properties._remove_point_property("prescribed_dofs", point_id)
+                    table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", point_id, "points"))
+
+                for line_id in app().project.model.mesh.line_from_point[point_id]:
+                    data = self.properties._get_property("prescribed_dofs", line=line_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_line_property("prescribed_dofs", line_id)
+                        table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", line_id, "lines"))
+
+                    for surface_id in self.model.mesh.surface_from_line[line_id]:
+                        data = self.properties._get_property("prescribed_dofs", surface=surface_id)
+                        if isinstance(data, dict):
+                            self.properties._remove_surface_property("prescribed_dofs", surface_id)
+                            table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", surface_id, "surfaces"))
+
+            for node_id in nodes_to_remove:
+                self.properties._remove_nodal_property("prescribed_dofs", node_id)
+                table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", node_id, "nodes"))
+
+            self.process_table_file_removal(table_names)
 
     def attribute_callback(self):
         index = self.tabWidget_main.currentIndex()
@@ -936,11 +1030,13 @@ class PrescribedDofsInputs(QDialog):
 
     def process_table_file_removal(self, table_names: list):
 
+        if len(table_names) == 0:
+            return
+
         for table_name in table_names:
             self.properties.remove_imported_tables("structural", table_name)
 
-        if table_names:
-            app().file.write_imported_table_data_in_file()
+        app().file.write_imported_table_data_in_file()
 
     def remove_conflicting_excitations(self, selected_ids: int | list, selection: str):
 
@@ -992,7 +1088,14 @@ class PrescribedDofsInputs(QDialog):
             elif selection == "Node":
                 self.properties._remove_nodal_property("prescribed_dofs", selected_id)
 
+            else:
+                return
+
+            self.remove_table_files_from(selected_id, f"{selection.lower()}s")
             self.actions_to_finalize()
+
+            app().main_window.set_geometry_selection()
+            app().main_window.set_mesh_selection()
 
     def reset_callback(self):
 
@@ -1027,6 +1130,9 @@ class PrescribedDofsInputs(QDialog):
 
             self.properties._reset_property("prescribed_dofs")
             self.actions_to_finalize()
+
+            app().main_window.set_geometry_selection()
+            app().main_window.set_mesh_selection()
 
     def actions_to_finalize(self):
         self.load_model_info()

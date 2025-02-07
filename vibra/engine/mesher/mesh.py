@@ -67,6 +67,8 @@ class Mesh:
         self.volume_from_element = dict()
 
         self.surfaces_from_volumes = dict()
+        self.lines_from_surface = dict()
+        self.points_from_line = dict()
         self.connectivity_from_surfaces = dict()
         self.nodes_from_face_element = dict()
         self.nodes_from_solid_element = dict()
@@ -80,6 +82,8 @@ class Mesh:
 
         self.nodal_area = defaultdict(list)
         self.volume_from_surface = defaultdict(list)
+        self.surface_from_line = defaultdict(list)
+        self.line_from_point = defaultdict(list)
         self.face_elements_connected_to_nodes = defaultdict(list)
 
         self.nodal_normals_data = dict()
@@ -426,15 +430,35 @@ class Mesh:
 
         self.surfaces_from_volumes.clear()
         self.volume_from_surface.clear()
+
+        self.lines_from_surface.clear()
+        self.surface_from_line.clear()
+
+        self.points_from_line.clear()
+        self.line_from_point.clear()
+
         self.solid_elements_center.clear()
 
         for dim, tag in gmsh.model.getEntities():
 
-            if dim == 3:
+            if dim in [1, 2, 3]:
+
                 _, downwards = gmsh.model.getAdjacencies(dim, tag)
-                self.surfaces_from_volumes[tag] = list(downwards)
-                for surf_id in list(downwards):
-                    self.volume_from_surface[surf_id].append(tag)
+
+                if dim == 3:
+                    self.surfaces_from_volumes[tag] = list(downwards)
+                    for surf_id in list(downwards):
+                        self.volume_from_surface[surf_id].append(tag)
+
+                elif dim == 2:
+                    self.lines_from_surface[tag] = list(downwards)
+                    for line_id in list(downwards):
+                        self.surface_from_line[line_id].append(tag)
+
+                elif dim == 1:
+                    self.points_from_line[tag] = list(downwards)
+                    for point_id in list(downwards):
+                        self.line_from_point[point_id].append(tag)
 
             elements_data = dict()
             element_types, element_indexes, element_nodes = gmsh.model.mesh.getElements(dim, tag)
@@ -478,9 +502,13 @@ class Mesh:
         self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity, self.map_solid_elements = self._get_connectivity_array(connectivity_dim3)
 
-        np.savetxt("nodal_coordinates.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
-        np.savetxt("faces_connectivity.dat", self.faces_connectivity, delimiter=",", fmt="%i")
+        # np.savetxt("nodal_coordinates.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
+        # np.savetxt("faces_connectivity.dat", self.faces_connectivity, delimiter=",", fmt="%i")
         # np.savetxt("solids_connectivity.dat", self.solids_connectivity, delimiter=",", fmt="%i")
+
+        # from pprint import pprint
+        # pprint(self.lines_from_surface)
+        # pprint(self.points_from_line)
 
         # # internal check for solid connectivity
         # aux_zeros = np.zeros(len(self.solids_connectivity[0,4:]))
