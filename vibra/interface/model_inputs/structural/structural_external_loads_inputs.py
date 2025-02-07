@@ -24,6 +24,7 @@ class StructuralExternalLoadsInputs(QDialog):
         ui_path = UI_DIR / "model/setup/structural/structural_external_loads_input.ui"
         uic.loadUi(ui_path, self)
 
+        self.model = app().project.model
         self.properties = app().project.model.properties
 
         app().main_window.set_input_widget(self)
@@ -324,10 +325,10 @@ class StructuralExternalLoadsInputs(QDialog):
                 _real = float(real_input)
 
             except Exception:
+                self.hide()
                 title = f"Invalid entry to the {label}"
                 message = f"Wrong input for real part of {label}."
                 PrintMessageInput([window_title_1, title, message])
-                real_input.setFocus()
                 return True, None
 
         _imag = None
@@ -336,10 +337,10 @@ class StructuralExternalLoadsInputs(QDialog):
                 _imag = float(imag_input)
 
             except Exception:
+                self.hide()
                 title = f"Invalid entry to the {label}"
                 message = f"Wrong input for imaginary part of {label}."
                 PrintMessageInput([window_title_1, title, message])
-                imag_input.setFocus()
                 return True, None
 
         if _real is None and _imag is None:
@@ -351,13 +352,7 @@ class StructuralExternalLoadsInputs(QDialog):
         else:
             values = _real + 1j * _imag
 
-        if label == "all_dofs":
-            if self.comboBox_element_type.currentIndex() == 0:
-                output = [values, values, values, values, values, values]
-            else:
-                output = [values, values, values]
-        else:
-            output = values
+        output = values
 
         return False, output
 
@@ -387,6 +382,7 @@ class StructuralExternalLoadsInputs(QDialog):
             self.lineEdit_selection_id.setFocus()
             return
 
+        self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
 
         if self.comboBox_element_type.currentIndex() == 0:
@@ -454,7 +450,6 @@ class StructuralExternalLoadsInputs(QDialog):
                     self.properties._set_property("external_loads", data, node=selected_id)
 
             self.actions_to_finalize()
-            # print(f"[Set Prescribed DOF] - defined at surface(s) {selected_ids}")
 
         else:
             title = "Additional inputs required"
@@ -462,7 +457,7 @@ class StructuralExternalLoadsInputs(QDialog):
             message += "before confirming the property assignment."
             PrintMessageInput([window_title_1, title, message])
 
-    def load_table(self, lineEdit : QLineEdit, dof_label : str, direct_load = False):
+    def load_table(self, lineEdit : QLineEdit, load_label : str, direct_load = False):
 
         title = "Error while loading table"
 
@@ -478,7 +473,7 @@ class StructuralExternalLoadsInputs(QDialog):
                 else:
                     path = last_path
 
-                caption = f"Choose a table to import the {dof_label} nodal load"
+                caption = f"Choose a table to import the {load_label} data"
                 imported_table_path, check = QFileDialog.getOpenFileName(  
                                                                          None, 
                                                                          caption, 
@@ -571,7 +566,7 @@ class StructuralExternalLoadsInputs(QDialog):
         if self.Mz_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Mz)
 
-    def save_table_files(self, dof_label: str, selected_id: int, selection: str, values: np.ndarray):
+    def save_table_files(self, load_label: str, selected_id: int, selection: str, values: np.ndarray):
 
         if self.frequencies[0] == 0:
             self.frequencies[0] = float(1e-6)
@@ -579,7 +574,7 @@ class StructuralExternalLoadsInputs(QDialog):
         if self.frequencies[0] == float(1e-6):
             self.frequencies[0] = 0
 
-        table_name = f"prescribed_dof_{dof_label}_from_{selection[:-1]}_{selected_id}"
+        table_name = f"external_load_{load_label}_from_{selection[:-1]}_{selected_id}"
 
         real_values = np.real(values)
         imag_values = np.imag(values)
@@ -660,6 +655,7 @@ class StructuralExternalLoadsInputs(QDialog):
             self.lineEdit_selection_id.setFocus()
             return
 
+        self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
 
         if self.comboBox_element_type.currentIndex() == 0:
@@ -720,7 +716,7 @@ class StructuralExternalLoadsInputs(QDialog):
 
             if condition_1 or condition_2:
                 title = "Additional inputs required"
-                message = "It is necessary to enter at least one prescribed dof "
+                message = "It is necessary to enter at least one external load "
                 message += "before confirming the property assignment."
                 PrintMessageInput([window_title_1, title, message]) 
                 return 
@@ -745,7 +741,98 @@ class StructuralExternalLoadsInputs(QDialog):
                 self.properties._set_property("external_loads", data, node=selected_id)
 
         self.actions_to_finalize()
-        # print(f"[Set Prescribed DOF] - defined at {selection}(s) {selected_ids}")
+
+    def remove_duplicated_attributions(self, selected_ids: list, selection: str):
+
+        table_names = list()
+        nodes_to_remove = list()
+        for selected_id in selected_ids:
+
+            if selection == "surfaces":
+
+                nodes_from_surface = self.model.mesh.nodes_from_surfaces[selected_id]
+                for (property, node_id) in self.properties.nodal_properties.keys():
+                    if property == "external_loads" and node_id in nodes_from_surface:
+                        if node_id not in nodes_to_remove:
+                            nodes_to_remove.append(node_id)
+
+                for line_id in app().project.model.mesh.lines_from_surface[selected_id]:
+                    data = self.properties._get_property("external_loads", line=line_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_line_property("external_loads", line_id)
+                        table_names.extend(self.properties.get_property_related_table_names("external_loads", line_id, "lines"))
+
+                    for point_id in app().project.model.mesh.points_from_line[line_id]:
+                        data = self.properties._get_property("external_loads", point=point_id)
+                        if isinstance(data, dict):
+                            self.properties._remove_point_property("external_loads", point_id)
+                            table_names.extend(self.properties.get_property_related_table_names("external_loads", point_id, "points"))
+
+            elif selection == "lines":
+
+                nodes_from_line = self.model.mesh.nodes_from_lines[selected_id]
+                for (property, node_id) in self.properties.nodal_properties.keys():
+                    if property == "external_loads" and node_id in nodes_from_line:
+                        if node_id not in nodes_to_remove:
+                            nodes_to_remove.append(node_id)
+
+                for surface_id in app().project.model.mesh.surface_from_line[selected_id]:
+                    data = self.properties._get_property("external_loads", surface=surface_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_surface_property("external_loads", surface_id)
+                        table_names.extend(self.properties.get_property_related_table_names("external_loads", surface_id, "surfaces"))
+
+                for point_id in app().project.model.mesh.points_from_line[selected_id]:
+                    data = self.properties._get_property("external_loads", point=point_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_point_property("external_loads", point_id)
+                        table_names.extend(self.properties.get_property_related_table_names("external_loads", point_id, "points"))
+
+            elif selection == "points":
+
+                nodes_from_point = self.model.mesh.nodes_from_points[selected_id]
+                for (property, node_id) in self.properties.nodal_properties.keys():
+                    if property == "external_loads" and node_id in nodes_from_point:
+                        if node_id not in nodes_to_remove:
+                            nodes_to_remove.append(node_id)
+
+                for line_id in app().project.model.mesh.line_from_point[selected_id]:
+                    data = self.properties._get_property("external_loads", line=line_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_line_property("external_loads", line_id)
+                        table_names.extend(self.properties.get_property_related_table_names("external_loads", line_id, "lines"))
+
+                    for surface_id in self.model.mesh.surface_from_line[line_id]:
+                        data = self.properties._get_property("external_loads", surface=surface_id)
+                        if isinstance(data, dict):
+                            self.properties._remove_surface_property("external_loads", surface_id)
+                            table_names.extend(self.properties.get_property_related_table_names("external_loads", surface_id, "surfaces"))
+
+            elif selection == "nodes":
+
+                point_id = selected_id + 1
+                data = self.properties._get_property("external_loads", point=point_id)
+                if isinstance(data, dict):
+                    self.properties._remove_point_property("external_loads", point_id)
+                    table_names.extend(self.properties.get_property_related_table_names("external_loads", point_id, "points"))
+
+                for line_id in app().project.model.mesh.line_from_point[point_id]:
+                    data = self.properties._get_property("external_loads", line=line_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_line_property("external_loads", line_id)
+                        table_names.extend(self.properties.get_property_related_table_names("external_loads", line_id, "lines"))
+
+                    for surface_id in self.model.mesh.surface_from_line[line_id]:
+                        data = self.properties._get_property("external_loads", surface=surface_id)
+                        if isinstance(data, dict):
+                            self.properties._remove_surface_property("external_loads", surface_id)
+                            table_names.extend(self.properties.get_property_related_table_names("external_loads", surface_id, "surfaces"))
+
+            for node_id in nodes_to_remove:
+                self.properties._remove_nodal_property("external_loads", node_id)
+                table_names.extend(self.properties.get_property_related_table_names("external_loads", node_id, "nodes"))
+
+            self.process_table_file_removal(table_names)
 
     def attribute_callback(self):
         index = self.tabWidget_main.currentIndex()
@@ -757,12 +844,12 @@ class StructuralExternalLoadsInputs(QDialog):
     def text_label(self, mask):
 
         if len(mask) == 6:
-            dofs_labels = np.array(['Fx','Fy','Fz','Mx','My','Mz'])
+            load_labels = np.array(['Fx','Fy','Fz','Mx','My','Mz'])
 
         elif len(mask) == 3:
-            dofs_labels = np.array(['Fx','Fy','Fz'])
+            load_labels = np.array(['Fx','Fy','Fz'])
 
-        labels = dofs_labels[mask]
+        labels = load_labels[mask]
 
         text = ""
         if list(mask).count(True) == 6:
@@ -787,8 +874,8 @@ class StructuralExternalLoadsInputs(QDialog):
 
             if property == "external_loads":
                 values = data["values"]
-                constrained_dofs_mask = [False if value is None else True for value in values]
-                new = QTreeWidgetItem([str(args[0]), "Surface", str(self.text_label(constrained_dofs_mask))])
+                constrained_loads_mask = [False if value is None else True for value in values]
+                new = QTreeWidgetItem([str(args[0]), "Surface", str(self.text_label(constrained_loads_mask))])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
@@ -798,8 +885,8 @@ class StructuralExternalLoadsInputs(QDialog):
 
             if property == "external_loads":
                 values = data["values"]
-                constrained_dofs_mask = [False if value is None else True for value in values]
-                new = QTreeWidgetItem([str(args[0]), "Line", str(self.text_label(constrained_dofs_mask))])
+                constrained_loads_mask = [False if value is None else True for value in values]
+                new = QTreeWidgetItem([str(args[0]), "Line", str(self.text_label(constrained_loads_mask))])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
@@ -809,8 +896,8 @@ class StructuralExternalLoadsInputs(QDialog):
 
             if property == "external_loads":
                 values = data["values"]
-                constrained_dofs_mask = [False if value is None else True for value in values]
-                new = QTreeWidgetItem([str(args[0]), "Point", str(self.text_label(constrained_dofs_mask))])
+                constrained_loads_mask = [False if value is None else True for value in values]
+                new = QTreeWidgetItem([str(args[0]), "Point", str(self.text_label(constrained_loads_mask))])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
@@ -820,8 +907,8 @@ class StructuralExternalLoadsInputs(QDialog):
 
             if property == "external_loads":
                 values = data["values"]
-                constrained_dofs_mask = [False if value is None else True for value in values]
-                new = QTreeWidgetItem([str(args[0]), "Node", str(self.text_label(constrained_dofs_mask))])
+                constrained_loads_mask = [False if value is None else True for value in values]
+                new = QTreeWidgetItem([str(args[0]), "Node", str(self.text_label(constrained_loads_mask))])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
@@ -831,25 +918,18 @@ class StructuralExternalLoadsInputs(QDialog):
 
     def update_tabs_visibility(self):
 
-        for (property, _) in self.properties.surface_properties.keys():
-            if property == "external_loads":
-                self.tabWidget_main.setTabVisible(2, True)
-                return
+        properties_to_check = [
+                               self.properties.surface_properties,
+                               self.properties.line_properties,
+                               self.properties.point_properties,
+                               self.properties.nodal_properties,
+                               ]
 
-        for (property, _) in self.properties.line_properties.keys():
-            if property == "external_loads":
-                self.tabWidget_main.setTabVisible(2, True)
-                return
-
-        for (property, _) in self.properties.point_properties.keys():
-            if property == "external_loads":
-                self.tabWidget_main.setTabVisible(2, True)
-                return
-
-        for (property, _) in self.properties.nodal_properties.keys():
-            if property == "external_loads":
-                self.tabWidget_main.setTabVisible(2, True)
-                return
+        for current_property in properties_to_check:
+            for (property, _) in current_property.keys():
+                if property == "external_loads":
+                    self.tabWidget_main.setTabVisible(2, True)
+                    return
 
         self.tabWidget_main.setTabVisible(2, False)
         self.tabWidget_main.setCurrentIndex(0)
@@ -908,11 +988,13 @@ class StructuralExternalLoadsInputs(QDialog):
 
     def process_table_file_removal(self, table_names: list):
 
+        if len(table_names) == 0:
+            return
+
         for table_name in table_names:
             self.properties.remove_imported_tables("structural", table_name)
 
-        if table_names:
-            app().file.write_imported_table_data_in_file()
+        app().file.write_imported_table_data_in_file()
 
     def remove_conflicting_excitations(self, selected_ids: int | list, selection: str):
 
@@ -931,7 +1013,7 @@ class StructuralExternalLoadsInputs(QDialog):
         elif selection == "nodes":
             remove_function = self.properties._remove_nodal_property
 
-        properties = ["external_loads", "external_load"]
+        properties = ["external_load", "prescribed_dofs"]
 
         for selected_id in selected_ids:
             for property in properties:
@@ -964,7 +1046,11 @@ class StructuralExternalLoadsInputs(QDialog):
             elif selection == "Node":
                 self.properties._remove_nodal_property("external_loads", selected_id)
 
+            self.remove_table_files_from(selected_id, f"{selection.lower()}s")
             self.actions_to_finalize()
+
+            app().main_window.set_geometry_selection()
+            app().main_window.set_mesh_selection()
 
     def reset_callback(self):
 
@@ -974,12 +1060,12 @@ class StructuralExternalLoadsInputs(QDialog):
         message = "Would you like to remove the all prescribed DOFs from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
-        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+        obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
-        if read._cancel:
+        if obj._cancel:
             return
 
-        if read._continue:
+        if obj._continue:
 
             for (property, *args) in self.properties.surface_properties.keys():
                 if property == "external_loads":
@@ -1000,6 +1086,9 @@ class StructuralExternalLoadsInputs(QDialog):
             self.properties._reset_property("external_loads")
             self.actions_to_finalize()
 
+            app().main_window.set_geometry_selection()
+            app().main_window.set_mesh_selection()
+
     def actions_to_finalize(self):
         self.load_model_info()
         self.reset_input_fields()
@@ -1019,7 +1108,7 @@ class StructuralExternalLoadsInputs(QDialog):
 
         for key, data in self.properties.surface_properties.items():
             property, _ = key
-            if property in ["external_loads", "external_loads"]:
+            if property in ["external_load", "prescribed_dofs"]:
                 if "table_names" in data.keys():
                     return
 

@@ -475,7 +475,6 @@ class PrescribedDofsInputs(QDialog):
                     self.model.properties._set_property("prescribed_dofs", data, node=selected_id)
 
             self.actions_to_finalize()
-            # print(f"[Set Prescribed DOF] - defined at surface(s) {selected_ids}")
 
         else:
             title = "Additional inputs required"
@@ -499,7 +498,7 @@ class PrescribedDofsInputs(QDialog):
                 else:
                     path = last_path
 
-                caption = f"Choose a table to import the {dof_label} nodal load"
+                caption = f"Choose a table to import the {dof_label} data"
                 imported_table_path, check = QFileDialog.getOpenFileName(  
                                                                          None, 
                                                                          caption, 
@@ -775,7 +774,6 @@ class PrescribedDofsInputs(QDialog):
                 self.model.properties._set_property("prescribed_dofs", data, node=selected_id)
 
         self.actions_to_finalize()
-        # print(f"[Set Prescribed DOF] - defined at {selection}(s) {selected_ids}")
 
     def remove_duplicated_attributions(self, selected_ids: list, selection: str):
 
@@ -953,25 +951,18 @@ class PrescribedDofsInputs(QDialog):
 
     def update_tabs_visibility(self):
 
-        for (property, _) in self.properties.surface_properties.keys():
-            if property == "prescribed_dofs":
-                self.tabWidget_main.setTabVisible(2, True)
-                return
+        properties_to_check = [
+                               self.properties.surface_properties,
+                               self.properties.line_properties,
+                               self.properties.point_properties,
+                               self.properties.nodal_properties,
+                               ]
 
-        for (property, _) in self.properties.line_properties.keys():
-            if property == "prescribed_dofs":
-                self.tabWidget_main.setTabVisible(2, True)
-                return
-
-        for (property, _) in self.properties.point_properties.keys():
-            if property == "prescribed_dofs":
-                self.tabWidget_main.setTabVisible(2, True)
-                return
-
-        for (property, _) in self.properties.nodal_properties.keys():
-            if property == "prescribed_dofs":
-                self.tabWidget_main.setTabVisible(2, True)
-                return
+        for current_property in properties_to_check:
+            for (property, _) in current_property.keys():
+                if property == "prescribed_dofs":
+                    self.tabWidget_main.setTabVisible(2, True)
+                    return
 
         self.tabWidget_main.setTabVisible(2, False)
         self.tabWidget_main.setCurrentIndex(0)
@@ -1055,7 +1046,7 @@ class PrescribedDofsInputs(QDialog):
         elif selection == "nodes":
             remove_function = self.properties._remove_nodal_property
 
-        properties = ["prescribed_dofs", "external_load"]
+        properties = ["external_load", "prescribed_dofs"]
 
         for selected_id in selected_ids:
             for property in properties:
@@ -1105,12 +1096,12 @@ class PrescribedDofsInputs(QDialog):
         message = "Would you like to remove the all prescribed DOFs from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
-        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+        obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
-        if read._cancel:
+        if obj._cancel:
             return
 
-        if read._continue:
+        if obj._continue:
 
             for (property, *args) in self.properties.surface_properties.keys():
                 if property == "prescribed_dofs":
@@ -1153,7 +1144,7 @@ class PrescribedDofsInputs(QDialog):
 
         for key, data in self.properties.surface_properties.items():
             property, _ = key
-            if property in ["prescribed_dofs", "external_load"]:
+            if property in ["external_load", "prescribed_dofs"]:
                 if "table_names" in data.keys():
                     return
 
