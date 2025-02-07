@@ -27,13 +27,10 @@ class SetMaterialInput(QDialog):
 
         self.cache_selected_lines = kwargs.get("cache_selected_lines", list())
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
-        self.main_window.viewer_tabs.show_geometry()
+        app().main_window.set_input_widget(self)
+        app().main_window.viewer_tabs.show_geometry()
 
-        self.project = app().project
         self.model = app().project.model
-        self.properties = app().project.model.properties
 
         self._config_window()
         self._initialize()
@@ -55,7 +52,6 @@ class SetMaterialInput(QDialog):
 
     def _initialize(self):
         self.keep_window_open = True
-        self.complete = False
         self.material = None
         self.selected_column = None
 
@@ -89,7 +85,7 @@ class SetMaterialInput(QDialog):
         self.tableWidget_material_data = self.findChild(QTableWidget, 'tableWidget_material_data')
 
     def _add_material_widget(self):
-        self.material_widget = MaterialWidget()
+        self.material_widget = MaterialWidget(dialog=self)
         self.grid_layout.addWidget(self.material_widget)
         self.material_widget.pushButton_remove_column.clicked.connect(self.reset_selected_material_lineEdit)
 
@@ -106,7 +102,7 @@ class SetMaterialInput(QDialog):
         #
         self.tableWidget_material_data.currentCellChanged.connect(self.current_cell_changed)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
         #
         self.attribution_type_callback()
 
@@ -120,8 +116,8 @@ class SetMaterialInput(QDialog):
 
     def geometry_selection_callback(self):
 
-        volumes = self.main_window.selected_geometry_volumes
-        surfaces = self.main_window.selected_geometry_surfaces
+        volumes = app().main_window.selected_geometry_volumes
+        surfaces = app().main_window.selected_geometry_surfaces
 
         if volumes:
             selected_ids = volumes
@@ -174,11 +170,12 @@ class SetMaterialInput(QDialog):
         selected_material = self.material_widget.get_selected_material()
 
         if selected_material is None:
+            self.hide()
             self.title = "No materials selected"
             self.message = "Select a material in the list before confirming the material attribution."
             PrintMessageInput([window_title_1, self.title, self.message])
             return
-        
+
         attribution_type = self.comboBox_attribution_type.currentIndex()
 
         try:
@@ -237,20 +234,23 @@ class SetMaterialInput(QDialog):
                     app().project.set_material(selected_material, surface=surface_id)
 
             app().file.write_model_properties_in_file()
-            self.main_window.viewer_tabs.geometry_widget.update_info_text()
-            self.main_window.viewer_tabs.mesh_widget.update_info_text()
-            self.complete = True
+            app().main_window.viewer_tabs.geometry_widget.update_info_text()
+            app().main_window.viewer_tabs.mesh_widget.update_info_text()
+
             self.close()
 
         except Exception as error_log:
+            self.hide()
             title = "Error detected on material list data"
             message = str(error_log)
             PrintMessageInput([window_title_1, title, message])
             return
 
     def keyPressEvent(self, event):
+
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.attribute_callback()
+
         elif event.key() == Qt.Key_Escape:
             self.close()
 

@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QHeaderView, QPushButton, QTableWidget, QTableWidgetItem, QWidget
+from PyQt5.QtWidgets import QDialog, QHeaderView, QPushButton, QTableWidget, QTableWidgetItem, QWidget
 from PyQt5.QtGui import QCloseEvent, QColor
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
@@ -31,7 +31,7 @@ def getColorRGB(color):
 
 class MaterialWidget(QWidget):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__()
 
         ui_path = UI_DIR / "model/setup/material/material_widget.ui"
         uic.loadUi(ui_path, self)
@@ -41,6 +41,8 @@ class MaterialWidget(QWidget):
         self.project = app().project
         self.model = self.project.model
         self.properties = self.model.properties
+
+        self.dialog = kwargs.get("dialog", None)
 
         self._initialize()
         self._define_qt_variables()
@@ -98,7 +100,7 @@ class MaterialWidget(QWidget):
     def _config_widgets(self):
         self.tableWidget_material_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
         self.tableWidget_material_data.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
-    
+
     def load_data_from_materials_library(self):
 
         if not os.path.exists(TEMP_PROJECT_FILE):
@@ -497,10 +499,14 @@ class MaterialWidget(QWidget):
             self.model.properties._remove_surface_property("material", surface_id=surf_id)
 
     def keyPressEvent(self, event):
+
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            return
+            if isinstance(self.dialog, QDialog):
+                self.dialog.attribute_callback()
+
         elif event.key() == Qt.Key_Delete:
             self.remove_selected_column()
+
         elif event.key() == Qt.Key_Escape:
             self.close()
 
