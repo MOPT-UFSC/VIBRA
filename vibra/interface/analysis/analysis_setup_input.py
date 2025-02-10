@@ -313,7 +313,6 @@ class AnalysisSetupInput(QDialog):
     def check_run(self):
         if self.enter_setup_callback():
             return
-        app().main_window.analysis_toolbar.pushButton_run_analysis.click()
         self.solve_analysis = True
 
     def closeEvent(self, a0):

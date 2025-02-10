@@ -159,6 +159,20 @@ class AnalysisToolbar(QToolBar):
     
     def update_pushbutton_reset_solution(self):
         self.pushButton_reset_solution.setDisabled(False)
+
+    def update_analysis_combo_boxes(self):
+        analysis_type, analysis_domain = app().project.last_analysis.split()
+        
+        if analysis_type == "Harmonic":
+            self.combo_box_analysis_type.setCurrentIndex(0)
+        else:
+            self.combo_box_analysis_type.setCurrentIndex(1)
+
+        if analysis_domain == "Structural":
+            self.combo_box_analysis_domain.setCurrentIndex(0)
+        else:
+            self.combo_box_analysis_domain.setCurrentIndex(1)
+
     
     def run_analysis(self):
         self.main_window.menu_widget.run_analysis()
@@ -189,7 +203,6 @@ class AnalysisToolbar(QToolBar):
             elif physical_domain == "Acoustic":
                 self.modal_acoustic()
         
-
     def harmonic_structural(self):
         select = StructuralHarmonicAnalysisInput()
         method_id = select.index
@@ -207,7 +220,8 @@ class AnalysisToolbar(QToolBar):
             "analysis_method_label": analysis_method_label,
         }
         self.finalize(analysis_data, analysis_id)
-        self.analysis_finished.emit()
+        self.run_analysis()
+
     
     def harmonic_acoustic(self):
         method_id = 0
@@ -222,6 +236,8 @@ class AnalysisToolbar(QToolBar):
         }
         self.finalize(analysis_data, analysis_id)
         harmonic = AnalysisSetupInput()
+        if harmonic.solve_analysis:
+            self.run_analysis()
     
     def modal_structural(self):
         modal = StructuralModalAnalysisInput()
@@ -239,6 +255,8 @@ class AnalysisToolbar(QToolBar):
                 "sigma_factor": sigma_factor,
             }
             self.finalize(analysis_data, analysis_id)
+            self.run_analysis()
+
 
     def modal_acoustic(self):
         modal = AcousticModalAnalysisInput()
@@ -256,6 +274,8 @@ class AnalysisToolbar(QToolBar):
                 "sigma_factor": sigma_factor,
             }
             self.finalize(analysis_data, analysis_id)
+            self.run_analysis()
+
 
     def finalize(self, analysis_data: dict, analysis_id: int):
         if app().project.analysis_data is not None:

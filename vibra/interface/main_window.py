@@ -548,6 +548,7 @@ class MainWindow(QMainWindow):
             
             self.render_widgets_stack.setCurrentWidget(render_widget)
             self.menu_widget.update_items()
+            self.analysis_toolbar.update_analysis_combo_boxes()
 
     def action_new_project_callback(self):
         self.new_project_dialog()

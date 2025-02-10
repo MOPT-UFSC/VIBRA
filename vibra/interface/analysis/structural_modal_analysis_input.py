@@ -78,7 +78,6 @@ class StructuralModalAnalysisInput(QDialog):
             return
         self.complete = True
         app().main_window.analysis_toolbar.analysis_finished.emit()
-        app().main_window.analysis_toolbar.pushButton_run_analysis.click()
         self.close()
 
     def button_clicked(self):
