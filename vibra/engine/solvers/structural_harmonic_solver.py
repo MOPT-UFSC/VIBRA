@@ -29,7 +29,7 @@ class StructuralHarmonicSolver:
         self.frequencies = None
         self.dissipation_model = None
         self.modal_shape = None
-        self.solution = None
+        self.solution_full = None
         self.loads = None
         self.global_damping = (0, 0, 0, 0)
 
@@ -64,7 +64,9 @@ class StructuralHarmonicSolver:
 
         """
 
-        data = self.solution[:, column]
+        disp_dofs = self.assembler.displacement_dofs
+        data = self.solution_full[disp_dofs, column]
+
         amplitudes = np.abs(data)
         phases = np.angle(data)
 
@@ -155,9 +157,7 @@ class StructuralHarmonicSolver:
             ps.free_memory(everything=True)
             del A, F
 
-        self.solution = self._reinsert_prescribed_dofs(solution)
-
-        return self.solution
+        self._reinsert_prescribed_dofs(solution)
     
     def solve_mode_superposition_method(self, print_log=False):
         """ 
@@ -188,16 +188,15 @@ class StructuralHarmonicSolver:
             full_solution[self.prescribed_dofs_indexes, :] = self.array_prescribed_dofs_values[:, 0:cols]
 
         if len(self.assembler.active_2d_element_dofs):
-            disp_dofs = self.assembler.displacement_dofs
             unprescribed_shell_dofs = self.assembler.unprescribed_shell_dofs
             full_solution[unprescribed_shell_dofs, :] = solution
-            full_solution = full_solution[disp_dofs, :]
-            print("reinserted dofs -> ", len(disp_dofs))
+            self.solution_full = full_solution
+            # disp_dofs = self.assembler.displacement_dofs
+            # print("reinserted dofs -> ", len(disp_dofs))
 
         else:
             full_solution[self.unprescribed_dofs_indexes, :] = solution
-
-        return full_solution
+            self.solution_full = full_solution
     
     def get_prescribed_dofs_model_excitation(self, freq_dependent=False, index=0):
         """
