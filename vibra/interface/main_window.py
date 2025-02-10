@@ -233,6 +233,35 @@ class MainWindow(QMainWindow):
                 "toolbar.background": "#202124",
             }
         }
+
+    def configure_main_window(self):
+
+        app().splash.update_progress(10)
+        self.configure_window()
+
+        app().splash.update_progress(30)
+        self._load_render_widgets()
+
+        app().splash.update_progress(60)
+        self._define_qt_variables()
+        self.create_basic_layout()
+        self._configure_render_widgets_stack()
+
+        app().splash.update_progress(90)
+        self.load_user_preferences()
+        self.config_tool_tip_appearance()
+        self.create_temporary_vibra_folder()
+
+        app().splash.close()
+        self.showMaximized()
+
+        app().processEvents()
+
+        if len(sys.argv) > 1:
+            self.open_project(Path(sys.argv[1]))
+
+        elif not self.is_temporary_vibra_folder_empty():
+            self.recovery_dialog()
     
     # External functions that may be usefull
     def set_theme(self, theme: str):
@@ -282,9 +311,8 @@ class MainWindow(QMainWindow):
     def update_mesh_information(self, nodes, face_elements, solid_elements):
         self.status_bar.update_mesh_information(nodes, face_elements, solid_elements)
     
-    def action_section_plane_callback(self):
-        self.section_plane.show()
-        self.action_section_plane.setChecked(True)
+    def _configure_render_widgets_stack(self):
+        self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
 
     def set_mesh_selection(self, *, nodes=None, faces=None, solids=None, join=False, remove=False):
         if nodes is None:
@@ -320,6 +348,29 @@ class MainWindow(QMainWindow):
             self.selected_geometry_volumes.clear()
 
         self.selection_changed.emit()
+
+    def create_status_bar(self):
+        self.setStatusBar(self.status_bar)
+
+    def config_tool_tip_appearance(self):
+        tool_tip_style = "QToolTip { color: rgb(0, 0, 0); background-color: rgb(255, 255, 255) }"
+        self.setStyleSheet(tool_tip_style)
+
+    def _load_render_widgets(self):
+        self.section_plane = SectionPlaneWidget(self)
+        self.geometry_widget = GeometryRenderWidget()
+        self.mesh_widget = MeshRenderWidget()
+        self.acoustic_modal_analysis = AcousticModalAnalysisRenderWidget()
+        self.structural_modal_analysis = StructuralModalAnalysisRenderWidget()
+        self.acoustic_harmonic_analysis = AcousticHarmonicAnalysisRenderWidget()
+        self.welcome_widget = WelcomeWidget()
+        self.help_widget = HelpWidget()
+
+    def load_user_preferences(self):
+        self.set_theme(app().user_config.theme)
+
+    def get_user_config(self):
+        return app().user_config
 
     def set_geometry_selection(self, *, points=None, lines=None, surfaces=None, volumes=None, join=False, remove=False):
         s = time()
@@ -423,6 +474,10 @@ class MainWindow(QMainWindow):
 
     def disable_cut(self):
         self.viewer_tabs.stop_cutting_mode()
+
+    def action_section_plane_callback(self):
+        self.section_plane.show()
+        self.action_section_plane.setChecked(True)
     
     def action_theme_callback(self):
         color = QColor("#448cff")
@@ -592,65 +647,10 @@ class MainWindow(QMainWindow):
         self.set_mesh_selection()
         self.set_geometry_selection()
     
-    def _configure_render_widgets_stack(self):
-        self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
-
     def action_unhide_all_callback(self):
         self.hidden_surfaces.clear()
         self.hidden_volumes.clear()
         self.update_hidden_plots()
-
-    def create_status_bar(self):
-        self.setStatusBar(self.status_bar)
-
-    def config_tool_tip_appearance(self):
-        tool_tip_style = "QToolTip { color: rgb(0, 0, 0); background-color: rgb(255, 255, 255) }"
-        self.setStyleSheet(tool_tip_style)
-
-    def _load_render_widgets(self):
-        self.section_plane = SectionPlaneWidget(self)
-        self.geometry_widget = GeometryRenderWidget()
-        self.mesh_widget = MeshRenderWidget()
-        self.acoustic_modal_analysis = AcousticModalAnalysisRenderWidget()
-        self.structural_modal_analysis = StructuralModalAnalysisRenderWidget()
-        self.acoustic_harmonic_analysis = AcousticHarmonicAnalysisRenderWidget()
-        self.welcome_widget = WelcomeWidget()
-        self.help_widget = HelpWidget()
-
-    def configure_main_window(self):
-
-        app().splash.update_progress(10)
-        self.configure_window()
-
-        app().splash.update_progress(30)
-        self._load_render_widgets()
-
-        app().splash.update_progress(60)
-        self._define_qt_variables()
-        self.create_basic_layout()
-        self._configure_render_widgets_stack()
-
-        app().splash.update_progress(90)
-        self.load_user_preferences()
-        self.config_tool_tip_appearance()
-        self.create_temporary_vibra_folder()
-
-        app().splash.close()
-        self.showMaximized()
-
-        app().processEvents()
-
-        if len(sys.argv) > 1:
-            self.open_project(Path(sys.argv[1]))
-
-        elif not self.is_temporary_vibra_folder_empty():
-            self.recovery_dialog()
-
-    def load_user_preferences(self):
-        self.set_theme(app().user_config.theme)
-
-    def get_user_config(self):
-        return app().user_config
 
     def set_menu_items_visibility_state(self, state: bool):
         app().user_config.menu_items_visible = state
@@ -666,15 +666,6 @@ class MainWindow(QMainWindow):
             return
 
         self.open_project(path)
-
-    def open_project(self, path):
-        path = Path(path)
-        self.project = Project.load(path)
-        # self.user_config.add_recent_file(path)
-
-        self.viewer_tabs.close_mesh_tabs()
-        self.viewer_tabs.show_geometry()
-        self.viewer_tabs.show_mesh()
     
     def action_save_callback(self):
       self.save_project_dialog()

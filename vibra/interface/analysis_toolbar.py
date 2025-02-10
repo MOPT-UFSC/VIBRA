@@ -172,7 +172,6 @@ class AnalysisToolbar(QToolBar):
             self.combo_box_analysis_domain.setCurrentIndex(0)
         else:
             self.combo_box_analysis_domain.setCurrentIndex(1)
-
     
     def run_analysis(self):
         self.main_window.menu_widget.run_analysis()
