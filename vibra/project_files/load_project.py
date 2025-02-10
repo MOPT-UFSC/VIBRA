@@ -402,44 +402,32 @@ class LoadProject:
 
         if results_data:
             logging.info("Loading results..." + ProgressStatus(20, 100))
-        
-            analysis_setup = self.file.read_analysis_setup_from_file()
-            if analysis_setup is None:
-                return
-            
-            analysis_type = analysis_setup["analysis_type"]
+            for key, data in results_data.items():
 
-            key = None
-            if analysis_type == "Structural Modal Analysis":
-                key = "modal_structural"
-            elif analysis_type == "Acoustic Harmonic Analysis":
-                key = "harmonic_acoustic"
-            elif analysis_type == "Acoustic Modal Analysis":
-                key = "modal_acoustic"
-
-            data = results_data[key]
-
-            if key == "modal_acoustic":
-                        act_modal_analysis = True
-                        app().project.acoustic_modal_solver.natural_frequencies = data["natural_frequencies"]
-                        app().project.acoustic_modal_solver.modal_shape = data["modal_shape"]
+                if key == "modal_acoustic" and app().project.acoustic_modal_solver is not None:
+                    act_modal_analysis = True
+                    app().project.acoustic_modal_solver.natural_frequencies = data["natural_frequencies"]
+                    app().project.acoustic_modal_solver.modal_shape = data["modal_shape"]
                 
-            elif key == "modal_structural":
-                        str_modal_analysis = True
-                        app().project.structural_modal_solver.natural_frequencies = data["natural_frequencies"]
-                        app().project.structural_modal_solver.modal_shape = data["modal_shape"]
+                elif key == "modal_structural" and app().project.structural_modal_solver is not None:
+                    str_modal_analysis = True
+                    app().project.structural_modal_solver.natural_frequencies = data["natural_frequencies"]
+                    app().project.structural_modal_solver.modal_shape = data["modal_shape"]
 
-            elif key == "harmonic_acoustic":
-                        act_harmonic_analysis = True
-                        app().project.acoustic_harmonic_solver.frequencies = data["frequencies"]
-                        app().project.acoustic_harmonic_solver.solution = data["solution"]
-                        app().main_window.disable_advanced_acoustic_plots_buttons(False)
+                elif key == "harmonic_acoustic" and app().project.acoustic_harmonic_solver is not None:
+                    act_harmonic_analysis = True
+                    app().project.acoustic_harmonic_solver.frequencies = data["frequencies"]
+                    app().project.acoustic_harmonic_solver.solution = data["solution"]
+                    app().main_window.disable_advanced_acoustic_plots_buttons(False)
 
-            elif key == "harmonic_structural":
-                        str_harmonic_analysis = True
-                        app().project.structural_harmonic_solver.frequencies = data["frequencies"]
-                        app().project.structural_harmonic_solver.solution = data["solution"]
-          
+                elif key == "harmonic_structural" and app().project.structural_harmonic_solver is not None:
+                    str_harmonic_analysis = True
+                    app().project.structural_harmonic_solver.frequencies = data["frequencies"]
+                    app().project.structural_harmonic_solver.solution = data["solution"]
+
+                else:
+                    continue
+            
             logging.info("Updating analysis render..." + ProgressStatus(85, 100))
             if act_modal_analysis:
                 app().main_window.configure_acoustic_modal_analysis_render_widget()
