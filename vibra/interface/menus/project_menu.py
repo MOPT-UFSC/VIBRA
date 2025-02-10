@@ -139,10 +139,10 @@ class ProjectMenu(QMenu):
     #     self.main_window.viewer_tabs.show_example()
 
     #
-    def solve_example_analysis_callback(self):
-        try:
-            app().project.solve_modal_acoustic()
-        except NotImplementedError as e:
-            ErrorMessage(e)
-        else:
-            self.main_window.viewer_tabs.show_acoustic_modal_analysis()
+    # def solve_example_analysis_callback(self):
+    #     try:
+    #         app().project.solve_modal_acoustic()
+    #     except NotImplementedError as e:
+    #         ErrorMessage(e)
+    #     else:
+    #         self.main_window.viewer_tabs.show_acoustic_modal_analysis()

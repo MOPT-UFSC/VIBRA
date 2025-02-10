@@ -466,15 +466,6 @@ class MainWindow(QMainWindow):
     def update_geometry_information(self, geometry_info: dict):
         self.status_bar.update_geometry_information(geometry_info)
 
-    def show_hide_section_plane_callback(self, option):
-        if option:
-            self.viewer_tabs.start_cutting_mode()
-        else:
-            self.viewer_tabs.stop_cutting_mode()
-
-    def disable_cut(self):
-        self.viewer_tabs.stop_cutting_mode()
-
     def action_section_plane_callback(self):
         self.section_plane.show()
         self.action_section_plane.setChecked(True)
@@ -932,14 +923,6 @@ class MainWindow(QMainWindow):
     
     def action_exit_callback(self):
         self.close_app()
-
-    def solve_example_analysis_callback(self):
-        try:
-            self.project.solve_modal_acoustic()
-        except NotImplementedError as e:
-            ErrorMessage(e)
-        else:
-            self.viewer_tabs.show_acoustic_modal_analysis()
     
     def action_face_view_callback(self):
         widget = self.render_widgets_stack.currentWidget()
