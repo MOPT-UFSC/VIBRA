@@ -1,23 +1,25 @@
-import numpy as np
-from molde.render_widgets import CommonRenderWidget
-from molde.utils import TreeInfo
-from molde.utils.format_sequences import format_long_sequence
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from vtkmodules.vtkCommonCore import vtkIntArray
-from vtkmodules.vtkCommonDataModel import vtkPolyData
-from vtkmodules.vtkRenderingCore import vtkActor, vtkCellPicker
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtWidgets import QApplication
 
 from vibra import app
 from vibra.interface.tabs.geometry_info_bar import GeometryInfoBar
-from vibra.interface.viewer_3d.actors.section_plane_actor import (
-    SectionPlaneActor,
-)
+from vibra.interface.viewer_3d.actors.section_plane_actor import SectionPlaneActor
 from ..actors.faces_actor import FacesActor
 from ..actors.lines_actor import LinesActor
 from ..actors.points_actor import PointsActor
 from ..actors.selection_spheres import SelectionSpheres
 from ..actors.ghost_actor import GhostActor
+
+from molde.render_widgets import CommonRenderWidget
+from molde.utils import TreeInfo
+from molde.utils.format_sequences import format_long_sequence
+
+import numpy as np
+from numbers import Number
+
+from vtkmodules.vtkCommonCore import vtkIntArray
+from vtkmodules.vtkCommonDataModel import vtkPolyData
+from vtkmodules.vtkRenderingCore import vtkActor, vtkCellPicker
 
 
 SHOW_POINTS = 0
@@ -470,7 +472,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         text += self._material_info_text()
         text += self._fluid_info_text()
         text += self._porous_material_info_text()
-        text += self._boundary_conditions_info_text()
+        text += self._acoustic_boundary_conditions_info_text()
+        text += self._structural_boundary_conditions_info_text()
 
         self.set_info_text(text)
         self.update()
@@ -579,7 +582,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         surfaces = list(self.main_window.selected_geometry_surfaces)
 
         text = ""
-        if len(volumes) != 1 or len(surfaces) != 1:
+        if len(volumes) != 1 and len(surfaces) != 1:
             return text
 
         elif len(volumes) == 1:
@@ -627,88 +630,120 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         return text
 
-    def _boundary_conditions_info_text(self):
-        selected_faces = list(self.main_window.selected_geometry_surfaces)
+    def _acoustic_boundary_conditions_info_text(self):
+
         text = ""
+        selected_faces = list(self.main_window.selected_geometry_surfaces)
 
         if len(selected_faces) != 1:
             return text
 
-        acoustic_pressure = app().project.model.properties.get_acoustic_pressure(
-            selected_faces[0]
-        )
-        surface_velocity = app().project.model.properties.get_surface_velocity(
-            selected_faces[0]
-        )
-        specific_impedance = app().project.model.properties.get_specific_impedance(
-            selected_faces[0]
-        )
+        acoustic_pressure = app().project.model.properties._get_property("acoustic_pressure", surface=selected_faces[0])
+        surface_velocity = app().project.model.properties._get_property("surface_velocity", surface=selected_faces[0])
+        specific_impedance = app().project.model.properties._get_property("specific_impedance", surface=selected_faces[0])
         boundary_conditions_list = [acoustic_pressure, surface_velocity, specific_impedance]
 
         if all(condition is None for condition in boundary_conditions_list):
             return text
 
-        tree = TreeInfo("Boundary Conditions")
-
         if acoustic_pressure is not None:
-
-            if "real_values" in acoustic_pressure.keys():
-                real_values = np.array(acoustic_pressure["real_values"])
-                imag_values = np.array(acoustic_pressure["imag_values"])
-                complex_values = real_values + 1j * imag_values
-
-            elif "values" in acoustic_pressure.keys():
-                complex_values = acoustic_pressure["values"]
-
-            if "table_names" in acoustic_pressure.keys():
-                values = "table of values"
-            else:
-                values = f"{np.round(complex_values, 6)}"
-
-            tree.add_item("Acoustic pressure", values, "Pa")
+            values = acoustic_pressure["values"][0]
+            text += _acoustic_format("Acoustic pressure", values, "P", "Pa")
 
         if surface_velocity is not None:
-
-            if "real_values" in surface_velocity.keys():
-                real_values = np.array(surface_velocity["real_values"])
-                imag_values = np.array(surface_velocity["imag_values"])
-                complex_values = real_values + 1j * imag_values
-
-            elif "values" in surface_velocity.keys():
-                complex_values = surface_velocity["values"]
-
-            if "table_names" in surface_velocity.keys():
-                values = "table of values"
-            else:
-                values = f"{np.round(complex_values, 6)}"
-
-            tree.add_item("Surface velocity", values, "m/s")
+            values = surface_velocity["values"][0]
+            text += _acoustic_format("Acoustic pressure", values, "Vn", "m/s")
 
         if specific_impedance is not None:
+
             if "anechoic_termination" in specific_impedance.keys():
                 fluid = app().project.model.properties.get_fluid(surface=selected_faces[0])
                 density = fluid.fluid_density
                 speed_of_sound = fluid.speed_of_sound
-                complex_values = np.array([density * speed_of_sound], dtype=complex)
+                values = np.array([density * speed_of_sound], dtype=complex)
+                text += _acoustic_format("Acoustic pressure", values[0], "Zs", "kg/m².s", ("Impedance type", "anechoic (non-reflexive)"))
 
-            elif "real_values" in specific_impedance.keys():
-                real_values = np.array(specific_impedance["real_values"])
-                imag_values = np.array(specific_impedance["imag_values"])
-                complex_values = real_values + 1j * imag_values
-
-            elif "values" in specific_impedance.keys():
-                complex_values = specific_impedance["values"]
-
-            if "table_names" in specific_impedance.keys():
-                values = "table of values"
             else:
-                values = f"{np.round(complex_values, 6)}"
-
-            tree.add_item("Specific impedance", values, "kg/m²s")
-
-            if "anechoic_termination" in specific_impedance.keys():
-                tree.add_item("Impedance type", "anechoic (non-reflexive)")
-
-        text += str(tree)
+                values = surface_velocity["values"]
+                text += _acoustic_format("Acoustic pressure", values[0], "Zs", "kg/m².s")
 
         return text
+
+    def _structural_boundary_conditions_info_text(self):
+
+        text = ""
+        selected_faces = list(self.main_window.selected_geometry_surfaces)
+
+        if len(selected_faces) != 1:
+            return text
+
+        prescribed_dofs = app().project.model.properties._get_property("prescribed_dofs", surface=selected_faces[0])
+        external_loads = app().project.model.properties._get_property("external_loads", surface=selected_faces[0])
+        boundary_conditions_list = [prescribed_dofs, external_loads]
+
+        if all(condition is None for condition in boundary_conditions_list):
+            return text
+
+        if prescribed_dofs is not None:
+            values = prescribed_dofs["values"]
+            loaded_table = "table_names" in prescribed_dofs.keys()
+            text += _structural_format("Prescribed dofs",  values, ("u", "r"), ("m", "rad"), loaded_table)
+
+        if external_loads is not None:
+            values = external_loads["values"]
+            loaded_table = "table_names" in external_loads.keys()
+            text += _structural_format("External loads",  values, ("F", "M"), ("N", "N.m"), loaded_table)
+
+        return text
+
+def _all_none(sequence) -> bool:
+    return all(i is None for i in sequence)
+
+def _structural_format(property_name, values, labels, units, has_table):
+
+    if _all_none(values):
+        return ""
+
+    u_values = list()
+    u_labels = list()
+    for val, label in zip(values[:3], "xyz"):
+        if val is not None:
+            u_values.append(val)
+            u_labels.append(labels[0] + label)
+
+    r_values = list()
+    r_labels = list()
+    for val, label in zip(values[3:], "xyz"):
+        if val is None:
+            continue
+
+        if not isinstance(val, Number | str):
+            val = "table"
+
+        r_values.append(val)
+        r_labels.append(labels[1] + label)
+
+    tree = TreeInfo(property_name)
+    if has_table:
+        tree.add_item(u_labels, "Table of values")
+        tree.add_item(r_labels, "Table of values")
+    else:
+        if u_values:
+            tree.add_item(", ".join(u_labels), u_values, units[0])
+        if r_values:
+            tree.add_item(", ".join(r_labels), r_values, units[1])
+
+    return str(tree)
+
+def _acoustic_format(property_name, value, label, unit, additional_labels=[]):
+
+    tree = TreeInfo(property_name)
+    if isinstance(value, Number | str | float | complex):
+        tree.add_item(label, np.round(value, 4), unit)
+    else:
+        tree.add_item(label, "Table of values")
+
+    if len(additional_labels) == 2:
+        tree.add_item(additional_labels[0], additional_labels[1])
+
+    return str(tree)

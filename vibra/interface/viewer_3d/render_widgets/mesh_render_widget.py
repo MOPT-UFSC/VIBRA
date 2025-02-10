@@ -665,15 +665,11 @@ class MeshRenderWidget(CommonRenderWidget):
         if len(elements) != 1:
             return text
 
-        acoustic_pressure = app().project.model.properties.get_acoustic_pressure(
-            elements[0]
-        )
-        surface_velocity = app().project.model.properties.get_surface_velocity(
-            elements[0]
-        )
-        specific_impedance = app().project.model.properties.get_specific_impedance(
-            elements[0]
-        )
+        surface_id = app().project.model.mesh.surface_from_element[elements[0]]
+
+        acoustic_pressure = app().project.model.properties._get_property("acoustic_pressure", surface=surface_id)
+        surface_velocity = app().project.model.properties._get_property("surface_velocity", surface=surface_id)
+        specific_impedance = app().project.model.properties._get_property("specific_impedance", surface=surface_id)
         boundary_conditions_list = [acoustic_pressure, surface_velocity, specific_impedance]
 
         if all(condition is None for condition in boundary_conditions_list):
