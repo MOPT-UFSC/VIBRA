@@ -1,44 +1,42 @@
-from PyQt5.QtWidgets import QDialog, QFileDialog, QFrame, QGridLayout, QMainWindow, QMessageBox, QAction
-from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtCore import pyqtSignal
+import logging
+import os
+import sys
+from pathlib import Path
+from shutil import copy, rmtree
+from time import time
 
-from vibra import *
-# from vibra.config import UserConfig
+import qdarktheme
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import (
+    QDialog,
+    QFileDialog,
+    QFrame,
+    QGridLayout,
+    QMainWindow,
+    QMessageBox,
+    QWidget,
+)
+
+from vibra import TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, app
 from vibra.interface.analysis_filter_menu import AnalysisFilter
-from vibra.interface.section_plane_widget import SectionPlaneWidget
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
-from vibra.interface.exception_message import ErrorMessage
+from vibra.interface.formatters.icons import get_vibra_icon
+from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_bar import load_function
 from vibra.interface.menu_items import MenuItems
+from vibra.interface.menus.advanced_results_menu import AdvancedResultsMenu
 from vibra.interface.menus.help_menu import HelpMenu
 from vibra.interface.menus.mesher_menu import MesherMenu
 from vibra.interface.menus.project_menu import ProjectMenu
 from vibra.interface.menus.settings_menu import VisibilitySettingsMenu
 from vibra.interface.menus.view_mode_menu import ViewModeMenu
-from vibra.interface.menus.advanced_results_menu import AdvancedResultsMenu
-from vibra.interface.menus.views_menu import ViewsMenu
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
 from vibra.interface.renderer_toolbar import RendererToolbar
+from vibra.interface.section_plane_widget import SectionPlaneWidget
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_tabs import ViewerTabs
-from vibra.interface.formatters.icons import *
-from vibra.interface.general.print_message_input import PrintMessageInput
-from molde.render_widgets import CommonRenderWidget
-
 from vibra.utils.interface_utils import VisualizationFilter
 from vibra.utils.progress_status import ProgressStatus
-
-from vibra.project_files.load_project import LoadProject
-from vibra.project_files.project import Project
-from vibra.project_files.project_file import ProjectFile
-
-import qdarktheme
-
-import sys
-import logging
-from pathlib import Path
-from shutil import rmtree, copy
-from time import sleep, time
 
 
 class MainWindow(QMainWindow):
