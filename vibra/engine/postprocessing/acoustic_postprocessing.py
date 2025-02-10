@@ -2,12 +2,11 @@ import numpy as np
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
-    from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver 
+    from vibra.engine.solvers import AcousticHarmonicSolver, AcousticModalSolver
 
 
 def compute_acoustic_modal_field(
-    solver: AcousticModalSolver,
+    solver: "AcousticModalSolver",
     index: int,
     phase: float,
     response_abs: bool = False,
@@ -34,7 +33,7 @@ def compute_acoustic_modal_field(
     return color_scalars, min_value, max_value
 
 def compute_acoustic_harmonic_field(
-    solver: AcousticHarmonicSolver,
+    solver: "AcousticHarmonicSolver",
     index: int,
     phase: float,
     response_abs: bool = False,

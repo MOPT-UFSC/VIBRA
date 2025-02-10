@@ -1,8 +1,12 @@
 import numpy as np
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.solvers import StructuralModalSolver
+
 
 def compute_structural_modal_field(
-    modal_shape: np.ndarray,
+    solver: "StructuralModalSolver",
     index: int,
     phase: float,
     update_coloring: bool = False,
@@ -11,7 +15,7 @@ def compute_structural_modal_field(
     response_uy: bool = False,
     response_uz: bool = False,
 ):
-    current_modal_shape = modal_shape[:, index].reshape(-1, 3).copy()
+    current_modal_shape = solver.modal_shape[:, index].reshape(-1, 3).copy()
 
     if response_abs:
         values_1 = np.linalg.norm(current_modal_shape, axis=1).copy()

@@ -76,7 +76,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         if self.current_analysis == "structural_modal":
             data = compute_structural_modal_field(
-                app().project.structural_modal_solver.modal_shape,
+                app().project.structural_modal_solver,
                 self.current_frequency_index, 
                 self.current_phase,
             )
