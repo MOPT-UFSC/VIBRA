@@ -1,6 +1,7 @@
 import numpy as np
 
 from vibra.engine.elements.solid_elements import Element3D
+from vibra.engine.properties.material import Material
 # fmt: off
 
 def shapeT4C(ssx, ttx, rrx):
@@ -44,8 +45,8 @@ def get_detJAC_and_invJAC(JAC):
 class STRUCT_TETRAHEDRON_4S(Element3D):
     #
     NODES_PER_ELEMENT = 4
-    DOF_PER_NODE = 3
-    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
+    DOFS_PER_NODE = 3
+    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
 
     def __init__(self, model):
         #
@@ -94,9 +95,13 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
                               [-1, 1, 0, 0], 
                               [-1, 0, 1, 0]], dtype=float)
 
-    def get_constitutive_model(self, el_index, model_type="linear-isotropic"):
+    def get_constitutive_model(self, material: Material, model_type="linear-isotropic"):
         """This methdo returns the material constitutive model."""
-        self.material = self.model.properties.get_material(element=el_index)
+
+        self.material = material
+        # volume_id = self.model.mesh.volume_from_element[el_index]
+        # self.material = self.model.properties.get_material(volume=volume_id)
+
         vv = self.material.poisson_ratio
         E = self.material.young_modulus
         # print(self.material.density, self.material.young_modulus, self.material.poisson_ratio)
@@ -117,16 +122,15 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
 
             return tempc * const_law
 
-    def elementary_matrices(self, el_index):
+    def elementary_matrices(self, el_index: int, material: Material):
         """Stiffness and mass matrices.
         This is not a p-u mixed fomulation. Do not compare with SOLID285.
         """
         #
-        ie = self.connectivity[el_index, 1:]
-
-        const_mat = self.get_constitutive_model(ie, model_type="linear-isotropic")
+        const_mat = self.get_constitutive_model(material, model_type="linear-isotropic")
         rho = self.material.density
         #
+        ie = self.connectivity[el_index, 1:]
         JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
         detJAC, invJAC = get_detJAC_and_invJAC(JAC)
         dphi_t = invJAC @ self.dphi
@@ -164,7 +168,7 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         """This method processess the dofs indices (rows and columns) for assembly"""
 
         self.reorder_connect()
-        dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
+        dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT
         ind_dofs = (np.array([  dofs * self.connectivity[:, 1] - 1,
                                 dofs * self.connectivity[:, 1],
                                 dofs * self.connectivity[:, 1] + 1,

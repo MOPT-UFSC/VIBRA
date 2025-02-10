@@ -12,10 +12,10 @@ class EdgesActor(vtkActor):
         self.data = None
 
         self.mapper.ScalarVisibilityOff()
-        self.GetProperty().SetRepresentationToWireframe()
 
         self.SetMapper(self.mapper)
         self.extract_data(data)
+        self.configure_appearance()
 
     def extract_data(self, data):
         if data == self.edges_extractor.GetInput():
@@ -54,3 +54,7 @@ class EdgesActor(vtkActor):
         self.GetMapper().RemoveAllClippingPlanes()
         self.GetMapper().RemoveAllInputConnections(0)
         self.GetMapper().SetInputData(self.data)
+
+    def configure_appearance(self):
+        self.GetProperty().SetColor(0, 0, 0)
+        self.GetProperty().SetRepresentationToWireframe()

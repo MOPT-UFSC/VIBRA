@@ -6,11 +6,11 @@ def default_material_library():
     config = configparser.ConfigParser()
 
     config["Steel"] = {
-        "name" : "Steel",
+        "name" : "Carbon_Steel",
         "identifier" : 1,
         "color" : "[170,170,170]",  # Light Gray
-        "material_density" : 7860,
-        "young_modulus" : 210,
+        "material_density" : 7850,
+        "young_modulus" : 200,
         "poisson" : 0.3,
         "thermal_expansion_coefficient" : 1.2e-5,
     }

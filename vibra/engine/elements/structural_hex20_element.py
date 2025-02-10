@@ -34,8 +34,8 @@ def get_detJAC_and_invJAC(JAC):
 class STRUCT_HEXAHEDRON_20(Element3D):
     #
     NODES_PER_ELEMENT = 20
-    DOF_PER_NODE = 3
-    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
+    DOFS_PER_NODE = 3
+    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
 
     def __init__(self, model):
         self.model = model
@@ -121,7 +121,7 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         phit[:, 19] = div4 * (1 - ssx) * (1 + ttx) * (1 - rrx**2)
         #
         # derivatives
-        dphit = np.zeros((self.nint, self.DOF_PER_NODE, self.NODES_PER_ELEMENT), dtype=float)
+        dphit = np.zeros((self.nint, self.DOFS_PER_NODE, self.NODES_PER_ELEMENT), dtype=float)
         #
         dphit[:, 0, 0] = div8 * (1 - ttx) * (1 - rrx) * (-(-ssx - ttx - rrx - 2) + (1 - ssx) * (-1))
         dphit[:, 0, 1] = div8 * (1 - ttx) * (1 - rrx) * (+(ssx - ttx - rrx - 2) + (1 + ssx) * (1))
@@ -265,7 +265,7 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         """This method processess the dofs indices (rows and columns) for assembly"""
 
         self.reorder_connect()
-        dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
+        dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT
         ind_dofs = (
             np.array(
                 [

@@ -22,11 +22,12 @@ import os
 import gmsh
 import sys
 
+from itertools import combinations
+from collections import defaultdict
 from pathlib import Path
 from time import time
 
 import numpy as np
-from collections import defaultdict
 
 
 class Mesh:
@@ -59,12 +60,15 @@ class Mesh:
         self.elements_from_line = dict()
         self.elements_from_surface = dict()
         self.elements_from_volume = dict()
+        self.face_element_thickness = dict()
 
         self.line_from_element = dict()
         self.surface_from_element = dict()
         self.volume_from_element = dict()
 
         self.surfaces_from_volumes = dict()
+        self.lines_from_surface = dict()
+        self.points_from_line = dict()
         self.connectivity_from_surfaces = dict()
         self.nodes_from_face_element = dict()
         self.nodes_from_solid_element = dict()
@@ -78,6 +82,8 @@ class Mesh:
 
         self.nodal_area = defaultdict(list)
         self.volume_from_surface = defaultdict(list)
+        self.surface_from_line = defaultdict(list)
+        self.line_from_point = defaultdict(list)
         self.face_elements_connected_to_nodes = defaultdict(list)
 
         self.nodal_normals_data = dict()
@@ -177,6 +183,7 @@ class Mesh:
                              mesh_refinement_parameters,
                              )
 
+        # gmsh.model.occ.removeAllDuplicates()
         gmsh.model.occ.synchronize()
         # self.dimension = min(dimension, gmsh.model.getDimension())
         self.element_type = element_type
@@ -214,9 +221,11 @@ class Mesh:
     def _merge_nodes_from_adjacent_volumes(self):
         """ This method merges all nodes from adjacent volumes.
         """
+        # lines_list = gmsh.model.getEntities(1)
         volumes_list = gmsh.model.getEntities(3)
+        # gmsh.model.occ.fragment(lines_list, lines_list)
         gmsh.model.occ.fragment(volumes_list, volumes_list)
-        gmsh.model.occ.synchronize() 
+        gmsh.model.occ.synchronize()
 
     def import_nodes_coordinates(self, filename):
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
@@ -287,15 +296,15 @@ class Mesh:
     def export_nodal_coordinates(self, filename):
         fmt = ["%i", "%.16f", "%.16f", "%.16f"]
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
-        np.savetxt(filename, self.nodal_coordinates, delimiter=";", header=header, fmt=fmt)
+        np.savetxt(filename, self.nodal_coordinates, delimiter=",", header=header, fmt=fmt)
 
     def export_face_elements_connectivity(self, filename):
         header = "Index || Element ID || Face ID || Element type ID || Connected Node IDs"
-        np.savetxt(filename, self.faces_connectivity, delimiter=";", header=header, fmt="%i")
+        np.savetxt(filename, self.faces_connectivity, delimiter=",", header=header, fmt="%i")
 
     def export_solid_elements_connectivity(self, filename):
         header = "Index || Solid ID || Element type ID || Element ID || Connected Node IDs"
-        np.savetxt(filename, self.solids_connectivity, delimiter=";", header=header, fmt="%i")
+        np.savetxt(filename, self.solids_connectivity, delimiter=",", header=header, fmt="%i")
 
     def export_vtu_file(self, filename):
         """ This methods exports vtu file. """
@@ -421,15 +430,35 @@ class Mesh:
 
         self.surfaces_from_volumes.clear()
         self.volume_from_surface.clear()
+
+        self.lines_from_surface.clear()
+        self.surface_from_line.clear()
+
+        self.points_from_line.clear()
+        self.line_from_point.clear()
+
         self.solid_elements_center.clear()
 
         for dim, tag in gmsh.model.getEntities():
 
-            if dim == 3:
+            if dim in [1, 2, 3]:
+
                 _, downwards = gmsh.model.getAdjacencies(dim, tag)
-                self.surfaces_from_volumes[tag] = list(downwards)
-                for surf_id in list(downwards):
-                    self.volume_from_surface[surf_id].append(tag)
+
+                if dim == 3:
+                    self.surfaces_from_volumes[tag] = list(downwards)
+                    for surf_id in list(downwards):
+                        self.volume_from_surface[surf_id].append(tag)
+
+                elif dim == 2:
+                    self.lines_from_surface[tag] = list(downwards)
+                    for line_id in list(downwards):
+                        self.surface_from_line[line_id].append(tag)
+
+                elif dim == 1:
+                    self.points_from_line[tag] = list(downwards)
+                    for point_id in list(downwards):
+                        self.line_from_point[point_id].append(tag)
 
             elements_data = dict()
             element_types, element_indexes, element_nodes = gmsh.model.mesh.getElements(dim, tag)
@@ -449,7 +478,7 @@ class Mesh:
                                               }
 
             if dim == 0:  # Points
-                self.nodes_from_points[tag] = int(element_nodes[0]) - 1
+                self.nodes_from_points[tag] = np.array([int(element_nodes[0]) - 1], dtype=int)
 
             elif dim == 1:  # Lines
                 connectivity_dim1[dim, tag] = elements_data
@@ -477,17 +506,24 @@ class Mesh:
         # np.savetxt("faces_connectivity.dat", self.faces_connectivity, delimiter=",", fmt="%i")
         # np.savetxt("solids_connectivity.dat", self.solids_connectivity, delimiter=",", fmt="%i")
 
+        # from pprint import pprint
+        # pprint(self.lines_from_surface)
+        # pprint(self.points_from_line)
+
         # # internal check for solid connectivity
         # aux_zeros = np.zeros(len(self.solids_connectivity[0,4:]))
         # for i, values in enumerate(self.solids_connectivity[:,4:]):
         #     if (aux_zeros == values).all():
         #         print(f"The solid element #{i} doesn't have valid connectivity")
+        
+        self.create_element_mappings()
 
+    def create_element_mappings(self):
         self._maps_lines_by_elements()
         self._maps_surfaces_by_elements()
         self._maps_volumes_by_elements()
+        self._maps_face_elements_to_solid_elements()
         self.get_principal_diagonal_structure_parallelepiped()
-
 
     def _maps_lines_by_elements(self):
         self.line_from_element.clear()
@@ -508,6 +544,7 @@ class Mesh:
     def _maps_surfaces_by_elements(self):
         self.surface_from_element.clear()
         self.elements_from_surface.clear()
+        self.face_element_thickness.clear()
         for tag, gmsh_indexes in self.gmsh_elements_from_surfaces.items():
 
             n = len(gmsh_indexes)
@@ -570,7 +607,6 @@ class Mesh:
         # with open("areas_data.json", "r") as file:
         #     areas_data = json.load(file)
 
-
     def _process_solid_elements_connected_to_nodes(self):
         # t0 = time()
 
@@ -581,6 +617,72 @@ class Mesh:
         # dt = time() - t0
         # print(f"Elapsed '_process_solid_elements_connected_to_nodes': {dt} s")
 
+
+    # def _maps_face_elements_to_solid_elements(self):
+    #     self.face_to_solid_element = dict()
+    #     self.solid_to_face_elements = defaultdict(list)
+
+    #     if len(self.solids_connectivity) == 0:
+    #         return
+
+    #     nodes_per_face_element = len(self.faces_connectivity[0, 4:])
+    #     node_ids = np.array([*set(self.faces_connectivity[:, 4:].flatten())], dtype=int)
+
+    #     mask_0 = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= nodes_per_face_element
+    #     filtered_data = self.solids_connectivity[mask_0, :]
+
+    #     for elf_id, _, _, _, *face_nodes in self.faces_connectivity:
+    #         mask_1 = np.sum(np.isin(filtered_data[:, 4:], face_nodes), axis=1) == nodes_per_face_element
+    #         els_id = filtered_data[mask_1, 0][0]
+    #         self.face_to_solid_element[elf_id] = els_id
+    #         self.solid_to_face_elements[els_id].append(elf_id)
+
+    def _maps_face_elements_to_solid_elements(self):
+        self.face_to_solid_element = dict()
+        self.solid_to_face_elements = defaultdict(list)
+
+        if len(self.solids_connectivity) == 0:
+            return
+
+        nodes_per_face_element = len(self.faces_connectivity[0, 4:])
+        all_face_nodes = np.unique(self.faces_connectivity[:, 4:])
+
+        mask_solid_nodes_touching_face = np.isin(self.solids_connectivity[:, 4:], all_face_nodes)
+        face_nodes_per_solid = np.sum(mask_solid_nodes_touching_face, axis=1)
+
+        # Be carefull with this number
+        # it makes the cache grow factorially
+        cache_range = 2
+        cache = dict()
+
+        mask_bruteforce = face_nodes_per_solid >= (nodes_per_face_element + cache_range)
+        mask_cache = (face_nodes_per_solid >= nodes_per_face_element) & ~mask_bruteforce
+
+        submasks = mask_solid_nodes_touching_face[mask_cache]
+        masked_connectivity = self.solids_connectivity[mask_cache]
+
+        # Populate the cache with all valid combinations of nodes_per_face_element
+        for submask, row in zip(submasks, masked_connectivity):
+            filtered_nodes = row[4:][submask]
+            for nodes in combinations(filtered_nodes, nodes_per_face_element):
+                key = tuple(sorted(nodes))
+                solid_id = row[0]
+                cache.setdefault(key, solid_id)
+
+        # Populates the dictionaries using the cache or bruteforce
+        for row in self.faces_connectivity:
+            key = tuple(sorted(row[4:]))
+            face_id = row[0]
+            face_nodes = row[4:]
+
+            if key in cache:
+                solid_id = cache[key]
+            else:
+                mask_1 = np.sum(np.isin(masked_connectivity[:, 4:], face_nodes), axis=1) == nodes_per_face_element
+                solid_id = masked_connectivity[mask_1, 0][0]
+
+            self.face_to_solid_element[face_id] = solid_id
+            self.solid_to_face_elements[solid_id].append(face_id)
 
     def get_face_elements_connected_to_nodes(self, node_ids, surface_id=None):
 
@@ -658,6 +760,11 @@ class Mesh:
             area = np.linalg.norm(np.cross(AB, BC)) / 2
 
         return area
+
+
+    def set_face_element_thickness(self, surface_id: int, data: dict):
+        for face_element in self.elements_from_surface[surface_id]:
+            self.face_element_thickness[face_element] = data
 
 
     def get_mesh_info(self):
@@ -999,6 +1106,10 @@ class Mesh:
             elif selection == "solid_elements":
                 all_ids = list(self.solids_connectivity[:, 0])
 
+            elif selection == "points":
+                if selection in self.geometry_information.keys():
+                    all_ids = self.geometry_information["points"]
+
             elif selection == "lines":
                 if "curves" in self.geometry_information.keys():
                     all_ids = self.geometry_information["curves"]
@@ -1012,7 +1123,7 @@ class Mesh:
                     all_ids = self.geometry_information["volumes"]
 
             else:
-                return
+                return None
 
             _size = len(all_ids)
 
@@ -1042,12 +1153,12 @@ class Mesh:
             window_title = "Error"
             title = "Invalid entry to the Selection ID"
             PrintMessageInput([window_title, title, message])
-            return True, list()
+            return None
 
         if single_id:
-            return False, list_ids[0]
+            return list_ids[0]
         else:
-            return False, list_ids
+            return list_ids
 
 
     def check_input_line_id(self, selected_ids, single_id=False):

@@ -58,7 +58,7 @@ class AcousticModalSolver:
         modal_shape = modal_shape[:, index_order]
 
         self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
-        self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_values()
+        self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_dofs_values()
 
         self.natural_frequencies = natural_frequencies
         self.modal_shape = modal_shape

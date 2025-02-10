@@ -1,38 +1,36 @@
 import numpy as np
-from vtkmodules.vtkCommonCore import vtkLookupTable
+from vtkmodules.vtkCommonCore import vtkUnsignedCharArray
 
 from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
+from ..coloring.color_table import ColorTable
 
 
 class AnalysisActor(SolidsActor):
-    def __init__(self, mesh):
-        super().__init__(mesh)
 
-        self.lookup_table = vtkLookupTable()
-        self.lookup_table.SetHueRange(2 / 3, 0)
-        self.clipped_data = self.data
+    def apply_deformation(self, displacements: np.ndarray, magnification_factor: float, max_abs: float):
 
-    def apply_deformation(self, displacements, phase, magnification_factor):
-        max_abs = np.max(np.linalg.norm(displacements, axis=0))
-        u_def = displacements * np.cos(phase * np.pi / 180)
-        deformed_coordinates = (
-            self.mesh.nodal_coordinates[:, 1:] + (magnification_factor / max_abs) * u_def
-        )
+        if max_abs == 0:
+            max_abs = 1
+
+        deltas = (magnification_factor / max_abs) * displacements
+        deformed_coordinates = deltas + self.mesh.nodal_coordinates[:, 1:]
+
         self.update_coordinates(deformed_coordinates)
 
-    def plot_colorbar(self, values, min_value, max_value):
+    def plot_color_bar(self, values, min_value, max_value):
+        color_table = ColorTable(values, min_value, max_value)
+        self.set_color_table(color_table)
+
+    def set_color_table(self, color_table: ColorTable):
         if self.data is None:
             return
 
-        self.lookup_table.SetTableRange(min_value, max_value)
-        self.lookup_table.Build()
+        self.color_table = color_table
+        point_colors: vtkUnsignedCharArray = self.data.GetPointData().GetScalars()
+        point_colors.Fill(0)
 
-        point_colors = self.data.GetPointData().GetScalars()
-        for i, val in enumerate(values):
-            color = [0, 0, 0]
-            # yes, vtk uses it as a f****** python pointer instead of returning a tuple...
-            self.lookup_table.GetColor(val, color)
-            color = [int(i * 255) for i in color]
+        for i, val in enumerate(self.color_table.values_vector):
+            color = self.color_table.get_color(val)
             point_colors.SetTuple(i, color)
 
         self.data.Modified()

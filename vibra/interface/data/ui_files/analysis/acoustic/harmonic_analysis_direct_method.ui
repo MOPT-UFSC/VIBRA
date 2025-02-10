@@ -490,7 +490,7 @@
           <number>2</number>
          </property>
          <item row="0" column="0">
-          <widget class="QPushButton" name="pushButton_confirm_close">
+          <widget class="QPushButton" name="pushButton_enter_setup">
            <property name="minimumSize">
             <size>
              <width>120</width>
@@ -521,7 +521,7 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QPushButton" name="pushButton_confirm_run_analysis">
+          <widget class="QPushButton" name="pushButton_run_analysis">
            <property name="minimumSize">
             <size>
              <width>120</width>
@@ -644,8 +644,8 @@
   <tabstop>lineEdit_fmin</tabstop>
   <tabstop>lineEdit_fmax</tabstop>
   <tabstop>lineEdit_fstep</tabstop>
-  <tabstop>pushButton_confirm_run_analysis</tabstop>
-  <tabstop>pushButton_confirm_close</tabstop>
+  <tabstop>pushButton_run_analysis</tabstop>
+  <tabstop>pushButton_enter_setup</tabstop>
  </tabstops>
  <resources/>
  <connections/>

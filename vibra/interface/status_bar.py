@@ -1,6 +1,5 @@
 from PyQt5.QtWidgets import QLabel, QStatusBar
 
-from vibra.utils.interface_functions import get_main_window
 from vibra import app
 
 

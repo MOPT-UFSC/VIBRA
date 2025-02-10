@@ -61,9 +61,7 @@ class SolidsActor(vtkActor):
 
         elif self.mesh.element_type == HEXAHEDRON_20:
             cell_type = VTK_QUADRATIC_HEXAHEDRON
-            # fmt: off
             nodes_order = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 17, 13, 20, 22, 23, 21, 14, 16, 18, 19)
-            # fmt: on
             nodes_connectivity = self.mesh.solids_connectivity[:, nodes_order]
 
         else:
@@ -90,11 +88,11 @@ class SolidsActor(vtkActor):
         for i, volume, _, _, *nodes in nodes_connectivity:
             if volume in hidden_volumes:
                 continue
-            data.InsertNextCell(cell_type, len(nodes), nodes)
-            visible_index = cell_indexes.InsertNextValue(
-                i
-            )  # This is usefull if part of the cells are hidden
+
+            # This is usefull if part of the cells are hidden
+            visible_index = cell_indexes.InsertNextValue(i)
             self.visible_indexes[i] = visible_index
+            data.InsertNextCell(cell_type, len(nodes), nodes)
 
         data.SetPoints(points)
         data.GetPointData().SetScalars(point_colors)
@@ -121,21 +119,19 @@ class SolidsActor(vtkActor):
         if self.data is None:
             return
 
+        color = (255, 255, 255)
+        self.set_color(color)
+
+    def set_color(self, color):
         point_colors = self.data.GetPointData().GetScalars()
         cell_colors = self.data.GetCellData().GetScalars()
 
-        r, g, b = self.GetProperty().GetColor()
-        r = int(r * 255)
-        g = int(g * 255)
-        b = int(b * 255)
+        point_colors.Fill(255)
+        cell_colors.Fill(255)
 
-        point_colors.FillComponent(0, r)
-        point_colors.FillComponent(1, g)
-        point_colors.FillComponent(2, b)
-
-        cell_colors.FillComponent(0, r)
-        cell_colors.FillComponent(1, g)
-        cell_colors.FillComponent(2, b)
+        for component, value in enumerate(color):
+            point_colors.FillComponent(component, value)
+            cell_colors.FillComponent(component, value)
 
         self.GetMapper().ScalarVisibilityOff()
 

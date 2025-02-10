@@ -9,6 +9,7 @@ from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
+from vibra.engine.solvers.structural_harmonic_solver import StructuralHarmonicSolver
 from vibra.utils.progress_status import ProgressStatus
 
 import numpy as np
@@ -123,10 +124,11 @@ class Project:
 
         data = self.analysis_data
         if "analysis_id" in data.keys():
+
             # structural harmonic analysis - direct method
             if data["analysis_id"] == 0:
-                print("Structural harmonic analysis (direct method) not implemented")
-                raise NotImplementedError("Not implemented solver")
+                self.set_structural_element_to_model()
+                self.structural_harmonic_solver = StructuralHarmonicSolver(self.structural_assembler, analysis_data=data)
 
             # structural harmonic analysis - mode superposition method
             elif data["analysis_id"] == 1:
@@ -197,6 +199,18 @@ class Project:
         print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
         app().file.write_results_data_in_file()
         app().main_window.advanced_results_menu.disable_advanced_acoustic_plots_buttons(False)
+
+    def solve_structural_harmonic_analysis(self):
+        self.structural_assembler.process_assemble()
+        t0 = time()
+        if self.analysis_data["analysis_id"] == 0:
+            self.structural_harmonic_solver.solve_direct_method()
+        else:
+            self.structural_harmonic_solver.solve_mode_superposition_method()
+            return
+        dt = time() - t0
+        print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
+        app().file.write_results_data_in_file()
 
     def long_function(self):
         for i in range(20):

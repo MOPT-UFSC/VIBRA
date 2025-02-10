@@ -11,16 +11,12 @@ from vibra import app
 from vibra.interface.analysis_bars.structural_analysis_bar import (
     StructuralModalAnalysisBar,
 )
-from vibra.interface.viewer_3d.actors.analysis_actor import AnalysisActor
-from vibra.interface.viewer_3d.actors.cutting_plane_actor import (
-    CuttingPlaneActor,
-)
-from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
-from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
-# from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
-#     CommonRenderWidget,
-# )
-from vibra.utils.interface_functions import get_main_window
+from ..actors.ghost_actor import GhostActor
+from ..actors.analysis_actor import AnalysisActor
+from ..actors.hollow_analysis_actor import HollowAnalysisActor
+from ..actors.section_plane_actor import SectionPlaneActor
+from ..actors.edges_actor import EdgesActor
+from ..actors.faces_actor import FacesActor
 from vibra.utils.math_functions import lerp
 
 
@@ -41,6 +37,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.control_bar.create_video_button.clicked.connect(self.save_video)
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
+        self.control_bar.frequency_selector_label.setText("Natural frequency:")
 
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
@@ -51,13 +48,13 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.setContentsMargins(0, 0, 0, 0)
 
         self.show_plane_actor = True
-        self.cutting_plane_active = False
-        self.cutting_plane_args = tuple()
+        self.section_plane_active = False
+        self.section_plane_args = tuple()
 
-        self.analysis_actor = None
-        self.edges_actor = None
-        self.plane_actor = None
-        self.hidden_part_actor = None
+        self.analysis_actor: AnalysisActor | HollowAnalysisActor = None
+        self.edges_actor: EdgesActor = None
+        self.plane_actor: SectionPlaneActor = None
+        self.ghost_actor: GhostActor = None
         self.bounds = (0, 0, 0, 0, 0, 0)
 
         self.create_axes()
@@ -115,9 +112,9 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         if self.plane_actor is not None:
             self.show_plane_actor = self.plane_actor.GetVisibility()
 
-        self.remove_actors()
+        self.remove_all_actors()
 
-        self.analysis_actor = AnalysisActor(mesh)
+        self.analysis_actor = HollowAnalysisActor(mesh)
 
         self.edges_actor = EdgesActor(self.analysis_actor.data)
         self.edges_actor.GetProperty().SetColor(0, 0, 0)
@@ -125,14 +122,11 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         # Add a very subtle transparent actor to represent the whole
         # structure even if part of it is hidden
         has_hidden_part = bool(self.main_window.hidden_surfaces)
-        self.hidden_part_actor = FacesActor(mesh, allow_hidding=False)
-        self.hidden_part_actor.SetVisibility(has_hidden_part)
-        self.hidden_part_actor.GetProperty().SetOpacity(0.05)
-        self.hidden_part_actor.GetProperty().LightingOff()
-        self.hidden_part_actor.PickableOff()
-        self.renderer.AddActor(self.hidden_part_actor)
+        self.ghost_actor = GhostActor(mesh)
+        self.ghost_actor.SetVisibility(has_hidden_part)
+        self.renderer.AddActor(self.ghost_actor)
 
-        self.plane_actor = CuttingPlaneActor(self.analysis_actor.GetBounds())
+        self.plane_actor = SectionPlaneActor(self.analysis_actor.GetBounds())
         self.plane_actor.VisibilityOff()
 
         self.update_deformations()
@@ -142,15 +136,6 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
 
         mesh_visibility = self.control_bar.show_mesh_button.isChecked()
         self.set_mesh_visibility(mesh_visibility)
-
-        # if self.cutting_plane_active and self.cutting_plane_args:
-        #     self.start_cutting_mode()
-        #     self.apply_cutting_plane(*self.cutting_plane_args)
-        #     if not self.show_plane_actor:
-        #         self.plane_actor.VisibilityOff()
-        #         self.update()
-        # else:
-        #     self.update()
 
         if reset_camera:
             self.renderer.ResetCamera()
@@ -180,16 +165,14 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
             return
 
         phase = self.control_bar.phase_slider.value()
-        magnification_factor = self.control_bar.magnification_factor_slider.value()
-        displacements, color_scalars, min_value, max_value = self._calculate_displacements(
-            index, phase
-        )
+        magnification_factor = self.control_bar.magnification_factor_slider.value() / 16
+        displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
 
-        self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
+        self.analysis_actor.apply_deformation(displacements, magnification_factor, max_value)
         self.edges_actor.extract_data(self.analysis_actor.data)
 
-        self.analysis_actor.plot_colorbar(color_scalars, min_value, max_value)
-        self.colorbar_actor.SetLookupTable(self.analysis_actor.lookup_table)
+        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
     def set_mesh_visibility(self, condition):
@@ -203,6 +186,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
 
     #
     def show_points(self):
+        return
         if not self._actors_exists():
             return
 
@@ -213,6 +197,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def show_lines(self):
+        return
         if not self._actors_exists():
             return
 
@@ -223,6 +208,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def show_faces(self):
+        return
         if not self._actors_exists():
             return
 
@@ -247,7 +233,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         inverted = section_plane.get_inverted()
 
         if section_plane.editing:
-            self.plane_actor.configure_cutting_plane(position, rotation)
+            self.plane_actor.configure_section_plane(position, rotation)
             self.plane_actor.VisibilityOn()
             self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
             self.plane_actor.GetProperty().SetOpacity(0.8)
@@ -257,15 +243,25 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
 
     def _disable_section_plane(self):
         has_hidden_part = bool(self.main_window.hidden_surfaces)
-        self.hidden_part_actor.SetVisibility(has_hidden_part)
+        self.ghost_actor.SetVisibility(has_hidden_part)
         self.plane_actor.VisibilityOff()
         self.analysis_actor.disable_cut()
         self.edges_actor.disable_cut()
         self.update()
 
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
-        self.plane_actor.configure_cutting_plane(position, rotation)
-        xyz = self.plane_actor.calculate_x_y_z_position(position)
+        if isinstance(self.analysis_actor, HollowAnalysisActor):
+            mesh = app().project.model.mesh
+            if mesh is None:
+                return
+
+            if mesh.solids_connectivity.size > 0:
+                self.remove_actors(self.analysis_actor)
+                self.analysis_actor = AnalysisActor(mesh)
+                self.add_actors(self.analysis_actor)
+
+        self.plane_actor.configure_section_plane(position, rotation)
+        xyz = self.plane_actor.calculate_xyz_position(position)
         normal = self.plane_actor.calculate_normal_vector(rotation)
         if inverted:
             normal = -normal
@@ -273,44 +269,44 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.analysis_actor.apply_cut(xyz, normal)
         self.edges_actor.apply_cut(xyz, normal)
 
-        self.hidden_part_actor.VisibilityOn()
+        self.ghost_actor.VisibilityOn()
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
         self.update()
 
     #
-    # def start_cutting_mode(self):
+    # def start_section_mode(self):
     #     if not self._actors_exists():
     #         return
-    #     self.cutting_plane_active = True
+    #     self.section_plane_active = True
     #     self.plane_actor.VisibilityOn()
-    #     self.hidden_part_actor.VisibilityOn()
+    #     self.ghost_actor.VisibilityOn()
 
-    # def stop_cutting_mode(self):
+    # def stop_section_mode(self):
     #     if not self._actors_exists():
     #         return
-    #     self.cutting_plane_active = False
+    #     self.section_plane_active = False
     #     self.plane_actor.VisibilityOff()
     #     has_hidden_part = bool(self.main_window.hidden_surfaces)
-    #     self.hidden_part_actor.SetVisibility(has_hidden_part)
+    #     self.ghost_actor.SetVisibility(has_hidden_part)
     #     self.analysis_actor.disable_cut()
     #     self.edges_actor.disable_cut()
     #     self.update()
 
-    # def configure_cutting_plane(self, position, orientation):
+    # def configure_section_plane(self, position, orientation):
     #     if not self._actors_exists():
     #         return
 
-    #     self.plane_actor.configure_cutting_plane(position, orientation)
+    #     self.plane_actor.configure_section_plane(position, orientation)
     #     self.update()
 
-    # def apply_cutting_plane(self, position, orientation, invert=False):
+    # def apply_section_plane(self, position, orientation, invert=False):
     #     if not self._actors_exists():
     #         return
 
-    #     self.cutting_plane_args = (position, orientation, invert)
-    #     xyz = self.plane_actor.calculate_x_y_z_position(position)
+    #     self.section_plane_args = (position, orientation, invert)
+    #     xyz = self.plane_actor.calculate_xyz_position(position)
     #     normal = self.plane_actor.calculate_normal_vector(orientation)
     #     if invert:
     #         normal = -normal
@@ -318,21 +314,21 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
     #     self.edges_actor.apply_cut(xyz, normal)
 
     #     self.plane_actor.VisibilityOn()
-    #     self.plane_actor.configure_cutting_plane(position, orientation)
+    #     self.plane_actor.configure_section_plane(position, orientation)
     #     self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
     #     self.plane_actor.GetProperty().SetOpacity(0.2)
 
     #     self.update()
 
-    def remove_actors(self):
+    def remove_all_actors(self):
         self.renderer.RemoveActor(self.analysis_actor)
         self.renderer.RemoveActor(self.edges_actor)
         self.renderer.RemoveActor(self.plane_actor)
-        self.renderer.RemoveActor(self.hidden_part_actor)
+        self.renderer.RemoveActor(self.ghost_actor)
         self.analysis_actor = None
         self.edges_actor = None
         self.plane_actor = None
-        self.hidden_part_actor = None
+        self.ghost_actor = None
 
     def update_animation(self, frame):
         if not self._actors_exists():
@@ -349,13 +345,13 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         # Map the frames from 0 to 1
         t = frame / (self._animation_total_frames - 1)
         phase = lerp(0, 360, t)
-        displacements, color_scalars, min_value, max_value = self._calculate_displacements(
-            index, phase
-        )
-        magnification_factor = self.control_bar.magnification_factor_slider.value()
 
-        self.analysis_actor.apply_deformation(displacements, phase, magnification_factor)
-        self.analysis_actor.plot_colorbar(color_scalars, min_value, max_value)
+        magnification_factor = self.control_bar.magnification_factor_slider.value() / 16
+        displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
+
+        self.analysis_actor.apply_deformation(displacements, magnification_factor, max_value)
+        self.ghost_actor.apply_deformation(displacements, magnification_factor, max_value)
+        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value)
         # self.edges_actor.extract_data(self.analysis_actor.data)
         self.update()
 
@@ -380,59 +376,98 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
 
         return all([actor is not None for actor in actors])
 
-    def _calculate_displacements(self, index, phase):
+    # def _calculate_displacements(self, index, phase):
+    #     solver = app().project.structural_modal_solver
+    #     if solver.modal_shape is None:
+    #         return
+
+    #     current_modal_shape = solver.modal_shape[:, index].reshape(-1, 3).copy()
+
+    #     if self.control_bar.sum_button.isChecked():
+    #         values_1 = np.linalg.norm(current_modal_shape, axis=1).copy()
+    #         displacements = current_modal_shape.copy()
+
+    #     elif self.control_bar.response_ux_button.isChecked():
+    #         values_1 = current_modal_shape[:, 0]
+    #         displacements = current_modal_shape * np.array([1.0, 0.0, 0.0])
+
+    #     elif self.control_bar.response_uy_button.isChecked():
+    #         values_1 = current_modal_shape[:, 1]
+    #         displacements = current_modal_shape * np.array([0.0, 1.0, 0.0])
+
+    #     elif self.control_bar.response_uz_button.isChecked():
+    #         values_1 = current_modal_shape[:, 2]
+    #         displacements = current_modal_shape * np.array([0.0, 0.0, 1.0])
+    #     #
+    #     max_abs = np.max(np.abs(values_1))
+    #     values_1 /= max_abs
+    #     #
+    #     min_value = round(min(values_1), 1)
+    #     max_value = round(max(values_1), 1)
+    #     #
+
+    #     if self.control_bar.update_coloring.isChecked():
+    #         mod_values = displacements * np.cos(phase * np.pi / 180)
+
+    #         if self.control_bar.sum_button.isChecked():
+    #             values_2 = np.linalg.norm(mod_values, axis=1).copy()
+
+    #         elif self.control_bar.response_ux_button.isChecked():
+    #             values_2 = mod_values[:, 0]
+
+    #         elif self.control_bar.response_uy_button.isChecked():
+    #             values_2 = mod_values[:, 1]
+
+    #         elif self.control_bar.response_uz_button.isChecked():
+    #             values_2 = mod_values[:, 2]
+
+    #         values_2 /= max_abs
+    #         if not self.control_bar.sum_button.isChecked():
+    #             if np.abs(min_value) != np.abs(max_value):
+    #                 min_value = -np.max(np.abs([min_value, max_value]))
+    #                 max_value = np.max(np.abs([min_value, max_value]))
+    #     else:
+    #         values_2 = values_1.copy()
+
+    #     color_scalars = values_2
+
+    #     return displacements, color_scalars, min_value, max_value
+
+    def _calculate_displacements(self, index: int, selected_phase_deg: float):
+
         solver = app().project.structural_modal_solver
         if solver.modal_shape is None:
             return
 
-        current_modal_shape = solver.modal_shape[:, index].reshape(-1, 3).copy()
+        results_complex = solver.modal_shape[:, index]
+        amplitudes = np.abs(results_complex)
+        phases = np.angle(results_complex)
+
+        selected_phase_rad = selected_phase_deg * np.pi / 180
+        results_real = amplitudes * np.cos(phases + selected_phase_rad)
+
+        current_solution = results_real.reshape(-1, 3).copy()
 
         if self.control_bar.sum_button.isChecked():
-            values_1 = np.linalg.norm(current_modal_shape, axis=1).copy()
-            displacements = current_modal_shape.copy()
+            disp_type = "u_sum"
+            color_scalars = np.linalg.norm(current_solution, axis=1)#.copy()
+            displacements = current_solution.copy()
 
         elif self.control_bar.response_ux_button.isChecked():
-            values_1 = current_modal_shape[:, 0]
-            displacements = current_modal_shape * np.array([1.0, 0.0, 0.0])
+            disp_type = "u_x"
+            color_scalars = current_solution[:, 0]
+            displacements = current_solution * np.array([1.0, 0.0, 0.0])
 
         elif self.control_bar.response_uy_button.isChecked():
-            values_1 = current_modal_shape[:, 1]
-            displacements = current_modal_shape * np.array([0.0, 1.0, 0.0])
+            disp_type = "u_y"
+            color_scalars = current_solution[:, 1]
+            displacements = current_solution * np.array([0.0, 1.0, 0.0])
 
         elif self.control_bar.response_uz_button.isChecked():
-            values_1 = current_modal_shape[:, 2]
-            displacements = current_modal_shape * np.array([0.0, 0.0, 1.0])
-        #
-        max_abs = np.max(np.abs(values_1))
-        values_1 /= max_abs
-        #
-        min_value = round(min(values_1), 1)
-        max_value = round(max(values_1), 1)
-        #
+            disp_type = "u_z"
+            color_scalars = current_solution[:, 2]
+            displacements = current_solution * np.array([0.0, 0.0, 1.0])
 
-        if self.control_bar.update_coloring.isChecked():
-            mod_values = displacements * np.cos(phase * np.pi / 180)
-
-            if self.control_bar.sum_button.isChecked():
-                values_2 = np.linalg.norm(mod_values, axis=1).copy()
-
-            elif self.control_bar.response_ux_button.isChecked():
-                values_2 = mod_values[:, 0]
-
-            elif self.control_bar.response_uy_button.isChecked():
-                values_2 = mod_values[:, 1]
-
-            elif self.control_bar.response_uz_button.isChecked():
-                values_2 = mod_values[:, 2]
-
-            values_2 /= max_abs
-            if not self.control_bar.sum_button.isChecked():
-                if np.abs(min_value) != np.abs(max_value):
-                    min_value = -np.max(np.abs([min_value, max_value]))
-                    max_value = np.max(np.abs([min_value, max_value]))
-        else:
-            values_2 = values_1.copy()
-
-        color_scalars = values_2
+        min_value, max_value = solver.get_max_min_values_of_displacements(index, disp_type)
 
         return displacements, color_scalars, min_value, max_value

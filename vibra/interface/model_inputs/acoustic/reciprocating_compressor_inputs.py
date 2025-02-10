@@ -221,13 +221,14 @@ class ReciprocatingCompressorInputs(QDialog):
             surface_ids = [str(i) for i in selected_surfaces]
             self.lineEdit_selected_surface_id.setText(surface_ids[0])
 
-            stop, surface_id = self.model.mesh.check_selected_ids(
-                                                                  self.lineEdit_selected_surface_id.text(), 
-                                                                  selection = "surfaces", 
-                                                                  single_id = True
-                                                                  )
+            input_ids = self.lineEdit_selected_surface_id.text()
+            surface_id = self.model.mesh.check_selected_ids(
+                                                            input_ids, 
+                                                            selection = "surfaces", 
+                                                            single_id = True
+                                                            )
 
-            if stop:
+            if surface_id is None:
                 self.lineEdit_selected_surface_id.setFocus()
                 return True
 
@@ -488,22 +489,22 @@ class ReciprocatingCompressorInputs(QDialog):
 
     def check_surface_id(self, lineEdit: QLineEdit):
 
-        input_selected_id = lineEdit.text()
-        stop, surface_id = self.model.mesh.check_selected_ids(
-                                                            input_selected_id, 
-                                                            selection = "surfaces", 
-                                                            single_id = True
-                                                            )
+        input_ids = lineEdit.text()
+        surface_id = self.model.mesh.check_selected_ids(
+                                                        input_ids, 
+                                                        selection = "surfaces", 
+                                                        single_id = True
+                                                        )
 
-        if stop:
+        if surface_id is None:
             lineEdit.setFocus()
             lineEdit.selectAll()
-            return True, None
+            return None
 
         volumes_from_surface = self.model.mesh.volume_from_surface[surface_id]
 
         if len(volumes_from_surface) == 1:
-            return stop, surface_id
+            return surface_id
 
         else:
             self.hide()
@@ -513,13 +514,13 @@ class ReciprocatingCompressorInputs(QDialog):
             message += "compressor excitation attribution."
             PrintMessageInput([window_title_1, title, message])
             lineEdit.setText("")
-            return True, None
+            return None
 
     def check_input_surfaces(self):
 
-        stop, surface_id = self.check_surface_id(self.lineEdit_selected_surface_id)
+        surface_id = self.check_surface_id(self.lineEdit_selected_surface_id)
 
-        if stop:
+        if surface_id is None:
             self.lineEdit_selected_surface_id.setFocus()
             return True
 
@@ -902,12 +903,12 @@ class ReciprocatingCompressorInputs(QDialog):
 
     def remove_conflicting_excitations(self, surface_id: int):
         for label in ["acoustic_pressure", "surface_velocity", "mass_flow_rate", "reciprocating_compressor_excitation", "reciprocating_pump_excitation"]:
-            table_names = self.properties.get_surface_related_table_names(label, surface_id)
+            table_names = self.properties.get_property_related_table_names(label, surface_id, "surface")
             self.properties._remove_surface_property(label, surface_id)
             self.process_table_file_removal(table_names)
 
     def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_surface_related_table_names("reciprocating_compressor_excitation", surface_id)
+        table_names = self.properties.get_property_related_table_names("reciprocating_compressor_excitation", surface_id, "surface")
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):

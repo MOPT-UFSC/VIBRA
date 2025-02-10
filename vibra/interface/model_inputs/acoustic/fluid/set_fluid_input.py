@@ -176,8 +176,13 @@ class SetFluidInput(QDialog):
             if self.comboBox_attribution_type.currentIndex():
 
                 input_ids = self.lineEdit_selection_id.text()
-                stop, volume_ids = self.model.mesh.check_selected_ids(input_ids, selection = "volumes", single_id = False)
-                if stop:
+                volume_ids = self.model.mesh.check_selected_ids(
+                                                                input_ids, 
+                                                                selection = "volumes", 
+                                                                single_id = False
+                                                                )
+
+                if volume_ids is None:
                     self.lineEdit_selection_id.setFocus()
                     return True
 

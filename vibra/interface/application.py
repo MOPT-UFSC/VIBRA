@@ -35,8 +35,23 @@ class Application(QApplication):
         self.main_window.configure_main_window()
 
         self.update()
+        self.filter_tab_scroll_by_wheel()
 
     def update(self):
         return
         self.geometry_toolbox.update()
         self.main_window.update()
+
+    def filter_tab_scroll_by_wheel(self):
+        from PyQt5.QtWidgets import QTabBar
+        from PyQt5.QtCore import QObject, QEvent
+
+        class Filter(QObject):
+            def eventFilter(self, obj, event):
+                if isinstance(obj, QTabBar) and (event.type() == QEvent.Wheel):
+                    return True
+                else:
+                    return False
+
+        filter = Filter(self)
+        self.installEventFilter(filter)

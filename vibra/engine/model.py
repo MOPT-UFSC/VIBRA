@@ -74,9 +74,9 @@ class Model:
         try:
 
             try:
-                self.mesh = Mesh.from_cad(path, dimension=2, size_factor=0.0, minimum_element_size=10, maximum_element_size=40)
+                self.mesh = Mesh.from_cad(path, dimension=2, size_factor=0.0, minimum_element_size=10, maximum_element_size=30)
             except:
-                self.mesh = Mesh.from_cad(path, dimension=2, size_factor=0.0, minimum_element_size=5, maximum_element_size=20)
+                self.mesh = Mesh.from_cad(path, dimension=2, size_factor=0.0, minimum_element_size=5, maximum_element_size=10)
 
             self.generated_mesh = False
             app().main_window.update_geometry_information(self.mesh.geometry_information)
@@ -222,18 +222,56 @@ class Model:
     def get_acoustic_global_dofs_from_nodes(self, nodes: np.ndarray):
         if self.solid_acoustic_element is None:
             return list()
-        _dofs_per_node = self.solid_acoustic_element.DOF_PER_NODE
+        _dofs_per_node = self.solid_acoustic_element.DOFS_PER_NODE
         _nodes = nodes.reshape(-1, 1)
         global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
         return np.array(global_dofs.flatten(), dtype=int)
 
-    def get_structural_global_dofs_from_nodes(self, nodes):
-        if self.solid_structural_element is None:
-            return list()
-        _dofs_per_node = self.solid_structural_element.DOF_PER_NODE
-        _nodes = nodes.reshape(-1, 1)
-        global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
-        return np.array(global_dofs.flatten(), dtype=int)
+    def get_structural_property_data_from_nodes(self, nodes: np.ndarray, data: dict, selection: str):
+
+        output_data = dict()
+        if data["element_type"] == "2d_element":
+            if self.surface_structural_element is None:
+                return output_data
+            dofs_per_node = self.surface_structural_element.DOFS_PER_NODE
+
+        else:
+            if self.solid_structural_element is None:
+                return output_data
+            dofs_per_node = self.solid_structural_element.DOFS_PER_NODE
+
+        local_dofs = np.arange(dofs_per_node, dtype=int)
+        global_dofs = dofs_per_node * nodes.reshape(-1, 1) + local_dofs
+
+        den = 1
+        if "nodal_attribution" in data.keys():
+
+            nodal_attribution = data["nodal_attribution"]
+            averaged = data["averaged"]
+            if nodal_attribution and averaged:
+                den = len(nodes)
+
+            elif not nodal_attribution:
+                #TODO: process element integration
+                den = 1
+
+                if selection == "surfaces":
+                    pass
+                elif selection == "lines":
+                    pass
+                else:
+                    pass
+
+        for node_gdofs in global_dofs:
+            for j, gdof in enumerate(node_gdofs):
+
+                values = data["values"][j]
+                if values is None:
+                    continue
+
+                output_data[gdof] = values / den
+
+        return output_data
 
     def get_fluid_density_for_particle_velocity_calculation(self, surface_id: int, frequencies: np.ndarray):
 
@@ -344,3 +382,9 @@ class Model:
 
     def set_structural_load(self, data, line, surface):
         self.properties.set_structural_load(data, line, surface)
+
+    def process_surface_thickness(self):
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "surface_thickness":
+                self.mesh.set_face_element_thickness(surface_id, data)

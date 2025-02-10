@@ -33,12 +33,17 @@ class StructuralModalAnalysisBar(QWidget):
         self.create_video_button.setMinimumWidth(80)
 
         self.frequency_box = QComboBox()
+
         self.response_ux_button = QRadioButton("Real Ux")
         self.response_uy_button = QRadioButton("Real Uy")
         self.response_uz_button = QRadioButton("Real Uz")
+
         self.sum_button = QRadioButton("Sum")
         self.show_mesh_button = QCheckBox("Show mesh")
         self.update_coloring = QCheckBox("Update coloring")
+
+        self.frequency_selector_label = QLabel("Frequency selector:")
+
         self.sum_button.setChecked(True)
         self.show_mesh_button.setChecked(True)
         self.update_coloring.setChecked(True)
@@ -84,7 +89,7 @@ class StructuralModalAnalysisBar(QWidget):
         # layout.addStretch()
         layout.addLayout(buttons_layout)
         layout.addStretch()
-        layout.addWidget(QLabel("Mode Selector:"))
+        layout.addWidget(self.frequency_selector_label)
         layout.addWidget(self.frequency_box)
         self.setLayout(layout)
 
@@ -112,21 +117,21 @@ class StructuralModalAnalysisBar(QWidget):
         self.play_pause_button.setToolTip("Pause animation")
 
     def create_sliders(self):
-        #
+
         self.magnification_factor_label = QLabel("value")
         self.magnification_factor_label.setFixedWidth(60)
         self.magnification_factor_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         self.magnification_factor_slider = QSlider(Qt.Orientation.Horizontal)
         self.magnification_factor_slider.setMinimum(0)
-        self.magnification_factor_slider.setMaximum(4)
-        self.magnification_factor_slider.setValue(2)
+        self.magnification_factor_slider.setMaximum(32)
+        self.magnification_factor_slider.setValue(16)
         self.magnification_factor_slider.setSingleStep(1)
         self.magnification_factor_slider.setMaximumWidth(200)
         self.magnification_factor_slider.valueChanged.connect(self.value_change_callback)
         self.magnification_factor_slider.sliderPressed.connect(self.slider_pressed.emit)
         self.magnification_factor_slider.sliderReleased.connect(self.slider_released.emit)
-        self.magnification_factor_label.setText(f"({self.magnification_factor_slider.value()}x)")
-        #
+        self.magnification_factor_label.setText(f"({self.magnification_factor_slider.value() / 16}x)")
+
         self.phase_label = QLabel("value")
         self.phase_label.setFixedWidth(60)
         self.phase_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
@@ -140,9 +145,8 @@ class StructuralModalAnalysisBar(QWidget):
         self.phase_slider.sliderPressed.connect(self.slider_pressed.emit)
         self.phase_slider.sliderReleased.connect(self.slider_released.emit)
         self.phase_label.setText(f"({self.phase_slider.value()}°)")
-        #
 
     def value_change_callback(self):
-        self.magnification_factor_label.setText(f"({self.magnification_factor_slider.value()}x)")
+        self.magnification_factor_label.setText(f"({self.magnification_factor_slider.value() / 16}x)")
         self.phase_label.setText(f"({self.phase_slider.value()}°)")
         self.value_changed.emit()

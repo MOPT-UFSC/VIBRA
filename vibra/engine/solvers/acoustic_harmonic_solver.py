@@ -198,7 +198,7 @@ class AcousticHarmonicSolver:
         """
 
         # logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(0, len(self.frequencies)))
-        self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_values()
+        self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_dofs_values()
         #
         Kr = (self.assembler.stiffness_matrix_r.toarray())[self.unprescribed_indexes, :]
         Mr = (self.assembler.mass_matrix_r.toarray())[self.unprescribed_indexes, :]

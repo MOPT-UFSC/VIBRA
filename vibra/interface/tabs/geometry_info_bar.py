@@ -6,7 +6,6 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 from vibra import app
-from vibra.utils.interface_functions import get_main_window
 
 
 class GeometryInfoBar(QWidget):

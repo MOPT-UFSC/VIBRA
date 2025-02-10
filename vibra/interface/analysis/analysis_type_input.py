@@ -5,18 +5,16 @@ from PyQt5 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
-from vibra.interface.analysis.acoustic_harmonic_analysis_input import AcousticHarmonicAnalysisInput
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
-from vibra.interface.analysis.coupled_harmonic_analysis_input import CoupledHarmonicAnalysisInput
-from vibra.interface.analysis.structural_harmonic_analysis_input import StructuralHarmonicAnalysisInput
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
+from vibra.interface.analysis.harmonic_analysis_method_selector_input import StructuralHarmonicAnalysisMethodSelecorInput
 
 
 class AnalysisTypeInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "analysis/analysis_type_input.ui"
+        ui_path = UI_DIR / "analysis/general/analysis_type_input.ui"
         uic.loadUi(ui_path, self)
 
         self.main_window = app().main_window
@@ -28,7 +26,8 @@ class AnalysisTypeInput(QDialog):
 
         ConfigWidgetAppearance(self)
 
-        self.exec()
+        while self.keep_window_open:
+            self.exec()
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -54,8 +53,12 @@ class AnalysisTypeInput(QDialog):
         self.complete = False
         self.modes = 0
         self.sigma_factor = 1e-4
+        self.run_modal = False
+
+        self.keep_window_open = True
 
     def _define_qt_variables(self):
+
         # QPushButton
         self.pushButton_harmonic_structural : QPushButton
         self.pushButton_harmonic_acoustic : QPushButton
@@ -63,8 +66,6 @@ class AnalysisTypeInput(QDialog):
         self.pushButton_modal_structural : QPushButton
         self.pushButton_modal_acoustic : QPushButton
         # temporary
-        self.pushButton_harmonic_structural.setDisabled(True)
-        # self.pushButton_harmonic_acoustic.setDisabled(True)
         self.pushButton_harmonic_coupled.setDisabled(True)
 
     def _create_connections(self):
@@ -81,22 +82,25 @@ class AnalysisTypeInput(QDialog):
             self.close()
 
     def harmonic_structural(self):
-        self.close()
-        select = StructuralHarmonicAnalysisInput()
-        self.method_id = select.index
-        self.analysis_type_label = "Structural Harmonic Analysis"
-        if self.method_id == 0:
-            self.analysis_id = 0
-            self.analysis_method_label = "Direct Method"
+
+        self.hide()
+        select = StructuralHarmonicAnalysisMethodSelecorInput()
+        if select.index == -1:
+            return
+
+        if select.index == 0:
+            analysis_id = 0
+            analysis_method_label = "Direct Method"
+
         else:
-            self.analysis_id = 1
-            self.analysis_method_label = "Mode Superposition Method"
-        #
+            analysis_id = 1
+            analysis_method_label = "Mode Superposition Method"
+
         self.analysis_data = {
-            "analysis_id": self.analysis_id,
-            "analysis_type": self.analysis_type_label,
-            "analysis_method_label": self.analysis_method_label,
-        }
+                              "analysis_id": analysis_id,
+                              "analysis_type": "Structural Harmonic Analysis",
+                              "analysis_method_label": analysis_method_label,
+                              }
         self.finalize()
 
     def harmonic_acoustic(self):
@@ -114,59 +118,48 @@ class AnalysisTypeInput(QDialog):
         self.finalize()
 
     def harmonic_coupled(self):
-        self.close()
-        select = CoupledHarmonicAnalysisInput()
-        self.method_id = select.index
-        self.analysis_type_label = "Coupled Harmonic Analysis"
-        if self.method_id == 0:
-            self.analysis_id = 5
-            self.analysis_method_label = "Direct Method"
+
+        self.hide()
+        select = StructuralHarmonicAnalysisMethodSelecorInput()
+        if select.index == -1:
+            return
+
+        if select.index == 0:
+            analysis_id = 5
+            analysis_method_label = "Direct Method"
+
         else:
-            self.analysis_id = 6
-            self.analysis_method_label = "Mode Superposition Method"
-        #
+            analysis_id = 6
+            analysis_method_label = "Mode Superposition Method"
+
         self.analysis_data = {
-            "analysis_id": self.analysis_id,
-            "analysis_type": self.analysis_type_label,
-            "analysis_method_label": self.analysis_method_label,
-        }
+                              "analysis_id": analysis_id,
+                              "analysis_type": "Coupled Harmonic Analysis",
+                              "analysis_method_label": analysis_method_label,
+                              }
         self.finalize()
 
     def modal_structural(self):
+
         self.close()
         modal = StructuralModalAnalysisInput()
-        if modal.modes is None:
+        if not modal.setup_defined:
             return
-        self.modes = modal.modes
-        self.sigma_factor = modal.sigma_factor
-        self.analysis_id = 2
-        self.analysis_type_label = "Structural Modal Analysis"
-        if modal.complete:
-            self.analysis_data = {
-                "analysis_id": self.analysis_id,
-                "analysis_type": self.analysis_type_label,
-                "modes": self.modes,
-                "sigma_factor": self.sigma_factor,
-            }
-            self.finalize()
+
+        self.analysis_data = modal.analysis_setup.copy()
+        self.run_modal = modal.proceed_solution
+        self.finalize()
 
     def modal_acoustic(self):
+
         self.close()
         modal = AcousticModalAnalysisInput()
-        if modal.modes is None:
+        if not modal.setup_defined:
             return
-        self.modes = modal.modes
-        self.sigma_factor = modal.sigma_factor
-        self.analysis_id = 4
-        self.analysis_type_label = "Acoustic Modal Analysis"
-        if modal.complete:
-            self.analysis_data = {
-                "analysis_id": self.analysis_id,
-                "analysis_type": self.analysis_type_label,
-                "modes": self.modes,
-                "sigma_factor": self.sigma_factor,
-            }
-            self.finalize()
+
+        self.analysis_data = modal.analysis_setup.copy()
+        self.run_modal = modal.proceed_solution
+        self.finalize()
 
     def finalize(self):
 
@@ -183,3 +176,7 @@ class AnalysisTypeInput(QDialog):
             app().file.write_analysis_setup_in_file(self.analysis_data)
 
         self.close()
+
+    def closeEvent(self, a0):
+        self.keep_window_open = False
+        return super().closeEvent(a0)

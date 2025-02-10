@@ -69,13 +69,14 @@ class ModelProperties:
         self.volume_properties = dict()
         self.surface_properties = dict()
         self.line_properties = dict()
+        self.point_properties = dict()
         self.element_properties = dict()
         self.nodal_properties = dict()
 
-        self.global_properties["material", "global"] = DEFAULT_MATERIAL
-        self.global_properties["fluid", "global"] = DEFAULT_FLUID
+        # self.global_properties["material", "global"] = DEFAULT_MATERIAL
+        # self.global_properties["fluid", "global"] = DEFAULT_FLUID
 
-    def get_material(self, element=None, **kwargs) -> Material:
+    def get_material(self, **kwargs) -> Material:
         return self._get_property("material", **kwargs)
 
     def get_fluid(self, **kwargs) -> Fluid:
@@ -156,7 +157,7 @@ class ModelProperties:
     def get_porous_material_model_data(self, volume):
         return self._get_property("porous_material_model", volume=volume)
 
-    def _set_property(self, property: str, data: dict | Fluid | Material, node=None, element=None, line=None, surface=None, volume=None, group=None):
+    def _set_property(self, property: str, data: dict | Fluid | Material, node=None, element=None, point=None, line=None, surface=None, volume=None, group=None):
         """
         Sets a data to a property by node, element, line, surface or volume
         if any of these exists. Otherwise sets the property as global.
@@ -212,6 +213,9 @@ class ModelProperties:
         elif line is not None:
             self.line_properties[property, line] = data
 
+        elif point is not None:
+            self.point_properties[property, point] = data
+
         elif element is not None:
             self.element_properties[property, element] = data
 
@@ -221,7 +225,7 @@ class ModelProperties:
         else:
             self.global_properties[property, "global"] = data
 
-    def _get_property(self, property: str, node=None, element=None, line=None, surface=None, volume=None):
+    def _get_property(self, property: str, node=None, element=None, point=None, line=None, surface=None, volume=None):
         """
         Finds the value that corresponds to the property needed.
         Checks node, element, entity, volume and global data by
@@ -233,6 +237,9 @@ class ModelProperties:
 
         if (property, element) in self.element_properties:
             return self.element_properties[property, element]
+
+        if (property, point) in self.point_properties:
+            return self.point_properties[property, point]
 
         if (property, line) in self.line_properties:
             return self.line_properties[property, line]
@@ -274,13 +281,14 @@ class ModelProperties:
         Clears all instances of a specific property from the structure.
         """
         data_dicts = [  
+                      self.volume_properties,
+                      self.surface_properties,
+                      self.line_properties,
+                      self.point_properties,
+                      self.group_properties,
+                      self.global_properties,
                       self.nodal_properties,
                       self.element_properties,
-                      self.line_properties,
-                      self.surface_properties,
-                      self.volume_properties,
-                      self.group_properties,
-                      self.global_properties
                       ]
 
         for data in data_dicts:
@@ -309,6 +317,12 @@ class ModelProperties:
         key = (property, element_id)
         if key in self.element_properties.keys():
             self.element_properties.pop(key)
+
+    def _remove_point_property(self, property: str, point_id: int):
+        """Remove a point property at specific point_id."""
+        key = (property, point_id)
+        if key in self.point_properties.keys():
+            self.point_properties.pop(key)
 
     def _remove_line_property(self, property: str, line_id: int):
         """Remove a line property at specific line_id."""
@@ -371,24 +385,35 @@ class ModelProperties:
         else:
             return "structural"
 
-    def get_surface_related_table_names(self, property : str, surface_ids : int | list) -> list:
+    def get_property_related_table_names(self, property : str, selected_ids : int | list, selection: str) -> list:
         """
         """
         table_names = list()
-        if isinstance(surface_ids, int):
-            test_key = (property, surface_ids)
+        if isinstance(selected_ids, int):
+            test_key = (property, selected_ids)
 
-        elif isinstance(surface_ids, list) and len(surface_ids) == 1:
-            test_key = (property, surface_ids[0])
+        elif isinstance(selected_ids, list) and len(selected_ids) == 1:
+            test_key = (property, selected_ids[0])
 
-        elif isinstance(surface_ids, list) and len(surface_ids) == 2:
-            test_key = (property, surface_ids[0], surface_ids[1])
+        elif isinstance(selected_ids, list) and len(selected_ids) == 2:
+            test_key = (property, selected_ids[0], selected_ids[1])
 
         else:
             return table_names
 
-        if test_key in self.surface_properties.keys():
-            data = self.surface_properties[test_key]
+        if selection == "surfaces":
+            _properties = self.surface_properties
+        elif selection == "lines":
+            _properties = self.line_properties
+        elif selection == "points":
+            _properties = self.point_properties
+        elif selection == "nodes":
+            _properties = self.nodal_properties
+        else:
+            return table_names
+
+        if test_key in _properties.keys():
+            data = _properties[test_key]
 
             if "table_names" in data.keys():
                 for table_name in data["table_names"]:

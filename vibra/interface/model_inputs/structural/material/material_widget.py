@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QWidget
+from PyQt5.QtWidgets import QDialog, QHeaderView, QPushButton, QTableWidget, QTableWidgetItem, QWidget
 from PyQt5.QtGui import QCloseEvent, QColor
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
@@ -13,9 +13,9 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.libraries.default_libraries import default_material_library
 from vibra.engine.properties.material import Material
 
-import configparser
+# import configparser
 from itertools import count
-from pathlib import Path
+# from pathlib import Path
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -31,7 +31,7 @@ def getColorRGB(color):
 
 class MaterialWidget(QWidget):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__()
 
         ui_path = UI_DIR / "model/setup/material/material_widget.ui"
         uic.loadUi(ui_path, self)
@@ -42,9 +42,12 @@ class MaterialWidget(QWidget):
         self.model = self.project.model
         self.properties = self.model.properties
 
+        self.dialog = kwargs.get("dialog", None)
+
         self._initialize()
-        self.define_qt_variables()
-        self.create_connections()
+        self._define_qt_variables()
+        self._create_connections()
+        self._config_widgets()
         self.load_data_from_materials_library()
 
     # def _config_window(self):
@@ -73,7 +76,7 @@ class MaterialWidget(QWidget):
                                     "color"
                                     ]
 
-    def define_qt_variables(self):
+    def _define_qt_variables(self):
 
         # QPushButton
         self.pushButton_attribute : QPushButton
@@ -85,7 +88,7 @@ class MaterialWidget(QWidget):
         # QTableWidget
         self.tableWidget_material_data : QTableWidget
 
-    def create_connections(self):
+    def _create_connections(self):
         #
         self.pushButton_add_column.clicked.connect(self.add_column)
         self.pushButton_remove_column.clicked.connect(self.remove_selected_column)
@@ -94,29 +97,10 @@ class MaterialWidget(QWidget):
         self.tableWidget_material_data.itemChanged.connect(self.item_changed_callback)
         self.tableWidget_material_data.cellClicked.connect(self.cell_clicked_callback)
 
-    def config_table_of_material_data(self):
-        return
-        header = [
-            'Name',
-            'Density \n[kg/m³]',
-            'Elasticity \nmodulus [GPa]',
-            'Poisson',
-            'Thermal expansion \ncoefficient [m/mK]',
-            'Color',
-        ]
-        
-        self.tableWidget_material_data.setColumnCount(len(header))
-        self.tableWidget_material_data.setHorizontalHeaderLabels(header)
-        self.tableWidget_material_data.setSelectionBehavior(1)
-        self.tableWidget_material_data.resizeColumnsToContents()
+    def _config_widgets(self):
+        self.tableWidget_material_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
+        self.tableWidget_material_data.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
 
-        self.tableWidget_material_data.horizontalHeader().setSectionResizeMode(0)
-        self.tableWidget_material_data.horizontalHeader().setStretchLastSection(True)
-
-        for j, width in enumerate([140, 80, 120, 80, 140, 40]):
-            self.tableWidget_material_data.horizontalHeader().resizeSection(j, width)
-            self.tableWidget_material_data.horizontalHeaderItem(j).setTextAlignment(Qt.AlignCenter)
-    
     def load_data_from_materials_library(self):
 
         if not os.path.exists(TEMP_PROJECT_FILE):
@@ -151,7 +135,6 @@ class MaterialWidget(QWidget):
 
     def update_table(self):
 
-        self.config_table_of_material_data()
         self.tableWidget_material_data.clearContents()
         self.tableWidget_material_data.blockSignals(True)
         self.tableWidget_material_data.setRowCount(COLOR_ROW + 1)
@@ -516,10 +499,14 @@ class MaterialWidget(QWidget):
             self.model.properties._remove_surface_property("material", surface_id=surf_id)
 
     def keyPressEvent(self, event):
+
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            return
+            if isinstance(self.dialog, QDialog):
+                self.dialog.attribute_callback()
+
         elif event.key() == Qt.Key_Delete:
             self.remove_selected_column()
+
         elif event.key() == Qt.Key_Escape:
             self.close()
 
