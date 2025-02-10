@@ -40,9 +40,10 @@ class LinesActor(vtkActor):
 
         data.SetPoints(points)
         data.GetCellData().SetScalars(cell_colors)
-
         mapper.SetInputData(data)
         self.SetMapper(mapper)
+
+        self.clear_colors()
 
     def configure_appearance(self):
         self.GetProperty().SetLineWidth(6)

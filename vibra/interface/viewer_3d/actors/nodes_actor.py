@@ -51,10 +51,11 @@ class NodesActor(vtkActor):
         data.GetCellData().SetScalars(cell_colors)
         data.GetCellData().AddArray(cell_indexes)
         self.data = data
-
         mapper.SetInputData(data)
         mapper.SetScalarModeToUseCellData()
         self.SetMapper(mapper)
+
+        self.clear_colors()
 
     def update_coordinates(self, coordinates):
         points: vtkPoints
