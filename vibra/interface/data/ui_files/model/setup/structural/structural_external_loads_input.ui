@@ -415,7 +415,7 @@
            </property>
            <property name="maximumSize">
             <size>
-             <width>380</width>
+             <width>420</width>
              <height>16777215</height>
             </size>
            </property>
@@ -632,7 +632,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>[m]</string>
+                   <string>[N]</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -663,7 +663,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>[m]</string>
+                   <string>[N]</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -971,7 +971,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>[m]</string>
+                   <string>[N]</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -1032,7 +1032,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>[rad]</string>
+                   <string>[N.m]</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -1122,7 +1122,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>[rad]</string>
+                   <string>[N.m]</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -1152,7 +1152,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>[rad]</string>
+                   <string>[N.m]</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -2374,7 +2374,7 @@
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>320</width>
+                    <width>380</width>
                     <height>200</height>
                    </size>
                   </property>
@@ -2421,7 +2421,7 @@
                   </column>
                   <column>
                    <property name="text">
-                    <string>DOFs</string>
+                    <string>External loads</string>
                    </property>
                    <property name="textAlignment">
                     <set>AlignCenter</set>
