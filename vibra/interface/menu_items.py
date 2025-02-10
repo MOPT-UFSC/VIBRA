@@ -473,13 +473,16 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_select_analysis_type:
             if not self.item_child_select_analysis_type.isDisabled():
+
                 analysis_type = AnalysisTypeInput()
                 if analysis_type.complete:
+                    analysis_id = app().project.analysis_data.get("analysis_id", None)
 
-                    if analysis_type.analysis_id in [2, 4]:
-                        self.run_analysis()
-                        self.item_child_run_analysis.setDisabled(False)
-                        # self.item_child_reset_solution.setDisabled(False)
+                    if analysis_id in [2, 4]:
+                        if analysis_type.run_modal:
+                            self.run_analysis()
+                            self.item_child_run_analysis.setDisabled(False)
+                            # self.item_child_reset_solution.setDisabled(False)
 
                     else:
 
@@ -583,26 +586,27 @@ class MenuItems(QTreeWidget):
         #         return
 
         analysis = ProcessAnalysis()
-
         analysis_id = app().project.analysis_data["analysis_id"]
-        #
-        if analysis_id == 2:
-            solve_modal = load_function(analysis.process_structural_modal_analysis, 
-                                        self.main_window)
+
+        if analysis_id in [0, 1]:
+            solve_harmonic = load_function(analysis.process_structural_harmonic_analysis, self.main_window)
+            solve_harmonic()
+
+        elif analysis_id == 2:
+            solve_modal = load_function(analysis.process_structural_modal_analysis, self.main_window)
             solve_modal()
 
         elif analysis_id == 3:
-            solve_harmonic = load_function(analysis.process_acoustic_harmonic_analysis, 
-                                           self.main_window)
+            solve_harmonic = load_function(analysis.process_acoustic_harmonic_analysis, self.main_window)
             solve_harmonic()
 
         elif analysis_id == 4:
-            solve_modal = load_function(analysis.process_acoustic_modal_analysis, 
-                                        self.main_window)
+            solve_modal = load_function(analysis.process_acoustic_modal_analysis, self.main_window)
             solve_modal()
 
         else:
             raise NotImplementedError("Not implemented analysis")
+
         self.update_items()
 
     def reset_solution(self):

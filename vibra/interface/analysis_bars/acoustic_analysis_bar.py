@@ -33,9 +33,12 @@ class AcousticModalAnalysisBar(QWidget):
         self.create_video_button.setMinimumWidth(80)
 
         self.frequency_box = QComboBox()
+
         self.absolute_button = QRadioButton("Absolute")
         self.real_part_button = QRadioButton("Real part")
         self.show_mesh_button = QCheckBox("Show mesh")
+
+        self.frequency_selector_label = QLabel("Frequency selector:")
 
         button_group = QButtonGroup()
         button_group.addButton(self.real_part_button)

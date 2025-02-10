@@ -33,12 +33,17 @@ class StructuralModalAnalysisBar(QWidget):
         self.create_video_button.setMinimumWidth(80)
 
         self.frequency_box = QComboBox()
+
         self.response_ux_button = QRadioButton("Real Ux")
         self.response_uy_button = QRadioButton("Real Uy")
         self.response_uz_button = QRadioButton("Real Uz")
+
         self.sum_button = QRadioButton("Sum")
         self.show_mesh_button = QCheckBox("Show mesh")
         self.update_coloring = QCheckBox("Update coloring")
+
+        self.frequency_selector_label = QLabel("Frequency selector:")
+
         self.sum_button.setChecked(True)
         self.show_mesh_button.setChecked(True)
         self.update_coloring.setChecked(True)
@@ -84,7 +89,7 @@ class StructuralModalAnalysisBar(QWidget):
         # layout.addStretch()
         layout.addLayout(buttons_layout)
         layout.addStretch()
-        layout.addWidget(QLabel("Mode Selector:"))
+        layout.addWidget(self.frequency_selector_label)
         layout.addWidget(self.frequency_box)
         self.setLayout(layout)
 

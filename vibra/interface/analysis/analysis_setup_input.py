@@ -37,12 +37,15 @@ class AnalysisSetupInput(QDialog):
         |--------------------------------------------------------------------|
         """
 
-        if self.analysis_id in [1, 6]:
-            ui_path = UI_DIR / "analysis/structural/harmonic_analysis_mode_superposition_method.ui"
-        elif self.analysis_id in [0, 5]:
+        if self.analysis_id in [0, 5]:
             ui_path = UI_DIR / "analysis/structural/harmonic_analysis_direct_method.ui"
+
+        elif self.analysis_id in [1, 6]:
+            ui_path = UI_DIR / "analysis/structural/harmonic_analysis_mode_superposition_method.ui"
+
         elif self.analysis_id in [3]:
             ui_path = UI_DIR / "analysis/acoustic/harmonic_analysis_direct_method.ui"
+
         else:
             return
 
@@ -99,16 +102,16 @@ class AnalysisSetupInput(QDialog):
         self.lineEdit_fstep : QLineEdit
 
         # QPushButton
-        self.pushButton_confirm_close : QPushButton
-        self.pushButton_confirm_run_analysis : QPushButton
+        self.pushButton_enter_setup : QPushButton
+        self.pushButton_run_analysis : QPushButton
 
         # QTabWidget
         self.tabWidget : QTabWidget
 
     def _create_connections(self):
         #
-        self.pushButton_confirm_close.clicked.connect(self.enter_setup_callback)
-        self.pushButton_confirm_run_analysis.clicked.connect(self.check_run)
+        self.pushButton_enter_setup.clicked.connect(self.enter_setup_callback)
+        self.pushButton_run_analysis.clicked.connect(self.check_run)
 
     def _update_fmin(self):
         df = self.lineEdit_fstep.text()

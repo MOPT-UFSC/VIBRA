@@ -70,7 +70,7 @@ class AcousticAssembler:
     def is_assembled(self):
         return (self.stiffness_matrix is not None) and (self.mass_matrix is not None)
 
-    def get_prescribed_values(self):
+    def get_prescribed_dofs_values(self):
         """
         This method returns all the values of the acoustic degrees of freedom with prescribed pressure boundary conditions.
 

@@ -31,3 +31,11 @@ class ProcessAnalysis:
             ErrorMessage(e)
         else:
             self.main_window.viewer_tabs.show_acoustic_harmonic_analysis()
+
+    def process_structural_harmonic_analysis(self):
+        try:
+            self.project.solve_structural_harmonic_analysis()
+        except NotImplementedError as e:
+            ErrorMessage(e)
+        else:
+            self.main_window.viewer_tabs.show_structural_harmonic_analysis()

@@ -41,6 +41,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.control_bar.create_video_button.clicked.connect(self.save_video)
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
+        self.control_bar.frequency_selector_label.setText("Frequency selector:")
 
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
@@ -80,7 +81,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         super().stop_animation()
         self.control_bar.use_play_icon()
 
-    def current_shape_index(self):
+    def current_frequency_index(self):
         return self.control_bar.frequency_box.currentIndex()
 
     def update_frequencies(self):
@@ -109,7 +110,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         if solver.solution is None:
             return
 
-        index = self.current_shape_index()
+        index = self.current_frequency_index()
         if not (0 <= index < solver.solution.shape[1]):
             return
         
@@ -190,7 +191,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         if solver.solution is None:
             return
 
-        index = self.current_shape_index()
+        index = self.current_frequency_index()
         if not (0 <= index < solver.solution.shape[1]):
             return
 
@@ -255,7 +256,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         if solver.solution is None:
             return
 
-        index = self.current_shape_index()
+        index = self.current_frequency_index()
         if not (0 <= index < solver.solution.shape[1]):
             return
 

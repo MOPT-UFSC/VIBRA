@@ -227,22 +227,51 @@ class Model:
         global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
         return np.array(global_dofs.flatten(), dtype=int)
 
-    def get_structural_global_dofs_from_nodes(self, nodes: np.ndarray, element_type: str):
+    def get_structural_property_data_from_nodes(self, nodes: np.ndarray, data: dict, selection: str):
 
-        if element_type == "2d_element":
+        output_data = dict()
+        if data["element_type"] == "2d_element":
             if self.surface_structural_element is None:
-                return list()
+                return output_data
             dofs_per_node = self.surface_structural_element.DOFS_PER_NODE
 
         else:
             if self.solid_structural_element is None:
-                return list()
+                return output_data
             dofs_per_node = self.solid_structural_element.DOFS_PER_NODE
 
-        local_dofs = np.arange(dofs_per_node)
+        local_dofs = np.arange(dofs_per_node, dtype=int)
         global_dofs = dofs_per_node * nodes.reshape(-1, 1) + local_dofs
 
-        return np.array(global_dofs.flatten(), dtype=int)
+        den = 1
+        if "nodal_attribution" in data.keys():
+
+            nodal_attribution = data["nodal_attribution"]
+            averaged = data["averaged"]
+            if nodal_attribution and averaged:
+                den = len(nodes)
+
+            elif not nodal_attribution:
+                #TODO: process element integration
+                den = 1
+
+                if selection == "surfaces":
+                    pass
+                elif selection == "lines":
+                    pass
+                else:
+                    pass
+
+        for node_gdofs in global_dofs:
+            for j, gdof in enumerate(node_gdofs):
+
+                values = data["values"][j]
+                if values is None:
+                    continue
+
+                output_data[gdof] = values / den
+
+        return output_data
 
     def get_fluid_density_for_particle_velocity_calculation(self, surface_id: int, frequencies: np.ndarray):
 

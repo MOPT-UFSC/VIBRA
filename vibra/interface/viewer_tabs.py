@@ -1,17 +1,20 @@
 from PyQt5.QtWidgets import QLabel, QPushButton, QTabWidget, QVBoxLayout, QWidget
 from PyQt5.QtCore import QCoreApplication, pyqtSignal
 
-from molde.render_widgets import CommonRenderWidget
 
 from vibra import app
-from vibra.interface.help_widget import HelpWidget
-from vibra.interface.viewer_3d.render_widgets.acoustic_harmonic_analysis_render_widget import AcousticHarmonicAnalysisRenderWidget
-from vibra.interface.viewer_3d.render_widgets.acoustic_modal_analysis_render_widget import AcousticModalAnalysisRenderWidget
-from vibra.interface.viewer_3d.render_widgets.example_render_widget import ExampleRenderWidget
+from molde.render_widgets import CommonRenderWidget
+from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.interface.viewer_3d.render_widgets.geometry_render_widget import GeometryRenderWidget
 from vibra.interface.viewer_3d.render_widgets.mesh_render_widget import MeshRenderWidget
+
+from vibra.interface.viewer_3d.render_widgets.acoustic_harmonic_analysis_render_widget import AcousticHarmonicAnalysisRenderWidget
+from vibra.interface.viewer_3d.render_widgets.acoustic_modal_analysis_render_widget import AcousticModalAnalysisRenderWidget
 from vibra.interface.viewer_3d.render_widgets.structural_modal_analysis_render_widget import StructuralModalAnalysisRenderWidget
-from vibra.interface.welcome_widget import WelcomeWidget
+from vibra.interface.viewer_3d.render_widgets.structural_harmonic_analysis_render_widget import StructuralHarmonicAnalysisRenderWidget
+
+# from vibra.interface.viewer_3d.render_widgets.example_render_widget import ExampleRenderWidget
+from vibra.interface.help_widget import HelpWidget
 
 
 class ViewerTabs(QTabWidget):
@@ -27,6 +30,7 @@ class ViewerTabs(QTabWidget):
         self.acoustic_modal_analysis = AcousticModalAnalysisRenderWidget()
         self.structural_modal_analysis = StructuralModalAnalysisRenderWidget()
         self.acoustic_harmonic_analysis = AcousticHarmonicAnalysisRenderWidget()
+        self.structural_harmonic_analysis = StructuralHarmonicAnalysisRenderWidget()
 
         self.welcome_widget = WelcomeWidget()
         self.help_widget = HelpWidget()
@@ -49,6 +53,7 @@ class ViewerTabs(QTabWidget):
         self.addTab(self.acoustic_modal_analysis, "Acoustic Modal Analysis")
         self.addTab(self.structural_modal_analysis, "Structural Modal Analysis")
         self.addTab(self.acoustic_harmonic_analysis, "Acoustic Harmonic Analysis")
+        self.addTab(self.structural_harmonic_analysis, "Structural Harmonic Analysis")
 
     def hide_current_tab(self):
         index = self.currentIndex()
@@ -66,7 +71,7 @@ class ViewerTabs(QTabWidget):
             self.setTabVisible(i, False)
 
     def reset_solution_tabs_visibility(self):
-        for index in [3, 4, 5]:
+        for index in [3, 4, 5, 6]:
             self.setTabVisible(index, False)
 
     def show_welcome(self):
@@ -106,6 +111,13 @@ class ViewerTabs(QTabWidget):
             self.acoustic_harmonic_analysis.update_frequencies()
             self.acoustic_harmonic_analysis.update_plot()
         self.setCurrentIndex(5)
+
+    def show_structural_harmonic_analysis(self):
+        if not self.isTabVisible(6):
+            self.setTabVisible(6, True)
+            self.structural_harmonic_analysis.update_frequencies()
+            self.structural_harmonic_analysis.update_plot()
+        self.setCurrentIndex(6)
 
     # def show_example_analysis(self):
     #     if self.example_analysis_widget not in self.tabs():

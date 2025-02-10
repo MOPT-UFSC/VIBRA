@@ -35,6 +35,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.control_bar.create_video_button.clicked.connect(self.save_video)
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
+        self.control_bar.frequency_selector_label.setText("Natural frequency:")
 
         self.section_plane_active = False
         self.show_plane_actor = True

@@ -13,10 +13,12 @@ class GhostActor(FacesActor):
             points.SetPoint(i, xyz)
         points.Modified()
 
-    def apply_deformation(self, displacements, phase, magnification_factor):
-        max_abs = np.max(np.linalg.norm(displacements, axis=0))
-        u_def = displacements * np.cos(phase * np.pi / 180)
-        deltas = (magnification_factor / max_abs) * u_def
+    def apply_deformation(self, displacements: np.ndarray, magnification_factor: float, max_abs: float):
+
+        if max_abs == 0:
+            max_abs = 1
+
+        deltas = (magnification_factor / max_abs) * displacements
         deformed_coordinates = deltas + self.mesh.nodal_coordinates[:, 1:]
         self.update_coordinates(deformed_coordinates)
 

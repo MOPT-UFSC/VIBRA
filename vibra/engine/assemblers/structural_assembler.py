@@ -30,9 +30,9 @@ class StructuralAssembler:
         self.mass_matrix = None
         self.frequencies = None
 
-        self.prescribed_values = np.array([])
-        self.prescribed_indexes = np.array([])
-        self.unprescribed_indexes = np.array([])
+        self.prescribed_dofs_values = np.array([])
+        self.prescribed_dofs_indexes = np.array([])
+        self.unprescribed_dofs_indexes = np.array([])
 
     def get_element(self):
 
@@ -66,11 +66,42 @@ class StructuralAssembler:
     def is_assembled(self):
         return (self.stiffness_matrix is not None) and (self.mass_matrix is not None)
 
-    def process_indexes(self):
-        self.prescribed_indexes = self.get_prescribed_indexes()
-        self.unprescribed_indexes = self.get_unprescribed_indexes()
+    def get_property_data_for_selected_property(self, selected_property: str):
+        """
+        """
 
-    def get_prescribed_values(self):
+        prescribed_data = defaultdict(int)
+        for (property, surface_id), data in self.properties.surface_properties.items():
+            if property == selected_property:
+                nodes = self.model.mesh.nodes_from_surfaces[surface_id]
+                property_data_from_nodes = self.model.get_structural_property_data_from_nodes(nodes, data, "surfaces")
+                for gdof, p_data in property_data_from_nodes.items():
+                    prescribed_data[gdof] += p_data
+
+        for (property, line_id), data in self.properties.line_properties.items():
+            if property == selected_property:
+                nodes = self.model.mesh.nodes_from_lines[line_id]
+                property_data_from_nodes = self.model.get_structural_property_data_from_nodes(nodes, data, "lines")
+                for gdof, p_data in property_data_from_nodes.items():
+                    prescribed_data[gdof] += p_data
+
+        for (property, point_id), data in self.properties.point_properties.items():
+            if property == selected_property:
+                nodes = self.model.mesh.nodes_from_points[point_id]
+                property_data_from_nodes = self.model.get_structural_property_data_from_nodes(nodes, data, "points")
+                for gdof, p_data in property_data_from_nodes.items():
+                    prescribed_data[gdof] += p_data
+
+        for (property, node_id), data in self.properties.nodal_properties.items():
+            if property == selected_property:
+                nodes = np.array([node_id], dtype=int)
+                property_data_from_nodes = self.model.get_structural_property_data_from_nodes(nodes, data, "nodes")
+                for gdof, p_data in property_data_from_nodes.items():
+                    prescribed_data[gdof] += p_data
+
+        return prescribed_data
+
+    def process_property_arrays(self, data: dict):
         """
         This method returns all the values of the structural degrees of freedom with prescribed structural displacement or rotation boundary conditions.
 
@@ -86,96 +117,75 @@ class StructuralAssembler:
         get_unprescribed_indexes : Indexes of the structural free degrees of freedom.
         """
 
-        global_prescribed = list()
-        list_prescribed_dofs = list()
         if self.frequencies is None:
             number_frequencies = 1
         else:
             number_frequencies = len(self.frequencies)
 
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
-            if property == "prescribed_dofs":
-                values = data["values"]
-                nodes = self.model.mesh.nodes_from_surfaces[surface_id]
-                for _ in nodes:
-                    global_prescribed.extend(values)
-
-        for key, data in self.properties.line_properties.items():
-            property, line_id = key
-            if property == "prescribed_dofs":
-                values = data["values"]
-                nodes = self.model.mesh.nodes_from_lines[line_id]
-                for _ in nodes:
-                    global_prescribed.extend(values)
-
-        for key, data in self.properties.point_properties.items():
-            property, point_id = key
-            if property == "prescribed_dofs":
-                values = data["values"]
-                nodes = self.model.mesh.nodes_from_points[point_id]
-                for _ in nodes:
-                    global_prescribed.extend(values)
-
-        for key, data in self.properties.nodal_properties.items():
-            property, _ = key
-            if property == "prescribed_dofs":
-                values = data["values"]
-                global_prescribed.extend(values)    
-
         try:
-            aux_ones = np.ones(number_frequencies, dtype=complex)
-            for value in global_prescribed:
+
+            property_data = dict()
+            for gdof in data.keys():
+                value = data[gdof]
+
+                aux_ones = np.ones(number_frequencies, dtype=complex)
                 if isinstance(value, complex):
-                    list_prescribed_dofs.append(aux_ones * value)
+                    property_data[gdof] = aux_ones * value
+
                 elif isinstance(value, np.ndarray):
-                    list_prescribed_dofs.append(value[0:number_frequencies])
-            array_prescribed_values = np.array(list_prescribed_dofs)
+                    property_data[gdof] = value[0:number_frequencies]
 
         except Exception as _error_log:
             print(str(_error_log))
 
-        return global_prescribed, array_prescribed_values
-
-    def get_prescribed_indexes(self):
-
-        _prescribed_indexes = list()
-
-        for (property, surface_id), data in self.properties.surface_properties.items():
-            if property == "prescribed_dofs":
-                element_type = data["element_type"]
-                nodes = self.model.mesh.nodes_from_surfaces[surface_id]
-                for index in self.model.get_structural_global_dofs_from_nodes(nodes, element_type):
-                    _prescribed_indexes.append(index)
-
-        for (property, line_id), data in self.properties.line_properties.items():
-            if property == "prescribed_dofs":
-                element_type = data["element_type"]
-                nodes = self.model.mesh.nodes_from_lines[line_id]
-                for index in self.model.get_structural_global_dofs_from_nodes(nodes, element_type):
-                    _prescribed_indexes.append(index)
-
-        for (property, point_id), data in self.properties.point_properties.items():
-            if property == "prescribed_dofs":
-                element_type = data["element_type"]
-                nodes = self.model.mesh.nodes_from_points[point_id]
-                for index in self.model.get_structural_global_dofs_from_nodes(nodes, element_type):
-                    _prescribed_indexes.append(index)
-
-        for (property, node_id), data in self.properties.nodal_properties.items():
-            if property == "prescribed_dofs":
-                element_type = data["element_type"]
-                for index in self.model.get_structural_global_dofs_from_nodes(np.array([node_id]), element_type):
-                    _prescribed_indexes.append(index)
-
-        return _prescribed_indexes
+        return property_data, np.array(list(property_data.values()))
 
     def get_unprescribed_indexes(self):
-        prescribed_indexes = np.array([*set(self.prescribed_indexes)], dtype=int)
+        prescribed_indexes = np.array([*set(self.prescribed_dofs_indexes)], dtype=int)
         return np.delete(self.all_dofs, prescribed_indexes)
 
+    def reorder_property_data_based_on_gdofs(self, input_property_data: dict):
+
+        output_property_data = dict()
+        ordered_gdofs = np.sort(list(input_property_data.keys()))
+        for gdof in ordered_gdofs:
+            output_property_data[gdof] = input_property_data[gdof]
+
+        return output_property_data
+
+    def process_prescribed_dofs_data(self):
+
+        input_prescribed_dofs_data = self.get_property_data_for_selected_property("prescribed_dofs")
+        output_prescribed_dofs_data = self.reorder_property_data_based_on_gdofs(input_prescribed_dofs_data)
+        self.prescribed_dofs_values, self.array_prescribed_values = self.process_property_arrays(output_prescribed_dofs_data)
+
+        self.prescribed_dofs_indexes = list(output_prescribed_dofs_data.keys())
+        self.unprescribed_dofs_indexes = self.get_unprescribed_indexes()
+
+    def process_structural_external_loads(self):
+
+        input_external_loads_data = self.get_property_data_for_selected_property("external_loads")
+        output_external_loads_data = self.reorder_property_data_based_on_gdofs(input_external_loads_data)
+        external_loads, _ = self.process_property_arrays(output_external_loads_data)
+
+        # self.external_loads_indexes = list(output_external_loads_data.keys())
+        output = np.zeros((len(self.all_dofs), self.number_frequencies), dtype=complex)
+
+        if external_loads:
+            indexes = list(external_loads.keys())
+            excitation = list(external_loads.values())
+            output[indexes, :] = np.array(excitation)
+
+        if self.prescribed_dofs_indexes:
+            return output[self.unprescribed_dofs_indexes, :]
+        else:
+            return output
+
     def get_matrices_dropping_indexes(self):
-        return self.unprescribed_indexes, self.prescribed_indexes
+        return self.unprescribed_dofs_indexes, self.prescribed_dofs_indexes
+
+    def get_prescribed_dofs_values(self):
+        return self.prescribed_dofs_values, self.array_prescribed_values
 
     def get_all_degrees_of_freedom(self, element_2D, element_3D, active_2d_dofs):
 
@@ -347,26 +357,29 @@ class StructuralAssembler:
         _stiffness_matrix_full = csr_matrix((self.data_K, (self.ind_rows, self.ind_cols)), shape=(self.n_dofs, self.n_dofs))
         _mass_matrix_full = csr_matrix((self.data_M, (self.ind_rows, self.ind_cols)), shape=(self.n_dofs, self.n_dofs))
 
-        self.process_indexes()
+        self.process_prescribed_dofs_data()
 
         if len(self.active_2d_element_dofs):
-            self.unprescribed_shell_dofs = np.intersect1d(self.unprescribed_indexes, self.active_2d_element_dofs)
+            self.unprescribed_shell_dofs = np.intersect1d(self.unprescribed_dofs_indexes, self.active_2d_element_dofs)
             self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_shell_dofs, :][:, self.unprescribed_shell_dofs]
             self.mass_matrix = _mass_matrix_full[self.unprescribed_shell_dofs, :][:, self.unprescribed_shell_dofs]
 
         else:
 
-            # self.unprescribed_indexes = self.dofs_from_3d_elements
-            self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-            self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+            # self.unprescribed_dofs_indexes = self.dofs_from_3d_elements
+            self.mass_matrix = _mass_matrix_full[self.unprescribed_dofs_indexes, :][:, self.unprescribed_dofs_indexes]
+            self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_dofs_indexes, :][:, self.unprescribed_dofs_indexes]
             
-            if self.prescribed_indexes:
-                self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-                self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+            if self.prescribed_dofs_indexes:
+                self.mass_matrix = _mass_matrix_full[self.unprescribed_dofs_indexes, :][:, self.unprescribed_dofs_indexes]
+                self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_dofs_indexes, :][:, self.unprescribed_dofs_indexes]
 
             else:
                 self.mass_matrix = _mass_matrix_full
                 self.stiffness_matrix = _stiffness_matrix_full
+
+        self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_dofs_indexes]
+        self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_dofs_indexes]
 
     def process_assemble(self):
 
@@ -384,6 +397,8 @@ class StructuralAssembler:
         self.assemble_global_matrices()
         dt = time() - t0
         print(f"Elapsed time to assemble the global stiffness matrix: {round(dt, 4)} [s]")
+
+        self.external_loads = self.process_structural_external_loads()
 
         # A = self.get_structural_excitations_by_nodal_attribution()
         # B = self.get_structural_excitations_by_element_integration()

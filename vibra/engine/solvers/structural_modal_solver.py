@@ -3,6 +3,7 @@
 import logging
 
 import numpy as np
+from functools import cache
 from scipy.linalg import eig
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh, inv, lobpcg
 
@@ -37,9 +38,68 @@ class StructuralModalSolver:
                 else:
                     self.analysis_type = "acoustic"
 
+    @cache
+    def get_max_min_values_of_displacements(self, column: int, disp_type: str):
+        """ This method returns the minimum and maximum displacement values
+            of selected frequency for animation purposes.
+
+            Parameters:
+            -----------
+            column: int value relative to frequency column index.
+
+            Returns:
+            -----------
+            u_min, u_max: float values for minimum and maximum displacements,
+
+        """
+
+        data = self.modal_shape[:, column]
+        amplitudes = np.abs(data)
+        phases = np.angle(data)
+
+        r_min = 1
+        r_max = 0
+        thetas = np.arange(0, 360, 2) * (np.pi / 180)
+
+        for theta in thetas:
+
+            results = (amplitudes * np.cos(phases + theta)).reshape(-1, 3)
+
+            if disp_type == "u_x":
+                u_xyz = results * np.array([1.0, 0.0, 0.0])
+            elif disp_type == "u_y":
+                u_xyz = results * np.array([0.0, 1.0, 0.0])
+            elif disp_type == "u_z":
+                u_xyz = results * np.array([0.0, 0.0, 1.0])
+            else:
+                u_xyz = np.linalg.norm(results, axis=1)
+
+            r_min_i = np.min(u_xyz)
+            if r_min_i < r_min:
+                r_min = r_min_i
+
+            r_max_i = np.max(u_xyz)
+            if r_max_i > r_max:
+                r_max = r_max_i
+
+        # print("get_max_min_values_of_displacements", r_min, r_max)
+
+        if disp_type == "u_sum":
+            return 0., r_max
+
+        else:
+
+            if np.abs(r_min) != np.abs(r_max):
+                max_abs = np.max(np.abs([r_min, r_max]))
+                r_min = -max_abs
+                r_max = max_abs
+
+        return r_min, r_max
+
     def solve(self, K=[], M=[], which="LM", normalize=True, harmonic_analysis=False):
+        """ 
         """
-        """
+        self.get_max_min_values_of_displacements.cache_clear()
 
         if K == [] and M == []:
             K = self.assembler.stiffness_matrix
@@ -58,12 +118,12 @@ class StructuralModalSolver:
         natural_frequencies = natural_frequencies[index_order]
         modal_shape = modal_shape[:, index_order]
 
-        self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
-        self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_values()
+        self.unprescribed_dofs_indexes, self.prescribed_dofs_indexes = self.assembler.get_matrices_dropping_indexes()
+        self.prescribed_dofs_values, self.array_prescribed_dofs_values = self.assembler.get_prescribed_dofs_values()
 
         if not harmonic_analysis:
             modal_shape = self._reinsert_prescribed_dofs(modal_shape, modal_analysis=True)
-            for value in self.prescribed_values:
+            for value in self.prescribed_dofs_values:
                 if value is not None:
                     if (isinstance(value, complex) and value != complex(0)) or (isinstance(value, np.ndarray) and sum(value) != complex(0)):
                         self.warning_modal = "The Prescribed DOFs of non-zero values have been ignored in the modal analysis. "
@@ -105,13 +165,13 @@ class StructuralModalSolver:
             print("reinsert dofs -> ", len(disp_dofs))
 
         else:
-            full_solution[self.unprescribed_indexes, :] = solution
+            full_solution[self.unprescribed_dofs_indexes, :] = solution
 
         if modal_analysis:
             return np.real(full_solution)
 
-        if len(self.prescribed_indexes) > 0:
-            full_solution[self.prescribed_indexes, :] = self.array_prescribed_values[:, 0:cols]
+        if len(self.prescribed_dofs_indexes) > 0:
+            full_solution[self.prescribed_dofs_indexes, :] = self.array_prescribed_dofs_values[:, 0:cols]
             return full_solution
 
 # fmt: on

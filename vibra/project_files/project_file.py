@@ -444,8 +444,8 @@ class ProjectFile:
                 structural_harmonic_solver = app().project.structural_harmonic_solver
                 if structural_harmonic_solver is not None:
                     if structural_harmonic_solver.solution is not None:
-                        frequencies = acoustic_harmonic_solver.frequencies
-                        solution = acoustic_harmonic_solver.solution
+                        frequencies = structural_harmonic_solver.frequencies
+                        solution = structural_harmonic_solver.solution
                         f.create_dataset("harmonic_structural/frequencies", data=frequencies, dtype=float)
                         f.create_dataset("harmonic_structural/solution", data=solution, dtype=complex)
 

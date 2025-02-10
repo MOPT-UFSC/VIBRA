@@ -1,17 +1,18 @@
-import os
-from math import pi
-from pathlib import Path
 
-import numpy as np
+from PyQt5.QtWidgets import QCheckBox, QComboBox, QDialog, QFileDialog, QLabel, QLineEdit, QPushButton, QRadioButton, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QCloseEvent
 from PyQt5 import uic
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
 
 from vibra import app, UI_DIR
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+
+from os.path import basename
+from pathlib import Path
+
+import numpy as np
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -86,9 +87,15 @@ class StructuralExternalLoadsInputs(QDialog):
 
     def _define_qt_variables(self):
 
+        # QCheckBox
+        self.checkBox_averaged_constant_values: QCheckBox
+        self.checkBox_averaged_table_values: QCheckBox
+
         # QComboBox
         self.comboBox_attribution_type: QComboBox
         self.comboBox_element_type: QComboBox
+        self.comboBox_load_distribution_constant_values: QComboBox
+        self.comboBox_load_distribution_table_values: QComboBox
 
         # QLabel
         self.label_Fx_constant: QLabel
@@ -153,7 +160,7 @@ class StructuralExternalLoadsInputs(QDialog):
         self.tabWidget_main: QTabWidget
 
         # QTreeWidget
-        self.treeWidget_structural_loads: QTreeWidget
+        self.treeWidget_external_loads: QTreeWidget
 
     def _create_list_lineEdits(self):
 
@@ -178,13 +185,15 @@ class StructuralExternalLoadsInputs(QDialog):
     def _config_widgets(self):
         #
         for i, w in enumerate([60, 100, 160]):
-            self.treeWidget_structural_loads.setColumnWidth(i, w)
-            self.treeWidget_structural_loads.headerItem().setTextAlignment(i, Qt.AlignCenter)
+            self.treeWidget_external_loads.setColumnWidth(i, w)
+            self.treeWidget_external_loads.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
         #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
+        self.comboBox_load_distribution_constant_values.currentIndexChanged.connect(self.update_controls_for_constant_values)
+        self.comboBox_load_distribution_table_values.currentIndexChanged.connect(self.update_controls_for_table_values)
         #
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
@@ -199,10 +208,13 @@ class StructuralExternalLoadsInputs(QDialog):
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
-        self.treeWidget_structural_loads.itemClicked.connect(self.on_click_item)
-        self.treeWidget_structural_loads.itemDoubleClicked.connect(self.on_double_click_item)
+        self.treeWidget_external_loads.itemClicked.connect(self.on_click_item)
+        self.treeWidget_external_loads.itemDoubleClicked.connect(self.on_double_click_item)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        #
+        self.update_controls_for_constant_values()
+        self.update_controls_for_table_values()
 
     def geometry_selection_callback(self):
 
@@ -428,13 +440,18 @@ class StructuralExternalLoadsInputs(QDialog):
             real_values = [value if value is None else np.real(value) for value in external_loads]
             imag_values = [value if value is None else np.imag(value) for value in external_loads]
 
+            nodal_attribution = bool(self.comboBox_load_distribution_constant_values.currentIndex())
+            key_avg = self.checkBox_averaged_constant_values.isChecked()
+
             for selected_id in selected_ids:
 
                 data = {
                         "element_type" : element_type,
                         "values" : external_loads,
                         "real_values" : real_values,
-                        "imag_values" : imag_values
+                        "imag_values" : imag_values,
+                        "nodal_attribution": nodal_attribution,
+                        "averaged": key_avg,
                         }
 
                 if attribution_type == 0:
@@ -488,7 +505,7 @@ class StructuralExternalLoadsInputs(QDialog):
             app().config.write_last_folder_path_in_file("imported table folder", imported_table_path)
 
             imported_file = np.loadtxt(imported_table_path, delimiter=",")
-            imported_filename = os.path.basename(imported_table_path)
+            imported_filename = basename(imported_table_path)
 
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum "
@@ -681,6 +698,9 @@ class StructuralExternalLoadsInputs(QDialog):
         if self.Mz_table_path is None:
             self.Mz_table_values, self.Mz_table_path = self.load_table(self.lineEdit_path_table_Mz, "Mz", direct_load = True)
 
+        nodal_attribution = bool(self.comboBox_load_distribution_table_values.currentIndex())
+        key_avg = self.checkBox_averaged_table_values.isChecked()
+
         for selected_id in selected_ids:
             
             if self.Fx_table_values is not None:
@@ -719,13 +739,15 @@ class StructuralExternalLoadsInputs(QDialog):
                 message = "It is necessary to enter at least one external load "
                 message += "before confirming the property assignment."
                 PrintMessageInput([window_title_1, title, message]) 
-                return 
+                return
 
             data = {
                     "element_type" : element_type,
                     "table_names" : table_names,
                     "table_paths" : table_paths,
-                    "values" : external_loads
+                    "values" : external_loads,
+                    "nodal_attribution": nodal_attribution,
+                    "averaged": key_avg,
                     }
 
             if attribution_type == 0:
@@ -869,7 +891,7 @@ class StructuralExternalLoadsInputs(QDialog):
 
     def load_model_info(self):
 
-        self.treeWidget_structural_loads.clear()
+        self.treeWidget_external_loads.clear()
         for (property, *args), data in self.properties.surface_properties.items():
 
             if property == "external_loads":
@@ -879,7 +901,7 @@ class StructuralExternalLoadsInputs(QDialog):
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-                self.treeWidget_structural_loads.addTopLevelItem(new)
+                self.treeWidget_external_loads.addTopLevelItem(new)
 
         for (property, *args), data in self.properties.line_properties.items():
 
@@ -890,7 +912,7 @@ class StructuralExternalLoadsInputs(QDialog):
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-                self.treeWidget_structural_loads.addTopLevelItem(new)
+                self.treeWidget_external_loads.addTopLevelItem(new)
 
         for (property, *args), data in self.properties.point_properties.items():
 
@@ -901,7 +923,7 @@ class StructuralExternalLoadsInputs(QDialog):
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-                self.treeWidget_structural_loads.addTopLevelItem(new)
+                self.treeWidget_external_loads.addTopLevelItem(new)
 
         for (property, *args), data in self.properties.nodal_properties.items():
 
@@ -912,7 +934,7 @@ class StructuralExternalLoadsInputs(QDialog):
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-                self.treeWidget_structural_loads.addTopLevelItem(new)
+                self.treeWidget_external_loads.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 
@@ -952,6 +974,16 @@ class StructuralExternalLoadsInputs(QDialog):
 
             self.lineEdit_selection_id.setDisabled(False)
             self.pushButton_attribute.setEnabled(True)
+
+    def update_controls_for_constant_values(self):
+        key = bool(self.comboBox_load_distribution_constant_values.currentIndex())
+        self.checkBox_averaged_constant_values.setChecked(key)
+        self.checkBox_averaged_constant_values.setEnabled(key)
+
+    def update_controls_for_table_values(self):
+        key = bool(self.comboBox_load_distribution_table_values.currentIndex())
+        self.checkBox_averaged_table_values.setChecked(key)
+        self.checkBox_averaged_table_values.setEnabled(key)
 
     def on_click_item(self, item):
 
