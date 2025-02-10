@@ -27,7 +27,7 @@ PhysicalDomain = Literal[
 
 class AnalysisToolbar(QToolBar):
 
-    analysis_finished = pyqtSignal()
+    enable_pushbutons = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -68,8 +68,8 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_run_analysis.clicked.connect(self.run_analysis)
         self.pushButton_configure_analysis.clicked.connect(self.configure_analysis)
         self.pushButton_reset_solution.clicked.connect(self.reset_solution)
-        self.analysis_finished.connect(self.update_pushbutton_run_analysis)
-        self.analysis_finished.connect(self.update_pushbutton_reset_solution)
+        self.enable_pushbutons.connect(self.update_pushbutton_run_analysis)
+        self.enable_pushbutons.connect(self.update_pushbutton_reset_solution)
         self.combo_box_analysis_domain.currentTextChanged.connect(lambda: self.update_pushbutton_run_analysis(True))
         self.combo_box_analysis_type.currentTextChanged.connect(lambda: self.update_pushbutton_run_analysis(True))
 
@@ -176,6 +176,7 @@ class AnalysisToolbar(QToolBar):
     
     def run_analysis(self):
         self.main_window.menu_widget.run_analysis()
+        self.update_pushbutton_reset_solution()
     
     def reset_solution(self):
         app().project.reset_solutions()
@@ -184,6 +185,7 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_reset_solution.setDisabled(True)
         self.pushButton_run_analysis.setDisabled(True)
         app().main_window.action_model_workspace_callback()
+        app().main_window.disable_advanced_acoustic_plots_buttons(True)
         app().project.last_analysis = None
 
     def configure_analysis(self):

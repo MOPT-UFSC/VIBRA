@@ -84,7 +84,7 @@ class AcousticModalAnalysisInput(QDialog):
         if self.check():
             return
         self.complete = True
-        app().main_window.analysis_toolbar.analysis_finished.emit()
+        app().main_window.analysis_toolbar.enable_pushbutons.emit()
         self.close()
 
     def button_clicked(self):

@@ -402,8 +402,12 @@ class LoadProject:
 
         if results_data:
             logging.info("Loading results..." + ProgressStatus(20, 100))
-            # for key, data in results_data.items():
-            analysis_type = self.file.read_analysis_setup_from_file()["analysis_type"]
+        
+            analysis_setup = self.file.read_analysis_setup_from_file()
+            if analysis_setup is None:
+                return
+            
+            analysis_type = analysis_setup["analysis_type"]
 
             key = None
             if analysis_type == "Structural Modal Analysis":
@@ -435,9 +439,7 @@ class LoadProject:
                         str_harmonic_analysis = True
                         app().project.structural_harmonic_solver.frequencies = data["frequencies"]
                         app().project.structural_harmonic_solver.solution = data["solution"]
-                # else:
-                #     continue
-            
+          
             logging.info("Updating analysis render..." + ProgressStatus(85, 100))
             if act_modal_analysis:
                 app().main_window.configure_acoustic_modal_analysis_render_widget()

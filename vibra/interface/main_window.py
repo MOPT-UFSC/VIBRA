@@ -212,6 +212,7 @@ class MainWindow(QMainWindow):
 
         self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)
+        self.disable_advanced_acoustic_plots_buttons(True)
     
     def _config_window(self):
         self.setMinimumSize(800, 600)
@@ -1121,6 +1122,11 @@ class MainWindow(QMainWindow):
             ErrorMessage(e)
         else:
             self.configure_acoustic_harmonic_analysis_render_widget(True)
+    
+    def disable_advanced_acoustic_plots_buttons(self, disabled : bool):
+        self.action_plot_specific_acoustic_impedance.setDisabled(disabled)
+        self.action_plot_particle_velocity.setDisabled(disabled)
+        self.action_export_element_transfer_data.setDisabled(disabled)
 
 def create_new_folder(path : Path, folder_name : str) -> Path:
     folder_path = path / folder_name
