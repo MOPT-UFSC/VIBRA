@@ -2,7 +2,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QApplication
 
 from vibra import app
-from vibra.interface.tabs.geometry_info_bar import GeometryInfoBar
+# from vibra.interface.tabs.geometry_info_bar import GeometryInfoBar
 from vibra.interface.viewer_3d.actors.section_plane_actor import SectionPlaneActor
 from ..actors.faces_actor import FacesActor
 from ..actors.lines_actor import LinesActor
