@@ -4,7 +4,6 @@ from PyQt5 import uic
 
 from vibra import *
 # from vibra.config import UserConfig
-from vibra.interface.analysis_filter_menu import AnalysisFilter
 from vibra.interface.section_plane_widget import SectionPlaneWidget
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.exception_message import ErrorMessage
@@ -19,18 +18,15 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.help_widget import HelpWidget
 from vibra.interface.viewer_3d.render_widgets.acoustic_harmonic_analysis_render_widget import AcousticHarmonicAnalysisRenderWidget
 from vibra.interface.viewer_3d.render_widgets.acoustic_modal_analysis_render_widget import AcousticModalAnalysisRenderWidget
-from vibra.interface.viewer_3d.render_widgets.example_render_widget import ExampleRenderWidget
 from vibra.interface.viewer_3d.render_widgets.geometry_render_widget import GeometryRenderWidget
 from vibra.interface.viewer_3d.render_widgets.mesh_render_widget import MeshRenderWidget
 from vibra.interface.viewer_3d.render_widgets.structural_modal_analysis_render_widget import StructuralModalAnalysisRenderWidget
 from vibra.interface.welcome_widget import WelcomeWidget
 
-from vibra.interface.mesh.mesher_inputs import MesherInputs
 from molde.render_widgets import CommonRenderWidget
 
 from vibra.utils.progress_status import ProgressStatus
 from vibra.utils.icons import load_icon
-from vibra.utils.enumerators import Workspace
 
 from vibra.project_files.load_project import LoadProject
 from vibra.project_files.project import Project
