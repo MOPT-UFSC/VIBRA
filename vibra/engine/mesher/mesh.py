@@ -52,6 +52,7 @@ class Mesh:
         self.nodes_from_lines = dict()
         self.nodes_from_surfaces = dict()
         self.nodes_from_volumes = dict()
+        self.surfaces_from_node = defaultdict(list)
 
         self.gmsh_elements_from_lines = dict()
         self.gmsh_elements_from_surfaces = dict()
@@ -421,6 +422,7 @@ class Mesh:
         self.nodes_from_lines.clear()
         self.nodes_from_surfaces.clear()
         self.nodes_from_volumes.clear()
+        self.surfaces_from_node.clear()
 
         self.gmsh_elements_from_lines.clear()
         self.gmsh_elements_from_surfaces.clear()
@@ -487,9 +489,12 @@ class Mesh:
 
             elif dim == 2:  # Surfaces
                 connectivity_dim2[dim, tag] = elements_data
-                self.nodes_from_surfaces[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
+                surface_nodes = np.array([*set(element_nodes[0])], dtype=int) - 1
+                self.nodes_from_surfaces[tag] = surface_nodes
                 self.connectivity_from_surfaces[tag] = array_element_nodes
                 self.gmsh_elements_from_surfaces[tag] = np.array([*set(element_indexes[0])], dtype=int)
+                self._update_surfaces_from_nodes(tag, surface_nodes)
+                del surface_nodes
 
             elif dim == 3:  # Solids
                 connectivity_dim3[dim, tag] = elements_data
@@ -506,17 +511,19 @@ class Mesh:
         # np.savetxt("faces_connectivity.dat", self.faces_connectivity, delimiter=",", fmt="%i")
         # np.savetxt("solids_connectivity.dat", self.solids_connectivity, delimiter=",", fmt="%i")
 
-        # from pprint import pprint
-        # pprint(self.lines_from_surface)
-        # pprint(self.points_from_line)
-
         # # internal check for solid connectivity
         # aux_zeros = np.zeros(len(self.solids_connectivity[0,4:]))
         # for i, values in enumerate(self.solids_connectivity[:,4:]):
         #     if (aux_zeros == values).all():
         #         print(f"The solid element #{i} doesn't have valid connectivity")
-        
+
         self.create_element_mappings()
+
+
+    def _update_surfaces_from_nodes(self, surface_id, node_ids):
+        for node_id in node_ids:
+            self.surfaces_from_node[node_id].append(surface_id)
+
 
     def create_element_mappings(self):
         self._maps_lines_by_elements()
@@ -524,6 +531,7 @@ class Mesh:
         self._maps_volumes_by_elements()
         self._maps_face_elements_to_solid_elements()
         self.get_principal_diagonal_structure_parallelepiped()
+
 
     def _maps_lines_by_elements(self):
         self.line_from_element.clear()
