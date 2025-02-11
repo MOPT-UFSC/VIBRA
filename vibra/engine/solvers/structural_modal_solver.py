@@ -12,8 +12,9 @@ from vibra.utils.progress_status import ProgressStatus
 
 class StructuralModalSolver:
     def __init__(self, assembler, analysis_data=None):
-        #
+
         self.assembler = assembler
+
         self.reset_variables()
         self.load_analysis_data(analysis_data)
 
@@ -22,7 +23,7 @@ class StructuralModalSolver:
         self.sigma_factor = 0.01
         self.analysis_type = None
         self.natural_frequencies = None
-        self.modal_shape = None
+        self.solution_full = None
         self.eigen_values = None
         self.eigen_vectors = None
 
@@ -53,7 +54,8 @@ class StructuralModalSolver:
 
         """
 
-        data = self.modal_shape[:, column]
+        data = self.solution_full[self.displacement_dofs, column]
+
         amplitudes = np.abs(data)
         phases = np.angle(data)
 
@@ -118,6 +120,7 @@ class StructuralModalSolver:
         natural_frequencies = natural_frequencies[index_order]
         modal_shape = modal_shape[:, index_order]
 
+        self.natural_frequencies = natural_frequencies
         self.unprescribed_dofs_indexes, self.prescribed_dofs_indexes = self.assembler.get_matrices_dropping_indexes()
         self.prescribed_dofs_values, self.array_prescribed_dofs_values = self.assembler.get_prescribed_dofs_values()
 
@@ -128,9 +131,6 @@ class StructuralModalSolver:
                     if (isinstance(value, complex) and value != complex(0)) or (isinstance(value, np.ndarray) and sum(value) != complex(0)):
                         self.warning_modal = "The Prescribed DOFs of non-zero values have been ignored in the modal analysis. "
                         self.warning_modal += "The null value has been attributed to those DOFs with non-zero values."
-
-        self.natural_frequencies = natural_frequencies
-        self.modal_shape = modal_shape
 
         return natural_frequencies, modal_shape
 
@@ -154,24 +154,18 @@ class StructuralModalSolver:
 
         rows = self.assembler.n_dofs
         cols = solution.shape[1]
+        self.displacement_dofs = self.assembler.displacement_dofs
 
-        full_solution = np.zeros((rows, cols), dtype=complex)
+        solution_full = np.zeros((rows, cols), dtype=complex)
 
         if len(self.assembler.active_2d_element_dofs):
-            disp_dofs = self.assembler.displacement_dofs
             unprescribed_shell_dofs = self.assembler.unprescribed_shell_dofs
-            full_solution[unprescribed_shell_dofs, :] = solution
-            full_solution = full_solution[disp_dofs, :]
-            print("reinsert dofs -> ", len(disp_dofs))
+            solution_full[unprescribed_shell_dofs, :] = solution
+            self.solution_full = solution_full
+            # print("reinserted dofs -> ", len(self.displacement_dofs))
 
         else:
-            full_solution[self.unprescribed_dofs_indexes, :] = solution
-
-        if modal_analysis:
-            return np.real(full_solution)
-
-        if len(self.prescribed_dofs_indexes) > 0:
-            full_solution[self.prescribed_dofs_indexes, :] = self.array_prescribed_dofs_values[:, 0:cols]
-            return full_solution
+            solution_full[self.unprescribed_dofs_indexes, :] = solution
+            self.solution_full = solution_full
 
 # fmt: on

@@ -29,7 +29,6 @@ class AcousticHarmonicSolver:
         self.analysis_type = None
         self.frequencies = None
         self.dissipation_model = None
-        self.modal_shape = None
         self.solution = None
         self.loads = None
 

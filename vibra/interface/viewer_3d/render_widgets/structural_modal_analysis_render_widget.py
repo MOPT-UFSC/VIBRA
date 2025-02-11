@@ -102,11 +102,11 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         if solver is None:
             return
 
-        if solver.modal_shape is None:
+        if solver.solution_full is None:
             return
 
         index = self.current_shape_index()
-        if not (0 <= index < solver.modal_shape.shape[1]):
+        if not (0 <= index < solver.solution_full.shape[1]):
             return
         
         if self.plane_actor is not None:
@@ -152,11 +152,11 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
             return
 
         solver = app().project.structural_modal_solver
-        if solver.modal_shape is None:
+        if solver.solution_full is None:
             return
 
         index = self.current_shape_index()
-        if not (0 <= index < solver.modal_shape.shape[1]):
+        if not (0 <= index < solver.solution_full.shape[1]):
             return
 
         # Do not update the deformation directly if an animation is running.
@@ -335,11 +335,11 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
             return
 
         solver = app().project.structural_modal_solver
-        if solver.modal_shape is None:
+        if solver.solution_full is None:
             return
 
         index = self.current_shape_index()
-        if not (0 <= index < solver.modal_shape.shape[1]):
+        if not (0 <= index < solver.solution_full.shape[1]):
             return
 
         # Map the frames from 0 to 1
@@ -376,70 +376,15 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
 
         return all([actor is not None for actor in actors])
 
-    # def _calculate_displacements(self, index, phase):
-    #     solver = app().project.structural_modal_solver
-    #     if solver.modal_shape is None:
-    #         return
-
-    #     current_modal_shape = solver.modal_shape[:, index].reshape(-1, 3).copy()
-
-    #     if self.control_bar.sum_button.isChecked():
-    #         values_1 = np.linalg.norm(current_modal_shape, axis=1).copy()
-    #         displacements = current_modal_shape.copy()
-
-    #     elif self.control_bar.response_ux_button.isChecked():
-    #         values_1 = current_modal_shape[:, 0]
-    #         displacements = current_modal_shape * np.array([1.0, 0.0, 0.0])
-
-    #     elif self.control_bar.response_uy_button.isChecked():
-    #         values_1 = current_modal_shape[:, 1]
-    #         displacements = current_modal_shape * np.array([0.0, 1.0, 0.0])
-
-    #     elif self.control_bar.response_uz_button.isChecked():
-    #         values_1 = current_modal_shape[:, 2]
-    #         displacements = current_modal_shape * np.array([0.0, 0.0, 1.0])
-    #     #
-    #     max_abs = np.max(np.abs(values_1))
-    #     values_1 /= max_abs
-    #     #
-    #     min_value = round(min(values_1), 1)
-    #     max_value = round(max(values_1), 1)
-    #     #
-
-    #     if self.control_bar.update_coloring.isChecked():
-    #         mod_values = displacements * np.cos(phase * np.pi / 180)
-
-    #         if self.control_bar.sum_button.isChecked():
-    #             values_2 = np.linalg.norm(mod_values, axis=1).copy()
-
-    #         elif self.control_bar.response_ux_button.isChecked():
-    #             values_2 = mod_values[:, 0]
-
-    #         elif self.control_bar.response_uy_button.isChecked():
-    #             values_2 = mod_values[:, 1]
-
-    #         elif self.control_bar.response_uz_button.isChecked():
-    #             values_2 = mod_values[:, 2]
-
-    #         values_2 /= max_abs
-    #         if not self.control_bar.sum_button.isChecked():
-    #             if np.abs(min_value) != np.abs(max_value):
-    #                 min_value = -np.max(np.abs([min_value, max_value]))
-    #                 max_value = np.max(np.abs([min_value, max_value]))
-    #     else:
-    #         values_2 = values_1.copy()
-
-    #     color_scalars = values_2
-
-    #     return displacements, color_scalars, min_value, max_value
-
     def _calculate_displacements(self, index: int, selected_phase_deg: float):
 
         solver = app().project.structural_modal_solver
-        if solver.modal_shape is None:
+        if solver.solution_full is None:
             return
 
-        results_complex = solver.modal_shape[:, index]
+        disp_dofs = solver.displacement_dofs
+        results_complex = solver.solution_full[disp_dofs, index]
+
         amplitudes = np.abs(results_complex)
         phases = np.angle(results_complex)
 

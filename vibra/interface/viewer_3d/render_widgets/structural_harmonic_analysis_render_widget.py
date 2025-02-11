@@ -381,7 +381,7 @@ class StructuralHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         if solver.solution_full is None:
             return
 
-        disp_dofs = solver.assembler.displacement_dofs
+        disp_dofs = solver.displacement_dofs
         results_complex = solver.solution_full[disp_dofs, index]
 
         amplitudes = np.abs(results_complex)

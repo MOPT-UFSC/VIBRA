@@ -55,9 +55,6 @@ class Project:
         if self.acoustic_harmonic_solver is not None:
             self.acoustic_harmonic_solver.reset_variables()
 
-        if self.structural_modal_solver is not None:
-            self.structural_modal_solver.reset_variables()
-
         if self.structural_harmonic_solver is not None:
             self.structural_harmonic_solver.reset_variables()
 

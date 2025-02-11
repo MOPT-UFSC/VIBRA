@@ -18,17 +18,16 @@ from vibra.utils.progress_status import ProgressStatus
 
 class StructuralHarmonicSolver:
     def __init__(self, assembler, analysis_data=None):
-        #
+
         self.assembler = assembler
-        #
+
         self.reset_variables()
         self.load_analysis_data(analysis_data)
 
     def reset_variables(self):
         self.analysis_type = None
         self.frequencies = None
-        self.dissipation_model = None
-        self.modal_shape = None
+        self.disp_dofs = None
         self.solution_full = None
         self.loads = None
         self.global_damping = (0, 0, 0, 0)
@@ -46,9 +45,6 @@ class StructuralHarmonicSolver:
 
                 self.global_damping = analysis_data.get("global_damping", (0, 0, 0, 0))
 
-    def load_dissipation_model(self, data):
-        self.dissipation_model = data
-
     @cache
     def get_max_min_values_of_displacements(self, column: int, disp_type: str):
         """ This method returns the minimum and maximum displacement values
@@ -64,8 +60,7 @@ class StructuralHarmonicSolver:
 
         """
 
-        disp_dofs = self.assembler.displacement_dofs
-        data = self.solution_full[disp_dofs, column]
+        data = self.solution_full[self.displacement_dofs, column]
 
         amplitudes = np.abs(data)
         phases = np.angle(data)
@@ -184,6 +179,8 @@ class StructuralHarmonicSolver:
         cols = solution.shape[1]
         full_solution = np.zeros((rows, cols), dtype=complex)
 
+        self.displacement_dofs = self.assembler.displacement_dofs
+
         if len(self.prescribed_dofs_indexes):
             full_solution[self.prescribed_dofs_indexes, :] = self.array_prescribed_dofs_values[:, 0:cols]
 
@@ -191,8 +188,7 @@ class StructuralHarmonicSolver:
             unprescribed_shell_dofs = self.assembler.unprescribed_shell_dofs
             full_solution[unprescribed_shell_dofs, :] = solution
             self.solution_full = full_solution
-            # disp_dofs = self.assembler.displacement_dofs
-            # print("reinserted dofs -> ", len(disp_dofs))
+            # print("reinserted dofs -> ", len(self.displacement_dofs))
 
         else:
             full_solution[self.unprescribed_dofs_indexes, :] = solution

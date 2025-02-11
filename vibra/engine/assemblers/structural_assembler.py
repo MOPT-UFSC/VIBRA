@@ -26,10 +26,12 @@ class StructuralAssembler:
         self.reset()
 
     def reset(self):
+
         self.stiffness_matrix = None
         self.mass_matrix = None
         self.frequencies = None
 
+        self.displacement_dofs = np.array([])
         self.prescribed_dofs_values = np.array([])
         self.prescribed_dofs_indexes = np.array([])
         self.unprescribed_dofs_indexes = np.array([])

@@ -48,7 +48,6 @@ class AnalysisTypeInput(QDialog):
         self.analysis_data = {}
         self.analysis_id = None
         self.analysis_type_label = None
-        self.method_id = None
         self.analysis_method_label = None
         self.complete = False
         self.modes = 0
@@ -104,17 +103,12 @@ class AnalysisTypeInput(QDialog):
         self.finalize()
 
     def harmonic_acoustic(self):
-        self.close()
-        self.method_id = 0
-        self.analysis_id = 3
-        self.analysis_type_label = "Acoustic Harmonic Analysis"
-        self.analysis_method_label = "Direct Method"
-        #
+
         self.analysis_data = {
-            "analysis_id": self.analysis_id,
-            "analysis_type": self.analysis_type_label,
-            "analysis_method_label": self.analysis_method_label,
-        }
+                              "analysis_id": 3,
+                              "analysis_type": "Acoustic Harmonic Analysis",
+                              "analysis_method_label": "Direct Method",
+                              }
         self.finalize()
 
     def harmonic_coupled(self):
@@ -172,7 +166,7 @@ class AnalysisTypeInput(QDialog):
         app().project.set_analysis_data(self.analysis_data)
         app().project.create_solver()
 
-        if self.analysis_id in [2, 4]:
+        if self.analysis_data["analysis_id"] in [2, 4]:
             app().file.write_analysis_setup_in_file(self.analysis_data)
 
         self.close()

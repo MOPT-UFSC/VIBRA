@@ -413,7 +413,8 @@ class LoadProject:
                 elif key == "modal_structural":
                     str_modal_analysis = True
                     app().project.structural_modal_solver.natural_frequencies = data["natural_frequencies"]
-                    app().project.structural_modal_solver.modal_shape = data["modal_shape"]
+                    app().project.structural_modal_solver.solution_full = data["modal_shape"]
+                    app().project.structural_modal_solver.displacement_dofs = data["displacement_dofs"]
 
                 elif key == "harmonic_acoustic":
                     act_harmonic_analysis = True
@@ -424,12 +425,14 @@ class LoadProject:
                 elif key == "harmonic_structural":
                     str_harmonic_analysis = True
                     app().project.structural_harmonic_solver.frequencies = data["frequencies"]
-                    app().project.structural_harmonic_solver.solution = data["solution"]
+                    app().project.structural_harmonic_solver.solution_full = data["solution"]
+                    app().project.structural_harmonic_solver.displacement_dofs = data["displacement_dofs"]
 
                 else:
                     continue
             
             logging.info("Updating analysis render..." + ProgressStatus(85, 100))
+
             if act_modal_analysis:
                 app().main_window.viewer_tabs.show_acoustic_modal_analysis()
                 app().main_window.menu_widget.update_items()
@@ -443,7 +446,6 @@ class LoadProject:
                 app().main_window.menu_widget.update_items()
 
             elif str_harmonic_analysis:
-                return
                 app().main_window.viewer_tabs.show_structural_harmonic_analysis()
                 app().main_window.menu_widget.update_items()
 
