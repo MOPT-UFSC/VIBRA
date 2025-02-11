@@ -22,7 +22,7 @@ class PlotStructuralFrequencyResponseInput(QDialog):
         uic.loadUi(ui_path, self)
 
         app().main_window.set_input_widget(self)
-        app().main_window.viewer_tabs.show_geometry()
+        app().main_window.action_model_workspace_callback()
 
         self.model = app().project.model
         self.mesh = app().project.model.mesh

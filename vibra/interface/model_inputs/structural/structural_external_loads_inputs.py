@@ -29,7 +29,7 @@ class StructuralExternalLoadsInputs(QDialog):
         self.properties = app().project.model.properties
 
         app().main_window.set_input_widget(self)
-        app().main_window.viewer_tabs.show_geometry()
+        app().main_window.action_model_workspace_callback()
 
         self._config_window()
         self._initialize()
@@ -297,9 +297,9 @@ class StructuralExternalLoadsInputs(QDialog):
 
     def attribution_type_callback(self):
         if self.comboBox_attribution_type.currentIndex() == 3:
-            app().main_window.viewer_tabs.show_mesh()
+            app().main_window.action_mesh_workspace_callback()
         else:
-            app().main_window.viewer_tabs.show_geometry()
+            app().main_window.action_model_workspace_callback()
 
     def element_type_callback(self):
 
@@ -1008,10 +1008,10 @@ class StructuralExternalLoadsInputs(QDialog):
                 app().main_window.set_mesh_selection(nodes=[int(selected_id)])
 
             if selection == "Node":
-                app().main_window.viewer_tabs.show_mesh()
+                app().main_window.action_mesh_workspace_callback()
 
             else:
-                app().main_window.viewer_tabs.show_geometry()
+                app().main_window.action_model_workspace_callback()
 
             self.lineEdit_selection_id.setText(text)
 
@@ -1124,7 +1124,7 @@ class StructuralExternalLoadsInputs(QDialog):
     def actions_to_finalize(self):
         self.load_model_info()
         self.reset_input_fields()
-        app().main_window.viewer_tabs.update_info_text()
+        app().main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
         # app().main_window.viewer_tabs.mesh_widget.symbols_actor.build()

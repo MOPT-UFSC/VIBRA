@@ -38,5 +38,5 @@ class ProcessAnalysis:
             self.project.solve_structural_harmonic_analysis()
         except NotImplementedError as e:
             ErrorMessage(e)
-        # else:
-            # self.main_window.viewer_tabs.show_structural_harmonic_analysis()
+        else:
+            self.main_window.configure_structural_harmonic_analysis_render_widget(True)

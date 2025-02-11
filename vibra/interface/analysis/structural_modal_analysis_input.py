@@ -103,10 +103,11 @@ class StructuralModalAnalysisInput(QDialog):
                                 }
 
         self.setup_defined = True
+        app().main_window.analysis_toolbar.enable_pushbutons.emit()
+        self.close()
+
     def confirm(self):
-        if self.check():
-            return
-        self.complete = True
+        self.proceed_solution = True
         app().main_window.analysis_toolbar.enable_pushbutons.emit()
         self.close()
 
@@ -116,6 +117,7 @@ class StructuralModalAnalysisInput(QDialog):
             return
 
         self.proceed_solution = True
+        self.confirm()
 
     def button_clicked(self):
         self.check_analysis_inputs()

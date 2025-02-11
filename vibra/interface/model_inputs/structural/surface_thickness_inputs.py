@@ -23,8 +23,8 @@ class SurfaceThicknessInput(QDialog):
         uic.loadUi(ui_path, self)
 
         app().main_window.set_input_widget(self)
-        app().main_window.viewer_tabs.show_geometry()
-        app().main_window.unhide_all_callback()
+        app().main_window.action_model_workspace_callback()
+        app().main_window.action_unhide_all_callback()
 
         self.project = app().project
         self.model = app().project.model
@@ -254,7 +254,7 @@ class SurfaceThicknessInput(QDialog):
 
     def actions_to_finalize(self):
         self.load_info()
-        app().main_window.viewer_tabs.update_info_text()
+        app().main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
         # app().main_window.viewer_tabs.mesh_widget.symbols_actor.build()
@@ -322,7 +322,7 @@ class SurfaceThicknessInput(QDialog):
             for _surface_id in surfaces_to_hide:
                 app().main_window.hidden_surfaces.add(_surface_id)
     
-            app().main_window.viewer_tabs.update_hidden_plots()
+            app().main_window.update_hidden_plots()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

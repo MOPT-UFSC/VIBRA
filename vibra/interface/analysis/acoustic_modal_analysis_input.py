@@ -17,7 +17,7 @@ class AcousticModalAnalysisInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "analysis/acoustic/modal_analysis_input.ui"
+        ui_path = UI_DIR / "analysis/acoustic/acoustic_modal_analysis_input.ui"
         uic.loadUi(ui_path, self)
 
         app().main_window.set_input_widget(self)
@@ -102,10 +102,11 @@ class AcousticModalAnalysisInput(QDialog):
                                 }
 
         self.setup_defined = True
+        app().main_window.analysis_toolbar.enable_pushbutons.emit()
+        self.close()
+
     def confirm(self):
-        if self.check():
-            return
-        self.complete = True
+        self.proceed_solution = True
         app().main_window.analysis_toolbar.enable_pushbutons.emit()
         self.close()
 
@@ -114,7 +115,7 @@ class AcousticModalAnalysisInput(QDialog):
         if self.enter_setup_callback():
             return
 
-        self.proceed_solution = True
+        self.confirm()
 
     def button_clicked(self):
         self.check_analysis_inputs()

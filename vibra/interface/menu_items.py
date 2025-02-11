@@ -527,8 +527,6 @@ class MenuItems(QTreeWidget):
         """
         """
 
-        self.reset_solution()
-
         if not app().project.model.generated_mesh:
             obj = MesherInputs()
             if obj.complete:

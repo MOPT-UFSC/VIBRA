@@ -21,6 +21,7 @@ from vibra.interface.viewer_3d.render_widgets.acoustic_modal_analysis_render_wid
 from vibra.interface.viewer_3d.render_widgets.geometry_render_widget import GeometryRenderWidget
 from vibra.interface.viewer_3d.render_widgets.mesh_render_widget import MeshRenderWidget
 from vibra.interface.viewer_3d.render_widgets.structural_modal_analysis_render_widget import StructuralModalAnalysisRenderWidget
+from vibra.interface.viewer_3d.render_widgets.structural_harmonic_analysis_render_widget import StructuralHarmonicAnalysisRenderWidget
 from vibra.interface.welcome_widget import WelcomeWidget
 
 from molde.render_widgets import CommonRenderWidget
@@ -198,8 +199,9 @@ class MainWindow(QMainWindow):
 
         self.render_widgets_stack.addWidget(self.geometry_widget)
         self.render_widgets_stack.addWidget(self.mesh_widget)
-        self.render_widgets_stack.addWidget(self.acoustic_modal_analysis)
         self.render_widgets_stack.addWidget(self.structural_modal_analysis)
+        self.render_widgets_stack.addWidget(self.structural_harmonic_analysis)
+        self.render_widgets_stack.addWidget(self.acoustic_modal_analysis)
         self.render_widgets_stack.addWidget(self.acoustic_harmonic_analysis)
         self.render_widgets_stack.addWidget(self.help_widget)
         self.render_widgets_stack.addWidget(self.welcome_widget)
@@ -358,8 +360,9 @@ class MainWindow(QMainWindow):
         self.section_plane = SectionPlaneWidget(self)
         self.geometry_widget = GeometryRenderWidget()
         self.mesh_widget = MeshRenderWidget()
-        self.acoustic_modal_analysis = AcousticModalAnalysisRenderWidget()
         self.structural_modal_analysis = StructuralModalAnalysisRenderWidget()
+        self.structural_harmonic_analysis = StructuralHarmonicAnalysisRenderWidget()
+        self.acoustic_modal_analysis = AcousticModalAnalysisRenderWidget()
         self.acoustic_harmonic_analysis = AcousticHarmonicAnalysisRenderWidget()
         self.welcome_widget = WelcomeWidget()
         self.help_widget = HelpWidget()
@@ -511,6 +514,19 @@ class MainWindow(QMainWindow):
                 self.action_model_workspace.setEnabled(True)
             if not self.action_mesh_workspace.isEnabled():
                 self.action_mesh_workspace.setEnabled(True)
+            
+    def configure_structural_harmonic_analysis_render_widget(self, show_render_widget=False):
+        self.structural_harmonic_analysis.update_frequencies()
+        self.structural_harmonic_analysis.update_plot()
+
+        if show_render_widget:
+            self.render_widgets_stack.setCurrentWidget(self.structural_harmonic_analysis)
+
+            self.action_results_workspace.setEnabled(False)
+            if not self.action_model_workspace.isEnabled():
+                self.action_model_workspace.setEnabled(True)
+            if not self.action_mesh_workspace.isEnabled():
+                self.action_mesh_workspace.setEnabled(True)
 
     def configure_acoustic_harmonic_analysis_render_widget(self, show_render_widget=False):
         self.acoustic_harmonic_analysis.update_frequencies()
@@ -575,6 +591,8 @@ class MainWindow(QMainWindow):
                 render_widget = self.structural_modal_analysis
             elif app().project.last_analysis == "Harmonic Acoustic":
                 render_widget = self.acoustic_harmonic_analysis
+            else:
+                render_widget = self.structural_harmonic_analysis
             
             self.render_widgets_stack.setCurrentWidget(render_widget)
             self.menu_widget.update_items()

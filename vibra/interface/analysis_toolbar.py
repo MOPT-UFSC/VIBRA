@@ -2,7 +2,6 @@ from PyQt5.QtWidgets import QToolBar, QComboBox, QLabel, QPushButton, QWidget
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import Qt, QSize, pyqtSignal
 
-from vibra.interface.analysis.acoustic_harmonic_analysis_input import AcousticHarmonicAnalysisInput
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
 from vibra.interface.analysis.harmonic_analysis_method_selector_input import StructuralHarmonicAnalysisMethodSelecorInput
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
@@ -205,9 +204,11 @@ class AnalysisToolbar(QToolBar):
                 self.modal_acoustic()
         
     def harmonic_structural(self):
-        select = StructuralHarmonicAnalysisInput()
+        select = StructuralHarmonicAnalysisMethodSelecorInput()
         method_id = select.index
+
         analysis_type_label = "Structural Harmonic Analysis"
+
         if method_id == 0:
             analysis_id = 0
             analysis_method_label = "Direct Method"
@@ -222,7 +223,6 @@ class AnalysisToolbar(QToolBar):
         }
         self.finalize(analysis_data, analysis_id)
         self.run_analysis()
-
     
     def harmonic_acoustic(self):
         method_id = 0
@@ -242,41 +242,27 @@ class AnalysisToolbar(QToolBar):
     
     def modal_structural(self):
         modal = StructuralModalAnalysisInput()
+
         if modal.modes is None:
             return
-        modes = modal.modes
-        sigma_factor = modal.sigma_factor
-        analysis_id = 2
-        analysis_type_label = "Structural Modal Analysis"
-        if modal.complete:
-            analysis_data = {
-                "analysis_id": analysis_id,
-                "analysis_type": analysis_type_label,
-                "modes": modes,
-                "sigma_factor": sigma_factor,
-            }
-            self.finalize(analysis_data, analysis_id)
-            self.run_analysis()
 
+        if modal.setup_defined:
+            self.finalize(modal.analysis_setup, modal.analysis_setup["analysis_id"])
+       
+        if modal.proceed_solution:
+            self.run_analysis()
 
     def modal_acoustic(self):
         modal = AcousticModalAnalysisInput()
+
         if modal.modes is None:
             return
-        modes = modal.modes
-        sigma_factor = modal.sigma_factor
-        analysis_id = 4
-        analysis_type_label = "Acoustic Modal Analysis"
-        if modal.complete:
-            analysis_data = {
-                "analysis_id": analysis_id,
-                "analysis_type": analysis_type_label,
-                "modes": modes,
-                "sigma_factor": sigma_factor,
-            }
-            self.finalize(analysis_data, analysis_id)
+        
+        if modal.setup_defined:
+            self.finalize(modal.analysis_setup, modal.analysis_setup["analysis_id"])
+        
+        if modal.proceed_solution:
             self.run_analysis()
-
 
     def finalize(self, analysis_data: dict, analysis_id: int):
         if app().project.analysis_data is not None:
