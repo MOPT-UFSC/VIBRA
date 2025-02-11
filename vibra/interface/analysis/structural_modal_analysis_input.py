@@ -104,6 +104,11 @@ class StructuralModalAnalysisInput(QDialog):
                                 }
 
         self.setup_defined = True
+    def confirm(self):
+        if self.check():
+            return
+        self.complete = True
+        app().main_window.analysis_toolbar.enable_pushbutons.emit()
         self.close()
 
     def run_analysis(self):

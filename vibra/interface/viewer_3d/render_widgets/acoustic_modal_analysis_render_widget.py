@@ -329,7 +329,8 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
             self.plane_actor.GetProperty().SetOpacity(0.8)
             self.update()
         else:
-            self._apply_section_plane(position, rotation, inverted, section_plane.isVisible())
+            show_plane = not section_plane.keep_section_plane
+            self._apply_section_plane(position, rotation, inverted, show_plane)
 
     def _disable_section_plane(self):
         has_hidden_part = bool(self.main_window.hidden_surfaces)

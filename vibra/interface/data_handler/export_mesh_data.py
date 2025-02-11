@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QCheckBox, QDialog, QFileDialog, QLineEdit, QPushButton
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QColor
 from PyQt5 import uic
 
 from vibra import app, UI_DIR
@@ -8,6 +8,7 @@ from vibra.interface.mesh.mesher_inputs import MesherInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.formatters.icons import change_icon_color_for_widgets
 
 import os
 import numpy as np
@@ -32,15 +33,16 @@ class ExportMeshData(QDialog):
         if self.mesh is None:
             return
         else:
-            self.main_window.viewer_tabs.show_mesh()
+            self.main_window.action_mesh_workspace_callback()
 
-        self._load_icons()
+        self._configure_window()
         self._reset_variables()
         self._define_qt_variables()
         self._create_connections()
+        self.update_icons_color()
         self.exec()
 
-    def _load_icons(self):
+    def _configure_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
@@ -65,12 +67,12 @@ class ExportMeshData(QDialog):
         # QPushButton
         self.pushButton_export_mesh = self.findChild(QPushButton, 'pushButton_export_mesh')
         self.pushButton_search_folder = self.findChild(QPushButton, 'pushButton_search_folder')
-        self.pushButton_export_mesh.setIcon(self.export_icon)
-        self.pushButton_search_folder.setIcon(self.search_icon)
+
     
     def _create_connections(self):
         self.pushButton_export_mesh.clicked.connect(self.export_mesh_data)
         self.pushButton_search_folder.clicked.connect(self.search_folder)
+        self.main_window.theme_changed.connect(self.update_icons_color)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
@@ -143,3 +145,13 @@ class ExportMeshData(QDialog):
             window_title = "Warning"
             PrintMessageInput([window_title, title, message], auto_close=False)
             return False
+    
+    def update_icons_color(self):
+        theme = app().user_config.theme
+        if theme == "dark":
+            icon_color = QColor("#5f9af4")
+        elif theme == "light":
+            icon_color = QColor("#1a73e8")
+
+        widgets = self.findChildren(QPushButton)
+        change_icon_color_for_widgets(widgets, icon_color)

@@ -260,7 +260,6 @@ class LoadProject:
 
     def load_mesh_setup(self):
 
-        app().main_window.viewer_tabs.close_mesh_tabs()
         mesh_setup = self.file.read_mesh_setup_from_file()
 
         if "element_type" in mesh_setup.keys():
@@ -300,18 +299,15 @@ class LoadProject:
 
                 self.update_render()
 
-        app().main_window.viewer_tabs.show_geometry()
+        app().main_window.action_model_workspace_callback()
 
     def update_render(self):
 
         logging.info("Updating render..." + ProgressStatus(20, 100))
-        app().main_window.viewer_tabs.show_mesh()
-
-        logging.info("Updating render..." + ProgressStatus(40, 100))
-        app().main_window.viewer_tabs.close_analysis_tabs()
+        app().main_window.configure_mesh_information()
 
         logging.info("Updating render..." + ProgressStatus(90, 100))
-        app().main_window.viewer_tabs.update_plots()
+        app().main_window.update_plots()
 
     def load_imported_table_data_from_file(self):
 
@@ -405,24 +401,24 @@ class LoadProject:
             logging.info("Loading results..." + ProgressStatus(20, 100))
             for key, data in results_data.items():
 
-                if key == "modal_acoustic":
+                if key == "modal_acoustic" and app().project.acoustic_modal_solver is not None:
                     act_modal_analysis = True
                     app().project.acoustic_modal_solver.natural_frequencies = data["natural_frequencies"]
                     app().project.acoustic_modal_solver.modal_shape = data["modal_shape"]
                 
-                elif key == "modal_structural":
+                elif key == "modal_structural" and app().project.structural_modal_solver is not None:
                     str_modal_analysis = True
                     app().project.structural_modal_solver.natural_frequencies = data["natural_frequencies"]
                     app().project.structural_modal_solver.solution_full = data["modal_shape"]
                     app().project.structural_modal_solver.displacement_dofs = data["displacement_dofs"]
 
-                elif key == "harmonic_acoustic":
+                elif key == "harmonic_acoustic" and app().project.acoustic_harmonic_solver is not None:
                     act_harmonic_analysis = True
                     app().project.acoustic_harmonic_solver.frequencies = data["frequencies"]
                     app().project.acoustic_harmonic_solver.solution = data["solution"]
-                    app().main_window.advanced_results_menu.disable_advanced_acoustic_plots_buttons(False)
+                    app().main_window.disable_advanced_acoustic_plots_buttons(False)
 
-                elif key == "harmonic_structural":
+                elif key == "harmonic_structural" and app().project.structural_harmonic_solver is not None:
                     str_harmonic_analysis = True
                     app().project.structural_harmonic_solver.frequencies = data["frequencies"]
                     app().project.structural_harmonic_solver.solution_full = data["solution"]
@@ -434,16 +430,13 @@ class LoadProject:
             logging.info("Updating analysis render..." + ProgressStatus(85, 100))
 
             if act_modal_analysis:
-                app().main_window.viewer_tabs.show_acoustic_modal_analysis()
-                app().main_window.menu_widget.update_items()
+                app().main_window.configure_acoustic_modal_analysis_render_widget()
 
             elif str_modal_analysis:
-                app().main_window.viewer_tabs.show_structural_modal_analysis()
-                app().main_window.menu_widget.update_items()
+                app().main_window.configure_structural_modal_analysis_render_widget()
 
             elif act_harmonic_analysis:
-                app().main_window.viewer_tabs.show_acoustic_harmonic_analysis()
-                app().main_window.menu_widget.update_items()
+                app().main_window.configure_acoustic_harmonic_analysis_render_widget()
 
             elif str_harmonic_analysis:
                 app().main_window.viewer_tabs.show_structural_harmonic_analysis()

@@ -27,8 +27,9 @@ class SetMaterialInput(QDialog):
 
         self.cache_selected_lines = kwargs.get("cache_selected_lines", list())
 
-        app().main_window.set_input_widget(self)
-        app().main_window.viewer_tabs.show_geometry()
+        self.main_window = app().main_window
+        self.main_window.set_input_widget(self)
+        self.main_window.action_model_workspace_callback()
 
         self.model = app().project.model
 
@@ -234,9 +235,9 @@ class SetMaterialInput(QDialog):
                     app().project.set_material(selected_material, surface=surface_id)
 
             app().file.write_model_properties_in_file()
-            app().main_window.viewer_tabs.geometry_widget.update_info_text()
-            app().main_window.viewer_tabs.mesh_widget.update_info_text()
-
+            self.main_window.geometry_widget.update_info_text()
+            self.main_window.mesh_widget.update_info_text()
+            self.complete = True
             self.close()
 
         except Exception as error_log:

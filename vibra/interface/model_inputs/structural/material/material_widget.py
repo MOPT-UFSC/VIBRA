@@ -36,7 +36,7 @@ class MaterialWidget(QWidget):
         ui_path = UI_DIR / "model/setup/material/material_widget.ui"
         uic.loadUi(ui_path, self)
 
-        app().main_window.viewer_tabs.show_geometry()
+        app().main_window.action_model_workspace_callback()
 
         self.project = app().project
         self.model = self.project.model

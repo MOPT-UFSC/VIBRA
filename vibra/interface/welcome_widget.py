@@ -80,7 +80,7 @@ class WelcomeWidget(QWidget):
                 icon = QIcon(QPixmap(image))
 
             handler = partial(self.main_window.open_project, path)
-            item = WelcomeItem(path.stem, icon)
+            item = WelcomeItem(path.stem, icon, False)
             item.setToolTip(str(path))
             item.clicked.connect(handler)
             recents_layout.addWidget(item)
@@ -119,7 +119,7 @@ class WelcomeWidget(QWidget):
                 icon = QIcon(QPixmap(image))
 
             handler = partial(self.main_window.open_project, path)
-            item = WelcomeItem(path.stem, icon)
+            item = WelcomeItem(path.stem, icon, False)
             item.setToolTip(str(path))
             item.clicked.connect(handler)
             examples_layout.addWidget(item)
@@ -138,13 +138,14 @@ class WelcomeWidget(QWidget):
 class WelcomeItem(QWidget):
     clicked = pyqtSignal()
 
-    def __init__(self, text="", icon=None):
+    def __init__(self, text="", icon=None, should_paint=True):
         super().__init__()
 
         button = QPushButton(self)
         button.clicked.connect(self.clicked.emit)
         button.setFixedSize(QSize(90, 90))
         button.setIconSize(QSize(80, 80))
+        button.should_paint = should_paint 
 
         if icon is not None:
             button.setIcon(icon)
@@ -157,3 +158,4 @@ class WelcomeItem(QWidget):
         layout.addWidget(label)
         layout.setAlignment(Qt.AlignCenter)
         self.setLayout(layout)
+    

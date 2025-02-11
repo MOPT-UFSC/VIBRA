@@ -80,6 +80,26 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor = EdgesActor(self.faces_actor.data)
         self.solids_actor: SolidsActor | HollowSolidsActor = HollowSolidsActor(mesh)
         # self.solids_actor: SolidsActor | HollowSolidsActor = SolidsActor(mesh)
+        self.renderer.AddActor(self.nodes_actor)
+
+        self.faces_actor = FacesActor(mesh, allow_hidding=False)
+        self.faces_actor.GetProperty().LightingOff()
+        self.faces_actor.ForceTranslucentOn()
+        self.faces_actor.PickableOff()
+        self.faces_actor.clear_colors((0, 0, 0, 0))
+        self.renderer.AddActor(self.faces_actor)
+
+        self.solids_actor = SolidsActor(mesh)
+        self.renderer.AddActor(self.solids_actor)
+
+        self.edges_actor = EdgesActor(self.solids_actor.data)
+        self.edges_actor.GetProperty().SetColor(0, 0, 0)
+        self.renderer.AddActor(self.edges_actor)
+
+        self.plane_actor = SectionPlaneActor(self.solids_actor.GetBounds())
+        self.plane_actor.VisibilityOff()
+        self.renderer.AddActor(self.plane_actor)
+
         self.symbols_actor = SymbolsActor(self.renderer)
         self.selection_spheres_actor = SelectionSpheres()
 
@@ -460,12 +480,8 @@ class MeshRenderWidget(CommonRenderWidget):
             self.plane_actor.GetProperty().SetOpacity(0.8)
             self.update()
         else:
-            self._apply_section_plane(
-                position,
-                rotation,
-                inverted,
-                section_plane.isVisible(),
-            )
+            show_plane = not section_plane.keep_section_plane
+            self._apply_section_plane(position, rotation, inverted, show_plane)
 
     def _disable_section_plane(self):
         has_hidden_part = bool(self.main_window.hidden_surfaces)
