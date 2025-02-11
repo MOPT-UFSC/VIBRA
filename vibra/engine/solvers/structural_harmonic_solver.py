@@ -204,16 +204,17 @@ class StructuralHarmonicSolver:
             F_eq. Each column corresponds to a frequency of analysis.
         """
 
-        # logging.info("Processing prescribed dofs model excitation..." + ProgressStatus(0, len(self.frequencies)))
-        # self.prescribed_dofs_values, self.array_prescribed_dofs_values = self.assembler.get_prescribed_dofs_values()
-        #
         external_load = self.assembler.external_loads
+
+        if np.sum(self.array_prescribed_dofs_values) == 0:
+            return external_load
+
         Kr = (self.assembler.stiffness_matrix_r.toarray())[self.unprescribed_dofs_indexes, :]
         Mr = (self.assembler.mass_matrix_r.toarray())[self.unprescribed_dofs_indexes, :]
 
         alpha_v, beta_v, alpha_h, beta_h = self.global_damping
 
-        # logging.info( "Processing prescribed dofs model excitation..." + ProgressStatus(10, len(self.frequencies)))
+        logging.info( "Processing prescribed dofs model excitation..." + ProgressStatus(10, len(self.frequencies)))
 
         rows = Kr.shape[0]
         if freq_dependent:

@@ -97,7 +97,6 @@ class AcousticModalAnalysisInput(QDialog):
 
         self.analysis_setup = {
                                 "analysis_id" : 4,
-                                "analysis_type": "Acoustic Modal Analysis",
                                 "modes" : self.modes,
                                 "sigma_factor" : self.sigma_factor
                                 }

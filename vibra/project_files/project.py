@@ -28,7 +28,7 @@ class Project:
         self.fluid_list_path = ""
         self.material_list_path = ""
 
-        self.analysis_data = None
+        self.analysis_data = dict()
         self.dissipation_model = None
         #
         self.model = Model()
@@ -60,7 +60,7 @@ class Project:
         if self.structural_harmonic_solver is not None:
             self.structural_harmonic_solver.reset_variables()
 
-        if self.analysis_data is None:
+        if len(self.analysis_data) == 0:
             return
 
         self.create_solver()

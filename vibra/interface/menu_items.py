@@ -509,8 +509,23 @@ class MenuItems(QTreeWidget):
         self.generate_mesh_action.setDisabled(True)
         self.item_child_generate_mesh.setDisabled(True)
 
+    def analysis_setup(self):
+        """
+        """
+
+        analysis_setup = AnalysisSetupInput()
+        self.item_child_analysis_setup.setDisabled(False)
+
+        if analysis_setup.complete:
+            self.item_child_run_analysis.setDisabled(False)
+            # self.item_child_reset_solution.setDisabled(False)
+
+        if analysis_setup.solve_analysis:
+            self.run_analysis()
+
     def run_analysis(self):
-        """ """
+        """
+        """
 
         self.reset_solution()
 
@@ -521,7 +536,7 @@ class MenuItems(QTreeWidget):
             else:
                 return
 
-        if app().project.analysis_data is None:
+        if len(app().project.analysis_data) == 0:
             return
 
         # if not app().project.model.generated_mesh:
@@ -633,7 +648,7 @@ class MenuItems(QTreeWidget):
         self.item_top_resultsViewer_structural.setHidden(True)
         self.item_top_resultsViewer_acoustic.setHidden(True)
 
-        if app().project.analysis_data is None:
+        if len(app().project.analysis_data) == 0:
             return
 
         analysis_id = app().project.analysis_data["analysis_id"]
