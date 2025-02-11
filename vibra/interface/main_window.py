@@ -104,7 +104,6 @@ class MainWindow(QMainWindow):
         self.action_capture_image: QAction
         self.action_theme: QAction
         self.action_exit: QAction
-        self.action_show_menu_items: QAction
         self.action_bottom_view: QAction
         self.action_right_view: QAction
         self.action_left_view: QAction
@@ -483,21 +482,6 @@ class MainWindow(QMainWindow):
         elif app().user_config.theme == "dark":
             self.set_theme("light")
             self.action_theme.setIcon(self.theme_moon_icon)
-    
-    def action_show_menu_items_callback(self):
-        if self.show_menu_items:
-            text = "Show menu items"
-        else:
-            text = "Hide menu items"
-
-        self.set_menu_items_visibility_state(self.show_menu_items)
-        self.action_show_menu_items.setText(text)
-        self.show_menu_items = not self.show_menu_items
-        self.menu_widget.setVisible(self.show_menu_items)
-        self.vertical_line.setVisible(self.show_menu_items)
-
-    def set_menu_items_visibility_state(self, state: bool):
-        app().user_config.menu_items_visible = state
     
     def configure_mesh_information(self):
         nodes, face_elements, solid_elements = app().project.model.mesh.get_mesh_info()

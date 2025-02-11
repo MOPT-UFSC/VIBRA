@@ -114,7 +114,6 @@
     <property name="title">
      <string>Visibility settings</string>
     </property>
-    <addaction name="action_show_menu_items"/>
     <addaction name="action_theme"/>
    </widget>
    <widget class="QMenu" name="menu_view_mode">
