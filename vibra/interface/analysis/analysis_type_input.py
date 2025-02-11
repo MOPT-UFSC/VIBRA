@@ -89,26 +89,15 @@ class AnalysisTypeInput(QDialog):
 
         if select.index == 0:
             analysis_id = 0
-            analysis_method_label = "Direct Method"
-
         else:
             analysis_id = 1
-            analysis_method_label = "Mode Superposition Method"
 
-        self.analysis_data = {
-                              "analysis_id": analysis_id,
-                              "analysis_type": "Structural Harmonic Analysis",
-                              "analysis_method_label": analysis_method_label,
-                              }
+        self.analysis_data = {"analysis_id": analysis_id}
         self.finalize()
 
     def harmonic_acoustic(self):
 
-        self.analysis_data = {
-                              "analysis_id": 3,
-                              "analysis_type": "Acoustic Harmonic Analysis",
-                              "analysis_method_label": "Direct Method",
-                              }
+        self.analysis_data = {"analysis_id": 3}
         self.finalize()
 
     def harmonic_coupled(self):
@@ -120,17 +109,10 @@ class AnalysisTypeInput(QDialog):
 
         if select.index == 0:
             analysis_id = 5
-            analysis_method_label = "Direct Method"
-
         else:
             analysis_id = 6
-            analysis_method_label = "Mode Superposition Method"
 
-        self.analysis_data = {
-                              "analysis_id": analysis_id,
-                              "analysis_type": "Coupled Harmonic Analysis",
-                              "analysis_method_label": analysis_method_label,
-                              }
+        self.analysis_data = {"analysis_id": analysis_id}
         self.finalize()
 
     def modal_structural(self):
@@ -158,9 +140,9 @@ class AnalysisTypeInput(QDialog):
     def finalize(self):
 
         self.complete = True
-        if app().project.analysis_data is not None:
+        if len(app().project.analysis_data):
             for key, value in app().project.analysis_data.items():
-                if key in ["f_min", "f_max", "f_step", "frequencies"]:
+                if key in ["f_min", "f_max", "f_step", "frequencies", "global_damping"]:
                     self.analysis_data[key] = value
 
         app().project.set_analysis_data(self.analysis_data)

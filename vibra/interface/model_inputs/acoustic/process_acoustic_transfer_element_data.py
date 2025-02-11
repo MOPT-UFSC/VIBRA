@@ -268,11 +268,7 @@ class ProcessAcousticTransferElementData(QDialog):
 
     def configure_analysis(self):
 
-        self.analysis_data = {
-                              "analysis_id": 3,
-                              "analysis_type": "Acoustic Harmonic Analysis",
-                              "analysis_method_label": "Direct Method",
-                              }
+        self.analysis_data = {"analysis_id": 3}
 
         if self.check_frequency_entries():
             return True

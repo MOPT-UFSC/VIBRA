@@ -98,7 +98,6 @@ class StructuralModalAnalysisInput(QDialog):
 
         self.analysis_setup = {
                                 "analysis_id" : 2,
-                                "analysis_type": "Structural Modal Analysis",
                                 "modes" : self.modes,
                                 "sigma_factor" : self.sigma_factor
                                 }
