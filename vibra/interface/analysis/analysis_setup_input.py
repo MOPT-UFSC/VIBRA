@@ -53,34 +53,29 @@ class AnalysisSetupInput(QDialog):
 
         self.model = app().project.model
 
+        self._initialize()
         self._config_window()
-        self._reset_variables()
-
         self._define_qt_variables()
         self._create_connections()
 
         ConfigWidgetAppearance(self)
 
-        self.update_frequency_setup_inputs()
-        self.update_damping_inputs()
-        # self._update_fmin()
+        self.load_analysis_data()
 
         while self.keep_window_open:
             self.exec()
+
+    def _initialize(self):
+        self.frequencies = []
+        self.complete = False
+        self.solve_analysis = False
+        self.keep_window_open = True
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(self.main_window.vibra_icon)
         self.setWindowTitle("Analysis setup")
-
-    def _reset_variables(self):
-        self.keep_window_open = True
-        self.complete = False
-        self.solve_analysis = False
-        self.frequencies = []
-        self.global_damping = [0, 0, 0, 0]
-        self.f_step = 0
 
     def _define_qt_variables(self):
 
@@ -117,70 +112,46 @@ class AnalysisSetupInput(QDialog):
         df = self.lineEdit_fstep.text()
         self.lineEdit_fmin.setText(df)
 
-    # def _load_analysis_data(self):
+    def load_analysis_data(self):
 
-    #     analysis_setup = app().file.read_analysis_setup_from_file()
-    #     if analysis_setup is None:
-    #         return
+        analysis_setup = app().project.analysis_data
         
-    #     if "analysis_id" in analysis_setup.keys():
+        f_min = analysis_setup.get("f_min", 2)
+        f_max = analysis_setup.get("f_max", 600)
+        f_step = analysis_setup.get("f_step", 2)
+        self.analysis_id = analysis_setup.get("analysis_id", None)
+        global_damping = analysis_setup.get("global_damping", (0., 0., 0., 0.))
 
-    #         analysis_id = analysis_setup["analysis_id"]
+        self.load_damping_inputs(self.analysis_id, global_damping)
+        self.load_frequency_setup_inputs(f_min, f_max, f_step)
 
-    #         if analysis_id in [0, 1]:
-    #             title = "Structural Harmonic Analysis Setup"
-    #         elif analysis_id == 2:
-    #             title = "Structural Modal Analysis"
-    #         elif analysis_id == 3:
-    #             title = "Acoustic Harmonic Analysis Setup"
-    #         elif analysis_id == 4:
-    #             title = "Acoustic Modal Analysis"
-    #         elif analysis_id in [5, 6]:
-    #             title = "Coupled Harmonic Analysis Setup"
+    def load_damping_inputs(self, analysis_id: int, global_damping: tuple | list):
 
-    #         if analysis_id in [0, 3, 5]:
-    #             subtitle = "Direct Method"
-    #         elif analysis_id in [1, 6]:
-    #             subtitle = "Mode Superposition Method"
+        if analysis_id in [0, 1, 5, 6] and sum(global_damping):
 
-    #     self.label_title.setText(title)
-    #     self.label_subtitle.setText(subtitle)
+            if global_damping[0]:
+                self.lineEdit_av.setText(str(global_damping[0]))
 
-    def update_damping_inputs(self):
-        if self.analysis_id not in [2, 3, 4]:
-            if self.global_damping != [0, 0, 0, 0]:
-                self.lineEdit_av.setText(str(self.global_damping[0]))
-                self.lineEdit_bv.setText(str(self.global_damping[1]))
-                self.lineEdit_ah.setText(str(self.global_damping[2]))
-                self.lineEdit_bh.setText(str(self.global_damping[3]))
+            if global_damping[1]:
+                self.lineEdit_bv.setText(str(global_damping[1]))
 
-    def update_frequency_setup_inputs(self):
+            if global_damping[2]:
+                self.lineEdit_ah.setText(str(global_damping[2]))
 
-        if (self.model.f_min, self.model.f_max, self.model.f_step).count(None):
-            f_min = 2
-            f_max = 600
-            f_step = 2
+            if global_damping[3]:
+                self.lineEdit_bh.setText(str(global_damping[3]))
 
-        else:
+    def load_frequency_setup_inputs(self, f_min: float, f_max: float, f_step: float):
 
-            f_min = self.model.f_min
-            f_max = self.model.f_max
-            f_step = self.model.f_step
+        self.lineEdit_fmin.setText(str(round(f_min, 6)))
+        self.lineEdit_fmax.setText(str(round(f_max, 6)))
+        self.lineEdit_fstep.setText(str(round(f_step, 6)))
 
-            # if f_min == 0:
-            #     f_min = f_step
+        key = app().project.model.properties.check_if_there_are_tables_at_the_model()
 
-        if f_step:
-
-            self.lineEdit_fmin.setText(str(round(f_min, 6)))
-            self.lineEdit_fmax.setText(str(round(f_max, 6)))
-            self.lineEdit_fstep.setText(str(round(f_step, 6)))
-
-            key = app().project.model.properties.check_if_there_are_tables_at_the_model()
-
-            self.lineEdit_fmin.setDisabled(key)
-            self.lineEdit_fmax.setDisabled(key)
-            self.lineEdit_fstep.setDisabled(key)        
+        self.lineEdit_fmin.setDisabled(key)
+        self.lineEdit_fmax.setDisabled(key)
+        self.lineEdit_fstep.setDisabled(key)        
 
     def enter_setup_callback(self):
 
@@ -192,7 +163,7 @@ class AnalysisSetupInput(QDialog):
 
         f_min = f_max = f_step = 0.
 
-        if self.analysis_id not in [2, 4]:
+        if self.analysis_id in [0, 1, 3, 5, 6]:
 
             if self.analysis_id in [1, 6]:
                 number_of_modes = self.check_inputs(self.lineEdit_modes, "'number of modes'")
@@ -252,8 +223,7 @@ class AnalysisSetupInput(QDialog):
                 self.lineEdit_bh.setFocus()
                 return True
 
-        global_damping = [alpha_v, beta_v, alpha_h, beta_h]
-        analysis_setup["global_damping"] = global_damping
+        analysis_setup["global_damping"] = [alpha_v, beta_v, alpha_h, beta_h]
         # self.model.set_global_damping(analysis_setup)
 
         if app().project.model.properties.check_if_there_are_tables_at_the_model():
@@ -271,6 +241,7 @@ class AnalysisSetupInput(QDialog):
 
         self.complete = True
         self.close()
+
         return False
 
     def check_inputs(self, lineEdit, label, only_positive=True, zero_included=False, _float=False):
