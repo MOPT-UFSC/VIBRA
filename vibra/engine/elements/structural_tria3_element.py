@@ -498,13 +498,13 @@ class STRUCT_TRIANGULAR_3(Element2D):
         loads = np.zeros(int(self.DOFS_PER_ELEMENT / 2), dtype=float)
 
         # Local coordinate system definition
-        x_loc, y_loc, T = get_local_coordinates(nodal_coords)
+        x_loc, y_loc, _ = get_local_coordinates(nodal_coords)
 
         ## LOAD - LINE PRESSURE
         if np.count_nonzero(e_nodes_load) >= 2:
 
             # Line integration points
-            num = np.sqrt(3/5) / 2
+            num = np.sqrt(3 / 5) / 2
             if e_nodes_load[0] == 1 and e_nodes_load[1] == 1:
 
                 dx_dst = x_loc[1] - x_loc[0]
@@ -526,7 +526,7 @@ class STRUCT_TRIANGULAR_3(Element2D):
                 coord_int = np.array([[0.5-num, 0.5, 0.5+num], 
                                       [0.5-num, 0.5, 0.5+num]], dtype=float)
                 
-            weights = [5 / 18, 8 / 18, 5 / 18]
+            weights = np.array([5, 8, 5], dtype=float) / 18
 
             # Determinant of the Jacobian
             det_J = np.sqrt(dx_dst**2 + dy_dst**2)
