@@ -102,11 +102,11 @@ class StructuralHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         if solver is None:
             return
 
-        if solver.solution is None:
+        if solver.solution_full is None:
             return
 
         index = self.current_frequency_index()
-        if not (0 <= index < solver.solution.shape[1]):
+        if not (0 <= index < solver.solution_full.shape[1]):
             return
         
         if self.plane_actor is not None:
@@ -153,11 +153,11 @@ class StructuralHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
             return
 
         solver = app().project.structural_harmonic_solver
-        if solver.solution is None:
+        if solver.solution_full is None:
             return
 
         index = self.current_frequency_index()
-        if not (0 <= index < solver.solution.shape[1]):
+        if not (0 <= index < solver.solution_full.shape[1]):
             return
 
         # Do not update the deformation directly if an animation is running.
@@ -337,11 +337,11 @@ class StructuralHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
             return
 
         solver = app().project.structural_harmonic_solver
-        if solver.solution is None:
+        if solver.solution_full is None:
             return
 
         index = self.current_frequency_index()
-        if not (0 <= index < solver.solution.shape[1]):
+        if not (0 <= index < solver.solution_full.shape[1]):
             return
 
         # Map the frames from 0 to 1
@@ -378,10 +378,12 @@ class StructuralHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
     def _calculate_displacements(self, index: int, selected_phase_deg: float):
 
         solver = app().project.structural_harmonic_solver
-        if solver.solution is None:
+        if solver.solution_full is None:
             return
 
-        results_complex = solver.solution[:, index]
+        disp_dofs = solver.displacement_dofs
+        results_complex = solver.solution_full[disp_dofs, index]
+
         amplitudes = np.abs(results_complex)
         phases = np.angle(results_complex)
 

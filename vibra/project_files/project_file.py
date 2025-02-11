@@ -427,11 +427,13 @@ class ProjectFile:
                 
                 structural_modal_solver = app().project.structural_modal_solver
                 if structural_modal_solver is not None:
-                    if structural_modal_solver.modal_shape is not None:
+                    if structural_modal_solver.solution_full is not None:
                         natural_frequencies = structural_modal_solver.natural_frequencies
-                        modal_shape = structural_modal_solver.modal_shape
+                        solution_full = structural_modal_solver.solution_full
+                        displacement_dofs = structural_modal_solver.displacement_dofs
                         f.create_dataset("modal_structural/natural_frequencies", data=natural_frequencies, dtype=float)
-                        f.create_dataset("modal_structural/modal_shape", data=modal_shape, dtype=float)
+                        f.create_dataset("modal_structural/modal_shape", data=solution_full, dtype=complex)
+                        f.create_dataset("modal_structural/displacement_dofs", data=displacement_dofs, dtype=int)
 
                 acoustic_harmonic_solver = app().project.acoustic_harmonic_solver
                 if acoustic_harmonic_solver is not None:
@@ -443,11 +445,13 @@ class ProjectFile:
                 
                 structural_harmonic_solver = app().project.structural_harmonic_solver
                 if structural_harmonic_solver is not None:
-                    if structural_harmonic_solver.solution is not None:
+                    if structural_harmonic_solver.solution_full is not None:
                         frequencies = structural_harmonic_solver.frequencies
-                        solution = structural_harmonic_solver.solution
+                        solution = structural_harmonic_solver.solution_full
+                        displacement_dofs = structural_harmonic_solver.displacement_dofs
                         f.create_dataset("harmonic_structural/frequencies", data=frequencies, dtype=float)
                         f.create_dataset("harmonic_structural/solution", data=solution, dtype=complex)
+                        f.create_dataset("harmonic_structural/displacement_dofs", data=displacement_dofs, dtype=int)
 
                 app().main_window.project_data_modified = True
 

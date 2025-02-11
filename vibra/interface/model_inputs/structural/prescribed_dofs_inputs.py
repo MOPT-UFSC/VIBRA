@@ -215,7 +215,6 @@ class PrescribedDofsInputs(QDialog):
 
     def geometry_selection_callback(self):
 
-        self.reset_input_fields()
         faces = app().main_window.selected_geometry_surfaces
         lines = app().main_window.selected_geometry_lines
         points = app().main_window.selected_geometry_points
@@ -273,6 +272,7 @@ class PrescribedDofsInputs(QDialog):
 
         if isinstance(data, dict):
 
+            self.reset_input_fields()
             values = data.get("values", None)
 
             if "table_paths" in data.keys():

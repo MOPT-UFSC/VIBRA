@@ -27,10 +27,13 @@ from vibra.interface.model_inputs.acoustic.process_acoustic_transfer_element_dat
 from vibra.interface.model_inputs.structural.surface_thickness_inputs import SurfaceThicknessInput
 from vibra.interface.model_inputs.structural.prescribed_dofs_inputs import PrescribedDofsInputs
 from vibra.interface.model_inputs.structural.structural_external_loads_inputs import StructuralExternalLoadsInputs
+#
 from vibra.interface.plots.acoustic.plot_acoustic_pressure_frequency_response_input import PlotAcousticPressureFrequencyResponseInput
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_input import PlotAcousticFrequencyResponseFunctionInput
 from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
 from vibra.interface.plots.acoustic.plot_transmission_loss_input import PlotTransmissionLossInput
+#
+from vibra.interface.plots.structural.plot_structural_frequency_response_input import PlotStructuralFrequencyResponseInput
 #
 from vibra.interface.process_analysis import ProcessAnalysis
 
@@ -255,7 +258,7 @@ class MenuItems(QTreeWidget):
         self.item_top_resultsViewer_structural = QTreeWidgetItem(["Results Viewer - Structural"])
         self.item_child_plotStructuralModeShapes = QTreeWidgetItem(["Plot Structural Mode Shapes"])
         self.item_child_plotDisplacementField = QTreeWidgetItem(["Plot Displacement Field"])
-        self.item_child_plotStructuralFrequencyResponse = QTreeWidgetItem(["Plot Structural Frequency Response"])
+        self.item_child_plot_structural_frequency_response = QTreeWidgetItem(["Plot Structural Frequency Response"])
         self.item_child_plotReactionsFrequencyResponse = QTreeWidgetItem(["Plot Reactions Frequency Response"])
         self.item_child_plotStressField = QTreeWidgetItem(["Plot Stress Field"])
         self.item_child_plotStressFrequencyResponse = QTreeWidgetItem(["Plot Stress Frequency Response"])
@@ -263,7 +266,7 @@ class MenuItems(QTreeWidget):
         self.list_top_items.append(self.item_top_resultsViewer_structural)
         self.list_child_items.append(self.item_child_plotStructuralModeShapes)
         self.list_child_items.append(self.item_child_plotDisplacementField)
-        self.list_child_items.append(self.item_child_plotStructuralFrequencyResponse)
+        self.list_child_items.append(self.item_child_plot_structural_frequency_response)
         self.list_child_items.append(self.item_child_plotReactionsFrequencyResponse)
         self.list_child_items.append(self.item_child_plotStressField)
         self.list_child_items.append(self.item_child_plotStressFrequencyResponse)
@@ -321,7 +324,7 @@ class MenuItems(QTreeWidget):
         self.item_top_resultsViewer_structural.addChild(self.item_child_plotStructuralModeShapes)
         self.item_top_resultsViewer_structural.addChild(self.item_child_plotDisplacementField)
         self.item_top_resultsViewer_structural.addChild(
-            self.item_child_plotStructuralFrequencyResponse
+            self.item_child_plot_structural_frequency_response
         )
         # self.item_top_resultsViewer_structural.addChild(self.item_child_plotReactionsFrequencyResponse)
         # self.item_top_resultsViewer_structural.addChild(self.item_child_plotStressField)
@@ -516,9 +519,9 @@ class MenuItems(QTreeWidget):
             if not self.item_child_plotDisplacementField.isDisabled():
                 pass
 
-        elif item == self.item_child_plotStructuralFrequencyResponse:
-            if not self.item_child_plotStructuralFrequencyResponse.isDisabled():
-                pass
+        elif item == self.item_child_plot_structural_frequency_response:
+            if not self.item_child_plot_structural_frequency_response.isDisabled():
+                PlotStructuralFrequencyResponseInput()
 
         elif item == self.item_child_plotReactionsFrequencyResponse:
             if not self.item_child_plotReactionsFrequencyResponse.isDisabled():
@@ -674,7 +677,7 @@ class MenuItems(QTreeWidget):
     def modify_items_structural_results_viewer(self, key: bool):
         self.item_top_resultsViewer_structural.setHidden(key)
         self.item_child_plotDisplacementField.setDisabled(key)
-        self.item_child_plotStructuralFrequencyResponse.setDisabled(key)
+        self.item_child_plot_structural_frequency_response.setDisabled(key)
         self.item_child_plotReactionsFrequencyResponse.setDisabled(key)
         self.item_child_plotStressField.setDisabled(key)
         self.item_child_plotStructuralModeShapes.setDisabled(key)
@@ -744,7 +747,7 @@ class MenuItems(QTreeWidget):
             self.item_top_resultsViewer_structural.setHidden(False)
 
         if analysis_id == 0 or analysis_id == 1:
-            self.item_child_plotStructuralFrequencyResponse.setDisabled(False)
+            self.item_child_plot_structural_frequency_response.setDisabled(False)
             self.item_child_plotDisplacementField.setDisabled(False)
             self.item_child_plotReactionsFrequencyResponse.setDisabled(False)
             self.item_child_plotStressField.setDisabled(False)
@@ -775,7 +778,7 @@ class MenuItems(QTreeWidget):
             self.item_child_plotAcousticDeltaPressures.setDisabled(False)
             self.item_child_plot_TL_NR.setDisabled(False)
             # structural
-            self.item_child_plotStructuralFrequencyResponse.setDisabled(False)
+            self.item_child_plot_structural_frequency_response.setDisabled(False)
             self.item_child_plotStressField.setDisabled(False)
             self.item_child_plotStressFrequencyResponse.setDisabled(False)
             self.item_child_plotDisplacementField.setDisabled(False)
