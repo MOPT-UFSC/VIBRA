@@ -16,6 +16,7 @@ from vtkmodules.vtkCommonDataModel import (
 )
 from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
 from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
+from vtkmodules.util.numpy_support import numpy_to_vtk
 
 from vibra import app
 from vibra.engine.mesher.element_type import *
@@ -78,9 +79,9 @@ class SolidsActor(vtkActor):
         cell_colors.SetNumberOfComponents(3)
         cell_colors.SetNumberOfTuples(number_of_elements)
         cell_indexes.Allocate(number_of_elements)
-
-        for x, y, z in self.get_coordinates():
-            points.InsertNextPoint(x, y, z)
+        
+        coordinates = self.get_coordinates()
+        points.SetData(numpy_to_vtk(coordinates))
 
         hidden_volumes = app().main_window.hidden_volumes if self.allow_hidding else set()
         self.visible_indexes = dict()
@@ -105,9 +106,7 @@ class SolidsActor(vtkActor):
 
     def update_coordinates(self, coordinates):
         points = self.data.GetPoints()
-        for i, xyz in enumerate(coordinates):
-            points.SetPoint(i, xyz)
-        points.Modified()
+        points.SetData(numpy_to_vtk(coordinates))
 
     def configure_appearance(self):
         self.GetProperty().SetInterpolationToPhong()

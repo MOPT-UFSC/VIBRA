@@ -1,50 +1,73 @@
-from PyQt5.QtWidgets import QDialog, QFileDialog, QFrame, QGridLayout, QMainWindow, QMessageBox, QAction, QMenu, QStackedWidget, QToolBar, QSplitter, QAbstractButton
-from PyQt5.QtCore import pyqtSignal
-from PyQt5 import uic
+import logging
+import os
+import sys
+from pathlib import Path
+from shutil import copy, rmtree
+from time import time
 
-from vibra import *
-# from vibra.config import UserConfig
-from vibra.interface.section_plane_widget import SectionPlaneWidget
-from vibra.interface.data_handler.export_mesh_data import ExportMeshData
-from vibra.interface.exception_message import ErrorMessage
-from vibra.interface.loading_bar import load_function
-from vibra.interface.menu_items import MenuItems
-from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
-from vibra.interface.status_bar import StatusBar
-from vibra.interface.analysis_toolbar import AnalysisToolbar
-from vibra.interface.viewer_tabs import ViewerTabs
-from vibra.interface.formatters.icons import *
-from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.help_widget import HelpWidget
-from vibra.interface.viewer_3d.render_widgets.acoustic_harmonic_analysis_render_widget import AcousticHarmonicAnalysisRenderWidget
-from vibra.interface.viewer_3d.render_widgets.acoustic_modal_analysis_render_widget import AcousticModalAnalysisRenderWidget
-from vibra.interface.viewer_3d.render_widgets.geometry_render_widget import GeometryRenderWidget
-from vibra.interface.viewer_3d.render_widgets.mesh_render_widget import MeshRenderWidget
-from vibra.interface.viewer_3d.render_widgets.structural_modal_analysis_render_widget import StructuralModalAnalysisRenderWidget
-from vibra.interface.viewer_3d.render_widgets.structural_harmonic_analysis_render_widget import StructuralHarmonicAnalysisRenderWidget
-from vibra.interface.welcome_widget import WelcomeWidget
-
-from molde.render_widgets import CommonRenderWidget
-
-from vibra.utils.interface_utils import VisualizationFilter
-from vibra.utils.progress_status import ProgressStatus
-from vibra.utils.icons import load_icon
-
-from vibra.project_files.load_project import LoadProject
-from vibra.project_files.project import Project
-from vibra.project_files.project_file import ProjectFile
-
-from vibra.interface.plots.acoustic.export_element_transfer_data_input import ExportElementTransferDataInput
-from vibra.interface.plots.acoustic.plot_particle_velocity_frequency_response_input import PlotParticleVelocityFrequencyResponseInput
-from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
 
 import qdarktheme
+from molde.render_widgets import CommonRenderWidget
+from PyQt5 import uic
+from PyQt5.QtGui import QColor
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import (
+    QAbstractButton,
+    QAction,
+    QDialog,
+    QFileDialog,
+    QFrame,
+    QGridLayout,
+    QMainWindow,
+    QMenu,
+    QMessageBox,
+    QSplitter,
+    QStackedWidget,
+    QToolBar,
+    QWidget,
+)
 
-import sys
-import logging
-from pathlib import Path
-from shutil import rmtree, copy
-from time import sleep, time
+from vibra import UI_DIR, ICON_DIR, TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, app
+from vibra.interface.analysis_toolbar import AnalysisToolbar
+from vibra.interface.data_handler.export_mesh_data import ExportMeshData
+from vibra.interface.formatters.icons import get_vibra_icon, change_icon_color_for_widgets
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.help_widget import HelpWidget
+from vibra.interface.loading_bar import load_function
+from vibra.interface.menu_items import MenuItems
+from vibra.interface.exception_message import ErrorMessage
+from vibra.interface.plots.acoustic.export_element_transfer_data_input import (
+    ExportElementTransferDataInput,
+)
+from vibra.interface.plots.acoustic.plot_particle_velocity_frequency_response_input import (
+    PlotParticleVelocityFrequencyResponseInput,
+)
+from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import (
+    PlotSpecificAcousticImpedanceInput,
+)
+from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
+
+# from vibra.config import UserConfig
+from vibra.interface.section_plane_widget import SectionPlaneWidget
+from vibra.interface.status_bar import StatusBar
+from vibra.interface.viewer_3d.render_widgets.acoustic_harmonic_analysis_render_widget import (
+    AcousticHarmonicAnalysisRenderWidget,
+)
+from vibra.interface.viewer_3d.render_widgets.acoustic_modal_analysis_render_widget import (
+    AcousticModalAnalysisRenderWidget,
+)
+from vibra.interface.viewer_3d.render_widgets.geometry_render_widget import GeometryRenderWidget
+from vibra.interface.viewer_3d.render_widgets.mesh_render_widget import MeshRenderWidget
+from vibra.interface.viewer_3d.render_widgets.structural_harmonic_analysis_render_widget import (
+    StructuralHarmonicAnalysisRenderWidget,
+)
+from vibra.interface.viewer_3d.render_widgets.structural_modal_analysis_render_widget import (
+    StructuralModalAnalysisRenderWidget,
+)
+from vibra.interface.welcome_widget import WelcomeWidget
+from vibra.utils.icons import load_icon
+from vibra.utils.interface_utils import VisualizationFilter
+from vibra.utils.progress_status import ProgressStatus
 
 
 class MainWindow(QMainWindow):
@@ -290,9 +313,6 @@ class MainWindow(QMainWindow):
             if hasattr(widget, "set_theme"):
                 widget.set_theme(theme)
 
-    def load_user_preferences(self):
-        self.set_theme(app().user_config.theme)
-
     def configure_window(self):
         self._config_window()
         self._connect_actions()
@@ -301,15 +321,11 @@ class MainWindow(QMainWindow):
         self.close_app()
         event.ignore()
     
-    def config_tool_tip_appearance(self):
-        tool_tip_style = "QToolTip { color: rgb(0, 0, 0); background-color: rgb(255, 255, 255) }"
-        self.setStyleSheet(tool_tip_style)
-    
-    def update_geometry_information(self):
-        self.status_bar.update_geometry_information()
-    
     def update_mesh_information(self, nodes, face_elements, solid_elements):
         self.status_bar.update_mesh_information(nodes, face_elements, solid_elements)
+
+    def update_geometry_information(self, geometry_info: dict):
+        self.status_bar.update_geometry_information(geometry_info)
     
     def _configure_render_widgets_stack(self):
         self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
@@ -461,12 +477,6 @@ class MainWindow(QMainWindow):
     def selection_changed_callback(self, points, lines, faces, volumes):
         self.status_bar.set_selection(points, lines, faces, volumes)
 
-    def update_mesh_information(self, nodes, face_elements, solid_elements):
-        self.status_bar.update_mesh_information(nodes, face_elements, solid_elements)
-
-    def update_geometry_information(self, geometry_info: dict):
-        self.status_bar.update_geometry_information(geometry_info)
-
     def action_section_plane_callback(self):
         self.section_plane.show()
         self.action_section_plane.setChecked(True)
@@ -603,10 +613,6 @@ class MainWindow(QMainWindow):
     
     def action_open_project_callback(self):
         self.open_project_dialog()
-    
-    def open_project_dialog(self):
-        path, check = QFileDialog.getOpenFileName(
-            self, "Open Project", filter="Vibra File (*.vibra)")
 
     def action_hide_selection_callback(self):
         mesh = app().project.model.mesh
@@ -646,18 +652,6 @@ class MainWindow(QMainWindow):
 
     def set_menu_items_visibility_state(self, state: bool):
         app().user_config.menu_items_visible = state
-
-    def capture_image(self):
-        path, check = QFileDialog.getSaveFileName(
-            self,
-            "PNG",
-            filter="PNG (*.png)",
-        )
-
-        if not check:
-            return
-
-        self.open_project(path)
     
     def action_save_callback(self):
       self.save_project_dialog()
@@ -830,9 +824,6 @@ class MainWindow(QMainWindow):
 
         return True
 
-    def export_mesh(self):
-        ExportMeshData()
-
     def update_window_title(self, project_path : str | Path):
         if isinstance(project_path, str):
             project_path = Path(project_path)
@@ -891,10 +882,6 @@ class MainWindow(QMainWindow):
             title = "Error while processing geometry"
             message = str(error_log)
             PrintMessageInput([window_title, title, message])
-
-    def closeEvent(self, event):
-        self.close_app()
-        event.ignore()
     
     def action_save_as_callback(self):
         self.save_project_as_dialog()
@@ -1042,9 +1029,6 @@ class MainWindow(QMainWindow):
         self.reset_temporary_vibra_folder()
         sys.exit()
 
-    def set_input_widget(self, dialog):
-        self.dialog = dialog
-
     def close_dialogs(self):
         if isinstance(self.dialog, (QDialog, QWidget)):
             self.dialog.close()
@@ -1069,11 +1053,6 @@ class MainWindow(QMainWindow):
             widget = self.render_widgets_stack.widget(i)
             if hasattr(widget, "update_hidden_plot"):
                 widget.update_hidden_plot()
-
-    def disable_advanced_acoustic_plots_buttons(self, disabled : bool):
-        self.action_plot_specific_acoustic_impedance.setDisabled(disabled)
-        self.action_plot_particle_velocity.setDisabled(disabled)
-        self.action_export_element_transfer_data.setDisabled(disabled)
     
     def process_acoustic_modal_analysis(self):
         try:

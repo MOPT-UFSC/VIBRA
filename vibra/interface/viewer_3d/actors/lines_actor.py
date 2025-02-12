@@ -8,6 +8,7 @@ from vtkmodules.vtkCommonDataModel import (
     vtkPolyData,
 )
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
+from vtkmodules.util.numpy_support import numpy_to_vtk
 
 
 class LinesActor(vtkActor):
@@ -26,8 +27,8 @@ class LinesActor(vtkActor):
         cell_colors.SetNumberOfComponents(3)
         cell_colors.SetNumberOfTuples(len(self.mesh.lines_connectivity))
 
-        for _, x, y, z in self.mesh.nodal_coordinates:
-            points.InsertNextPoint(x, y, z)
+        coordinates = self.mesh.nodal_coordinates[:, 1:]
+        points.SetData(numpy_to_vtk(coordinates))
 
         connect = self.mesh.lines_connectivity[:, 4:]
         if len(connect[0, :]) == 2:
@@ -39,9 +40,10 @@ class LinesActor(vtkActor):
 
         data.SetPoints(points)
         data.GetCellData().SetScalars(cell_colors)
-
         mapper.SetInputData(data)
         self.SetMapper(mapper)
+
+        self.clear_colors()
 
     def configure_appearance(self):
         self.GetProperty().SetLineWidth(6)

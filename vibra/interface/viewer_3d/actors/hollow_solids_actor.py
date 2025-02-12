@@ -3,6 +3,8 @@ from vtkmodules.vtkCommonCore import vtkIntArray
 from vibra import app
 from .faces_actor import FacesActor
 
+from vtkmodules.util.numpy_support import numpy_to_vtk
+
 
 class HollowSolidsActor(FacesActor):
     def __init__(self, mesh, allow_hidding=True):
@@ -19,12 +21,7 @@ class HollowSolidsActor(FacesActor):
     
     def update_coordinates(self, coordinates):
         points = self.data.GetPoints()
-        for i, xyz in enumerate(coordinates):
-            points.SetPoint(i, xyz)
-        points.Modified()
-
-    def clear_colors(self):
-        self.set_color((255, 255, 0))
+        points.SetData(numpy_to_vtk(coordinates))
     
     def paint_cells(self, color, solids: list[int]):
         faces = []
@@ -32,3 +29,9 @@ class HollowSolidsActor(FacesActor):
             face_elements = self.mesh.solid_to_face_elements.get(solid, [])
             faces.extend(face_elements)
         return super().paint_cells(color, faces)
+
+    def configure_appearance(self):
+        super().configure_appearance()
+        # Change the specular color to purple to differentiate
+        # from the massive solids actor
+        self.GetProperty().SetSpecularColor(1, 0, 1)
