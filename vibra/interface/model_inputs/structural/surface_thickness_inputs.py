@@ -257,7 +257,7 @@ class SurfaceThicknessInput(QDialog):
         app().main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
-        # app().main_window.viewer_tabs.mesh_widget.symbols_actor.build()
+        # app().main_window.mesh_widget.symbols_actor.build()
 
     def change_frequency_setup(self):
         if self.imported_values is not None:

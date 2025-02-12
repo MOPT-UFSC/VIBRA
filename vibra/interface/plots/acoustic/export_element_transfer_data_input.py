@@ -125,12 +125,7 @@ class ExportElementTransferDataInput(QDialog):
     def update_render_according_to_selector(self):
 
         self.geometry_selection_callback()
-
-        if not self.main_window.viewer_tabs.isTabEnabled(2):
-            self.main_window.viewer_tabs.show_geometry()
-            return
-
-        self.main_window.viewer_tabs.setCurrentIndex(1)
+        self.main_window.action_model_workspace_callback()
 
     def clickable(self, widget):
         class Filter(QObject):

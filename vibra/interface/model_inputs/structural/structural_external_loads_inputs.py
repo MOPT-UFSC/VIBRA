@@ -1178,10 +1178,10 @@ class StructuralExternalLoadsInputs(QDialog):
     def actions_to_finalize(self):
         self.load_model_info()
         self.reset_input_fields(reset_all=True)
-        app().main_window.viewer_tabs.update_info_text()
+        app().main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
-        # app().main_window.viewer_tabs.mesh_widget.symbols_actor.build()
+        # app().main_window.mesh_widget.symbols_actor.build()
 
     def change_frequency_setup(self):
         if self.imported_values is not None:

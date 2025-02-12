@@ -78,9 +78,9 @@ class PlotStructuralFrequencyResponseInput(QDialog):
     
     def selection_type_callback(self):
         if self.comboBox_selector_filter.currentIndex() == 3:
-            app().main_window.viewer_tabs.show_mesh()
+            app().main_window.action_mesh_workspace_callback()
         else:
-            app().main_window.viewer_tabs.show_geometry()
+            app().main_window.action_model_workspace_callback()
 
     def geometry_selection_callback(self):
 

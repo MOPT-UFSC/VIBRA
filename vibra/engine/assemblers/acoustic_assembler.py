@@ -232,8 +232,8 @@ class AcousticAssembler:
             #     # element_indexes = np.array(all_indexes)
             #     # filename = f"connect_data_{property_label}.dat"
             #     # np.savetxt(filename, np.insert(connect, 0, element_indexes, axis=1), fmt="%i")
-            #     app().main_window.viewer_tabs.show_mesh()
-            #     mesh_widget = app().main_window.viewer_tabs.mesh_widget
+            #     app().main_window.action_mesh_workspace_callback()
+            #     mesh_widget = app().main_window.mesh_widget
             #     mesh_widget.select_multiple_faces(all_indexes)
 
         return connect, surface_data

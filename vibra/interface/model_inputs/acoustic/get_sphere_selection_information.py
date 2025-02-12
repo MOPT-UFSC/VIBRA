@@ -25,9 +25,6 @@ class GetSphereSelectionInformation(QDialog):
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
 
-        if not app().main_window.viewer_tabs.isVisible():
-            return
-
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
@@ -104,11 +101,11 @@ class GetSphereSelectionInformation(QDialog):
         self.lineEdit_number_of_elements.setText(str(len(list_elements)))
         self.lineEdit_number_of_nodes.setText(str(len(list_nodes)))
 
-        if app().main_window.viewer_tabs.currentIndex() != 2:
-            app().main_window.viewer_tabs.setCurrentIndex(2)
+        if not app().main_window.action_mesh_workspace.isChecked():
+            app().main_window.action_mesh_workspace_callback()
 
         self.highlight_mesh_elements(list_elements)
 
     def highlight_mesh_elements(self, elements):
-        mesh_widget = app().main_window.viewer_tabs.mesh_widget
+        mesh_widget = app().main_window.mesh_widget
         mesh_widget.select_multiple_volumes(elements)

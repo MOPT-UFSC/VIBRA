@@ -114,21 +114,9 @@ class PlotParticleVelocityFrequencyResponseInput(QDialog):
         self.geometry_selection_callback()
 
         if self.comboBox_selector_filter.currentIndex() == 0:
-
-            if not self.main_window.viewer_tabs.isTabEnabled(2):
-                self.main_window.viewer_tabs.show_geometry()
-                return
-
-            self.main_window.viewer_tabs.setCurrentIndex(1)
-
+            self.main_window.action_model_workspace_callback()
         else:
-
-            if self.main_window.viewer_tabs.currentIndex() != 2:
-                if not self.main_window.viewer_tabs.isTabEnabled(2):
-                    self.main_window.viewer_tabs.show_mesh()
-                    return
-
-            self.main_window.viewer_tabs.setCurrentIndex(2)
+            self.main_window.action_mesh_workspace_callback()
 
     def check_inputs(self):
 
@@ -160,7 +148,7 @@ class PlotParticleVelocityFrequencyResponseInput(QDialog):
         self.join_model_data()
         self.plotter = FrequencyResponsePlotter()
         self.plotter._set_model_results_data_to_plot(self.model_results)
-        app().main_window.viewer_tabs.mesh_widget.update_symbols()
+        app().main_window.mesh_widget.update_symbols()
 
     def export_data_callback(self):
         

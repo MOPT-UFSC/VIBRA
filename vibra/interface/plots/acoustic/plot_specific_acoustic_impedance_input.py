@@ -114,21 +114,9 @@ class PlotSpecificAcousticImpedanceInput(QDialog):
         self.geometry_selection_callback()
 
         if self.comboBox_selector_filter.currentIndex() == 0:
-
-            if not self.main_window.viewer_tabs.isTabEnabled(2):
-                self.main_window.viewer_tabs.show_geometry()
-                return
-
-            self.main_window.viewer_tabs.setCurrentIndex(1)
-
+            self.main_window.action_model_workspace_callback()
         else:
-
-            if self.main_window.viewer_tabs.currentIndex() != 2:
-                if not self.main_window.viewer_tabs.isTabEnabled(2):
-                    self.main_window.viewer_tabs.show_mesh()
-                    return
-
-            self.main_window.viewer_tabs.setCurrentIndex(2)
+            self.main_window.action_mesh_workspace_callback()
 
     def check_inputs(self):
 
