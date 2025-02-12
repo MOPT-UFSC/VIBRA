@@ -91,6 +91,7 @@ class FacesActor(vtkActor):
 
         mapper.SetInputData(self.data)
         self.SetMapper(mapper)
+        self.clear_colors()
 
     def configure_appearance(self):
         self.GetProperty().SetInterpolationToPhong()

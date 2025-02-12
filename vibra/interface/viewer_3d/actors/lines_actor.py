@@ -51,18 +51,20 @@ class LinesActor(vtkActor):
 
     def clear_colors(self):
         data = self.GetMapper().GetInput()
-        cell_colors = data.GetCellData().GetScalars()
+        cell_colors: vtkUnsignedCharArray = data.GetCellData().GetScalars()
         r, g, b = color_names.BLACK.to_rgb()
 
         cell_colors.FillComponent(0, r)
         cell_colors.FillComponent(1, g)
         cell_colors.FillComponent(2, b)
 
-        self.GetMapper().ScalarVisibilityOff()
+        self.GetMapper().SetScalarModeToUseCellData()
+        self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
+        self.GetMapper().ScalarVisibilityOn()
 
     def paint_cells(self, color: tuple[3], cells: tuple[int]):
         data = self.GetMapper().GetInput()
-        cell_colors = data.GetCellData().GetScalars()
+        cell_colors: vtkUnsignedCharArray = data.GetCellData().GetScalars()
 
         for i in cells:
             cell_colors.SetTuple(i, color)
