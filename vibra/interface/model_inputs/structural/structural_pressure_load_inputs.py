@@ -1,5 +1,5 @@
 
-from PyQt5.QtWidgets import QCheckBox, QComboBox, QDialog, QFileDialog, QLabel, QLineEdit, QPushButton, QRadioButton, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PyQt5.QtWidgets import QCheckBox, QComboBox, QDialog, QFileDialog, QLabel, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCloseEvent
 from PyQt5 import uic
@@ -9,10 +9,10 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
+import numpy as np
 from os.path import basename
 from pathlib import Path
 
-import numpy as np
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
