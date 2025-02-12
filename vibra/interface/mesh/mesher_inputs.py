@@ -332,7 +332,7 @@ class MesherInputs(QDialog):
             self.close()
 
         logging.info("Updating render..." + ProgressStatus(95, 100))
-        app().main_window.action_model_workspace_callback()
+        app().main_window.action_mesh_workspace_callback()
         app().main_window.update_plots()
 
     def get_mesh_refinement_data(self):

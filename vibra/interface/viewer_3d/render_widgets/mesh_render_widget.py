@@ -1,22 +1,9 @@
-import numpy as np
-from molde.render_widgets import CommonRenderWidget
-from molde.utils import TreeInfo
-from molde.utils.format_sequences import format_long_sequence
-from molde.interactor_styles import BoxSelectionInteractorStyle
-
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-
-from vtkmodules.vtkCommonCore import vtkIntArray
-from vtkmodules.vtkCommonDataModel import vtkPolyData
-from vtkmodules.vtkRenderingCore import vtkActor, vtkCellPicker
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtWidgets import QApplication
 
 from vibra import app
-from vibra.interface.tabs.mesh_info_bar import MeshInfoBar
-from vibra.interface.viewer_3d.actors.section_plane_actor import (
-    SectionPlaneActor,
-)
-
+# from vibra.interface.tabs.mesh_info_bar import MeshInfoBar
+from vibra.interface.viewer_3d.actors.section_plane_actor import SectionPlaneActor
 from ..actors.edges_actor import EdgesActor
 from ..actors.faces_actor import FacesActor
 from ..actors.nodes_actor import NodesActor
@@ -25,6 +12,18 @@ from ..actors.hollow_solids_actor import HollowSolidsActor
 from ..actors.selection_spheres import SelectionSpheres
 from ..actors.symbols.symbols_actor import SymbolsActor
 from ..actors.ghost_actor import GhostActor
+
+from molde.render_widgets import CommonRenderWidget
+from molde.utils import TreeInfo
+from molde.utils.format_sequences import format_long_sequence
+from molde.interactor_styles import BoxSelectionInteractorStyle
+
+import numpy as np
+from numbers import Number
+
+from vtkmodules.vtkCommonCore import vtkIntArray
+from vtkmodules.vtkCommonDataModel import vtkPolyData
+from vtkmodules.vtkRenderingCore import vtkActor, vtkCellPicker
 
 
 # SHOW_POINTS = 0
@@ -80,26 +79,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor = EdgesActor(self.faces_actor.data)
         self.solids_actor: SolidsActor | HollowSolidsActor = HollowSolidsActor(mesh)
         # self.solids_actor: SolidsActor | HollowSolidsActor = SolidsActor(mesh)
-        self.renderer.AddActor(self.nodes_actor)
-
-        self.faces_actor = FacesActor(mesh, allow_hidding=False)
-        self.faces_actor.GetProperty().LightingOff()
-        self.faces_actor.ForceTranslucentOn()
-        self.faces_actor.PickableOff()
-        self.faces_actor.clear_colors((0, 0, 0, 0))
-        self.renderer.AddActor(self.faces_actor)
-
-        self.solids_actor = SolidsActor(mesh)
-        self.renderer.AddActor(self.solids_actor)
-
-        self.edges_actor = EdgesActor(self.solids_actor.data)
-        self.edges_actor.GetProperty().SetColor(0, 0, 0)
-        self.renderer.AddActor(self.edges_actor)
-
-        self.plane_actor = SectionPlaneActor(self.solids_actor.GetBounds())
-        self.plane_actor.VisibilityOff()
-        self.renderer.AddActor(self.plane_actor)
-
         self.symbols_actor = SymbolsActor(self.renderer)
         self.selection_spheres_actor = SelectionSpheres()
 
@@ -480,8 +459,12 @@ class MeshRenderWidget(CommonRenderWidget):
             self.plane_actor.GetProperty().SetOpacity(0.8)
             self.update()
         else:
-            show_plane = not section_plane.keep_section_plane
-            self._apply_section_plane(position, rotation, inverted, show_plane)
+            self._apply_section_plane(
+                position,
+                rotation,
+                inverted,
+                section_plane.isVisible(),
+            )
 
     def _disable_section_plane(self):
         has_hidden_part = bool(self.main_window.hidden_surfaces)
@@ -575,7 +558,7 @@ class MeshRenderWidget(CommonRenderWidget):
         text += self._solids_info_text()
         # text += self._material_info_text()
         # text += self._fluid_info_text()
-        # text += self._boundary_conditions_info_text()
+        text += self._structural_boundary_conditions_info_text()
 
         self.set_info_text(text)
         self.update()
@@ -671,35 +654,82 @@ class MeshRenderWidget(CommonRenderWidget):
 
         return text
 
-    def _boundary_conditions_info_text(self):
-        elements = list(self.main_window.selected_mesh_faces)
+
+    def _structural_boundary_conditions_info_text(self):
+
         text = ""
+        selected_nodes = list(self.main_window.selected_mesh_nodes)
 
-        if not elements:
-            elements = list(self.main_window.selected_mesh_solids)
-
-        if len(elements) != 1:
+        if len(selected_nodes) != 1:
             return text
 
-        surface_id = app().project.model.mesh.surface_from_element[elements[0]]
-
-        acoustic_pressure = app().project.model.properties._get_property("acoustic_pressure", surface=surface_id)
-        surface_velocity = app().project.model.properties._get_property("surface_velocity", surface=surface_id)
-        specific_impedance = app().project.model.properties._get_property("specific_impedance", surface=surface_id)
-        boundary_conditions_list = [acoustic_pressure, surface_velocity, specific_impedance]
+        prescribed_dofs = app().project.model.properties._get_property("prescribed_dofs", node=selected_nodes[0])
+        external_loads = app().project.model.properties._get_property("external_loads", node=selected_nodes[0])
+        boundary_conditions_list = [prescribed_dofs, external_loads]
 
         if all(condition is None for condition in boundary_conditions_list):
             return text
 
-        tree = TreeInfo("Boundary Conditions")
+        if prescribed_dofs is not None:
+            values = prescribed_dofs["values"]
+            loaded_table = "table_names" in prescribed_dofs.keys()
+            text += _structural_format("Prescribed dofs",  values, ("u", "r"), ("m", "rad"), loaded_table)
 
-        if acoustic_pressure is not None:
-            tree.add_item("Acoustic pressure", acoustic_pressure["real_values"][0], "Pa")
-        if surface_velocity is not None:
-            tree.add_item("Surface velocity", surface_velocity["real_values"][0], "m/s")
-        if specific_impedance is not None:
-            tree.add_item("Specific impedance", specific_impedance["real_values"][0], "kg/m²s")
-
-        text += str(tree)
+        if external_loads is not None:
+            values = external_loads["values"]
+            loaded_table = "table_names" in external_loads.keys()
+            text += _structural_format("External loads",  values, ("F", "M"), ("N", "N.m"), loaded_table)
 
         return text
+
+def _all_none(sequence) -> bool:
+    return all(i is None for i in sequence)
+
+def _structural_format(property_name, values, labels, units, has_table):
+
+    if _all_none(values):
+        return ""
+
+    u_values = list()
+    u_labels = list()
+    for val, label in zip(values[:3], "xyz"):
+        if val is not None:
+            u_values.append(val)
+            u_labels.append(labels[0] + label)
+
+    r_values = list()
+    r_labels = list()
+    for val, label in zip(values[3:], "xyz"):
+        if val is None:
+            continue
+
+        if not isinstance(val, Number | str):
+            val = "table"
+
+        r_values.append(val)
+        r_labels.append(labels[1] + label)
+
+    tree = TreeInfo(property_name)
+    if has_table:
+        tree.add_item(u_labels, "Table of values")
+        tree.add_item(r_labels, "Table of values")
+    else:
+        if u_values:
+            tree.add_item(", ".join(u_labels), u_values, units[0])
+        if r_values:
+            tree.add_item(", ".join(r_labels), r_values, units[1])
+
+    return str(tree)
+
+def _acoustic_format(property_name, value, label, unit, additional_labels=[]):
+
+    tree = TreeInfo(property_name)
+    if isinstance(value, Number | str | float | complex):
+        tree.add_item(label, np.round(value, 4), unit)
+    else:
+        tree.add_item(label, "Table of values")
+
+    if len(additional_labels) == 2:
+        tree.add_item(additional_labels[0], additional_labels[1])
+
+    return str(tree)

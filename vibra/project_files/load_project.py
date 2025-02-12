@@ -439,8 +439,4 @@ class LoadProject:
                 app().main_window.configure_acoustic_harmonic_analysis_render_widget()
 
             elif str_harmonic_analysis:
-                app().main_window.viewer_tabs.show_structural_harmonic_analysis()
-                app().main_window.menu_widget.update_items()
-
-            else:
-                return
+                app().main_window.configure_structural_harmonic_analysis_render_widget()

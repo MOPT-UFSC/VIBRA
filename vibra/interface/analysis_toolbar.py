@@ -222,7 +222,9 @@ class AnalysisToolbar(QToolBar):
             "analysis_method_label": analysis_method_label,
         }
         self.finalize(analysis_data, analysis_id)
-        self.run_analysis()
+        harmonic = AnalysisSetupInput()
+        if harmonic.solve_analysis:
+            self.run_analysis()
     
     def harmonic_acoustic(self):
         method_id = 0
@@ -273,6 +275,6 @@ class AnalysisToolbar(QToolBar):
         app().project.set_analysis_data(analysis_data)
         app().project.create_solver()
 
-        if analysis_id in [2, 3, 4]:
+        if analysis_id in [0, 2, 3, 4]:
             app().file.write_analysis_setup_in_file(analysis_data)
 
