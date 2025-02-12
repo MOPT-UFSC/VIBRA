@@ -6,6 +6,7 @@ from molde.render_widgets import AnimatedRenderWidget
 from vibra import app
 from vibra.engine.postprocessing import (
     compute_structural_modal_field,
+    compute_structural_harmonic_field,
     compute_acoustic_modal_field,
     compute_acoustic_harmonic_field,
 )
@@ -78,6 +79,14 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             data = compute_structural_modal_field(
                 app().project.structural_modal_solver.modal_shape,
                 self.current_frequency_index, 
+                self.current_phase,
+            )
+            displacements, color_scalars, min_value, max_value = data
+
+        elif self.current_analysis == "structural_harmonic":
+            data = compute_structural_harmonic_field(
+                app().project.structural_harmonic_solver.solution,
+                self.current_frequency_index,
                 self.current_phase,
             )
             displacements, color_scalars, min_value, max_value = data
