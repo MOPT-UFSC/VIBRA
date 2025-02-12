@@ -30,7 +30,7 @@ class PlotTransmissionLossInput(QDialog):
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
-        self.main_window.viewer_tabs.show_geometry()
+        self.main_window.action_model_workspace_callback()
 
         self.project = app().project
         self.model = app().project.model
@@ -178,7 +178,7 @@ class PlotTransmissionLossInput(QDialog):
         self.plotter = FrequencyResponsePlotter()
         self.plotter.imported_dB_data()
         self.plotter._set_model_results_data_to_plot(self.model_results)
-        app().main_window.viewer_tabs.mesh_widget.update_symbols()
+        app().main_window.mesh_widget.update_symbols()
 
     def export_data_callback(self):
 
@@ -275,7 +275,7 @@ class PlotTransmissionLossInput(QDialog):
 
     def plot_nodal_normals(self, normals_data: dict):
         
-        app().main_window.viewer_tabs.mesh_widget.update_symbols()
+        app().main_window.mesh_widget.update_symbols()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
