@@ -884,6 +884,7 @@ class MainWindow(QMainWindow):
 
             app().project.reset_solutions()
             app().project.model.properties._reset_variables()
+            self.update_plots()
 
         except Exception as error_log:
             window_title = "Error"
