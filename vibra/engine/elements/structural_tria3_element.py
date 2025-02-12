@@ -492,6 +492,110 @@ class STRUCT_TRIANGULAR_3(Element2D):
         return self.ind_rows, self.ind_cols
 
 
+    def force_vector(self, nodal_coords: np.ndarray, line_pressure, pressure, normpress, e_nodes_load, e_nodes_pressure, e_elems_normpress, n_unit_elem):
+
+        F_elem = np.zeros(self.DOFS_PER_ELEMENT, dtype=float)
+        loads = np.zeros(int(self.DOFS_PER_ELEMENT / 2), dtype=float)
+
+        # Local coordinate system definition
+        x_loc, y_loc, _ = get_local_coordinates(nodal_coords)
+
+        ## LOAD - LINE PRESSURE
+        if np.count_nonzero(e_nodes_load) >= 2:
+
+            # Line integration points
+            num = np.sqrt(3 / 5) / 2
+            if e_nodes_load[0] == 1 and e_nodes_load[1] == 1:
+
+                dx_dst = x_loc[1] - x_loc[0]
+                dy_dst = y_loc[1] - y_loc[0]
+                coord_int = np.array([[0.5-num,     0.5, 0.5+num], 
+                                      [      0,       0,       0]], dtype=float)
+            
+            elif e_nodes_load[0] == 1 and e_nodes_load[2] == 1:
+
+                dx_dst = x_loc[2] - x_loc[0]
+                dy_dst = y_loc[2] - y_loc[0]
+                coord_int = np.array([[      0,       0,       0], 
+                                      [0.5-num,     0.5, 0.5+num]], dtype=float)
+
+            else:
+
+                dx_dst = x_loc[2] - x_loc[1]
+                dy_dst = y_loc[2] - y_loc[1]
+                coord_int = np.array([[0.5-num, 0.5, 0.5+num], 
+                                      [0.5-num, 0.5, 0.5+num]], dtype=float)
+                
+            weights = np.array([5, 8, 5], dtype=float) / 18
+
+            # Determinant of the Jacobian
+            det_J = np.sqrt(dx_dst**2 + dy_dst**2)
+
+            # Numerical integration
+            for i, weight in enumerate(weights):
+
+                # Coordinates of integration points
+                r = coord_int[0, i]
+                s = coord_int[1, i]
+
+                # Shape functions
+                N = np.array([[1 - r - s,         0,         0, r, 0, 0, s, 0, 0],
+                              [        0, 1 - r - s,         0, 0, r, 0, 0, s, 0],
+                              [        0,         0, 1 - r - s, 0, 0, r, 0, 0, s]], dtype=float)
+
+                # Load vector
+                loads += det_J * weight * N.T @ line_pressure
+
+        ## PRESSURE
+        if np.count_nonzero(e_nodes_pressure) == 3:
+
+            # Integration points
+            r = 1 / 3
+            s = 1 / 3
+
+            # Jacobian
+            J = np.array([[x_loc[1] - x_loc[0], y_loc[1] - y_loc[0]], 
+                          [x_loc[2] - x_loc[0], y_loc[2] - y_loc[0]]], dtype=float)
+
+            # Determinant of the Jacobian
+            det_J = np.linalg.det(J)
+
+            # Shape functions
+            N = np.array([[1 - r - s,         0,         0, r, 0, 0, s, 0, 0],
+                            [        0, 1 - r - s,         0, 0, r, 0, 0, s, 0],
+                            [        0,         0, 1 - r - s, 0, 0, r, 0, 0, s]], dtype=float)
+
+            # Pressure vector
+            loads += 0.5 * det_J * N.T @ pressure
+
+        ## NORMAL PRESSURE
+        if e_elems_normpress == 1:
+
+            # Integration points
+            r = 1 / 3
+            s = 1 / 3
+
+            # Jacobian
+            J = np.array([[x_loc[1] - x_loc[0], y_loc[1] - y_loc[0]], 
+                          [x_loc[2] - x_loc[0], y_loc[2] - y_loc[0]]], dtype=float)
+
+            # Determinant of the Jacobian
+            det_J = np.linalg.det(J)
+
+            # Shape functions
+            N = np.array([[1 - r - s,         0,         0, r, 0, 0, s, 0, 0],
+                          [        0, 1 - r - s,         0, 0, r, 0, 0, s, 0],
+                          [        0,         0, 1 - r - s, 0, 0, r, 0, 0, s]], dtype=float)
+
+            # Normal pressure vector
+            loads += 0.5 * det_J * N.T @ (normpress * n_unit_elem)
+
+        force_indexes = [0, 1, 2, 6, 7, 8, 12, 13, 14]
+        F_elem[force_indexes] = loads
+
+        return F_elem
+
+
 def elementary_matrices(nodal_coords: np.ndarray):
     """ For validation purposes.
     """

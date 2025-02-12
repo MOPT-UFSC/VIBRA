@@ -12,7 +12,7 @@ class AnalysisActor(SolidsActor):
         if max_abs == 0:
             max_abs = 1
 
-        deltas = (magnification_factor / max_abs) * displacements
+        deltas = (magnification_factor / (10 * max_abs)) * displacements
         deformed_coordinates = deltas + self.mesh.nodal_coordinates[:, 1:]
 
         self.update_coordinates(deformed_coordinates)

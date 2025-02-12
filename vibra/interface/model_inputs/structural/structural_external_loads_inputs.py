@@ -1,5 +1,5 @@
 
-from PyQt5.QtWidgets import QCheckBox, QComboBox, QDialog, QFileDialog, QLabel, QLineEdit, QPushButton, QRadioButton, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PyQt5.QtWidgets import QCheckBox, QComboBox, QDialog, QFileDialog, QLabel, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCloseEvent
 from PyQt5 import uic
@@ -9,10 +9,10 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
+import numpy as np
 from os.path import basename
 from pathlib import Path
 
-import numpy as np
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -50,9 +50,7 @@ class StructuralExternalLoadsInputs(QDialog):
         self.setWindowTitle("Set structural external loads")
 
     def _initialize(self):
-
         self.keep_window_open = True
-
         self.reset_table_variables()
 
     def reset_table_variables(self):
@@ -184,7 +182,7 @@ class StructuralExternalLoadsInputs(QDialog):
 
     def _config_widgets(self):
         #
-        for i, w in enumerate([60, 100, 160]):
+        for i, w in enumerate([110, 150, 100]):
             self.treeWidget_external_loads.setColumnWidth(i, w)
             self.treeWidget_external_loads.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
@@ -225,75 +223,122 @@ class StructuralExternalLoadsInputs(QDialog):
 
         if faces:
 
-            self.comboBox_attribution_type.setCurrentIndex(0)
-
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
+            self.comboBox_attribution_type.setCurrentIndex(0)
 
             if len(faces) == 1:
                 surface_id = list(faces)[0]
                 data = self.properties._get_property("external_loads", surface=surface_id)
                 self.update_input_fields(data)
+                if data is None:
+                    self.update_formulation_callback(surface_id=surface_id)
 
         elif lines:
-            
-            self.comboBox_attribution_type.setCurrentIndex(1)
 
             text = ", ".join([str(i) for i in lines])
             self.lineEdit_selection_id.setText(text)
+            self.comboBox_attribution_type.setCurrentIndex(1)
 
             if len(lines) == 1:
                 line_id = list(lines)[0]
                 data = self.properties._get_property("external_loads", line=line_id)
                 self.update_input_fields(data)
+                if data is None:
+                    self.update_formulation_callback(line_id=line_id)
 
         elif points:
-            
-            self.comboBox_attribution_type.setCurrentIndex(2)
 
             text = ", ".join([str(i) for i in points])
             self.lineEdit_selection_id.setText(text)
+            self.comboBox_attribution_type.setCurrentIndex(2)
 
             if len(points) == 1:
                 point_id = list(points)[0]
                 data = self.properties._get_property("external_loads", point=point_id)
                 self.update_input_fields(data)
+                if data is None:
+                    self.update_formulation_callback(point_id=point_id)
 
         elif nodes:
-            
-            self.comboBox_attribution_type.setCurrentIndex(3)
 
             text = ", ".join([str(i) for i in nodes])
             self.lineEdit_selection_id.setText(text)
+            self.comboBox_attribution_type.setCurrentIndex(3)
 
             if len(nodes) == 1:
                 node_id = list(nodes)[0]
                 data = self.properties._get_property("external_loads", node=node_id)
                 self.update_input_fields(data)
+                if data is None:
+                    self.update_formulation_callback(node_id=node_id)
 
-    def update_input_fields(self, data: dict):
+    def update_input_fields(self, data: dict | None):
 
-        if isinstance(data, dict):
+        if data is None:
+            return
 
-            self.reset_input_fields()
-            values = data.get("values", None)
+        self.reset_input_fields()
 
-            if "table_paths" in data.keys():
-                table_paths = data["table_paths"]
-                for index, lineEdit_table in enumerate(self.list_lineEdit_table_values):
-                    table_path = table_paths[index]
-                    if table_path is not None:                   
-                        lineEdit_table.setText(table_path)
+        element_type = data.get("element_type", None)
+        if element_type == "2d_element":
+            self.comboBox_element_type.setCurrentIndex(0)
+        else:
+            self.comboBox_element_type.setCurrentIndex(1)
 
-            else:
-                for index, [lineEdit_real, lineEdit_imag] in enumerate(self.list_lineEdit_constant_values):
+        values = data.get("values", None)
+        if "table_paths" in data.keys():
+            table_paths = data["table_paths"]
+            for index, lineEdit_table in enumerate(self.list_lineEdit_table_values):
+                table_path = table_paths[index]
+                if table_path is not None:                   
+                    lineEdit_table.setText(table_path)
 
-                    if data["element_type"] == "3d_element" and index >= 3:
-                        continue
-                    
-                    elif index <= 5 and values[index] is not None:
-                        lineEdit_real.setText(str(np.real(values[index])))
-                        lineEdit_imag.setText(str(np.imag(values[index])))
+        else:
+            for index, [lineEdit_real, lineEdit_imag] in enumerate(self.list_lineEdit_constant_values):
+
+                if element_type == "3d_element" and index >= 3:
+                    continue
+                
+                elif index <= 5 and values[index] is not None:
+                    lineEdit_real.setText(str(np.real(values[index])))
+                    lineEdit_imag.setText(str(np.imag(values[index])))
+
+    def update_formulation_callback(self, **kwargs):
+
+        surface_id = kwargs.get("surface_id", None)
+        line_id = kwargs.get("line_id", None)
+        point_id = kwargs.get("point_id", None)
+        node_id = kwargs.get("node_id", None)
+
+        if isinstance(surface_id, int):
+            data = self.properties._get_property("surface_thickness", surface=surface_id)
+            if isinstance(data, dict):
+                self.comboBox_element_type.setCurrentIndex(0)
+                return
+            
+        if isinstance(line_id, int):
+            for node_id in app().project.model.mesh.nodes_from_lines[line_id]:
+                for surface_id in self.model.mesh.surfaces_from_node[node_id]:
+                    data = self.properties._get_property("surface_thickness", surface=surface_id)
+                    if isinstance(data, dict):
+                        self.comboBox_element_type.setCurrentIndex(0)
+                        return
+
+        if isinstance(point_id, int):
+            for node_id in app().project.model.mesh.nodes_from_points[line_id]:
+                for surface_id in self.model.mesh.surfaces_from_node[node_id]:
+                    data = self.properties._get_property("surface_thickness", surface=surface_id)
+                    if isinstance(data, dict):
+                        self.comboBox_element_type.setCurrentIndex(0)
+                        return
+
+        if isinstance(node_id, int):
+            for surface_id in self.model.mesh.surfaces_from_node[node_id]:
+                    data = self.properties._get_property("surface_thickness", surface=surface_id)
+                    if isinstance(data, dict):
+                        self.comboBox_element_type.setCurrentIndex(0)
+                        return
 
     def attribution_type_callback(self):
         if self.comboBox_attribution_type.currentIndex() == 3:
@@ -334,6 +379,7 @@ class StructuralExternalLoadsInputs(QDialog):
         _real = None
         if real_input != "":
             try:
+                real_input = real_input.replace(",", ".")
                 _real = float(real_input)
 
             except Exception:
@@ -346,6 +392,7 @@ class StructuralExternalLoadsInputs(QDialog):
         _imag = None
         if imag_input != "":
             try:
+                imag_input = imag_input.replace(",", ".")
                 _imag = float(imag_input)
 
             except Exception:
@@ -896,8 +943,10 @@ class StructuralExternalLoadsInputs(QDialog):
 
             if property == "external_loads":
                 values = data["values"]
+                element_type = data["element_type"]
                 constrained_loads_mask = [False if value is None else True for value in values]
-                new = QTreeWidgetItem([str(args[0]), "Surface", str(self.text_label(constrained_loads_mask))])
+                dofs_labels = str(self.text_label(constrained_loads_mask))
+                new = QTreeWidgetItem([f"Surface-{args[0]}", dofs_labels, element_type])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
@@ -907,8 +956,10 @@ class StructuralExternalLoadsInputs(QDialog):
 
             if property == "external_loads":
                 values = data["values"]
+                element_type = data["element_type"]
                 constrained_loads_mask = [False if value is None else True for value in values]
-                new = QTreeWidgetItem([str(args[0]), "Line", str(self.text_label(constrained_loads_mask))])
+                dofs_labels = str(self.text_label(constrained_loads_mask))
+                new = QTreeWidgetItem([f"Line-{args[0]}", dofs_labels, element_type])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
@@ -918,8 +969,10 @@ class StructuralExternalLoadsInputs(QDialog):
 
             if property == "external_loads":
                 values = data["values"]
+                element_type = data["element_type"]
                 constrained_loads_mask = [False if value is None else True for value in values]
-                new = QTreeWidgetItem([str(args[0]), "Point", str(self.text_label(constrained_loads_mask))])
+                dofs_labels = str(self.text_label(constrained_loads_mask))
+                new = QTreeWidgetItem([f"Point-{args[0]}", dofs_labels, element_type])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
@@ -929,8 +982,10 @@ class StructuralExternalLoadsInputs(QDialog):
 
             if property == "external_loads":
                 values = data["values"]
+                element_type = data["element_type"]
                 constrained_loads_mask = [False if value is None else True for value in values]
-                new = QTreeWidgetItem([str(args[0]), "Node", str(self.text_label(constrained_loads_mask))])
+                dofs_labels = str(self.text_label(constrained_loads_mask))
+                new = QTreeWidgetItem([f"Node-{args[0]}", dofs_labels, element_type])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
@@ -968,8 +1023,8 @@ class StructuralExternalLoadsInputs(QDialog):
         else:
 
             text = self.lineEdit_selection_id.text()
-            if " - " in text:
-                selected_id = text.split(" - ")[1]
+            if "-" in text:
+                selected_id = text.split("-")[1]
                 self.lineEdit_selection_id.setText(selected_id)
 
             self.lineEdit_selection_id.setDisabled(False)
@@ -987,13 +1042,12 @@ class StructuralExternalLoadsInputs(QDialog):
 
     def on_click_item(self, item):
 
-        selected_id = item.text(0)
-        selection = item.text(1)
         self.pushButton_remove.setDisabled(False)
 
-        if selection != "":
+        if item.text(0) != "":
 
-            text = f"{selection} - {selected_id}"
+            selection, _selected_id = item.text(0).split("-")
+            selected_id = int(_selected_id)
 
             if selection == "Surface":
                 app().main_window.set_geometry_selection(surfaces = [int(selected_id)])
@@ -1013,7 +1067,7 @@ class StructuralExternalLoadsInputs(QDialog):
             else:
                 app().main_window.action_model_workspace_callback()
 
-            self.lineEdit_selection_id.setText(text)
+            self.lineEdit_selection_id.setText(item.text(0))
 
     def on_double_click_item(self, item):
         self.on_click_item(item)
@@ -1061,9 +1115,9 @@ class StructuralExternalLoadsInputs(QDialog):
 
         text = self.lineEdit_selection_id.text()
 
-        if text != "" and " - " in text:
+        if "-" in text:
 
-            selection, _selected_id = text.split(" - ")
+            selection, _selected_id = text.split("-")
             selected_id = int(_selected_id)
 
             if selection == "Surface":
@@ -1123,8 +1177,8 @@ class StructuralExternalLoadsInputs(QDialog):
 
     def actions_to_finalize(self):
         self.load_model_info()
-        self.reset_input_fields()
-        app().main_window.update_info_text()
+        self.reset_input_fields(reset_all=True)
+        app().main_window.viewer_tabs.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
         # app().main_window.viewer_tabs.mesh_widget.symbols_actor.build()
@@ -1149,9 +1203,10 @@ class StructuralExternalLoadsInputs(QDialog):
             app().project.set_analysis_data(analysis_data)
             app().file.write_analysis_setup_in_file(analysis_data)
 
-    def reset_input_fields(self):
+    def reset_input_fields(self, reset_all=False):
 
-        self.lineEdit_selection_id.setText("")
+        if reset_all:
+            self.lineEdit_selection_id.setText("")
 
         for lineEdit_real, lineEdit_imag in self.list_lineEdit_constant_values:
             lineEdit_real.setText("")

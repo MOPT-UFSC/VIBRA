@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+
+>>>>>>> shell_element
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QApplication
 
