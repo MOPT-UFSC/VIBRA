@@ -179,7 +179,10 @@ class StructuralAssembler:
             output[indexes, :] = np.array(excitation)
 
         if self.prescribed_dofs_indexes:
-            return output[self.unprescribed_dofs_indexes, :]
+            if len(self.active_2d_element_dofs):
+                return output[self.unprescribed_shell_dofs, :]
+            else:
+                return output[self.unprescribed_dofs_indexes, :]
         else:
             return output
 
