@@ -31,7 +31,7 @@ class GeometrySelection:
         cell_picker.Pick(x, y, 0, renderer)
 
         pick_position = np.array(cell_picker.GetPickPosition())
-        all_points = self._get_nodes_subset() + 1  # The point id is 1-indexed
+        all_points = self._get_nodes_subset()  # The point id is 1-indexed
         i = np.argmin(np.linalg.norm(all_points[:, 1:] - pick_position, axis=1))
 
         coordinate = vtkCoordinate()
@@ -87,9 +87,9 @@ class GeometrySelection:
 
     def area_pick_points(self, x0: int, y0: int, x1: int, y1: int) -> set[int]:
         picked_nodes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
-        all_points = self._get_nodes_subset() + 1
+        all_points = self._get_nodes_subset()
         picked_points = set(picked_nodes) & set(all_points[:, 0].astype(int))
-        return picked_points
+        return {i + 1 for i in picked_points}
 
     def area_pick_lines(self, x0: int, y0: int, x1: int, y1: int) -> set[int]:
         mesh = app().project.model.mesh
