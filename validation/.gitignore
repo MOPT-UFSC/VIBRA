@@ -1,5 +1,6 @@
 !ds_tubo_reto.dat
 !ds_silencer_suction_stg1.dat
+!ds_only_fluid_of_silencer_suction_stg1.dat
 
 # Validation files for structural shell DKT-CST element
 !Ke_ref.dat
