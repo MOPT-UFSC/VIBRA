@@ -86,7 +86,7 @@ def test_structural_modal_analysis_for_shell():
     # Define the material properties
 
     density = 7850
-    young_modulus = 2e11
+    elasticity_modulus = 2e11
     poisson_ratio = 0.30
     thermal_expansion_coefficient = 1.1e-5
 
@@ -95,7 +95,7 @@ def test_structural_modal_analysis_for_shell():
                         identifier = 1,
                         color = (200, 200, 200),
                         density = density,
-                        young_modulus = young_modulus,
+                        elasticity_modulus = elasticity_modulus,
                         poisson_ratio = poisson_ratio,
                         thermal_expansion_coefficient = thermal_expansion_coefficient
                         )

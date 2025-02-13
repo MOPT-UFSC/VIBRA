@@ -618,7 +618,7 @@ class MeshRenderWidget(CommonRenderWidget):
             tree.add_item("Name", material.name)
             tree.add_item("Identifier", material.identifier)
             tree.add_item("Density", material.density, "kg/m³")
-            tree.add_item("Young Modulus", material.young_modulus / 1e9, "GPa")
+            tree.add_item("Young Modulus", material.elasticity_modulus / 1e9, "GPa")
             tree.add_item("Poisson Ratio", material.poisson_ratio, "--")
             tree.add_item(
                 "Thermal Expasion Coefficient", material.thermal_expansion_coefficient, "1/K"
