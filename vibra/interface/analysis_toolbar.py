@@ -181,7 +181,7 @@ class AnalysisToolbar(QToolBar):
         app().file.remove_results_data_from_project_file()
         
         self.pushButton_reset_solution.setDisabled(True)
-        self.pushButton_run_analysis.setDisabled(True)
+
         app().main_window.action_model_workspace_callback()
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
         app().project.last_analysis = None
@@ -189,8 +189,6 @@ class AnalysisToolbar(QToolBar):
     def configure_analysis(self):
         analysis_type : AnalysisType = self.combo_box_analysis_type.currentText()
         physical_domain : PhysicalDomain = self.combo_box_analysis_domain.currentText()
-
-        self.pushButton_run_analysis.setDisabled(True)
 
         if analysis_type == "Harmonic":
             if physical_domain == "Structural":
@@ -204,40 +202,20 @@ class AnalysisToolbar(QToolBar):
                 self.modal_acoustic()
         
     def harmonic_structural(self):
+
         select = StructuralHarmonicAnalysisMethodSelecorInput()
-        method_id = select.index
-
-        analysis_type_label = "Structural Harmonic Analysis"
-
-        if method_id == 0:
-            analysis_id = 0
-            analysis_method_label = "Direct Method"
-        else:
-            analysis_id = 1
-            analysis_method_label = "Mode Superposition Method"
-        #
-        analysis_data = {
-            "analysis_id": analysis_id,
-            "analysis_type": analysis_type_label,
-            "analysis_method_label": analysis_method_label,
-        }
-        self.finalize(analysis_data, analysis_id)
+        if select.index == -1:
+            return
+ 
+        analysis_data = {"analysis_id": select.index}
+        self.finalize(analysis_data)
         harmonic = AnalysisSetupInput()
         if harmonic.solve_analysis:
             self.run_analysis()
     
     def harmonic_acoustic(self):
-        method_id = 0
-        analysis_id = 3
-        analysis_type_label = "Acoustic Harmonic Analysis"
-        analysis_method_label = "Direct Method"
-        #
-        analysis_data = {
-            "analysis_id": analysis_id,
-            "analysis_type": analysis_type_label,
-            "analysis_method_label": analysis_method_label,
-        }
-        self.finalize(analysis_data, analysis_id)
+        analysis_data = {"analysis_id": 3}
+        self.finalize(analysis_data)
         harmonic = AnalysisSetupInput()
         if harmonic.solve_analysis:
             self.run_analysis()
@@ -249,7 +227,7 @@ class AnalysisToolbar(QToolBar):
             return
 
         if modal.setup_defined:
-            self.finalize(modal.analysis_setup, modal.analysis_setup["analysis_id"])
+            self.finalize(modal.analysis_setup)
        
         if modal.proceed_solution:
             self.run_analysis()
@@ -261,20 +239,19 @@ class AnalysisToolbar(QToolBar):
             return
         
         if modal.setup_defined:
-            self.finalize(modal.analysis_setup, modal.analysis_setup["analysis_id"])
+            self.finalize(modal.analysis_setup)
         
         if modal.proceed_solution:
             self.run_analysis()
 
-    def finalize(self, analysis_data: dict, analysis_id: int):
+    def finalize(self, analysis_data: dict):
         if app().project.analysis_data is not None:
             for key, value in app().project.analysis_data.items():
-                if key in ["f_min", "f_max", "f_step", "frequencies"]:
+                if key in ["f_min", "f_max", "f_step", "frequencies", "global_damping"]:
                     analysis_data[key] = value
 
         app().project.set_analysis_data(analysis_data)
         app().project.create_solver()
 
-        if analysis_id in [0, 2, 3, 4]:
+        if analysis_data["analysis_id"] in [0, 2, 3, 4]:
             app().file.write_analysis_setup_in_file(analysis_data)
-
