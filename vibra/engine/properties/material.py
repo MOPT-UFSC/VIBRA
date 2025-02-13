@@ -7,7 +7,7 @@ from pathlib import Path
 class Material:
     name: str
     density: float
-    young_modulus: float
+    elasticity_modulus: float
     poisson_ratio: float
     identifier: int = 0
     thermal_expansion_coefficient: float = 0.0
@@ -15,7 +15,7 @@ class Material:
 
     @property
     def shear_modulus(self):
-        return self.young_modulus / (2 * (1 + self.poisson_ratio))
+        return self.elasticity_modulus / (2 * (1 + self.poisson_ratio))
 
 
 def load_material_list(path):
