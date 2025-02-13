@@ -6,7 +6,6 @@ from PyQt5.QtGui import QCloseEvent
 from PyQt5 import uic
 
 from vibra import app, UI_DIR
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -37,9 +36,7 @@ class SurfaceThicknessInput(QDialog):
         self._create_connections()
         self._config_widgets()
 
-        # ConfigWidgetAppearance(self, tool_tip=True)
-
-        self.load_info()
+        self.load_model_info()
         self.geometry_selection_callback()
 
         while self.keep_window_open:
@@ -86,7 +83,7 @@ class SurfaceThicknessInput(QDialog):
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
-        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         self.treeWidget_surface_thickness.itemClicked.connect(self.on_click_item)
         self.treeWidget_surface_thickness.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
@@ -126,7 +123,7 @@ class SurfaceThicknessInput(QDialog):
             self.lineEdit_surface_thickness.setText(str(data["surface_thickness"]))
             self.comboBox_thickness_offset.setCurrentText(data["thickness_offset"])
 
-    def tabEvent_callback(self):
+    def tab_event_callback(self):
         if self.tabWidget_main.currentIndex() == 1:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
@@ -232,7 +229,7 @@ class SurfaceThicknessInput(QDialog):
         self.hide()
 
         title = "Surface thickness resetting"
-        message = "Would you like to remove the all applied surface thickness from model?"
+        message = "Would you like to remove the all assigned surface thickness from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -253,18 +250,11 @@ class SurfaceThicknessInput(QDialog):
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
-        self.load_info()
+        self.load_model_info()
         app().main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
         # app().main_window.mesh_widget.symbols_actor.build()
-
-    def change_frequency_setup(self):
-        if self.imported_values is not None:
-            self.hide()
-            obj = ChangeFrequencyDataRangeInput(self.imported_values)
-            if obj.filter_data is not None:
-                self.imported_values = obj.filter_data
 
     def update_tabs_visibility(self):
         surface_ids = list()
@@ -287,7 +277,7 @@ class SurfaceThicknessInput(QDialog):
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
 
-    def load_info(self):
+    def load_model_info(self):
         self.treeWidget_surface_thickness.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key

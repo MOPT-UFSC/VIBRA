@@ -1142,8 +1142,8 @@ class StructuralExternalLoadsInputs(QDialog):
 
         self.hide()
 
-        title = "Prescribed DOFs resetting"
-        message = "Would you like to remove the all prescribed DOFs from model?"
+        title = "External loads resetting"
+        message = "Would you like to remove the all external loads from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
         obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
