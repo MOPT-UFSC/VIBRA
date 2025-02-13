@@ -491,11 +491,11 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_plotAcousticModeShapes:
             if not self.item_child_plotAcousticModeShapes.isDisabled():
-                self.main_window.configure_acoustic_modal_analysis_render_widget()
+                self.main_window.configure_acoustic_modal_analysis_render_widget(True)
 
         elif item == self.item_child_plot_acoustic_pressure_field:
             if not self.item_child_plot_acoustic_pressure_field.isDisabled():
-                self.main_window.configure_acoustic_harmonic_analysis_render_widget()
+                self.main_window.configure_acoustic_harmonic_analysis_render_widget(True)
 
         elif item == self.item_child_plot_acoustic_pressure_frequency_response:
             if not self.item_child_plot_acoustic_pressure_frequency_response.isDisabled():
