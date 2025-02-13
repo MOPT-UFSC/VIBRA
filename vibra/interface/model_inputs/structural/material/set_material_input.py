@@ -190,12 +190,13 @@ class SetMaterialInput(QDialog):
                     for volume_id in volume_ids:
                         app().project.set_material(selected_material, volume=volume_id)
 
-                surface_ids = list()
-                if "surfaces" in self.model.mesh.geometry_information.keys():
-                    surface_ids = self.model.mesh.geometry_information["surfaces"]
+                if attribution_type in [0, 2]:
+                    surface_ids = list()
+                    if "surfaces" in self.model.mesh.geometry_information.keys():
+                        surface_ids = self.model.mesh.geometry_information["surfaces"]
 
-                for surface_id in surface_ids:
-                    app().project.set_material(selected_material, surface=surface_id)
+                    for surface_id in surface_ids:
+                        app().project.set_material(selected_material, surface=surface_id)
 
             elif attribution_type in [3, 5]:
 
