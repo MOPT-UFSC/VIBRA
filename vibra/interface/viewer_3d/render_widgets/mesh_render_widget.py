@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QApplication
 
 from vibra import app
 # from vibra.interface.tabs.mesh_info_bar import MeshInfoBar
-from vibra.interface.viewer_3d.actors.section_plane_actor import SectionPlaneActor
+from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.edges_actor import EdgesActor
 from ..actors.faces_actor import FacesActor
 from ..actors.nodes_actor import NodesActor
@@ -12,6 +12,7 @@ from ..actors.hollow_solids_actor import HollowSolidsActor
 from ..actors.selection_spheres import SelectionSpheres
 from ..actors.symbols.symbols_actor import SymbolsActor
 from ..actors.ghost_actor import GhostActor
+from ..selection.mesh_selection import MeshSelection
 
 from molde.render_widgets import CommonRenderWidget
 from molde.utils import TreeInfo
@@ -41,7 +42,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.mouse_click = (0, 0)
 
         self.main_window = app().main_window
-        # self.view_mode = SHOW_FACES
         self.selection_color = (20, 106, 245)
 
         self.left_clicked.connect(self.click_callback)
@@ -50,6 +50,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
+        self.mesh_selection = MeshSelection(self)
         self.section_plane_active = False
         self.section_plane_args = tuple()
 
@@ -245,9 +246,13 @@ class MeshRenderWidget(CommonRenderWidget):
         mouse_moved = (abs(x0 - x) > 10) or (abs(y0 - y) > 10)
 
         if mouse_moved:
-            picked_nodes, picked_faces, picked_solids = self._get_area_picked_cell_id(x, y)
+            # picked_nodes, picked_faces, picked_solids = self._get_area_picked_cell_id(x, y)
+            picked_nodes = self.mesh_selection.area_pick_nodes(x0, y0, x, y)
+            picked_solids = self.mesh_selection.area_pick_solids(x0, y0, x, y)
         else:
-            picked_nodes, picked_faces, picked_solids = self._get_picked_cell_id(x, y)
+            # picked_nodes, picked_faces, picked_solids = self._get_picked_cell_id(x, y)
+            picked_nodes = self.mesh_selection.pick_node(x, y)
+            picked_solids = self.mesh_selection.pick_solid(x, y)
 
         modifiers = QApplication.keyboardModifiers()
         ctrl_pressed = modifiers & Qt.ControlModifier
@@ -255,7 +260,7 @@ class MeshRenderWidget(CommonRenderWidget):
 
         app().main_window.set_mesh_selection(
             nodes=picked_nodes,
-            faces=picked_faces,
+            # faces=picked_faces,
             solids=picked_solids,
             join=ctrl_pressed,
             remove=alt_pressed,
@@ -382,7 +387,7 @@ class MeshRenderWidget(CommonRenderWidget):
         solids = self.main_window.selected_mesh_solids
 
         self.nodes_actor.paint_cells([255, 0, 0], nodes)
-        self.faces_actor.paint_cells(self.selection_color, faces)
+        # self.faces_actor.paint_cells(self.selection_color, faces)
         self.solids_actor.paint_cells(self.selection_color, solids)
         self.update()
 
