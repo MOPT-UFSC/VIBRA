@@ -22,6 +22,15 @@ class MeshSelection:
         self.mesh_render_widget = mesh_render_widget
 
     def pick_node(self, x: int, y: int) -> set[int]:
+        '''
+        Pick a node in the mesh.
+
+        This function finds the 3D coordinates of the mouse click (only works if it hit something).
+        Then, the closest node is picked.
+        To make sure this is a node, we project it into the screen and check if the screen distance
+        to the node is smaller than the node visual radius.
+        '''
+
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
@@ -40,7 +49,7 @@ class MeshSelection:
         view_coords = coordinate.GetComputedViewportValue(renderer)
         click = np.array([x, y])
 
-        node_size = 15
+        node_size = 10
         if np.linalg.norm(click - view_coords) < node_size / 2:
             return {mesh.nodal_coordinates[i, 0].astype(int)}
 
