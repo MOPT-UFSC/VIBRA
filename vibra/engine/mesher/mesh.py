@@ -66,6 +66,7 @@ class Mesh:
         self.line_from_element = dict()
         self.surface_from_element = dict()
         self.volume_from_element = dict()
+        self.surface_from_solid_element = defaultdict(list)
 
         self.surfaces_from_volumes = dict()
         self.lines_from_surface = dict()
@@ -523,6 +524,15 @@ class Mesh:
     def _update_surfaces_from_nodes(self, surface_id, node_ids):
         for node_id in node_ids:
             self.surfaces_from_node[node_id].append(surface_id)
+
+
+    def process_solid_elements_from_surfaces(self):
+        self.surface_from_solid_element.clear()
+        surface_nodes = np.array([*set(self.faces_connectivity[:, 4:])], dtype=int)
+        for surface_id, surface_nodes in self.nodes_from_surfaces.items():
+            mask_0 = np.sum(np.isin(self.solids_connectivity[:, 4:], surface_nodes), axis=1) >= 1
+            for el_index in self.solids_connectivity[mask_0, 0]:
+                self.surface_from_solid_element[el_index].append(surface_id)
 
 
     def create_element_mappings(self):
