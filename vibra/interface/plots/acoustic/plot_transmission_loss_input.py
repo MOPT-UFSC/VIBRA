@@ -30,7 +30,7 @@ class PlotTransmissionLossInput(QDialog):
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
+        self.main_window.show_geometry_render_widget()
 
         self.project = app().project
         self.model = app().project.model
