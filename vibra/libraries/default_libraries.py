@@ -10,7 +10,7 @@ def default_material_library():
         "identifier" : 1,
         "color" : "[170,170,170]",  # Light Gray
         "material_density" : 7850,
-        "young_modulus" : 200,
+        "elasticity_modulus" : 200,
         "poisson" : 0.3,
         "thermal_expansion_coefficient" : 1.2e-5,
     }
@@ -20,7 +20,7 @@ def default_material_library():
         "identifier" : 2,
         "color" : "[126,46,31]",  # Wood color
         "material_density" : 7750,
-        "young_modulus" : 193,
+        "elasticity_modulus" : 193,
         "poisson" : 0.31,
         "thermal_expansion_coefficient" : 1.7e-5,
     }
@@ -30,7 +30,7 @@ def default_material_library():
         "identifier" : 3,
         "color" : "[0,255,255]",  # Cyan
         "material_density" : 8220,
-        "young_modulus" : 212,
+        "elasticity_modulus" : 212,
         "poisson" : 0.315,
         "thermal_expansion_coefficient" : 1.2e-5,
     }
@@ -40,7 +40,7 @@ def default_material_library():
         "identifier" : 4,
         "color" : "[50,50,50]",  # Dark Grey
         "material_density" : 7200,
-        "young_modulus" : 110,
+        "elasticity_modulus" : 110,
         "poisson" : 0.28,
         "thermal_expansion_coefficient" : 1.1e-5,
     }
@@ -50,7 +50,7 @@ def default_material_library():
         "identifier" : 5,
         "color" : "[255,255,255]",  # White
         "material_density" : 2770,
-        "young_modulus" : 71,
+        "elasticity_modulus" : 71,
         "poisson" : 0.333,
         "thermal_expansion_coefficient" : 2.3e-5,
     }
@@ -60,7 +60,7 @@ def default_material_library():
         "identifier" : 6,
         "color" : "[181,166,66]",  # Brass color
         "material_density" : 8150,
-        "young_modulus" : 96,
+        "elasticity_modulus" : 96,
         "poisson" : 0.345,
         "thermal_expansion_coefficient" : 1.9e-5,
     }

@@ -569,7 +569,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         tree.add_item("Name", material.name)
         tree.add_item("Identifier", material.identifier)
         tree.add_item("Density", material.density, "kg/m³")
-        tree.add_item("elasticity modulus", material.young_modulus / 1e9, "GPa")
+        tree.add_item("elasticity modulus", material.elasticity_modulus / 1e9, "GPa")
         tree.add_item("Poisson ratio", material.poisson_ratio, "--")
         tree.add_item("Thermal expasion coefficient", material.thermal_expansion_coefficient, "1/K")
 
@@ -679,8 +679,8 @@ class GeometryRenderWidget(CommonRenderWidget):
             return text
 
         prescribed_dofs = app().project.model.properties._get_property("prescribed_dofs", surface=selected_faces[0])
-        external_loads = app().project.model.properties._get_property("external_loads", surface=selected_faces[0])
-        boundary_conditions_list = [prescribed_dofs, external_loads]
+        nodal_loads = app().project.model.properties._get_property("nodal_loads", surface=selected_faces[0])
+        boundary_conditions_list = [prescribed_dofs, nodal_loads]
 
         if all(condition is None for condition in boundary_conditions_list):
             return text
@@ -690,9 +690,9 @@ class GeometryRenderWidget(CommonRenderWidget):
             loaded_table = "table_names" in prescribed_dofs.keys()
             text += _structural_format("Prescribed dofs",  values, ("u", "r"), ("m", "rad"), loaded_table)
 
-        if external_loads is not None:
-            values = external_loads["values"]
-            loaded_table = "table_names" in external_loads.keys()
+        if nodal_loads is not None:
+            values = nodal_loads["values"]
+            loaded_table = "table_names" in nodal_loads.keys()
             text += _structural_format("External loads",  values, ("F", "M"), ("N", "N.m"), loaded_table)
 
         return text

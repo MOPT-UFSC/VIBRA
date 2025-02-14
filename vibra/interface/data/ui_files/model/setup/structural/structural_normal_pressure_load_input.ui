@@ -42,7 +42,7 @@
    <enum>Qt::DefaultContextMenu</enum>
   </property>
   <property name="windowTitle">
-   <string>Set the structural pressure load</string>
+   <string>Set normal pressure load</string>
   </property>
   <property name="whatsThis">
    <string/>
@@ -99,7 +99,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Set the structural normal pressure load</string>
+         <string>Set normal pressure load</string>
         </property>
         <property name="textFormat">
          <enum>Qt::AutoText</enum>

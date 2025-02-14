@@ -140,7 +140,7 @@ class LoadProject:
             identifier = int(section['identifier'])
             density = float(section['material_density'])
             poisson_ratio = float(section['poisson'])
-            young_modulus = float(section['young_modulus']) * 1e9
+            elasticity_modulus = float(section['elasticity_modulus']) * 1e9
             thermal_expansion_coefficient = float(section['thermal_expansion_coefficient'])
 
             material = Material(
@@ -148,7 +148,7 @@ class LoadProject:
                                 identifier = identifier, 
                                 density = density,
                                 poisson_ratio = poisson_ratio,
-                                young_modulus = young_modulus,
+                                elasticity_modulus = elasticity_modulus,
                                 thermal_expansion_coefficient = thermal_expansion_coefficient, 
                                 # color = getColorRGB(section['color'])
                                 )

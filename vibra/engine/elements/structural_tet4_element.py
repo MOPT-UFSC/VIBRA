@@ -103,8 +103,8 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         # self.material = self.model.properties.get_material(volume=volume_id)
 
         vv = self.material.poisson_ratio
-        E = self.material.young_modulus
-        # print(self.material.density, self.material.young_modulus, self.material.poisson_ratio)
+        E = self.material.elasticity_modulus
+        # print(self.material.density, self.material.elasticity_modulus, self.material.poisson_ratio)
 
         if model_type == "linear-isotropic":
             # Constititive model - Linear isotropic material

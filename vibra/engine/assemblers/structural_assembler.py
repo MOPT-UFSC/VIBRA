@@ -164,22 +164,25 @@ class StructuralAssembler:
         self.prescribed_dofs_indexes = list(output_prescribed_dofs_data.keys())
         self.unprescribed_dofs_indexes = self.get_unprescribed_indexes()
 
-    def process_structural_external_loads(self):
+    def process_structural_nodal_loads(self):
 
-        input_external_loads_data = self.get_property_data_for_selected_property("external_loads")
-        output_external_loads_data = self.reorder_property_data_based_on_gdofs(input_external_loads_data)
-        external_loads, _ = self.process_property_arrays(output_external_loads_data)
+        input_nodal_loads_data = self.get_property_data_for_selected_property("nodal_loads")
+        output_nodal_loads_data = self.reorder_property_data_based_on_gdofs(input_nodal_loads_data)
+        nodal_loads, _ = self.process_property_arrays(output_nodal_loads_data)
 
-        # self.external_loads_indexes = list(output_external_loads_data.keys())
+        # self.nodal_loads_indexes = list(output_nodal_loads_data.keys())
         output = np.zeros((len(self.all_dofs), self.number_frequencies), dtype=complex)
 
-        if external_loads:
-            indexes = list(external_loads.keys())
-            excitation = list(external_loads.values())
+        if nodal_loads:
+            indexes = list(nodal_loads.keys())
+            excitation = list(nodal_loads.values())
             output[indexes, :] = np.array(excitation)
 
         if self.prescribed_dofs_indexes:
-            return output[self.unprescribed_dofs_indexes, :]
+            if len(self.active_2d_element_dofs):
+                return output[self.unprescribed_shell_dofs, :]
+            else:
+                return output[self.unprescribed_dofs_indexes, :]
         else:
             return output
 
@@ -406,7 +409,7 @@ class StructuralAssembler:
         dt = time() - t0
         print(f"Elapsed time to assemble the global stiffness matrix: {round(dt, 4)} [s]")
 
-        self.external_loads = self.process_structural_external_loads()
+        self.nodal_loads = self.process_structural_nodal_loads()
 
         # A = self.get_structural_excitations_by_nodal_attribution()
         # B = self.get_structural_excitations_by_element_integration()
