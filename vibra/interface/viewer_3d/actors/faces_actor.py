@@ -19,6 +19,13 @@ from vibra import app
 
 
 class FacesActor(vtkActor):
+    NODES_TO_VTK_CELL = {
+        3: VTK_TRIANGLE,
+        6: VTK_QUADRATIC_TRIANGLE,
+        4: VTK_QUAD,
+        8: VTK_QUADRATIC_QUAD,
+    }
+
     def __init__(self, mesh, allow_hidding=True, update_normals=True):
         self.mesh = mesh
         self.data = None
@@ -52,14 +59,7 @@ class FacesActor(vtkActor):
         volume_indexes.SetName("volume_indexes")
         volume_indexes.Allocate(number_of_elements)
 
-        face_nodes = [3, 6, 4, 8]
-        types = [VTK_TRIANGLE, VTK_QUADRATIC_TRIANGLE, VTK_QUAD, VTK_QUADRATIC_QUAD]
-        aux = dict(zip(face_nodes, types))
-        try:
-            cell_type = aux[nodes_per_element]
-        except:
-            raise NotImplementedError("Not implemented plane element")
-
+        cell_type = self.NODES_TO_VTK_CELL[nodes_per_element]
         data.Allocate(nodes_per_element * number_of_elements)
 
         point_colors.SetNumberOfComponents(3)
