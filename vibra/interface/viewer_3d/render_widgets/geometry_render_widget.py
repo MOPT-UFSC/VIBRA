@@ -3,16 +3,19 @@ from PyQt5.QtWidgets import QApplication
 
 from vibra import app
 # from vibra.interface.tabs.geometry_info_bar import GeometryInfoBar
-from vibra.interface.viewer_3d.actors.section_plane_actor import SectionPlaneActor
+from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.faces_actor import FacesActor
 from ..actors.lines_actor import LinesActor
 from ..actors.points_actor import PointsActor
 from ..actors.selection_spheres import SelectionSpheres
 from ..actors.ghost_actor import GhostActor
+from ..selection.geometry_selection import GeometrySelection
+
 
 from molde.render_widgets import CommonRenderWidget
 from molde.utils import TreeInfo
 from molde.utils.format_sequences import format_long_sequence
+from molde.interactor_styles import BoxSelectionInteractorStyle
 
 import numpy as np
 from numbers import Number
@@ -32,6 +35,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.set_interactor_style(BoxSelectionInteractorStyle())
 
         self.main_window = app().main_window
         self.view_mode = SHOW_FACES
@@ -41,6 +45,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.main_window.selection_changed.connect(self.update_selection)
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
+
+        self.geometry_selection = GeometrySelection(self)
 
         self.points_actor = None
         self.lines_actor = None
@@ -206,42 +212,42 @@ class GeometryRenderWidget(CommonRenderWidget):
         if not self._actors_exists():
             return
 
-        mouse_moved = False
+        x0, y0 = self.mouse_click
+        mouse_moved = (abs(x0 - x) > 10) or (abs(y0 - y) > 10)
+
         if mouse_moved:
-            (
-                picked_nodes,
-                picked_line_elements,
-                picked_face_elements,
-            ) = self._get_area_picked_cell_id(x, y)
+            picked_points = self.geometry_selection.area_pick_points(x0, y0, x, y)
+            picked_lines = self.geometry_selection.area_pick_lines(x0, y0, x, y)
+            picked_faces = self.geometry_selection.area_pick_surfaces(x0, y0, x, y)
+            picked_volumes = self.geometry_selection.area_pick_volumes(x0, y0, x, y)
 
         else:
-            (
-                picked_nodes,
-                picked_line_elements,
-                picked_face_elements,
-            ) = self._get_picked_cell_id(x, y)
+            picked_points = self.geometry_selection.pick_point(x, y)
+            picked_lines = self.geometry_selection.pick_line(x, y)
+            picked_faces = self.geometry_selection.pick_surface(x, y)
+            picked_volumes = self.geometry_selection.pick_volume(x, y)
 
         # points are a subset of the nodes, but its index is 1-based
-        picked_points = {i+1 for i in picked_nodes}
+        # picked_points = {i+1 for i in picked_nodes}
 
-        picked_lines = set()
-        picked_faces = set()
-        picked_volumes = set()
+        # picked_lines = set()
+        # picked_faces = set()
+        # picked_volumes = set()
 
-        mesh = app().project.model.mesh
+        # mesh = app().project.model.mesh
 
-        for cell in picked_line_elements:
-            line_entity = mesh.lines_connectivity[cell][1]
-            picked_lines.add(line_entity)
+        # for cell in picked_line_elements:
+        #     line_entity = mesh.lines_connectivity[cell][1]
+        #     picked_lines.add(line_entity)
 
-        for cell in picked_face_elements:
-            face_entity = mesh.faces_connectivity[cell][1]
-            picked_faces.add(face_entity)
-            for volume, surfaces in mesh.surfaces_from_volumes.items():
-                if volume in self.main_window.hidden_volumes:
-                    continue
-                if face_entity in surfaces:
-                    picked_volumes.add(volume)
+        # for cell in picked_face_elements:
+        #     face_entity = mesh.faces_connectivity[cell][1]
+        #     picked_faces.add(face_entity)
+        #     for volume, surfaces in mesh.surfaces_from_volumes.items():
+        #         if volume in self.main_window.hidden_volumes:
+        #             continue
+        #         if face_entity in surfaces:
+        #             picked_volumes.add(volume)
 
         modifiers = QApplication.keyboardModifiers()
         ctrl_pressed = modifiers & Qt.ControlModifier
