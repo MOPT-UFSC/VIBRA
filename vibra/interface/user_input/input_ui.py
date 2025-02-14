@@ -44,8 +44,8 @@ class InputUi:
         self.main_window = app().main_window
         self.project = app().project
 
-        self.model_setup_items = app().main_window.model_setup_items
-        self.results_viewer_items = app().main_window.results_viewer_items
+        self.model_setup_items = app().main_window.model_setup_widget.model_setup_items
+        self.results_viewer_items = app().main_window.results_viewer_widget.results_viewer_items
 
         self._reset()
 

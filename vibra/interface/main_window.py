@@ -35,8 +35,8 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.help_widget import HelpWidget
 from vibra.interface.loading_bar import load_function
 from vibra.interface.menu_items import MenuItems
-from vibra.interface.menus.model_setup_items import ModelSetupItems
-from vibra.interface.menus.results_viewer_items import ResultsViewerItems
+from vibra.interface.menus.model_setup_widget import ModelSetupWidget
+from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
 from vibra.interface.user_input.input_ui import InputUi
 from vibra.interface.exception_message import ErrorMessage
 from vibra.interface.plots.acoustic.export_element_transfer_data_input import (
@@ -152,9 +152,6 @@ class MainWindow(QMainWindow):
         #QSplitter
         self.splitter: QSplitter
 
-        #QStacked
-        self.stacked_setup: QStackedWidget
-
         # QMenu
         self.menu_project: QMenu
         self.menu_settings: QMenu
@@ -166,7 +163,11 @@ class MainWindow(QMainWindow):
         self.renderer_toolbar: QToolBar
 
         # QStackedWidget
+        self.stacked_setup: QStackedWidget
         self.render_widgets_stack: QStackedWidget
+
+        # QSplitter
+        self.splitter : QSplitter
     
     def _connect_actions(self):
         '''
@@ -187,44 +188,12 @@ class MainWindow(QMainWindow):
             if callable(function):
                 action.triggered.connect(function)
 
-    def create_basic_layout(self):
-        
-        self.menu_widget = MenuItems()
-        self.results_viewer_items = ResultsViewerItems()
-        self.model_setup_items = ModelSetupItems()
-        self.input_ui = InputUi()
+    def create_basic_layout(self):      
         self.status_bar = StatusBar(self)
         self.analysis_toolbar = AnalysisToolbar()
 
-        grid_layout_left = QGridLayout()
-        grid_layout_left.addWidget(self.menu_widget, 1, 0)
-        grid_layout_left.setContentsMargins(0, 0, 0, 0)
-        grid_layout_left.setVerticalSpacing(0)
-
-        left_widget = QWidget()
-        left_widget.setLayout(grid_layout_left)
-        left_widget.setMinimumWidth(300)
-        left_widget.setMaximumWidth(360)
-
-        self.vertical_line = QFrame()
-        self.vertical_line.setLineWidth(4)
-        self.vertical_line.setFrameShape(QFrame.VLine)
-        self.vertical_line.setFrameShadow(QFrame.Sunken)
-
-        self.setCentralWidget(None)
         self.create_recents_menu()
         self.create_status_bar()
-
-        grid_layout_central = QGridLayout()
-        grid_layout_central.addWidget(left_widget, 0, 0)
-        grid_layout_central.addWidget(self.vertical_line, 0, 1)
-        grid_layout_central.addWidget(self.render_widgets_stack, 0, 2)
-        grid_layout_central.setContentsMargins(0, 0, 0, 0)
-        grid_layout_central.setHorizontalSpacing(0)
-
-        central_widget = QWidget()
-        central_widget.setLayout(grid_layout_central)
-        self.setCentralWidget(central_widget)
 
         self.render_widgets_stack.addWidget(self.geometry_widget)
         self.render_widgets_stack.addWidget(self.mesh_widget)
@@ -236,12 +205,18 @@ class MainWindow(QMainWindow):
         self.render_widgets_stack.addWidget(self.welcome_widget)
         self.render_widgets_stack.currentChanged.connect(self.render_changed_callback)
 
+        self.stacked_setup.addWidget(self.model_setup_widget)
+        self.stacked_setup.addWidget(self.results_viewer_widget)
+
         self.addToolBar(self.analysis_toolbar)
         self.insertToolBarBreak(self.analysis_toolbar)
 
         self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)
         self.disable_advanced_acoustic_plots_buttons(True)
+
+        self.splitter.setSizes([100, 400])
+        self.splitter.widget(0).setMinimumWidth(360)
     
     def _config_window(self):
         self.setMinimumSize(800, 600)
@@ -270,6 +245,7 @@ class MainWindow(QMainWindow):
 
         app().splash.update_progress(30)
         self._load_render_widgets()
+        self._load_menu_widgets()
 
         app().splash.update_progress(60)
         self._define_qt_variables()
@@ -303,7 +279,7 @@ class MainWindow(QMainWindow):
         qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
         app().user_config.theme = theme
         self.set_renderers_theme(theme)
-        self.menu_widget._configItems()
+        self.set_renderers_theme(theme)
 
         if theme == "dark":
             icon_color = QColor("#5f9af4")
@@ -312,6 +288,13 @@ class MainWindow(QMainWindow):
 
         widgets = self.findChildren((QAction, QAbstractButton))
         change_icon_color_for_widgets(widgets, icon_color)
+    
+    def set_menus_theme(self, theme: str):
+        for i in range(self.stacked_setup.count()):
+            menu_widget = self.stacked_setup.widget(i)
+            if hasattr(menu_widget, "get_item"):
+                menu_widget_item = menu_widget.get_item()
+                menu_widget_item.set_theme(theme)
     
     def set_renderers_theme(self, theme: str):
         for i in range(self.render_widgets_stack.count()):
@@ -388,6 +371,11 @@ class MainWindow(QMainWindow):
         self.acoustic_harmonic_analysis = AcousticHarmonicAnalysisRenderWidget()
         self.welcome_widget = WelcomeWidget()
         self.help_widget = HelpWidget()
+    
+    def _load_menu_widgets(self):
+        self.results_viewer_widget = ResultsViewerWidget()
+        self.model_setup_widget = ModelSetupWidget()
+        self.input_ui = InputUi(self)
 
     def load_user_preferences(self):
         self.set_theme(app().user_config.theme)
@@ -583,8 +571,9 @@ class MainWindow(QMainWindow):
         if not self.action_results_workspace.isEnabled():
             self.action_results_workspace.setEnabled(True)
 
+        self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-        self.menu_widget.modify_items_access_after_geometry_importing()
+        self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
     
     def action_mesh_workspace_callback(self):
         self.action_mesh_workspace.setEnabled(False)
@@ -594,10 +583,11 @@ class MainWindow(QMainWindow):
         if not self.action_results_workspace.isEnabled():
             self.action_results_workspace.setEnabled(True)
 
+        self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
         self.configure_mesh_information()
-        self.menu_widget.modify_items_access_after_geometry_importing()
-    
+        self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
+
     def action_results_workspace_callback(self):
         if app().project.last_analysis is not None:
             self.action_results_workspace.setEnabled(False)
@@ -617,8 +607,9 @@ class MainWindow(QMainWindow):
             else:
                 render_widget = self.structural_harmonic_analysis
             
+            self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.render_widgets_stack.setCurrentWidget(render_widget)
-            self.menu_widget.update_items()
+            self.results_viewer_widget.results_viewer_items.update_items()
             self.analysis_toolbar.update_analysis_combo_boxes()
 
     def action_new_project_callback(self):

@@ -151,7 +151,7 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_top_acoustic_model_setup.setHidden(True)
         self.item_top_generalSettings.setHidden(True)
 
-    def _update_items(self):
+    def update_items(self):
         """Enables and disables the Child Items on the menu after the solution is done."""
 
         self.modify_acoustic_results_viewer_items(True)
