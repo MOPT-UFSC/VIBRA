@@ -1,5 +1,3 @@
-from vibra.interface.analysis.analysis_setup_input import AnalysisSetupInput
-from vibra.interface.analysis.analysis_type_input import AnalysisTypeInput
 from vibra.interface.model_inputs.structural.material.set_material_input import SetMaterialInput
 from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input import SetFluidInput
 from vibra.interface.mesh.mesher_inputs import MesherInputs
@@ -46,7 +44,7 @@ class InputUi:
         self.main_window = app().main_window
         self.project = app().project
 
-        self.menu_items = app().main_window.menu_widget
+        self.model_setup_items = app().main_window.model_setup_items
         self.results_viewer_items = app().main_window.results_viewer_items
 
         self._reset()
@@ -59,34 +57,89 @@ class InputUi:
         read = working_class(*args, **kwargs)
         return read
 
-    def call_geometry_editor(self):
-        main_window = self.main_window
-        main_window.show_geometry_render_widget()
+    def import_geometry(self):
+        if not self.model_setup_items.item_child_import_geometry.isDisabled():
+            if self.main_window.import_geometry_dialog():
+                self.model_setup_items.modify_items_access_after_geometry_importing()
+            
+    def mesh_setup(self):
+        if not self.model_setup_items.item_child_mesh_setup.isDisabled():
+            obj = self.process_input(MesherInputs)
+            if obj.complete:
+                self.model_setup_items.modify_items_access_after_geometry_importing()
+            
+    def generate_mesh(self):
+        generate_mesh = load_function(app().project.generate_mesh, self.main_window)
+        generate_mesh()
+
+        self.main_window.action_mesh_workspace_callback()
+        self.model_setup_items.item_child_generate_mesh.setDisabled(True)
 
     def set_material(self):
-        self.process_input(SetMaterialInput)   
+        if not self.model_setup_items.item_child_set_material.isDisabled():
+            self.process_input(SetMaterialInput)   
 
     def set_fluid(self):
-        self.process_input(SetFluidInput)
+        if not self.model_setup_items.item_child_set_fluid.isDisabled():
+            self.process_input(SetFluidInput)
+        
+    def set_surface_thickness(self):
+        if not self.model_setup_items.item_child_set_surface_thickness.isDisabled():
+            self.process_input(SurfaceThicknessInput)
+        
+    def set_prescribed_dofs(self):
+        if not self.model_setup_items.item_child_set_prescribed_dofs.isDisabled():
+            self.process_input(PrescribedDofsInputs)
+        
+    def set_external_loads(self):
+        if not self.model_setup_items.item_child_set_external_loads.isDisabled():
+            self.process_input(StructuralExternalLoadsInputs)
+    
+    def set_pressure_load(self):
+        if not self.model_setup_items.item_child_set_pressure_load.isDisabled():
+            self.process_input(SetStructuralPressureLoadInputs)
 
     def set_acoustic_pressure(self):
-        self.process_input(AcousticPressureInput)
+        if not self.model_setup_items.item_child_set_acoustic_pressure.isDisabled():
+            self.process_input(AcousticPressureInput)
+        
+    def set_mass_flow_rate(self):
+        if not self.model_setup_items.item_child_set_mass_flow_rate.isDisabled():
+            self.process_input(MassFlowRateInput)
+        
+    def set_surface_velocity(self):
+        if not self.model_setup_items.item_child_set_surface_velocity.isDisabled():
+            self.process_input(SurfaceVelocityInput)
+        
+    def set_anechoic_termination(self):
+        if not self.model_setup_items.item_child_set_anechoic_termination.isDisabled():
+            self.process_input(SetAnechoicTerminationInputs)
+        
+    def set_dissipation_model(self):
+        if not self.model_setup_items.item_child_set_dissipation_model.isDisabled():
+            self.process_input(DissipationModelInput)
+        
+    def set_porous_material_model(self):
+        if not self.model_setup_items.item_child_set_porous_material_model.isDisabled():
+            self.process_input(SetPorousMaterialModel)
+        
+    def set_viscous_thermal_model(self):
+        if not self.model_setup_items.item_child_set_viscous_thermal_model.isDisabled():
+            self.process_input(SetViscousThermalLossModel)
+        
+    def set_acoustic_properties_grandient(self):
+        if not self.model_setup_items.item_child_set_acoustic_properties_gradient.isDisabled():
+            self.process_input(SetAcousticPropertiesGradientInputs)
+        
+    def set_acoustic_transfer_element_setup(self):
+        if not self.model_setup_items.item_child_set_acoustic_transfer_element_setup.isDisabled():
+            self.process_input(ProcessAcousticTransferElementData)
 
     def set_specific_impedance(self):
         self.process_input(SpecificImpedanceInput)
 
     def add_reciprocating_compressor_excitation(self):
         self.process_input(ReciprocatingCompressorInputs)
-
-    def analysis_setup(self):
-        analysis_setup = AnalysisSetupInput()
-        self.item_child_analysis_setup.setDisabled(False)
-
-        if analysis_setup.complete:
-            self.item_child_run_analysis.setDisabled(False)
-
-        if analysis_setup.solve_analysis:
-            self.run_analysis()
 
     def plot_structural_mode_shapes(self):
         if not self.results_viewer_items.item_child_plot_structural_mode_shapes.isDisabled():

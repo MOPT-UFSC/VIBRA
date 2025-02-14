@@ -35,7 +35,9 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.help_widget import HelpWidget
 from vibra.interface.loading_bar import load_function
 from vibra.interface.menu_items import MenuItems
+from vibra.interface.menus.model_setup_items import ModelSetupItems
 from vibra.interface.menus.results_viewer_items import ResultsViewerItems
+from vibra.interface.user_input.input_ui import InputUi
 from vibra.interface.exception_message import ErrorMessage
 from vibra.interface.plots.acoustic.export_element_transfer_data_input import (
     ExportElementTransferDataInput,
@@ -189,6 +191,8 @@ class MainWindow(QMainWindow):
         
         self.menu_widget = MenuItems()
         self.results_viewer_items = ResultsViewerItems()
+        self.model_setup_items = ModelSetupItems()
+        self.input_ui = InputUi()
         self.status_bar = StatusBar(self)
         self.analysis_toolbar = AnalysisToolbar()
 
