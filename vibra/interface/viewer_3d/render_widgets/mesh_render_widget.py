@@ -664,8 +664,8 @@ class MeshRenderWidget(CommonRenderWidget):
             return text
 
         prescribed_dofs = app().project.model.properties._get_property("prescribed_dofs", node=selected_nodes[0])
-        external_loads = app().project.model.properties._get_property("external_loads", node=selected_nodes[0])
-        boundary_conditions_list = [prescribed_dofs, external_loads]
+        nodal_loads = app().project.model.properties._get_property("nodal_loads", node=selected_nodes[0])
+        boundary_conditions_list = [prescribed_dofs, nodal_loads]
 
         if all(condition is None for condition in boundary_conditions_list):
             return text
@@ -675,9 +675,9 @@ class MeshRenderWidget(CommonRenderWidget):
             loaded_table = "table_names" in prescribed_dofs.keys()
             text += _structural_format("Prescribed dofs",  values, ("u", "r"), ("m", "rad"), loaded_table)
 
-        if external_loads is not None:
-            values = external_loads["values"]
-            loaded_table = "table_names" in external_loads.keys()
+        if nodal_loads is not None:
+            values = nodal_loads["values"]
+            loaded_table = "table_names" in nodal_loads.keys()
             text += _structural_format("External loads",  values, ("F", "M"), ("N", "N.m"), loaded_table)
 
         return text
