@@ -27,7 +27,6 @@ class ResultsViewerItems(CommonMenuItems):
         self._create_connections()
 
     def _create_items(self):
-
         # Structural results items
         self.item_top_results_viewer_structural = self.add_top_item("Results Viewer - Structural")
         self.item_child_plot_structural_mode_shapes = self.add_item("Plot structural mode shapes")
@@ -48,6 +47,68 @@ class ResultsViewerItems(CommonMenuItems):
 
         self.top_level_items = [self.item_top_results_viewer_acoustic,
                                 self.item_top_results_viewer_structural]
+        
+    def _create_connections(self):
+        for top_level_items in self.top_level_items:
+            for index in range(top_level_items.childCount()):
+                item_child = top_level_items.child(index)
+                item_child_name = self._find_qtree_widget_item_name(item_child)
+
+                if item_child_name is None:
+                    continue
+
+                function_name = item_child_name + "_callback"
+                function_exists = hasattr(self, function_name)
+            
+                if not function_exists:
+                    continue
+
+                function = getattr(self, function_name)
+                if callable(function):
+                    item_child.clicked.connect(function)
+
+        app().main_window.theme_changed.connect(self.set_theme)
+    
+    def _find_qtree_widget_item_name(self, qtree_widet_item):
+        for attr_name, attr_value in self.__dict__.items():
+            if attr_value == qtree_widet_item:
+                return attr_name
+        
+    def item_child_plot_acoustic_mode_shapes_callback(self):
+        app().main_window.input_ui.plot_acoustic_mode_shapes()
+    
+    def item_child_plot_acoustic_pressure_field_callback(self):
+        app().main_window.input_ui.plot_acoustic_pressure_field()
+    
+    def item_child_plot_acoustic_pressure_frequency_response_callback(self):
+        app().main_window.input_ui.plot_acoustic_pressure_frequency_response()
+    
+    def item_child_plot_acoustic_pressure_frequency_response_function_callback(self):
+        app().main_window.input_ui.plot_acoustic_pressure_frequency_response_function()
+    
+    def item_child_plot_acoustic_delta_pressures_callback(self):
+        app().main_window.input_ui.plot_acoustic_delta_pressures()
+    
+    def item_child_plot_TL_NR_callback(self):
+        app().main_window.input_ui.plot_TL_NR()
+    
+    def item_child_plot_structural_mode_shapes_callback(self):
+        app().main_window.input_ui.plot_structural_mode_shapes()
+    
+    def item_child_plot_displacement_field_callback(self):
+        app().main_window.input_ui.plot_displacement_field()
+    
+    def item_child_plot_structural_frequency_response_callback(self):
+        app().main_window.input_ui.plot_structural_frequency_response()
+    
+    def item_child_plot_reaction_frequency_response_callback(self):
+        app().main_window.input_ui.plot_reaction_frequency_response()
+    
+    def item_child_plot_stress_field_callback(self):
+        app().main_window.input_ui.plot_stress_field()
+    
+    def item_child_plot_stress_frequency_response_callback(self):
+        app().main_window.input_ui.plot_stress_frequency_response()
     
     def modify_acoustic_results_viewer_items(self, key: bool):
         self.item_top_results_viewer_acoustic.setHidden(key)
@@ -144,9 +205,6 @@ class ResultsViewerItems(CommonMenuItems):
 
         self.update_tree_visibility_after_solution()
     
-    def _create_connections(self):
-        app().main_window.theme_changed.connect(self.set_theme)
-
     def update_tree_visibility_after_solution(self):
         """ Expands and collapses the Top Level Items on 
             the menu after the solution is done.
@@ -160,16 +218,6 @@ class ResultsViewerItems(CommonMenuItems):
         elif analysis_id in [5, 6]:
             self.expandItem(self.item_top_resultsViewer_structural)
             self.expandItem(self.item_top_resultsViewer_acoustic)
-
-    # def modify_item_names_according_to_analysis(self):
-    #     if self.project.analysis_id == 7:
-    #         self.item_child_plot_structural_frequency_response.setText(0, "Plot nodal response")
-    #         self.item_child_plot_reaction_frequency_response.setText(0, "Plot reactions")
-    #         self.item_child_plot_stress_frequency_response.setText(0, "Plot stresses")
-    #     else:
-    #         self.item_child_plot_structural_frequency_response.setText(0, "Plot structural frequency response")
-    #         self.item_child_plot_reaction_frequency_response.setText(0, "Plot reactions frequency response")
-    #         self.item_child_plot_stress_frequency_response.setText(0, "Plot stress frequency response")
 
     def set_theme(self, theme : str):
 

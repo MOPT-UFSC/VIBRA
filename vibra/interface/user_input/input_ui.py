@@ -177,14 +177,14 @@ class InputUi:
         if not self.results_viewer_items.item_child_plot_acoustic_pressure_frequency_response.isDisabled():
             self.process_input(PlotAcousticPressureFrequencyResponseInput)
 
-    def plot_acoustic_frequency_response_function(self):
+    def plot_acoustic_pressure_frequency_response_function(self):
         if not self.results_viewer_items.item_child_plot_acoustic_pressure_frequency_response_function.isDisabled():
             self.process_input(PlotAcousticFrequencyResponseFunctionInput)
 
     def plot_acoustic_delta_pressures(self):
         pass
 
-    def plot_transmission_loss(self):
+    def plot_TL_NR(self):
        if not self.results_viewer_items.item_child_plot_TL_NR.isDisabled():
            self.process_input(PlotTransmissionLossInput)
             
