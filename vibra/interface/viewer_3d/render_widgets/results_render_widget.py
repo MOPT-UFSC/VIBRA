@@ -142,11 +142,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
             self.plane_actor.GetProperty().SetOpacity(0.8)
         else:
-            self._apply_section_plane(position, rotation, inverted)
-            self.ghost_actor.VisibilityOn()
-            self.plane_actor.SetVisibility(not section_plane.keep_section_plane)
-            self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
-            self.plane_actor.GetProperty().SetOpacity(0.2)
+            show_plane = not section_plane.keep_section_plane
+            self._apply_section_plane(position, rotation, inverted, show_plane)
 
         self.update()
 
@@ -170,7 +167,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.edges_actor.disable_cut()
         self.update()
 
-    def _apply_section_plane(self, position, rotation, inverted):
+    def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
         if isinstance(self.solids_actor, HollowAnalysisActor):
             mesh = app().project.model.mesh
             self.remove_actors(self.solids_actor)
@@ -184,6 +181,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.analysis_actor.apply_cut(xyz, normal)
         self.edges_actor.apply_cut(xyz, normal)
         self.update()
+    
+        self.ghost_actor.VisibilityOn()
+        self.plane_actor.SetVisibility(show_plane)
+        self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
+        self.plane_actor.GetProperty().SetOpacity(0.2)
+
 
     def _actors_exists(self):
         return len(self._widget_actors) > 0
