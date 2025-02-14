@@ -478,7 +478,7 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_plot_displacement_field:
             if not self.item_child_plot_displacement_field.isDisabled():
-                pass
+                self.main_window.configure_structural_harmonic_analysis_render_widget(True)
 
         elif item == self.item_child_plot_structural_frequency_response:
             if not self.item_child_plot_structural_frequency_response.isDisabled():
@@ -486,15 +486,15 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_plotReactionsFrequencyResponse:
             if not self.item_child_plotReactionsFrequencyResponse.isDisabled():
-                pass
+                self.main_window.show_geometry_render_widget()
 
         elif item == self.item_child_plotStressField:
             if not self.item_child_plotStressField.isDisabled():
-                pass
+                self.main_window.configure_structural_harmonic_analysis_render_widget(True)
 
         elif item == self.item_child_plotStressFrequencyResponse:
             if not self.item_child_plotStressFrequencyResponse.isDisabled():
-                pass
+                self.main_window.show_geometry_render_widget()
 
         elif item == self.item_child_plotAcousticModeShapes:
             if not self.item_child_plotAcousticModeShapes.isDisabled():
