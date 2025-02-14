@@ -248,7 +248,6 @@ class SetNormalPressureLoadInputs(QDialog):
             self.lineEdit_selection_id.setFocus()
             return
 
-        self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
 
         if self.comboBox_element_type.currentIndex() == 0:
@@ -468,7 +467,6 @@ class SetNormalPressureLoadInputs(QDialog):
             self.lineEdit_selection_id.setFocus()
             return
 
-        self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
 
         if self.comboBox_element_type.currentIndex() == 0:
@@ -493,7 +491,7 @@ class SetNormalPressureLoadInputs(QDialog):
 
             if condition_1 or condition_2:
                 title = "Additional inputs required"
-                message = "It is necessary to enter at least one external load "
+                message = "It is necessary to enter at least one normal pressure load "
                 message += "before confirming the property assignment."
                 PrintMessageInput([window_title_1, title, message]) 
                 return
@@ -517,58 +515,6 @@ class SetNormalPressureLoadInputs(QDialog):
                 return
 
         self.actions_to_finalize()
-
-    def remove_duplicated_attributions(self, selected_ids: list, selection: str):
-
-        table_names = list()
-        nodes_to_remove = list()
-        for selected_id in selected_ids:
-
-            if selection == "surfaces":
-
-                nodes_from_surface = self.model.mesh.nodes_from_surfaces[selected_id]
-                for (property, node_id) in self.properties.nodal_properties.keys():
-                    if property == "normal_pressure_load" and node_id in nodes_from_surface:
-                        if node_id not in nodes_to_remove:
-                            nodes_to_remove.append(node_id)
-
-                for line_id in app().project.model.mesh.lines_from_surface[selected_id]:
-                    data = self.properties._get_property("normal_pressure_load", line=line_id)
-                    if isinstance(data, dict):
-                        self.properties._remove_line_property("normal_pressure_load", line_id)
-                        table_names.extend(self.properties.get_property_related_table_names("normal_pressure_load", line_id, "lines"))
-
-                    for point_id in app().project.model.mesh.points_from_line[line_id]:
-                        data = self.properties._get_property("normal_pressure_load", point=point_id)
-                        if isinstance(data, dict):
-                            self.properties._remove_point_property("normal_pressure_load", point_id)
-                            table_names.extend(self.properties.get_property_related_table_names("normal_pressure_load", point_id, "points"))
-
-            elif selection == "lines":
-
-                nodes_from_line = self.model.mesh.nodes_from_lines[selected_id]
-                for (property, node_id) in self.properties.nodal_properties.keys():
-                    if property == "normal_pressure_load" and node_id in nodes_from_line:
-                        if node_id not in nodes_to_remove:
-                            nodes_to_remove.append(node_id)
-
-                for surface_id in app().project.model.mesh.surface_from_line[selected_id]:
-                    data = self.properties._get_property("normal_pressure_load", surface=surface_id)
-                    if isinstance(data, dict):
-                        self.properties._remove_surface_property("normal_pressure_load", surface_id)
-                        table_names.extend(self.properties.get_property_related_table_names("normal_pressure_load", surface_id, "surfaces"))
-
-                for point_id in app().project.model.mesh.points_from_line[selected_id]:
-                    data = self.properties._get_property("normal_pressure_load", point=point_id)
-                    if isinstance(data, dict):
-                        self.properties._remove_point_property("normal_pressure_load", point_id)
-                        table_names.extend(self.properties.get_property_related_table_names("normal_pressure_load", point_id, "points"))
-
-            for node_id in nodes_to_remove:
-                self.properties._remove_nodal_property("normal_pressure_load", node_id)
-                table_names.extend(self.properties.get_property_related_table_names("normal_pressure_load", node_id, "nodes"))
-
-            self.process_table_file_removal(table_names)
 
     def attribute_callback(self):
         index = self.tabWidget_main.currentIndex()
@@ -686,12 +632,6 @@ class SetNormalPressureLoadInputs(QDialog):
         elif selection == "lines":
             remove_function = self.properties._remove_line_property
 
-        elif selection == "points":
-            remove_function = self.properties._remove_point_property
-
-        elif selection == "nodes":
-            remove_function = self.properties._remove_nodal_property
-
         properties = ["nodal_loads", "prescribed_dofs"]
 
         for selected_id in selected_ids:
@@ -719,12 +659,6 @@ class SetNormalPressureLoadInputs(QDialog):
             elif selection == "Line":
                 self.properties._remove_line_property("normal_pressure_load", selected_id)
 
-            elif selection == "Point":
-                self.properties._remove_point_property("normal_pressure_load", selected_id)
-
-            elif selection == "Node":
-                self.properties._remove_nodal_property("normal_pressure_load", selected_id)
-
             self.remove_table_files_from(selected_id, f"{selection.lower()}s")
             self.actions_to_finalize()
 
@@ -735,8 +669,8 @@ class SetNormalPressureLoadInputs(QDialog):
 
         self.hide()
 
-        title = "Prescribed DOFs resetting"
-        message = "Would you like to remove the all prescribed DOFs from model?"
+        title = "Normal pressure load resetting"
+        message = "Would you like to remove the all normal pressure loads from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
         obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -753,14 +687,6 @@ class SetNormalPressureLoadInputs(QDialog):
             for (property, *args) in self.properties.line_properties.keys():
                 if property == "normal_pressure_load":
                     self.remove_table_files_from(args[0], "lines")
-
-            for (property, *args) in self.properties.point_properties.keys():
-                if property == "normal_pressure_load":
-                    self.remove_table_files_from(args[0], "points")
-
-            for (property, *args) in self.properties.nodal_properties.keys():
-                if property == "normal_pressure_load":
-                    self.remove_table_files_from(args[0], "nodes")
 
             self.properties._reset_property("normal_pressure_load")
             self.actions_to_finalize()

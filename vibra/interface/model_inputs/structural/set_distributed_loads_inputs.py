@@ -47,7 +47,7 @@ class SetDistributedLoadsInputs(QDialog):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Set structural external loads")
+        self.setWindowTitle("Set structural distributed loads")
 
     def _initialize(self):
         self.keep_window_open = True
@@ -165,8 +165,6 @@ class SetDistributedLoadsInputs(QDialog):
 
         faces = app().main_window.selected_geometry_surfaces
         lines = app().main_window.selected_geometry_lines
-        points = app().main_window.selected_geometry_points
-        nodes = app().main_window.selected_mesh_nodes
 
         if faces:
 
@@ -193,32 +191,6 @@ class SetDistributedLoadsInputs(QDialog):
                 self.update_input_fields(data)
                 if data is None:
                     self.update_formulation_callback(line_id=line_id)
-
-        elif points:
-
-            text = ", ".join([str(i) for i in points])
-            self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(2)
-
-            if len(points) == 1:
-                point_id = list(points)[0]
-                data = self.properties._get_property("distributed_loads", point=point_id)
-                self.update_input_fields(data)
-                if data is None:
-                    self.update_formulation_callback(point_id=point_id)
-
-        elif nodes:
-
-            text = ", ".join([str(i) for i in nodes])
-            self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(3)
-
-            if len(nodes) == 1:
-                node_id = list(nodes)[0]
-                data = self.properties._get_property("distributed_loads", node=node_id)
-                self.update_input_fields(data)
-                if data is None:
-                    self.update_formulation_callback(node_id=node_id)
 
     def update_input_fields(self, data: dict | None):
 
@@ -255,8 +227,6 @@ class SetDistributedLoadsInputs(QDialog):
 
         surface_id = kwargs.get("surface_id", None)
         line_id = kwargs.get("line_id", None)
-        point_id = kwargs.get("point_id", None)
-        node_id = kwargs.get("node_id", None)
 
         if isinstance(surface_id, int):
             data = self.properties._get_property("surface_thickness", surface=surface_id)
@@ -267,21 +237,6 @@ class SetDistributedLoadsInputs(QDialog):
         if isinstance(line_id, int):
             for node_id in app().project.model.mesh.nodes_from_lines[line_id]:
                 for surface_id in self.model.mesh.surfaces_from_node[node_id]:
-                    data = self.properties._get_property("surface_thickness", surface=surface_id)
-                    if isinstance(data, dict):
-                        self.comboBox_element_type.setCurrentIndex(0)
-                        return
-
-        if isinstance(point_id, int):
-            for node_id in app().project.model.mesh.nodes_from_points[line_id]:
-                for surface_id in self.model.mesh.surfaces_from_node[node_id]:
-                    data = self.properties._get_property("surface_thickness", surface=surface_id)
-                    if isinstance(data, dict):
-                        self.comboBox_element_type.setCurrentIndex(0)
-                        return
-
-        if isinstance(node_id, int):
-            for surface_id in self.model.mesh.surfaces_from_node[node_id]:
                     data = self.properties._get_property("surface_thickness", surface=surface_id)
                     if isinstance(data, dict):
                         self.comboBox_element_type.setCurrentIndex(0)
@@ -361,12 +316,6 @@ class SetDistributedLoadsInputs(QDialog):
 
         elif attribution_type == 1:
             selection = "lines"
-
-        elif attribution_type == 2:
-            selection = "points"
-
-        else:
-            selection = "nodes"
 
         selected_ids = app().project.model.mesh.check_selected_ids(
                                                                    input_ids, 
@@ -599,12 +548,6 @@ class SetDistributedLoadsInputs(QDialog):
         elif attribution_type == 1:
             selection = "lines"
 
-        elif attribution_type == 2:
-            selection = "points"
-
-        else:
-            selection = "nodes"
-
         selected_ids = app().project.model.mesh.check_selected_ids(
                                                                    input_ids, 
                                                                    selection = selection
@@ -651,7 +594,7 @@ class SetDistributedLoadsInputs(QDialog):
 
             if condition_1 or condition_2:
                 title = "Additional inputs required"
-                message = "It is necessary to enter at least one external load "
+                message = "It is necessary to enter at least one distributed load "
                 message += "before confirming the property assignment."
                 PrintMessageInput([window_title_1, title, message]) 
                 return
@@ -822,18 +765,7 @@ class SetDistributedLoadsInputs(QDialog):
             elif selection == "Line":
                 app().main_window.set_geometry_selection(lines = [int(selected_id)])
 
-            elif selection == "Point":
-                app().main_window.set_geometry_selection(points = [int(selected_id)])
-
-            elif selection == "Node":
-                app().main_window.set_mesh_selection(nodes=[int(selected_id)])
-
-            if selection == "Node":
-                app().main_window.action_mesh_workspace_callback()
-
-            else:
-                app().main_window.action_model_workspace_callback()
-
+            # app().main_window.action_model_workspace_callback()
             self.lineEdit_selection_id.setText(item.text(0))
 
     def on_double_click_item(self, item):
@@ -859,12 +791,6 @@ class SetDistributedLoadsInputs(QDialog):
 
         elif selection == "lines":
             remove_function = self.properties._remove_line_property
-
-        elif selection == "points":
-            remove_function = self.properties._remove_point_property
-
-        elif selection == "nodes":
-            remove_function = self.properties._remove_nodal_property
 
         properties = ["distributed_loads", "prescribed_dofs"]
 
@@ -909,8 +835,8 @@ class SetDistributedLoadsInputs(QDialog):
 
         self.hide()
 
-        title = "External loads resetting"
-        message = "Would you like to remove the all external loads from model?"
+        title = "Distributed loads resetting"
+        message = "Would you like to remove the all distributed loads from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
         obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -927,14 +853,6 @@ class SetDistributedLoadsInputs(QDialog):
             for (property, *args) in self.properties.line_properties.keys():
                 if property == "distributed_loads":
                     self.remove_table_files_from(args[0], "lines")
-
-            for (property, *args) in self.properties.point_properties.keys():
-                if property == "distributed_loads":
-                    self.remove_table_files_from(args[0], "points")
-
-            for (property, *args) in self.properties.nodal_properties.keys():
-                if property == "distributed_loads":
-                    self.remove_table_files_from(args[0], "nodes")
 
             self.properties._reset_property("distributed_loads")
             self.actions_to_finalize()
