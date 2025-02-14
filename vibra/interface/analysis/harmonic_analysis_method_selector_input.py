@@ -12,6 +12,7 @@ class StructuralHarmonicAnalysisMethodSelecorInput(QDialog):
         ui_path = UI_DIR / "analysis/general/harmonic_analysis_method.ui"
         uic.loadUi(ui_path, self)
 
+        app().main_window.close_dialogs()
         app().main_window.set_input_widget(self)
 
         self._initialize()
@@ -19,7 +20,7 @@ class StructuralHarmonicAnalysisMethodSelecorInput(QDialog):
         self._define_qt_variables()       
         self._create_connections()
         self.exec()
-        
+
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
@@ -56,6 +57,10 @@ class StructuralHarmonicAnalysisMethodSelecorInput(QDialog):
     def close_window(self):
         self.index = -1
         self.close()        
+
+    def closeEvent(self, a0):
+        self.keep_window_open = False
+        return super().closeEvent(a0)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

@@ -18,11 +18,11 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class StructuralNodalLoadsInputs(QDialog):
+class SetNodalLoadsInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/setup/structural/structural_nodal_loads_input.ui"
+        ui_path = UI_DIR / "model/setup/structural/nodal_loads_input.ui"
         uic.loadUi(ui_path, self)
 
         self.model = app().project.model

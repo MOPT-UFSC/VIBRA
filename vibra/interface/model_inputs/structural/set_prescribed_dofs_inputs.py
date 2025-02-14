@@ -18,7 +18,7 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class PrescribedDofsInputs(QDialog):
+class SetPrescribedDofsInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

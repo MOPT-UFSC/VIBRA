@@ -553,7 +553,7 @@ class MainWindow(QMainWindow):
             
     def show_geometry_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-    
+
     def show_mesh_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
     
@@ -1039,6 +1039,7 @@ class MainWindow(QMainWindow):
     def close_dialogs(self):
         if isinstance(self.dialog, (QDialog, QWidget)):
             self.dialog.close()
+            self.dialog = None
 
     def action_plot_specific_acoustic_impedance_callback(self):
             if app().project.acoustic_harmonic_solver.solution is None:

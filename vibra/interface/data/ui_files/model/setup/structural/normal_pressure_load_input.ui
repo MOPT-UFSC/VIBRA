@@ -774,7 +774,7 @@
                 <property name="verticalSpacing">
                  <number>7</number>
                 </property>
-                <item row="0" column="0">
+                <item row="0" column="1">
                  <widget class="QLabel" name="label_table">
                   <property name="enabled">
                    <bool>true</bool>
@@ -804,14 +804,14 @@
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="1">
-                 <widget class="QLineEdit" name="lineEdit_path_table">
+                <item row="0" column="2">
+                 <widget class="QLineEdit" name="lineEdit_table_path">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
                   <property name="minimumSize">
                    <size>
-                    <width>210</width>
+                    <width>240</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -829,7 +829,7 @@
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="2">
+                <item row="0" column="3">
                  <widget class="QPushButton" name="pushButton_load_table">
                   <property name="enabled">
                    <bool>true</bool>
@@ -864,6 +864,32 @@
                    <string>Search</string>
                   </property>
                  </widget>
+                </item>
+                <item row="0" column="4">
+                 <spacer name="horizontalSpacer_3">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item row="0" column="0">
+                 <spacer name="horizontalSpacer_4">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
                 </item>
                </layout>
               </widget>

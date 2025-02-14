@@ -18,11 +18,11 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class SetStructuralPressureLoadInputs(QDialog):
+class SetNormalPressureLoadInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/setup/structural/structural_pressure_load_input.ui"
+        ui_path = UI_DIR / "model/setup/structural/normal_pressure_load_input.ui"
         uic.loadUi(ui_path, self)
 
         self.model = app().project.model
@@ -47,7 +47,7 @@ class SetStructuralPressureLoadInputs(QDialog):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Set structural pressure load")
+        self.setWindowTitle("Set normal pressure load")
 
     def _initialize(self):
 
@@ -62,15 +62,9 @@ class SetStructuralPressureLoadInputs(QDialog):
 
     def _define_qt_variables(self):
 
-        # QCheckBox
-        self.checkBox_averaged_constant_values: QCheckBox
-        self.checkBox_averaged_table_values: QCheckBox
-
         # QComboBox
         self.comboBox_attribution_type: QComboBox
         self.comboBox_element_type: QComboBox
-        self.comboBox_load_distribution_constant_values: QComboBox
-        self.comboBox_load_distribution_table_values: QComboBox
 
         # QLabel
         self.label_constant: QLabel
@@ -79,14 +73,14 @@ class SetStructuralPressureLoadInputs(QDialog):
 
         # QLineEdit
         self.lineEdit_selection_id: QLineEdit
-        self.lineEdit_real_pressure: QLineEdit
-        self.lineEdit_imag_pressure: QLineEdit
-        self.lineEdit_path_table_pressure: QLineEdit
+        self.lineEdit_real_value: QLineEdit
+        self.lineEdit_imag_value: QLineEdit
+        self.lineEdit_table_path: QLineEdit
 
         # QPushButton
         self.pushButton_attribute: QPushButton
         self.pushButton_exit: QPushButton
-        self.pushButton_load_pressure_table: QPushButton
+        self.pushButton_load_table: QPushButton
         self.pushButton_remove: QPushButton
         self.pushButton_reset: QPushButton
 
@@ -94,43 +88,35 @@ class SetStructuralPressureLoadInputs(QDialog):
         self.tabWidget_main: QTabWidget
 
         # QTreeWidget
-        self.treeWidget_pressure_loads: QTreeWidget
+        self.treeWidget_normal_pressure_loads: QTreeWidget
 
     def _config_widgets(self):
         #
         for i, w in enumerate([60, 100, 160]):
-            self.treeWidget_pressure_loads.setColumnWidth(i, w)
-            self.treeWidget_pressure_loads.headerItem().setTextAlignment(i, Qt.AlignCenter)
+            self.treeWidget_normal_pressure_loads.setColumnWidth(i, w)
+            self.treeWidget_normal_pressure_loads.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
         #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
-        self.comboBox_load_distribution_constant_values.currentIndexChanged.connect(self.update_controls_for_constant_values)
-        self.comboBox_load_distribution_table_values.currentIndexChanged.connect(self.update_controls_for_table_values)
         #
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
-        self.pushButton_load_pressure_table.clicked.connect(self.load_pressure_table)
+        self.pushButton_load_table.clicked.connect(self.load_pressure_table)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
-        self.treeWidget_pressure_loads.itemClicked.connect(self.on_click_item)
-        self.treeWidget_pressure_loads.itemDoubleClicked.connect(self.on_double_click_item)
+        self.treeWidget_normal_pressure_loads.itemClicked.connect(self.on_click_item)
+        self.treeWidget_normal_pressure_loads.itemDoubleClicked.connect(self.on_double_click_item)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
-        #
-        self.update_controls_for_constant_values()
-        self.update_controls_for_table_values()
 
     def geometry_selection_callback(self):
 
         faces = app().main_window.selected_geometry_surfaces
-        lines = app().main_window.selected_geometry_lines
-        points = app().main_window.selected_geometry_points
-        nodes = app().main_window.selected_mesh_nodes
 
         if faces:
 
@@ -141,19 +127,7 @@ class SetStructuralPressureLoadInputs(QDialog):
 
             if len(faces) == 1:
                 surface_id = list(faces)[0]
-                data = self.properties._get_property("pressure_load", surface=surface_id)
-                self.update_input_fields(data)
-
-        elif lines:
-            
-            self.comboBox_attribution_type.setCurrentIndex(1)
-
-            text = ", ".join([str(i) for i in lines])
-            self.lineEdit_selection_id.setText(text)
-
-            if len(lines) == 1:
-                line_id = list(lines)[0]
-                data = self.properties._get_property("pressure_load", line=line_id)
+                data = self.properties._get_property("normal_pressure_load", surface=surface_id)
                 self.update_input_fields(data)
 
     def update_input_fields(self, data: dict):
@@ -182,10 +156,7 @@ class SetStructuralPressureLoadInputs(QDialog):
                         lineEdit_imag.setText(str(np.imag(values[index])))
 
     def attribution_type_callback(self):
-        if self.comboBox_attribution_type.currentIndex() == 3:
-            app().main_window.action_mesh_workspace_callback()
-        else:
-            app().main_window.action_model_workspace_callback()
+        app().main_window.action_model_workspace_callback()
 
     def element_type_callback(self):
 
@@ -285,7 +256,7 @@ class SetStructuralPressureLoadInputs(QDialog):
         else:
             element_type = "3d_element"
 
-        stop, value = self.check_complex_entries(self.lineEdit_real_pressure.text(), self.lineEdit_imag_pressure.text(), "Pressure load")
+        stop, value = self.check_complex_entries(self.lineEdit_real_value.text(), self.lineEdit_imag_value.text(), "Pressure load")
         if stop:
             return
 
@@ -299,9 +270,6 @@ class SetStructuralPressureLoadInputs(QDialog):
             real_values = [value if value is None else np.real(value) for value in pressure_load]
             imag_values = [value if value is None else np.imag(value) for value in pressure_load]
 
-            nodal_attribution = bool(self.comboBox_load_distribution_constant_values.currentIndex())
-            key_avg = self.checkBox_averaged_constant_values.isChecked()
-
             for selected_id in selected_ids:
 
                 data = {
@@ -309,15 +277,15 @@ class SetStructuralPressureLoadInputs(QDialog):
                         "values" : pressure_load,
                         "real_values" : real_values,
                         "imag_values" : imag_values,
-                        "nodal_attribution": nodal_attribution,
-                        "averaged": key_avg,
+                        "nodal_attribution": False,
+                        "averaged": False,
                         }
 
                 if attribution_type == 0:
-                    self.properties._set_property("pressure_load", data, surface=selected_id)
+                    self.properties._set_property("normal_pressure_load", data, surface=selected_id)
 
                 elif attribution_type == 1:
-                    self.properties._set_property("pressure_load", data, line=selected_id)
+                    self.properties._set_property("normal_pressure_load", data, line=selected_id)
 
                 else:
                     return
@@ -410,9 +378,9 @@ class SetStructuralPressureLoadInputs(QDialog):
         lineEdit.setFocus()
 
     def load_pressure_table(self):
-        self.pressure_table_values, self.pressure_table_path = self.load_table(self.lineEdit_path_table_pressure, "Pressure load")
+        self.pressure_table_values, self.pressure_table_path = self.load_table(self.lineEdit_table_path, "Pressure load")
         if  self.pressure_table_path is None:
-            self.lineEdit_reset(self.lineEdit_path_table_pressure)
+            self.lineEdit_reset(self.lineEdit_table_path)
 
     def save_table_files(self, load_label: str, selected_id: int, selection: str, values: np.ndarray):
 
@@ -509,10 +477,7 @@ class SetStructuralPressureLoadInputs(QDialog):
             element_type = "3d_element"
 
         if self.pressure_table_path is None:
-            self.pressure_table_values, self.pressure_table_path = self.load_table(self.lineEdit_path_table_pressure, "Pressure load", direct_load = True)
-
-        nodal_attribution = bool(self.comboBox_load_distribution_table_values.currentIndex())
-        key_avg = self.checkBox_averaged_table_values.isChecked()
+            self.pressure_table_values, self.pressure_table_path = self.load_table(self.lineEdit_table_path, "Pressure load", direct_load = True)
 
         for selected_id in selected_ids:
             
@@ -538,15 +503,15 @@ class SetStructuralPressureLoadInputs(QDialog):
                     "table_names" : table_names,
                     "table_paths" : table_paths,
                     "values" : pressure_load,
-                    "nodal_attribution": nodal_attribution,
-                    "averaged": key_avg,
+                    "nodal_attribution": False,
+                    "averaged": False,
                     }
 
             if attribution_type == 0:
-                self.properties._set_property("pressure_load", data, surface=selected_id)
+                self.properties._set_property("normal_pressure_load", data, surface=selected_id)
 
             elif attribution_type == 1:
-                self.properties._set_property("pressure_load", data, line=selected_id)
+                self.properties._set_property("normal_pressure_load", data, line=selected_id)
 
             else:
                 return
@@ -563,45 +528,45 @@ class SetStructuralPressureLoadInputs(QDialog):
 
                 nodes_from_surface = self.model.mesh.nodes_from_surfaces[selected_id]
                 for (property, node_id) in self.properties.nodal_properties.keys():
-                    if property == "pressure_load" and node_id in nodes_from_surface:
+                    if property == "normal_pressure_load" and node_id in nodes_from_surface:
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
                 for line_id in app().project.model.mesh.lines_from_surface[selected_id]:
-                    data = self.properties._get_property("pressure_load", line=line_id)
+                    data = self.properties._get_property("normal_pressure_load", line=line_id)
                     if isinstance(data, dict):
-                        self.properties._remove_line_property("pressure_load", line_id)
-                        table_names.extend(self.properties.get_property_related_table_names("pressure_load", line_id, "lines"))
+                        self.properties._remove_line_property("normal_pressure_load", line_id)
+                        table_names.extend(self.properties.get_property_related_table_names("normal_pressure_load", line_id, "lines"))
 
                     for point_id in app().project.model.mesh.points_from_line[line_id]:
-                        data = self.properties._get_property("pressure_load", point=point_id)
+                        data = self.properties._get_property("normal_pressure_load", point=point_id)
                         if isinstance(data, dict):
-                            self.properties._remove_point_property("pressure_load", point_id)
-                            table_names.extend(self.properties.get_property_related_table_names("pressure_load", point_id, "points"))
+                            self.properties._remove_point_property("normal_pressure_load", point_id)
+                            table_names.extend(self.properties.get_property_related_table_names("normal_pressure_load", point_id, "points"))
 
             elif selection == "lines":
 
                 nodes_from_line = self.model.mesh.nodes_from_lines[selected_id]
                 for (property, node_id) in self.properties.nodal_properties.keys():
-                    if property == "pressure_load" and node_id in nodes_from_line:
+                    if property == "normal_pressure_load" and node_id in nodes_from_line:
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
                 for surface_id in app().project.model.mesh.surface_from_line[selected_id]:
-                    data = self.properties._get_property("pressure_load", surface=surface_id)
+                    data = self.properties._get_property("normal_pressure_load", surface=surface_id)
                     if isinstance(data, dict):
-                        self.properties._remove_surface_property("pressure_load", surface_id)
-                        table_names.extend(self.properties.get_property_related_table_names("pressure_load", surface_id, "surfaces"))
+                        self.properties._remove_surface_property("normal_pressure_load", surface_id)
+                        table_names.extend(self.properties.get_property_related_table_names("normal_pressure_load", surface_id, "surfaces"))
 
                 for point_id in app().project.model.mesh.points_from_line[selected_id]:
-                    data = self.properties._get_property("pressure_load", point=point_id)
+                    data = self.properties._get_property("normal_pressure_load", point=point_id)
                     if isinstance(data, dict):
-                        self.properties._remove_point_property("pressure_load", point_id)
-                        table_names.extend(self.properties.get_property_related_table_names("pressure_load", point_id, "points"))
+                        self.properties._remove_point_property("normal_pressure_load", point_id)
+                        table_names.extend(self.properties.get_property_related_table_names("normal_pressure_load", point_id, "points"))
 
             for node_id in nodes_to_remove:
-                self.properties._remove_nodal_property("pressure_load", node_id)
-                table_names.extend(self.properties.get_property_related_table_names("pressure_load", node_id, "nodes"))
+                self.properties._remove_nodal_property("normal_pressure_load", node_id)
+                table_names.extend(self.properties.get_property_related_table_names("normal_pressure_load", node_id, "nodes"))
 
             self.process_table_file_removal(table_names)
 
@@ -614,26 +579,26 @@ class SetStructuralPressureLoadInputs(QDialog):
 
     def load_model_info(self):
 
-        self.treeWidget_pressure_loads.clear()
+        self.treeWidget_normal_pressure_loads.clear()
         for (property, *args), data in self.properties.surface_properties.items():
 
-            if property == "pressure_load":
+            if property == "normal_pressure_load":
                 values = data["values"]
                 new = QTreeWidgetItem([str(args[0]), "Surface", ""])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-                self.treeWidget_pressure_loads.addTopLevelItem(new)
+                self.treeWidget_normal_pressure_loads.addTopLevelItem(new)
 
         for (property, *args), data in self.properties.line_properties.items():
 
-            if property == "pressure_load":
+            if property == "normal_pressure_load":
                 values = data["values"]
                 new = QTreeWidgetItem([str(args[0]), "Line", ""])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-                self.treeWidget_pressure_loads.addTopLevelItem(new)
+                self.treeWidget_normal_pressure_loads.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 
@@ -646,13 +611,13 @@ class SetStructuralPressureLoadInputs(QDialog):
 
         for current_property in properties_to_check:
             for (property, _) in current_property.keys():
-                if property == "pressure_load":
+                if property == "normal_pressure_load":
                     self.tabWidget_main.setTabVisible(2, True)
                     return
 
         self.tabWidget_main.setTabVisible(2, False)
         self.tabWidget_main.setCurrentIndex(0)
-        self.lineEdit_real_pressure.setFocus()
+        self.lineEdit_real_value.setFocus()
         app().main_window.set_geometry_selection()
 
     def tab_event_callback(self):
@@ -671,16 +636,6 @@ class SetStructuralPressureLoadInputs(QDialog):
 
             self.lineEdit_selection_id.setDisabled(False)
             self.pushButton_attribute.setEnabled(True)
-
-    def update_controls_for_constant_values(self):
-        key = bool(self.comboBox_load_distribution_constant_values.currentIndex())
-        self.checkBox_averaged_constant_values.setChecked(key)
-        self.checkBox_averaged_constant_values.setEnabled(key)
-
-    def update_controls_for_table_values(self):
-        key = bool(self.comboBox_load_distribution_table_values.currentIndex())
-        self.checkBox_averaged_table_values.setChecked(key)
-        self.checkBox_averaged_table_values.setEnabled(key)
 
     def on_click_item(self, item):
 
@@ -742,7 +697,7 @@ class SetStructuralPressureLoadInputs(QDialog):
                 self.process_table_file_removal(table_names)
 
     def remove_table_files_from(self, selected_id : list, selection: str):
-        table_names = self.properties.get_property_related_table_names("pressure_load", selected_id, selection)
+        table_names = self.properties.get_property_related_table_names("normal_pressure_load", selected_id, selection)
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
@@ -755,16 +710,16 @@ class SetStructuralPressureLoadInputs(QDialog):
             selected_id = int(_selected_id)
 
             if selection == "Surface":
-                self.properties._remove_surface_property("pressure_load", selected_id)
+                self.properties._remove_surface_property("normal_pressure_load", selected_id)
 
             elif selection == "Line":
-                self.properties._remove_line_property("pressure_load", selected_id)
+                self.properties._remove_line_property("normal_pressure_load", selected_id)
 
             elif selection == "Point":
-                self.properties._remove_point_property("pressure_load", selected_id)
+                self.properties._remove_point_property("normal_pressure_load", selected_id)
 
             elif selection == "Node":
-                self.properties._remove_nodal_property("pressure_load", selected_id)
+                self.properties._remove_nodal_property("normal_pressure_load", selected_id)
 
             self.remove_table_files_from(selected_id, f"{selection.lower()}s")
             self.actions_to_finalize()
@@ -788,22 +743,22 @@ class SetStructuralPressureLoadInputs(QDialog):
         if obj._continue:
 
             for (property, *args) in self.properties.surface_properties.keys():
-                if property == "pressure_load":
+                if property == "normal_pressure_load":
                     self.remove_table_files_from(args[0], "surfaces")
 
             for (property, *args) in self.properties.line_properties.keys():
-                if property == "pressure_load":
+                if property == "normal_pressure_load":
                     self.remove_table_files_from(args[0], "lines")
 
             for (property, *args) in self.properties.point_properties.keys():
-                if property == "pressure_load":
+                if property == "normal_pressure_load":
                     self.remove_table_files_from(args[0], "points")
 
             for (property, *args) in self.properties.nodal_properties.keys():
-                if property == "pressure_load":
+                if property == "normal_pressure_load":
                     self.remove_table_files_from(args[0], "nodes")
 
-            self.properties._reset_property("pressure_load")
+            self.properties._reset_property("normal_pressure_load")
             self.actions_to_finalize()
 
             app().main_window.set_geometry_selection()
