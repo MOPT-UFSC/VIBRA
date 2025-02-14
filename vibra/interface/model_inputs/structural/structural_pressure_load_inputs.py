@@ -733,7 +733,7 @@ class SetStructuralPressureLoadInputs(QDialog):
         elif selection == "nodes":
             remove_function = self.properties._remove_nodal_property
 
-        properties = ["external_load", "prescribed_dofs"]
+        properties = ["nodal_loads", "prescribed_dofs"]
 
         for selected_id in selected_ids:
             for property in properties:
@@ -828,7 +828,7 @@ class SetStructuralPressureLoadInputs(QDialog):
 
         for key, data in self.properties.surface_properties.items():
             property, _ = key
-            if property in ["external_load", "prescribed_dofs"]:
+            if property in ["nodal_loads", "prescribed_dofs"]:
                 if "table_names" in data.keys():
                     return
 

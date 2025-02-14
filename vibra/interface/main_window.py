@@ -764,7 +764,7 @@ class MainWindow(QMainWindow):
         save_func(path)
 
         from datetime import datetime
-        message = f"The project data has been saved @{datetime.now()}"
+        message = f"The project data has been saved: {datetime.now()}"
         print(message)
 
     def open_project_dialog(self):
