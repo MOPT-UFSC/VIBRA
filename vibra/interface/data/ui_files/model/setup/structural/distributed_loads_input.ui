@@ -42,7 +42,7 @@
    <enum>Qt::DefaultContextMenu</enum>
   </property>
   <property name="windowTitle">
-   <string>Set normal pressure load</string>
+   <string>Set distributed loads</string>
   </property>
   <property name="whatsThis">
    <string/>
@@ -508,7 +508,7 @@
                  <number>6</number>
                 </property>
                 <item row="3" column="2">
-                 <widget class="QLineEdit" name="lineEdit_real_value_Fx">
+                 <widget class="QLineEdit" name="lineEdit_real_Fx">
                   <property name="minimumSize">
                    <size>
                     <width>80</width>
@@ -542,7 +542,7 @@
                  </widget>
                 </item>
                 <item row="3" column="3">
-                 <widget class="QLineEdit" name="lineEdit_imag_value_Fx">
+                 <widget class="QLineEdit" name="lineEdit_imag_Fx">
                   <property name="minimumSize">
                    <size>
                     <width>80</width>
@@ -635,7 +635,7 @@
                  </widget>
                 </item>
                 <item row="3" column="1">
-                 <widget class="QLabel" name="label_constant">
+                 <widget class="QLabel" name="label_constant_Fx">
                   <property name="minimumSize">
                    <size>
                     <width>70</width>
@@ -658,7 +658,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>Fx / A:</string>
+                   <string>Fx / area:</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -666,7 +666,7 @@
                  </widget>
                 </item>
                 <item row="3" column="4">
-                 <widget class="QLabel" name="label_unit">
+                 <widget class="QLabel" name="label_unit_Fx">
                   <property name="minimumSize">
                    <size>
                     <width>50</width>
@@ -723,7 +723,7 @@
                  </spacer>
                 </item>
                 <item row="4" column="2">
-                 <widget class="QLineEdit" name="lineEdit_real_value_Fy">
+                 <widget class="QLineEdit" name="lineEdit_real_Fy">
                   <property name="minimumSize">
                    <size>
                     <width>80</width>
@@ -757,7 +757,7 @@
                  </widget>
                 </item>
                 <item row="4" column="4">
-                 <widget class="QLabel" name="label_unit_2">
+                 <widget class="QLabel" name="label_unit_Fy">
                   <property name="minimumSize">
                    <size>
                     <width>50</width>
@@ -788,7 +788,7 @@
                  </widget>
                 </item>
                 <item row="4" column="3">
-                 <widget class="QLineEdit" name="lineEdit_imag_value_Fy">
+                 <widget class="QLineEdit" name="lineEdit_imag_Fy">
                   <property name="minimumSize">
                    <size>
                     <width>80</width>
@@ -819,7 +819,7 @@
                  </widget>
                 </item>
                 <item row="5" column="2">
-                 <widget class="QLineEdit" name="lineEdit_real_value_Fz">
+                 <widget class="QLineEdit" name="lineEdit_real_Fz">
                   <property name="minimumSize">
                    <size>
                     <width>80</width>
@@ -853,7 +853,7 @@
                  </widget>
                 </item>
                 <item row="5" column="3">
-                 <widget class="QLineEdit" name="lineEdit_imag_value_Fz">
+                 <widget class="QLineEdit" name="lineEdit_imag_Fz">
                   <property name="minimumSize">
                    <size>
                     <width>80</width>
@@ -884,7 +884,7 @@
                  </widget>
                 </item>
                 <item row="5" column="4">
-                 <widget class="QLabel" name="label_unit_3">
+                 <widget class="QLabel" name="label_unit_Fz">
                   <property name="minimumSize">
                    <size>
                     <width>50</width>
@@ -915,7 +915,7 @@
                  </widget>
                 </item>
                 <item row="4" column="1">
-                 <widget class="QLabel" name="label_constant_2">
+                 <widget class="QLabel" name="label_constant_Fy">
                   <property name="minimumSize">
                    <size>
                     <width>70</width>
@@ -938,7 +938,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>Fy / A:</string>
+                   <string>Fy / area:</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -946,7 +946,7 @@
                  </widget>
                 </item>
                 <item row="5" column="1">
-                 <widget class="QLabel" name="label_constant_3">
+                 <widget class="QLabel" name="label_constant_Fz">
                   <property name="minimumSize">
                    <size>
                     <width>70</width>
@@ -969,7 +969,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>Fz / A:</string>
+                   <string>Fz / area:</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -1029,7 +1029,7 @@
                  <number>7</number>
                 </property>
                 <item row="0" column="1">
-                 <widget class="QLineEdit" name="lineEdit_path_table">
+                 <widget class="QLineEdit" name="lineEdit_path_table_Fx">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
@@ -1054,7 +1054,7 @@
                  </widget>
                 </item>
                 <item row="0" column="0">
-                 <widget class="QLabel" name="label_table">
+                 <widget class="QLabel" name="label_table_Fx">
                   <property name="enabled">
                    <bool>true</bool>
                   </property>
@@ -1084,7 +1084,7 @@
                  </widget>
                 </item>
                 <item row="0" column="2">
-                 <widget class="QPushButton" name="pushButton_load_table_Fx">
+                 <widget class="QPushButton" name="pushButton_load_Fx_table">
                   <property name="enabled">
                    <bool>true</bool>
                   </property>
@@ -1120,7 +1120,7 @@
                  </widget>
                 </item>
                 <item row="1" column="0">
-                 <widget class="QLabel" name="label_table_2">
+                 <widget class="QLabel" name="label_table_Fy">
                   <property name="enabled">
                    <bool>true</bool>
                   </property>
@@ -1150,7 +1150,7 @@
                  </widget>
                 </item>
                 <item row="2" column="0">
-                 <widget class="QLabel" name="label_table_3">
+                 <widget class="QLabel" name="label_table_Fz">
                   <property name="enabled">
                    <bool>true</bool>
                   </property>
@@ -1180,7 +1180,7 @@
                  </widget>
                 </item>
                 <item row="1" column="1">
-                 <widget class="QLineEdit" name="lineEdit_path_table_2">
+                 <widget class="QLineEdit" name="lineEdit_path_table_Fy">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
@@ -1205,7 +1205,7 @@
                  </widget>
                 </item>
                 <item row="2" column="1">
-                 <widget class="QLineEdit" name="lineEdit_path_table_3">
+                 <widget class="QLineEdit" name="lineEdit_path_table_Fz">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
@@ -1230,7 +1230,7 @@
                  </widget>
                 </item>
                 <item row="1" column="2">
-                 <widget class="QPushButton" name="pushButton_load_table_Fy">
+                 <widget class="QPushButton" name="pushButton_load_Fy_table">
                   <property name="enabled">
                    <bool>true</bool>
                   </property>
@@ -1266,7 +1266,7 @@
                  </widget>
                 </item>
                 <item row="2" column="2">
-                 <widget class="QPushButton" name="pushButton_load_table_Fz">
+                 <widget class="QPushButton" name="pushButton_load_Fz_table">
                   <property name="enabled">
                    <bool>true</bool>
                   </property>
@@ -1362,7 +1362,7 @@
                </property>
                <layout class="QGridLayout" name="gridLayout_2">
                 <item row="0" column="0">
-                 <widget class="QTreeWidget" name="treeWidget_normal_pressure_loads">
+                 <widget class="QTreeWidget" name="treeWidget_distributed_loads">
                   <property name="minimumSize">
                    <size>
                     <width>320</width>

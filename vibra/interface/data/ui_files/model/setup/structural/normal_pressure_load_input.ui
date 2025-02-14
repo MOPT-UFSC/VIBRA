@@ -364,11 +364,6 @@
              <string>Selected faces</string>
             </property>
            </item>
-           <item>
-            <property name="text">
-             <string>Selected lines</string>
-            </property>
-           </item>
           </widget>
          </item>
         </layout>

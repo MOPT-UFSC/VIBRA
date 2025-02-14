@@ -18,11 +18,11 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class SetNormalPressureLoadInputs(QDialog):
+class SetDistributedLoadsInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/setup/structural/normal_pressure_load_input.ui"
+        ui_path = UI_DIR / "model/setup/structural/distributed_loads_input.ui"
         uic.loadUi(ui_path, self)
 
         self.model = app().project.model
@@ -47,18 +47,29 @@ class SetNormalPressureLoadInputs(QDialog):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Set normal pressure load")
+        self.setWindowTitle("Set structural external loads")
 
     def _initialize(self):
-
         self.keep_window_open = True
-
         self.reset_table_variables()
 
     def reset_table_variables(self):
 
-        self.pressure_table_values = None
-        self.pressure_table_path = None
+        self.Fx_table_values = None
+        self.Fy_table_values = None
+        self.Fz_table_values = None
+
+        self.Fx_array = None
+        self.Fy_array = None
+        self.Fz_array = None
+
+        self.Fx_table_path = None
+        self.Fy_table_path = None
+        self.Fz_table_path = None
+
+        self.Fx_table_name = None
+        self.Fy_table_name = None
+        self.Fz_table_name = None
 
     def _define_qt_variables(self):
 
@@ -67,20 +78,40 @@ class SetNormalPressureLoadInputs(QDialog):
         self.comboBox_element_type: QComboBox
 
         # QLabel
-        self.label_constant: QLabel
-        self.label_table: QLabel
-        self.label_unit: QLabel
+        self.label_constant_Fx: QLabel
+        self.label_constant_Fy: QLabel
+        self.label_constant_Fz: QLabel
+        #
+        self.label_unit_Fx: QLabel
+        self.label_unit_Fy: QLabel
+        self.label_unit_Fz: QLabel
+        #
+        self.label_table_Fx: QLabel
+        self.label_table_Fy: QLabel
+        self.label_table_Fz: QLabel
 
         # QLineEdit
         self.lineEdit_selection_id: QLineEdit
-        self.lineEdit_real_value: QLineEdit
-        self.lineEdit_imag_value: QLineEdit
-        self.lineEdit_table_path: QLineEdit
+        self.lineEdit_real_Fx: QLineEdit
+        self.lineEdit_real_Fy: QLineEdit
+        self.lineEdit_real_Fz: QLineEdit
+        #
+        self.lineEdit_imag_Fx: QLineEdit
+        self.lineEdit_imag_Fy: QLineEdit
+        self.lineEdit_imag_Fz: QLineEdit
+        #
+        self.lineEdit_path_table_Fx: QLineEdit
+        self.lineEdit_path_table_Fy: QLineEdit
+        self.lineEdit_path_table_Fz: QLineEdit
+        #
+        self._create_list_lineEdits()
 
         # QPushButton
         self.pushButton_attribute: QPushButton
         self.pushButton_exit: QPushButton
-        self.pushButton_load_table: QPushButton
+        self.pushButton_load_Fx_table: QPushButton
+        self.pushButton_load_Fy_table: QPushButton
+        self.pushButton_load_Fz_table: QPushButton
         self.pushButton_remove: QPushButton
         self.pushButton_reset: QPushButton
 
@@ -88,13 +119,27 @@ class SetNormalPressureLoadInputs(QDialog):
         self.tabWidget_main: QTabWidget
 
         # QTreeWidget
-        self.treeWidget_normal_pressure_loads: QTreeWidget
+        self.treeWidget_distributed_loads: QTreeWidget
+
+    def _create_list_lineEdits(self):
+
+        self.list_lineEdit_constant_values = [  
+                                              [self.lineEdit_real_Fx, self.lineEdit_imag_Fx],
+                                              [self.lineEdit_real_Fy, self.lineEdit_imag_Fy],
+                                              [self.lineEdit_real_Fz, self.lineEdit_imag_Fz],
+                                              ]
+
+        self.list_lineEdit_table_values = [ 
+                                           self.lineEdit_path_table_Fx,
+                                           self.lineEdit_path_table_Fy,
+                                           self.lineEdit_path_table_Fz,
+                                           ]
 
     def _config_widgets(self):
         #
-        for i, w in enumerate([60, 100, 160]):
-            self.treeWidget_normal_pressure_loads.setColumnWidth(i, w)
-            self.treeWidget_normal_pressure_loads.headerItem().setTextAlignment(i, Qt.AlignCenter)
+        for i, w in enumerate([110, 150, 100]):
+            self.treeWidget_distributed_loads.setColumnWidth(i, w)
+            self.treeWidget_distributed_loads.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
         #
@@ -104,93 +149,173 @@ class SetNormalPressureLoadInputs(QDialog):
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
-        self.pushButton_load_table.clicked.connect(self.load_pressure_table)
+        self.pushButton_load_Fx_table.clicked.connect(self.load_Fx_table)
+        self.pushButton_load_Fy_table.clicked.connect(self.load_Fy_table)
+        self.pushButton_load_Fz_table.clicked.connect(self.load_Fz_table)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
-        self.treeWidget_normal_pressure_loads.itemClicked.connect(self.on_click_item)
-        self.treeWidget_normal_pressure_loads.itemDoubleClicked.connect(self.on_double_click_item)
+        self.treeWidget_distributed_loads.itemClicked.connect(self.on_click_item)
+        self.treeWidget_distributed_loads.itemDoubleClicked.connect(self.on_double_click_item)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
 
     def geometry_selection_callback(self):
 
         faces = app().main_window.selected_geometry_surfaces
+        lines = app().main_window.selected_geometry_lines
+        points = app().main_window.selected_geometry_points
+        nodes = app().main_window.selected_mesh_nodes
 
         if faces:
 
-            self.comboBox_attribution_type.setCurrentIndex(0)
-
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
+            self.comboBox_attribution_type.setCurrentIndex(0)
 
             if len(faces) == 1:
                 surface_id = list(faces)[0]
-                data = self.properties._get_property("normal_pressure_load", surface=surface_id)
+                data = self.properties._get_property("distributed_loads", surface=surface_id)
                 self.update_input_fields(data)
+                if data is None:
+                    self.update_formulation_callback(surface_id=surface_id)
 
-    def update_input_fields(self, data: dict):
-        return
+        elif lines:
 
-        if isinstance(data, dict):
+            text = ", ".join([str(i) for i in lines])
+            self.lineEdit_selection_id.setText(text)
+            self.comboBox_attribution_type.setCurrentIndex(1)
 
-            self.reset_input_fields()
-            values = data.get("values", None)
+            if len(lines) == 1:
+                line_id = list(lines)[0]
+                data = self.properties._get_property("distributed_loads", line=line_id)
+                self.update_input_fields(data)
+                if data is None:
+                    self.update_formulation_callback(line_id=line_id)
 
-            if "table_paths" in data.keys():
-                table_paths = data["table_paths"]
-                for index, lineEdit_table in enumerate(self.list_lineEdit_table_values):
-                    table_path = table_paths[index]
-                    if table_path is not None:                   
-                        lineEdit_table.setText(table_path)
+        elif points:
 
-            else:
-                for index, [lineEdit_real, lineEdit_imag] in enumerate(self.list_lineEdit_constant_values):
+            text = ", ".join([str(i) for i in points])
+            self.lineEdit_selection_id.setText(text)
+            self.comboBox_attribution_type.setCurrentIndex(2)
 
-                    if data["element_type"] == "3d_element" and index >= 3:
-                        continue
-                    
-                    elif index <= 5 and values[index] is not None:
-                        lineEdit_real.setText(str(np.real(values[index])))
-                        lineEdit_imag.setText(str(np.imag(values[index])))
+            if len(points) == 1:
+                point_id = list(points)[0]
+                data = self.properties._get_property("distributed_loads", point=point_id)
+                self.update_input_fields(data)
+                if data is None:
+                    self.update_formulation_callback(point_id=point_id)
+
+        elif nodes:
+
+            text = ", ".join([str(i) for i in nodes])
+            self.lineEdit_selection_id.setText(text)
+            self.comboBox_attribution_type.setCurrentIndex(3)
+
+            if len(nodes) == 1:
+                node_id = list(nodes)[0]
+                data = self.properties._get_property("distributed_loads", node=node_id)
+                self.update_input_fields(data)
+                if data is None:
+                    self.update_formulation_callback(node_id=node_id)
+
+    def update_input_fields(self, data: dict | None):
+
+        if data is None:
+            return
+
+        self.reset_input_fields()
+
+        element_type = data.get("element_type", None)
+        if element_type == "2d_element":
+            self.comboBox_element_type.setCurrentIndex(0)
+        else:
+            self.comboBox_element_type.setCurrentIndex(1)
+
+        values = data.get("values", None)
+        if "table_paths" in data.keys():
+            table_paths = data["table_paths"]
+            for index, lineEdit_table in enumerate(self.list_lineEdit_table_values):
+                table_path = table_paths[index]
+                if table_path is not None:                   
+                    lineEdit_table.setText(table_path)
+
+        else:
+            for index, [lineEdit_real, lineEdit_imag] in enumerate(self.list_lineEdit_constant_values):
+
+                if element_type == "3d_element" and index >= 3:
+                    continue
+                
+                elif index <= 5 and values[index] is not None:
+                    lineEdit_real.setText(str(np.real(values[index])))
+                    lineEdit_imag.setText(str(np.imag(values[index])))
+
+    def update_formulation_callback(self, **kwargs):
+
+        surface_id = kwargs.get("surface_id", None)
+        line_id = kwargs.get("line_id", None)
+        point_id = kwargs.get("point_id", None)
+        node_id = kwargs.get("node_id", None)
+
+        if isinstance(surface_id, int):
+            data = self.properties._get_property("surface_thickness", surface=surface_id)
+            if isinstance(data, dict):
+                self.comboBox_element_type.setCurrentIndex(0)
+                return
+            
+        if isinstance(line_id, int):
+            for node_id in app().project.model.mesh.nodes_from_lines[line_id]:
+                for surface_id in self.model.mesh.surfaces_from_node[node_id]:
+                    data = self.properties._get_property("surface_thickness", surface=surface_id)
+                    if isinstance(data, dict):
+                        self.comboBox_element_type.setCurrentIndex(0)
+                        return
+
+        if isinstance(point_id, int):
+            for node_id in app().project.model.mesh.nodes_from_points[line_id]:
+                for surface_id in self.model.mesh.surfaces_from_node[node_id]:
+                    data = self.properties._get_property("surface_thickness", surface=surface_id)
+                    if isinstance(data, dict):
+                        self.comboBox_element_type.setCurrentIndex(0)
+                        return
+
+        if isinstance(node_id, int):
+            for surface_id in self.model.mesh.surfaces_from_node[node_id]:
+                    data = self.properties._get_property("surface_thickness", surface=surface_id)
+                    if isinstance(data, dict):
+                        self.comboBox_element_type.setCurrentIndex(0)
+                        return
 
     def attribution_type_callback(self):
-        app().main_window.action_model_workspace_callback()
+        if self.comboBox_attribution_type.currentIndex() == 0:
+            unit_label = "[N/m²]"
+            load_label = "F{} / area:".format
+        else:
+            unit_label = "[N/m]"
+            load_label = "F{} / length:".format
+
+        self.label_unit_Fx.setText(unit_label)
+        self.label_unit_Fy.setText(unit_label)
+        self.label_unit_Fz.setText(unit_label)
+
+        self.label_constant_Fx.setText(load_label("x"))
+        self.label_constant_Fy.setText(load_label("y"))
+        self.label_constant_Fz.setText(load_label("z"))
+
+        self.label_table_Fx.setText(load_label("x"))
+        self.label_table_Fy.setText(load_label("y"))
+        self.label_table_Fz.setText(load_label("z"))
 
     def element_type_callback(self):
-
-        key = self.comboBox_element_type.currentIndex() == 0
-
-        self.label_Mx_constant.setEnabled(key)
-        self.label_My_constant.setEnabled(key)
-        self.label_Mz_constant.setEnabled(key)
-
-        self.label_Mx_unit.setEnabled(key)
-        self.label_My_unit.setEnabled(key)
-        self.label_Mz_unit.setEnabled(key)
-
-        self.label_Mx_table.setEnabled(key)
-        self.label_My_table.setEnabled(key)
-        self.label_Mz_table.setEnabled(key)
-
-        self.lineEdit_real_Mx.setEnabled(key)
-        self.lineEdit_real_My.setEnabled(key)
-        self.lineEdit_real_Mz.setEnabled(key)
-
-        self.lineEdit_imag_Mx.setEnabled(key)
-        self.lineEdit_imag_My.setEnabled(key)
-        self.lineEdit_imag_Mz.setEnabled(key)
-
-        self.pushButton_load_Mx_table.setEnabled(key)
-        self.pushButton_load_My_table.setEnabled(key)
-        self.pushButton_load_Mz_table.setEnabled(key)
+        return
 
     def check_complex_entries(self, real_input: str, imag_input: str, label: str):
 
         _real = None
         if real_input != "":
             try:
+                real_input = real_input.replace(",", ".")
                 _real = float(real_input)
 
             except Exception:
@@ -203,6 +328,7 @@ class SetNormalPressureLoadInputs(QDialog):
         _imag = None
         if imag_input != "":
             try:
+                imag_input = imag_input.replace(",", ".")
                 _imag = float(imag_input)
 
             except Exception:
@@ -236,8 +362,11 @@ class SetNormalPressureLoadInputs(QDialog):
         elif attribution_type == 1:
             selection = "lines"
 
+        elif attribution_type == 2:
+            selection = "points"
+
         else:
-            return
+            selection = "nodes"
 
         selected_ids = app().project.model.mesh.check_selected_ids(
                                                                    input_ids, 
@@ -256,25 +385,38 @@ class SetNormalPressureLoadInputs(QDialog):
         else:
             element_type = "3d_element"
 
-        stop, value = self.check_complex_entries(self.lineEdit_real_value.text(), self.lineEdit_imag_value.text(), "Pressure load")
+        stop, Fx= self.check_complex_entries(self.lineEdit_real_Fx.text(), self.lineEdit_imag_Fx.text(), "Fx")
         if stop:
             return
 
-        pressure_load = [value]
+        stop, Fy= self.check_complex_entries(self.lineEdit_real_Fy.text(), self.lineEdit_imag_Fy.text(), "Fy")
+        if stop:
+            return
 
-        condition_1 = self.comboBox_element_type.currentIndex() == 0 and pressure_load.count(None) == 0
-        condition_2 = self.comboBox_element_type.currentIndex() == 1 and pressure_load.count(None) == 0
+        stop, Fz= self.check_complex_entries(self.lineEdit_real_Fz.text(), self.lineEdit_imag_Fz.text(), "Fz")
+        if stop:
+            return
+
+        distributed_loads = [Fx, Fy, Fz]
+
+        condition_1 = self.comboBox_element_type.currentIndex() == 0 and distributed_loads.count(None) == 3
+        condition_2 = self.comboBox_element_type.currentIndex() == 1 and distributed_loads.count(None) == 3
 
         if condition_1 or condition_2:
+            title = "Additional inputs required"
+            message = "It is necessary to enter at least one prescribed dof "
+            message += "before confirming the property assignment."
+            PrintMessageInput([window_title_1, title, message])
 
-            real_values = [value if value is None else np.real(value) for value in pressure_load]
-            imag_values = [value if value is None else np.imag(value) for value in pressure_load]
+        else:
+            real_values = [value if value is None else np.real(value) for value in distributed_loads]
+            imag_values = [value if value is None else np.imag(value) for value in distributed_loads]
 
             for selected_id in selected_ids:
 
                 data = {
                         "element_type" : element_type,
-                        "values" : pressure_load,
+                        "values" : distributed_loads,
                         "real_values" : real_values,
                         "imag_values" : imag_values,
                         "nodal_attribution": False,
@@ -282,21 +424,12 @@ class SetNormalPressureLoadInputs(QDialog):
                         }
 
                 if attribution_type == 0:
-                    self.properties._set_property("normal_pressure_load", data, surface=selected_id)
+                    self.properties._set_property("distributed_loads", data, surface=selected_id)
 
                 elif attribution_type == 1:
-                    self.properties._set_property("normal_pressure_load", data, line=selected_id)
-
-                else:
-                    return
+                    self.properties._set_property("distributed_loads", data, line=selected_id)
 
             self.actions_to_finalize()
-
-        else:
-            title = "Additional inputs required"
-            message = "It is necessary to enter at least one prescribed dof "
-            message += "before confirming the property assignment."
-            PrintMessageInput([window_title_1, title, message])
 
     def load_table(self, lineEdit : QLineEdit, load_label : str, direct_load = False):
 
@@ -377,10 +510,20 @@ class SetNormalPressureLoadInputs(QDialog):
         lineEdit.setText("")
         lineEdit.setFocus()
 
-    def load_pressure_table(self):
-        self.pressure_table_values, self.pressure_table_path = self.load_table(self.lineEdit_table_path, "Pressure load")
-        if  self.pressure_table_path is None:
-            self.lineEdit_reset(self.lineEdit_table_path)
+    def load_Fx_table(self):
+        self.Fx_table_values, self.Fx_table_path = self.load_table(self.lineEdit_path_table_Fx, "Fx")
+        if  self.Fx_table_path is None:
+            self.lineEdit_reset(self.lineEdit_path_table_Fx)
+
+    def load_Fy_table(self):
+        self.Fy_table_values, self.Fy_table_path = self.load_table(self.lineEdit_path_table_Fy, "Fy")
+        if self.Fy_table_path is None:
+            self.lineEdit_reset(self.lineEdit_path_table_Fy)
+            
+    def load_Fz_table(self):
+        self.Fz_table_values, self.Fz_table_path = self.load_table(self.lineEdit_path_table_Fz, "Fz")
+        if self.Fz_table_path is None:
+            self.lineEdit_reset(self.lineEdit_path_table_Fz)
 
     def save_table_files(self, load_label: str, selected_id: int, selection: str, values: np.ndarray):
 
@@ -390,7 +533,7 @@ class SetNormalPressureLoadInputs(QDialog):
         if self.frequencies[0] == float(1e-6):
             self.frequencies[0] = 0
 
-        table_name = f"presssure_load_{load_label}_from_{selection[:-1]}_{selected_id}"
+        table_name = f"distributed_loads_{load_label}_from_{selection[:-1]}_{selected_id}"
 
         real_values = np.real(values)
         imag_values = np.imag(values)
@@ -456,8 +599,11 @@ class SetNormalPressureLoadInputs(QDialog):
         elif attribution_type == 1:
             selection = "lines"
 
+        elif attribution_type == 2:
+            selection = "points"
+
         else:
-            return
+            selection = "nodes"
 
         selected_ids = app().project.model.mesh.check_selected_ids(
                                                                    input_ids, 
@@ -476,20 +622,32 @@ class SetNormalPressureLoadInputs(QDialog):
         else:
             element_type = "3d_element"
 
-        if self.pressure_table_path is None:
-            self.pressure_table_values, self.pressure_table_path = self.load_table(self.lineEdit_table_path, "Pressure load", direct_load = True)
+        if self.Fx_table_path is None:
+            self.Fx_table_values, self.Fx_table_path = self.load_table(self.lineEdit_path_table_Fx, "Fx", direct_load = True)
+
+        if self.Fy_table_path is None:
+            self.Fy_table_values, self.Fy_table_path = self.load_table(self.lineEdit_path_table_Fy, "Fy", direct_load = True)
+
+        if self.Fz_table_path is None:
+            self.Fz_table_values, self.Fz_table_path = self.load_table(self.lineEdit_path_table_Fz, "Fz", direct_load = True)
 
         for selected_id in selected_ids:
             
-            if self.pressure_table_values is not None:
-                self.pressure_table_name, self.pressure_array = self.save_table_files("arrumar", selected_id, selection, self.pressure_table_values, self.pressure_table_path)
+            if self.Fx_table_values is not None:
+                self.Fx_table_name, self.Fx_array = self.save_table_files("Fx", selected_id, selection, self.Fx_table_values, self.Fx_table_path)
 
-            table_names = [self.pressure_table_name]
-            table_paths = [self.pressure_table_path]
-            pressure_load = [self.pressure_table_values]
+            if self.Fy_table_values is not None:
+                self.Fy_table_name, self.Fy_array = self.save_table_files("Fy", selected_id, selection, self.Fy_table_values, self.Fy_table_path)
 
-            condition_1 = self.comboBox_element_type.currentIndex() == 0 and table_names.count(None) == 1
-            condition_2 = self.comboBox_element_type.currentIndex() == 1 and table_names.count(None) == 1
+            if self.Fz_table_values is not None:
+                self.Fz_table_name, self.Fz_array = self.save_table_files("Fz", selected_id, selection, self.Fz_table_values, self.Fz_table_path)
+
+            table_names = [self.Fx_table_name, self.Fy_table_name, self.Fz_table_name]
+            table_paths = [self.Fx_table_path, self.Fy_table_path, self.Fz_table_path]
+            distributed_loads = [self.Fx_table_values, self.Fy_table_values, self.Fz_table_values]
+
+            condition_1 = self.comboBox_element_type.currentIndex() == 0 and table_names.count(None) == 3
+            condition_2 = self.comboBox_element_type.currentIndex() == 1 and table_names.count(None) == 3
 
             if condition_1 or condition_2:
                 title = "Additional inputs required"
@@ -502,71 +660,37 @@ class SetNormalPressureLoadInputs(QDialog):
                     "element_type" : element_type,
                     "table_names" : table_names,
                     "table_paths" : table_paths,
-                    "values" : pressure_load,
-                    "nodal_attribution": False,
+                    "values" : distributed_loads,
+                    "nodal_attribution": True,
                     "averaged": False,
                     }
 
             if attribution_type == 0:
-                self.properties._set_property("normal_pressure_load", data, surface=selected_id)
+                self.properties._set_property("distributed_loads", data, surface=selected_id)
 
             elif attribution_type == 1:
-                self.properties._set_property("normal_pressure_load", data, line=selected_id)
-
-            else:
-                return
+                self.properties._set_property("distributed_loads", data, line=selected_id)
 
         self.actions_to_finalize()
 
     def remove_duplicated_attributions(self, selected_ids: list, selection: str):
 
         table_names = list()
-        nodes_to_remove = list()
         for selected_id in selected_ids:
 
             if selection == "surfaces":
-
-                nodes_from_surface = self.model.mesh.nodes_from_surfaces[selected_id]
-                for (property, node_id) in self.properties.nodal_properties.keys():
-                    if property == "normal_pressure_load" and node_id in nodes_from_surface:
-                        if node_id not in nodes_to_remove:
-                            nodes_to_remove.append(node_id)
-
                 for line_id in app().project.model.mesh.lines_from_surface[selected_id]:
-                    data = self.properties._get_property("normal_pressure_load", line=line_id)
+                    data = self.properties._get_property("distributed_loads", line=line_id)
                     if isinstance(data, dict):
-                        self.properties._remove_line_property("normal_pressure_load", line_id)
-                        table_names.extend(self.properties.get_property_related_table_names("normal_pressure_load", line_id, "lines"))
-
-                    for point_id in app().project.model.mesh.points_from_line[line_id]:
-                        data = self.properties._get_property("normal_pressure_load", point=point_id)
-                        if isinstance(data, dict):
-                            self.properties._remove_point_property("normal_pressure_load", point_id)
-                            table_names.extend(self.properties.get_property_related_table_names("normal_pressure_load", point_id, "points"))
+                        self.properties._remove_line_property("distributed_loads", line_id)
+                        table_names.extend(self.properties.get_property_related_table_names("distributed_loads", line_id, "lines"))
 
             elif selection == "lines":
-
-                nodes_from_line = self.model.mesh.nodes_from_lines[selected_id]
-                for (property, node_id) in self.properties.nodal_properties.keys():
-                    if property == "normal_pressure_load" and node_id in nodes_from_line:
-                        if node_id not in nodes_to_remove:
-                            nodes_to_remove.append(node_id)
-
                 for surface_id in app().project.model.mesh.surface_from_line[selected_id]:
-                    data = self.properties._get_property("normal_pressure_load", surface=surface_id)
+                    data = self.properties._get_property("distributed_loads", surface=surface_id)
                     if isinstance(data, dict):
-                        self.properties._remove_surface_property("normal_pressure_load", surface_id)
-                        table_names.extend(self.properties.get_property_related_table_names("normal_pressure_load", surface_id, "surfaces"))
-
-                for point_id in app().project.model.mesh.points_from_line[selected_id]:
-                    data = self.properties._get_property("normal_pressure_load", point=point_id)
-                    if isinstance(data, dict):
-                        self.properties._remove_point_property("normal_pressure_load", point_id)
-                        table_names.extend(self.properties.get_property_related_table_names("normal_pressure_load", point_id, "points"))
-
-            for node_id in nodes_to_remove:
-                self.properties._remove_nodal_property("normal_pressure_load", node_id)
-                table_names.extend(self.properties.get_property_related_table_names("normal_pressure_load", node_id, "nodes"))
+                        self.properties._remove_surface_property("distributed_loads", surface_id)
+                        table_names.extend(self.properties.get_property_related_table_names("distributed_loads", surface_id, "surfaces"))
 
             self.process_table_file_removal(table_names)
 
@@ -577,32 +701,72 @@ class SetNormalPressureLoadInputs(QDialog):
         elif index == 1:
             self.table_values_attribution()
 
+    def text_label(self, mask):
+
+        load_labels = np.array(['Fx','Fy','Fz'])
+        labels = load_labels[mask]
+
+        if list(mask).count(True) == 3:
+            return "[{}, {}, {}]".format(*labels)
+        elif list(mask).count(True) == 2:
+            return "[{}, {}]".format(*labels)
+        elif list(mask).count(True) == 1:
+            return "[{}]".format(*labels)
+
     def load_model_info(self):
 
-        self.treeWidget_normal_pressure_loads.clear()
+        self.treeWidget_distributed_loads.clear()
         for (property, *args), data in self.properties.surface_properties.items():
 
-            if property == "normal_pressure_load":
-                values = data["values"][0]
-                if isinstance(values, complex):
-                    str_values = str(values)
-                else:
-                    str_values = "Table"
-                new = QTreeWidgetItem([str(args[0]), "Surface", str_values])
+            if property == "distributed_loads":
+                values = data["values"]
+                element_type = data["element_type"]
+                constrained_loads_mask = [False if value is None else True for value in values]
+                dofs_labels = str(self.text_label(constrained_loads_mask))
+                new = QTreeWidgetItem([f"Surface-{args[0]}", dofs_labels, element_type])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-                self.treeWidget_normal_pressure_loads.addTopLevelItem(new)
+                self.treeWidget_distributed_loads.addTopLevelItem(new)
 
         for (property, *args), data in self.properties.line_properties.items():
 
-            if property == "normal_pressure_load":
+            if property == "distributed_loads":
                 values = data["values"]
-                new = QTreeWidgetItem([str(args[0]), "Line", ""])
+                element_type = data["element_type"]
+                constrained_loads_mask = [False if value is None else True for value in values]
+                dofs_labels = str(self.text_label(constrained_loads_mask))
+                new = QTreeWidgetItem([f"Line-{args[0]}", dofs_labels, element_type])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-                self.treeWidget_normal_pressure_loads.addTopLevelItem(new)
+                self.treeWidget_distributed_loads.addTopLevelItem(new)
+
+        for (property, *args), data in self.properties.point_properties.items():
+
+            if property == "distributed_loads":
+                values = data["values"]
+                element_type = data["element_type"]
+                constrained_loads_mask = [False if value is None else True for value in values]
+                dofs_labels = str(self.text_label(constrained_loads_mask))
+                new = QTreeWidgetItem([f"Point-{args[0]}", dofs_labels, element_type])
+                for i in range(3):
+                    new.setTextAlignment(i, Qt.AlignCenter)
+
+                self.treeWidget_distributed_loads.addTopLevelItem(new)
+
+        for (property, *args), data in self.properties.nodal_properties.items():
+
+            if property == "distributed_loads":
+                values = data["values"]
+                element_type = data["element_type"]
+                constrained_loads_mask = [False if value is None else True for value in values]
+                dofs_labels = str(self.text_label(constrained_loads_mask))
+                new = QTreeWidgetItem([f"Node-{args[0]}", dofs_labels, element_type])
+                for i in range(3):
+                    new.setTextAlignment(i, Qt.AlignCenter)
+
+                self.treeWidget_distributed_loads.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 
@@ -611,17 +775,19 @@ class SetNormalPressureLoadInputs(QDialog):
         properties_to_check = [
                                self.properties.surface_properties,
                                self.properties.line_properties,
+                               self.properties.point_properties,
+                               self.properties.nodal_properties,
                                ]
 
         for current_property in properties_to_check:
             for (property, _) in current_property.keys():
-                if property == "normal_pressure_load":
+                if property == "distributed_loads":
                     self.tabWidget_main.setTabVisible(2, True)
                     return
 
         self.tabWidget_main.setTabVisible(2, False)
         self.tabWidget_main.setCurrentIndex(0)
-        self.lineEdit_real_value.setFocus()
+        self.lineEdit_real_Fx.setFocus()
         app().main_window.set_geometry_selection()
 
     def tab_event_callback(self):
@@ -634,8 +800,8 @@ class SetNormalPressureLoadInputs(QDialog):
         else:
 
             text = self.lineEdit_selection_id.text()
-            if " - " in text:
-                selected_id = text.split(" - ")[1]
+            if "-" in text:
+                selected_id = text.split("-")[1]
                 self.lineEdit_selection_id.setText(selected_id)
 
             self.lineEdit_selection_id.setDisabled(False)
@@ -643,13 +809,12 @@ class SetNormalPressureLoadInputs(QDialog):
 
     def on_click_item(self, item):
 
-        selected_id = item.text(0)
-        selection = item.text(1)
         self.pushButton_remove.setDisabled(False)
 
-        if selection != "":
+        if item.text(0) != "":
 
-            text = f"{selection} - {selected_id}"
+            selection, _selected_id = item.text(0).split("-")
+            selected_id = int(_selected_id)
 
             if selection == "Surface":
                 app().main_window.set_geometry_selection(surfaces = [int(selected_id)])
@@ -657,10 +822,19 @@ class SetNormalPressureLoadInputs(QDialog):
             elif selection == "Line":
                 app().main_window.set_geometry_selection(lines = [int(selected_id)])
 
-            else:
-                return
+            elif selection == "Point":
+                app().main_window.set_geometry_selection(points = [int(selected_id)])
 
-            self.lineEdit_selection_id.setText(text)
+            elif selection == "Node":
+                app().main_window.set_mesh_selection(nodes=[int(selected_id)])
+
+            if selection == "Node":
+                app().main_window.action_mesh_workspace_callback()
+
+            else:
+                app().main_window.action_model_workspace_callback()
+
+            self.lineEdit_selection_id.setText(item.text(0))
 
     def on_double_click_item(self, item):
         self.on_click_item(item)
@@ -692,7 +866,7 @@ class SetNormalPressureLoadInputs(QDialog):
         elif selection == "nodes":
             remove_function = self.properties._remove_nodal_property
 
-        properties = ["nodal_loads", "prescribed_dofs"]
+        properties = ["distributed_loads", "prescribed_dofs"]
 
         for selected_id in selected_ids:
             for property in properties:
@@ -701,29 +875,29 @@ class SetNormalPressureLoadInputs(QDialog):
                 self.process_table_file_removal(table_names)
 
     def remove_table_files_from(self, selected_id : list, selection: str):
-        table_names = self.properties.get_property_related_table_names("normal_pressure_load", selected_id, selection)
+        table_names = self.properties.get_property_related_table_names("distributed_loads", selected_id, selection)
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
 
         text = self.lineEdit_selection_id.text()
 
-        if text != "" and " - " in text:
+        if "-" in text:
 
-            selection, _selected_id = text.split(" - ")
+            selection, _selected_id = text.split("-")
             selected_id = int(_selected_id)
 
             if selection == "Surface":
-                self.properties._remove_surface_property("normal_pressure_load", selected_id)
+                self.properties._remove_surface_property("distributed_loads", selected_id)
 
             elif selection == "Line":
-                self.properties._remove_line_property("normal_pressure_load", selected_id)
+                self.properties._remove_line_property("distributed_loads", selected_id)
 
             elif selection == "Point":
-                self.properties._remove_point_property("normal_pressure_load", selected_id)
+                self.properties._remove_point_property("distributed_loads", selected_id)
 
             elif selection == "Node":
-                self.properties._remove_nodal_property("normal_pressure_load", selected_id)
+                self.properties._remove_nodal_property("distributed_loads", selected_id)
 
             self.remove_table_files_from(selected_id, f"{selection.lower()}s")
             self.actions_to_finalize()
@@ -735,8 +909,8 @@ class SetNormalPressureLoadInputs(QDialog):
 
         self.hide()
 
-        title = "Prescribed DOFs resetting"
-        message = "Would you like to remove the all prescribed DOFs from model?"
+        title = "External loads resetting"
+        message = "Would you like to remove the all external loads from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
         obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -747,22 +921,22 @@ class SetNormalPressureLoadInputs(QDialog):
         if obj._continue:
 
             for (property, *args) in self.properties.surface_properties.keys():
-                if property == "normal_pressure_load":
+                if property == "distributed_loads":
                     self.remove_table_files_from(args[0], "surfaces")
 
             for (property, *args) in self.properties.line_properties.keys():
-                if property == "normal_pressure_load":
+                if property == "distributed_loads":
                     self.remove_table_files_from(args[0], "lines")
 
             for (property, *args) in self.properties.point_properties.keys():
-                if property == "normal_pressure_load":
+                if property == "distributed_loads":
                     self.remove_table_files_from(args[0], "points")
 
             for (property, *args) in self.properties.nodal_properties.keys():
-                if property == "normal_pressure_load":
+                if property == "distributed_loads":
                     self.remove_table_files_from(args[0], "nodes")
 
-            self.properties._reset_property("normal_pressure_load")
+            self.properties._reset_property("distributed_loads")
             self.actions_to_finalize()
 
             app().main_window.set_geometry_selection()
@@ -770,7 +944,7 @@ class SetNormalPressureLoadInputs(QDialog):
 
     def actions_to_finalize(self):
         self.load_model_info()
-        self.reset_input_fields()
+        self.reset_input_fields(reset_all=True)
         app().main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
@@ -787,7 +961,7 @@ class SetNormalPressureLoadInputs(QDialog):
 
         for key, data in self.properties.surface_properties.items():
             property, _ = key
-            if property in ["nodal_loads", "prescribed_dofs"]:
+            if property in ["distributed_loads", "prescribed_dofs"]:
                 if "table_names" in data.keys():
                     return
 
@@ -796,11 +970,17 @@ class SetNormalPressureLoadInputs(QDialog):
             app().project.set_analysis_data(analysis_data)
             app().file.write_analysis_setup_in_file(analysis_data)
 
-    def reset_input_fields(self):
-        self.lineEdit_selection_id.setText("")
-        self.lineEdit_real_value.setText("")
-        self.lineEdit_imag_value.setText("")
-        self.lineEdit_table_path.setText("")
+    def reset_input_fields(self, reset_all=False):
+
+        if reset_all:
+            self.lineEdit_selection_id.setText("")
+
+        for lineEdit_real, lineEdit_imag in self.list_lineEdit_constant_values:
+            lineEdit_real.setText("")
+            lineEdit_imag.setText("")
+
+        for lineEdit_table in self.list_lineEdit_table_values:
+            lineEdit_table.setText("")
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

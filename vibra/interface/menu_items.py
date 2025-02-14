@@ -27,7 +27,7 @@ from vibra.interface.model_inputs.acoustic.process_acoustic_transfer_element_dat
 from vibra.interface.model_inputs.structural.set_surface_thickness_inputs import SetSurfaceThicknessInput
 from vibra.interface.model_inputs.structural.set_prescribed_dofs_inputs import SetPrescribedDofsInputs
 from vibra.interface.model_inputs.structural.set_nodal_loads_inputs import SetNodalLoadsInputs
-# from vibra.interface.model_inputs.structural.distributed_loads import SetDistributedLoadsInputs
+from vibra.interface.model_inputs.structural.set_distributed_loads_inputs import SetDistributedLoadsInputs
 from vibra.interface.model_inputs.structural.set_normal_pressure_load_inputs import SetNormalPressureLoadInputs
 #
 from vibra.interface.plots.acoustic.plot_acoustic_pressure_frequency_response_input import PlotAcousticPressureFrequencyResponseInput
@@ -421,8 +421,7 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_set_distributed_loads:
             if not self.item_child_set_distributed_loads.isDisabled():
-                pass
-                # obj = SetDistributedLoadsInputs()
+                obj = SetDistributedLoadsInputs()
 
         elif item == self.item_child_set_normal_pressure:
             if not self.item_child_set_normal_pressure.isDisabled():
