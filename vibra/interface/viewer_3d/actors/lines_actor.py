@@ -1,5 +1,6 @@
 from molde.colors import color_names
 
+from vtkmodules.vtkCommonCore import vtkIntArray
 from vtkmodules.vtkCommonCore import vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import (
     VTK_LINE,
@@ -23,6 +24,11 @@ class LinesActor(vtkActor):
         mapper = vtkPolyDataMapper()
         cell_colors = vtkUnsignedCharArray()
 
+        line_indexes = vtkIntArray()
+        line_indexes.SetName("line_indexes")
+        # volume_indexes.Allocate(number_of_elements)
+
+
         data.Allocate(len(self.mesh.lines_connectivity))
         cell_colors.SetNumberOfComponents(3)
         cell_colors.SetNumberOfTuples(len(self.mesh.lines_connectivity))
@@ -30,16 +36,27 @@ class LinesActor(vtkActor):
         coordinates = self.mesh.nodal_coordinates[:, 1:]
         points.SetData(numpy_to_vtk(coordinates))
 
-        connect = self.mesh.lines_connectivity[:, 4:]
-        if len(connect[0, :]) == 2:
-            for a, b in connect:
-                data.InsertNextCell(VTK_LINE, 2, (a, b))
+        if self.mesh.faces_connectivity.shape[1] == 2:
+            for i, line, _, _, *values in self.mesh.faces_connectivity:
+                data.InsertNextCell(VTK_LINE, 2, values)
+                # line_indexes.InsertNextValue(line)
         else:
-            for a, b, c in connect:
-                data.InsertNextCell(VTK_QUADRATIC_EDGE, 3, (a, b, c))
+            for i, line, _, _, *values in self.mesh.faces_connectivity:
+                data.InsertNextCell(VTK_QUADRATIC_EDGE, 3, values)
+                # line_indexes.InsertNextValue(line)
+
+        # connect = self.mesh.lines_connectivity[:, 4:]
+        # if len(connect[0, :]) == 2:
+        #     for a, b in connect:
+        #         data.InsertNextCell(VTK_LINE, 2, (a, b))
+        # else:
+        #     for a, b, c in connect:
+        #         data.InsertNextCell(VTK_QUADRATIC_EDGE, 3, (a, b, c))
 
         data.SetPoints(points)
         data.GetCellData().SetScalars(cell_colors)
+        # data.GetCellData().AddArray(line_indexes)
+
         mapper.SetInputData(data)
         self.SetMapper(mapper)
 

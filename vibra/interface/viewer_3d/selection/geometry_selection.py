@@ -51,7 +51,7 @@ class GeometrySelection:
             x,
             y,
             self.geometry_render_widget.lines_actor,
-            "cell_indexes",
+            "line_indexes",
             self.geometry_render_widget.renderer,
         )
         if cell_id >= 0:
