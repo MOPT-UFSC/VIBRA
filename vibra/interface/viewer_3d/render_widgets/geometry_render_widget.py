@@ -205,7 +205,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.mouse_click = (x, y)
 
     def selection_callback(self, x, y):
-        # This is a optimization, may imply side effects
+        # This is a optimization, may have side effects
         if not self.isVisible():
             return
 
@@ -216,16 +216,20 @@ class GeometryRenderWidget(CommonRenderWidget):
         mouse_moved = (abs(x0 - x) > 10) or (abs(y0 - y) > 10)
 
         if mouse_moved:
-            picked_points = self.geometry_selection.area_pick_points(x0, y0, x, y)
-            picked_lines = self.geometry_selection.area_pick_lines(x0, y0, x, y)
-            picked_faces = self.geometry_selection.area_pick_surfaces(x0, y0, x, y)
-            picked_volumes = self.geometry_selection.area_pick_volumes(x0, y0, x, y)
+            (
+                picked_points,
+                picked_lines,
+                picked_faces,
+                picked_volumes,
+            ) = self.geometry_selection.area_pick(x0, y0, x, y)
 
         else:
-            picked_points = self.geometry_selection.pick_point(x, y)
-            picked_lines = self.geometry_selection.pick_line(x, y)
-            picked_faces = self.geometry_selection.pick_surface(x, y)
-            picked_volumes = self.geometry_selection.pick_volume(x, y)
+            (
+                picked_points,
+                picked_lines,
+                picked_faces,
+                picked_volumes,
+            ) = self.geometry_selection.pick(x, y)
 
         # points are a subset of the nodes, but its index is 1-based
         # picked_points = {i+1 for i in picked_nodes}
