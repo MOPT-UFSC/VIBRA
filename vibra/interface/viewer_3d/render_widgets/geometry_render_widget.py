@@ -693,7 +693,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if nodal_loads is not None:
             values = nodal_loads["values"]
             loaded_table = "table_names" in nodal_loads.keys()
-            text += _structural_format("External loads",  values, ("F", "M"), ("N", "N.m"), loaded_table)
+            text += _structural_format("Nodal loads",  values, ("F", "M"), ("N", "N.m"), loaded_table)
 
         return text
 
@@ -708,9 +708,14 @@ def _structural_format(property_name, values, labels, units, has_table):
     u_values = list()
     u_labels = list()
     for val, label in zip(values[:3], "xyz"):
-        if val is not None:
-            u_values.append(val)
-            u_labels.append(labels[0] + label)
+        if val is None:
+            continue
+
+        if not isinstance(val, Number | complex | str):
+            val = "table"
+        
+        u_values.append(val)
+        u_labels.append(labels[0] + label)
 
     r_values = list()
     r_labels = list()
@@ -718,7 +723,7 @@ def _structural_format(property_name, values, labels, units, has_table):
         if val is None:
             continue
 
-        if not isinstance(val, Number | str):
+        if not isinstance(val, Number | complex | str):
             val = "table"
 
         r_values.append(val)
@@ -726,8 +731,11 @@ def _structural_format(property_name, values, labels, units, has_table):
 
     tree = TreeInfo(property_name)
     if has_table:
-        tree.add_item(u_labels, "Table of values")
-        tree.add_item(r_labels, "Table of values")
+        if u_values:
+            tree.add_item(", ".join(u_labels), "Table of values")
+        if r_values:
+            tree.add_item(", ".join(r_labels), "Table of values")
+
     else:
         if u_values:
             tree.add_item(", ".join(u_labels), u_values, units[0])
