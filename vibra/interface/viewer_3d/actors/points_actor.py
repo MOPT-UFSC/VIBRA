@@ -1,5 +1,6 @@
 from molde.colors import color_names
 
+from vtkmodules.vtkCommonCore import vtkIntArray
 from vtkmodules.vtkCommonCore import vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import VTK_VERTEX, vtkPlane, vtkPolyData
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
@@ -12,14 +13,20 @@ class PointsActor(vtkActor):
         self.configure_appearance()
 
     def create_geometry(self):
+        number_of_points = self.mesh.nodal_coordinates.shape[0]
+
         data = vtkPolyData()
         points = vtkPoints()
         mapper = vtkPolyDataMapper()
         cell_colors = vtkUnsignedCharArray()
 
-        data.Allocate(len(self.mesh.nodal_coordinates))
+        data.Allocate(number_of_points)
         cell_colors.SetNumberOfComponents(3)
-        cell_colors.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
+        cell_colors.SetNumberOfTuples(number_of_points)
+
+        point_indexes = vtkIntArray()
+        point_indexes.SetName("point_indexes")
+        point_indexes.Allocate(number_of_points)
 
         for tag, (node_id,) in self.mesh.nodes_from_points.items():
             _, x, y, z = self.mesh.nodal_coordinates[node_id]
@@ -28,6 +35,7 @@ class PointsActor(vtkActor):
 
         data.SetPoints(points)
         data.GetCellData().SetScalars(cell_colors)
+        data.GetCellData().AddArray(point_indexes)
 
         mapper.SetInputData(data)
         self.SetMapper(mapper)
