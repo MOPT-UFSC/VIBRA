@@ -20,6 +20,49 @@ class GeometrySelection:
     def __init__(self, geometry_render_widget: "GeometryRenderWidget"):
         self.geometry_render_widget = geometry_render_widget
 
+    def pick(
+        self, x: int, y: int
+    ) -> tuple[
+        set[int],
+        set[int],
+        set[int],
+        set[int],
+    ]:
+        picked_points = self.pick_point(x, y)
+        picked_lines = self.pick_line(x, y)
+        picked_surfaces = self.pick_surface(x, y)
+        picked_volumes = self.pick_volume(x, y)
+
+        if picked_points:
+            picked_lines.clear()
+            picked_surfaces.clear()
+            picked_volumes.clear()
+
+        elif picked_lines:
+            picked_surfaces.clear()
+            picked_volumes.clear()
+
+        return picked_points, picked_lines, picked_surfaces, picked_volumes
+
+    def area_pick(
+        self, x0: int, y0: int, x1: int, y1: int
+    ) -> tuple[
+        set[int],
+        set[int],
+        set[int],
+        set[int],
+    ]:
+        internal_picked_nodes = self._area_pick_node_internal_indexes(
+            x0, y0, x1, y1
+        )
+
+        return (
+            self.area_pick_points(x0, y0, x1, y1, internal_picked_nodes),
+            self.area_pick_lines(x0, y0, x1, y1, internal_picked_nodes),
+            self.area_pick_surfaces(x0, y0, x1, y1, internal_picked_nodes),
+            self.area_pick_volumes(x0, y0, x1, y1, internal_picked_nodes),
+        )
+
     def pick_point(self, x: int, y: int) -> set[int]:
         mesh = app().project.model.mesh
         if mesh is None:
@@ -85,47 +128,91 @@ class GeometrySelection:
         else:
             return set()
 
-    def area_pick_points(self, x0: int, y0: int, x1: int, y1: int) -> set[int]:
-        picked_nodes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
+    def area_pick_points(
+        self,
+        x0: int,
+        y0: int,
+        x1: int,
+        y1: int,
+        internal_picked_nodes: list[int] | None = None,
+    ) -> set[int]:
+
+        if internal_picked_nodes is None:
+            internal_picked_nodes = self._area_pick_node_internal_indexes(
+                x0, y0, x1, y1
+            )
+
         all_points = self._get_nodes_subset()
-        picked_points = set(picked_nodes) & set(all_points[:, 0].astype(int))
+        picked_points = set(internal_picked_nodes) & set(all_points[:, 0].astype(int))
         return {i + 1 for i in picked_points}
 
-    def area_pick_lines(self, x0: int, y0: int, x1: int, y1: int) -> set[int]:
+    def area_pick_lines(
+        self,
+        x0: int,
+        y0: int,
+        x1: int,
+        y1: int,
+        internal_picked_nodes: list[int] | None = None,
+    ) -> set[int]:
+
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
 
-        picked_nodes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
+        if internal_picked_nodes is None:
+            internal_picked_nodes = self._area_pick_node_internal_indexes(
+                x0, y0, x1, y1
+            )
+
         mask_selected_elements = np.all(
-            np.isin(mesh.lines_connectivity[:, 4:], picked_nodes),
-            axis=1
+            np.isin(mesh.lines_connectivity[:, 4:], internal_picked_nodes), axis=1
         )
 
         return set(mesh.lines_connectivity[mask_selected_elements, 1].astype(int))
 
-    def area_pick_surfaces(self, x0: int, y0: int, x1: int, y1: int) -> set[int]:
+    def area_pick_surfaces(
+        self,
+        x0: int,
+        y0: int,
+        x1: int,
+        y1: int,
+        internal_picked_nodes: list[int] | None = None,
+    ) -> set[int]:
+
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
 
-        picked_nodes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
+        if internal_picked_nodes is None:
+            internal_picked_nodes = self._area_pick_node_internal_indexes(
+                x0, y0, x1, y1
+            )
+
         mask_selected_elements = np.all(
-            np.isin(mesh.faces_connectivity[:, 4:], picked_nodes),
-            axis=1
+            np.isin(mesh.faces_connectivity[:, 4:], internal_picked_nodes), axis=1
         )
 
         return set(mesh.faces_connectivity[mask_selected_elements, 1].astype(int))
 
-    def area_pick_volumes(self, x0: int, y0: int, x1: int, y1: int) -> set[int]:
+    def area_pick_volumes(
+        self,
+        x0: int,
+        y0: int,
+        x1: int,
+        y1: int,
+        internal_picked_nodes: list[int] | None = None,
+    ) -> set[int]:
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
 
-        picked_nodes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
+        if internal_picked_nodes is None:
+            internal_picked_nodes = self._area_pick_node_internal_indexes(
+                x0, y0, x1, y1
+            )
+
         mask_selected_elements = np.all(
-            np.isin(mesh.solids_connectivity[:, 4:], picked_nodes), 
-            axis=1
+            np.isin(mesh.solids_connectivity[:, 4:], internal_picked_nodes), axis=1
         )
 
         return set(mesh.solids_connectivity[mask_selected_elements, 1].astype(int))
@@ -141,7 +228,9 @@ class GeometrySelection:
 
         return mesh.nodal_coordinates[node_indexes]
 
-    def _area_pick_node_internal_indexes(self, x0: int, y0: int, x1: int, y1: int) -> list[int]:
+    def _area_pick_node_internal_indexes(
+        self, x0: int, y0: int, x1: int, y1: int
+    ) -> list[int]:
         picker = vtkAreaPicker()
         extractor = vtkExtractSelectedFrustum()
         picker.AreaPick(x0, y0, x1, y1, self.geometry_render_widget.renderer)
@@ -152,6 +241,8 @@ class GeometrySelection:
             return set()
 
         bounds = mesh.nodal_coordinates[:, (1, 1, 2, 2, 3, 3)]
-        picked_indexes = [i for i, bound in enumerate(bounds) if extractor.OverallBoundsTest(bound)]
+        picked_indexes = [
+            i for i, bound in enumerate(bounds) if extractor.OverallBoundsTest(bound)
+        ]
 
         return picked_indexes
