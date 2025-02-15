@@ -442,15 +442,15 @@ class SetNodalLoadsInputs(QDialog):
         else:
             element_type = "3d_element"
 
-        stop, Fx= self.check_complex_entries(self.lineEdit_real_Fx.text(), self.lineEdit_imag_Fx.text(), "Fx")
+        stop, Fx = self.check_complex_entries(self.lineEdit_real_Fx.text(), self.lineEdit_imag_Fx.text(), "Fx")
         if stop:
             return
 
-        stop, Fy= self.check_complex_entries(self.lineEdit_real_Fy.text(), self.lineEdit_imag_Fy.text(), "Fy")
+        stop, Fy = self.check_complex_entries(self.lineEdit_real_Fy.text(), self.lineEdit_imag_Fy.text(), "Fy")
         if stop:
             return
 
-        stop, Fz= self.check_complex_entries(self.lineEdit_real_Fz.text(), self.lineEdit_imag_Fz.text(), "Fz")
+        stop, Fz = self.check_complex_entries(self.lineEdit_real_Fz.text(), self.lineEdit_imag_Fz.text(), "Fz")
         if stop:
             return
 
@@ -458,60 +458,60 @@ class SetNodalLoadsInputs(QDialog):
 
         if self.comboBox_element_type.currentIndex() == 0:
             
-            stop, rx= self.check_complex_entries(self.lineEdit_real_Mx.text(), self.lineEdit_imag_Mx.text(), "rx")
+            stop, rx = self.check_complex_entries(self.lineEdit_real_Mx.text(), self.lineEdit_imag_Mx.text(), "rx")
             if stop:
                 return
 
-            stop, ry= self.check_complex_entries(self.lineEdit_real_My.text(), self.lineEdit_imag_My.text(), "ry")
+            stop, ry = self.check_complex_entries(self.lineEdit_real_My.text(), self.lineEdit_imag_My.text(), "ry")
             if stop:
                 return
 
-            stop, Mz= self.check_complex_entries(self.lineEdit_real_Mz.text(), self.lineEdit_imag_Mz.text(), "Mz")
+            stop, Mz = self.check_complex_entries(self.lineEdit_real_Mz.text(), self.lineEdit_imag_Mz.text(), "Mz")
             if stop:
                 return
 
             nodal_loads.extend([rx, ry, Mz])
 
-        condition_1 = self.comboBox_element_type.currentIndex() == 0 and nodal_loads.count(None) < 6
-        condition_2 = self.comboBox_element_type.currentIndex() == 1 and nodal_loads.count(None) < 3
+        condition_1 = self.comboBox_element_type.currentIndex() == 0 and nodal_loads.count(None) == 6
+        condition_2 = self.comboBox_element_type.currentIndex() == 1 and nodal_loads.count(None) == 3
 
         if condition_1 or condition_2:
-
-            real_values = [value if value is None else np.real(value) for value in nodal_loads]
-            imag_values = [value if value is None else np.imag(value) for value in nodal_loads]
-
-            key_avg = self.checkBox_averaged_constant_values.isChecked()
-
-            for selected_id in selected_ids:
-
-                data = {
-                        "element_type" : element_type,
-                        "values" : nodal_loads,
-                        "real_values" : real_values,
-                        "imag_values" : imag_values,
-                        "nodal_attribution": True,
-                        "averaged": key_avg,
-                        }
-
-                if attribution_type == 0:
-                    self.properties._set_property("nodal_loads", data, surface=selected_id)
-
-                elif attribution_type == 1:
-                    self.properties._set_property("nodal_loads", data, line=selected_id)
-
-                elif attribution_type == 2:
-                    self.properties._set_property("nodal_loads", data, point=selected_id)
-
-                elif attribution_type == 3:
-                    self.properties._set_property("nodal_loads", data, node=selected_id)
-
-            self.actions_to_finalize()
-
-        else:
+            self.hide()
             title = "Additional inputs required"
             message = "It is necessary to enter at least one prescribed dof "
             message += "before confirming the property assignment."
             PrintMessageInput([window_title_1, title, message])
+            return
+
+        real_values = [value if value is None else np.real(value) for value in nodal_loads]
+        imag_values = [value if value is None else np.imag(value) for value in nodal_loads]
+
+        key_avg = self.checkBox_averaged_constant_values.isChecked()
+
+        for selected_id in selected_ids:
+
+            data = {
+                    "element_type" : element_type,
+                    "values" : nodal_loads,
+                    "real_values" : real_values,
+                    "imag_values" : imag_values,
+                    "nodal_attribution": True,
+                    "averaged": key_avg,
+                    }
+
+            if attribution_type == 0:
+                self.properties._set_property("nodal_loads", data, surface=selected_id)
+
+            elif attribution_type == 1:
+                self.properties._set_property("nodal_loads", data, line=selected_id)
+
+            elif attribution_type == 2:
+                self.properties._set_property("nodal_loads", data, point=selected_id)
+
+            elif attribution_type == 3:
+                self.properties._set_property("nodal_loads", data, node=selected_id)
+
+        self.actions_to_finalize()
 
     def load_table(self, lineEdit : QLineEdit, load_label : str, direct_load = False):
 
@@ -519,6 +519,9 @@ class SetNodalLoadsInputs(QDialog):
 
         try:
             if direct_load:
+                if lineEdit.text() == "":
+                    return None, None
+
                 imported_table_path = lineEdit.text()
 
             else:
@@ -742,13 +745,13 @@ class SetNodalLoadsInputs(QDialog):
         for selected_id in selected_ids:
             
             if self.Fx_table_values is not None:
-                self.Fx_table_name, self.Fx_array = self.save_table_files("Fx", selected_id, selection, self.Fx_table_values, self.Fx_table_path)
+                self.Fx_table_name, self.Fx_array = self.save_table_files("Fx", selected_id, selection, self.Fx_table_values)
 
             if self.Fy_table_values is not None:
-                self.Fy_table_name, self.Fy_array = self.save_table_files("Fy", selected_id, selection, self.Fy_table_values, self.Fy_table_path)
+                self.Fy_table_name, self.Fy_array = self.save_table_files("Fy", selected_id, selection, self.Fy_table_values)
 
             if self.Fz_table_values is not None:
-                self.Fz_table_name, self.Fz_array = self.save_table_files("Fz", selected_id, selection, self.Fz_table_values, self.Fz_table_path)
+                self.Fz_table_name, self.Fz_array = self.save_table_files("Fz", selected_id, selection, self.Fz_table_values)
 
             table_names = [self.Fx_table_name, self.Fy_table_name, self.Fz_table_name]
             table_paths = [self.Fx_table_path, self.Fy_table_path, self.Fz_table_path]
@@ -757,13 +760,13 @@ class SetNodalLoadsInputs(QDialog):
             if self.comboBox_element_type.currentIndex() == 0:
 
                 if self.Mx_table_values is not None:
-                    self.Mx_table_name, self.Mx_array = self.save_table_files("Mx", selected_id, selection, self.Mx_table_values, self.Mx_table_path)
+                    self.Mx_table_name, self.Mx_array = self.save_table_files("Mx", selected_id, selection, self.Mx_table_values)
 
                 if self.My_table_values is not None:
-                    self.My_table_name, self.Mx_array = self.save_table_files("My", selected_id, selection, self.My_table_values, self.My_table_path)
+                    self.My_table_name, self.Mx_array = self.save_table_files("My", selected_id, selection, self.My_table_values)
 
                 if self.Mz_table_values is not None:
-                    self.Mz_table_name, self.Mx_array = self.save_table_files("Mz", selected_id, selection, self.Mz_table_values, self.Mz_table_path)
+                    self.Mz_table_name, self.Mx_array = self.save_table_files("Mz", selected_id, selection, self.Mz_table_values)
 
                 table_names.extend([self.Mx_table_name, self.My_table_name, self.Mz_table_name])
                 table_paths.extend([self.Mx_table_path, self.My_table_path, self.Mz_table_path])
@@ -773,6 +776,7 @@ class SetNodalLoadsInputs(QDialog):
             condition_2 = self.comboBox_element_type.currentIndex() == 1 and table_names.count(None) == 3
 
             if condition_1 or condition_2:
+                self.hide()
                 title = "Additional inputs required"
                 message = "It is necessary to enter at least one external load "
                 message += "before confirming the property assignment."
@@ -1123,7 +1127,7 @@ class SetNodalLoadsInputs(QDialog):
 
         self.hide()
 
-        title = "External loads resetting"
+        title = "Nodal loads resetting"
         message = "Would you like to remove the all external loads from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}

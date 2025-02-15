@@ -228,27 +228,17 @@ class SetNormalPressureLoadInputs(QDialog):
     def constant_values_attribution(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        attribution_type = self.comboBox_attribution_type.currentIndex()
-
-        if attribution_type == 0:
-            selection = "surfaces"
-
-        elif attribution_type == 1:
-            selection = "lines"
-
-        else:
-            return
 
         selected_ids = app().project.model.mesh.check_selected_ids(
                                                                    input_ids, 
-                                                                   selection = selection
+                                                                   selection = "surfaces"
                                                                    )
 
         if selected_ids is None:
             self.lineEdit_selection_id.setFocus()
             return
 
-        self.remove_conflicting_excitations(selected_ids, selection)
+        self.remove_conflicting_excitations(selected_ids, "surfaces")
 
         if self.comboBox_element_type.currentIndex() == 0:
             element_type = "2d_element"
@@ -261,41 +251,34 @@ class SetNormalPressureLoadInputs(QDialog):
 
         pressure_load = [value]
 
-        condition_1 = self.comboBox_element_type.currentIndex() == 0 and pressure_load.count(None) == 0
-        condition_2 = self.comboBox_element_type.currentIndex() == 1 and pressure_load.count(None) == 0
+        condition_1 = self.comboBox_element_type.currentIndex() == 0 and pressure_load.count(None) == 1
+        condition_2 = self.comboBox_element_type.currentIndex() == 1 and pressure_load.count(None) == 1
 
         if condition_1 or condition_2:
-
-            real_values = [value if value is None else np.real(value) for value in pressure_load]
-            imag_values = [value if value is None else np.imag(value) for value in pressure_load]
-
-            for selected_id in selected_ids:
-
-                data = {
-                        "element_type" : element_type,
-                        "values" : pressure_load,
-                        "real_values" : real_values,
-                        "imag_values" : imag_values,
-                        "nodal_attribution": False,
-                        "averaged": False,
-                        }
-
-                if attribution_type == 0:
-                    self.properties._set_property("normal_pressure_load", data, surface=selected_id)
-
-                elif attribution_type == 1:
-                    self.properties._set_property("normal_pressure_load", data, line=selected_id)
-
-                else:
-                    return
-
-            self.actions_to_finalize()
-
-        else:
+            self.hide()
             title = "Additional inputs required"
             message = "It is necessary to enter at least one prescribed dof "
             message += "before confirming the property assignment."
             PrintMessageInput([window_title_1, title, message])
+            return
+
+        real_values = [value if value is None else np.real(value) for value in pressure_load]
+        imag_values = [value if value is None else np.imag(value) for value in pressure_load]
+
+        for selected_id in selected_ids:
+
+            data = {
+                    "element_type" : element_type,
+                    "values" : pressure_load,
+                    "real_values" : real_values,
+                    "imag_values" : imag_values,
+                    "nodal_attribution": False,
+                    "averaged": False,
+                    }
+
+            self.properties._set_property("normal_pressure_load", data, surface=selected_id)
+
+        self.actions_to_finalize()
 
     def load_table(self, lineEdit : QLineEdit, load_label : str, direct_load = False):
 
@@ -303,6 +286,9 @@ class SetNormalPressureLoadInputs(QDialog):
 
         try:
             if direct_load:
+                if lineEdit.text() == "":
+                    return None, None
+
                 imported_table_path = lineEdit.text()
 
             else:
@@ -381,7 +367,7 @@ class SetNormalPressureLoadInputs(QDialog):
         if  self.pressure_table_path is None:
             self.lineEdit_reset(self.lineEdit_table_path)
 
-    def save_table_files(self, load_label: str, selected_id: int, selection: str, values: np.ndarray):
+    def save_table_files(self, selected_id: int, values: np.ndarray):
 
         if self.frequencies[0] == 0:
             self.frequencies[0] = float(1e-6)
@@ -389,7 +375,7 @@ class SetNormalPressureLoadInputs(QDialog):
         if self.frequencies[0] == float(1e-6):
             self.frequencies[0] = 0
 
-        table_name = f"presssure_load_{load_label}_from_{selection[:-1]}_{selected_id}"
+        table_name = f"normal_pressure_from_surface_{selected_id}"
 
         real_values = np.real(values)
         imag_values = np.imag(values)
@@ -447,27 +433,17 @@ class SetNormalPressureLoadInputs(QDialog):
     def table_values_attribution(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        attribution_type = self.comboBox_attribution_type.currentIndex()
-
-        if attribution_type == 0:
-            selection = "surfaces"
-
-        elif attribution_type == 1:
-            selection = "lines"
-
-        else:
-            return
 
         selected_ids = app().project.model.mesh.check_selected_ids(
                                                                    input_ids, 
-                                                                   selection = selection
+                                                                   selection = "surfaces"
                                                                    )
 
         if selected_ids is None:
             self.lineEdit_selection_id.setFocus()
             return
 
-        self.remove_conflicting_excitations(selected_ids, selection)
+        self.remove_conflicting_excitations(selected_ids, "surfaces")
 
         if self.comboBox_element_type.currentIndex() == 0:
             element_type = "2d_element"
@@ -480,7 +456,7 @@ class SetNormalPressureLoadInputs(QDialog):
         for selected_id in selected_ids:
             
             if self.pressure_table_values is not None:
-                self.pressure_table_name, self.pressure_array = self.save_table_files("arrumar", selected_id, selection, self.pressure_table_values, self.pressure_table_path)
+                self.pressure_table_name, self.pressure_array = self.save_table_files(selected_id, self.pressure_table_values, self.pressure_table_path)
 
             table_names = [self.pressure_table_name]
             table_paths = [self.pressure_table_path]
@@ -490,6 +466,7 @@ class SetNormalPressureLoadInputs(QDialog):
             condition_2 = self.comboBox_element_type.currentIndex() == 1 and table_names.count(None) == 1
 
             if condition_1 or condition_2:
+                self.hide()
                 title = "Additional inputs required"
                 message = "It is necessary to enter at least one normal pressure load "
                 message += "before confirming the property assignment."
@@ -505,14 +482,7 @@ class SetNormalPressureLoadInputs(QDialog):
                     "averaged": False,
                     }
 
-            if attribution_type == 0:
-                self.properties._set_property("normal_pressure_load", data, surface=selected_id)
-
-            elif attribution_type == 1:
-                self.properties._set_property("normal_pressure_load", data, line=selected_id)
-
-            else:
-                return
+            self.properties._set_property("normal_pressure_load", data, surface=selected_id)
 
         self.actions_to_finalize()
 
@@ -600,9 +570,6 @@ class SetNormalPressureLoadInputs(QDialog):
             if selection == "Surface":
                 app().main_window.set_geometry_selection(surfaces = [int(selected_id)])
 
-            elif selection == "Line":
-                app().main_window.set_geometry_selection(lines = [int(selected_id)])
-
             else:
                 return
 
@@ -628,9 +595,6 @@ class SetNormalPressureLoadInputs(QDialog):
 
         if selection == "surfaces":
             remove_function = self.properties._remove_surface_property
-
-        elif selection == "lines":
-            remove_function = self.properties._remove_line_property
 
         properties = ["nodal_loads", "prescribed_dofs"]
 
@@ -683,10 +647,6 @@ class SetNormalPressureLoadInputs(QDialog):
             for (property, *args) in self.properties.surface_properties.keys():
                 if property == "normal_pressure_load":
                     self.remove_table_files_from(args[0], "surfaces")
-
-            for (property, *args) in self.properties.line_properties.keys():
-                if property == "normal_pressure_load":
-                    self.remove_table_files_from(args[0], "lines")
 
             self.properties._reset_property("normal_pressure_load")
             self.actions_to_finalize()

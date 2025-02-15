@@ -493,42 +493,42 @@ class SetPrescribedDofsInputs(QDialog):
 
                 prescribed_dofs.extend([rx, ry, rz])
 
-        condition_1 = self.comboBox_element_type.currentIndex() == 0 and prescribed_dofs.count(None) < 6
-        condition_2 = self.comboBox_element_type.currentIndex() == 1 and prescribed_dofs.count(None) < 3
+        condition_1 = self.comboBox_element_type.currentIndex() == 0 and prescribed_dofs.count(None) == 6
+        condition_2 = self.comboBox_element_type.currentIndex() == 1 and prescribed_dofs.count(None) == 3
 
         if condition_1 or condition_2:
-
-            real_values = [value if value is None else np.real(value) for value in prescribed_dofs]
-            imag_values = [value if value is None else np.imag(value) for value in prescribed_dofs]
-
-            for selected_id in selected_ids:
-
-                data = {
-                        "element_type" : element_type,
-                        "values" : prescribed_dofs,
-                        "real_values" : real_values,
-                        "imag_values" : imag_values
-                        }
-
-                if attribution_type == 0:
-                    self.model.properties._set_property("prescribed_dofs", data, surface=selected_id)
-
-                elif attribution_type == 1:
-                    self.model.properties._set_property("prescribed_dofs", data, line=selected_id)
-
-                elif attribution_type == 2:
-                    self.model.properties._set_property("prescribed_dofs", data, point=selected_id)
-
-                elif attribution_type == 3:
-                    self.model.properties._set_property("prescribed_dofs", data, node=selected_id)
-
-            self.actions_to_finalize()
-
-        else:
+            self.hide()
             title = "Additional inputs required"
             message = "It is necessary to enter at least one prescribed dof "
             message += "before confirming the property assignment."
             PrintMessageInput([window_title_1, title, message])
+            return
+
+        real_values = [value if value is None else np.real(value) for value in prescribed_dofs]
+        imag_values = [value if value is None else np.imag(value) for value in prescribed_dofs]
+
+        for selected_id in selected_ids:
+
+            data = {
+                    "element_type" : element_type,
+                    "values" : prescribed_dofs,
+                    "real_values" : real_values,
+                    "imag_values" : imag_values
+                    }
+
+            if attribution_type == 0:
+                self.model.properties._set_property("prescribed_dofs", data, surface=selected_id)
+
+            elif attribution_type == 1:
+                self.model.properties._set_property("prescribed_dofs", data, line=selected_id)
+
+            elif attribution_type == 2:
+                self.model.properties._set_property("prescribed_dofs", data, point=selected_id)
+
+            elif attribution_type == 3:
+                self.model.properties._set_property("prescribed_dofs", data, node=selected_id)
+
+        self.actions_to_finalize()
 
     def load_table(self, lineEdit : QLineEdit, dof_label : str, direct_load = False):
 
@@ -536,6 +536,9 @@ class SetPrescribedDofsInputs(QDialog):
 
         try:
             if direct_load:
+                if lineEdit.text() == "":
+                    return None, None
+
                 imported_table_path = lineEdit.text()
 
             else:
@@ -796,6 +799,7 @@ class SetPrescribedDofsInputs(QDialog):
             condition_2 = self.comboBox_element_type.currentIndex() == 1 and table_names.count(None) == 3
 
             if condition_1 or condition_2:
+                self.hide()
                 title = "Additional inputs required"
                 message = "It is necessary to enter at least one prescribed dof "
                 message += "before confirming the property assignment."

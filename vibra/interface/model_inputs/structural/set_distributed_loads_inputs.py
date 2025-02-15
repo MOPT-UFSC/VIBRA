@@ -352,33 +352,34 @@ class SetDistributedLoadsInputs(QDialog):
         condition_2 = self.comboBox_element_type.currentIndex() == 1 and distributed_loads.count(None) == 3
 
         if condition_1 or condition_2:
+            self.hide()
             title = "Additional inputs required"
             message = "It is necessary to enter at least one prescribed dof "
             message += "before confirming the property assignment."
             PrintMessageInput([window_title_1, title, message])
+            return
 
-        else:
-            real_values = [value if value is None else np.real(value) for value in distributed_loads]
-            imag_values = [value if value is None else np.imag(value) for value in distributed_loads]
+        real_values = [value if value is None else np.real(value) for value in distributed_loads]
+        imag_values = [value if value is None else np.imag(value) for value in distributed_loads]
 
-            for selected_id in selected_ids:
+        for selected_id in selected_ids:
 
-                data = {
-                        "element_type" : element_type,
-                        "values" : distributed_loads,
-                        "real_values" : real_values,
-                        "imag_values" : imag_values,
-                        "nodal_attribution": False,
-                        "averaged": False,
-                        }
+            data = {
+                    "element_type" : element_type,
+                    "values" : distributed_loads,
+                    "real_values" : real_values,
+                    "imag_values" : imag_values,
+                    "nodal_attribution": False,
+                    "averaged": False,
+                    }
 
-                if attribution_type == 0:
-                    self.properties._set_property("distributed_loads", data, surface=selected_id)
+            if attribution_type == 0:
+                self.properties._set_property("distributed_loads", data, surface=selected_id)
 
-                elif attribution_type == 1:
-                    self.properties._set_property("distributed_loads", data, line=selected_id)
+            elif attribution_type == 1:
+                self.properties._set_property("distributed_loads", data, line=selected_id)
 
-            self.actions_to_finalize()
+        self.actions_to_finalize()
 
     def load_table(self, lineEdit : QLineEdit, load_label : str, direct_load = False):
 
@@ -386,6 +387,9 @@ class SetDistributedLoadsInputs(QDialog):
 
         try:
             if direct_load:
+                if lineEdit.text() == "":
+                    return None, None
+
                 imported_table_path = lineEdit.text()
 
             else:
@@ -577,13 +581,13 @@ class SetDistributedLoadsInputs(QDialog):
         for selected_id in selected_ids:
             
             if self.Fx_table_values is not None:
-                self.Fx_table_name, self.Fx_array = self.save_table_files("Fx", selected_id, selection, self.Fx_table_values, self.Fx_table_path)
+                self.Fx_table_name, self.Fx_array = self.save_table_files("Fx", selected_id, selection, self.Fx_table_values)
 
             if self.Fy_table_values is not None:
-                self.Fy_table_name, self.Fy_array = self.save_table_files("Fy", selected_id, selection, self.Fy_table_values, self.Fy_table_path)
+                self.Fy_table_name, self.Fy_array = self.save_table_files("Fy", selected_id, selection, self.Fy_table_values)
 
             if self.Fz_table_values is not None:
-                self.Fz_table_name, self.Fz_array = self.save_table_files("Fz", selected_id, selection, self.Fz_table_values, self.Fz_table_path)
+                self.Fz_table_name, self.Fz_array = self.save_table_files("Fz", selected_id, selection, self.Fz_table_values)
 
             table_names = [self.Fx_table_name, self.Fy_table_name, self.Fz_table_name]
             table_paths = [self.Fx_table_path, self.Fy_table_path, self.Fz_table_path]
@@ -593,6 +597,7 @@ class SetDistributedLoadsInputs(QDialog):
             condition_2 = self.comboBox_element_type.currentIndex() == 1 and table_names.count(None) == 3
 
             if condition_1 or condition_2:
+                self.hide()
                 title = "Additional inputs required"
                 message = "It is necessary to enter at least one distributed load "
                 message += "before confirming the property assignment."

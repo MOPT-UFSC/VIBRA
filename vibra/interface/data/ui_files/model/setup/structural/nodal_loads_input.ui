@@ -1570,7 +1570,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>Ry:</string>
+                   <string>My:</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -1600,7 +1600,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>Rz:</string>
+                   <string>Mz:</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -1785,7 +1785,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>Ux:</string>
+                   <string>Fx:</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -1837,7 +1837,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>Rx:</string>
+                   <string>Mx:</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -1889,7 +1889,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>Uy:</string>
+                   <string>Fy:</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -1980,7 +1980,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>Uz:</string>
+                   <string>Fz:</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -2231,7 +2231,7 @@
                   </column>
                   <column>
                    <property name="text">
-                    <string>External loads</string>
+                    <string>Nodal loads</string>
                    </property>
                    <property name="textAlignment">
                     <set>AlignCenter</set>
