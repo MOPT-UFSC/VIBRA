@@ -52,9 +52,7 @@ class GeometrySelection:
         set[int],
         set[int],
     ]:
-        internal_picked_nodes = self._area_pick_node_internal_indexes(
-            x0, y0, x1, y1
-        )
+        internal_picked_nodes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
 
         return (
             self.area_pick_points(x0, y0, x1, y1, internal_picked_nodes),
@@ -136,7 +134,6 @@ class GeometrySelection:
         y1: int,
         internal_picked_nodes: list[int] | None = None,
     ) -> set[int]:
-
         if internal_picked_nodes is None:
             internal_picked_nodes = self._area_pick_node_internal_indexes(
                 x0, y0, x1, y1
@@ -154,7 +151,6 @@ class GeometrySelection:
         y1: int,
         internal_picked_nodes: list[int] | None = None,
     ) -> set[int]:
-
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
@@ -164,8 +160,9 @@ class GeometrySelection:
                 x0, y0, x1, y1
             )
 
-        mask_selected_elements = np.all(
-            np.isin(mesh.lines_connectivity[:, 4:], internal_picked_nodes), axis=1
+        mask_selected_elements = np.any(
+            np.isin(mesh.lines_connectivity[:, 4:], internal_picked_nodes),
+            axis=1,
         )
 
         return set(mesh.lines_connectivity[mask_selected_elements, 1].astype(int))
@@ -178,7 +175,6 @@ class GeometrySelection:
         y1: int,
         internal_picked_nodes: list[int] | None = None,
     ) -> set[int]:
-
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
@@ -188,8 +184,9 @@ class GeometrySelection:
                 x0, y0, x1, y1
             )
 
-        mask_selected_elements = np.all(
-            np.isin(mesh.faces_connectivity[:, 4:], internal_picked_nodes), axis=1
+        mask_selected_elements = np.any(
+            np.isin(mesh.faces_connectivity[:, 4:], internal_picked_nodes),
+            axis=1,
         )
 
         return set(mesh.faces_connectivity[mask_selected_elements, 1].astype(int))
@@ -211,8 +208,9 @@ class GeometrySelection:
                 x0, y0, x1, y1
             )
 
-        mask_selected_elements = np.all(
-            np.isin(mesh.solids_connectivity[:, 4:], internal_picked_nodes), axis=1
+        mask_selected_elements = np.any(
+            np.isin(mesh.solids_connectivity[:, 4:], internal_picked_nodes),
+            axis=1,
         )
 
         return set(mesh.solids_connectivity[mask_selected_elements, 1].astype(int))
