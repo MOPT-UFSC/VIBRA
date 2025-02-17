@@ -15,21 +15,42 @@ from vtkmodules.vtkRenderingCore import (
 )
 
 from vibra import app
-
+from time import time
 
 class MeshSelection:
     def __init__(self, mesh_render_widget: "MeshRenderWidget"):
         self.mesh_render_widget = mesh_render_widget
 
+    def pick(
+        self, x: int, y: int
+    ) -> tuple[
+        set[int],
+        set[int],
+    ]:
+        picked_nodes = self.pick_node(x, y)
+        picked_solids = self.pick_solid(x, y)
+        return picked_nodes, picked_solids
+
+    def area_pick(
+        self, x0: int, y0: int, x1: int, y1: int
+    ) -> tuple[
+        set[int],
+        set[int],
+    ]:
+        internal_picked_nodes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
+        picked_nodes = self.area_pick_nodes(x0, y0, x1, y1, internal_picked_nodes)
+        picked_solids = self.area_pick_solids(x0, y0, x1, y1, internal_picked_nodes)
+        return picked_nodes, picked_solids
+
     def pick_node(self, x: int, y: int) -> set[int]:
-        '''
+        """
         Pick a node in the mesh.
 
         This function finds the 3D coordinates of the mouse click (only works if it hit something).
         Then, the closest node is picked.
         To make sure this is a node, we project it into the screen and check if the screen distance
         to the node is smaller than the node visual radius.
-        '''
+        """
 
         mesh = app().project.model.mesh
         if mesh is None:
@@ -61,23 +82,41 @@ class MeshSelection:
             return {cell_id}
         return set()
 
-    def area_pick_nodes(self, x0: int, y0: int, x1: int, y1: int) -> set[int]:
+    def area_pick_nodes(
+        self,
+        x0: int,
+        y0: int,
+        x1: int,
+        y1: int,
+        internal_picked_nodes: list[int] | None = None,
+    ) -> set[int]:
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
 
-        picked_indexes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
-        picked_nodes = set(mesh.nodal_coordinates[picked_indexes, 0].astype(int))
+        if internal_picked_nodes is None:
+            internal_picked_nodes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
+
+        picked_nodes = set(mesh.nodal_coordinates[internal_picked_nodes, 0].astype(int))
         return picked_nodes
 
-    def area_pick_solids(self, x0: int, y0: int, x1: int, y1: int) -> set[int]:
+    def area_pick_solids(
+        self,
+        x0: int,
+        y0: int,
+        x1: int,
+        y1: int,
+        internal_picked_nodes: list[int] | None = None,
+    ) -> set[int]:
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
 
-        picked_nodes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
+        if internal_picked_nodes is None:
+            internal_picked_nodes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
+
         mask_selected_elements = np.any(
-            np.isin(mesh.solids_connectivity[:, 4:], picked_nodes), axis=1
+            np.isin(mesh.solids_connectivity[:, 4:], internal_picked_nodes), axis=1
         )
 
         return set(mesh.solids_connectivity[mask_selected_elements, 0].astype(int))
