@@ -251,6 +251,7 @@ class MainWindow(QMainWindow):
         self._define_qt_variables()
         self.create_basic_layout()
         self._configure_render_widgets_stack()
+        self._configure_stacked_setup()
 
         app().splash.update_progress(90)
         self.load_user_preferences()
@@ -288,6 +289,8 @@ class MainWindow(QMainWindow):
 
         widgets = self.findChildren((QAction, QAbstractButton))
         change_icon_color_for_widgets(widgets, icon_color)
+
+        self.theme_changed.emit(theme)
     
     def set_menus_theme(self, theme: str):
         for i in range(self.stacked_setup.count()):
@@ -318,6 +321,9 @@ class MainWindow(QMainWindow):
     
     def _configure_render_widgets_stack(self):
         self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
+    
+    def _configure_stacked_setup(self):
+        self.stacked_setup.setCurrentWidget(self.model_setup_widget)
 
     def set_mesh_selection(self, *, nodes=None, faces=None, solids=None, join=False, remove=False):
         if nodes is None:

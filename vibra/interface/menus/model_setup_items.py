@@ -5,6 +5,7 @@ from pathlib import Path
 
 from vibra import app
 from vibra.interface.menus.common_menu_items import CommonMenuItems
+from vibra.interface.menus.border_item_delegate import BorderItemDelegate
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 
@@ -22,6 +23,7 @@ class ModelSetupItems(CommonMenuItems):
 
         self._create_items()
         self._create_connections()
+        self._initial_configuration()
 
     def _create_items(self):
         """Creates all TreeWidgetItems."""
@@ -29,7 +31,6 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_import_geometry = self.add_item('Import Geometry')
         self.item_child_mesh_setup = self.add_item("Mesh Setup")
         self.item_child_set_material = self.add_item("Set Material")
-        self.item_child_generate_mesh = self.add_item("Generate Mesh")
         self.item_child_set_fluid = self.add_item('Set Fluid')
         #
         material_tool_tip = "Attribute material to selected bodies. \ndefault material: steel (E = 210 GPa; poisson = 0.30; density = 7860 kg/m³)"
@@ -85,6 +86,14 @@ class ModelSetupItems(CommonMenuItems):
 
         app().main_window.theme_changed.connect(self.set_theme)
     
+    def _initial_configuration(self):
+        self.item_top_structural_model_setup.setHidden(True)
+        self.item_top_acoustic_model_setup.setHidden(True)
+
+        self.item_child_mesh_setup.setDisabled(True)
+        self.item_child_set_material.setDisabled(True)
+        self.item_child_set_fluid.setDisabled(True)
+
     def _find_qtree_widget_item_name(self, qtree_widet_item):
         for attr_name, attr_value in self.__dict__.items():
             if attr_value == qtree_widet_item:
@@ -96,9 +105,6 @@ class ModelSetupItems(CommonMenuItems):
     
     def item_child_mesh_setup_callback(self):
         app().main_window.input_ui.mesh_setup()
-    
-    def item_child_generate_mesh_callback(self):
-        app().main_window.input_ui.generate_mesh()
 
     def item_child_set_material_callback(self):
         app().main_window.input_ui.set_material()
@@ -153,7 +159,6 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_mesh_setup.setDisabled(key)
         self.item_child_set_material.setDisabled(key)
         self.item_child_set_fluid.setDisabled(key)
-        self.item_child_generate_mesh.setDisabled(True)
 
     def modify_structural_model_setup_items_acces(self, key: bool):
         self.item_child_set_surface_thickness.setDisabled(key)
@@ -187,23 +192,23 @@ class ModelSetupItems(CommonMenuItems):
         self.expandItem(self.item_top_general_settings)
         self.expandItem(self.item_top_structural_model_setup)
         self.expandItem(self.item_top_acoustic_model_setup)
-
+    
+    def hide_all_top_items(self):
+        self.item_top_general_settings.setHidden(True)
+        self.item_top_structural_model_setup.setHidden(True)
+        self.item_top_acoustic_model_setup.setHidden(True)
+    
     def set_theme(self, theme : str):
 
         if theme == "dark":
-            # self.line_color = QColor(220,220,220)
-            # self.line_color = QColor(26,115,232,150)
             self.line_color = QColor(107,137,185)
             self.background_color = QColor(60,60,70)
 
         else:
-            # self.line_color = QColor(60,60,60)
-            # self.line_color = QColor(26,115,232,150)
             self.line_color = QColor(107,137,185)
             self.background_color = QColor(230,230,230)
 
         border_role = Qt.UserRole + 1
-        # border_pen = QPen(self.background_color)
         border_pen = QPen(self.line_color)
         border_pen.setWidth(1)
             
