@@ -11,15 +11,33 @@ from vtkmodules.vtkRenderingCore import (
     vtkActor,
     vtkAreaPicker,
     vtkCellPicker,
-    vtkCoordinate,
 )
 
+from vibra.utils.interface_utils import world_to_screen_coords, screen_to_world_coords
+from vibra.utils.math_functions import points_in_between
 from vibra import app
-from time import time
+
 
 class MeshSelection:
     def __init__(self, mesh_render_widget: "MeshRenderWidget"):
         self.mesh_render_widget = mesh_render_widget
+        self.elements_center = np.array([])
+
+    def precompute_data(self):
+        mesh = app().project.model.mesh
+        if mesh is None:
+            return set()
+
+        solids_connectivity = mesh.solids_connectivity[:, 4:]
+        nodal_coordinates = mesh.nodal_coordinates[:, 1:]
+
+        if mesh.solids_connectivity.size <= 0:
+            return
+
+        self.elements_center = np.average(
+            nodal_coordinates[solids_connectivity],
+            axis=1,
+        )
 
     def pick(
         self, x: int, y: int
@@ -37,9 +55,8 @@ class MeshSelection:
         set[int],
         set[int],
     ]:
-        internal_picked_nodes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
-        picked_nodes = self.area_pick_nodes(x0, y0, x1, y1, internal_picked_nodes)
-        picked_solids = self.area_pick_solids(x0, y0, x1, y1, internal_picked_nodes)
+        picked_nodes = self.area_pick_nodes(x0, y0, x1, y1)
+        picked_solids = self.area_pick_solids(x0, y0, x1, y1)
         return picked_nodes, picked_solids
 
     def pick_node(self, x: int, y: int) -> set[int]:
@@ -62,19 +79,21 @@ class MeshSelection:
         cell_picker.Pick(x, y, 0, renderer)
 
         pick_position = np.array(cell_picker.GetPickPosition())
-        i = np.argmin(np.linalg.norm(mesh.nodal_coordinates[:, 1:] - pick_position, axis=1))
+        distance_to_pick_position = np.linalg.norm(
+            pick_position - mesh.nodal_coordinates[:, 1:],
+            axis=1,
+        )
 
-        coordinate = vtkCoordinate()
-        coordinate.SetCoordinateSystemToWorld()
-        coordinate.SetValue(mesh.nodal_coordinates[i, 1:])
-        view_coords = coordinate.GetComputedViewportValue(renderer)
+        index = np.argmin(distance_to_pick_position)
+        world_coords = mesh.nodal_coordinates[index, 1:]
+        screen_coords = world_to_screen_coords(world_coords, renderer)
         click = np.array([x, y])
 
         node_size = 10
-        if np.linalg.norm(click - view_coords) < node_size / 2:
-            return {mesh.nodal_coordinates[i, 0].astype(int)}
-
-        return set()
+        if np.linalg.norm(click - screen_coords) < node_size / 2:
+            return {mesh.nodal_coordinates[index, 0].astype(int)}
+        else:
+            return set()
 
     def pick_solid(self, x: int, y: int) -> set[int]:
         cell_id = self._pick_actor_cell_id(x, y, self.mesh_render_widget.solids_actor)
@@ -88,16 +107,18 @@ class MeshSelection:
         y0: int,
         x1: int,
         y1: int,
-        internal_picked_nodes: list[int] | None = None,
+        mask: list[int] | None = None,
     ) -> set[int]:
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
 
-        if internal_picked_nodes is None:
-            internal_picked_nodes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
-
-        picked_nodes = set(mesh.nodal_coordinates[internal_picked_nodes, 0].astype(int))
+        mask = self._get_coordinates_inside_area(
+            coordinates=mesh.nodal_coordinates[:, 1:],
+            area=(x0, y0, x1, y1),
+        )
+        node_indexes = mesh.nodal_coordinates[:, 0].astype(int)
+        picked_nodes = set(node_indexes[mask])
         return picked_nodes
 
     def area_pick_solids(
@@ -106,22 +127,21 @@ class MeshSelection:
         y0: int,
         x1: int,
         y1: int,
-        internal_picked_nodes: list[int] | None = None,
     ) -> set[int]:
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
 
-        if internal_picked_nodes is None:
-            internal_picked_nodes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
-
-        mask_selected_elements = np.any(
-            np.isin(mesh.solids_connectivity[:, 4:], internal_picked_nodes), axis=1
+        mask_selected_elements = self._get_coordinates_inside_area(
+            coordinates=self.elements_center,
+            area=(x0, y0, x1, y1),
         )
+        solid_indexes = mesh.solids_connectivity[:, 0].astype(int)
+        return set(solid_indexes[mask_selected_elements])
 
-        return set(mesh.solids_connectivity[mask_selected_elements, 0].astype(int))
-
-    def _area_pick_node_internal_indexes(self, x0: int, y0: int, x1: int, y1: int) -> list[int]:
+    def _area_pick_node_internal_indexes(
+        self, x0: int, y0: int, x1: int, y1: int
+    ) -> list[int]:
         picker = vtkAreaPicker()
         extractor = vtkExtractSelectedFrustum()
         picker.AreaPick(x0, y0, x1, y1, self.mesh_render_widget.renderer)
@@ -132,9 +152,37 @@ class MeshSelection:
             return set()
 
         bounds = mesh.nodal_coordinates[:, (1, 1, 2, 2, 3, 3)]
-        picked_indexes = [i for i, bound in enumerate(bounds) if extractor.OverallBoundsTest(bound)]
+        picked_indexes = [
+            i for i, bound in enumerate(bounds) if extractor.OverallBoundsTest(bound)
+        ]
 
         return picked_indexes
+
+    def _get_coordinates_inside_area(
+        self,
+        coordinates: np.ndarray,
+        area: list[int, int, int, int],
+    ) -> list[int]:
+        x0, y0, x1, y1 = area
+        renderer = self.mesh_render_widget.renderer
+
+        upper_left_3d = screen_to_world_coords((x0, y0, 0), renderer)
+        upper_right_3d = screen_to_world_coords((x1, y0, 0), renderer)
+        bottom_left_3d = screen_to_world_coords((x0, y1, 0), renderer)
+
+        mask_horizontal = points_in_between(
+            coordinates,
+            upper_left_3d,
+            upper_right_3d,
+        )
+
+        mask_vertical = points_in_between(
+            coordinates,
+            upper_left_3d,
+            bottom_left_3d,
+        )
+
+        return mask_horizontal & mask_vertical
 
     def _pick_actor_cell_id(self, x, y, target_actor: vtkActor):
         cell_picker = vtkCellPicker()

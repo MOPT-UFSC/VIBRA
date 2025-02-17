@@ -72,6 +72,7 @@ class MeshRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
+        self.mesh_selection.precompute_data()
         self.remove_all_actors()
 
         # TODO: load the mesh directly inside the actors
