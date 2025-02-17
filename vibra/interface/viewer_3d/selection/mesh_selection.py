@@ -139,25 +139,6 @@ class MeshSelection:
         solid_indexes = mesh.solids_connectivity[:, 0].astype(int)
         return set(solid_indexes[mask_selected_elements])
 
-    def _area_pick_node_internal_indexes(
-        self, x0: int, y0: int, x1: int, y1: int
-    ) -> list[int]:
-        picker = vtkAreaPicker()
-        extractor = vtkExtractSelectedFrustum()
-        picker.AreaPick(x0, y0, x1, y1, self.mesh_render_widget.renderer)
-        extractor.SetFrustum(picker.GetFrustum())
-
-        mesh = app().project.model.mesh
-        if mesh is None:
-            return set()
-
-        bounds = mesh.nodal_coordinates[:, (1, 1, 2, 2, 3, 3)]
-        picked_indexes = [
-            i for i, bound in enumerate(bounds) if extractor.OverallBoundsTest(bound)
-        ]
-
-        return picked_indexes
-
     def _get_coordinates_inside_area(
         self,
         coordinates: np.ndarray,
