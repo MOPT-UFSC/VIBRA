@@ -25,6 +25,7 @@ from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input impor
 from vibra.interface.plots.acoustic.plot_transmission_loss_input import PlotTransmissionLossInput
 #
 from vibra.interface.plots.structural.plot_structural_frequency_response_input import PlotStructuralFrequencyResponseInput
+from vibra.interface.plots.structural.plot_structural_mode_shape import PlotStructuralModeShape
 #
 from vibra.interface.process_analysis import ProcessAnalysis
 
@@ -142,8 +143,8 @@ class InputUi:
         self.process_input(ReciprocatingCompressorInputs)
 
     def plot_structural_mode_shapes(self):
-        if not self.results_viewer_items.item_child_plot_structural_mode_shapes.isDisabled():
-            self.main_window.configure_structural_modal_analysis_render_widget()     
+        if self.project.analysis_id in [2, 4]:
+            return self.process_input(PlotStructuralModeShape)     
 
     def plot_displacement_field(self):
         if not self.results_viewer_items.item_child_plot_displacement_field.isDisabled():

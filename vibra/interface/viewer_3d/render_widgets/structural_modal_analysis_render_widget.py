@@ -30,7 +30,6 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
 
         self.main_window = app().main_window
         self.control_bar = StructuralModalAnalysisBar()
-        self.control_bar.value_changed.connect(self.update_deformations)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
         self.control_bar.phase_slider.sliderPressed.connect(self.stop_animation)
         self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
@@ -78,7 +77,9 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.control_bar.use_play_icon()
 
     def current_shape_index(self):
-        return self.control_bar.frequency_box.currentIndex()
+        if app().main_window.results_viewer_widget.current_widget is not None:
+            return app().main_window.results_viewer_widget.current_widget.current_mode_index()
+        return 0
 
     def update_frequencies(self):
         solver = app().project.structural_modal_solver

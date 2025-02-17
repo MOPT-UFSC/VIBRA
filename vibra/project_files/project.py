@@ -33,6 +33,7 @@ class Project:
         self.material_list_path = ""
 
         self.analysis_data = dict()
+        self.analysis_id = None
         self.dissipation_model = None
         #
         self.model = Model()
@@ -66,6 +67,8 @@ class Project:
 
         if len(self.analysis_data) == 0:
             return
+        
+        self.natural_frequencies_structural = list()
 
         self.create_solver()
 
@@ -133,6 +136,7 @@ class Project:
                 self.set_structural_element_to_model()
                 self.structural_harmonic_solver = StructuralHarmonicSolver(self.structural_assembler, analysis_data=data)
                 self.last_analysis = "Harmonic Structural"
+                self.analysis_id = 0
 
             # structural harmonic analysis - mode superposition method
             elif data["analysis_id"] == 1:
@@ -144,18 +148,21 @@ class Project:
                 self.set_structural_element_to_model()
                 self.structural_modal_solver = StructuralModalSolver(self.structural_assembler, analysis_data=data)
                 self.last_analysis = "Modal Structural"
+                self.analysis_id = 2
            
             # acoustic harmonic analysis
             elif data["analysis_id"] == 3:
                 self.set_acoustic_element_to_model()
                 self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_assembler, analysis_data=data)
                 self.last_analysis = "Harmonic Acoustic"
+                self.analysis_id = 3
             
             # acoustic modal analysis
             elif data["analysis_id"] == 4:
                 self.set_acoustic_element_to_model()
                 self.acoustic_modal_solver = AcousticModalSolver(self.acoustic_assembler, analysis_data=data)
                 self.last_analysis = "Modal Acoustic"
+                self.analysis_id = 4
             
             # couled harmonic analysis (direct method)
             elif data["analysis_id"] == 5:
@@ -194,6 +201,7 @@ class Project:
         self.structural_assembler.process_assemble()
         self.structural_modal_solver.solve()
         self.last_analysis = "Modal Structural"
+        self.natural_frequencies_structural = self.structural_modal_solver.natural_frequencies
         app().file.write_results_data_in_file()
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 

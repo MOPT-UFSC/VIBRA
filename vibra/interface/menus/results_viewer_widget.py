@@ -14,7 +14,7 @@ class ResultsViewerWidget(QWidget):
 
         self._reset()
         self._define_qt_variables()
-        # self._create_connections()
+        self._create_connections()
 
     def _reset(self):
         self.current_widget = None
@@ -31,6 +31,9 @@ class ResultsViewerWidget(QWidget):
         self.layout().replaceWidget(self.top_widget, self.results_viewer_items)
         self.adjustSize()
     
+    def _create_connections(self):
+        self.results_viewer_items.item_child_plot_structural_mode_shapes.clicked.connect(self.add_structural_mode_shape_widget)
+    
     def get_item(self):
         return self.results_viewer_items
 
@@ -39,9 +42,9 @@ class ResultsViewerWidget(QWidget):
         self.results_viewer_items.update_tree_visibility_after_solution()
 
     def add_structural_mode_shape_widget(self):
-        self.configure_render_according_to_plot_type("tubes")
-        widget = app().main_window.input_ui.plot_structural_mode_shapes()
-        self.add_widget(widget, animation_widget=True)
+        # self.configure_render_according_to_plot_type("tubes")
+        self.current_widget = app().main_window.input_ui.plot_structural_mode_shapes()
+        self.add_widget(self.current_widget, animation_widget=True)
 
     def add_displacement_field_widget(self):
         self.configure_render_according_to_plot_type("tubes")
@@ -123,7 +126,7 @@ class ResultsViewerWidget(QWidget):
 
     def add_widget(self, widget: QWidget, animation_widget=False):
 
-        app().main_window.animation_toolbar.setEnabled(False)
+        # app().main_window.animation_toolbar.setEnabled(False)
 
         # TODO: please, remove the hide after all it shouldn't be needed
         if isinstance(self.bottom_widget, QWidget):
@@ -132,7 +135,7 @@ class ResultsViewerWidget(QWidget):
         self.layout().replaceWidget(self.bottom_widget, widget)
         self.bottom_widget = widget
 
-        app().main_window.animation_toolbar.setEnabled(animation_widget)
+        # app().main_window.animation_toolbar.setEnabled(animation_widget)
         self.adjustSize()
 
     def configure_render_according_to_plot_type(self, set_by: str):
