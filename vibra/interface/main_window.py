@@ -505,6 +505,7 @@ class MainWindow(QMainWindow):
         
         if show_renderer_widget:
             self.render_widgets_stack.setCurrentWidget(self.acoustic_modal_analysis)
+            self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             
             self.action_results_workspace.setEnabled(False)
             if not self.action_model_workspace.isEnabled():
@@ -518,6 +519,7 @@ class MainWindow(QMainWindow):
 
         if show_render_widget:
             self.render_widgets_stack.setCurrentWidget(self.structural_modal_analysis)
+            self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
 
             self.action_results_workspace.setEnabled(False)
             if not self.action_model_workspace.isEnabled():
@@ -531,6 +533,7 @@ class MainWindow(QMainWindow):
 
         if show_render_widget:
             self.render_widgets_stack.setCurrentWidget(self.structural_harmonic_analysis)
+            self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
 
             self.action_results_workspace.setEnabled(False)
             if not self.action_model_workspace.isEnabled():
@@ -544,6 +547,7 @@ class MainWindow(QMainWindow):
 
         if show_render_widget:
             self.render_widgets_stack.setCurrentWidget(self.acoustic_harmonic_analysis)
+            self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
 
             self.action_results_workspace.setEnabled(False)
             if not self.action_model_workspace.isEnabled():

@@ -12,6 +12,10 @@ from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
 from vibra.engine.solvers.structural_harmonic_solver import StructuralHarmonicSolver
 from vibra.utils.progress_status import ProgressStatus
 
+from vibra.interface.process_analysis import ProcessAnalysis
+from vibra.interface.mesh.mesher_inputs import MesherInputs
+from vibra.interface.loading_bar import load_function
+
 import numpy as np
 
 class Project:
@@ -218,6 +222,51 @@ class Project:
         self.last_analysis = "Harmonic Structural"
         print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
         app().file.write_results_data_in_file()
+    
+    def run_analysis(self):
+
+        if not self.model.generated_mesh:
+            obj = MesherInputs()
+            if obj.complete:
+                self.main_window.update_plots()
+            else:
+                return
+
+        if len(self.analysis_data) == 0:
+            return
+
+        # if not app().project.model.generated_mesh:
+        #     try:
+        #         self.generate_mesh()
+        #     except IncompleteSetupError or IncompleteMeshSetup as error:
+        #         # Please use this error message. It is easy to use,
+        #         # is very clean and follows the operational system standard.
+        #         ErrorMessage(error)
+        #         return
+
+        analysis = ProcessAnalysis()
+        analysis_id = self.analysis_data["analysis_id"]
+
+        if analysis_id in [0, 1]:
+            solve_harmonic = load_function(analysis.process_structural_harmonic_analysis, app().main_window)
+            solve_harmonic()
+
+        elif analysis_id == 2:
+            solve_modal = load_function(analysis.process_structural_modal_analysis, app().main_window)
+            solve_modal()
+
+        elif analysis_id == 3:
+            solve_harmonic = load_function(analysis.process_acoustic_harmonic_analysis, app().main_window)
+            solve_harmonic()
+
+        elif analysis_id == 4:
+            solve_modal = load_function(analysis.process_acoustic_modal_analysis, app().main_window)
+            solve_modal()
+
+        else:
+            raise NotImplementedError("Not implemented analysis")
+    
+        app().main_window.results_viewer_widget.results_viewer_items.update_items()
 
     def long_function(self):
         for i in range(20):

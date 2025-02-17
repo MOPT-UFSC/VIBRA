@@ -29,21 +29,20 @@ class ResultsViewerItems(CommonMenuItems):
     def _create_items(self):
         # Structural results items
         self.item_top_results_viewer_structural = self.add_top_item("Results Viewer - Structural")
-        self.item_child_plot_structural_mode_shapes = self.add_item("Plot structural mode shapes")
-        self.item_child_plot_displacement_field = self.add_item("Plot displacement field")
-        self.item_child_plot_structural_frequency_response = self.add_item("Plot structural frequency response")
-        self.item_child_plot_reaction_frequency_response = self.add_item("Plot reactions frequency response")
-        self.item_child_plot_stress_field = self.add_item("Plot stress field")
-        self.item_child_plot_stress_frequency_response = self.add_item("Plot stress frequency response")
+        self.item_child_plot_structural_mode_shapes = self.add_item("Plot Structural Mode Shapes")
+        self.item_child_plot_displacement_field = self.add_item("Plot Displacement Field")
+        self.item_child_plot_structural_frequency_response = self.add_item("Plot Structural Frequency Response")
+        # self.item_child_plot_reaction_frequency_response = self.add_item("Plot Reactions Frequency Response")
+        # self.item_child_plot_stress_field = self.add_item("Plot Stress Field")
+        # self.item_child_plot_stress_frequency_response = self.add_item("Plot Stress Frequency Response")
 
         # Acoustic results items
         self.item_top_results_viewer_acoustic = self.add_top_item("Results Viewer - Acoustic")
-        self.item_child_plot_acoustic_mode_shapes = self.add_item("Plot acoustic mode shapes")
-        self.item_child_plot_acoustic_pressure_field = self.add_item("Plot acoustic pressure field")
-        self.item_child_plot_acoustic_pressure_frequency_response = self.add_item("Plot acoustic pressure frequency response")
-        self.item_child_plot_acoustic_pressure_frequency_response_function = self.add_item("Plot acoustic presssure frequency response function")
-        self.item_child_plot_acoustic_delta_pressures = self.add_item("Plot acoustic delta pressures")
-        self.item_child_plot_TL_NR = self.add_item("Plot transmission loss or attenuation")
+        self.item_child_plot_acoustic_mode_shapes = self.add_item("Plot Acoustic Mode Shapes")
+        self.item_child_plot_acoustic_pressure_field = self.add_item("Plot Acoustic Pressure Field")
+        self.item_child_plot_acoustic_pressure_frequency_response = self.add_item("Plot Acoustic Pressure Frequency Response")
+        self.item_child_plot_acoustic_pressure_frequency_response_function = self.add_item("Plot Acoustic Presssure Frequency Response Function")
+        self.item_child_plot_TL_NR = self.add_item("Plot Transmission Loss or Attenuation")
 
         self.top_level_items = [self.item_top_results_viewer_acoustic,
                                 self.item_top_results_viewer_structural]
@@ -86,9 +85,6 @@ class ResultsViewerItems(CommonMenuItems):
     def item_child_plot_acoustic_pressure_frequency_response_function_callback(self):
         app().main_window.input_ui.plot_acoustic_pressure_frequency_response_function()
     
-    def item_child_plot_acoustic_delta_pressures_callback(self):
-        app().main_window.input_ui.plot_acoustic_delta_pressures()
-    
     def item_child_plot_TL_NR_callback(self):
         app().main_window.input_ui.plot_TL_NR()
     
@@ -102,12 +98,15 @@ class ResultsViewerItems(CommonMenuItems):
         app().main_window.input_ui.plot_structural_frequency_response()
     
     def item_child_plot_reaction_frequency_response_callback(self):
+        return
         app().main_window.input_ui.plot_reaction_frequency_response()
     
     def item_child_plot_stress_field_callback(self):
+        return
         app().main_window.input_ui.plot_stress_field()
     
     def item_child_plot_stress_frequency_response_callback(self):
+        return
         app().main_window.input_ui.plot_stress_frequency_response()
     
     def modify_acoustic_results_viewer_items(self, key: bool):
@@ -116,15 +115,14 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_plot_acoustic_pressure_frequency_response.setDisabled(key)
         self.item_child_plot_acoustic_pressure_frequency_response_function.setDisabled(key)
         self.item_child_plot_acoustic_pressure_field.setDisabled(key)
-        self.item_child_plot_acoustic_delta_pressures.setDisabled(key)
         self.item_child_plot_TL_NR.setDisabled(key)
 
     def modify_structural_results_viewer_items(self, key: bool):
         self.item_top_results_viewer_structural.setHidden(key)
         self.item_child_plot_displacement_field.setDisabled(key)
         self.item_child_plot_structural_frequency_response.setDisabled(key)
-        self.item_child_plot_reaction_frequency_response.setDisabled(key)
-        self.item_child_plot_stress_field.setDisabled(key)
+        # self.item_child_plot_reaction_frequency_response.setDisabled(key)
+        # self.item_child_plot_stress_field.setDisabled(key)
         self.item_child_plot_structural_mode_shapes.setDisabled(key)
     
     def update_structural_analysis_visibility_items(self):
@@ -140,8 +138,8 @@ class ResultsViewerItems(CommonMenuItems):
         self.main_window.model_setup_widget.model_setup_items.hide_all_top_items()
 
     def update_coupled_analysis_visibility_items(self):
-        self.item_top_resultsViewer_structural.setHidden(False)
-        self.item_top_resultsViewer_acoustic.setHidden(False)
+        self.item_top_results_viewer_structural.setHidden(False)
+        self.item_top_results_viewer_acoustic.setHidden(False)
 
         self.main_window.model_setup_widget.model_setup_items.hide_all_top_items()
 
@@ -168,9 +166,9 @@ class ResultsViewerItems(CommonMenuItems):
         if analysis_id in [0, 1]:
             self.item_child_plot_structural_frequency_response.setDisabled(False)
             self.item_child_plot_displacement_field.setDisabled(False)
-            self.item_child_plot_reaction_frequency_response.setDisabled(False)
-            self.item_child_plot_stress_field.setDisabled(False)
-            self.item_child_plot_stress_frequency_response.setDisabled(False)
+            # self.item_child_plot_reaction_frequency_response.setDisabled(False)
+            # self.item_child_plot_stress_field.setDisabled(False)
+            # self.item_child_plot_stress_frequency_response.setDisabled(False)
         
         elif analysis_id == 2:
             self.item_child_plot_structural_mode_shapes.setDisabled(False)
@@ -187,15 +185,14 @@ class ResultsViewerItems(CommonMenuItems):
             if analysis_id != 3:
                 self.item_child_plot_displacement_field.setDisabled(False)
                 self.item_child_plot_structural_frequency_response.setDisabled(False)
-                self.item_child_plot_stress_field.setDisabled(False)
-                self.item_child_plot_stress_frequency_response.setDisabled(False)
-                self.item_child_plot_reaction_frequency_response.setDisabled(False)
+                # self.item_child_plot_stress_field.setDisabled(False)
+                # self.item_child_plot_stress_frequency_response.setDisabled(False)
+                # self.item_child_plot_reaction_frequency_response.setDisabled(False)
 
-            self.item_child_plot_acoustic_frequency_response.setDisabled(False)
-            self.item_child_plot_acoustic_frequency_response_function.setDisabled(False)
+            self.item_child_plot_acoustic_pressure_frequency_response.setDisabled(False)
+            self.item_child_plot_acoustic_pressure_frequency_response_function.setDisabled(False)
             self.item_child_plot_acoustic_pressure_field.setDisabled(False)
-            self.item_child_plot_acoustic_delta_pressures.setDisabled(False)
-            self.item_child_plot_transmission_loss.setDisabled(False)
+            self.item_child_plot_TL_NR.setDisabled(False)
 
         self.update_tree_visibility_after_solution()
     
@@ -206,32 +203,26 @@ class ResultsViewerItems(CommonMenuItems):
         analysis_id = app().project.analysis_data["analysis_id"]
 
         if analysis_id in [0, 1, 2]:
-            self.expandItem(self.item_top_resultsViewer_structural)
+            self.expandItem(self.item_top_results_viewer_structural)
         elif analysis_id in [3, 4]:
-            self.expandItem(self.item_top_resultsViewer_acoustic)
+            self.expandItem(self.item_top_results_viewer_acoustic)
         elif analysis_id in [5, 6]:
-            self.expandItem(self.item_top_resultsViewer_structural)
-            self.expandItem(self.item_top_resultsViewer_acoustic)
+            self.expandItem(self.item_top_results_viewer_structural)
+            self.expandItem(self.item_top_results_viewer_acoustic)
 
     def set_theme(self, theme : str):
 
         if theme == "dark":
             self.line_color = QColor(26,115,232,150)
             self.background_color = QColor(60,60,70)
-            # self.background_color = QColor(138,180,247)
-            # self.foreground_color = QColor(50,50,50)
         else:
             self.line_color = QColor(26,115,232,150)
             self.background_color = QColor(225,230,230)
-            # self.background_color = QColor(26,115,232)
-            # self.foreground_color = QColor(250,250,250)
-
+    
         border_role = Qt.UserRole + 1
-        # border_pen = QPen(self.background_color)
         border_pen = QPen(self.line_color)
         border_pen.setWidth(1)
             
         for item in self.top_level_items:
             item.setBackground(0, self.background_color)
-            # item.setForeground(0, self.foreground_color)
             item.setData(0, border_role, border_pen)
