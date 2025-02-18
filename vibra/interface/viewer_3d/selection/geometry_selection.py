@@ -11,10 +11,8 @@ from vtkmodules.vtkRenderingCore import (
 )
 
 from vibra import app
-from vibra.utils.interface_utils import screen_to_world_coords
-from vibra.utils.math_functions import points_in_between
 
-from .common_selection import pick_actor_cell_info
+from .common_selection import get_coordinates_inside_area, pick_actor_cell_info
 
 
 class GeometrySelection:
@@ -147,9 +145,11 @@ class GeometrySelection:
             return set()
 
         all_points = self._get_nodes_subset()
-        mask = self._get_coordinates_inside_area(
+        renderer = self.geometry_render_widget.renderer
+        mask = get_coordinates_inside_area(
             all_points[:, 1:],
             (x0, y0, x1, y1),
+            renderer,
         )
         return set(all_points[mask, 0].astype(int) + 1)
 
@@ -214,40 +214,16 @@ class GeometrySelection:
 
         return mesh.nodal_coordinates[node_indexes]
 
-    def _get_coordinates_inside_area(
-        self,
-        coordinates: np.ndarray,
-        area: list[int, int, int, int],
-    ) -> list[int]:
-        x0, y0, x1, y1 = area
-        renderer = self.geometry_render_widget.renderer
-
-        upper_left_3d = screen_to_world_coords((x0, y0, 0), renderer)
-        upper_right_3d = screen_to_world_coords((x1, y0, 0), renderer)
-        bottom_left_3d = screen_to_world_coords((x0, y1, 0), renderer)
-
-        mask_horizontal = points_in_between(
-            coordinates,
-            upper_left_3d,
-            upper_right_3d,
-        )
-
-        mask_vertical = points_in_between(
-            coordinates,
-            upper_left_3d,
-            bottom_left_3d,
-        )
-
-        return mask_horizontal & mask_vertical
-
     def _area_pick_node_internal_indexes(self, x0: int, y0: int, x1: int, y1: int) -> list[int]:
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
 
-        mask = self._get_coordinates_inside_area(
+        renderer = self.geometry_render_widget.renderer
+        mask = get_coordinates_inside_area(
             mesh.nodal_coordinates[:, 1:],
             (x0, y0, x1, y1),
+            renderer,
         )
 
         # returns the index of True values

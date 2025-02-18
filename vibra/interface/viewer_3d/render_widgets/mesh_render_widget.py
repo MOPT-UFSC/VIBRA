@@ -253,14 +253,8 @@ class MeshRenderWidget(CommonRenderWidget):
 
         if mouse_moved:
             picked_nodes, picked_solids = self.mesh_selection.area_pick(x0, y0, x, y)
-
-            # picked_nodes, picked_faces, picked_solids = self._get_area_picked_cell_id(x, y)
-            # picked_nodes = self.mesh_selection.area_pick_nodes(x0, y0, x, y)
-            # picked_solids = self.mesh_selection.area_pick_solids(x0, y0, x, y)
         else:
-            # picked_nodes, picked_faces, picked_solids = self._get_picked_cell_id(x, y)
-            picked_nodes = self.mesh_selection.pick_node(x, y)
-            picked_solids = self.mesh_selection.pick_solid(x, y)
+            picked_nodes, picked_solids = self.mesh_selection.pick(x, y)
 
         modifiers = QApplication.keyboardModifiers()
         ctrl_pressed = modifiers & Qt.ControlModifier

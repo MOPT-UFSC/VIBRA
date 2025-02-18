@@ -1,3 +1,4 @@
+import numpy as np
 from vtkmodules.vtkCommonCore import vtkIntArray
 from vtkmodules.vtkCommonDataModel import vtkPolyData
 from vtkmodules.vtkRenderingCore import (
@@ -6,7 +7,8 @@ from vtkmodules.vtkRenderingCore import (
     vtkRenderer,
 )
 
-import numpy as np
+from vibra.utils.interface_utils import screen_to_world_coords
+from vibra.utils.math_functions import points_in_between
 
 
 def pick_actor_cell_info(
@@ -57,3 +59,29 @@ def restore_pickability(pickability: dict, renderer: vtkRenderer):
     actor: vtkActor
     for actor in renderer.GetActors():
         actor.SetPickable(pickability[actor])
+
+
+def get_coordinates_inside_area(
+    coordinates: np.ndarray,
+    area: list[int, int, int, int],
+    renderer: vtkRenderer,
+) -> list[int]:
+    x0, y0, x1, y1 = area
+
+    upper_left_3d = screen_to_world_coords((x0, y0, 0), renderer)
+    upper_right_3d = screen_to_world_coords((x1, y0, 0), renderer)
+    bottom_left_3d = screen_to_world_coords((x0, y1, 0), renderer)
+
+    mask_horizontal = points_in_between(
+        coordinates,
+        upper_left_3d,
+        upper_right_3d,
+    )
+
+    mask_vertical = points_in_between(
+        coordinates,
+        upper_left_3d,
+        bottom_left_3d,
+    )
+
+    return mask_horizontal & mask_vertical
