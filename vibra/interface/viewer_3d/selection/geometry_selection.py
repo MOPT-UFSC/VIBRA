@@ -29,10 +29,10 @@ class GeometrySelection:
         set[int],
         set[int],
     ]:
-        point_ids, point_distance = self.pick_point(x, y)
-        line_ids, line_distance = self.pick_line(x, y)
-        surface_ids, surface_distance = self.pick_surface(x, y)
-        volume_ids, _ = self.pick_volume(x, y)
+        point_ids, point_distance = self._pick_point(x, y)
+        line_ids, line_distance = self._pick_line(x, y)
+        surface_ids, surface_distance = self._pick_surface(x, y)
+        volume_ids, _ = self._pick_volume(x, y)
 
         # Cheating a bit to prioritize point selection
         point_distance *= 0.98
@@ -60,14 +60,14 @@ class GeometrySelection:
     ]:
         internal_picked_nodes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
 
-        points = self.area_pick_points(x0, y0, x1, y1, internal_picked_nodes)
-        lines = self.area_pick_lines(x0, y0, x1, y1, internal_picked_nodes)
-        surfaces = self.area_pick_surfaces(x0, y0, x1, y1, internal_picked_nodes)
-        volumes = self.area_pick_volumes(x0, y0, x1, y1, internal_picked_nodes)
+        points = self._area_pick_points(x0, y0, x1, y1)
+        lines = self._pick_lines_from_indexes(internal_picked_nodes)
+        surfaces = self._pick_surfaces_from_indexes(internal_picked_nodes)
+        volumes = self._pick_volumes_from_indexes(internal_picked_nodes)
 
         return points, lines, surfaces, volumes
 
-    def pick_point(self, x: int, y: int) -> set[int]:
+    def _pick_point(self, x: int, y: int) -> set[int]:
         mesh = app().project.model.mesh
         if mesh is None:
             return set(), float("inf")
@@ -96,7 +96,7 @@ class GeometrySelection:
         else:
             return set(), float("inf")
 
-    def pick_line(self, x: int, y: int) -> set[int]:
+    def _pick_line(self, x: int, y: int) -> set[int]:
         line_id, line_distance = pick_actor_cell_info(
             x,
             y,
@@ -109,7 +109,7 @@ class GeometrySelection:
         else:
             return set(), line_distance
 
-    def pick_surface(self, x: int, y: int) -> set[int]:
+    def _pick_surface(self, x: int, y: int) -> set[int]:
         surface_id, surface_distance = pick_actor_cell_info(
             x,
             y,
@@ -122,7 +122,7 @@ class GeometrySelection:
         else:
             return set(), surface_distance
 
-    def pick_volume(self, x: int, y: int) -> set[int]:
+    def _pick_volume(self, x: int, y: int) -> set[int]:
         volume_id, volume_distance = pick_actor_cell_info(
             x,
             y,
@@ -135,17 +135,13 @@ class GeometrySelection:
         else:
             return set(), volume_distance
 
-    def area_pick_points(
+    def _area_pick_points(
         self,
         x0: int,
         y0: int,
         x1: int,
         y1: int,
-        internal_picked_nodes: list[int] | None = None,
     ) -> set[int]:
-        if internal_picked_nodes is None:
-            internal_picked_nodes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
-
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
@@ -157,20 +153,10 @@ class GeometrySelection:
         )
         return set(all_points[mask, 0].astype(int) + 1)
 
-    def area_pick_lines(
-        self,
-        x0: int,
-        y0: int,
-        x1: int,
-        y1: int,
-        internal_picked_nodes: list[int] | None = None,
-    ) -> set[int]:
+    def _pick_lines_from_indexes(self, internal_picked_nodes: list[int]) -> set[int]:
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
-
-        if internal_picked_nodes is None:
-            internal_picked_nodes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
 
         mask_unselected = np.any(
             np.isin(
@@ -186,20 +172,10 @@ class GeometrySelection:
         unselected = np.unique(line_indexes[mask_unselected])
         return set(all_lines) - set(unselected)
 
-    def area_pick_surfaces(
-        self,
-        x0: int,
-        y0: int,
-        x1: int,
-        y1: int,
-        internal_picked_nodes: list[int] | None = None,
-    ) -> set[int]:
+    def _pick_surfaces_from_indexes(self, internal_picked_nodes: list[int]) -> set[int]:
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
-
-        if internal_picked_nodes is None:
-            internal_picked_nodes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
 
         mask_unselected = np.any(
             np.isin(
@@ -215,20 +191,10 @@ class GeometrySelection:
         unselected = np.unique(surface_indexes[mask_unselected])
         return set(all_surfaces) - set(unselected)
 
-    def area_pick_volumes(
-        self,
-        x0: int,
-        y0: int,
-        x1: int,
-        y1: int,
-        internal_picked_nodes: list[int] | None = None,
-    ) -> set[int]:
+    def _pick_volumes_from_indexes(self, internal_picked_nodes: list[int]) -> set[int]:
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
-
-        if internal_picked_nodes is None:
-            internal_picked_nodes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
 
         mask_selected_elements = np.any(
             np.isin(mesh.solids_connectivity[:, 4:], internal_picked_nodes),
