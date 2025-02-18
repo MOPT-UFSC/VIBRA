@@ -55,8 +55,13 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.selection_spheres_actor = None
         self.selection_color = (20, 106, 245)
 
+        # The fast area selection just works if it is on
+        self.renderer.GetActiveCamera().ParallelProjectionOn()
+        self.renderer.RemoveAllLights()
+        
         self.create_axes()
         self.create_scale_bar()
+        self.create_camera_light(0.1, 0.1)
         self.update_plot()
 
     def update_plot(self, reset_camera=True):

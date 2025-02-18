@@ -63,8 +63,13 @@ class MeshRenderWidget(CommonRenderWidget):
         self.plane_actor = None
         self.symbols_actor = None
 
+        # The fast area selection just works if it is on
+        self.renderer.GetActiveCamera().ParallelProjectionOn()
+        self.renderer.RemoveAllLights()
+
         self.create_axes()
         self.create_scale_bar()
+        self.create_camera_light(0.1, 0.1)
         self.update_plot()
 
     def update_plot(self, reset_camera=True):
