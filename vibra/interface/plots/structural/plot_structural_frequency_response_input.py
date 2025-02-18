@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QComboBox, QDialog, QLineEdit, QPushButton, QRadioButton
+from PyQt5.QtWidgets import QComboBox, QWidget, QLineEdit, QPushButton, QRadioButton
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
@@ -14,14 +14,13 @@ import numpy as np
 window_title1 = "Error"
 window_title2 = "Warning"
 
-class PlotStructuralFrequencyResponseInput(QDialog):
+class PlotStructuralFrequencyResponseInput(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "plots/structural/plot_structural_frequency_response.ui"
         uic.loadUi(ui_path, self)
 
-        app().main_window.set_input_widget(self)
         app().main_window.show_geometry_render_widget()
 
         self.model = app().project.model
@@ -37,17 +36,12 @@ class PlotStructuralFrequencyResponseInput(QDialog):
         self._load_analysis_data_and_solution()
         self.geometry_selection_callback()
 
-        while self.keep_window_open:
-            self.exec()
-
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Vibra")
 
     def _initialize(self):
-        self.keep_window_open = True
         self.plotter = None
         self.exporter = None
         self.dof_labels = ["Ux", "Uy", "Uz", "Rx", "Ry", "Rz"]
@@ -226,8 +220,6 @@ class PlotStructuralFrequencyResponseInput(QDialog):
 
     def join_model_data(self):
 
-        self.hide()
-
         if self.comboBox_selector_filter.currentIndex() == 0:
             selection_type = "surface"
         elif self.comboBox_selector_filter.currentIndex() == 1:
@@ -262,19 +254,6 @@ class PlotStructuralFrequencyResponseInput(QDialog):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.plot_data_callback()
-        elif event.key() == Qt.Key_Escape:
-            self.close()
-
-    def closeEvent(self, a0: QCloseEvent | None) -> None:
-
-        if self.exporter is not None:
-            self.exporter.close()
-
-        if self.plotter is not None:
-            self.plotter.close()
-
-        self.keep_window_open = False
-        return super().closeEvent(a0)
     
 def get_color(index):
 

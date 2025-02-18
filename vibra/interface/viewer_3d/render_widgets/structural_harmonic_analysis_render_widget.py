@@ -64,7 +64,7 @@ class StructuralHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
     
     def configure_menu_widget(self, menu_widget: QWidget):
         self.current_menu_widget = menu_widget
-        # self.current_menu_widget.value_changed.connect(self.update_deformations)
+        self.current_menu_widget.value_changed.connect(self.update_deformations)
 
     def toggle_animation(self, *args, **kwargs):
         if self.playing_animation:
@@ -82,14 +82,14 @@ class StructuralHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
 
     def current_frequency_index(self):
         if self.current_menu_widget is not None:
-            return self.current_menu_widget.current_mode_index()
+            return self.current_menu_widget.current_frequency_index()
         return 0
 
     def update_frequencies(self):
         if self.current_menu_widget is None:
             return 
         
-        self.current_menu_widget.load_natural_frequencies()
+        self.current_menu_widget.load_frequencies()
 
     def update_plot(self, reset_camera=False):
         if app().project is None:
@@ -153,7 +153,6 @@ class StructuralHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.update_plot(reset_camera=False)
 
     def update_deformations(self):
-        # print(">> update_deformations")
         if not self._actors_exists():
             return
 

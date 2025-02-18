@@ -29,6 +29,7 @@ class PlotStructuralModeShape(QWidget):
 
     def _initialize(self):
         self.mode_index = None
+        
         # self.colormaps = ["jet",
         #                   "viridis",
         #                   "inferno",
@@ -138,7 +139,7 @@ class PlotStructuralModeShape(QWidget):
         # color_scale_setup = self.get_user_color_scale_setup()
 
         # app().project.set_color_scale_setup(color_scale_setup)
-        app().main_window.structural_modal_analysis.update_deformations()
+        app().main_window.structural_modal_analysis.update_plot()
         # app().main_window.results_widget.clear_cache()
     
     def update_displacements(self):

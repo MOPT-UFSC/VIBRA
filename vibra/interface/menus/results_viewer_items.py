@@ -88,9 +88,6 @@ class ResultsViewerItems(CommonMenuItems):
     def item_child_plot_TL_NR_callback(self):
         app().main_window.input_ui.plot_TL_NR()
     
-    def item_child_plot_structural_frequency_response_callback(self):
-        app().main_window.input_ui.plot_structural_frequency_response()
-    
     def item_child_plot_reaction_frequency_response_callback(self):
         return
         app().main_window.input_ui.plot_reaction_frequency_response()
@@ -139,7 +136,6 @@ class ResultsViewerItems(CommonMenuItems):
 
     def update_items(self):
         """Enables and disables the Child Items on the menu after the solution is done."""
-
         self.modify_acoustic_results_viewer_items(True)
         self.modify_structural_results_viewer_items(True)
 

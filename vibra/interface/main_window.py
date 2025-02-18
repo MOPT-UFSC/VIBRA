@@ -100,7 +100,6 @@ class MainWindow(QMainWindow):
         self.hidden_surfaces = set()
         self.hidden_volumes = set()
 
-        self.dialog = None
         self.show_menu_items = True
         self.last_render_index = None
 
@@ -621,6 +620,7 @@ class MainWindow(QMainWindow):
             self.render_widgets_stack.setCurrentWidget(render_widget)
             self.results_viewer_widget.results_viewer_items.update_items()
             self.analysis_toolbar.update_analysis_combo_boxes()
+            self.results_viewer_widget.update_render_by_menu_item()
 
     def action_new_project_callback(self):
         self.new_project_dialog()

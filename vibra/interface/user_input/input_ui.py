@@ -152,11 +152,11 @@ class InputUi:
             return self.process_input(PlotDisplacementField)
 
     def plot_structural_frequency_response(self):
-        if not self.results_viewer_items.item_child_plot_structural_frequency_response.isDisabled():
-            self.process_input(PlotStructuralFrequencyResponseInput)
+        if self.project.analysis_id in [0, 1]:
+            return self.process_input(PlotStructuralFrequencyResponseInput)
 
     def plot_reaction_frequency_response(self):
-        if not self.results_viewer_items.item_child_plot_reaction_frequency_response.isDisabled():
+        if self.projct:
             self.main_window.show_geometry_render_widget()
 
     def plot_stress_field(self):

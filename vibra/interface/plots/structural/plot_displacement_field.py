@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QComboBox, QFrame, QLineEdit, QPushButton, QSlider, QTreeWidget, QTreeWidgetItem, QWidget
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5 import uic
 
 from vibra import app, UI_DIR
@@ -9,6 +9,8 @@ import numpy as np
 
 
 class PlotDisplacementField(QWidget):
+    value_changed = pyqtSignal()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -23,6 +25,7 @@ class PlotDisplacementField(QWidget):
         self.load_user_preference_colormap()
 
     def _initialize(self):
+        self.frequency_index = None
 
         self.colormaps = ["jet",
                           "viridis",
@@ -47,6 +50,7 @@ class PlotDisplacementField(QWidget):
         # QComboBox
         self.comboBox_color_scale : QComboBox
         self.comboBox_colormaps : QComboBox
+        self.comboBox_displacements: QComboBox
 
         # QFrame
         self.frame_button : QFrame
@@ -69,6 +73,7 @@ class PlotDisplacementField(QWidget):
         #
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.comboBox_color_scale.currentIndexChanged.connect(self.update_plot)
+        self.comboBox_displacements.currentIndexChanged.connect(self.value_changed.emit)
         #
         self.pushButton_plot.clicked.connect(self.update_plot)
         #
@@ -127,11 +132,16 @@ class PlotDisplacementField(QWidget):
         frequency_selected = float(self.lineEdit_selected_frequency.text())
         if frequency_selected in self.frequencies:
             # frequency = self.frequency_to_index[frequency_selected]
-            frequency = self.frequencies.index(frequency_selected)
-            color_scale_setup = self.get_user_color_scale_setup()
-            app().project.set_color_scale_setup(color_scale_setup)
-            app().main_window.results_widget.show_displacement_field(frequency)
-            app().main_window.results_widget.clear_cache()
+            self.frequency_index = self.frequencies.index(frequency_selected)
+            # color_scale_setup = self.get_user_color_scale_setup()
+            # app().project.set_color_scale_setup(color_scale_setup)
+            app().main_window.structural_harmonic_analysis.update_plot()
+            # app().main_window.results_widget.clear_cache()
+        
+    def current_frequency_index(self):
+        if self.frequency_index is not None:
+            return self.frequency_index
+        return 0
 
     def get_user_color_scale_setup(self):
         return
