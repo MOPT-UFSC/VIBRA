@@ -32,30 +32,9 @@ class StructuralModalAnalysisBar(QWidget):
         self.create_video_button.setToolTip("Create video")
         self.create_video_button.setMinimumWidth(80)
 
-        self.frequency_box = QComboBox()
-
-        self.response_ux_button = QRadioButton("Real Ux")
-        self.response_uy_button = QRadioButton("Real Uy")
-        self.response_uz_button = QRadioButton("Real Uz")
-
-        self.sum_button = QRadioButton("Sum")
         self.show_mesh_button = QCheckBox("Show mesh")
-        self.update_coloring = QCheckBox("Update coloring")
 
-        self.frequency_selector_label = QLabel("Frequency selector:")
-
-        self.sum_button.setChecked(True)
         self.show_mesh_button.setChecked(True)
-        self.update_coloring.setChecked(True)
-        self.update_coloring.stateChanged.connect(self.value_changed)
-
-        button_group = QButtonGroup()
-        button_group.addButton(self.response_ux_button)
-        button_group.addButton(self.response_uy_button)
-        button_group.addButton(self.response_uz_button)
-        button_group.addButton(self.sum_button)
-        self.frequency_box.setMinimumWidth(180)
-        self.frequency_box.setMaximumWidth(300)
 
         sliders_layout = QGridLayout()
         sliders_layout.addWidget(QLabel("Magnification factor:"), 0, 0)
@@ -65,23 +44,13 @@ class StructuralModalAnalysisBar(QWidget):
         sliders_layout.addWidget(self.phase_slider, 1, 1)
         sliders_layout.addWidget(self.phase_label, 1, 2)
 
-        plot_layout = QHBoxLayout()
-        # plot_layout.addWidget(QLabel("Data to plot:"))
-        plot_layout.addWidget(self.sum_button)
-        plot_layout.addWidget(self.response_ux_button)
-        plot_layout.addWidget(self.response_uy_button)
-        plot_layout.addWidget(self.response_uz_button)
-        plot_layout.setSpacing(20)
-
         config_layout = QHBoxLayout()
         config_layout.addWidget(self.show_mesh_button)
-        config_layout.addWidget(self.update_coloring)
         config_layout.addStretch()
         config_layout.addWidget(self.play_pause_button)
         config_layout.addWidget(self.create_video_button)
 
         buttons_layout = QVBoxLayout()
-        buttons_layout.addLayout(plot_layout)
         buttons_layout.addLayout(config_layout)
 
         layout = QHBoxLayout()
@@ -89,24 +58,7 @@ class StructuralModalAnalysisBar(QWidget):
         # layout.addStretch()
         layout.addLayout(buttons_layout)
         layout.addStretch()
-        layout.addWidget(self.frequency_selector_label)
-        layout.addWidget(self.frequency_box)
         self.setLayout(layout)
-
-        self.frequency_box.activated.connect(self.value_changed.emit)
-        self.response_ux_button.clicked.connect(self.value_changed.emit)
-        self.response_uy_button.clicked.connect(self.value_changed.emit)
-        self.response_uz_button.clicked.connect(self.value_changed.emit)
-        self.sum_button.clicked.connect(self.value_changed.emit)
-
-    def set_frequencies(self, frequencies):
-        self.frequency_box.clear()
-
-        if frequencies is None:
-            return
-
-        for i, freq in enumerate(frequencies):
-            self.frequency_box.addItem(f" Mode {i + 1}: {round(freq, 6)} Hz")
 
     def use_play_icon(self):
         self.play_pause_button.setIcon(self.play_icon)

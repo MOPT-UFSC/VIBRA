@@ -26,6 +26,7 @@ from vibra.interface.plots.acoustic.plot_transmission_loss_input import PlotTran
 #
 from vibra.interface.plots.structural.plot_structural_frequency_response_input import PlotStructuralFrequencyResponseInput
 from vibra.interface.plots.structural.plot_structural_mode_shape import PlotStructuralModeShape
+from vibra.interface.plots.structural.plot_displacement_field import PlotDisplacementField
 #
 from vibra.interface.process_analysis import ProcessAnalysis
 
@@ -147,8 +148,8 @@ class InputUi:
             return self.process_input(PlotStructuralModeShape)     
 
     def plot_displacement_field(self):
-        if not self.results_viewer_items.item_child_plot_displacement_field.isDisabled():
-            self.main_window.configure_structural_harmonic_analysis_render_widget(True)
+        if self.project.analysis_id in [0, 1]:
+            return self.process_input(PlotDisplacementField)
 
     def plot_structural_frequency_response(self):
         if not self.results_viewer_items.item_child_plot_structural_frequency_response.isDisabled():

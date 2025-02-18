@@ -68,7 +68,7 @@ class Project:
         if len(self.analysis_data) == 0:
             return
         
-        self.natural_frequencies_structural = list()
+        
 
         self.create_solver()
 
@@ -201,7 +201,6 @@ class Project:
         self.structural_assembler.process_assemble()
         self.structural_modal_solver.solve()
         self.last_analysis = "Modal Structural"
-        self.natural_frequencies_structural = self.structural_modal_solver.natural_frequencies
         app().file.write_results_data_in_file()
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 

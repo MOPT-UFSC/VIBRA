@@ -412,8 +412,6 @@ class LoadProject:
                     app().project.structural_modal_solver.solution_full = data["modal_shape"]
                     app().project.structural_modal_solver.displacement_dofs = data["displacement_dofs"]
 
-                    app().project.natural_frequencies_structural = data["natural_frequencies"]
-
                 elif key == "harmonic_acoustic" and app().project.acoustic_harmonic_solver is not None:
                     act_harmonic_analysis = True
                     app().project.acoustic_harmonic_solver.frequencies = data["frequencies"]

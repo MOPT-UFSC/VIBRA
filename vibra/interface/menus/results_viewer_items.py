@@ -88,9 +88,6 @@ class ResultsViewerItems(CommonMenuItems):
     def item_child_plot_TL_NR_callback(self):
         app().main_window.input_ui.plot_TL_NR()
     
-    def item_child_plot_displacement_field_callback(self):
-        app().main_window.input_ui.plot_displacement_field()
-    
     def item_child_plot_structural_frequency_response_callback(self):
         app().main_window.input_ui.plot_structural_frequency_response()
     

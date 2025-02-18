@@ -1,116 +1,96 @@
 from PyQt5.QtWidgets import QComboBox, QFrame, QLineEdit, QPushButton, QSlider, QTreeWidget, QTreeWidgetItem, QWidget
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import Qt
 from PyQt5 import uic
 
 from vibra import app, UI_DIR
 
 import numpy as np
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
 
-class PlotStructuralModeShape(QWidget):
-    value_changed = pyqtSignal()
-
+class PlotDisplacementField(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "plots/structural/plot_structural_mode_shape.ui"
+        ui_path = UI_DIR / "plots/structural/plot_displacement_field.ui"
         uic.loadUi(ui_path, self)
 
-        self._config_window()
         self._initialize()
+        self._config_window()
         self._define_qt_variables()
         self._create_connections()
-        self._config_widgets()
-        self.load_natural_frequencies()
+        self.load_frequencies()
         self.load_user_preference_colormap()
 
     def _initialize(self):
-        self.mode_index = None
-        # self.colormaps = ["jet",
-        #                   "viridis",
-        #                   "inferno",
-        #                   "magma",
-        #                   "plasma",
-        #                   "bwr",
-        #                   "PiYG",
-        #                   "PRGn",
-        #                   "BrBG",
-        #                   "PuOR",
-        #                   "grayscale",
-        #                   ]
+
+        self.colormaps = ["jet",
+                          "viridis",
+                          "inferno",
+                          "magma",
+                          "plasma",
+                          "bwr",
+                          "PiYG",
+                          "PRGn",
+                          "BrBG",
+                          "PuOR",
+                          "grayscale",
+                          ]
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        
+
     def _define_qt_variables(self):
 
         # QComboBox
         self.comboBox_color_scale : QComboBox
         self.comboBox_colormaps : QComboBox
-        self.comboBox_displacements: QComboBox
 
         # QFrame
         self.frame_button : QFrame
-
-        # QLineEdit
-        self.lineEdit_natural_frequency : QLineEdit
-
-        # QPushButton
-        self.pushButton_plot : QPushButton
+        self.frame_button.setVisible(False)
 
         # QLineEdit
         self.lineEdit_selected_frequency : QLineEdit
 
-        # QSlider
-        self.slider_transparency : QSlider
-
         # QPushButton
         self.pushButton_plot : QPushButton
 
+        # QSlider
+        self.slider_transparency : QSlider
+
         # QTreeWidget
         self.treeWidget_frequencies : QTreeWidget
+        self._config_treeWidget()
 
     def _create_connections(self):
         #
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.comboBox_color_scale.currentIndexChanged.connect(self.update_plot)
-        self.comboBox_displacements.currentIndexChanged.connect(self.value_changed.emit)
         #
         self.pushButton_plot.clicked.connect(self.update_plot)
         #
         self.slider_transparency.valueChanged.connect(self.update_transparency_callback)
         #
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
-        self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
+        self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.update_animation_widget_visibility()
         self.load_user_preference_colormap()
         self.update_colormap_type()
 
-    def _config_widgets(self):
-
-        self.frame_button.setVisible(False)
-        self.lineEdit_natural_frequency.setDisabled(True)
-
-        widths = [80, 140]
-        for i, width in enumerate(widths):
-            self.treeWidget_frequencies.setColumnWidth(i, width)
-            self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
-  
     def update_animation_widget_visibility(self):
         return
         index = self.comboBox_color_scale.currentIndex()
         if index >= 4:
             app().main_window.animation_toolbar.setDisabled(True)
         else:
-            app().main_window.animation_toolbar.setDisabled(False)
+            app().main_window.animation_toolbar.setDisabled(False) 
 
     def load_user_preference_colormap(self):
+        return
         try:
             colormap = app().config.user_preferences.color_map
             if colormap in self.colormaps:
@@ -126,28 +106,32 @@ class PlotStructuralModeShape(QWidget):
         app().main_window.results_widget.set_colormap(colormap)
         self.update_plot()
 
-    def update_plot(self):
-
-        self.update_animation_widget_visibility()
-        if self.lineEdit_natural_frequency.text() == "":
-            return
-
-        # app().project.analysis_type_label = "Structural Modal Analysis"
-        frequency = self.selected_natural_frequency
-        self.mode_index = self.natural_frequencies.index(frequency)
-        # color_scale_setup = self.get_user_color_scale_setup()
-
-        # app().project.set_color_scale_setup(color_scale_setup)
-        app().main_window.structural_modal_analysis.update_deformations()
-        # app().main_window.results_widget.clear_cache()
-    
-    def update_displacements(self):
-        pass
+    def _config_treeWidget(self):
+        widths = [80, 140]
+        for i, width in enumerate(widths):
+            self.treeWidget_frequencies.setColumnWidth(i, width)
+            self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
+        #
+        self.lineEdit_selected_frequency.setDisabled(True)
 
     def update_transparency_callback(self):
         return
         transparency = self.slider_transparency.value() / 100
         app().main_window.results_widget.set_tube_actors_transparency(transparency)
+
+    def update_plot(self):
+        self.update_animation_widget_visibility()
+        if self.lineEdit_selected_frequency.text() == "":
+            return
+
+        frequency_selected = float(self.lineEdit_selected_frequency.text())
+        if frequency_selected in self.frequencies:
+            # frequency = self.frequency_to_index[frequency_selected]
+            frequency = self.frequencies.index(frequency_selected)
+            color_scale_setup = self.get_user_color_scale_setup()
+            app().project.set_color_scale_setup(color_scale_setup)
+            app().main_window.results_widget.show_displacement_field(frequency)
+            app().main_window.results_widget.clear_cache()
 
     def get_user_color_scale_setup(self):
         return
@@ -215,28 +199,38 @@ class PlotStructuralModeShape(QWidget):
 
         return color_scale_setup
 
-    def load_natural_frequencies(self):
-        
-        self.natural_frequencies = list(app().project.structural_modal_solver.natural_frequencies)
-        modes = np.arange(1, len(self.natural_frequencies) + 1, 1)
-        self.modes_to_frequencies = dict(zip(modes, self.natural_frequencies))
+    def load_frequencies(self):
+
+        self.treeWidget_frequencies.setDisabled(False)
+        if isinstance(app().project.model.frequencies, np.ndarray):
+            _frequencies = app().project.model.frequencies
+            self.frequencies = list(_frequencies)
+
+        self.frequency_to_index = dict(zip(self.frequencies, np.arange(len(self.frequencies), dtype=int)))
 
         self.treeWidget_frequencies.clear()
-        for mode, natural_frequency in self.modes_to_frequencies.items():
-            new = QTreeWidgetItem([str(mode), str(round(natural_frequency,4))])
-            new.setTextAlignment(0, Qt.AlignCenter)
-            new.setTextAlignment(1, Qt.AlignCenter)
-            self.treeWidget_frequencies.addTopLevelItem(new)
+        for index, frequency in enumerate(self.frequencies):
+
+            item = QTreeWidgetItem([str(index+1), str(frequency)])
+            for i in range(2):
+                item.setTextAlignment(i, Qt.AlignCenter)
+            self.treeWidget_frequencies.addTopLevelItem(item)
+
+    def plot_displacement_for_static_analysis(self):
+        #
+        self.lineEdit_selected_frequency.setText("0.0")
+        color_scale_setup = self.get_user_color_scale_setup()
+        #
+        app().project.set_color_scale_setup(color_scale_setup)
+        app().main_window.results_widget.show_displacement_field(0)
 
     def on_click_item(self, item):
-        self.selected_natural_frequency = self.modes_to_frequencies[int(item.text(0))]
-        self.lineEdit_natural_frequency.setText(str(round(self.selected_natural_frequency,4)))
+        self.lineEdit_selected_frequency.setText(item.text(1))
         self.update_plot()
-        
-    def current_mode_index(self):
-        if self.mode_index is not None:
-            return self.mode_index
-        return 0
+
+    def on_doubleclick_item(self, item):
+        self.lineEdit_selected_frequency.setText(item.text(1))
+        self.update_plot()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

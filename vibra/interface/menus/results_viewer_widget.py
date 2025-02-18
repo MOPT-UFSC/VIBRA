@@ -33,6 +33,7 @@ class ResultsViewerWidget(QWidget):
     
     def _create_connections(self):
         self.results_viewer_items.item_child_plot_structural_mode_shapes.clicked.connect(self.add_structural_mode_shape_widget)
+        self.results_viewer_items.item_child_plot_displacement_field.clicked.connect(self.add_displacement_field_widget)
     
     def get_item(self):
         return self.results_viewer_items
@@ -42,14 +43,14 @@ class ResultsViewerWidget(QWidget):
         self.results_viewer_items.update_tree_visibility_after_solution()
 
     def add_structural_mode_shape_widget(self):
-        # self.configure_render_according_to_plot_type("tubes")
         self.current_widget = app().main_window.input_ui.plot_structural_mode_shapes()
+        app().main_window.structural_modal_analysis.configure_menu_widget(self.current_widget)
         self.add_widget(self.current_widget, animation_widget=True)
 
     def add_displacement_field_widget(self):
-        self.configure_render_according_to_plot_type("tubes")
-        widget = app().main_window.input_ui.plot_displacement_field()
-        self.add_widget(widget, animation_widget=True)
+        self.current_widget = app().main_window.input_ui.plot_displacement_field()
+        app().main_window.structural_harmonic_analysis.configure_menu_widget(self.current_widget)
+        self.add_widget(self.current_widget, animation_widget=True)
 
     def add_structural_frequency_response_widget(self):
         self.configure_render_according_to_plot_type("nodes")

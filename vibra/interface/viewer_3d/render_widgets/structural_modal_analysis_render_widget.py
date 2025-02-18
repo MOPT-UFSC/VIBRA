@@ -29,6 +29,8 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         super().__init__(parent)
 
         self.main_window = app().main_window
+        self.current_menu_widget = None
+
         self.control_bar = StructuralModalAnalysisBar()
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
         self.control_bar.phase_slider.sliderPressed.connect(self.stop_animation)
@@ -36,7 +38,6 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.control_bar.create_video_button.clicked.connect(self.save_video)
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
-        self.control_bar.frequency_selector_label.setText("Natural frequency:")
 
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
@@ -59,8 +60,11 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.create_axes()
         self.create_color_bar()
         self.create_scale_bar()
-        self.update_frequencies()
         self.update_plot()
+    
+    def configure_menu_widget(self, menu_widget: QWidget):
+        self.current_menu_widget = menu_widget
+        self.current_menu_widget.value_changed.connect(self.update_deformations)
 
     def toggle_animation(self, *args, **kwargs):
         if self.playing_animation:
@@ -77,15 +81,15 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.control_bar.use_play_icon()
 
     def current_shape_index(self):
-        if app().main_window.results_viewer_widget.current_widget is not None:
-            return app().main_window.results_viewer_widget.current_widget.current_mode_index()
+        if self.current_menu_widget is not None:
+            return self.current_menu_widget.current_mode_index()
         return 0
-
+    
     def update_frequencies(self):
-        solver = app().project.structural_modal_solver
-        if solver is None:
-            return
-        self.control_bar.set_frequencies(solver.natural_frequencies)
+        if self.current_menu_widget is None:
+            return 
+        
+        self.current_menu_widget.load_natural_frequencies()
 
     def update_plot(self, reset_camera=False):
         if app().project is None:
@@ -395,22 +399,22 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
 
         current_solution = results_real.reshape(-1, 3).copy()
 
-        if self.control_bar.sum_button.isChecked():
+        if self.current_menu_widget is None or self.current_menu_widget.comboBox_displacements.currentIndex() == 0:
             disp_type = "u_sum"
             color_scalars = np.linalg.norm(current_solution, axis=1)#.copy()
             displacements = current_solution.copy()
 
-        elif self.control_bar.response_ux_button.isChecked():
+        elif self.current_menu_widget.comboBox_displacements.currentIndex() == 1:
             disp_type = "u_x"
             color_scalars = current_solution[:, 0]
             displacements = current_solution * np.array([1.0, 0.0, 0.0])
 
-        elif self.control_bar.response_uy_button.isChecked():
+        elif self.current_menu_widget.comboBox_displacements.currentIndex() == 2:
             disp_type = "u_y"
             color_scalars = current_solution[:, 1]
             displacements = current_solution * np.array([0.0, 1.0, 0.0])
 
-        elif self.control_bar.response_uz_button.isChecked():
+        else:
             disp_type = "u_z"
             color_scalars = current_solution[:, 2]
             displacements = current_solution * np.array([0.0, 0.0, 1.0])
