@@ -6,6 +6,8 @@ from vtkmodules.vtkRenderingCore import (
     vtkRenderer,
 )
 
+import numpy as np
+
 
 def pick_actor_cell_info(
     x,
@@ -14,7 +16,6 @@ def pick_actor_cell_info(
     indexes_array: str,
     renderer: vtkRenderer,
 ) -> tuple[int, tuple[float, float, float]]:
-
     cell_picker = vtkCellPicker()
     cell_picker.SetTolerance(0.0018)
 
@@ -24,6 +25,9 @@ def pick_actor_cell_info(
 
     cell_id = cell_picker.GetCellId()
     position = cell_picker.GetPickPosition()
+
+    camera_position = np.array(renderer.GetActiveCamera().GetPosition())
+    camera_distance = np.linalg.norm(camera_position - position) if cell_id >= 0 else float("inf")
 
     if cell_id < 0:
         return cell_id
@@ -37,7 +41,8 @@ def pick_actor_cell_info(
         return cell_id
 
     cell_info = cell_info_array.GetValue(cell_id)
-    return cell_info
+    return cell_info, camera_distance
+
 
 def narrow_pickability_to_actor(target_actor: vtkActor, renderer: vtkRenderer):
     actor: vtkActor
@@ -46,6 +51,7 @@ def narrow_pickability_to_actor(target_actor: vtkActor, renderer: vtkRenderer):
         pickability[actor] = actor.GetPickable()
         actor.SetPickable(actor == target_actor)
     return pickability
+
 
 def restore_pickability(pickability: dict, renderer: vtkRenderer):
     actor: vtkActor

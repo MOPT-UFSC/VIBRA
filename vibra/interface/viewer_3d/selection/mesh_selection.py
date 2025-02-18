@@ -22,6 +22,8 @@ class MeshSelection:
     def __init__(self, mesh_render_widget: "MeshRenderWidget"):
         self.mesh_render_widget = mesh_render_widget
         self.elements_center = np.array([])
+        self.cell_picker = vtkCellPicker()
+        self.cell_picker.SetTolerance(0.0018)
 
     def precompute_data(self):
         mesh = app().project.model.mesh
@@ -74,11 +76,9 @@ class MeshSelection:
             return set()
 
         renderer = self.mesh_render_widget.renderer
-        cell_picker = vtkCellPicker()
-        cell_picker.SetTolerance(0.0018)
-        cell_picker.Pick(x, y, 0, renderer)
+        self.cell_picker.Pick(x, y, 0, renderer)
 
-        pick_position = np.array(cell_picker.GetPickPosition())
+        pick_position = np.array(self.cell_picker.GetPickPosition())
         distance_to_pick_position = np.linalg.norm(
             pick_position - mesh.nodal_coordinates[:, 1:],
             axis=1,
@@ -166,16 +166,13 @@ class MeshSelection:
         return mask_horizontal & mask_vertical
 
     def _pick_actor_cell_id(self, x, y, target_actor: vtkActor):
-        cell_picker = vtkCellPicker()
-        cell_picker.SetTolerance(0.0018)
         renderer = self.mesh_render_widget.renderer
-
         pickability = self._narrow_pickability_to_actor(target_actor)
-        cell_picker.Pick(x, y, 0, renderer)
+        self.cell_picker.Pick(x, y, 0, renderer)
         self._restore_pickability(pickability)
 
-        cell_id = cell_picker.GetCellId()
-        _position = cell_picker.GetPickPosition()
+        cell_id = self.cell_picker.GetCellId()
+        _position = self.cell_picker.GetPickPosition()
 
         if cell_id < 0:
             return cell_id

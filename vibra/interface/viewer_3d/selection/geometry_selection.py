@@ -90,41 +90,41 @@ class GeometrySelection:
             return set()
 
     def pick_line(self, x: int, y: int) -> set[int]:
-        cell_id = pick_actor_cell_info(
+        line_id, line_distance = pick_actor_cell_info(
             x,
             y,
             self.geometry_render_widget.lines_actor,
             "line_indexes",
             self.geometry_render_widget.renderer,
         )
-        if cell_id >= 0:
-            return {cell_id}
+        if line_id >= 0:
+            return {line_id}
         else:
             return set()
 
     def pick_surface(self, x: int, y: int) -> set[int]:
-        surface = pick_actor_cell_info(
+        surface_id, surface_distance = pick_actor_cell_info(
             x,
             y,
             self.geometry_render_widget.faces_actor,
             "surface_indexes",
             self.geometry_render_widget.renderer,
         )
-        if surface >= 0:
-            return {surface}
+        if surface_id >= 0:
+            return {surface_id}
         else:
             return set()
 
     def pick_volume(self, x: int, y: int) -> set[int]:
-        volume = pick_actor_cell_info(
+        volume_id, volume_distance = pick_actor_cell_info(
             x,
             y,
             self.geometry_render_widget.faces_actor,
             "volume_indexes",
             self.geometry_render_widget.renderer,
         )
-        if volume >= 0:
-            return {volume}
+        if volume_id >= 0:
+            return {volume_id}
         else:
             return set()
 
