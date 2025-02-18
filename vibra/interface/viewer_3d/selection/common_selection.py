@@ -30,15 +30,15 @@ def pick_actor_cell_info(
     camera_distance = np.linalg.norm(camera_position - position) if cell_id >= 0 else float("inf")
 
     if cell_id < 0:
-        return cell_id
+        return -1, float("inf")
 
     data: vtkPolyData = target_actor.GetMapper().GetInput()
     if not data:
-        return cell_id
+        return -1, float("inf")
 
     cell_info_array: vtkIntArray = data.GetCellData().GetArray(indexes_array)
     if not cell_info_array:
-        return cell_id
+        return -1, float("inf")
 
     cell_info = cell_info_array.GetValue(cell_id)
     return cell_info, camera_distance

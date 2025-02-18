@@ -6,6 +6,7 @@ if TYPE_CHECKING:
 
 import numpy as np
 from vtkmodules.vtkRenderingCore import (
+    vtkActor,
     vtkCellPicker,
     vtkCoordinate,
 )
@@ -29,22 +30,26 @@ class GeometrySelection:
         set[int],
         set[int],
     ]:
-        picked_points = self.pick_point(x, y)
-        picked_lines = self.pick_line(x, y)
-        picked_surfaces = self.pick_surface(x, y)
-        picked_volumes = self.pick_volume(x, y)
+        point_ids, point_distance = self.pick_point(x, y)
+        line_ids, line_distance = self.pick_line(x, y)
+        surface_ids, surface_distance = self.pick_surface(x, y)
+        volume_ids, _ = self.pick_volume(x, y)
 
-        # TODO: this order is wrong, fix it somehow
-        if picked_points:
-            picked_lines.clear()
-            picked_surfaces.clear()
-            picked_volumes.clear()
+        # Cheating a bit to prioritize point selection
+        point_distance *= 0.98
+        closest = min(point_distance, line_distance, surface_distance)
+        
+        if closest == point_distance:
+            return point_ids, set(), set(), volume_ids
 
-        elif picked_lines:
-            picked_surfaces.clear()
-            picked_volumes.clear()
+        elif closest == line_distance:
+            return set(), line_ids, set(), volume_ids
 
-        return picked_points, picked_lines, picked_surfaces, picked_volumes
+        elif closest == surface_distance:
+            return set(), set(), surface_ids, volume_ids
+
+        else:
+            return set(), set(), set(), volume_ids
 
     def area_pick(
         self, x0: int, y0: int, x1: int, y1: int
@@ -66,7 +71,7 @@ class GeometrySelection:
     def pick_point(self, x: int, y: int) -> set[int]:
         mesh = app().project.model.mesh
         if mesh is None:
-            return set()
+            return set(), float("inf")
 
         renderer = self.geometry_render_widget.renderer
         cell_picker = vtkCellPicker()
@@ -77,6 +82,9 @@ class GeometrySelection:
         all_points = self._get_nodes_subset()  # The point id is 1-indexed
         i = np.argmin(np.linalg.norm(all_points[:, 1:] - pick_position, axis=1))
 
+        camera_position = np.array(renderer.GetActiveCamera().GetPosition())
+        camera_distance = np.linalg.norm(camera_position - pick_position)
+
         coordinate = vtkCoordinate()
         coordinate.SetCoordinateSystemToWorld()
         coordinate.SetValue(all_points[i, 1:])
@@ -85,9 +93,9 @@ class GeometrySelection:
 
         node_size = 15
         if np.linalg.norm(click - view_coords) < node_size / 2:
-            return {1 + all_points[i, 0].astype(int)}
+            return {1 + all_points[i, 0].astype(int)}, camera_distance
         else:
-            return set()
+            return set(), float("inf")
 
     def pick_line(self, x: int, y: int) -> set[int]:
         line_id, line_distance = pick_actor_cell_info(
@@ -98,9 +106,9 @@ class GeometrySelection:
             self.geometry_render_widget.renderer,
         )
         if line_id >= 0:
-            return {line_id}
+            return {line_id}, line_distance
         else:
-            return set()
+            return set(), line_distance
 
     def pick_surface(self, x: int, y: int) -> set[int]:
         surface_id, surface_distance = pick_actor_cell_info(
@@ -111,9 +119,9 @@ class GeometrySelection:
             self.geometry_render_widget.renderer,
         )
         if surface_id >= 0:
-            return {surface_id}
+            return {surface_id}, surface_distance
         else:
-            return set()
+            return set(), surface_distance
 
     def pick_volume(self, x: int, y: int) -> set[int]:
         volume_id, volume_distance = pick_actor_cell_info(
@@ -124,9 +132,9 @@ class GeometrySelection:
             self.geometry_render_widget.renderer,
         )
         if volume_id >= 0:
-            return {volume_id}
+            return {volume_id}, volume_distance
         else:
-            return set()
+            return set(), volume_distance
 
     def area_pick_points(
         self,
@@ -182,6 +190,20 @@ class GeometrySelection:
         )
 
         return set(mesh.lines_connectivity[mask_selected_elements, 1].astype(int))
+
+    def _pick_id(self, x: int, y: int, actor: vtkActor, array_name: str) -> int:
+        cell_id, camera_distance = pick_actor_cell_info(
+            x,
+            y,
+            actor,
+            array_name,
+            self.geometry_render_widget.renderer,
+        )
+
+        if cell_id < 0:
+            return set(), float("inf")
+
+        return {cell_id}, camera_distance
 
     # def area_pick_surfaces(
     #     self,
