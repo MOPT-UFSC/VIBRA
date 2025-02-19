@@ -123,9 +123,9 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.nodes_actor.SetVisibility(visualization.points)
         self.edges_actor.SetVisibility(visualization.lines)
-        self.faces_actor.SetVisibility(True)
+        self.faces_actor.SetVisibility(visualization.faces)
+        self.solids_actor.SetVisibility(visualization.solids)
         self.ghost_actor.SetVisibility(has_hidden_part)
-        self.solids_actor.SetVisibility(False)
 
         self.update()
 
