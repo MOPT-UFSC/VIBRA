@@ -119,18 +119,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
 
         self.remove_all_actors()
 
-        phase_deg = self.control_bar.phase_slider.value()
-        phi_sld = phase_deg * np.pi / 180
-
-        current_pressures = solver.solution[:, index].copy()
-        amplitudes = np.abs(current_pressures)
-        phase = np.angle(current_pressures)
-        output_pressures = amplitudes * np.cos(phase + phi_sld)
-
-        min_value, max_value = solver.get_max_min_values_of_pressures(index)
-        if self.control_bar.absolute_button.isChecked():
-            min_value = 0
-            output_pressures = np.abs(output_pressures)
+        output_pressures, min_value, max_value = self.calculate_color_bar_plots()
 
         self.analysis_actor = HollowAnalysisActor(mesh)
         self.analysis_actor.plot_color_bar(output_pressures, min_value, max_value)
@@ -178,6 +167,25 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.update_section_plane()
 
         app().project.thumbnail = self.get_thumbnail()
+    
+    def calculate_color_bar_plots(self):
+        solver = app().project.acoustic_harmonic_solver
+        index = self.current_frequency_index()
+
+        phase_deg = self.control_bar.phase_slider.value()
+        phi_sld = phase_deg * np.pi / 180
+
+        current_pressures = solver.solution[:, index].copy()
+        amplitudes = np.abs(current_pressures)
+        phase = np.angle(current_pressures)
+        output_pressures = amplitudes * np.cos(phase + phi_sld)
+
+        min_value, max_value = solver.get_max_min_values_of_pressures(index)
+        if self.control_bar.absolute_button.isChecked():
+            min_value = 0
+            output_pressures = np.abs(output_pressures)
+        
+        return output_pressures, min_value, max_value
 
     def update_hidden_plot(self):
         # in this case the update_plot function is fast enough
@@ -368,8 +376,10 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
             if mesh.solids_connectivity.size > 0:
                 self.remove_actors(self.analysis_actor)
                 self.analysis_actor = AnalysisActor(mesh)
+                output_pressures, min_value, max_value = self.calculate_color_bar_plots()
+                self.analysis_actor.plot_color_bar(output_pressures, min_value, max_value)
                 self.add_actors(self.analysis_actor)
-
+                
         self.plane_actor.configure_section_plane(position, rotation)
         xyz = self.plane_actor.calculate_xyz_position(position)
         normal = self.plane_actor.calculate_normal_vector(rotation)

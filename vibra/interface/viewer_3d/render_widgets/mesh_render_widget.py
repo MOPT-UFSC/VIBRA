@@ -459,12 +459,8 @@ class MeshRenderWidget(CommonRenderWidget):
             self.plane_actor.GetProperty().SetOpacity(0.8)
             self.update()
         else:
-            self._apply_section_plane(
-                position,
-                rotation,
-                inverted,
-                section_plane.isVisible(),
-            )
+            show_plane = not section_plane.keep_section_plane
+            self._apply_section_plane(position, rotation, inverted, show_plane)
 
     def _disable_section_plane(self):
         has_hidden_part = bool(self.main_window.hidden_surfaces)
@@ -618,7 +614,7 @@ class MeshRenderWidget(CommonRenderWidget):
             tree.add_item("Name", material.name)
             tree.add_item("Identifier", material.identifier)
             tree.add_item("Density", material.density, "kg/m³")
-            tree.add_item("Young Modulus", material.young_modulus / 1e9, "GPa")
+            tree.add_item("Young Modulus", material.elasticity_modulus / 1e9, "GPa")
             tree.add_item("Poisson Ratio", material.poisson_ratio, "--")
             tree.add_item(
                 "Thermal Expasion Coefficient", material.thermal_expansion_coefficient, "1/K"
@@ -664,8 +660,8 @@ class MeshRenderWidget(CommonRenderWidget):
             return text
 
         prescribed_dofs = app().project.model.properties._get_property("prescribed_dofs", node=selected_nodes[0])
-        external_loads = app().project.model.properties._get_property("external_loads", node=selected_nodes[0])
-        boundary_conditions_list = [prescribed_dofs, external_loads]
+        nodal_loads = app().project.model.properties._get_property("nodal_loads", node=selected_nodes[0])
+        boundary_conditions_list = [prescribed_dofs, nodal_loads]
 
         if all(condition is None for condition in boundary_conditions_list):
             return text
@@ -675,10 +671,10 @@ class MeshRenderWidget(CommonRenderWidget):
             loaded_table = "table_names" in prescribed_dofs.keys()
             text += _structural_format("Prescribed dofs",  values, ("u", "r"), ("m", "rad"), loaded_table)
 
-        if external_loads is not None:
-            values = external_loads["values"]
-            loaded_table = "table_names" in external_loads.keys()
-            text += _structural_format("External loads",  values, ("F", "M"), ("N", "N.m"), loaded_table)
+        if nodal_loads is not None:
+            values = nodal_loads["values"]
+            loaded_table = "table_names" in nodal_loads.keys()
+            text += _structural_format("Nodal loads",  values, ("F", "M"), ("N", "N.m"), loaded_table)
 
         return text
 
@@ -690,12 +686,18 @@ def _structural_format(property_name, values, labels, units, has_table):
     if _all_none(values):
         return ""
 
+
     u_values = list()
     u_labels = list()
     for val, label in zip(values[:3], "xyz"):
-        if val is not None:
-            u_values.append(val)
-            u_labels.append(labels[0] + label)
+        if val is None:
+            continue
+
+        if not isinstance(val, Number | complex | str):
+            val = "table"
+        
+        u_values.append(val)
+        u_labels.append(labels[0] + label)
 
     r_values = list()
     r_labels = list()
@@ -703,7 +705,7 @@ def _structural_format(property_name, values, labels, units, has_table):
         if val is None:
             continue
 
-        if not isinstance(val, Number | str):
+        if not isinstance(val, Number | complex | str):
             val = "table"
 
         r_values.append(val)
@@ -711,8 +713,11 @@ def _structural_format(property_name, values, labels, units, has_table):
 
     tree = TreeInfo(property_name)
     if has_table:
-        tree.add_item(u_labels, "Table of values")
-        tree.add_item(r_labels, "Table of values")
+        if u_values:
+            tree.add_item(", ".join(u_labels), "Table of values")
+        if r_values:
+            tree.add_item(", ".join(r_labels), "Table of values")
+
     else:
         if u_values:
             tree.add_item(", ".join(u_labels), u_values, units[0])

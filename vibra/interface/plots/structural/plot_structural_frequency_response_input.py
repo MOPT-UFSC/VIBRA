@@ -22,7 +22,7 @@ class PlotStructuralFrequencyResponseInput(QDialog):
         uic.loadUi(ui_path, self)
 
         app().main_window.set_input_widget(self)
-        app().main_window.action_model_workspace_callback()
+        app().main_window.show_geometry_render_widget()
 
         self.model = app().project.model
         self.mesh = app().project.model.mesh
@@ -78,9 +78,9 @@ class PlotStructuralFrequencyResponseInput(QDialog):
     
     def selection_type_callback(self):
         if self.comboBox_selector_filter.currentIndex() == 3:
-            app().main_window.action_mesh_workspace_callback()
+            app().main_window.show_mesh_render_widget()
         else:
-            app().main_window.action_model_workspace_callback()
+            app().main_window.show_geometry_render_widget()
 
     def geometry_selection_callback(self):
 

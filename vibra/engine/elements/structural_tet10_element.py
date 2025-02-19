@@ -215,8 +215,8 @@ class STRUCT_TETRAHEDRON_10S(Element3D):
         """This methdo returns the material constitutive model."""
         self.material = self.model.properties.get_material(element=el_index)
         vv = self.material.poisson_ratio
-        E = self.material.young_modulus
-        # print(self.material.density, self.material.young_modulus, self.material.poisson_ratio)
+        E = self.material.elasticity_modulus
+        # print(self.material.density, self.material.elasticity_modulus, self.material.poisson_ratio)
 
         if model_type == "linear-isotropic":
             # Constititive model - Linear isotropic material
