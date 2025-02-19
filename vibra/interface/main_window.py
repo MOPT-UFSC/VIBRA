@@ -921,9 +921,6 @@ class MainWindow(QMainWindow):
         self.close_app()
     
     def action_face_view_callback(self, clicked: bool):
-        # widget = self.render_widgets_stack.currentWidget()
-        # if isinstance(widget, CommonRenderWidget):
-        #     widget.show_faces()
         self.visualization_filter.faces = clicked
         self.visualization_filter.solids = clicked
         self.visualization_changed.emit()
@@ -990,18 +987,6 @@ class MainWindow(QMainWindow):
         self.visualization_filter.acoustic_symbols = clicked
         self.visualization_filter.structural_symbols = clicked
         self.visualization_changed.emit()
-
-        # symbols_actor = self.mesh_widget.symbols_actor
-        #
-        # if symbols_actor is None:
-        #     return
-        #
-        # if symbols_actor.GetVisibility():
-        #     symbols_actor.VisibilityOff()
-        # else:
-        #     symbols_actor.VisibilityOn()
-        #
-        # self.mesh_widget.update()
         
     def close_app(self):
 
