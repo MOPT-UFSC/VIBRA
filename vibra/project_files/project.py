@@ -235,7 +235,7 @@ class Project:
         if not self.model.generated_mesh:
             obj = MesherInputs()
             if obj.complete:
-                self.main_window.update_plots()
+                app().main_window.update_plots()
             else:
                 return
 
