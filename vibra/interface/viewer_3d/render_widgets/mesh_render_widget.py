@@ -393,28 +393,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.solids_actor.paint_cells(self.selection_color, solids)
         self.update()
 
-    def select_multiple_nodes(self, new_nodes, *, join=False, remove=False):
-        if not self._actors_exists():
-            return
-        self.nodes_actor.paint_cells([255, 0, 0], new_nodes)
-        self.update()
-        # if self.view_mode != SHOW_FACES:
-        #     self.show_points()
-
-    def select_multiple_faces(self, new_faces, *, join=False, remove=False):
-        if not self._actors_exists():
-            return
-        self.faces_actor.paint_cells(self.selection_color, new_faces)
-        self.update()
-        self.show_faces()
-
-    def select_multiple_volumes(self, new_volumes, *, join=False, remove=False):
-        if not self._actors_exists():
-            return
-        self.solids_actor.paint_cells(self.selection_color, new_volumes)
-        self.update()
-        self.show_volumes()
-
     def clear_selection_spheres(self):
         if self.selection_spheres_actor is None:
             return
@@ -509,54 +487,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
         self.update()
-
-    # def start_section_mode(self):
-    #     if not self._actors_exists():
-    #         return
-    #     self.section_plane_active = True
-    #     self.plane_actor.VisibilityOn()
-    #     self.faces_actor.clear_colors((255, 255, 255, 12))
-    #     self.update()
-
-    # def stop_section_mode(self):
-    #     if not self._actors_exists():
-    #         return
-    #     self.section_plane_active = False
-    #     self.plane_actor.VisibilityOff()
-    #     has_hidden_part = bool(self.main_window.hidden_surfaces)
-    #     faces_alpha = 12 if has_hidden_part else 0
-    #     self.faces_actor.clear_colors((255, 255, 255, faces_alpha))
-    #     self.solids_actor.disable_cut()
-    #     self.edges_actor.disable_cut()
-    #     self.nodes_actor.disable_cut()
-    #     self.update()
-
-    # def configure_section_plane(self, position, orientation):
-    #     if not self._actors_exists():
-    #         return
-
-    #     self.plane_actor.configure_section_plane(position, orientation)
-    #     self.update()
-
-    # def apply_section_plane(self, position, orientation, invert=False):
-    #     if not self._actors_exists():
-    #         return
-
-    #     self.section_plane_args = (position, orientation, invert)
-    #     xyz = self.plane_actor.calculate_xyz_position(position)
-    #     normal = self.plane_actor.calculate_normal_vector(orientation)
-    #     if invert:
-    #         normal = -normal
-    #     self.solids_actor.apply_cut(xyz, normal)
-    #     # self.faces_actor.apply_cut(xyz, normal)
-    #     self.edges_actor.apply_cut(xyz, normal)
-    #     self.nodes_actor.apply_cut(xyz, normal)
-
-    #     self.plane_actor.VisibilityOn()
-    #     self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
-    #     self.plane_actor.GetProperty().SetOpacity(0.2)
-
-    #     self.update()
 
     def update_info_text(self):
         text = ""
