@@ -133,68 +133,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.update_section_plane()
         # self.update()
 
-    def set_theme(self, theme):
-        super().set_theme(theme)
-
-        try:
-            if not self._actors_exists():
-                return
-        except AttributeError:
-            return
-
-        if theme == "light":
-            self.points_actor.GetProperty().SetColor(0.2, 0.2, 0.2)
-            self.lines_actor.GetProperty().SetColor(0.2, 0.2, 0.2)
-        elif theme == "dark":
-            self.points_actor.GetProperty().SetColor(1, 1, 1)
-            self.lines_actor.GetProperty().SetColor(1, 1, 1)
-
-    #
-    def show_points(self):
-        if not self._actors_exists():
-            return
-
-        self.points_actor.VisibilityOn()
-        self.lines_actor.VisibilityOff()
-        self.faces_actor.GetProperty().SetOpacity(0.1)
-
-        self.points_actor.PickableOn()
-        self.lines_actor.PickableOff()
-        self.faces_actor.PickableOff()
-
-        self.view_mode = SHOW_POINTS
-        self.update()
-
-    def show_lines(self):
-        if not self._actors_exists():
-            return
-
-        self.points_actor.VisibilityOff()
-        self.lines_actor.VisibilityOn()
-        self.faces_actor.GetProperty().SetOpacity(0.1)
-
-        self.points_actor.PickableOff()
-        self.lines_actor.PickableOn()
-        self.faces_actor.PickableOff()
-
-        self.view_mode = SHOW_LINES
-        self.update()
-
-    def show_faces(self):
-        if not self._actors_exists():
-            return
-
-        self.points_actor.VisibilityOff()
-        self.lines_actor.VisibilityOff()
-        self.faces_actor.GetProperty().SetOpacity(1)
-
-        self.points_actor.PickableOff()
-        self.lines_actor.PickableOff()
-        self.faces_actor.PickableOn()
-
-        self.view_mode = SHOW_FACES
-        self.update()
-
     #
     def click_callback(self, x, y):
         self.mouse_click = (x, y)
