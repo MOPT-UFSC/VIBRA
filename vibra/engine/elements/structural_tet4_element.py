@@ -103,8 +103,8 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         # self.material = self.model.properties.get_material(volume=volume_id)
 
         vv = self.material.poisson_ratio
-        E = self.material.young_modulus
-        # print(self.material.density, self.material.young_modulus, self.material.poisson_ratio)
+        E = self.material.elasticity_modulus
+        # print(self.material.density, self.material.elasticity_modulus, self.material.poisson_ratio)
 
         if model_type == "linear-isotropic":
             # Constititive model - Linear isotropic material
@@ -164,26 +164,67 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
         self.connectivity = self.connectivity[:, [0, 6, 4, 5, 7]]
 
+    def get_rows_and_cols_indexes(self, el_index: int, shift_index: int):
+
+        edofs = self.DOFS_PER_ELEMENT
+        node_ids = self.connectivity[el_index, 1:]
+        local_dofs = np.arange(self.DOFS_PER_NODE, dtype=int)
+
+        _dofs = np.zeros(len(node_ids), dtype=int)
+        _shifts = np.zeros(len(node_ids), dtype=int)
+
+        for i, node_id in enumerate(node_ids):
+
+            shift = shift_index
+            dofs_node = self.DOFS_PER_NODE
+            surface_ids = self.model.mesh.surfaces_from_node.get(node_id, list())
+
+            for surface_id in surface_ids:
+                shell_data = self.model.properties._get_property("surface_thickness", surface=surface_id)
+                if isinstance(shell_data, dict):
+                    dofs_node = 2 * self.DOFS_PER_NODE
+                    shift = 0
+                    break
+
+            _dofs[i] = dofs_node
+            _shifts[i] = shift
+
+        _indexes = (_dofs * node_ids + _shifts).reshape(-1, 1) + local_dofs
+        aux = np.tile(_indexes.flatten(), (edofs, 1))
+        ind_rows = aux.T
+        ind_cols = aux
+
+        return ind_rows, ind_cols
+
     def generate_ind_rows_cols(self):
         """This method processess the dofs indices (rows and columns) for assembly"""
 
         self.reorder_connect()
-        dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT
-        ind_dofs = (np.array([  dofs * self.connectivity[:, 1] - 1,
-                                dofs * self.connectivity[:, 1],
-                                dofs * self.connectivity[:, 1] + 1,
-                                dofs * self.connectivity[:, 2] - 1,
-                                dofs * self.connectivity[:, 2],
-                                dofs * self.connectivity[:, 2] + 1,
-                                dofs * self.connectivity[:, 3] - 1,
-                                dofs * self.connectivity[:, 3],
-                                dofs * self.connectivity[:, 3] + 1,
-                                dofs * self.connectivity[:, 4] - 1,
-                                dofs * self.connectivity[:, 4],
-                                dofs * self.connectivity[:, 4] + 1  ], dtype=int) + 1).T
 
-        vect_indices = ind_dofs.flatten()
-        self.ind_rows = ((np.tile(vect_indices, (edofs, 1))).T).flatten()
+        dofs = self.DOFS_PER_NODE
+        edofs = self.DOFS_PER_ELEMENT
+
+        # ind_dofs = np.array([  dofs * self.connectivity[:, 1] + 0,
+        #                        dofs * self.connectivity[:, 1] + 1,
+        #                        dofs * self.connectivity[:, 1] + 2,
+        #                        dofs * self.connectivity[:, 2] + 0,
+        #                        dofs * self.connectivity[:, 2] + 1,
+        #                        dofs * self.connectivity[:, 2] + 2,
+        #                        dofs * self.connectivity[:, 3] + 0,
+        #                        dofs * self.connectivity[:, 3] + 1,
+        #                        dofs * self.connectivity[:, 3] + 2,
+        #                        dofs * self.connectivity[:, 4] + 0,
+        #                        dofs * self.connectivity[:, 4] + 1,
+        #                        dofs * self.connectivity[:, 4] + 2  ], dtype=int).T
+
+        local_dofs = np.arange(dofs, dtype=int)
+
+        ind_dofs = np.array([dofs * self.connectivity[:, 1].reshape(-1, 1) + local_dofs,
+                             dofs * self.connectivity[:, 2].reshape(-1, 1) + local_dofs,
+                             dofs * self.connectivity[:, 3].reshape(-1, 1) + local_dofs,
+                             dofs * self.connectivity[:, 4].reshape(-1, 1) + local_dofs], dtype=int)
+
+        self.ind_rows = ((np.tile(ind_dofs.flatten(), (edofs, 1))).T).flatten()
         self.ind_cols = (np.tile(ind_dofs, edofs)).flatten()
 
         return self.ind_rows, self.ind_cols

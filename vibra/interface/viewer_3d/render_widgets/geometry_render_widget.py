@@ -479,7 +479,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         tree.add_item("Name", material.name)
         tree.add_item("Identifier", material.identifier)
         tree.add_item("Density", material.density, "kg/m³")
-        tree.add_item("elasticity modulus", material.young_modulus / 1e9, "GPa")
+        tree.add_item("elasticity modulus", material.elasticity_modulus / 1e9, "GPa")
         tree.add_item("Poisson ratio", material.poisson_ratio, "--")
         tree.add_item("Thermal expasion coefficient", material.thermal_expansion_coefficient, "1/K")
 
@@ -594,13 +594,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         if len(selected_faces) != 1:
             return text
 
-        prescribed_dofs = app().project.model.properties._get_property(
-            "prescribed_dofs", surface=selected_faces[0]
-        )
-        external_loads = app().project.model.properties._get_property(
-            "external_loads", surface=selected_faces[0]
-        )
-        boundary_conditions_list = [prescribed_dofs, external_loads]
+        prescribed_dofs = app().project.model.properties._get_property("prescribed_dofs", surface=selected_faces[0])
+        nodal_loads = app().project.model.properties._get_property("nodal_loads", surface=selected_faces[0])
+        boundary_conditions_list = [prescribed_dofs, nodal_loads]
 
         if all(condition is None for condition in boundary_conditions_list):
             return text
@@ -612,12 +608,10 @@ class GeometryRenderWidget(CommonRenderWidget):
                 "Prescribed dofs", values, ("u", "r"), ("m", "rad"), loaded_table
             )
 
-        if external_loads is not None:
-            values = external_loads["values"]
-            loaded_table = "table_names" in external_loads.keys()
-            text += _structural_format(
-                "External loads", values, ("F", "M"), ("N", "N.m"), loaded_table
-            )
+        if nodal_loads is not None:
+            values = nodal_loads["values"]
+            loaded_table = "table_names" in nodal_loads.keys()
+            text += _structural_format("Nodal loads",  values, ("F", "M"), ("N", "N.m"), loaded_table)
 
         return text
 
@@ -633,9 +627,14 @@ def _structural_format(property_name, values, labels, units, has_table):
     u_values = list()
     u_labels = list()
     for val, label in zip(values[:3], "xyz"):
-        if val is not None:
-            u_values.append(val)
-            u_labels.append(labels[0] + label)
+        if val is None:
+            continue
+
+        if not isinstance(val, Number | complex | str):
+            val = "table"
+        
+        u_values.append(val)
+        u_labels.append(labels[0] + label)
 
     r_values = list()
     r_labels = list()
@@ -643,7 +642,7 @@ def _structural_format(property_name, values, labels, units, has_table):
         if val is None:
             continue
 
-        if not isinstance(val, Number | str):
+        if not isinstance(val, Number | complex | str):
             val = "table"
 
         r_values.append(val)
@@ -651,8 +650,11 @@ def _structural_format(property_name, values, labels, units, has_table):
 
     tree = TreeInfo(property_name)
     if has_table:
-        tree.add_item(u_labels, "Table of values")
-        tree.add_item(r_labels, "Table of values")
+        if u_values:
+            tree.add_item(", ".join(u_labels), "Table of values")
+        if r_values:
+            tree.add_item(", ".join(r_labels), "Table of values")
+
     else:
         if u_values:
             tree.add_item(", ".join(u_labels), u_values, units[0])

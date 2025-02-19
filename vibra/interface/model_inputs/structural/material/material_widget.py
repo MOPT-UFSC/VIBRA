@@ -70,7 +70,7 @@ class MaterialWidget(QWidget):
                                     "name",
                                     "identifier",
                                     "material_density",
-                                    "young_modulus",
+                                    "elasticity_modulus",
                                     "poisson",
                                     "thermal_expansion_coefficient",
                                     "color"
@@ -124,7 +124,7 @@ class MaterialWidget(QWidget):
                                 identifier = int(config[tag]['identifier']), 
                                 density = float(config[tag]['material_density']),
                                 poisson_ratio = float(config[tag]['poisson']),
-                                young_modulus = float(config[tag]['young_modulus']) * 1e9,
+                                elasticity_modulus = float(config[tag]['elasticity_modulus']) * 1e9,
                                 thermal_expansion_coefficient = float(config[tag]['thermal_expansion_coefficient']), 
                                 color = getColorRGB(config[tag]['color'])
                                 )
@@ -146,7 +146,7 @@ class MaterialWidget(QWidget):
                 self.tableWidget_material_data.setItem(0, j, QTableWidgetItem(str(material.name)))
                 self.tableWidget_material_data.setItem(1, j, QTableWidgetItem(str(material.identifier)))
                 self.tableWidget_material_data.setItem(2, j, QTableWidgetItem(str(material.density)))
-                self.tableWidget_material_data.setItem(3, j, QTableWidgetItem(f"{material.young_modulus/1e9 :.2f}"))
+                self.tableWidget_material_data.setItem(3, j, QTableWidgetItem(f"{material.elasticity_modulus/1e9 :.2f}"))
                 self.tableWidget_material_data.setItem(4, j, QTableWidgetItem(str(material.poisson_ratio)))
                 self.tableWidget_material_data.setItem(5, j, QTableWidgetItem(str(material.thermal_expansion_coefficient)))
 
@@ -323,7 +323,7 @@ class MaterialWidget(QWidget):
 
         prop_labels = {
                         2 : "material_density", 
-                        3 : "young_modulus",
+                        3 : "elasticity_modulus",
                         4 : "poisson",
                         5 : "thermal_expansion_coefficient"
                     }

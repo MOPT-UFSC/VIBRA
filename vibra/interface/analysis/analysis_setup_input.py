@@ -7,7 +7,6 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QTabWidget
 
 from vibra import app, UI_DIR
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 window_title = "Error"
@@ -51,14 +50,15 @@ class AnalysisSetupInput(QDialog):
 
         uic.loadUi(ui_path, self)
 
+        app().main_window.close_dialogs()
+        app().main_window.set_input_widget(self)
+
         self.model = app().project.model
 
         self._initialize()
         self._config_window()
         self._define_qt_variables()
         self._create_connections()
-
-        ConfigWidgetAppearance(self)
 
         self.load_analysis_data()
 

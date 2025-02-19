@@ -114,24 +114,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
 
         self.remove_all_actors()
 
-        phase = self.control_bar.phase_slider.value()
-
-        current_modal_shape = solver.modal_shape[:, index].copy()
-        if self.control_bar.absolute_button.isChecked():
-            current_modal_shape = np.abs(current_modal_shape)
-        current_modal_shape /= np.max(np.abs(current_modal_shape))
-
-        min_value = np.min(current_modal_shape)
-        max_value = np.max(current_modal_shape)
-
-        if self.control_bar.real_part_button.isChecked():
-            if np.abs(min_value) != np.abs(max_value):
-                min_value = -np.max(np.abs([min_value, max_value]))
-                max_value = np.max(np.abs([min_value, max_value]))
-
-        current_modal_shape *= np.cos(phase * np.pi / 180)
-        if self.control_bar.absolute_button.isChecked():
-            current_modal_shape = np.abs(current_modal_shape)
+        current_modal_shape, min_value, max_value = self.calculate_color_bar_plots()
 
         self.analysis_actor = HollowAnalysisActor(mesh)
         self.analysis_actor.plot_color_bar(current_modal_shape, min_value, max_value)
@@ -181,6 +164,31 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         if reset_camera:
             self.renderer.ResetCamera()
         app().project.thumbnail = self.get_thumbnail()
+    
+    def calculate_color_bar_plots(self):
+        solver = app().project.acoustic_modal_solver
+        index = self.current_shape_index()
+
+        phase = self.control_bar.phase_slider.value()
+
+        current_modal_shape = solver.modal_shape[:, index].copy()
+        if self.control_bar.absolute_button.isChecked():
+            current_modal_shape = np.abs(current_modal_shape)
+        current_modal_shape /= np.max(np.abs(current_modal_shape))
+
+        min_value = np.min(current_modal_shape)
+        max_value = np.max(current_modal_shape)
+
+        if self.control_bar.real_part_button.isChecked():
+            if np.abs(min_value) != np.abs(max_value):
+                min_value = -np.max(np.abs([min_value, max_value]))
+                max_value = np.max(np.abs([min_value, max_value]))
+
+        current_modal_shape *= np.cos(phase * np.pi / 180)
+        if self.control_bar.absolute_button.isChecked():
+            current_modal_shape = np.abs(current_modal_shape)
+            
+        return current_modal_shape, min_value, max_value
 
     def update_hidden_plot(self):
         # in this case the update_plot function is fast enough
@@ -349,6 +357,8 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
             if mesh.solids_connectivity.size > 0:
                 self.remove_actors(self.analysis_actor)
                 self.analysis_actor = AnalysisActor(mesh)
+                current_modal_shape, min_value, max_value = self.calculate_color_bar_plots()
+                self.analysis_actor.plot_color_bar(current_modal_shape, min_value, max_value)
                 self.add_actors(self.analysis_actor)
 
         self.plane_actor.configure_section_plane(position, rotation)

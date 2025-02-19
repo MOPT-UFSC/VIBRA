@@ -550,6 +550,12 @@ class MainWindow(QMainWindow):
                 self.action_model_workspace.setEnabled(True)
             if not self.action_mesh_workspace.isEnabled():
                 self.action_mesh_workspace.setEnabled(True)
+            
+    def show_geometry_render_widget(self):
+        self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
+
+    def show_mesh_render_widget(self):
+        self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
     
     def update_plots(self, reset_camera=True):
         for i in range(self.render_widgets_stack.count()):
@@ -583,6 +589,7 @@ class MainWindow(QMainWindow):
             self.action_results_workspace.setEnabled(True)
 
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
+        self.configure_mesh_information()
         self.menu_widget.modify_items_access_after_geometry_importing()
     
     def action_results_workspace_callback(self):
@@ -757,7 +764,7 @@ class MainWindow(QMainWindow):
         save_func(path)
 
         from datetime import datetime
-        message = f"The project data has been saved @{datetime.now()}"
+        message = f"The project data has been saved: {datetime.now()}"
         print(message)
 
     def open_project_dialog(self):
@@ -1032,6 +1039,7 @@ class MainWindow(QMainWindow):
     def close_dialogs(self):
         if isinstance(self.dialog, (QDialog, QWidget)):
             self.dialog.close()
+            self.dialog = None
 
     def action_plot_specific_acoustic_impedance_callback(self):
             if app().project.acoustic_harmonic_solver.solution is None:
