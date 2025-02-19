@@ -46,6 +46,7 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.left_clicked.connect(self.click_callback)
         self.left_released.connect(self.selection_callback)
+        self.main_window.visualization_changed.connect(self.visualization_changed_callback)
         self.main_window.selection_changed.connect(self.update_selection)
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
@@ -163,76 +164,6 @@ class MeshRenderWidget(CommonRenderWidget):
         # self.faces_actor.clear_colors((255, 255, 255, faces_alpha))
 
         self.update_section_plane()
-
-    # TODO: replace these methods to use flags
-    # Then, combinations of these visualizations will be valid
-    def show_points(self):
-        return
-        self.view_mode = SHOW_POINTS
-        self.nodes_actor.VisibilityOn()
-        self.edges_actor.VisibilityOff()
-        self.faces_actor.VisibilityOff()
-        self.solids_actor.VisibilityOff()
-        self.update()
-
-    def show_lines(self):
-        return
-        self.view_mode = SHOW_LINES
-        self.nodes_actor.VisibilityOn()
-        self.edges_actor.VisibilityOn()
-        self.faces_actor.VisibilityOff()
-        self.solids_actor.VisibilityOff()
-        self.update()
-
-    def show_faces(self):
-        return
-        self.view_mode = SHOW_FACES
-        self.nodes_actor.VisibilityOn()
-        self.edges_actor.VisibilityOn()
-        self.faces_actor.VisibilityOn()
-        self.solids_actor.VisibilityOn()
-        self.edges_actor.GetProperty().SetColor(0, 0, 0)
-        self.update()
-
-    def show_volumes(self):
-        return
-        self.view_mode = SHOW_VOLUMES
-        self.nodes_actor.VisibilityOn()
-        self.edges_actor.VisibilityOn()
-        self.faces_actor.VisibilityOff()
-        self.solids_actor.VisibilityOn()
-        self.edges_actor.GetProperty().SetColor(0, 0, 0)
-        self.update()
-
-    def set_theme(self, theme):
-        super().set_theme(theme)
-        return
-
-        try:
-            if not self._actors_exists():
-                return
-        except AttributeError:
-            return
-
-        light_color = (1, 1, 1)
-        dark_color = (0, 0, 0)
-
-        # It it is showing faces, the colors are fixed
-        # otherwise it should follow the theme
-        if self.view_mode in (SHOW_FACES, SHOW_VOLUMES):
-            self.edges_actor.GetProperty().SetColor(dark_color)
-            self.faces_actor.GetProperty().SetColor(light_color)
-            self.solids_actor.GetProperty().SetColor(light_color)
-
-        elif theme == "light":
-            self.edges_actor.GetProperty().SetColor(dark_color)
-            self.faces_actor.GetProperty().SetColor(dark_color)
-            self.solids_actor.GetProperty().SetColor(dark_color)
-
-        elif theme == "dark":
-            self.edges_actor.GetProperty().SetColor(light_color)
-            self.faces_actor.GetProperty().SetColor(light_color)
-            self.solids_actor.GetProperty().SetColor(light_color)
 
     def click_callback(self, x, y):
         self.mouse_click = (x, y)
