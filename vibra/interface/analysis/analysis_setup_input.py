@@ -290,7 +290,6 @@ class AnalysisSetupInput(QDialog):
         self.solve_analysis = True
         app().main_window.analysis_toolbar.enable_pushbutons.emit()
 
-
     def closeEvent(self, a0):
         self.keep_window_open = False
         return super().closeEvent(a0)

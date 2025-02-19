@@ -499,12 +499,12 @@ class MainWindow(QMainWindow):
         self.update_mesh_information(nodes, face_elements, solid_elements)
     
     def configure_acoustic_modal_analysis_render_widget(self, show_renderer_widget=False):
-        self.acoustic_modal_analysis.update_frequencies()
         self.acoustic_modal_analysis.update_plot()
         
         if show_renderer_widget:
             self.render_widgets_stack.setCurrentWidget(self.acoustic_modal_analysis)
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
+            self.results_viewer_widget.hide_bottom_widget()
             
             self.action_results_workspace.setEnabled(False)
             if not self.action_model_workspace.isEnabled():
@@ -513,12 +513,12 @@ class MainWindow(QMainWindow):
                 self.action_mesh_workspace.setEnabled(True)
     
     def configure_structural_modal_analysis_render_widget(self, show_render_widget=False):
-        self.structural_modal_analysis.update_frequencies()
         self.structural_modal_analysis.update_plot()
 
         if show_render_widget:
             self.render_widgets_stack.setCurrentWidget(self.structural_modal_analysis)
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
+            self.results_viewer_widget.hide_bottom_widget()
 
             self.action_results_workspace.setEnabled(False)
             if not self.action_model_workspace.isEnabled():
@@ -527,12 +527,12 @@ class MainWindow(QMainWindow):
                 self.action_mesh_workspace.setEnabled(True)
             
     def configure_structural_harmonic_analysis_render_widget(self, show_render_widget=False):
-        self.structural_harmonic_analysis.update_frequencies()
         self.structural_harmonic_analysis.update_plot()
 
         if show_render_widget:
             self.render_widgets_stack.setCurrentWidget(self.structural_harmonic_analysis)
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
+            self.results_viewer_widget.hide_bottom_widget()
 
             self.action_results_workspace.setEnabled(False)
             if not self.action_model_workspace.isEnabled():
@@ -541,12 +541,12 @@ class MainWindow(QMainWindow):
                 self.action_mesh_workspace.setEnabled(True)
 
     def configure_acoustic_harmonic_analysis_render_widget(self, show_render_widget=False):
-        self.acoustic_harmonic_analysis.update_frequencies()
         self.acoustic_harmonic_analysis.update_plot()
 
         if show_render_widget:
             self.render_widgets_stack.setCurrentWidget(self.acoustic_harmonic_analysis)
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
+            self.results_viewer_widget.hide_bottom_widget()
 
             self.action_results_workspace.setEnabled(False)
             if not self.action_model_workspace.isEnabled():

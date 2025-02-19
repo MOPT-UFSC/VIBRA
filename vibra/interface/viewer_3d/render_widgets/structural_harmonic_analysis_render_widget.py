@@ -85,12 +85,6 @@ class StructuralHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
             return self.current_menu_widget.current_frequency_index()
         return 0
 
-    def update_frequencies(self):
-        if self.current_menu_widget is None:
-            return 
-        
-        self.current_menu_widget.load_frequencies()
-
     def update_plot(self, reset_camera=False):
         if app().project is None:
             return

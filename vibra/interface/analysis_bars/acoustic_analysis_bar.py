@@ -32,20 +32,8 @@ class AcousticModalAnalysisBar(QWidget):
         self.create_video_button.setToolTip("Create video")
         self.create_video_button.setMinimumWidth(80)
 
-        self.frequency_box = QComboBox()
-
-        self.absolute_button = QRadioButton("Absolute")
-        self.real_part_button = QRadioButton("Real part")
         self.show_mesh_button = QCheckBox("Show mesh")
-
-        self.frequency_selector_label = QLabel("Frequency selector:")
-
-        button_group = QButtonGroup()
-        button_group.addButton(self.real_part_button)
-        button_group.addButton(self.absolute_button)
-        self.frequency_box.setMinimumWidth(180)
-        self.frequency_box.setMaximumWidth(300)
-        self.real_part_button.setChecked(True)
+ 
         self.show_mesh_button.setChecked(True)
 
         hspacing = 20
@@ -54,11 +42,6 @@ class AcousticModalAnalysisBar(QWidget):
         layout.addWidget(QLabel("Phase [deg]:"))
         layout.addWidget(self.phase_slider)
         layout.addWidget(self.phase_label)
-        layout.addSpacing(hspacing)
-
-        layout.addWidget(QLabel("Color Scale:"))
-        layout.addWidget(self.absolute_button)
-        layout.addWidget(self.real_part_button)
         layout.addSpacing(hspacing)
 
         layout.addWidget(self.show_mesh_button)
@@ -71,12 +54,7 @@ class AcousticModalAnalysisBar(QWidget):
         self.selector_label = QLabel("List of results:")
 
         layout.addWidget(self.selector_label)
-        layout.addWidget(self.frequency_box)
         self.setLayout(layout)
-
-        self.frequency_box.activated.connect(self.value_changed.emit)
-        self.real_part_button.clicked.connect(self.value_changed.emit)
-        self.absolute_button.clicked.connect(self.value_changed.emit)
 
     def use_play_icon(self):
         self.play_pause_button.setIcon(self.play_icon)
@@ -85,24 +63,6 @@ class AcousticModalAnalysisBar(QWidget):
     def use_pause_icon(self):
         self.play_pause_button.setIcon(self.pause_icon)
         self.play_pause_button.setToolTip("Pause animation")
-
-    def set_frequencies(self, frequencies):
-        self.frequency_box.clear()
-
-        if frequencies is None:
-            return
-
-        analysis_data = app().project.analysis_data
-        if analysis_data is None:
-            return
-
-        if analysis_data["analysis_id"] == 4:
-            prefix = "Mode"
-        else:
-            prefix = "Frequency"
-
-        for i, freq in enumerate(frequencies):
-            self.frequency_box.addItem(f" {prefix} {i + 1}: {round(freq, 6)} Hz")
 
     def create_sliders(self):
         self.phase_label = QLabel("value")

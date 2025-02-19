@@ -57,7 +57,6 @@ class PlotStructuralFrequencyResponseInput(QWidget):
 
         # QPushButton
         self.pushButton_export_data : QPushButton
-        self.pushButton_exit: QPushButton
         self.pushButton_plot_data : QPushButton
 
     def _create_connections(self):
@@ -65,7 +64,6 @@ class PlotStructuralFrequencyResponseInput(QWidget):
         self.comboBox_selector_filter.currentIndexChanged.connect(self.selection_type_callback)
         #
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
-        self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)

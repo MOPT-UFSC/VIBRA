@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
 from PyQt5.QtCore import QObjectCleanupHandler
-from PyQt5.QtWidgets import QVBoxLayout, QFileDialog
+from PyQt5.QtWidgets import QVBoxLayout, QFileDialog, QWidget
 
 from vibra import app
 # from vibra.interface.modal_analysis_bar import AcousticModalAnalysisBar
@@ -33,6 +33,8 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         super().__init__(parent)
 
         self.main_window = app().main_window
+        self.current_widget = None
+
         self.control_bar = AcousticModalAnalysisBar()
         self.control_bar.value_changed.connect(self.update_plot)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
@@ -41,7 +43,6 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.control_bar.create_video_button.clicked.connect(self.save_video)
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
-        self.control_bar.frequency_selector_label.setText("Frequency selector:")
 
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
@@ -64,8 +65,10 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.create_axes()
         self.create_color_bar()
         self.create_scale_bar()
-        self.update_frequencies()
         self.update_plot()
+    
+    def configure_menu_widget(self, widget: QWidget):
+        self.current_widget = widget
 
     def toggle_animation(self, *args, **kwargs):
         if self.playing_animation:
@@ -82,13 +85,9 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.control_bar.use_play_icon()
 
     def current_frequency_index(self):
-        return self.control_bar.frequency_box.currentIndex()
-
-    def update_frequencies(self):
-        solver = app().project.acoustic_harmonic_solver
-        if solver is None:
-            return
-        self.control_bar.set_frequencies(solver.frequencies)
+        if self.current_widget is not None:
+            return self.current_widget.current_frequency_index()
+        return 0
 
     def update_plot(self, reset_camera=False):
 
@@ -109,7 +108,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
 
         if solver.solution is None:
             return
-
+        
         index = self.current_frequency_index()
         if not (0 <= index < solver.solution.shape[1]):
             return
@@ -128,7 +127,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         output_pressures = amplitudes * np.cos(phase + phi_sld)
 
         min_value, max_value = solver.get_max_min_values_of_pressures(index)
-        if self.control_bar.absolute_button.isChecked():
+        if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
             min_value = 0
             output_pressures = np.abs(output_pressures)
 
@@ -205,7 +204,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         output_pressures = amplitudes * np.cos(phase + phi[frame])
 
         min_value, max_value = solver.get_max_min_values_of_pressures(index)
-        if self.control_bar.absolute_button.isChecked():
+        if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
             min_value = 0
             output_pressures = np.abs(output_pressures)
 

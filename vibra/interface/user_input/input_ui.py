@@ -19,6 +19,7 @@ from vibra.interface.model_inputs.structural.prescribed_dofs_inputs import Presc
 from vibra.interface.model_inputs.structural.structural_external_loads_inputs import StructuralExternalLoadsInputs
 from vibra.interface.model_inputs.structural.structural_pressure_load_inputs import SetStructuralPressureLoadInputs
 #
+from vibra.interface.plots.acoustic.plot_acoustic_pressure_field import PlotAcousticPressureField
 from vibra.interface.plots.acoustic.plot_acoustic_pressure_frequency_response_input import PlotAcousticPressureFrequencyResponseInput
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_input import PlotAcousticFrequencyResponseFunctionInput
 from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
@@ -172,8 +173,8 @@ class InputUi:
             self.main_window.configure_acoustic_modal_analysis_render_widget(True)
 
     def plot_acoustic_pressure_field(self):
-        if not self.results_viewer_items.item_child_plot_acoustic_pressure_field.isDisabled():
-            self.main_window.configure_acoustic_harmonic_analysis_render_widget(True)
+        if self.project.analysis_id in [3]:
+            return self.process_input(PlotAcousticPressureField)
 
     def plot_acoustic_pressure_frequency_response(self):
         if not self.results_viewer_items.item_child_plot_acoustic_pressure_frequency_response.isDisabled():

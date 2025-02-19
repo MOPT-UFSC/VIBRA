@@ -76,9 +76,6 @@ class ResultsViewerItems(CommonMenuItems):
     def item_child_plot_acoustic_mode_shapes_callback(self):
         app().main_window.input_ui.plot_acoustic_mode_shapes()
     
-    def item_child_plot_acoustic_pressure_field_callback(self):
-        app().main_window.input_ui.plot_acoustic_pressure_field()
-    
     def item_child_plot_acoustic_pressure_frequency_response_callback(self):
         app().main_window.input_ui.plot_acoustic_pressure_frequency_response()
     

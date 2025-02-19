@@ -18,6 +18,9 @@ class ResultsViewerWidget(QWidget):
 
     def _reset(self):
         self.current_widget = None
+    
+    def hide_bottom_widget(self):
+        self.bottom_widget.hide()
 
     def _define_qt_variables(self):
 
@@ -35,6 +38,7 @@ class ResultsViewerWidget(QWidget):
         self.results_viewer_items.item_child_plot_structural_mode_shapes.clicked.connect(self.add_structural_mode_shape_widget)
         self.results_viewer_items.item_child_plot_displacement_field.clicked.connect(self.add_displacement_field_widget)
         self.results_viewer_items.item_child_plot_structural_frequency_response.clicked.connect(self.add_structural_frequency_response_widget)
+        self.results_viewer_items.item_child_plot_acoustic_pressure_field.clicked.connect(self.add_acoustic_pressure_field_widget)
     
     def get_item(self):
         return self.results_viewer_items
@@ -88,9 +92,9 @@ class ResultsViewerWidget(QWidget):
         self.add_widget(widget, animation_widget=True)
 
     def add_acoustic_pressure_field_widget(self):
-        self.configure_render_according_to_plot_type("tubes")
-        widget = app().main_window.input_ui.plot_acoustic_pressure_field()
-        self.add_widget(widget, animation_widget=True)
+        self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_field()
+        app().main_window.acoustic_harmonic_analysis.configure_menu_widget(self.current_widget)
+        self.add_widget(self.current_widget, animation_widget=True)
 
     def add_acoustic_frequency_response_widget(self):
         self.configure_render_according_to_plot_type("nodes")

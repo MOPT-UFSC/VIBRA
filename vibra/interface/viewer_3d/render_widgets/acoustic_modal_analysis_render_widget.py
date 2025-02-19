@@ -35,7 +35,6 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.control_bar.create_video_button.clicked.connect(self.save_video)
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
-        self.control_bar.frequency_selector_label.setText("Natural frequency:")
 
         self.section_plane_active = False
         self.show_plane_actor = True
@@ -58,7 +57,6 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.create_axes()
         self.create_color_bar()
         self.create_scale_bar()
-        self.update_frequencies()
         self.update_plot()
 
     def toggle_animation(self, *args, **kwargs):
@@ -77,12 +75,6 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
 
     def current_shape_index(self):
         return self.control_bar.frequency_box.currentIndex()
-
-    def update_frequencies(self):
-        solver = app().project.acoustic_modal_solver
-        if solver is None:
-            return
-        self.control_bar.set_frequencies(solver.natural_frequencies)
 
     def update_plot(self, reset_camera=False):
         # Remember of updating the frequencies before running this
