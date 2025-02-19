@@ -76,15 +76,6 @@ class ResultsViewerItems(CommonMenuItems):
     def item_child_plot_acoustic_mode_shapes_callback(self):
         app().main_window.input_ui.plot_acoustic_mode_shapes()
     
-    def item_child_plot_acoustic_pressure_frequency_response_callback(self):
-        app().main_window.input_ui.plot_acoustic_pressure_frequency_response()
-    
-    def item_child_plot_acoustic_pressure_frequency_response_function_callback(self):
-        app().main_window.input_ui.plot_acoustic_pressure_frequency_response_function()
-    
-    def item_child_plot_TL_NR_callback(self):
-        app().main_window.input_ui.plot_TL_NR()
-    
     def item_child_plot_reaction_frequency_response_callback(self):
         return
         app().main_window.input_ui.plot_reaction_frequency_response()

@@ -21,7 +21,7 @@ from vibra.interface.model_inputs.structural.structural_pressure_load_inputs imp
 #
 from vibra.interface.plots.acoustic.plot_acoustic_pressure_field import PlotAcousticPressureField
 from vibra.interface.plots.acoustic.plot_acoustic_pressure_frequency_response_input import PlotAcousticPressureFrequencyResponseInput
-from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_input import PlotAcousticFrequencyResponseFunctionInput
+from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_input import PlotAcousticPressureFrequencyResponseFunctionInput
 from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
 from vibra.interface.plots.acoustic.plot_transmission_loss_input import PlotTransmissionLossInput
 #
@@ -177,19 +177,19 @@ class InputUi:
             return self.process_input(PlotAcousticPressureField)
 
     def plot_acoustic_pressure_frequency_response(self):
-        if not self.results_viewer_items.item_child_plot_acoustic_pressure_frequency_response.isDisabled():
-            self.process_input(PlotAcousticPressureFrequencyResponseInput)
+        if self.project.analysis_id in [3]:
+            return self.process_input(PlotAcousticPressureFrequencyResponseInput)
 
     def plot_acoustic_pressure_frequency_response_function(self):
-        if not self.results_viewer_items.item_child_plot_acoustic_pressure_frequency_response_function.isDisabled():
-            self.process_input(PlotAcousticFrequencyResponseFunctionInput)
+        if self.project.analysis_id in [3]:
+            return self.process_input(PlotAcousticPressureFrequencyResponseFunctionInput)
 
     def plot_acoustic_delta_pressures(self):
         pass
 
     def plot_TL_NR(self):
-       if not self.results_viewer_items.item_child_plot_TL_NR.isDisabled():
-           self.process_input(PlotTransmissionLossInput)
+       if self.project.analysis_id in [3]:
+           return self.process_input(PlotTransmissionLossInput)
             
     def empty_project_action_message(self):
         title = 'EMPTY PROJECT'

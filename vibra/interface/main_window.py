@@ -616,11 +616,10 @@ class MainWindow(QMainWindow):
             else:
                 render_widget = self.structural_harmonic_analysis
             
-            self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.render_widgets_stack.setCurrentWidget(render_widget)
+            self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.results_viewer_widget.results_viewer_items.update_items()
             self.analysis_toolbar.update_analysis_combo_boxes()
-            self.results_viewer_widget.update_render_by_menu_item()
 
     def action_new_project_callback(self):
         self.new_project_dialog()

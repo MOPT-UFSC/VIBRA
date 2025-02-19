@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QComboBox, QLineEdit, QPushButton, QDialog
+from PyQt5.QtWidgets import QComboBox, QLineEdit, QPushButton, QWidget
 from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt5.QtGui import QCloseEvent
 from PyQt5 import uic
@@ -14,7 +14,7 @@ import numpy as np
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class PlotAcousticFrequencyResponseFunctionInput(QDialog):
+class PlotAcousticPressureFrequencyResponseFunctionInput(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -22,7 +22,6 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         uic.loadUi(ui_path, self)
 
         self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
         self.main_window.show_geometry_render_widget()
 
         self.project = app().project
@@ -30,7 +29,6 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
-        self._config_window()
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
@@ -39,17 +37,12 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
 
         self._load_analysis_data_and_solution()
         self.geometry_selection_callback()
-
-        while self.keep_window_open:
-            self.exec()
-
-    def _config_window(self):
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(app().main_window.vibra_icon)
+    
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.update_render_according_to_selector()
 
     def _initialize(self):
-        self.keep_window_open = True
         self.exporter = None
         self.plotter = None
         self.unit_label = "Pa/Pa"
@@ -66,7 +59,6 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
 
         # QPushButton
         self.pushButton_export_data : QPushButton
-        self.pushButton_exit: QPushButton
         self.pushButton_plot_data : QPushButton
         self.pushButton_flip_selection : QPushButton
 
@@ -75,7 +67,6 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
         #
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
-        self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_flip_selection.clicked.connect(self.flip_nodes)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
@@ -260,7 +251,6 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
 
     def join_model_data(self):
 
-        self.hide()
         index = self.comboBox_selector_filter.currentIndex()
 
         if index == 0:
@@ -321,5 +311,4 @@ class PlotAcousticFrequencyResponseFunctionInput(QDialog):
         if self.plotter is not None:
             self.plotter.close()
 
-        self.keep_window_open = False
         return super().closeEvent(a0)

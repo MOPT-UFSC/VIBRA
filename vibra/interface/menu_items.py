@@ -30,7 +30,7 @@ from vibra.interface.model_inputs.structural.structural_external_loads_inputs im
 from vibra.interface.model_inputs.structural.structural_pressure_load_inputs import SetStructuralPressureLoadInputs
 #
 from vibra.interface.plots.acoustic.plot_acoustic_pressure_frequency_response_input import PlotAcousticPressureFrequencyResponseInput
-from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_input import PlotAcousticFrequencyResponseFunctionInput
+from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_input import PlotAcousticPressureFrequencyResponseFunctionInput
 from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
 from vibra.interface.plots.acoustic.plot_transmission_loss_input import PlotTransmissionLossInput
 #
@@ -503,7 +503,7 @@ class MenuItems(QTreeWidget):
 
         elif item == self.item_child_plot_acoustic_pressure_frequency_response_function:
             if not self.item_child_plot_acoustic_pressure_frequency_response_function.isDisabled():
-                PlotAcousticFrequencyResponseFunctionInput()
+                PlotAcousticPressureFrequencyResponseFunctionInput()
 
         elif item == self.item_child_plot_TL_NR:
             if not self.item_child_plot_TL_NR.isDisabled():

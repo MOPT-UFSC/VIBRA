@@ -1,100 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Dialog</class>
- <widget class="QDialog" name="Dialog">
-  <property name="windowModality">
-   <enum>Qt::NonModal</enum>
-  </property>
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>280</height>
+    <height>300</height>
    </rect>
   </property>
-  <property name="sizePolicy">
-   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-    <horstretch>0</horstretch>
-    <verstretch>0</verstretch>
-   </sizepolicy>
-  </property>
-  <property name="minimumSize">
-   <size>
-    <width>400</width>
-    <height>280</height>
-   </size>
-  </property>
-  <property name="maximumSize">
-   <size>
-    <width>400</width>
-    <height>280</height>
-   </size>
-  </property>
-  <property name="contextMenuPolicy">
-   <enum>Qt::DefaultContextMenu</enum>
-  </property>
   <property name="windowTitle">
-   <string>Plot the TL or NR</string>
+   <string>Form</string>
   </property>
-  <property name="whatsThis">
-   <string/>
-  </property>
-  <layout class="QGridLayout" name="gridLayout_4">
-   <property name="leftMargin">
-    <number>4</number>
-   </property>
-   <property name="topMargin">
-    <number>4</number>
-   </property>
-   <property name="rightMargin">
-    <number>4</number>
-   </property>
-   <property name="bottomMargin">
-    <number>4</number>
-   </property>
-   <property name="spacing">
-    <number>4</number>
-   </property>
+  <layout class="QGridLayout" name="gridLayout_2">
    <item row="0" column="0">
     <widget class="QFrame" name="frame">
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>48</height>
-      </size>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>520</width>
-       <height>48</height>
-      </size>
-     </property>
      <property name="frameShape">
       <enum>QFrame::Box</enum>
      </property>
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
-     <property name="lineWidth">
-      <number>1</number>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_2">
-      <property name="leftMargin">
-       <number>0</number>
-      </property>
-      <property name="topMargin">
-       <number>0</number>
-      </property>
-      <property name="rightMargin">
-       <number>0</number>
-      </property>
-      <property name="bottomMargin">
-       <number>0</number>
-      </property>
-      <property name="spacing">
-       <number>0</number>
-      </property>
+     <layout class="QGridLayout" name="gridLayout_4">
       <item row="0" column="0">
        <widget class="QLabel" name="label">
         <property name="minimumSize">
@@ -299,6 +227,79 @@
             </size>
            </property>
           </spacer>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QFrame" name="frame_3">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>52</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>52</height>
+         </size>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_47">
+         <property name="leftMargin">
+          <number>2</number>
+         </property>
+         <property name="topMargin">
+          <number>2</number>
+         </property>
+         <property name="rightMargin">
+          <number>2</number>
+         </property>
+         <property name="bottomMargin">
+          <number>2</number>
+         </property>
+         <property name="spacing">
+          <number>2</number>
+         </property>
+         <item row="0" column="0">
+          <widget class="QPushButton" name="pushButton_plot_data">
+           <property name="minimumSize">
+            <size>
+             <width>120</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>120</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>MS Shell Dlg 2</family>
+             <pointsize>10</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="text">
+            <string>Plot data</string>
+           </property>
+           <property name="flat">
+            <bool>false</bool>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -511,109 +512,6 @@ background-color: rgb(255,255,255)</string>
         </layout>
        </widget>
       </item>
-      <item row="4" column="0">
-       <widget class="QFrame" name="frame_3">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>52</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>52</height>
-         </size>
-        </property>
-        <property name="frameShape">
-         <enum>QFrame::NoFrame</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_47">
-         <property name="leftMargin">
-          <number>2</number>
-         </property>
-         <property name="topMargin">
-          <number>2</number>
-         </property>
-         <property name="rightMargin">
-          <number>2</number>
-         </property>
-         <property name="bottomMargin">
-          <number>2</number>
-         </property>
-         <property name="spacing">
-          <number>2</number>
-         </property>
-         <item row="0" column="1">
-          <widget class="QPushButton" name="pushButton_plot_data">
-           <property name="minimumSize">
-            <size>
-             <width>120</width>
-             <height>32</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>120</width>
-             <height>32</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <family>MS Shell Dlg 2</family>
-             <pointsize>10</pointsize>
-             <weight>50</weight>
-             <italic>false</italic>
-             <bold>false</bold>
-            </font>
-           </property>
-           <property name="styleSheet">
-            <string notr="true"/>
-           </property>
-           <property name="text">
-            <string>Plot data</string>
-           </property>
-           <property name="flat">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QPushButton" name="pushButton_exit">
-           <property name="minimumSize">
-            <size>
-             <width>120</width>
-             <height>32</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>120</width>
-             <height>32</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
-           <property name="styleSheet">
-            <string notr="true"/>
-           </property>
-           <property name="text">
-            <string>Exit</string>
-           </property>
-           <property name="flat">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
       <item row="0" column="0">
        <widget class="QFrame" name="frame_4">
         <property name="minimumSize">
@@ -653,6 +551,67 @@ background-color: rgb(255,255,255)</string>
          <property name="verticalSpacing">
           <number>2</number>
          </property>
+         <item row="0" column="0">
+          <spacer name="horizontalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="4">
+          <spacer name="horizontalSpacer_4">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLineEdit" name="lineEdit_output_surface_id">
+           <property name="minimumSize">
+            <size>
+             <width>120</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>120</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>Arial</family>
+             <pointsize>10</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">color: rgb(0, 0, 255);
+background-color: rgb(255,255,255)</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
          <item row="0" column="1">
           <widget class="QLabel" name="label_10">
            <property name="minimumSize">
@@ -758,67 +717,6 @@ background-color: rgb(255,255,255)</string>
            </layout>
           </widget>
          </item>
-         <item row="0" column="2">
-          <widget class="QLineEdit" name="lineEdit_output_surface_id">
-           <property name="minimumSize">
-            <size>
-             <width>120</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>120</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <family>Arial</family>
-             <pointsize>10</pointsize>
-             <weight>50</weight>
-             <italic>false</italic>
-             <bold>false</bold>
-            </font>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">color: rgb(0, 0, 255);
-background-color: rgb(255,255,255)</string>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <spacer name="horizontalSpacer_3">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="0" column="4">
-          <spacer name="horizontalSpacer_4">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
         </layout>
        </widget>
       </item>
@@ -827,14 +725,6 @@ background-color: rgb(255,255,255)</string>
    </item>
   </layout>
  </widget>
- <tabstops>
-  <tabstop>lineEdit_output_surface_id</tabstop>
-  <tabstop>lineEdit_input_surface_id</tabstop>
-  <tabstop>comboBox_processing_selector</tabstop>
-  <tabstop>pushButton_plot_data</tabstop>
-  <tabstop>pushButton_flip_selection</tabstop>
-  <tabstop>pushButton_export_data</tabstop>
- </tabstops>
  <resources/>
  <connections/>
 </ui>

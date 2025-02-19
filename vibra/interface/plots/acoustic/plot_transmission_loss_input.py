@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QComboBox, QLineEdit, QPushButton, QDialog
+from PyQt5.QtWidgets import QComboBox, QLineEdit, QPushButton, QWidget
 from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt5.QtGui import QCloseEvent
 from PyQt5 import uic
@@ -21,7 +21,7 @@ from pathlib import Path
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class PlotTransmissionLossInput(QDialog):
+class PlotTransmissionLossInput(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -29,7 +29,6 @@ class PlotTransmissionLossInput(QDialog):
         uic.loadUi(ui_path, self)
 
         self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
         self.main_window.show_geometry_render_widget()
 
         self.project = app().project
@@ -37,7 +36,6 @@ class PlotTransmissionLossInput(QDialog):
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
-        self._config_window()
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
@@ -51,7 +49,10 @@ class PlotTransmissionLossInput(QDialog):
             return
 
         self.geometry_selection_callback()
-        self.exec()
+    
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.main_window.show_geometry_render_widget()
 
     def _load_analysis_data(self):
         self.analysis_method = ""
@@ -59,11 +60,6 @@ class PlotTransmissionLossInput(QDialog):
         if "analysis_id" in analysis_data.keys():
             if analysis_data["analysis_id"] == 3:
                 self.analysis_method = "Direct method"
-
-    def _config_window(self):
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(app().main_window.vibra_icon)
 
     def _initialize(self):
         self.exporter = None
@@ -81,14 +77,12 @@ class PlotTransmissionLossInput(QDialog):
 
         # QPushButton
         self.pushButton_export_data: QPushButton
-        self.pushButton_exit: QPushButton
         self.pushButton_plot_data: QPushButton
         self.pushButton_flip_selection: QPushButton
 
     def _create_connections(self):
         #
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
-        self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_flip_selection.clicked.connect(self.invert_selection)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
@@ -217,7 +211,6 @@ class PlotTransmissionLossInput(QDialog):
 
     def join_model_data(self):
 
-        self.hide()
         self.model_results = dict()
 
         if self.comboBox_processing_selector.currentIndex() == 0:
@@ -280,8 +273,6 @@ class PlotTransmissionLossInput(QDialog):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.plot_data_callback()
-        elif event.key() == Qt.Key_Escape:
-            self.close()
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
 

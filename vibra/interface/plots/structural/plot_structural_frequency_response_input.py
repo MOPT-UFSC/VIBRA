@@ -35,6 +35,10 @@ class PlotStructuralFrequencyResponseInput(QWidget):
 
         self._load_analysis_data_and_solution()
         self.geometry_selection_callback()
+    
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.selection_type_callback()
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
