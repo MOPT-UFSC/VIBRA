@@ -17,7 +17,8 @@ from .common_selection import get_coordinates_inside_area, pick_actor_cell_info
 class MeshSelection:
     def __init__(self, mesh_render_widget: "MeshRenderWidget"):
         self.mesh_render_widget = mesh_render_widget
-        self.elements_center = np.array([])
+        self.solid_elements_center = np.array([])
+        self.face_elements_center = np.array([])
         self.cell_picker = vtkCellPicker()
         self.cell_picker.SetTolerance(0.0018)
 
@@ -27,15 +28,24 @@ class MeshSelection:
             return
 
         solids_connectivity = mesh.solids_connectivity[:, 4:]
+        faces_connectivity = mesh.faces_connectivity[:, 4:]
         nodal_coordinates = mesh.nodal_coordinates[:, 1:]
 
-        if mesh.solids_connectivity.size <= 0:
-            return
+        if mesh.solids_connectivity.size > 0:
+            self.solid_elements_center = np.average(
+                nodal_coordinates[solids_connectivity],
+                axis=1,
+            )
+        else:
+            self.solid_elements_center = np.array([])
 
-        self.elements_center = np.average(
-            nodal_coordinates[solids_connectivity],
-            axis=1,
-        )
+        if mesh.faces_connectivity.size > 0:
+            self.face_elements_center = np.average(
+                nodal_coordinates[faces_connectivity],
+                axis=1,
+            )
+        else:
+            self.face_elements_center = np.array([])
 
     def pick(
         self, x: int, y: int
@@ -51,13 +61,13 @@ class MeshSelection:
         closest = min(nodes_distance, solids_distance)
 
         if closest == nodes_distance:
-            return picked_nodes, set()
-        
+            return picked_nodes, set(), set()
+
         elif closest == solids_distance:
-            return set(), picked_solids
-        
+            return set(), set(), picked_solids
+
         else:
-            return set(), set()
+            return set(), set(), set()
 
     def area_pick(
         self, x0: int, y0: int, x1: int, y1: int
@@ -66,8 +76,13 @@ class MeshSelection:
         set[int],
     ]:
         picked_nodes = self._area_pick_nodes(x0, y0, x1, y1)
-        picked_solids = self._area_pick_solids(x0, y0, x1, y1)
-        return picked_nodes, picked_solids
+        picked_faces = self._area_pick_faces(x0, y0, x1, y1)
+
+        picked_solids = set()
+        if self.solid_elements_center.size > 0:
+            picked_solids = self._area_pick_solids(x0, y0, x1, y1)
+
+        return picked_nodes, picked_faces, picked_solids
 
     def _pick_node(self, x: int, y: int) -> set[int]:
         """
@@ -106,18 +121,32 @@ class MeshSelection:
         else:
             return set(), float("inf")
 
+    def _pick_face(self, x: int, y: int) -> set[int]:
+        face_id, face_distance = pick_actor_cell_info(
+            x,
+            y,
+            self.mesh_render_widget.faces_actor,
+            "face_indexes",
+            self.mesh_render_widget.renderer,
+        )
+
+        if face_id < 0:
+            return set(), float("inf")
+
+        return {face_id}, face_distance
+
     def _pick_solid(self, x: int, y: int) -> set[int]:
         solid_id, solid_distance = pick_actor_cell_info(
             x,
             y,
             self.mesh_render_widget.solids_actor,
-            "cell_indexes",
+            "solid_indexes",
             self.mesh_render_widget.renderer,
         )
 
         if solid_id < 0:
             return set(), float("inf")
-    
+
         return {solid_id}, solid_distance
 
     def _area_pick_nodes(
@@ -141,6 +170,23 @@ class MeshSelection:
         picked_nodes = set(node_indexes[mask])
         return picked_nodes
 
+    def _area_pick_faces(self, x0: int, y0: int, x1: int, y1: int) -> set[int]:
+        mesh = app().project.model.mesh
+        if mesh is None:
+            return set()
+
+        if self.face_elements_center.size == 0:
+            return set()
+
+        mask_selected_faces = get_coordinates_inside_area(
+            self.face_elements_center,
+            (x0, y0, x1, y1),
+            self.mesh_render_widget.renderer,
+        )
+
+        face_indexes = mesh.faces_connectivity[:, 0].astype(int)
+        return set(face_indexes[mask_selected_faces])
+
     def _area_pick_solids(
         self,
         x0: int,
@@ -152,8 +198,11 @@ class MeshSelection:
         if mesh is None:
             return set()
 
+        if self.solid_elements_center.size == 0:
+            return set()
+
         mask_selected_elements = get_coordinates_inside_area(
-            self.elements_center,
+            self.solid_elements_center,
             (x0, y0, x1, y1),
             self.mesh_render_widget.renderer,
         )

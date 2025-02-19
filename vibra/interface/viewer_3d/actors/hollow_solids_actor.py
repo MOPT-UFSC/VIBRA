@@ -12,13 +12,19 @@ class HollowSolidsActor(FacesActor):
 
     def create_geometry(self):
         super().create_geometry()
-        cell_indexes: vtkIntArray = self.data.GetCellData().GetArray("cell_indexes")
 
-        for i in range(cell_indexes.GetNumberOfTuples()):
-            cell2d = cell_indexes.GetValue(i)
+        face_indexes: vtkIntArray = self.data.GetCellData().GetArray("face_indexes")
+        solid_indexes = vtkIntArray()
+        solid_indexes.SetName("solid_indexes")
+        solid_indexes.SetNumberOfValues(face_indexes.GetNumberOfValues())
+
+        for i in range(face_indexes.GetNumberOfTuples()):
+            cell2d = face_indexes.GetValue(i)
             cell3d = self.mesh.face_to_solid_element.get(cell2d, -1)
-            cell_indexes.SetValue(i, cell3d)
-    
+            solid_indexes.SetValue(i, cell3d)
+        
+        self.data.GetCellData().AddArray(solid_indexes)
+
     def update_coordinates(self, coordinates):
         points = self.data.GetPoints()
         points.SetData(numpy_to_vtk(coordinates))

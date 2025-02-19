@@ -99,7 +99,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.add_actors(
             self.nodes_actor,
             self.edges_actor,
-            # self.faces_actor,
+            self.faces_actor,
             self.solids_actor,
             self.ghost_actor,
             self.plane_actor,
@@ -122,9 +122,9 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.nodes_actor.SetVisibility(visualization.points)
         self.edges_actor.SetVisibility(visualization.lines)
-        self.faces_actor.SetVisibility(False)
+        self.faces_actor.SetVisibility(True)
         self.ghost_actor.SetVisibility(has_hidden_part)
-        self.solids_actor.SetVisibility(visualization.solids)
+        self.solids_actor.SetVisibility(False)
 
         self.update()
 
@@ -252,9 +252,9 @@ class MeshRenderWidget(CommonRenderWidget):
         mouse_moved = (abs(x0 - x) > 10) or (abs(y0 - y) > 10)
 
         if mouse_moved:
-            picked_nodes, picked_solids = self.mesh_selection.area_pick(x0, y0, x, y)
+            picked_nodes, picked_faces, picked_solids = self.mesh_selection.area_pick(x0, y0, x, y)
         else:
-            picked_nodes, picked_solids = self.mesh_selection.pick(x, y)
+            picked_nodes, picked_faces, picked_solids = self.mesh_selection.pick(x, y)
 
         modifiers = QApplication.keyboardModifiers()
         ctrl_pressed = modifiers & Qt.ControlModifier
@@ -262,7 +262,7 @@ class MeshRenderWidget(CommonRenderWidget):
 
         app().main_window.set_mesh_selection(
             nodes=picked_nodes,
-            # faces=picked_faces,
+            faces=picked_faces,
             solids=picked_solids,
             join=ctrl_pressed,
             remove=alt_pressed,
@@ -290,7 +290,7 @@ class MeshRenderWidget(CommonRenderWidget):
         solids = self.main_window.selected_mesh_solids
 
         self.nodes_actor.paint_cells([255, 0, 0], nodes)
-        # self.faces_actor.paint_cells(self.selection_color, faces)
+        self.faces_actor.paint_cells(self.selection_color, faces)
         self.solids_actor.paint_cells(self.selection_color, solids)
         self.update()
 

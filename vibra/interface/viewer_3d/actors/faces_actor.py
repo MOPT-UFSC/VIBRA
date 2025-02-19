@@ -47,9 +47,9 @@ class FacesActor(vtkActor):
         cell_colors = vtkUnsignedCharArray()
         cell_colors.Fill(0)
 
-        cell_indexes = vtkIntArray()
-        cell_indexes.SetName("cell_indexes")
-        cell_indexes.Allocate(number_of_elements)
+        face_indexes = vtkIntArray()
+        face_indexes.SetName("face_indexes")
+        face_indexes.Allocate(number_of_elements)
 
         surface_indexes = vtkIntArray()
         surface_indexes.SetName("surface_indexes")
@@ -81,19 +81,19 @@ class FacesActor(vtkActor):
             if surface in hidden_surfaces:
                 continue
 
-            volume = surface_to_volume[surface]
+            volume = surface_to_volume.get(surface, -1)
             surface_indexes.InsertNextValue(surface)
             volume_indexes.InsertNextValue(volume)
 
             # This is usefull if part of the cells are hidden
-            visible_index = cell_indexes.InsertNextValue(i)
+            visible_index = face_indexes.InsertNextValue(i)
             self.visible_indexes[i] = visible_index
             data.InsertNextCell(cell_type, nodes_per_element, list(values))
 
         data.SetPoints(points)
         data.GetPointData().SetScalars(point_colors)
         data.GetCellData().SetScalars(cell_colors)
-        data.GetCellData().AddArray(cell_indexes)
+        data.GetCellData().AddArray(face_indexes)
         data.GetCellData().AddArray(surface_indexes)
         data.GetCellData().AddArray(volume_indexes)
 
