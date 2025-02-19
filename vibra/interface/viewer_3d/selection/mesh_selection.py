@@ -24,7 +24,7 @@ class MeshSelection:
     def precompute_data(self):
         mesh = app().project.model.mesh
         if mesh is None:
-            return set()
+            return
 
         solids_connectivity = mesh.solids_connectivity[:, 4:]
         nodal_coordinates = mesh.nodal_coordinates[:, 1:]
