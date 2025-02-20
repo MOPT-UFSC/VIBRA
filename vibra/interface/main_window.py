@@ -34,7 +34,6 @@ from vibra.interface.formatters.icons import get_vibra_icon, change_icon_color_f
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.help_widget import HelpWidget
 from vibra.interface.loading_bar import load_function
-from vibra.interface.menu_items import MenuItems
 from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
 from vibra.interface.user_input.input_ui import InputUi
