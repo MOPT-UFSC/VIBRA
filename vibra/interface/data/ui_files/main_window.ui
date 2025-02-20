@@ -136,7 +136,7 @@
      <x>0</x>
      <y>0</y>
      <width>1055</width>
-     <height>26</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_project">
@@ -406,6 +406,12 @@
    </property>
   </action>
   <action name="action_node_view">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normaloff>../icons/visibility/nodes.png</normaloff>../icons/visibility/nodes.png</iconset>
@@ -415,6 +421,12 @@
    </property>
   </action>
   <action name="action_line_view">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normaloff>../icons/visibility/lines.png</normaloff>../icons/visibility/lines.png</iconset>
@@ -424,6 +436,12 @@
    </property>
   </action>
   <action name="action_face_view">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normaloff>../icons/visibility/faces.png</normaloff>../icons/visibility/faces.png</iconset>
@@ -442,6 +460,12 @@
    </property>
   </action>
   <action name="action_hide_show_symbols">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normaloff>../icons/visibility/show_symbols.png</normaloff>../icons/visibility/show_symbols.png</iconset>

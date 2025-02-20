@@ -238,7 +238,8 @@ class StructuralHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
             self.plane_actor.GetProperty().SetOpacity(0.8)
             self.update()
         else:
-            self._apply_section_plane(position, rotation, inverted, section_plane.isVisible())
+            show_plane = not section_plane.keep_section_plane
+            self._apply_section_plane(position, rotation, inverted, show_plane)
 
     def _disable_section_plane(self):
         has_hidden_part = bool(self.main_window.hidden_surfaces)
@@ -257,6 +258,7 @@ class StructuralHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
             if mesh.solids_connectivity.size > 0:
                 self.remove_actors(self.analysis_actor)
                 self.analysis_actor = AnalysisActor(mesh)
+                self.update_deformations()
                 self.add_actors(self.analysis_actor)
 
         self.plane_actor.configure_section_plane(position, rotation)

@@ -556,7 +556,7 @@ class MainWindow(QMainWindow):
             
     def show_geometry_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-    
+
     def show_mesh_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
     
@@ -770,7 +770,7 @@ class MainWindow(QMainWindow):
         save_func(path)
 
         from datetime import datetime
-        message = f"The project data has been saved @{datetime.now()}"
+        message = f"The project data has been saved: {datetime.now()}"
         print(message)
 
     def open_project_dialog(self):
@@ -926,20 +926,18 @@ class MainWindow(QMainWindow):
     def action_exit_callback(self):
         self.close_app()
     
-    def action_face_view_callback(self):
-        widget = self.render_widgets_stack.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.show_faces()
+    def action_face_view_callback(self, clicked: bool):
+        self.visualization_filter.faces = clicked
+        self.visualization_filter.solids = clicked
+        self.visualization_changed.emit()
     
-    def action_line_view_callback(self):
-        widget = self.render_widgets_stack.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.show_lines()
+    def action_line_view_callback(self, clicked: bool):
+        self.visualization_filter.lines = clicked
+        self.visualization_changed.emit()
     
-    def action_node_view_callback(self):
-        widget = self.render_widgets_stack.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.show_points()
+    def action_node_view_callback(self, clicked: bool):
+        self.visualization_filter.points = clicked
+        self.visualization_changed.emit()
     
     def action_about_vibra_callback(self):
         self.render_widgets_stack.setCurrentWidget(self.help_widget)
@@ -989,19 +987,12 @@ class MainWindow(QMainWindow):
             widget.renderer.ResetCamera()
             widget.update()
     
-    def action_hide_show_symbols_callback(self):
-
-        symbols_actor = self.mesh_widget.symbols_actor
-
-        if symbols_actor is None:
-            return
-
-        if symbols_actor.GetVisibility():
-            symbols_actor.VisibilityOff()
-        else:
-            symbols_actor.VisibilityOn()
-
-        self.mesh_widget.update()
+    def action_hide_show_symbols_callback(self, clicked: bool):
+        # TODO: test this function.
+        #  OBS: I do not know if it is working because I do not have any symbols to check
+        self.visualization_filter.acoustic_symbols = clicked
+        self.visualization_filter.structural_symbols = clicked
+        self.visualization_changed.emit()
         
     def close_app(self):
 
@@ -1045,6 +1036,7 @@ class MainWindow(QMainWindow):
     def close_dialogs(self):
         if isinstance(self.dialog, (QDialog, QWidget)):
             self.dialog.close()
+            self.dialog = None
 
     def action_plot_specific_acoustic_impedance_callback(self):
             if app().project.acoustic_harmonic_solver.solution is None:

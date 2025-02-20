@@ -35,6 +35,7 @@ class Mesh:
         self.geometry_setup = None
         self.mesh_setup = None
         self.reset_variables()
+        self.list_elements = list()
 
     def reset_variables(self):
 
@@ -718,6 +719,7 @@ class Mesh:
             if surface_id is None:
                 mask = np.sum(filtered_data[:, 4:] == node_id, axis=1) == 1
                 face_elements_connected_to_nodes[node_id, surface_id] = filtered_data[:, 0][mask]
+
             else:
                 connect_from_surface = self.connectivity_from_surfaces[surface_id]
                 mask = np.sum(connect_from_surface == node_id, axis=1) == 1
@@ -977,7 +979,30 @@ class Mesh:
                     center_coords.append(avg_coords)
 
         return center_coords
-    
+
+
+    def get_element_face_normal(self, connect: np.ndarray):
+
+        # ie = self.faces_connectivity[element_id, 4:]
+        coords = self.nodal_coordinates[connect, 1:]
+
+        P1 = coords[0, :]
+        P2 = coords[1, :]
+        P3 = coords[2, :]
+
+        P2P1 = np.array(P2 - P1)
+        P3P1 = np.array(P3 - P1)
+
+        cross = np.cross(P2P1, P3P1)
+        norm_cross = np.linalg.norm(cross)
+
+        if norm_cross == 0:
+            return 0.
+
+        normal = cross / np.linalg.norm(cross)
+
+        return normal
+
 
     def set_nodal_normals_data(self, normals_data: dict):
         for node_id, nodal_normal in normals_data.items():

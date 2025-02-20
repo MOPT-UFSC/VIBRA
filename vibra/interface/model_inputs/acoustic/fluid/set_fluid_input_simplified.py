@@ -55,31 +55,30 @@ class SetFluidInputSimplified(QDialog):
     def _define_qt_variables(self):
 
         # QComboBox
-        self.comboBox_attribution_type = self.findChild(QComboBox, 'comboBox_attribution_type')
+        self.comboBox_attribution_type : QComboBox
 
         # QFrame
-        self.frame_main_widget = self.findChild(QFrame, 'frame_main_widget')
+        # self.frame_main_widget : QFrame
 
         # QGridLayout
         self.grid_layout = QGridLayout()
         self.grid_layout.setContentsMargins(0,0,0,0)
 
         # QLineEdit
-        self.lineEdit_fluid_identifier = self.findChild(QLineEdit, 'lineEdit_fluid_identifier')
-        self.lineEdit_selected_fluid_name = self.findChild(QLineEdit, 'lineEdit_selected_fluid_name')
+        self.lineEdit_fluid_identifier : QLineEdit
+        self.lineEdit_selected_fluid_name : QLineEdit
 
         # QScrollArea
         self.scrollArea_table_of_fluids : QScrollArea
         self.scrollArea_table_of_fluids.setLayout(self.grid_layout)
         self._add_fluid_widget()
-        self.frame_main_widget.adjustSize()
+        # self.frame_main_widget.adjustSize()
 
         # QPushButton
-        self.pushButton_attribute = self.findChild(QPushButton, 'pushButton_attribute')
-        self.pushButton_remove_row = self.fluid_widget.findChild(QPushButton, 'pushButton_remove_row')
-
+        self.pushButton_attribute = self.fluid_widget.pushButton_attribute
+  
         # QTableWidget
-        self.tableWidget_fluid_data = self.findChild(QTableWidget, 'tableWidget_fluid_data')
+        self.tableWidget_fluid_data = self.fluid_widget.tableWidget_fluid_data
 
     def _create_connections(self):
         self.fluid_widget.pushButton_exit.clicked.connect(self.close)

@@ -44,8 +44,8 @@ class SolidsActor(vtkActor):
         mapper = vtkDataSetMapper()
         point_colors = vtkUnsignedCharArray()
         cell_colors = vtkUnsignedCharArray()
-        cell_indexes = vtkIntArray()
-        cell_indexes.SetName("cell_indexes")
+        solid_indexes = vtkIntArray()
+        solid_indexes.SetName("solid_indexes")
 
         if self.mesh.element_type == TETRAHEDRON_4:
             cell_type = VTK_TETRA
@@ -78,7 +78,7 @@ class SolidsActor(vtkActor):
         point_colors.SetNumberOfTuples(number_of_nodes)
         cell_colors.SetNumberOfComponents(3)
         cell_colors.SetNumberOfTuples(number_of_elements)
-        cell_indexes.Allocate(number_of_elements)
+        solid_indexes.Allocate(number_of_elements)
         
         coordinates = self.get_coordinates()
         points.SetData(numpy_to_vtk(coordinates))
@@ -91,14 +91,14 @@ class SolidsActor(vtkActor):
                 continue
 
             # This is usefull if part of the cells are hidden
-            visible_index = cell_indexes.InsertNextValue(i)
+            visible_index = solid_indexes.InsertNextValue(i)
             self.visible_indexes[i] = visible_index
             data.InsertNextCell(cell_type, len(nodes), nodes)
 
         data.SetPoints(points)
         data.GetPointData().SetScalars(point_colors)
         data.GetCellData().SetScalars(cell_colors)
-        data.GetCellData().AddArray(cell_indexes)
+        data.GetCellData().AddArray(solid_indexes)
 
         self.data = data
         mapper.SetInputData(self.data)
@@ -113,6 +113,10 @@ class SolidsActor(vtkActor):
         self.GetProperty().SetPointSize(3)
         self.GetProperty().SetLineWidth(0.1)
         self.clear_colors()
+
+        mapper = self.GetMapper()
+        mapper.SetResolveCoincidentTopologyToPolygonOffset()
+        mapper.SetRelativeCoincidentTopologyPolygonOffsetParameters(1.1, 0)
 
     def clear_colors(self):
         if self.data is None:
