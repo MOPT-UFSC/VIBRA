@@ -142,6 +142,40 @@ class StructuralAssembler:
 
         return property_data, np.array(list(property_data.values()))
 
+    def process_loads_arrays(self, structural_loads: list):
+        """
+        This method returns...
+        """
+
+        if self.frequencies is None:
+            number_frequencies = 1
+        else:
+            number_frequencies = len(self.frequencies)
+
+        try:
+
+            loads_list = list()
+            aux_ones = np.ones(number_frequencies, dtype=complex)
+            aux_zeros = np.zeros(number_frequencies, dtype=complex)
+
+            for value in structural_loads:
+
+                if value is None:
+                    loads_list.append(aux_zeros)
+
+                elif isinstance(value, complex):
+                    loads_list.append(aux_ones * value)
+
+                elif isinstance(value, np.ndarray):
+                    loads_list.append(value[0:number_frequencies])
+
+        except Exception as _error_log:
+            print(str(_error_log))
+            # TODO: check matrix dimensions for compatibility
+            return aux_ones
+
+        return np.array(loads_list, dtype=complex)
+
     def get_unprescribed_indexes(self):
         prescribed_indexes = np.array([*set(self.prescribed_dofs_indexes)], dtype=int)
         return np.delete(self.all_dofs, prescribed_indexes)
@@ -177,6 +211,62 @@ class StructuralAssembler:
             indexes = list(nodal_loads.keys())
             excitation = list(nodal_loads.values())
             output[indexes, :] = np.array(excitation)
+
+        if self.prescribed_dofs_indexes:
+            if len(self.active_2d_element_dofs):
+                return output[self.unprescribed_shell_dofs, :]
+            else:
+                return output[self.unprescribed_dofs_indexes, :]
+        else:
+            return output
+
+    def process_distributed_loads(self):
+
+        from vibra import app
+
+        output = np.zeros((len(self.all_dofs), self.number_frequencies), dtype=complex)
+
+        for (property, surface_id), data in self.properties.surface_properties.items():
+            if property == "distributed_loads":
+                surface_load = self.process_loads_arrays(data["values"])
+                if surface_load is None:
+                    continue
+
+                for elem_id in self.model.mesh.elements_from_surface[surface_id]:
+                    g_dofs, F_elem = self.element_2D.process_forces_for_distributed_load_over_area(elem_id, surface_load)
+                    output[g_dofs, :] += F_elem
+
+            elif property == "normal_pressure_load":
+                normal_pressure = self.process_loads_arrays(data["values"])
+                if normal_pressure is None:
+                    continue
+
+                for elem_id in self.model.mesh.elements_from_surface[surface_id]:
+                    g_dofs, F_elem = self.element_2D.process_forces_for_normal_pressure_load(elem_id, normal_pressure)
+                    output[g_dofs, :] += F_elem
+
+        list_element_ids = list()
+        for (property, line_id), data in self.properties.line_properties.items():
+            if property == "distributed_loads":
+                line_load = self.process_loads_arrays(data["values"])
+                if line_load is None:
+                    continue
+
+                nodes_from_line = self.model.mesh.nodes_from_lines[line_id]
+
+                for surface_id in self.model.mesh.surface_from_line[line_id]:
+                    elements_from_surface = self.model.mesh.elements_from_surface[surface_id]
+                    connectivities = self.element_2D.connectivity[elements_from_surface, :]
+                    mask = np.sum(np.isin(connectivities[:, 1:], nodes_from_line), axis=1) == 2
+
+                    list_element_ids.extend(connectivities[mask, 0].flatten())
+                    for connect_2d in connectivities[mask, 1:]:
+                        active_nodes = [1 if node_id in nodes_from_line else 0 for node_id in connect_2d]
+                        g_dofs, F_elem = self.element_2D.process_forces_for_distributed_load_over_line(connect_2d, active_nodes, line_load)
+                        output[g_dofs, :] += F_elem
+
+        if list_element_ids:
+            self.model.mesh.list_elements = list_element_ids
 
         if self.prescribed_dofs_indexes:
             if len(self.active_2d_element_dofs):
@@ -277,16 +367,16 @@ class StructuralAssembler:
         self.ind_cols = np.array([], dtype=int)
         self.ind_rows = np.array([], dtype=int)
 
-        element_3D, element_2D = self.get_element()
-        self.active_2d_element_dofs, self.n_dofs, shift_index = self.process_face_elements_with_thickness(element_2D, element_3D)
+        self.element_3D, self.element_2D = self.get_element()
+        self.active_2d_element_dofs, self.n_dofs, shift_index = self.process_face_elements_with_thickness(self.element_2D, self.element_3D)
 
-        element_3D.reorder_connect()
-        # rows_se, cols_se = element_3D.generate_ind_rows_cols()
+        self.element_3D.reorder_connect()
+        # rows_se, cols_se = self.element_3D.generate_ind_rows_cols()
         # self.ind_rows = np.append(self.ind_rows, rows_se)
         # self.ind_cols = np.append(self.ind_cols, cols_se)
 
-        dofs = element_3D.DOFS_PER_ELEMENT
-        nel = len(element_3D.connectivity)
+        dofs = self.element_3D.DOFS_PER_ELEMENT
+        nel = len(self.element_3D.connectivity)
 
         ind_rows = np.zeros((nel, dofs, dofs), dtype=int)
         ind_cols = np.zeros((nel, dofs, dofs), dtype=int)
@@ -300,11 +390,11 @@ class StructuralAssembler:
             if material is None:
                 continue
 
-            rows, cols = element_3D.get_rows_and_cols_indexes(el_index, shift_index)
+            rows, cols = self.element_3D.get_rows_and_cols_indexes(el_index, shift_index)
             ind_rows[el_index, :, :] = rows
             ind_cols[el_index, :, :] = cols
 
-            Ke, Me = element_3D.elementary_matrices(el_index, material)
+            Ke, Me = self.element_3D.elementary_matrices(el_index, material)
             data_K_se[el_index, :, :] = Ke
             data_M_se[el_index, :, :] = Me
 
@@ -320,10 +410,10 @@ class StructuralAssembler:
 
         if len(self.active_2d_element_dofs):
 
-            rows_fe, cols_fe = element_2D.generate_ind_rows_cols()
+            rows_fe, cols_fe = self.element_2D.generate_ind_rows_cols()
 
-            dofs = element_2D.DOFS_PER_ELEMENT
-            nel = len(element_2D.connectivity)
+            dofs = self.element_2D.DOFS_PER_ELEMENT
+            nel = len(self.element_2D.connectivity)
 
             self.ind_rows = np.append(self.ind_rows, rows_fe)
             self.ind_cols = np.append(self.ind_cols, cols_fe)
@@ -345,7 +435,7 @@ class StructuralAssembler:
 
                 t = surface_data["surface_thickness"]
  
-                Ke, Me = element_2D.elementary_matrices(el_index, material, t)
+                Ke, Me = self.element_2D.elementary_matrices(el_index, material, t)
 
                 if np.sum(Ke) == 0.:
 
@@ -409,7 +499,10 @@ class StructuralAssembler:
         dt = time() - t0
         print(f"Elapsed time to assemble the global stiffness matrix: {round(dt, 4)} [s]")
 
-        self.nodal_loads = self.process_structural_nodal_loads()
+        A = self.process_structural_nodal_loads()
+        B = self.process_distributed_loads()
+
+        self.structural_loads = A + B
 
         # A = self.get_structural_excitations_by_nodal_attribution()
         # B = self.get_structural_excitations_by_element_integration()

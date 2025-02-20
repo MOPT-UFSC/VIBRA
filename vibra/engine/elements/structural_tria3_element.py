@@ -3,7 +3,6 @@
 from vibra.engine.elements.surface_elements import Element2D
 from vibra.engine.properties.material import Material
 
-import sys
 import numpy as np
 from numba import njit
 np.set_printoptions(precision=18)#threshold=sys.maxsize)
@@ -230,6 +229,8 @@ class STRUCT_TRIANGULAR_3(Element2D):
         #
         self.number_of_nodes = len(self.nodal_coordinates)
         self.number_of_elements = len(self.connectivity)
+        #
+        self.local_dofs = np.arange(self.DOFS_PER_NODE, dtype=int)
 
     def define_integration_points_for_bending(self):
         """ This method computes the integration points for the bending effects. """
@@ -492,16 +493,29 @@ class STRUCT_TRIANGULAR_3(Element2D):
         return self.ind_rows, self.ind_cols
 
 
-    def force_vector(self, nodal_coords: np.ndarray, line_pressure, pressure, normpress, e_nodes_load, e_nodes_pressure, e_elems_normpress, n_unit_elem):
+    def force_vector(self, element_id: int, **kwargs):#, line_pressure, pressure, normpress, e_nodes_load, e_nodes_pressure, e_elems_normpress, n_unit_elem, **kwargs):
 
-        F_elem = np.zeros(self.DOFS_PER_ELEMENT, dtype=float)
+        distributed_line_load = kwargs.get("distributed_line_load", None) 
+        line_connectivity = kwargs.get("line_connectivity", None)
+
+        distributed_area_load = kwargs.get("distributed_area_load", None) 
+        area_connectivity = kwargs.get("area_connectivity", None)
+
+        normal_pressure_load = kwargs.get("normal_pressure_load", None)
+        normal_unit_vector = kwargs.get("normal_unit_vector", None)
+
         loads = np.zeros(int(self.DOFS_PER_ELEMENT / 2), dtype=float)
 
         # Local coordinate system definition
-        x_loc, y_loc, _ = get_local_coordinates(nodal_coords)
+        node_ids = self.connectivity[element_id, 1:]
+        nodal_coords = self.nodal_coordinates[node_ids, 1:]
+        x_loc, y_loc, *_ = get_local_coordinates(nodal_coords)
 
-        ## LOAD - LINE PRESSURE
-        if np.count_nonzero(e_nodes_load) >= 2:
+        if distributed_line_load is not None:
+            e_nodes_load = line_connectivity
+
+            ## LOAD - LINE PRESSURE
+            # if np.count_nonzero(e_nodes_load) >= 2:
 
             # Line integration points
             num = np.sqrt(3 / 5) / 2
@@ -511,7 +525,7 @@ class STRUCT_TRIANGULAR_3(Element2D):
                 dy_dst = y_loc[1] - y_loc[0]
                 coord_int = np.array([[0.5-num,     0.5, 0.5+num], 
                                       [      0,       0,       0]], dtype=float)
-            
+
             elif e_nodes_load[0] == 1 and e_nodes_load[2] == 1:
 
                 dx_dst = x_loc[2] - x_loc[0]
@@ -544,56 +558,201 @@ class STRUCT_TRIANGULAR_3(Element2D):
                               [        0,         0, 1 - r - s, 0, 0, r, 0, 0, s]], dtype=float)
 
                 # Load vector
-                loads += det_J * weight * N.T @ line_pressure
+                loads += det_J * weight * N.T @ distributed_line_load
 
-        ## PRESSURE
-        if np.count_nonzero(e_nodes_pressure) == 3:
 
-            # Integration points
-            r = 1 / 3
-            s = 1 / 3
+        if distributed_area_load is not None:
+            e_nodes_pressure = area_connectivity
 
-            # Jacobian
-            J = np.array([[x_loc[1] - x_loc[0], y_loc[1] - y_loc[0]], 
-                          [x_loc[2] - x_loc[0], y_loc[2] - y_loc[0]]], dtype=float)
+            ## PRESSURE
+            if np.count_nonzero(e_nodes_pressure) == 3:
 
-            # Determinant of the Jacobian
-            det_J = np.linalg.det(J)
+                # Integration points
+                r = 1 / 3
+                s = 1 / 3
 
-            # Shape functions
-            N = np.array([[1 - r - s,         0,         0, r, 0, 0, s, 0, 0],
-                            [        0, 1 - r - s,         0, 0, r, 0, 0, s, 0],
-                            [        0,         0, 1 - r - s, 0, 0, r, 0, 0, s]], dtype=float)
+                # Jacobian
+                J = np.array([[x_loc[1] - x_loc[0], y_loc[1] - y_loc[0]], 
+                              [x_loc[2] - x_loc[0], y_loc[2] - y_loc[0]]], dtype=float)
 
-            # Pressure vector
-            loads += 0.5 * det_J * N.T @ pressure
+                # Determinant of the Jacobian
+                det_J = np.linalg.det(J)
 
-        ## NORMAL PRESSURE
-        if e_elems_normpress == 1:
+                # Shape functions
+                N = np.array([[1 - r - s,         0,         0, r, 0, 0, s, 0, 0],
+                              [        0, 1 - r - s,         0, 0, r, 0, 0, s, 0],
+                              [        0,         0, 1 - r - s, 0, 0, r, 0, 0, s]], dtype=float)
 
-            # Integration points
-            r = 1 / 3
-            s = 1 / 3
+                # Pressure vector
+                loads += 0.5 * det_J * N.T @ distributed_area_load
 
-            # Jacobian
-            J = np.array([[x_loc[1] - x_loc[0], y_loc[1] - y_loc[0]], 
-                          [x_loc[2] - x_loc[0], y_loc[2] - y_loc[0]]], dtype=float)
+        if normal_pressure_load is not None:
 
-            # Determinant of the Jacobian
-            det_J = np.linalg.det(J)
+            e_elems_normpress = area_connectivity
+
+            ## NORMAL PRESSURE
+            if e_elems_normpress == 1:
+
+                # Integration points
+                r = 1 / 3
+                s = 1 / 3
+
+                # Jacobian
+                J = np.array([[x_loc[1] - x_loc[0], y_loc[1] - y_loc[0]], 
+                              [x_loc[2] - x_loc[0], y_loc[2] - y_loc[0]]], dtype=float)
+
+                # Determinant of the Jacobian
+                det_J = np.linalg.det(J)
+
+                # Shape functions
+                N = np.array([[1 - r - s,         0,         0, r, 0, 0, s, 0, 0],
+                              [        0, 1 - r - s,         0, 0, r, 0, 0, s, 0],
+                              [        0,         0, 1 - r - s, 0, 0, r, 0, 0, s]], dtype=float)
+
+                # Normal pressure vector
+                loads += 0.5 * det_J * N.T @ (normal_pressure_load * normal_unit_vector)
+
+        force_indexes = [0, 1, 2, 6, 7, 8, 12, 13, 14]
+
+        F_elem = np.zeros(self.DOFS_PER_ELEMENT, dtype=float)
+        F_elem[force_indexes] = loads
+
+        return F_elem
+
+    def process_forces_for_distributed_load_over_line(self, connect: np.ndarray, active_nodes: list, distributed_load: np.ndarray):
+
+        # Local coordinate system definition
+        nodal_coords = self.nodal_coordinates[connect, 1:]
+        x_loc, y_loc, *_ = get_local_coordinates(nodal_coords)
+
+        # Line integration points
+        num = np.sqrt(3 / 5) / 2
+
+        if active_nodes == [1, 1, 0]:
+            dx_dst = x_loc[1] - x_loc[0]
+            dy_dst = y_loc[1] - y_loc[0]
+            coord_int = np.array([[0.5-num,     0.5, 0.5+num], 
+                                  [      0,       0,       0]], dtype=float)
+
+        elif active_nodes == [1, 0, 1]:
+            dx_dst = x_loc[2] - x_loc[0]
+            dy_dst = y_loc[2] - y_loc[0]
+            coord_int = np.array([[      0,       0,       0], 
+                                  [0.5-num,     0.5, 0.5+num]], dtype=float)
+
+        else:
+            dx_dst = x_loc[2] - x_loc[1]
+            dy_dst = y_loc[2] - y_loc[1]
+            coord_int = np.array([[0.5-num, 0.5, 0.5+num], 
+                                  [0.5-num, 0.5, 0.5+num]], dtype=float)
+
+        weights = np.array([5, 8, 5], dtype=float) / 18
+
+        # Determinant of the Jacobian
+        det_J = np.sqrt(dx_dst**2 + dy_dst**2)
+
+        loads = 0.
+        # Numerical integration
+        for i, weight in enumerate(weights):
+
+            # Coordinates of integration points
+            r = coord_int[0, i]
+            s = coord_int[1, i]
 
             # Shape functions
             N = np.array([[1 - r - s,         0,         0, r, 0, 0, s, 0, 0],
                           [        0, 1 - r - s,         0, 0, r, 0, 0, s, 0],
                           [        0,         0, 1 - r - s, 0, 0, r, 0, 0, s]], dtype=float)
 
-            # Normal pressure vector
-            loads += 0.5 * det_J * N.T @ (normpress * n_unit_elem)
+            # Load vector
+            loads += det_J * weight * N.T @ distributed_load
 
         force_indexes = [0, 1, 2, 6, 7, 8, 12, 13, 14]
-        F_elem[force_indexes] = loads
 
-        return F_elem
+        number_of_frequencies = distributed_load.shape[1]
+        F_elem = np.zeros((self.DOFS_PER_ELEMENT, number_of_frequencies), dtype=complex)
+        F_elem[force_indexes, :] = loads
+
+        g_dofs = self.DOFS_PER_NODE * connect.reshape(-1, 1) + self.local_dofs
+
+        return g_dofs.flatten(), F_elem
+
+    def process_forces_for_distributed_load_over_area(self, element_id: int, distributed_load: np.ndarray):
+
+        # Local coordinate system definition
+        connect = self.connectivity[element_id, 1:]
+        nodal_coords = self.nodal_coordinates[connect, 1:]
+        x_loc, y_loc, *_ = get_local_coordinates(nodal_coords)
+
+        # Integration points
+        r = 1 / 3
+        s = 1 / 3
+
+        # Jacobian
+        J = np.array([[x_loc[1] - x_loc[0], y_loc[1] - y_loc[0]], 
+                      [x_loc[2] - x_loc[0], y_loc[2] - y_loc[0]]], dtype=float)
+
+        # Determinant of the Jacobian
+        det_J = np.linalg.det(J)
+
+        # Shape functions
+        N = np.array([[1 - r - s,         0,         0, r, 0, 0, s, 0, 0],
+                      [        0, 1 - r - s,         0, 0, r, 0, 0, s, 0],
+                      [        0,         0, 1 - r - s, 0, 0, r, 0, 0, s]], dtype=float)
+
+        # Pressure vector
+        loads = 0.5 * det_J * N.T @ distributed_load
+
+        force_indexes = [0, 1, 2, 6, 7, 8, 12, 13, 14]
+
+        number_of_frequencies = distributed_load.shape[1]
+        F_elem = np.zeros((self.DOFS_PER_ELEMENT, number_of_frequencies), dtype=complex)
+        F_elem[force_indexes, :] = loads
+
+        g_dofs = self.DOFS_PER_NODE * connect.reshape(-1, 1) + self.local_dofs
+
+        return g_dofs.flatten(), F_elem
+
+    def process_forces_for_normal_pressure_load(self, element_id: int, normal_pressure_load: np.ndarray):
+
+        # Local coordinate system definition
+        connect = self.connectivity[element_id, 1:]
+        nodal_coords = self.nodal_coordinates[connect, 1:]
+        normal_unit_vector = self.model.mesh.get_element_face_normal(connect)
+
+        number_of_frequencies = normal_pressure_load.shape[1]
+        F_elem = np.zeros((self.DOFS_PER_ELEMENT, number_of_frequencies), dtype=complex)
+
+        if normal_unit_vector is None:
+            return F_elem
+
+        x_loc, y_loc, *_ = get_local_coordinates(nodal_coords)
+
+        # Integration points
+        r = 1 / 3
+        s = 1 / 3
+
+        # Jacobian
+        J = np.array([[x_loc[1] - x_loc[0], y_loc[1] - y_loc[0]], 
+                      [x_loc[2] - x_loc[0], y_loc[2] - y_loc[0]]], dtype=float)
+
+        # Determinant of the Jacobian
+        det_J = np.linalg.det(J)
+
+        # Shape functions
+        N = np.array([[1 - r - s,         0,         0, r, 0, 0, s, 0, 0],
+                      [        0, 1 - r - s,         0, 0, r, 0, 0, s, 0],
+                      [        0,         0, 1 - r - s, 0, 0, r, 0, 0, s]], dtype=float)
+
+        # Normal pressure vector
+        loads = 0.5 * det_J * N.T @ (normal_unit_vector.reshape(-1, 1) @ normal_pressure_load)
+
+        force_indexes = [0, 1, 2, 6, 7, 8, 12, 13, 14]
+        F_elem[force_indexes, :] = loads
+
+        g_dofs = self.DOFS_PER_NODE * connect.reshape(-1, 1) + self.local_dofs
+
+        return g_dofs.flatten(), F_elem
 
 
 def elementary_matrices(nodal_coords: np.ndarray):

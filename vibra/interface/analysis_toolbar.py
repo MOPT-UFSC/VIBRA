@@ -212,7 +212,8 @@ class AnalysisToolbar(QToolBar):
         harmonic = AnalysisSetupInput()
         if harmonic.solve_analysis:
             self.run_analysis()
-    
+            app().main_window.mesh_widget.update_symbols()
+
     def harmonic_acoustic(self):
         analysis_data = {"analysis_id": 3}
         self.finalize(analysis_data)

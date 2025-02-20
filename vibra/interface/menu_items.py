@@ -212,14 +212,14 @@ class MenuItems(QTreeWidget):
         self.item_child_set_prescribed_dofs = QTreeWidgetItem(["Set Prescribed DOFs"])
         self.item_child_set_nodal_loads = QTreeWidgetItem(["Set Nodal Loads"])
         self.item_child_set_distributed_loads = QTreeWidgetItem(["Set Distributed Loads"])
-        self.item_child_set_normal_pressure = QTreeWidgetItem(["Set Normal Pressure"])
+        self.item_child_set_normal_pressure_load = QTreeWidgetItem(["Set Normal Pressure Load"])
         #
         self.list_top_items.append(self.item_top_structuralModelSetup)
         self.list_child_items.append(self.item_child_set_surface_thickness)
         self.list_child_items.append(self.item_child_set_prescribed_dofs)
         self.list_child_items.append(self.item_child_set_nodal_loads)
         self.list_child_items.append(self.item_child_set_distributed_loads)
-        self.list_child_items.append(self.item_child_set_normal_pressure)
+        self.list_child_items.append(self.item_child_set_normal_pressure_load)
         #
         self.item_top_acoustic_model_setup = QTreeWidgetItem(["Acoustic Model Setup"])
         self.item_child_set_dissipation_model = QTreeWidgetItem(["Set Dissipation Model"])
@@ -296,7 +296,7 @@ class MenuItems(QTreeWidget):
         self.item_top_structuralModelSetup.addChild(self.item_child_set_prescribed_dofs)
         self.item_top_structuralModelSetup.addChild(self.item_child_set_nodal_loads)
         self.item_top_structuralModelSetup.addChild(self.item_child_set_distributed_loads)
-        self.item_top_structuralModelSetup.addChild(self.item_child_set_normal_pressure)
+        self.item_top_structuralModelSetup.addChild(self.item_child_set_normal_pressure_load)
 
         self.addTopLevelItem(self.item_top_acoustic_model_setup)
         self.item_top_acoustic_model_setup.addChild(self.item_child_set_acoustic_pressure)
@@ -386,7 +386,7 @@ class MenuItems(QTreeWidget):
         if self.update_childItems_visibility(item):
             return
 
-        self.generate_mesh_action = self.main_window.findChild(QAction, "generate_mesh_action")
+        self.generate_mesh_action = app().main_window.findChild(QAction, "generate_mesh_action")
 
         if item == self.item_child_import_geometry:
             if not self.item_child_import_geometry.isDisabled():
@@ -423,8 +423,8 @@ class MenuItems(QTreeWidget):
             if not self.item_child_set_distributed_loads.isDisabled():
                 obj = SetDistributedLoadsInputs()
 
-        elif item == self.item_child_set_normal_pressure:
-            if not self.item_child_set_normal_pressure.isDisabled():
+        elif item == self.item_child_set_normal_pressure_load:
+            if not self.item_child_set_normal_pressure_load.isDisabled():
                 obj = SetNormalPressureLoadInputs()
 
         elif item == self.item_child_set_acoustic_pressure:
@@ -608,7 +608,7 @@ class MenuItems(QTreeWidget):
         self.item_child_set_prescribed_dofs.setDisabled(key)
         self.item_child_set_nodal_loads.setDisabled(key)
         self.item_child_set_distributed_loads.setDisabled(key)
-        self.item_child_set_normal_pressure.setDisabled(key)
+        self.item_child_set_normal_pressure_load.setDisabled(key)
 
     def modify_acoustic_model_setup_items_acces(self, key: bool):
         self.item_child_set_acoustic_pressure.setDisabled(key)

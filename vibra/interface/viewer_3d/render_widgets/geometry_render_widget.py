@@ -673,16 +673,30 @@ class GeometryRenderWidget(CommonRenderWidget):
     def _structural_boundary_conditions_info_text(self):
 
         text = ""
-        selected_faces = list(self.main_window.selected_geometry_surfaces)
+        distributed_loads_line = None
+        prescribed_dofs = None
+        nodal_loads = None
+        distributed_loads_area = None
+        normal_pressure_load = None
 
-        if len(selected_faces) != 1:
+        selected_faces = list(self.main_window.selected_geometry_surfaces)
+        selected_lines = list(self.main_window.selected_geometry_lines)
+
+        if len(selected_faces) == 1:
+            prescribed_dofs = app().project.model.properties._get_property("prescribed_dofs", surface=selected_faces[0])
+            nodal_loads = app().project.model.properties._get_property("nodal_loads", surface=selected_faces[0])
+            distributed_loads_area = app().project.model.properties._get_property("distributed_loads", surface=selected_faces[0])
+            normal_pressure_load = app().project.model.properties._get_property("normal_pressure_load", surface=selected_faces[0])
+
+        elif len(selected_lines) == 1:
+            distributed_loads_line = app().project.model.properties._get_property("distributed_loads", line=selected_lines[0])
+
+        else:
             return text
 
-        prescribed_dofs = app().project.model.properties._get_property("prescribed_dofs", surface=selected_faces[0])
-        nodal_loads = app().project.model.properties._get_property("nodal_loads", surface=selected_faces[0])
-        boundary_conditions_list = [prescribed_dofs, nodal_loads]
+        boundary_conditions = [prescribed_dofs, nodal_loads, distributed_loads_area, normal_pressure_load, distributed_loads_line]
 
-        if all(condition is None for condition in boundary_conditions_list):
+        if all(bc is None for bc in boundary_conditions):
             return text
 
         if prescribed_dofs is not None:
@@ -695,6 +709,21 @@ class GeometryRenderWidget(CommonRenderWidget):
             loaded_table = "table_names" in nodal_loads.keys()
             text += _structural_format("Nodal loads",  values, ("F", "M"), ("N", "N.m"), loaded_table)
 
+        if distributed_loads_area is not None:
+            values = distributed_loads_area["values"]
+            loaded_table = "table_names" in distributed_loads_area.keys()
+            text += _structural_format("Distributed loads",  values, ["P"], ["N/m²"], loaded_table)
+
+        if distributed_loads_line is not None:
+            values = distributed_loads_line["values"]
+            loaded_table = "table_names" in distributed_loads_line.keys()
+            text += _structural_format("Distributed loads",  values, ["P"], ["N/m"], loaded_table)
+
+        if normal_pressure_load is not None:
+            values = normal_pressure_load["values"]
+            loaded_table = "table_names" in normal_pressure_load.keys()
+            text += _structural_format("Normal pressure",  values, ["P"], ["N/m²"], loaded_table)
+
         return text
 
 def _all_none(sequence) -> bool:
@@ -704,10 +733,15 @@ def _structural_format(property_name, values, labels, units, has_table):
 
     if _all_none(values):
         return ""
+    
+    if property_name == "Normal pressure":
+        sufix_labels = "n"
+    else:
+        sufix_labels = "xyz"
 
     u_values = list()
     u_labels = list()
-    for val, label in zip(values[:3], "xyz"):
+    for val, label in zip(values[:3], sufix_labels):
         if val is None:
             continue
 
@@ -719,26 +753,29 @@ def _structural_format(property_name, values, labels, units, has_table):
 
     r_values = list()
     r_labels = list()
-    for val, label in zip(values[3:], "xyz"):
-        if val is None:
-            continue
+    if len(values) > 3:
+        for val, label in zip(values[3:], "xyz"):
+            if val is None:
+                continue
 
-        if not isinstance(val, Number | complex | str):
-            val = "table"
+            if not isinstance(val, Number | complex | str):
+                val = "table"
 
-        r_values.append(val)
-        r_labels.append(labels[1] + label)
+            r_values.append(val)
+            r_labels.append(labels[1] + label)
 
     tree = TreeInfo(property_name)
     if has_table:
         if u_values:
             tree.add_item(", ".join(u_labels), "Table of values")
+    
         if r_values:
             tree.add_item(", ".join(r_labels), "Table of values")
 
     else:
         if u_values:
             tree.add_item(", ".join(u_labels), u_values, units[0])
+    
         if r_values:
             tree.add_item(", ".join(r_labels), r_values, units[1])
 
