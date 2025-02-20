@@ -1,24 +1,26 @@
 import numpy as np
 
-f_min = 0
-f_max = 200
+f_min = 2
+f_max = 600
 df = 2
 
 frequencies = np.arange(f_min, f_max+df, df)
-a = float(1e7)
-real = a*np.ones(len(frequencies))
-imag = np.zeros(len(frequencies))
+value = 2.037183e3
 
-data = np.array([frequencies, real]).T 
+real = value * np.ones(len(frequencies), dtype=float)
+imag = np.zeros(len(frequencies), dtype=float)
 
-header = "Frequency [Hz], real, imaginary"
+data = np.array([frequencies, real, imag], dtype=float)
 
-filename = 'load_Kxyz.dat'
-np.savetxt(filename, data, delimiter=",", header=header)
+unit = "N/m2"
+header = f"Frequency [Hz], real [{unit}], imaginary [{unit}]"
+
+filename = 'distributed_load_table_2037p183N_m2.dat'
+np.savetxt(filename, data.T, delimiter=",", header=header)
 teste = np.loadtxt(filename,delimiter=",")
 
-f = open(filename)
-header_r = f.readline()
+# f = open(filename)
+# header_r = f.readline()
 # last_col_name = header.split(',')[-1]
 # np.savetxt('load_Fx.dat', data, delimiter=",", header=header)
 # np.savetxt('acoustic_pressure_table.dat', data, delimiter=",", header=header)
