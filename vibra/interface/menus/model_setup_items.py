@@ -45,16 +45,16 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_set_pressure_load = self.add_item("Set Pressure Load")
         #
         self.item_top_acoustic_model_setup = self.add_top_item('Acoustic Model Setup')
-        self.item_child_set_dissipation_model = self.add_item("Set Dissipation Model")
         self.item_child_set_acoustic_pressure = self.add_item('Set Acoustic Pressure')
-        self.item_child_set_mass_flow_rate = self.add_item("Set Mass Flow Rate")
+        # self.item_child_set_mass_flow_rate = self.add_item("Set Mass Flow Rate")
         self.item_child_set_surface_velocity = self.add_item("Set Surface Velocity")
         self.item_child_set_anechoic_termination = self.add_item("Set Anechoic Termination")
         self.item_child_set_specific_impedance = self.add_item("Set Specific Impedance")
+        self.item_child_set_dissipation_model = self.add_item("Set Dissipation Model")
         self.item_child_set_porous_material_model = self.add_item("Set Porous Material Model")
         self.item_child_set_viscous_thermal_model = self.add_item("Set Viscous-thermal Loss Model")
-        self.item_child_add_reciprocating_compressor_excitation = self.add_item("Add Reciprocating Compressor Excitation")
         self.item_child_set_acoustic_properties_gradient = self.add_item("Set Acoustic Properties Gradient")
+        self.item_child_add_reciprocating_compressor_excitation = self.add_item("Add Reciprocating Compressor Excitation")
         self.item_child_set_acoustic_transfer_element_setup = self.add_item("Process Acoustic Transfer Element Data")
         #
         self.item_child_set_anechoic_termination.setToolTip(0, "equivalent to the long pipe boundary condition")
@@ -136,6 +136,7 @@ class ModelSetupItems(CommonMenuItems):
         app().main_window.input_ui.set_acoustic_pressure()
     
     def item_child_set_mass_flow_rate_callback(self):
+        return
         app().main_window.input_ui.set_mass_flow_rate()
     
     def item_child_set_surface_velocity_callback(self):
@@ -176,7 +177,7 @@ class ModelSetupItems(CommonMenuItems):
 
     def modify_acoustic_model_setup_items_acces(self, key: bool):
         self.item_child_set_acoustic_pressure.setDisabled(key)
-        self.item_child_set_mass_flow_rate.setDisabled(key)
+        # self.item_child_set_mass_flow_rate.setDisabled(key)
         self.item_child_set_surface_velocity.setDisabled(key)
         self.item_child_set_specific_impedance.setDisabled(key)
         self.item_child_set_anechoic_termination.setDisabled(key)
