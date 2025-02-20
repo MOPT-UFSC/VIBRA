@@ -165,25 +165,25 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
     
     def calculate_color_bar_plots(self):
         solver = app().project.acoustic_modal_solver
-        index = self.current_shape_index()
+        index = self.current_mode_index()
 
         phase = self.control_bar.phase_slider.value()
 
         current_modal_shape = solver.modal_shape[:, index].copy()
-        if self.control_bar.absolute_button.isChecked():
+        if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
             current_modal_shape = np.abs(current_modal_shape)
         current_modal_shape /= np.max(np.abs(current_modal_shape))
 
         min_value = np.min(current_modal_shape)
         max_value = np.max(current_modal_shape)
 
-        if self.control_bar.real_part_button.isChecked():
+        if self.current_widget is not None and self.current_widget.comboBox_color_scale.currentIndex() == 1:
             if np.abs(min_value) != np.abs(max_value):
                 min_value = -np.max(np.abs([min_value, max_value]))
                 max_value = np.max(np.abs([min_value, max_value]))
 
         current_modal_shape *= np.cos(phase * np.pi / 180)
-        if self.control_bar.absolute_button.isChecked():
+        if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
             current_modal_shape = np.abs(current_modal_shape)
             
         return current_modal_shape, min_value, max_value

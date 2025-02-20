@@ -67,6 +67,10 @@ class ResultsViewerWidget(QWidget):
 
     def add_structural_frequency_response_widget(self):
         self.current_widget = app().main_window.input_ui.plot_structural_frequency_response()
+
+        if app().main_window.structural_harmonic_analysis.playing_animation:
+            app().main_window.structural_harmonic_analysis.stop_animation()
+
         self.add_widget(self.current_widget)
 
     def add_acoustic_pressure_field_widget(self):
@@ -77,14 +81,26 @@ class ResultsViewerWidget(QWidget):
     
     def add_acoustic_pressure_frequency_response_widget(self):
         self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_frequency_response()
+
+        if app().main_window.acoustic_harmonic_analysis.playing_animation:
+            app().main_window.acoustic_harmonic_analysis.stop_animation()
+
         self.add_widget(self.current_widget)
     
     def add_acoustic_pressure_frequency_response_function_widget(self):
         self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_frequency_response_function()
+
+        if app().main_window.acoustic_harmonic_analysis.playing_animation:
+            app().main_window.acoustic_harmonic_analysis.stop_animation()
+
         self.add_widget(self.current_widget)
     
     def add_TL_NR_widget(self):
         self.current_widget = app().main_window.input_ui.plot_TL_NR()
+
+        if app().main_window.acoustic_harmonic_analysis.playing_animation:
+            app().main_window.acoustic_harmonic_analysis.stop_animation()
+            
         self.add_widget(self.current_widget)
 
     def add_acoustic_mode_shape_widget(self):

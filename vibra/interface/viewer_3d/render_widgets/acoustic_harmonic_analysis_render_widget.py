@@ -180,7 +180,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         output_pressures = amplitudes * np.cos(phase + phi_sld)
 
         min_value, max_value = solver.get_max_min_values_of_pressures(index)
-        if self.control_bar.absolute_button.isChecked():
+        if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
             min_value = 0
             output_pressures = np.abs(output_pressures)
         
