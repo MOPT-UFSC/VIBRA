@@ -24,6 +24,7 @@ from vibra.interface.plots.acoustic.plot_acoustic_pressure_frequency_response_in
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_input import PlotAcousticPressureFrequencyResponseFunctionInput
 from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
 from vibra.interface.plots.acoustic.plot_transmission_loss_input import PlotTransmissionLossInput
+from vibra.interface.plots.acoustic.plot_acoustic_mode_shape import PlotAcousticModeShape
 #
 from vibra.interface.plots.structural.plot_structural_frequency_response_input import PlotStructuralFrequencyResponseInput
 from vibra.interface.plots.structural.plot_structural_mode_shape import PlotStructuralModeShape
@@ -169,8 +170,8 @@ class InputUi:
             self.main_window.show_geometry_render_widget() 
 
     def plot_acoustic_mode_shapes(self):
-        if not self.results_viewer_items.item_child_plot_acoustic_mode_shapes.isDisabled():
-            self.main_window.configure_acoustic_modal_analysis_render_widget(True)
+        if self.project.analysis_id in [4]:
+            return self.process_input(PlotAcousticModeShape)
 
     def plot_acoustic_pressure_field(self):
         if self.project.analysis_id in [3]:

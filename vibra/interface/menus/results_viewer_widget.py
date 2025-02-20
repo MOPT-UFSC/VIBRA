@@ -35,13 +35,17 @@ class ResultsViewerWidget(QWidget):
         self.adjustSize()
     
     def _create_connections(self):
+        # Structural
         self.results_viewer_items.item_child_plot_structural_mode_shapes.clicked.connect(self.add_structural_mode_shape_widget)
-        self.results_viewer_items.item_child_plot_displacement_field.clicked.connect(self.add_displacement_field_widget)
         self.results_viewer_items.item_child_plot_structural_frequency_response.clicked.connect(self.add_structural_frequency_response_widget)
+        self.results_viewer_items.item_child_plot_displacement_field.clicked.connect(self.add_displacement_field_widget)
+
+        # Acoustic
         self.results_viewer_items.item_child_plot_acoustic_pressure_field.clicked.connect(self.add_acoustic_pressure_field_widget)
         self.results_viewer_items.item_child_plot_acoustic_pressure_frequency_response.clicked.connect(self.add_acoustic_pressure_frequency_response_widget)
         self.results_viewer_items.item_child_plot_acoustic_pressure_frequency_response_function.clicked.connect(self.add_acoustic_pressure_frequency_response_function_widget)
         self.results_viewer_items.item_child_plot_TL_NR.clicked.connect(self.add_TL_NR_widget)
+        self.results_viewer_items.item_child_plot_acoustic_mode_shapes.clicked.connect(self.add_acoustic_mode_shape_widget)
     
     def get_item(self):
         return self.results_viewer_items
@@ -81,6 +85,12 @@ class ResultsViewerWidget(QWidget):
     
     def add_TL_NR_widget(self):
         self.current_widget = app().main_window.input_ui.plot_TL_NR()
+        self.add_widget(self.current_widget)
+
+    def add_acoustic_mode_shape_widget(self):
+        self.current_widget = app().main_window.input_ui.plot_acoustic_mode_shapes()
+        app().main_window.configure_acoustic_modal_analysis_render_widget(True)
+        app().main_window.acoustic_modal_analysis.configure_menu_widget(self.current_widget)
         self.add_widget(self.current_widget)
 
     def add_widget(self, widget: QWidget, animation_widget=False):

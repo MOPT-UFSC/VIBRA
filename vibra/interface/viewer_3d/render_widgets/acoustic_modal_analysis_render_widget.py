@@ -26,6 +26,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         super().__init__(parent)
 
         self.main_window = app().main_window
+        self.current_widget = None
         self.control_bar = AcousticModalAnalysisBar()
 
         self.control_bar.value_changed.connect(self.update_deformation)
@@ -58,6 +59,9 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.create_color_bar()
         self.create_scale_bar()
         self.update_plot()
+    
+    def configure_menu_widget(self, menu_widget: QWidget):
+        self.current_widget = menu_widget
 
     def toggle_animation(self, *args, **kwargs):
         if self.playing_animation:
@@ -73,8 +77,10 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         super().stop_animation()
         self.control_bar.use_play_icon()
 
-    def current_shape_index(self):
-        return self.control_bar.frequency_box.currentIndex()
+    def current_mode_index(self):
+        if self.current_widget is not None:
+            return self.current_widget.current_mode_index()
+        return 0
 
     def update_plot(self, reset_camera=False):
         # Remember of updating the frequencies before running this
@@ -97,7 +103,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         if solver.modal_shape is None:
             return
 
-        index = self.current_shape_index()
+        index = 0
         if not (0 <= index < solver.modal_shape.shape[1]):
             return
         
@@ -109,20 +115,23 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         phase = self.control_bar.phase_slider.value()
 
         current_modal_shape = solver.modal_shape[:, index].copy()
-        if self.control_bar.absolute_button.isChecked():
+        # if self.control_bar.absolute_button.isChecked():
+        if True:
             current_modal_shape = np.abs(current_modal_shape)
         current_modal_shape /= np.max(np.abs(current_modal_shape))
 
         min_value = np.min(current_modal_shape)
         max_value = np.max(current_modal_shape)
 
-        if self.control_bar.real_part_button.isChecked():
+        # if self.control_bar.real_part_button.isChecked():
+        if False:
             if np.abs(min_value) != np.abs(max_value):
                 min_value = -np.max(np.abs([min_value, max_value]))
                 max_value = np.max(np.abs([min_value, max_value]))
 
         current_modal_shape *= np.cos(phase * np.pi / 180)
-        if self.control_bar.absolute_button.isChecked():
+        # if self.control_bar.absolute_button.isChecked():
+        if True:
             current_modal_shape = np.abs(current_modal_shape)
 
         self.analysis_actor = HollowAnalysisActor(mesh)
@@ -186,26 +195,26 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         if solver.modal_shape is None:
             return
 
-        index = self.current_shape_index()
+        index = self.current_mode_index()
         if not (0 <= index < solver.modal_shape.shape[1]):
             return
 
         phase = self.control_bar.phase_slider.value()
         current_modal_shape = solver.modal_shape[:, index].copy()
-        if self.control_bar.absolute_button.isChecked():
+        if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
             current_modal_shape = np.abs(current_modal_shape)
         current_modal_shape /= np.max(np.abs(current_modal_shape))
 
         min_value = np.min(current_modal_shape)
         max_value = np.max(current_modal_shape)
 
-        if self.control_bar.real_part_button.isChecked():
+        if self.current_widget is not None and self.current_widget.comboBox_color_scale.currentIndex() == 1:
             if np.abs(min_value) != np.abs(max_value):
                 min_value = -np.max(np.abs([min_value, max_value]))
                 max_value = np.max(np.abs([min_value, max_value]))
 
         current_modal_shape *= np.cos(phase * np.pi / 180)
-        if self.control_bar.absolute_button.isChecked():
+        if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
             current_modal_shape = np.abs(current_modal_shape)
 
         self.analysis_actor.plot_color_bar(current_modal_shape, min_value, max_value)
@@ -220,7 +229,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         if solver.modal_shape is None:
             return
 
-        index = self.current_shape_index()
+        index = self.current_mode_index()
         if not (0 <= index < solver.modal_shape.shape[1]):
             return
 
@@ -228,20 +237,20 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         phase = lerp(0, 360, t)
 
         current_modal_shape = solver.modal_shape[:, index].copy()
-        if self.control_bar.absolute_button.isChecked():
+        if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
             current_modal_shape = np.abs(current_modal_shape)
         current_modal_shape /= np.max(np.abs(current_modal_shape))
 
         min_value = np.min(current_modal_shape)
         max_value = np.max(current_modal_shape)
 
-        if self.control_bar.real_part_button.isChecked():
+        if self.current_widget is not None and self.current_widget.comboBox_color_scale.currentIndex() == 1:
             if np.abs(min_value) != np.abs(max_value):
                 min_value = -np.max(np.abs([min_value, max_value]))
                 max_value = np.max(np.abs([min_value, max_value]))
 
         current_modal_shape *= np.cos(phase * np.pi / 180)
-        if self.control_bar.absolute_button.isChecked():
+        if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
             current_modal_shape = np.abs(current_modal_shape)
 
         self.analysis_actor.plot_color_bar(current_modal_shape, min_value, max_value)

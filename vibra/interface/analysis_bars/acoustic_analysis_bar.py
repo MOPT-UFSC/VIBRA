@@ -50,10 +50,7 @@ class AcousticModalAnalysisBar(QWidget):
         layout.addWidget(self.play_pause_button)
         layout.addWidget(self.create_video_button)
         layout.addStretch()
-
-        self.selector_label = QLabel("List of results:")
-
-        layout.addWidget(self.selector_label)
+        
         self.setLayout(layout)
 
     def use_play_icon(self):

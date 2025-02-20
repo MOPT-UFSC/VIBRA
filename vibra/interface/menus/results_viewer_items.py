@@ -48,6 +48,11 @@ class ResultsViewerItems(CommonMenuItems):
                                 self.item_top_results_viewer_structural]
         
     def _create_connections(self):
+        """
+        This function iterates through all child items, connecting the items one by one
+        into a function called child name + _callback, if the function exists
+        """
+
         for top_level_items in self.top_level_items:
             for index in range(top_level_items.childCount()):
                 item_child = top_level_items.child(index)
@@ -72,9 +77,6 @@ class ResultsViewerItems(CommonMenuItems):
         for attr_name, attr_value in self.__dict__.items():
             if attr_value == qtree_widet_item:
                 return attr_name
-        
-    def item_child_plot_acoustic_mode_shapes_callback(self):
-        app().main_window.input_ui.plot_acoustic_mode_shapes()
     
     def item_child_plot_reaction_frequency_response_callback(self):
         return

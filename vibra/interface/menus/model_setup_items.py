@@ -66,6 +66,14 @@ class ModelSetupItems(CommonMenuItems):
                                 ]
 
     def _create_connections(self):
+        """
+        This function iterates through all child items, connecting the items one by one
+        into a function called child name + _callback, if the function exists.
+
+        Example: If the name of the child item is item_child_set_material, it will be connected
+        with a function called item_child_set_material_callback, it this function exists.
+        """
+
         for top_level_items in self.top_level_items:
             for index in range(top_level_items.childCount()):
                 item_child = top_level_items.child(index)
