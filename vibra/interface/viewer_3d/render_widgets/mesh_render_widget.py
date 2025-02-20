@@ -213,7 +213,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.update_info_text()
 
         self.nodes_actor.clear_colors((0, 0, 0, 0))
-        self.faces_actor.clear_colors((255, 255, 255, 255))
+        self.faces_actor.clear_colors((0, 0, 0, 0))
         self.solids_actor.clear_colors()
 
         nodes = self.main_window.selected_mesh_nodes
@@ -221,7 +221,7 @@ class MeshRenderWidget(CommonRenderWidget):
         solids = self.main_window.selected_mesh_solids
 
         self.nodes_actor.paint_cells([255, 0, 0], nodes)
-        self.faces_actor.paint_cells(self.selection_color, faces)
+        self.faces_actor.paint_cells((70, 170, 255), faces)
         self.solids_actor.paint_cells(self.selection_color, solids)
         self.update()
 
