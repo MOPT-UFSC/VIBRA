@@ -72,7 +72,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.lines_actor = LinesActor(mesh)
         self.faces_actor = FacesActor(mesh)
         self.selection_spheres_actor = SelectionSpheres()
-
         self.symbols_actor = NewSymbolsActor()
 
         has_hidden_part = bool(self.main_window.hidden_surfaces)
@@ -106,6 +105,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         visualization = app().main_window.visualization_filter
         faces_opacity = 1 if visualization.faces else 0.1
 
+        self.symbols_actor.SetVisibility(visualization.acoustic_symbols | visualization.structural_symbols)
         self.points_actor.SetVisibility(visualization.points)
         self.lines_actor.SetVisibility(visualization.lines)
         self.faces_actor.GetProperty().SetOpacity(faces_opacity)
