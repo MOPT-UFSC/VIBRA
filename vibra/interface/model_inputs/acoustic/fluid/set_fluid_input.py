@@ -66,33 +66,27 @@ class SetFluidInput(QDialog):
     def _define_qt_variables(self):
 
         # QComboBox
-        self.comboBox_attribution_type = self.findChild(QComboBox, 'comboBox_attribution_type')
-
-        # QFrame
-        self.frame_main_widget = self.findChild(QFrame, 'frame_main_widget')
+        self.comboBox_attribution_type : QComboBox
 
         # QGridLayout
         self.grid_layout = QGridLayout()
         self.grid_layout.setContentsMargins(0,0,0,0)
 
         # QLineEdit
-        self.lineEdit_selection_id = self.findChild(QLineEdit, 'lineEdit_selection_id')
-        self.lineEdit_selected_fluid_name = self.findChild(QLineEdit, 'lineEdit_selected_fluid_name')
+        self.lineEdit_selection_id : QLineEdit
+        self.lineEdit_selected_fluid_name : QLineEdit
 
         # QScrollArea
         self.scrollArea_table_of_fluids : QScrollArea
         self.scrollArea_table_of_fluids.setLayout(self.grid_layout)
         self._add_fluid_widget()
-        self.frame_main_widget.adjustSize()
 
         # QPushButton
-        self.pushButton_attribute = self.findChild(QPushButton, 'pushButton_attribute')
-        self.pushButton_exit = self.fluid_widget.findChild(QPushButton, 'pushButton_exit')
-        self.pushButton_remove_row = self.fluid_widget.findChild(QPushButton, 'pushButton_remove_row')
-        self.pushButton_reset_library = self.fluid_widget.findChild(QPushButton, 'pushButton_reset_library')
+        self.pushButton_attribute = self.fluid_widget.pushButton_attribute
+        self.pushButton_exit = self.fluid_widget.pushButton_exit
 
         # QTableWidget
-        self.tableWidget_fluid_data = self.findChild(QTableWidget, 'tableWidget_fluid_data')
+        self.tableWidget_fluid_data = self.fluid_widget.tableWidget_fluid_data
 
     def _add_fluid_widget(self):
         self.fluid_widget = FluidWidget(parent_widget=self, state_properties=self.state_properties)
@@ -111,7 +105,7 @@ class SetFluidInput(QDialog):
         #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
         self.pushButton_exit.clicked.connect(self.close)
-        self.pushButton_reset_library.clicked.connect(self.reset_fluid_library_callback)
+        self.fluid_widget.pushButton_reset_library.clicked.connect(self.reset_fluid_library_callback)
         #
         self.tableWidget_fluid_data.currentCellChanged.connect(self.current_cell_changed)
         #

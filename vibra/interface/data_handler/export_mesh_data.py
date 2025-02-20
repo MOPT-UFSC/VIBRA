@@ -11,7 +11,6 @@ from vibra.interface.plots.general.frequency_response_plotter import FrequencyRe
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 
 import os
-import numpy as np
 from pathlib import Path
 
 
@@ -53,32 +52,29 @@ class ExportMeshData(QDialog):
         self.temp_path = os.path.expanduser('~')
 
     def _define_qt_variables(self):
+
         # QCheckBox
-        self.checkBox_nodal_coordinates = self.findChild(QCheckBox, 'checkBox_nodal_coordinates')
-        self.checkBox_solid_elements_connectivity = self.findChild(QCheckBox, 'checkBox_solid_elements_connectivity')
-        self.checkBox_face_elements_connectivity = self.findChild(QCheckBox, 'checkBox_face_elements_connectivity')
-        self.checkBox_export_vtu_file = self.findChild(QCheckBox, 'checkBox_export_vtu_file')
+        self.checkBox_nodal_coordinates : QCheckBox
+        self.checkBox_solid_elements_connectivity : QCheckBox
+        self.checkBox_face_elements_connectivity : QCheckBox
+        self.checkBox_export_vtu_file : QCheckBox
+        #
         self.checkBox_nodal_coordinates.setChecked(True)
         self.checkBox_face_elements_connectivity.setChecked(True)
         self.checkBox_solid_elements_connectivity.setChecked(True)
         self.checkBox_export_vtu_file.setChecked(True)
-        # QLineEdit
-        self.lineEdit_folder_path = self.findChild(QLineEdit, 'lineEdit_folder_path')
-        # QPushButton
-        self.pushButton_export_mesh = self.findChild(QPushButton, 'pushButton_export_mesh')
-        self.pushButton_search_folder = self.findChild(QPushButton, 'pushButton_search_folder')
 
+        # QLineEdit
+        self.lineEdit_folder_path : QLineEdit
+
+        # QPushButton
+        self.pushButton_export_mesh : QPushButton
+        self.pushButton_search_folder : QPushButton
     
     def _create_connections(self):
         self.pushButton_export_mesh.clicked.connect(self.export_mesh_data)
         self.pushButton_search_folder.clicked.connect(self.search_folder)
         self.main_window.theme_changed.connect(self.update_icons_color)
-
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.export_mesh_data()
-        if event.key() == Qt.Key_Escape:
-            self.close()
 
     def search_folder(self):
         self.folder_path = QFileDialog.getExistingDirectory(None, 'Choose a folder to export the mesh data', self.temp_path)
@@ -155,3 +151,9 @@ class ExportMeshData(QDialog):
 
         widgets = self.findChildren(QPushButton)
         change_icon_color_for_widgets(widgets, icon_color)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            self.export_mesh_data()
+        if event.key() == Qt.Key_Escape:
+            self.close()

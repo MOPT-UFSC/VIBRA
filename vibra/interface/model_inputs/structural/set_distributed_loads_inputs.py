@@ -313,9 +313,11 @@ class SetDistributedLoadsInputs(QDialog):
 
         if attribution_type == 0:
             selection = "surfaces"
+            unit = "N/m²"
 
         elif attribution_type == 1:
             selection = "lines"
+            unit = "N/m"
 
         selected_ids = app().project.model.mesh.check_selected_ids(
                                                                    input_ids, 
@@ -369,8 +371,7 @@ class SetDistributedLoadsInputs(QDialog):
                     "values" : distributed_loads,
                     "real_values" : real_values,
                     "imag_values" : imag_values,
-                    "nodal_attribution": False,
-                    "averaged": False,
+                    "unit" : unit,
                     }
 
             if attribution_type == 0:
@@ -548,9 +549,11 @@ class SetDistributedLoadsInputs(QDialog):
 
         if attribution_type == 0:
             selection = "surfaces"
+            unit = "N/m²"
 
         elif attribution_type == 1:
             selection = "lines"
+            unit = "N/m"
 
         selected_ids = app().project.model.mesh.check_selected_ids(
                                                                    input_ids, 
@@ -609,8 +612,7 @@ class SetDistributedLoadsInputs(QDialog):
                     "table_names" : table_names,
                     "table_paths" : table_paths,
                     "values" : distributed_loads,
-                    "nodal_attribution": True,
-                    "averaged": False,
+                    "unit" : unit,
                     }
 
             if attribution_type == 0:

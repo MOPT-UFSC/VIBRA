@@ -272,8 +272,6 @@ class SetNormalPressureLoadInputs(QDialog):
                     "values" : pressure_load,
                     "real_values" : real_values,
                     "imag_values" : imag_values,
-                    "nodal_attribution": False,
-                    "averaged": False,
                     }
 
             self.properties._set_property("normal_pressure_load", data, surface=selected_id)
@@ -478,8 +476,6 @@ class SetNormalPressureLoadInputs(QDialog):
                     "table_names" : table_names,
                     "table_paths" : table_paths,
                     "values" : pressure_load,
-                    "nodal_attribution": False,
-                    "averaged": False,
                     }
 
             self.properties._set_property("normal_pressure_load", data, surface=selected_id)

@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QDialog, QComboBox, QFrame, QGridLayout, QLineEdit, QPushButton, QScrollArea, QTableWidget, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PyQt5.QtWidgets import QDialog, QComboBox, QGridLayout, QLineEdit, QPushButton, QScrollArea, QTableWidget, QTabWidget, QTreeWidget, QTreeWidgetItem
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
@@ -63,9 +63,6 @@ class SetMaterialInput(QDialog):
         # QComboBox
         self.comboBox_attribution_type : QComboBox
 
-        # QFrame
-        self.frame_main_widget = self.findChild(QFrame, 'frame_main_widget')
-
         # QGridLayout
         self.grid_layout = QGridLayout()
         self.grid_layout.setContentsMargins(0,0,0,0)
@@ -81,13 +78,13 @@ class SetMaterialInput(QDialog):
         self.scrollArea_table_of_materials.adjustSize()
 
         # QPushButton
-        self.pushButton_attribute = self.findChild(QPushButton, 'pushButton_attribute')
-        self.pushButton_exit = self.findChild(QPushButton, 'pushButton_exit')
+        self.pushButton_attribute = self.material_widget.pushButton_attribute
+        self.pushButton_exit = self.material_widget.pushButton_exit
         self.pushButton_remove : QPushButton
         self.pushButton_reset : QPushButton
 
         # QTableWidget
-        self.tableWidget_material_data = self.findChild(QTableWidget, 'tableWidget_material_data')
+        self.tableWidget_material_data = self.material_widget.tableWidget_material_data
 
         # QTreeWidget
         self.tabWidget_main : QTabWidget
