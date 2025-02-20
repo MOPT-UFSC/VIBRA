@@ -19,6 +19,13 @@ from vibra import app
 
 
 class FacesActor(vtkActor):
+    NODES_TO_VTK_CELL = {
+        3: VTK_TRIANGLE,
+        6: VTK_QUADRATIC_TRIANGLE,
+        4: VTK_QUAD,
+        8: VTK_QUADRATIC_QUAD,
+    }
+
     def __init__(self, mesh, allow_hidding=True, update_normals=True):
         self.mesh = mesh
         self.data = None
@@ -29,57 +36,68 @@ class FacesActor(vtkActor):
         self.configure_appearance()
 
     def create_geometry(self):
+        number_of_nodes = self.mesh.nodal_coordinates.shape[0]
+        number_of_elements = len(self.mesh.faces_connectivity)
+        nodes_per_element = len(self.mesh.faces_connectivity[0, 4:])
         #
         data = vtkPolyData()
         points = vtkPoints()
         mapper = vtkPolyDataMapper()
         point_colors = vtkUnsignedCharArray()
         cell_colors = vtkUnsignedCharArray()
-        cell_indexes = vtkIntArray()
-        cell_indexes.SetName("cell_indexes")
         cell_colors.Fill(0)
-        
-        number_of_nodes = self.mesh.nodal_coordinates.shape[0]
-        number_of_elements = len(self.mesh.faces_connectivity)
-        nodes_per_element = len(self.mesh.faces_connectivity[0, 4:])
 
-        face_nodes = [3, 6, 4, 8]
-        types = [VTK_TRIANGLE, VTK_QUADRATIC_TRIANGLE, VTK_QUAD, VTK_QUADRATIC_QUAD]
-        aux = dict(zip(face_nodes, types))
-        try:
-            cell_type = aux[nodes_per_element]
-        except:
-            raise NotImplementedError("Not implemented plane element")
+        face_indexes = vtkIntArray()
+        face_indexes.SetName("face_indexes")
+        face_indexes.Allocate(number_of_elements)
 
+        surface_indexes = vtkIntArray()
+        surface_indexes.SetName("surface_indexes")
+        surface_indexes.Allocate(number_of_elements)
+
+        volume_indexes = vtkIntArray()
+        volume_indexes.SetName("volume_indexes")
+        volume_indexes.Allocate(number_of_elements)
+
+        cell_type = self.NODES_TO_VTK_CELL[nodes_per_element]
         data.Allocate(nodes_per_element * number_of_elements)
 
         point_colors.SetNumberOfComponents(3)
         point_colors.SetNumberOfTuples(number_of_nodes)
         cell_colors.SetNumberOfComponents(4)
         cell_colors.SetNumberOfTuples(number_of_elements)
-        cell_indexes.Allocate(number_of_elements)
 
         coordinates = self.mesh.nodal_coordinates[:, 1:]
         points.SetData(numpy_to_vtk(coordinates))
 
+        surface_to_volume = dict()
+        for volume, surfaces in self.mesh.surfaces_from_volumes.items():
+            for surface in surfaces:
+                surface_to_volume[surface] = volume
+
         self.visible_indexes = dict()
         hidden_surfaces = app().main_window.hidden_surfaces if self.allow_hidding else set()
-        # for i, values in enumerate(self.mesh.faces_connectivity[:, 4:]):
         for i, surface, _, _, *values in self.mesh.faces_connectivity:
             if surface in hidden_surfaces:
                 continue
 
+            volume = surface_to_volume.get(surface, -1)
+            surface_indexes.InsertNextValue(surface)
+            volume_indexes.InsertNextValue(volume)
+
             # This is usefull if part of the cells are hidden
-            visible_index = cell_indexes.InsertNextValue(i)
+            visible_index = face_indexes.InsertNextValue(i)
             self.visible_indexes[i] = visible_index
             data.InsertNextCell(cell_type, nodes_per_element, list(values))
 
         data.SetPoints(points)
         data.GetPointData().SetScalars(point_colors)
         data.GetCellData().SetScalars(cell_colors)
-        data.GetCellData().AddArray(cell_indexes)
+        data.GetCellData().AddArray(face_indexes)
+        data.GetCellData().AddArray(surface_indexes)
+        data.GetCellData().AddArray(volume_indexes)
 
-        # Updating the normals messes with the colors
+        # Updating normals messes with the colors
         # this is why this option exists.
         if self.update_normals:
             normals_filter = vtkPolyDataNormals()

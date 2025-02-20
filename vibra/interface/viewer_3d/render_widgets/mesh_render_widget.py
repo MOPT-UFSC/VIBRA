@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QApplication
 
 from vibra import app
 # from vibra.interface.tabs.mesh_info_bar import MeshInfoBar
-from vibra.interface.viewer_3d.actors.section_plane_actor import SectionPlaneActor
+from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.edges_actor import EdgesActor
 from ..actors.faces_actor import FacesActor
 from ..actors.nodes_actor import NodesActor
@@ -12,6 +12,7 @@ from ..actors.hollow_solids_actor import HollowSolidsActor
 from ..actors.selection_spheres import SelectionSpheres
 from ..actors.symbols.symbols_actor import SymbolsActor
 from ..actors.ghost_actor import GhostActor
+from ..selection.mesh_selection import MeshSelection
 
 from molde.render_widgets import CommonRenderWidget
 from molde.utils import TreeInfo
@@ -41,7 +42,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.mouse_click = (0, 0)
 
         self.main_window = app().main_window
-        # self.view_mode = SHOW_FACES
         self.selection_color = (20, 106, 245)
 
         self.left_clicked.connect(self.click_callback)
@@ -51,6 +51,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
+        self.mesh_selection = MeshSelection(self)
         self.section_plane_active = False
         self.section_plane_args = tuple()
 
@@ -63,8 +64,13 @@ class MeshRenderWidget(CommonRenderWidget):
         self.plane_actor = None
         self.symbols_actor = None
 
+        # The fast area selection just works if it is on
+        self.renderer.GetActiveCamera().ParallelProjectionOn()
+        self.renderer.RemoveAllLights()
+
         self.create_axes()
         self.create_scale_bar()
+        self.create_camera_light(0.1, 0.1)
         self.update_plot()
 
     def update_plot(self, reset_camera=True):
@@ -72,6 +78,7 @@ class MeshRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
+        self.mesh_selection.precompute_data()
         self.remove_all_actors()
 
         # TODO: load the mesh directly inside the actors
@@ -93,7 +100,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.add_actors(
             self.nodes_actor,
             self.edges_actor,
-            # self.faces_actor,
+            self.faces_actor,
             self.solids_actor,
             self.ghost_actor,
             self.plane_actor,
@@ -116,9 +123,9 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.nodes_actor.SetVisibility(visualization.points)
         self.edges_actor.SetVisibility(visualization.lines)
-        self.faces_actor.SetVisibility(False)
-        self.ghost_actor.SetVisibility(has_hidden_part)
+        self.faces_actor.SetVisibility(visualization.faces)
         self.solids_actor.SetVisibility(visualization.solids)
+        self.ghost_actor.SetVisibility(has_hidden_part)
 
         self.update()
 
@@ -176,9 +183,9 @@ class MeshRenderWidget(CommonRenderWidget):
         mouse_moved = (abs(x0 - x) > 10) or (abs(y0 - y) > 10)
 
         if mouse_moved:
-            picked_nodes, picked_faces, picked_solids = self._get_area_picked_cell_id(x, y)
+            picked_nodes, picked_faces, picked_solids = self.mesh_selection.area_pick(x0, y0, x, y)
         else:
-            picked_nodes, picked_faces, picked_solids = self._get_picked_cell_id(x, y)
+            picked_nodes, picked_faces, picked_solids = self.mesh_selection.pick(x, y)
 
         modifiers = QApplication.keyboardModifiers()
         ctrl_pressed = modifiers & Qt.ControlModifier
@@ -191,105 +198,6 @@ class MeshRenderWidget(CommonRenderWidget):
             join=ctrl_pressed,
             remove=alt_pressed,
         )
-
-    # These pick functions can be placed into a separated class
-    def _get_picked_cell_id(self, x, y):
-        """
-        Pick the nodes, faces and solids at the same time.
-        Them select just the one that is closest to the camera.
-
-        If the ID of a cell is lower than 1 the distance to the
-        camera is set to infinite, so it will never be selected.
-        """
-
-        picked_nodes = []
-        picked_faces = []
-        picked_solids = []
-
-        camera_position = np.array(self.renderer.GetActiveCamera().GetPosition())
-        node_id, node_pos = self._pick_actor(x, y, self.nodes_actor)
-        face_id, face_pos = self._pick_actor(x, y, self.nodes_actor)
-        solid_id, solid_pos = self._pick_actor(x, y, self.solids_actor)
-
-        node_distance = (
-            np.linalg.norm(camera_position - node_pos) 
-            if node_id >= 0 else float("inf")
-        )
-
-        face_distance = (
-            np.linalg.norm(camera_position - face_pos) 
-            if face_id >= 0 else float("inf")
-        )
-
-        solid_distance = (
-            np.linalg.norm(camera_position - solid_pos) 
-            if solid_id >= 0 else float("inf")
-        )
-
-        node_distance *= 0.96  # Cheating a bit to prioritize the node selection
-        face_distance *= 0.98  # Cheating a bit to prioritize the face selection
-        closest = min(node_distance, face_distance, solid_distance)
-
-        if closest == float("inf"):
-            return picked_nodes, picked_faces, picked_solids
-
-        if closest == node_distance:
-            picked_nodes.append(node_id)
-
-        # elif closest == face_distance:
-        #     picked_faces.append(face_id)
-
-        elif closest == solid_distance:
-            picked_solids.append(solid_id)
-
-        return picked_nodes, picked_faces, picked_solids
-
-    def _get_area_picked_cell_id(self, x, y):
-        print("Area selection not implemented yet")
-        picked_nodes = []
-        picked_faces = []
-        picked_solids = []
-        return picked_nodes, picked_faces, picked_solids
-
-    def _pick_actor(self, x, y, target_actor: vtkActor):
-        cell_picker = vtkCellPicker()
-        cell_picker.SetTolerance(0.003)
-
-        pickability = self._narrow_pickability_to_actor(target_actor)
-        cell_picker.Pick(x, y, 0, self.renderer)
-        self._restore_pickability(pickability)
-
-        cell_id = cell_picker.GetCellId()
-        position = cell_picker.GetPickPosition()
-
-        if cell_id < 0:
-            return cell_id, position
-
-        # Try to get the cell_indexes array that shows the original
-        # cell array even if it is being clipped.
-        data: vtkPolyData = target_actor.GetMapper().GetInput()
-        if not data:
-            return cell_id, position
-
-        cell_indexes: vtkIntArray = data.GetCellData().GetArray("cell_indexes")
-        if not cell_indexes:
-            return cell_id, position
-
-        new_cell_id = cell_indexes.GetValue(cell_id)
-        return new_cell_id, position
-
-    def _narrow_pickability_to_actor(self, target_actor: vtkActor):
-        actor: vtkActor
-        pickability = dict()
-        for actor in self.renderer.GetActors():
-            pickability[actor] = actor.GetPickable()
-            actor.SetPickable(actor == target_actor)
-        return pickability
-
-    def _restore_pickability(self, pickability: dict):
-        actor: vtkActor
-        for actor in self.renderer.GetActors():
-            actor.SetPickable(pickability[actor])
 
     def update_selection(self):
         """
@@ -316,28 +224,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.faces_actor.paint_cells(self.selection_color, faces)
         self.solids_actor.paint_cells(self.selection_color, solids)
         self.update()
-
-    def select_multiple_nodes(self, new_nodes, *, join=False, remove=False):
-        if not self._actors_exists():
-            return
-        self.nodes_actor.paint_cells([255, 0, 0], new_nodes)
-        self.update()
-        # if self.view_mode != SHOW_FACES:
-        #     self.show_points()
-
-    def select_multiple_faces(self, new_faces, *, join=False, remove=False):
-        if not self._actors_exists():
-            return
-        self.faces_actor.paint_cells(self.selection_color, new_faces)
-        self.update()
-        self.show_faces()
-
-    def select_multiple_volumes(self, new_volumes, *, join=False, remove=False):
-        if not self._actors_exists():
-            return
-        self.solids_actor.paint_cells(self.selection_color, new_volumes)
-        self.update()
-        self.show_volumes()
 
     def clear_selection_spheres(self):
         if self.selection_spheres_actor is None:
@@ -429,54 +315,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
         self.update()
-
-    # def start_section_mode(self):
-    #     if not self._actors_exists():
-    #         return
-    #     self.section_plane_active = True
-    #     self.plane_actor.VisibilityOn()
-    #     self.faces_actor.clear_colors((255, 255, 255, 12))
-    #     self.update()
-
-    # def stop_section_mode(self):
-    #     if not self._actors_exists():
-    #         return
-    #     self.section_plane_active = False
-    #     self.plane_actor.VisibilityOff()
-    #     has_hidden_part = bool(self.main_window.hidden_surfaces)
-    #     faces_alpha = 12 if has_hidden_part else 0
-    #     self.faces_actor.clear_colors((255, 255, 255, faces_alpha))
-    #     self.solids_actor.disable_cut()
-    #     self.edges_actor.disable_cut()
-    #     self.nodes_actor.disable_cut()
-    #     self.update()
-
-    # def configure_section_plane(self, position, orientation):
-    #     if not self._actors_exists():
-    #         return
-
-    #     self.plane_actor.configure_section_plane(position, orientation)
-    #     self.update()
-
-    # def apply_section_plane(self, position, orientation, invert=False):
-    #     if not self._actors_exists():
-    #         return
-
-    #     self.section_plane_args = (position, orientation, invert)
-    #     xyz = self.plane_actor.calculate_xyz_position(position)
-    #     normal = self.plane_actor.calculate_normal_vector(orientation)
-    #     if invert:
-    #         normal = -normal
-    #     self.solids_actor.apply_cut(xyz, normal)
-    #     # self.faces_actor.apply_cut(xyz, normal)
-    #     self.edges_actor.apply_cut(xyz, normal)
-    #     self.nodes_actor.apply_cut(xyz, normal)
-
-    #     self.plane_actor.VisibilityOn()
-    #     self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
-    #     self.plane_actor.GetProperty().SetOpacity(0.2)
-
-    #     self.update()
 
     def update_info_text(self):
         text = ""

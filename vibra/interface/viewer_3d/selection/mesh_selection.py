@@ -4,131 +4,208 @@ if TYPE_CHECKING:
     from ..render_widgets.mesh_render_widget import MeshRenderWidget
 
 import numpy as np
-from vtkmodules.vtkCommonCore import vtkIntArray
-from vtkmodules.vtkCommonDataModel import vtkPolyData
-from vtkmodules.vtkFiltersGeneral import vtkExtractSelectedFrustum
 from vtkmodules.vtkRenderingCore import (
-    vtkActor,
-    vtkAreaPicker,
     vtkCellPicker,
-    vtkCoordinate,
 )
 
 from vibra import app
+from vibra.utils.interface_utils import world_to_screen_coords
+
+from .common_selection import get_coordinates_inside_area, pick_actor_cell_info
 
 
 class MeshSelection:
     def __init__(self, mesh_render_widget: "MeshRenderWidget"):
         self.mesh_render_widget = mesh_render_widget
+        self.solid_elements_center = np.array([])
+        self.face_elements_center = np.array([])
+        self.cell_picker = vtkCellPicker()
+        self.cell_picker.SetTolerance(0.0018)
 
-    def pick_node(self, x: int, y: int) -> set[int]:
+    def precompute_data(self):
         mesh = app().project.model.mesh
         if mesh is None:
-            return set()
+            return
+
+        solids_connectivity = mesh.solids_connectivity[:, 4:]
+        faces_connectivity = mesh.faces_connectivity[:, 4:]
+        nodal_coordinates = mesh.nodal_coordinates[:, 1:]
+
+        if mesh.solids_connectivity.size > 0:
+            self.solid_elements_center = np.average(
+                nodal_coordinates[solids_connectivity],
+                axis=1,
+            )
+        else:
+            self.solid_elements_center = np.array([])
+
+        if mesh.faces_connectivity.size > 0:
+            self.face_elements_center = np.average(
+                nodal_coordinates[faces_connectivity],
+                axis=1,
+            )
+        else:
+            self.face_elements_center = np.array([])
+
+    def pick(
+        self, x: int, y: int
+    ) -> tuple[
+        set[int],
+        set[int],
+    ]:
+        picked_nodes, nodes_distance = self._pick_node(x, y)
+        picked_solids, solids_distance = self._pick_solid(x, y)
+
+        # Cheating a bit to prioritize point selection
+        nodes_distance *= 0.98
+        closest = min(nodes_distance, solids_distance)
+
+        if closest == nodes_distance:
+            return picked_nodes, set(), set()
+
+        elif closest == solids_distance:
+            return set(), set(), picked_solids
+
+        else:
+            return set(), set(), set()
+
+    def area_pick(
+        self, x0: int, y0: int, x1: int, y1: int
+    ) -> tuple[
+        set[int],
+        set[int],
+    ]:
+        picked_nodes = self._area_pick_nodes(x0, y0, x1, y1)
+        picked_faces = self._area_pick_faces(x0, y0, x1, y1)
+
+        picked_solids = set()
+        if self.solid_elements_center.size > 0:
+            picked_solids = self._area_pick_solids(x0, y0, x1, y1)
+
+        return picked_nodes, picked_faces, picked_solids
+
+    def _pick_node(self, x: int, y: int) -> set[int]:
+        """
+        Pick a node in the mesh.
+
+        This function finds the 3D coordinates of the mouse click (only works if it hit something).
+        Then, the closest node is picked.
+        To make sure this is a node, we project it into the screen and check if the screen distance
+        to the node is smaller than the node visual radius.
+        """
+
+        mesh = app().project.model.mesh
+        if mesh is None:
+            return set(), float("inf")
 
         renderer = self.mesh_render_widget.renderer
-        cell_picker = vtkCellPicker()
-        cell_picker.SetTolerance(0.0018)
-        cell_picker.Pick(x, y, 0, renderer)
+        self.cell_picker.Pick(x, y, 0, renderer)
 
-        pick_position = np.array(cell_picker.GetPickPosition())
-        i = np.argmin(np.linalg.norm(mesh.nodal_coordinates[:, 1:] - pick_position, axis=1))
-
-        coordinate = vtkCoordinate()
-        coordinate.SetCoordinateSystemToWorld()
-        coordinate.SetValue(mesh.nodal_coordinates[i, 1:])
-        view_coords = coordinate.GetComputedViewportValue(renderer)
-        click = np.array([x, y])
-
-        node_size = 15
-        if np.linalg.norm(click - view_coords) < node_size / 2:
-            return {mesh.nodal_coordinates[i, 0].astype(int)}
-
-        return set()
-
-    def pick_solid(self, x: int, y: int) -> set[int]:
-        cell_id = self._pick_actor_cell_id(x, y, self.mesh_render_widget.solids_actor)
-        if cell_id >= 0:
-            return {cell_id}
-        return set()
-
-    def area_pick_nodes(self, x0: int, y0: int, x1: int, y1: int) -> set[int]:
-        mesh = app().project.model.mesh
-        if mesh is None:
-            return set()
-
-        picked_indexes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
-        picked_nodes = set(mesh.nodal_coordinates[picked_indexes, 0].astype(int))
-        return picked_nodes
-
-    def area_pick_solids(self, x0: int, y0: int, x1: int, y1: int) -> set[int]:
-        mesh = app().project.model.mesh
-        if mesh is None:
-            return set()
-
-        picked_nodes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
-        mask_selected_elements = np.any(
-            np.isin(mesh.solids_connectivity[:, 4:], picked_nodes), axis=1
+        pick_position = np.array(self.cell_picker.GetPickPosition())
+        distance_to_pick_position = np.linalg.norm(
+            pick_position - mesh.nodal_coordinates[:, 1:],
+            axis=1,
         )
 
-        return set(mesh.solids_connectivity[mask_selected_elements, 0].astype(int))
+        index = np.argmin(distance_to_pick_position)
+        world_coords = mesh.nodal_coordinates[index, 1:]
+        screen_coords = world_to_screen_coords(world_coords, renderer)
+        click = np.array([x, y])
 
-    def _area_pick_node_internal_indexes(self, x0: int, y0: int, x1: int, y1: int) -> list[int]:
-        picker = vtkAreaPicker()
-        extractor = vtkExtractSelectedFrustum()
-        picker.AreaPick(x0, y0, x1, y1, self.mesh_render_widget.renderer)
-        extractor.SetFrustum(picker.GetFrustum())
+        camera_position = np.array(renderer.GetActiveCamera().GetPosition())
+        camera_distance = np.linalg.norm(camera_position - pick_position)
 
+        node_size = 10
+        if np.linalg.norm(click - screen_coords) < node_size / 2:
+            return {mesh.nodal_coordinates[index, 0].astype(int)}, camera_distance
+        else:
+            return set(), float("inf")
+
+    def _pick_face(self, x: int, y: int) -> set[int]:
+        face_id, face_distance = pick_actor_cell_info(
+            x,
+            y,
+            self.mesh_render_widget.faces_actor,
+            "face_indexes",
+            self.mesh_render_widget.renderer,
+        )
+
+        if face_id < 0:
+            return set(), float("inf")
+
+        return {face_id}, face_distance
+
+    def _pick_solid(self, x: int, y: int) -> set[int]:
+        solid_id, solid_distance = pick_actor_cell_info(
+            x,
+            y,
+            self.mesh_render_widget.solids_actor,
+            "solid_indexes",
+            self.mesh_render_widget.renderer,
+        )
+
+        if solid_id < 0:
+            return set(), float("inf")
+
+        return {solid_id}, solid_distance
+
+    def _area_pick_nodes(
+        self,
+        x0: int,
+        y0: int,
+        x1: int,
+        y1: int,
+    ) -> set[int]:
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
 
-        bounds = mesh.nodal_coordinates[:, (1, 1, 2, 2, 3, 3)]
-        picked_indexes = [i for i, bound in enumerate(bounds) if extractor.OverallBoundsTest(bound)]
+        mask = get_coordinates_inside_area(
+            mesh.nodal_coordinates[:, 1:],
+            (x0, y0, x1, y1),
+            self.mesh_render_widget.renderer,
+        )
 
-        return picked_indexes
+        node_indexes = mesh.nodal_coordinates[:, 0].astype(int)
+        picked_nodes = set(node_indexes[mask])
+        return picked_nodes
 
-    def _pick_actor_cell_id(self, x, y, target_actor: vtkActor):
-        cell_picker = vtkCellPicker()
-        cell_picker.SetTolerance(0.0018)
-        renderer = self.mesh_render_widget.renderer
+    def _area_pick_faces(self, x0: int, y0: int, x1: int, y1: int) -> set[int]:
+        mesh = app().project.model.mesh
+        if mesh is None:
+            return set()
 
-        pickability = self._narrow_pickability_to_actor(target_actor)
-        cell_picker.Pick(x, y, 0, renderer)
-        self._restore_pickability(pickability)
+        if self.face_elements_center.size == 0:
+            return set()
 
-        cell_id = cell_picker.GetCellId()
-        _position = cell_picker.GetPickPosition()
+        mask_selected_faces = get_coordinates_inside_area(
+            self.face_elements_center,
+            (x0, y0, x1, y1),
+            self.mesh_render_widget.renderer,
+        )
 
-        if cell_id < 0:
-            return cell_id
+        face_indexes = mesh.faces_connectivity[:, 0].astype(int)
+        return set(face_indexes[mask_selected_faces])
 
-        # Try to get the cell_indexes array that shows the original
-        # cell array even if it is being clipped.
-        data: vtkPolyData = target_actor.GetMapper().GetInput()
-        if not data:
-            return cell_id
+    def _area_pick_solids(
+        self,
+        x0: int,
+        y0: int,
+        x1: int,
+        y1: int,
+    ) -> set[int]:
+        mesh = app().project.model.mesh
+        if mesh is None:
+            return set()
 
-        cell_indexes: vtkIntArray = data.GetCellData().GetArray("cell_indexes")
-        if not cell_indexes:
-            return cell_id
+        if self.solid_elements_center.size == 0:
+            return set()
 
-        new_cell_id = cell_indexes.GetValue(cell_id)
-        return new_cell_id
+        mask_selected_elements = get_coordinates_inside_area(
+            self.solid_elements_center,
+            (x0, y0, x1, y1),
+            self.mesh_render_widget.renderer,
+        )
 
-    def _narrow_pickability_to_actor(self, target_actor: vtkActor):
-        actor: vtkActor
-        pickability = dict()
-        renderer = self.mesh_render_widget.renderer
-
-        for actor in renderer.GetActors():
-            pickability[actor] = actor.GetPickable()
-            actor.SetPickable(actor == target_actor)
-        return pickability
-
-    def _restore_pickability(self, pickability: dict):
-        actor: vtkActor
-        renderer = self.mesh_render_widget.renderer
-
-        for actor in renderer.GetActors():
-            actor.SetPickable(pickability[actor])
+        solid_indexes = mesh.solids_connectivity[:, 0].astype(int)
+        return set(solid_indexes[mask_selected_elements])
