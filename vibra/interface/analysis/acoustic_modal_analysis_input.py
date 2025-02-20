@@ -56,6 +56,10 @@ class AcousticModalAnalysisInput(QDialog):
 
     def _load_analysis_setup(self):
         analysis_setup = app().file.read_analysis_setup_from_file()
+
+        if not analysis_setup:
+            return
+        
         if isinstance(analysis_setup, dict):
             if analysis_setup["analysis_id"] in [2, 4]:
                 modes = analysis_setup["modes"]
