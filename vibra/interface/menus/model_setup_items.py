@@ -41,8 +41,9 @@ class ModelSetupItems(CommonMenuItems):
         self.item_top_structural_model_setup = self.add_top_item('Structural Model Setup')
         self.item_child_set_surface_thickness = self.add_item("Set Surface Thickness")
         self.item_child_set_prescribed_dofs = self.add_item("Set Prescribed DOFs")
-        self.item_child_set_external_loads = self.add_item("Set External Loads")
-        self.item_child_set_pressure_load = self.add_item("Set Pressure Load")
+        self.item_child_set_nodal_loads = self.add_item("Set Nodal Loads")
+        self.item_child_set_distributed_loads = self.add_item("Set Distributed Loads")
+        self.item_child_set_normal_pressure_load = self.add_item("Set Normal Pressure Load")
         #
         self.item_top_acoustic_model_setup = self.add_top_item('Acoustic Model Setup')
         self.item_child_set_acoustic_pressure = self.add_item('Set Acoustic Pressure')
@@ -126,11 +127,14 @@ class ModelSetupItems(CommonMenuItems):
     def item_child_set_prescribed_dofs_callback(self):
         app().main_window.input_ui.set_prescribed_dofs()
 
-    def item_child_set_external_loads_callback(self):
-       app().main_window.input_ui.set_external_loads()
+    def item_child_set_nodal_loads_callback(self):
+       app().main_window.input_ui.set_nodal_loads()
     
-    def item_child_set_pressure_load_callback(self):
-        app().main_window.input_ui.set_pressure_load()
+    def item_child_set_distributed_loads_callback(self):
+        app().main_window.input_ui.set_distributed_loads()
+    
+    def item_child_set_normal_pressure_load_callback(self):
+        app().main_window.input_ui.set_normal_pressure_load()
     
     def item_child_set_acoustic_pressure_callback(self):
         app().main_window.input_ui.set_acoustic_pressure()
@@ -172,8 +176,9 @@ class ModelSetupItems(CommonMenuItems):
     def modify_structural_model_setup_items_acces(self, key: bool):
         self.item_child_set_surface_thickness.setDisabled(key)
         self.item_child_set_prescribed_dofs.setDisabled(key)
-        self.item_child_set_external_loads.setDisabled(key)
-        self.item_child_set_pressure_load.setDisabled(key)
+        self.item_child_set_nodal_loads.setDisabled(key)
+        self.item_child_set_normal_pressure_load.setDisabled(key)
+        self.item_child_set_distributed_loads.setDisabled(key)
 
     def modify_acoustic_model_setup_items_acces(self, key: bool):
         self.item_child_set_acoustic_pressure.setDisabled(key)

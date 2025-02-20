@@ -14,11 +14,12 @@ from vibra.interface.model_inputs.acoustic.set_acoustic_properties_gradient_inpu
 from vibra.interface.model_inputs.acoustic.reciprocating_compressor_inputs import ReciprocatingCompressorInputs
 from vibra.interface.model_inputs.acoustic.process_acoustic_transfer_element_data import ProcessAcousticTransferElementData
 #
-from vibra.interface.model_inputs.structural.surface_thickness_inputs import SurfaceThicknessInput
-from vibra.interface.model_inputs.structural.prescribed_dofs_inputs import PrescribedDofsInputs
-from vibra.interface.model_inputs.structural.structural_external_loads_inputs import StructuralExternalLoadsInputs
-from vibra.interface.model_inputs.structural.structural_pressure_load_inputs import SetStructuralPressureLoadInputs
-#
+from vibra.interface.model_inputs.structural.set_surface_thickness_inputs import SetSurfaceThicknessInput
+from vibra.interface.model_inputs.structural.set_prescribed_dofs_inputs import SetPrescribedDofsInputs
+from vibra.interface.model_inputs.structural.set_nodal_loads_inputs import SetNodalLoadsInputs
+from vibra.interface.model_inputs.structural.set_normal_pressure_load_inputs import SetNormalPressureLoadInputs
+from vibra.interface.model_inputs.structural.set_distributed_loads_inputs import SetDistributedLoadsInputs
+# #
 from vibra.interface.plots.acoustic.plot_acoustic_pressure_field import PlotAcousticPressureField
 from vibra.interface.plots.acoustic.plot_acoustic_pressure_frequency_response_input import PlotAcousticPressureFrequencyResponseInput
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_input import PlotAcousticPressureFrequencyResponseFunctionInput
@@ -89,19 +90,23 @@ class InputUi:
         
     def set_surface_thickness(self):
         if not self.model_setup_items.item_child_set_surface_thickness.isDisabled():
-            self.process_input(SurfaceThicknessInput)
+            self.process_input(SetSurfaceThicknessInput)
         
     def set_prescribed_dofs(self):
         if not self.model_setup_items.item_child_set_prescribed_dofs.isDisabled():
-            self.process_input(PrescribedDofsInputs)
+            self.process_input(SetPrescribedDofsInputs)
         
-    def set_external_loads(self):
-        if not self.model_setup_items.item_child_set_external_loads.isDisabled():
-            self.process_input(StructuralExternalLoadsInputs)
+    def set_nodal_loads(self):
+        if not self.model_setup_items.item_child_set_nodal_loads.isDisabled():
+            self.process_input(SetNodalLoadsInputs)
+        
+    def set_distributed_loads(self):
+        if not self.model_setup_items.item_child_set_distributed_loads.isDisabled():
+            self.process_input(SetDistributedLoadsInputs)
     
-    def set_pressure_load(self):
-        if not self.model_setup_items.item_child_set_pressure_load.isDisabled():
-            self.process_input(SetStructuralPressureLoadInputs)
+    def set_normal_pressure_load(self):
+        if not self.model_setup_items.item_child_set_normal_pressure_load.isDisabled():
+            self.process_input(SetNormalPressureLoadInputs)
 
     def set_acoustic_pressure(self):
         if not self.model_setup_items.item_child_set_acoustic_pressure.isDisabled():
