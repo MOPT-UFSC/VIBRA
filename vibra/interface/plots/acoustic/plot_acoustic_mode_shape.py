@@ -67,6 +67,8 @@ class PlotAcousticModeShape(QWidget):
         self.treeWidget_frequencies : QTreeWidget
 
     def _create_connections(self):
+        self.comboBox_colormaps.setDisabled(True)
+        self.slider_transparency.setDisabled(True)
         #
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.comboBox_color_scale.currentIndexChanged.connect(self.update_plot)

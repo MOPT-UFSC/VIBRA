@@ -18,7 +18,6 @@ class PlotDisplacementField(QWidget):
         uic.loadUi(ui_path, self)
 
         self._initialize()
-        self._config_window()
         self._define_qt_variables()
         self._create_connections()
         self.load_frequencies()
@@ -39,11 +38,6 @@ class PlotDisplacementField(QWidget):
                           "PuOR",
                           "grayscale",
                           ]
-
-    def _config_window(self):
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(app().main_window.vibra_icon)
 
     def _define_qt_variables(self):
 
@@ -71,6 +65,10 @@ class PlotDisplacementField(QWidget):
 
     def _create_connections(self):
         #
+        self.comboBox_colormaps.setDisabled(True)
+        self.comboBox_color_scale.setDisabled(True)
+        self.slider_transparency.setDisabled(True)
+
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.comboBox_color_scale.currentIndexChanged.connect(self.update_plot)
         self.comboBox_displacements.currentIndexChanged.connect(self.value_changed.emit)

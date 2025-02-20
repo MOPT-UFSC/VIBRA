@@ -19,7 +19,6 @@ class PlotStructuralModeShape(QWidget):
         ui_path = UI_DIR / "plots/structural/plot_structural_mode_shape.ui"
         uic.loadUi(ui_path, self)
 
-        self._config_window()
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
@@ -42,11 +41,6 @@ class PlotStructuralModeShape(QWidget):
         #                   "PuOR",
         #                   "grayscale",
         #                   ]
-
-    def _config_window(self):
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(app().main_window.vibra_icon)
         
     def _define_qt_variables(self):
 
@@ -78,6 +72,10 @@ class PlotStructuralModeShape(QWidget):
 
     def _create_connections(self):
         #
+        self.comboBox_colormaps.setDisabled(True)
+        self.comboBox_color_scale.setDisabled(True)
+        self.slider_transparency.setDisabled(True)
+
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.comboBox_color_scale.currentIndexChanged.connect(self.update_plot)
         self.comboBox_displacements.currentIndexChanged.connect(self.value_changed.emit)

@@ -17,7 +17,6 @@ class PlotAcousticPressureField(QWidget):
         ui_path = UI_DIR / "plots/acoustic/plot_acoustic_pressure_field.ui"
         uic.loadUi(ui_path, self)
 
-        self._config_window()
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
@@ -40,11 +39,7 @@ class PlotAcousticPressureField(QWidget):
                           "PuOR",
                           "grayscale",
                           ]
-
-    def _config_window(self):
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
-
+        
     def _define_qt_variables(self):
 
         # QComboBox
@@ -69,6 +64,8 @@ class PlotAcousticPressureField(QWidget):
         self._config_treeWidget()
 
     def _create_connections(self):
+        self.comboBox_colormaps.setDisabled(True)
+        self.slider_transparency.setDisabled(True)
         #
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.comboBox_color_scale.currentIndexChanged.connect(self.update_plot)
