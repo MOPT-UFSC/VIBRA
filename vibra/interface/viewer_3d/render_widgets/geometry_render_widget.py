@@ -11,7 +11,7 @@ from ..actors.points_actor import PointsActor
 from ..actors.selection_spheres import SelectionSpheres
 from ..actors.ghost_actor import GhostActor
 from ..selection.geometry_selection import GeometrySelection
-
+from ..actors.symbols.new_symbols_actor import NewSymbolsActor
 
 from molde.render_widgets import CommonRenderWidget
 from molde.utils import TreeInfo
@@ -49,12 +49,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
         self.geometry_selection = GeometrySelection(self)
-
-        self.points_actor = None
-        self.lines_actor = None
-        self.faces_actor = None
-        self.ghost_actor = None
-        self.selection_spheres_actor = None
+        self.remove_all_actors()
         self.selection_color = (20, 106, 245)
 
         # The fast area selection just works if it is on
@@ -78,6 +73,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.faces_actor = FacesActor(mesh)
         self.selection_spheres_actor = SelectionSpheres()
 
+        self.symbols_actor = NewSymbolsActor()
+
         has_hidden_part = bool(self.main_window.hidden_surfaces)
         self.ghost_actor = GhostActor(mesh)
         self.ghost_actor.SetVisibility(has_hidden_part)
@@ -92,6 +89,7 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.selection_spheres_actor,
             self.ghost_actor,
             self.plane_actor,
+            self.symbols_actor,
         )
 
         if reset_camera:
