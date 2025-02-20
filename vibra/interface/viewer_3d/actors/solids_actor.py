@@ -114,6 +114,10 @@ class SolidsActor(vtkActor):
         self.GetProperty().SetLineWidth(0.1)
         self.clear_colors()
 
+        mapper = self.GetMapper()
+        mapper.SetResolveCoincidentTopologyToPolygonOffset()
+        mapper.SetRelativeCoincidentTopologyPolygonOffsetParameters(1.1, 0)
+
     def clear_colors(self):
         if self.data is None:
             return
