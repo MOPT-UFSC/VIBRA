@@ -7,6 +7,7 @@ from .new_symbols_common import SymbolActorFixedSize
 class NewSymbolsActor(SymbolActorFixedSize):
     def __init__(self):
         super().__init__()
+        self.configure_appearance()
         self._register_shapes()
         self.build()
 
@@ -41,3 +42,6 @@ class NewSymbolsActor(SymbolActorFixedSize):
         source.SetTipLength(0.25)
         source.Update()
         return source.GetOutput()
+
+    def configure_appearance(self):
+        self.GetProperty().SetAmbient(0.5)
