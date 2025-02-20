@@ -54,20 +54,17 @@ class MeshSelection:
         set[int],
     ]:
         picked_nodes, nodes_distance = self._pick_node(x, y)
+        picked_faces, faces_distance = self._pick_face(x, y)
         picked_solids, solids_distance = self._pick_solid(x, y)
 
         # Cheating a bit to prioritize point selection
         nodes_distance *= 0.98
-        closest = min(nodes_distance, solids_distance)
+        closest = min(nodes_distance, faces_distance, solids_distance)
 
         if closest == nodes_distance:
             return picked_nodes, set(), set()
-
-        elif closest == solids_distance:
-            return set(), set(), picked_solids
-
         else:
-            return set(), set(), set()
+            return set(), picked_faces, picked_solids
 
     def area_pick(
         self, x0: int, y0: int, x1: int, y1: int
