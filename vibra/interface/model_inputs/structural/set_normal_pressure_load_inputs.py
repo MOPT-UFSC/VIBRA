@@ -50,13 +50,10 @@ class SetNormalPressureLoadInputs(QDialog):
         self.setWindowTitle("Set normal pressure load")
 
     def _initialize(self):
-
         self.keep_window_open = True
-
         self.reset_table_variables()
 
     def reset_table_variables(self):
-
         self.pressure_table_values = None
         self.pressure_table_path = None
 
@@ -323,30 +320,6 @@ class SetNormalPressureLoadInputs(QDialog):
 
             imported_values = imported_file[:, 1] + 1j * imported_file[:, 2]
             self.frequencies = imported_file[:, 0]
-        
-            if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
-
-                self.lineEdit_reset(lineEdit)
-
-                title = "Project frequency setup cannot be modified"
-                message = f"The following imported table of values has a frequency setup\n"
-                message += "different from the others already imported ones. The current\n"
-                message += "project frequency setup is not going to be modified."
-                message += f"\n\n{imported_filename}"
-                PrintMessageInput([window_title_1, title, message])
-                return None, None
-
-            # else:
-
-            #     f_min = self.frequencies[0]
-            #     f_max = self.frequencies[-1]
-            #     f_step = self.frequencies[1] - self.frequencies[0] 
-
-            #     frequency_setup = { "f_min" : f_min,
-            #                         "f_max" : f_max,
-            #                         "f_step" : f_step }
-
-            #     app().project.model.set_frequency_setup(frequency_setup)
 
             return imported_values, imported_table_path
 
@@ -365,52 +338,6 @@ class SetNormalPressureLoadInputs(QDialog):
         if  self.pressure_table_path is None:
             self.lineEdit_reset(self.lineEdit_table_path)
 
-    def save_table_files(self, selected_id: int, values: np.ndarray):
-
-        if self.frequencies[0] == 0:
-            self.frequencies[0] = float(1e-6)
-
-        if self.frequencies[0] == float(1e-6):
-            self.frequencies[0] = 0
-
-        table_name = f"normal_pressure_from_surface_{selected_id}"
-
-        real_values = np.real(values)
-        imag_values = np.imag(values)
-        data = np.array([self.frequencies, real_values, imag_values], dtype=float).T
-
-        self.properties.add_imported_tables("structural", table_name, data)
-        self.update_analysis_setup_in_file(self.frequencies)
-
-        return table_name, data
-
-    # def save_table_values(self, table_name: str, imported_values: np.ndarray):
-
-    #     mask = imported_values[:, 0] > 0
-    #     _imported_values = imported_values[mask, :]
-    #     _frequencies = _imported_values[:, 0]
-
-    #     if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
-    #         self.hide()
-    #         title = "Project frequency setup cannot be modified"
-    #         message = "The following imported table of values has a frequency setup "
-    #         message += "different from the others already imported ones. The current "
-    #         message += "project frequency setup is not going to be modified."
-    #         message += f"\n\n{table_name}"
-    #         PrintMessageInput([window_title_1, title, message])
-    #         return True
-
-    #     self.update_analysis_setup_in_file(_frequencies)
-
-    #     real_values = _imported_values[:, 1]
-    #     imag_values = _imported_values[:, 2]
-
-    #     data = np.array([_frequencies, real_values, imag_values], dtype=float).T
-
-    #     self.properties.add_imported_tables("acoustic", table_name, data)
-
-    #     return False
-
     def update_analysis_setup_in_file(self, frequencies: np.ndarray):
 
         analysis_setup = app().file.read_analysis_setup_from_file()
@@ -427,6 +354,41 @@ class SetNormalPressureLoadInputs(QDialog):
 
         app().project.set_analysis_data(analysis_setup)
         app().file.write_analysis_setup_in_file(analysis_setup)
+
+    def save_table_files(self, selected_id: int, values: np.ndarray):
+
+        if self.frequencies[0] == 0:
+            self.frequencies[0] = float(1e-6)
+
+        if self.frequencies[0] == float(1e-6):
+            self.frequencies[0] = 0
+
+        if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
+
+            self.hide()
+            lineEdit = self.lineEdit_table_path
+            imported_filename = basename(lineEdit.text())
+            self.lineEdit_reset(lineEdit)
+
+            title = "Project frequency setup cannot be modified"
+            message = f"The following imported table of values has a frequency setup "
+            message += "different from the others already imported ones. The current "
+            message += "project frequency setup is not going to be modified."
+            message += f"\n\nFile name: {imported_filename}"
+            PrintMessageInput([window_title_1, title, message])
+
+            return None, None
+
+        table_name = f"normal_pressure_from_surface_{selected_id}"
+
+        real_values = np.real(values)
+        imag_values = np.imag(values)
+        data = np.array([self.frequencies, real_values, imag_values], dtype=float).T
+
+        self.properties.add_imported_tables("structural", table_name, data)
+        self.update_analysis_setup_in_file(self.frequencies)
+
+        return table_name, data
 
     def table_values_attribution(self):
 
@@ -455,6 +417,8 @@ class SetNormalPressureLoadInputs(QDialog):
             
             if self.pressure_table_values is not None:
                 self.pressure_table_name, self.pressure_array = self.save_table_files(selected_id, self.pressure_table_values, self.pressure_table_path)
+                if self.pressure_array is None:
+                    return
 
             table_names = [self.pressure_table_name]
             table_paths = [self.pressure_table_path]
@@ -480,6 +444,7 @@ class SetNormalPressureLoadInputs(QDialog):
 
             self.properties._set_property("normal_pressure_load", data, surface=selected_id)
 
+        self.reset_table_variables()
         self.actions_to_finalize()
 
     def attribute_callback(self):

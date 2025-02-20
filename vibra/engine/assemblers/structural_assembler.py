@@ -222,8 +222,6 @@ class StructuralAssembler:
 
     def process_distributed_loads(self):
 
-        from vibra import app
-
         output = np.zeros((len(self.all_dofs), self.number_frequencies), dtype=complex)
 
         for (property, surface_id), data in self.properties.surface_properties.items():
@@ -253,7 +251,6 @@ class StructuralAssembler:
                     continue
 
                 nodes_from_line = self.model.mesh.nodes_from_lines[line_id]
-
                 for surface_id in self.model.mesh.surface_from_line[line_id]:
                     elements_from_surface = self.model.mesh.elements_from_surface[surface_id]
                     connectivities = self.element_2D.connectivity[elements_from_surface, :]

@@ -174,14 +174,14 @@ class SetPrescribedDofsInputs(QDialog):
                                               [self.lineEdit_real_alldofs, self.lineEdit_imag_alldofs],
                                               ]
 
-        self.list_lineEdit_table_values = [ 
-                                           self.lineEdit_path_table_ux,
-                                           self.lineEdit_path_table_uy,
-                                           self.lineEdit_path_table_uz,
-                                           self.lineEdit_path_table_rx,
-                                           self.lineEdit_path_table_ry,
-                                           self.lineEdit_path_table_rz,
-                                           ]
+        self.table_lineEdits = { 
+                                "Ux" : self.lineEdit_path_table_ux,
+                                "Uy" : self.lineEdit_path_table_uy,
+                                "Uz" : self.lineEdit_path_table_uz,
+                                "Rx" : self.lineEdit_path_table_rx,
+                                "Ry" : self.lineEdit_path_table_ry,
+                                "Rz" : self.lineEdit_path_table_rz,
+                                }
 
     def _config_widgets(self):
         #
@@ -287,7 +287,7 @@ class SetPrescribedDofsInputs(QDialog):
         values = data.get("values", None)
         if "table_paths" in data.keys():
             table_paths = data["table_paths"]
-            for index, lineEdit_table in enumerate(self.list_lineEdit_table_values):
+            for index, lineEdit_table in enumerate(self.table_lineEdits.values()):
                 table_path = table_paths[index]
                 if table_path is not None:                   
                     lineEdit_table.setText(table_path)
@@ -575,30 +575,6 @@ class SetPrescribedDofsInputs(QDialog):
 
             imported_values = imported_file[:, 1] + 1j * imported_file[:, 2]
             self.frequencies = imported_file[:, 0]
-        
-            if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
-
-                self.lineEdit_reset(lineEdit)
-
-                title = "Project frequency setup cannot be modified"
-                message = f"The following imported table of values has a frequency setup\n"
-                message += "different from the others already imported ones. The current\n"
-                message += "project frequency setup is not going to be modified."
-                message += f"\n\n{imported_filename}"
-                PrintMessageInput([window_title_1, title, message])
-                return None, None
-
-            # else:
-
-            #     f_min = self.frequencies[0]
-            #     f_max = self.frequencies[-1]
-            #     f_step = self.frequencies[1] - self.frequencies[0] 
-
-            #     frequency_setup = { "f_min" : f_min,
-            #                         "f_max" : f_max,
-            #                         "f_step" : f_step }
-
-            #     app().project.model.set_frequency_setup(frequency_setup)
 
             return imported_values, imported_table_path
 
@@ -642,60 +618,6 @@ class SetPrescribedDofsInputs(QDialog):
         if self.rz_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_rz)
 
-    def integrate_and_save_table_files(self, dof_label: str, selected_id: int, selection: str, values: np.ndarray, linear=False, angular=False):
-
-        if self.frequencies[0] == 0:
-            self.frequencies[0] = float(1e-6)
-
-        if linear:
-            index_lin = self.comboBox_linear_data_type.currentIndex()
-            values /= ((1j*2*np.pi*self.frequencies)**index_lin)
-
-        if angular:
-            index_ang = self.comboBox_angular_data_type.currentIndex()
-            values /= ((1j*2*np.pi*self.frequencies)**index_ang)
-
-        if self.frequencies[0] == float(1e-6):
-            self.frequencies[0] = 0
-
-        table_name = f"prescribed_dof_{dof_label}_from_{selection[:-1]}_{selected_id}"
-
-        real_values = np.real(values)
-        imag_values = np.imag(values)
-        data = np.array([self.frequencies, real_values, imag_values], dtype=float).T
-
-        self.properties.add_imported_tables("structural", table_name, data)
-        self.update_analysis_setup_in_file(self.frequencies)
-
-        return table_name, data
-
-    # def save_table_values(self, table_name: str, imported_values: np.ndarray):
-
-    #     mask = imported_values[:, 0] > 0
-    #     _imported_values = imported_values[mask, :]
-    #     _frequencies = _imported_values[:, 0]
-
-    #     if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
-    #         self.hide()
-    #         title = "Project frequency setup cannot be modified"
-    #         message = "The following imported table of values has a frequency setup "
-    #         message += "different from the others already imported ones. The current "
-    #         message += "project frequency setup is not going to be modified."
-    #         message += f"\n\n{table_name}"
-    #         PrintMessageInput([window_title_1, title, message])
-    #         return True
-
-    #     self.update_analysis_setup_in_file(_frequencies)
-
-    #     real_values = _imported_values[:, 1]
-    #     imag_values = _imported_values[:, 2]
-
-    #     data = np.array([_frequencies, real_values, imag_values], dtype=float).T
-
-    #     self.properties.add_imported_tables("acoustic", table_name, data)
-
-    #     return False
-
     def update_analysis_setup_in_file(self, frequencies: np.ndarray):
 
         analysis_setup = app().file.read_analysis_setup_from_file()
@@ -712,6 +634,49 @@ class SetPrescribedDofsInputs(QDialog):
 
         app().project.set_analysis_data(analysis_setup)
         app().file.write_analysis_setup_in_file(analysis_setup)
+
+    def integrate_and_save_table_files(self, dof_label: str, selected_id: int, selection: str, values: np.ndarray, linear=False, angular=False):
+
+        if self.frequencies[0] == 0:
+            self.frequencies[0] = float(1e-6)
+
+        if linear:
+            index_lin = self.comboBox_linear_data_type.currentIndex()
+            values /= ((1j*2*np.pi*self.frequencies)**index_lin)
+
+        if angular:
+            index_ang = self.comboBox_angular_data_type.currentIndex()
+            values /= ((1j*2*np.pi*self.frequencies)**index_ang)
+
+        if self.frequencies[0] == float(1e-6):
+            self.frequencies[0] = 0
+
+        if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
+
+            self.hide()
+            lineEdit = self.table_lineEdits[dof_label]
+            imported_filename = basename(lineEdit.text())
+            self.lineEdit_reset(lineEdit)
+
+            title = "Project frequency setup cannot be modified"
+            message = f"The following imported table of values has a frequency setup "
+            message += "different from the others already imported ones. The current "
+            message += "project frequency setup is not going to be modified."
+            message += f"\n\nFile name: {imported_filename}"
+            PrintMessageInput([window_title_1, title, message])
+
+            return None, None
+
+        table_name = f"prescribed_dof_{dof_label}_from_{selection[:-1]}_{selected_id}"
+
+        real_values = np.real(values)
+        imag_values = np.imag(values)
+        data = np.array([self.frequencies, real_values, imag_values], dtype=float).T
+
+        self.properties.add_imported_tables("structural", table_name, data)
+        self.update_analysis_setup_in_file(self.frequencies)
+
+        return table_name, data
 
     def table_values_attribution(self):
 
@@ -825,6 +790,7 @@ class SetPrescribedDofsInputs(QDialog):
             elif attribution_type == 3:
                 self.model.properties._set_property("prescribed_dofs", data, node=selected_id)
 
+        self.reset_table_variables()
         self.actions_to_finalize()
 
     def remove_duplicated_attributions(self, selected_ids: list, selection: str):
@@ -1221,7 +1187,7 @@ class SetPrescribedDofsInputs(QDialog):
             lineEdit_real.setText("")
             lineEdit_imag.setText("")
 
-        for lineEdit_table in self.list_lineEdit_table_values:
+        for lineEdit_table in self.table_lineEdits.values():
             lineEdit_table.setText("")
 
     def keyPressEvent(self, event):

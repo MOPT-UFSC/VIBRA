@@ -169,14 +169,14 @@ class SetNodalLoadsInputs(QDialog):
                                               [self.lineEdit_real_Mz, self.lineEdit_imag_Mz],
                                               ]
 
-        self.list_lineEdit_table_values = [ 
-                                           self.lineEdit_path_table_Fx,
-                                           self.lineEdit_path_table_Fy,
-                                           self.lineEdit_path_table_Fz,
-                                           self.lineEdit_path_table_Mx,
-                                           self.lineEdit_path_table_My,
-                                           self.lineEdit_path_table_Mz,
-                                           ]
+        self.table_lineEdits = { 
+                                "Fx" : self.lineEdit_path_table_Fx,
+                                "Fy" : self.lineEdit_path_table_Fy,
+                                "Fz" : self.lineEdit_path_table_Fz,
+                                "Mx" : self.lineEdit_path_table_Mx,
+                                "My" : self.lineEdit_path_table_My,
+                                "Mz" : self.lineEdit_path_table_Mz,
+                                }
 
     def _config_widgets(self):
         #
@@ -282,7 +282,7 @@ class SetNodalLoadsInputs(QDialog):
         values = data.get("values", None)
         if "table_paths" in data.keys():
             table_paths = data["table_paths"]
-            for index, lineEdit_table in enumerate(self.list_lineEdit_table_values):
+            for index, lineEdit_table in enumerate(self.table_lineEdits.values()):
                 table_path = table_paths[index]
                 if table_path is not None:                   
                     lineEdit_table.setText(table_path)
@@ -625,52 +625,6 @@ class SetNodalLoadsInputs(QDialog):
         if self.Mz_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Mz)
 
-    def save_table_files(self, load_label: str, selected_id: int, selection: str, values: np.ndarray):
-
-        if self.frequencies[0] == 0:
-            self.frequencies[0] = float(1e-6)
-
-        if self.frequencies[0] == float(1e-6):
-            self.frequencies[0] = 0
-
-        table_name = f"nodal_loads_{load_label}_from_{selection[:-1]}_{selected_id}"
-
-        real_values = np.real(values)
-        imag_values = np.imag(values)
-        data = np.array([self.frequencies, real_values, imag_values], dtype=float).T
-
-        self.properties.add_imported_tables("structural", table_name, data)
-        self.update_analysis_setup_in_file(self.frequencies)
-
-        return table_name, data
-
-    # def save_table_values(self, table_name: str, imported_values: np.ndarray):
-
-    #     mask = imported_values[:, 0] > 0
-    #     _imported_values = imported_values[mask, :]
-    #     _frequencies = _imported_values[:, 0]
-
-    #     if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
-    #         self.hide()
-    #         title = "Project frequency setup cannot be modified"
-    #         message = "The following imported table of values has a frequency setup "
-    #         message += "different from the others already imported ones. The current "
-    #         message += "project frequency setup is not going to be modified."
-    #         message += f"\n\n{table_name}"
-    #         PrintMessageInput([window_title_1, title, message])
-    #         return True
-
-    #     self.update_analysis_setup_in_file(_frequencies)
-
-    #     real_values = _imported_values[:, 1]
-    #     imag_values = _imported_values[:, 2]
-
-    #     data = np.array([_frequencies, real_values, imag_values], dtype=float).T
-
-    #     self.properties.add_imported_tables("acoustic", table_name, data)
-
-    #     return False
-
     def update_analysis_setup_in_file(self, frequencies: np.ndarray):
 
         analysis_setup = app().file.read_analysis_setup_from_file()
@@ -687,6 +641,41 @@ class SetNodalLoadsInputs(QDialog):
 
         app().project.set_analysis_data(analysis_setup)
         app().file.write_analysis_setup_in_file(analysis_setup)
+
+    def save_table_files(self, load_label: str, selected_id: int, selection: str, values: np.ndarray):
+
+        if self.frequencies[0] == 0:
+            self.frequencies[0] = float(1e-6)
+
+        if self.frequencies[0] == float(1e-6):
+            self.frequencies[0] = 0
+
+        if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
+
+            self.hide()
+            lineEdit = self.table_lineEdits[load_label]
+            imported_filename = basename(lineEdit.text())
+            self.lineEdit_reset(lineEdit)
+
+            title = "Project frequency setup cannot be modified"
+            message = f"The following imported table of values has a frequency setup "
+            message += "different from the others already imported ones. The current "
+            message += "project frequency setup is not going to be modified."
+            message += f"\n\nFile name: {imported_filename}"
+            PrintMessageInput([window_title_1, title, message])
+
+            return None, None
+
+        table_name = f"nodal_loads_{load_label}_from_{selection[:-1]}_{selected_id}"
+
+        real_values = np.real(values)
+        imag_values = np.imag(values)
+        data = np.array([self.frequencies, real_values, imag_values], dtype=float).T
+
+        self.properties.add_imported_tables("structural", table_name, data)
+        self.update_analysis_setup_in_file(self.frequencies)
+
+        return table_name, data
 
     def table_values_attribution(self):
 
@@ -746,12 +735,18 @@ class SetNodalLoadsInputs(QDialog):
             
             if self.Fx_table_values is not None:
                 self.Fx_table_name, self.Fx_array = self.save_table_files("Fx", selected_id, selection, self.Fx_table_values)
-
+                if self.Fx_array is None:
+                    return
+                
             if self.Fy_table_values is not None:
                 self.Fy_table_name, self.Fy_array = self.save_table_files("Fy", selected_id, selection, self.Fy_table_values)
-
+                if self.Fy_array is None:
+                    return
+                
             if self.Fz_table_values is not None:
                 self.Fz_table_name, self.Fz_array = self.save_table_files("Fz", selected_id, selection, self.Fz_table_values)
+                if self.Fz_array is None:
+                    return
 
             table_names = [self.Fx_table_name, self.Fy_table_name, self.Fz_table_name]
             table_paths = [self.Fx_table_path, self.Fy_table_path, self.Fz_table_path]
@@ -761,12 +756,18 @@ class SetNodalLoadsInputs(QDialog):
 
                 if self.Mx_table_values is not None:
                     self.Mx_table_name, self.Mx_array = self.save_table_files("Mx", selected_id, selection, self.Mx_table_values)
+                    if self.Mx_array is None:
+                        return
 
                 if self.My_table_values is not None:
                     self.My_table_name, self.Mx_array = self.save_table_files("My", selected_id, selection, self.My_table_values)
+                    if self.My_array is None:
+                        return
 
                 if self.Mz_table_values is not None:
                     self.Mz_table_name, self.Mx_array = self.save_table_files("Mz", selected_id, selection, self.Mz_table_values)
+                    if self.Mz_array is None:
+                        return
 
                 table_names.extend([self.Mx_table_name, self.My_table_name, self.Mz_table_name])
                 table_paths.extend([self.Mx_table_path, self.My_table_path, self.Mz_table_path])
@@ -804,6 +805,7 @@ class SetNodalLoadsInputs(QDialog):
             elif attribution_type == 3:
                 self.properties._set_property("nodal_loads", data, node=selected_id)
 
+        self.reset_table_variables()
         self.actions_to_finalize()
 
     def remove_duplicated_attributions(self, selected_ids: list, selection: str):
@@ -1197,7 +1199,7 @@ class SetNodalLoadsInputs(QDialog):
             lineEdit_real.setText("")
             lineEdit_imag.setText("")
 
-        for lineEdit_table in self.list_lineEdit_table_values:
+        for lineEdit_table in self.table_lineEdits.values():
             lineEdit_table.setText("")
 
     def keyPressEvent(self, event):
