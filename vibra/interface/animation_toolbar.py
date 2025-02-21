@@ -132,9 +132,11 @@ class AnimationToolbar(QToolBar):
     def update_toolbar(self):
         if isinstance(self.current_render_widget, AcousticHarmonicAnalysisRenderWidget):
             self.magnification_factor_slider.setDisabled(True)
+            self.label_magnification_factor.setDisabled(True)
             self.label_factor.setDisabled(True)
         else:
             self.magnification_factor_slider.setDisabled(False)
+            self.label_magnification_factor.setDisabled(False)
             self.label_factor.setDisabled(False)
         
     def update_current_render_widget(self):
