@@ -1,13 +1,11 @@
+import logging
 import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
 from PyQt5.QtCore import QObjectCleanupHandler
 from PyQt5.QtWidgets import *
 
 from vibra import app
-# from vibra.interface.modal_analysis_bar import AcousticModalAnalysisBar
-from vibra.interface.analysis_bars.acoustic_analysis_bar import (
-    AcousticModalAnalysisBar,
-)
+
 from vibra.interface.viewer_3d.actors.analysis_actor import AnalysisActor
 from vibra.interface.viewer_3d.actors.hollow_analysis_actor import HollowAnalysisActor
 from vibra.interface.viewer_3d.actors.section_plane_actor import (
@@ -27,10 +25,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
 
         self.main_window = app().main_window
         self.current_widget = None
-        self.control_bar = AcousticModalAnalysisBar()
 
-        self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
-        self.control_bar.phase_slider.valueChanged.connect(self.stop_animation)
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
@@ -41,7 +36,6 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
         layout = QVBoxLayout()
-        layout.addWidget(self.control_bar)
         layout.addWidget(self.render_interactor)
         self.setLayout(layout)
         self.setContentsMargins(0, 0, 0, 0)
@@ -64,10 +58,10 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         if self.playing_animation:
             self.stop_animation()
         else:
-            self.start_animation()
+            self.start_animation(*args, **kwargs)
 
-    def start_animation(self):
-        super().start_animation()
+    def start_animation(self, *args, **kwargs):
+        super().start_animation(*args, **kwargs)
         self.main_window.animation_toolbar.update_animate_button_icons(True)
 
     def stop_animation(self):
@@ -137,13 +131,13 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.plane_actor.SetScale(scale, scale, scale)
         self.renderer.AddActor(self.plane_actor)
 
-        mesh_visibility = self.control_bar.show_mesh_button.isChecked()
-        self.set_mesh_visibility(mesh_visibility)
+        # mesh_visibility = self.main_window.animation_toolbar.checkBox_show_mesh.isChecked()
+        # self.set_mesh_visibility(mesh_visibility)
 
-        if self.control_bar.show_mesh_button.isChecked():
-            self.analysis_actor.VisibilityOn()
-            self.analysis_actor.GetProperty().SetRepresentationToSurface()
-            self.edges_actor.VisibilityOn()
+        # if mesh_visibility:
+        #     self.analysis_actor.VisibilityOn()
+        #     self.analysis_actor.GetProperty().SetRepresentationToSurface()
+        #     self.edges_actor.VisibilityOn()
 
         # if self.section_plane_active and self.section_plane_args:
         #     self.start_section_mode()
@@ -234,6 +228,8 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         index = self.current_mode_index()
         if not (0 <= index < solver.modal_shape.shape[1]):
             return
+    
+        logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]")
 
         t = frame / (self._animation_total_frames - 1)
         phase = lerp(0, 360, t)
@@ -259,19 +255,6 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
-    def save_video(self):
-        file_path, check = QFileDialog.getSaveFileName(
-                                                        self,
-                                                        "Save As",
-                                                        filter = "All Files ();; Video (*.mp4);; GIF (*.gif);;",
-                                                    )
-        
-        if not check:
-            return
-        
-        self.generate_video(file_path)
-        
-
     def set_mesh_visibility(self, condition):
         if not self._actors_exists():
             return
@@ -282,6 +265,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
             self.show_faces()
 
     def show_points(self):
+        return
         if not self._actors_exists():
             return
 
@@ -292,6 +276,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def show_lines(self):
+        return
         if not self._actors_exists():
             return
 
@@ -302,6 +287,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def show_faces(self):
+        return
         if not self._actors_exists():
             return
 

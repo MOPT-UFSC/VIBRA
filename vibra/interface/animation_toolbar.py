@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QLabel, QFileDialog, QPushButton, QSlider, QSpinBox, QToolBar, QWidget, QCheckBox
-from PyQt5.QtCore import QSize, Qt 
+from PyQt5.QtWidgets import QLabel, QFileDialog, QPushButton, QSlider, QSpinBox, QToolBar, QWidget
 from PyQt5.QtGui import  QIcon, QFont, QColor
+from PyQt5.QtCore import Qt, QSize
 
 from vibra import app, UI_DIR, ICON_DIR
 from vibra.interface.formatters import icons
@@ -8,7 +8,7 @@ from vibra.utils.icons import load_icon
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.viewer_3d.render_widgets.acoustic_harmonic_analysis_render_widget import AcousticHarmonicAnalysisRenderWidget
 
-from molde.render_widgets.animated_render_widget import AnimatedRenderWidget
+from molde.windows.loading_window import LoadingWindow
 
 from pathlib import Path
 
@@ -32,13 +32,14 @@ class AnimationToolbar(QToolBar):
 
     def _initialize(self):
         self.animating = False
+        self.current_render_widget = None
 
     def _load_icons(self):
         color = QColor("#448cff")
 
         self.play_icon = load_icon(ICON_DIR / "play.png", color)
         self.pause_icon = load_icon(ICON_DIR / "pause.png", color)
-        self.export_icon = load_icon(ICON_DIR / "save_as.png", color)
+        self.save_animation_icon = load_icon(ICON_DIR / "create_video_icon.png", color)
 
     def _define_qt_variables(self):
 
@@ -49,11 +50,10 @@ class AnimationToolbar(QToolBar):
         self.label_degrees = QLabel("(0°)")
         self.label_magnification_factor = QLabel("Magnification factor:")
         self.label_factor = QLabel("(1.0x)")
-        self.label_show_mesh = QLabel("Show mesh")
 
         # QPushButton
         self.pushButton_animate = QPushButton(self)
-        self.pushButton_export = QPushButton(self)
+        self.pushButton_save_animation = QPushButton(self)
 
         # QSlider
         self.phase_slider = QSlider(self)
@@ -62,9 +62,6 @@ class AnimationToolbar(QToolBar):
         # QSpinBox
         self.spinBox_frames = QSpinBox(self)
         self.spinBox_cycles = QSpinBox(self)
-
-        # QCheckBox
-        self.checkBox_show_mesh = QCheckBox(self)
 
     def _config_widgets(self):
         # QLabel
@@ -79,11 +76,11 @@ class AnimationToolbar(QToolBar):
         self.pushButton_animate.setToolTip("Play/Pause the animation")
         self.pushButton_animate.setCheckable(True)
 
-        self.pushButton_export.setFixedSize(50, 30)
-        self.pushButton_export.setIcon(self.export_icon)
-        self.pushButton_export.setIconSize(QSize(20,20))
-        self.pushButton_export.setCursor(Qt.PointingHandCursor)
-        self.pushButton_export.setToolTip("Export the animation")
+        self.pushButton_save_animation.setFixedSize(50, 30)
+        self.pushButton_save_animation.setIcon(self.save_animation_icon)
+        self.pushButton_save_animation.setIconSize(QSize(20,20))
+        self.pushButton_save_animation.setCursor(Qt.PointingHandCursor)
+        self.pushButton_save_animation.setToolTip("Save animation")
 
         # QSlider
         self.phase_slider.setOrientation(Qt.Orientation.Horizontal)
@@ -117,27 +114,31 @@ class AnimationToolbar(QToolBar):
         self.spinBox_frames.setAlignment(Qt.AlignHCenter)
         self.spinBox_frames.setCursor(Qt.PointingHandCursor)
 
-        # QCheckBox
-        self.checkBox_show_mesh.setChecked(True)
-
     def _create_connections(self):
+        self.spinBox_frames.valueChanged.connect(self.frames_value_changed)
+
+        self.phase_slider.sliderPressed.connect(self.pause_animation)
         self.phase_slider.valueChanged.connect(self.phase_slider_callback)
         self.magnification_factor_slider.valueChanged.connect(self.magnification_factor_slider_callback)
 
         self.pushButton_animate.clicked.connect(self.process_animation)
-        self.pushButton_export.clicked.connect(self.export_video)
+        self.pushButton_save_animation.clicked.connect(self.save_animation)
 
+        app().main_window.render_widget_changed.connect(self.update_current_render_widget)
         app().main_window.render_widget_changed.connect(self.update_toolbar)
+
+        self.update_phase_slider_steps()
     
     def update_toolbar(self):
-        current_render_widget = app().main_window.render_widgets_stack.currentWidget()
-
-        if isinstance(current_render_widget, AcousticHarmonicAnalysisRenderWidget):
+        if isinstance(self.current_render_widget, AcousticHarmonicAnalysisRenderWidget):
             self.magnification_factor_slider.setDisabled(True)
             self.label_factor.setDisabled(True)
         else:
             self.magnification_factor_slider.setDisabled(False)
             self.label_factor.setDisabled(False)
+        
+    def update_current_render_widget(self):
+        self.current_render_widget = app().main_window.render_widgets_stack.currentWidget()
 
     def get_spacer(self):
         spacer = QWidget()
@@ -165,16 +166,12 @@ class AnimationToolbar(QToolBar):
         self.addWidget(self.label_factor)
         self.addWidget(self.get_spacer())
         #
-        self.addWidget(self.checkBox_show_mesh)
-        self.addWidget(self.label_show_mesh)
-        self.addWidget(self.get_spacer())
-        #
         self.addSeparator()
         self.addWidget(self.get_spacer())
         self.addWidget(self.pushButton_animate)
         self.addWidget(self.get_spacer())
         self.addWidget(self.get_spacer())
-        self.addWidget(self.pushButton_export)
+        self.addWidget(self.pushButton_save_animation)
         #
 
     def _configure_appearance(self):
@@ -211,44 +208,29 @@ class AnimationToolbar(QToolBar):
 
     def cycles_value_changed(self):
         self.cycles = self.spinBox_cycles.value()
-        # app().project.cycles = self.cycles
-        # app().main_window.results_widget.clear_cache()
 
     def phase_slider_callback(self):
         self.update_degree_label()
-        # self.pause_animation()      
-        # value = self.phase_slider.value()
-        # app().main_window.results_widget.slider_callback(value)
+
+        self.current_render_widget.update_plot()
     
     def magnification_factor_slider_callback(self):
         self.update_factor_label()
 
-        current_render_widget = app().main_window.render_widgets_stack.currentWidget()
-
-        if not isinstance(current_render_widget, AnimatedRenderWidget):
-            return
-
-        if hasattr(current_render_widget, "update_deformations"):
-            current_render_widget.update_deformations()
+        if hasattr(self.current_render_widget, "update_deformations"):
+            self.current_render_widget.update_deformations()
 
     def pause_animation(self):
-        if self.pushButton_animate.isChecked(): 
-            self.pushButton_animate.blockSignals(True)
-            self.pushButton_animate.setChecked(False)
-            self.update_animate_button_icons(False)
-            app().main_window.results_widget.stop_animation()
-            self.pushButton_animate.blockSignals(False)
+        self.update_animate_button_icons(False)
+
+        if self.current_render_widget is not None and self.current_render_widget.playing_animation:
+            self.current_render_widget.stop_animation()
 
     def process_animation(self, state: bool):
         self.update_animation_settings()
         self.update_animate_button_icons(state)
 
-        current_render_widget = app().main_window.render_widgets_stack.currentWidget()
-        current_render_widget.toggle_animation()
-    
-    def export_video(self):
-        current_render_widget = app().main_window.render_widgets_stack.currentWidget()
-        current_render_widget.save_video()
+        self.current_render_widget.toggle_animation(frames=self.frames, cycles=self.cycles)
 
     def update_animate_button_icons(self, state: bool):
         if state:
@@ -277,4 +259,44 @@ class AnimationToolbar(QToolBar):
     def update_factor_label(self):
         value = self.magnification_factor_slider.value() * 2 / 32
         self.label_factor.setText(f"({value}x)")
+    
+    def update_phase_slider_steps(self):
+        frames = self.spinBox_frames.value()
+        single_step = int(360 / frames)
+        self.phase_slider.setSingleStep(single_step)
 
+    def save_animation(self):
+        file_path, extension = QFileDialog.getSaveFileName(
+            self, "Save As",
+            filter = "Video (*.mp4);;WEBP (*.webp);;GIF (*.gif);; All Files ();;",
+        )
+
+        if not extension:
+            return
+
+        # Add default suffix if it does not have one
+        file_path = Path(file_path)
+        if extension == "Video (*.mp4)":
+            suffix = ".mp4"
+        elif extension == "WEBP (*.webp)":
+            suffix = ".webp"
+        elif extension == "GIF (*.gif)":
+            suffix = ".gif"
+        else:
+            suffix = ".mp4"
+
+        if not file_path.suffix:
+            file_path = file_path.parent / (file_path.name + suffix)
+
+        try:
+
+            if file_path.suffix.lower() in [".gif", ".webp"]:
+                LoadingWindow(self.current_render_widget.save_animation, app(), app().main_window.vibra_icon).run(file_path)
+            else:
+                LoadingWindow(self.current_render_widget.save_video, app(), app().main_window.vibra_icon).run(file_path)
+
+        except Exception as error_log:
+            title = "Error while exporting animation"
+            message = "An error has occured while exporting the animation file.\n"
+            message += str(error_log)
+            PrintMessageInput([window_title_1, title, message])
