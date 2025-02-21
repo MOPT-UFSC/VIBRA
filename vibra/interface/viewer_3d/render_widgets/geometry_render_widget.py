@@ -30,6 +30,7 @@ SHOW_POINTS = 0
 SHOW_LINES = 1
 SHOW_FACES = 2
 
+# fmt: off
 
 class GeometryRenderWidget(CommonRenderWidget):
     selection_changed = pyqtSignal(set, set, set, set)
@@ -484,15 +485,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         if len(selected_faces) != 1:
             return text
 
-        acoustic_pressure = app().project.model.properties._get_property(
-            "acoustic_pressure", surface=selected_faces[0]
-        )
-        surface_velocity = app().project.model.properties._get_property(
-            "surface_velocity", surface=selected_faces[0]
-        )
-        specific_impedance = app().project.model.properties._get_property(
-            "specific_impedance", surface=selected_faces[0]
-        )
+        acoustic_pressure = app().project.model.properties._get_property("acoustic_pressure", surface=selected_faces[0])
+        surface_velocity = app().project.model.properties._get_property("surface_velocity", surface=selected_faces[0])
+        specific_impedance = app().project.model.properties._get_property("specific_impedance", surface=selected_faces[0])
+
         boundary_conditions_list = [acoustic_pressure, surface_velocity, specific_impedance]
 
         if all(condition is None for condition in boundary_conditions_list):
@@ -504,7 +500,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         if surface_velocity is not None:
             values = surface_velocity["values"][0]
-            text += _acoustic_format("Acoustic pressure", values, "Vn", "m/s")
+            text += _acoustic_format("Surface velocity", values, "Vn", "m/s")
 
         if specific_impedance is not None:
             if "anechoic_termination" in specific_impedance.keys():
@@ -512,17 +508,11 @@ class GeometryRenderWidget(CommonRenderWidget):
                 density = fluid.fluid_density
                 speed_of_sound = fluid.speed_of_sound
                 values = np.array([density * speed_of_sound], dtype=complex)
-                text += _acoustic_format(
-                    "Acoustic pressure",
-                    values[0],
-                    "Zs",
-                    "kg/m².s",
-                    ("Impedance type", "anechoic (non-reflexive)"),
-                )
+                text += _acoustic_format("Specific impedance", values[0], "Zs", "kg/m².s", ("Impedance type", "anechoic (non-reflexive)"))
 
             else:
                 values = surface_velocity["values"]
-                text += _acoustic_format("Acoustic pressure", values[0], "Zs", "kg/m².s")
+                text += _acoustic_format("Specific impedance", values[0], "Zs", "kg/m².s")
 
         return text
 
@@ -651,3 +641,5 @@ def _acoustic_format(property_name, value, label, unit, additional_labels=[]):
         tree.add_item(additional_labels[0], additional_labels[1])
 
     return str(tree)
+
+# fmt: on
