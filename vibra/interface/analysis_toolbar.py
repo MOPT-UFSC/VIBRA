@@ -2,12 +2,12 @@ from PyQt5.QtWidgets import QToolBar, QComboBox, QLabel, QPushButton, QWidget
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import Qt, QSize, pyqtSignal
 
+
+from vibra import ICON_DIR, app
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
 from vibra.interface.analysis.harmonic_analysis_method_selector_input import StructuralHarmonicAnalysisMethodSelecorInput
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
 from vibra.interface.analysis.analysis_setup_input import AnalysisSetupInput
-
-from vibra import ICON_DIR, app
 
 from typing import Literal
 
@@ -173,7 +173,8 @@ class AnalysisToolbar(QToolBar):
             self.combo_box_analysis_domain.setCurrentIndex(1)
     
     def run_analysis(self):
-        app().project.run_analysis()
+        if app().project.run_analysis():
+            return
         self.update_pushbutton_reset_solution()
     
     def reset_solution(self):

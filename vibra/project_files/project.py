@@ -10,11 +10,12 @@ from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
 from vibra.engine.solvers.structural_harmonic_solver import StructuralHarmonicSolver
-from vibra.utils.progress_status import ProgressStatus
+from vibra.engine.checkers.analysis_requirements_checker import AnalysisRequirementsChecker
 
 from vibra.interface.process_analysis import ProcessAnalysis
 from vibra.interface.mesh.mesher_inputs import MesherInputs
 from vibra.interface.loading_bar import load_function
+from vibra.utils.progress_status import ProgressStatus
 
 import numpy as np
 
@@ -254,19 +255,29 @@ class Project:
         analysis = ProcessAnalysis()
         analysis_id = self.analysis_data["analysis_id"]
 
+        checker = AnalysisRequirementsChecker()
+
         if analysis_id in [0, 1]:
+            if checker.check_structural_harmonic_analysis():
+                return True
             solve_harmonic = load_function(analysis.process_structural_harmonic_analysis, app().main_window)
             solve_harmonic()
 
         elif analysis_id == 2:
+            if checker.check_structural_modal_analysis():
+                return True
             solve_modal = load_function(analysis.process_structural_modal_analysis, app().main_window)
             solve_modal()
 
         elif analysis_id == 3:
+            if checker.check_acoustic_harmonic_analysis():
+                return True
             solve_harmonic = load_function(analysis.process_acoustic_harmonic_analysis, app().main_window)
             solve_harmonic()
 
         elif analysis_id == 4:
+            if checker.check_acoustic_modal_analysis():
+                return True
             solve_modal = load_function(analysis.process_acoustic_modal_analysis, app().main_window)
             solve_modal()
 

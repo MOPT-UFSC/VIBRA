@@ -29,9 +29,9 @@ class ModelSetupItems(CommonMenuItems):
         """Creates all TreeWidgetItems."""
         self.item_top_general_settings = self.add_top_item('General Settings')
         self.item_child_import_geometry = self.add_item('Import Geometry')
-        self.item_child_mesh_setup = self.add_item("Mesh Setup")
         self.item_child_set_material = self.add_item("Set Material")
         self.item_child_set_fluid = self.add_item('Set Fluid')
+        self.item_child_mesh_setup = self.add_item("Mesh Setup")
         #
         material_tool_tip = "Attribute material to selected bodies. \ndefault material: steel (E = 210 GPa; poisson = 0.30; density = 7860 kg/m³)"
         fluid_tool_tip = "Attribute fluid to selected bodies. \ndefault fluid: air (speed of sound 343.2021 m/s; fluid density = 1.215 kg/m³)"
