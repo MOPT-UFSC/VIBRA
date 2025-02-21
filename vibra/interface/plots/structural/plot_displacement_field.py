@@ -9,7 +9,6 @@ import numpy as np
 
 
 class PlotDisplacementField(QWidget):
-    value_changed = pyqtSignal()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -71,7 +70,7 @@ class PlotDisplacementField(QWidget):
 
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.comboBox_color_scale.currentIndexChanged.connect(self.update_plot)
-        self.comboBox_displacements.currentIndexChanged.connect(self.value_changed.emit)
+        self.comboBox_displacements.currentIndexChanged.connect(self.update_plot)
         #
         self.pushButton_plot.clicked.connect(self.update_plot)
         #

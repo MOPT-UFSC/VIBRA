@@ -10,10 +10,7 @@ from PyQt5.QtCore import QObjectCleanupHandler
 from PyQt5.QtWidgets import QVBoxLayout, QFileDialog, QWidget
 
 from vibra import app
-# from vibra.interface.modal_analysis_bar import AcousticModalAnalysisBar
-from vibra.interface.analysis_bars.acoustic_analysis_bar import (
-    AcousticModalAnalysisBar,
-)
+
 from vibra.interface.viewer_3d.actors.analysis_actor import AnalysisActor
 from vibra.interface.viewer_3d.actors.hollow_analysis_actor import HollowAnalysisActor
 from vibra.interface.viewer_3d.actors.section_plane_actor import (
@@ -35,19 +32,12 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.main_window = app().main_window
         self.current_widget = None
 
-        self.control_bar = AcousticModalAnalysisBar()
-        self.control_bar.value_changed.connect(self.update_plot)
-        self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
-        self.control_bar.phase_slider.valueChanged.connect(self.stop_animation)
-        self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
-        self.control_bar.create_video_button.clicked.connect(self.save_video)
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
         layout = QVBoxLayout()
-        layout.addWidget(self.control_bar)
         layout.addWidget(self.render_interactor)
         self.setLayout(layout)
         self.setContentsMargins(0, 0, 0, 0)
@@ -74,15 +64,15 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         if self.playing_animation:
             self.stop_animation()
         else:
-            self.start_animation()
+            self.start_animation(*args, **kwargs)
 
-    def start_animation(self):
-        super().start_animation()
-        self.control_bar.use_pause_icon()
+    def start_animation(self, *args, **kwargs):
+        super().start_animation(*args, **kwargs)
+        self.main_window.animation_toolbar.update_animate_button_icons(True)
 
     def stop_animation(self):
         super().stop_animation()
-        self.control_bar.use_play_icon()
+        self.main_window.animation_toolbar.update_animate_button_icons(False)
 
     def current_frequency_index(self):
         if self.current_widget is not None:
@@ -143,13 +133,13 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.plane_actor.VisibilityOff()
         self.renderer.AddActor(self.plane_actor)
 
-        mesh_visibility = self.control_bar.show_mesh_button.isChecked()
-        self.set_mesh_visibility(mesh_visibility)
+        # mesh_visibility = self.control_bar.show_mesh_button.isChecked()
+        # self.set_mesh_visibility(mesh_visibility)
 
-        if self.control_bar.show_mesh_button.isChecked():
-            self.analysis_actor.VisibilityOn()
-            self.analysis_actor.GetProperty().SetRepresentationToSurface()
-            self.edges_actor.VisibilityOn()
+        # if self.control_bar.show_mesh_button.isChecked():
+        #     self.analysis_actor.VisibilityOn()
+        #     self.analysis_actor.GetProperty().SetRepresentationToSurface()
+        #     self.edges_actor.VisibilityOn()
 
         # if self.section_plane_active and self.section_plane_args:
         #     self.start_section_mode()
@@ -171,7 +161,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         solver = app().project.acoustic_harmonic_solver
         index = self.current_frequency_index()
 
-        phase_deg = self.control_bar.phase_slider.value()
+        phase_deg = self.main_window.animation_toolbar.phase_slider.value()
         phi_sld = phase_deg * np.pi / 180
 
         current_pressures = solver.solution[:, index].copy()
@@ -204,11 +194,13 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
 
         t0 = time()
 
+        logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]")
+
         current_pressures = solver.solution[:, index]
         amplitudes = np.abs(current_pressures)
         phase = np.angle(current_pressures)
 
-        phi = np.linspace(0, 2 * np.pi, self._animation_fps, endpoint=False)
+        phi = np.linspace(0, 2 * np.pi, self._animation_total_frames, endpoint=False)
         output_pressures = amplitudes * np.cos(phase + phi[frame])
 
         min_value, max_value = solver.get_max_min_values_of_pressures(index)
@@ -233,19 +225,6 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.update()
         # dt = time() - t0
         # print(f"Elapsed time to process D: {round(dt, 4)} s")
-
-    def save_video(self):
-        file_path, check = QFileDialog.getSaveFileName(
-                                                        self,
-                                                        "Save As",
-                                                        filter = "All Files ();; Video (*.mp4);; GIF (*.gif);;",
-                                                    )
-        
-        if not check:
-            return
-        
-        self.generate_video(file_path)
-    
         
     def process_animation_frames(self):
         """This method processes the animation frames for one complete
@@ -274,7 +253,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         deg_angles = np.linspace(0, 360, self._animation_fps, endpoint=False)
         min_value, max_value = solver.get_max_min_values_of_pressures(index)
 
-        if self.control_bar.absolute_button.isChecked():
+        if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
             min_value = 0
             max_value = np.max(np.abs([min_value, max_value]))
 
@@ -282,7 +261,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
             phi = deg_angle * np.pi / 180
             output_pressures = amplitudes * np.cos(phase + phi)
 
-            if self.control_bar.absolute_button.isChecked():
+            if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
                 output_pressures = np.abs(output_pressures)
 
             self.animation_data[deg_angle] = output_pressures
@@ -305,6 +284,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
             self.show_faces()
 
     def show_points(self):
+        return
         if not self._actors_exists():
             return
 
@@ -315,6 +295,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def show_lines(self):
+        return
         if not self._actors_exists():
             return
 
@@ -325,6 +306,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def show_faces(self):
+        return
         if not self._actors_exists():
             return
 

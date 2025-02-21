@@ -29,6 +29,7 @@ from PyQt5.QtWidgets import (
 
 from vibra import UI_DIR, ICON_DIR, TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, app
 from vibra.interface.analysis_toolbar import AnalysisToolbar
+from vibra.interface.animation_toolbar import AnimationToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.formatters.icons import get_vibra_icon, change_icon_color_for_widgets
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -75,6 +76,7 @@ from vibra.utils.progress_status import ProgressStatus
 class MainWindow(QMainWindow):
     theme_changed = pyqtSignal(str)
     visualization_changed = pyqtSignal()
+    render_widget_changed = pyqtSignal()
     selection_changed = pyqtSignal()
 
     def __init__(self, parent=None):
@@ -159,6 +161,7 @@ class MainWindow(QMainWindow):
 
         # QToolBar
         self.renderer_toolbar: QToolBar
+        self.animation_toolbar: QToolBar
 
         # QStackedWidget
         self.stacked_setup: QStackedWidget
@@ -189,6 +192,7 @@ class MainWindow(QMainWindow):
     def create_basic_layout(self):      
         self.status_bar = StatusBar(self)
         self.analysis_toolbar = AnalysisToolbar()
+        self.animation_toolbar = AnimationToolbar()
 
         self.create_recents_menu()
         self.create_status_bar()
@@ -208,9 +212,12 @@ class MainWindow(QMainWindow):
 
         self.addToolBar(self.analysis_toolbar)
         self.insertToolBarBreak(self.analysis_toolbar)
+        self.addToolBar(self.animation_toolbar)
+        self.insertToolBarBreak(self.animation_toolbar)
 
         self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)
+        self.animation_toolbar.setDisabled(True)
         self.disable_advanced_acoustic_plots_buttons(True)
 
         self.splitter.setSizes([100, 400])
@@ -502,6 +509,8 @@ class MainWindow(QMainWindow):
         
         if show_renderer_widget:
             self.render_widgets_stack.setCurrentWidget(self.acoustic_modal_analysis)
+            self.render_widget_changed.emit()
+
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.results_viewer_widget.hide_bottom_widget()
             
@@ -510,12 +519,16 @@ class MainWindow(QMainWindow):
                 self.action_model_workspace.setEnabled(True)
             if not self.action_mesh_workspace.isEnabled():
                 self.action_mesh_workspace.setEnabled(True)
+
+            self.animation_toolbar.setDisabled(False)
     
     def configure_structural_modal_analysis_render_widget(self, show_render_widget=False):
         self.structural_modal_analysis.update_plot()
 
         if show_render_widget:
             self.render_widgets_stack.setCurrentWidget(self.structural_modal_analysis)
+            self.render_widget_changed.emit()
+
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.results_viewer_widget.hide_bottom_widget()
 
@@ -525,11 +538,15 @@ class MainWindow(QMainWindow):
             if not self.action_mesh_workspace.isEnabled():
                 self.action_mesh_workspace.setEnabled(True)
             
+            self.animation_toolbar.setDisabled(False)
+            
     def configure_structural_harmonic_analysis_render_widget(self, show_render_widget=False):
         self.structural_harmonic_analysis.update_plot()
 
         if show_render_widget:
             self.render_widgets_stack.setCurrentWidget(self.structural_harmonic_analysis)
+            self.render_widget_changed.emit()
+            
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.results_viewer_widget.hide_bottom_widget()
 
@@ -538,12 +555,16 @@ class MainWindow(QMainWindow):
                 self.action_model_workspace.setEnabled(True)
             if not self.action_mesh_workspace.isEnabled():
                 self.action_mesh_workspace.setEnabled(True)
+            
+            self.animation_toolbar.setDisabled(False)
 
     def configure_acoustic_harmonic_analysis_render_widget(self, show_render_widget=False):
         self.acoustic_harmonic_analysis.update_plot()
 
         if show_render_widget:
             self.render_widgets_stack.setCurrentWidget(self.acoustic_harmonic_analysis)
+            self.render_widget_changed.emit()
+
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.results_viewer_widget.hide_bottom_widget()
 
@@ -552,6 +573,8 @@ class MainWindow(QMainWindow):
                 self.action_model_workspace.setEnabled(True)
             if not self.action_mesh_workspace.isEnabled():
                 self.action_mesh_workspace.setEnabled(True)
+            
+            self.animation_toolbar.setDisabled(False)
             
     def show_geometry_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
@@ -582,6 +605,9 @@ class MainWindow(QMainWindow):
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
         self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
+
+        self.animation_toolbar.setDisabled(True)
+        self.animation_toolbar.pause_animation()
     
     def action_mesh_workspace_callback(self):
         self.action_mesh_workspace.setEnabled(False)
@@ -595,6 +621,9 @@ class MainWindow(QMainWindow):
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
         self.configure_mesh_information()
         self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
+
+        self.animation_toolbar.setDisabled(True)
+        self.animation_toolbar.pause_animation()
 
     def action_results_workspace_callback(self):
         if app().project.last_analysis is not None:
@@ -616,9 +645,13 @@ class MainWindow(QMainWindow):
                 render_widget = self.structural_harmonic_analysis
             
             self.render_widgets_stack.setCurrentWidget(render_widget)
+            self.render_widget_changed.emit()
+
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.results_viewer_widget.results_viewer_items.update_items()
             self.analysis_toolbar.update_analysis_combo_boxes()
+
+            self.animation_toolbar.setDisabled(False)
 
     def action_new_project_callback(self):
         self.new_project_dialog()

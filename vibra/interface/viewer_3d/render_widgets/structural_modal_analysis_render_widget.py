@@ -8,9 +8,7 @@ from PyQt5.QtCore import QObjectCleanupHandler
 from PyQt5.QtWidgets import *
 
 from vibra import app
-from vibra.interface.analysis_bars.structural_analysis_bar import (
-    StructuralModalAnalysisBar,
-)
+
 from ..actors.ghost_actor import GhostActor
 from ..actors.analysis_actor import AnalysisActor
 from ..actors.hollow_analysis_actor import HollowAnalysisActor
@@ -31,18 +29,12 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.main_window = app().main_window
         self.current_menu_widget = None
 
-        self.control_bar = StructuralModalAnalysisBar()
-        self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
-        self.control_bar.phase_slider.sliderPressed.connect(self.stop_animation)
-        self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
-        self.control_bar.create_video_button.clicked.connect(self.save_video)
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
         # replace the layout to add other usefull widgets
         QObjectCleanupHandler().add(self.layout())
         layout = QVBoxLayout()
-        layout.addWidget(self.control_bar)
         layout.addWidget(self.render_interactor)
         self.setLayout(layout)
         self.setContentsMargins(0, 0, 0, 0)
@@ -64,21 +56,20 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
     
     def configure_menu_widget(self, menu_widget: QWidget):
         self.current_menu_widget = menu_widget
-        self.current_menu_widget.value_changed.connect(self.update_deformations)
 
     def toggle_animation(self, *args, **kwargs):
         if self.playing_animation:
             self.stop_animation()
         else:
-            self.start_animation()
+            self.start_animation(*args, **kwargs)
 
-    def start_animation(self):
-        super().start_animation()
-        self.control_bar.use_pause_icon()
+    def start_animation(self, *args, **kwargs):
+        super().start_animation(*args, **kwargs)
+        self.main_window.animation_toolbar.update_animate_button_icons(True)
 
     def stop_animation(self):
         super().stop_animation()
-        self.control_bar.use_play_icon()
+        self.main_window.animation_toolbar.update_animate_button_icons(False)
 
     def current_shape_index(self):
         if self.current_menu_widget is not None:
@@ -133,8 +124,8 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.renderer.AddActor(self.edges_actor)
         self.renderer.AddActor(self.plane_actor)
 
-        mesh_visibility = self.control_bar.show_mesh_button.isChecked()
-        self.set_mesh_visibility(mesh_visibility)
+        # mesh_visibility = self.control_bar.show_mesh_button.isChecked()
+        # self.set_mesh_visibility(mesh_visibility)
 
         if reset_camera:
             self.renderer.ResetCamera()
@@ -163,8 +154,8 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         if self.playing_animation:
             return
 
-        phase = self.control_bar.phase_slider.value()
-        magnification_factor = self.control_bar.magnification_factor_slider.value() / 16
+        phase = self.main_window.animation_toolbar.phase_slider.value()
+        magnification_factor = self.main_window.animation_toolbar.magnification_factor_slider.value() / 16
         displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
 
         self.analysis_actor.apply_deformation(displacements, magnification_factor, max_value)
@@ -344,11 +335,13 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         if not (0 <= index < solver.solution_full.shape[1]):
             return
 
+        logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]")
+
         # Map the frames from 0 to 1
         t = frame / (self._animation_total_frames - 1)
         phase = lerp(0, 360, t)
 
-        magnification_factor = self.control_bar.magnification_factor_slider.value() / 16
+        magnification_factor = self.main_window.animation_toolbar.magnification_factor_slider.value() / 16
         displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
 
         self.analysis_actor.apply_deformation(displacements, magnification_factor, max_value)
@@ -356,18 +349,6 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value)
         # self.edges_actor.extract_data(self.analysis_actor.data)
         self.update()
-
-    def save_video(self):
-        file_path, check = QFileDialog.getSaveFileName(
-                                                        self,
-                                                        "Save As",
-                                                        filter = "All Files ();; Video (*.mp4);; GIF (*.gif);;",
-                                                    )
-        
-        if not check:
-            return
-        
-        self.generate_video(file_path)
 
     def _actors_exists(self):
         actors = [

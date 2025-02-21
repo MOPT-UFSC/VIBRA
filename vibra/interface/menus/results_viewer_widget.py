@@ -63,6 +63,9 @@ class ResultsViewerWidget(QWidget):
         self.current_widget = app().main_window.input_ui.plot_displacement_field()
         app().main_window.configure_structural_harmonic_analysis_render_widget(True)
         app().main_window.structural_harmonic_analysis.configure_menu_widget(self.current_widget)
+
+        app().main_window.animation_toolbar.setDisabled(False)
+
         self.add_widget(self.current_widget, animation_widget=True)
 
     def add_structural_frequency_response_widget(self):
@@ -70,6 +73,8 @@ class ResultsViewerWidget(QWidget):
 
         if app().main_window.structural_harmonic_analysis.playing_animation:
             app().main_window.structural_harmonic_analysis.stop_animation()
+        
+        app().main_window.animation_toolbar.setDisabled(True)
 
         self.add_widget(self.current_widget)
 
@@ -77,6 +82,10 @@ class ResultsViewerWidget(QWidget):
         self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_field()
         app().main_window.configure_acoustic_harmonic_analysis_render_widget(True)
         app().main_window.acoustic_harmonic_analysis.configure_menu_widget(self.current_widget)
+
+        app().main_window.animation_toolbar.setDisabled(False)
+        app().main_window.animation_toolbar.update_toolbar()
+
         self.add_widget(self.current_widget, animation_widget=True)
     
     def add_acoustic_pressure_frequency_response_widget(self):
@@ -84,6 +93,8 @@ class ResultsViewerWidget(QWidget):
 
         if app().main_window.acoustic_harmonic_analysis.playing_animation:
             app().main_window.acoustic_harmonic_analysis.stop_animation()
+        
+        app().main_window.animation_toolbar.setDisabled(True)
 
         self.add_widget(self.current_widget)
     
@@ -93,6 +104,8 @@ class ResultsViewerWidget(QWidget):
         if app().main_window.acoustic_harmonic_analysis.playing_animation:
             app().main_window.acoustic_harmonic_analysis.stop_animation()
 
+            app().main_window.animation_toolbar.setDisabled(True)
+
         self.add_widget(self.current_widget)
     
     def add_TL_NR_widget(self):
@@ -100,7 +113,9 @@ class ResultsViewerWidget(QWidget):
 
         if app().main_window.acoustic_harmonic_analysis.playing_animation:
             app().main_window.acoustic_harmonic_analysis.stop_animation()
-            
+        
+        app().main_window.animation_toolbar.setDisabled(True)
+
         self.add_widget(self.current_widget)
 
     def add_acoustic_mode_shape_widget(self):
