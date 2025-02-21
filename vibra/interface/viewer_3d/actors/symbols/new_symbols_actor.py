@@ -1,17 +1,23 @@
 from vtkmodules.vtkCommonTransforms import vtkTransform
 from vtkmodules.vtkFiltersGeneral import vtkTransformPolyDataFilter
-from vtkmodules.vtkFiltersSources import vtkArrowSource, vtkCylinderSource, vtkSphereSource, vtkConeSource
+from vtkmodules.vtkFiltersSources import (
+    vtkArrowSource,
+    vtkCylinderSource,
+    vtkSphereSource,
+    vtkConeSource,
+)
 from vibra import SYMBOLS_DIR
 
 from molde.colors import Color
 from vtkmodules.vtkIOGeometry import vtkOBJReader, vtkSTLReader
 
-from .new_symbols_common import SymbolActorFixedSize
+from .common_symbols_actor_fixed_size import CommonSymbolsActorFixedSize
+from .common_symbols_actor_variable_size import CommonSymbolsActorVariableSize
 
 
-class NewSymbolsActor(SymbolActorFixedSize):
-    def __init__(self):
-        super().__init__()
+class NewSymbolsActor(CommonSymbolsActorVariableSize):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.configure_appearance()
         self._register_shapes()
         self.build()
@@ -36,9 +42,9 @@ class NewSymbolsActor(SymbolActorFixedSize):
         self.add_symbol(
             "cylinder",
             position=(6, 0, 0),
-            orientation=(1,0, 0),
+            orientation=(1, 0, 0),
             color=Color(0, 255, 0),
-            scale=.3,
+            scale=0.3,
         )
 
         self.add_symbol(
@@ -68,14 +74,15 @@ class NewSymbolsActor(SymbolActorFixedSize):
         super().build()
 
     def _register_shapes(self):
+        lumped_source = self._get_shape_obj_file(SYMBOLS_DIR / "structural/lumped_damper.obj")
+        damper_symbol = self._get_shape_stl_file(SYMBOLS_DIR / "stl_files/damper_symbol.STL")
+
         self.register_shape("arrow", self._get_arrow_source())
         self.register_shape("cone", self._get_cone_source())
         self.register_shape("cylinder", self._get_cylinder_source())
         self.register_shape("sphere", self._get_sphere_source())
-        self.register_shape("OBJ", self._get_shape_obj_file(
-            SYMBOLS_DIR / "structural/lumped_damper.obj"))
-        self.register_shape("STL", self._get_shape_stl_file(
-            SYMBOLS_DIR / "stl_files/damper_symbol.STL"))
+        self.register_shape("OBJ", lumped_source)
+        self.register_shape("STL", damper_symbol)
         # TODO: add the following shapes
         # spring
 

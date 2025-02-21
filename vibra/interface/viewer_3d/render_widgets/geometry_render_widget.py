@@ -72,7 +72,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.lines_actor = LinesActor(mesh)
         self.faces_actor = FacesActor(mesh)
         self.selection_spheres_actor = SelectionSpheres()
-        self.symbols_actor = NewSymbolsActor()
+        self.symbols_actor = NewSymbolsActor(self.renderer)
 
         has_hidden_part = bool(self.main_window.hidden_surfaces)
         self.ghost_actor = GhostActor(mesh)
