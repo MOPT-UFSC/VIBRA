@@ -29,11 +29,8 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.current_widget = None
         self.control_bar = AcousticModalAnalysisBar()
 
-        self.control_bar.value_changed.connect(self.update_deformation)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
         self.control_bar.phase_slider.valueChanged.connect(self.stop_animation)
-        self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
-        self.control_bar.create_video_button.clicked.connect(self.save_video)
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
@@ -71,11 +68,11 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
 
     def start_animation(self):
         super().start_animation()
-        self.control_bar.use_pause_icon()
+        self.main_window.animation_toolbar.update_animate_button_icons(True)
 
     def stop_animation(self):
         super().stop_animation()
-        self.control_bar.use_play_icon()
+        self.main_window.animation_toolbar.update_animate_button_icons(False)
 
     def current_mode_index(self):
         if self.current_widget is not None:
@@ -167,7 +164,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         solver = app().project.acoustic_modal_solver
         index = self.current_mode_index()
 
-        phase = self.control_bar.phase_slider.value()
+        phase = self.main_window.animation_toolbar.phase_slider.value()
 
         current_modal_shape = solver.modal_shape[:, index].copy()
         if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
@@ -204,7 +201,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         if not (0 <= index < solver.modal_shape.shape[1]):
             return
 
-        phase = self.control_bar.phase_slider.value()
+        phase = self.main_window.animation_toolbar.phase_slider.value()
         current_modal_shape = solver.modal_shape[:, index].copy()
         if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
             current_modal_shape = np.abs(current_modal_shape)

@@ -36,11 +36,8 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.current_widget = None
 
         self.control_bar = AcousticModalAnalysisBar()
-        self.control_bar.value_changed.connect(self.update_plot)
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
         self.control_bar.phase_slider.valueChanged.connect(self.stop_animation)
-        self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
-        self.control_bar.create_video_button.clicked.connect(self.save_video)
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
@@ -78,11 +75,11 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
 
     def start_animation(self):
         super().start_animation()
-        self.control_bar.use_pause_icon()
+        self.main_window.animation_toolbar.update_animate_button_icons(True)
 
     def stop_animation(self):
         super().stop_animation()
-        self.control_bar.use_play_icon()
+        self.main_window.animation_toolbar.update_animate_button_icons(False)
 
     def current_frequency_index(self):
         if self.current_widget is not None:
@@ -171,7 +168,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         solver = app().project.acoustic_harmonic_solver
         index = self.current_frequency_index()
 
-        phase_deg = self.control_bar.phase_slider.value()
+        phase_deg = self.main_window.animation_toolbar.phase_slider.value()
         phi_sld = phase_deg * np.pi / 180
 
         current_pressures = solver.solution[:, index].copy()
@@ -274,7 +271,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         deg_angles = np.linspace(0, 360, self._animation_fps, endpoint=False)
         min_value, max_value = solver.get_max_min_values_of_pressures(index)
 
-        if self.control_bar.absolute_button.isChecked():
+        if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
             min_value = 0
             max_value = np.max(np.abs([min_value, max_value]))
 
@@ -282,7 +279,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
             phi = deg_angle * np.pi / 180
             output_pressures = amplitudes * np.cos(phase + phi)
 
-            if self.control_bar.absolute_button.isChecked():
+            if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
                 output_pressures = np.abs(output_pressures)
 
             self.animation_data[deg_angle] = output_pressures

@@ -34,8 +34,6 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.control_bar = StructuralModalAnalysisBar()
         self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
         self.control_bar.phase_slider.sliderPressed.connect(self.stop_animation)
-        self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
-        self.control_bar.create_video_button.clicked.connect(self.save_video)
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
@@ -64,7 +62,6 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
     
     def configure_menu_widget(self, menu_widget: QWidget):
         self.current_menu_widget = menu_widget
-        self.current_menu_widget.value_changed.connect(self.update_deformations)
 
     def toggle_animation(self, *args, **kwargs):
         if self.playing_animation:
@@ -74,11 +71,11 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
 
     def start_animation(self):
         super().start_animation()
-        self.control_bar.use_pause_icon()
+        self.main_window.animation_toolbar.update_animate_button_icons(True)
 
     def stop_animation(self):
         super().stop_animation()
-        self.control_bar.use_play_icon()
+        self.main_window.animation_toolbar.update_animate_button_icons(False)
 
     def current_shape_index(self):
         if self.current_menu_widget is not None:
@@ -163,8 +160,8 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         if self.playing_animation:
             return
 
-        phase = self.control_bar.phase_slider.value()
-        magnification_factor = self.control_bar.magnification_factor_slider.value() / 16
+        phase = self.main_window.animation_toolbar.phase_slider.value()
+        magnification_factor = self.main_window.animation_toolbar.magnification_factor_slider.value() / 16
         displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
 
         self.analysis_actor.apply_deformation(displacements, magnification_factor, max_value)
@@ -348,7 +345,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         t = frame / (self._animation_total_frames - 1)
         phase = lerp(0, 360, t)
 
-        magnification_factor = self.control_bar.magnification_factor_slider.value() / 16
+        magnification_factor = self.main_window.animation_toolbar.magnification_factor_slider.value() / 16
         displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
 
         self.analysis_actor.apply_deformation(displacements, magnification_factor, max_value)
