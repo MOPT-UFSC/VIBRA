@@ -374,7 +374,7 @@ class SetMaterialInput(QDialog):
         if self.tabWidget_main.currentIndex() == 1:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
-            self.pushButton_attribute.setDisabled(True)
+            self.pushButton_remove.setDisabled(True)
             self.comboBox_attribution_type.setDisabled(True)
 
         else:
