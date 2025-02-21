@@ -157,21 +157,22 @@ class AnalysisRequirementsChecker:
         prop_labels = [
                        "prescribed_dofs", 
                        "nodal_loads", 
-                       "distributed_lodas", 
-                       "normal_pressure_load"
+                       "distributed_loads", 
+                       "normal_pressure_load",
                        ]
 
         properties = [
                       self.properties.surface_properties, 
                       self.properties.line_properties, 
                       self.properties.point_properties, 
-                      self.properties.nodal_properties
+                      self.properties.nodal_properties,
                       ]
 
         for property in properties:
             for (prop_label, *_), data in property.items():
                 if prop_label in prop_labels:
-                    if np.sum(data["values"]):
+                    values = [0 if value is None else value for value in data["values"]]
+                    if np.sum(values):
                         return False
 
         title = "Invalid model excitation"    
