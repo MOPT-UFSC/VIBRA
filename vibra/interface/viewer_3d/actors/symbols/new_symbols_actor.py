@@ -1,9 +1,10 @@
 from vtkmodules.vtkCommonTransforms import vtkTransform
 from vtkmodules.vtkFiltersGeneral import vtkTransformPolyDataFilter
-from vtkmodules.vtkFiltersSources import vtkArrowSource, vtkCylinderSource, vtkSphereSource, vtkConeSource
+from vtkmodules.vtkFiltersSources import vtkArrowSource, vtkCylinderSource, vtkSphereSource, vtkConeSource, \
+    vtkCubeSource
 from vibra import SYMBOLS_DIR
 
-from molde.colors import Color
+from molde.colors import Color, color_names
 from vtkmodules.vtkIOGeometry import vtkOBJReader, vtkSTLReader
 
 from .new_symbols_common import SymbolActorFixedSize
@@ -16,104 +17,158 @@ class NewSymbolsActor(SymbolActorFixedSize):
         self._register_shapes()
         self.build()
 
-    def build(self):
+    def add_force_symbol(self):
         self.add_symbol(
-            "arrow",
+            "force",
             position=(2, 0, 0),
             orientation=(1, 0, 0),
-            color=Color(255, 255, 0),
+            color=color_names.RED,
             scale=0.3,
         )
 
+    def add_spring_symbol(self):
         self.add_symbol(
-            "cone",
+            "spring",
             position=(4, 0, 0),
             orientation=(1, 0, 0),
-            color=Color(255, 255, 0),
+            color=color_names.ORANGE,
             scale=0.3,
         )
 
+    def add_DOF_cone_symbol(self):
         self.add_symbol(
-            "cylinder",
+            "DOF_cone",
             position=(6, 0, 0),
-            orientation=(1,0, 0),
-            color=Color(0, 255, 0),
-            scale=.3,
+            orientation=(1, 0, 0),
+            color=color_names.GREEN,
+            scale=0.3,
         )
 
+    def add_volume_velocity_symbol(self):
         self.add_symbol(
-            "sphere",
+            "volume_velocity",
+            position=(2, 2, 0),
+            orientation=(1, 0, 0),
+            color=color_names.RED,
+            scale=0.3,
+        )
+
+    def add_damper_symbol(self):
+        self.add_symbol(
+            "damper",
+            position=(4, 2, 0),
+            orientation=(1, 0, 0),
+            color=color_names.PINK,
+            scale=0.3,
+        )
+
+    def add_mass_symbol(self):
+        self.add_symbol(
+            "mass",
+            position=(6, 2, 0),
+            orientation=(1, 0, 0),
+            color=color_names.BLUE,
+            scale=0.3,
+        )
+
+    def add_acoustic_pressure_symbol(self):
+        self.add_symbol(
+            "acoustic_pressure",
             position=(8, 2, 0),
             orientation=(1, 0, 0),
-            color=Color(0, 0, 255),
+            color=color_names.PURPLE,
             scale=0.3,
         )
 
+    def add_impedance_symbol(self):
         self.add_symbol(
-            "OBJ",
-            position=(-2, 0, 0),
+            "impedance",
+            position=(10, 2, 0),
             orientation=(1, 0, 0),
-            color=Color(255, 0, 0),
+            color=color_names.GREEN,
             scale=0.3,
         )
 
-        self.add_symbol(
-            "STL",
-            position=(-4, 0, 0),
-            orientation=(1, 0, 0),
-            color=Color(255, 0, 0),
-            scale=1,
-        )
+    def build(self):
+        # self.add_force_symbol()
+        # self.add_DOF_cone_symbol()
+        # self.add_spring_symbol()
+        # self.add_volume_velocity_symbol()
+        # self.add_damper_symbol()
+        # self.add_mass_symbol()
+        # self.add_acoustic_pressure_symbol()
+        # self.add_impedance_symbol()
 
         super().build()
 
     def _register_shapes(self):
-        self.register_shape("arrow", self._get_arrow_source())
-        self.register_shape("cone", self._get_cone_source())
-        self.register_shape("cylinder", self._get_cylinder_source())
-        self.register_shape("sphere", self._get_sphere_source())
-        self.register_shape("OBJ", self._get_shape_obj_file(
-            SYMBOLS_DIR / "structural/lumped_damper.obj"))
-        self.register_shape("STL", self._get_shape_stl_file(
-            SYMBOLS_DIR / "stl_files/damper_symbol.STL"))
-        # TODO: add the following shapes
-        # spring
+        self.register_shape("force", self._get_force_source())
+        self.register_shape("DOF_cone", self._get_cone_source())
+        self.register_shape("spring", self._get_spring_source())
+        self.register_shape("volume_velocity", self._get_volume_velocity_source())
+        self.register_shape("damper", self._get_damper_source())
+        self.register_shape("mass", self._get_mass_source())
+        self.register_shape("acoustic_pressure", self._get_acoustic_pressure_source())
+        self.register_shape("impedance", self._get_impedance_source())
 
-    def _get_arrow_source(self):
+    def _get_force_source(self):
         source = vtkArrowSource()
-        source.SetTipLength(0.25)
+        source.SetTipLength(.25)
         source.Update()
         return source.GetOutput()
 
     def _get_cone_source(self):
         source = vtkConeSource()
-        source.SetHeight(0.5)
+        source.SetHeight(.5)
+        source.SetRadius(.7)
         source.Update()
         return source.GetOutput()
 
-    def _get_cylinder_source(self):
-        source = vtkCylinderSource()
-        source.SetHeight(2)
+    def _get_spring_source(self):
+        reader = vtkSTLReader()
+        reader.SetFileName(str(SYMBOLS_DIR / "stl_files/spring_symbol.STL"))
+        reader.Update()
+        return reader.GetOutput()
+
+    def _get_volume_velocity_source(self):
+        source = vtkArrowSource()
+        source.SetTipLength(.85)
         source.Update()
+        return source.GetOutput()
+
+    def _get_damper_source(self):
+        reader = vtkOBJReader()
+        reader.SetFileName(str(SYMBOLS_DIR / "structural/lumped_damper.obj"))
+        reader.Update()
+        return reader.GetOutput()
+
+    def _get_mass_source(self):
+        reader = vtkOBJReader()
+        reader.SetFileName(str(SYMBOLS_DIR / "structural/new_lumped_mass.obj"))
+        reader.Update()
         transform = vtkTransform()
-        transform.Translate(1, 0, 0)
-        transform.RotateZ(-90.0)
-        # transformation
+        transform.RotateWXYZ(90, 0, 1, 0)
         transformation = vtkTransformPolyDataFilter()
         transformation.SetTransform(transform)
-        transformation.SetInputData(source.GetOutput())
+        transformation.SetInputData(reader.GetOutput())
         transformation.Update()
         return transformation.GetOutput()
 
-    def _get_sphere_source(self):
-        source = vtkSphereSource()
-        source.SetRadius(0.5)
+    def _get_acoustic_pressure_source(self):
+        source = vtkArrowSource()
+        source.SetTipLength(.45)
+        source.Update()
+        return source.GetOutput()
+
+    def _get_impedance_source(self):
+        source = vtkCubeSource()
+        source.SetBounds(0, 1, 0, 1, 0, 1)
         source.Update()
         return source.GetOutput()
 
     def _get_shape_obj_file(self, path: str):
         reader = vtkOBJReader()
-        reader.SetFileName(str(path))
+        reader.SetFileName(str(SYMBOLS_DIR / "structural/lumped_damper.obj"))
         reader.Update()
         return reader.GetOutput()
 
