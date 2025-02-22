@@ -5,6 +5,7 @@ from vtkmodules.vtkFiltersSources import (
     vtkCylinderSource,
     vtkSphereSource,
     vtkConeSource,
+    vtkCubeSource,
 )
 from vibra import SYMBOLS_DIR
 
