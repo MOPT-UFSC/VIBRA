@@ -1,7 +1,10 @@
 from vtkmodules.vtkCommonTransforms import vtkTransform
 from vtkmodules.vtkFiltersGeneral import vtkTransformPolyDataFilter
-from vtkmodules.vtkFiltersSources import vtkArrowSource, vtkCylinderSource, vtkSphereSource, vtkConeSource, \
+from vtkmodules.vtkFiltersSources import (
+    vtkArrowSource,
+    vtkConeSource,
     vtkCubeSource
+)
 from vibra import SYMBOLS_DIR
 
 from molde.colors import Color, color_names
@@ -90,14 +93,14 @@ class NewSymbolsActor(SymbolActorFixedSize):
         )
 
     def build(self):
-        # self.add_force_symbol()
-        # self.add_DOF_cone_symbol()
-        # self.add_spring_symbol()
-        # self.add_volume_velocity_symbol()
-        # self.add_damper_symbol()
-        # self.add_mass_symbol()
-        # self.add_acoustic_pressure_symbol()
-        # self.add_impedance_symbol()
+        self.add_force_symbol()
+        self.add_DOF_cone_symbol()
+        self.add_spring_symbol()
+        self.add_volume_velocity_symbol()
+        self.add_damper_symbol()
+        self.add_mass_symbol()
+        self.add_acoustic_pressure_symbol()
+        self.add_impedance_symbol()
 
         super().build()
 
