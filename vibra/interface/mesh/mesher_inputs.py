@@ -6,7 +6,6 @@ from PyQt5.QtCore import Qt
 from PyQt5 import uic
 
 from vibra import app, UI_DIR
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.engine.mesher.element_type import *
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_bar import load_function
@@ -38,8 +37,6 @@ class MesherInputs(QDialog):
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
-
-        ConfigWidgetAppearance(self, tool_tip=True)
 
         self._load_current_mesh_setup()
 

@@ -12,7 +12,6 @@ from vibra.interface.model_inputs.acoustic.get_sphere_selection_information impo
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 
 import warnings
 import numpy as np
@@ -43,8 +42,6 @@ class SetViscousThermalLossModel(QDialog):
         self._define_qt_variables()
         self._create_connections()
         self._config_widgets()
-
-        ConfigWidgetAppearance(self, tool_tip=True)
 
         self.load_info()
 

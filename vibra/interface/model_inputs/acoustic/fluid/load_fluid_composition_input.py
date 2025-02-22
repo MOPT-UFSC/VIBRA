@@ -8,7 +8,6 @@ from vibra import app, UI_DIR
 from vibra.interface.formatters.icons import *
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 
 import os
 
@@ -29,8 +28,6 @@ class LoadFluidCompositionInput(QDialog):
         self._config_window()
         self._define_qt_variables()
         self._create_connections()
-
-        ConfigWidgetAppearance(self, tool_tip=True)
 
         self._config_widgets()
         self._load_file()

@@ -5,7 +5,6 @@ from PyQt5 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.icons import *
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 
 from time import sleep, time 
 
@@ -24,8 +23,6 @@ class PrintMessageInput(QDialog):
         self._config_window()
         self._define_qt_variables()
         self._create_connections()
-
-        ConfigWidgetAppearance(self)
 
         self._config_widgets()
         self._set_texts()

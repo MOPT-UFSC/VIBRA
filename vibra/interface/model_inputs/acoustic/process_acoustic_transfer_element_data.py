@@ -5,7 +5,6 @@ from PyQt5 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.mesh.mesher_inputs import MesherInputs
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_bar import load_function
 from vibra.utils.progress_status import ProgressStatus
@@ -39,8 +38,6 @@ class ProcessAcousticTransferElementData(QDialog):
         self._reset_variables()
         self._define_qt_variables()
         self._create_connections()
-
-        ConfigWidgetAppearance(self, tool_tip=True)
 
         self._load_analysis_data()
         self.geometry_selection_callback()
