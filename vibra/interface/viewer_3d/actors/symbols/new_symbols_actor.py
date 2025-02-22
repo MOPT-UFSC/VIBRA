@@ -2,20 +2,22 @@ from vtkmodules.vtkCommonTransforms import vtkTransform
 from vtkmodules.vtkFiltersGeneral import vtkTransformPolyDataFilter
 from vtkmodules.vtkFiltersSources import (
     vtkArrowSource,
+    vtkCylinderSource,
+    vtkSphereSource,
     vtkConeSource,
-    vtkCubeSource
 )
 from vibra import SYMBOLS_DIR
 
 from molde.colors import Color, color_names
 from vtkmodules.vtkIOGeometry import vtkOBJReader, vtkSTLReader
 
-from .new_symbols_common import SymbolActorFixedSize
+from .common_symbols_actor_fixed_size import CommonSymbolsActorFixedSize
+from .common_symbols_actor_variable_size import CommonSymbolsActorVariableSize
 
 
-class NewSymbolsActor(SymbolActorFixedSize):
-    def __init__(self):
-        super().__init__()
+class NewSymbolsActor(CommonSymbolsActorVariableSize):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.configure_appearance()
         self._register_shapes()
         self.build()
