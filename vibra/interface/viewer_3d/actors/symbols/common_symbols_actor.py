@@ -1,16 +1,18 @@
-from molde import Color
-
 from dataclasses import dataclass
-from vtkmodules.vtkRenderingCore import vtkActor
-from vtkmodules.vtkCommonDataModel import vtkPolyData
-from vtkmodules.vtkRenderingCore import vtkGlyph3DMapper
-from vtkmodules.vtkCommonCore import vtkPoints
+from pathlib import Path
+
+from molde import Color
 from vtkmodules.vtkCommonCore import (
-    vtkIntArray,
     vtkDoubleArray,
+    vtkIntArray,
+    vtkPoints,
     vtkUnsignedCharArray,
 )
-
+from vtkmodules.vtkCommonDataModel import vtkPolyData
+from vtkmodules.vtkCommonTransforms import vtkTransform
+from vtkmodules.vtkFiltersGeneral import vtkTransformPolyDataFilter
+from vtkmodules.vtkIOGeometry import vtkOBJReader, vtkSTLReader
+from vtkmodules.vtkRenderingCore import vtkActor, vtkGlyph3DMapper
 
 Triple = tuple[float, float, float]
 
@@ -59,7 +61,7 @@ class CommonSymbolsActor(vtkActor):
         self.clear_shapes()
         self.clear_symbols()
 
-    def common_build(self) -> vtkPolyData:
+    def common_build(self):
         self.data = vtkPolyData()
         points = vtkPoints()
 
@@ -97,3 +99,35 @@ class CommonSymbolsActor(vtkActor):
         self.data.GetPointData().AddArray(rotations)
         self.data.GetPointData().AddArray(scales)
         self.data.GetPointData().SetScalars(colors)
+
+    def read_obj_file(self, path: str | Path) -> vtkPolyData:
+        reader = vtkOBJReader()
+        reader.SetFileName(str(path))
+        reader.Update()
+        return reader.GetOutput()
+
+    def read_stl_file(self, path: str | Path) -> vtkPolyData:
+        reader = vtkSTLReader()
+        reader.SetFileName(str(path))
+        reader.Update()
+        return reader.GetOutput()
+
+    def transform_polydata(
+        self,
+        polydata: vtkPolyData,
+        position=(0, 0, 0),
+        rotation=(0, 0, 0),
+        scale=(1, 1, 1),
+    ) -> vtkPolyData:
+        transform = vtkTransform()
+        transform.Translate(position)
+        transform.Scale(scale)
+        transform.RotateX(rotation[0])
+        transform.RotateY(rotation[1])
+        transform.RotateZ(rotation[2])
+        transform.Update()
+        transformation = vtkTransformPolyDataFilter()
+        transformation.SetTransform(transform)
+        transformation.SetInputData(polydata)
+        transformation.Update()
+        return transformation.GetOutput()
