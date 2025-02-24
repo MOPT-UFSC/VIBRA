@@ -7,6 +7,7 @@ from vtkmodules.vtkFiltersSources import (
     vtkConeSource,
     vtkCubeSource,
 )
+from vtkmodules.vtkFiltersCore import vtkAppendPolyData
 
 from vibra import SYMBOLS_DIR
 from pathlib import Path
@@ -26,22 +27,17 @@ class NewSymbolsActor(CommonSymbolsActorFixedSize):
         self.build()
 
     def build(self):
-        # add your custom code here
-        for i in range(10):
-            self.add_force_symbol(position=(i, 0, 0), orientation=(i, 0, 0))
-            self.add_prescribed_dof_symbol(position=(i, 1, 0), orientation=(i, 1, 0))
-            self.add_spring_symbol(position=(i, 2, 0), orientation=(i, 2, 0))
-            self.add_volume_velocity_symbol(position=(i, 3, 0), orientation=(i, 3, 0))
-            self.add_damper_symbol(position=(i, 4, 0), orientation=(i, 4, 0))
-            self.add_mass_symbol(position=(i, 5, 0), orientation=(i, 5, 0))
-            self.add_acoustic_pressure_symbol(position=(i, 6, 0), orientation=(i, 6, 0))
-            self.add_impedance_symbol(position=(i, 7, 0), orientation=(i, 7, 0))
+        pos = (3, 0, 0)
+        self.add_force_symbol(pos, (1, 0, 0))
+        self.add_volume_velocity_symbol(pos, (0, 1, 0))
+        self.add_prescribed_dof_symbol(pos, (1, 1, 0))
+        self.add_acoustic_pressure_symbol(pos, (0, 0, 1))
 
         super().build()
 
     def add_force_symbol(self, position, orientation):
         self.add_symbol(
-            "arrow_1",
+            "arrow",
             position,
             orientation,
             color=color_names.RED,
@@ -63,12 +59,12 @@ class NewSymbolsActor(CommonSymbolsActorFixedSize):
             position,
             orientation,
             color=color_names.GREEN,
-            scale=1,
+            scale=0.4,
         )
 
     def add_volume_velocity_symbol(self, position, orientation):
         self.add_symbol(
-            "arrow_2",
+            "long_arrow",
             position,
             orientation,
             color=color_names.RED,
@@ -95,7 +91,7 @@ class NewSymbolsActor(CommonSymbolsActorFixedSize):
 
     def add_acoustic_pressure_symbol(self, position, orientation):
         self.add_symbol(
-            "arrow_3",
+            "double_arrow",
             position,
             orientation,
             color=color_names.PURPLE,
@@ -112,40 +108,72 @@ class NewSymbolsActor(CommonSymbolsActorFixedSize):
         )
 
     def _register_shapes(self):
-        self.register_shape("arrow_1", self._get_arrow_1_source())
-        self.register_shape("arrow_2", self._get_arrow_2_source())
-        self.register_shape("arrow_3", self._get_arrow_3_source())
+        self.register_shape("arrow", self._get_arrow_source())
+        self.register_shape("long_arrow", self._get_long_arrow_source())
+        self.register_shape("double_arrow", self._get_double_arrow_source())
         self.register_shape("cone", self._get_cone_source())
         self.register_shape("cube", self._get_cube_source())
         self.register_shape("spring", self._get_spring_source())
         self.register_shape("damper", self._get_damper_source())
         self.register_shape("mass", self._get_mass_source())
 
-    def _get_arrow_1_source(self):
+    def _get_arrow_source(self):
+        source = vtkArrowSource()
+        source.SetTipLength(0.25)
+        source.Update()
+
+        return self._transform_polydata(
+            source.GetOutput(),
+            position=(-1, 0, 0),
+        )
+
+    def _get_long_arrow_source(self):
+        source = vtkArrowSource()
+        source.SetTipResolution(4)
+        source.SetShaftResolution(4)
+        source.SetTipLength(0.85)
+        source.Update()
+
+        return self._transform_polydata(
+            source.GetOutput(),
+            position=(-1, 0, 0),
+        )
+
+    def _get_double_arrow_source(self):
+        arrow1 = vtkArrowSource()
+        arrow1.SetTipLength(0.45)
+        arrow1.Update()
+
+        arrow2 = vtkArrowSource()
+        arrow2.SetTipLength(0.3)
+        arrow2.Update()
+
+        source = vtkAppendPolyData()
+        source.AddInputData(arrow1.GetOutput())
+        source.AddInputData(arrow2.GetOutput())
+        source.Update()
+    
+        return self._transform_polydata(
+            source.GetOutput(),
+            position=(-1, 0, 0),
+        )
+
+    def _get_outwards_arrow_source(self):
         source = vtkArrowSource()
         source.SetTipLength(0.25)
         source.Update()
         return source.GetOutput()
 
-    def _get_arrow_2_source(self):
-        source = vtkArrowSource()
-        source.SetTipLength(0.85)
-        source.Update()
-        return source.GetOutput()
-
-    def _get_arrow_3_source(self):
-        source = vtkArrowSource()
-        source.SetTipLength(0.45)
-        source.Update()
-        return source.GetOutput()
-
     def _get_cone_source(self):
         source = vtkConeSource()
-        source.SetHeight(0.4)
-        source.SetRadius(0.2)
+        source.SetHeight(1)
+        source.SetRadius(0.5)
         source.SetResolution(12)
         source.Update()
-        return source.GetOutput()
+        return self._transform_polydata(
+            source.GetOutput(),
+            position=(-0.5, 0, 0),
+        )
 
     def _get_cube_source(self):
         source = vtkCubeSource()
@@ -160,7 +188,7 @@ class NewSymbolsActor(CommonSymbolsActorFixedSize):
         return self._read_obj_file(SYMBOLS_DIR / "structural/lumped_damper.obj")
 
     def _get_mass_source(self):
-        return self._transform_source(
+        return self._transform_polydata(
             self._read_obj_file(SYMBOLS_DIR / "structural/new_lumped_mass.obj"),
             rotation=(0, 90, 0),
         )
@@ -178,12 +206,12 @@ class NewSymbolsActor(CommonSymbolsActorFixedSize):
         reader.Update()
         return reader.GetOutput()
 
-    def _transform_source(
+    def _transform_polydata(
         self,
-        source: vtkPolyData,
+        polydata: vtkPolyData,
         position=(0, 0, 0),
         rotation=(0, 0, 0),
-        scale=(0, 0, 0),
+        scale=(1, 1, 1),
     ) -> vtkPolyData:
         transform = vtkTransform()
         transform.Translate(position)
@@ -191,9 +219,10 @@ class NewSymbolsActor(CommonSymbolsActorFixedSize):
         transform.RotateX(rotation[0])
         transform.RotateY(rotation[1])
         transform.RotateZ(rotation[2])
+        transform.Update()
         transformation = vtkTransformPolyDataFilter()
         transformation.SetTransform(transform)
-        transformation.SetInputData(source)
+        transformation.SetInputData(polydata)
         transformation.Update()
         return transformation.GetOutput()
 
