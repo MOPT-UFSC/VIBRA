@@ -41,9 +41,9 @@ class NewSymbolsActor(CommonSymbolsActorVariableSize):
             scale=0.3,
         )
 
-    def add_DOF_cone_symbol(self):
+    def add_dof_cone_symbol(self):
         self.add_symbol(
-            "DOF_cone",
+            "dof_cone",
             position=(6, 0, 0),
             orientation=(1, 0, 0),
             color=color_names.GREEN,
@@ -97,7 +97,7 @@ class NewSymbolsActor(CommonSymbolsActorVariableSize):
 
     def build(self):
         self.add_force_symbol()
-        self.add_DOF_cone_symbol()
+        self.add_dof_cone_symbol()
         self.add_spring_symbol()
         self.add_volume_velocity_symbol()
         self.add_damper_symbol()
@@ -109,7 +109,7 @@ class NewSymbolsActor(CommonSymbolsActorVariableSize):
 
     def _register_shapes(self):
         self.register_shape("force", self._get_force_source())
-        self.register_shape("DOF_cone", self._get_cone_source())
+        self.register_shape("dof_cone", self._get_cone_source())
         self.register_shape("spring", self._get_spring_source())
         self.register_shape("volume_velocity", self._get_volume_velocity_source())
         self.register_shape("damper", self._get_damper_source())
