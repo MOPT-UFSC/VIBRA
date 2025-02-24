@@ -29,6 +29,7 @@ class NewSymbolsActor(CommonSymbolsActorFixedSize):
     def build(self):
         pos = (3, 0, 0)
         self.add_force_symbol(pos, (1, 0, 0))
+        self.add_normal_symbol(pos, (1, 0, 0))
         self.add_damper_symbol(pos, (1, 1, 0))
         self.add_spring_symbol(pos, (1, 1, 0))
 
@@ -106,10 +107,20 @@ class NewSymbolsActor(CommonSymbolsActorFixedSize):
             scale=1,
         )
 
+    def add_normal_symbol(self, position, orientation):
+        self.add_symbol(
+            "outwards_arrow",
+            position,
+            orientation,
+            color=color_names.GRAY,
+            scale=1,
+        )
+
     def _register_shapes(self):
         self.register_shape("arrow", self._get_arrow_source())
         self.register_shape("long_arrow", self._get_long_arrow_source())
         self.register_shape("double_arrow", self._get_double_arrow_source())
+        self.register_shape("outwards_arrow", self._get_outwards_arrow_source())
         self.register_shape("cone", self._get_cone_source())
         self.register_shape("cube", self._get_cube_source())
         self.register_shape("spring", self._get_spring_source())
