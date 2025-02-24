@@ -31,9 +31,6 @@ class CommonSymbolsActor(vtkActor):
     
     def register_shape(self, name: str, shape: vtkPolyData):
         self._shapes[name] = shape
-    
-    def add_force_symbol(self, position: Triple, orientation: Triple):
-        self.add_symbol("arrow", position, orientation, Color(1, 0, 0))
 
     def add_symbol(
         self,
