@@ -23,89 +23,91 @@ class NewSymbolsActor(CommonSymbolsActorVariableSize):
         self._register_shapes()
         self.build()
 
-    def add_force_symbol(self):
+    def build(self):
+        # add your custom code here
+        for i in range(10):
+            self.add_force_symbol(position=(i, 0, 0), orientation=(i, 0, 0))
+            self.add_prescribed_dof_symbol(position=(i, 1, 0), orientation=(i, 1, 0))
+            self.add_spring_symbol(position=(i, 2, 0), orientation=(i, 2, 0))
+            self.add_volume_velocity_symbol(position=(i, 3, 0), orientation=(i, 3, 0))
+            self.add_damper_symbol(position=(i, 4, 0), orientation=(i, 4, 0))
+            self.add_mass_symbol(position=(i, 5, 0), orientation=(i, 5, 0))
+            self.add_acoustic_pressure_symbol(position=(i, 6, 0), orientation=(i, 6, 0))
+            self.add_impedance_symbol(position=(i, 7, 0), orientation=(i, 7, 0))
+
+        super().build()
+
+    def add_force_symbol(self, position, orientation):
         self.add_symbol(
             "force",
-            position=(2, 0, 0),
-            orientation=(1, 0, 0),
+            position,
+            orientation,
             color=color_names.RED,
             scale=0.3,
         )
 
-    def add_spring_symbol(self):
+    def add_spring_symbol(self, position, orientation):
         self.add_symbol(
             "spring",
-            position=(4, 0, 0),
-            orientation=(1, 0, 0),
+            position,
+            orientation,
             color=color_names.ORANGE,
             scale=0.3,
         )
 
-    def add_dof_cone_symbol(self):
+    def add_prescribed_dof_symbol(self, position, orientation):
         self.add_symbol(
             "dof_cone",
-            position=(6, 0, 0),
-            orientation=(1, 0, 0),
+            position,
+            orientation,
             color=color_names.GREEN,
             scale=0.3,
         )
 
-    def add_volume_velocity_symbol(self):
+    def add_volume_velocity_symbol(self, position, orientation):
         self.add_symbol(
             "volume_velocity",
-            position=(2, 2, 0),
-            orientation=(1, 0, 0),
+            position,
+            orientation,
             color=color_names.RED,
             scale=0.3,
         )
 
-    def add_damper_symbol(self):
+    def add_damper_symbol(self, position, orientation):
         self.add_symbol(
             "damper",
-            position=(4, 2, 0),
-            orientation=(1, 0, 0),
+            position,
+            orientation,
             color=color_names.PINK,
             scale=0.3,
         )
 
-    def add_mass_symbol(self):
+    def add_mass_symbol(self, position, orientation):
         self.add_symbol(
             "mass",
-            position=(6, 2, 0),
-            orientation=(1, 0, 0),
+            position,
+            orientation,
             color=color_names.BLUE,
             scale=0.3,
         )
 
-    def add_acoustic_pressure_symbol(self):
+    def add_acoustic_pressure_symbol(self, position, orientation):
         self.add_symbol(
             "acoustic_pressure",
-            position=(8, 2, 0),
-            orientation=(1, 0, 0),
+            position,
+            orientation,
             color=color_names.PURPLE,
             scale=0.3,
         )
 
-    def add_impedance_symbol(self):
+    def add_impedance_symbol(self, position, orientation):
         self.add_symbol(
             "impedance",
-            position=(10, 2, 0),
-            orientation=(1, 0, 0),
+            position,
+            orientation,
             color=color_names.GREEN,
             scale=0.3,
         )
-
-    def build(self):
-        self.add_force_symbol()
-        self.add_dof_cone_symbol()
-        self.add_spring_symbol()
-        self.add_volume_velocity_symbol()
-        self.add_damper_symbol()
-        self.add_mass_symbol()
-        self.add_acoustic_pressure_symbol()
-        self.add_impedance_symbol()
-
-        super().build()
 
     def _register_shapes(self):
         self.register_shape("force", self._get_force_source())
