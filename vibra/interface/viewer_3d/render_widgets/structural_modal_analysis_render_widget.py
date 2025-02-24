@@ -33,11 +33,6 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
-        layout = QVBoxLayout()
-        layout.addWidget(self.render_interactor)
-        self.setLayout(layout)
-        self.setContentsMargins(0, 0, 0, 0)
-
         self.show_plane_actor = True
         self.section_plane_active = False
         self.section_plane_args = tuple()

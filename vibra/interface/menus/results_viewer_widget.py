@@ -1,16 +1,18 @@
-from PyQt5.QtWidgets import QFrame, QWidget
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QFrame, QWidget
+from PySide6.QtCore import Qt
 
 from vibra import app, UI_DIR
 from vibra.interface.menus.results_viewer_items import ResultsViewerItems
+
+from molde import load_ui
+
 
 class ResultsViewerWidget(QWidget):
     def __init__(self):
         super().__init__()
 
         ui_path = UI_DIR / "menu/left_menu_widget.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self)
 
         self._reset()
         self._define_qt_variables()

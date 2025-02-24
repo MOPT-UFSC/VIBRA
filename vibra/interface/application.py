@@ -43,8 +43,8 @@ class Application(QApplication):
         self.main_window.update()
 
     def filter_tab_scroll_by_wheel(self):
-        from PyQt5.QtWidgets import QTabBar
-        from PyQt5.QtCore import QObject, QEvent
+        from PySide6.QtWidgets import QTabBar
+        from PySide6.QtCore import QObject, QEvent
 
         class Filter(QObject):
             def eventFilter(self, obj, event):

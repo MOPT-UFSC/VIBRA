@@ -4,8 +4,7 @@ from time import time
 
 import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
-from PyQt5.QtCore import QObjectCleanupHandler
-from PyQt5.QtWidgets import *
+from PySide6.QtWidgets import *
 
 from vibra import app
 
@@ -32,13 +31,6 @@ class StructuralHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
 
         self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
-
-        # replace the layout to add other usefull widgets
-        QObjectCleanupHandler().add(self.layout())
-        layout = QVBoxLayout()
-        layout.addWidget(self.render_interactor)
-        self.setLayout(layout)
-        self.setContentsMargins(0, 0, 0, 0)
 
         self.show_plane_actor = True
         self.section_plane_active = False

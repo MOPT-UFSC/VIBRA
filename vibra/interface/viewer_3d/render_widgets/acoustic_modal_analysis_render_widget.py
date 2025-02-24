@@ -32,12 +32,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.section_plane_active = False
         self.show_plane_actor = True
         self.section_plane_args = tuple()
-
-        layout = QVBoxLayout()
-        layout.addWidget(self.render_interactor)
-        self.setLayout(layout)
-        self.setContentsMargins(0, 0, 0, 0)
-
+        
         self.analysis_actor = None
         self.edges_actor = None
         self.plane_actor = None

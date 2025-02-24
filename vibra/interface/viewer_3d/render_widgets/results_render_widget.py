@@ -1,5 +1,5 @@
 from typing import Literal
-from PyQt5.QtWidgets import QFileDialog
+from PySide6.QtWidgets import QFileDialog
 
 from molde.render_widgets import AnimatedRenderWidget
 

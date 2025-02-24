@@ -1,9 +1,10 @@
-from PyQt5.QtWidgets import QComboBox, QFrame, QLineEdit, QPushButton, QSlider, QTreeWidget, QTreeWidgetItem, QWidget
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5 import uic
+from PySide6.QtWidgets import QComboBox, QFrame, QLineEdit, QPushButton, QSlider, QTreeWidget, QTreeWidgetItem, QWidget
+from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt, Signal
 
 from vibra import app, UI_DIR
+
+from molde import load_ui
 
 import numpy as np
 
@@ -14,7 +15,7 @@ class PlotDisplacementField(QWidget):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "plots/structural/plot_displacement_field.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
 
         self._initialize()
         self._define_qt_variables()
