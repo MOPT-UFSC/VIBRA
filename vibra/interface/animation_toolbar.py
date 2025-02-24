@@ -6,9 +6,9 @@ from vibra import app, UI_DIR, ICON_DIR
 from vibra.interface.formatters import icons
 from vibra.utils.icons import load_icon
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.viewer_3d.render_widgets.acoustic_harmonic_analysis_render_widget import AcousticHarmonicAnalysisRenderWidget
+from vibra.interface.loading_bar import load_function
 
-from molde.windows.loading_window import LoadingWindow
+from molde.render_widgets.animated_render_widget import AnimatedRenderWidget
 
 from pathlib import Path
 
@@ -130,7 +130,7 @@ class AnimationToolbar(QToolBar):
         self.update_phase_slider_steps()
     
     def update_toolbar(self):
-        if isinstance(self.current_render_widget, AcousticHarmonicAnalysisRenderWidget):
+        if app().main_window.analysis_toolbar.combo_box_analysis_domain.currentIndex() == 1:
             self.magnification_factor_slider.setDisabled(True)
             self.label_magnification_factor.setDisabled(True)
             self.label_factor.setDisabled(True)
@@ -225,6 +225,9 @@ class AnimationToolbar(QToolBar):
     def pause_animation(self):
         self.update_animate_button_icons(False)
 
+        if not isinstance(self.current_render_widget, AnimatedRenderWidget):
+            return
+
         if self.current_render_widget is not None and self.current_render_widget.playing_animation:
             self.current_render_widget.stop_animation()
 
@@ -293,9 +296,11 @@ class AnimationToolbar(QToolBar):
         try:
 
             if file_path.suffix.lower() in [".gif", ".webp"]:
-                LoadingWindow(self.current_render_widget.save_animation, app(), app().main_window.vibra_icon).run(file_path)
+                save_animation = load_function(self.current_render_widget.save_animation, app().main_window)
+                save_animation(file_path)
             else:
-                LoadingWindow(self.current_render_widget.save_video, app(), app().main_window.vibra_icon).run(file_path)
+                save_video = load_function(self.current_render_widget.save_video, app().main_window)
+                save_video(file_path)
 
         except Exception as error_log:
             title = "Error while exporting animation"

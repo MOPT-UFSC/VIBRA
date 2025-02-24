@@ -21,6 +21,15 @@ class PlotDisplacementField(QWidget):
         self._create_connections()
         self.load_frequencies()
         self.load_user_preference_colormap()
+    
+    def showEvent(self, event):
+        super().showEvent(event)
+
+        render_widget = app().main_window.structural_harmonic_analysis
+        app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
+        app().main_window.render_widget_changed.emit()
+
+        app().main_window.animation_toolbar.setDisabled(False)
 
     def _initialize(self):
         self.frequency_index = None
@@ -222,6 +231,10 @@ class PlotDisplacementField(QWidget):
             for i in range(2):
                 item.setTextAlignment(i, Qt.AlignCenter)
             self.treeWidget_frequencies.addTopLevelItem(item)
+        
+        first_item = self.treeWidget_frequencies.topLevelItem(0)
+        first_item.setSelected(True)
+        self.treeWidget_frequencies.itemClicked.emit(first_item, 0)
 
     def plot_displacement_for_static_analysis(self):
         #
