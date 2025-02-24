@@ -6,8 +6,7 @@ from pathlib import Path
 
 import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
-from PyQt5.QtCore import QObjectCleanupHandler
-from PyQt5.QtWidgets import QVBoxLayout, QFileDialog, QWidget
+from PySide6.QtWidgets import QVBoxLayout, QFileDialog, QWidget
 
 from vibra import app
 
@@ -36,7 +35,6 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
         # replace the layout to add other usefull widgets
-        QObjectCleanupHandler().add(self.layout())
         layout = QVBoxLayout()
         layout.addWidget(self.render_interactor)
         self.setLayout(layout)
@@ -50,7 +48,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.edges_actor = None
         self.plane_actor = None
         self.hidden_part_actor = None
-        self.bounds = (0, 0, 0, 0, 0, 0)
+        self._bounds = (0, 0, 0, 0, 0, 0)
 
         self.create_axes()
         self.create_color_bar()

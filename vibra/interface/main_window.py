@@ -5,27 +5,23 @@ from pathlib import Path
 from shutil import copy, rmtree
 from time import time
 
-
 import qdarktheme
-from molde.render_widgets import CommonRenderWidget
-from PyQt5 import uic
-from PyQt5.QtGui import QColor
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import (
-    QAbstractButton,
-    QAction,
-    QDialog,
-    QFileDialog,
-    QFrame,
-    QGridLayout,
-    QMainWindow,
-    QMenu,
-    QMessageBox,
-    QSplitter,
-    QStackedWidget,
-    QToolBar,
-    QWidget,
+
+from PySide6.QtWidgets import (
+     QAbstractButton,
+     QDialog,
+     QFileDialog, QFrame,
+     QGridLayout, 
+     QMainWindow, 
+     QMenu,
+     QMessageBox,
+     QSplitter,
+     QStackedWidget,
+     QToolBar,
+     QWidget,
 )
+from PySide6.QtGui import QAction, QColor
+from PySide6.QtCore import Signal
 
 from vibra import UI_DIR, ICON_DIR, TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, app
 from vibra.interface.analysis_toolbar import AnalysisToolbar
@@ -72,18 +68,22 @@ from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import VisualizationFilter
 from vibra.utils.progress_status import ProgressStatus
 
+from molde.render_widgets import CommonRenderWidget
+from molde import stylesheets
+from molde import load_ui
+
 
 class MainWindow(QMainWindow):
-    theme_changed = pyqtSignal(str)
-    visualization_changed = pyqtSignal()
-    render_widget_changed = pyqtSignal()
-    selection_changed = pyqtSignal()
+    theme_changed = Signal(str)
+    visualization_changed = Signal()
+    render_widget_changed = Signal()
+    selection_changed = Signal()
 
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
 
         ui_path = UI_DIR / 'main_window.ui'
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
         
         self.visualization_filter = VisualizationFilter.all_true()
 

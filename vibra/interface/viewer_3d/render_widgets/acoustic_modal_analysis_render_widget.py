@@ -1,8 +1,7 @@
 import logging
 import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
-from PyQt5.QtCore import QObjectCleanupHandler
-from PyQt5.QtWidgets import *
+from PySide6.QtWidgets import *
 
 from vibra import app
 
@@ -34,8 +33,6 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.show_plane_actor = True
         self.section_plane_args = tuple()
 
-        # replace the layout to add other usefull widgets
-        QObjectCleanupHandler().add(self.layout())
         layout = QVBoxLayout()
         layout.addWidget(self.render_interactor)
         self.setLayout(layout)
@@ -45,7 +42,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.edges_actor = None
         self.plane_actor = None
         self.hidden_part_actor = None
-        self.bounds = (0, 0, 0, 0, 0, 0)
+        self._bounds = (0, 0, 0, 0, 0, 0)
 
         self.create_axes()
         self.create_color_bar()
@@ -125,7 +122,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.hidden_part_actor.PickableOff()
         self.renderer.AddActor(self.hidden_part_actor)
 
-        self.bounds = self.analysis_actor.GetBounds()
+        self._bounds = self.analysis_actor.GetBounds()
         scale = bounds_distance(self.bounds)
         self.plane_actor = SectionPlaneActor(self.analysis_actor.GetBounds())
         self.plane_actor.VisibilityOff()

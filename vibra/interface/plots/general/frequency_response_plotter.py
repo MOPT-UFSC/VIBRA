@@ -1,7 +1,6 @@
-from PyQt5.QtWidgets import QComboBox, QCheckBox, QDialog, QFrame, QPushButton, QRadioButton, QSpinBox, QVBoxLayout, QToolButton, QWidget
-from PyQt5.QtGui import QCloseEvent, QColor
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QComboBox, QCheckBox, QDialog, QFrame, QPushButton, QRadioButton, QSpinBox, QVBoxLayout, QToolButton, QWidget
+from PySide6.QtGui import QCloseEvent, QColor
+from PySide6.QtCore import Qt
 
 from vibra import app, UI_DIR
 from vibra.interface.data_handler.export_model_results import ExportModelResults
@@ -9,6 +8,7 @@ from vibra.interface.data_handler.import_data_to_compare import ImportDataToComp
 from vibra.interface.formatters import icons
 from vibra.interface.plots.general.advanced_cursor import AdvancedCursor
 
+from molde import load_ui
 import numpy as np
 
 
@@ -17,7 +17,7 @@ class FrequencyResponsePlotter(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "plots/general/frequency_response_plot.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
 
         self._config_window()
         self._initialize()

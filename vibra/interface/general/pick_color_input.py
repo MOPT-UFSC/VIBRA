@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QColorDialog
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QColor
+from PySide6.QtWidgets import QColorDialog
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtGui import QColor
 
 from vibra import app
 

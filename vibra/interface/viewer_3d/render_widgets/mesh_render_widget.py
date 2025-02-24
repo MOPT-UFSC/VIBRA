@@ -1,5 +1,5 @@
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtWidgets import QApplication
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import QApplication
 
 from vibra import app
 # from vibra.interface.tabs.mesh_info_bar import MeshInfoBar
@@ -34,7 +34,7 @@ from vtkmodules.vtkRenderingCore import vtkActor, vtkCellPicker
 
 
 class MeshRenderWidget(CommonRenderWidget):
-    selection_changed = pyqtSignal(list, list, list)
+    selection_changed = Signal(list, list, list)
 
     def __init__(self, parent=None):
         super().__init__(parent)

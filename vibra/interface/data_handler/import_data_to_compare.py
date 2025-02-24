@@ -1,7 +1,6 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import *
+from PySide6.QtGui import *
+from PySide6.QtCore import Qt
 from pathlib import Path
 
 import os
@@ -9,6 +8,7 @@ import numpy as np
 
 from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
+from molde import load_ui
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -19,7 +19,7 @@ class ImportDataToCompare(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "data_handler/import_data_to_compare.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
         
         self.plotter = plotter
 

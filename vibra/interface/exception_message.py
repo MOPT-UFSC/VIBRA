@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QMessageBox
 
 from vibra.errors import VibraException
 

@@ -1,6 +1,3 @@
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtWidgets import QApplication
-
 from vibra import app
 
 # from vibra.interface.tabs.geometry_info_bar import GeometryInfoBar
@@ -21,6 +18,8 @@ from molde.interactor_styles import BoxSelectionInteractorStyle
 import numpy as np
 from numbers import Number
 
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import QApplication
 from vtkmodules.vtkCommonCore import vtkIntArray
 from vtkmodules.vtkCommonDataModel import vtkPolyData
 from vtkmodules.vtkRenderingCore import vtkActor, vtkCellPicker
@@ -32,7 +31,7 @@ SHOW_FACES = 2
 
 
 class GeometryRenderWidget(CommonRenderWidget):
-    selection_changed = pyqtSignal(set, set, set, set)
+    selection_changed = Signal(set, set, set, set)
 
     def __init__(self, parent=None):
         super().__init__(parent)

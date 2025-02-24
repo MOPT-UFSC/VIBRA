@@ -1,7 +1,6 @@
-from PyQt5.QtWidgets import QDialog, QHeaderView, QPushButton, QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QWidget
-from PyQt5.QtGui import QIcon, QColor, QBrush, QFont
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog, QPushButton, QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QWidget, QHeaderView
+from PySide6.QtGui import QIcon, QColor, QBrush, QFont
+from PySide6.QtCore import Qt
 
 from vibra import app, UI_DIR, TEMP_PROJECT_FILE
 from vibra.interface.formatters.icons import *
@@ -15,6 +14,7 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.libraries.default_libraries import default_fluid_library
 
 from vibra.utils.utils import *
+from molde import load_ui
 
 from itertools import count
 
@@ -35,7 +35,7 @@ class FluidWidget(QWidget):
         super().__init__()
         
         ui_path = UI_DIR  / "model/setup/fluid/fluid_widget.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
 
         self.parent_widget = kwargs.get("parent_widget", None)
         self.state_properties = kwargs.get("state_properties", dict())

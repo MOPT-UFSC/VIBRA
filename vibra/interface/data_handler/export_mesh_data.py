@@ -1,7 +1,6 @@
-from PyQt5.QtWidgets import QCheckBox, QDialog, QFileDialog, QLineEdit, QPushButton
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor
-from PyQt5 import uic
+from PySide6.QtWidgets import QCheckBox, QDialog, QFileDialog, QLineEdit, QPushButton
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon, QColor
 
 from vibra import app, UI_DIR
 from vibra.interface.mesh.mesher_inputs import MesherInputs
@@ -12,6 +11,7 @@ from vibra.interface.formatters.icons import change_icon_color_for_widgets
 
 import os
 from pathlib import Path
+from molde import load_ui
 
 
 class ExportMeshData(QDialog):
@@ -19,7 +19,7 @@ class ExportMeshData(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "data_handler/export_mesh.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
