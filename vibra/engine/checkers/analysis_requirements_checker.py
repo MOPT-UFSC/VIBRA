@@ -33,8 +33,9 @@ class AnalysisRequirementsChecker:
             if prop_data is None:
                 surfaces_without_material.append(surface_id)
 
-        if self.volume_ids:
-            if len(volumes_without_material) == len(self.volume_ids):
+        surfaces_without_material, _, shell_without_thickness = self.check_material_and_surface_thickness()
+        if volumes_without_material:
+            if len(volumes_without_material) != len(self.volume_ids):
                 title = "Invalid model setup"
                 message = f"You should assign one material for volumes {volumes_without_material} "
                 message += "to proceed with the analysis solution."
@@ -43,26 +44,26 @@ class AnalysisRequirementsChecker:
                 PrintMessageInput([window_title_1, title, message])
                 return True
 
-            return False
-
-        else:
-            surfaces_without_material, _, shell_without_thickness = self.check_material_and_surface_thickness()
+        if len(volumes_without_material) == len(self.volume_ids):
             if len(surfaces_without_material) == len(self.surface_ids):
                 title = "Invalid model setup"
-                message = f"You should assign one material for {surfaces_without_material} surfaces "
+                if len(self.volume_ids):
+                    message = f"You should assign one material for all volumes or some surfaces "
+                else:
+                    message = f"You should assign one material to some surfaces "
                 message += "to proceed with the analysis solution."
                 # app().main_window.set_geometry_selection(surfaces=shell_without_material)
                 PrintMessageInput([window_title_1, title, message])
                 return True
 
-            elif len(shell_without_thickness) == len(self.surface_ids):
+            if shell_without_thickness:
                 title = "Invalid model setup"
-                if shell_without_thickness:
-                    message = f"You should assign at least one thickness for one surface "
-                else:
+                if len(shell_without_thickness) == len(self.surface_ids):
                     message = f"You should assign at least one material and thickness for one surface "
+                else:
+                    message = f"You should assign a thickness for the already assigned surface materials "
+                    app().main_window.set_geometry_selection(surfaces=shell_without_thickness)
                 message += "to proceed with the analysis solution."
-                # app().main_window.set_geometry_selection(surfaces=shell_without_material)
                 PrintMessageInput([window_title_1, title, message])
                 return True
 
@@ -176,7 +177,7 @@ class AnalysisRequirementsChecker:
                         return False
 
         title = "Invalid model excitation"    
-        message = "Enter a valid model excitation to proceed "
+        message = "Enter a valid structural model excitation to proceed "
         message += "with the structural harmonic analysis solution."
         PrintMessageInput([window_title_1, title, message])
 
