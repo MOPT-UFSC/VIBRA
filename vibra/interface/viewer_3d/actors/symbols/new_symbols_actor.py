@@ -29,9 +29,8 @@ class NewSymbolsActor(CommonSymbolsActorFixedSize):
     def build(self):
         pos = (3, 0, 0)
         self.add_force_symbol(pos, (1, 0, 0))
-        self.add_volume_velocity_symbol(pos, (0, 1, 0))
-        self.add_prescribed_dof_symbol(pos, (1, 1, 0))
-        self.add_acoustic_pressure_symbol(pos, (0, 0, 1))
+        self.add_damper_symbol(pos, (1, 1, 0))
+        self.add_spring_symbol(pos, (1, 1, 0))
 
         super().build()
 
@@ -50,7 +49,7 @@ class NewSymbolsActor(CommonSymbolsActorFixedSize):
             position,
             orientation,
             color=color_names.ORANGE,
-            scale=1,
+            scale=0.8,
         )
 
     def add_prescribed_dof_symbol(self, position, orientation):
@@ -77,7 +76,7 @@ class NewSymbolsActor(CommonSymbolsActorFixedSize):
             position,
             orientation,
             color=color_names.PINK,
-            scale=1,
+            scale=0.8,
         )
 
     def add_mass_symbol(self, position, orientation):
@@ -182,10 +181,19 @@ class NewSymbolsActor(CommonSymbolsActorFixedSize):
         return source.GetOutput()
 
     def _get_spring_source(self):
-        return self._read_stl_file(SYMBOLS_DIR / "stl_files/spring_symbol.STL")
+        polydata = self._read_stl_file(SYMBOLS_DIR / "stl_files/spring_symbol.STL")
+        return self._transform_polydata(
+            polydata,
+            position=(-1.25, -0.18, 0.18),
+            rotation=(0, 90, 0),
+        )
 
     def _get_damper_source(self):
-        return self._read_obj_file(SYMBOLS_DIR / "structural/lumped_damper.obj")
+        polydata = self._read_obj_file(SYMBOLS_DIR / "structural/lumped_damper.obj")
+        return self._transform_polydata(
+            polydata,
+            position=(-0.145, 0, 0),
+        )
 
     def _get_mass_source(self):
         return self._transform_polydata(
