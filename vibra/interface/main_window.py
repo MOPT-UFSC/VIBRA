@@ -284,7 +284,9 @@ class MainWindow(QMainWindow):
 
         The input is a string "light" or "dark".
         """
-        qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
+        # qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
+        stylesheets.set_theme(theme)
+
         app().user_config.theme = theme
         self.set_renderers_theme(theme)
         self.set_renderers_theme(theme)
