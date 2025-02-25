@@ -269,7 +269,9 @@ class MainWindow(QMainWindow):
         app().processEvents()
 
         if len(sys.argv) > 1:
-            self.open_project(Path(sys.argv[1]))
+            path = Path(sys.argv[1])
+            if path.exists():
+                self.open_project(path)
 
         elif not self.is_temporary_vibra_folder_empty():
             self.recovery_dialog()
