@@ -1,6 +1,6 @@
 # fmt: off
 
-from PySide6.QtWidgets import QCheckBox, QComboBox, QDialog, QLabel, QLineEdit, QPushButton, QDoubleSpinBox, QTableWidget, QTableWidgetItem
+from PySide6.QtWidgets import QCheckBox, QComboBox, QDialog, QLabel, QLineEdit, QPushButton, QDoubleSpinBox, QTableWidget, QTableWidgetItem, QAbstractItemView, QHeaderView
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import Qt
 
@@ -100,8 +100,8 @@ class MesherInputs(QDialog):
             self.tableWidget_refining_mesh_data.horizontalHeaderItem(i).setText(header[i])
             self.tableWidget_refining_mesh_data.horizontalHeaderItem(i).setTextAlignment(Qt.AlignCenter)
 
-        self.tableWidget_refining_mesh_data.setSelectionBehavior(1)
-        self.tableWidget_refining_mesh_data.horizontalHeader().setSectionResizeMode(0)
+        self.tableWidget_refining_mesh_data.setSelectionBehavior(QAbstractItemView.SelectionBehavior(1))
+        self.tableWidget_refining_mesh_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(0))
         self.tableWidget_refining_mesh_data.horizontalHeader().setStretchLastSection(True)
 
     def _create_connections(self):

@@ -149,6 +149,9 @@ class ModelSetupItems(CommonMenuItems):
     def item_child_set_anechoic_termination_callback(self):
         app().main_window.input_ui.set_anechoic_termination()
     
+    def item_child_set_specific_impedance_callback(self):
+        app().main_window.input_ui.set_specific_impedance()
+    
     def item_child_set_dissipation_model_callback(self):
         app().main_window.input_ui.set_dissipation_model()
     

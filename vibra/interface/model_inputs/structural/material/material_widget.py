@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QDialog, QFrame, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QWidget
+from PySide6.QtWidgets import QDialog, QFrame, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QWidget, QHeaderView
 from PySide6.QtGui import QCloseEvent, QColor
 from PySide6.QtCore import Qt
 
