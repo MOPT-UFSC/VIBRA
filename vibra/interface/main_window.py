@@ -1051,7 +1051,7 @@ class MainWindow(QMainWindow):
 
         app().user_config.save()
         self.reset_temporary_vibra_folder()
-        sys.exit()
+        app().quit()
 
     def close_dialogs(self):
         if isinstance(self.dialog, (QDialog, QWidget)):
