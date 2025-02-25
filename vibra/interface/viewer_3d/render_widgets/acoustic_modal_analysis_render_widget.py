@@ -117,7 +117,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.hidden_part_actor.PickableOff()
         self.renderer.AddActor(self.hidden_part_actor)
 
-        self._bounds = self.analysis_actor.GetBounds()
+        self.bounds = self.analysis_actor.GetBounds()
         scale = bounds_distance(self.bounds)
         self.plane_actor = SectionPlaneActor(self.analysis_actor.GetBounds())
         self.plane_actor.VisibilityOff()

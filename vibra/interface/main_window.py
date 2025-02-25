@@ -511,10 +511,10 @@ class MainWindow(QMainWindow):
         self.acoustic_modal_analysis.update_plot()
         
         if show_renderer_widget:
-            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-            
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.results_viewer_widget.hide_bottom_widget()
+
+            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
             
             self.action_results_workspace.setEnabled(False)
             if not self.action_model_workspace.isEnabled():
@@ -528,10 +528,10 @@ class MainWindow(QMainWindow):
         self.structural_modal_analysis.update_plot()
 
         if show_render_widget:
-            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.results_viewer_widget.hide_bottom_widget()
+
+            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
 
             self.action_results_workspace.setEnabled(False)
             if not self.action_model_workspace.isEnabled():
@@ -545,10 +545,10 @@ class MainWindow(QMainWindow):
         self.structural_harmonic_analysis.update_plot()
 
         if show_render_widget:
-            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-            
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.results_viewer_widget.hide_bottom_widget()
+
+            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
 
             self.action_results_workspace.setEnabled(False)
             if not self.action_model_workspace.isEnabled():
@@ -562,10 +562,10 @@ class MainWindow(QMainWindow):
         self.acoustic_harmonic_analysis.update_plot()
 
         if show_render_widget:
-            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.results_viewer_widget.hide_bottom_widget()
+            
+            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
 
             self.action_results_workspace.setEnabled(False)
             if not self.action_model_workspace.isEnabled():
