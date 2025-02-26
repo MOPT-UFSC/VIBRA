@@ -104,6 +104,7 @@ class PlotStructuralModeShape(QWidget):
 
         self.frame_button.setVisible(False)
         self.lineEdit_natural_frequency.setDisabled(True)
+        self.lineEdit_natural_frequency.setProperty("status", "information")
 
         widths = [80, 140]
         for i, width in enumerate(widths):

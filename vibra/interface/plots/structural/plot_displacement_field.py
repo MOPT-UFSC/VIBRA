@@ -61,6 +61,7 @@ class PlotDisplacementField(QWidget):
 
         # QLineEdit
         self.lineEdit_selected_frequency : QLineEdit
+        self.lineEdit_selected_frequency.setProperty("status", "information")
 
         # QPushButton
         self.pushButton_plot : QPushButton

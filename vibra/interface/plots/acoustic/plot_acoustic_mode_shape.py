@@ -98,6 +98,7 @@ class PlotAcousticModeShape(QWidget):
 
         self.frame_button.setVisible(False)
         self.lineEdit_natural_frequency.setDisabled(True)
+        self.lineEdit_selected_frequency.setProperty("status", "information")
 
         widths = [120, 160]
         headers = ["Mode", "Frequency [Hz]"]
