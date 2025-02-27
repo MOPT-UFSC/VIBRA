@@ -26,6 +26,7 @@ class RendererUserPreferencesInput(QDialog):
         self.renderer_font_color = None
         self.nodes_points_color = None
         self.lines_color = None
+        self.edges_color = None
         self.faces_color = None
         self.renderer_font_size = None
 
@@ -56,6 +57,7 @@ class RendererUserPreferencesInput(QDialog):
         self.lineEdit_renderer_font_color : QLineEdit
         self.lineEdit_nodes_points_color : QLineEdit
         self.lineEdit_lines_color : QLineEdit
+        self.lineEdit_edges_color : QLineEdit
         self.lineEdit_faces_color : QLineEdit
         self.lineEdit_renderer_font_size: QLineEdit
 
@@ -65,6 +67,7 @@ class RendererUserPreferencesInput(QDialog):
         self.pushButton_renderer_font_color : QPushButton
         self.pushButton_nodes_points_color : QPushButton
         self.pushButton_lines_color : QPushButton
+        self.pushButton_edges_color : QPushButton
         self.pushButton_faces_color : QPushButton
         self.pushButton_reset_to_default : QPushButton
         self.pushButton_update_settings : QPushButton
@@ -77,6 +80,7 @@ class RendererUserPreferencesInput(QDialog):
         self.pushButton_nodes_points_color.clicked.connect(self.update_nodes_points_color)
         self.pushButton_lines_color.clicked.connect(self.update_lines_color)
         self.pushButton_faces_color.clicked.connect(self.update_faces_color)
+        self.pushButton_edges_color.clicked.connect(self.update_edges_color)
         self.pushButton_reset_to_default.clicked.connect(self.reset_to_default)
         self.pushButton_update_settings.clicked.connect(self.confirm_and_update_user_preferences)
         self.pushButton_apply_settings.clicked.connect(self.apply_user_preferences)
@@ -146,6 +150,19 @@ class RendererUserPreferencesInput(QDialog):
     def update_line_edit_lines_color(self):
         str_color = str(self.user_preferences.lines_color.to_rgb())[1:-1]
         self.lineEdit_lines_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+    
+    def update_edges_color(self):
+        read = PickColorInput(title="Pick the lines color")
+        if read.complete:
+            edges_color = tuple(read.color)
+            str_color = str(edges_color)[1:-1]
+            self.lineEdit_edges_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+
+            self.edges_color = Color(*edges_color)
+    
+    def update_line_edit_edges_color(self):
+        str_color = str(self.user_preferences.edges_color.to_rgb())[1:-1]
+        self.lineEdit_edges_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
 
     def update_faces_color(self):
         read = PickColorInput(title="Pick the surfaces color")
@@ -186,6 +203,9 @@ class RendererUserPreferencesInput(QDialog):
 
         if self.lines_color is not None:
             self.user_preferences.lines_color = self.lines_color
+        
+        if self.edges_color is not None:
+            self.user_preferences.edges_color = self.edges_color
 
         if self.faces_color is not None:
             self.user_preferences.faces_color = self.faces_color
@@ -206,14 +226,13 @@ class RendererUserPreferencesInput(QDialog):
         self.main_window.update_plots()
 
     def reset_to_default(self):
-        if self.main_window.config.user_preferences.interface_theme == "dark":
+        if self.config.user_preferences.interface_theme == "dark":
             self.user_preferences.set_dark_theme()
         else:
             self.user_preferences.set_light_theme()
         
         self.reset_attributes()
         self.user_preferences.reset_font_size()
-        self.reset_logo_state()
         self.reset_reference_scale_state()
         self.load_user_preferences()
 
@@ -225,6 +244,7 @@ class RendererUserPreferencesInput(QDialog):
         self.renderer_font_color = None
         self.nodes_points_color = None
         self.lines_color = None
+        self.edges_color = None
         self.faces_color = None
         self.renderer_font_size = None
 
@@ -261,6 +281,7 @@ class RendererUserPreferencesInput(QDialog):
         self.update_line_edit_renderer_font_color()
         self.update_line_edit_nodes_points_color()
         self.update_line_edit_lines_color()
+        self.update_line_edit_edges_color()
         self.update_line_edit_faces_color()
         self.update_line_edit_renderer_font_size()
         self.update_show_reference_scalebar_checkbox()

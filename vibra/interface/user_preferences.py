@@ -9,6 +9,7 @@ class UserPreferences:
     renderer_background_color_2: Color = Color("#EEF2F3")
     nodes_points_color: Color = Color("#FFB432")
     lines_color: Color = Color("#5A5A5A")
+    edges_color: Color = color_names.BLACK
     faces_color: Color = color_names.WHITE
     renderer_font_color: Color = color_names.BLACK
     renderer_font_size: int  = 12
@@ -22,6 +23,7 @@ class UserPreferences:
         self.renderer_font_color = Color("#111111")
         self.nodes_points_color = Color("#FFB432")
         self.lines_color = Color("#5A5A5A")
+        self.edges_color = color_names.BLACK
         self.faces_color = color_names.WHITE
         self.renderer_font_color = color_names.BLACK
     
@@ -32,6 +34,7 @@ class UserPreferences:
         self.renderer_font_color = Color("#CCCCCC")
         self.nodes_points_color = Color("#FFB432")
         self.lines_color = Color("#5A5A5A")
+        self.edges_color = color_names.BLACK
         self.faces_color = color_names.WHITE
         self.renderer_font_color = color_names.WHITE
 

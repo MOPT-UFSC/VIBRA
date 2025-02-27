@@ -10,6 +10,7 @@ from vtkmodules.vtkCommonDataModel import VTK_VERTEX, vtkPlane, vtkPolyData
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
 
 from vibra.engine.mesher.element_type import *
+from vibra import app
 
 
 class NodesActor(vtkActor):
@@ -68,14 +69,14 @@ class NodesActor(vtkActor):
         self.GetProperty().RenderPointsAsSpheresOn()
         self.GetProperty().SetPointSize(10)
         self.GetProperty().LightingOff()
-        self.clear_colors((0, 0, 0, 0))
+        self.clear_colors()
 
-    def clear_colors(self, color=(255, 255, 255, 255)):
+    def clear_colors(self):
         if self.data is None:
             return
 
         cell_colors = self.data.GetCellData().GetScalars()
-        r, g, b, a = color
+        r, g, b, a = app().config.user_preferences.nodes_points_color.to_rgba()
 
         cell_colors.FillComponent(0, r)
         cell_colors.FillComponent(1, g)

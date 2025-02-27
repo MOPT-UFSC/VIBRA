@@ -290,7 +290,6 @@ class MainWindow(QMainWindow):
 
         app().user_config.theme = theme
         self.set_renderers_theme(theme)
-        self.set_renderers_theme(theme)
 
         if theme == "dark":
             icon_color = QColor("#5f9af4")
@@ -397,7 +396,14 @@ class MainWindow(QMainWindow):
         self.input_ui = InputUi(self)
 
     def load_user_preferences(self):
-        self.set_theme(app().user_config.theme)
+        theme = app().user_config.theme
+
+        if theme == "dark":
+            app().config.user_preferences.set_dark_theme()
+        else:
+            app().config.user_preferences.set_light_theme()
+
+        self.set_theme(theme)
 
     def get_user_config(self):
         return app().user_config
@@ -501,10 +507,12 @@ class MainWindow(QMainWindow):
         self.theme_moon_icon = load_icon(Path(ICON_DIR / "moon_icon.png"), color)
 
         if app().user_config.theme == "light":
+            app().config.user_preferences.set_dark_theme()
             self.set_theme("dark")
             self.action_theme.setIcon(self.theme_sun_icon)
 
         elif app().user_config.theme == "dark":
+            app().config.user_preferences.set_light_theme()
             self.set_theme("light")
             self.action_theme.setIcon(self.theme_moon_icon)
         
