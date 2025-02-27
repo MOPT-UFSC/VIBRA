@@ -67,6 +67,7 @@ from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import VisualizationFilter
 from vibra.utils.progress_status import ProgressStatus
+from vibra.interface.user_input.render_user_preferences import RendererUserPreferencesInput
 
 from molde.render_widgets import CommonRenderWidget
 from molde import stylesheets
@@ -506,6 +507,9 @@ class MainWindow(QMainWindow):
         elif app().user_config.theme == "dark":
             self.set_theme("light")
             self.action_theme.setIcon(self.theme_moon_icon)
+        
+    def action_user_preferences_callback(self):
+        self.render_user_preferences = RendererUserPreferencesInput()
     
     def configure_mesh_information(self):
         nodes, face_elements, solid_elements = app().project.model.mesh.get_mesh_info()

@@ -3,11 +3,15 @@ import sys
 import configparser
 from pathlib import Path
 
+from vibra.interface.user_preferences import UserPreferences
+
 from vibra.utils.utils import get_new_path
 
 
 class Config:
     def __init__(self):
+        self.user_preferences = UserPreferences()
+
         self.reset()
 
     def reset(self):
