@@ -608,6 +608,16 @@ class MainWindow(QMainWindow):
             widget = self.render_widgets_stack.widget(i)
             if hasattr(widget, "update_info_text"):
                 widget.update_info_text()
+            
+    def update_scale_bar(self, show=True):
+        for i in range(self.render_widgets_stack.count()):
+            widget = self.render_widgets_stack.widget(i)
+            if hasattr(widget, "scale_bar_actor"):
+                if show:
+                    widget.enable_scale_bar()
+                else:
+                    widget.disable_scale_bar()
+
         
     def action_model_workspace_callback(self):
         self.action_model_workspace.setEnabled(False)

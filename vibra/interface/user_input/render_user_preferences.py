@@ -253,15 +253,12 @@ class RendererUserPreferencesInput(QDialog):
         self.checkBox_reference_scale.setChecked(1)
     
     def update_reference_scale_state(self):
-        return
         if self.checkBox_reference_scale.isChecked():
             self.user_preferences.show_reference_scale_bar = True
-            self.main_window.results_widget.enable_scale_bar()
-            self.main_window.mesh_widget.enable_scale_bar()
+            self.main_window.update_scale_bar(True)
         else:
             self.user_preferences.show_reference_scale_bar = False
-            self.main_window.results_widget.disable_scale_bar()
-            self.main_window.mesh_widget.disable_scale_bar()
+            self.main_window.update_scale_bar(False)
 
     def update_show_reference_scalebar_checkbox(self):
         if self.user_preferences.show_reference_scale_bar:

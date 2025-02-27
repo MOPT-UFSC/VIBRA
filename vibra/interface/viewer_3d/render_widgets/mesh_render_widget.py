@@ -96,13 +96,23 @@ class MeshRenderWidget(CommonRenderWidget):
         if hasattr(self, "text_actor"):
             self.text_actor.GetTextProperty().SetColor(font_color.to_rgb_f())
 
-        if hasattr(self, "colorbar_actor"):
-            self.colorbar_actor.GetTitleTextProperty().SetColor(font_color.to_rgb_f())
-            self.colorbar_actor.GetLabelTextProperty().SetColor(font_color.to_rgb_f())
-
         if hasattr(self, "scale_bar_actor"):
             self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
             self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
+    
+    def update_scale_bar_visibility(self):
+        user_preferences = app().config.user_preferences
+
+        if user_preferences.show_reference_scale_bar:
+            self.enable_scale_bar()
+        else:
+            self.disable_scale_bar()
+    
+    def enable_scale_bar(self):
+        self.scale_bar_actor.VisibilityOn()
+
+    def disable_scale_bar(self):
+        self.scale_bar_actor.VisibilityOff()
 
     def update_plot(self, reset_camera=True):
         mesh = app().project.model.mesh

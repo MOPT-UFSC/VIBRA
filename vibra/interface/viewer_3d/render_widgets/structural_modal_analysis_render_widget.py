@@ -95,6 +95,20 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         if hasattr(self, "scale_bar_actor"):
             self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
             self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
+        
+    def update_scale_bar_visibility(self):
+        user_preferences = app().config.user_preferences
+
+        if user_preferences.show_reference_scale_bar:
+            self.enable_scale_bar()
+        else:
+            self.disable_scale_bar()
+    
+    def enable_scale_bar(self):
+        self.scale_bar_actor.VisibilityOn()
+
+    def disable_scale_bar(self):
+        self.scale_bar_actor.VisibilityOff()
 
     def current_shape_index(self):
         if self.current_menu_widget is not None:
@@ -151,6 +165,8 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
 
         # mesh_visibility = self.control_bar.show_mesh_button.isChecked()
         # self.set_mesh_visibility(mesh_visibility)
+
+        self.update_theme()
 
         if reset_camera:
             self.renderer.ResetCamera()
