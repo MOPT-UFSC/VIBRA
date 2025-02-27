@@ -617,7 +617,12 @@ class MainWindow(QMainWindow):
                     widget.enable_scale_bar()
                 else:
                     widget.disable_scale_bar()
-
+                
+    def update_renderer_font_size(self):
+        for i in range(self.render_widgets_stack.count()):
+            widget = self.render_widgets_stack.widget(i)
+            if hasattr(widget, "update_renderer_font_size"):
+                widget.update_renderer_font_size()
         
     def action_model_workspace_callback(self):
         self.action_model_workspace.setEnabled(False)

@@ -267,10 +267,7 @@ class RendererUserPreferencesInput(QDialog):
             self.checkBox_reference_scale.setChecked(0)
         
     def update_renderers_font_size(self):
-        return
-        self.main_window.geometry_widget.update_renderer_font_size()
-        self.main_window.results_widget.update_renderer_font_size()
-        self.main_window.mesh_widget.update_renderer_font_size()
+        self.main_window.update_renderer_font_size()
 
     def load_user_preferences(self):
         self.update_line_edit_renderer_background_color_1()
