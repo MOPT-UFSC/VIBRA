@@ -1696,6 +1696,6 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
   <tabstop>pushButton_confirm</tabstop>
   <tabstop>pushButton_exit</tabstop>
  </tabstops>
- <resources/>
+ <resources><include location="../../../../icons/resources.qrc" /></resources>
  <connections/>
 </ui>
