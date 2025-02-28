@@ -303,7 +303,8 @@ class MainWindow(QMainWindow):
         change_icon_color_for_widgets(widgets, icon_color)
 
         self.theme_changed.emit(theme)
-    
+        self.update_plots()
+
     def set_menus_theme(self, theme: str):
         for i in range(self.stacked_setup.count()):
             menu_widget = self.stacked_setup.widget(i)
@@ -397,16 +398,11 @@ class MainWindow(QMainWindow):
 
     def load_user_preferences(self):
         theme = app().config.user_preferences.interface_theme
-
-        if theme == "dark":
-            app().config.user_preferences.set_dark_theme()
-        else:
-            app().config.user_preferences.set_light_theme()
-
         self.set_theme(theme)
 
-    def get_user_config(self):
-        return app().user_config
+        show = app().config.user_preferences.show_reference_scale_bar
+        self.update_scale_bar(show)
+        self.update_renderer_font_size()
 
     def set_geometry_selection(self, *, points=None, lines=None, surfaces=None, volumes=None, join=False, remove=False):
         s = time()
@@ -515,6 +511,8 @@ class MainWindow(QMainWindow):
             app().config.user_preferences.set_light_theme()
             self.set_theme("light")
             self.action_theme.setIcon(self.theme_moon_icon)
+        
+        app().config.update_config_file()
         
     def action_user_preferences_callback(self):
         self.render_user_preferences = RendererUserPreferencesInput()
@@ -712,9 +710,6 @@ class MainWindow(QMainWindow):
         self.hidden_volumes.clear()
         self.update_hidden_plots()
 
-    def set_menu_items_visibility_state(self, state: bool):
-        app().user_config.menu_items_visible = state
-    
     def action_save_callback(self):
       self.save_project_dialog()
 
@@ -1078,7 +1073,6 @@ class MainWindow(QMainWindow):
             if close == QMessageBox.No:
                 return
 
-        app().user_config.save()
         self.reset_temporary_vibra_folder()
         app().quit()
 

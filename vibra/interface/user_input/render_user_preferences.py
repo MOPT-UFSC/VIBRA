@@ -236,6 +236,7 @@ class RendererUserPreferencesInput(QDialog):
         self.load_user_preferences()
 
         self.update_settings()
+        self.config.update_config_file()
     
     def reset_attributes(self):
         self.renderer_background_color_1 = None

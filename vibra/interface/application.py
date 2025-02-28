@@ -2,7 +2,6 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QApplication
 
 from vibra import TEMP_PROJECT_FILE
-from vibra.config import UserConfig
 from vibra.interface.config2 import Config
 from vibra.interface.main_window import MainWindow
 from vibra.interface.splash_screen import SplashScreen
@@ -24,7 +23,6 @@ class Application(QApplication):
 
         # global params
         self.config = Config()
-        self.user_config = UserConfig.load()
 
         self.file = ProjectFile(TEMP_PROJECT_FILE)
         self.project = Project()
