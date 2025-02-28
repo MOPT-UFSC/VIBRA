@@ -287,7 +287,6 @@ class MainWindow(QMainWindow):
         """
         # qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
         stylesheets.set_theme(theme)
-
         app().config.user_preferences.interface_theme = theme
         self.set_renderers_theme(theme)
 
@@ -303,7 +302,6 @@ class MainWindow(QMainWindow):
         change_icon_color_for_widgets(widgets, icon_color)
 
         self.theme_changed.emit(theme)
-        self.update_plots()
 
     def set_menus_theme(self, theme: str):
         for i in range(self.stacked_setup.count()):
@@ -513,6 +511,7 @@ class MainWindow(QMainWindow):
             self.action_theme.setIcon(self.theme_moon_icon)
         
         app().config.update_config_file()
+        self.update_plots()
         
     def action_user_preferences_callback(self):
         self.render_user_preferences = RendererUserPreferencesInput()
