@@ -594,30 +594,6 @@
            </property>
           </widget>
          </item>
-         <item row="9" column="2">
-          <widget class="QLineEdit" name="lineEdit_renderer_font_size">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>90</width>
-             <height>26</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>90</width>
-             <height>26</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
-          </widget>
-         </item>
          <item row="8" column="1">
           <widget class="QLabel" name="label_8">
            <property name="minimumSize">
@@ -1003,6 +979,19 @@
            </property>
            <property name="text">
             <string>Pick color</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="2">
+          <widget class="QSpinBox" name="spinBox_renderer_font_size">
+           <property name="minimum">
+            <number>8</number>
+           </property>
+           <property name="maximum">
+            <number>15</number>
+           </property>
+           <property name="value">
+            <number>12</number>
            </property>
           </widget>
          </item>
