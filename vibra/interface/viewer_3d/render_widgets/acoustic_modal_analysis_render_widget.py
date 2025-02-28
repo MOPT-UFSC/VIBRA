@@ -118,6 +118,11 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         scale_bar_title_property.SetFontSize(font_size_px)
         scale_bar_label_property.SetFontSize(font_size_px)
 
+        color_bar_title_property = self.colorbar_actor.GetTitleTextProperty()
+        color_bar_label_property = self.colorbar_actor.GetLabelTextProperty()
+        color_bar_title_property.SetFontSize(font_size_px)
+        color_bar_label_property.SetFontSize(font_size_px)
+
     def current_mode_index(self):
         if self.current_widget is not None:
             return self.current_widget.current_mode_index()

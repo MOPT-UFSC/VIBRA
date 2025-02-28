@@ -122,6 +122,11 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         scale_bar_label_property = self.scale_bar_actor.GetLegendLabelProperty()
         scale_bar_title_property.SetFontSize(font_size_px)
         scale_bar_label_property.SetFontSize(font_size_px)
+    
+        color_bar_title_property = self.colorbar_actor.GetTitleTextProperty()
+        color_bar_label_property = self.colorbar_actor.GetLabelTextProperty()
+        color_bar_title_property.SetFontSize(font_size_px)
+        color_bar_label_property.SetFontSize(font_size_px)
 
     def current_frequency_index(self):
         if self.current_widget is not None:
