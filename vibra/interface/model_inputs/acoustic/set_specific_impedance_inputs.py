@@ -235,7 +235,7 @@ class SpecificImpedanceInput(QDialog):
 
             else:
 
-                last_path = app().config.get_last_folder_for("imported table folder")
+                last_path = app().config.get_last_folder_for("imported_table_folder")
                 if last_path is None:
                     path = os.path.expanduser("~")
                 else:

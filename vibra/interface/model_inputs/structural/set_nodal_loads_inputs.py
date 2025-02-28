@@ -527,7 +527,7 @@ class SetNodalLoadsInputs(QDialog):
 
             else:
 
-                last_path = app().config.get_last_folder_for("imported table folder")
+                last_path = app().config.get_last_folder_for("imported_table_folder")
                 if last_path is None:
                     path = str(Path().home())
                 else:
@@ -545,7 +545,7 @@ class SetNodalLoadsInputs(QDialog):
                     return None, None
 
             lineEdit.setText(imported_table_path)
-            app().config.write_last_folder_path_in_file("imported table folder", imported_table_path)
+            app().config.write_last_folder_path_in_file("imported_table_folder", imported_table_path)
 
             imported_file = np.loadtxt(imported_table_path, delimiter=",")
             imported_filename = basename(imported_table_path)

@@ -155,7 +155,7 @@ class ProcessAcousticTransferElementData(QDialog):
 
         caption = "Set a file name to export the acoustic element transfer data"
 
-        last_path = app().config.get_last_folder_for("exported data folder")
+        last_path = app().config.get_last_folder_for("exported_data_folder")
         if last_path is None:
             last_path = str(Path().home())
 
@@ -172,7 +172,7 @@ class ProcessAcousticTransferElementData(QDialog):
             return True
 
         self.lineEdit_spreadsheet_path.setText(path)
-        app().config.write_last_folder_path_in_file("exported data folder", path)
+        app().config.write_last_folder_path_in_file("exported_data_folder", path)
 
     def check_typed_ids(self):
  

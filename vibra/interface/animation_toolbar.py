@@ -243,7 +243,7 @@ class AnimationToolbar(QToolBar):
         else:
             self.pushButton_animate.setIcon(self.play_icon)
 
-        theme = app().user_config.theme
+        theme = app().config.user_preferences.interface_theme
 
         if theme == "dark":
             icon_color = QColor("#5f9af4")

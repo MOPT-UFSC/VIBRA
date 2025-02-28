@@ -277,7 +277,7 @@ class FrequencyResponsePlotter(QDialog):
         if toolbar is None:
             return
 
-        if app().user_config.theme == "dark":
+        if app().config.user_preferences.interface_theme == "dark":
             color = QColor("#5f9af4")
         else:
             color = QColor("#1a73e8")

@@ -143,7 +143,7 @@ class ExportMeshData(QDialog):
             return False
     
     def update_icons_color(self):
-        theme = app().user_config.theme
+        theme = app().config.user_preferences.interface_theme
         if theme == "dark":
             icon_color = QColor("#5f9af4")
         elif theme == "light":

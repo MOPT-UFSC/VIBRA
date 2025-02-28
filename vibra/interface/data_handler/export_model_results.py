@@ -106,7 +106,7 @@ class ExportModelResults(QFileDialog):
 
             caption = "Export the model results"
 
-            path = app().config.get_last_folder_for("exported data folder")
+            path = app().config.get_last_folder_for("exported_data_folder")
             if path is None:
                 directory_path = os.path.expanduser("~")
             else:

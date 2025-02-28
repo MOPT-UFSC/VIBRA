@@ -288,7 +288,7 @@ class MainWindow(QMainWindow):
         # qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
         stylesheets.set_theme(theme)
 
-        app().user_config.theme = theme
+        app().config.user_preferences.interface_theme = theme
         self.set_renderers_theme(theme)
 
         if theme == "dark":
@@ -396,7 +396,7 @@ class MainWindow(QMainWindow):
         self.input_ui = InputUi(self)
 
     def load_user_preferences(self):
-        theme = app().user_config.theme
+        theme = app().config.user_preferences.interface_theme
 
         if theme == "dark":
             app().config.user_preferences.set_dark_theme()
@@ -506,12 +506,12 @@ class MainWindow(QMainWindow):
         self.theme_sun_icon = load_icon(Path(ICON_DIR / "sun_icon.png"), color)
         self.theme_moon_icon = load_icon(Path(ICON_DIR / "moon_icon.png"), color)
 
-        if app().user_config.theme == "light":
+        if app().config.user_preferences.interface_theme == "light":
             app().config.user_preferences.set_dark_theme()
             self.set_theme("dark")
             self.action_theme.setIcon(self.theme_sun_icon)
 
-        elif app().user_config.theme == "dark":
+        elif app().config.user_preferences.interface_theme == "dark":
             app().config.user_preferences.set_light_theme()
             self.set_theme("light")
             self.action_theme.setIcon(self.theme_moon_icon)
@@ -770,7 +770,7 @@ class MainWindow(QMainWindow):
         obj = SaveProjectDataSelector()
         if obj.complete:
 
-            last_path = app().config.get_last_folder_for("project folder")
+            last_path = app().config.get_last_folder_for("project_folder")
             if last_path is None:
                 path = os.path.expanduser("~")
             else:
@@ -806,7 +806,7 @@ class MainWindow(QMainWindow):
             app().config.add_recent_file(path)
             logging.info("Saving project data..." + ProgressStatus(10, 100))
 
-            app().config.write_last_folder_path_in_file("project folder", path)
+            app().config.write_last_folder_path_in_file("project_folder", path)
             self.update_recents_menu()
             logging.info("Saving project data..." + ProgressStatus(60, 100))
             
@@ -824,7 +824,7 @@ class MainWindow(QMainWindow):
 
     def open_project_dialog(self):
 
-        last_path = app().config.get_last_folder_for("project folder")
+        last_path = app().config.get_last_folder_for("project_folder")
         if last_path is None:
             path = os.path.expanduser("~")
         else:
@@ -844,7 +844,7 @@ class MainWindow(QMainWindow):
 
     def import_geometry_dialog(self):
 
-        last_path = app().config.get_last_folder_for("geometry folder")
+        last_path = app().config.get_last_folder_for("geometry_folder")
         if last_path is None:
             path = os.path.expanduser("~")
         else:
@@ -860,7 +860,7 @@ class MainWindow(QMainWindow):
         if not check:
             return False
 
-        app().config.write_last_folder_path_in_file("geometry folder", geometry_path)
+        app().config.write_last_folder_path_in_file("geometry_folder", geometry_path)
 
         app().project.reset_variables()
         app().project.reset_solutions()
@@ -901,7 +901,7 @@ class MainWindow(QMainWindow):
 
         if project_path is not None:
             app().config.add_recent_file(project_path)
-            app().config.write_last_folder_path_in_file("project folder", project_path)
+            app().config.write_last_folder_path_in_file("project_folder", project_path)
             self.update_recents_menu()
             copy(project_path, TEMP_PROJECT_FILE)
             self.update_window_title(project_path)
