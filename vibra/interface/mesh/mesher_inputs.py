@@ -169,10 +169,13 @@ class MesherInputs(QDialog):
         else:
             selected_type = "surfaces"
 
-        ref_size = self.doubleSpinBox_refined_element_size.value()
         selected_ids = self.get_selected_ids()
+        ref_size = self.doubleSpinBox_refined_element_size.value()
+
         if selected_ids:
-            self.mesh_refinement_data[(selected_type, ref_size)].extend(selected_ids)
+            for selected_id in selected_ids:
+                if selected_id not in self.mesh_refinement_data[(selected_type, ref_size)]:
+                    self.mesh_refinement_data[(selected_type, ref_size)].append(selected_id)
 
             for key, _selected_ids in self.mesh_refinement_data.copy().items():
                 if key[0] == selected_type and key[1] != ref_size:
@@ -191,18 +194,24 @@ class MesherInputs(QDialog):
     def remove_callback(self):
 
         current_row = self.tableWidget_refining_mesh_data.currentRow()
+        if current_row == -1:
+            return
 
-        if isinstance(current_row, int):
+        try:
+            if isinstance(current_row, int):
 
-            ref_size = float(self.tableWidget_refining_mesh_data.item(current_row, 0).text())
-            selection_type = self.tableWidget_refining_mesh_data.item(current_row, 1).text()
-            self.tableWidget_refining_mesh_data.removeRow(current_row)
+                ref_size = float(self.tableWidget_refining_mesh_data.item(current_row, 0).text())
+                selection_type = self.tableWidget_refining_mesh_data.item(current_row, 1).text()
+                self.tableWidget_refining_mesh_data.removeRow(current_row)
 
-            if (selection_type, ref_size) in self.mesh_refinement_data.keys():
-                self.mesh_refinement_data.pop((selection_type, ref_size))
-                self.update_table_data()
+                if (selection_type, ref_size) in self.mesh_refinement_data.keys():
+                    self.mesh_refinement_data.pop((selection_type, ref_size))
+                    self.update_table_data()
 
-        app().main_window.set_geometry_selection()
+            app().main_window.set_geometry_selection()
+
+        except:
+            return
 
     def _load_current_mesh_setup(self):
 
