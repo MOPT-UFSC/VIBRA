@@ -34,7 +34,6 @@ class DissipationModelInput(QDialog):
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
-        self._load_icons()
         self._config_window()
         self._initialize()
         self._define_qt_variables()
@@ -46,14 +45,11 @@ class DissipationModelInput(QDialog):
         while self.keep_window_open:
             self.exec()
 
-    def _load_icons(self):
-        self.vibra_icon = app().main_window.vibra_icon
-
     def _config_window(self):
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(self.vibra_icon)
-        self.setWindowTitle("Set the dissipation model")
+        self.setWindowTitle("Vibra")
 
     def _initialize(self):
         self.model = ""
@@ -271,7 +267,7 @@ class DissipationModelInput(QDialog):
                 }
 
         for volume_id in volume_ids:
-            self.project.set_dissipation_model(data, volume=volume_id)
+            self.properties._set_property("dissipation_model", data, volume=volume_id)
         
         print(f"The dissipation model has been attributed to volumes: {volume_ids}")
 

@@ -27,7 +27,6 @@ class GetUserConfirmationInput(QDialog):
         self.buttons_config = buttons_config
         self.window_title = kwargs.get('window_title', f'Vibra v{__version__}')
 
-        self._load_icons()
         self._config_window()
         self._reset_variables()
         self._define_qt_variables()
@@ -37,13 +36,10 @@ class GetUserConfirmationInput(QDialog):
         self._configure_buttons()
         self.exec()
 
-    def _load_icons(self):
-        self.icon = app().main_window.vibra_icon
-
     def _config_window(self):
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(self.icon)
         self.setWindowTitle(self.window_title)
 
     def _reset_variables(self):

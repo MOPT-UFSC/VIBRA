@@ -1,3 +1,5 @@
+# fmt: off
+
 from PyQt5.QtWidgets import QComboBox, QDialog, QDoubleSpinBox, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCloseEvent
@@ -5,6 +7,7 @@ from PyQt5 import uic
 
 from vibra import app, UI_DIR
 from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input_simplified import SetFluidInputSimplified
+from vibra.interface.model_inputs.acoustic.show_porous_material_mode_equations import ShowPorousMaterialModelEquations
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
@@ -15,12 +18,11 @@ from vibra.engine.dissipation_models.porous_materials_models import PorousMateri
 import warnings
 import numpy as np
 
-# fmt: off
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class SetPorousMaterialModel(QDialog):
+class SetPorousMaterialModelInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -37,7 +39,6 @@ class SetPorousMaterialModel(QDialog):
         self.properties = app().project.model.properties
 
         self._initialize()
-        self._load_icons()
         self._config_window()
         self._define_qt_variables()
         self._create_connections()
@@ -49,18 +50,17 @@ class SetPorousMaterialModel(QDialog):
             self.exec()
 
     def _config_window(self):
-        self.setWindowIcon(self.icon)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
         self.selected_fluid = None
+        self.auxiliar_dialog = None
+        self.update_tabs = True
         self.keep_window_open = True
         self.material_model_data = dict()
-
-    def _load_icons(self):
-        self.icon = app().main_window.vibra_icon
 
     def _define_qt_variables(self):
 
@@ -117,6 +117,8 @@ class SetPorousMaterialModel(QDialog):
         self.pushButton_reset: QPushButton
         self.pushButton_get_fluid: QPushButton
         self.pushButton_plot_data: QPushButton
+        self.pushButton_DB_equations: QPushButton
+        self.pushButton_DBM_equations: QPushButton
 
         # QTabWidget
         self.tabWidget_main: QTabWidget
@@ -131,10 +133,12 @@ class SetPorousMaterialModel(QDialog):
         #
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_confirm.clicked.connect(self.attribute_callback)
-        self.pushButton_remove.clicked.connect(self.remove_porous_material_model)
-        self.pushButton_reset.clicked.connect(self.reset_porous_material_model)
+        self.pushButton_remove.clicked.connect(self.remove_callback)
+        self.pushButton_reset.clicked.connect(self.reset_callback)
         self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
+        self.pushButton_DB_equations.clicked.connect(self.show_equations_for_DBM_callback)
+        self.pushButton_DBM_equations.clicked.connect(self.show_equations_for_DBM_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tabEvent_porous_material_model)
         #
@@ -145,6 +149,80 @@ class SetPorousMaterialModel(QDialog):
         #
         self.update_attribution_type()
         self.update_plot_buttons_access()
+
+    def geometry_selection_callback(self):
+
+        volumes = self.main_window.selected_geometry_volumes
+
+        if volumes:
+
+            if self.comboBox_attribution_type.currentIndex() == 0:
+                self.comboBox_attribution_type.setCurrentIndex(1)
+                # return
+
+            text = ", ".join([str(i) for i in volumes])
+            self.lineEdit_selection_id.setText(text)
+
+            if len(volumes) == 1 and self.update_tabs:
+                volume_id = list(volumes)[0]
+                pm_data = self.properties._get_property("porous_material_model", volume=volume_id)
+                if pm_data is None:
+                    return
+
+                self.load_porous_material_model_inputs(pm_data)
+
+    def load_porous_material_model_inputs(self, pm_data: dict):
+
+        pm_model = pm_data.get("model")
+
+        if pm_model == "Delany-Bazley":
+
+            self.tabWidget_main.setCurrentIndex(0)
+            self.doubleSpinBox_C1_DB.setValue(pm_data["C1"])
+            self.doubleSpinBox_C2_DB.setValue(pm_data["C2"])
+            self.doubleSpinBox_C3_DB.setValue(pm_data["C3"])
+            self.doubleSpinBox_C4_DB.setValue(pm_data["C4"])
+            self.doubleSpinBox_C5_DB.setValue(pm_data["C5"])
+            self.doubleSpinBox_C6_DB.setValue(pm_data["C6"])
+            self.doubleSpinBox_C7_DB.setValue(pm_data["C7"])
+            self.doubleSpinBox_C8_DB.setValue(pm_data["C8"])
+            self.doubleSpinBox_flow_resistivity_DB.setValue(pm_data["flow_resistivity"])       
+
+        elif pm_model == "Delany-Bazley-Miki":
+
+            self.tabWidget_main.setCurrentIndex(1)
+            self.doubleSpinBox_C1_DBM.setValue(pm_data["C1"])
+            self.doubleSpinBox_C2_DBM.setValue(pm_data["C2"])
+            self.doubleSpinBox_C3_DBM.setValue(pm_data["C3"])
+            self.doubleSpinBox_C4_DBM.setValue(pm_data["C4"])
+            self.doubleSpinBox_C5_DBM.setValue(pm_data["C5"])
+            self.doubleSpinBox_C6_DBM.setValue(pm_data["C6"])
+            self.doubleSpinBox_C7_DBM.setValue(pm_data["C7"])
+            self.doubleSpinBox_C8_DBM.setValue(pm_data["C8"])
+            self.doubleSpinBox_flow_resistivity_DB.setValue(pm_data["flow_resistivity"])
+
+        elif pm_model in ["Jhonson-Champoux-Allard", ""]:
+
+            self.tabWidget_main.setCurrentIndex(2)
+            self.doubleSpinBox_porosity_JCA.setValue(pm_data["porosity"])
+            self.doubleSpinBox_tortuosity_JCA.setValue(pm_data["tortuosity"])
+            self.lineEdit_thermal_characteristic_length_JCA.setText(pm_data["thermal_characteristic_length"])
+            self.lineEdit_viscous_characteristic_length_JCA.setText(pm_data["viscous_characteristic_length"])
+            self.doubleSpinBox_flow_resistivity_JCA.setValue(pm_data["flow_resistivity"])
+
+        elif pm_model == "Jhonson-Champoux-Allard-Lafarge":
+
+            self.tabWidget_main.setCurrentIndex(3)
+            self.doubleSpinBox_porosity_JCAL.setValue(pm_data["porosity"])
+            self.doubleSpinBox_tortuosity_JCAL.setValue(pm_data["tortuosity"])
+            self.lineEdit_thermal_characteristic_length_JCAL.setText(pm_data["thermal_characteristic_length"])
+            self.lineEdit_viscous_characteristic_length_JCAL.setText(pm_data["viscous_characteristic_length"])
+            self.doubleSpinBox_flow_resistivity_JCAL.setValue(pm_data["flow_resistivity"])
+
+    def show_equations_for_DBM_callback(self):
+        file_path = "model/auxiliar/equations_for_DBM_porous_material_models.ui"
+        self.auxiliar_dialog = ShowPorousMaterialModelEquations(file_path)
+        self.auxiliar_dialog.exec()
 
     def update_plot_buttons_access(self):
         state = self.selected_fluid is None
@@ -158,14 +236,14 @@ class SetPorousMaterialModel(QDialog):
         else:
             self.doubleSpinBox_porous_material_depth.setDisabled(False)
 
-    def remove_porous_material_model(self):
+    def remove_callback(self):
         if self.lineEdit_selection_id.text() != "":
             volume_id = int(self.lineEdit_selection_id.text())
             self.properties._remove_volume_property("porous_material_model", volume_id)
             app().file.write_model_properties_in_file()
             self.load_info()
 
-    def reset_porous_material_model(self):
+    def reset_callback(self):
 
         volume_ids = list()
         for key, data in self.properties.volume_properties.items():
@@ -217,7 +295,9 @@ class SetPorousMaterialModel(QDialog):
             str_id = item.text(0)
             volume_id = int(str_id)
             self.lineEdit_selection_id.setText(str_id)
+            self.update_tabs = False
             app().main_window.set_geometry_selection(volumes=[volume_id])
+            self.update_tabs = True
 
         except:
             self.lineEdit_selection_id.setText("")
@@ -274,19 +354,6 @@ class SetPorousMaterialModel(QDialog):
                 self.treeWidget_porous_material_model.addTopLevelItem(new)
 
         self.update_tabs_visibility()
-
-    def geometry_selection_callback(self):
-
-        volumes = self.main_window.selected_geometry_volumes
-
-        if volumes:
-
-            if self.comboBox_attribution_type.currentIndex() == 0:
-                self.comboBox_attribution_type.setCurrentIndex(1)
-                # return
-
-            text = ", ".join([str(i) for i in volumes])
-            self.lineEdit_selection_id.setText(text)
 
     def check_selected_bodies(self):
         lineEdit = self.lineEdit_selection_id.text()
@@ -410,7 +477,7 @@ class SetPorousMaterialModel(QDialog):
                     return True
 
             for volume_id in volume_ids:
-                self.project.set_porous_material_model(model_data, volume=volume_id)
+                self.properties._set_property("porous_material_model", model_data, volume=volume_id)
 
             app().file.write_model_properties_in_file()
 
@@ -668,8 +735,13 @@ class SetPorousMaterialModel(QDialog):
             self.close()
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
+
         self.keep_window_open = False
         warnings.filterwarnings('default')
+
+        if isinstance(self.auxiliar_dialog, QDialog):
+            self.auxiliar_dialog.close()
+
         return super().closeEvent(a0)
 
 # fmt: on

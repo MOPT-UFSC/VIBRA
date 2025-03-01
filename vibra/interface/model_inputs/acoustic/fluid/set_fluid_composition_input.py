@@ -32,7 +32,6 @@ class SetFluidCompositionInput(QDialog):
         self.model = self.project.model
         self.properties = self.model.properties
 
-        self._load_icons()
         self._config_window()
         self._initialize()
         self._define_qt_variables()
@@ -52,13 +51,11 @@ class SetFluidCompositionInput(QDialog):
         while self.keep_window_open:
             self.exec()
 
-    def _load_icons(self):
-        self.icon = app().main_window.vibra_icon
 
     def _config_window(self):
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(self.icon)
         self.setWindowTitle("Vibra")
 
     def _initialize(self):

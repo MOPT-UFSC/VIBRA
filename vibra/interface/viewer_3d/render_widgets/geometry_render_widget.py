@@ -466,7 +466,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if len(volumes) != 1:
             return text
 
-        pm_model = app().project.model.properties.get_porous_material_model_data(volume=volumes[0])
+        pm_model = app().project.model.properties._get_property("porous_material_model", volume=volumes[0])
         if pm_model is None:
             return text
 

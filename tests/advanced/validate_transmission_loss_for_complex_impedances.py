@@ -160,7 +160,7 @@ def load_external_mesh_and_solve():
 
     ## Configure porous material
     # pm_data = get_porous_material_data(model=pm_model)
-    # model.set_porous_material_model_data(pm_data, volume=1)
+    # model.properties._set_property("porous_material_model", pm_data, volume=1)
     # model.process_porous_material_properties(frequencies)
 
     assembler = AcousticAssembler(model)
@@ -468,14 +468,14 @@ def get_porous_material_data(model="DB"):
 
         material_model_data = {
                                 "model" : "Delany-Bazley",
-                                "C1" : 0.0497,
-                                "C2" : -0.754,
-                                "C3" : 0.0758,
-                                "C4" : -0.732,
-                                "C5" : 0.169,
-                                "C6" : -0.595,
-                                "C7" : 0.0858,
-                                "C8" : -0.700,
+                                "C1" : 0.0858,
+                                "C2" : 0.700,
+                                "C3" : 0.169,
+                                "C4" : 0.595,
+                                "C5" : 0.0497,
+                                "C6" : 0.754,
+                                "C7" : 0.0758,
+                                "C8" : 0.732,
                                 "flow_resistivity" : 1518.5066
                                 }
 
@@ -483,14 +483,14 @@ def get_porous_material_data(model="DB"):
 
         material_model_data = {
                                 "model" : "Delany-Bazley-Miki",
-                                "C1" : 0.070,
-                                "C2" : -0.632,
-                                "C3" : 0.1070,
-                                "C4" : -0.632,
-                                "C5" : 0.1600,
-                                "C6" : -0.618,
-                                "C7" : 0.1090,
-                                "C8" : -0.618,
+                                "C1" : 0.1090,
+                                "C2" : 0.618,
+                                "C3" : 0.1600,
+                                "C4" : 0.618,
+                                "C5" : 0.070,
+                                "C6" : 0.632,
+                                "C7" : 0.1070,
+                                "C8" : 0.632,
                                 "flow_resistivity" : 1518.5066
                                 }
 

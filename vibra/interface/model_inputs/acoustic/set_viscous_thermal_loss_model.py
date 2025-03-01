@@ -604,7 +604,7 @@ class SetViscousThermalLossModel(QDialog):
                         return True
 
                 for volume_id in volume_ids:
-                    self.project.set_viscous_thermal_model(model_data, volume=volume_id)
+                    self.properties._set_property("viscous_thermal_model", model_data, volume=volume_id)
 
                 print(f"The viscous_thermal {model_data['formulation']} model for '{model_data['section_type']}' has been attributed to the volumes {volume_ids}.")
 
@@ -626,7 +626,7 @@ class SetViscousThermalLossModel(QDialog):
                 model_data["averaged"] = averaged_selection
                 model_data["filter_type"] = filter_type
 
-                self.project.set_viscous_thermal_model(model_data, group=group_id)
+                self.properties._set_property("viscous_thermal_model", model_data, group=group_id)
 
                 print(f"The viscous_thermal {model_data['formulation']} model for '{model_data['section_type']}' has been attributed to the group {group_id}.")
 

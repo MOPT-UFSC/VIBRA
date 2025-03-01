@@ -110,18 +110,6 @@ class Project:
             return
         self.model.process_mesh()
 
-    def set_structural_boundary_condition(self, data, line, surface):
-        self.model.set_structural_boundary_condition(data, line, surface)
-
-    def set_dissipation_model(self, data, volume):
-        self.model.set_dissipation_model_data(data, volume=volume)
-
-    def set_porous_material_model(self, data, **kwargs):
-        self.model.set_porous_material_model_data(data, **kwargs)
-
-    def set_viscous_thermal_model(self, data, **kwargs):
-        self.model.set_viscous_thermal_model_data(data, **kwargs)
-
     def set_analysis_data(self, data: dict):
         self.analysis_data = data
         self.model.set_frequency_setup(data)

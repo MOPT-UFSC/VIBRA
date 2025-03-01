@@ -86,7 +86,7 @@ class SetFluidInput(QDialog):
         self.tableWidget_fluid_data = self.fluid_widget.tableWidget_fluid_data
 
     def _add_fluid_widget(self):
-        self.fluid_widget = FluidWidget(parent_widget=self, state_properties=self.state_properties)
+        self.fluid_widget = FluidWidget(dialog=self, state_properties=self.state_properties)
         self.grid_layout.addWidget(self.fluid_widget)
         self.fluid_widget.pushButton_remove_column.clicked.connect(self.reset_selected_fluid_lineEdit)
 

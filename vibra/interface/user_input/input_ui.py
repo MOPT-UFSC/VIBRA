@@ -8,7 +8,7 @@ from vibra.interface.model_inputs.acoustic.set_surface_velocity_inputs import Su
 from vibra.interface.model_inputs.acoustic.set_specific_impedance_inputs import SpecificImpedanceInput
 from vibra.interface.model_inputs.acoustic.set_anechoic_termination_inputs import SetAnechoicTerminationInputs
 from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import DissipationModelInput
-from vibra.interface.model_inputs.acoustic.set_porous_material_model import SetPorousMaterialModel
+from vibra.interface.model_inputs.acoustic.set_porous_material_model_inputs import SetPorousMaterialModelInputs
 from vibra.interface.model_inputs.acoustic.set_viscous_thermal_loss_model import SetViscousThermalLossModel
 from vibra.interface.model_inputs.acoustic.set_acoustic_properties_gradient_input import SetAcousticPropertiesGradientInputs
 from vibra.interface.model_inputs.acoustic.reciprocating_compressor_inputs import ReciprocatingCompressorInputs
@@ -130,7 +130,7 @@ class InputUi:
         
     def set_porous_material_model(self):
         if not self.model_setup_items.item_child_set_porous_material_model.isDisabled():
-            self.process_input(SetPorousMaterialModel)
+            self.process_input(SetPorousMaterialModelInputs)
         
     def set_viscous_thermal_model(self):
         if not self.model_setup_items.item_child_set_viscous_thermal_model.isDisabled():
