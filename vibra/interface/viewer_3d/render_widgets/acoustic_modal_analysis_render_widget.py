@@ -17,6 +17,7 @@ from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 #     CommonRenderWidget,
 # )
 from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
+from vibra.utils.progress_status import ProgressStatus
 
 
 class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
@@ -229,7 +230,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         if not (0 <= index < solver.modal_shape.shape[1]):
             return
     
-        logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]")
+        logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]" + ProgressStatus(frame, self._animation_total_frames))
 
         t = frame / (self._animation_total_frames - 1)
         phase = lerp(0, 360, t)

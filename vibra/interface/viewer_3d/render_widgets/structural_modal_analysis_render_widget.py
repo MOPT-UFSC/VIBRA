@@ -16,6 +16,7 @@ from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.edges_actor import EdgesActor
 from ..actors.faces_actor import FacesActor
 from vibra.utils.math_functions import lerp
+from vibra.utils.progress_status import ProgressStatus
 
 
 class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
@@ -335,7 +336,7 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         if not (0 <= index < solver.solution_full.shape[1]):
             return
 
-        logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]")
+        logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]" + ProgressStatus(frame, self._animation_total_frames))
 
         # Map the frames from 0 to 1
         t = frame / (self._animation_total_frames - 1)

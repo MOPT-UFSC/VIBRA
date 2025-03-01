@@ -508,9 +508,8 @@ class MainWindow(QMainWindow):
         self.acoustic_modal_analysis.update_plot()
         
         if show_renderer_widget:
-            self.render_widgets_stack.setCurrentWidget(self.acoustic_modal_analysis)
-            self.render_widget_changed.emit()
-
+            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
+            
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.results_viewer_widget.hide_bottom_widget()
             
@@ -520,14 +519,13 @@ class MainWindow(QMainWindow):
             if not self.action_mesh_workspace.isEnabled():
                 self.action_mesh_workspace.setEnabled(True)
 
-            self.animation_toolbar.setDisabled(False)
+            self.animation_toolbar.setDisabled(True)
     
     def configure_structural_modal_analysis_render_widget(self, show_render_widget=False):
         self.structural_modal_analysis.update_plot()
 
         if show_render_widget:
-            self.render_widgets_stack.setCurrentWidget(self.structural_modal_analysis)
-            self.render_widget_changed.emit()
+            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
 
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.results_viewer_widget.hide_bottom_widget()
@@ -538,14 +536,13 @@ class MainWindow(QMainWindow):
             if not self.action_mesh_workspace.isEnabled():
                 self.action_mesh_workspace.setEnabled(True)
             
-            self.animation_toolbar.setDisabled(False)
+            self.animation_toolbar.setDisabled(True)
             
     def configure_structural_harmonic_analysis_render_widget(self, show_render_widget=False):
         self.structural_harmonic_analysis.update_plot()
 
         if show_render_widget:
-            self.render_widgets_stack.setCurrentWidget(self.structural_harmonic_analysis)
-            self.render_widget_changed.emit()
+            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
             
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.results_viewer_widget.hide_bottom_widget()
@@ -556,14 +553,13 @@ class MainWindow(QMainWindow):
             if not self.action_mesh_workspace.isEnabled():
                 self.action_mesh_workspace.setEnabled(True)
             
-            self.animation_toolbar.setDisabled(False)
+            self.animation_toolbar.setDisabled(True)
 
     def configure_acoustic_harmonic_analysis_render_widget(self, show_render_widget=False):
         self.acoustic_harmonic_analysis.update_plot()
 
         if show_render_widget:
-            self.render_widgets_stack.setCurrentWidget(self.acoustic_harmonic_analysis)
-            self.render_widget_changed.emit()
+            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
 
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.results_viewer_widget.hide_bottom_widget()
@@ -574,7 +570,7 @@ class MainWindow(QMainWindow):
             if not self.action_mesh_workspace.isEnabled():
                 self.action_mesh_workspace.setEnabled(True)
             
-            self.animation_toolbar.setDisabled(False)
+            self.animation_toolbar.setDisabled(True)
             
     def show_geometry_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
@@ -633,25 +629,12 @@ class MainWindow(QMainWindow):
                 self.action_model_workspace.setEnabled(True)
             if not self.action_mesh_workspace.isEnabled():
                 self.action_mesh_workspace.setEnabled(True)
-
-            render_widget = None
-            if app().project.last_analysis == "Modal Acoustic":
-                render_widget = self.acoustic_modal_analysis
-            elif app().project.last_analysis == "Modal Structural":
-                render_widget = self.structural_modal_analysis
-            elif app().project.last_analysis == "Harmonic Acoustic":
-                render_widget = self.acoustic_harmonic_analysis
-            else:
-                render_widget = self.structural_harmonic_analysis
             
-            self.render_widgets_stack.setCurrentWidget(render_widget)
-            self.render_widget_changed.emit()
+            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
 
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.results_viewer_widget.results_viewer_items.update_items()
             self.analysis_toolbar.update_analysis_combo_boxes()
-
-            self.animation_toolbar.setDisabled(False)
 
     def action_new_project_callback(self):
         self.new_project_dialog()

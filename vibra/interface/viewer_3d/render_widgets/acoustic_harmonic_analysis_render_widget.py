@@ -194,7 +194,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
 
         t0 = time()
 
-        logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]")
+        logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]" + ProgressStatus(frame, self._animation_total_frames))
 
         current_pressures = solver.solution[:, index]
         amplitudes = np.abs(current_pressures)
