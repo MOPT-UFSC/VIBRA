@@ -1,13 +1,18 @@
-from molde.colors import color_names
-from vtkmodules.vtkFiltersCore import vtkAppendPolyData
-from vtkmodules.vtkFiltersSources import (
-    vtkArrowSource,
-    vtkConeSource,
-    vtkCubeSource,
-)
-
 import numpy as np
-from vibra import SYMBOLS_DIR, app
+from molde.colors import color_names
+
+from vibra import app
+from vibra.interface.viewer_3d.sources import (
+    create_arrow_source,
+    create_cone_source,
+    create_cube_source,
+    create_damper_source,
+    create_double_arrow_source,
+    create_long_arrow_source,
+    create_mass_source,
+    create_outwards_arrow_source,
+    create_spring_source,
+)
 
 from .common_symbols_actor_fixed_size import CommonSymbolsActorFixedSize  # noqa: F401
 from .common_symbols_actor_variable_size import CommonSymbolsActorVariableSize  # noqa: F401
@@ -145,97 +150,12 @@ class NewSymbolsActor(CommonSymbolsActorVariableSize):
 
     # Preload the symbol shapes (they are likelly used in many symbols)
     def _register_shapes(self):
-        self.register_shape("arrow", self._get_arrow_source())
-        self.register_shape("long_arrow", self._get_long_arrow_source())
-        self.register_shape("double_arrow", self._get_double_arrow_source())
-        self.register_shape("outwards_arrow", self._get_outwards_arrow_source())
-        self.register_shape("cone", self._get_cone_source())
-        self.register_shape("cube", self._get_cube_source())
-        self.register_shape("spring", self._get_spring_source())
-        self.register_shape("damper", self._get_damper_source())
-        self.register_shape("mass", self._get_mass_source())
-
-    def _get_arrow_source(self):
-        source = vtkArrowSource()
-        source.SetTipLength(0.25)
-        source.Update()
-
-        return self.transform_polydata(
-            source.GetOutput(),
-            position=(-1, 0, 0),
-        )
-
-    def _get_long_arrow_source(self):
-        source = vtkArrowSource()
-        source.SetTipResolution(4)
-        source.SetShaftResolution(4)
-        source.SetTipLength(0.85)
-        source.Update()
-
-        return self.transform_polydata(
-            source.GetOutput(),
-            position=(-1, 0, 0),
-        )
-
-    def _get_double_arrow_source(self):
-        arrow1 = vtkArrowSource()
-        arrow1.SetTipLength(0.45)
-        arrow1.Update()
-
-        arrow2 = vtkArrowSource()
-        arrow2.SetTipLength(0.3)
-        arrow2.Update()
-
-        source = vtkAppendPolyData()
-        source.AddInputData(arrow1.GetOutput())
-        source.AddInputData(arrow2.GetOutput())
-        source.Update()
-    
-        return self.transform_polydata(
-            source.GetOutput(),
-            position=(-1, 0, 0),
-        )
-
-    def _get_outwards_arrow_source(self):
-        source = vtkArrowSource()
-        source.SetTipLength(0.25)
-        source.Update()
-        return source.GetOutput()
-
-    def _get_cone_source(self):
-        source = vtkConeSource()
-        source.SetHeight(1)
-        source.SetRadius(0.5)
-        source.SetResolution(12)
-        source.Update()
-        return self.transform_polydata(
-            source.GetOutput(),
-            position=(-0.5, 0, 0),
-        )
-
-    def _get_cube_source(self):
-        source = vtkCubeSource()
-        source.SetBounds(0, 1, 0, 1, 0, 1)
-        source.Update()
-        return source.GetOutput()
-
-    def _get_spring_source(self):
-        polydata = self.read_stl_file(SYMBOLS_DIR / "stl_files/spring_symbol.STL")
-        return self.transform_polydata(
-            polydata,
-            position=(-1.25, -0.18, 0.18),
-            rotation=(0, 90, 0),
-        )
-
-    def _get_damper_source(self):
-        polydata = self.read_obj_file(SYMBOLS_DIR / "structural/lumped_damper.obj")
-        return self.transform_polydata(
-            polydata,
-            position=(-0.145, 0, 0),
-        )
-
-    def _get_mass_source(self):
-        return self.transform_polydata(
-            self.read_obj_file(SYMBOLS_DIR / "structural/new_lumped_mass.obj"),
-            rotation=(0, -90, 0),
-        )
+        self.register_shape("arrow", create_arrow_source())
+        self.register_shape("long_arrow", create_long_arrow_source())
+        self.register_shape("double_arrow", create_double_arrow_source())
+        self.register_shape("outwards_arrow", create_outwards_arrow_source())
+        self.register_shape("cone", create_cone_source())
+        self.register_shape("cube", create_cube_source())
+        self.register_shape("spring", create_spring_source())
+        self.register_shape("damper", create_damper_source())
+        self.register_shape("mass", create_mass_source())
