@@ -899,7 +899,7 @@ class MainWindow(QMainWindow):
 
             self.renderer_toolbar.setDisabled(False)
             self.analysis_toolbar.setDisabled(False)
-            self.analysis_toolbar.pushButton_run_analysis.setDisabled(True)
+            self.analysis_toolbar.load_analysis_settings()
 
             app().project.reset_solutions()
             app().project.model.properties._reset_variables()

@@ -68,8 +68,6 @@ class Project:
 
         if len(self.analysis_data) == 0:
             return
-        
-        
 
         self.create_solver()
 
@@ -113,6 +111,37 @@ class Project:
     def set_analysis_data(self, data: dict):
         self.analysis_data = data
         self.model.set_frequency_setup(data)
+
+    def is_analysis_setup_complete(self):
+
+        analysis_setup = app().file.read_analysis_setup_from_file()
+        if isinstance(analysis_setup, dict):
+            analysis_id = analysis_setup.get("analysis_id")
+            if analysis_id in [2, 4]:
+                if "modes" in analysis_setup.keys():
+                    if not isinstance(analysis_setup["modes"], int):
+                        return False
+                else:
+                    return False
+
+                if "sigma_factor" in analysis_setup.keys():
+                    if not isinstance(analysis_setup["sigma_factor"], int | float):
+                        return False
+                else:
+                    return False
+
+                return True
+
+            elif analysis_id in [0, 1, 3]:
+                for f_type in ["f_min", "f_max", "f_step"]:    
+                    if f_type in analysis_setup.keys():
+                        if not isinstance(analysis_setup[f_type], int | float):
+                            return False
+                    else:
+                        return False
+                return True
+
+        return False
 
     def create_solver(self):
         """ """

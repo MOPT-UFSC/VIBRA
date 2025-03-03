@@ -257,3 +257,33 @@ class AnalysisToolbar(QToolBar):
 
         if analysis_data["analysis_id"] in [0, 2, 3, 4]:
             app().file.write_analysis_setup_in_file(analysis_data)
+
+    def load_analysis_settings(self):
+
+        self.pushButton_run_analysis.setDisabled(True)
+
+        analysis_setup = app().file.read_analysis_setup_from_file()
+        if analysis_setup is None:
+            return
+
+        analysis_id = analysis_setup.get("analysis_id")
+        if analysis_id in [0, 1, 3, 5, 6]:
+            self.combo_box_analysis_type.setCurrentIndex(0)
+        elif analysis_id in [2, 4]:
+            self.combo_box_analysis_type.setCurrentIndex(1)
+        elif analysis_id == 7:
+            # coming soon
+            return
+            self.combo_box_analysis_type.setCurrentIndex(2)
+
+        if analysis_id in [0, 1, 2, 7]:
+            self.combo_box_analysis_domain.setCurrentIndex(0)
+        elif analysis_id in [3, 4]:
+            self.combo_box_analysis_domain.setCurrentIndex(1)
+        elif analysis_id in [5, 6]:
+            # coming soon
+            return
+            self.combo_box_analysis_domain.setCurrentIndex(2)
+
+        setup_complete = app().project.is_analysis_setup_complete()
+        self.pushButton_run_analysis.setEnabled(setup_complete)
