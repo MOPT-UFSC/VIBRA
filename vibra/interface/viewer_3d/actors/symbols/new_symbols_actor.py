@@ -61,26 +61,6 @@ class NewSymbolsActor(CommonSymbolsActorVariableSize):
             coords = mesh.nodal_coordinates[node_id, 1:]
             self.add_normal_symbol(coords, normal_vector)
 
-    # def build_only_normals(self):
-    #     self.add_normal_symbol((3, 0, 0), (1, 1, 1))
-
-    #     self.clear_all()
-    #     surface_properties = app().project.model.properties.surface_properties
-    #     mesh = app().project.model.mesh
-
-    #     for (property_name, surface_id) in surface_properties.keys():
-    #         if property_name != "normal_pressure_load":
-    #             continue 
-
-    #         for elem_id in mesh.elements_from_surface[surface_id]:
-    #             connect = mesh.faces_connectivity[elem_id, 4:]
-    #             coords = np.average(mesh.nodal_coordinates[connect, 1:], axis=0)
-    #             normal_vector = mesh.get_element_face_normal(connect)
-    #             self.add_normal_symbol(coords, normal_vector)
-    #             print("hi")
-
-    #     super().build()
-
     # Specifications on how each symbol should look like
     def add_force_symbol(self, position, orientation):
         self.add_symbol(
