@@ -14,8 +14,7 @@ from vibra.interface.viewer_3d.sources import (
     create_spring_source,
 )
 
-from .common_symbols_actor_fixed_size import CommonSymbolsActorFixedSize  # noqa: F401
-from .common_symbols_actor_variable_size import CommonSymbolsActorVariableSize  # noqa: F401
+from .common_symbols_actor import CommonSymbolsActorFixedSize, CommonSymbolsActorVariableSize  # noqa: F401
 
 
 class NewSymbolsActor(CommonSymbolsActorVariableSize):
@@ -41,7 +40,7 @@ class NewSymbolsActor(CommonSymbolsActorVariableSize):
         self.add_mass_symbol(pos, (-1, -1, 0))
         self.add_normal_symbol(pos, (1, 1, 1))
         super().build()
-    
+
     def _build_surface_velocity(self):
         mesh = app().project.model.mesh
         surface_properties = app().project.model.properties.surface_properties
