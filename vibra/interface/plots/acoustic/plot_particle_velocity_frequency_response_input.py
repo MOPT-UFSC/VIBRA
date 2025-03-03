@@ -148,7 +148,7 @@ class PlotParticleVelocityFrequencyResponseInput(QDialog):
         self.join_model_data()
         self.plotter = FrequencyResponsePlotter()
         self.plotter._set_model_results_data_to_plot(self.model_results)
-        app().main_window.mesh_widget.update_symbols()
+        app().main_window.update_symbols()
 
     def export_data_callback(self):
         

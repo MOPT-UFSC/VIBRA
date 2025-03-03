@@ -26,10 +26,12 @@ class CommonSymbolsActorVariableSize(CommonSymbolsActor):
         self.mapper.SetOrientationModeToDirection()
 
         # shows the actor in front of everything else
-        offset = -66000
+        # offset = -66000
+        offset = 0
+        factor = 1.3
         self.mapper.SetResolveCoincidentTopologyToPolygonOffset()
-        self.mapper.SetRelativeCoincidentTopologyLineOffsetParameters(0, offset)
-        self.mapper.SetRelativeCoincidentTopologyPolygonOffsetParameters(0, offset)
+        self.mapper.SetRelativeCoincidentTopologyLineOffsetParameters(factor, offset)
+        self.mapper.SetRelativeCoincidentTopologyPolygonOffsetParameters(factor, offset)
         self.mapper.SetRelativeCoincidentTopologyPointOffsetParameter(offset)
 
         self.mapper.Update()

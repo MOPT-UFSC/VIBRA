@@ -143,6 +143,11 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.update_section_plane()
         # self.update()
 
+    def update_symbols(self):
+        if not self._actors_exists():
+            return
+        self.symbols_actor.build()
+
     #
     def click_callback(self, x, y):
         self.mouse_click = (x, y)
