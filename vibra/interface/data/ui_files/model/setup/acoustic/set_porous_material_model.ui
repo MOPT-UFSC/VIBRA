@@ -2904,6 +2904,49 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>tabWidget_main</tabstop>
+  <tabstop>doubleSpinBox_C1_DB</tabstop>
+  <tabstop>doubleSpinBox_C2_DB</tabstop>
+  <tabstop>doubleSpinBox_C3_DB</tabstop>
+  <tabstop>doubleSpinBox_C4_DB</tabstop>
+  <tabstop>doubleSpinBox_C5_DB</tabstop>
+  <tabstop>doubleSpinBox_C6_DB</tabstop>
+  <tabstop>doubleSpinBox_C7_DB</tabstop>
+  <tabstop>doubleSpinBox_C8_DB</tabstop>
+  <tabstop>doubleSpinBox_flow_resistivity_DB</tabstop>
+  <tabstop>pushButton_get_fluid</tabstop>
+  <tabstop>doubleSpinBox_porous_material_depth</tabstop>
+  <tabstop>comboBox_plot_type</tabstop>
+  <tabstop>pushButton_plot_data</tabstop>
+  <tabstop>doubleSpinBox_C1_DBM</tabstop>
+  <tabstop>doubleSpinBox_C2_DBM</tabstop>
+  <tabstop>doubleSpinBox_C3_DBM</tabstop>
+  <tabstop>doubleSpinBox_C4_DBM</tabstop>
+  <tabstop>doubleSpinBox_C5_DBM</tabstop>
+  <tabstop>doubleSpinBox_C6_DBM</tabstop>
+  <tabstop>doubleSpinBox_C7_DBM</tabstop>
+  <tabstop>doubleSpinBox_C8_DBM</tabstop>
+  <tabstop>doubleSpinBox_flow_resistivity_DBM</tabstop>
+  <tabstop>doubleSpinBox_porosity_JCA</tabstop>
+  <tabstop>doubleSpinBox_tortuosity_JCA</tabstop>
+  <tabstop>lineEdit_viscous_characteristic_length_JCA</tabstop>
+  <tabstop>lineEdit_thermal_characteristic_length_JCA</tabstop>
+  <tabstop>doubleSpinBox_flow_resistivity_JCA</tabstop>
+  <tabstop>doubleSpinBox_porosity_JCAL</tabstop>
+  <tabstop>doubleSpinBox_tortuosity_JCAL</tabstop>
+  <tabstop>lineEdit_viscous_characteristic_length_JCAL</tabstop>
+  <tabstop>lineEdit_thermal_characteristic_length_JCAL</tabstop>
+  <tabstop>doubleSpinBox_flow_resistivity_JCAL</tabstop>
+  <tabstop>pushButton_confirm</tabstop>
+  <tabstop>pushButton_exit</tabstop>
+  <tabstop>comboBox_attribution_type</tabstop>
+  <tabstop>pushButton_DB_equations</tabstop>
+  <tabstop>pushButton_DBM_equations</tabstop>
+  <tabstop>treeWidget_porous_material_model</tabstop>
+  <tabstop>pushButton_reset</tabstop>
+  <tabstop>pushButton_remove</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
