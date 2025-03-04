@@ -239,17 +239,21 @@ class ImportDataToCompare(QDialog):
         return key
     
     def join_imported_data(self):
+
         j = 0
         imported_results_data = dict()
         for id, checkBox in self.ids_to_checkBox.items():
-            temp_dict = dict()
+            
+            checkBox: QCheckBox
+            aux = dict()
+
             if checkBox.isChecked():
 
-                if id < len(self.colors):
+                if len(imported_results_data) <= len(self.colors):
                     color = self.colors[j]
                     j += 1
                 else:
-                    color = np.random.randint(0,255,3)/255
+                    color = np.random.randint(0,255,3) / 255
 
                 data = self.imported_results[id]["data"]
                 cols = data.shape[1]
@@ -265,19 +269,21 @@ class ImportDataToCompare(QDialog):
                 else:
                     legend_label = self.imported_results[id]["filename"]
 
-                temp_dict = {   "type" : "imported_data",
-                                "x_data" : x_values,
-                                "y_data" : y_values,
-                                "x_label" : "Frequency [Hz]",
-                                "y_label" : "Nodal response",
-                                "legend" : legend_label,
-                                "unit" : "",
-                                "title" : "",
-                                "color" : color,
-                                "linestyle" : "--"   }
+                aux = { 
+                       "type" : "imported_data",
+                       "x_data" : x_values,
+                       "y_data" : y_values,
+                       "x_label" : "Frequency [Hz]",
+                       "y_label" : "Nodal response",
+                       "legend" : legend_label,
+                       "unit" : "",
+                       "title" : "",
+                       "color" : color,
+                       "linestyle" : "--" 
+                       }
 
                 key = (id)
-                imported_results_data[key] = temp_dict
+                imported_results_data[key] = aux
 
         self.plotter._set_imported_results_data_to_plot(imported_results_data)
 
