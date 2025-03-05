@@ -113,13 +113,21 @@ class FrequencyResponsePlotter(QDialog):
         self._initial_config()
 
     def import_file(self):
-        if self.importer is None:
+
+        if isinstance(self.importer, QDialog):
+            if self.importer.isVisible():
+                self.importer.raise_()
+            else:
+                self.importer.exec()
+            return
+
+        elif self.importer is None:
             self.importer = ImportDataToCompare(self)
-        self.importer.exec()
+            self.importer.exec()
 
     def _initial_config(self):
         self.aux_bool = False
-        self.plot_type = self.comboBox_plot_type.currentText()        
+        self.plot_type = self.comboBox_plot_type.currentText()
         self.checkBox_cursor_legends.setChecked(False)
         self.checkBox_cursor_legends.setDisabled(True)
         self.frame_vertical_lines.setDisabled(True)
@@ -461,8 +469,10 @@ class FrequencyResponsePlotter(QDialog):
         if self.exporter is not None:
             self.exporter.close()
 
-        if self.importer is not None:
-            self.importer.close()
+        if isinstance(self.importer, QDialog):
+            if self.importer.isVisible():
+                self.importer.close()
+            self.importer = None
 
         self.keep_window_open = False
         return super().closeEvent(a0)
