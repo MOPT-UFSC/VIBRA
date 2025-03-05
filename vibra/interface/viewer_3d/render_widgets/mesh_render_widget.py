@@ -48,7 +48,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.left_released.connect(self.selection_callback)
         self.main_window.visualization_changed.connect(self.visualization_changed_callback)
         self.main_window.selection_changed.connect(self.update_selection)
-        self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
         self.mesh_selection = MeshSelection(self)

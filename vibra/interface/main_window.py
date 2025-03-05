@@ -288,7 +288,6 @@ class MainWindow(QMainWindow):
         # qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
         stylesheets.set_theme(theme)
         app().config.user_preferences.interface_theme = theme
-        self.set_renderers_theme(theme)
 
         if theme == "dark":
             icon_color = QColor("#5f9af4")

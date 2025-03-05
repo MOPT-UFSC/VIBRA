@@ -30,7 +30,6 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.main_window = app().main_window
         self.current_menu_widget = None
 
-        self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
         self.show_plane_actor = True
