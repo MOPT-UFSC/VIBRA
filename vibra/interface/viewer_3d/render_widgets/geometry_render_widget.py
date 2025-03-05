@@ -2,6 +2,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QApplication
 
 from vibra import app
+from vibra.engine.properties.fluid import Fluid
 
 # from vibra.interface.tabs.geometry_info_bar import GeometryInfoBar
 from ..actors.section_plane_actor import SectionPlaneActor
@@ -505,10 +506,11 @@ class GeometryRenderWidget(CommonRenderWidget):
         if specific_impedance is not None:
             if "anechoic_termination" in specific_impedance.keys():
                 fluid = app().project.model.properties.get_fluid(surface=selected_faces[0])
-                density = fluid.fluid_density
-                speed_of_sound = fluid.speed_of_sound
-                values = np.array([density * speed_of_sound], dtype=complex)
-                text += _acoustic_format("Specific impedance", values[0], "Zs", "kg/m².s", ("Impedance type", "anechoic (non-reflexive)"))
+                if isinstance(fluid, Fluid):
+                    density = fluid.fluid_density
+                    speed_of_sound = fluid.speed_of_sound
+                    values = np.array([density * speed_of_sound], dtype=complex)
+                    text += _acoustic_format("Specific impedance", values[0], "Zs", "kg/m².s", ("Impedance type", "anechoic (non-reflexive)"))
 
             else:
                 values = surface_velocity["values"]
