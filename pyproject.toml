@@ -26,7 +26,7 @@ intel-openmp = "2023.2.0"
 h5py = "^3.11.0"
 moviepy = "^1.0.3"
 pypardiso-mopt = "^0.1.0"
-molde = "^0.1.0"
+molde = "^0.1.2"
 fileboxes = "^0.1.3"
 numba = "^0.60.0"
 

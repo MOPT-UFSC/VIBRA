@@ -1,5 +1,6 @@
 import numpy as np
 from molde.colors import color_names
+from molde.actors import CommonSymbolsActorVariableSize
 
 from vibra import app
 from vibra.interface.viewer_3d.sources import (
@@ -14,9 +15,6 @@ from vibra.interface.viewer_3d.sources import (
     create_spring_source,
 )
 
-from .common_symbols_actor import CommonSymbolsActorFixedSize, CommonSymbolsActorVariableSize  # noqa: F401
-
-
 class NewSymbolsActor(CommonSymbolsActorVariableSize):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -29,10 +27,10 @@ class NewSymbolsActor(CommonSymbolsActorVariableSize):
         self.PickableOff()
 
     def build(self):
-        self._build_nodal_normals()
-        self._build_surface_velocity()
-        super().build()
-        return
+        # self._build_nodal_normals()
+        # self._build_surface_velocity()
+        # super().build()
+        # return
         pos = (3, 0, 0)
         self.add_force_symbol(pos, (1, 0, 0))
         self.add_damper_symbol(pos, (1, 1, 0))
