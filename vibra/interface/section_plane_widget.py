@@ -35,9 +35,9 @@ class SectionPlaneWidget(QDialog):
             | Qt.WindowShadeButtonHint
             | Qt.WindowMinimizeButtonHint
         )
-
-        self.setGeometry(200, 200, 400, 400)
         self.setWindowIcon(app().main_window.vibra_icon)
+        self.setWindowTitle("Vibra")
+        self.setGeometry(200, 200, 400, 400)
     
     def show(self):
         super().show()
