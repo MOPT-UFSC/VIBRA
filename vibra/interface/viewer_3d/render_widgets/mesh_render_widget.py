@@ -280,6 +280,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.nodes_actor.paint_cells([255, 0, 0], nodes)
         self.faces_actor.paint_cells((70, 170, 255), faces)
         self.solids_actor.paint_cells(self.selection_color, solids)
+        self.edges_actor.configure_appearance()
         self.update()
 
     def clear_selection_spheres(self):
