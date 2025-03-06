@@ -8,14 +8,19 @@ import numpy as np
 
 from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+
 from molde import load_ui
+
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
 class ImportDataToCompare(QDialog):
-    def __init__(self, plotter, *args, **kwargs):
+    def __init__(self, plotter: 'FrequencyResponsePlotter', *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "data_handler/import_data_to_compare.ui"
@@ -269,12 +274,14 @@ class ImportDataToCompare(QDialog):
                 else:
                     legend_label = self.imported_results[id]["filename"]
 
+                y_label = self.plotter.y_label.split(f" [{self.plotter.unit}]")[0]
+
                 aux = { 
                        "type" : "imported_data",
                        "x_data" : x_values,
                        "y_data" : y_values,
                        "x_label" : "Frequency [Hz]",
-                       "y_label" : "Nodal response",
+                       "y_label" : y_label,
                        "legend" : legend_label,
                        "unit" : "",
                        "title" : "",

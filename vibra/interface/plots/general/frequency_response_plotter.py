@@ -190,7 +190,7 @@ class FrequencyResponsePlotter(QDialog):
         self.radioButton_decibel_scale.setDisabled(True)
         self.comboBox_differentiate_data.setDisabled(True)
 
-    def load_data_to_plot(self, data):
+    def load_data_to_plot(self, data: dict):
 
         if "x_data" in data.keys():
             self.x_data = data["x_data"]
@@ -223,10 +223,11 @@ class FrequencyResponsePlotter(QDialog):
                 shift = 0
             self.x_data = self.x_data[shift:]
             data2 = np.real(data[shift:]*np.conjugate(data[shift:]))
-            if "Pa" in self.unit:
+            # if "Pa" in self.unit:
+            if self.unit == "Pa":
                 return 10*np.log10(data2/((2e-5)**2))
             else:
-                return 10*np.log10(data2**2)
+                return 10*np.log10(data2)
         else:
             return data
 
@@ -241,7 +242,7 @@ class FrequencyResponsePlotter(QDialog):
         else:
             return self.get_scaled_data(dif_data)
 
-    def get_y_axis_label(self, label):
+    def get_y_axis_label(self, label: str):
         
         if self.radioButton_real.isChecked():
             type_label = "real"
