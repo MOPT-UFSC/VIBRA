@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QComboBox, QLineEdit, QPushButton, QWidget
 from PySide6.QtCore import Qt, QEvent, QObject, Signal
 from PySide6.QtGui import QCloseEvent
 
-from vibra import app, UI_DIR
+from vibra import app, UI_DIR, VIBRA_DIR
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
@@ -27,7 +27,8 @@ class PlotTransmissionLossInput(QWidget):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "plots/acoustic/plot_transmission_loss.ui"
-        load_ui(ui_path, self, UI_DIR)
+        ui_dir = ui_path.parent
+        load_ui(ui_path, self, ui_dir)
 
         self.main_window = app().main_window
         self.main_window.show_geometry_render_widget()
