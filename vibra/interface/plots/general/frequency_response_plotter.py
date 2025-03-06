@@ -17,7 +17,7 @@ class FrequencyResponsePlotter(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "plots/general/frequency_response_plot.ui"
-        load_ui(ui_path, self, UI_DIR)
+        load_ui(ui_path, self, ui_path.parent)
 
         self._config_window()
         self._initialize()

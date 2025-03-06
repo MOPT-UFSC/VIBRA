@@ -20,7 +20,7 @@ class PlotStructuralFrequencyResponseInput(QWidget):
 
         ui_path = UI_DIR / "plots/structural/plot_structural_frequency_response.ui"
         ui_dir = ui_path.parent
-        load_ui(ui_path, self, ui_dir)
+        load_ui(ui_path, self, ui_path.parent)
 
         app().main_window.show_geometry_render_widget()
 

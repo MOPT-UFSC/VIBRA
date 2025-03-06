@@ -16,7 +16,7 @@ class PlotAcousticPressureField(QWidget):
         super().__init__(*args, **kwargs)
         
         ui_path = UI_DIR / "plots/acoustic/plot_acoustic_pressure_field.ui"
-        load_ui(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         self._initialize()
         self._define_qt_variables()

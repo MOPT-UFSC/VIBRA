@@ -18,7 +18,7 @@ class AcousticModalAnalysisInput(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "analysis/acoustic/acoustic_modal_analysis_input.ui"
-        load_ui(ui_path, self, UI_DIR)
+        load_ui(ui_path, self, ui_path.parent)
 
         app().main_window.close_dialogs()
         app().main_window.set_input_widget(self)

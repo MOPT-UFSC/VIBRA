@@ -15,7 +15,7 @@ class PlotDisplacementField(QWidget):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "plots/structural/plot_displacement_field.ui"
-        load_ui(ui_path, self, UI_DIR)
+        load_ui(ui_path, self, ui_path.parent)
 
         self._initialize()
         self._define_qt_variables()

@@ -24,7 +24,7 @@ class SetDistributedLoadsInputs(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "model/setup/structural/distributed_loads_input.ui"
-        load_ui(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         self.model = app().project.model
         self.properties = app().project.model.properties

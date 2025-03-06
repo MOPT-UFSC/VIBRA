@@ -22,7 +22,7 @@ class SpecificImpedanceInput(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "model/setup/acoustic/specific_impedance_input.ui"
-        load_ui(ui_path, self, UI_DIR)
+        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)

@@ -20,7 +20,7 @@ class PlotAcousticPressureFrequencyResponseInput(QWidget):
 
         ui_path = UI_DIR / "plots/acoustic/plot_acoustic_pressure_frequency_response_input.ui"
         ui_dir = ui_path.parent
-        load_ui(ui_path, self, ui_dir)
+        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.show_geometry_render_widget()

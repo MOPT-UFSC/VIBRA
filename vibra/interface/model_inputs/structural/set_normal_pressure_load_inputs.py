@@ -24,7 +24,7 @@ class SetNormalPressureLoadInputs(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "model/setup/structural/normal_pressure_load_input.ui"
-        load_ui(ui_path, self, UI_DIR)
+        load_ui(ui_path, self, ui_path.parent)
 
         self.model = app().project.model
         self.properties = app().project.model.properties

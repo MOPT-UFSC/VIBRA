@@ -13,8 +13,7 @@ class SplashScreen(QSplashScreen):
         super().__init__()
 
         ui_path = UI_DIR / "project/splash.ui"
-        ui_dir = ui_path.parent
-        load_ui(ui_path, self, ui_dir)
+        load_ui(ui_path, self, ui_path.parent)
 
         self._config_widget()
         self._define_qt_variables()

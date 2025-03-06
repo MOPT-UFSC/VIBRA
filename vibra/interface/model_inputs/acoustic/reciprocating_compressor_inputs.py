@@ -28,7 +28,7 @@ class ReciprocatingCompressorInputs(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "model/setup/acoustic/reciprocating_compressor_inputs.ui"
-        load_ui(ui_path, self, UI_DIR)
+        load_ui(ui_path, self, ui_path.parent)
 
         app().main_window.set_input_widget(self)
         app().main_window.action_model_workspace_callback()

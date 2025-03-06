@@ -12,7 +12,7 @@ class StructuralHarmonicAnalysisMethodSelecorInput(QDialog):
         super().__init__()
 
         ui_path = UI_DIR / "analysis/general/harmonic_analysis_method.ui"
-        load_ui(ui_path, self, UI_DIR)
+        load_ui(ui_path, self, ui_path.parent)
 
         app().main_window.close_dialogs()
         app().main_window.set_input_widget(self)

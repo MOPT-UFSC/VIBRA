@@ -24,7 +24,7 @@ class SetMaterialInput(QDialog):
         super().__init__()
 
         ui_path = UI_DIR / "model/setup/material/set_material.ui"
-        load_ui(ui_path, self, UI_DIR)
+        load_ui(ui_path, self, ui_path.parent)
 
         self.cache_selected_lines = kwargs.get("cache_selected_lines", list())
 

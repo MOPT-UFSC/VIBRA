@@ -34,7 +34,7 @@ class MaterialWidget(QWidget):
         super().__init__()
 
         ui_path = UI_DIR / "model/setup/material/material_widget.ui"
-        load_ui(ui_path, self, UI_DIR)
+        load_ui(ui_path, self, ui_path.parent)
 
         app().main_window.action_model_workspace_callback()
 
