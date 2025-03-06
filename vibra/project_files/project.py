@@ -300,7 +300,7 @@ class Project:
 
         else:
             raise NotImplementedError("Not implemented analysis")
-    
+
         app().main_window.results_viewer_widget.results_viewer_items.update_items()
 
     def long_function(self):

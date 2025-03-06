@@ -3,6 +3,8 @@ from vtkmodules.vtkFiltersCore import vtkExtractEdges
 from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
 from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
 
+from vibra import app
+
 
 class EdgesActor(vtkActor):
     def __init__(self, data):
@@ -56,5 +58,6 @@ class EdgesActor(vtkActor):
         self.GetMapper().SetInputData(self.data)
 
     def configure_appearance(self):
-        self.GetProperty().SetColor(0, 0, 0)
+        r, g, b = app().config.user_preferences.edges_color.to_rgb()
+        self.GetProperty().SetColor(r, g, b)
         self.GetProperty().SetRepresentationToWireframe()

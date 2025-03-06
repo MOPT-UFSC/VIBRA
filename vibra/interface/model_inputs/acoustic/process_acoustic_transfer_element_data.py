@@ -1,13 +1,14 @@
-from PyQt5.QtWidgets import QDialog, QFileDialog, QLineEdit, QPushButton, QTabWidget
-from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
-from PyQt5.QtGui import QCloseEvent
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog, QFileDialog, QLineEdit, QPushButton, QTabWidget
+from PySide6.QtCore import Qt, QEvent, QObject, Signal
+from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
 from vibra.interface.mesh.mesher_inputs import MesherInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_bar import load_function
 from vibra.utils.progress_status import ProgressStatus
+
+from molde import load_ui
 
 import logging
 import numpy as np
@@ -24,7 +25,7 @@ class ProcessAcousticTransferElementData(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "model/setup/acoustic/process_acoustic_transfer_element_data.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
 
         app().main_window.set_input_widget(self)
         app().main_window.action_model_workspace_callback()
@@ -111,7 +112,7 @@ class ProcessAcousticTransferElementData(QDialog):
 
     def clickable(self, widget):
         class Filter(QObject):
-            clicked = pyqtSignal()
+            clicked = Signal()
 
             def eventFilter(self, obj, event):
                 if obj == widget and event.type() == QEvent.MouseButtonRelease and obj.rect().contains(event.pos()):
@@ -151,7 +152,7 @@ class ProcessAcousticTransferElementData(QDialog):
 
         caption = "Set a file name to export the acoustic element transfer data"
 
-        last_path = app().config.get_last_folder_for("exported data folder")
+        last_path = app().config.get_last_folder_for("exported_data_folder")
         if last_path is None:
             last_path = str(Path().home())
 
@@ -168,7 +169,7 @@ class ProcessAcousticTransferElementData(QDialog):
             return True
 
         self.lineEdit_spreadsheet_path.setText(path)
-        app().config.write_last_folder_path_in_file("exported data folder", path)
+        app().config.write_last_folder_path_in_file("exported_data_folder", path)
 
     def check_typed_ids(self):
  

@@ -1,7 +1,7 @@
 
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap, QImage
-from PyQt5.QtCore import QSize
+from PySide6.QtWidgets import QWidget
+from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap, QImage
+from PySide6.QtCore import QSize
 
 from vibra import ICON_DIR
 

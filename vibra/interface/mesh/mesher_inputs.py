@@ -1,9 +1,8 @@
 # fmt: off
 
-from PyQt5.QtWidgets import QCheckBox, QComboBox, QDialog, QLabel, QLineEdit, QPushButton, QDoubleSpinBox, QTableWidget, QTableWidgetItem
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QCheckBox, QComboBox, QDialog, QLabel, QLineEdit, QPushButton, QDoubleSpinBox, QTableWidget, QTableWidgetItem, QAbstractItemView, QHeaderView
+from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt
 
 from vibra import app, UI_DIR
 from vibra.engine.mesher.element_type import *
@@ -13,6 +12,7 @@ from vibra.utils.progress_status import ProgressStatus
 
 import logging
 from collections import defaultdict
+from molde import load_ui
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -23,7 +23,7 @@ class MesherInputs(QDialog):
         super().__init__()
 
         ui_path = UI_DIR / "mesh/mesher_setup.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
 
         self.close_after_generate = kwargs.get("close_after_generate", False)
 
@@ -97,8 +97,8 @@ class MesherInputs(QDialog):
             self.tableWidget_refining_mesh_data.horizontalHeaderItem(i).setText(header[i])
             self.tableWidget_refining_mesh_data.horizontalHeaderItem(i).setTextAlignment(Qt.AlignCenter)
 
-        self.tableWidget_refining_mesh_data.setSelectionBehavior(1)
-        self.tableWidget_refining_mesh_data.horizontalHeader().setSectionResizeMode(0)
+        self.tableWidget_refining_mesh_data.setSelectionBehavior(QAbstractItemView.SelectionBehavior(1))
+        self.tableWidget_refining_mesh_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(0))
         self.tableWidget_refining_mesh_data.horizontalHeader().setStretchLastSection(True)
 
     def _create_connections(self):

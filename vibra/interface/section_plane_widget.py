@@ -1,19 +1,19 @@
-from PyQt5.QtWidgets import QDialog, QSlider, QSpinBox, QPushButton, QWidget
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog, QSlider, QSpinBox, QPushButton, QWidget
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QFont
 
 from vibra import app, UI_DIR
-
+from molde import load_ui
 
 class SectionPlaneWidget(QDialog):
-    value_changed = pyqtSignal()
-    closed = pyqtSignal()
+    value_changed = Signal()
+    closed = Signal()
 
     def __init__(self, parent):
         super().__init__(parent)
 
         ui_path = UI_DIR / "render/section_plane_inputs.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
 
         self.editing = False
         self.cutting = False

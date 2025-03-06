@@ -1,7 +1,6 @@
-from PyQt5.QtWidgets import QDialog, QHeaderView, QPushButton, QTableWidget, QTableWidgetItem, QWidget
-from PyQt5.QtGui import QCloseEvent, QColor
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog, QFrame, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QWidget, QHeaderView
+from PySide6.QtGui import QCloseEvent, QColor
+from PySide6.QtCore import Qt
 
 from vibra import app, UI_DIR, TEMP_PROJECT_FILE
 from vibra.interface.formatters.icons import *
@@ -12,6 +11,7 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 
 from vibra.libraries.default_libraries import default_material_library
 from vibra.engine.properties.material import Material
+from molde import load_ui
 
 # import configparser
 from itertools import count
@@ -34,7 +34,7 @@ class MaterialWidget(QWidget):
         super().__init__()
 
         ui_path = UI_DIR / "model/setup/material/material_widget.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
 
         app().main_window.action_model_workspace_callback()
 

@@ -1,21 +1,22 @@
-from PyQt5.QtWidgets import QComboBox, QFrame, QLineEdit, QPushButton, QSlider, QTreeWidget, QTreeWidgetItem, QWidget
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5 import uic
+from PySide6.QtWidgets import QComboBox, QFrame, QLineEdit, QPushButton, QSlider, QTreeWidget, QTreeWidgetItem, QWidget
+from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt, Signal
 
 from vibra import app, UI_DIR
+
+from molde import load_ui
 
 import numpy as np
 
 
 class PlotAcousticPressureField(QWidget):
-    value_changed = pyqtSignal()
+    value_changed = Signal()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
         ui_path = UI_DIR / "plots/acoustic/plot_acoustic_pressure_field.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self)
 
         self._initialize()
         self._define_qt_variables()
@@ -61,6 +62,7 @@ class PlotAcousticPressureField(QWidget):
 
         # QLineEdit
         self.lineEdit_selected_frequency : QLineEdit
+        self.lineEdit_selected_frequency.setProperty("status", "information")
 
         # QPushButton
         self.pushButton_plot : QPushButton

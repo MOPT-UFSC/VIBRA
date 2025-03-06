@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem
-from PyQt5.QtGui import QIcon, QFont, QPixmap, QColor, QLinearGradient, QBrush, QPen
-from PyQt5.QtCore import Qt, QSize, QRect
+from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem
+from PySide6.QtGui import QIcon, QFont, QPixmap, QColor, QLinearGradient, QBrush, QPen
+from PySide6.QtCore import Qt, QSize, QRect
 from pathlib import Path
 
 from vibra import app
@@ -148,6 +148,9 @@ class ModelSetupItems(CommonMenuItems):
     
     def item_child_set_anechoic_termination_callback(self):
         app().main_window.input_ui.set_anechoic_termination()
+    
+    def item_child_set_specific_impedance_callback(self):
+        app().main_window.input_ui.set_specific_impedance()
     
     def item_child_set_dissipation_model_callback(self):
         app().main_window.input_ui.set_dissipation_model()

@@ -1,8 +1,7 @@
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QApplication
+from PySide6.QtCore import Signal
+from PySide6.QtWidgets import QApplication
 
 from vibra import TEMP_PROJECT_FILE
-from vibra.config import UserConfig
 from vibra.interface.config import Config
 from vibra.interface.main_window import MainWindow
 from vibra.interface.splash_screen import SplashScreen
@@ -12,7 +11,7 @@ from vibra.project_files.project import Project
 from vibra.project_files.project_file import ProjectFile
 
 class Application(QApplication):
-    selection_changed = pyqtSignal()
+    selection_changed = Signal()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -24,7 +23,6 @@ class Application(QApplication):
 
         # global params
         self.config = Config()
-        self.user_config = UserConfig.load()
 
         self.file = ProjectFile(TEMP_PROJECT_FILE)
         self.project = Project()
@@ -43,8 +41,8 @@ class Application(QApplication):
         self.main_window.update()
 
     def filter_tab_scroll_by_wheel(self):
-        from PyQt5.QtWidgets import QTabBar
-        from PyQt5.QtCore import QObject, QEvent
+        from PySide6.QtWidgets import QTabBar
+        from PySide6.QtCore import QObject, QEvent
 
         class Filter(QObject):
             def eventFilter(self, obj, event):

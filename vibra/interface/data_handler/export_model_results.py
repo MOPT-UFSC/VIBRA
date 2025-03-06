@@ -1,7 +1,6 @@
-from PyQt5.QtWidgets import QDialog, QFileDialog, QLabel, QLineEdit, QPushButton
-from PyQt5.QtGui import * 
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog, QFileDialog, QLabel, QLineEdit, QPushButton
+from PySide6.QtGui import * 
+from PySide6.QtCore import Qt
 
 from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -107,7 +106,7 @@ class ExportModelResults(QFileDialog):
 
             caption = "Export the model results"
 
-            path = app().config.get_last_folder_for("exported data folder")
+            path = app().config.get_last_folder_for("exported_data_folder")
             if path is None:
                 directory_path = os.path.expanduser("~")
             else:

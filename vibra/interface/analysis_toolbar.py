@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QToolBar, QComboBox, QLabel, QPushButton, QWidget
-from PyQt5.QtGui import QIcon, QFont
-from PyQt5.QtCore import Qt, QSize, pyqtSignal
+from PySide6.QtWidgets import QToolBar, QComboBox, QLabel, QPushButton, QWidget
+from PySide6.QtGui import QIcon, QFont
+from PySide6.QtCore import Qt, QSize, Signal
 
 
 from vibra import ICON_DIR, app
@@ -26,7 +26,7 @@ PhysicalDomain = Literal[
 
 class AnalysisToolbar(QToolBar):
 
-    enable_pushbutons = pyqtSignal()
+    enable_pushbutons = Signal()
 
     def __init__(self):
         super().__init__()
@@ -80,8 +80,10 @@ class AnalysisToolbar(QToolBar):
         font = QFont()
         font.setPointSize(10)
 
-        for widget in self.findChildren((QComboBox, QLabel, QPushButton)):
-            widget.setFont(font)
+        widgets_type = [QComboBox, QLabel, QPushButton]
+        for widget_type in widgets_type:
+            for widget in self.findChildren(widget_type):
+                widget.setFont(font)
         
         self.setStyleSheet(
             """

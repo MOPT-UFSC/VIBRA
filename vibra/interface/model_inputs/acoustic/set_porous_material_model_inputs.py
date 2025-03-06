@@ -1,9 +1,7 @@
 # fmt: off
-
-from PyQt5.QtWidgets import QComboBox, QDialog, QDoubleSpinBox, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QCloseEvent
-from PyQt5 import uic
+from PySide6.QtWidgets import QComboBox, QDialog, QDoubleSpinBox, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
 from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input_simplified import SetFluidInputSimplified
@@ -14,6 +12,8 @@ from vibra.interface.plots.general.frequency_response_plotter import FrequencyRe
 
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
+
+from molde import load_ui
 
 import warnings
 import numpy as np
@@ -27,7 +27,7 @@ class SetPorousMaterialModelInputs(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "model/setup/acoustic/set_porous_material_model.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)

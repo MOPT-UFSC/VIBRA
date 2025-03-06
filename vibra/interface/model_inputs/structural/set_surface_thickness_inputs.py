@@ -1,14 +1,15 @@
 # fmt: off
 
-from PyQt5.QtWidgets import QComboBox, QDialog, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QCloseEvent
-from PyQt5 import uic
+from PySide6.QtWidgets import QComboBox, QDialog, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+
+from molde import load_ui
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -19,7 +20,7 @@ class SetSurfaceThicknessInput(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "model/setup/structural/surface_thickness_input.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
 
         app().main_window.set_input_widget(self)
         app().main_window.action_model_workspace_callback()

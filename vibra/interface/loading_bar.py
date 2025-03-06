@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QApplication, QLabel, QProgressBar, QVBoxLayout, QWidget
-from PyQt5.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QLabel, QProgressBar, QVBoxLayout, QWidget
+from PySide6.QtCore import Qt
 
 from vibra import app
 from vibra.utils.progress_status import ProgressStatus
@@ -49,7 +49,7 @@ class LoadingWindow(QWidget):
         self.update_position()
 
     def update_position(self):
-        desktop_geometry = app().desktop().screenGeometry()
+        desktop_geometry = app().primaryScreen().geometry()
         pos_x = int((desktop_geometry.width() - self.width())/2)
         pos_y = int((desktop_geometry.height() - self.height())/2)
         self.setGeometry(pos_x, pos_y, self.width(), self.height())

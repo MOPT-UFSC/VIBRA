@@ -136,7 +136,7 @@
      <x>0</x>
      <y>0</y>
      <width>1055</width>
-     <height>24</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_project">
@@ -157,6 +157,7 @@
      <string>Visibility settings</string>
     </property>
     <addaction name="action_theme"/>
+    <addaction name="action_user_preferences"/>
    </widget>
    <widget class="QMenu" name="menu_view_mode">
     <property name="title">
@@ -613,6 +614,15 @@
    </property>
    <property name="text">
     <string>Results Workspace</string>
+   </property>
+  </action>
+  <action name="action_user_preferences">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/user_preferences_icon.png</normaloff>../icons/user_preferences_icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>User Preferences</string>
    </property>
   </action>
  </widget>

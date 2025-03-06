@@ -69,6 +69,7 @@ class InputUi:
             
     def mesh_setup(self):
         if not self.model_setup_items.item_child_mesh_setup.isDisabled():
+            self.main_window.action_model_workspace_callback()
             obj = self.process_input(MesherInputs)
             if obj.complete:
                 self.model_setup_items.modify_items_access_after_geometry_importing()

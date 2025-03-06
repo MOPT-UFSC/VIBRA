@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QLabel, QFileDialog, QPushButton, QSlider, QSpinBox, QToolBar, QWidget
-from PyQt5.QtGui import  QIcon, QFont, QColor
-from PyQt5.QtCore import Qt, QSize
+from PySide6.QtWidgets import QLabel, QFileDialog, QPushButton, QSlider, QSpinBox, QToolBar, QWidget
+from PySide6.QtGui import  QIcon, QFont, QColor
+from PySide6.QtCore import Qt, QSize
 
 from vibra import app, UI_DIR, ICON_DIR
 from vibra.interface.formatters import icons
@@ -243,7 +243,7 @@ class AnimationToolbar(QToolBar):
         else:
             self.pushButton_animate.setIcon(self.play_icon)
 
-        theme = app().user_config.theme
+        theme = app().config.user_preferences.interface_theme
 
         if theme == "dark":
             icon_color = QColor("#5f9af4")
