@@ -13,7 +13,8 @@ class SplashScreen(QSplashScreen):
         super().__init__()
 
         ui_path = UI_DIR / "project/splash.ui"
-        load_ui(ui_path, self, UI_DIR)
+        ui_dir = ui_path.parent
+        load_ui(ui_path, self, ui_dir)
 
         self._config_widget()
         self._define_qt_variables()
@@ -25,8 +26,6 @@ class SplashScreen(QSplashScreen):
         self.progressBar.setStyleSheet( """  QProgressBar{background-color : rgba(255, 255, 255, 0); border-radius: 6px; border-style: ridge; border-width: 0px;}
                                              QProgressBar::chunk {background-color : rgb(45, 110, 190); border-radius: 6px; border-style: ridge; border-width: 0px;}
                                         """)
-    
-        self.label.setPixmap(QPixmap(ICON_DIR / "azul cinza.png"))
 
     def _define_qt_variables(self):
         self.label_loading : QLabel

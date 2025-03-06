@@ -46,6 +46,7 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.left_clicked.connect(self.click_callback)
         self.left_released.connect(self.selection_callback)
+        self.main_window.theme_changed.connect(self.update_theme)
         self.main_window.visualization_changed.connect(self.visualization_changed_callback)
         self.main_window.selection_changed.connect(self.update_selection)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
@@ -98,6 +99,8 @@ class MeshRenderWidget(CommonRenderWidget):
         if hasattr(self, "scale_bar_actor"):
             self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
             self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
+        
+        self.update_selection()
     
     def update_scale_bar_visibility(self):
         user_preferences = app().config.user_preferences
@@ -258,8 +261,8 @@ class MeshRenderWidget(CommonRenderWidget):
         Update the visualization of selected data.
         """
         # This is a optimization, may imply side effects
-        if not self.isVisible():
-            return
+        # if not self.isVisible():
+        #     return
 
         if not self._actors_exists():
             return

@@ -286,8 +286,8 @@ class MainWindow(QMainWindow):
         The input is a string "light" or "dark".
         """
         # qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
-        stylesheets.set_theme(theme)
         app().config.user_preferences.interface_theme = theme
+        stylesheets.set_theme(theme)
 
         if theme == "dark":
             icon_color = QColor("#5f9af4")
@@ -299,7 +299,7 @@ class MainWindow(QMainWindow):
         for widget_type in widgets_type:
             widgets += self.findChildren(widget_type)
         change_icon_color_for_widgets(widgets, icon_color)
-
+        
         self.theme_changed.emit(theme)
 
     def set_menus_theme(self, theme: str):
@@ -510,7 +510,6 @@ class MainWindow(QMainWindow):
             self.action_theme.setIcon(self.theme_moon_icon)
         
         app().config.update_config_file()
-        self.update_plots()
         
     def action_user_preferences_callback(self):
         self.render_user_preferences = RendererUserPreferencesInput()

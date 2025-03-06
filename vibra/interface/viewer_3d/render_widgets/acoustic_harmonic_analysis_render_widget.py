@@ -31,6 +31,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         self.main_window = app().main_window
         self.current_widget = None
 
+        self.main_window.theme_changed.connect(self.update_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
         
         self.section_plane_active = False
@@ -95,7 +96,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         if hasattr(self, "scale_bar_actor"):
             self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
             self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
-    
+            
     def update_scale_bar_visibility(self):
         user_preferences = app().config.user_preferences
 
