@@ -40,6 +40,8 @@ class RendererUserPreferencesInput(QDialog):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
+        self.setStyleSheet("QLineEdit { border: 1px solid gray; }")
+                                           
 
     def _define_qt_variables(self):
         # QCheckBox

@@ -303,8 +303,11 @@
              <bold>true</bold>
             </font>
            </property>
-           <property name="styleSheet">
-            <string notr="true"/>
+           <property name="frame">
+            <bool>true</bool>
+           </property>
+           <property name="echoMode">
+            <enum>QLineEdit::Normal</enum>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -357,6 +360,12 @@
              <family>Arial</family>
              <pointsize>11</pointsize>
             </font>
+           </property>
+           <property name="frame">
+            <bool>true</bool>
+           </property>
+           <property name="echoMode">
+            <enum>QLineEdit::Normal</enum>
            </property>
           </widget>
          </item>
@@ -432,8 +441,11 @@
              <bold>true</bold>
             </font>
            </property>
-           <property name="styleSheet">
-            <string notr="true"/>
+           <property name="frame">
+            <bool>true</bool>
+           </property>
+           <property name="echoMode">
+            <enum>QLineEdit::Normal</enum>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -466,8 +478,11 @@
              <bold>true</bold>
             </font>
            </property>
-           <property name="styleSheet">
-            <string notr="true"/>
+           <property name="frame">
+            <bool>true</bool>
+           </property>
+           <property name="echoMode">
+            <enum>QLineEdit::Normal</enum>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -668,8 +683,11 @@
              <bold>true</bold>
             </font>
            </property>
-           <property name="styleSheet">
-            <string notr="true"/>
+           <property name="frame">
+            <bool>true</bool>
+           </property>
+           <property name="echoMode">
+            <enum>QLineEdit::Normal</enum>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -786,8 +804,11 @@
              <bold>true</bold>
             </font>
            </property>
-           <property name="styleSheet">
-            <string notr="true"/>
+           <property name="frame">
+            <bool>true</bool>
+           </property>
+           <property name="echoMode">
+            <enum>QLineEdit::Normal</enum>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -820,8 +841,11 @@
              <bold>true</bold>
             </font>
            </property>
-           <property name="styleSheet">
-            <string notr="true"/>
+           <property name="frame">
+            <bool>true</bool>
+           </property>
+           <property name="echoMode">
+            <enum>QLineEdit::Normal</enum>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
