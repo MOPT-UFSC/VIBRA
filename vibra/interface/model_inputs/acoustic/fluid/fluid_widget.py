@@ -692,7 +692,7 @@ class FluidWidget(QWidget):
                     data = self.fluid_data_refprop[key]
                     if isinstance(data, float):
 
-                        if key in ["pressure", "thermal conductivity", "dynamic viscosity"]:
+                        if key in ["pressure", "thermal_conductivity", "dynamic_viscosity"]:
                             _data = f"{data : .6e}"
                         else:
                             _data = f"{data : .6f}"
