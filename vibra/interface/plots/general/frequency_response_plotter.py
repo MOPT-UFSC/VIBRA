@@ -116,6 +116,8 @@ class FrequencyResponsePlotter(QDialog):
 
         if isinstance(self.importer, QDialog):
             if self.importer.isVisible():
+                if self.importer.isMinimized():
+                    self.importer.showNormal()
                 self.importer.raise_()
             else:
                 self.importer.exec()
