@@ -420,7 +420,7 @@ class MeshRenderWidget(CommonRenderWidget):
             element_id = solids_elem_ids[0]
             connect = app().project.model.mesh.solids_connectivity[element_id, 4:]
             text += f"Solid element: {element_id}\n"
-            text += f"Connectivity: {list(connect)}\n\n"
+            text += f"Connectivity: {[int(node_id) for node_id in connect]}\n\n"
 
         return text
 
