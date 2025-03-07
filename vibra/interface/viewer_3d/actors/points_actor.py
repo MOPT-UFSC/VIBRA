@@ -28,7 +28,7 @@ class PointsActor(vtkActor):
         point_indexes.SetName("point_indexes")
         point_indexes.Allocate(number_of_points)
 
-        for tag, (node_id,) in self.mesh.nodes_from_points.items():
+        for tag, (node_id,) in sorted(self.mesh.nodes_from_points.items()):
             _, x, y, z = self.mesh.nodal_coordinates[node_id]
             points.InsertNextPoint(x, y, z)
             data.InsertNextCell(VTK_VERTEX, 1, [node_id])
