@@ -759,6 +759,9 @@ class MainWindow(QMainWindow):
 
     def save_project_as_dialog(self):
 
+        if not os.path.exists(TEMP_PROJECT_FILE):
+            return
+
         obj = SaveProjectDataSelector()
         if obj.complete:
 
