@@ -30,7 +30,6 @@ SHOW_POINTS = 0
 SHOW_LINES = 1
 SHOW_FACES = 2
 
-# fmt: off
 
 class GeometryRenderWidget(CommonRenderWidget):
     selection_changed = Signal(set, set, set, set)
@@ -701,5 +700,3 @@ def _acoustic_format(property_name, value, label, unit, additional_labels=[]):
         tree.add_item(additional_labels[0], additional_labels[1])
 
     return str(tree)
-
-# fmt: on
