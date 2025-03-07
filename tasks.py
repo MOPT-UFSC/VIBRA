@@ -47,7 +47,7 @@ def qrc_compile(c):
     Usage example: inv qrc-compile
     '''
     rcc_path = RESOURCE_DIR / "resources_rc.py"
-    command = f"pyrcc5 \"{str(QRC_PATH)}\" -o \"{str(rcc_path)}\""
+    command = f"pyside6-rcc \"{str(QRC_PATH)}\" -o \"{str(rcc_path)}\""
     result = c.run(command, warn=True)
     if result.ok:
         print(f"✅ {rcc_path} generated successfully!")
@@ -88,8 +88,8 @@ def ui_compile(c):
 
                 wrapper_class_name = to_camel_case(os.path.splitext(filename)[0])
 
-                # Run pyuic5 to generate the Python file
-                command = f"pyuic5 \"{ui_path}\" -o \"{py_path}\""
+                # Run pyside6-uic to generate the Python file
+                command = f"pyside6-uic \"{ui_path}\" -o \"{py_path}\""
                 result = c.run(command, warn=True)
 
                 if result.ok:
@@ -111,7 +111,7 @@ def ui_compile(c):
 
                     wrapper_class = f"""
 
-class {wrapper_class_name}_UI(QtWidgets.{qt_class_name}, Ui_{ui_class_name}):
+class {wrapper_class_name}_UI({qt_class_name}, Ui_{ui_class_name}):
 {docstring}
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -145,12 +145,12 @@ def fix_ui_files(c):
                 fix_ui_file_text(Path(ui_path))
 
 
-def to_camel_case(filename):
+def to_camel_case(filename: str) -> str:
     """Convert filename (snake_case or kebab-case) to CamelCase."""
     return "".join(word.capitalize() for word in re.split(r"[_\s-]+", filename))
 
 
-def extract_class_names(ui_path):
+def extract_class_names(ui_path: str) -> tuple[str, str]:
     """Extracts Qt base class and UI class name from the .ui XML file."""
     try:
         tree = ET.parse(ui_path)
@@ -168,7 +168,7 @@ def extract_class_names(ui_path):
         return None, None
 
 
-def extract_widget_hierarchy(ui_path):
+def extract_widget_hierarchy(ui_path: str) -> str:
     """Extracts the hierarchical structure of widgets from the .ui file, including deeply nested components."""
     try:
         tree = ET.parse(ui_path)
@@ -203,47 +203,19 @@ def extract_widget_hierarchy(ui_path):
         return ""
 
 
-def get_relative_qrc_path(ui_path: Path):
+def get_relative_qrc_path(ui_path: Path) -> str:
     return os.path.relpath(QRC_PATH, start=ui_path.parent)
 
 
-def convert_to_qrc_path(icon_path):
+def convert_to_qrc_path(icon_path: str) -> str:
     icon_path = Path(icon_path).as_posix()
     if QRC_PREFIX_NAME in icon_path:
         relative_icon_path = icon_path.split(QRC_PREFIX_NAME)[-1]
         return f"{QRC_PREFIX}{relative_icon_path}"
     return icon_path
+    
 
-
-def fix_ui_file_xml(ui_path):
-    '''
-    Fix .ui file to enable to use it from designer.
-    '''
-    tree = ET.parse(ui_path)
-    root = tree.getroot()
-
-    # Add include tag with qrc file location
-    relative_qrc_path = get_relative_qrc_path(ui_path)
-    resources_element = root.find("resources")
-    if resources_element is not None:
-        include_element = resources_element.find('include')
-        if include_element is None:
-            include_element = ET.Element("include", location=relative_qrc_path)
-            resources_element.append(include_element)
-
-    # Convert internal icon paths to qrc path
-    for icon_property in root.findall(".//property[@name='icon']"):
-        for iconset in icon_property.findall("iconset"):
-            for sub_elem in iconset.iter():
-                if sub_elem.text and not sub_elem.text.startswith(QRC_PREFIX):
-                    sub_elem.text = convert_to_qrc_path(sub_elem.text)
-
-    tree.write(ui_path, encoding="utf-8", xml_declaration=True)
-    print(f"✅ Fixed: {ui_path}")
-
-import re
-
-def fix_ui_file_text(file_path: Path):
+def fix_ui_file_text(file_path: Path) -> None:
     updated_lines = []
     lines = file_path.open('r').readlines()
     for line in lines:
@@ -267,6 +239,6 @@ def fix_ui_file_text(file_path: Path):
     print(f"✅ Fixed: {file_path}")
 
 
-def find_relative_paths(text) -> list[str]:
+def find_relative_paths(text: str) -> list[str]:
     pattern = r'(?:(?:\.\./)+[\w\-/]+\.[\w]+)'
     return re.findall(pattern, text)
