@@ -708,7 +708,7 @@ class SetPorousMaterialModelInputs(QDialog):
         legend_label = label
         title = f"{pm_label} Porous Material Curve"
 
-        key = ("property", (None))
+        key = (label.replace(" ", "_"), None)
 
         self.data_to_plot[key] = { 
                                     "x_data" : x_data,

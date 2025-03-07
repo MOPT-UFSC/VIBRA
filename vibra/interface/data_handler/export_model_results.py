@@ -78,10 +78,18 @@ class ExportModelResults(QFileDialog):
                 existing_df: DataFrame
                 existing_df.to_excel(writer, sheet_name=key, index=False)
 
+            count = 0
             for key, data in self.data.items():
 
-                selection_type, selection_id = key
-                sheet_name = f"{selection_type}_{selection_id}"
+                if len(key) == 2:
+                    if key[1] is None:
+                        sheet_name = f"{key[0]}"
+                    else:
+                        selection_type, selection_id = key
+                        sheet_name = f"{selection_type}_{selection_id}"
+                else:
+                    count += 1
+                    sheet_name = f"sheet_{count}"
 
                 x_data = data["x_data"]
                 y_data = data["y_data"]
@@ -128,7 +136,7 @@ class ExportModelResults(QFileDialog):
         else:
             file_path = existing_path
 
-        app().config.write_last_folder_path_in_file("exported data folder", file_path)
+        app().config.write_last_folder_path_in_file("exported_data_folder", file_path)
 
         sufix = Path(file_path).suffix      
         if sufix == ".xlsx":
