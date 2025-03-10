@@ -42,7 +42,7 @@ class NewSymbolsActor(CommonSymbolsActorVariableSize):
     def _build_surface_velocity(self):
         mesh = app().project.model.mesh
         surface_properties = app().project.model.properties.surface_properties
-        orientation = np.array([-1, 0, 0], dtype=float)
+        orientation = np.array([1, 0, 0], dtype=float)
 
         for (property_name, surface_id), data in surface_properties.items():
             if property_name != "surface_velocity":
