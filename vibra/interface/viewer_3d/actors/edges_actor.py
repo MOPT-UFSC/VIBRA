@@ -58,6 +58,6 @@ class EdgesActor(vtkActor):
         self.GetMapper().SetInputData(self.data)
 
     def configure_appearance(self):
-        r, g, b = app().config.user_preferences.edges_color.to_rgb()
+        r, g, b = app().config.user_preferences.edges_color.to_rgb_f()
         self.GetProperty().SetColor(r, g, b)
         self.GetProperty().SetRepresentationToWireframe()
