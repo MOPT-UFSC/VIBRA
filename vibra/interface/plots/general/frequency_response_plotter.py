@@ -1,7 +1,6 @@
-from PyQt5.QtWidgets import QComboBox, QCheckBox, QDialog, QFrame, QPushButton, QRadioButton, QSpinBox, QVBoxLayout, QToolButton, QWidget
-from PyQt5.QtGui import QCloseEvent, QColor
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QComboBox, QCheckBox, QDialog, QFrame, QPushButton, QRadioButton, QSpinBox, QVBoxLayout, QToolButton, QWidget
+from PySide6.QtGui import QCloseEvent, QColor
+from PySide6.QtCore import Qt
 
 from vibra import app, UI_DIR
 from vibra.interface.data_handler.export_model_results import ExportModelResults
@@ -9,6 +8,7 @@ from vibra.interface.data_handler.import_data_to_compare import ImportDataToComp
 from vibra.interface.formatters import icons
 from vibra.interface.plots.general.advanced_cursor import AdvancedCursor
 
+from molde import load_ui
 import numpy as np
 
 
@@ -17,7 +17,7 @@ class FrequencyResponsePlotter(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "plots/general/frequency_response_plot.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         self._config_window()
         self._initialize()
@@ -113,13 +113,23 @@ class FrequencyResponsePlotter(QDialog):
         self._initial_config()
 
     def import_file(self):
-        if self.importer is None:
+
+        if isinstance(self.importer, QDialog):
+            if self.importer.isVisible():
+                if self.importer.isMinimized():
+                    self.importer.showNormal()
+                self.importer.raise_()
+            else:
+                self.importer.exec()
+            return
+
+        elif self.importer is None:
             self.importer = ImportDataToCompare(self)
-        self.importer.exec()
+            self.importer.exec()
 
     def _initial_config(self):
         self.aux_bool = False
-        self.plot_type = self.comboBox_plot_type.currentText()        
+        self.plot_type = self.comboBox_plot_type.currentText()
         self.checkBox_cursor_legends.setChecked(False)
         self.checkBox_cursor_legends.setDisabled(True)
         self.frame_vertical_lines.setDisabled(True)
@@ -180,7 +190,7 @@ class FrequencyResponsePlotter(QDialog):
         self.radioButton_decibel_scale.setDisabled(True)
         self.comboBox_differentiate_data.setDisabled(True)
 
-    def load_data_to_plot(self, data):
+    def load_data_to_plot(self, data: dict):
 
         if "x_data" in data.keys():
             self.x_data = data["x_data"]
@@ -213,10 +223,11 @@ class FrequencyResponsePlotter(QDialog):
                 shift = 0
             self.x_data = self.x_data[shift:]
             data2 = np.real(data[shift:]*np.conjugate(data[shift:]))
-            if "Pa" in self.unit:
+            # if "Pa" in self.unit:
+            if self.unit == "Pa":
                 return 10*np.log10(data2/((2e-5)**2))
             else:
-                return 10*np.log10(data2**2)
+                return 10*np.log10(data2)
         else:
             return data
 
@@ -231,7 +242,7 @@ class FrequencyResponsePlotter(QDialog):
         else:
             return self.get_scaled_data(dif_data)
 
-    def get_y_axis_label(self, label):
+    def get_y_axis_label(self, label: str):
         
         if self.radioButton_real.isChecked():
             type_label = "real"
@@ -277,7 +288,7 @@ class FrequencyResponsePlotter(QDialog):
         if toolbar is None:
             return
 
-        if app().user_config.theme == "dark":
+        if app().config.user_preferences.interface_theme == "dark":
             color = QColor("#5f9af4")
         else:
             color = QColor("#1a73e8")
@@ -461,8 +472,10 @@ class FrequencyResponsePlotter(QDialog):
         if self.exporter is not None:
             self.exporter.close()
 
-        if self.importer is not None:
-            self.importer.close()
+        if isinstance(self.importer, QDialog):
+            if self.importer.isVisible():
+                self.importer.close()
+            self.importer = None
 
         self.keep_window_open = False
         return super().closeEvent(a0)

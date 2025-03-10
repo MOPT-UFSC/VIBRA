@@ -1,12 +1,11 @@
-from PyQt5.QtWidgets import QDialog, QComboBox, QFrame, QGridLayout, QLineEdit, QPushButton, QScrollArea, QTableWidget
-from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog, QComboBox, QFrame, QGridLayout, QLineEdit, QPushButton, QScrollArea, QTableWidget
+from PySide6.QtGui import QCloseEvent
+from PySide6.QtCore import Qt
 
 from vibra import app, UI_DIR
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.model_inputs.acoustic.fluid.fluid_widget import FluidWidget
 from vibra.interface.general.print_message_input import PrintMessageInput
+from molde import load_ui
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -23,7 +22,7 @@ class SetFluidInput(QDialog):
         super().__init__()
 
         ui_path = UI_DIR / "model/setup/fluid/set_fluid_input.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         self.cache_selected_lines = kwargs.get("cache_selected_lines", list())
         self.state_properties = kwargs.get("state_properties", dict())
@@ -40,8 +39,6 @@ class SetFluidInput(QDialog):
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
-
-        ConfigWidgetAppearance(self, tool_tip=True)
 
         if self.state_properties:
             self.load_compressor_info()
@@ -89,7 +86,7 @@ class SetFluidInput(QDialog):
         self.tableWidget_fluid_data = self.fluid_widget.tableWidget_fluid_data
 
     def _add_fluid_widget(self):
-        self.fluid_widget = FluidWidget(parent_widget=self, state_properties=self.state_properties)
+        self.fluid_widget = FluidWidget(dialog=self, state_properties=self.state_properties)
         self.grid_layout.addWidget(self.fluid_widget)
         self.fluid_widget.pushButton_remove_column.clicked.connect(self.reset_selected_fluid_lineEdit)
 

@@ -1,12 +1,10 @@
 # fmt: off
 
-from PyQt5.QtWidgets import QCheckBox, QComboBox, QDialog, QLabel, QLineEdit, QPushButton, QDoubleSpinBox, QTableWidget, QTableWidgetItem
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QCheckBox, QComboBox, QDialog, QLabel, QLineEdit, QPushButton, QDoubleSpinBox, QTableWidget, QTableWidgetItem, QAbstractItemView, QHeaderView
+from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt
 
 from vibra import app, UI_DIR
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.engine.mesher.element_type import *
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_bar import load_function
@@ -14,6 +12,7 @@ from vibra.utils.progress_status import ProgressStatus
 
 import logging
 from collections import defaultdict
+from molde import load_ui
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -24,7 +23,7 @@ class MesherInputs(QDialog):
         super().__init__()
 
         ui_path = UI_DIR / "mesh/mesher_setup.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         self.close_after_generate = kwargs.get("close_after_generate", False)
 
@@ -38,8 +37,6 @@ class MesherInputs(QDialog):
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
-
-        ConfigWidgetAppearance(self, tool_tip=True)
 
         self._load_current_mesh_setup()
 
@@ -100,8 +97,8 @@ class MesherInputs(QDialog):
             self.tableWidget_refining_mesh_data.horizontalHeaderItem(i).setText(header[i])
             self.tableWidget_refining_mesh_data.horizontalHeaderItem(i).setTextAlignment(Qt.AlignCenter)
 
-        self.tableWidget_refining_mesh_data.setSelectionBehavior(1)
-        self.tableWidget_refining_mesh_data.horizontalHeader().setSectionResizeMode(0)
+        self.tableWidget_refining_mesh_data.setSelectionBehavior(QAbstractItemView.SelectionBehavior(1))
+        self.tableWidget_refining_mesh_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(0))
         self.tableWidget_refining_mesh_data.horizontalHeader().setStretchLastSection(True)
 
     def _create_connections(self):
@@ -172,10 +169,13 @@ class MesherInputs(QDialog):
         else:
             selected_type = "surfaces"
 
-        ref_size = self.doubleSpinBox_refined_element_size.value()
         selected_ids = self.get_selected_ids()
+        ref_size = self.doubleSpinBox_refined_element_size.value()
+
         if selected_ids:
-            self.mesh_refinement_data[(selected_type, ref_size)].extend(selected_ids)
+            for selected_id in selected_ids:
+                if selected_id not in self.mesh_refinement_data[(selected_type, ref_size)]:
+                    self.mesh_refinement_data[(selected_type, ref_size)].append(selected_id)
 
             for key, _selected_ids in self.mesh_refinement_data.copy().items():
                 if key[0] == selected_type and key[1] != ref_size:
@@ -194,18 +194,24 @@ class MesherInputs(QDialog):
     def remove_callback(self):
 
         current_row = self.tableWidget_refining_mesh_data.currentRow()
+        if current_row == -1:
+            return
 
-        if isinstance(current_row, int):
+        try:
+            if isinstance(current_row, int):
 
-            ref_size = float(self.tableWidget_refining_mesh_data.item(current_row, 0).text())
-            selection_type = self.tableWidget_refining_mesh_data.item(current_row, 1).text()
-            self.tableWidget_refining_mesh_data.removeRow(current_row)
+                ref_size = float(self.tableWidget_refining_mesh_data.item(current_row, 0).text())
+                selection_type = self.tableWidget_refining_mesh_data.item(current_row, 1).text()
+                self.tableWidget_refining_mesh_data.removeRow(current_row)
 
-            if (selection_type, ref_size) in self.mesh_refinement_data.keys():
-                self.mesh_refinement_data.pop((selection_type, ref_size))
-                self.update_table_data()
+                if (selection_type, ref_size) in self.mesh_refinement_data.keys():
+                    self.mesh_refinement_data.pop((selection_type, ref_size))
+                    self.update_table_data()
 
-        app().main_window.set_geometry_selection()
+            app().main_window.set_geometry_selection()
+
+        except:
+            return
 
     def _load_current_mesh_setup(self):
 

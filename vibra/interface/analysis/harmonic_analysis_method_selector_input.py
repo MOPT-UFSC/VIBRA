@@ -1,7 +1,9 @@
-from PyQt5.QtWidgets import QDialog, QComboBox, QLabel, QPushButton
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog, QComboBox, QLabel, QPushButton
+from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt
+
+from molde import load_ui
+
 
 from vibra import  app, UI_DIR
 
@@ -10,7 +12,7 @@ class StructuralHarmonicAnalysisMethodSelecorInput(QDialog):
         super().__init__()
 
         ui_path = UI_DIR / "analysis/general/harmonic_analysis_method.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         app().main_window.close_dialogs()
         app().main_window.set_input_widget(self)

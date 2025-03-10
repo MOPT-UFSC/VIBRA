@@ -1,13 +1,13 @@
-from PyQt5.QtWidgets import QComboBox, QWidget, QLineEdit, QPushButton, QRadioButton
-from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QComboBox, QWidget, QLineEdit, QPushButton, QRadioButton
+from PySide6.QtGui import QCloseEvent
+from PySide6.QtCore import Qt
 
 from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
+
+from molde import load_ui
 
 import numpy as np
 
@@ -19,7 +19,8 @@ class PlotStructuralFrequencyResponseInput(QWidget):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "plots/structural/plot_structural_frequency_response.ui"
-        uic.loadUi(ui_path, self)
+        ui_dir = ui_path.parent
+        load_ui(ui_path, self, ui_path.parent)
 
         app().main_window.show_geometry_render_widget()
 
@@ -30,8 +31,6 @@ class PlotStructuralFrequencyResponseInput(QWidget):
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
-
-        ConfigWidgetAppearance(self, tool_tip=True)
 
         self._load_analysis_data_and_solution()
         self.geometry_selection_callback()

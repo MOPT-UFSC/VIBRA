@@ -1,7 +1,5 @@
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtWidgets import QApplication
-
 from vibra import app
+from vibra.engine.properties.fluid import Fluid
 
 # from vibra.interface.tabs.geometry_info_bar import GeometryInfoBar
 from ..actors.section_plane_actor import SectionPlaneActor
@@ -21,6 +19,8 @@ from molde.interactor_styles import BoxSelectionInteractorStyle
 import numpy as np
 from numbers import Number
 
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import QApplication
 from vtkmodules.vtkCommonCore import vtkIntArray
 from vtkmodules.vtkCommonDataModel import vtkPolyData
 from vtkmodules.vtkRenderingCore import vtkActor, vtkCellPicker
@@ -32,7 +32,7 @@ SHOW_FACES = 2
 
 
 class GeometryRenderWidget(CommonRenderWidget):
-    selection_changed = pyqtSignal(set, set, set, set)
+    selection_changed = Signal(set, set, set, set)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -42,10 +42,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.view_mode = SHOW_FACES
 
         self.left_clicked.connect(self.click_callback)
+        self.main_window.theme_changed.connect(self.update_theme)
         self.main_window.visualization_changed.connect(self.visualization_changed_callback)
         self.left_released.connect(self.selection_callback)
         self.main_window.selection_changed.connect(self.update_selection)
-        self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
         self.geometry_selection = GeometrySelection(self)
@@ -60,6 +60,61 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.create_scale_bar()
         self.create_camera_light(0.1, 0.1)
         self.update_plot()
+    
+    def set_theme(self, *args, **kwargs):
+        self.update_theme()
+    
+    def update_theme(self):
+        user_preferences = app().config.user_preferences
+        bkg_1 = user_preferences.renderer_background_color_1
+        bkg_2 = user_preferences.renderer_background_color_2
+        font_color = user_preferences.renderer_font_color
+
+        if bkg_1 is None:
+            raise ValueError('Missing value "bkg_1"')
+        if bkg_2 is None:
+            raise ValueError('Missing value "bkg_2"')
+        if font_color is None:
+            raise ValueError('Missing value "font_color"')
+
+        self.renderer.GradientBackgroundOn()
+        self.renderer.SetBackground(bkg_1.to_rgb_f())
+        self.renderer.SetBackground2(bkg_2.to_rgb_f())
+
+        if hasattr(self, "text_actor"):
+            self.text_actor.GetTextProperty().SetColor(font_color.to_rgb_f())
+
+        if hasattr(self, "scale_bar_actor"):
+            self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
+            self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
+        
+        self.update_selection()
+                
+    def update_scale_bar_visibility(self):
+        user_preferences = app().config.user_preferences
+
+        if user_preferences.show_reference_scale_bar:
+            self.enable_scale_bar()
+        else:
+            self.disable_scale_bar()
+    
+    def enable_scale_bar(self):
+        self.scale_bar_actor.VisibilityOn()
+
+    def disable_scale_bar(self):
+        self.scale_bar_actor.VisibilityOff()
+    
+    def update_renderer_font_size(self):
+        user_preferences = app().config.user_preferences
+        font_size_px = int(user_preferences.renderer_font_size * 4/3)
+
+        info_text_property = self.text_actor.GetTextProperty()
+        info_text_property.SetFontSize(font_size_px)
+
+        scale_bar_title_property = self.scale_bar_actor.GetLegendTitleProperty()
+        scale_bar_label_property = self.scale_bar_actor.GetLegendLabelProperty()
+        scale_bar_title_property.SetFontSize(font_size_px)
+        scale_bar_label_property.SetFontSize(font_size_px)
 
     def update_plot(self, reset_camera=True):
         mesh = app().project.model.mesh
@@ -90,6 +145,7 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.plane_actor,
             self.symbols_actor,
         )
+        self.update_theme()
 
         if reset_camera:
             self.renderer.ResetCamera()
@@ -199,6 +255,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.update()
 
     def update_selection(self):
+        if not self._actors_exists():
+            return 
+        
         self.points_actor.clear_colors()
         self.lines_actor.clear_colors()
         self.faces_actor.clear_colors()
@@ -468,7 +527,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if len(volumes) != 1:
             return text
 
-        pm_model = app().project.model.properties.get_porous_material_model_data(volume=volumes[0])
+        pm_model = app().project.model.properties._get_property("porous_material_model", volume=volumes[0])
         if pm_model is None:
             return text
 
@@ -487,15 +546,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         if len(selected_faces) != 1:
             return text
 
-        acoustic_pressure = app().project.model.properties._get_property(
-            "acoustic_pressure", surface=selected_faces[0]
-        )
-        surface_velocity = app().project.model.properties._get_property(
-            "surface_velocity", surface=selected_faces[0]
-        )
-        specific_impedance = app().project.model.properties._get_property(
-            "specific_impedance", surface=selected_faces[0]
-        )
+        acoustic_pressure = app().project.model.properties._get_property("acoustic_pressure", surface=selected_faces[0])
+        surface_velocity = app().project.model.properties._get_property("surface_velocity", surface=selected_faces[0])
+        specific_impedance = app().project.model.properties._get_property("specific_impedance", surface=selected_faces[0])
+
         boundary_conditions_list = [acoustic_pressure, surface_velocity, specific_impedance]
 
         if all(condition is None for condition in boundary_conditions_list):
@@ -507,25 +561,20 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         if surface_velocity is not None:
             values = surface_velocity["values"][0]
-            text += _acoustic_format("Acoustic pressure", values, "Vn", "m/s")
+            text += _acoustic_format("Surface velocity", values, "Vn", "m/s")
 
         if specific_impedance is not None:
             if "anechoic_termination" in specific_impedance.keys():
                 fluid = app().project.model.properties.get_fluid(surface=selected_faces[0])
-                density = fluid.fluid_density
-                speed_of_sound = fluid.speed_of_sound
-                values = np.array([density * speed_of_sound], dtype=complex)
-                text += _acoustic_format(
-                    "Acoustic pressure",
-                    values[0],
-                    "Zs",
-                    "kg/m².s",
-                    ("Impedance type", "anechoic (non-reflexive)"),
-                )
+                if isinstance(fluid, Fluid):
+                    density = fluid.fluid_density
+                    speed_of_sound = fluid.speed_of_sound
+                    values = np.array([density * speed_of_sound], dtype=complex)
+                    text += _acoustic_format("Specific impedance", values[0], "Zs", "kg/m².s", ("Impedance type", "anechoic (non-reflexive)"))
 
             else:
                 values = surface_velocity["values"]
-                text += _acoustic_format("Acoustic pressure", values[0], "Zs", "kg/m².s")
+                text += _acoustic_format("Specific impedance", values[0], "Zs", "kg/m².s")
 
         return text
 

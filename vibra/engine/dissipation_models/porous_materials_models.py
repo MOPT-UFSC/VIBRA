@@ -1,4 +1,8 @@
-from vibra import app
+from vibra.engine.properties.fluid import Fluid
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.model import Model
 
 import numpy as np
 # import matplotlib.pyplot as plt
@@ -7,7 +11,7 @@ import numpy as np
 
 class PorousMaterialModels:
 
-    def __init__(self, model):
+    def __init__(self, model: "Model"):
         super().__init__()
 
         self.model = model
@@ -59,7 +63,7 @@ class PorousMaterialModels:
                 # data = np.array([np.arange(len(C_eff)), C_eff])
                 # np.savetxt("complex_sound.dat", data.T, delimiter=";")
 
-    def get_Delany_Bazley_Miki_effective_properties(self, omega, fluid, data):
+    def get_Delany_Bazley_Miki_effective_properties(self, omega: np.ndarray, fluid: Fluid, data: dict):
 
         """ This method returns the Delany-Bazley or Delany-Bazley-Miki porous
             material model effective properties.
@@ -82,15 +86,15 @@ class PorousMaterialModels:
         frequencies = omega / (2 * np.pi)
         X = frequencies / flow_resistivity
 
-        Z_eff = (rho_0 * C_0) * ( 1 + C1*(X**C2) - 1j*(C3*(X**C4)) )
-        k_eff = (-1j) * (omega / C_0) * ( C5*(X**C6) + 1j*(1 + C7*(X**C8)) )
+        k_eff = (omega / C_0) * ( 1 + C1*(X**-C2) - 1j*(C3*(X**-C4)) )
+        Z_eff = (rho_0 * C_0) * ( 1 + C5*(X**-C6) - 1j*(C7*(X**-C8)) )
 
         C_eff = omega / k_eff
         rho_eff = Z_eff / C_eff
 
         return rho_eff, C_eff
 
-    def get_JCA_effective_properties(self, omega, fluid, data):
+    def get_JCA_effective_properties(self, omega: np.ndarray, fluid: Fluid, data: dict):
 
         """ This method returns the Jhonson-Champoux-Allard porous material model
             effective properties.
@@ -134,7 +138,7 @@ class PorousMaterialModels:
 
         return rho_eff, C_eff
 
-    def get_JCAL_effective_properties(self, omega, fluid, data):
+    def get_JCAL_effective_properties(self, omega: np.ndarray, fluid: Fluid, data: dict):
 
         """ This method returns the Jhonson-Champoux-Allard-Lafarge porous material model
             effective properties.

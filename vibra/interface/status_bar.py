@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QLabel, QStatusBar
+from PySide6.QtWidgets import QLabel, QStatusBar
 
 from vibra import app
 
@@ -50,9 +50,9 @@ class StatusBar(QStatusBar):
         self.curves_label.setFixedWidth(100)
         self.surfaces_label.setFixedWidth(100)
         self.volumes_label.setFixedWidth(100)
-        self.nodes_label.setFixedWidth(100)
-        self.surface_elements_label.setFixedWidth(140)
-        self.solid_elements_label.setFixedWidth(140)
+        self.nodes_label.setFixedWidth(140)
+        self.surface_elements_label.setFixedWidth(180)
+        self.solid_elements_label.setFixedWidth(180)
 
     def set_selection(self, points, lines, faces, volumes):
         self.reset_selections_visibility()

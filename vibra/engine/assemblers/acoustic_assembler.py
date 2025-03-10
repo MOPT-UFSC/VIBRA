@@ -256,6 +256,8 @@ class AcousticAssembler:
         condition_1 = self.model.porous_material_properties
         condition_2 = self.model.viscous_thermal_model_properties
 
+        last_progress = 0
+
         if condition_1 or condition_2:
 
             nf = self.number_frequencies
@@ -265,6 +267,12 @@ class AcousticAssembler:
             self.den_K = np.zeros((nel, nf), dtype=complex)
 
             for el in range(nel):
+
+                progress = 100 * np.round(el/nel, 2)
+                if progress != last_progress:
+                    logging.info( "Processing elementary matrices data..." + ProgressStatus(int(progress), 100))
+
+                last_progress = progress
 
                 Ke, Me = element_3D.elementary_matrices(el)
                 self.data_K[el, :, :] = Ke
@@ -304,6 +312,12 @@ class AcousticAssembler:
             self.den_K = np.zeros((nel, nf), dtype=complex)
 
             for el in range(nel):
+
+                progress = 100 * np.round(el/nel, 2)
+                if progress != last_progress:
+                    logging.info( "Processing elementary matrices data..." + ProgressStatus(int(progress), 100))
+
+                last_progress = progress
 
                 rho_0, C_0, mu_0 = self.model.get_fluid_properties(proportional_damping=True, element=el)
 

@@ -1,7 +1,6 @@
-from PyQt5.QtWidgets import QDialog, QHeaderView, QPushButton, QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QWidget
-from PyQt5.QtGui import QIcon, QColor, QBrush, QFont
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog, QPushButton, QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QWidget, QHeaderView
+from PySide6.QtGui import QIcon, QColor, QBrush, QFont
+from PySide6.QtCore import Qt
 
 from vibra import app, UI_DIR, TEMP_PROJECT_FILE
 from vibra.interface.formatters.icons import *
@@ -15,6 +14,7 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.libraries.default_libraries import default_fluid_library
 
 from vibra.utils.utils import *
+from molde import load_ui
 
 from itertools import count
 
@@ -35,9 +35,9 @@ class FluidWidget(QWidget):
         super().__init__()
         
         ui_path = UI_DIR  / "model/setup/fluid/fluid_widget.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
-        self.parent_widget = kwargs.get("parent_widget", None)
+        self.dialog = kwargs.get("dialog", None)
         self.state_properties = kwargs.get("state_properties", dict())
 
         app().main_window.action_model_workspace_callback()
@@ -544,8 +544,8 @@ class FluidWidget(QWidget):
         fluid_name = self.tableWidget_fluid_data.item(0, col).text()
 
         if fluid_name in self.fluid_name_to_refprop_data.keys():
-            if isinstance(self.parent_widget, QDialog):
-                self.parent_widget.hide()
+            if isinstance(self.dialog, QDialog):
+                self.dialog.hide()
 
             selected_fluid = self.fluid_name_to_refprop_data[fluid_name]
             self.refprop = SetFluidCompositionInput(selected_fluid_to_edit = selected_fluid, 
@@ -652,8 +652,8 @@ class FluidWidget(QWidget):
 
     def call_refprop_interface(self):
 
-        if isinstance(self.parent_widget, QDialog):
-            self.parent_widget.hide()
+        if isinstance(self.dialog, QDialog):
+            self.dialog.hide()
 
         self.refprop = SetFluidCompositionInput(state_properties = self.state_properties)
         if not self.refprop.complete:
@@ -692,7 +692,7 @@ class FluidWidget(QWidget):
                     data = self.fluid_data_refprop[key]
                     if isinstance(data, float):
 
-                        if key in ["pressure", "thermal conductivity", "dynamic viscosity"]:
+                        if key in ["pressure", "thermal_conductivity", "dynamic_viscosity"]:
                             _data = f"{data : .6e}"
                         else:
                             _data = f"{data : .6f}"
@@ -713,21 +713,21 @@ class FluidWidget(QWidget):
 
         if self.state_properties:
 
-            if isinstance(self.parent_widget, QDialog):
+            if isinstance(self.dialog, QDialog):
                 return
 
                 volume_id = self.state_properties['volume_id']
-                self.parent_widget.comboBox_attribution_type.setCurrentIndex(1)
-                self.parent_widget.write_ids(volume_id)
-                self.parent_widget.lineEdit_selection_id.setDisabled(True)
+                self.dialog.comboBox_attribution_type.setCurrentIndex(1)
+                self.dialog.write_ids(volume_id)
+                self.dialog.lineEdit_selection_id.setDisabled(True)
                 if self.fluid_data_refprop:
                     fluid_name = self.fluid_data_refprop["name"]
-                    self.parent_widget.lineEdit_fluid_name.setText(fluid_name)
+                    self.dialog.lineEdit_fluid_name.setText(fluid_name)
 
                 connection_type_comp = self.state_properties['connection type']
                 connection_label = "discharge" if connection_type_comp else "suction"
                 
-                self.parent_widget.setWindowTitle(f"Set a fluid thermodynamic state at the compressor {connection_label}")
+                self.dialog.setWindowTitle(f"Set a fluid thermodynamic state at the compressor {connection_label}")
 
     def update_compressor_fluid_temperature_and_pressure(self):
         return

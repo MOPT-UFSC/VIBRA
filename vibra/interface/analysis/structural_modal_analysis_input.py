@@ -1,13 +1,13 @@
 from math import pi
 from pathlib import Path
 
-from PyQt5 import uic
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
 
 from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
+from molde import load_ui
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -18,7 +18,7 @@ class StructuralModalAnalysisInput(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "analysis/structural/modal_analysis_input.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         app().main_window.close_dialogs()
         app().main_window.set_input_widget(self)

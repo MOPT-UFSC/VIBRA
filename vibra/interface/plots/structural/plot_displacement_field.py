@@ -1,27 +1,36 @@
-from PyQt5.QtWidgets import QComboBox, QFrame, QLineEdit, QPushButton, QSlider, QTreeWidget, QTreeWidgetItem, QWidget
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5 import uic
+from PySide6.QtWidgets import QComboBox, QFrame, QLineEdit, QPushButton, QSlider, QTreeWidget, QTreeWidgetItem, QWidget
+from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt, Signal
 
 from vibra import app, UI_DIR
+
+from molde import load_ui
 
 import numpy as np
 
 
 class PlotDisplacementField(QWidget):
-    value_changed = pyqtSignal()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "plots/structural/plot_displacement_field.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
         self.load_frequencies()
         self.load_user_preference_colormap()
+    
+    def showEvent(self, event):
+        super().showEvent(event)
+
+        render_widget = app().main_window.structural_harmonic_analysis
+        app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
+        app().main_window.render_widget_changed.emit()
+
+        app().main_window.animation_toolbar.setDisabled(False)
 
     def _initialize(self):
         self.frequency_index = None
@@ -52,6 +61,7 @@ class PlotDisplacementField(QWidget):
 
         # QLineEdit
         self.lineEdit_selected_frequency : QLineEdit
+        self.lineEdit_selected_frequency.setProperty("status", "information")
 
         # QPushButton
         self.pushButton_plot : QPushButton
@@ -71,7 +81,7 @@ class PlotDisplacementField(QWidget):
 
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.comboBox_color_scale.currentIndexChanged.connect(self.update_plot)
-        self.comboBox_displacements.currentIndexChanged.connect(self.value_changed.emit)
+        self.comboBox_displacements.currentIndexChanged.connect(self.update_plot)
         #
         self.pushButton_plot.clicked.connect(self.update_plot)
         #
@@ -223,6 +233,10 @@ class PlotDisplacementField(QWidget):
             for i in range(2):
                 item.setTextAlignment(i, Qt.AlignCenter)
             self.treeWidget_frequencies.addTopLevelItem(item)
+        
+        first_item = self.treeWidget_frequencies.topLevelItem(0)
+        first_item.setSelected(True)
+        self.treeWidget_frequencies.itemClicked.emit(first_item, 0)
 
     def plot_displacement_for_static_analysis(self):
         #

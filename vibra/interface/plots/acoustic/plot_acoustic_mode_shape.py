@@ -1,9 +1,10 @@
-from PyQt5.QtWidgets import QComboBox, QFrame, QLineEdit, QPushButton, QSlider, QTreeWidget, QTreeWidgetItem, QWidget
-from PyQt5.QtGui import QFont
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QComboBox, QFrame, QLineEdit, QPushButton, QSlider, QTreeWidget, QTreeWidgetItem, QWidget
+from PySide6.QtGui import QFont
+from PySide6.QtCore import Qt, QModelIndex
 
 from vibra import app, UI_DIR
+
+from molde import load_ui
 
 import numpy as np
 
@@ -15,7 +16,7 @@ class PlotAcousticModeShape(QWidget):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "plots/acoustic/acoustic_mode_shape.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         self._initialize()
         self._define_qt_variables()
@@ -23,6 +24,15 @@ class PlotAcousticModeShape(QWidget):
         self._config_widgets()
         self.load_natural_frequencies()
         self.load_user_preference_colormap()
+    
+    def showEvent(self, event):
+        super().showEvent(event)
+
+        render_widget = app().main_window.acoustic_modal_analysis
+        app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
+        app().main_window.render_widget_changed.emit()
+
+        app().main_window.animation_toolbar.setDisabled(False)
        
     def _initialize(self):
         self.mode_index = None
@@ -88,15 +98,10 @@ class PlotAcousticModeShape(QWidget):
 
         self.frame_button.setVisible(False)
         self.lineEdit_natural_frequency.setDisabled(True)
+        self.lineEdit_natural_frequency.setProperty("status", "information")
 
-        # if isinstance(app().project.complex_natural_frequencies_acoustic, np.ndarray):
-        if False:
-            widths = [60, 170]
-            headers = ["Mode", "Damped frequency [Hz]", "Damping ratio [--]"]
-
-        else:
-            widths = [120, 160]
-            headers = ["Mode", "Frequency [Hz]"]
+        widths = [120, 160]
+        headers = ["Mode", "Frequency [Hz]"]
 
         font = QFont()
         font.setPointSize(9)
@@ -107,7 +112,7 @@ class PlotAcousticModeShape(QWidget):
             if i < 2:
                 self.treeWidget_frequencies.setColumnWidth(i, widths[i])
             self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
-            
+                    
     def update_animation_widget_visibility(self):
         return
         index = self.comboBox_color_scale.currentIndex()
@@ -188,10 +193,17 @@ class PlotAcousticModeShape(QWidget):
             cols = 2
             new = QTreeWidgetItem([str(mode), str(round(value,4))])
 
+            if mode == 1:
+                new.setSelected(True)
+
             for i in range(cols):
                 new.setTextAlignment(i, Qt.AlignCenter)
             
             self.treeWidget_frequencies.addTopLevelItem(new)
+        
+        first_item = self.treeWidget_frequencies.topLevelItem(0)
+        first_item.setSelected(True)
+        self.treeWidget_frequencies.itemClicked.emit(first_item, 0)
     
     def current_mode_index(self):
         if self.mode_index is not None:
@@ -204,6 +216,7 @@ class PlotAcousticModeShape(QWidget):
         self.lineEdit_natural_frequency.setText(str(round(selected_frequency, 4)))
 
         self.selected_frequency = selected_frequency
+        
         self.update_plot()
 
     def on_doubleclick_item(self, item):

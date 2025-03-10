@@ -1,13 +1,10 @@
+import logging
 import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
-from PyQt5.QtCore import QObjectCleanupHandler
-from PyQt5.QtWidgets import *
+from PySide6.QtWidgets import *
 
 from vibra import app
-# from vibra.interface.modal_analysis_bar import AcousticModalAnalysisBar
-from vibra.interface.analysis_bars.acoustic_analysis_bar import (
-    AcousticModalAnalysisBar,
-)
+
 from vibra.interface.viewer_3d.actors.analysis_actor import AnalysisActor
 from vibra.interface.viewer_3d.actors.hollow_analysis_actor import HollowAnalysisActor
 from vibra.interface.viewer_3d.actors.section_plane_actor import (
@@ -19,6 +16,7 @@ from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 #     CommonRenderWidget,
 # )
 from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
+from vibra.utils.progress_status import ProgressStatus
 
 
 class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
@@ -27,33 +25,19 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
 
         self.main_window = app().main_window
         self.current_widget = None
-        self.control_bar = AcousticModalAnalysisBar()
 
-        self.control_bar.value_changed.connect(self.update_deformation)
-        self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
-        self.control_bar.phase_slider.valueChanged.connect(self.stop_animation)
-        self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
-        self.control_bar.create_video_button.clicked.connect(self.save_video)
-        self.main_window.theme_changed.connect(self.set_theme)
+        self.main_window.theme_changed.connect(self.update_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
         self.section_plane_active = False
         self.show_plane_actor = True
         self.section_plane_args = tuple()
-
-        # replace the layout to add other usefull widgets
-        QObjectCleanupHandler().add(self.layout())
-        layout = QVBoxLayout()
-        layout.addWidget(self.control_bar)
-        layout.addWidget(self.render_interactor)
-        self.setLayout(layout)
-        self.setContentsMargins(0, 0, 0, 0)
-
+        
         self.analysis_actor = None
         self.edges_actor = None
         self.plane_actor = None
         self.hidden_part_actor = None
-        self.bounds = (0, 0, 0, 0, 0, 0)
+        self._bounds = (0, 0, 0, 0, 0, 0)
 
         self.create_axes()
         self.create_color_bar()
@@ -67,15 +51,77 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         if self.playing_animation:
             self.stop_animation()
         else:
-            self.start_animation()
+            self.start_animation(*args, **kwargs)
 
-    def start_animation(self):
-        super().start_animation()
-        self.control_bar.use_pause_icon()
+    def start_animation(self, *args, **kwargs):
+        super().start_animation(*args, **kwargs)
+        self.main_window.animation_toolbar.update_animate_button_icons(True)
 
     def stop_animation(self):
         super().stop_animation()
-        self.control_bar.use_play_icon()
+        self.main_window.animation_toolbar.update_animate_button_icons(False)
+    
+    def set_theme(self, *args, **kwargs):
+        self.update_theme()
+    
+    def update_theme(self):
+        user_preferences = app().config.user_preferences
+        bkg_1 = user_preferences.renderer_background_color_1
+        bkg_2 = user_preferences.renderer_background_color_2
+        font_color = user_preferences.renderer_font_color
+
+        if bkg_1 is None:
+            raise ValueError('Missing value "bkg_1"')
+        if bkg_2 is None:
+            raise ValueError('Missing value "bkg_2"')
+        if font_color is None:
+            raise ValueError('Missing value "font_color"')
+
+        self.renderer.GradientBackgroundOn()
+        self.renderer.SetBackground(bkg_1.to_rgb_f())
+        self.renderer.SetBackground2(bkg_2.to_rgb_f())
+
+        if hasattr(self, "text_actor"):
+            self.text_actor.GetTextProperty().SetColor(font_color.to_rgb_f())
+
+        if hasattr(self, "colorbar_actor"):
+            self.colorbar_actor.GetTitleTextProperty().SetColor(font_color.to_rgb_f())
+            self.colorbar_actor.GetLabelTextProperty().SetColor(font_color.to_rgb_f())
+
+        if hasattr(self, "scale_bar_actor"):
+            self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
+            self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
+    
+    def update_scale_bar_visibility(self):
+        user_preferences = app().config.user_preferences
+
+        if user_preferences.show_reference_scale_bar:
+            self.enable_scale_bar()
+        else:
+            self.disable_scale_bar()
+    
+    def enable_scale_bar(self):
+        self.scale_bar_actor.VisibilityOn()
+
+    def disable_scale_bar(self):
+        self.scale_bar_actor.VisibilityOff()
+    
+    def update_renderer_font_size(self):
+        user_preferences = app().config.user_preferences
+        font_size_px = int(user_preferences.renderer_font_size * 4/3)
+
+        info_text_property = self.text_actor.GetTextProperty()
+        info_text_property.SetFontSize(font_size_px)
+
+        scale_bar_title_property = self.scale_bar_actor.GetLegendTitleProperty()
+        scale_bar_label_property = self.scale_bar_actor.GetLegendLabelProperty()
+        scale_bar_title_property.SetFontSize(font_size_px)
+        scale_bar_label_property.SetFontSize(font_size_px)
+
+        color_bar_title_property = self.colorbar_actor.GetTitleTextProperty()
+        color_bar_label_property = self.colorbar_actor.GetLabelTextProperty()
+        color_bar_title_property.SetFontSize(font_size_px)
+        color_bar_label_property.SetFontSize(font_size_px)
 
     def current_mode_index(self):
         if self.current_widget is not None:
@@ -140,13 +186,13 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.plane_actor.SetScale(scale, scale, scale)
         self.renderer.AddActor(self.plane_actor)
 
-        mesh_visibility = self.control_bar.show_mesh_button.isChecked()
-        self.set_mesh_visibility(mesh_visibility)
+        # mesh_visibility = self.main_window.animation_toolbar.checkBox_show_mesh.isChecked()
+        # self.set_mesh_visibility(mesh_visibility)
 
-        if self.control_bar.show_mesh_button.isChecked():
-            self.analysis_actor.VisibilityOn()
-            self.analysis_actor.GetProperty().SetRepresentationToSurface()
-            self.edges_actor.VisibilityOn()
+        # if mesh_visibility:
+        #     self.analysis_actor.VisibilityOn()
+        #     self.analysis_actor.GetProperty().SetRepresentationToSurface()
+        #     self.edges_actor.VisibilityOn()
 
         # if self.section_plane_active and self.section_plane_args:
         #     self.start_section_mode()
@@ -158,6 +204,8 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         #     self.update()
 
         self.update_section_plane()
+        
+        self.update_theme()
 
         if reset_camera:
             self.renderer.ResetCamera()
@@ -167,7 +215,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         solver = app().project.acoustic_modal_solver
         index = self.current_mode_index()
 
-        phase = self.control_bar.phase_slider.value()
+        phase = self.main_window.animation_toolbar.phase_slider.value()
 
         current_modal_shape = solver.modal_shape[:, index].copy()
         if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
@@ -204,7 +252,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         if not (0 <= index < solver.modal_shape.shape[1]):
             return
 
-        phase = self.control_bar.phase_slider.value()
+        phase = self.main_window.animation_toolbar.phase_slider.value()
         current_modal_shape = solver.modal_shape[:, index].copy()
         if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
             current_modal_shape = np.abs(current_modal_shape)
@@ -237,6 +285,8 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         index = self.current_mode_index()
         if not (0 <= index < solver.modal_shape.shape[1]):
             return
+    
+        logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]" + ProgressStatus(frame, self._animation_total_frames))
 
         t = frame / (self._animation_total_frames - 1)
         phase = lerp(0, 360, t)
@@ -262,19 +312,6 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
-    def save_video(self):
-        file_path, check = QFileDialog.getSaveFileName(
-                                                        self,
-                                                        "Save As",
-                                                        filter = "All Files ();; Video (*.mp4);; GIF (*.gif);;",
-                                                    )
-        
-        if not check:
-            return
-        
-        self.generate_video(file_path)
-        
-
     def set_mesh_visibility(self, condition):
         if not self._actors_exists():
             return
@@ -285,6 +322,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
             self.show_faces()
 
     def show_points(self):
+        return
         if not self._actors_exists():
             return
 
@@ -295,6 +333,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def show_lines(self):
+        return
         if not self._actors_exists():
             return
 
@@ -305,6 +344,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def show_faces(self):
+        return
         if not self._actors_exists():
             return
 

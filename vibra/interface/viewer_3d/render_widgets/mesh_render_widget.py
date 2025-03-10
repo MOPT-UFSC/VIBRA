@@ -1,5 +1,5 @@
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtWidgets import QApplication
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import QApplication
 
 from vibra import app
 # from vibra.interface.tabs.mesh_info_bar import MeshInfoBar
@@ -34,7 +34,7 @@ from vtkmodules.vtkRenderingCore import vtkActor, vtkCellPicker
 
 
 class MeshRenderWidget(CommonRenderWidget):
-    selection_changed = pyqtSignal(list, list, list)
+    selection_changed = Signal(list, list, list)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -46,9 +46,9 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.left_clicked.connect(self.click_callback)
         self.left_released.connect(self.selection_callback)
+        self.main_window.theme_changed.connect(self.update_theme)
         self.main_window.visualization_changed.connect(self.visualization_changed_callback)
         self.main_window.selection_changed.connect(self.update_selection)
-        self.main_window.theme_changed.connect(self.set_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
         self.mesh_selection = MeshSelection(self)
@@ -72,6 +72,61 @@ class MeshRenderWidget(CommonRenderWidget):
         self.create_scale_bar()
         self.create_camera_light(0.1, 0.1)
         self.update_plot()
+    
+    def set_theme(self, *args, **kwargs):
+        self.update_theme()
+    
+    def update_theme(self):
+        user_preferences = app().config.user_preferences
+        bkg_1 = user_preferences.renderer_background_color_1
+        bkg_2 = user_preferences.renderer_background_color_2
+        font_color = user_preferences.renderer_font_color
+
+        if bkg_1 is None:
+            raise ValueError('Missing value "bkg_1"')
+        if bkg_2 is None:
+            raise ValueError('Missing value "bkg_2"')
+        if font_color is None:
+            raise ValueError('Missing value "font_color"')
+
+        self.renderer.GradientBackgroundOn()
+        self.renderer.SetBackground(bkg_1.to_rgb_f())
+        self.renderer.SetBackground2(bkg_2.to_rgb_f())
+
+        if hasattr(self, "text_actor"):
+            self.text_actor.GetTextProperty().SetColor(font_color.to_rgb_f())
+
+        if hasattr(self, "scale_bar_actor"):
+            self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
+            self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
+        
+        self.update_selection()
+    
+    def update_scale_bar_visibility(self):
+        user_preferences = app().config.user_preferences
+
+        if user_preferences.show_reference_scale_bar:
+            self.enable_scale_bar()
+        else:
+            self.disable_scale_bar()
+    
+    def enable_scale_bar(self):
+        self.scale_bar_actor.VisibilityOn()
+
+    def disable_scale_bar(self):
+        self.scale_bar_actor.VisibilityOff()
+    
+    def update_renderer_font_size(self):
+        user_preferences = app().config.user_preferences
+        font_size_px = int(user_preferences.renderer_font_size * 4/3)
+
+        info_text_property = self.text_actor.GetTextProperty()
+        info_text_property.SetFontSize(font_size_px)
+
+        scale_bar_title_property = self.scale_bar_actor.GetLegendTitleProperty()
+        scale_bar_label_property = self.scale_bar_actor.GetLegendLabelProperty()
+        scale_bar_title_property.SetFontSize(font_size_px)
+        scale_bar_label_property.SetFontSize(font_size_px)
 
     def update_plot(self, reset_camera=True):
         mesh = app().project.model.mesh
@@ -106,6 +161,8 @@ class MeshRenderWidget(CommonRenderWidget):
             self.plane_actor,
             self.symbols_actor,
         )
+
+        self.update_theme()
 
         if reset_camera:
             self.renderer.ResetCamera()
@@ -204,16 +261,16 @@ class MeshRenderWidget(CommonRenderWidget):
         Update the visualization of selected data.
         """
         # This is a optimization, may imply side effects
-        if not self.isVisible():
-            return
+        # if not self.isVisible():
+        #     return
 
         if not self._actors_exists():
             return
 
         self.update_info_text()
 
-        self.nodes_actor.clear_colors((0, 0, 0, 0))
-        self.faces_actor.clear_colors((0, 0, 0, 0))
+        self.nodes_actor.clear_colors()
+        self.faces_actor.clear_colors()
         self.solids_actor.clear_colors()
 
         nodes = self.main_window.selected_mesh_nodes
@@ -223,6 +280,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.nodes_actor.paint_cells([255, 0, 0], nodes)
         self.faces_actor.paint_cells((70, 170, 255), faces)
         self.solids_actor.paint_cells(self.selection_color, solids)
+        self.edges_actor.configure_appearance()
         self.update()
 
     def clear_selection_spheres(self):
@@ -258,7 +316,7 @@ class MeshRenderWidget(CommonRenderWidget):
     def update_section_plane(self):
         if not self._actors_exists():
             return
-
+        
         section_plane = self.main_window.section_plane
 
         if not section_plane.cutting:
@@ -362,7 +420,7 @@ class MeshRenderWidget(CommonRenderWidget):
             element_id = solids_elem_ids[0]
             connect = app().project.model.mesh.solids_connectivity[element_id, 4:]
             text += f"Solid element: {element_id}\n"
-            text += f"Connectivity: {list(connect)}\n\n"
+            text += f"Connectivity: {[int(node_id) for node_id in connect]}\n\n"
 
         return text
 

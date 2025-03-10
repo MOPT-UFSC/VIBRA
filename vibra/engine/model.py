@@ -313,11 +313,11 @@ class Model:
 
     def process_porous_material_properties(self, frequencies: np.ndarray):
 
-        model = PorousMaterialModels(self)
-        model.process_effective_properties(frequencies)
+        pm_model = PorousMaterialModels(self)
+        pm_model.process_effective_properties(frequencies)
 
         self.porous_material_properties = dict()
-        for volume_id, data in model.effective_properties.items():
+        for volume_id, data in pm_model.effective_properties.items():
             for element_id in self.mesh.elements_from_volume[volume_id]:
                 self.porous_material_properties[element_id] = data
             # print(len(self.mesh.elements_from_volume[volume_id]))
@@ -367,21 +367,8 @@ class Model:
 
         return False, None, None
 
-    # Properties can be accessed from outside, so this "indirection layer" is not needed
-    def set_dissipation_model_data(self, data, volume=None):
-        self.properties.set_dissipation_model(data, volume=volume)
-
-    def set_porous_material_model_data(self, data, surface=None, volume=None):
-        self.properties.set_porous_material_model_data(data, surface=surface, volume=volume)
-
     def set_viscous_thermal_model_data(self, data, group=None, volume=None):
         self.properties._set_property("viscous_thermal_model", data, group=group, volume=volume)
-
-    def set_structural_boundary_condition(self, data, line, surface):
-        self.properties.set_structural_boundary_condition(data, line, surface)
-
-    def set_structural_load(self, data, line, surface):
-        self.properties.set_structural_load(data, line, surface)
 
     def process_surface_thickness(self):
         for key, data in self.properties.surface_properties.items():

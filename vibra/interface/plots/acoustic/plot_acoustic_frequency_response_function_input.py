@@ -1,13 +1,13 @@
-from PyQt5.QtWidgets import QComboBox, QLineEdit, QPushButton, QWidget
-from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
-from PyQt5.QtGui import QCloseEvent
-from PyQt5 import uic
+from PySide6.QtWidgets import QComboBox, QLineEdit, QPushButton, QDialog, QWidget
+from PySide6.QtCore import Qt, QEvent, QObject, Signal
+from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+
+from molde import load_ui
 
 import numpy as np
 
@@ -19,7 +19,7 @@ class PlotAcousticPressureFrequencyResponseFunctionInput(QWidget):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "plots/acoustic/plot_acoustic_pressure_frequency_response_function.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.show_geometry_render_widget()
@@ -32,8 +32,6 @@ class PlotAcousticPressureFrequencyResponseFunctionInput(QWidget):
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
-
-        ConfigWidgetAppearance(self, tool_tip=True)
 
         self._load_analysis_data_and_solution()
         self.geometry_selection_callback()
@@ -87,7 +85,7 @@ class PlotAcousticPressureFrequencyResponseFunctionInput(QWidget):
 
     def clickable(self, widget):
         class Filter(QObject):
-            clicked = pyqtSignal()
+            clicked = Signal()
 
             def eventFilter(self, obj, event):
                 if obj == widget and event.type() == QEvent.MouseButtonRelease and obj.rect().contains(event.pos()):

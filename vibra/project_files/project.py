@@ -10,11 +10,12 @@ from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
 from vibra.engine.solvers.structural_harmonic_solver import StructuralHarmonicSolver
-from vibra.utils.progress_status import ProgressStatus
+from vibra.engine.checkers.analysis_requirements_checker import AnalysisRequirementsChecker
 
 from vibra.interface.process_analysis import ProcessAnalysis
 from vibra.interface.mesh.mesher_inputs import MesherInputs
 from vibra.interface.loading_bar import load_function
+from vibra.utils.progress_status import ProgressStatus
 
 import numpy as np
 
@@ -67,8 +68,6 @@ class Project:
 
         if len(self.analysis_data) == 0:
             return
-        
-        
 
         self.create_solver()
 
@@ -109,21 +108,40 @@ class Project:
             return
         self.model.process_mesh()
 
-    def set_structural_boundary_condition(self, data, line, surface):
-        self.model.set_structural_boundary_condition(data, line, surface)
-
-    def set_dissipation_model(self, data, volume):
-        self.model.set_dissipation_model_data(data, volume=volume)
-
-    def set_porous_material_model(self, data, **kwargs):
-        self.model.set_porous_material_model_data(data, **kwargs)
-
-    def set_viscous_thermal_model(self, data, **kwargs):
-        self.model.set_viscous_thermal_model_data(data, **kwargs)
-
     def set_analysis_data(self, data: dict):
         self.analysis_data = data
         self.model.set_frequency_setup(data)
+
+    def is_analysis_setup_complete(self):
+
+        analysis_setup = app().file.read_analysis_setup_from_file()
+        if isinstance(analysis_setup, dict):
+            analysis_id = analysis_setup.get("analysis_id")
+            if analysis_id in [2, 4]:
+                if "modes" in analysis_setup.keys():
+                    if not isinstance(analysis_setup["modes"], int):
+                        return False
+                else:
+                    return False
+
+                if "sigma_factor" in analysis_setup.keys():
+                    if not isinstance(analysis_setup["sigma_factor"], int | float):
+                        return False
+                else:
+                    return False
+
+                return True
+
+            elif analysis_id in [0, 1, 3]:
+                for f_type in ["f_min", "f_max", "f_step"]:    
+                    if f_type in analysis_setup.keys():
+                        if not isinstance(analysis_setup[f_type], int | float):
+                            return False
+                    else:
+                        return False
+                return True
+
+        return False
 
     def create_solver(self):
         """ """
@@ -254,25 +272,35 @@ class Project:
         analysis = ProcessAnalysis()
         analysis_id = self.analysis_data["analysis_id"]
 
+        checker = AnalysisRequirementsChecker()
+
         if analysis_id in [0, 1]:
+            if checker.check_structural_harmonic_analysis():
+                return True
             solve_harmonic = load_function(analysis.process_structural_harmonic_analysis, app().main_window)
             solve_harmonic()
 
         elif analysis_id == 2:
+            if checker.check_structural_modal_analysis():
+                return True
             solve_modal = load_function(analysis.process_structural_modal_analysis, app().main_window)
             solve_modal()
 
         elif analysis_id == 3:
+            if checker.check_acoustic_harmonic_analysis():
+                return True
             solve_harmonic = load_function(analysis.process_acoustic_harmonic_analysis, app().main_window)
             solve_harmonic()
 
         elif analysis_id == 4:
+            if checker.check_acoustic_modal_analysis():
+                return True
             solve_modal = load_function(analysis.process_acoustic_modal_analysis, app().main_window)
             solve_modal()
 
         else:
             raise NotImplementedError("Not implemented analysis")
-    
+
         app().main_window.results_viewer_widget.results_viewer_items.update_items()
 
     def long_function(self):

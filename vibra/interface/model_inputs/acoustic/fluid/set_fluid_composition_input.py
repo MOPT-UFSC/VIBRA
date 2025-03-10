@@ -1,14 +1,13 @@
-from PyQt5.QtWidgets import QDialog, QComboBox, QFileDialog, QLabel, QLineEdit, QPushButton, QTableWidget, QTabWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem
-from PyQt5.QtGui import QIcon, QFont
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog, QComboBox, QFileDialog, QLabel, QLineEdit, QPushButton, QTableWidget, QTabWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem
+from PySide6.QtGui import QIcon, QFont
+from PySide6.QtCore import Qt
 
 from vibra import app, UI_DIR
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.model_inputs.acoustic.fluid.load_fluid_composition_input import LoadFluidCompositionInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.utils.utils import *
+from molde import load_ui
 
 import os
 
@@ -20,7 +19,7 @@ class SetFluidCompositionInput(QDialog):
         super().__init__()
 
         ui_path = UI_DIR / "model/setup/fluid/set_fluid_composition_input.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         self.selected_fluid_to_edit = kwargs.get("selected_fluid_to_edit", None)
         self.state_properties = kwargs.get("state_properties", dict())
@@ -33,7 +32,6 @@ class SetFluidCompositionInput(QDialog):
         self.model = self.project.model
         self.properties = self.model.properties
 
-        self._load_icons()
         self._config_window()
         self._initialize()
         self._define_qt_variables()
@@ -53,13 +51,11 @@ class SetFluidCompositionInput(QDialog):
         while self.keep_window_open:
             self.exec()
 
-    def _load_icons(self):
-        self.icon = app().main_window.vibra_icon
 
     def _config_window(self):
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(self.icon)
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
@@ -156,8 +152,6 @@ class SetFluidCompositionInput(QDialog):
         self.treeWidget_reference_gases.itemDoubleClicked.connect(self.on_double_click_item_refprop_fluids)
 
     def _config_widgets(self):
-
-        ConfigWidgetAppearance(self, tool_tip=True)
 
         self.label_discharge.setVisible(False)
         self.label_suction.setVisible(False)

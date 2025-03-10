@@ -119,10 +119,11 @@ class FacesActor(vtkActor):
         self.GetProperty().SetSpecularColor(1, 1, 1)
         self.clear_colors()
 
-    def clear_colors(self, color=(255, 255, 255, 255)):
+    def clear_colors(self):
         if self.data is None:
             return
 
+        color = app().config.user_preferences.faces_color.to_rgba()
         self.set_color(color)
 
     def set_color(self, color: tuple[int, int, int, int] | tuple[int, int, int]):

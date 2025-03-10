@@ -1,11 +1,11 @@
-from PyQt5.QtWidgets import QDialog, QLabel, QPushButton
-from PyQt5.QtGui import QIcon, QFont
-from PyQt5.QtCore import Qt, QRect
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog, QLabel, QPushButton
+from PySide6.QtGui import QIcon, QFont
+from PySide6.QtCore import Qt, QRect
 
 from vibra import app, UI_DIR, __version__
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
-from vibra.interface.formatters.icons import * 
+from vibra.interface.formatters.icons import *
+from molde import load_ui
 
 
 class GetUserConfirmationInput(QDialog):
@@ -13,7 +13,7 @@ class GetUserConfirmationInput(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "messages/get_user_confirmation.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -28,25 +28,19 @@ class GetUserConfirmationInput(QDialog):
         self.buttons_config = buttons_config
         self.window_title = kwargs.get('window_title', f'Vibra v{__version__}')
 
-        self._load_icons()
         self._config_window()
         self._reset_variables()
         self._define_qt_variables()
         self._create_connections()
 
-        ConfigWidgetAppearance(self)
-
         self._configure_labels()
         self._configure_buttons()
         self.exec()
 
-    def _load_icons(self):
-        self.icon = app().main_window.vibra_icon
-
     def _config_window(self):
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(self.icon)
         self.setWindowTitle(self.window_title)
 
     def _reset_variables(self):

@@ -4,13 +4,11 @@ from time import time
 
 import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
-from PyQt5.QtCore import QObjectCleanupHandler
-from PyQt5.QtWidgets import *
+# from PySide6.QtCore import QObjectCleanupHandler
+from PySide6.QtWidgets import *
 
 from vibra import app
-from vibra.interface.analysis_bars.structural_analysis_bar import (
-    StructuralModalAnalysisBar,
-)
+
 from ..actors.ghost_actor import GhostActor
 from ..actors.analysis_actor import AnalysisActor
 from ..actors.hollow_analysis_actor import HollowAnalysisActor
@@ -18,6 +16,7 @@ from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.edges_actor import EdgesActor
 from ..actors.faces_actor import FacesActor
 from vibra.utils.math_functions import lerp
+from vibra.utils.progress_status import ProgressStatus
 
 
 class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
@@ -31,21 +30,8 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.main_window = app().main_window
         self.current_menu_widget = None
 
-        self.control_bar = StructuralModalAnalysisBar()
-        self.control_bar.show_mesh_button.stateChanged.connect(self.set_mesh_visibility)
-        self.control_bar.phase_slider.sliderPressed.connect(self.stop_animation)
-        self.control_bar.play_pause_button.clicked.connect(self.toggle_animation)
-        self.control_bar.create_video_button.clicked.connect(self.save_video)
-        self.main_window.theme_changed.connect(self.set_theme)
+        self.main_window.theme_changed.connect(self.update_theme)
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
-
-        # replace the layout to add other usefull widgets
-        QObjectCleanupHandler().add(self.layout())
-        layout = QVBoxLayout()
-        layout.addWidget(self.control_bar)
-        layout.addWidget(self.render_interactor)
-        self.setLayout(layout)
-        self.setContentsMargins(0, 0, 0, 0)
 
         self.show_plane_actor = True
         self.section_plane_active = False
@@ -64,21 +50,82 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
     
     def configure_menu_widget(self, menu_widget: QWidget):
         self.current_menu_widget = menu_widget
-        self.current_menu_widget.value_changed.connect(self.update_deformations)
 
     def toggle_animation(self, *args, **kwargs):
         if self.playing_animation:
             self.stop_animation()
         else:
-            self.start_animation()
+            self.start_animation(*args, **kwargs)
 
-    def start_animation(self):
-        super().start_animation()
-        self.control_bar.use_pause_icon()
+    def start_animation(self, *args, **kwargs):
+        super().start_animation(*args, **kwargs)
+        self.main_window.animation_toolbar.update_animate_button_icons(True)
 
     def stop_animation(self):
         super().stop_animation()
-        self.control_bar.use_play_icon()
+        self.main_window.animation_toolbar.update_animate_button_icons(False)
+    
+    def set_theme(self, *args, **kwargs):
+        self.update_theme()
+    
+    def update_theme(self):
+        user_preferences = app().config.user_preferences
+        bkg_1 = user_preferences.renderer_background_color_1
+        bkg_2 = user_preferences.renderer_background_color_2
+        font_color = user_preferences.renderer_font_color
+
+        if bkg_1 is None:
+            raise ValueError('Missing value "bkg_1"')
+        if bkg_2 is None:
+            raise ValueError('Missing value "bkg_2"')
+        if font_color is None:
+            raise ValueError('Missing value "font_color"')
+
+        self.renderer.GradientBackgroundOn()
+        self.renderer.SetBackground(bkg_1.to_rgb_f())
+        self.renderer.SetBackground2(bkg_2.to_rgb_f())
+
+        if hasattr(self, "text_actor"):
+            self.text_actor.GetTextProperty().SetColor(font_color.to_rgb_f())
+
+        if hasattr(self, "colorbar_actor"):
+            self.colorbar_actor.GetTitleTextProperty().SetColor(font_color.to_rgb_f())
+            self.colorbar_actor.GetLabelTextProperty().SetColor(font_color.to_rgb_f())
+
+        if hasattr(self, "scale_bar_actor"):
+            self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
+            self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
+        
+    def update_scale_bar_visibility(self):
+        user_preferences = app().config.user_preferences
+
+        if user_preferences.show_reference_scale_bar:
+            self.enable_scale_bar()
+        else:
+            self.disable_scale_bar()
+    
+    def enable_scale_bar(self):
+        self.scale_bar_actor.VisibilityOn()
+
+    def disable_scale_bar(self):
+        self.scale_bar_actor.VisibilityOff()
+    
+    def update_renderer_font_size(self):
+        user_preferences = app().config.user_preferences
+        font_size_px = int(user_preferences.renderer_font_size * 4/3)
+
+        info_text_property = self.text_actor.GetTextProperty()
+        info_text_property.SetFontSize(font_size_px)
+
+        scale_bar_title_property = self.scale_bar_actor.GetLegendTitleProperty()
+        scale_bar_label_property = self.scale_bar_actor.GetLegendLabelProperty()
+        scale_bar_title_property.SetFontSize(font_size_px)
+        scale_bar_label_property.SetFontSize(font_size_px)
+
+        color_bar_title_property = self.colorbar_actor.GetTitleTextProperty()
+        color_bar_label_property = self.colorbar_actor.GetLabelTextProperty()
+        color_bar_title_property.SetFontSize(font_size_px)
+        color_bar_label_property.SetFontSize(font_size_px)
 
     def current_shape_index(self):
         if self.current_menu_widget is not None:
@@ -133,8 +180,10 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.renderer.AddActor(self.edges_actor)
         self.renderer.AddActor(self.plane_actor)
 
-        mesh_visibility = self.control_bar.show_mesh_button.isChecked()
-        self.set_mesh_visibility(mesh_visibility)
+        # mesh_visibility = self.control_bar.show_mesh_button.isChecked()
+        # self.set_mesh_visibility(mesh_visibility)
+
+        self.update_theme()
 
         if reset_camera:
             self.renderer.ResetCamera()
@@ -163,8 +212,8 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         if self.playing_animation:
             return
 
-        phase = self.control_bar.phase_slider.value()
-        magnification_factor = self.control_bar.magnification_factor_slider.value() / 16
+        phase = self.main_window.animation_toolbar.phase_slider.value()
+        magnification_factor = self.main_window.animation_toolbar.magnification_factor_slider.value() / 16
         displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
 
         self.analysis_actor.apply_deformation(displacements, magnification_factor, max_value)
@@ -344,11 +393,13 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         if not (0 <= index < solver.solution_full.shape[1]):
             return
 
+        logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]" + ProgressStatus(frame, self._animation_total_frames))
+
         # Map the frames from 0 to 1
         t = frame / (self._animation_total_frames - 1)
         phase = lerp(0, 360, t)
 
-        magnification_factor = self.control_bar.magnification_factor_slider.value() / 16
+        magnification_factor = self.main_window.animation_toolbar.magnification_factor_slider.value() / 16
         displacements, color_scalars, min_value, max_value = self._calculate_displacements(index, phase)
 
         self.analysis_actor.apply_deformation(displacements, magnification_factor, max_value)
@@ -356,18 +407,6 @@ class StructuralModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value)
         # self.edges_actor.extract_data(self.analysis_actor.data)
         self.update()
-
-    def save_video(self):
-        file_path, check = QFileDialog.getSaveFileName(
-                                                        self,
-                                                        "Save As",
-                                                        filter = "All Files ();; Video (*.mp4);; GIF (*.gif);;",
-                                                    )
-        
-        if not check:
-            return
-        
-        self.generate_video(file_path)
 
     def _actors_exists(self):
         actors = [

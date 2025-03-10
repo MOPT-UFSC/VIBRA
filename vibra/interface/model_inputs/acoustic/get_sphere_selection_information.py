@@ -1,13 +1,14 @@
 # fmt: off
 
-from PyQt5.QtWidgets import QDialog, QLineEdit, QPushButton
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog, QLineEdit, QPushButton
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon
 
 from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_bar import load_function
+
+from molde import load_ui
 
 import numpy as np
 from pathlib import Path
@@ -20,7 +21,7 @@ class GetSphereSelectionInformation(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "model/setup/acoustic/get_sphere_selection_information.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)

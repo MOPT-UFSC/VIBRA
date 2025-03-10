@@ -351,9 +351,9 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="tab_edit">
+        <widget class="QWidget" name="tab_list">
          <attribute name="title">
-          <string>Remove</string>
+          <string>List</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_6">
           <item row="0" column="0">

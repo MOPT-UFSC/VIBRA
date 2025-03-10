@@ -1,9 +1,10 @@
-from PyQt5.QtWidgets import QComboBox, QFrame, QLineEdit, QPushButton, QSlider, QTreeWidget, QTreeWidgetItem, QWidget
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5 import uic
+from PySide6.QtWidgets import QComboBox, QFrame, QLineEdit, QPushButton, QSlider, QTreeWidget, QTreeWidgetItem, QWidget
+from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt, Signal
 
 from vibra import app, UI_DIR
+
+from molde import load_ui
 
 import numpy as np
 
@@ -11,13 +12,12 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 class PlotStructuralModeShape(QWidget):
-    value_changed = pyqtSignal()
-
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "plots/structural/plot_structural_mode_shape.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         self._initialize()
         self._define_qt_variables()
@@ -25,6 +25,15 @@ class PlotStructuralModeShape(QWidget):
         self._config_widgets()
         self.load_natural_frequencies()
         self.load_user_preference_colormap()
+    
+    def showEvent(self, event):
+        super().showEvent(event)
+
+        render_widget = app().main_window.structural_modal_analysis
+        app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
+        app().main_window.render_widget_changed.emit()
+
+        app().main_window.animation_toolbar.setDisabled(False)
 
     def _initialize(self):
         self.mode_index = None
@@ -78,7 +87,7 @@ class PlotStructuralModeShape(QWidget):
 
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.comboBox_color_scale.currentIndexChanged.connect(self.update_plot)
-        self.comboBox_displacements.currentIndexChanged.connect(self.value_changed.emit)
+        self.comboBox_displacements.currentIndexChanged.connect(self.update_plot)
         #
         self.pushButton_plot.clicked.connect(self.update_plot)
         #
@@ -95,6 +104,7 @@ class PlotStructuralModeShape(QWidget):
 
         self.frame_button.setVisible(False)
         self.lineEdit_natural_frequency.setDisabled(True)
+        self.lineEdit_natural_frequency.setProperty("status", "information")
 
         widths = [80, 140]
         for i, width in enumerate(widths):
@@ -226,6 +236,10 @@ class PlotStructuralModeShape(QWidget):
             new.setTextAlignment(0, Qt.AlignCenter)
             new.setTextAlignment(1, Qt.AlignCenter)
             self.treeWidget_frequencies.addTopLevelItem(new)
+        
+        first_item = self.treeWidget_frequencies.topLevelItem(0)
+        first_item.setSelected(True)
+        self.treeWidget_frequencies.itemClicked.emit(first_item, 0)
 
     def on_click_item(self, item):
         self.selected_natural_frequency = self.modes_to_frequencies[int(item.text(0))]

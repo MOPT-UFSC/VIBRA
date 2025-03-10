@@ -1,15 +1,15 @@
 # fmt: off
 
-from PyQt5.QtWidgets import QCheckBox, QDialog, QFileDialog, QLineEdit, QPushButton, QRadioButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QCloseEvent
-from PyQt5 import uic
+from PySide6.QtWidgets import QCheckBox, QDialog, QFileDialog, QLineEdit, QPushButton, QRadioButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+
+from molde import load_ui
 
 import os
 import numpy as np
@@ -23,7 +23,7 @@ class SurfaceVelocityInput(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "model/setup/acoustic/surface_velocity_input.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -38,8 +38,6 @@ class SurfaceVelocityInput(QDialog):
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
-
-        ConfigWidgetAppearance(self, tool_tip=True)
 
         self.load_info()
         self.geometry_selection_callback()
@@ -263,7 +261,7 @@ class SurfaceVelocityInput(QDialog):
 
             else:
 
-                last_path = app().config.get_last_folder_for("imported table folder")
+                last_path = app().config.get_last_folder_for("imported_table_folder")
                 if last_path is None:
                     path = os.path.expanduser("~")
                 else:
@@ -280,7 +278,7 @@ class SurfaceVelocityInput(QDialog):
                     return None
 
             lineEdit.setText(imported_table_path)
-            app().config.write_last_folder_path_in_file("imported table folder", imported_table_path)
+            app().config.write_last_folder_path_in_file("imported_table_folder", imported_table_path)
 
             imported_file = np.loadtxt(imported_table_path, delimiter=",")
 

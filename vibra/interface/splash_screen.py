@@ -1,18 +1,19 @@
-from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QLabel, QProgressBar, QSplashScreen
-from PyQt5 import uic
+from PySide6.QtCore import Signal, Qt
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QApplication, QLabel, QProgressBar, QSplashScreen
 
 from vibra import ICON_DIR, UI_DIR
+
+from molde import load_ui
 
 from time import time
 
 class SplashScreen(QSplashScreen):
     def __init__(self, parent):
-        super(QSplashScreen, self).__init__()
+        super().__init__()
 
         ui_path = UI_DIR / "project/splash.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         self._config_widget()
         self._define_qt_variables()
@@ -28,9 +29,10 @@ class SplashScreen(QSplashScreen):
     def _define_qt_variables(self):
         self.label_loading : QLabel
         self.progressBar : QProgressBar
+        self.label: QLabel
 
     def update_position(self, app):
-        desktop_geometry = app.desktop().screenGeometry()
+        desktop_geometry = app.primaryScreen().geometry()
         pos_x = int((desktop_geometry.width() - self.width())/2)
         pos_y = int((desktop_geometry.height() - self.height())/2)
         self.setGeometry(pos_x, pos_y, self.width(), self.height())

@@ -1,16 +1,18 @@
-from PyQt5.QtWidgets import QFrame, QWidget
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QFrame, QWidget
+from PySide6.QtCore import Qt
 
 from vibra import app, UI_DIR
 from vibra.interface.menus.results_viewer_items import ResultsViewerItems
+
+from molde import load_ui
+
 
 class ResultsViewerWidget(QWidget):
     def __init__(self):
         super().__init__()
 
         ui_path = UI_DIR / "menu/left_menu_widget.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         self._reset()
         self._define_qt_variables()
@@ -59,31 +61,39 @@ class ResultsViewerWidget(QWidget):
         app().main_window.structural_modal_analysis.configure_menu_widget(self.current_widget)
         self.add_widget(self.current_widget, animation_widget=True)
 
+        app().main_window.structural_modal_analysis.update_plot()
+
     def add_displacement_field_widget(self):
         self.current_widget = app().main_window.input_ui.plot_displacement_field()
-        app().main_window.configure_structural_harmonic_analysis_render_widget(True)
         app().main_window.structural_harmonic_analysis.configure_menu_widget(self.current_widget)
         self.add_widget(self.current_widget, animation_widget=True)
+
+        app().main_window.structural_harmonic_analysis.update_plot()
 
     def add_structural_frequency_response_widget(self):
         self.current_widget = app().main_window.input_ui.plot_structural_frequency_response()
 
         if app().main_window.structural_harmonic_analysis.playing_animation:
             app().main_window.structural_harmonic_analysis.stop_animation()
+        
+        app().main_window.animation_toolbar.setDisabled(True)
 
         self.add_widget(self.current_widget)
 
     def add_acoustic_pressure_field_widget(self):
         self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_field()
-        app().main_window.configure_acoustic_harmonic_analysis_render_widget(True)
         app().main_window.acoustic_harmonic_analysis.configure_menu_widget(self.current_widget)
         self.add_widget(self.current_widget, animation_widget=True)
-    
+
+        app().main_window.acoustic_harmonic_analysis.update_plot()
+
     def add_acoustic_pressure_frequency_response_widget(self):
         self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_frequency_response()
 
         if app().main_window.acoustic_harmonic_analysis.playing_animation:
             app().main_window.acoustic_harmonic_analysis.stop_animation()
+        
+        app().main_window.animation_toolbar.setDisabled(True)
 
         self.add_widget(self.current_widget)
     
@@ -93,6 +103,8 @@ class ResultsViewerWidget(QWidget):
         if app().main_window.acoustic_harmonic_analysis.playing_animation:
             app().main_window.acoustic_harmonic_analysis.stop_animation()
 
+            app().main_window.animation_toolbar.setDisabled(True)
+
         self.add_widget(self.current_widget)
     
     def add_TL_NR_widget(self):
@@ -100,14 +112,17 @@ class ResultsViewerWidget(QWidget):
 
         if app().main_window.acoustic_harmonic_analysis.playing_animation:
             app().main_window.acoustic_harmonic_analysis.stop_animation()
-            
+        
+        app().main_window.animation_toolbar.setDisabled(True)
+
         self.add_widget(self.current_widget)
 
     def add_acoustic_mode_shape_widget(self):
         self.current_widget = app().main_window.input_ui.plot_acoustic_mode_shapes()
-        app().main_window.configure_acoustic_modal_analysis_render_widget(True)
         app().main_window.acoustic_modal_analysis.configure_menu_widget(self.current_widget)
         self.add_widget(self.current_widget)
+
+        app().main_window.acoustic_modal_analysis.update_plot()
 
     def add_widget(self, widget: QWidget, animation_widget=False):
 

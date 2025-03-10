@@ -1,13 +1,13 @@
-from PyQt5.QtWidgets import QToolBar, QComboBox, QLabel, QPushButton, QWidget
-from PyQt5.QtGui import QIcon, QFont
-from PyQt5.QtCore import Qt, QSize, pyqtSignal
+from PySide6.QtWidgets import QToolBar, QComboBox, QLabel, QPushButton, QWidget
+from PySide6.QtGui import QIcon, QFont
+from PySide6.QtCore import Qt, QSize, Signal
 
+
+from vibra import ICON_DIR, app
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
 from vibra.interface.analysis.harmonic_analysis_method_selector_input import StructuralHarmonicAnalysisMethodSelecorInput
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
 from vibra.interface.analysis.analysis_setup_input import AnalysisSetupInput
-
-from vibra import ICON_DIR, app
 
 from typing import Literal
 
@@ -26,7 +26,7 @@ PhysicalDomain = Literal[
 
 class AnalysisToolbar(QToolBar):
 
-    enable_pushbutons = pyqtSignal()
+    enable_pushbutons = Signal()
 
     def __init__(self):
         super().__init__()
@@ -80,8 +80,10 @@ class AnalysisToolbar(QToolBar):
         font = QFont()
         font.setPointSize(10)
 
-        for widget in self.findChildren((QComboBox, QLabel, QPushButton)):
-            widget.setFont(font)
+        widgets_type = [QComboBox, QLabel, QPushButton]
+        for widget_type in widgets_type:
+            for widget in self.findChildren(widget_type):
+                widget.setFont(font)
         
         self.setStyleSheet(
             """
@@ -173,7 +175,8 @@ class AnalysisToolbar(QToolBar):
             self.combo_box_analysis_domain.setCurrentIndex(1)
     
     def run_analysis(self):
-        app().project.run_analysis()
+        if app().project.run_analysis():
+            return
         self.update_pushbutton_reset_solution()
     
     def reset_solution(self):
@@ -256,3 +259,33 @@ class AnalysisToolbar(QToolBar):
 
         if analysis_data["analysis_id"] in [0, 2, 3, 4]:
             app().file.write_analysis_setup_in_file(analysis_data)
+
+    def load_analysis_settings(self):
+
+        self.pushButton_run_analysis.setDisabled(True)
+
+        analysis_setup = app().file.read_analysis_setup_from_file()
+        if analysis_setup is None:
+            return
+
+        analysis_id = analysis_setup.get("analysis_id")
+        if analysis_id in [0, 1, 3, 5, 6]:
+            self.combo_box_analysis_type.setCurrentIndex(0)
+        elif analysis_id in [2, 4]:
+            self.combo_box_analysis_type.setCurrentIndex(1)
+        elif analysis_id == 7:
+            # coming soon
+            return
+            self.combo_box_analysis_type.setCurrentIndex(2)
+
+        if analysis_id in [0, 1, 2, 7]:
+            self.combo_box_analysis_domain.setCurrentIndex(0)
+        elif analysis_id in [3, 4]:
+            self.combo_box_analysis_domain.setCurrentIndex(1)
+        elif analysis_id in [5, 6]:
+            # coming soon
+            return
+            self.combo_box_analysis_domain.setCurrentIndex(2)
+
+        setup_complete = app().project.is_analysis_setup_complete()
+        self.pushButton_run_analysis.setEnabled(setup_complete)

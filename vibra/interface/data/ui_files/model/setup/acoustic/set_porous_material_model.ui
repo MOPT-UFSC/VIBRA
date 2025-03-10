@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>531</width>
-    <height>628</height>
+    <height>659</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -665,65 +665,31 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                </property>
               </widget>
              </item>
-             <item row="1" column="5">
-              <widget class="QDoubleSpinBox" name="doubleSpinBox_C6_DB">
-               <property name="minimumSize">
+             <item row="0" column="0">
+              <spacer name="horizontalSpacer_3">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
                 <size>
-                 <width>100</width>
-                 <height>28</height>
+                 <width>40</width>
+                 <height>20</height>
                 </size>
                </property>
-               <property name="maximumSize">
-                <size>
-                 <width>100</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-               <property name="decimals">
-                <number>4</number>
-               </property>
-               <property name="minimum">
-                <double>-100.000000000000000</double>
-               </property>
-               <property name="maximum">
-                <double>100.000000000000000</double>
-               </property>
-               <property name="value">
-                <double>-0.595000000000000</double>
-               </property>
-              </widget>
+              </spacer>
              </item>
-             <item row="0" column="5">
-              <widget class="QDoubleSpinBox" name="doubleSpinBox_C5_DB">
-               <property name="minimumSize">
-                <size>
-                 <width>100</width>
-                 <height>28</height>
-                </size>
+             <item row="1" column="1">
+              <widget class="QLabel" name="label_3">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
                </property>
-               <property name="maximumSize">
-                <size>
-                 <width>100</width>
-                 <height>28</height>
-                </size>
+               <property name="text">
+                <string>C2:</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-               <property name="decimals">
-                <number>4</number>
-               </property>
-               <property name="minimum">
-                <double>-100.000000000000000</double>
-               </property>
-               <property name="maximum">
-                <double>100.000000000000000</double>
-               </property>
-               <property name="value">
-                <double>0.169000000000000</double>
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
               </widget>
              </item>
@@ -754,7 +720,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                 <double>100.000000000000000</double>
                </property>
                <property name="value">
-                <double>-0.732000000000000</double>
+                <double>0.595000000000000</double>
                </property>
               </widget>
              </item>
@@ -773,18 +739,67 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                </property>
               </widget>
              </item>
-             <item row="0" column="6">
-              <spacer name="horizontalSpacer">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
+             <item row="0" column="5">
+              <widget class="QDoubleSpinBox" name="doubleSpinBox_C5_DB">
+               <property name="minimumSize">
                 <size>
-                 <width>40</width>
-                 <height>20</height>
+                 <width>100</width>
+                 <height>28</height>
                 </size>
                </property>
-              </spacer>
+               <property name="maximumSize">
+                <size>
+                 <width>100</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="minimum">
+                <double>-100.000000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>100.000000000000000</double>
+               </property>
+               <property name="value">
+                <double>0.049700000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="5">
+              <widget class="QDoubleSpinBox" name="doubleSpinBox_C6_DB">
+               <property name="minimumSize">
+                <size>
+                 <width>100</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>100</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="minimum">
+                <double>-100.000000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>100.000000000000000</double>
+               </property>
+               <property name="value">
+                <double>0.754000000000000</double>
+               </property>
+              </widget>
              </item>
              <item row="2" column="5">
               <widget class="QDoubleSpinBox" name="doubleSpinBox_C7_DB">
@@ -813,9 +828,22 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                 <double>100.000000000000000</double>
                </property>
                <property name="value">
-                <double>0.085800000000000</double>
+                <double>0.075800000000000</double>
                </property>
               </widget>
+             </item>
+             <item row="0" column="6">
+              <spacer name="horizontalSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
              </item>
              <item row="3" column="4">
               <widget class="QLabel" name="label_9">
@@ -859,7 +887,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                 <double>100.000000000000000</double>
                </property>
                <property name="value">
-                <double>-0.700000000000000</double>
+                <double>0.732000000000000</double>
                </property>
               </widget>
              </item>
@@ -872,6 +900,21 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                </property>
                <property name="text">
                 <string>C4:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLabel" name="label_4">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>C3:</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -905,7 +948,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                 <double>100.000000000000000</double>
                </property>
                <property name="value">
-                <double>0.075800000000000</double>
+                <double>0.169000000000000</double>
                </property>
               </widget>
              </item>
@@ -918,21 +961,6 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                </property>
                <property name="text">
                 <string>C1:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="1">
-              <widget class="QLabel" name="label_4">
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>C3:</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -966,7 +994,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                 <double>100.000000000000000</double>
                </property>
                <property name="value">
-                <double>0.049700000000000</double>
+                <double>0.085800000000000</double>
                </property>
               </widget>
              </item>
@@ -997,51 +1025,44 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                 <double>100.000000000000000</double>
                </property>
                <property name="value">
-                <double>-0.754000000000000</double>
+                <double>0.700000000000000</double>
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
-              <widget class="QLabel" name="label_3">
+             <item row="0" column="3">
+              <widget class="QPushButton" name="pushButton_DB_equations">
+               <property name="minimumSize">
+                <size>
+                 <width>40</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>100</width>
+                 <height>28</height>
+                </size>
+               </property>
                <property name="font">
                 <font>
                  <pointsize>10</pointsize>
                 </font>
                </property>
+               <property name="toolTip">
+                <string>See the equations for Delany-Bazley porous material model.</string>
+               </property>
                <property name="text">
-                <string>C2:</string>
+                <string/>
                </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               <property name="icon">
+                <iconset>
+                 <normaloff>../../../../icons/views/zoom_icon.png</normaloff>../../../../icons/views/zoom_icon.png</iconset>
                </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <spacer name="horizontalSpacer_3">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
+               <property name="iconSize">
                 <size>
-                 <width>40</width>
-                 <height>20</height>
+                 <width>18</width>
+                 <height>18</height>
                 </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="0" column="3">
-              <widget class="QFrame" name="frame_11">
-               <property name="minimumSize">
-                <size>
-                 <width>30</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="frameShape">
-                <enum>QFrame::NoFrame</enum>
-               </property>
-               <property name="frameShadow">
-                <enum>QFrame::Raised</enum>
                </property>
               </widget>
              </item>
@@ -1118,7 +1139,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                 </font>
                </property>
                <property name="text">
-                <string>Flow resistivity:</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Flow resistivity &amp;sigma;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
               </widget>
              </item>
@@ -1211,38 +1232,8 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
              <property name="spacing">
               <number>6</number>
              </property>
-             <item row="2" column="4">
-              <widget class="QLabel" name="label_19">
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>C7:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="4">
-              <widget class="QLabel" name="label_20">
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>C6:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="5">
-              <widget class="QDoubleSpinBox" name="doubleSpinBox_C6_DBM">
+             <item row="3" column="2">
+              <widget class="QDoubleSpinBox" name="doubleSpinBox_C4_DBM">
                <property name="minimumSize">
                 <size>
                  <width>100</width>
@@ -1268,7 +1259,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                 <double>100.000000000000000</double>
                </property>
                <property name="value">
-                <double>-0.618000000000000</double>
+                <double>0.618000000000000</double>
                </property>
               </widget>
              </item>
@@ -1299,53 +1290,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                 <double>100.000000000000000</double>
                </property>
                <property name="value">
-                <double>0.160000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="2">
-              <widget class="QDoubleSpinBox" name="doubleSpinBox_C4_DBM">
-               <property name="minimumSize">
-                <size>
-                 <width>100</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>100</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-               <property name="decimals">
-                <number>4</number>
-               </property>
-               <property name="minimum">
-                <double>-100.000000000000000</double>
-               </property>
-               <property name="maximum">
-                <double>100.000000000000000</double>
-               </property>
-               <property name="value">
-                <double>-0.632000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="4">
-              <widget class="QLabel" name="label_39">
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>C5:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                <double>0.069900000000000</double>
                </property>
               </widget>
              </item>
@@ -1361,6 +1306,21 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                 </size>
                </property>
               </spacer>
+             </item>
+             <item row="0" column="4">
+              <widget class="QLabel" name="label_39">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>C5:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
              </item>
              <item row="2" column="5">
               <widget class="QDoubleSpinBox" name="doubleSpinBox_C7_DBM">
@@ -1389,7 +1349,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                 <double>100.000000000000000</double>
                </property>
                <property name="value">
-                <double>0.109000000000000</double>
+                <double>0.107000000000000</double>
                </property>
               </widget>
              </item>
@@ -1435,22 +1395,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                 <double>100.000000000000000</double>
                </property>
                <property name="value">
-                <double>-0.618000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="1">
-              <widget class="QLabel" name="label_41">
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>C4:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                <double>0.632000000000000</double>
                </property>
               </widget>
              </item>
@@ -1481,7 +1426,22 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                 <double>100.000000000000000</double>
                </property>
                <property name="value">
-                <double>0.107000000000000</double>
+                <double>0.160000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="label_41">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>C4:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
               </widget>
              </item>
@@ -1542,7 +1502,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                 <double>100.000000000000000</double>
                </property>
                <property name="value">
-                <double>0.070000000000000</double>
+                <double>0.109000000000000</double>
                </property>
               </widget>
              </item>
@@ -1573,7 +1533,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                 <double>100.000000000000000</double>
                </property>
                <property name="value">
-                <double>-0.632000000000000</double>
+                <double>0.618000000000000</double>
                </property>
               </widget>
              </item>
@@ -1592,6 +1552,67 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                </property>
               </widget>
              </item>
+             <item row="2" column="4">
+              <widget class="QLabel" name="label_19">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>C7:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="4">
+              <widget class="QLabel" name="label_20">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>C6:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="5">
+              <widget class="QDoubleSpinBox" name="doubleSpinBox_C6_DBM">
+               <property name="minimumSize">
+                <size>
+                 <width>100</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>100</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="minimum">
+                <double>-100.000000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>100.000000000000000</double>
+               </property>
+               <property name="value">
+                <double>0.632000000000000</double>
+               </property>
+              </widget>
+             </item>
              <item row="0" column="0">
               <spacer name="horizontalSpacer_11">
                <property name="orientation">
@@ -1606,18 +1627,39 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
               </spacer>
              </item>
              <item row="0" column="3">
-              <widget class="QFrame" name="frame_12">
+              <widget class="QPushButton" name="pushButton_DBM_equations">
                <property name="minimumSize">
                 <size>
-                 <width>30</width>
-                 <height>0</height>
+                 <width>40</width>
+                 <height>28</height>
                 </size>
                </property>
-               <property name="frameShape">
-                <enum>QFrame::NoFrame</enum>
+               <property name="maximumSize">
+                <size>
+                 <width>100</width>
+                 <height>28</height>
+                </size>
                </property>
-               <property name="frameShadow">
-                <enum>QFrame::Raised</enum>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="toolTip">
+                <string>See the equations for Delany-Bazley-Miki porous material model.</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset>
+                 <normaloff>../../../../icons/views/zoom_icon.png</normaloff>../../../../icons/views/zoom_icon.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>18</width>
+                 <height>18</height>
+                </size>
                </property>
               </widget>
              </item>
@@ -1694,7 +1736,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                 </font>
                </property>
                <property name="text">
-                <string>Flow resistivity:</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Flow resistivity σ:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
               </widget>
              </item>
@@ -2471,9 +2513,9 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="tab_remove">
+        <widget class="QWidget" name="tab_list">
          <attribute name="title">
-          <string>Remove</string>
+          <string>List</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_16">
           <property name="leftMargin">
@@ -2862,6 +2904,49 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>tabWidget_main</tabstop>
+  <tabstop>doubleSpinBox_C1_DB</tabstop>
+  <tabstop>doubleSpinBox_C2_DB</tabstop>
+  <tabstop>doubleSpinBox_C3_DB</tabstop>
+  <tabstop>doubleSpinBox_C4_DB</tabstop>
+  <tabstop>doubleSpinBox_C5_DB</tabstop>
+  <tabstop>doubleSpinBox_C6_DB</tabstop>
+  <tabstop>doubleSpinBox_C7_DB</tabstop>
+  <tabstop>doubleSpinBox_C8_DB</tabstop>
+  <tabstop>doubleSpinBox_flow_resistivity_DB</tabstop>
+  <tabstop>pushButton_get_fluid</tabstop>
+  <tabstop>doubleSpinBox_porous_material_depth</tabstop>
+  <tabstop>comboBox_plot_type</tabstop>
+  <tabstop>pushButton_plot_data</tabstop>
+  <tabstop>doubleSpinBox_C1_DBM</tabstop>
+  <tabstop>doubleSpinBox_C2_DBM</tabstop>
+  <tabstop>doubleSpinBox_C3_DBM</tabstop>
+  <tabstop>doubleSpinBox_C4_DBM</tabstop>
+  <tabstop>doubleSpinBox_C5_DBM</tabstop>
+  <tabstop>doubleSpinBox_C6_DBM</tabstop>
+  <tabstop>doubleSpinBox_C7_DBM</tabstop>
+  <tabstop>doubleSpinBox_C8_DBM</tabstop>
+  <tabstop>doubleSpinBox_flow_resistivity_DBM</tabstop>
+  <tabstop>doubleSpinBox_porosity_JCA</tabstop>
+  <tabstop>doubleSpinBox_tortuosity_JCA</tabstop>
+  <tabstop>lineEdit_viscous_characteristic_length_JCA</tabstop>
+  <tabstop>lineEdit_thermal_characteristic_length_JCA</tabstop>
+  <tabstop>doubleSpinBox_flow_resistivity_JCA</tabstop>
+  <tabstop>doubleSpinBox_porosity_JCAL</tabstop>
+  <tabstop>doubleSpinBox_tortuosity_JCAL</tabstop>
+  <tabstop>lineEdit_viscous_characteristic_length_JCAL</tabstop>
+  <tabstop>lineEdit_thermal_characteristic_length_JCAL</tabstop>
+  <tabstop>doubleSpinBox_flow_resistivity_JCAL</tabstop>
+  <tabstop>pushButton_confirm</tabstop>
+  <tabstop>pushButton_exit</tabstop>
+  <tabstop>comboBox_attribution_type</tabstop>
+  <tabstop>pushButton_DB_equations</tabstop>
+  <tabstop>pushButton_DBM_equations</tabstop>
+  <tabstop>treeWidget_porous_material_model</tabstop>
+  <tabstop>pushButton_reset</tabstop>
+  <tabstop>pushButton_remove</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

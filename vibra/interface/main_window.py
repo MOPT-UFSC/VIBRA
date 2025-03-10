@@ -5,30 +5,27 @@ from pathlib import Path
 from shutil import copy, rmtree
 from time import time
 
-
 import qdarktheme
-from molde.render_widgets import CommonRenderWidget
-from PyQt5 import uic
-from PyQt5.QtGui import QColor
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import (
-    QAbstractButton,
-    QAction,
-    QDialog,
-    QFileDialog,
-    QFrame,
-    QGridLayout,
-    QMainWindow,
-    QMenu,
-    QMessageBox,
-    QSplitter,
-    QStackedWidget,
-    QToolBar,
-    QWidget,
+
+from PySide6.QtWidgets import (
+     QAbstractButton,
+     QDialog,
+     QFileDialog, QFrame,
+     QGridLayout, 
+     QMainWindow, 
+     QMenu,
+     QMessageBox,
+     QSplitter,
+     QStackedWidget,
+     QToolBar,
+     QWidget,
 )
+from PySide6.QtGui import QAction, QColor
+from PySide6.QtCore import Signal
 
 from vibra import UI_DIR, ICON_DIR, TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, app
 from vibra.interface.analysis_toolbar import AnalysisToolbar
+from vibra.interface.animation_toolbar import AnimationToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.formatters.icons import get_vibra_icon, change_icon_color_for_widgets
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -70,18 +67,24 @@ from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import VisualizationFilter
 from vibra.utils.progress_status import ProgressStatus
+from vibra.interface.user_input.render_user_preferences import RendererUserPreferencesInput
+
+from molde.render_widgets import CommonRenderWidget
+from molde import stylesheets
+from molde import load_ui
 
 
 class MainWindow(QMainWindow):
-    theme_changed = pyqtSignal(str)
-    visualization_changed = pyqtSignal()
-    selection_changed = pyqtSignal()
+    theme_changed = Signal(str)
+    visualization_changed = Signal()
+    render_widget_changed = Signal()
+    selection_changed = Signal()
 
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
 
         ui_path = UI_DIR / 'main_window.ui'
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, UI_DIR)
         
         self.visualization_filter = VisualizationFilter.all_true()
 
@@ -159,6 +162,7 @@ class MainWindow(QMainWindow):
 
         # QToolBar
         self.renderer_toolbar: QToolBar
+        self.animation_toolbar: QToolBar
 
         # QStackedWidget
         self.stacked_setup: QStackedWidget
@@ -189,6 +193,7 @@ class MainWindow(QMainWindow):
     def create_basic_layout(self):      
         self.status_bar = StatusBar(self)
         self.analysis_toolbar = AnalysisToolbar()
+        self.animation_toolbar = AnimationToolbar()
 
         self.create_recents_menu()
         self.create_status_bar()
@@ -208,9 +213,12 @@ class MainWindow(QMainWindow):
 
         self.addToolBar(self.analysis_toolbar)
         self.insertToolBarBreak(self.analysis_toolbar)
+        self.addToolBar(self.animation_toolbar)
+        self.insertToolBarBreak(self.animation_toolbar)
 
         self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)
+        self.animation_toolbar.setDisabled(True)
         self.disable_advanced_acoustic_plots_buttons(True)
 
         self.splitter.setSizes([100, 400])
@@ -262,7 +270,9 @@ class MainWindow(QMainWindow):
         app().processEvents()
 
         if len(sys.argv) > 1:
-            self.open_project(Path(sys.argv[1]))
+            path = Path(sys.argv[1])
+            if path.exists():
+                self.open_project(path)
 
         elif not self.is_temporary_vibra_folder_empty():
             self.recovery_dialog()
@@ -275,21 +285,23 @@ class MainWindow(QMainWindow):
 
         The input is a string "light" or "dark".
         """
-        qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
-        app().user_config.theme = theme
-        self.set_renderers_theme(theme)
-        self.set_renderers_theme(theme)
+        # qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
+        app().config.user_preferences.interface_theme = theme
+        stylesheets.set_theme(theme)
 
         if theme == "dark":
             icon_color = QColor("#5f9af4")
         elif theme == "light":
             icon_color = QColor("#1a73e8")
 
-        widgets = self.findChildren((QAction, QAbstractButton))
+        widgets_type = [QAction, QAbstractButton]
+        widgets = list()
+        for widget_type in widgets_type:
+            widgets += self.findChildren(widget_type)
         change_icon_color_for_widgets(widgets, icon_color)
-
+        
         self.theme_changed.emit(theme)
-    
+
     def set_menus_theme(self, theme: str):
         for i in range(self.stacked_setup.count()):
             menu_widget = self.stacked_setup.widget(i)
@@ -382,10 +394,12 @@ class MainWindow(QMainWindow):
         self.input_ui = InputUi(self)
 
     def load_user_preferences(self):
-        self.set_theme(app().user_config.theme)
+        theme = app().config.user_preferences.interface_theme
+        self.set_theme(theme)
 
-    def get_user_config(self):
-        return app().user_config
+        show = app().config.user_preferences.show_reference_scale_bar
+        self.update_scale_bar(show)
+        self.update_renderer_font_size()
 
     def set_geometry_selection(self, *, points=None, lines=None, surfaces=None, volumes=None, join=False, remove=False):
         if points is None:
@@ -474,13 +488,20 @@ class MainWindow(QMainWindow):
         self.theme_sun_icon = load_icon(Path(ICON_DIR / "sun_icon.png"), color)
         self.theme_moon_icon = load_icon(Path(ICON_DIR / "moon_icon.png"), color)
 
-        if app().user_config.theme == "light":
+        if app().config.user_preferences.interface_theme == "light":
+            app().config.user_preferences.set_dark_theme()
             self.set_theme("dark")
             self.action_theme.setIcon(self.theme_sun_icon)
 
-        elif app().user_config.theme == "dark":
+        elif app().config.user_preferences.interface_theme == "dark":
+            app().config.user_preferences.set_light_theme()
             self.set_theme("light")
             self.action_theme.setIcon(self.theme_moon_icon)
+        
+        app().config.update_config_file()
+        
+    def action_user_preferences_callback(self):
+        self.render_user_preferences = RendererUserPreferencesInput()
     
     def configure_mesh_information(self):
         nodes, face_elements, solid_elements = app().project.model.mesh.get_mesh_info()
@@ -490,23 +511,27 @@ class MainWindow(QMainWindow):
         self.acoustic_modal_analysis.update_plot()
         
         if show_renderer_widget:
-            self.render_widgets_stack.setCurrentWidget(self.acoustic_modal_analysis)
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.results_viewer_widget.hide_bottom_widget()
+
+            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
             
             self.action_results_workspace.setEnabled(False)
             if not self.action_model_workspace.isEnabled():
                 self.action_model_workspace.setEnabled(True)
             if not self.action_mesh_workspace.isEnabled():
                 self.action_mesh_workspace.setEnabled(True)
+
+            self.animation_toolbar.setDisabled(True)
     
     def configure_structural_modal_analysis_render_widget(self, show_render_widget=False):
         self.structural_modal_analysis.update_plot()
 
         if show_render_widget:
-            self.render_widgets_stack.setCurrentWidget(self.structural_modal_analysis)
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.results_viewer_widget.hide_bottom_widget()
+
+            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
 
             self.action_results_workspace.setEnabled(False)
             if not self.action_model_workspace.isEnabled():
@@ -514,33 +539,41 @@ class MainWindow(QMainWindow):
             if not self.action_mesh_workspace.isEnabled():
                 self.action_mesh_workspace.setEnabled(True)
             
+            self.animation_toolbar.setDisabled(True)
+            
     def configure_structural_harmonic_analysis_render_widget(self, show_render_widget=False):
         self.structural_harmonic_analysis.update_plot()
 
         if show_render_widget:
-            self.render_widgets_stack.setCurrentWidget(self.structural_harmonic_analysis)
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.results_viewer_widget.hide_bottom_widget()
+
+            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
 
             self.action_results_workspace.setEnabled(False)
             if not self.action_model_workspace.isEnabled():
                 self.action_model_workspace.setEnabled(True)
             if not self.action_mesh_workspace.isEnabled():
                 self.action_mesh_workspace.setEnabled(True)
+            
+            self.animation_toolbar.setDisabled(True)
 
     def configure_acoustic_harmonic_analysis_render_widget(self, show_render_widget=False):
         self.acoustic_harmonic_analysis.update_plot()
 
         if show_render_widget:
-            self.render_widgets_stack.setCurrentWidget(self.acoustic_harmonic_analysis)
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.results_viewer_widget.hide_bottom_widget()
+            
+            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
 
             self.action_results_workspace.setEnabled(False)
             if not self.action_model_workspace.isEnabled():
                 self.action_model_workspace.setEnabled(True)
             if not self.action_mesh_workspace.isEnabled():
                 self.action_mesh_workspace.setEnabled(True)
+            
+            self.animation_toolbar.setDisabled(True)
             
     def show_geometry_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
@@ -565,6 +598,21 @@ class MainWindow(QMainWindow):
             widget = self.render_widgets_stack.widget(i)
             if hasattr(widget, "update_info_text"):
                 widget.update_info_text()
+            
+    def update_scale_bar(self, show=True):
+        for i in range(self.render_widgets_stack.count()):
+            widget = self.render_widgets_stack.widget(i)
+            if hasattr(widget, "scale_bar_actor"):
+                if show:
+                    widget.enable_scale_bar()
+                else:
+                    widget.disable_scale_bar()
+                
+    def update_renderer_font_size(self):
+        for i in range(self.render_widgets_stack.count()):
+            widget = self.render_widgets_stack.widget(i)
+            if hasattr(widget, "update_renderer_font_size"):
+                widget.update_renderer_font_size()
         
     def action_model_workspace_callback(self):
         self.action_model_workspace.setEnabled(False)
@@ -577,6 +625,9 @@ class MainWindow(QMainWindow):
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
         self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
+
+        self.animation_toolbar.setDisabled(True)
+        self.animation_toolbar.pause_animation()
     
     def action_mesh_workspace_callback(self):
         self.action_mesh_workspace.setEnabled(False)
@@ -591,6 +642,9 @@ class MainWindow(QMainWindow):
         self.configure_mesh_information()
         self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
 
+        self.animation_toolbar.setDisabled(True)
+        self.animation_toolbar.pause_animation()
+
     def action_results_workspace_callback(self):
         if app().project.last_analysis is not None:
             self.action_results_workspace.setEnabled(False)
@@ -599,18 +653,9 @@ class MainWindow(QMainWindow):
                 self.action_model_workspace.setEnabled(True)
             if not self.action_mesh_workspace.isEnabled():
                 self.action_mesh_workspace.setEnabled(True)
-
-            render_widget = None
-            if app().project.last_analysis == "Modal Acoustic":
-                render_widget = self.acoustic_modal_analysis
-            elif app().project.last_analysis == "Modal Structural":
-                render_widget = self.structural_modal_analysis
-            elif app().project.last_analysis == "Harmonic Acoustic":
-                render_widget = self.acoustic_harmonic_analysis
-            else:
-                render_widget = self.structural_harmonic_analysis
             
-            self.render_widgets_stack.setCurrentWidget(render_widget)
+            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
+
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.results_viewer_widget.results_viewer_items.update_items()
             self.analysis_toolbar.update_analysis_combo_boxes()
@@ -657,9 +702,6 @@ class MainWindow(QMainWindow):
         self.hidden_volumes.clear()
         self.update_hidden_plots()
 
-    def set_menu_items_visibility_state(self, state: bool):
-        app().user_config.menu_items_visible = state
-    
     def action_save_callback(self):
       self.save_project_dialog()
 
@@ -712,10 +754,13 @@ class MainWindow(QMainWindow):
 
     def save_project_as_dialog(self):
 
+        if not os.path.exists(TEMP_PROJECT_FILE):
+            return
+
         obj = SaveProjectDataSelector()
         if obj.complete:
 
-            last_path = app().config.get_last_folder_for("project folder")
+            last_path = app().config.get_last_folder_for("project_folder")
             if last_path is None:
                 path = os.path.expanduser("~")
             else:
@@ -751,7 +796,7 @@ class MainWindow(QMainWindow):
             app().config.add_recent_file(path)
             logging.info("Saving project data..." + ProgressStatus(10, 100))
 
-            app().config.write_last_folder_path_in_file("project folder", path)
+            app().config.write_last_folder_path_in_file("project_folder", path)
             self.update_recents_menu()
             logging.info("Saving project data..." + ProgressStatus(60, 100))
             
@@ -769,7 +814,7 @@ class MainWindow(QMainWindow):
 
     def open_project_dialog(self):
 
-        last_path = app().config.get_last_folder_for("project folder")
+        last_path = app().config.get_last_folder_for("project_folder")
         if last_path is None:
             path = os.path.expanduser("~")
         else:
@@ -789,7 +834,7 @@ class MainWindow(QMainWindow):
 
     def import_geometry_dialog(self):
 
-        last_path = app().config.get_last_folder_for("geometry folder")
+        last_path = app().config.get_last_folder_for("geometry_folder")
         if last_path is None:
             path = os.path.expanduser("~")
         else:
@@ -805,7 +850,7 @@ class MainWindow(QMainWindow):
         if not check:
             return False
 
-        app().config.write_last_folder_path_in_file("geometry folder", geometry_path)
+        app().config.write_last_folder_path_in_file("geometry_folder", geometry_path)
 
         app().project.reset_variables()
         app().project.reset_solutions()
@@ -846,7 +891,7 @@ class MainWindow(QMainWindow):
 
         if project_path is not None:
             app().config.add_recent_file(project_path)
-            app().config.write_last_folder_path_in_file("project folder", project_path)
+            app().config.write_last_folder_path_in_file("project_folder", project_path)
             self.update_recents_menu()
             copy(project_path, TEMP_PROJECT_FILE)
             self.update_window_title(project_path)
@@ -881,7 +926,7 @@ class MainWindow(QMainWindow):
 
             self.renderer_toolbar.setDisabled(False)
             self.analysis_toolbar.setDisabled(False)
-            self.analysis_toolbar.pushButton_run_analysis.setDisabled(True)
+            self.analysis_toolbar.load_analysis_settings()
 
             app().project.reset_solutions()
             app().project.model.properties._reset_variables()
@@ -1026,9 +1071,8 @@ class MainWindow(QMainWindow):
             if close == QMessageBox.No:
                 return
 
-        app().user_config.save()
         self.reset_temporary_vibra_folder()
-        sys.exit()
+        app().quit()
 
     def close_dialogs(self):
         if isinstance(self.dialog, (QDialog, QWidget)):

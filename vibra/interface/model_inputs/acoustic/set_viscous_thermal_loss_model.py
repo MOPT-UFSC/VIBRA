@@ -1,7 +1,6 @@
-from PyQt5.QtWidgets import QComboBox, QDialog, QDoubleSpinBox, QFrame, QLineEdit, QPushButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QCloseEvent
-from PyQt5 import uic
+from PySide6.QtWidgets import QComboBox, QDialog, QDoubleSpinBox, QFrame, QLineEdit, QPushButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
 from vibra.engine.properties.fluid import Fluid
@@ -12,7 +11,8 @@ from vibra.interface.model_inputs.acoustic.get_sphere_selection_information impo
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
+
+from molde import load_ui
 
 import warnings
 import numpy as np
@@ -27,7 +27,7 @@ class SetViscousThermalLossModel(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "model/setup/acoustic/set_viscous_thermal_model_inputs.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -43,8 +43,6 @@ class SetViscousThermalLossModel(QDialog):
         self._define_qt_variables()
         self._create_connections()
         self._config_widgets()
-
-        ConfigWidgetAppearance(self, tool_tip=True)
 
         self.load_info()
 
@@ -607,7 +605,7 @@ class SetViscousThermalLossModel(QDialog):
                         return True
 
                 for volume_id in volume_ids:
-                    self.project.set_viscous_thermal_model(model_data, volume=volume_id)
+                    self.properties._set_property("viscous_thermal_model", model_data, volume=volume_id)
 
                 print(f"The viscous_thermal {model_data['formulation']} model for '{model_data['section_type']}' has been attributed to the volumes {volume_ids}.")
 
@@ -629,7 +627,7 @@ class SetViscousThermalLossModel(QDialog):
                 model_data["averaged"] = averaged_selection
                 model_data["filter_type"] = filter_type
 
-                self.project.set_viscous_thermal_model(model_data, group=group_id)
+                self.properties._set_property("viscous_thermal_model", model_data, group=group_id)
 
                 print(f"The viscous_thermal {model_data['formulation']} model for '{model_data['section_type']}' has been attributed to the group {group_id}.")
 

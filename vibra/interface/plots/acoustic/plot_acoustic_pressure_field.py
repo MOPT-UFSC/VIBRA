@@ -1,27 +1,37 @@
-from PyQt5.QtWidgets import QComboBox, QFrame, QLineEdit, QPushButton, QSlider, QTreeWidget, QTreeWidgetItem, QWidget
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5 import uic
+from PySide6.QtWidgets import QComboBox, QFrame, QLineEdit, QPushButton, QSlider, QTreeWidget, QTreeWidgetItem, QWidget
+from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt, Signal
 
 from vibra import app, UI_DIR
+
+from molde import load_ui
 
 import numpy as np
 
 
 class PlotAcousticPressureField(QWidget):
-    value_changed = pyqtSignal()
+    value_changed = Signal()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
         ui_path = UI_DIR / "plots/acoustic/plot_acoustic_pressure_field.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
         self.load_frequencies()
         self.load_user_preference_colormap()
+    
+    def showEvent(self, event):
+        super().showEvent(event)
+
+        render_widget = app().main_window.acoustic_harmonic_analysis
+        app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
+        app().main_window.render_widget_changed.emit()
+
+        app().main_window.animation_toolbar.setDisabled(False)
 
     def _initialize(self):
         self.frequencies = app().project.model.frequencies
@@ -52,6 +62,7 @@ class PlotAcousticPressureField(QWidget):
 
         # QLineEdit
         self.lineEdit_selected_frequency : QLineEdit
+        self.lineEdit_selected_frequency.setProperty("status", "information")
 
         # QPushButton
         self.pushButton_plot : QPushButton
@@ -166,6 +177,10 @@ class PlotAcousticPressureField(QWidget):
             new.setTextAlignment(0, Qt.AlignCenter)
             new.setTextAlignment(1, Qt.AlignCenter)
             self.treeWidget_frequencies.addTopLevelItem(new)
+        
+        first_item = self.treeWidget_frequencies.topLevelItem(0)
+        first_item.setSelected(True)
+        self.treeWidget_frequencies.itemClicked.emit(first_item, 0)
         
     def current_frequency_index(self):
         if self.current_frequency is not None:

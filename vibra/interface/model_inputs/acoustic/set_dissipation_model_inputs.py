@@ -1,13 +1,13 @@
 
-from PyQt5.QtWidgets import QComboBox, QDialog, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QCloseEvent
-from PyQt5 import uic
+from PySide6.QtWidgets import QComboBox, QDialog, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+
+from molde import load_ui
 
 import configparser
 import os
@@ -24,7 +24,7 @@ class DissipationModelInput(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "model/setup/acoustic/dissipation_model_inputs.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -35,27 +35,22 @@ class DissipationModelInput(QDialog):
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
-        self._load_icons()
         self._config_window()
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
         self.load_info()
 
-        ConfigWidgetAppearance(self, tool_tip=True)
         self.geometry_selection_callback()
 
         while self.keep_window_open:
             self.exec()
 
-    def _load_icons(self):
-        self.vibra_icon = app().main_window.vibra_icon
-
     def _config_window(self):
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(self.vibra_icon)
-        self.setWindowTitle("Set the dissipation model")
+        self.setWindowTitle("Vibra")
 
     def _initialize(self):
         self.model = ""
@@ -273,7 +268,7 @@ class DissipationModelInput(QDialog):
                 }
 
         for volume_id in volume_ids:
-            self.project.set_dissipation_model(data, volume=volume_id)
+            self.properties._set_property("dissipation_model", data, volume=volume_id)
         
         print(f"The dissipation model has been attributed to volumes: {volume_ids}")
 

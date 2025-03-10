@@ -1,236 +1,153 @@
-import os
-import sys
-import configparser
 from pathlib import Path
+import json
 
-from vibra.utils.utils import get_new_path
+from vibra.interface.user_preferences import UserPreferences
+
+from molde.colors import Color
 
 
 class Config:
+
     def __init__(self):
-        self.reset()
+        self.config_path = Path().home() / "vibra_config.json"
+        self.user_preferences = UserPreferences()
 
-    def reset(self):
-        self.recent_projects = dict()
-        self.open_last_project = False
-        self.config_path = Path().home() / ".vibra_config"
         self.load_config_file()
-    
-    def add_recent_file(self, recent_file: str | Path):
-        # try:
-        recents = self.get_recent_files()
-        recents.append(str(recent_file))
-
-        # only keep the last N files
-        recents = recents[-10:]
-
-        config = configparser.ConfigParser()
-        config.read(self.config_path)
-
-        if not config.has_section("Recents"):
-            config["Recents"] = dict()
-
-        for i, file in enumerate(recents):
-            config["Recents"][str(i)] = str(file)
-
-        self.write_data_in_file(self.config_path, config)
-
-    def get_recent_files(self) -> list:
-        config = configparser.ConfigParser()
-        config.read(self.config_path)
-
-        if not config.has_section("Recents"):
-            return list()
-
-        # only keep existing files
-        recents = [Path(file) for i, file in sorted(config["Recents"].items()) 
-                   if Path(file).exists()]
-        # avoid repetitions
-        recents = list(set(recents))
-        return recents
 
     def load_config_file(self):
         try:
-            config = configparser.ConfigParser()
-            config.read(self.config_path)
-            if config.has_section('project'):
-                for key, value in config.items('project'):
-                    self.recent_projects[key] = value
+            with open(self.config_path, "r") as file:
+                user_preferences = json.load(file)
+
+                self.user_preferences.interface_theme = user_preferences["interface_theme"]
+                self.user_preferences.renderer_background_color_1 = Color(*user_preferences["renderer_background_color_1"])
+                self.user_preferences.renderer_background_color_2 = Color(*user_preferences["renderer_background_color_2"])
+                self.user_preferences.nodes_points_color = Color(*user_preferences["nodes_points_color"])
+                self.user_preferences.lines_color = Color(*user_preferences["lines_color"])
+                self.user_preferences.edges_color = Color(*user_preferences["edges_color"])
+                self.user_preferences.faces_color = Color(*user_preferences["faces_color"])
+                self.user_preferences.renderer_font_color = Color(*user_preferences["renderer_font_color"])
+                self.user_preferences.renderer_font_size = user_preferences["renderer_font_size"]
+                self.user_preferences.show_reference_scale_bar = user_preferences["show_reference_scale_bar"]
+                self.user_preferences.color_map = user_preferences["color_map"]
         except:
-            if self.config_path.exists():
-                os.remove(self.config_path)
+            self._write_config_file()
+    
+    def _write_config_file(self):
+        data = { 
+        "interface_theme" : self.user_preferences.interface_theme,
+        "renderer_background_color_1" : self.user_preferences.renderer_background_color_1.to_rgb(),
+        "renderer_background_color_2" : self.user_preferences.renderer_background_color_2.to_rgb(),
+        "nodes_points_color" : self.user_preferences.nodes_points_color.to_rgb(),
+        "lines_color" : self.user_preferences.lines_color.to_rgb(),
+        "edges_color" : self.user_preferences.edges_color.to_rgb(),
+        "faces_color" : self.user_preferences.faces_color.to_rgb(),
+        "renderer_font_color" : self.user_preferences.renderer_font_color.to_rgb(),
+        "renderer_font_size" : self.user_preferences.renderer_font_size,
+        "show_reference_scale_bar" : self.user_preferences.show_reference_scale_bar,
+        "color_map" : self.user_preferences.color_map
+        }
+        
+        self.write_data_in_file(data)
 
-    def get_last_folder_for(self, label : str):
+    def update_config_file(self):
+        data = self.get_config_data()
 
-        config = configparser.ConfigParser()
-        config.read(self.config_path)
+        data["interface_theme"] = self.user_preferences.interface_theme
+        data["renderer_background_color_1"] = self.user_preferences.renderer_background_color_1.to_rgb()
+        data["renderer_background_color_2"] = self.user_preferences.renderer_background_color_2.to_rgb()
+        data["nodes_points_color"] = self.user_preferences.nodes_points_color.to_rgb()
+        data["lines_color"] = self.user_preferences.lines_color.to_rgb()
+        data["edges_color"] = self.user_preferences.edges_color.to_rgb()
+        data["faces_color"] = self.user_preferences.faces_color.to_rgb()
+        data["renderer_font_color"] = self.user_preferences.renderer_font_color.to_rgb()
+        data["renderer_font_size"] = self.user_preferences.renderer_font_size
+        data["show_reference_scale_bar"] = self.user_preferences.show_reference_scale_bar
+        data["color_map"] = self.user_preferences.color_map
 
-        if config.has_section("Recent paths"):
-            section = config["Recent paths"]
-            key = f"last {label}"
-            if key in section.keys():
-                return section[key]
+        self.write_data_in_file(data)
+    
+    def add_recent_file(self, recent_file: str | Path):
+        recent_file = Path(recent_file)
 
+        recent_files = self.get_recent_files()
+        if (len(recent_files) == 5) and (recent_file not in recent_files):
+            recent_files.pop()
+
+        if recent_file in recent_files:
+            recent_files.remove(recent_file)
+
+        recent_files = [str(file) for file in recent_files]
+        recent_files.insert(0, str(recent_file))
+
+        data = self.get_config_data()
+        data["recent_files"] = recent_files
+
+        self.write_data_in_file(data)
+    
+    def get_recent_files(self) -> list[Path]:
+        data = self.get_config_data()
+
+        recent_files = list()
+        if "recent_files" not in data.keys():
+            return recent_files
+        
+        for file in data["recent_files"]:
+            recent_files.append(Path(file))
+        
+        return recent_files
+    
+    def remove_path_from_config_file(self, path: str | Path):
+        data = self.get_config_data()
+        data["recent_files"].remove(str(path))
+
+        self.write_data_in_file(data)
+        
+    def reset_recent_projects(self):
+        data = self.get_config_data()
+        data["recent_files"] = list()
+
+        self.write_data_in_file(data)
+
+    def write_last_folder_path_in_file(self, label: str, file_path: str):
+        data = self.get_config_data()
+        path = str(Path(file_path).parent)
+
+        key = f"last_{label}"
+        if "last_paths" in data.keys():
+            data["last_paths"][key] = path
+        else:
+            data["last_paths"] = {key : path}
+        
+        self.write_data_in_file(data)
+        
+    def get_last_folder_for(self, label: str) -> str | None:
+        data = self.get_config_data()
+
+        if "last_paths" in data.keys():
+            key = f"last_{label}"
+            return data["last_paths"].get(key)
+        
         return None
 
-    def write_last_folder_path_in_file(self, label : str, project_path : str):
-        try:
+    def write_refprop_path_in_file(self, path: str):
+        data = self.get_config_data()
+        data["refprop_path"] = path
 
-            _path = os.path.dirname(project_path)
-            config = configparser.ConfigParser()
-            config.read(self.config_path)
-            
-            key = f"last {label}"
-            if config.has_section('Recent paths'):
-                config["Recent paths"][key] = _path
-            else:
-                config["Recent paths"] = {key : _path}
+        self.write_data_in_file(data)
 
-        except:
-            return
+    def get_refprop_path_from_file(self) -> str | None:
+        data = self.get_config_data()
 
-        self.write_data_in_file(self.config_path, config)
-
-    def write_theme_in_file(self, theme : str):
-        try:
-
-            config = configparser.ConfigParser()
-            config.read(self.config_path)
-
-            if config.has_section('User preferences'):
-                config["User preferences"]["interface theme"] = theme
-                config["User preferences"]["background color"] = theme
-            else:
-                config["User preferences"] = {"interface theme" : theme,
-                                              "background color" : theme}
-
-        except:
-            return
-
-        self.write_data_in_file(self.config_path, config)
+        if "refprop_path" in data.keys():
+            return data["refprop_path"]
     
-    def write_menu_items_visible_in_file(self, menu_items_visible : str):
-        try:
-            config = configparser.ConfigParser()
-            config.read(self.config_path)
+        return None
     
-            if config.has_section('User preferences'):
-                config["User preferences"]["menu_items_visible"] = str(menu_items_visible)
-            else:
-                config["User preferences"] = {"menu_items_visible" : str(menu_items_visible)}
-        except:
-            return
-
-        self.write_data_in_file(self.config_path, config)
-
-    def write_colormap_in_file(self, colormap : str):
-        try:
-
-            config = configparser.ConfigParser()
-            config.read(self.config_path)
-
-            if config.has_section('User preferences'):
-                config["User preferences"]["colormap"] = colormap
-            else:
-                config["User preferences"] = {"colormap" : colormap}
-
-        except:
-            return
-
-        self.write_data_in_file(self.config_path, config)
-
-    def write_user_preferences_in_file(self, preferences):
-
-        config = configparser.ConfigParser()
-        config.read(self.config_path)
-
-        config['User preferences'] = preferences
-        
-        self.write_data_in_file(self.config_path, config)
-
-    def get_user_preferences(self):
-
-        config = configparser.ConfigParser()
-        config.read(self.config_path)
-
-        user_preferences = dict()
-        if config.has_section("User preferences"):
-            
-            section = config["User preferences"]
-
-            try:
-
-                if "interface theme" in section.keys():
-                    user_preferences["interface theme"] = section["interface theme"]
-
-                if "menu_items_visible" in section.keys():
-                    user_preferences["menu_items_visible"] = section["menu_items_visible"]
-
-                if "background color" in section.keys():
-                    if section["background color"] in ["light", "dark"]:
-                        user_preferences["background color"] = section["background color"]
-                    else:
-                        background_color = section["background color"][1:-1].split(",")
-                        user_preferences["background color"] = tuple([float(val) for val in background_color])
-
-                if "bottom font color" in section.keys():
-                    font_color = section["bottom font color"][1:-1].split(",")
-                    user_preferences["bottom font color"] = tuple([float(val) for val in font_color])
-
-                if "nodes color" in section.keys():
-                    nodes_color = section["nodes color"][1:-1].split(",")
-                    user_preferences["nodes color"] = tuple([float(val) for val in nodes_color])
-
-                if "lines color" in section.keys():
-                    lines_color = section["lines color"][1:-1].split(",")
-                    user_preferences["lines color"] = tuple([float(val) for val in lines_color])
-
-                if "surfaces color" in section.keys():
-                    surfaces_color = section["surfaces color"][1:-1].split(",")
-                    user_preferences["surfaces color"] = tuple([float(val) for val in surfaces_color])
-
-                if "transparency" in section.keys():
-                    user_preferences["transparency"] = float(section["transparency"])
-
-                if "openpulse logo" in section.keys():
-                    user_preferences["openpulse logo"] = bool(int(section["openpulse logo"]))
-
-                if "colormap" in section.keys():
-                    user_preferences["colormap"] = section["colormap"]
-
-                if "Reference scale" in section.keys():
-                    user_preferences["Reference scale"] = bool(int(section["Reference scale"]))
-
-            except:
-                pass
-
-        return user_preferences
-
-    def write_refprop_path_in_file(self, path):
-
-        config = configparser.ConfigParser()
-        config.read(self.config_path)
-
-        if config.has_section('User preferences'):
-            config["User preferences"]["refprop path"] = path
-        else:
-            config["User preferences"] = {"refprop path" : path}
-
-        self.write_data_in_file(self.config_path, config)
-
-    def get_refprop_path_from_file(self):
-
-        config = configparser.ConfigParser()
-        config.read(self.config_path)
-
-        refprop_path = None
-        if config.has_section("User preferences"):
-            section = config["User preferences"]
-            if "refprop path" in section.keys():
-                refprop_path = section["refprop path"]
-
-        return refprop_path
-
-    def write_data_in_file(self, path, config):
-        with open(path, 'w') as config_file:
-            config.write(config_file)
+    def get_config_data(self) -> dict:
+        with open(self.config_path, "r") as file:
+            return json.load(file)
+    
+    def write_data_in_file(self, data: dict):
+        with open(self.config_path, "w") as file:
+            json.dump(data, file, indent=2)

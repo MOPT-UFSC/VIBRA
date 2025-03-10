@@ -1,15 +1,15 @@
-from PyQt5.QtWidgets import QComboBox, QDialog, QFileDialog, QLineEdit, QPushButton
-from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
-from PyQt5.QtGui import QCloseEvent
-from PyQt5 import uic
+from PySide6.QtWidgets import QComboBox, QDialog, QFileDialog, QLineEdit, QPushButton
+from PySide6.QtCore import Qt, QEvent, QObject, Signal
+from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.loading_bar import load_function
 from vibra.utils.progress_status import ProgressStatus
+
+from molde import load_ui
 
 import logging
 import numpy as np
@@ -23,7 +23,7 @@ class ExportElementTransferDataInput(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "data_handler/export_element_transfer_data.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -38,8 +38,6 @@ class ExportElementTransferDataInput(QDialog):
         self._reset_variables()
         self._define_qt_variables()
         self._create_connections()
-
-        ConfigWidgetAppearance(self, tool_tip=True)
 
         self._load_analysis_data_and_solution()
         self.geometry_selection_callback()
@@ -129,7 +127,7 @@ class ExportElementTransferDataInput(QDialog):
 
     def clickable(self, widget):
         class Filter(QObject):
-            clicked = pyqtSignal()
+            clicked = Signal()
 
             def eventFilter(self, obj, event):
                 if obj == widget and event.type() == QEvent.MouseButtonRelease and obj.rect().contains(event.pos()):
@@ -150,7 +148,7 @@ class ExportElementTransferDataInput(QDialog):
 
     def search_callback(self):
 
-        last_path = app().config.get_last_folder_for("imported table folder")
+        last_path = app().config.get_last_folder_for("imported_table_folder")
         if last_path is None:
             last_path = str(Path().home())
 
@@ -166,7 +164,7 @@ class ExportElementTransferDataInput(QDialog):
             return True
 
         self.lineEdit_spreadsheet_path.setText(path)
-        app().config.write_last_folder_path_in_file("imported table folder", path)
+        app().config.write_last_folder_path_in_file("imported_table_folder", path)
 
     def check_inputs(self):
  

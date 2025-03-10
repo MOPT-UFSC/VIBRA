@@ -1,9 +1,9 @@
-from molde.colors import color_names
-
 from vtkmodules.vtkCommonCore import vtkIntArray
 from vtkmodules.vtkCommonCore import vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import VTK_VERTEX, vtkPlane, vtkPolyData
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
+
+from vibra import app
 
 
 class PointsActor(vtkActor):
@@ -28,7 +28,7 @@ class PointsActor(vtkActor):
         point_indexes.SetName("point_indexes")
         point_indexes.Allocate(number_of_points)
 
-        for tag, (node_id,) in self.mesh.nodes_from_points.items():
+        for tag, (node_id,) in sorted(self.mesh.nodes_from_points.items()):
             _, x, y, z = self.mesh.nodal_coordinates[node_id]
             points.InsertNextPoint(x, y, z)
             data.InsertNextCell(VTK_VERTEX, 1, [node_id])
@@ -51,7 +51,7 @@ class PointsActor(vtkActor):
     def clear_colors(self):
         data = self.GetMapper().GetInput()
         cell_colors = data.GetCellData().GetScalars()
-        r, g, b = color_names.YELLOW_5.to_rgb()
+        r, g, b = app().config.user_preferences.nodes_points_color.to_rgb()
 
         cell_colors.FillComponent(0, r)
         cell_colors.FillComponent(1, g)

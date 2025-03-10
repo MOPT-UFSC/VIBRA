@@ -1,7 +1,7 @@
 
-from PyQt5.QtCore import QSize, Qt, pyqtSignal
-from PyQt5.QtGui import QIcon, QImage, QPixmap
-from PyQt5.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget, QBoxLayout
+from PySide6.QtCore import QSize, Qt, Signal
+from PySide6.QtGui import QIcon, QImage, QPixmap
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget, QBoxLayout
 
 from fileboxes import Filebox
 
@@ -136,7 +136,7 @@ class WelcomeWidget(QWidget):
 
 
 class WelcomeItem(QWidget):
-    clicked = pyqtSignal()
+    clicked = Signal()
 
     def __init__(self, text="", icon=None, should_paint=True):
         super().__init__()

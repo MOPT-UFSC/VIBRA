@@ -1,12 +1,11 @@
+
+from vibra.engine.properties.fluid import Fluid
+from vibra.engine.properties.material import Material
+
 import json
 import numpy as np
 import os
 from dataclasses import dataclass
-
-from vibra import app
-from vibra.engine.properties.fluid import Fluid
-from vibra.engine.properties.material import Material
-# from vibra.project.project_file import *
 
 
 DEFAULT_MATERIAL = Material(
@@ -84,9 +83,6 @@ class ModelProperties:
 
     def get_dissipation_model(self, **kwargs):
         return self._get_property("dissipation_model", **kwargs)
-    
-    def get_lrf_model_inputs(self, element_id):
-        return self._get_property("lrf_eq_model", element=element_id)
 
     def set_material(self, material: Material, surface=None, volume=None):
         self._set_property("material", material, surface=surface, volume=volume)
@@ -94,13 +90,7 @@ class ModelProperties:
     def set_fluid(self, fluid: Fluid, surface=None, volume=None):
         self._set_property("fluid", fluid, surface=surface, volume=volume)
 
-    def set_dissipation_model(self, data, **kwargs):
-        self._set_property("dissipation_model", data, **kwargs)
-
-    def set_porous_material_model_data(self, data, **kwargs):
-        self._set_property("porous_material_model", data, **kwargs)
-
-    def get_fluid_density(self, fluid, **kwargs):
+    def get_fluid_density(self, fluid: Fluid, **kwargs):
         rho_0 = fluid.fluid_density
         dissipation_model = self.get_dissipation_model(**kwargs)
         if dissipation_model is None:
@@ -109,7 +99,7 @@ class ModelProperties:
             factor = dissipation_model["fluid density factor"]
             return (1 + factor * 1j) * rho_0
 
-    def get_speed_of_sound(self, fluid, **kwargs):
+    def get_speed_of_sound(self, fluid: Fluid, **kwargs):
         c_0 = fluid.speed_of_sound
         dissipation_model = self.get_dissipation_model(**kwargs)
         if dissipation_model is None:
@@ -117,27 +107,9 @@ class ModelProperties:
         elif dissipation_model["model"] == "proportional damping":
             factor = dissipation_model["speed of sound factor"]
             return (1 + factor * 1j) * c_0
-        
-    def get_lrf_model_inputs(self):
-        pass
-
-    def get_structural_boundary_condition(self, surface):
-        return self._get_property("prescribed_dofs", surface=surface)
 
     def get_structural_load(self, surface):
         return self._get_property("structural_load", surface=surface)
-
-    def set_structural_boundary_condition(self, data, line_id, surface_id):
-        if line_id is not None:
-            self._set_property("prescribed_dofs", data, line_id)
-        if surface_id is not None:
-            self._set_property("prescribed_dofs", data, surface_id)
-
-    def set_structural_load(self, data, line_id, surface_id):
-        if line_id is not None:
-            self._set_property("structural_load", data, line_id)
-        if surface_id is not None:
-            self._set_property("structural_load", data, surface_id)
 
     def get_acoustic_pressure(self, surface):
         return self._get_property("acoustic_pressure", surface=surface)
@@ -153,9 +125,6 @@ class ModelProperties:
 
     def get_specific_impedance(self, surface):
         return self._get_property("specific_impedance", surface=surface)
-
-    def get_porous_material_model_data(self, volume):
-        return self._get_property("porous_material_model", volume=volume)
 
     def _set_property(self, property: str, data: dict | Fluid | Material, node=None, element=None, point=None, line=None, surface=None, volume=None, group=None):
         """

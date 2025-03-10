@@ -1,12 +1,12 @@
 # fmt: off
 
-from PyQt5.QtWidgets import QCheckBox, QDialog, QLineEdit, QPushButton
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QCloseEvent
-from PyQt5 import uic
+from PySide6.QtWidgets import QCheckBox, QDialog, QLineEdit, QPushButton
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR, TEMP_PROJECT_FILE
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
+
+from molde import load_ui
 
 import os
 
@@ -19,7 +19,7 @@ class SaveProjectDataSelector(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / "project/save_project_data_selector.ui"
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -28,8 +28,6 @@ class SaveProjectDataSelector(QDialog):
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
-
-        ConfigWidgetAppearance(self, tool_tip=True)
 
         self.get_required_memory()
 
@@ -57,15 +55,20 @@ class SaveProjectDataSelector(QDialog):
         self.lineEdit_required_memory.setDisabled(True)
 
         # QPushButton
+        self.pushButton_exit : QPushButton
         self.pushButton_proceed : QPushButton
 
     def _create_connections(self):
+        #
         self.checkBox_mesh_data.stateChanged.connect(self.remove_solution_data)
+        #
+        self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_proceed.clicked.connect(self.proceed_callback)
 
     def get_required_memory(self):
-        size_of_file = os.path.getsize(TEMP_PROJECT_FILE) / 1e6
-        self.lineEdit_required_memory.setText(str(round(size_of_file, 4)))
+        if os.path.exists(TEMP_PROJECT_FILE):
+            size_of_file = os.path.getsize(TEMP_PROJECT_FILE) / 1e6
+            self.lineEdit_required_memory.setText(str(round(size_of_file, 4)))
 
     def remove_solution_data(self):
         if self.checkBox_mesh_data.isChecked():
