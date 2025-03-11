@@ -112,7 +112,7 @@ class MeshSelection:
         camera_position = np.array(renderer.GetActiveCamera().GetPosition())
         camera_distance = np.linalg.norm(camera_position - pick_position)
 
-        node_size = 10
+        node_size = 8
         if np.linalg.norm(click - screen_coords) < node_size / 2:
             return {mesh.nodal_coordinates[index, 0].astype(int)}, camera_distance
         else:
