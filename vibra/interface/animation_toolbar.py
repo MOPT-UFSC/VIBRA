@@ -211,13 +211,14 @@ class AnimationToolbar(QToolBar):
     def cycles_value_changed(self):
         self.cycles = self.spinBox_cycles.value()
 
-    def phase_slider_callback(self):
+    def phase_slider_callback(self, value: int):
         self.update_degree_label()
-
+        app().main_window.results_widget.update_color_and_deformation()
         self.current_render_widget.update_plot()
     
-    def magnification_factor_slider_callback(self):
+    def magnification_factor_slider_callback(self, value: int):
         self.update_factor_label()
+        app().main_window.results_widget.update_color_and_deformation()
 
         if hasattr(self.current_render_widget, "update_deformations"):
             self.current_render_widget.update_deformations()
