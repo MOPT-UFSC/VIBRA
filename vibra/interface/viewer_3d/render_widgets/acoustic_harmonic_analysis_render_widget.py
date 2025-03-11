@@ -225,7 +225,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         phase = np.angle(current_pressures)
         output_pressures = amplitudes * np.cos(phase + phi_sld)
 
-        min_value, max_value = solver.get_max_min_values_of_pressures(index)
+        min_value, max_value = solver.get_min_max_values_of_pressures(index)
         if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
             min_value = 0
             output_pressures = np.abs(output_pressures)
@@ -259,7 +259,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         phi = np.linspace(0, 2 * np.pi, self._animation_total_frames, endpoint=False)
         output_pressures = amplitudes * np.cos(phase + phi[frame])
 
-        min_value, max_value = solver.get_max_min_values_of_pressures(index)
+        min_value, max_value = solver.get_min_max_values_of_pressures(index)
         if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
             min_value = 0
             output_pressures = np.abs(output_pressures)
@@ -307,7 +307,7 @@ class AcousticHarmonicAnalysisRenderWidget(AnimatedRenderWidget):
         phase = np.angle(nodal_solution)
 
         deg_angles = np.linspace(0, 360, self._animation_fps, endpoint=False)
-        min_value, max_value = solver.get_max_min_values_of_pressures(index)
+        min_value, max_value = solver.get_min_max_values_of_pressures(index)
 
         if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
             min_value = 0

@@ -43,7 +43,7 @@ def compute_acoustic_harmonic_field(
     phases = np.angle(current_pressures)
     output_pressures = amplitudes * np.cos(phases + phase)
 
-    min_value, max_value = solver.get_max_min_values_of_pressures(index)
+    min_value, max_value = solver.get_min_max_values_of_pressures(index)
     if response_abs:
         min_value = 0
         output_pressures = np.abs(output_pressures)

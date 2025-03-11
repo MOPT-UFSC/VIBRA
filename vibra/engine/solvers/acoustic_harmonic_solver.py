@@ -45,7 +45,7 @@ class AcousticHarmonicSolver:
         self.dissipation_model = data
 
     @cache
-    def get_max_min_values_of_pressures(self, column):
+    def get_min_max_values_of_pressures(self, column):
         """ This method returns the minimum and maximum pressure values
             of selected frequency for animation purposes.
 
@@ -82,7 +82,7 @@ class AcousticHarmonicSolver:
 
     def solve(self, print_log=False):
         """ """
-        self.get_max_min_values_of_pressures.cache_clear()
+        self.get_min_max_values_of_pressures.cache_clear()
 
         # Note: use mtype=3 for full symmetric complex matrix and mtype=6 for upper triangular complex matrix
         ps = PyPardisoSolver(mtype=6)
