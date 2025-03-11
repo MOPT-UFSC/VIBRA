@@ -28,7 +28,7 @@ class PlotAcousticModeShape(QWidget):
     def showEvent(self, event):
         super().showEvent(event)
 
-        render_widget = app().main_window.acoustic_modal_analysis
+        render_widget = app().main_window.results_widget
         app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
         app().main_window.render_widget_changed.emit()
 
