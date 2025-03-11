@@ -135,11 +135,13 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_harmonic
             frequency_index = analysis_widget.current_frequency_index()
             phase = animation_toolbar.phase_slider.value()
+            response_abs = analysis_widget.comboBox_color_scale.currentIndex() == 0
 
             data = compute_acoustic_harmonic_field(
                 app().project.acoustic_harmonic_solver,
                 frequency_index,
                 phase,
+                response_abs=response_abs,
             )
             color_scalars, min_value, max_value = data
 
