@@ -36,18 +36,19 @@ class PlotAcousticModeShape(QWidget):
        
     def _initialize(self):
         self.mode_index = None
-        self.colormaps = ["jet",
-                          "viridis",
-                          "inferno",
-                          "magma",
-                          "plasma",
-                          "bwr",
-                          "PiYG",
-                          "PRGn",
-                          "BrBG",
-                          "PuOR",
-                          "grayscale",
-                          ]
+        self.colormaps = [
+            "jet",
+            "viridis",
+            "inferno",
+            "magma",
+            "plasma",
+            "bwr",
+            "PiYG",
+            "PRGn",
+            "BrBG",
+            "PuOR",
+            "grayscale",
+        ]
 
     def _define_qt_variables(self):
 
@@ -145,6 +146,11 @@ class PlotAcousticModeShape(QWidget):
         
         self.mode_index = self.natural_frequencies.index(self.selected_frequency)
         app().main_window.acoustic_modal_analysis.update_deformation()
+
+        results_widget = app().main_window.results_widget
+        results_widget.configure_analysis("acoustic_modal")
+        results_widget.update_plot()
+
             
         # color_scale_setup = self.get_user_color_scale_setup()
         # app().project.set_color_scale_setup(color_scale_setup)
@@ -183,8 +189,10 @@ class PlotAcousticModeShape(QWidget):
         return color_scale_setup
 
     def load_natural_frequencies(self):
-        self.natural_frequencies = list(app().project.acoustic_modal_solver.natural_frequencies)
+        if app().project.acoustic_modal_solver is None:
+            return
 
+        self.natural_frequencies = list(app().project.acoustic_modal_solver.natural_frequencies)
         modes = np.arange(1, len(self.natural_frequencies) + 1, 1)
         self.modes_to_frequencies = dict(zip(modes, self.natural_frequencies))
 

@@ -26,7 +26,7 @@ class PlotDisplacementField(QWidget):
     def showEvent(self, event):
         super().showEvent(event)
 
-        render_widget = app().main_window.structural_harmonic_analysis
+        render_widget = app().main_window.results_widget
         app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
         app().main_window.render_widget_changed.emit()
 
@@ -139,6 +139,11 @@ class PlotDisplacementField(QWidget):
 
         frequency_selected = float(self.lineEdit_selected_frequency.text())
         if frequency_selected in self.frequencies:
+            
+            results_widget = app().main_window.results_widget
+            results_widget.configure_analysis("structural_harmonic")
+            results_widget.update_plot()
+
             # frequency = self.frequency_to_index[frequency_selected]
             self.frequency_index = self.frequencies.index(frequency_selected)
             # color_scale_setup = self.get_user_color_scale_setup()
@@ -218,11 +223,11 @@ class PlotDisplacementField(QWidget):
         return color_scale_setup
 
     def load_frequencies(self):
-
         self.treeWidget_frequencies.setDisabled(False)
         if isinstance(app().project.model.frequencies, np.ndarray):
-            _frequencies = app().project.model.frequencies
-            self.frequencies = list(_frequencies)
+            self.frequencies = list(app().project.model.frequencies)
+        else:
+            return
 
         self.frequency_to_index = dict(zip(self.frequencies, np.arange(len(self.frequencies), dtype=int)))
 

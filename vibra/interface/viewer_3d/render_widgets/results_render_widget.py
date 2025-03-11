@@ -1,5 +1,5 @@
 from typing import Literal
-from PySide6.QtWidgets import QFileDialog
+from PySide6.QtWidgets import QFileDialog, QWidget
 
 from molde.render_widgets import AnimatedRenderWidget
 
@@ -23,23 +23,29 @@ from ..actors import (
 AnalysisType = Literal[
     "",
     "structural_modal",
+    "structural_harmonic",
     "acoustic_modal",
     "acoustic_harmonic",
 ]
+
 
 class ResultsRenderWidget(AnimatedRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
         self.current_analysis: AnalysisType = ""
-        self.current_frequency_index = 0
-        self.current_phase = 0
-        self.magnification_factor = 1
+        self.current_menu_widget: QWidget | None = None
 
         self.create_axes()
         self.create_color_bar()
         self.create_scale_bar()
         self.update_plot()
+
+    def configure_analysis(self, analysis: AnalysisType):
+        self.current_analysis = analysis
+
+    def set_theme(self, theme, **kwargs):
+        return super().set_theme("dark", **kwargs)
 
     def update_plot(self, reset_camera=False):
         mesh = app().project.model.mesh
@@ -73,37 +79,67 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         app().project.thumbnail = self.get_thumbnail()
 
     def update_color_and_deformation(self):
+        animation_toolbar = app().main_window.animation_toolbar
+        phase = animation_toolbar.phase_slider.value()
+        magnification_factor = animation_toolbar.magnification_factor_slider.value()
         displacements = None
 
-        if self.current_analysis == "structural_modal":
+        displacement_types = [
+            "u_sum",
+            "u_x",
+            "u_y",
+            "u_z",
+        ]
+
+        if self.current_analysis == "":
+            return
+        
+        elif self.current_analysis == "structural_modal":
+            analysis_widget = app().main_window.results_viewer_widget.plot_structural_modal
+            mode_index = analysis_widget.current_mode_index()
+            displacement_index = analysis_widget.comboBox_displacements.currentIndex()
+
             data = compute_structural_modal_field(
-                app().project.structural_modal_solver.modal_shape,
-                self.current_frequency_index, 
-                self.current_phase,
+                app().project.structural_modal_solver,
+                mode_index,
+                phase,
+                displacement_types[displacement_index]
             )
             displacements, color_scalars, min_value, max_value = data
 
         elif self.current_analysis == "structural_harmonic":
+            analysis_widget = app().main_window.results_viewer_widget.plot_structural_harmonic
+            frequency_index = analysis_widget.current_frequency_index()
+            displacement_index = analysis_widget.comboBox_displacements.currentIndex()
+
             data = compute_structural_harmonic_field(
-                app().project.structural_harmonic_solver.solution,
-                self.current_frequency_index,
-                self.current_phase,
+                app().project.structural_harmonic_solver,
+                frequency_index,
+                phase,
+                displacement_types[displacement_index],
             )
             displacements, color_scalars, min_value, max_value = data
 
         elif self.current_analysis == "acoustic_modal":
+            analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_modal
+            mode_index = analysis_widget.current_mode_index()
+
             data = compute_acoustic_modal_field(
-                app().project.acoustic_modal_solver.modal_shape,
-                self.current_frequency_index,
-                self.current_phase,
+                app().project.acoustic_modal_solver,
+                mode_index,
+                phase,
             )
             color_scalars, min_value, max_value = data
 
         elif self.current_analysis == "acoustic_harmonic":
+            analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_harmonic
+            frequency_index = analysis_widget.current_frequency_index()
+            phase = animation_toolbar.phase_slider.value()
+
             data = compute_acoustic_harmonic_field(
-                app().project.acoustic_harmonic_solver.solution,
-                self.current_frequency_index,
-                self.current_phase,
+                app().project.acoustic_harmonic_solver,
+                frequency_index,
+                phase,
             )
             color_scalars, min_value, max_value = data
 
@@ -113,8 +149,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if displacements is not None:
             self.analysis_actor.apply_deformation(
                 displacements,
-                self.current_phase,
-                self.magnification_factor,
+                phase,
+                magnification_factor,
             )
             self.edges_actor.extract_data(self.analysis_actor.data)
 
@@ -181,12 +217,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.analysis_actor.apply_cut(xyz, normal)
         self.edges_actor.apply_cut(xyz, normal)
         self.update()
-    
+
         self.ghost_actor.VisibilityOn()
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
-
 
     def _actors_exists(self):
         return len(self._widget_actors) > 0

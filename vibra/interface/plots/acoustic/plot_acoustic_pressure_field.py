@@ -27,15 +27,13 @@ class PlotAcousticPressureField(QWidget):
     def showEvent(self, event):
         super().showEvent(event)
 
-        render_widget = app().main_window.acoustic_harmonic_analysis
+        render_widget = app().main_window.results_widget
         app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
         app().main_window.render_widget_changed.emit()
 
         app().main_window.animation_toolbar.setDisabled(False)
 
     def _initialize(self):
-        self.frequencies = app().project.model.frequencies
-        self.frequency_to_index = dict(zip(self.frequencies, np.arange(len(self.frequencies), dtype=int)))
         self.current_frequency = None
         self.colormaps = ["jet",
                           "viridis",
@@ -139,6 +137,10 @@ class PlotAcousticPressureField(QWidget):
 
         app().main_window.acoustic_harmonic_analysis.update_plot()
 
+        results_widget = app().main_window.results_widget
+        results_widget.configure_analysis("acoustic_harmonic")
+        results_widget.update_plot()
+
         # color_scale_setup = self.get_user_color_scale_setup()
         # app().project.set_color_scale_setup(color_scale_setup)
         # app().main_window.results_widget.show_pressure_field(self.frequency)
@@ -171,6 +173,13 @@ class PlotAcousticPressureField(QWidget):
         return color_scale_setup
 
     def load_frequencies(self):
+        if isinstance(app().project.model.frequencies, np.ndarray):
+            self.frequencies = app().project.model.frequencies
+        else:
+            return
+
+        self.frequency_to_index = dict(zip(self.frequencies, np.arange(len(self.frequencies), dtype=int)))
+
         self.treeWidget_frequencies.clear()
         for index, frequency in enumerate(self.frequencies):
             new = QTreeWidgetItem([str(index+1), str(frequency)])
