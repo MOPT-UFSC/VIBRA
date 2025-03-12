@@ -4,7 +4,6 @@ from vibra.engine.elements.surface_elements import Element2D
 from vibra.engine.properties.material import Material
 
 import numpy as np
-from numba import njit
 np.set_printoptions(precision=18)#threshold=sys.maxsize)
 
 
