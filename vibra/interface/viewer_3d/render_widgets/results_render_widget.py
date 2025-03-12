@@ -10,6 +10,8 @@ from vibra.engine.postprocessing import (
     compute_acoustic_modal_field,
     compute_acoustic_harmonic_field,
 )
+from vibra.utils.math_functions import lerp
+
 
 from ..actors import (
     EdgesActor,
@@ -43,6 +45,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def configure_analysis(self, analysis: AnalysisType):
         self.current_analysis = analysis
+
+    def toggle_animation(self, *args, **kwargs):
+        if self.playing_animation:
+            self.stop_animation()
+        else:
+            self.start_animation(*args, **kwargs)
 
     def set_theme(self, theme, **kwargs):
         return super().set_theme("dark", **kwargs)
@@ -78,11 +86,22 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.update_section_plane()
         app().project.thumbnail = self.get_thumbnail()
 
-    def update_color_and_deformation(self):
+    def update_animation(self, frame):
+        # Map the frames from 0 to 1
+        t = frame / (self._animation_total_frames - 1)
+        phase = lerp(0, 360, t)
+        self.update_color_and_deformation(phase)
+
+    def update_color_and_deformation(self, phase=None):
+        if not self._actors_exists():
+            return
+
         animation_toolbar = app().main_window.animation_toolbar
-        phase = animation_toolbar.phase_slider.value()
         magnification_factor = animation_toolbar.magnification_factor_slider.value() / 16
         displacements = None
+
+        if phase is None:
+            phase = animation_toolbar.phase_slider.value()
 
         displacement_types = [
             "u_sum",
@@ -93,7 +112,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         if self.current_analysis == "":
             return
-        
+
         elif self.current_analysis == "structural_modal":
             analysis_widget = app().main_window.results_viewer_widget.plot_structural_modal
             mode_index = analysis_widget.current_mode_index()
@@ -103,7 +122,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 app().project.structural_modal_solver,
                 mode_index,
                 phase,
-                displacement_types[displacement_index]
+                displacement_types[displacement_index],
             )
             displacements, color_scalars, min_value, max_value = data
 
