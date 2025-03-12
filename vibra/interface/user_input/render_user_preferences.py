@@ -64,6 +64,10 @@ class RendererUserPreferencesInput(QDialog):
 
         # QSpinBox
         self.spinBox_renderer_font_size: QSpinBox
+        self.spinBox_points_size: QSpinBox
+        self.spinBox_nodess_size: QSpinBox
+        self.spinBox_lines_thickness: QSpinBox
+        self.spinBox_edges_thickness: QSpinBox
 
         # QPushButton
         self.pushButton_renderer_background_color_1 : QPushButton
