@@ -21,10 +21,9 @@ def compute_acoustic_modal_field(
     min_value = np.min(color_scalars)
     max_value = np.max(color_scalars)
 
-    if response_real:
-        if np.abs(min_value) != np.abs(max_value):
-            min_value = -np.max(np.abs([min_value, max_value]))
-            max_value = np.max(np.abs([min_value, max_value]))
+    if response_real and (np.abs(min_value) != np.abs(max_value)):
+        min_value = -np.max(np.abs([min_value, max_value]))
+        max_value = np.max(np.abs([min_value, max_value]))
 
     color_scalars *= np.cos(phase * np.pi / 180)
     if response_abs:
