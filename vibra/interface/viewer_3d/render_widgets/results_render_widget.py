@@ -67,14 +67,14 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.ghost_actor = GhostActor(mesh)
         self.plane_actor = SectionPlaneActor(self.analysis_actor.GetBounds())
 
-        self.update_color_and_deformation()
-
         self.add_actors(
             self.analysis_actor,
             self.edges_actor,
             self.ghost_actor,
             self.plane_actor,
         )
+
+        self.update_color_and_deformation()
 
         has_hidden_part = bool(app().main_window.hidden_surfaces)
         self.ghost_actor.SetVisibility(has_hidden_part)
