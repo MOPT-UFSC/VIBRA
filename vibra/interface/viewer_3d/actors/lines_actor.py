@@ -57,7 +57,8 @@ class LinesActor(vtkActor):
         self.clear_colors()
 
     def configure_appearance(self):
-        self.GetProperty().SetLineWidth(6)
+        lines_thickness = app().config.user_preferences.lines_thickness
+        self.GetProperty().SetLineWidth(lines_thickness)
         self.clear_colors()
 
     def clear_colors(self):

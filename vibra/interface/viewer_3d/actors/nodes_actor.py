@@ -66,8 +66,9 @@ class NodesActor(vtkActor):
         points.Modified()
 
     def configure_appearance(self):
+        nodes_size = app().config.user_preferences.nodes_size
         self.GetProperty().RenderPointsAsSpheresOn()
-        self.GetProperty().SetPointSize(10)
+        self.GetProperty().SetPointSize(nodes_size)
         self.GetProperty().LightingOff()
         self.clear_colors()
 

@@ -5,7 +5,7 @@ from pathlib import Path
 from shutil import copy, rmtree
 from time import time
 
-import qdarktheme
+# import qdarktheme
 
 from PySide6.QtWidgets import (
      QAbstractButton,

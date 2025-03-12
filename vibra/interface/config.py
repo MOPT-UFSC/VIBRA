@@ -28,6 +28,10 @@ class Config:
                 self.user_preferences.faces_color = Color(*user_preferences["faces_color"])
                 self.user_preferences.renderer_font_color = Color(*user_preferences["renderer_font_color"])
                 self.user_preferences.renderer_font_size = user_preferences["renderer_font_size"]
+                self.user_preferences.points_size = user_preferences["points_size"]
+                self.user_preferences.nodes_size = user_preferences["nodes_size"]
+                self.user_preferences.lines_thickness = user_preferences["lines_thickness"]
+                self.user_preferences.edges_thickness = user_preferences["edges_thickness"]
                 self.user_preferences.show_reference_scale_bar = user_preferences["show_reference_scale_bar"]
                 self.user_preferences.color_map = user_preferences["color_map"]
         except:
@@ -44,6 +48,10 @@ class Config:
         "faces_color" : self.user_preferences.faces_color.to_rgb(),
         "renderer_font_color" : self.user_preferences.renderer_font_color.to_rgb(),
         "renderer_font_size" : self.user_preferences.renderer_font_size,
+        "points_size" : self.user_preferences.points_size,
+        "nodes_size" : self.user_preferences.nodes_size,
+        "lines_thickness" : self.user_preferences.lines_thickness,
+        "edges_thickness" : self.user_preferences.edges_thickness,
         "show_reference_scale_bar" : self.user_preferences.show_reference_scale_bar,
         "color_map" : self.user_preferences.color_map
         }
@@ -62,6 +70,10 @@ class Config:
         data["faces_color"] = self.user_preferences.faces_color.to_rgb()
         data["renderer_font_color"] = self.user_preferences.renderer_font_color.to_rgb()
         data["renderer_font_size"] = self.user_preferences.renderer_font_size
+        data["points_size"] = self.user_preferences.points_size
+        data["nodes_size"] = self.user_preferences.nodes_size
+        data["lines_thickness"] = self.user_preferences.lines_thickness
+        data["edges_thickness"] = self.user_preferences.edges_thickness
         data["show_reference_scale_bar"] = self.user_preferences.show_reference_scale_bar
         data["color_map"] = self.user_preferences.color_map
 

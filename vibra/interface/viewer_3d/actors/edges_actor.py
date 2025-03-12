@@ -61,3 +61,5 @@ class EdgesActor(vtkActor):
         r, g, b = app().config.user_preferences.edges_color.to_rgb_f()
         self.GetProperty().SetColor(r, g, b)
         self.GetProperty().SetRepresentationToWireframe()
+        edges_thickness = app().config.user_preferences.edges_thickness
+        self.GetProperty().SetLineWidth(edges_thickness)

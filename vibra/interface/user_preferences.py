@@ -13,6 +13,10 @@ class UserPreferences:
     faces_color: Color = color_names.WHITE
     renderer_font_color: Color = color_names.BLACK
     renderer_font_size: int  = 12
+    points_size: int = 15
+    nodes_size: int = 10
+    lines_thickness: int = 5
+    edges_thickness: int = 1
     show_reference_scale_bar: bool = True
     color_map = "jet"
 
@@ -37,9 +41,13 @@ class UserPreferences:
         self.edges_color = color_names.BLACK
         self.faces_color = color_names.WHITE
         self.renderer_font_color = color_names.WHITE
-
-    def reset_font_size(self):
+    
+    def reset_sizes(self):
         self.renderer_font_size = 12
+        self.points_size: int = 15
+        self.nodes_size: int = 10
+        self.lines_thickness: int = 5
+        self.edges_thickness: int = 1
     
     def reset_reference_scale_bar(self):
         self.show_reference_scale_bar = True

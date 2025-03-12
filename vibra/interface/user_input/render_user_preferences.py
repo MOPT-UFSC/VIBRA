@@ -21,15 +21,7 @@ class RendererUserPreferencesInput(QDialog):
         self.config = app().config
         self.user_preferences = app().config.user_preferences
 
-        self.renderer_background_color_1 = None
-        self.renderer_background_color_2 = None
-        self.renderer_font_color = None
-        self.nodes_points_color = None
-        self.lines_color = None
-        self.edges_color = None
-        self.faces_color = None
-        self.renderer_font_size = None
-
+        self.reset_attributes()
         self._config_window()
         self._define_qt_variables()
         self._create_connections()
@@ -65,7 +57,7 @@ class RendererUserPreferencesInput(QDialog):
         # QSpinBox
         self.spinBox_renderer_font_size: QSpinBox
         self.spinBox_points_size: QSpinBox
-        self.spinBox_nodess_size: QSpinBox
+        self.spinBox_nodes_size: QSpinBox
         self.spinBox_lines_thickness: QSpinBox
         self.spinBox_edges_thickness: QSpinBox
 
@@ -93,6 +85,10 @@ class RendererUserPreferencesInput(QDialog):
         self.pushButton_update_settings.clicked.connect(self.confirm_and_update_user_preferences)
         self.pushButton_apply_settings.clicked.connect(self.apply_user_preferences)
         self.spinBox_renderer_font_size.valueChanged.connect(self.update_renderer_font_size)
+        self.spinBox_points_size.valueChanged.connect(self.update_points_size)
+        self.spinBox_nodes_size.valueChanged.connect(self.update_nodes_size)
+        self.spinBox_lines_thickness.valueChanged.connect(self.update_lines_thickness)
+        self.spinBox_edges_thickness.valueChanged.connect(self.update_edges_thickness)
         
     def update_renderer_background_color_1(self):
         read = PickColorInput(title="Pick the background color")
@@ -187,11 +183,37 @@ class RendererUserPreferencesInput(QDialog):
     
     def update_renderer_font_size(self):
         self.renderer_font_size = self.spinBox_renderer_font_size.value()
-        self.user_preferences.renderer_font_size = self.renderer_font_size
 
     def update_spin_box_renderer_font_size(self):
         renderer_font_size = self.user_preferences.renderer_font_size
         self.spinBox_renderer_font_size.setValue(renderer_font_size)
+    
+    def update_points_size(self):
+        self.points_size = self.spinBox_points_size.value()
+    def update_spin_box_points_size(self):
+        points_size = self.user_preferences.points_size
+        self.spinBox_points_size.setValue(points_size)
+    
+    def update_nodes_size(self):
+        self.nodes_size = self.spinBox_nodes_size.value()
+
+    def update_spin_box_nodes_size(self):
+        nodes_size = self.user_preferences.nodes_size
+        self.spinBox_nodes_size.setValue(nodes_size)
+    
+    def update_lines_thickness(self):
+        self.lines_thickness = self.spinBox_lines_thickness.value()
+
+    def update_spin_box_lines_thickness(self):
+        lines_thickness = self.user_preferences.lines_thickness
+        self.spinBox_lines_thickness.setValue(lines_thickness)
+    
+    def update_edges_thickness(self):
+        self.edges_thickness = self.spinBox_edges_thickness.value()
+
+    def update_spin_box_edges_thickness(self):
+        edges_thickness = self.user_preferences.edges_thickness
+        self.spinBox_edges_thickness.setValue(edges_thickness)
 
     def apply_user_preferences(self):
         if self.renderer_background_color_1 is not None:
@@ -218,6 +240,18 @@ class RendererUserPreferencesInput(QDialog):
         if self.renderer_font_size is not None:
             self.user_preferences.renderer_font_size = self.renderer_font_size
 
+        if self.points_size is not None:
+            self.user_preferences.points_size = self.points_size
+
+        if self.nodes_size is not None:
+            self.user_preferences.nodes_size = self.nodes_size
+
+        if self.lines_thickness is not None:
+            self.user_preferences.lines_thickness = self.lines_thickness
+
+        if self.edges_thickness is not None:
+            self.user_preferences.edges_thickness = self.edges_thickness
+
         self.update_settings()
         self.config.update_config_file()
 
@@ -237,7 +271,7 @@ class RendererUserPreferencesInput(QDialog):
             self.user_preferences.set_light_theme()
         
         self.reset_attributes()
-        self.user_preferences.reset_font_size()
+        self.user_preferences.reset_sizes()
         self.reset_reference_scale_state()
         self.load_user_preferences()
 
@@ -253,6 +287,10 @@ class RendererUserPreferencesInput(QDialog):
         self.edges_color = None
         self.faces_color = None
         self.renderer_font_size = None
+        self.points_size = None
+        self.nodes_size = None
+        self.lines_thickness = None
+        self.edges_thickness = None
 
     def reset_reference_scale_state(self):
         self.user_preferences.reset_reference_scale_bar()
@@ -284,6 +322,10 @@ class RendererUserPreferencesInput(QDialog):
         self.update_line_edit_edges_color()
         self.update_line_edit_faces_color()
         self.update_spin_box_renderer_font_size()
+        self.update_spin_box_points_size()
+        self.update_spin_box_nodes_size()
+        self.update_spin_box_lines_thickness()
+        self.update_spin_box_edges_thickness()
         self.update_show_reference_scalebar_checkbox()
 
     def keyPressEvent(self, event):
