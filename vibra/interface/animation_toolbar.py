@@ -214,7 +214,6 @@ class AnimationToolbar(QToolBar):
     def phase_slider_callback(self, value: int):
         self.update_degree_label()
         app().main_window.results_widget.update_color_and_deformation()
-        self.current_render_widget.update_plot()
     
     def magnification_factor_slider_callback(self, value: int):
         self.update_factor_label()

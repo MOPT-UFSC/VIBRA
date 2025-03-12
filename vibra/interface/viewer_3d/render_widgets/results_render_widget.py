@@ -35,9 +35,13 @@ class ResultsRenderWidget(AnimatedRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        app().main_window.theme_changed.connect(self.update_theme)
+        app().main_window.section_plane.value_changed.connect(self.update_section_plane)
+
         self.current_analysis: AnalysisType = ""
         self.current_menu_widget: QWidget | None = None
 
+        self.remove_all_actors()
         self.create_axes()
         self.create_color_bar()
         self.create_scale_bar()
@@ -52,8 +56,33 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         else:
             self.start_animation(*args, **kwargs)
 
-    def set_theme(self, theme, **kwargs):
-        return super().set_theme("dark", **kwargs)
+    def update_theme(self):
+        user_preferences = app().config.user_preferences
+        bkg_1 = user_preferences.renderer_background_color_1
+        bkg_2 = user_preferences.renderer_background_color_2
+        font_color = user_preferences.renderer_font_color
+
+        if bkg_1 is None:
+            raise ValueError('Missing value "bkg_1"')
+        if bkg_2 is None:
+            raise ValueError('Missing value "bkg_2"')
+        if font_color is None:
+            raise ValueError('Missing value "font_color"')
+
+        self.renderer.GradientBackgroundOn()
+        self.renderer.SetBackground(bkg_1.to_rgb_f())
+        self.renderer.SetBackground2(bkg_2.to_rgb_f())
+
+        if hasattr(self, "text_actor"):
+            self.text_actor.GetTextProperty().SetColor(font_color.to_rgb_f())
+
+        if hasattr(self, "colorbar_actor"):
+            self.colorbar_actor.GetTitleTextProperty().SetColor(font_color.to_rgb_f())
+            self.colorbar_actor.GetLabelTextProperty().SetColor(font_color.to_rgb_f())
+
+        if hasattr(self, "scale_bar_actor"):
+            self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
+            self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
 
     def update_plot(self, reset_camera=False):
         mesh = app().project.model.mesh
@@ -74,16 +103,16 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.plane_actor,
         )
 
-        self.update_color_and_deformation()
-
         has_hidden_part = bool(app().main_window.hidden_surfaces)
         self.ghost_actor.SetVisibility(has_hidden_part)
         self.plane_actor.VisibilityOff()
 
+        self.update_section_plane()
+        self.update_color_and_deformation()
+
         if reset_camera:
             self.renderer.ResetCamera()
 
-        self.update_section_plane()
         app().project.thumbnail = self.get_thumbnail()
 
     def update_animation(self, frame):
@@ -225,11 +254,15 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
-        if isinstance(self.solids_actor, HollowAnalysisActor):
-            mesh = app().project.model.mesh
-            self.remove_actors(self.solids_actor)
-            self.solids_actor = AnalysisActor(mesh)
-            self.add_actors(self.solids_actor)
+        mesh = app().project.model.mesh
+        actor_is_hollow = isinstance(self.analysis_actor, HollowAnalysisActor)
+        mesh_is_hollow = mesh.solids_connectivity.size <= 0
+
+        if actor_is_hollow and not mesh_is_hollow:
+            self.remove_actors(self.analysis_actor)
+            self.analysis_actor = AnalysisActor(mesh)
+            self.add_actors(self.analysis_actor)
+            self.update_color_and_deformation()
 
         xyz, normal = self.plane_actor.configure_section_plane(position, rotation)
         if inverted:
@@ -246,3 +279,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def _actors_exists(self):
         return len(self._widget_actors) > 0
+
+    def remove_all_actors(self):
+        self.analysis_actor: None | AnalysisActor | HollowAnalysisActor = None
+        self.edges_actor: None | EdgesActor = None
+        self.ghost_actor: None | GhostActor = None
+        self.plane_actor: None | SectionPlaneActor = None
+        return super().remove_all_actors()
