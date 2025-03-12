@@ -81,7 +81,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
     def update_color_and_deformation(self):
         animation_toolbar = app().main_window.animation_toolbar
         phase = animation_toolbar.phase_slider.value()
-        magnification_factor = animation_toolbar.magnification_factor_slider.value()
+        magnification_factor = animation_toolbar.magnification_factor_slider.value() / 16
         displacements = None
 
         displacement_types = [
@@ -123,6 +123,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         elif self.current_analysis == "acoustic_modal":
             analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_modal
             mode_index = analysis_widget.current_mode_index()
+            response_abs = analysis_widget.comboBox_color_scale.currentIndex() == 0
 
             data = compute_acoustic_modal_field(
                 app().project.acoustic_modal_solver,
@@ -134,7 +135,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         elif self.current_analysis == "acoustic_harmonic":
             analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_harmonic
             frequency_index = analysis_widget.current_frequency_index()
-            phase = animation_toolbar.phase_slider.value()
             response_abs = analysis_widget.comboBox_color_scale.currentIndex() == 0
 
             data = compute_acoustic_harmonic_field(
@@ -151,8 +151,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if displacements is not None:
             self.analysis_actor.apply_deformation(
                 displacements,
-                phase,
                 magnification_factor,
+                max_value,
             )
             self.edges_actor.extract_data(self.analysis_actor.data)
 
