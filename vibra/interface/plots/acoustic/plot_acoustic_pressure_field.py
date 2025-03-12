@@ -135,7 +135,7 @@ class PlotAcousticPressureField(QWidget):
         frequency_selected = float(self.lineEdit_selected_frequency.text())
         self.current_frequency = self.frequency_to_index[frequency_selected]
 
-        app().main_window.acoustic_harmonic_analysis.update_plot()
+        app().main_window.results_widget.update_plot()
 
         results_widget = app().main_window.results_widget
         results_widget.configure_analysis("acoustic_harmonic")

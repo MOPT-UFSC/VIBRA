@@ -49,18 +49,18 @@ from vibra.interface.project.save_project_data_selector import SaveProjectDataSe
 # from vibra.config import UserConfig
 from vibra.interface.section_plane_widget import SectionPlaneWidget
 from vibra.interface.status_bar import StatusBar
-from vibra.interface.viewer_3d.render_widgets.acoustic_harmonic_analysis_render_widget import (
-    AcousticHarmonicAnalysisRenderWidget,
-)
-from vibra.interface.viewer_3d.render_widgets.acoustic_modal_analysis_render_widget import (
-    AcousticModalAnalysisRenderWidget,
-)
-from vibra.interface.viewer_3d.render_widgets.structural_harmonic_analysis_render_widget import (
-    StructuralHarmonicAnalysisRenderWidget,
-)
-from vibra.interface.viewer_3d.render_widgets.structural_modal_analysis_render_widget import (
-    StructuralModalAnalysisRenderWidget,
-)
+# from vibra.interface.viewer_3d.render_widgets.acoustic_harmonic_analysis_render_widget import (
+#     AcousticHarmonicAnalysisRenderWidget,
+# )
+# from vibra.interface.viewer_3d.render_widgets.acoustic_modal_analysis_render_widget import (
+#     AcousticModalAnalysisRenderWidget,
+# )
+# from vibra.interface.viewer_3d.render_widgets.structural_harmonic_analysis_render_widget import (
+#     StructuralHarmonicAnalysisRenderWidget,
+# )
+# from vibra.interface.viewer_3d.render_widgets.structural_modal_analysis_render_widget import (
+#     StructuralModalAnalysisRenderWidget,
+# )
 from vibra.interface.viewer_3d.render_widgets import (
     GeometryRenderWidget,
     MeshRenderWidget,
@@ -156,6 +156,9 @@ class MainWindow(QMainWindow):
         #QSplitter
         self.splitter: QSplitter
 
+        # QToolBar
+        self.renderer_toolbar: QToolBar
+
         # QMenu
         self.menu_project: QMenu
         self.menu_settings: QMenu
@@ -180,6 +183,7 @@ class MainWindow(QMainWindow):
         the function named "action_new_callback" if it exists.
         '''
         for action in self.findChildren(QAction):
+            action: QAction
             function_name = action.objectName() + "_callback"
             function_exists = hasattr(self, function_name)
             if not function_exists:
@@ -200,10 +204,10 @@ class MainWindow(QMainWindow):
         self.render_widgets_stack.addWidget(self.geometry_widget)
         self.render_widgets_stack.addWidget(self.mesh_widget)
         self.render_widgets_stack.addWidget(self.results_widget)
-        self.render_widgets_stack.addWidget(self.structural_modal_analysis)
-        self.render_widgets_stack.addWidget(self.structural_harmonic_analysis)
-        self.render_widgets_stack.addWidget(self.acoustic_modal_analysis)
-        self.render_widgets_stack.addWidget(self.acoustic_harmonic_analysis)
+        # self.render_widgets_stack.addWidget(self.structural_modal_analysis)
+        # self.render_widgets_stack.addWidget(self.structural_harmonic_analysis)
+        # self.render_widgets_stack.addWidget(self.acoustic_modal_analysis)
+        # self.render_widgets_stack.addWidget(self.acoustic_harmonic_analysis)
         self.render_widgets_stack.addWidget(self.help_widget)
         self.render_widgets_stack.addWidget(self.welcome_widget)
         self.render_widgets_stack.currentChanged.connect(self.render_changed_callback)
@@ -384,10 +388,10 @@ class MainWindow(QMainWindow):
         self.results_widget = ResultsRenderWidget()
         
         # TODO: remove these render widgets when they are replaced
-        self.structural_modal_analysis = StructuralModalAnalysisRenderWidget()
-        self.structural_harmonic_analysis = StructuralHarmonicAnalysisRenderWidget()
-        self.acoustic_modal_analysis = AcousticModalAnalysisRenderWidget()
-        self.acoustic_harmonic_analysis = AcousticHarmonicAnalysisRenderWidget()
+        # self.structural_modal_analysis = StructuralModalAnalysisRenderWidget()
+        # self.structural_harmonic_analysis = StructuralHarmonicAnalysisRenderWidget()
+        # self.acoustic_modal_analysis = AcousticModalAnalysisRenderWidget()
+        # self.acoustic_harmonic_analysis = AcousticHarmonicAnalysisRenderWidget()
 
         self.welcome_widget = WelcomeWidget()
         self.help_widget = HelpWidget()
@@ -530,7 +534,7 @@ class MainWindow(QMainWindow):
     
     def configure_acoustic_modal_analysis_render_widget(self, show_render_widget=False):
         self.results_widget.configure_analysis("acoustic_modal")
-        self.acoustic_modal_analysis.update_plot()
+        # self.acoustic_modal_analysis.update_plot()
         
         if show_render_widget:
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
@@ -550,7 +554,7 @@ class MainWindow(QMainWindow):
     
     def configure_structural_modal_analysis_render_widget(self, show_render_widget=False):
         self.results_widget.configure_analysis("structural_modal")
-        self.structural_modal_analysis.update_plot()
+        # self.structural_modal_analysis.update_plot()
 
         if show_render_widget:
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
@@ -570,7 +574,7 @@ class MainWindow(QMainWindow):
             
     def configure_structural_harmonic_analysis_render_widget(self, show_render_widget=False):
         self.results_widget.configure_analysis("structural_harmonic")
-        self.structural_harmonic_analysis.update_plot()
+        # self.structural_harmonic_analysis.update_plot()
 
         if show_render_widget:
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
@@ -590,7 +594,7 @@ class MainWindow(QMainWindow):
 
     def configure_acoustic_harmonic_analysis_render_widget(self, show_render_widget=False):
         self.results_widget.configure_analysis("acoustic_harmonic")
-        self.acoustic_harmonic_analysis.update_plot()
+        # self.acoustic_harmonic_analysis.update_plot()
 
         if show_render_widget:
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)

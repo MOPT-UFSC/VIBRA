@@ -145,7 +145,7 @@ class PlotAcousticModeShape(QWidget):
             return
         
         self.mode_index = self.natural_frequencies.index(self.selected_frequency)
-        app().main_window.acoustic_modal_analysis.update_deformation()
+        # app().main_window.acoustic_modal_analysis.update_deformation()
 
         results_widget = app().main_window.results_widget
         results_widget.configure_analysis("acoustic_modal")
