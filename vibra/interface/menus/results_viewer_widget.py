@@ -1,15 +1,12 @@
+from molde import load_ui
 from PySide6.QtWidgets import QFrame, QWidget
-from PySide6.QtCore import Qt
 
-from vibra import app, UI_DIR
+from vibra import UI_DIR, app
 from vibra.interface.menus.results_viewer_items import ResultsViewerItems
-
-from vibra.interface.plots.structural.plot_structural_mode_shape import PlotStructuralModeShape
-from vibra.interface.plots.structural.plot_displacement_field import PlotDisplacementField
 from vibra.interface.plots.acoustic.plot_acoustic_mode_shape import PlotAcousticModeShape
 from vibra.interface.plots.acoustic.plot_acoustic_pressure_field import PlotAcousticPressureField
-
-from molde import load_ui
+from vibra.interface.plots.structural.plot_displacement_field import PlotDisplacementField
+from vibra.interface.plots.structural.plot_structural_mode_shape import PlotStructuralModeShape
 
 
 class ResultsViewerWidget(QWidget):

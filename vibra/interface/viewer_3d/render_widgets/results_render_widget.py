@@ -1,24 +1,24 @@
 from typing import Literal
-from PySide6.QtWidgets import QFileDialog, QWidget
 
+from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import AnimatedRenderWidget
+from PySide6.QtWidgets import QFileDialog
 
 from vibra import app
 from vibra.engine.postprocessing import (
-    compute_structural_modal_field,
-    compute_structural_harmonic_field,
-    compute_acoustic_modal_field,
     compute_acoustic_harmonic_field,
+    compute_acoustic_modal_field,
+    compute_structural_harmonic_field,
+    compute_structural_modal_field,
 )
 from vibra.utils.math_functions import lerp
 
-
 from ..actors import (
+    AnalysisActor,
     EdgesActor,
     GhostActor,
-    SectionPlaneActor,
-    AnalysisActor,
     HollowAnalysisActor,
+    SectionPlaneActor,
 )
 
 # Just for type hints
@@ -34,12 +34,12 @@ AnalysisType = Literal[
 class ResultsRenderWidget(AnimatedRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.set_interactor_style(BoxSelectionInteractorStyle())
 
         app().main_window.theme_changed.connect(self.update_theme)
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
 
         self.current_analysis: AnalysisType = ""
-        self.current_menu_widget: QWidget | None = None
 
         self.remove_all_actors()
         self.create_axes()
