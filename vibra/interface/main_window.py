@@ -204,10 +204,6 @@ class MainWindow(QMainWindow):
         self.render_widgets_stack.addWidget(self.geometry_widget)
         self.render_widgets_stack.addWidget(self.mesh_widget)
         self.render_widgets_stack.addWidget(self.results_widget)
-        # self.render_widgets_stack.addWidget(self.structural_modal_analysis)
-        # self.render_widgets_stack.addWidget(self.structural_harmonic_analysis)
-        # self.render_widgets_stack.addWidget(self.acoustic_modal_analysis)
-        # self.render_widgets_stack.addWidget(self.acoustic_harmonic_analysis)
         self.render_widgets_stack.addWidget(self.help_widget)
         self.render_widgets_stack.addWidget(self.welcome_widget)
         self.render_widgets_stack.currentChanged.connect(self.render_changed_callback)
@@ -249,9 +245,9 @@ class MainWindow(QMainWindow):
         }
 
     def configure_main_window(self):
-
         app().splash.update_progress(10)
-        self.configure_window()
+        self._config_window()
+        self._connect_actions()
 
         app().splash.update_progress(30)
         self._load_menu_widgets()
@@ -318,10 +314,6 @@ class MainWindow(QMainWindow):
             widget = self.render_widgets_stack.widget(i)
             if hasattr(widget, "set_theme"):
                 widget.set_theme(theme)
-
-    def configure_window(self):
-        self._config_window()
-        self._connect_actions()
     
     def closeEvent(self, event):
         self.close_app()
