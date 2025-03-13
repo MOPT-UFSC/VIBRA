@@ -162,13 +162,16 @@ class MeshRenderWidget(CommonRenderWidget):
             self.symbols_actor,
         )
 
-        self.update_theme()
+        with self.update_lock:
+            self.update_theme()
+            self.visualization_changed_callback()
+            self.update_section_plane()
 
         if reset_camera:
             self.renderer.ResetCamera()
+        else:
+            self.update()
 
-        self.visualization_changed_callback()
-        self.update_section_plane()
         app().project.thumbnail = self.get_thumbnail()
 
     def visualization_changed_callback(self):

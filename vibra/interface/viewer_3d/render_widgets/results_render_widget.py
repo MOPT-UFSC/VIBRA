@@ -107,11 +107,15 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.ghost_actor.SetVisibility(has_hidden_part)
         self.plane_actor.VisibilityOff()
 
-        self.update_section_plane()
-        self.update_color_and_deformation()
+        with self.update_lock:
+            self.update_theme()
+            self.update_section_plane()
+            self.update_color_and_deformation()
 
         if reset_camera:
             self.renderer.ResetCamera()
+        else:
+            self.update()
 
         app().project.thumbnail = self.get_thumbnail()
 
