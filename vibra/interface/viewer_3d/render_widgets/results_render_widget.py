@@ -62,13 +62,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         bkg_2 = user_preferences.renderer_background_color_2
         font_color = user_preferences.renderer_font_color
 
-        if bkg_1 is None:
-            raise ValueError('Missing value "bkg_1"')
-        if bkg_2 is None:
-            raise ValueError('Missing value "bkg_2"')
-        if font_color is None:
-            raise ValueError('Missing value "font_color"')
-
         self.renderer.GradientBackgroundOn()
         self.renderer.SetBackground(bkg_1.to_rgb_f())
         self.renderer.SetBackground2(bkg_2.to_rgb_f())
