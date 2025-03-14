@@ -144,7 +144,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         app().project.thumbnail = self.get_thumbnail()
 
     def visualization_changed_callback(self):
-        if not self._actors_exists():
+        if not self.actors_exists():
             return
 
         visualization = app().main_window.visualization_filter
@@ -173,7 +173,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
-        if not self._actors_exists():
+        if not self.actors_exists():
             self.update_plot()
             return
 
@@ -196,7 +196,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if not self.isVisible():
             return
 
-        if not self._actors_exists():
+        if not self.actors_exists():
             return
 
         x0, y0 = self.mouse_click
@@ -238,7 +238,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.update()
 
     def update_selection(self):
-        if not self._actors_exists():
+        if not self.actors_exists():
             return
 
         self.points_actor.clear_colors()
@@ -293,7 +293,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.update()
 
     def update_section_plane(self):
-        if not self._actors_exists():
+        if not self.actors_exists():
             return
 
         section_plane = app().main_window.section_plane
@@ -354,7 +354,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.nodes_actor = None
         self.ghost_actor = None
 
-    def _actors_exists(self):
+    def actors_exists(self):
         return len(self._widget_actors) > 0
 
     def update_info_text(self):
