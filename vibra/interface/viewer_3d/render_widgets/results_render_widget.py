@@ -41,6 +41,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         app().main_window.theme_changed.connect(self.update_theme)
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
+        app().main_window.visualization_changed.connect(self.visualization_changed_callback)
 
         self.current_analysis: AnalysisType = ""
         self._animation_cached_data = dict()
@@ -286,6 +287,19 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         else:
             show_plane = not section_plane.keep_section_plane
             self._apply_section_plane(position, rotation, inverted, show_plane)
+
+        self.update()
+
+    def visualization_changed_callback(self):
+        if not self.actors_exists():
+            return
+
+        visualization = app().main_window.visualization_filter
+        has_hidden_part = bool(app().main_window.hidden_surfaces)
+
+        self.edges_actor.SetVisibility(visualization.lines)
+        self.analysis_actor.SetVisibility(visualization.faces)
+        self.ghost_actor.SetVisibility(has_hidden_part)
 
         self.update()
 
