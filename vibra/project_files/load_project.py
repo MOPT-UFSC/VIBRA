@@ -297,8 +297,6 @@ class LoadProject:
                     app().project.generate_mesh()
                     app().file.write_mesh_data_in_file()
 
-                self.update_render()
-
         app().main_window.action_model_workspace_callback()
 
     def update_render(self):

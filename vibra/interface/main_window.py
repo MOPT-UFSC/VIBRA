@@ -402,7 +402,6 @@ class MainWindow(QMainWindow):
         self.update_renderer_font_size()
 
     def set_geometry_selection(self, *, points=None, lines=None, surfaces=None, volumes=None, join=False, remove=False):
-        s = time()
         if points is None:
             points = set()
         
@@ -421,15 +420,6 @@ class MainWindow(QMainWindow):
         for volume in volumes:
             volume_surfaces = mesh.surfaces_from_volumes.get(volume, [])
             surfaces |= set(volume_surfaces)
-
-        # Select the mesh elements associated with the selected geometry
-        # mesh_faces = []
-        # mesh_solids = []
-        # for surface in surfaces:
-        #     mesh_faces.extend(mesh.elements_from_surface.get(surface, []))
-        # for volume in volumes:
-        #     mesh_solids.extend(mesh.elements_from_volume.get(volume, []))
-        # self.set_mesh_selection(faces=mesh_faces, solids=mesh_solids, join=join, remove=remove)
 
         if join and remove:
             self.selected_geometry_points ^= set(points)
@@ -453,7 +443,6 @@ class MainWindow(QMainWindow):
             self.selected_geometry_volumes = set(volumes)
 
         self.selection_changed.emit()
-        # print("COMBINING SELECTION", time() - s)
     
     def create_recents_menu(self):
         color = QColor("#448cff") 
@@ -598,6 +587,12 @@ class MainWindow(QMainWindow):
             if isinstance(widget, CommonRenderWidget):
                 widget.update_plot(reset_camera)
     
+    def update_symbols(self):
+        for i in range(self.render_widgets_stack.count()):
+            widget = self.render_widgets_stack.widget(i)
+            if hasattr(widget, "update_symbols"):
+                widget.update_symbols()
+
     def update_info_text(self):
         for i in range(self.render_widgets_stack.count()):
             widget = self.render_widgets_stack.widget(i)
@@ -915,6 +910,9 @@ class MainWindow(QMainWindow):
         app().load_project.initialize()
         load = load_function(app().load_project.load, self)
         load()
+
+        self.configure_mesh_information()
+        self.update_plots()
 
     def import_geometry(self, path : str):
 
