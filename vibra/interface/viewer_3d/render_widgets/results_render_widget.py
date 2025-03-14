@@ -5,7 +5,7 @@ import numpy as np
 from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import AnimatedRenderWidget
 from PySide6.QtWidgets import QFileDialog
-from vtkmodules.vtkCommonDataModel import vtkPolyData
+from vtkmodules.vtkCommonDataModel import vtkPointData, vtkPolyData
 
 from vibra import app
 from vibra.engine.postprocessing import (
@@ -132,8 +132,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 phase = lerp(0, 360, t)
                 self.update_color_and_deformation(phase, clear_cache=False)
 
-                cached = vtkPolyData()
-                cached.DeepCopy(self.analysis_actor.GetMapper().GetInput())
+                cached = vtkPointData()
+                cached.DeepCopy(self.analysis_actor.data.GetPointData())
                 self._animation_cached_data[frame] = cached
 
     def update_animation(self, frame):
@@ -144,18 +144,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if not self._animation_cached_data:
             self.cache_animation_frames()
 
-        # t = frame / (self._animation_total_frames - 1)
-        # phase = lerp(0, 360, t)
-        # self.update_color_and_deformation(phase, clear_cache=False)
-        # return
-
         if frame in self._animation_cached_data:
             logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]")
             cached = self._animation_cached_data[frame]
-            self.analysis_actor.GetMapper().SetInputData(cached)
-            self.analysis_actor.GetMapper().Update()
-            self.analysis_actor.GetMapper().Modified()
-            self.analysis_actor.Modified()
+            self.analysis_actor.data.GetPointData().DeepCopy(cached)
             self.update()
         else:
             # It will only enter here if something wrong happened
@@ -167,7 +159,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
             self.update_plot()
             cached = vtkPolyData()
-            cached.DeepCopy(self.tubes_actor.GetMapper().GetInput())
+            cached.DeepCopy(self.analysis_actor.data)
             self._animation_cached_data[frame] = cached
 
     def update_color_and_deformation(self, phase=None, clear_cache=True):
