@@ -377,8 +377,8 @@ class StructuralAssembler:
 
         ind_rows = np.zeros((nel, dofs, dofs), dtype=int)
         ind_cols = np.zeros((nel, dofs, dofs), dtype=int)
-        data_K_se = np.zeros((nel, dofs, dofs), dtype=float)
-        data_M_se = np.zeros((nel, dofs, dofs), dtype=float)
+        data_K_se = np.zeros((nel, dofs, dofs), dtype=complex)
+        data_M_se = np.zeros((nel, dofs, dofs), dtype=complex)
 
         last_progress = 0
 
@@ -422,8 +422,8 @@ class StructuralAssembler:
             self.ind_cols = np.append(self.ind_cols, cols_fe)
             # np.savetxt("indexes.dat", np.array([ind_rows, ind_cols], dtype=int).T, fmt="%i")
 
-            data_K_fe = np.zeros((nel, dofs, dofs), dtype=float)
-            data_M_fe = np.zeros((nel, dofs, dofs), dtype=float)
+            data_K_fe = np.zeros((nel, dofs, dofs), dtype=complex)
+            data_M_fe = np.zeros((nel, dofs, dofs), dtype=complex)
 
             last_progress = 0
 

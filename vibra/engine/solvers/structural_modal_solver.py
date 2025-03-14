@@ -122,8 +122,8 @@ class StructuralModalSolver:
 
         logging.info("Solving the eigenproblem..." + ProgressStatus(70, 100))
         sigma = self.sigma_factor
-        # opinv = LuInv(K - sigma * M)
-        self.eigen_values, self.eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which)#, OPinv=opinv)
+        opinv = LuInv(K - sigma * M)
+        self.eigen_values, self.eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
 
         logging.info("Post-processing the solution..." + ProgressStatus(95, 100))
         positive_real = np.absolute(np.real(self.eigen_values))
