@@ -120,7 +120,7 @@ class StructuralModalSolver:
             K = self.assembler.stiffness_matrix
             M = self.assembler.mass_matrix
 
-        logging.info("Solving the eigenproblem..." + ProgressStatus(70, 100))
+        logging.info("Solving the eigenproblem..." + ProgressStatus(75, 100))
         sigma = self.sigma_factor
         opinv = LuInv(K - sigma * M)
         self.eigen_values, self.eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
