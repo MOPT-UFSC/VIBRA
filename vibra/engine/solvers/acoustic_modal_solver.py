@@ -1,31 +1,25 @@
+# fmt: off
+
+from vibra.utils.progress_status import ProgressStatus
+
 import logging
 
 import numpy as np
 from pypardiso import PyPardisoSolver
 from scipy.sparse import lil_matrix, coo_matrix, csr_matrix, triu
-from scipy.sparse.linalg import LinearOperator, eigs, eigsh, inv, lobpcg
-from scipy.sparse.csgraph import reverse_cuthill_mckee
-from vibra.utils.progress_status import ProgressStatus
+from scipy.sparse.linalg import LinearOperator, eigs, eigsh
 
 
-def pardiso_eigsh(matrix, k, M, sigma, **kwargs):
-    """Call sla.eigsh with pardiso support.
+class LuInv(LinearOperator):
+    def __init__(self, A):
+        ps = PyPardisoSolver(mtype=6)
+        ps.factorize(triu(A, format="csr"))
+        self.factorized_A = ps.factorized_A
+        self.solve = ps.solve
+        LinearOperator.__init__(self, A.dtype, A.shape)
 
-    See scipy.sparse.linalg.eigsh for documentation.
-    """
-    class LuInv(LinearOperator):
-        def __init__(self, A):
-            ps = PyPardisoSolver(mtype=6)
-            ps.factorize(triu(A, format="csr"))
-            self.factorized_A = ps.factorized_A
-            self.solve = ps.solve
-            LinearOperator.__init__(self, A.dtype, A.shape)
-
-        def _matvec(self, x):
-            return self.solve(self.factorized_A, x.astype(self.dtype))
-
-    opinv = LuInv(matrix - sigma * M)
-    return eigsh(matrix, k, M=M, sigma=sigma, OPinv=opinv, **kwargs)
+    def _matvec(self, x):
+        return self.solve(self.factorized_A, x.astype(self.dtype))
 
 
 class AcousticModalSolver:
@@ -64,9 +58,10 @@ class AcousticModalSolver:
             K = self.assembler.stiffness_matrix
             M = self.assembler.mass_matrix
 
-        # self.plot_graph(K)
-        logging.info("Solving the eigenproblem..." + ProgressStatus(10, 100))
-        self.eigen_values, self.eigen_vectors = pardiso_eigsh(K, M=M, k=self.modes, which=which, sigma=self.sigma_factor, tol=1e-2)
+        logging.info("Solving the eigenproblem..." + ProgressStatus(70, 100))
+        sigma = self.sigma_factor
+        opinv = LuInv(K - sigma * M)
+        self.eigen_values, self.eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
 
         logging.info("Post-processing the solution..." + ProgressStatus(95, 100))
         positive_real = np.absolute(np.real(self.eigen_values))
@@ -125,3 +120,5 @@ class AcousticModalSolver:
         plt.cla()
         plt.spy(graph, color=(0.25,0.25,0.25))
         plt.show()
+
+# fmt: on
