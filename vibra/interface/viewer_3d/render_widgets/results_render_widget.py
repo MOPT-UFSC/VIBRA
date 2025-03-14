@@ -1,8 +1,11 @@
+import logging
 from typing import Literal
 
+import numpy as np
 from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import AnimatedRenderWidget
 from PySide6.QtWidgets import QFileDialog
+from vtkmodules.vtkCommonDataModel import vtkPolyData
 
 from vibra import app
 from vibra.engine.postprocessing import (
@@ -40,6 +43,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
 
         self.current_analysis: AnalysisType = ""
+        self._animation_cached_data = dict()
 
         self.remove_all_actors()
         self.create_axes()
@@ -112,15 +116,65 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         app().project.thumbnail = self.get_thumbnail()
 
-    def update_animation(self, frame):
-        # Map the frames from 0 to 1
-        t = frame / (self._animation_total_frames - 1)
-        phase = lerp(0, 360, t)
-        self.update_color_and_deformation(phase)
+    def clear_cache(self):
+        logging.info("Clearing animation cache")
+        self._animation_cached_data.clear()
 
-    def update_color_and_deformation(self, phase=None):
-        if not self._actors_exists():
+    def cache_animation_frames(self):
+        self.clear_cache()
+
+        with self.update_lock:
+            for frame in range(self._animation_total_frames):
+                logging.info(f"Caching animation frames [{frame}/{self._animation_total_frames}]")
+
+                t = frame / (self._animation_total_frames - 1)
+                phase = lerp(0, 360, t)
+                self.update_color_and_deformation(phase, clear_cache=False)
+
+                cached = vtkPolyData()
+                cached.DeepCopy(self.analysis_actor.GetMapper().GetInput())
+                self._animation_cached_data[frame] = cached
+
+    def update_animation(self, frame):
+        if self.current_analysis == "":
+            self.stop_animation()
             return
+
+        if not self._animation_cached_data:
+            self.cache_animation_frames()
+
+        # t = frame / (self._animation_total_frames - 1)
+        # phase = lerp(0, 360, t)
+        # self.update_color_and_deformation(phase, clear_cache=False)
+        # return
+
+        if frame in self._animation_cached_data:
+            logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]")
+            cached = self._animation_cached_data[frame]
+            self.analysis_actor.GetMapper().SetInputData(cached)
+            self.analysis_actor.GetMapper().Update()
+            self.analysis_actor.GetMapper().Modified()
+            self.analysis_actor.Modified()
+            self.update()
+        else:
+            # It will only enter here if something wrong happened
+            # in the function that caches the frames
+            logging.warning(f"Cache miss on update_animation function for frame {frame}")
+            d_theta = 2 * np.pi / self._animation_total_frames
+            phase_step = frame * d_theta
+            self.current_phase_step = phase_step
+
+            self.update_plot()
+            cached = vtkPolyData()
+            cached.DeepCopy(self.tubes_actor.GetMapper().GetInput())
+            self._animation_cached_data[frame] = cached
+
+    def update_color_and_deformation(self, phase=None, clear_cache=True):
+        if not self.actors_exists():
+            return
+
+        if clear_cache:
+            self.clear_cache()
 
         animation_toolbar = app().main_window.animation_toolbar
         magnification_factor = animation_toolbar.magnification_factor_slider.value() / 16
@@ -206,13 +260,18 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def update_section_plane(self):
-        if not self._actors_exists():
+        if not self.actors_exists():
             return
 
         section_plane = app().main_window.section_plane
 
         if not section_plane.cutting:
-            self._disable_section_plane()
+            has_hidden_part = bool(app().main_window.hidden_surfaces)
+            self.ghost_actor.SetVisibility(has_hidden_part)
+            self.plane_actor.VisibilityOff()
+            self.analysis_actor.disable_cut()
+            self.edges_actor.disable_cut()
+            self.update()
             return
 
         position = section_plane.get_position()
@@ -242,18 +301,22 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         self.save_video(file_path)
 
-    def _disable_section_plane(self):
-        has_hidden_part = bool(app().main_window.hidden_surfaces)
-        self.ghost_actor.SetVisibility(has_hidden_part)
-        self.plane_actor.VisibilityOff()
-        self.analysis_actor.disable_cut()
-        self.edges_actor.disable_cut()
-        self.update()
+    def actors_exists(self):
+        return len(self._widget_actors) > 0
+
+    def remove_all_actors(self):
+        self.analysis_actor: None | AnalysisActor | HollowAnalysisActor = None
+        self.edges_actor: None | EdgesActor = None
+        self.ghost_actor: None | GhostActor = None
+        self.plane_actor: None | SectionPlaneActor = None
+        return super().remove_all_actors()
 
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
         mesh = app().project.model.mesh
         actor_is_hollow = isinstance(self.analysis_actor, HollowAnalysisActor)
         mesh_is_hollow = mesh.solids_connectivity.size <= 0
+
+        self.clear_cache()
 
         if actor_is_hollow and not mesh_is_hollow:
             self.remove_actors(self.analysis_actor)
@@ -273,13 +336,3 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
-
-    def _actors_exists(self):
-        return len(self._widget_actors) > 0
-
-    def remove_all_actors(self):
-        self.analysis_actor: None | AnalysisActor | HollowAnalysisActor = None
-        self.edges_actor: None | EdgesActor = None
-        self.ghost_actor: None | GhostActor = None
-        self.plane_actor: None | SectionPlaneActor = None
-        return super().remove_all_actors()
