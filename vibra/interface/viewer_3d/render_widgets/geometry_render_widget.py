@@ -9,7 +9,7 @@ from ..actors.points_actor import PointsActor
 from ..actors.selection_spheres import SelectionSpheres
 from ..actors.ghost_actor import GhostActor
 from ..selection.geometry_selection import GeometrySelection
-
+from ..actors.symbols.new_symbols_actor import NewSymbolsActor
 
 from molde.render_widgets import CommonRenderWidget
 from molde.utils import TreeInfo
@@ -49,12 +49,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.main_window.section_plane.value_changed.connect(self.update_section_plane)
 
         self.geometry_selection = GeometrySelection(self)
-
-        self.points_actor = None
-        self.lines_actor = None
-        self.faces_actor = None
-        self.ghost_actor = None
-        self.selection_spheres_actor = None
+        self.remove_all_actors()
         self.selection_color = (20, 106, 245)
 
         # The fast area selection just works if it is on
@@ -132,6 +127,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.lines_actor = LinesActor(mesh)
         self.faces_actor = FacesActor(mesh)
         self.selection_spheres_actor = SelectionSpheres()
+        self.symbols_actor = NewSymbolsActor(self.renderer)
 
         has_hidden_part = bool(self.main_window.hidden_surfaces)
         self.ghost_actor = GhostActor(mesh)
@@ -147,6 +143,7 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.selection_spheres_actor,
             self.ghost_actor,
             self.plane_actor,
+            self.symbols_actor,
         )
         self.update_theme()
 
@@ -164,6 +161,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         visualization = app().main_window.visualization_filter
         faces_opacity = 1 if visualization.faces else 0.1
 
+        self.symbols_actor.SetVisibility(visualization.acoustic_symbols | visualization.structural_symbols)
         self.points_actor.SetVisibility(visualization.points)
         self.lines_actor.SetVisibility(visualization.lines)
         self.faces_actor.GetProperty().SetOpacity(faces_opacity)
@@ -200,6 +198,11 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.update_section_plane()
         # self.update()
+
+    def update_symbols(self):
+        if not self._actors_exists():
+            return
+        self.symbols_actor.build()
 
     #
     def click_callback(self, x, y):
