@@ -1,25 +1,5 @@
-import logging
-import os
-import sys
-from pathlib import Path
-from shutil import copy, rmtree
-from time import time
 
-import qdarktheme
-
-from PySide6.QtWidgets import (
-     QAbstractButton,
-     QDialog,
-     QFileDialog, QFrame,
-     QGridLayout, 
-     QMainWindow, 
-     QMenu,
-     QMessageBox,
-     QSplitter,
-     QStackedWidget,
-     QToolBar,
-     QWidget,
-)
+from PySide6.QtWidgets import QAbstractButton, QDialog, QFileDialog, QMainWindow, QMenu, QMessageBox, QSplitter, QStackedWidget, QToolBar, QWidget
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtCore import Signal
 
@@ -35,34 +15,19 @@ from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
 from vibra.interface.user_input.input_ui import InputUi
 from vibra.interface.exception_message import ErrorMessage
-from vibra.interface.plots.acoustic.export_element_transfer_data_input import (
-    ExportElementTransferDataInput,
-)
-from vibra.interface.plots.acoustic.plot_particle_velocity_frequency_response_input import (
-    PlotParticleVelocityFrequencyResponseInput,
-)
-from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import (
-    PlotSpecificAcousticImpedanceInput,
-)
+from vibra.interface.plots.acoustic.export_element_transfer_data_input import ExportElementTransferDataInput
+from vibra.interface.plots.acoustic.plot_particle_velocity_frequency_response_input import PlotParticleVelocityFrequencyResponseInput
+from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
 
-# from vibra.config import UserConfig
 from vibra.interface.section_plane_widget import SectionPlaneWidget
 from vibra.interface.status_bar import StatusBar
-from vibra.interface.viewer_3d.render_widgets.acoustic_harmonic_analysis_render_widget import (
-    AcousticHarmonicAnalysisRenderWidget,
-)
-from vibra.interface.viewer_3d.render_widgets.acoustic_modal_analysis_render_widget import (
-    AcousticModalAnalysisRenderWidget,
-)
+from vibra.interface.viewer_3d.render_widgets.acoustic_harmonic_analysis_render_widget import AcousticHarmonicAnalysisRenderWidget
+from vibra.interface.viewer_3d.render_widgets.acoustic_modal_analysis_render_widget import AcousticModalAnalysisRenderWidget
 from vibra.interface.viewer_3d.render_widgets.geometry_render_widget import GeometryRenderWidget
 from vibra.interface.viewer_3d.render_widgets.mesh_render_widget import MeshRenderWidget
-from vibra.interface.viewer_3d.render_widgets.structural_harmonic_analysis_render_widget import (
-    StructuralHarmonicAnalysisRenderWidget,
-)
-from vibra.interface.viewer_3d.render_widgets.structural_modal_analysis_render_widget import (
-    StructuralModalAnalysisRenderWidget,
-)
+from vibra.interface.viewer_3d.render_widgets.structural_harmonic_analysis_render_widget import StructuralHarmonicAnalysisRenderWidget
+from vibra.interface.viewer_3d.render_widgets.structural_modal_analysis_render_widget import StructuralModalAnalysisRenderWidget
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import VisualizationFilter
@@ -72,6 +37,15 @@ from vibra.interface.user_input.render_user_preferences import RendererUserPrefe
 from molde.render_widgets import CommonRenderWidget
 from molde import stylesheets
 from molde import load_ui
+
+import logging
+import os
+import sys
+from pathlib import Path
+from shutil import copy, rmtree
+from time import time
+
+# import qdarktheme
 
 
 class MainWindow(QMainWindow):
