@@ -4,11 +4,10 @@ if TYPE_CHECKING:
     from ..render_widgets.mesh_render_widget import MeshRenderWidget
 
 import numpy as np
-from vtkmodules.vtkRenderingCore import (
-    vtkCellPicker,
-)
+from vtkmodules.vtkRenderingCore import vtkCellPicker
 
 from vibra import app
+from vibra.utils.math_functions import inside_plane
 from vibra.utils.interface_utils import world_to_screen_coords
 
 from .common_selection import get_coordinates_inside_area, pick_actor_cell_info
@@ -17,6 +16,8 @@ from .common_selection import get_coordinates_inside_area, pick_actor_cell_info
 class MeshSelection:
     def __init__(self, mesh_render_widget: "MeshRenderWidget"):
         self.mesh_render_widget = mesh_render_widget
+        self.section_plane_config = None
+
         self.solid_elements_center = np.array([])
         self.face_elements_center = np.array([])
         self.cell_picker = vtkCellPicker()
@@ -81,6 +82,12 @@ class MeshSelection:
 
         return picked_nodes, picked_faces, picked_solids
 
+    def set_section_plane(self, position, rotation):
+        self.section_plane_config = (position, rotation)
+
+    def clear_section_plane(self):
+        self.section_plane_config = None
+
     def _pick_node(self, x: int, y: int) -> set[int]:
         """
         Pick a node in the mesh.
@@ -98,14 +105,17 @@ class MeshSelection:
         renderer = self.mesh_render_widget.renderer
         self.cell_picker.Pick(x, y, 0, renderer)
 
+        plane_mask = self._section_plane_mask(mesh.nodal_coordinates[:, 1:])
+        nodes = mesh.nodal_coordinates[plane_mask]
+
         pick_position = np.array(self.cell_picker.GetPickPosition())
         distance_to_pick_position = np.linalg.norm(
-            pick_position - mesh.nodal_coordinates[:, 1:],
+            pick_position - nodes[:, 1:],
             axis=1,
         )
 
         index = np.argmin(distance_to_pick_position)
-        world_coords = mesh.nodal_coordinates[index, 1:]
+        world_coords = nodes[index, 1:]
         screen_coords = world_to_screen_coords(world_coords, renderer)
         click = np.array([x, y])
 
@@ -114,7 +124,7 @@ class MeshSelection:
 
         node_size = 8
         if np.linalg.norm(click - screen_coords) < node_size / 2:
-            return {mesh.nodal_coordinates[index, 0].astype(int)}, camera_distance
+            return {nodes[index, 0].astype(int)}, camera_distance
         else:
             return set(), float("inf")
 
@@ -157,6 +167,7 @@ class MeshSelection:
         if mesh is None:
             return set()
 
+        plane_mask = self._section_plane_mask(mesh.nodal_coordinates[:, 1:])
         mask = get_coordinates_inside_area(
             mesh.nodal_coordinates[:, 1:],
             (x0, y0, x1, y1),
@@ -164,7 +175,7 @@ class MeshSelection:
         )
 
         node_indexes = mesh.nodal_coordinates[:, 0].astype(int)
-        picked_nodes = set(node_indexes[mask])
+        picked_nodes = set(node_indexes[mask & plane_mask])
         return picked_nodes
 
     def _area_pick_faces(self, x0: int, y0: int, x1: int, y1: int) -> set[int]:
@@ -175,6 +186,7 @@ class MeshSelection:
         if self.face_elements_center.size == 0:
             return set()
 
+        plane_mask = self._section_plane_mask(self.face_elements_center)
         mask_selected_faces = get_coordinates_inside_area(
             self.face_elements_center,
             (x0, y0, x1, y1),
@@ -182,7 +194,7 @@ class MeshSelection:
         )
 
         face_indexes = mesh.faces_connectivity[:, 0].astype(int)
-        return set(face_indexes[mask_selected_faces])
+        return set(face_indexes[mask_selected_faces & plane_mask])
 
     def _area_pick_solids(
         self,
@@ -198,6 +210,7 @@ class MeshSelection:
         if self.solid_elements_center.size == 0:
             return set()
 
+        plane_mask = self._section_plane_mask(self.solid_elements_center)
         mask_selected_elements = get_coordinates_inside_area(
             self.solid_elements_center,
             (x0, y0, x1, y1),
@@ -205,4 +218,12 @@ class MeshSelection:
         )
 
         solid_indexes = mesh.solids_connectivity[:, 0].astype(int)
-        return set(solid_indexes[mask_selected_elements])
+        return set(solid_indexes[mask_selected_elements & plane_mask])
+
+    def _section_plane_mask(self, coordinates: np.ndarray):
+        if self.section_plane_config is None:
+            return np.ones(coordinates.shape[0], dtype=bool)
+
+        position, rotation = self.section_plane_config
+        plane_mask = inside_plane(coordinates, position, rotation)
+        return plane_mask

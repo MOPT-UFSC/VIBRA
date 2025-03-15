@@ -183,6 +183,16 @@ class MeshRenderWidget(CommonRenderWidget):
         x0, y0 = self.mouse_click
         mouse_moved = (abs(x0 - x) > 10) or (abs(y0 - y) > 10)
 
+        section_plane_widget = app().main_window.section_plane
+        if section_plane_widget.cutting:
+            xyz = self.plane_actor.calculate_xyz_position(section_plane_widget.get_position())
+            normal = self.plane_actor.calculate_normal_vector(section_plane_widget.get_rotation())
+            if section_plane_widget.get_inverted():
+                normal = -normal
+            self.mesh_selection.set_section_plane(xyz, normal)            
+        else:
+            self.mesh_selection.clear_section_plane()
+
         if mouse_moved:
             picked_nodes, picked_faces, picked_solids = self.mesh_selection.area_pick(x0, y0, x, y)
         else:
@@ -308,6 +318,7 @@ class MeshRenderWidget(CommonRenderWidget):
         if inverted:
             normal = -normal
 
+        self.nodes_actor.apply_cut(xyz, normal)
         self.faces_actor.apply_cut(xyz, normal)
         self.solids_actor.apply_cut(xyz, normal)
         self.edges_actor.apply_cut(xyz, normal)
