@@ -223,8 +223,10 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.update_info_text()
 
+        # In this renderer the faces should be transparent
+        # all the time, except when they are selected
+        self.faces_actor.set_color((0, 0, 0, 0))
         self.nodes_actor.clear_colors()
-        self.faces_actor.clear_colors()
         self.solids_actor.clear_colors()
 
         nodes = app().main_window.selected_mesh_nodes
