@@ -482,7 +482,7 @@ class MainWindow(QMainWindow):
         self.update_mesh_information(nodes, face_elements, solid_elements)
     
     def configure_acoustic_modal_analysis_render_widget(self, show_renderer_widget=False):
-        self.acoustic_modal_analysis.update_plot()
+        # self.acoustic_modal_analysis.update_plot()
         
         if show_renderer_widget:
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)

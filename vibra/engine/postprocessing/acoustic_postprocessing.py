@@ -12,7 +12,7 @@ def compute_acoustic_modal_field(
     response_abs: bool = False,
     response_real: bool = False,
 ):
-    color_scalars = solver.modal_shape[:, index]
+    color_scalars = solver.modal_shapes[:, index]
 
     if response_abs:
         color_scalars = np.abs(color_scalars)

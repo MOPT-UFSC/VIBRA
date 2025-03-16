@@ -77,7 +77,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         if self.current_analysis == "structural_modal":
             data = compute_structural_modal_field(
-                app().project.structural_modal_solver.modal_shape,
+                app().project.structural_modal_solver.modal_shapes,
                 self.current_frequency_index, 
                 self.current_phase,
             )
@@ -93,7 +93,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         elif self.current_analysis == "acoustic_modal":
             data = compute_acoustic_modal_field(
-                app().project.acoustic_modal_solver.modal_shape,
+                app().project.acoustic_modal_solver.modal_shapes,
                 self.current_frequency_index,
                 self.current_phase,
             )

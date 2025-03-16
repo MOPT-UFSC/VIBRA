@@ -418,13 +418,16 @@ class ProjectFile:
             with h5py.File(internal_file, "w") as f:
 
                 acoustic_modal_solver = app().project.acoustic_modal_solver
-                if acoustic_modal_solver is not None:
-                    if acoustic_modal_solver.modal_shape is not None:
-                        natural_frequencies = acoustic_modal_solver.natural_frequencies
-                        modal_shape = acoustic_modal_solver.modal_shape
+                if acoustic_modal_solver.modal_shapes is not None:
+                    natural_frequencies = acoustic_modal_solver.natural_frequencies
+                    modal_shapes = acoustic_modal_solver.modal_shapes
+                    complex_natural_frequencies = acoustic_modal_solver.complex_natural_frequencies 
+                    if isinstance(complex_natural_frequencies, np.ndarray):
+                        f.create_dataset("modal_acoustic/natural_frequencies", data=complex_natural_frequencies, dtype=complex)
+                    else:
                         f.create_dataset("modal_acoustic/natural_frequencies", data=natural_frequencies, dtype=float)
-                        f.create_dataset("modal_acoustic/modal_shape", data=modal_shape, dtype=float)
-                
+                    f.create_dataset("modal_acoustic/modal_shape", data=modal_shapes, dtype=complex)
+
                 structural_modal_solver = app().project.structural_modal_solver
                 if structural_modal_solver is not None:
                     if structural_modal_solver.solution_full is not None:
