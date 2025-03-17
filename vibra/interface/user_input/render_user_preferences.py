@@ -1,3 +1,5 @@
+from dataclasses import fields
+
 from PySide6.QtWidgets import QDialog, QCheckBox, QFrame, QLineEdit, QPushButton, QSlider, QSpinBox
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtCore import Qt
@@ -7,6 +9,8 @@ from molde.colors import Color
 from molde import load_ui
 
 from vibra.interface.user_input.model.color_selector import PickColorInput
+from vibra.interface.user_preferences import UserPreferences
+
 
 class RendererUserPreferencesInput(QDialog):
     def __init__(self, *args, **kwargs):
@@ -21,19 +25,32 @@ class RendererUserPreferencesInput(QDialog):
         self.config = app().config
         self.user_preferences = app().config.user_preferences
 
-        self.reset_attributes()
+        self._initialize_attributes()
         self._config_window()
         self._define_qt_variables()
         self._create_connections()
         self.load_user_preferences()
         self.exec()
 
+    def _initialize_attributes(self):
+        self.renderer_background_color_1 = None
+        self.renderer_background_color_2 = None
+        self.renderer_font_color = None
+        self.nodes_points_color = None
+        self.lines_color = None
+        self.edges_color = None
+        self.faces_color = None
+        self.renderer_font_size = None
+        self.points_size = None
+        self.nodes_size = None
+        self.lines_thickness = None
+        self.edges_thickness = None
+
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setStyleSheet("QLineEdit { border: 1px solid gray; }")
-                                           
 
     def _define_qt_variables(self):
         # QCheckBox
@@ -216,41 +233,10 @@ class RendererUserPreferencesInput(QDialog):
         self.spinBox_edges_thickness.setValue(edges_thickness)
 
     def apply_user_preferences(self):
-        if self.renderer_background_color_1 is not None:
-            self.user_preferences.renderer_background_color_1 = self.renderer_background_color_1
-
-        if self.renderer_background_color_2 is not None:
-            self.user_preferences.renderer_background_color_2 = self.renderer_background_color_2
-
-        if self.renderer_font_color is not None:
-            self.user_preferences.renderer_font_color = self.renderer_font_color
-        
-        if self.nodes_points_color is not None:
-            self.user_preferences.nodes_points_color = self.nodes_points_color
-
-        if self.lines_color is not None:
-            self.user_preferences.lines_color = self.lines_color
-        
-        if self.edges_color is not None:
-            self.user_preferences.edges_color = self.edges_color
-
-        if self.faces_color is not None:
-            self.user_preferences.faces_color = self.faces_color
-
-        if self.renderer_font_size is not None:
-            self.user_preferences.renderer_font_size = self.renderer_font_size
-
-        if self.points_size is not None:
-            self.user_preferences.points_size = self.points_size
-
-        if self.nodes_size is not None:
-            self.user_preferences.nodes_size = self.nodes_size
-
-        if self.lines_thickness is not None:
-            self.user_preferences.lines_thickness = self.lines_thickness
-
-        if self.edges_thickness is not None:
-            self.user_preferences.edges_thickness = self.edges_thickness
+        render_user_preferences_attr = self.get_attributes()
+        for attr, value in render_user_preferences_attr.items():
+            if hasattr(self.user_preferences, attr):
+                setattr(self.user_preferences, attr, value)
 
         self.update_settings()
         self.config.update_config_file()
@@ -270,27 +256,13 @@ class RendererUserPreferencesInput(QDialog):
         else:
             self.user_preferences.set_light_theme()
         
-        self.reset_attributes()
+        # self.reset_attributes()
         self.user_preferences.reset_sizes()
         self.reset_reference_scale_state()
         self.load_user_preferences()
 
         self.update_settings()
         self.config.update_config_file()
-    
-    def reset_attributes(self):
-        self.renderer_background_color_1 = None
-        self.renderer_background_color_2 = None
-        self.renderer_font_color = None
-        self.nodes_points_color = None
-        self.lines_color = None
-        self.edges_color = None
-        self.faces_color = None
-        self.renderer_font_size = None
-        self.points_size = None
-        self.nodes_size = None
-        self.lines_thickness = None
-        self.edges_thickness = None
 
     def reset_reference_scale_state(self):
         self.user_preferences.reset_reference_scale_bar()
@@ -314,6 +286,11 @@ class RendererUserPreferencesInput(QDialog):
         self.main_window.update_renderer_font_size()
 
     def load_user_preferences(self):
+        user_preferences_attr = self.user_preferences.get_attributes()
+        for attr, value in user_preferences_attr.items():
+            if hasattr(self, attr):
+                setattr(self, attr, value)
+
         self.update_line_edit_renderer_background_color_1()
         self.update_line_edit_renderer_background_color_2()
         self.update_line_edit_renderer_font_color()
@@ -327,6 +304,13 @@ class RendererUserPreferencesInput(QDialog):
         self.update_spin_box_lines_thickness()
         self.update_spin_box_edges_thickness()
         self.update_show_reference_scalebar_checkbox()
+
+    def _get_attributes(self):
+        attributes = dict()
+        for attr, value in self.__dict__.items():
+            attributes[attr] = value
+
+        return attributes
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

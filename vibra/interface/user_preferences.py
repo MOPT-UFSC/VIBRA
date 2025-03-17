@@ -51,3 +51,10 @@ class UserPreferences:
     
     def reset_reference_scale_bar(self):
         self.show_reference_scale_bar = True
+
+    def get_attributes(self):
+        attributes = dict()
+        for attr, value in self.__dict__.items():
+            attributes[attr] = value
+
+        return attributes
