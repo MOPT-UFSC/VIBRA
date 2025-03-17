@@ -1,26 +1,12 @@
 # fmt: off
-
+from vibra.engine.solvers.linear_solver import initialize_solver, SolverType
 from vibra.utils.progress_status import ProgressStatus
 
 import logging
 
 import numpy as np
 from functools import cache
-from pypardiso import PyPardisoSolver
-from scipy.sparse import lil_matrix, coo_matrix, csr_matrix, triu
-from scipy.sparse.linalg import LinearOperator, eigs, eigsh
-
-
-class LuInv(LinearOperator):
-    def __init__(self, A):
-        ps = PyPardisoSolver(mtype=6)
-        ps.factorize(triu(A, format="csr"))
-        self.factorized_A = ps.factorized_A
-        self.solve = ps.solve
-        LinearOperator.__init__(self, A.dtype, A.shape)
-
-    def _matvec(self, x):
-        return self.solve(self.factorized_A, x.astype(self.dtype))
+from scipy.sparse.linalg import eigs
 
 
 class StructuralModalSolver:
@@ -119,8 +105,9 @@ class StructuralModalSolver:
             M = self.assembler.mass_matrix
 
         logging.info("Solving the eigenproblem..." + ProgressStatus(75, 100))
+        linear_solver = initialize_solver(SolverType.PARDISO)
         sigma = self.sigma_factor
-        opinv = LuInv(K - sigma * M)
+        opinv = linear_solver.build_linear_operator(K - sigma * M)
         eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
 
         logging.info("Post-processing the solution..." + ProgressStatus(95, 100))

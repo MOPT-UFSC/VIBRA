@@ -1,5 +1,3 @@
-
-from pypardiso.pardiso_wrapper import PyPardisoSolver
 from vibra.utils.progress_status import ProgressStatus
 
 import logging
@@ -8,7 +6,10 @@ import numpy as np
 
 from scipy.sparse.linalg import spsolve
 from scipy.sparse import triu
+
 from functools import cache
+
+from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
 
 
 class AcousticHarmonicSolver:
@@ -102,8 +103,7 @@ class AcousticHarmonicSolver:
         """
         self.get_min_max_values_of_pressures.cache_clear()
 
-        # Note: use mtype=3 for full symmetric complex matrix and mtype=6 for upper triangular complex matrix
-        ps = PyPardisoSolver(mtype=6)
+        linear_solver = initialize_solver(SolverType.PARDISO)
         #
         self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
         #
@@ -171,8 +171,8 @@ class AcousticHarmonicSolver:
             # ps.factorize(A)
 
             # solution[:, i] = spsolve(A, F)
-            solution[:, i] = ps.solve(A, F)
-            ps.free_memory(everything=True)
+            solution[:, i] = linear_solver.solve(A, F)
+            linear_solver.clear_memory()
             del A, F
 
         self.solution = self._reinsert_prescribed_dofs(solution)
