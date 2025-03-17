@@ -48,6 +48,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         self.current_analysis: AnalysisType = ""
         self._animation_cached_data = dict()
+        self.min_value = 0
+        self.max_value = 0
 
         self.remove_all_actors()
         self.create_axes()
@@ -123,6 +125,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
     def clear_cache(self):
         logging.info("Clearing animation cache")
         self._animation_cached_data.clear()
+        self.min_value = 0
+        self.max_value = 0
 
     def cache_animation_frames(self):
         self.clear_cache()
@@ -137,7 +141,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def cache_frame(self, frame):
         t = frame / (self._animation_total_frames - 1)
-        phase = lerp(0, 360, t)
+        phase = lerp(0, 2 * np.pi, t)
         self.update_color_and_deformation(phase, clear_cache=False)
 
         point_data = vtkPointData()
@@ -198,7 +202,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 phase,
                 displacement_type,
             )
-            displacements, color_scalars, min_value, max_value = data
+            displacements, color_scalars, self.min_value, self.max_value = data
 
         elif self.current_analysis == "structural_harmonic":
             analysis_widget = app().main_window.results_viewer_widget.plot_structural_harmonic
@@ -211,7 +215,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 phase,
                 displacement_type,
             )
-            displacements, color_scalars, min_value, max_value = data
+            displacements, color_scalars, self.min_value, self.max_value = data
 
         elif self.current_analysis == "acoustic_modal":
             analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_modal
@@ -225,6 +229,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 plot_type,
             )
             color_scalars, min_value, max_value = data
+            if self.clear_cache:
+                self.min_value = min_value
+                self.max_value = max_value
 
         elif self.current_analysis == "acoustic_harmonic":
             analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_harmonic
@@ -237,7 +244,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 phase,
                 response_abs=response_abs,
             )
-            color_scalars, min_value, max_value = data
+            color_scalars, self.min_value, self.max_value = data
 
         else:
             raise ValueError(f"Unknown analysis: {self.current_analysis}")
