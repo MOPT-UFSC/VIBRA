@@ -6,14 +6,19 @@ import logging
 
 import numpy as np
 from pypardiso import PyPardisoSolver
-from scipy.sparse import csr_matrix, block_array, bmat, eye, triu 
+from scipy.sparse import csr_matrix, block_array, bmat, eye, triu, identity
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh, inv
+
+from time import time
 
 
 class LuInv(LinearOperator):
-    def __init__(self, A):
-        ps = PyPardisoSolver(mtype=6)
-        ps.factorize(triu(A, format="csr"))
+    def __init__(self, A, **kwargs):
+        ps = PyPardisoSolver(**kwargs)
+        if kwargs.get("mtype") == 6:
+            ps.factorize(triu(A, format="csr"))
+        else:
+            ps.factorize(A)
         self.factorized_A = ps.factorized_A
         self.solve = ps.solve
         LinearOperator.__init__(self, A.dtype, A.shape)
@@ -72,39 +77,42 @@ class AcousticModalSolver:
 
         if np.sum(C_imp):
 
-            print("resolvendo análise modal complexa")
-
             N_t = len(self.unprescribed_indexes)
+            I = eye(N_t, dtype=complex, format="csr")
 
-            eyes = eye(N_t, dtype=complex, format="csr")
-            zeros = csr_matrix((N_t, N_t), dtype=complex)
+            # ## Reference - Craig, Roy R., Kurdila, Andrew J. Fundamentals of Structural Dynamics. Second edition, 2006.
+            # A = bmat([[ C_imp,    M], 
+            #           [     M, None]], format="csr", dtype=complex)
 
-            ## Reference - book
-            # A = bmat([[ C_imp, M_add], 
-            #           [ M_add,  None]], format="csr", dtype=complex)
+            # B = bmat([[    K, None], 
+            #           [ None,   -M]], format="csr", dtype=complex)            
 
-            # B = bmat([[K_add,   None], 
-            #         [ None, -M_add]], format="csr", dtype=complex)            
+            # ## Ans-theory
+            # A = bmat([[-C_imp,   -M], 
+            #           [     I, None]], format="csr", dtype=complex)
 
-            ## As Ans-theory
-            # A = bmat([  [ C_imp, -M_add], 
-            #             [  eyes,  zeros]  ], format="csr", dtype=complex)
+            # B = bmat([[   K, None], 
+            #           [None,    I]], format="csr", dtype=complex)
 
-            # B = bmat([  [K_add, zeros], 
-            #             [zeros,   eyes]  ], format="csr", dtype=complex)
+            # # opinv = LuInv(B - sigma * A, mtype=13)
+            # self.eigen_values, self.eigen_vectors = eigs(B, M=A, k=2*self.modes, which=which, sigma=sigma)#, OPinv=opinv)
 
-            # from scipy.linalg import eig
-            # eigen_values, eigen_vectors = eig(B.toarray(), b=A.toarray())
-            # eigen_values, eigen_vectors = eigs(B, M=A, k=modes, which=which, sigma=sigma_factor)
-
+            t0 = time()
             inv_M = inv(M.tocsc()).tocsr()
-            print("a matriz foi invertida")
+            # ps = PyPardisoSolver(mtype=6)
+            # ps.factorize(triu(M, format="csr"))
+            # inv_M = ps.solve(ps.factorized_A, identity(M.shape[0], dtype=complex, format="csr"))
+            dt = time() - t0
+            print(f"Elapsed time to calculate the inverse of matrix M: {dt : .4f}")
 
-            AA = bmat([ [zeros, eyes],
-                        [-inv_M@K, -inv_M@C_imp]])
-    
-            # eigen_values, eigen_vectors = eigs(AA, k=modes, which=which, sigma=sigma_factor)
-            self.eigen_values, self.eigen_vectors = eigs(AA, k=2*self.modes, sigma=sigma, which=which)#, OPinv=opinv)
+            AA = bmat([ [    None,            I],
+                        [-inv_M@K, -inv_M@C_imp]], format="csr", dtype=complex)
+
+            t0 = time()
+            opinv = LuInv(AA - sigma * identity(AA.shape[0], dtype=complex, format="csr"), mtype=13)
+            self.eigen_values, self.eigen_vectors = eigs(AA, k=2*self.modes, sigma=sigma, which=which, OPinv=opinv)
+            dt = time() - t0
+            print(f"Elapsed time to solve the eigensolver: {dt : .4f}")
 
             logging.info("Post-processing the solution..." + ProgressStatus(95, 100))
 
@@ -132,14 +140,9 @@ class AcousticModalSolver:
             modal_shapes = modal_shapes[:, mask_dmp]
             self.complex_natural_frequencies = complex_natural_frequencies[mask_dmp]
 
-            # print(np.array([natural_frequencies, damping_ratio]).T[:10])
-            # print(eigen_values[:10])
-
         else:
 
-            print("resolvendo análise modal real")
-
-            opinv = LuInv(K - sigma * M)
+            opinv = LuInv(K - sigma * M, mtype=6)
             self.eigen_values, self.eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
 
             logging.info("Post-processing the solution..." + ProgressStatus(95, 100))
