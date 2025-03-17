@@ -1,11 +1,11 @@
 import logging
 from typing import Literal
 
-import numpy as np
 from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import AnimatedRenderWidget
 from PySide6.QtWidgets import QFileDialog
-from vtkmodules.vtkCommonDataModel import vtkPointData, vtkPolyData
+from vtkmodules.vtkCommonCore import vtkPoints
+from vtkmodules.vtkCommonDataModel import vtkPointData
 
 from vibra import app
 from vibra.engine.postprocessing import (
@@ -14,7 +14,9 @@ from vibra.engine.postprocessing import (
     compute_structural_harmonic_field,
     compute_structural_modal_field,
 )
+from vibra.interface.loading_bar import load_function
 from vibra.utils.math_functions import lerp
+from vibra.utils.progress_status import ProgressStatus
 
 from ..actors import (
     AnalysisActor,
@@ -126,15 +128,25 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         with self.update_lock:
             for frame in range(self._animation_total_frames):
-                logging.info(f"Caching animation frames [{frame}/{self._animation_total_frames}]")
+                logging.info(
+                    f"Caching animation frames [{frame}/{self._animation_total_frames}]"
+                    + ProgressStatus(frame, self._animation_total_frames)
+                )
+                self.cache_frame(frame)
 
-                t = frame / (self._animation_total_frames - 1)
-                phase = lerp(0, 360, t)
-                self.update_color_and_deformation(phase, clear_cache=False)
+    def cache_frame(self, frame):
+        t = frame / (self._animation_total_frames - 1)
+        phase = lerp(0, 360, t)
+        self.update_color_and_deformation(phase, clear_cache=False)
 
-                cached = vtkPointData()
-                cached.DeepCopy(self.analysis_actor.data.GetPointData())
-                self._animation_cached_data[frame] = cached
+        point_data = vtkPointData()
+        point_position = vtkPoints()
+        point_data.DeepCopy(self.analysis_actor.data.GetPointData())
+        point_position.DeepCopy(self.analysis_actor.data.GetPoints())
+        self._animation_cached_data[frame] = (
+            point_data,
+            point_position,
+        )
 
     def update_animation(self, frame):
         if self.current_analysis == "":
@@ -142,25 +154,20 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         if not self._animation_cached_data:
-            self.cache_animation_frames()
+            load = load_function(self.cache_animation_frames, app().main_window)
+            load()
 
         if frame in self._animation_cached_data:
             logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]")
-            cached = self._animation_cached_data[frame]
-            self.analysis_actor.data.GetPointData().DeepCopy(cached)
+            point_data, point_position = self._animation_cached_data[frame]
+            self.analysis_actor.data.GetPointData().DeepCopy(point_data)
+            self.analysis_actor.data.GetPoints().DeepCopy(point_position)
             self.update()
         else:
             # It will only enter here if something wrong happened
             # in the function that caches the frames
             logging.warning(f"Cache miss on update_animation function for frame {frame}")
-            d_theta = 2 * np.pi / self._animation_total_frames
-            phase_step = frame * d_theta
-            self.current_phase_step = phase_step
-
-            self.update_plot()
-            cached = vtkPolyData()
-            cached.DeepCopy(self.analysis_actor.data)
-            self._animation_cached_data[frame] = cached
+            self.cache_frame(frame)
 
     def update_color_and_deformation(self, phase=None, clear_cache=True):
         if not self.actors_exists():
