@@ -30,17 +30,16 @@ class AcousticModalSolver:
         self.load_analysis_data(analysis_data)
 
     def reset_variables(self):
-
         self.modes = 40
         self.sigma_factor = 0.01
         self.analysis_type = None
 
         self.solution = None
-        self.modal_shapes = None
-        self.eigen_values = None
-        self.eigen_vectors = None
-        self.natural_frequencies = None
-        self.complex_natural_frequencies = None
+        self.modal_shapes = np.array([])
+        self.eigen_values = np.array([])
+        self.eigen_vectors = np.array([])
+        self.natural_frequencies = np.array([])
+        self.complex_natural_frequencies = np.array([])
 
     def load_analysis_data(self, analysis_data):
         if analysis_data is not None:

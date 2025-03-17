@@ -1,47 +1,56 @@
 import numpy as np
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
+
 if TYPE_CHECKING:
     from vibra.engine.solvers import AcousticHarmonicSolver, AcousticModalSolver
+
+ModalAcousticPlotTypes = Literal[
+    "absolute_animation",
+    "non_absolute_animation",
+    "absolute_values",
+    "real_values",
+    "imag_values",
+]
 
 
 def compute_acoustic_modal_field(
     solver: "AcousticModalSolver",
     index: int,
-    phase: float,
-    response_abs: bool = False,
-    response_real: bool = False,
+    phase_deg: float,
+    plot_type: ModalAcousticPlotTypes,
 ):
-    color_scalars = solver.modal_shapes[:, index]
+    selected_mode_shape = solver.modal_shapes[:, index]
+    phase_rad = phase_deg * np.pi / 180
 
-    if response_abs:
-        color_scalars = np.abs(color_scalars)
-    color_scalars /= np.max(np.abs(color_scalars))
+    pressures = np.abs(selected_mode_shape)
+    phases = np.angle(selected_mode_shape)
 
-    min_value = np.min(color_scalars)
-    max_value = np.max(color_scalars)
+    acoustic_pressures = pressures * np.cos(phases + phase_rad)
+    if plot_type == "absolute_values":
+        acoustic_pressures = np.abs(selected_mode_shape)
+    elif plot_type == "real_values":
+        acoustic_pressures = np.real(selected_mode_shape)
+    elif plot_type == "imag_values":
+        acoustic_pressures = np.imag(selected_mode_shape)
+    elif plot_type == "absolute_animation":
+        acoustic_pressures = np.abs(acoustic_pressures)
 
-    if response_real and (np.abs(min_value) != np.abs(max_value)):
-        min_value = -np.max(np.abs([min_value, max_value]))
-        max_value = np.max(np.abs([min_value, max_value]))
+    min_value, max_value = get_min_max_values_of_pressures(selected_mode_shape, plot_type)
 
-    color_scalars *= np.cos(phase * np.pi / 180)
-    if response_abs:
-        color_scalars = np.abs(color_scalars)
-    
-    return color_scalars, min_value, max_value
+    return acoustic_pressures, min_value, max_value
 
 def compute_acoustic_harmonic_field(
     solver: "AcousticHarmonicSolver",
     index: int,
-    phase: float,
+    phase_deg: float,
     response_abs: bool = False,
 ):
     current_pressures = solver.solution[:, index].copy()
     amplitudes = np.abs(current_pressures)
     phases = np.angle(current_pressures)
-    selected_phase_rad = phase * np.pi / 180
-    output_pressures = amplitudes * np.cos(phases + selected_phase_rad)
+    phase_rad = phase_deg * np.pi / 180
+    output_pressures = amplitudes * np.cos(phases + phase_rad)
 
     min_value, max_value = solver.get_min_max_values_of_pressures(index)
     if response_abs:
@@ -49,3 +58,47 @@ def compute_acoustic_harmonic_field(
         output_pressures = np.abs(output_pressures)
 
     return output_pressures, min_value, max_value
+
+
+def get_min_max_values_of_pressures(data: np.ndarray, plot_type: str):
+    _pressures = np.abs(data)
+    _phases = np.angle(data)
+
+    p_min = 1
+    p_max = 0
+
+    divisions = 36
+    thetas = np.linspace(0, 2 * np.pi, divisions + 1, endpoint=True)
+
+    if plot_type == "absolute_values":
+        return 0, max(np.abs(data))
+
+    if plot_type == "real_values":
+        return min(np.real(data)), max(np.real(data))
+
+    if plot_type == "imag_values":
+        return min(np.imag(data)), max(np.imag(data))
+
+    for theta in thetas:
+        pressures = _pressures * np.cos(theta + _phases)
+
+        if plot_type == "absolute_animation":
+            pressures = np.abs(pressures)
+
+        p_min_i = min(pressures)
+        p_max_i = max(pressures)
+
+        if p_min_i < p_min:
+            p_min = p_min_i
+        if p_max_i > p_max:
+            p_max = p_max_i
+
+    if plot_type == "absolute_animation":
+        p_min = 0
+
+    if plot_type == "non_absolute_animation":
+        max_value = np.max(np.abs([p_min, p_max]))
+        p_min = -max_value
+        p_max = max_value
+
+    return p_min, p_max

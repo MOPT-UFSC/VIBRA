@@ -190,6 +190,14 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             "u_z",
         ]
 
+        acoustic_plot_types = [
+            "absolute_animation",
+            "non_absolute_animation",
+            "absolute_values",
+            "real_values",
+            "imag_values",
+        ]
+
         if self.current_analysis == "":
             return
 
@@ -222,12 +230,13 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         elif self.current_analysis == "acoustic_modal":
             analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_modal
             mode_index = analysis_widget.current_mode_index()
-            response_abs = analysis_widget.comboBox_color_scale.currentIndex() == 0
+            plot_type_index = analysis_widget.comboBox_color_scale.currentIndex()
 
             data = compute_acoustic_modal_field(
                 app().project.acoustic_modal_solver,
                 mode_index,
                 phase,
+                acoustic_plot_types[plot_type_index],
             )
             color_scalars, min_value, max_value = data
 

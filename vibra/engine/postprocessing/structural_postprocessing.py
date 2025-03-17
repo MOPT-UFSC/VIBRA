@@ -11,7 +11,7 @@ DisplacementTypes = Literal["u_sum", "u_x", "u_y", "u_z"]
 def compute_structural_modal_field(
     solver: "StructuralModalSolver",
     index: int,
-    phase: float,
+    phase_deg: float,
     displacement_type: DisplacementTypes,
 ):
     if solver.solution_full is None:
@@ -23,8 +23,8 @@ def compute_structural_modal_field(
     amplitudes = np.abs(results_complex)
     phases = np.angle(results_complex)
 
-    selected_phase_rad = phase * np.pi / 180
-    results_real = amplitudes * np.cos(phases + selected_phase_rad)
+    phase_rad = phase_deg * np.pi / 180
+    results_real = amplitudes * np.cos(phases + phase_rad)
 
     current_solution = results_real.reshape(-1, 3).copy()
     if displacement_type == "u_sum":
@@ -51,7 +51,7 @@ def compute_structural_modal_field(
 def compute_structural_harmonic_field(
     solver: "StructuralHarmonicSolver",
     index: int,
-    phase: float,
+    phase_deg: float,
     displacement_type: DisplacementTypes,
 ):
     if solver.solution_full is None:
@@ -63,8 +63,8 @@ def compute_structural_harmonic_field(
     amplitudes = np.abs(results_complex)
     phases = np.angle(results_complex)
 
-    selected_phase_rad = phase * np.pi / 180
-    results_real = amplitudes * np.cos(phases + selected_phase_rad)
+    phase_rad = phase_deg * np.pi / 180
+    results_real = amplitudes * np.cos(phases + phase_rad)
 
     current_solution = results_real.reshape(-1, 3).copy()
     if displacement_type == "u_sum":

@@ -200,7 +200,6 @@ class PlotAcousticModeShape(QWidget):
         else:
             self.natural_frequencies = list(app().project.acoustic_modal_solver.natural_frequencies)
 
-        self.natural_frequencies = list(app().project.acoustic_modal_solver.natural_frequencies)
         modes = np.arange(1, len(self.natural_frequencies) + 1, 1)
         self.modes_to_frequencies = dict(zip(modes, self.natural_frequencies))
 
@@ -224,8 +223,9 @@ class PlotAcousticModeShape(QWidget):
             self.treeWidget_frequencies.addTopLevelItem(new)
 
         first_item = self.treeWidget_frequencies.topLevelItem(0)
-        first_item.setSelected(True)
-        self.treeWidget_frequencies.itemClicked.emit(first_item, 0)
+        if first_item is not None:
+            first_item.setSelected(True)
+            self.treeWidget_frequencies.itemClicked.emit(first_item, 0)
     
     def current_mode_index(self):
         if self.mode_index is not None:
