@@ -161,6 +161,16 @@ class PlotStructuralModeShape(QWidget):
         transparency = self.slider_transparency.value() / 100
         app().main_window.results_widget.set_tube_actors_transparency(transparency)
 
+    def get_plot_type(self):
+        plot_types = [
+            "u_sum",
+            "u_x",
+            "u_y",
+            "u_z",
+        ]
+        index = self.comboBox_displacements.currentIndex()
+        return plot_types[index]
+
     def get_user_color_scale_setup(self):
         return
 

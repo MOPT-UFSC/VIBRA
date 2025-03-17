@@ -119,6 +119,16 @@ class PlotDisplacementField(QWidget):
         app().main_window.results_widget.set_colormap(colormap)
         self.update_plot()
 
+    def get_plot_type(self):
+        plot_types = [
+            "u_sum",
+            "u_x",
+            "u_y",
+            "u_z",
+        ]
+        index = self.comboBox_displacements.currentIndex()
+        return plot_types[index]
+
     def _config_treeWidget(self):
         widths = [80, 140]
         for i, width in enumerate(widths):

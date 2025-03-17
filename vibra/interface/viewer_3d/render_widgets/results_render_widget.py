@@ -183,60 +183,45 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if phase is None:
             phase = animation_toolbar.phase_slider.value()
 
-        displacement_types = [
-            "u_sum",
-            "u_x",
-            "u_y",
-            "u_z",
-        ]
-
-        acoustic_plot_types = [
-            "absolute_animation",
-            "non_absolute_animation",
-            "absolute_values",
-            "real_values",
-            "imag_values",
-        ]
-
         if self.current_analysis == "":
             return
 
         elif self.current_analysis == "structural_modal":
             analysis_widget = app().main_window.results_viewer_widget.plot_structural_modal
             mode_index = analysis_widget.current_mode_index()
-            displacement_index = analysis_widget.comboBox_displacements.currentIndex()
+            displacement_type = analysis_widget.get_plot_type()
 
             data = compute_structural_modal_field(
                 app().project.structural_modal_solver,
                 mode_index,
                 phase,
-                displacement_types[displacement_index],
+                displacement_type,
             )
             displacements, color_scalars, min_value, max_value = data
 
         elif self.current_analysis == "structural_harmonic":
             analysis_widget = app().main_window.results_viewer_widget.plot_structural_harmonic
             frequency_index = analysis_widget.current_frequency_index()
-            displacement_index = analysis_widget.comboBox_displacements.currentIndex()
+            displacement_type = analysis_widget.get_plot_type()
 
             data = compute_structural_harmonic_field(
                 app().project.structural_harmonic_solver,
                 frequency_index,
                 phase,
-                displacement_types[displacement_index],
+                displacement_type,
             )
             displacements, color_scalars, min_value, max_value = data
 
         elif self.current_analysis == "acoustic_modal":
             analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_modal
             mode_index = analysis_widget.current_mode_index()
-            plot_type_index = analysis_widget.comboBox_color_scale.currentIndex()
-
+            plot_type = analysis_widget.get_plot_type()
+            
             data = compute_acoustic_modal_field(
                 app().project.acoustic_modal_solver,
                 mode_index,
                 phase,
-                acoustic_plot_types[plot_type_index],
+                plot_type,
             )
             color_scalars, min_value, max_value = data
 

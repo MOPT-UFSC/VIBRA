@@ -188,6 +188,18 @@ class PlotAcousticModeShape(QWidget):
                                 "absolute_animation" : absolute_animation   }
 
         return color_scale_setup
+    
+    def get_plot_type(self):
+        plot_types = [
+            "absolute_animation",
+            "non_absolute_animation",
+            "absolute_values",
+            "real_values",
+            "imag_values",
+        ]
+        index = self.comboBox_color_scale.currentIndex()
+        return plot_types[index]
+
 
     def load_natural_frequencies(self):
         if app().project.acoustic_modal_solver is None:
