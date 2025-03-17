@@ -17,12 +17,10 @@ ModalAcousticPlotTypes = Literal[
 def compute_acoustic_modal_field(
     solver: "AcousticModalSolver",
     index: int,
-    phase_deg: float,
+    phase_rad: float,
     plot_type: ModalAcousticPlotTypes,
 ):
     selected_mode_shape = solver.modal_shapes[:, index]
-    phase_rad = phase_deg * np.pi / 180
-
     pressures = np.abs(selected_mode_shape)
     phases = np.angle(selected_mode_shape)
 
@@ -40,16 +38,16 @@ def compute_acoustic_modal_field(
 
     return acoustic_pressures, min_value, max_value
 
+
 def compute_acoustic_harmonic_field(
     solver: "AcousticHarmonicSolver",
     index: int,
-    phase_deg: float,
+    phase_rad: float,
     response_abs: bool = False,
 ):
     current_pressures = solver.solution[:, index].copy()
     amplitudes = np.abs(current_pressures)
     phases = np.angle(current_pressures)
-    phase_rad = phase_deg * np.pi / 180
     output_pressures = amplitudes * np.cos(phases + phase_rad)
 
     min_value, max_value = solver.get_min_max_values_of_pressures(index)

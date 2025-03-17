@@ -1,5 +1,6 @@
 import logging
 from typing import Literal
+import numpy as np
 
 from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import AnimatedRenderWidget
@@ -181,7 +182,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         displacements = None
 
         if phase is None:
-            phase = animation_toolbar.phase_slider.value()
+            phase = np.radians(animation_toolbar.phase_slider.value())
 
         if self.current_analysis == "":
             return
