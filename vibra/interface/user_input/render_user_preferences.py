@@ -1,3 +1,4 @@
+from copy import deepcopy
 from dataclasses import fields
 
 from PySide6.QtWidgets import QDialog, QCheckBox, QFrame, QLineEdit, QPushButton, QSlider, QSpinBox
@@ -24,27 +25,13 @@ class RendererUserPreferencesInput(QDialog):
         self.main_window = app().main_window
         self.config = app().config
         self.user_preferences = app().config.user_preferences
+        self.tmp_user_preferences = deepcopy(self.user_preferences)
 
-        self._initialize_attributes()
         self._config_window()
         self._define_qt_variables()
         self._create_connections()
         self.load_user_preferences()
         self.exec()
-
-    def _initialize_attributes(self):
-        self.renderer_background_color_1 = None
-        self.renderer_background_color_2 = None
-        self.renderer_font_color = None
-        self.nodes_points_color = None
-        self.lines_color = None
-        self.edges_color = None
-        self.faces_color = None
-        self.renderer_font_size = None
-        self.points_size = None
-        self.nodes_size = None
-        self.lines_thickness = None
-        self.edges_thickness = None
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -106,7 +93,7 @@ class RendererUserPreferencesInput(QDialog):
         self.spinBox_nodes_size.valueChanged.connect(self.update_nodes_size)
         self.spinBox_lines_thickness.valueChanged.connect(self.update_lines_thickness)
         self.spinBox_edges_thickness.valueChanged.connect(self.update_edges_thickness)
-        
+
     def update_renderer_background_color_1(self):
         read = PickColorInput(title="Pick the background color")
         if read.complete:
@@ -114,7 +101,7 @@ class RendererUserPreferencesInput(QDialog):
             str_color = str(renderer_background_color_1)[1:-1]
             self.lineEdit_renderer_background_color_1.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
 
-            self.renderer_background_color_1 = Color(*renderer_background_color_1)
+            self.tmp_user_preferences.renderer_background_color_1 = Color(*renderer_background_color_1)
 
     def update_line_edit_renderer_background_color_1(self):
         str_color = str(self.user_preferences.renderer_background_color_1.to_rgb())[1:-1]
@@ -127,7 +114,7 @@ class RendererUserPreferencesInput(QDialog):
             str_color = str(renderer_background_color_2)[1:-1]
             self.lineEdit_renderer_background_color_2.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
 
-            self.renderer_background_color_2 = Color(*renderer_background_color_2)
+            self.tmp_user_preferences.renderer_background_color_2 = Color(*renderer_background_color_2)
 
     def update_line_edit_renderer_background_color_2(self):
         str_color = str(self.user_preferences.renderer_background_color_2.to_rgb())[1:-1]
@@ -140,7 +127,7 @@ class RendererUserPreferencesInput(QDialog):
             str_color = str(renderer_font_color)[1:-1]
             self.lineEdit_renderer_font_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
 
-            self.renderer_font_color = Color(*renderer_font_color)
+            self.tmp_user_preferences.renderer_font_color = Color(*renderer_font_color)
 
     def update_line_edit_renderer_font_color(self):
         str_color = str(self.user_preferences.renderer_font_color.to_rgb())[1:-1]
@@ -153,7 +140,7 @@ class RendererUserPreferencesInput(QDialog):
             str_color = str(nodes_points_color)[1:-1]
             self.lineEdit_nodes_points_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
 
-            self.nodes_points_color = Color(*nodes_points_color)
+            self.tmp_user_preferences.nodes_points_color = Color(*nodes_points_color)
         
     def update_line_edit_nodes_points_color(self):
         str_color = str(self.user_preferences.nodes_points_color.to_rgb())[1:-1]
@@ -166,7 +153,7 @@ class RendererUserPreferencesInput(QDialog):
             str_color = str(lines_color)[1:-1]
             self.lineEdit_lines_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
 
-            self.lines_color = Color(*lines_color)
+            self.tmp_user_preferences.lines_color = Color(*lines_color)
     
     def update_line_edit_lines_color(self):
         str_color = str(self.user_preferences.lines_color.to_rgb())[1:-1]
@@ -179,7 +166,7 @@ class RendererUserPreferencesInput(QDialog):
             str_color = str(edges_color)[1:-1]
             self.lineEdit_edges_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
 
-            self.edges_color = Color(*edges_color)
+            self.tmp_user_preferences.edges_color = Color(*edges_color)
     
     def update_line_edit_edges_color(self):
         str_color = str(self.user_preferences.edges_color.to_rgb())[1:-1]
@@ -192,48 +179,49 @@ class RendererUserPreferencesInput(QDialog):
             str_color = str(faces_color)[1:-1]
             self.lineEdit_faces_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
            
-            self.faces_color = Color(*faces_color)
+            self.tmp_user_preferences.faces_color = Color(*faces_color)
 
     def update_line_edit_faces_color(self):
         str_color = str(self.user_preferences.faces_color.to_rgb())[1:-1]
         self.lineEdit_faces_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
     
     def update_renderer_font_size(self):
-        self.renderer_font_size = self.spinBox_renderer_font_size.value()
+        self.tmp_user_preferences.renderer_font_size = self.spinBox_renderer_font_size.value()
 
     def update_spin_box_renderer_font_size(self):
         renderer_font_size = self.user_preferences.renderer_font_size
         self.spinBox_renderer_font_size.setValue(renderer_font_size)
     
     def update_points_size(self):
-        self.points_size = self.spinBox_points_size.value()
+        self.tmp_user_preferences.points_size = self.spinBox_points_size.value()
+
     def update_spin_box_points_size(self):
         points_size = self.user_preferences.points_size
         self.spinBox_points_size.setValue(points_size)
     
     def update_nodes_size(self):
-        self.nodes_size = self.spinBox_nodes_size.value()
+        self.tmp_user_preferences.nodes_size = self.spinBox_nodes_size.value()
 
     def update_spin_box_nodes_size(self):
         nodes_size = self.user_preferences.nodes_size
         self.spinBox_nodes_size.setValue(nodes_size)
     
     def update_lines_thickness(self):
-        self.lines_thickness = self.spinBox_lines_thickness.value()
+        self.tmp_user_preferences.lines_thickness = self.spinBox_lines_thickness.value()
 
     def update_spin_box_lines_thickness(self):
         lines_thickness = self.user_preferences.lines_thickness
         self.spinBox_lines_thickness.setValue(lines_thickness)
     
     def update_edges_thickness(self):
-        self.edges_thickness = self.spinBox_edges_thickness.value()
+        self.tmp_user_preferences.edges_thickness = self.spinBox_edges_thickness.value()
 
     def update_spin_box_edges_thickness(self):
         edges_thickness = self.user_preferences.edges_thickness
         self.spinBox_edges_thickness.setValue(edges_thickness)
 
     def apply_user_preferences(self):
-        render_user_preferences_attr = self.get_attributes()
+        render_user_preferences_attr = self.tmp_user_preferences.get_attributes()
         for attr, value in render_user_preferences_attr.items():
             if hasattr(self.user_preferences, attr):
                 setattr(self.user_preferences, attr, value)
@@ -255,8 +243,9 @@ class RendererUserPreferencesInput(QDialog):
             self.user_preferences.set_dark_theme()
         else:
             self.user_preferences.set_light_theme()
-        
-        # self.reset_attributes()
+
+        self.tmp_user_preferences = deepcopy(self.user_preferences)
+
         self.user_preferences.reset_sizes()
         self.reset_reference_scale_state()
         self.load_user_preferences()
@@ -289,6 +278,7 @@ class RendererUserPreferencesInput(QDialog):
         user_preferences_attr = self.user_preferences.get_attributes()
         for attr, value in user_preferences_attr.items():
             if hasattr(self, attr):
+                print(value)
                 setattr(self, attr, value)
 
         self.update_line_edit_renderer_background_color_1()
@@ -304,13 +294,6 @@ class RendererUserPreferencesInput(QDialog):
         self.update_spin_box_lines_thickness()
         self.update_spin_box_edges_thickness()
         self.update_show_reference_scalebar_checkbox()
-
-    def _get_attributes(self):
-        attributes = dict()
-        for attr, value in self.__dict__.items():
-            attributes[attr] = value
-
-        return attributes
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

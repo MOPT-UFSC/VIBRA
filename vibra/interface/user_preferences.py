@@ -4,7 +4,7 @@ from molde.colors import Color, color_names
 
 @dataclass
 class UserPreferences:
-    interface_theme = "light"
+    interface_theme: str = "light"
     renderer_background_color_1: Color =  Color("#8092A6")
     renderer_background_color_2: Color = Color("#EEF2F3")
     nodes_points_color: Color = Color("#FFB432")
@@ -18,7 +18,7 @@ class UserPreferences:
     lines_thickness: int = 5
     edges_thickness: int = 1
     show_reference_scale_bar: bool = True
-    color_map = "jet"
+    color_map: str = "jet"
 
     def set_light_theme(self):
         self.interface_theme = "light"
