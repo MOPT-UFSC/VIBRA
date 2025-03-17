@@ -270,7 +270,7 @@ class AcousticAssembler:
 
                 progress = 100 * np.round(el/nel, 2)
                 if progress != last_progress:
-                    logging.info( "Processing elementary matrices data..." + ProgressStatus(int(progress), 100))
+                    logging.info( "Processing the elementary matrices data..." + ProgressStatus(int(progress), 100))
 
                 last_progress = progress
 
@@ -315,7 +315,7 @@ class AcousticAssembler:
 
                 progress = 100 * np.round(el/nel, 2)
                 if progress != last_progress:
-                    logging.info( "Processing elementary matrices data..." + ProgressStatus(int(progress), 100))
+                    logging.info( "Processing the elementary matrices data..." + ProgressStatus(int(progress), 100))
 
                 last_progress = progress
 

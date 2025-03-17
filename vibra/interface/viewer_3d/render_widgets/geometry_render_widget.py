@@ -17,6 +17,7 @@ from ..actors.lines_actor import LinesActor
 from ..actors.points_actor import PointsActor
 from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.selection_spheres import SelectionSpheres
+from ..actors.symbols.new_symbols_actor import NewSymbolsActor
 from ..selection.geometry_selection import GeometrySelection
 
 
@@ -26,7 +27,7 @@ class GeometryRenderWidget(CommonRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.set_interactor_style(BoxSelectionInteractorStyle())
-        
+
         self.geometry_selection = GeometrySelection(self)
         self.selection_color = (20, 106, 245)
         self.mouse_click = (0, 0)
@@ -114,6 +115,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.lines_actor = LinesActor(mesh)
         self.faces_actor = FacesActor(mesh)
         self.selection_spheres_actor = SelectionSpheres()
+        self.symbols_actor = NewSymbolsActor(self.renderer)
 
         has_hidden_part = bool(app().main_window.hidden_surfaces)
         self.ghost_actor = GhostActor(mesh)
@@ -129,6 +131,7 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.selection_spheres_actor,
             self.ghost_actor,
             self.plane_actor,
+            self.symbols_actor,
         )
 
         with self.update_lock:
@@ -150,6 +153,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         visualization = app().main_window.visualization_filter
         faces_opacity = 1 if visualization.faces else 0.1
 
+        self.symbols_actor.SetVisibility(
+            visualization.acoustic_symbols | visualization.structural_symbols
+        )
         self.points_actor.SetVisibility(visualization.points)
         self.lines_actor.SetVisibility(visualization.lines)
         self.faces_actor.GetProperty().SetOpacity(faces_opacity)
@@ -187,6 +193,11 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.update_section_plane()
         # self.update()
 
+    def update_symbols(self):
+        if not self._actors_exists():
+            return
+        self.symbols_actor.build()
+
     #
     def click_callback(self, x, y):
         self.mouse_click = (x, y)
@@ -201,7 +212,7 @@ class GeometryRenderWidget(CommonRenderWidget):
             normal = self.plane_actor.calculate_normal_vector(section_plane_widget.get_rotation())
             if section_plane_widget.get_inverted():
                 normal = -normal
-            self.geometry_selection.set_section_plane(xyz, normal)            
+            self.geometry_selection.set_section_plane(xyz, normal)
         else:
             self.geometry_selection.clear_section_plane()
 

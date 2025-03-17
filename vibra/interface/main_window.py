@@ -1,25 +1,5 @@
-import logging
-import os
-import sys
-from pathlib import Path
-from shutil import copy, rmtree
-from time import time
 
-import qdarktheme
-
-from PySide6.QtWidgets import (
-     QAbstractButton,
-     QDialog,
-     QFileDialog, QFrame,
-     QGridLayout, 
-     QMainWindow, 
-     QMenu,
-     QMessageBox,
-     QSplitter,
-     QStackedWidget,
-     QToolBar,
-     QWidget,
-)
+from PySide6.QtWidgets import QAbstractButton, QDialog, QFileDialog, QMainWindow, QMenu, QMessageBox, QSplitter, QStackedWidget, QToolBar, QWidget
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtCore import Signal
 
@@ -35,32 +15,13 @@ from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
 from vibra.interface.user_input.input_ui import InputUi
 from vibra.interface.exception_message import ErrorMessage
-from vibra.interface.plots.acoustic.export_element_transfer_data_input import (
-    ExportElementTransferDataInput,
-)
-from vibra.interface.plots.acoustic.plot_particle_velocity_frequency_response_input import (
-    PlotParticleVelocityFrequencyResponseInput,
-)
-from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import (
-    PlotSpecificAcousticImpedanceInput,
-)
+from vibra.interface.plots.acoustic.export_element_transfer_data_input import ExportElementTransferDataInput
+from vibra.interface.plots.acoustic.plot_particle_velocity_frequency_response_input import PlotParticleVelocityFrequencyResponseInput
+from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
 
-# from vibra.config import UserConfig
 from vibra.interface.section_plane_widget import SectionPlaneWidget
 from vibra.interface.status_bar import StatusBar
-# from vibra.interface.viewer_3d.render_widgets.acoustic_harmonic_analysis_render_widget import (
-#     AcousticHarmonicAnalysisRenderWidget,
-# )
-# from vibra.interface.viewer_3d.render_widgets.acoustic_modal_analysis_render_widget import (
-#     AcousticModalAnalysisRenderWidget,
-# )
-# from vibra.interface.viewer_3d.render_widgets.structural_harmonic_analysis_render_widget import (
-#     StructuralHarmonicAnalysisRenderWidget,
-# )
-# from vibra.interface.viewer_3d.render_widgets.structural_modal_analysis_render_widget import (
-#     StructuralModalAnalysisRenderWidget,
-# )
 from vibra.interface.viewer_3d.render_widgets import (
     GeometryRenderWidget,
     MeshRenderWidget,
@@ -75,6 +36,15 @@ from vibra.interface.user_input.render_user_preferences import RendererUserPrefe
 from molde.render_widgets import CommonRenderWidget
 from molde import stylesheets
 from molde import load_ui
+
+import logging
+import os
+import sys
+from pathlib import Path
+from shutil import copy, rmtree
+from time import time
+
+# import qdarktheme
 
 
 class MainWindow(QMainWindow):
@@ -193,7 +163,7 @@ class MainWindow(QMainWindow):
             if callable(function):
                 action.triggered.connect(function)
 
-    def create_basic_layout(self):      
+    def _create_basic_layout(self):      
         self.status_bar = StatusBar(self)
         self.analysis_toolbar = AnalysisToolbar()
         self.animation_toolbar = AnimationToolbar()
@@ -255,7 +225,7 @@ class MainWindow(QMainWindow):
 
         app().splash.update_progress(60)
         self._define_qt_variables()
-        self.create_basic_layout()
+        self._create_basic_layout()
         self._configure_render_widgets_stack()
         self._configure_stacked_setup()
 
@@ -378,12 +348,6 @@ class MainWindow(QMainWindow):
         self.geometry_widget = GeometryRenderWidget()
         self.mesh_widget = MeshRenderWidget()
         self.results_widget = ResultsRenderWidget()
-        
-        # TODO: remove these render widgets when they are replaced
-        # self.structural_modal_analysis = StructuralModalAnalysisRenderWidget()
-        # self.structural_harmonic_analysis = StructuralHarmonicAnalysisRenderWidget()
-        # self.acoustic_modal_analysis = AcousticModalAnalysisRenderWidget()
-        # self.acoustic_harmonic_analysis = AcousticHarmonicAnalysisRenderWidget()
 
         self.welcome_widget = WelcomeWidget()
         self.help_widget = HelpWidget()
@@ -402,7 +366,6 @@ class MainWindow(QMainWindow):
         self.update_renderer_font_size()
 
     def set_geometry_selection(self, *, points=None, lines=None, surfaces=None, volumes=None, join=False, remove=False):
-        s = time()
         if points is None:
             points = set()
         
@@ -421,15 +384,6 @@ class MainWindow(QMainWindow):
         for volume in volumes:
             volume_surfaces = mesh.surfaces_from_volumes.get(volume, [])
             surfaces |= set(volume_surfaces)
-
-        # Select the mesh elements associated with the selected geometry
-        # mesh_faces = []
-        # mesh_solids = []
-        # for surface in surfaces:
-        #     mesh_faces.extend(mesh.elements_from_surface.get(surface, []))
-        # for volume in volumes:
-        #     mesh_solids.extend(mesh.elements_from_volume.get(volume, []))
-        # self.set_mesh_selection(faces=mesh_faces, solids=mesh_solids, join=join, remove=remove)
 
         if join and remove:
             self.selected_geometry_points ^= set(points)
@@ -453,7 +407,6 @@ class MainWindow(QMainWindow):
             self.selected_geometry_volumes = set(volumes)
 
         self.selection_changed.emit()
-        # print("COMBINING SELECTION", time() - s)
     
     def create_recents_menu(self):
         color = QColor("#448cff") 
@@ -616,6 +569,12 @@ class MainWindow(QMainWindow):
             if isinstance(widget, CommonRenderWidget):
                 widget.update_plot(reset_camera)
     
+    def update_symbols(self):
+        for i in range(self.render_widgets_stack.count()):
+            widget = self.render_widgets_stack.widget(i)
+            if hasattr(widget, "update_symbols"):
+                widget.update_symbols()
+
     def update_info_text(self):
         for i in range(self.render_widgets_stack.count()):
             widget = self.render_widgets_stack.widget(i)
@@ -930,6 +889,9 @@ class MainWindow(QMainWindow):
         app().load_project.initialize()
         load = load_function(app().load_project.load, self)
         load()
+
+        self.configure_mesh_information()
+        self.update_plots()
 
     def import_geometry(self, path : str):
 

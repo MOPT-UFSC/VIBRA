@@ -1,10 +1,10 @@
 
-from PyQt5.QtWidgets import QDialog, QPushButton, QWidget
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QCloseEvent
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog, QPushButton, QWidget
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
+from molde import load_ui
 
 from pathlib import Path
 
@@ -13,7 +13,7 @@ class ShowPorousMaterialModelEquations(QDialog):
         super().__init__(*args, **kwargs)
 
         ui_path = UI_DIR / str(file_path)
-        uic.loadUi(ui_path, self)
+        load_ui(ui_path, self, ui_path.parent)
 
         self._config_window()
         self._define_qt_variables()

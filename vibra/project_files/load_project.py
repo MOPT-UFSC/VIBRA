@@ -297,8 +297,6 @@ class LoadProject:
                     app().project.generate_mesh()
                     app().file.write_mesh_data_in_file()
 
-                self.update_render()
-
         app().main_window.action_model_workspace_callback()
 
     def update_render(self):
@@ -403,9 +401,12 @@ class LoadProject:
 
                 if key == "modal_acoustic" and app().project.acoustic_modal_solver is not None:
                     act_modal_analysis = True
-                    app().project.acoustic_modal_solver.natural_frequencies = data["natural_frequencies"]
-                    app().project.acoustic_modal_solver.modal_shape = data["modal_shape"]
-                
+                    if np.iscomplexobj(data["natural_frequencies"]):
+                        app().project.acoustic_modal_solver.complex_natural_frequencies = data["natural_frequencies"]
+                    else:
+                        app().project.acoustic_modal_solver.natural_frequencies = data["natural_frequencies"]
+                    app().project.acoustic_modal_solver.modal_shapes = data["modal_shape"]
+
                 elif key == "modal_structural" and app().project.structural_modal_solver is not None:
                     str_modal_analysis = True
                     app().project.structural_modal_solver.natural_frequencies = data["natural_frequencies"]

@@ -209,6 +209,11 @@
            <property name="indentation">
             <number>0</number>
            </property>
+           <column>
+            <property name="text">
+             <string notr="true">1</string>
+            </property>
+           </column>
           </widget>
          </item>
         </layout>
@@ -835,12 +840,27 @@
            </property>
            <item>
             <property name="text">
-             <string>Absolute</string>
+             <string>Absolute (animation)</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string>Real part</string>
+             <string>Non-absolute (animation)</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Absolute values</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Real values</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Imag values</string>
             </property>
            </item>
           </widget>

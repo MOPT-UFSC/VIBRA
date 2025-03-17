@@ -1,15 +1,10 @@
-import logging
-import numpy as np
-from molde.render_widgets import AnimatedRenderWidget
-from PySide6.QtWidgets import *
+
+from PySide6.QtWidgets import QWidget
 
 from vibra import app
-
 from vibra.interface.viewer_3d.actors.analysis_actor import AnalysisActor
 from vibra.interface.viewer_3d.actors.hollow_analysis_actor import HollowAnalysisActor
-from vibra.interface.viewer_3d.actors.section_plane_actor import (
-    SectionPlaneActor,
-)
+from vibra.interface.viewer_3d.actors.section_plane_actor import SectionPlaneActor
 from vibra.interface.viewer_3d.actors.edges_actor import EdgesActor
 from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 # from vibra.interface.viewer_3d.render_widgets.common_render_widget import (
@@ -18,16 +13,28 @@ from vibra.interface.viewer_3d.actors.faces_actor import FacesActor
 from vibra.utils.math_functions import bounds_distance, lerp, rotation_matrices
 from vibra.utils.progress_status import ProgressStatus
 
+from molde.render_widgets import AnimatedRenderWidget
+
+import logging
+import numpy as np
 
 class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.main_window = app().main_window
-        self.current_widget = None
 
-        self.main_window.theme_changed.connect(self.update_theme)
-        self.main_window.section_plane.value_changed.connect(self.update_section_plane)
+        app().main_window.theme_changed.connect(self.update_theme)
+        app().main_window.section_plane.value_changed.connect(self.update_section_plane)
+
+        self._initialize()
+        self.create_axes()
+        self.create_color_bar()
+        self.create_scale_bar()
+        # self.update_plot()
+    
+    def _initialize(self):
+
+        self.current_widget = None
 
         self.section_plane_active = False
         self.show_plane_actor = True
@@ -39,27 +46,26 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.hidden_part_actor = None
         self._bounds = (0, 0, 0, 0, 0, 0)
 
-        self.create_axes()
-        self.create_color_bar()
-        self.create_scale_bar()
-        self.update_plot()
-    
+        self.min_value = 0
+        self.max_value = 0
+
     def configure_menu_widget(self, menu_widget: QWidget):
         self.current_widget = menu_widget
 
     def toggle_animation(self, *args, **kwargs):
-        if self.playing_animation:
-            self.stop_animation()
-        else:
-            self.start_animation(*args, **kwargs)
+        if app().main_window.animation_toolbar.isEnabled():
+            if self.playing_animation:
+                self.stop_animation()
+            else:
+                self.start_animation(*args, **kwargs)
 
     def start_animation(self, *args, **kwargs):
         super().start_animation(*args, **kwargs)
-        self.main_window.animation_toolbar.update_animate_button_icons(True)
+        app().main_window.animation_toolbar.update_animate_button_icons(True)
 
     def stop_animation(self):
         super().stop_animation()
-        self.main_window.animation_toolbar.update_animate_button_icons(False)
+        app().main_window.animation_toolbar.update_animate_button_icons(False)
     
     def set_theme(self, *args, **kwargs):
         self.update_theme()
@@ -146,11 +152,11 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         if solver is None:
             return
 
-        if solver.modal_shape is None:
+        if solver.modal_shapes is None:
             return
 
         index = 0
-        if not (0 <= index < solver.modal_shape.shape[1]):
+        if not (0 <= index < solver.modal_shapes.shape[1]):
             return
         
         if self.plane_actor is not None:
@@ -158,10 +164,10 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
 
         self.remove_all_actors()
 
-        current_modal_shape, min_value, max_value = self.calculate_color_bar_plots()
+        mode_shape = self.calculate_pressure_field(update_min_max=True)
 
         self.analysis_actor = HollowAnalysisActor(mesh)
-        self.analysis_actor.plot_color_bar(current_modal_shape, min_value, max_value)
+        self.analysis_actor.plot_color_bar(mode_shape, self.min_value, self.max_value)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.renderer.AddActor(self.analysis_actor)
 
@@ -171,7 +177,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
 
         # Add a very subtle transparent actor to represent the whole
         # structure even if part of it is hidden
-        has_hidden_part = bool(self.main_window.hidden_surfaces)
+        has_hidden_part = bool(app().main_window.hidden_surfaces)
         self.hidden_part_actor = FacesActor(mesh, allow_hidding=False)
         self.hidden_part_actor.SetVisibility(has_hidden_part)
         self.hidden_part_actor.GetProperty().SetOpacity(0.05)
@@ -186,7 +192,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         self.plane_actor.SetScale(scale, scale, scale)
         self.renderer.AddActor(self.plane_actor)
 
-        # mesh_visibility = self.main_window.animation_toolbar.checkBox_show_mesh.isChecked()
+        # mesh_visibility = app().main_window.animation_toolbar.checkBox_show_mesh.isChecked()
         # self.set_mesh_visibility(mesh_visibility)
 
         # if mesh_visibility:
@@ -211,66 +217,63 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
             self.renderer.ResetCamera()
         app().project.thumbnail = self.get_thumbnail()
     
-    def calculate_color_bar_plots(self):
+    def calculate_pressure_field(self, update_min_max: bool = False, **kwargs):
+
         solver = app().project.acoustic_modal_solver
         index = self.current_mode_index()
+        selected_mode_shape = solver.modal_shapes[:, index].copy()
 
-        phase = self.main_window.animation_toolbar.phase_slider.value()
+        slider_phase = app().main_window.animation_toolbar.phase_slider.value()
+        phase_deg = kwargs.get("phase", slider_phase)
+        phase_rad = phase_deg * (np.pi / 180)
 
-        current_modal_shape = solver.modal_shape[:, index].copy()
-        if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
-            current_modal_shape = np.abs(current_modal_shape)
-        current_modal_shape /= np.max(np.abs(current_modal_shape))
+        if self.current_widget is None:
+            return np.array([])
 
-        min_value = np.min(current_modal_shape)
-        max_value = np.max(current_modal_shape)
+        index = self.current_widget.comboBox_color_scale.currentIndex()
+        plot_types = ["absolute_animation", "non_absolute_animation", "absolute_values", "real_values", "imag_values"]
 
-        if self.current_widget is not None and self.current_widget.comboBox_color_scale.currentIndex() == 1:
-            if np.abs(min_value) != np.abs(max_value):
-                min_value = -np.max(np.abs([min_value, max_value]))
-                max_value = np.max(np.abs([min_value, max_value]))
+        _pressures = np.abs(selected_mode_shape)
+        _phases = np.angle(selected_mode_shape)
 
-        current_modal_shape *= np.cos(phase * np.pi / 180)
-        if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
-            current_modal_shape = np.abs(current_modal_shape)
-            
-        return current_modal_shape, min_value, max_value
+        acoustic_pressures = _pressures * np.cos(_phases + phase_rad)
+
+        plot_type = plot_types[index]
+        if plot_type == "absolute_values":
+            acoustic_pressures = np.abs(selected_mode_shape)
+        elif plot_type == "real_values":
+            acoustic_pressures = np.real(selected_mode_shape)
+        elif plot_type == "imag_values":
+            acoustic_pressures = np.imag(selected_mode_shape)
+        elif plot_type == "absolute_animation":
+            acoustic_pressures = np.abs(acoustic_pressures)
+
+        if update_min_max:
+            self.min_value, self.max_value = get_max_min_values_of_pressures(selected_mode_shape, plot_type)
+
+        return acoustic_pressures
 
     def update_hidden_plot(self):
         # in this case the update_plot function is fast enough
         self.update_plot(reset_camera=False)
 
-    def update_deformation(self):
+    def plot_acoustic_mode_shape(self):
+
         if not self._actors_exists():
             return
 
         solver = app().project.acoustic_modal_solver
-        if solver.modal_shape is None:
+        if solver.modal_shapes is None:
             return
 
         index = self.current_mode_index()
-        if not (0 <= index < solver.modal_shape.shape[1]):
+        if not (0 <= index < solver.modal_shapes.shape[1]):
             return
 
-        phase = self.main_window.animation_toolbar.phase_slider.value()
-        current_modal_shape = solver.modal_shape[:, index].copy()
-        if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
-            current_modal_shape = np.abs(current_modal_shape)
-        current_modal_shape /= np.max(np.abs(current_modal_shape))
+        mode_shape = self.calculate_pressure_field(update_min_max=True)
+        # mode_shape /= np.max(np.abs(mode_shape))
 
-        min_value = np.min(current_modal_shape)
-        max_value = np.max(current_modal_shape)
-
-        if self.current_widget is not None and self.current_widget.comboBox_color_scale.currentIndex() == 1:
-            if np.abs(min_value) != np.abs(max_value):
-                min_value = -np.max(np.abs([min_value, max_value]))
-                max_value = np.max(np.abs([min_value, max_value]))
-
-        current_modal_shape *= np.cos(phase * np.pi / 180)
-        if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
-            current_modal_shape = np.abs(current_modal_shape)
-
-        self.analysis_actor.plot_color_bar(current_modal_shape, min_value, max_value)
+        self.analysis_actor.plot_color_bar(mode_shape, self.min_value, self.max_value)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
@@ -279,11 +282,11 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
             return
 
         solver = app().project.acoustic_modal_solver
-        if solver.modal_shape is None:
+        if solver.modal_shapes is None:
             return
 
         index = self.current_mode_index()
-        if not (0 <= index < solver.modal_shape.shape[1]):
+        if not (0 <= index < solver.modal_shapes.shape[1]):
             return
     
         logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]" + ProgressStatus(frame, self._animation_total_frames))
@@ -291,24 +294,10 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         t = frame / (self._animation_total_frames - 1)
         phase = lerp(0, 360, t)
 
-        current_modal_shape = solver.modal_shape[:, index].copy()
-        if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
-            current_modal_shape = np.abs(current_modal_shape)
-        current_modal_shape /= np.max(np.abs(current_modal_shape))
+        mode_shape = self.calculate_pressure_field(phase=phase)
+        # mode_shape /= np.max(np.abs(mode_shape))
 
-        min_value = np.min(current_modal_shape)
-        max_value = np.max(current_modal_shape)
-
-        if self.current_widget is not None and self.current_widget.comboBox_color_scale.currentIndex() == 1:
-            if np.abs(min_value) != np.abs(max_value):
-                min_value = -np.max(np.abs([min_value, max_value]))
-                max_value = np.max(np.abs([min_value, max_value]))
-
-        current_modal_shape *= np.cos(phase * np.pi / 180)
-        if self.current_widget is None or self.current_widget.comboBox_color_scale.currentIndex() == 0:
-            current_modal_shape = np.abs(current_modal_shape)
-
-        self.analysis_actor.plot_color_bar(current_modal_shape, min_value, max_value)
+        self.analysis_actor.plot_color_bar(mode_shape, self.min_value, self.max_value)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
@@ -358,7 +347,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
         if not self._actors_exists():
             return
 
-        section_plane = self.main_window.section_plane
+        section_plane = app().main_window.section_plane
 
         if not section_plane.cutting:
             self._disable_section_plane()
@@ -379,7 +368,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
             self._apply_section_plane(position, rotation, inverted, show_plane)
 
     def _disable_section_plane(self):
-        has_hidden_part = bool(self.main_window.hidden_surfaces)
+        has_hidden_part = bool(app().main_window.hidden_surfaces)
         self.hidden_part_actor.SetVisibility(has_hidden_part)
         self.plane_actor.VisibilityOff()
         self.analysis_actor.disable_cut()
@@ -395,8 +384,8 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
             if mesh.solids_connectivity.size > 0:
                 self.remove_actors(self.analysis_actor)
                 self.analysis_actor = AnalysisActor(mesh)
-                current_modal_shape, min_value, max_value = self.calculate_color_bar_plots()
-                self.analysis_actor.plot_color_bar(current_modal_shape, min_value, max_value)
+                mode_shape = self.calculate_pressure_field()
+                self.analysis_actor.plot_color_bar(mode_shape, self.min_value, self.max_value)
                 self.add_actors(self.analysis_actor)
 
         self.plane_actor.configure_section_plane(position, rotation)
@@ -426,7 +415,7 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
     #         return
     #     self.section_plane_active = False
     #     self.plane_actor.VisibilityOff()
-    #     has_hidden_part = bool(self.main_window.hidden_surfaces)
+    #     has_hidden_part = bool(app().main_window.hidden_surfaces)
     #     self.hidden_part_actor.SetVisibility(has_hidden_part)
     #     self.analysis_actor.disable_cut()
     #     self.edges_actor.disable_cut()
@@ -493,3 +482,47 @@ class AcousticModalAnalysisRenderWidget(AnimatedRenderWidget):
 
         normal = rz @ rx @ ry @ np.array([1, 0, 0, 1])
         return normal[:3]
+    
+def get_max_min_values_of_pressures(data: np.ndarray, plot_type: str):
+
+    _pressures = np.abs(data)
+    _phases = np.angle(data)
+
+    p_min = 1
+    p_max = 0
+
+    N_div = 36
+    thetas = np.arange(0, N_div+1, 1)*(2*np.pi/N_div)
+
+    if plot_type == "absolute_values":
+        return 0, max(np.abs(data))
+
+    if plot_type == "real_values":
+        return min(np.real(data)), max(np.real(data))
+
+    if plot_type == "imag_values":
+        return min(np.imag(data)), max(np.imag(data))
+
+    for theta in thetas:
+        pressures = _pressures*np.cos(theta + _phases)
+        
+        if plot_type == "absolute_animation":
+            pressures = np.abs(pressures)
+
+        p_min_i = min(pressures)
+        p_max_i = max(pressures)
+
+        if p_min_i < p_min:
+            p_min = p_min_i
+        if p_max_i > p_max:
+            p_max = p_max_i
+
+    if plot_type == "absolute_animation":
+        p_min = 0
+
+    if plot_type == "non_absolute_animation":
+        max_value = np.max(np.abs([p_min, p_max]))
+        p_min = -max_value
+        p_max = max_value
+
+    return p_min, p_max
