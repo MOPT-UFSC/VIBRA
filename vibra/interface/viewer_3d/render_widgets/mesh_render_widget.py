@@ -42,7 +42,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.mouse_click = (0, 0)
 
         self.main_window = app().main_window
-        self.selection_color = (20, 106, 245)
+        self.selection_color = app().config.user_preferences.selection_color.to_rgb()
 
         self.left_clicked.connect(self.click_callback)
         self.left_released.connect(self.selection_callback)

@@ -1320,6 +1320,89 @@
            </property>
           </widget>
          </item>
+         <item row="9" column="1" alignment="Qt::AlignmentFlag::AlignRight">
+          <widget class="QLabel" name="label_2">
+           <property name="minimumSize">
+            <size>
+             <width>160</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>160</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="layoutDirection">
+            <enum>Qt::LayoutDirection::RightToLeft</enum>
+           </property>
+           <property name="text">
+            <string>Selection color:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="2">
+          <widget class="QLineEdit" name="lineEdit_selection_color">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>90</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>90</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>Arial</family>
+             <pointsize>11</pointsize>
+            </font>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="3">
+          <widget class="QPushButton" name="pushButton_selection_color">
+           <property name="minimumSize">
+            <size>
+             <width>90</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>90</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>Arial</family>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="text">
+            <string>Pick color</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
@@ -1328,6 +1411,12 @@
    </item>
    <item row="4" column="0">
     <widget class="QFrame" name="gridFrame">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>35</height>
+      </size>
+     </property>
      <property name="frameShape">
       <enum>QFrame::Shape::Box</enum>
      </property>
@@ -1335,10 +1424,16 @@
       <property name="leftMargin">
        <number>1</number>
       </property>
+      <property name="topMargin">
+       <number>4</number>
+      </property>
       <property name="rightMargin">
        <number>6</number>
       </property>
-      <item row="0" column="0" alignment="Qt::AlignmentFlag::AlignLeft">
+      <property name="bottomMargin">
+       <number>4</number>
+      </property>
+      <item row="0" column="0" alignment="Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter">
        <widget class="QCheckBox" name="checkBox_reference_scale">
         <property name="minimumSize">
          <size>

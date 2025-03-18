@@ -11,6 +11,7 @@ class UserPreferences:
     lines_color: Color = color_names.BLACK
     edges_color: Color = color_names.BLACK
     faces_color: Color = color_names.WHITE
+    selection_color: Color = Color("#146AF5")
     renderer_font_color: Color = color_names.BLACK
     renderer_font_size: int  = 12
     points_size: int = 15
@@ -29,6 +30,7 @@ class UserPreferences:
         self.lines_color = color_names.BLACK
         self.edges_color = color_names.BLACK
         self.faces_color = color_names.WHITE
+        self.selection_color = Color("#146AF5")
         self.renderer_font_color = color_names.BLACK
     
     def set_dark_theme(self):
@@ -40,6 +42,7 @@ class UserPreferences:
         self.lines_color = color_names.BLACK
         self.edges_color = color_names.BLACK
         self.faces_color = color_names.WHITE
+        self.selection_color = Color("#146AF5")
         self.renderer_font_color = color_names.WHITE
     
     def reset_sizes(self):

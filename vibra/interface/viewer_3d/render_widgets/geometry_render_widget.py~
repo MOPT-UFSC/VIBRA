@@ -293,7 +293,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.lines_actor.paint_cells(self.selection_color, all_lines_elements)
         self.faces_actor.paint_cells(self.selection_color, all_faces_elements)
         self.selection_color = app().config.user_preferences.selection_color.to_rgb()
-
         self.update_info_text()
 
     def clear_selection_spheres(self):
