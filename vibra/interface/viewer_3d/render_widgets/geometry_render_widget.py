@@ -194,7 +194,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         # self.update()
 
     def update_symbols(self):
-        if not self._actors_exists():
+        if not self.actors_exists():
             return
         self.symbols_actor.build()
 
