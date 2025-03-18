@@ -202,7 +202,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 phase,
                 displacement_type,
             )
-            displacements, color_scalars, self.min_value, self.max_value = data
+            displacements, color_scalars, min_value, max_value = data
+            if self.clear_cache:
+                self.min_value = min_value
+                self.max_value = max_value
 
         elif self.current_analysis == "structural_harmonic":
             analysis_widget = app().main_window.results_viewer_widget.plot_structural_harmonic
@@ -215,7 +218,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 phase,
                 displacement_type,
             )
-            displacements, color_scalars, self.min_value, self.max_value = data
+            displacements, color_scalars, min_value, max_value = data
+            if self.clear_cache:
+                self.min_value = min_value
+                self.max_value = max_value
 
         elif self.current_analysis == "acoustic_modal":
             analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_modal
@@ -228,6 +234,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 phase,
                 plot_type,
             )
+            if data is None:
+                return
+
             color_scalars, min_value, max_value = data
             if self.clear_cache:
                 self.min_value = min_value
@@ -236,15 +245,20 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         elif self.current_analysis == "acoustic_harmonic":
             analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_harmonic
             frequency_index = analysis_widget.current_frequency_index()
-            response_abs = analysis_widget.comboBox_color_scale.currentIndex() == 0
+            plot_type = analysis_widget.get_plot_type()
 
             data = compute_acoustic_harmonic_field(
                 app().project.acoustic_harmonic_solver,
                 frequency_index,
                 phase,
-                response_abs=response_abs,
+                plot_type,
             )
-            color_scalars, self.min_value, self.max_value = data
+            if data is None:
+                return
+            color_scalars, min_value, max_value = data
+            if self.clear_cache:
+                self.min_value = min_value
+                self.max_value = max_value
 
         else:
             raise ValueError(f"Unknown analysis: {self.current_analysis}")
