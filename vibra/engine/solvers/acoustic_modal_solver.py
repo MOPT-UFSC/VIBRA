@@ -11,6 +11,8 @@ from pypardiso import PyPardisoSolver
 from scipy.sparse import bmat, eye, triu, identity
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh, inv
 
+from time import time
+
 
 class LuInv(LinearOperator):
     def __init__(self, A, **kwargs):
