@@ -98,7 +98,7 @@ class PlotAcousticModeShape(QWidget):
         self.lineEdit_natural_frequency.setDisabled(True)
         self.lineEdit_natural_frequency.setProperty("status", "information")
 
-        if isinstance(app().project.acoustic_modal_solver.complex_natural_frequencies, np.ndarray):
+        if len(app().project.acoustic_modal_solver.complex_natural_frequencies):
             widths = [60, 170]
             headers = ["Mode", "Damped frequency [Hz]", "Damping ratio [--]"]
 
@@ -152,7 +152,6 @@ class PlotAcousticModeShape(QWidget):
         results_widget.configure_analysis("acoustic_modal")
         results_widget.update_plot()
 
-            
         # color_scale_setup = self.get_user_color_scale_setup()
         # app().project.set_color_scale_setup(color_scale_setup)
         # app().main_window.results_widget.show_pressure_field(self.mode_index)
@@ -207,7 +206,7 @@ class PlotAcousticModeShape(QWidget):
         
         self._config_widgets()
 
-        if isinstance(app().project.acoustic_modal_solver.complex_natural_frequencies, np.ndarray):
+        if len(app().project.acoustic_modal_solver.complex_natural_frequencies):
             self.natural_frequencies = list(app().project.acoustic_modal_solver.complex_natural_frequencies)
         else:
             self.natural_frequencies = list(app().project.acoustic_modal_solver.natural_frequencies)
