@@ -1,45 +1,91 @@
+import logging
 from typing import Literal
-from PySide6.QtWidgets import QFileDialog
+import numpy as np
 
+from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import AnimatedRenderWidget
+from PySide6.QtWidgets import QFileDialog
+from vtkmodules.vtkCommonCore import vtkPoints
+from vtkmodules.vtkCommonDataModel import vtkPointData
 
 from vibra import app
 from vibra.engine.postprocessing import (
-    compute_structural_modal_field,
-    compute_structural_harmonic_field,
-    compute_acoustic_modal_field,
     compute_acoustic_harmonic_field,
+    compute_acoustic_modal_field,
+    compute_structural_harmonic_field,
+    compute_structural_modal_field,
 )
+from vibra.interface.loading_bar import load_function
+from vibra.utils.math_functions import lerp
+from vibra.utils.progress_status import ProgressStatus
 
 from ..actors import (
+    AnalysisActor,
     EdgesActor,
     GhostActor,
-    SectionPlaneActor,
-    AnalysisActor,
     HollowAnalysisActor,
+    SectionPlaneActor,
 )
 
 # Just for type hints
 AnalysisType = Literal[
     "",
     "structural_modal",
+    "structural_harmonic",
     "acoustic_modal",
     "acoustic_harmonic",
 ]
 
+
 class ResultsRenderWidget(AnimatedRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.set_interactor_style(BoxSelectionInteractorStyle())
+
+        app().main_window.theme_changed.connect(self.update_theme)
+        app().main_window.section_plane.value_changed.connect(self.update_section_plane)
+        app().main_window.visualization_changed.connect(self.visualization_changed_callback)
 
         self.current_analysis: AnalysisType = ""
-        self.current_frequency_index = 0
-        self.current_phase = 0
-        self.magnification_factor = 1
+        self._animation_cached_data = dict()
+        self.min_value = 0
+        self.max_value = 0
 
+        self.remove_all_actors()
         self.create_axes()
         self.create_color_bar()
         self.create_scale_bar()
         self.update_plot()
+
+    def configure_analysis(self, analysis: AnalysisType):
+        self.current_analysis = analysis
+
+    def toggle_animation(self, *args, **kwargs):
+        if self.playing_animation:
+            self.stop_animation()
+        else:
+            self.start_animation(*args, **kwargs)
+
+    def update_theme(self):
+        user_preferences = app().config.user_preferences
+        bkg_1 = user_preferences.renderer_background_color_1
+        bkg_2 = user_preferences.renderer_background_color_2
+        font_color = user_preferences.renderer_font_color
+
+        self.renderer.GradientBackgroundOn()
+        self.renderer.SetBackground(bkg_1.to_rgb_f())
+        self.renderer.SetBackground2(bkg_2.to_rgb_f())
+
+        if hasattr(self, "text_actor"):
+            self.text_actor.GetTextProperty().SetColor(font_color.to_rgb_f())
+
+        if hasattr(self, "colorbar_actor"):
+            self.colorbar_actor.GetTitleTextProperty().SetColor(font_color.to_rgb_f())
+            self.colorbar_actor.GetLabelTextProperty().SetColor(font_color.to_rgb_f())
+
+        if hasattr(self, "scale_bar_actor"):
+            self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
+            self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
 
     def update_plot(self, reset_camera=False):
         mesh = app().project.model.mesh
@@ -53,8 +99,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.ghost_actor = GhostActor(mesh)
         self.plane_actor = SectionPlaneActor(self.analysis_actor.GetBounds())
 
-        self.update_color_and_deformation()
-
         self.add_actors(
             self.analysis_actor,
             self.edges_actor,
@@ -66,46 +110,155 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.ghost_actor.SetVisibility(has_hidden_part)
         self.plane_actor.VisibilityOff()
 
+        with self.update_lock:
+            self.update_theme()
+            self.update_section_plane()
+            self.update_color_and_deformation()
+
         if reset_camera:
             self.renderer.ResetCamera()
+        else:
+            self.update()
 
-        self.update_section_plane()
         app().project.thumbnail = self.get_thumbnail()
 
-    def update_color_and_deformation(self):
+    def clear_cache(self):
+        logging.info("Clearing animation cache")
+        self._animation_cached_data.clear()
+        self.min_value = 0
+        self.max_value = 0
+
+    def cache_animation_frames(self):
+        self.clear_cache()
+
+        with self.update_lock:
+            for frame in range(self._animation_total_frames):
+                logging.info(
+                    f"Caching animation frames [{frame}/{self._animation_total_frames}]"
+                    + ProgressStatus(frame, self._animation_total_frames)
+                )
+                self.cache_frame(frame)
+
+    def cache_frame(self, frame):
+        t = frame / (self._animation_total_frames - 1)
+        phase = lerp(0, 2 * np.pi, t)
+        self.update_color_and_deformation(phase, clear_cache=False)
+
+        point_data = vtkPointData()
+        point_position = vtkPoints()
+        point_data.DeepCopy(self.analysis_actor.data.GetPointData())
+        point_position.DeepCopy(self.analysis_actor.data.GetPoints())
+        self._animation_cached_data[frame] = (
+            point_data,
+            point_position,
+        )
+
+    def update_animation(self, frame):
+        if self.current_analysis == "":
+            self.stop_animation()
+            return
+
+        if not self._animation_cached_data:
+            load = load_function(self.cache_animation_frames, app().main_window)
+            load()
+
+        if frame in self._animation_cached_data:
+            logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]")
+            point_data, point_position = self._animation_cached_data[frame]
+            self.analysis_actor.data.GetPointData().DeepCopy(point_data)
+            self.analysis_actor.data.GetPoints().DeepCopy(point_position)
+            self.update()
+        else:
+            # It will only enter here if something wrong happened
+            # in the function that caches the frames
+            logging.warning(f"Cache miss on update_animation function for frame {frame}")
+            self.cache_frame(frame)
+
+    def update_color_and_deformation(self, phase=None, clear_cache=True):
+        if not self.actors_exists():
+            return
+
+        if clear_cache:
+            self.clear_cache()
+
+        animation_toolbar = app().main_window.animation_toolbar
+        magnification_factor = animation_toolbar.magnification_factor_slider.value() / 16
         displacements = None
 
-        if self.current_analysis == "structural_modal":
+        if phase is None:
+            phase = np.radians(animation_toolbar.phase_slider.value())
+
+        if self.current_analysis == "":
+            return
+
+        elif self.current_analysis == "structural_modal":
+            analysis_widget = app().main_window.results_viewer_widget.plot_structural_modal
+            mode_index = analysis_widget.current_mode_index()
+            displacement_type = analysis_widget.get_plot_type()
+
             data = compute_structural_modal_field(
-                app().project.structural_modal_solver.modal_shapes,
-                self.current_frequency_index, 
-                self.current_phase,
+                app().project.structural_modal_solver,
+                mode_index,
+                phase,
+                displacement_type,
             )
             displacements, color_scalars, min_value, max_value = data
+            if self.clear_cache:
+                self.min_value = min_value
+                self.max_value = max_value
 
         elif self.current_analysis == "structural_harmonic":
+            analysis_widget = app().main_window.results_viewer_widget.plot_structural_harmonic
+            frequency_index = analysis_widget.current_frequency_index()
+            displacement_type = analysis_widget.get_plot_type()
+
             data = compute_structural_harmonic_field(
-                app().project.structural_harmonic_solver.solution,
-                self.current_frequency_index,
-                self.current_phase,
+                app().project.structural_harmonic_solver,
+                frequency_index,
+                phase,
+                displacement_type,
             )
             displacements, color_scalars, min_value, max_value = data
+            if self.clear_cache:
+                self.min_value = min_value
+                self.max_value = max_value
 
         elif self.current_analysis == "acoustic_modal":
+            analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_modal
+            mode_index = analysis_widget.current_mode_index()
+            plot_type = analysis_widget.get_plot_type()
+            
             data = compute_acoustic_modal_field(
-                app().project.acoustic_modal_solver.modal_shapes,
-                self.current_frequency_index,
-                self.current_phase,
+                app().project.acoustic_modal_solver,
+                mode_index,
+                phase,
+                plot_type,
             )
+            if data is None:
+                return
+
             color_scalars, min_value, max_value = data
+            if self.clear_cache:
+                self.min_value = min_value
+                self.max_value = max_value
 
         elif self.current_analysis == "acoustic_harmonic":
+            analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_harmonic
+            frequency_index = analysis_widget.current_frequency_index()
+            plot_type = analysis_widget.get_plot_type()
+
             data = compute_acoustic_harmonic_field(
-                app().project.acoustic_harmonic_solver.solution,
-                self.current_frequency_index,
-                self.current_phase,
+                app().project.acoustic_harmonic_solver,
+                frequency_index,
+                phase,
+                plot_type,
             )
+            if data is None:
+                return
             color_scalars, min_value, max_value = data
+            if self.clear_cache:
+                self.min_value = min_value
+                self.max_value = max_value
 
         else:
             raise ValueError(f"Unknown analysis: {self.current_analysis}")
@@ -113,8 +266,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if displacements is not None:
             self.analysis_actor.apply_deformation(
                 displacements,
-                self.current_phase,
-                self.magnification_factor,
+                magnification_factor,
+                max_value,
             )
             self.edges_actor.extract_data(self.analysis_actor.data)
 
@@ -123,13 +276,18 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def update_section_plane(self):
-        if not self._actors_exists():
+        if not self.actors_exists():
             return
 
         section_plane = app().main_window.section_plane
 
         if not section_plane.cutting:
-            self._disable_section_plane()
+            has_hidden_part = bool(app().main_window.hidden_surfaces)
+            self.ghost_actor.SetVisibility(has_hidden_part)
+            self.plane_actor.VisibilityOff()
+            self.analysis_actor.disable_cut()
+            self.edges_actor.disable_cut()
+            self.update()
             return
 
         position = section_plane.get_position()
@@ -147,6 +305,19 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         self.update()
 
+    def visualization_changed_callback(self):
+        if not self.actors_exists():
+            return
+
+        visualization = app().main_window.visualization_filter
+        has_hidden_part = bool(app().main_window.hidden_surfaces)
+
+        self.edges_actor.SetVisibility(visualization.lines)
+        self.analysis_actor.SetVisibility(visualization.faces)
+        self.ghost_actor.SetVisibility(has_hidden_part)
+
+        self.update()
+
     def export_animation_to_file(self):
         file_path, check = QFileDialog.getSaveFileName(
             self,
@@ -159,20 +330,28 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         self.save_video(file_path)
 
-    def _disable_section_plane(self):
-        has_hidden_part = bool(app().main_window.hidden_surfaces)
-        self.ghost_actor.SetVisibility(has_hidden_part)
-        self.plane_actor.VisibilityOff()
-        self.analysis_actor.disable_cut()
-        self.edges_actor.disable_cut()
-        self.update()
+    def actors_exists(self):
+        return len(self._widget_actors) > 0
+
+    def remove_all_actors(self):
+        self.analysis_actor: None | AnalysisActor | HollowAnalysisActor = None
+        self.edges_actor: None | EdgesActor = None
+        self.ghost_actor: None | GhostActor = None
+        self.plane_actor: None | SectionPlaneActor = None
+        return super().remove_all_actors()
 
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
-        if isinstance(self.solids_actor, HollowAnalysisActor):
-            mesh = app().project.model.mesh
-            self.remove_actors(self.solids_actor)
-            self.solids_actor = AnalysisActor(mesh)
-            self.add_actors(self.solids_actor)
+        mesh = app().project.model.mesh
+        actor_is_hollow = isinstance(self.analysis_actor, HollowAnalysisActor)
+        mesh_is_hollow = mesh.solids_connectivity.size <= 0
+
+        self.clear_cache()
+
+        if actor_is_hollow and not mesh_is_hollow:
+            self.remove_actors(self.analysis_actor)
+            self.analysis_actor = AnalysisActor(mesh)
+            self.add_actors(self.analysis_actor)
+            self.update_color_and_deformation()
 
         xyz, normal = self.plane_actor.configure_section_plane(position, rotation)
         if inverted:
@@ -181,12 +360,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.analysis_actor.apply_cut(xyz, normal)
         self.edges_actor.apply_cut(xyz, normal)
         self.update()
-    
+
         self.ghost_actor.VisibilityOn()
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
-
-
-    def _actors_exists(self):
-        return len(self._widget_actors) > 0

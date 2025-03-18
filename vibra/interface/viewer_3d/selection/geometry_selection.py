@@ -11,6 +11,7 @@ from vtkmodules.vtkRenderingCore import (
 )
 
 from vibra import app
+from vibra.utils.math_functions import inside_plane
 
 from .common_selection import get_coordinates_inside_area, pick_actor_cell_info
 
@@ -18,6 +19,7 @@ from .common_selection import get_coordinates_inside_area, pick_actor_cell_info
 class GeometrySelection:
     def __init__(self, geometry_render_widget: "GeometryRenderWidget"):
         self.geometry_render_widget = geometry_render_widget
+        self.section_plane_config = None
 
     def pick(
         self, x: int, y: int
@@ -65,6 +67,12 @@ class GeometrySelection:
 
         return points, lines, surfaces, volumes
 
+    def set_section_plane(self, position, rotation):
+        self.section_plane_config = (position, rotation)
+
+    def clear_section_plane(self):
+        self.section_plane_config = None
+
     def _pick_point(self, x: int, y: int) -> set[int]:
         mesh = app().project.model.mesh
         if mesh is None:
@@ -77,8 +85,10 @@ class GeometrySelection:
 
         pick_position = np.array(cell_picker.GetPickPosition())
         all_points = self._get_nodes_subset()  # The point id is 1-indexed
-        i = np.argmin(np.linalg.norm(all_points[:, 1:] - pick_position, axis=1))
+        plane_mask = self._section_plane_mask(all_points[:, 1:])
+        all_points = all_points[plane_mask]
 
+        i = np.argmin(np.linalg.norm(all_points[:, 1:] - pick_position, axis=1))
         camera_position = np.array(renderer.GetActiveCamera().GetPosition())
         camera_distance = np.linalg.norm(camera_position - pick_position)
 
@@ -140,18 +150,21 @@ class GeometrySelection:
         x1: int,
         y1: int,
     ) -> set[int]:
+
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
 
-        all_points = self._get_nodes_subset()
         renderer = self.geometry_render_widget.renderer
+        all_points = self._get_nodes_subset()
+        plane_mask = self._section_plane_mask(all_points[:, 1:])
+
         mask = get_coordinates_inside_area(
             all_points[:, 1:],
             (x0, y0, x1, y1),
             renderer,
         )
-        return set(all_points[mask, 0].astype(int) + 1)
+        return set(all_points[mask & plane_mask, 0].astype(int) + 1)
 
     def _pick_lines_from_indexes(self, internal_picked_nodes: list[int]) -> set[int]:
         mesh = app().project.model.mesh
@@ -220,7 +233,8 @@ class GeometrySelection:
             return set()
 
         renderer = self.geometry_render_widget.renderer
-        mask = get_coordinates_inside_area(
+        plane_mask = self._section_plane_mask(mesh.nodal_coordinates[:, 1:])
+        mask = plane_mask & get_coordinates_inside_area(
             mesh.nodal_coordinates[:, 1:],
             (x0, y0, x1, y1),
             renderer,
@@ -228,3 +242,11 @@ class GeometrySelection:
 
         # returns the index of True values
         return np.nonzero(mask.flatten())
+
+    def _section_plane_mask(self, coordinates: np.ndarray):
+        if self.section_plane_config is None:
+            return np.ones(coordinates.shape[0], dtype=bool)
+
+        position, rotation = self.section_plane_config
+        plane_mask = inside_plane(coordinates, position, rotation)
+        return plane_mask

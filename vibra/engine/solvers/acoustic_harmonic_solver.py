@@ -1,20 +1,14 @@
+
+from pypardiso.pardiso_wrapper import PyPardisoSolver
+from vibra.utils.progress_status import ProgressStatus
+
 import logging
 # import os
 import numpy as np
+
 from scipy.sparse.linalg import spsolve
 from scipy.sparse import triu
-
-#
-# os.environ["OMP_DYNAMIC"] = "FALSE"
-# os.environ["OMP_THREAD_LIMIT"] = "8"
-# os.environ["OMP_NUM_THREADS"] = "4"
-# 
-
-from pypardiso.pardiso_wrapper import PyPardisoSolver
-
 from functools import cache
-
-from vibra.utils.progress_status import ProgressStatus
 
 
 class AcousticHarmonicSolver:
@@ -45,7 +39,7 @@ class AcousticHarmonicSolver:
         self.dissipation_model = data
 
     @cache
-    def get_max_min_values_of_pressures(self, column):
+    def get_min_max_values_of_pressures(self, column: int, plot_type: str):
         """ This method returns the minimum and maximum pressure values
             of selected frequency for animation purposes.
 
@@ -58,6 +52,7 @@ class AcousticHarmonicSolver:
             p_min, p_max: float values for minimum and maximum pressures,
 
         """
+    
         data = self.solution[:, column]
 
         amplitudes = np.abs(data)
@@ -65,10 +60,24 @@ class AcousticHarmonicSolver:
 
         p_min = 1
         p_max = 0
-        thetas = np.arange(0, 360, 2) * (np.pi / 180)
+
+        divisions = 36
+        thetas = np.linspace(0, 2 * np.pi, divisions + 1, endpoint=True)
+
+        if plot_type == "absolute_values":
+            return 0, max(np.abs(data))
+
+        if plot_type == "real_values":
+            return min(np.real(data)), max(np.real(data))
+
+        if plot_type == "imag_values":
+            return min(np.imag(data)), max(np.imag(data))
 
         for theta in thetas:
-            pressures = amplitudes * np.cos(phases + theta)
+            pressures = amplitudes * np.cos(theta + phases)
+
+            if plot_type == "absolute_animation":
+                pressures = np.abs(pressures)
 
             p_min_i = min(pressures)
             p_max_i = max(pressures)
@@ -78,11 +87,20 @@ class AcousticHarmonicSolver:
             if p_max_i > p_max:
                 p_max = p_max_i
 
+        if plot_type == "absolute_animation":
+            p_min = 0
+
+        if plot_type == "non_absolute_animation":
+            max_value = np.max(np.abs([p_min, p_max]))
+            p_min = -max_value
+            p_max = max_value
+
         return p_min, p_max
 
     def solve(self, print_log=False):
-        """ """
-        self.get_max_min_values_of_pressures.cache_clear()
+        """ 
+        """
+        self.get_min_max_values_of_pressures.cache_clear()
 
         # Note: use mtype=3 for full symmetric complex matrix and mtype=6 for upper triangular complex matrix
         ps = PyPardisoSolver(mtype=6)

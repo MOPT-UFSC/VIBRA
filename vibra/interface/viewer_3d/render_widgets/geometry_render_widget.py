@@ -1,34 +1,24 @@
-from vibra import app
-from vibra.engine.properties.fluid import Fluid
+from numbers import Number
 
-# from vibra.interface.tabs.geometry_info_bar import GeometryInfoBar
-from ..actors.section_plane_actor import SectionPlaneActor
-from ..actors.faces_actor import FacesActor
-from ..actors.lines_actor import LinesActor
-from ..actors.points_actor import PointsActor
-from ..actors.selection_spheres import SelectionSpheres
-from ..actors.ghost_actor import GhostActor
-from ..selection.geometry_selection import GeometrySelection
-from ..actors.symbols.new_symbols_actor import NewSymbolsActor
-
+import numpy as np
+from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import CommonRenderWidget
 from molde.utils import TreeInfo
 from molde.utils.format_sequences import format_long_sequence
-from molde.interactor_styles import BoxSelectionInteractorStyle
-
-import numpy as np
-from numbers import Number
-
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QApplication
-from vtkmodules.vtkCommonCore import vtkIntArray
-from vtkmodules.vtkCommonDataModel import vtkPolyData
-from vtkmodules.vtkRenderingCore import vtkActor, vtkCellPicker
 
+from vibra import app
+from vibra.engine.properties.fluid import Fluid
 
-SHOW_POINTS = 0
-SHOW_LINES = 1
-SHOW_FACES = 2
+from ..actors.faces_actor import FacesActor
+from ..actors.ghost_actor import GhostActor
+from ..actors.lines_actor import LinesActor
+from ..actors.points_actor import PointsActor
+from ..actors.section_plane_actor import SectionPlaneActor
+from ..actors.selection_spheres import SelectionSpheres
+from ..actors.symbols.new_symbols_actor import NewSymbolsActor
+from ..selection.geometry_selection import GeometrySelection
 
 
 class GeometryRenderWidget(CommonRenderWidget):
@@ -38,32 +28,30 @@ class GeometryRenderWidget(CommonRenderWidget):
         super().__init__(parent)
         self.set_interactor_style(BoxSelectionInteractorStyle())
 
-        self.main_window = app().main_window
-        self.view_mode = SHOW_FACES
+        self.geometry_selection = GeometrySelection(self)
+        self.selection_color = (20, 106, 245)
+        self.mouse_click = (0, 0)
 
         self.left_clicked.connect(self.click_callback)
-        self.main_window.theme_changed.connect(self.update_theme)
-        self.main_window.visualization_changed.connect(self.visualization_changed_callback)
         self.left_released.connect(self.selection_callback)
-        self.main_window.selection_changed.connect(self.update_selection)
-        self.main_window.section_plane.value_changed.connect(self.update_section_plane)
-
-        self.geometry_selection = GeometrySelection(self)
-        self.remove_all_actors()
-        self.selection_color = (20, 106, 245)
+        app().main_window.theme_changed.connect(self.update_theme)
+        app().main_window.visualization_changed.connect(self.visualization_changed_callback)
+        app().main_window.selection_changed.connect(self.update_selection)
+        app().main_window.section_plane.value_changed.connect(self.update_section_plane)
 
         # The fast area selection just works if it is on
         self.renderer.GetActiveCamera().ParallelProjectionOn()
         self.renderer.RemoveAllLights()
 
+        self.remove_all_actors()
         self.create_axes()
         self.create_scale_bar()
         self.create_camera_light(0.1, 0.1)
         self.update_plot()
-    
+
     def set_theme(self, *args, **kwargs):
         self.update_theme()
-    
+
     def update_theme(self):
         user_preferences = app().config.user_preferences
         bkg_1 = user_preferences.renderer_background_color_1
@@ -87,9 +75,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         if hasattr(self, "scale_bar_actor"):
             self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
             self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
-        
+
         self.update_selection()
-                
+
     def update_scale_bar_visibility(self):
         user_preferences = app().config.user_preferences
 
@@ -97,16 +85,16 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.enable_scale_bar()
         else:
             self.disable_scale_bar()
-    
+
     def enable_scale_bar(self):
         self.scale_bar_actor.VisibilityOn()
 
     def disable_scale_bar(self):
         self.scale_bar_actor.VisibilityOff()
-    
+
     def update_renderer_font_size(self):
         user_preferences = app().config.user_preferences
-        font_size_px = int(user_preferences.renderer_font_size * 4/3)
+        font_size_px = int(user_preferences.renderer_font_size * 4 / 3)
 
         info_text_property = self.text_actor.GetTextProperty()
         info_text_property.SetFontSize(font_size_px)
@@ -129,7 +117,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.selection_spheres_actor = SelectionSpheres()
         self.symbols_actor = NewSymbolsActor(self.renderer)
 
-        has_hidden_part = bool(self.main_window.hidden_surfaces)
+        has_hidden_part = bool(app().main_window.hidden_surfaces)
         self.ghost_actor = GhostActor(mesh)
         self.ghost_actor.SetVisibility(has_hidden_part)
 
@@ -145,23 +133,29 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.plane_actor,
             self.symbols_actor,
         )
-        self.update_theme()
+
+        with self.update_lock:
+            self.update_theme()
+            self.visualization_changed_callback()
+            self.update_section_plane()
 
         if reset_camera:
             self.renderer.ResetCamera()
+        else:
+            self.update()
 
-        self.visualization_changed_callback()
-        self.update_section_plane()
         app().project.thumbnail = self.get_thumbnail()
 
     def visualization_changed_callback(self):
-        if not self._actors_exists():
+        if not self.actors_exists():
             return
 
         visualization = app().main_window.visualization_filter
         faces_opacity = 1 if visualization.faces else 0.1
 
-        self.symbols_actor.SetVisibility(visualization.acoustic_symbols | visualization.structural_symbols)
+        self.symbols_actor.SetVisibility(
+            visualization.acoustic_symbols | visualization.structural_symbols
+        )
         self.points_actor.SetVisibility(visualization.points)
         self.lines_actor.SetVisibility(visualization.lines)
         self.faces_actor.GetProperty().SetOpacity(faces_opacity)
@@ -185,7 +179,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
-        if not self._actors_exists():
+        if not self.actors_exists():
             self.update_plot()
             return
 
@@ -193,14 +187,14 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.faces_actor = FacesActor(mesh)
         self.renderer.AddActor(self.faces_actor)
 
-        has_hidden_part = bool(self.main_window.hidden_surfaces)
+        has_hidden_part = bool(app().main_window.hidden_surfaces)
         self.ghost_actor.SetVisibility(has_hidden_part)
 
         self.update_section_plane()
         # self.update()
 
     def update_symbols(self):
-        if not self._actors_exists():
+        if not self.actors_exists():
             return
         self.symbols_actor.build()
 
@@ -209,12 +203,18 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.mouse_click = (x, y)
 
     def selection_callback(self, x, y):
-        # This is a optimization, may have side effects
-        if not self.isVisible():
+        if not self.actors_exists():
             return
 
-        if not self._actors_exists():
-            return
+        section_plane_widget = app().main_window.section_plane
+        if section_plane_widget.cutting:
+            xyz = self.plane_actor.calculate_xyz_position(section_plane_widget.get_position())
+            normal = self.plane_actor.calculate_normal_vector(section_plane_widget.get_rotation())
+            if section_plane_widget.get_inverted():
+                normal = -normal
+            self.geometry_selection.set_section_plane(xyz, normal)
+        else:
+            self.geometry_selection.clear_section_plane()
 
         x0, y0 = self.mouse_click
         mouse_moved = (abs(x0 - x) > 10) or (abs(y0 - y) > 10)
@@ -243,7 +243,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if not shift_pressed:
             picked_volumes.clear()
 
-        self.main_window.set_geometry_selection(
+        app().main_window.set_geometry_selection(
             points=picked_points,
             lines=picked_lines,
             surfaces=picked_faces,
@@ -255,9 +255,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.update()
 
     def update_selection(self):
-        if not self._actors_exists():
-            return 
-        
+        if not self.actors_exists():
+            return
+
         self.points_actor.clear_colors()
         self.lines_actor.clear_colors()
         self.faces_actor.clear_colors()
@@ -310,10 +310,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.update()
 
     def update_section_plane(self):
-        if not self._actors_exists():
+        if not self.actors_exists():
             return
 
-        section_plane = self.main_window.section_plane
+        section_plane = app().main_window.section_plane
 
         if not section_plane.cutting:
             self._disable_section_plane()
@@ -334,7 +334,7 @@ class GeometryRenderWidget(CommonRenderWidget):
             self._apply_section_plane(position, rotation, inverted, show_plane)
 
     def _disable_section_plane(self):
-        has_hidden_part = bool(self.main_window.hidden_surfaces)
+        has_hidden_part = bool(app().main_window.hidden_surfaces)
         self.ghost_actor.SetVisibility(has_hidden_part)
         self.plane_actor.VisibilityOff()
         self.points_actor.disable_cut()
@@ -371,7 +371,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.nodes_actor = None
         self.ghost_actor = None
 
-    def _actors_exists(self):
+    def actors_exists(self):
         return len(self._widget_actors) > 0
 
     def update_info_text(self):
@@ -391,7 +391,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.update()
 
     def _points_info_text(self):
-        points = list(self.main_window.selected_geometry_points)
+        points = list(app().main_window.selected_geometry_points)
         text = ""
 
         if len(points) > 1:
@@ -402,7 +402,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         return text
 
     def _lines_info_text(self):
-        lines = list(self.main_window.selected_geometry_lines)
+        lines = list(app().main_window.selected_geometry_lines)
         text = ""
 
         if len(lines) > 1:
@@ -414,10 +414,10 @@ class GeometryRenderWidget(CommonRenderWidget):
 
     def _faces_info_text(self):
         text = ""
-        volumes = list(self.main_window.selected_geometry_volumes)
+        volumes = list(app().main_window.selected_geometry_volumes)
 
         if len(volumes) == 0:
-            faces = list(self.main_window.selected_geometry_surfaces)
+            faces = list(app().main_window.selected_geometry_surfaces)
 
             if len(faces) > 1:
                 text += f"{len(faces)} surfaces in selection\n{format_long_sequence(faces)}\n\n"
@@ -427,7 +427,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         return text
 
     def _volumes_info_text(self):
-        volumes = list(self.main_window.selected_geometry_volumes)
+        volumes = list(app().main_window.selected_geometry_volumes)
         text = ""
 
         if len(volumes) > 1:
@@ -438,7 +438,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         return text
 
     def _surface_thickness_info_text(self):
-        surfaces = list(self.main_window.selected_geometry_surfaces)
+        surfaces = list(app().main_window.selected_geometry_surfaces)
         text = ""
 
         if len(surfaces) == 1:
@@ -460,8 +460,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         return text
 
     def _material_info_text(self):
-        volumes = list(self.main_window.selected_geometry_volumes)
-        surfaces = list(self.main_window.selected_geometry_surfaces)
+        volumes = list(app().main_window.selected_geometry_volumes)
+        surfaces = list(app().main_window.selected_geometry_surfaces)
 
         text = ""
         if len(volumes) != 1 and len(surfaces) != 1:
@@ -489,8 +489,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         return text
 
     def _fluid_info_text(self):
-        volumes = list(self.main_window.selected_geometry_volumes)
-        surfaces = list(self.main_window.selected_geometry_surfaces)
+        volumes = list(app().main_window.selected_geometry_volumes)
+        surfaces = list(app().main_window.selected_geometry_surfaces)
 
         text = ""
         if len(volumes) != 1 and len(surfaces) != 1:
@@ -521,13 +521,15 @@ class GeometryRenderWidget(CommonRenderWidget):
         return text
 
     def _porous_material_info_text(self):
-        volumes = list(self.main_window.selected_geometry_volumes)
+        volumes = list(app().main_window.selected_geometry_volumes)
         text = ""
 
         if len(volumes) != 1:
             return text
 
-        pm_model = app().project.model.properties._get_property("porous_material_model", volume=volumes[0])
+        pm_model = app().project.model.properties._get_property(
+            "porous_material_model", volume=volumes[0]
+        )
         if pm_model is None:
             return text
 
@@ -541,14 +543,20 @@ class GeometryRenderWidget(CommonRenderWidget):
 
     def _acoustic_boundary_conditions_info_text(self):
         text = ""
-        selected_faces = list(self.main_window.selected_geometry_surfaces)
+        selected_faces = list(app().main_window.selected_geometry_surfaces)
 
         if len(selected_faces) != 1:
             return text
 
-        acoustic_pressure = app().project.model.properties._get_property("acoustic_pressure", surface=selected_faces[0])
-        surface_velocity = app().project.model.properties._get_property("surface_velocity", surface=selected_faces[0])
-        specific_impedance = app().project.model.properties._get_property("specific_impedance", surface=selected_faces[0])
+        acoustic_pressure = app().project.model.properties._get_property(
+            "acoustic_pressure", surface=selected_faces[0]
+        )
+        surface_velocity = app().project.model.properties._get_property(
+            "surface_velocity", surface=selected_faces[0]
+        )
+        specific_impedance = app().project.model.properties._get_property(
+            "specific_impedance", surface=selected_faces[0]
+        )
 
         boundary_conditions_list = [acoustic_pressure, surface_velocity, specific_impedance]
 
@@ -570,7 +578,13 @@ class GeometryRenderWidget(CommonRenderWidget):
                     density = fluid.fluid_density
                     speed_of_sound = fluid.speed_of_sound
                     values = np.array([density * speed_of_sound], dtype=complex)
-                    text += _acoustic_format("Specific impedance", values[0], "Zs", "kg/m².s", ("Impedance type", "anechoic (non-reflexive)"))
+                    text += _acoustic_format(
+                        "Specific impedance",
+                        values[0],
+                        "Zs",
+                        "kg/m².s",
+                        ("Impedance type", "anechoic (non-reflexive)"),
+                    )
 
             else:
                 values = surface_velocity["values"]
@@ -586,22 +600,38 @@ class GeometryRenderWidget(CommonRenderWidget):
         distributed_loads_area = None
         normal_pressure_load = None
 
-        selected_faces = list(self.main_window.selected_geometry_surfaces)
-        selected_lines = list(self.main_window.selected_geometry_lines)
+        selected_faces = list(app().main_window.selected_geometry_surfaces)
+        selected_lines = list(app().main_window.selected_geometry_lines)
 
         if len(selected_faces) == 1:
-            prescribed_dofs = app().project.model.properties._get_property("prescribed_dofs", surface=selected_faces[0])
-            nodal_loads = app().project.model.properties._get_property("nodal_loads", surface=selected_faces[0])
-            distributed_loads_area = app().project.model.properties._get_property("distributed_loads", surface=selected_faces[0])
-            normal_pressure_load = app().project.model.properties._get_property("normal_pressure_load", surface=selected_faces[0])
+            prescribed_dofs = app().project.model.properties._get_property(
+                "prescribed_dofs", surface=selected_faces[0]
+            )
+            nodal_loads = app().project.model.properties._get_property(
+                "nodal_loads", surface=selected_faces[0]
+            )
+            distributed_loads_area = app().project.model.properties._get_property(
+                "distributed_loads", surface=selected_faces[0]
+            )
+            normal_pressure_load = app().project.model.properties._get_property(
+                "normal_pressure_load", surface=selected_faces[0]
+            )
 
         elif len(selected_lines) == 1:
-            distributed_loads_line = app().project.model.properties._get_property("distributed_loads", line=selected_lines[0])
+            distributed_loads_line = app().project.model.properties._get_property(
+                "distributed_loads", line=selected_lines[0]
+            )
 
         else:
             return text
 
-        boundary_conditions = [prescribed_dofs, nodal_loads, distributed_loads_area, normal_pressure_load, distributed_loads_line]
+        boundary_conditions = [
+            prescribed_dofs,
+            nodal_loads,
+            distributed_loads_area,
+            normal_pressure_load,
+            distributed_loads_line,
+        ]
 
         if all(bc is None for bc in boundary_conditions):
             return text
@@ -616,22 +646,24 @@ class GeometryRenderWidget(CommonRenderWidget):
         if nodal_loads is not None:
             values = nodal_loads["values"]
             loaded_table = "table_names" in nodal_loads.keys()
-            text += _structural_format("Nodal loads",  values, ("F", "M"), ("N", "N.m"), loaded_table)
+            text += _structural_format(
+                "Nodal loads", values, ("F", "M"), ("N", "N.m"), loaded_table
+            )
 
         if distributed_loads_area is not None:
             values = distributed_loads_area["values"]
             loaded_table = "table_names" in distributed_loads_area.keys()
-            text += _structural_format("Distributed loads",  values, ["P"], ["N/m²"], loaded_table)
+            text += _structural_format("Distributed loads", values, ["P"], ["N/m²"], loaded_table)
 
         if distributed_loads_line is not None:
             values = distributed_loads_line["values"]
             loaded_table = "table_names" in distributed_loads_line.keys()
-            text += _structural_format("Distributed loads",  values, ["P"], ["N/m"], loaded_table)
+            text += _structural_format("Distributed loads", values, ["P"], ["N/m"], loaded_table)
 
         if normal_pressure_load is not None:
             values = normal_pressure_load["values"]
             loaded_table = "table_names" in normal_pressure_load.keys()
-            text += _structural_format("Normal pressure",  values, ["P"], ["N/m²"], loaded_table)
+            text += _structural_format("Normal pressure", values, ["P"], ["N/m²"], loaded_table)
 
         return text
 
@@ -643,7 +675,7 @@ def _all_none(sequence) -> bool:
 def _structural_format(property_name, values, labels, units, has_table):
     if _all_none(values):
         return ""
-    
+
     if property_name == "Normal pressure":
         sufix_labels = "n"
     else:
@@ -657,7 +689,7 @@ def _structural_format(property_name, values, labels, units, has_table):
 
         if not isinstance(val, Number | complex | str):
             val = "table"
-        
+
         u_values.append(val)
         u_labels.append(labels[0] + label)
 
@@ -678,14 +710,14 @@ def _structural_format(property_name, values, labels, units, has_table):
     if has_table:
         if u_values:
             tree.add_item(", ".join(u_labels), "Table of values")
-    
+
         if r_values:
             tree.add_item(", ".join(r_labels), "Table of values")
 
     else:
         if u_values:
             tree.add_item(", ".join(u_labels), u_values, units[0])
-    
+
         if r_values:
             tree.add_item(", ".join(r_labels), r_values, units[1])
 

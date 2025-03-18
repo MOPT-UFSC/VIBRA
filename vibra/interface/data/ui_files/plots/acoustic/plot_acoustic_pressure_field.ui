@@ -308,19 +308,6 @@
          <property name="verticalSpacing">
           <number>0</number>
          </property>
-         <item row="0" column="0">
-          <spacer name="horizontalSpacer">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
          <item row="0" column="1">
           <widget class="QLabel" name="label_color_scalling">
            <property name="minimumSize">
@@ -361,6 +348,19 @@
            </property>
           </spacer>
          </item>
+         <item row="0" column="0">
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
          <item row="0" column="2">
           <widget class="QComboBox" name="comboBox_color_scale">
            <property name="minimumSize">
@@ -382,12 +382,27 @@
            </property>
            <item>
             <property name="text">
-             <string>Absolute</string>
+             <string>Absolute (animation)</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string>Real part</string>
+             <string>Non-absolute (animation)</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Absolute values</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Real values</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Imag values</string>
             </property>
            </item>
           </widget>
@@ -913,7 +928,6 @@
   <tabstop>treeWidget_frequencies</tabstop>
   <tabstop>comboBox_colormaps</tabstop>
   <tabstop>slider_transparency</tabstop>
-  <tabstop>comboBox_color_scale</tabstop>
   <tabstop>pushButton_plot</tabstop>
  </tabstops>
  <resources/>

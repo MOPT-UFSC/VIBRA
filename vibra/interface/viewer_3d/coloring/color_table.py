@@ -67,7 +67,7 @@ class ColorTable(vtkLookupTable):
         # yes, vtk uses the list as a python pointer 
         # instead of returning a tuple...
         tmp = [0, 0, 0]
-        self.GetColor(value, tmp)
+        self.GetColor(np.real(value), tmp)
         return tuple(int(i * 255) for i in tmp)
 
     def _set_colors(self, colors, shades=256):

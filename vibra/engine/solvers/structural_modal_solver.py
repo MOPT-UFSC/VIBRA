@@ -37,8 +37,6 @@ class StructuralModalSolver:
         self.analysis_type = None
         self.natural_frequencies = None
         self.solution_full = None
-        self.eigen_values = None
-        self.eigen_vectors = None
 
     def load_analysis_data(self, analysis_data):
         if analysis_data is not None:
@@ -123,12 +121,12 @@ class StructuralModalSolver:
         logging.info("Solving the eigenproblem..." + ProgressStatus(75, 100))
         sigma = self.sigma_factor
         opinv = LuInv(K - sigma * M)
-        self.eigen_values, self.eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
+        eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
 
         logging.info("Post-processing the solution..." + ProgressStatus(95, 100))
-        positive_real = np.absolute(np.real(self.eigen_values))
+        positive_real = np.absolute(np.real(eigen_values))
         natural_frequencies = np.sqrt(positive_real) / (2 * np.pi)
-        modal_shape = np.real(self.eigen_vectors)
+        modal_shape = np.real(eigen_vectors)
         # print(f"\nNatural frequencies: \n {natural_frequencies.reshape(-1, 1)}")
 
         index_order = np.argsort(natural_frequencies)

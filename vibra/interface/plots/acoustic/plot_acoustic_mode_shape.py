@@ -21,14 +21,11 @@ class PlotAcousticModeShape(QWidget):
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
-        self._config_widgets()
-        self.load_natural_frequencies()
-        self.load_user_preference_colormap()
     
     def showEvent(self, event):
         super().showEvent(event)
 
-        render_widget = app().main_window.acoustic_modal_analysis
+        render_widget = app().main_window.results_widget
         app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
         app().main_window.render_widget_changed.emit()
 
@@ -36,18 +33,19 @@ class PlotAcousticModeShape(QWidget):
        
     def _initialize(self):
         self.mode_index = None
-        self.colormaps = ["jet",
-                          "viridis",
-                          "inferno",
-                          "magma",
-                          "plasma",
-                          "bwr",
-                          "PiYG",
-                          "PRGn",
-                          "BrBG",
-                          "PuOR",
-                          "grayscale",
-                          ]
+        self.colormaps = [
+            "jet",
+            "viridis",
+            "inferno",
+            "magma",
+            "plasma",
+            "bwr",
+            "PiYG",
+            "PRGn",
+            "BrBG",
+            "PuOR",
+            "grayscale",
+        ]
 
     def _define_qt_variables(self):
 
@@ -88,7 +86,6 @@ class PlotAcousticModeShape(QWidget):
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        self.update_animation_widget_visibility()
         self.load_user_preference_colormap()
         self.update_colormap_type()
                     
@@ -101,7 +98,7 @@ class PlotAcousticModeShape(QWidget):
         self.lineEdit_natural_frequency.setDisabled(True)
         self.lineEdit_natural_frequency.setProperty("status", "information")
 
-        if isinstance(app().project.acoustic_modal_solver.complex_natural_frequencies, np.ndarray):
+        if len(app().project.acoustic_modal_solver.complex_natural_frequencies):
             widths = [60, 170]
             headers = ["Mode", "Damped frequency [Hz]", "Damping ratio [--]"]
 
@@ -149,7 +146,11 @@ class PlotAcousticModeShape(QWidget):
             return
 
         self.mode_index = self.natural_frequencies.index(self.selected_frequency)
-        app().main_window.acoustic_modal_analysis.plot_acoustic_mode_shape()
+        # app().main_window.acoustic_modal_analysis.update_deformation()
+
+        results_widget = app().main_window.results_widget
+        results_widget.configure_analysis("acoustic_modal")
+        results_widget.update_plot()
 
         # color_scale_setup = self.get_user_color_scale_setup()
         # app().project.set_color_scale_setup(color_scale_setup)
@@ -186,10 +187,26 @@ class PlotAcousticModeShape(QWidget):
                                 "absolute_animation" : absolute_animation   }
 
         return color_scale_setup
+    
+    def get_plot_type(self):
+        plot_types = [
+            "absolute_animation",
+            "non_absolute_animation",
+            "absolute_values",
+            "real_values",
+            "imag_values",
+        ]
+        index = self.comboBox_color_scale.currentIndex()
+        return plot_types[index]
+
 
     def load_natural_frequencies(self):
+        if app().project.acoustic_modal_solver is None:
+            return
+        
+        self._config_widgets()
 
-        if isinstance(app().project.acoustic_modal_solver.complex_natural_frequencies, np.ndarray):
+        if len(app().project.acoustic_modal_solver.complex_natural_frequencies):
             self.natural_frequencies = list(app().project.acoustic_modal_solver.complex_natural_frequencies)
         else:
             self.natural_frequencies = list(app().project.acoustic_modal_solver.natural_frequencies)
@@ -217,8 +234,9 @@ class PlotAcousticModeShape(QWidget):
             self.treeWidget_frequencies.addTopLevelItem(new)
 
         first_item = self.treeWidget_frequencies.topLevelItem(0)
-        first_item.setSelected(True)
-        self.treeWidget_frequencies.itemClicked.emit(first_item, 0)
+        if first_item is not None:
+            first_item.setSelected(True)
+            self.treeWidget_frequencies.itemClicked.emit(first_item, 0)
     
     def current_mode_index(self):
         if self.mode_index is not None:

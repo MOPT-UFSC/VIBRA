@@ -398,31 +398,32 @@ class LoadProject:
         if results_data:
             logging.info("Loading results..." + ProgressStatus(20, 100))
             for key, data in results_data.items():
+                data: dict
 
                 if key == "modal_acoustic" and app().project.acoustic_modal_solver is not None:
                     act_modal_analysis = True
                     if np.iscomplexobj(data["natural_frequencies"]):
-                        app().project.acoustic_modal_solver.complex_natural_frequencies = data["natural_frequencies"]
+                        app().project.acoustic_modal_solver.complex_natural_frequencies = data.get("natural_frequencies", np.array([]))
                     else:
-                        app().project.acoustic_modal_solver.natural_frequencies = data["natural_frequencies"]
-                    app().project.acoustic_modal_solver.modal_shapes = data["modal_shape"]
+                        app().project.acoustic_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
+                    app().project.acoustic_modal_solver.solution = data.get("solution")
 
                 elif key == "modal_structural" and app().project.structural_modal_solver is not None:
                     str_modal_analysis = True
-                    app().project.structural_modal_solver.natural_frequencies = data["natural_frequencies"]
-                    app().project.structural_modal_solver.solution_full = data["modal_shape"]
+                    app().project.structural_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
+                    app().project.structural_modal_solver.solution_full = data.get("solution")
                     app().project.structural_modal_solver.displacement_dofs = data["displacement_dofs"]
 
                 elif key == "harmonic_acoustic" and app().project.acoustic_harmonic_solver is not None:
                     act_harmonic_analysis = True
-                    app().project.acoustic_harmonic_solver.frequencies = data["frequencies"]
-                    app().project.acoustic_harmonic_solver.solution = data["solution"]
+                    app().project.acoustic_harmonic_solver.frequencies = data.get("frequencies")
+                    app().project.acoustic_harmonic_solver.solution = data.get("solution")
                     app().main_window.disable_advanced_acoustic_plots_buttons(False)
 
                 elif key == "harmonic_structural" and app().project.structural_harmonic_solver is not None:
                     str_harmonic_analysis = True
-                    app().project.structural_harmonic_solver.frequencies = data["frequencies"]
-                    app().project.structural_harmonic_solver.solution_full = data["solution"]
+                    app().project.structural_harmonic_solver.frequencies = data.get("frequencies")
+                    app().project.structural_harmonic_solver.solution_full = data.get("solution")
                     app().project.structural_harmonic_solver.displacement_dofs = data["displacement_dofs"]
 
                 else:

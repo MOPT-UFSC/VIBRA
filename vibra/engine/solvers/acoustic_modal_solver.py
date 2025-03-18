@@ -3,10 +3,12 @@
 from vibra.utils.progress_status import ProgressStatus
 
 import logging
-
 import numpy as np
+
+from time import time
+from functools import cache
 from pypardiso import PyPardisoSolver
-from scipy.sparse import csr_matrix, block_array, bmat, eye, triu, identity
+from scipy.sparse import bmat, eye, triu, identity
 from scipy.sparse.linalg import LinearOperator, eigs, eigsh, inv
 
 from time import time
@@ -35,17 +37,13 @@ class AcousticModalSolver:
         self.load_analysis_data(analysis_data)
 
     def reset_variables(self):
-
         self.modes = 40
         self.sigma_factor = 0.01
         self.analysis_type = None
 
         self.solution = None
-        self.modal_shapes = None
-        self.eigen_values = None
-        self.eigen_vectors = None
-        self.natural_frequencies = None
-        self.complex_natural_frequencies = None
+        self.natural_frequencies = np.array([])
+        self.complex_natural_frequencies = np.array([])
 
     def load_analysis_data(self, analysis_data):
         if analysis_data is not None:
@@ -59,9 +57,70 @@ class AcousticModalSolver:
                 else:
                     self.analysis_type = "acoustic"
 
+
+    @cache
+    def get_min_max_values_of_pressures(self, column: int, plot_type: str):
+        """ This method returns the minimum and maximum pressure values
+            of selected frequency for animation purposes.
+
+            Parameters:
+            -----------
+            column: int value relative to frequency column index.
+
+            Returns:
+            -----------
+            p_min, p_max: float values for minimum and maximum pressures,
+
+        """
+    
+        data = self.solution[:, column]
+        
+        amplitudes = np.abs(data)
+        phases = np.angle(data)
+
+        p_min = 1
+        p_max = 0
+
+        divisions = 36
+        thetas = np.linspace(0, 2 * np.pi, divisions + 1, endpoint=True)
+
+        if plot_type == "absolute_values":
+            return 0, max(np.abs(data))
+
+        if plot_type == "real_values":
+            return min(np.real(data)), max(np.real(data))
+
+        if plot_type == "imag_values":
+            return min(np.imag(data)), max(np.imag(data))
+
+        for theta in thetas:
+            pressures = amplitudes * np.cos(theta + phases)
+
+            if plot_type == "absolute_animation":
+                pressures = np.abs(pressures)
+
+            p_min_i = min(pressures)
+            p_max_i = max(pressures)
+
+            if p_min_i < p_min:
+                p_min = p_min_i
+            if p_max_i > p_max:
+                p_max = p_max_i
+
+        if plot_type == "absolute_animation":
+            p_min = 0
+
+        if plot_type == "non_absolute_animation":
+            max_value = np.max(np.abs([p_min, p_max]))
+            p_min = -max_value
+            p_max = max_value
+
+        return p_min, p_max
+
     def solve(self, K=[], M=[], which="LM", normalize=True, harmonic_analysis=False, complex_analysis=True):
         """
         """
+        self.get_min_max_values_of_pressures.cache_clear()
 
         self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
         self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_dofs_values()
@@ -143,19 +202,19 @@ class AcousticModalSolver:
         else:
 
             opinv = LuInv(K - sigma * M, mtype=6)
-            self.eigen_values, self.eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
+            eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
 
             logging.info("Post-processing the solution..." + ProgressStatus(95, 100))
-            positive_real = np.absolute(np.real(self.eigen_values))
+            positive_real = np.absolute(np.real(eigen_values))
             natural_frequencies = np.sqrt(positive_real) / (2 * np.pi)
-            modal_shapes = self.eigen_vectors
+            modal_shapes = eigen_vectors
 
             index_order = np.argsort(natural_frequencies)
             natural_frequencies = natural_frequencies[index_order]
             modal_shapes = modal_shapes[:, index_order]
 
         self.natural_frequencies = natural_frequencies
-        self.modal_shapes = modal_shapes
+        self.solution = modal_shapes
 
         return natural_frequencies, modal_shapes
 
