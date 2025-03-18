@@ -201,8 +201,11 @@ class AcousticModalSolver:
 
         else:
 
-            opinv = LuInv(K - sigma * M, mtype=6)
-            eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
+            try:
+                opinv = LuInv(K - sigma * M, mtype=6)
+                eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
+            except:
+                eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which)
 
             logging.info("Post-processing the solution..." + ProgressStatus(95, 100))
             positive_real = np.absolute(np.real(eigen_values))
