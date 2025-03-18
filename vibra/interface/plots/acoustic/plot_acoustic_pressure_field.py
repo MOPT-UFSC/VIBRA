@@ -86,7 +86,6 @@ class PlotAcousticPressureField(QWidget):
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        self.update_animation_widget_visibility()
         self.load_user_preference_colormap()
         self.update_colormap_type()
 
@@ -97,7 +96,6 @@ class PlotAcousticPressureField(QWidget):
             self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def update_animation_widget_visibility(self):
-        return
         index = self.comboBox_color_scale.currentIndex()
         if index >= 2:
             app().main_window.animation_toolbar.setDisabled(True)
@@ -171,6 +169,17 @@ class PlotAcousticPressureField(QWidget):
                                 "absolute_animation" : absolute_animation   }
 
         return color_scale_setup
+
+    def get_plot_type(self):
+        plot_types = [
+            "absolute_animation",
+            "non_absolute_animation",
+            "absolute_values",
+            "real_values",
+            "imag_values",
+        ]
+        index = self.comboBox_color_scale.currentIndex()
+        return plot_types[index]
 
     def load_frequencies(self):
         if isinstance(app().project.model.frequencies, np.ndarray):
