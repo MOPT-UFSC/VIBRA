@@ -27,6 +27,15 @@ To generate the conda environment, just run:
 conda env create -f environment.yml
 ```
 
+After environment generation, we can activate and run Vibra by running the following commands:
+```
+conda activate VIBRA
+```
+
+```
+python vibra
+```
+
 ## Generate Installer
 ```
 poetry run pyinstaller vibra.spec --noconfirm
