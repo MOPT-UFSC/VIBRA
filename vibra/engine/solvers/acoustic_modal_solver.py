@@ -153,7 +153,7 @@ class AcousticModalSolver:
         else:
 
             try:
-                linear_solver = initialize_solver(SolverType.MUMPS, mtype=6)
+                linear_solver = initialize_solver(SolverType.PARDISO, mtype=6)
                 opinv = linear_solver.build_linear_operator(K - sigma * M)
                 eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
 
