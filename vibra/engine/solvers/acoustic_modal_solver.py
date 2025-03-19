@@ -5,10 +5,9 @@ from vibra.utils.progress_status import ProgressStatus
 import logging
 import numpy as np
 
-from time import time
 from functools import cache
-from scipy.sparse import bmat, eye, triu, identity
-from scipy.sparse.linalg import eigs, eigsh, inv
+from scipy.sparse import block_array
+from scipy.sparse.linalg import eigs, eigsh
 
 class AcousticModalSolver:
     def __init__(self, assembler, analysis_data=None):
@@ -116,35 +115,22 @@ class AcousticModalSolver:
         sigma = self.sigma_factor
 
         if np.sum(C_imp):
-            # ## Reference - Craig, Roy R., Kurdila, Andrew J. Fundamentals of Structural Dynamics. Second edition, 2006.
-            # A = bmat([[ C_imp,    M], 
-            #           [     M, None]], format="csr", dtype=complex)
 
-            # B = bmat([[    K, None], 
-            #           [ None,   -M]], format="csr", dtype=complex)            
+            B = block_array([[M, None], [None, M]], format="csr", dtype=complex)
+            A = block_array([[None, M], [-K, -C_imp]], format="csr", dtype=complex)
 
-            # ## Ans-theory
-            # A = bmat([[-C_imp,   -M], 
-            #           [     I, None]], format="csr", dtype=complex)
-
-            # B = bmat([[   K, None], 
-            #           [None,    I]], format="csr", dtype=complex)
-
-            B = bmat([[M, None], [None, M]], format="csr", dtype=complex)
-
-            A = bmat([[None, M], [-K,  -C_imp]], format="csr", dtype=complex)
             linear_solver = initialize_solver(SolverType.PARDISO, mtype=13)
             opinv = linear_solver.build_linear_operator(A - sigma * B)
 
-            self.eigen_values, self.eigen_vectors = eigs(A, M=B, k=2*self.modes, sigma=sigma, which=which, OPinv=opinv)
+            eigen_values, eigen_vectors = eigs(A, M=B, k=2*self.modes, sigma=sigma, which=which, OPinv=opinv)
 
             logging.info("Post-processing the solution..." + ProgressStatus(95, 100))
 
-            N_dofs = int(self.eigen_vectors.shape[0] / 2)
+            N_dofs = int(eigen_vectors.shape[0] / 2)
 
-            mask = np.imag(self.eigen_values) > 0
-            _eigen_values = self.eigen_values[mask]
-            _eigen_vectors = self.eigen_vectors[:, mask]
+            mask = np.imag(eigen_values) > 0
+            _eigen_values = eigen_values[mask]
+            _eigen_vectors = eigen_vectors[:, mask]
 
             Wn = np.abs(_eigen_values)
             natural_frequencies = Wn / (2 * np.pi)
