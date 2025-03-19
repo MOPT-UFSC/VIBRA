@@ -273,12 +273,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         # but the points are 1-indexed
         point_cells = {i - 1 for i in points}
 
-        # Get the line elements of all selected lines
-        all_lines_elements = list()
-        for line in lines:
-            indexes = app().project.model.mesh.elements_from_line.get(line, [])
-            all_lines_elements.extend(indexes)
-
         all_faces_elements = list()
         # Get the face elements of all selected faces
         for face in faces:
@@ -293,7 +287,7 @@ class GeometryRenderWidget(CommonRenderWidget):
                 all_faces_elements.extend(indexes)
 
         self.points_actor.paint_cells(self.selection_color, point_cells)
-        self.lines_actor.paint_cells(self.selection_color, all_lines_elements)
+        self.lines_actor.paint_lines(self.selection_color, lines)
         self.faces_actor.paint_cells(self.selection_color, all_faces_elements)
 
         self.update_info_text()
