@@ -20,6 +20,13 @@ poetry run pytest
 ```
 poetry run black
 ```
+## Conda environment
+To enable MUMPS solver in Vibra we need to use conda instead of poetry.
+To generate the conda environment, just run:
+```
+conda env create -f environment.yml
+```
+
 ## Generate Installer
 ```
 poetry run pyinstaller vibra.spec --noconfirm
