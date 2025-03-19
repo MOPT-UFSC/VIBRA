@@ -151,11 +151,15 @@ class AcousticModalSolver:
             self.complex_natural_frequencies = complex_natural_frequencies[mask_dmp]
 
         else:
+
             try:
-                linear_solver = initialize_solver(SolverType.PARDISO, mtype=6)
+                linear_solver = initialize_solver(SolverType.MUMPS, mtype=6)
                 opinv = linear_solver.build_linear_operator(K - sigma * M)
                 eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
-            except:
+
+            except Exception as error_log:
+                from traceback import print_exception
+                print_exception(error_log)
                 eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which)
 
             logging.info("Post-processing the solution..." + ProgressStatus(95, 100))
