@@ -76,7 +76,7 @@ class PlotAcousticModeShape(QWidget):
 
     def _create_connections(self):
         #
-        self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
+        self.comboBox_colormaps.currentIndexChanged.connect(self.update_color_and_deformation)
         self.comboBox_color_scale.currentIndexChanged.connect(self.update_plot)
         #
         self.pushButton_plot.clicked.connect(self.update_plot)
@@ -87,11 +87,10 @@ class PlotAcousticModeShape(QWidget):
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.load_user_preference_colormap()
-        self.update_colormap_type()
                     
     def _config_widgets(self):
 
-        self.comboBox_colormaps.setDisabled(True)
+        # self.comboBox_colormaps.setDisabled(True)
         self.slider_transparency.setDisabled(True)
 
         self.frame_button.setVisible(False)
@@ -133,12 +132,25 @@ class PlotAcousticModeShape(QWidget):
         except:
             self.comboBox_colormaps.setCurrentIndex(0)
 
-    def update_colormap_type(self):
-        return
+    def update_color_and_deformation(self):
+        app().main_window.results_widget.update_color_and_deformation()
+
+    def get_colormap(self) -> str:
+        colormaps = [
+            "jet",
+            "viridis",
+            "inferno",
+            "magma",
+            "plasma",
+            "bwr",
+            "PiYG",
+            "PRGn",
+            "BrBG",
+            "PuOR",
+            "grayscale",
+        ]
         index = self.comboBox_colormaps.currentIndex()
-        colormap = self.colormaps[index]
-        app().main_window.results_widget.set_colormap(colormap)
-        self.update_plot()
+        return colormaps[index]
 
     def update_plot(self):
         self.update_animation_widget_visibility()

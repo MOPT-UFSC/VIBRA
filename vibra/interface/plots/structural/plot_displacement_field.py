@@ -75,11 +75,11 @@ class PlotDisplacementField(QWidget):
 
     def _create_connections(self):
         #
-        self.comboBox_colormaps.setDisabled(True)
+        # self.comboBox_colormaps.setDisabled(True)
         self.comboBox_color_scale.setDisabled(True)
         self.slider_transparency.setDisabled(True)
 
-        self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
+        self.comboBox_colormaps.currentIndexChanged.connect(self.update_color_and_deformation)
         self.comboBox_color_scale.currentIndexChanged.connect(self.update_plot)
         self.comboBox_displacements.currentIndexChanged.connect(self.update_plot)
         #
@@ -92,7 +92,6 @@ class PlotDisplacementField(QWidget):
         #
         self.update_animation_widget_visibility()
         self.load_user_preference_colormap()
-        self.update_colormap_type()
 
     def update_animation_widget_visibility(self):
         return
@@ -112,12 +111,8 @@ class PlotDisplacementField(QWidget):
         except:
             self.comboBox_colormaps.setCurrentIndex(0)
 
-    def update_colormap_type(self):
-        return
-        index = self.comboBox_colormaps.currentIndex()
-        colormap = self.colormaps[index]
-        app().main_window.results_widget.set_colormap(colormap)
-        self.update_plot()
+    def update_color_and_deformation(self):
+        app().main_window.results_widget.update_color_and_deformation()
 
     def get_plot_type(self):
         plot_types = [
@@ -165,6 +160,23 @@ class PlotDisplacementField(QWidget):
         if self.frequency_index is not None:
             return self.frequency_index
         return 0
+
+    def get_colormap(self) -> str:
+        colormaps = [
+            "jet",
+            "viridis",
+            "inferno",
+            "magma",
+            "plasma",
+            "bwr",
+            "PiYG",
+            "PRGn",
+            "BrBG",
+            "PuOR",
+            "grayscale",
+        ]
+        index = self.comboBox_colormaps.currentIndex()
+        return colormaps[index]
 
     def get_user_color_scale_setup(self):
         return

@@ -183,7 +183,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         animation_toolbar = app().main_window.animation_toolbar
         magnification_factor = animation_toolbar.magnification_factor_slider.value() / 16
+
         displacements = None
+        colormap = "jet"
 
         if phase is None:
             phase = np.radians(animation_toolbar.phase_slider.value())
@@ -193,6 +195,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         elif self.current_analysis == "structural_modal":
             analysis_widget = app().main_window.results_viewer_widget.plot_structural_modal
+            colormap = analysis_widget.get_colormap()
             mode_index = analysis_widget.current_mode_index()
             displacement_type = analysis_widget.get_plot_type()
 
@@ -209,6 +212,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         elif self.current_analysis == "structural_harmonic":
             analysis_widget = app().main_window.results_viewer_widget.plot_structural_harmonic
+            colormap = analysis_widget.get_colormap()
             frequency_index = analysis_widget.current_frequency_index()
             displacement_type = analysis_widget.get_plot_type()
 
@@ -225,6 +229,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         elif self.current_analysis == "acoustic_modal":
             analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_modal
+            colormap = analysis_widget.get_colormap()
             mode_index = analysis_widget.current_mode_index()
             plot_type = analysis_widget.get_plot_type()
             
@@ -244,6 +249,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         elif self.current_analysis == "acoustic_harmonic":
             analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_harmonic
+            colormap = analysis_widget.get_colormap()
             frequency_index = analysis_widget.current_frequency_index()
             plot_type = analysis_widget.get_plot_type()
 
@@ -271,7 +277,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             )
             self.edges_actor.extract_data(self.analysis_actor.data)
 
-        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value)
+        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
