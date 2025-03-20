@@ -1,18 +1,25 @@
-from PySide6.QtWidgets import QComboBox, QFrame, QLineEdit, QPushButton, QSlider, QTreeWidget, QTreeWidgetItem, QWidget
-from PySide6.QtGui import QIcon
-from PySide6.QtCore import Qt, Signal
-
-from vibra import app, UI_DIR
-
-from molde import load_ui
-
 import numpy as np
+from molde import load_ui
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QComboBox,
+    QFrame,
+    QLineEdit,
+    QPushButton,
+    QSlider,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QWidget,
+)
+
+from vibra import UI_DIR, app
+from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
+
 class PlotStructuralModeShape(QWidget):
-    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -25,7 +32,7 @@ class PlotStructuralModeShape(QWidget):
         self._config_widgets()
         self.load_natural_frequencies()
         self.load_user_preference_colormap()
-    
+
     def showEvent(self, event):
         super().showEvent(event)
 
@@ -37,47 +44,33 @@ class PlotStructuralModeShape(QWidget):
 
     def _initialize(self):
         self.mode_index = -1
-        
-        # self.colormaps = ["jet",
-        #                   "viridis",
-        #                   "inferno",
-        #                   "magma",
-        #                   "plasma",
-        #                   "bwr",
-        #                   "PiYG",
-        #                   "PRGn",
-        #                   "BrBG",
-        #                   "PuOR",
-        #                   "grayscale",
-        #                   ]
-        
-    def _define_qt_variables(self):
 
+    def _define_qt_variables(self):
         # QComboBox
-        self.comboBox_color_scale : QComboBox
-        self.comboBox_colormaps : QComboBox
+        self.comboBox_color_scale: QComboBox
+        self.comboBox_colormaps: QComboBox
         self.comboBox_displacements: QComboBox
 
         # QFrame
-        self.frame_button : QFrame
+        self.frame_button: QFrame
 
         # QLineEdit
-        self.lineEdit_natural_frequency : QLineEdit
+        self.lineEdit_natural_frequency: QLineEdit
 
         # QPushButton
-        self.pushButton_plot : QPushButton
+        self.pushButton_plot: QPushButton
 
         # QLineEdit
-        self.lineEdit_selected_frequency : QLineEdit
+        self.lineEdit_selected_frequency: QLineEdit
 
         # QSlider
-        self.slider_transparency : QSlider
+        self.slider_transparency: QSlider
 
         # QPushButton
-        self.pushButton_plot : QPushButton
+        self.pushButton_plot: QPushButton
 
         # QTreeWidget
-        self.treeWidget_frequencies : QTreeWidget
+        self.treeWidget_frequencies: QTreeWidget
 
     def _create_connections(self):
         #
@@ -100,7 +93,6 @@ class PlotStructuralModeShape(QWidget):
         self.load_user_preference_colormap()
 
     def _config_widgets(self):
-
         self.frame_button.setVisible(False)
         self.lineEdit_natural_frequency.setDisabled(True)
         self.lineEdit_natural_frequency.setProperty("status", "information")
@@ -109,7 +101,7 @@ class PlotStructuralModeShape(QWidget):
         for i, width in enumerate(widths):
             self.treeWidget_frequencies.setColumnWidth(i, width)
             self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
-  
+
     def update_animation_widget_visibility(self):
         return
         index = self.comboBox_color_scale.currentIndex()
@@ -121,11 +113,17 @@ class PlotStructuralModeShape(QWidget):
     def load_user_preference_colormap(self):
         try:
             colormap = app().config.user_preferences.color_map
-            if colormap in self.colormaps:
-                index = self.colormaps.index(colormap)
+            if colormap in COLORMAP_NAMES:
+                index = COLORMAP_NAMES.index(colormap)
                 self.comboBox_colormaps.setCurrentIndex(index)
-        except:
+        except Exception:
             self.comboBox_colormaps.setCurrentIndex(0)
+
+    def get_colormap(self) -> str:
+        index = self.comboBox_colormaps.currentIndex()
+        if not (0 <= index < len(COLORMAP_NAMES)):
+            return "jet"
+        return COLORMAP_NAMES[index]
 
     def update_color_and_deformation(self):
         app().main_window.results_widget.update_color_and_deformation()
@@ -147,7 +145,7 @@ class PlotStructuralModeShape(QWidget):
         # app().project.set_color_scale_setup(color_scale_setup)
         # app().main_window.structural_modal_analysis.update_plot()
         # app().main_window.results_widget.clear_cache()
-    
+
     def update_displacements(self):
         pass
 
@@ -215,47 +213,49 @@ class PlotStructuralModeShape(QWidget):
         elif index == 13:
             uz_imag_values = True
 
-        color_scale_setup = {   "absolute" : absolute,
-                                "ux_abs_values" : ux_abs_values,
-                                "uy_abs_values" : uy_abs_values,
-                                "uz_abs_values" : uz_abs_values,
-                                "ux_real_values" : ux_real_values,
-                                "uy_real_values" : uy_real_values,
-                                "uz_real_values" : uz_real_values,
-                                "ux_imag_values" : ux_imag_values,
-                                "uy_imag_values" : uy_imag_values,
-                                "uz_imag_values" : uz_imag_values,
-                                "absolute_animation" : absolute_animation,
-                                "ux_animation" : ux_animation,
-                                "uy_animation" : uy_animation,
-                                "uz_animation" : uz_animation   }
+        color_scale_setup = {
+            "absolute": absolute,
+            "ux_abs_values": ux_abs_values,
+            "uy_abs_values": uy_abs_values,
+            "uz_abs_values": uz_abs_values,
+            "ux_real_values": ux_real_values,
+            "uy_real_values": uy_real_values,
+            "uz_real_values": uz_real_values,
+            "ux_imag_values": ux_imag_values,
+            "uy_imag_values": uy_imag_values,
+            "uz_imag_values": uz_imag_values,
+            "absolute_animation": absolute_animation,
+            "ux_animation": ux_animation,
+            "uy_animation": uy_animation,
+            "uz_animation": uz_animation,
+        }
 
         return color_scale_setup
 
     def load_natural_frequencies(self):
         if app().project.structural_modal_solver is None:
             return
-        
+
         self.natural_frequencies = list(app().project.structural_modal_solver.natural_frequencies)
         modes = np.arange(1, len(self.natural_frequencies) + 1, 1)
         self.modes_to_frequencies = dict(zip(modes, self.natural_frequencies))
 
         self.treeWidget_frequencies.clear()
         for mode, natural_frequency in self.modes_to_frequencies.items():
-            new = QTreeWidgetItem([str(mode), str(round(natural_frequency,4))])
+            new = QTreeWidgetItem([str(mode), str(round(natural_frequency, 4))])
             new.setTextAlignment(0, Qt.AlignCenter)
             new.setTextAlignment(1, Qt.AlignCenter)
             self.treeWidget_frequencies.addTopLevelItem(new)
-        
+
         first_item = self.treeWidget_frequencies.topLevelItem(0)
         first_item.setSelected(True)
         self.treeWidget_frequencies.itemClicked.emit(first_item, 0)
 
     def on_click_item(self, item):
         self.selected_natural_frequency = self.modes_to_frequencies[int(item.text(0))]
-        self.lineEdit_natural_frequency.setText(str(round(self.selected_natural_frequency,4)))
+        self.lineEdit_natural_frequency.setText(str(round(self.selected_natural_frequency, 4)))
         self.update_plot()
-        
+
     def current_mode_index(self):
         if self.mode_index is not None:
             return self.mode_index
