@@ -1,33 +1,13 @@
 # fmt: off
-
+from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
 from vibra.utils.progress_status import ProgressStatus
 
 import logging
 import numpy as np
 
-from time import time
 from functools import cache
-from pypardiso import PyPardisoSolver
-from scipy.sparse import bmat, eye, triu, identity
-from scipy.sparse.linalg import LinearOperator, eigs, eigsh, inv
-
-from time import time
-
-
-class LuInv(LinearOperator):
-    def __init__(self, A, **kwargs):
-        ps = PyPardisoSolver(**kwargs)
-        if kwargs.get("mtype") == 6:
-            ps.factorize(triu(A, format="csr"))
-        else:
-            ps.factorize(A)
-        self.factorized_A = ps.factorized_A
-        self.solve = ps.solve
-        LinearOperator.__init__(self, A.dtype, A.shape)
-
-    def _matvec(self, x):
-        return self.solve(self.factorized_A, x.astype(self.dtype))
-
+from scipy.sparse import block_array
+from scipy.sparse.linalg import eigs, eigsh
 
 class AcousticModalSolver:
     def __init__(self, assembler, analysis_data=None):
@@ -136,50 +116,21 @@ class AcousticModalSolver:
 
         if np.sum(C_imp):
 
-            N_t = len(self.unprescribed_indexes)
-            I = eye(N_t, dtype=complex, format="csr")
+            B = block_array([[M, None], [None, M]], format="csr", dtype=complex)
+            A = block_array([[None, M], [-K, -C_imp]], format="csr", dtype=complex)
 
-            # ## Reference - Craig, Roy R., Kurdila, Andrew J. Fundamentals of Structural Dynamics. Second edition, 2006.
-            # A = bmat([[ C_imp,    M], 
-            #           [     M, None]], format="csr", dtype=complex)
+            linear_solver = initialize_solver(SolverType.PARDISO, mtype=13)
+            opinv = linear_solver.build_linear_operator(A - sigma * B)
 
-            # B = bmat([[    K, None], 
-            #           [ None,   -M]], format="csr", dtype=complex)            
-
-            # ## Ans-theory
-            # A = bmat([[-C_imp,   -M], 
-            #           [     I, None]], format="csr", dtype=complex)
-
-            # B = bmat([[   K, None], 
-            #           [None,    I]], format="csr", dtype=complex)
-
-            # # opinv = LuInv(B - sigma * A, mtype=13)
-            # self.eigen_values, self.eigen_vectors = eigs(B, M=A, k=2*self.modes, which=which, sigma=sigma)#, OPinv=opinv)
-
-            t0 = time()
-            inv_M = inv(M.tocsc()).tocsr()
-            # ps = PyPardisoSolver(mtype=6)
-            # ps.factorize(triu(M, format="csr"))
-            # inv_M = ps.solve(ps.factorized_A, identity(M.shape[0], dtype=complex, format="csr"))
-            dt = time() - t0
-            print(f"Elapsed time to calculate the inverse of matrix M: {dt : .4f}")
-
-            AA = bmat([ [    None,            I],
-                        [-inv_M@K, -inv_M@C_imp]], format="csr", dtype=complex)
-
-            t0 = time()
-            opinv = LuInv(AA - sigma * identity(AA.shape[0], dtype=complex, format="csr"), mtype=13)
-            self.eigen_values, self.eigen_vectors = eigs(AA, k=2*self.modes, sigma=sigma, which=which, OPinv=opinv)
-            dt = time() - t0
-            print(f"Elapsed time to solve the eigensolver: {dt : .4f}")
+            eigen_values, eigen_vectors = eigs(A, M=B, k=2*self.modes, sigma=sigma, which=which, OPinv=opinv)
 
             logging.info("Post-processing the solution..." + ProgressStatus(95, 100))
 
-            N_dofs = int(self.eigen_vectors.shape[0] / 2)
+            N_dofs = int(eigen_vectors.shape[0] / 2)
 
-            mask = np.imag(self.eigen_values) > 0
-            _eigen_values = self.eigen_values[mask]
-            _eigen_vectors = self.eigen_vectors[:, mask]
+            mask = np.imag(eigen_values) > 0
+            _eigen_values = eigen_values[mask]
+            _eigen_vectors = eigen_vectors[:, mask]
 
             Wn = np.abs(_eigen_values)
             natural_frequencies = Wn / (2 * np.pi)
@@ -202,9 +153,13 @@ class AcousticModalSolver:
         else:
 
             try:
-                opinv = LuInv(K - sigma * M, mtype=6)
+                linear_solver = initialize_solver(SolverType.PARDISO, mtype=6)
+                opinv = linear_solver.build_linear_operator(K - sigma * M)
                 eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
-            except:
+
+            except Exception as error_log:
+                from traceback import print_exception
+                print_exception(error_log)
                 eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which)
 
             logging.info("Post-processing the solution..." + ProgressStatus(95, 100))

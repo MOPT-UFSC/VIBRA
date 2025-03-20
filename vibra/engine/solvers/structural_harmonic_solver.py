@@ -11,8 +11,8 @@ from scipy.sparse import triu
 # 
 
 from functools import cache
-from pypardiso.pardiso_wrapper import PyPardisoSolver
 
+from vibra.engine.solvers.linear_solver import initialize_solver, SolverType
 from vibra.utils.progress_status import ProgressStatus
 
 
@@ -109,8 +109,7 @@ class StructuralHarmonicSolver:
         """
         self.get_max_min_values_of_displacements.cache_clear()
 
-        # Note: use mtype=3 for full symmetric complex matrix and mtype=6 for upper triangular complex matrix
-        ps = PyPardisoSolver(mtype=6)
+        linear_solver = initialize_solver(SolverType.PARDISO)
         #
         self.unprescribed_dofs_indexes, self.prescribed_dofs_indexes = self.assembler.get_matrices_dropping_indexes()
         self.prescribed_dofs_values, self.array_prescribed_dofs_values = self.assembler.get_prescribed_dofs_values()
@@ -148,8 +147,8 @@ class StructuralHarmonicSolver:
             # ps.factorize(A)
 
             # solution[:, i] = spsolve(A, F)
-            solution[:, i] = ps.solve(A, F)
-            ps.free_memory(everything=True)
+            solution[:, i] = linear_solver.solve(A, F)
+            linear_solver.clear_memory()
             del A, F
 
         self._reinsert_prescribed_dofs(solution)
