@@ -28,6 +28,8 @@ from ..actors import (
     SectionPlaneActor,
 )
 
+from .model_info_text import analysis_info_text
+
 # Just for type hints
 AnalysisType = Literal[
     "",
@@ -123,61 +125,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         app().project.thumbnail = self.get_thumbnail()
 
-        self.analysis_info_text()
+        self.update_info_text()
     
-    def analysis_info_text(frequency_index: int):
-
-        project = app().project
-        if project.last_analysis is not None:
-            tree = TreeInfo(project.last_analysis)
-
-        if project.analysis_id in [2, 4]:
-            if project.last_analysis == "Structural Modal Analysis":
-                frequencies = list(project.analysis_data["frequencies"])
-
-            if project.last_analysis == "Acoustic Modal Analysis":
-                if isinstance(project.acoustic_modal_solver.complex_natural_frequencies, np.ndarray):
-                    frequencies = list(project.analysis_data["frequencies"])
-                else:
-                    frequencies = list(project.analysis_data["frequencies"])
-
-            if frequencies is None:
-                return ""
-
-            if frequency_index >= len(frequencies):
-                return ""
-
-            mode = frequency_index + 1
-            tree.add_item("Mode", mode)
-
-            if isinstance(project.complex_natural_frequencies_acoustic, np.ndarray):
-                value = frequencies[frequency_index]
-                damping_ratio = -np.real(value) / np.abs(value)
-                damped_frequency = np.abs(value) * np.sqrt(1 - damping_ratio**2)
-                tree.add_item("Damped Natural Frequency", f"{damped_frequency : .4f}", "Hz")
-                tree.add_item("Damping Ratio", f"{damping_ratio : .4e}", "--")
-
-            else:
-                frequency = frequencies[frequency_index]
-                tree.add_item("Natural Frequency", f"{frequency : .4f}", "Hz")
-
-        else:
-
-            frequencies = project.model.frequencies
-            if frequencies is None:
-                return ""
-
-            if frequency_index >= len(frequencies):
-                return ""
-
-            if project.last_analysis is not None:
-                if project.solve_structural_harmonic_analysis is not None:
-                    tree.add_item("Method", project.analysis_method_label)
-
-            frequency = frequencies[frequency_index]
-            tree.add_item("Frequency", f"{frequency:.2f}", "Hz")
-
-        return str(tree)
 
     def clear_cache(self):
         logging.info("Clearing animation cache")
@@ -209,6 +158,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             point_data,
             point_position,
         )
+
+    # def update_info_text(self):
+        
 
     def update_animation(self, frame):
         if self.current_analysis == "":
