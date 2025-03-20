@@ -56,6 +56,7 @@ class MainWindow(QMainWindow):
         load_ui(ui_path, self, UI_DIR)
         
         self.visualization_filter = VisualizationFilter.all_true()
+        self.visualization_filter.points = False
 
         self.selected_mesh_nodes = set()
         self.selected_mesh_faces = set()
@@ -172,7 +173,10 @@ class MainWindow(QMainWindow):
         self.render_widgets_stack.addWidget(self.results_widget)
         self.render_widgets_stack.addWidget(self.help_widget)
         self.render_widgets_stack.addWidget(self.welcome_widget)
+
         self.render_widgets_stack.currentChanged.connect(self.render_changed_callback)
+        self.visualization_changed.connect(self.update_visualization_filter)
+        self.update_visualization_filter()
 
         self.stacked_setup.addWidget(self.model_setup_widget)
         self.stacked_setup.addWidget(self.results_viewer_widget)
@@ -939,6 +943,15 @@ class MainWindow(QMainWindow):
         self.visualization_filter.points = clicked
         self.visualization_changed.emit()
     
+    def update_visualization_filter(self):
+        self.blockSignals(True)
+        self.action_node_view.setChecked(self.visualization_filter.points)
+        self.action_line_view.setChecked(self.visualization_filter.lines)
+        self.action_face_view.setChecked(
+            self.visualization_filter.faces and self.visualization_filter.solids
+        )
+        self.blockSignals(False)
+
     def action_about_vibra_callback(self):
         self.render_widgets_stack.setCurrentWidget(self.help_widget)
 
