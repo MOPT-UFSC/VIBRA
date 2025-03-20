@@ -10,7 +10,7 @@ poetry install
 ```
 
 ```
-poetry run python vibra
+poetry run python -m vibra
 ```
 
 ```
@@ -30,6 +30,13 @@ To generate the conda environment, just run:
 conda env create -f environment.yml
 ```
 
+If you are using Windows, the following commands will only work on `cmd`, and not on `powershell`.
+To make this work propperly on powershell too, you need to run
+```
+conda init powershell
+```
+And then restart the `powershell` window.
+
 After environment generation, we can activate and run Vibra by running the following commands:
 ```
 conda activate VIBRA
@@ -37,7 +44,7 @@ conda activate VIBRA
 
 Finally, enter the following command to execute the application:
 ```
-conda run vibra
+python -m vibra
 ```
 
 ## Generate Installer
