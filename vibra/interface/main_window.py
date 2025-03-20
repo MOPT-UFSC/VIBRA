@@ -14,7 +14,6 @@ from vibra.interface.loading_bar import load_function
 from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
 from vibra.interface.user_input.input_ui import InputUi
-from vibra.interface.exception_message import ErrorMessage
 from vibra.interface.plots.acoustic.export_element_transfer_data_input import ExportElementTransferDataInput
 from vibra.interface.plots.acoustic.plot_particle_velocity_frequency_response_input import PlotParticleVelocityFrequencyResponseInput
 from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
@@ -42,9 +41,6 @@ import os
 import sys
 from pathlib import Path
 from shutil import copy, rmtree
-from time import time
-
-# import qdarktheme
 
 
 class MainWindow(QMainWindow):
@@ -271,19 +267,6 @@ class MainWindow(QMainWindow):
         change_icon_color_for_widgets(widgets, icon_color)
         
         self.theme_changed.emit(theme)
-
-    def set_menus_theme(self, theme: str):
-        for i in range(self.stacked_setup.count()):
-            menu_widget = self.stacked_setup.widget(i)
-            if hasattr(menu_widget, "get_item"):
-                menu_widget_item = menu_widget.get_item()
-                menu_widget_item.set_theme(theme)
-    
-    def set_renderers_theme(self, theme: str):
-        for i in range(self.render_widgets_stack.count()):
-            widget = self.render_widgets_stack.widget(i)
-            if hasattr(widget, "set_theme"):
-                widget.set_theme(theme)
     
     def closeEvent(self, event):
         self.close_app()
@@ -685,23 +668,20 @@ class MainWindow(QMainWindow):
       self.save_project_dialog()
 
     def create_temporary_vibra_folder(self):
-        create_new_folder(self.user_path, "temp_vibra")
+        temp_path = self.user_path / "temp_vibra"
+        if not temp_path.exists():
+            temp_path.mkdir(parents=True)
+        return temp_path 
 
     def reset_temporary_vibra_folder(self):
         if TEMP_PROJECT_DIR.exists():
-            for filename in os.listdir(TEMP_PROJECT_DIR).copy():
-                file_path = TEMP_PROJECT_DIR / filename
-                if os.path.exists(file_path):
-                    if "." in filename:
-                        os.remove(file_path)
-                    else:
-                        rmtree(file_path)
+            rmtree(TEMP_PROJECT_DIR)
 
     def is_temporary_vibra_folder_empty(self):
         if TEMP_PROJECT_DIR.exists():
-            if os.listdir(TEMP_PROJECT_DIR):
-                return False
-        return True
+            return not any(TEMP_PROJECT_DIR.iterdir())
+        else:
+            return True
 
     def recovery_dialog(self):
 
@@ -732,8 +712,7 @@ class MainWindow(QMainWindow):
             return True
 
     def save_project_as_dialog(self):
-
-        if not os.path.exists(TEMP_PROJECT_FILE):
+        if not TEMP_PROJECT_FILE.exists():
             return
 
         obj = SaveProjectDataSelector()
@@ -746,11 +725,11 @@ class MainWindow(QMainWindow):
                 path = last_path
 
             file_path, check = QFileDialog.getSaveFileName(
-                                                            self,
-                                                            "Save As",
-                                                            path,
-                                                            filter = "Vibra File (*.vibra)",
-                                                        )
+                self,
+                "Save As",
+                path,
+                filter="Vibra File (*.vibra)",
+            )
 
             if not check:
                 return
@@ -799,12 +778,12 @@ class MainWindow(QMainWindow):
         else:
             path = last_path
 
-        project_path, check = QFileDialog.getOpenFileName( 
-                                                            self, 
-                                                            "Open Project", 
-                                                            path, 
-                                                            filter = "Vibra File (*.vibra)"
-                                                         )
+        project_path, check = QFileDialog.getOpenFileName(
+            self,
+            "Open Project",
+            path,
+            filter="Vibra File (*.vibra)",
+        )
 
         if not check:
             return
@@ -1020,17 +999,17 @@ class MainWindow(QMainWindow):
         self.close_dialogs()
 
         condition_1 = app().project.save_path is None
-        condition_2 = os.path.exists(TEMP_PROJECT_FILE)
+        condition_2 = TEMP_PROJECT_FILE.exists()
         condition_3 = self.project_data_modified
         condition = (condition_1 and condition_2) or condition_3
 
         if condition:
-            close = QMessageBox.question(   
-                                            self, 
-                                            "QUIT", 
-                                            "Would you like to save the project data before exit?", 
-                                            QMessageBox.Cancel | QMessageBox.Discard | QMessageBox.Save
-                                        )
+            close = QMessageBox.question(
+                self,
+                "QUIT",
+                "Would you like to save the project data before exit?",
+                QMessageBox.Cancel | QMessageBox.Discard | QMessageBox.Save,
+            )
 
             if close == QMessageBox.Cancel:
                 return
@@ -1041,11 +1020,11 @@ class MainWindow(QMainWindow):
 
         else:
             close = QMessageBox.question(
-                                            self, 
-                                            "QUIT", 
-                                            "Would you like to close the application?", 
-                                            QMessageBox.Yes | QMessageBox.No
-                                        )
+                self,
+                "QUIT",
+                "Would you like to close the application?",
+                QMessageBox.Yes | QMessageBox.No,
+            )
 
             if close == QMessageBox.No:
                 return
@@ -1079,37 +1058,7 @@ class MainWindow(QMainWindow):
             if hasattr(widget, "update_hidden_plot"):
                 widget.update_hidden_plot()
     
-    # def process_acoustic_modal_analysis(self):
-    #     try:
-    #         self.project.solve_acoustic_modal_analysis()
-    #     except NotImplementedError as e:
-    #         ErrorMessage(e)
-    #     else:
-    #         self.configure_acoustic_modal_analysis_render_widget(True)
-
-    # def process_structural_modal_analysis(self):
-    #     try:
-    #         self.project.solve_structural_modal_analysis()
-    #     except NotImplementedError as e:
-    #         ErrorMessage(e)
-    #     else:
-    #         self.configure_structural_modal_analysis_render_widget(True)
-    
-    # def process_acoustic_harmonic_analysis(self):
-    #     try:
-    #         self.project.solve_acoustic_harmonic_analysis()
-    #     except NotImplementedError as e:
-    #         ErrorMessage(e)
-    #     else:
-    #         self.configure_acoustic_harmonic_analysis_render_widget(True)
-    
     def disable_advanced_acoustic_plots_buttons(self, disabled : bool):
         self.action_plot_specific_acoustic_impedance.setDisabled(disabled)
         self.action_plot_particle_velocity.setDisabled(disabled)
         self.action_export_element_transfer_data.setDisabled(disabled)
-
-def create_new_folder(path : Path, folder_name : str) -> Path:
-    folder_path = path / folder_name
-    if not os.path.exists(folder_path):
-        os.mkdir(folder_path)
-    return folder_path
