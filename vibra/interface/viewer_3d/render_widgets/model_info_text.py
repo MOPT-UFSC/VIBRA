@@ -482,25 +482,28 @@ def analysis_info_text(frequency_index: int):
         tree = TreeInfo(project.last_analysis)
 
     if project.analysis_id in [2, 4]:
-        if project.last_analysis == "Structural Modal Analysis":
-            frequencies = list(project.analysis_data["frequencies"])
+        frequencies = None
+        if project.last_analysis == "Modal Structural":
+            frequencies = project.structural_modal_solver.natural_frequencies
 
-        if project.last_analysis == "Acoustic Modal Analysis":
-            if isinstance(project.acoustic_modal_solver.complex_natural_frequencies, np.ndarray):
-                frequencies = list(project.analysis_data["frequencies"])
+        if project.last_analysis == "Modal Acoustic":
+            if project.acoustic_modal_solver.complex_natural_frequencies != np.ndarray([]):
+                frequencies = list(project.acoustic_modal_solver.complex_natural_frequencies)
             else:
-                frequencies = list(project.analysis_data["frequencies"])
+                frequencies = list(project.acoustic_modal_solver.natural_frequencies)
 
         if frequencies is None:
             return ""
 
         if frequency_index >= len(frequencies):
+            print(f"frequency index: {frequency_index}")
+            print(f"frequencies: {frequencies}")
             return ""
 
         mode = frequency_index + 1
         tree.add_item("Mode", mode)
 
-        if isinstance(project.complex_natural_frequencies_acoustic, np.ndarray):
+        if project.last_analysis == "Modal Acoustic":
             value = frequencies[frequency_index]
             damping_ratio = -np.real(value) / np.abs(value)
             damped_frequency = np.abs(value) * np.sqrt(1 - damping_ratio**2)
@@ -522,7 +525,7 @@ def analysis_info_text(frequency_index: int):
 
         if project.last_analysis is not None:
             if project.solve_structural_harmonic_analysis is not None:
-                tree.add_item("Method", project.analysis_method_label)
+                tree.add_item("Method", "placeholder")
 
         frequency = frequencies[frequency_index]
         tree.add_item("Frequency", f"{frequency:.2f}", "Hz")
