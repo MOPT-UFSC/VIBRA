@@ -71,7 +71,7 @@ class PlotDisplacementField(QWidget):
         self.comboBox_color_scale.setDisabled(True)
         self.slider_transparency.setDisabled(True)
 
-        self.comboBox_colormaps.currentIndexChanged.connect(self.update_color_and_deformation)
+        self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.comboBox_color_scale.currentIndexChanged.connect(self.update_plot)
         self.comboBox_displacements.currentIndexChanged.connect(self.update_plot)
         #
@@ -102,8 +102,13 @@ class PlotDisplacementField(QWidget):
         except Exception:
             self.comboBox_colormaps.setCurrentIndex(0)
 
-    def update_color_and_deformation(self):
-        app().main_window.results_widget.update_color_and_deformation()
+    def update_colormap_type(self):
+        app().config.user_preferences.color_map = self.get_colormap()
+        app().config.update_config_file()
+        try:
+            app().main_window.results_widget.update_color_and_deformation()
+        except AttributeError:
+            pass
 
     def get_plot_type(self):
         plot_types = [
