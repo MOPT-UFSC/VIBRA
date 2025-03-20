@@ -35,7 +35,8 @@ class GeometrySelection:
         volume_ids, _ = self._pick_volume(x, y)
 
         # Cheating a bit to prioritize point selection
-        point_distance *= 0.98
+        point_distance *= 0.96
+        line_distance *= 0.98
         closest = min(point_distance, line_distance, surface_distance)
 
         if closest == point_distance:
