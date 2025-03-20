@@ -21,7 +21,10 @@ poetry run pytest
 poetry run black
 ```
 ## Conda environment
-To enable MUMPS solver in Vibra we need to use conda instead of poetry.
+
+Download and install the conda-forge ([conda-forge](https://conda-forge.org/download/)).
+It is recommended to check the option *Add Miniforge3 to my PATH environment variable* in the program installation setup.
+Once conda-forge was installed, it is possible to enable the MUMPS solver in Vibra. To enable this solver we need to use conda instead of poetry.
 To generate the conda environment, just run:
 ```
 conda env create -f environment.yml
@@ -32,8 +35,9 @@ After environment generation, we can activate and run Vibra by running the follo
 conda activate VIBRA
 ```
 
+Finally, enter the following command to execute the application:
 ```
-python vibra
+conda run vibra
 ```
 
 ## Generate Installer
