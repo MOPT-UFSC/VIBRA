@@ -78,7 +78,7 @@ class PlotStructuralModeShape(QWidget):
         self.comboBox_color_scale.setDisabled(True)
         self.slider_transparency.setDisabled(True)
 
-        self.comboBox_colormaps.currentIndexChanged.connect(self.update_color_and_deformation)
+        self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.comboBox_color_scale.currentIndexChanged.connect(self.update_plot)
         self.comboBox_displacements.currentIndexChanged.connect(self.update_plot)
         #
@@ -125,8 +125,13 @@ class PlotStructuralModeShape(QWidget):
             return "jet"
         return COLORMAP_NAMES[index]
 
-    def update_color_and_deformation(self):
-        app().main_window.results_widget.update_color_and_deformation()
+    def update_colormap_type(self):
+        app().config.user_preferences.color_map = self.get_colormap()
+        app().config.update_config_file()
+        try:
+            app().main_window.results_widget.update_color_and_deformation()
+        except AttributeError:
+            pass
 
     def update_plot(self):
         self.update_animation_widget_visibility()
