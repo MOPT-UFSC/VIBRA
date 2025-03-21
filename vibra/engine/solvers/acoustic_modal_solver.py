@@ -99,7 +99,7 @@ class AcousticModalSolver:
         return p_min, p_max
 
     def solve(self, K=[], M=[], which="LM", normalize=True, harmonic_analysis=False, complex_analysis=True):
-        """
+        """ This method solves the acoustic modal analysis for both damped and undamped problems.
         """
         self.get_min_max_values_of_pressures.cache_clear()
 
@@ -114,14 +114,16 @@ class AcousticModalSolver:
 
         logging.info("Solving the eigenproblem..." + ProgressStatus(75, 100))
         sigma = self.sigma_factor
+
         is_M_complex = np.any(np.imag(M.data))
         is_K_complex = np.any(np.imag(K.data))
         is_C_complex = np.any(np.imag(C_imp.data))
+
         is_complex = False
         if is_M_complex or is_K_complex or is_C_complex:
             is_complex = True
-        
-        if np.sum(C_imp):
+
+        if np.any(C_imp.data):
             if not is_complex:
                 M.data = np.real(M.data)
                 K.data = np.real(K.data)
@@ -134,31 +136,32 @@ class AcousticModalSolver:
             opinv = linear_solver.build_linear_operator(A - sigma * B)
 
             eigen_values, eigen_vectors = eigs(A, M=B, k=2*self.modes, sigma=sigma, which=which, OPinv=opinv)
+            linear_solver.clear_memory()
 
             logging.info("Post-processing the solution..." + ProgressStatus(95, 100))
 
-            N_dofs = int(eigen_vectors.shape[0] / 2)
+            n_dofs = int(eigen_vectors.shape[0] / 2)
 
+            # filtering the eigenvalues with positive imaginary part
             mask = np.imag(eigen_values) > 0
-            _eigen_values = eigen_values[mask]
-            _eigen_vectors = eigen_vectors[:, mask]
+            eigen_values = eigen_values[mask]
+            eigen_vectors = eigen_vectors[:, mask]
 
-            Wn = np.abs(_eigen_values)
+            Wn = np.abs(eigen_values)
             natural_frequencies = Wn / (2 * np.pi)
-            damping_ratio = -np.real(_eigen_values) / Wn
+            damping_ratio = -np.real(eigen_values) / Wn
 
+            # reordering the eigenvalues and eigenvectors founded
             index_order = np.argsort(natural_frequencies)
-
             damping_ratio = damping_ratio[index_order]
             natural_frequencies = natural_frequencies[index_order]
-            complex_natural_frequencies = _eigen_values[index_order] / (2 * np.pi)
-            modal_shapes = _eigen_vectors[:N_dofs, index_order]
+            complex_natural_frequencies = eigen_values[index_order] / (2 * np.pi)
 
+            # filtering the eigenvalues with damping ratio csi < 1
             mask_dmp = np.round(np.abs(damping_ratio), 6) < 1
-
             damping_ratio = damping_ratio[mask_dmp]
-            natural_frequencies = natural_frequencies[mask_dmp]
-            modal_shapes = modal_shapes[:, mask_dmp]
+            self.natural_frequencies = natural_frequencies[mask_dmp]
+            self.solution = eigen_vectors[:n_dofs, index_order][:, mask_dmp]
             self.complex_natural_frequencies = complex_natural_frequencies[mask_dmp]
 
         else:
@@ -171,9 +174,12 @@ class AcousticModalSolver:
             # K = (K + K.T) / 2
 
             try:
+
                 linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=True)
                 opinv = linear_solver.build_linear_operator(K - sigma * M)
+
                 eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
+                linear_solver.clear_memory()
 
             except Exception as error_log:
                 from traceback import print_exception
@@ -181,18 +187,14 @@ class AcousticModalSolver:
                 eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which)
 
             logging.info("Post-processing the solution..." + ProgressStatus(95, 100))
-            positive_real = np.absolute(np.real(eigen_values))
-            natural_frequencies = np.sqrt(positive_real) / (2 * np.pi)
-            modal_shapes = eigen_vectors
 
+            Wn2 = np.absolute(np.real(eigen_values))
+            natural_frequencies = np.sqrt(Wn2) / (2 * np.pi)
+
+            # reordering the eigenvalues and eigenvectors founded
             index_order = np.argsort(natural_frequencies)
-            natural_frequencies = natural_frequencies[index_order]
-            modal_shapes = modal_shapes[:, index_order]
-
-        self.natural_frequencies = natural_frequencies
-        self.solution = modal_shapes
-
-        return natural_frequencies, modal_shapes
+            self.natural_frequencies = natural_frequencies[index_order]
+            self.solution = eigen_vectors[:, index_order]
 
     def _reinsert_prescribed_dofs(self, solution, modal_analysis=False):
         """

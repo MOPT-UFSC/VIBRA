@@ -104,11 +104,14 @@ class StructuralModalSolver:
             K = self.assembler.stiffness_matrix
             M = self.assembler.mass_matrix
 
-        logging.info("Solving the eigenproblem..." + ProgressStatus(75, 100))
-        linear_solver = initialize_solver(SolverType.PARDISO)
         sigma = self.sigma_factor
+
+        logging.info("Solving the eigenproblem..." + ProgressStatus(75, 100))
+        linear_solver = initialize_solver(SolverType.PARDISO, is_complex=False, is_symmetric=True)
         opinv = linear_solver.build_linear_operator(K - sigma * M)
+
         eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
+        linear_solver.clear_memory()
 
         logging.info("Post-processing the solution..." + ProgressStatus(95, 100))
         positive_real = np.absolute(np.real(eigen_values))

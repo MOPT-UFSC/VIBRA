@@ -1,19 +1,12 @@
-import logging
-# import os
-import numpy as np
-from scipy.sparse.linalg import spsolve
-from scipy.sparse import triu
-
-#
-# os.environ["OMP_DYNAMIC"] = "FALSE"
-# os.environ["OMP_THREAD_LIMIT"] = "8"
-# os.environ["OMP_NUM_THREADS"] = "4"
-# 
-
-from functools import cache
 
 from vibra.engine.solvers.linear_solver import initialize_solver, SolverType
 from vibra.utils.progress_status import ProgressStatus
+
+import logging
+import numpy as np
+
+from scipy.sparse import triu
+from functools import cache
 
 
 class StructuralHarmonicSolver:
@@ -105,27 +98,23 @@ class StructuralHarmonicSolver:
         return r_min, r_max
 
     def solve_direct_method(self, print_log=False):
-        """ 
+        """ This method solves the structural harmonic analysis for both damped and undamped problems.
         """
         self.get_max_min_values_of_displacements.cache_clear()
 
-        linear_solver = initialize_solver(SolverType.PARDISO)
-        #
         self.unprescribed_dofs_indexes, self.prescribed_dofs_indexes = self.assembler.get_matrices_dropping_indexes()
         self.prescribed_dofs_values, self.array_prescribed_dofs_values = self.assembler.get_prescribed_dofs_values()
-        #
+
         M = self.assembler.mass_matrix
         K = self.assembler.stiffness_matrix
-        #
-        # self.plot_graph(M)
-        #
+
         alpha_v, beta_v, alpha_h, beta_h = self.global_damping
         F_combined = self.get_prescribed_dofs_model_excitation()
-        #
+
         rows = K.shape[0]
         cols = len(self.frequencies)
         solution = np.zeros((rows, cols), dtype=complex)
-        #
+
         logging.info( "Solving harmonic analysis..." + ProgressStatus(0, len(self.frequencies)))
 
         for i, freq in enumerate(self.frequencies):
@@ -140,13 +129,30 @@ class StructuralHarmonicSolver:
 
             F = F_combined[:, i]
 
+            if i == 0:
+
+                # evaluates A and C matrices for omega = 1
+                C = ((beta_h + beta_v) * K + (alpha_h + alpha_v) * M)
+                A = K - M + 1j * C
+
+                is_A_complex = np.any(np.imag(A.data))
+                is_F_complex = np.any(np.imag(F_combined))
+
+                is_complex = False
+                if is_A_complex or is_F_complex:
+                    is_complex = True
+                
+                linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=True)
+                del A, C
+
             C = 1j * ((beta_h + omega * beta_v) * K + (alpha_h + omega * alpha_v) * M)
             A = K - (omega**2) * M + 1j * omega * C
+            if not is_complex:
+                A.data = np.real(A.data)
+                F = np.real(F)
 
             A = triu(A, format="csr")
-            # ps.factorize(A)
 
-            # solution[:, i] = spsolve(A, F)
             solution[:, i] = linear_solver.solve(A, F)
             linear_solver.clear_memory()
             del A, F
