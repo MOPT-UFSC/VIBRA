@@ -514,6 +514,7 @@ class MainWindow(QMainWindow):
                 widget.update_renderer_font_size()
         
     def action_model_workspace_callback(self):
+        self.action_node_view.setToolTip("Points view")
         self.action_model_workspace.setEnabled(False)
 
         if not self.action_mesh_workspace.isEnabled():
@@ -530,6 +531,7 @@ class MainWindow(QMainWindow):
         self.animation_toolbar.pause_animation()
     
     def action_mesh_workspace_callback(self):
+        self.action_node_view.setToolTip("Nodes view")
         self.action_mesh_workspace.setEnabled(False)
 
         if not self.action_model_workspace.isEnabled():
