@@ -103,7 +103,7 @@ class Mesh:
                  geometry_tolerance: float = 1e-8,
                  size_factor: float = 0.50,
                  dimension: int = 3,
-                 threads: int = 4,
+                 threads: int = 0,
                  gmsh_gui: bool = False,
                  mesh_refinement_parameters = list(),
                  mesh_connection = True,
