@@ -74,9 +74,11 @@ class Model:
         try:
 
             try:
-                self.mesh = Mesh.from_cad(path, dimension=2, size_factor=0.0, minimum_element_size=10, maximum_element_size=30)
+                self.mesh = Mesh()
+                self.mesh.load_cad(path, dimension=2, size_factor=0.0, minimum_element_size=10, maximum_element_size=30)
             except:
-                self.mesh = Mesh.from_cad(path, dimension=2, size_factor=0.0, minimum_element_size=5, maximum_element_size=10)
+                self.mesh = Mesh()
+                self.mesh.load_cad(path, dimension=2, size_factor=0.0, minimum_element_size=5, maximum_element_size=10)
 
             self.generated_mesh = False
             app().main_window.update_geometry_information(self.mesh.geometry_information)
@@ -102,9 +104,6 @@ class Model:
             context = ( "The mesh setup has not been defined yet."
                         "You should to configure the mesher to proceed." )
             raise IncompleteSetupError(message, context=context)
-
-        # if self.mesh is None:
-        #     self.mesh = Mesh.from_cad(self.geometry_path)
 
         logging.info("Processing mesh..." + ProgressStatus(80, 100))
         self.mesh.load_cad(self.geometry_path, **self.mesh_setup)
