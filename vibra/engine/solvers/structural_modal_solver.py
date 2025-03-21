@@ -95,8 +95,8 @@ class StructuralModalSolver:
 
         return r_min, r_max
 
-    def solve(self, K=[], M=[], which="LM", normalize=True, harmonic_analysis=False):
-        """ 
+    def solve(self, K=[], M=[], which="LM", harmonic_analysis=False):
+        """ This method solves the structural modal analysis for undamped problems.
         """
         self.get_max_min_values_of_displacements.cache_clear()
 
@@ -104,11 +104,22 @@ class StructuralModalSolver:
             K = self.assembler.stiffness_matrix
             M = self.assembler.mass_matrix
 
-        logging.info("Solving the eigenproblem..." + ProgressStatus(75, 100))
-        linear_solver = initialize_solver(SolverType.PARDISO)
         sigma = self.sigma_factor
+        logging.info("Solving the eigenproblem..." + ProgressStatus(75, 100))
+
+        is_M_complex = np.any(np.imag(M.data))
+        is_K_complex = np.any(np.imag(K.data))
+        is_complex = is_M_complex or is_K_complex
+
+        if not is_complex:
+            M.data = np.real(M.data)
+            K.data = np.real(K.data)
+
+        linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=True)
         opinv = linear_solver.build_linear_operator(K - sigma * M)
+
         eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
+        linear_solver.clear_memory()
 
         logging.info("Post-processing the solution..." + ProgressStatus(95, 100))
         positive_real = np.absolute(np.real(eigen_values))

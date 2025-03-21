@@ -166,11 +166,13 @@ def load_external_mesh_and_solve():
     # t0 = time()
     # # Run modal analysis
     # modal_solver = AcousticModalSolver(assembler)
-    # natural_frequencies, modal_shape = modal_solver.solve()
+    # modal_solver.solve()
+    # natural_frequencies = modal_solver.natural_frequencies
+    # modal_shape = modal_solver.solution
     # dt = time() - t0
     # print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
     # return
-    
+
     # Define the analysis type and load setup
     analysis_data = {"analysis_id" : 3, "frequencies" : frequencies}
     harmonic_solver = AcousticHarmonicSolver(assembler, analysis_data=analysis_data)

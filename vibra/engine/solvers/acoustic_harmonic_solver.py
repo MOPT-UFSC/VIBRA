@@ -1,15 +1,13 @@
+
 from vibra.utils.progress_status import ProgressStatus
+from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
 
 import logging
-# import os
 import numpy as np
 
-from scipy.sparse.linalg import spsolve
-from scipy.sparse import triu
-
 from functools import cache
-
-from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
+from scipy.sparse import triu
+from pypardiso.pardiso_wrapper import Matrix_type
 
 
 class AcousticHarmonicSolver:
@@ -99,24 +97,19 @@ class AcousticHarmonicSolver:
         return p_min, p_max
 
     def solve(self, print_log=False):
-        """ 
+        """ This method solves the acoustic harmonic analysis for both damped and undamped problems.
         """
         self.get_min_max_values_of_pressures.cache_clear()
 
-        linear_solver = initialize_solver(SolverType.PARDISO)
-        #
         self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
-        #
+
         M = self.assembler.mass_matrix
         K = self.assembler.stiffness_matrix
-        #
+
         C_imp = self.assembler.damping_matrix
         C_visc = self.assembler.visc_damping_matrix
         Q = self.assembler.mass_flow_vectors
-        Q_visc = self.assembler.Qvisc_damping_matrix*0
-        # np.savetxt("mass_flow_vectors.dat", Q)
-        #
-        # self.plot_graph(M)
+        Q_visc = self.assembler.Qvisc_damping_matrix * 0 # this effect is temporary disabled
         
         condition_1 = self.assembler.model.porous_material_properties
         condition_2 = self.assembler.model.viscous_thermal_model_properties
@@ -165,12 +158,26 @@ class AcousticHarmonicSolver:
                 F = Q_visc @ Q[:, i] - 1j * omega * Q[:, i] - F_eq[:, i]
 
             C = C_imp + C_visc
+
+            if i == 0:
+
+                # evaluates A matrix for omega = 1
+                A = K - M + 1j * C
+
+                is_A_complex = np.any(np.imag(A.data))
+                is_F_complex = np.any(np.imag(F)) or np.any(np.imag(F_eq))
+                is_complex = is_A_complex or is_F_complex
+
+                linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=True)
+                del A
+
             A = K - (omega**2) * M + 1j * omega * C
+            if not is_complex:
+                A.data = np.real(A.data)
+                F = np.real(F)
 
             A = triu(A, format="csr")
-            # ps.factorize(A)
 
-            # solution[:, i] = spsolve(A, F)
             solution[:, i] = linear_solver.solve(A, F)
             linear_solver.clear_memory()
             del A, F
