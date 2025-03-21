@@ -430,15 +430,4 @@ class LoadProject:
                     continue
             
             logging.info("Updating analysis render..." + ProgressStatus(85, 100))
-
-            if act_modal_analysis:
-                app().main_window.configure_acoustic_modal_analysis_render_widget()
-
-            elif str_modal_analysis:
-                app().main_window.configure_structural_modal_analysis_render_widget()
-
-            elif act_harmonic_analysis:
-                app().main_window.configure_acoustic_harmonic_analysis_render_widget()
-
-            elif str_harmonic_analysis:
-                app().main_window.configure_structural_harmonic_analysis_render_widget()
+            app().main_window.configure_results_render_widget()

@@ -461,95 +461,28 @@ class MainWindow(QMainWindow):
     def configure_results_render_widget(self, show_render_widget=False):
         self.results_widget.update_plot()
 
-        if show_render_widget:
-            ...
-    
-    def configure_acoustic_modal_analysis_render_widget(self, show_render_widget=False):
-        self.results_widget.configure_analysis("acoustic_modal")
-        # self.acoustic_modal_analysis.update_plot()
-        
-        if show_render_widget:
-            self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
-            self.results_viewer_widget.hide_bottom_widget()
+        if not show_render_widget:
+            return 
 
-            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-            
-            self.action_results_workspace.setEnabled(False)
-            if not self.action_model_workspace.isEnabled():
-                self.action_model_workspace.setEnabled(True)
-            if not self.action_mesh_workspace.isEnabled():
-                self.action_mesh_workspace.setEnabled(True)
+        self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
+        self.results_viewer_widget.hide_bottom_widget()
+        self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
 
-            self.animation_toolbar.setDisabled(True)
-        
-        self.configure_results_render_widget(show_render_widget)
-    
-    def configure_structural_modal_analysis_render_widget(self, show_render_widget=False):
-        self.results_widget.configure_analysis("structural_modal")
-        # self.structural_modal_analysis.update_plot()
+        if not self.action_model_workspace.isEnabled():
+            self.action_model_workspace.setEnabled(True)
 
-        if show_render_widget:
-            self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
-            self.results_viewer_widget.hide_bottom_widget()
-
-            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-
-            self.action_results_workspace.setEnabled(False)
-            if not self.action_model_workspace.isEnabled():
-                self.action_model_workspace.setEnabled(True)
-            if not self.action_mesh_workspace.isEnabled():
-                self.action_mesh_workspace.setEnabled(True)
-            
-            self.animation_toolbar.setDisabled(True)
-        
-        self.configure_results_render_widget(show_render_widget)
-            
-    def configure_structural_harmonic_analysis_render_widget(self, show_render_widget=False):
-        self.results_widget.configure_analysis("structural_harmonic")
-        # self.structural_harmonic_analysis.update_plot()
-
-        if show_render_widget:
-            self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
-            self.results_viewer_widget.hide_bottom_widget()
-
-            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-
-            self.action_results_workspace.setEnabled(False)
-            if not self.action_model_workspace.isEnabled():
-                self.action_model_workspace.setEnabled(True)
-            if not self.action_mesh_workspace.isEnabled():
-                self.action_mesh_workspace.setEnabled(True)
-            
-            self.animation_toolbar.setDisabled(True)
-        
-        self.configure_results_render_widget(show_render_widget)
-
-    def configure_acoustic_harmonic_analysis_render_widget(self, show_render_widget=False):
-        self.results_widget.configure_analysis("acoustic_harmonic")
-        # self.acoustic_harmonic_analysis.update_plot()
-
-        if show_render_widget:
-            self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
-            self.results_viewer_widget.hide_bottom_widget()
-            
-            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-
-            self.action_results_workspace.setEnabled(False)
-            if not self.action_model_workspace.isEnabled():
-                self.action_model_workspace.setEnabled(True)
-            if not self.action_mesh_workspace.isEnabled():
-                self.action_mesh_workspace.setEnabled(True)
-            
-            self.animation_toolbar.setDisabled(True)
-        
-        self.configure_results_render_widget(show_render_widget)
+        if not self.action_mesh_workspace.isEnabled():
+            self.action_mesh_workspace.setEnabled(True)
+ 
+        self.action_results_workspace.setEnabled(False)
+        self.animation_toolbar.setEnabled(False)  
             
     def show_geometry_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
 
     def show_mesh_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
-    
+
     def update_plots(self, reset_camera=True):
         for i in range(self.render_widgets_stack.count()):
             widget = self.render_widgets_stack.widget(i)
@@ -585,6 +518,7 @@ class MainWindow(QMainWindow):
 
         if not self.action_mesh_workspace.isEnabled():
             self.action_mesh_workspace.setEnabled(True)
+
         if not self.action_results_workspace.isEnabled():
             self.action_results_workspace.setEnabled(True)
 
@@ -600,6 +534,7 @@ class MainWindow(QMainWindow):
 
         if not self.action_model_workspace.isEnabled():
             self.action_model_workspace.setEnabled(True)
+
         if not self.action_results_workspace.isEnabled():
             self.action_results_workspace.setEnabled(True)
 
@@ -612,19 +547,21 @@ class MainWindow(QMainWindow):
         self.animation_toolbar.pause_animation()
 
     def action_results_workspace_callback(self):
-        if app().project.last_analysis is not None:
-            self.action_results_workspace.setEnabled(False)
+        if app().project.last_analysis is None:
+            return
+ 
+        self.action_results_workspace.setEnabled(False)
 
-            if not self.action_model_workspace.isEnabled():
-                self.action_model_workspace.setEnabled(True)
-            if not self.action_mesh_workspace.isEnabled():
-                self.action_mesh_workspace.setEnabled(True)
-            
-            self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
+        if not self.action_model_workspace.isEnabled():
+            self.action_model_workspace.setEnabled(True)
+        if not self.action_mesh_workspace.isEnabled():
+            self.action_mesh_workspace.setEnabled(True)
+        
+        self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
 
-            self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
-            self.results_viewer_widget.results_viewer_items.update_items()
-            self.analysis_toolbar.update_analysis_combo_boxes()
+        self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
+        self.results_viewer_widget.results_viewer_items.update_items()
+        self.analysis_toolbar.update_analysis_combo_boxes()
 
     def action_new_project_callback(self):
         self.new_project_dialog()
