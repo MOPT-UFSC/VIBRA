@@ -1,16 +1,15 @@
-from PySide6.QtWidgets import QLabel, QFileDialog, QPushButton, QSlider, QSpinBox, QToolBar, QWidget
-from PySide6.QtGui import  QIcon, QFont, QColor
-from PySide6.QtCore import Qt, QSize
-
-from vibra import app, UI_DIR, ICON_DIR
-from vibra.interface.formatters import icons
-from vibra.utils.icons import load_icon
-from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.loading_bar import load_function
+from pathlib import Path
 
 from molde.render_widgets.animated_render_widget import AnimatedRenderWidget
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QColor, QFont
+from PySide6.QtWidgets import QFileDialog, QLabel, QPushButton, QSlider, QSpinBox, QToolBar, QWidget
 
-from pathlib import Path
+from vibra import ICON_DIR, app
+from vibra.interface.formatters import icons
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.loading_bar import load_function
+from vibra.utils.icons import load_icon
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -42,7 +41,6 @@ class AnimationToolbar(QToolBar):
         self.save_animation_icon = load_icon(ICON_DIR / "create_video_icon.png", color)
 
     def _define_qt_variables(self):
-
         # QLabel
         self.label_cycles = QLabel("Animation cycles:")
         self.label_frames = QLabel("Frames per cycle:")
@@ -71,14 +69,14 @@ class AnimationToolbar(QToolBar):
         # QPushButton
         self.pushButton_animate.setFixedSize(50, 30)
         self.pushButton_animate.setIcon(self.play_icon)
-        self.pushButton_animate.setIconSize(QSize(20,20))
+        self.pushButton_animate.setIconSize(QSize(20, 20))
         self.pushButton_animate.setCursor(Qt.PointingHandCursor)
         self.pushButton_animate.setToolTip("Play/Pause the animation")
         self.pushButton_animate.setCheckable(True)
 
         self.pushButton_save_animation.setFixedSize(50, 30)
         self.pushButton_save_animation.setIcon(self.save_animation_icon)
-        self.pushButton_save_animation.setIconSize(QSize(20,20))
+        self.pushButton_save_animation.setIconSize(QSize(20, 20))
         self.pushButton_save_animation.setCursor(Qt.PointingHandCursor)
         self.pushButton_save_animation.setToolTip("Save animation")
 
@@ -88,7 +86,7 @@ class AnimationToolbar(QToolBar):
         self.phase_slider.setCursor(Qt.PointingHandCursor)
         self.phase_slider.setMinimum(0)
         self.phase_slider.setMaximum(360)
-        
+
         self.magnification_factor_slider.setOrientation(Qt.Orientation.Horizontal)
         self.magnification_factor_slider.setMaximumWidth(150)
         self.magnification_factor_slider.setCursor(Qt.PointingHandCursor)
@@ -128,7 +126,7 @@ class AnimationToolbar(QToolBar):
         app().main_window.render_widget_changed.connect(self.update_toolbar)
 
         self.update_phase_slider_steps()
-    
+
     def update_toolbar(self):
         if app().main_window.analysis_toolbar.combo_box_analysis_domain.currentIndex() == 1:
             self.magnification_factor_slider.setDisabled(True)
@@ -138,7 +136,7 @@ class AnimationToolbar(QToolBar):
             self.magnification_factor_slider.setDisabled(False)
             self.label_magnification_factor.setDisabled(False)
             self.label_factor.setDisabled(False)
-        
+
     def update_current_render_widget(self):
         self.current_render_widget = app().main_window.render_widgets_stack.currentWidget()
 
@@ -214,7 +212,7 @@ class AnimationToolbar(QToolBar):
     def phase_slider_callback(self, value: int):
         self.update_degree_label()
         app().main_window.results_widget.update_color_and_deformation(clear_cache=False)
-    
+
     def magnification_factor_slider_callback(self, value: int):
         self.update_factor_label()
         app().main_window.results_widget.update_color_and_deformation()
@@ -228,14 +226,20 @@ class AnimationToolbar(QToolBar):
         if not isinstance(self.current_render_widget, AnimatedRenderWidget):
             return
 
-        if self.current_render_widget is not None and self.current_render_widget.playing_animation:
+        if (self.current_render_widget is not None) and self.current_render_widget.playing_animation:
             self.current_render_widget.stop_animation()
 
     def process_animation(self, state: bool):
         self.update_animation_settings()
         self.update_animate_button_icons(state)
 
-        self.current_render_widget.toggle_animation(frames=self.frames, cycles=self.cycles)
+        if state:
+            app().main_window.results_widget.start_animation(
+                frames=self.frames,
+                cycles=self.cycles,
+            )
+        else:
+            app().main_window.results_widget.stop_animation()
 
     def update_animate_button_icons(self, state: bool):
         if state:
@@ -256,15 +260,15 @@ class AnimationToolbar(QToolBar):
     def update_animation_settings(self):
         self.frames = self.spinBox_frames.value()
         self.cycles = self.spinBox_cycles.value()
-    
+
     def update_degree_label(self):
         value = self.phase_slider.value()
         self.label_degrees.setText(f"({value}°)")
-    
+
     def update_factor_label(self):
         value = self.magnification_factor_slider.value() * 2 / 32
         self.label_factor.setText(f"({value}x)")
-    
+
     def update_phase_slider_steps(self):
         frames = self.spinBox_frames.value()
         single_step = int(360 / frames)
@@ -272,8 +276,9 @@ class AnimationToolbar(QToolBar):
 
     def save_animation(self):
         file_path, extension = QFileDialog.getSaveFileName(
-            self, "Save As",
-            filter = "Video (*.mp4);;WEBP (*.webp);;GIF (*.gif);; All Files ();;",
+            self,
+            "Save As",
+            filter="Video (*.mp4);;WEBP (*.webp);;GIF (*.gif);; All Files ();;",
         )
 
         if not extension:
@@ -294,7 +299,6 @@ class AnimationToolbar(QToolBar):
             file_path = file_path.parent / (file_path.name + suffix)
 
         try:
-
             if file_path.suffix.lower() in [".gif", ".webp"]:
                 save_animation = load_function(self.current_render_widget.save_animation, app().main_window)
                 save_animation(file_path)

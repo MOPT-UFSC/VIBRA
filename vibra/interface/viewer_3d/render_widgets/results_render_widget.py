@@ -60,12 +60,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
     def configure_analysis(self, analysis: AnalysisType):
         self.current_analysis = analysis
 
-    def toggle_animation(self, *args, **kwargs):
-        if self.playing_animation:
-            self.stop_animation()
-        else:
-            self.start_animation(*args, **kwargs)
-
     def update_theme(self):
         user_preferences = app().config.user_preferences
         bkg_1 = user_preferences.renderer_background_color_1
@@ -153,6 +147,14 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             point_data,
             point_position,
         )
+
+    def start_animation(self, *args, **kwargs):
+        super().start_animation(*args, **kwargs)
+    
+    def stop_animation(self, *args, **kwargs):
+        app().main_window.animation_toolbar.pushButton_animate.setChecked(False)
+        app().main_window.animation_toolbar.update_animate_button_icons(False)
+        super().stop_animation(*args, **kwargs)
 
     def update_animation(self, frame):
         if self.current_analysis == "":
