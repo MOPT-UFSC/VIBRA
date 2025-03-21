@@ -1,3 +1,4 @@
+# fmt: off
 
 from PySide6.QtWidgets import QComboBox, QDialog, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
 from PySide6.QtCore import Qt
@@ -8,11 +9,6 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 from molde import load_ui
-
-import configparser
-import os
-from pathlib import Path
-
 import numpy as np
 
 window_title_1 = "Error"
@@ -53,9 +49,6 @@ class DissipationModelInput(QDialog):
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
-        self.model = ""
-        self.speed_of_sound_factor = 0
-        self.fluid_density_factor = 0
         self.keep_window_open = True
 
     def _define_qt_variables(self):
@@ -99,12 +92,10 @@ class DissipationModelInput(QDialog):
         self.update_attribution_type()
 
     def remove_callback(self):
-
         if self.lineEdit_selection_id.text() != "":
-
             volume_id = int(self.lineEdit_selection_id.text())
             self.properties._remove_volume_property("dissipation_model", volume_id)
-            self.load_info()
+            self.actions_to_finalize()
 
     def reset_callback(self):
 
@@ -130,7 +121,8 @@ class DissipationModelInput(QDialog):
             if read._continue:
                 for volume_id in volume_ids:
                     self.properties._remove_volume_property("dissipation_model", volume_id)
-                self.close()
+
+                self.actions_to_finalize()
 
     def tabEvent_dissipation_model(self):
         tab_index = self.tabWidget_dissipation_model.currentIndex()
@@ -206,75 +198,61 @@ class DissipationModelInput(QDialog):
 
             if self.comboBox_attribution_type.currentIndex() == 0:
                 self.comboBox_attribution_type.setCurrentIndex(1)
-                # return
 
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selection_id.setText(text)
 
-    def check_dissipation_model_entries(self):
-
-        tab_index = self.tabWidget_dissipation_model.currentIndex()
-        if tab_index == 0:
-            self.model = "proportional damping"
-            #
-            lineEdit = self.lineEdit_speed_of_sound_complex_factor
-            self.speed_of_sound_factor = self.check_inputs(
-                lineEdit, "Speed of sound complex factor", only_positive=True
-            )
-            if self.stop:
-                lineEdit.setFocus()
-                return True
-            #
-            lineEdit = self.lineEdit_fluid_density_complex_factor
-            self.fluid_density_factor = self.check_inputs(
-                lineEdit, "Fluid density complex factor", only_positive=True
-            )
-            if self.stop:
-                lineEdit.setFocus()
-                return True
-        else:
-            print("Not implemented dissipation model.")
-
     def attribute_callback(self):
 
         attribute_type = self.comboBox_attribution_type.currentIndex()
-        if attribute_type in [0, 1]:
             
-            volume_ids = list()
-            if attribute_type == 0:
-                if "volumes" in self.mesh.geometry_information.keys():
-                    volume_ids = self.mesh.geometry_information["volumes"]
+        volume_ids = list()
+        if attribute_type == 0:
+            if "volumes" in self.mesh.geometry_information.keys():
+                volume_ids = self.mesh.geometry_information["volumes"]
 
-            elif attribute_type == 1:
-                input_ids = self.lineEdit_selection_id.text()
-                volume_ids = self.mesh.check_selected_ids(
-                                                          input_ids, 
-                                                          selection = "volumes", 
-                                                          single_id = False
-                                                          )
+        elif attribute_type == 1:
+            input_ids = self.lineEdit_selection_id.text()
+            volume_ids = self.mesh.check_selected_ids(
+                                                      input_ids, 
+                                                      selection = "volumes", 
+                                                      single_id = False
+                                                      )
 
-                if volume_ids is None:
-                    self.lineEdit_selection_id.setFocus()
-                    return True
+            if volume_ids is None:
+                self.lineEdit_selection_id.setFocus()
+                return True
 
-        if self.check_dissipation_model_entries():
-            return
+        lineEdit = self.lineEdit_speed_of_sound_complex_factor
+        speed_of_sound_factor = self.check_inputs(lineEdit, "Speed of sound complex factor", only_positive=True)
+        if speed_of_sound_factor:
+            lineEdit.setFocus()
+            return True
+
+        lineEdit = self.lineEdit_fluid_density_complex_factor
+        fluid_density_factor = self.check_inputs(lineEdit, "Fluid density complex factor", only_positive=True)
+        if fluid_density_factor:
+            lineEdit.setFocus()
+            return True
 
         data = {
-                "entity_ids": volume_ids,
-                "model": self.model,
-                "speed of sound factor": self.speed_of_sound_factor,
-                "fluid density factor": self.fluid_density_factor,
+                "speed_of_sound_factor" : speed_of_sound_factor,
+                "fluid_density_factor" : fluid_density_factor,
                 }
 
         for volume_id in volume_ids:
             self.properties._set_property("dissipation_model", data, volume=volume_id)
-        
+
+        self.actions_to_finalize()
+
         print(f"The dissipation model has been attributed to volumes: {volume_ids}")
 
-        self.close()
+    def actions_to_finalize(self):
+        self.load_info()
+        self.main_window.update_info_text()
+        app().file.write_model_properties_in_file()
 
-    def check_inputs(self, lineEdit, label, only_positive=False, zero_included=True, _float=True):
+    def check_inputs(self, lineEdit: QLineEdit, label: str, only_positive=False, zero_included=True, _float=True):
 
         self.stop = False
         message = ""
@@ -327,3 +305,5 @@ class DissipationModelInput(QDialog):
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
         return super().closeEvent(a0)
+
+# fmt: on

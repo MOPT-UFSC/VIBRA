@@ -181,8 +181,8 @@ class ACT_HEXAHEDRON_8C(Element3D):
         # fluid = self.model.properties.get_fluid(element=el_index)
         # rho = fluid.fluid_density
         # c_0 = fluid.speed_of_sound
+        # c_0 = self.model.properties.get_speed_of_sound(element=el_index)
 
-        c_0 = self.model.properties.get_speed_of_sound(element=el_index)
         ie = self.connectivity[el_index, 1:]
         #
         JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
@@ -202,7 +202,8 @@ class ACT_HEXAHEDRON_8C(Element3D):
         Ke, Me = 0, 0
         for i in range(self.nint):
             Ke += B[i, :, :].T @ B[i, :, :] * (detJAC[i, :, :] * self.wps)
-            Me += (1 / c_0**2) * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps)
+            Me += N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps)
+            # Me += (1 / c_0**2) * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps)
 
         return Ke, Me
 

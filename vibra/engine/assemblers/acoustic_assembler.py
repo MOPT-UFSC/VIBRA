@@ -296,7 +296,13 @@ class AcousticAssembler:
 
                 else:
 
-                    rho_0, C_0, mu_0 = self.model.get_fluid_properties(proportional_damping=True, element=el)
+                    volume_id = self.model.get_volume(element=el)
+                    fluid = self.properties.get_fluid(volume=volume_id)
+                    proportional_damping = self.properties._get_property("proportional_damping", volume=volume_id)
+
+                    rho_0 = self.properties.get_fluid_density(fluid, proportional_damping)
+                    C_0 = self.properties.get_speed_of_sound(fluid, proportional_damping)
+                    mu_0 = fluid.dynamic_viscosity
 
                     self.den_K[el, :] = aux_ones / (rho_0)
                     self.den_M[el, :] = aux_ones / (rho_0 * C_0**2)
@@ -319,7 +325,13 @@ class AcousticAssembler:
 
                 last_progress = progress
 
-                rho_0, C_0, mu_0 = self.model.get_fluid_properties(proportional_damping=True, element=el)
+                volume_id = self.model.get_volume(element=el)
+                fluid = self.properties.get_fluid(volume=volume_id)
+                proportional_damping = self.properties._get_property("proportional_damping", volume=volume_id)
+
+                rho_0 = self.properties.get_fluid_density(fluid, proportional_damping)
+                C_0 = self.properties.get_speed_of_sound(fluid, proportional_damping)
+                mu_0 = fluid.dynamic_viscosity
 
                 self.den_K[el, :] = aux_ones / (rho_0)
                 self.den_M[el, :] = aux_ones / (rho_0 * C_0**2)

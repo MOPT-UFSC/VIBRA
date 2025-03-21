@@ -9,6 +9,7 @@ from functools import cache
 from scipy.sparse import block_array
 from scipy.sparse.linalg import eigs, eigsh
 
+
 class AcousticModalSolver:
     def __init__(self, assembler, analysis_data=None):
         #
@@ -116,10 +117,23 @@ class AcousticModalSolver:
 
         if np.sum(C_imp):
 
-            B = block_array([[M, None], [None, M]], format="csr", dtype=complex)
-            A = block_array([[None, M], [-K, -C_imp]], format="csr", dtype=complex)
+            condition_M = np.any(np.imag(M.data))
+            condition_K = np.any(np.imag(K.data))
+            condition_C = np.any(np.imag(C_imp.data))
 
-            linear_solver = initialize_solver(SolverType.PARDISO, mtype=13)
+            if condition_M or condition_K or condition_C:
+                mtype = 13
+
+            else:
+                mtype = 11
+                M.data = np.real(M.data)
+                K.data = np.real(K.data)
+                C_imp.data = np.real(C_imp.data)
+
+            B = block_array([[M, None], [None, M]], format="csr")
+            A = block_array([[None, M], [-K, -C_imp]], format="csr")
+
+            linear_solver = initialize_solver(SolverType.PARDISO, mtype=mtype)
             opinv = linear_solver.build_linear_operator(A - sigma * B)
 
             eigen_values, eigen_vectors = eigs(A, M=B, k=2*self.modes, sigma=sigma, which=which, OPinv=opinv)
@@ -152,8 +166,23 @@ class AcousticModalSolver:
 
         else:
 
+            condition_M = np.any(np.imag(K.data))
+            condition_K = np.any(np.imag(C_imp.data))
+
+            if condition_M or condition_K:
+                mtype = 6
+
+            else:
+                mtype = -2
+                M.data = np.real(M.data)
+                K.data = np.real(K.data)
+
+            ## symmetrize the global matrices
+            # M = (M + M.T) / 2
+            # K = (K + K.T) / 2
+
             try:
-                linear_solver = initialize_solver(SolverType.PARDISO, mtype=6)
+                linear_solver = initialize_solver(SolverType.PARDISO, mtype=mtype)
                 opinv = linear_solver.build_linear_operator(K - sigma * M)
                 eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
 

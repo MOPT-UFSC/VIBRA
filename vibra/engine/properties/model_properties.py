@@ -90,22 +90,20 @@ class ModelProperties:
     def set_fluid(self, fluid: Fluid, surface=None, volume=None):
         self._set_property("fluid", fluid, surface=surface, volume=volume)
 
-    def get_fluid_density(self, fluid: Fluid, **kwargs):
+    def get_fluid_density(self, fluid: Fluid, proportional_damping: dict | None) -> float | complex:
         rho_0 = fluid.fluid_density
-        dissipation_model = self.get_dissipation_model(**kwargs)
-        if dissipation_model is None:
+        if proportional_damping is None:
             return rho_0
-        elif dissipation_model["model"] == "proportional damping":
-            factor = dissipation_model["fluid density factor"]
+        else:
+            factor = proportional_damping.get("fluid_density_factor", 0)
             return (1 + factor * 1j) * rho_0
 
-    def get_speed_of_sound(self, fluid: Fluid, **kwargs):
+    def get_speed_of_sound(self, fluid: Fluid, proportional_damping: dict | None) -> float | complex:
         c_0 = fluid.speed_of_sound
-        dissipation_model = self.get_dissipation_model(**kwargs)
-        if dissipation_model is None:
+        if proportional_damping is None:
             return c_0
-        elif dissipation_model["model"] == "proportional damping":
-            factor = dissipation_model["speed of sound factor"]
+        else:
+            factor = proportional_damping.get("speed_of_sound_factor", 0)
             return (1 + factor * 1j) * c_0
 
     def get_structural_load(self, surface):

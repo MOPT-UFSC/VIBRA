@@ -329,8 +329,8 @@ class ACT_HEXAHEDRON_20C(Element3D):
         # fluid = self.model.properties.get_fluid(element=el_index)
         # rho = fluid.fluid_density
         # c_0 = fluid.speed_of_sound
+        # c_0 = self.model.properties.get_speed_of_sound(element=el_index)
 
-        c_0 = self.model.properties.get_speed_of_sound(element=el_index)
         ie = self.connectivity[el_index, 1:]
 
         #
@@ -353,7 +353,8 @@ class ACT_HEXAHEDRON_20C(Element3D):
         # Me = np.zeros((self.DOFS_PER_ELEMENT_3D, self.DOFS_PER_ELEMENT_3D), dtype=float)
         for i in range(self.nint):
             Ke += B[i, :, :].T @ B[i, :, :] * (detJAC[i, :, :] * self.wps[i])
-            Me += (1 / c_0**2) * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps[i])
+            Me += N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps[i])
+            # Me += (1 / c_0**2) * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps[i])
 
         return Ke, Me
 

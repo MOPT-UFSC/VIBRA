@@ -201,18 +201,6 @@ class Model:
         fluid = self.properties.get_fluid(volume=volume)
         return fluid, volume
 
-    def get_fluid_properties(self, proportional_damping=False, **kwargs):
-        """ This method returns the fluid properties """
-        fluid, volume = self.get_fluid(**kwargs)
-        dynamic_viscosity = fluid.dynamic_viscosity
-        if proportional_damping:
-            c_0 = self.properties.get_speed_of_sound(fluid, volume=volume)
-            rho_0 = self.properties.get_fluid_density(fluid, volume=volume)
-        else:
-            c_0 = fluid.speed_of_sound
-            rho_0 = fluid.fluid_density
-        return rho_0, c_0, dynamic_viscosity
-
     def set_acoustic_element(self, element):
         self.solid_acoustic_element, self.surface_acoustic_element = element
 
