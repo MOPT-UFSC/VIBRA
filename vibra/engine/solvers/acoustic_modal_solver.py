@@ -114,18 +114,15 @@ class AcousticModalSolver:
 
         logging.info("Solving the eigenproblem..." + ProgressStatus(75, 100))
         sigma = self.sigma_factor
-
+        is_M_complex = np.any(np.imag(M.data))
+        is_K_complex = np.any(np.imag(K.data))
+        is_C_complex = np.any(np.imag(C_imp.data))
+        is_complex = False
+        if is_M_complex or is_K_complex or is_C_complex:
+            is_complex = True
+        
         if np.sum(C_imp):
-
-            condition_M = np.any(np.imag(M.data))
-            condition_K = np.any(np.imag(K.data))
-            condition_C = np.any(np.imag(C_imp.data))
-
-            if condition_M or condition_K or condition_C:
-                mtype = 13
-
-            else:
-                mtype = 11
+            if not is_complex:
                 M.data = np.real(M.data)
                 K.data = np.real(K.data)
                 C_imp.data = np.real(C_imp.data)
@@ -133,7 +130,7 @@ class AcousticModalSolver:
             B = block_array([[M, None], [None, M]], format="csr")
             A = block_array([[None, M], [-K, -C_imp]], format="csr")
 
-            linear_solver = initialize_solver(SolverType.PARDISO, mtype=mtype)
+            linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=False)
             opinv = linear_solver.build_linear_operator(A - sigma * B)
 
             eigen_values, eigen_vectors = eigs(A, M=B, k=2*self.modes, sigma=sigma, which=which, OPinv=opinv)
@@ -165,15 +162,7 @@ class AcousticModalSolver:
             self.complex_natural_frequencies = complex_natural_frequencies[mask_dmp]
 
         else:
-
-            condition_M = np.any(np.imag(K.data))
-            condition_K = np.any(np.imag(C_imp.data))
-
-            if condition_M or condition_K:
-                mtype = 6
-
-            else:
-                mtype = -2
+            if not is_complex:
                 M.data = np.real(M.data)
                 K.data = np.real(K.data)
 
@@ -182,7 +171,7 @@ class AcousticModalSolver:
             # K = (K + K.T) / 2
 
             try:
-                linear_solver = initialize_solver(SolverType.PARDISO, mtype=mtype)
+                linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=True)
                 opinv = linear_solver.build_linear_operator(K - sigma * M)
                 eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
 

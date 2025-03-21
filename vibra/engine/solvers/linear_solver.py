@@ -36,7 +36,7 @@ class PardisoLinearOperator(LinearOperator):
 
 
 class LinearSolver:
-    def __init__(self, **kwargs):
+    def __init__(self, is_complex: bool, is_symmetric: bool, **kwargs):
         pass
 
     def solve(self, A, F):
@@ -50,9 +50,21 @@ class LinearSolver:
 
 
 class PardisoLinearSolver(LinearSolver):
-    def __init__(self, **kwargs):
+    def __init__(self, is_complex: bool, is_symmetric: bool, **kwargs):
         # Note: use mtype=3 for full symmetric complex matrix and mtype=6 for upper triangular complex matrix
-        mtype = kwargs.get('mtype', Matrix_type.CS)
+        mtype = kwargs.get('mtype')
+        if mtype is None:
+            if is_complex:
+                if is_symmetric:
+                    mtype = Matrix_type.CS
+                else:
+                    mtype = Matrix_type.CNS
+            else:
+                if is_symmetric:
+                    mtype = Matrix_type.RSI
+                else:
+                    mtype = Matrix_type.RNS
+
         phase = kwargs.get('phase', 13)
         size_limit_storage = kwargs.get('size_limit_storage', 5e7)
         self._solver = PyPardisoSolver(mtype, phase, size_limit_storage)
@@ -68,14 +80,16 @@ class PardisoLinearSolver(LinearSolver):
 
 
 class MumpsLinearSolver(LinearSolver):
-    def __init__(self, **kwargs):
+    def __init__(self, is_complex: bool, is_symmetric: bool, **kwargs):
         # local import of mumps for backward compatibility with the current build (without conda)
         from mumps import Context
+        self.is_complex = is_complex
+        self.is_symmetric = is_symmetric
         verbose = kwargs.get('verbose', False)
         self._solver = Context(verbose)
 
     def solve(self, A, F):
-        self._solver.set_matrix(A)
+        self._solver.set_matrix(A, symmetric=self.is_symmetric)
         self._solver.factor()
         return self._solver.solve(F)
 
@@ -83,8 +97,9 @@ class MumpsLinearSolver(LinearSolver):
         return MumpsLinearOperator(self._solver, A)
 
 
-def initialize_solver(solver_type: SolverType, **kwargs) -> LinearSolver:
+def initialize_solver(solver_type: SolverType, is_complex: bool = False, is_symmetric: bool = True,
+                      **kwargs) -> LinearSolver:
     if solver_type == SolverType.PARDISO:
-        return PardisoLinearSolver(**kwargs)
+        return PardisoLinearSolver(is_complex, is_symmetric, **kwargs)
     elif solver_type == SolverType.MUMPS:
-        return MumpsLinearSolver(**kwargs)
+        return MumpsLinearSolver(is_complex, is_symmetric, **kwargs)
