@@ -72,12 +72,15 @@ class NodesActor(vtkActor):
         self.clear_colors()
 
     def clear_colors(self):
+        color = app().config.user_preferences.nodes_points_color.to_rgba()
+        self.set_color(color)
+    
+    def set_color(self, color: tuple[int, int, int, int] | tuple[int, int, int]):
         if self.data is None:
             return
 
+        r, g, b, a = color
         cell_colors = self.data.GetCellData().GetScalars()
-        r, g, b, a = app().config.user_preferences.nodes_points_color.to_rgba()
-
         cell_colors.FillComponent(0, r)
         cell_colors.FillComponent(1, g)
         cell_colors.FillComponent(2, b)
