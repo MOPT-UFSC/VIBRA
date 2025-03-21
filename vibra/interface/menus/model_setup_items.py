@@ -54,6 +54,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_set_dissipation_model = self.add_item("Set Dissipation Model")
         self.item_child_set_porous_material_model = self.add_item("Set Porous Material Model")
         self.item_child_set_viscous_thermal_model = self.add_item("Set Viscous-thermal Loss Model")
+        self.item_child_set_perforated_plate_model = self.add_item("Set Perforated Plate Model")
         self.item_child_set_acoustic_properties_gradient = self.add_item("Set Acoustic Properties Gradient")
         self.item_child_add_reciprocating_compressor_excitation = self.add_item("Add Reciprocating Compressor Excitation")
         self.item_child_set_acoustic_transfer_element_setup = self.add_item("Process Acoustic Transfer Element Data")
@@ -160,7 +161,10 @@ class ModelSetupItems(CommonMenuItems):
     
     def item_child_set_viscous_thermal_model_callback(self):
         app().main_window.input_ui.set_viscous_thermal_model()
-    
+
+    def item_child_set_perforated_plate_model_callback(self):
+        app().main_window.input_ui.set_perforated_plate_model()
+
     def item_child_add_reciprocating_compressor_excitation_callback(self):
         app().main_window.input_ui.add_reciprocating_compressor_excitation()
     
@@ -192,6 +196,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_set_dissipation_model.setDisabled(key)
         self.item_child_set_porous_material_model.setDisabled(key)
         self.item_child_set_viscous_thermal_model.setDisabled(key)
+        self.item_child_set_perforated_plate_model.setDisabled(key)
         self.item_child_set_acoustic_properties_gradient.setDisabled(key)
         self.item_child_add_reciprocating_compressor_excitation.setDisabled(key)
         self.item_child_set_acoustic_transfer_element_setup.setDisabled(key)

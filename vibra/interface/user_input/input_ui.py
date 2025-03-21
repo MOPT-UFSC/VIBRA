@@ -10,6 +10,7 @@ from vibra.interface.model_inputs.acoustic.set_anechoic_termination_inputs impor
 from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import DissipationModelInput
 from vibra.interface.model_inputs.acoustic.set_porous_material_model_inputs import SetPorousMaterialModelInputs
 from vibra.interface.model_inputs.acoustic.set_viscous_thermal_loss_model import SetViscousThermalLossModel
+from vibra.interface.model_inputs.acoustic.set_perforated_plate_model_inputs import SetPerforatedPlateModelInputs
 from vibra.interface.model_inputs.acoustic.set_acoustic_properties_gradient_input import SetAcousticPropertiesGradientInputs
 from vibra.interface.model_inputs.acoustic.reciprocating_compressor_inputs import ReciprocatingCompressorInputs
 from vibra.interface.model_inputs.acoustic.process_acoustic_transfer_element_data import ProcessAcousticTransferElementData
@@ -136,7 +137,11 @@ class InputUi:
     def set_viscous_thermal_model(self):
         if not self.model_setup_items.item_child_set_viscous_thermal_model.isDisabled():
             self.process_input(SetViscousThermalLossModel)
-        
+
+    def set_perforated_plate_model(self):
+        if not self.model_setup_items.item_child_set_perforated_plate_model.isDisabled():
+            self.process_input(SetPerforatedPlateModelInputs)
+
     def set_acoustic_properties_grandient(self):
         if not self.model_setup_items.item_child_set_acoustic_properties_gradient.isDisabled():
             self.process_input(SetAcousticPropertiesGradientInputs)
