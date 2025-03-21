@@ -98,7 +98,7 @@ class AcousticModalSolver:
 
         return p_min, p_max
 
-    def solve(self, K=[], M=[], which="LM", normalize=True, harmonic_analysis=False, complex_analysis=True):
+    def solve(self, K=[], M=[], which="LM"):
         """ This method solves the acoustic modal analysis for both damped and undamped problems.
         """
         self.get_min_max_values_of_pressures.cache_clear()
@@ -118,10 +118,7 @@ class AcousticModalSolver:
         is_M_complex = np.any(np.imag(M.data))
         is_K_complex = np.any(np.imag(K.data))
         is_C_complex = np.any(np.imag(C_imp.data))
-
-        is_complex = False
-        if is_M_complex or is_K_complex or is_C_complex:
-            is_complex = True
+        is_complex = is_M_complex or is_K_complex or is_C_complex
 
         if np.any(C_imp.data):
             if not is_complex:

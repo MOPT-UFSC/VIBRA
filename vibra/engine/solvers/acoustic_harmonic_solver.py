@@ -166,11 +166,8 @@ class AcousticHarmonicSolver:
 
                 is_A_complex = np.any(np.imag(A.data))
                 is_F_complex = np.any(np.imag(F)) or np.any(np.imag(F_eq))
+                is_complex = is_A_complex or is_F_complex
 
-                is_complex = False
-                if is_A_complex or is_F_complex:
-                    is_complex = True
-                
                 linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=True)
                 del A
 
