@@ -131,18 +131,19 @@ class ResultsRenderWidget(AnimatedRenderWidget):
     def cache_animation_frames(self):
         self.clear_cache()
 
-        with self.update_lock:
-            for frame in range(self._animation_total_frames):
-                logging.info(
-                    f"Caching animation frames [{frame}/{self._animation_total_frames}]"
-                    + ProgressStatus(frame, self._animation_total_frames)
-                )
-                self.cache_frame(frame)
+        for frame in range(self._animation_total_frames):
+            logging.info(
+                f"Caching animation frames [{frame}/{self._animation_total_frames}]"
+                + ProgressStatus(frame, self._animation_total_frames)
+            )
+            self.cache_frame(frame)
 
     def cache_frame(self, frame):
         t = frame / (self._animation_total_frames - 1)
         phase = lerp(0, 2 * np.pi, t)
-        self.update_color_and_deformation(phase, clear_cache=False)
+
+        with self.update_lock:
+            self.update_color_and_deformation(phase, clear_cache=False)
 
         point_data = vtkPointData()
         point_position = vtkPoints()
