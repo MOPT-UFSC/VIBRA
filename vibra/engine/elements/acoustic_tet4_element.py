@@ -103,20 +103,13 @@ class ACT_TETRAHEDRON_4C(Element3D):
         dphi_t = invJAC @ self.dphi
         #
         B = np.zeros((3, self.DOFS_PER_ELEMENT), dtype=float)
-        N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
         #
         B[0, :] = dphi_t[0, :]
         B[1, :] = dphi_t[1, :]
         B[2, :] = dphi_t[2, :]
-        #
-        N[:, 0, :] = self.phi
 
-        # integration loop
-        Ke, Me = 0, 0
-        for i in range(self.nint):
-            Ke += (1 / 6) * B.T @ B * (detJAC * self.wps)
-            Me += (1 / 6) * N[i, :, :].T @ N[i, :, :] * (detJAC * self.wps)
-            # Me += (1 / 6) * (1 / c_0**2) * N[i, :, :].T @ N[i, :, :] * (detJAC * self.wps)
+        Ke = self.nint * (1 / 6) * B.T @ B * (detJAC * self.wps)
+        Me = (1 / 6) * self.phi.T @ self.phi * (detJAC * self.wps)
 
         return Ke, Me
     
