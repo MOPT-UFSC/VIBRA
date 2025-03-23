@@ -6,12 +6,15 @@ from vibra.engine.elements.solid_elements import Element3D
 
 def shapeT4C(ssx, ttx, rrx):
     """This function returns the shape functions and its derivatives."""
+
     # shape functions
     phi = np.array([1 - ssx - ttx - rrx, ttx, rrx, ssx], dtype=float).T
+
     # derivatives
     dphi = np.array([[-1, 0, 0, 1], 
                      [-1, 1, 0, 0], 
                      [-1, 0, 1, 0]], dtype=float)
+
     return phi, dphi
 
 def get_detJAC_and_invJAC(JAC):
@@ -87,29 +90,25 @@ class ACT_TETRAHEDRON_4C(Element3D):
         #
         self.phi, self.dphi = shapeT4C(ssx, ttx, rrx)
 
-    def elementary_matrices(self, el_index):
+    def elementary_matrices(self, el_index: int):
         """
         Stiffness and mass matrices.
         """
 
-        # fluid = self.model.properties.get_fluid(element=el_index)
-        # rho = fluid.fluid_density
-        # c_0 = fluid.speed_of_sound
-        # c_0 = self.model.properties.get_speed_of_sound(element=el_index)
         ie = self.connectivity[el_index, 1:]
-        #
         JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
+
         detJAC, invJAC = get_detJAC_and_invJAC(JAC)
         dphi_t = invJAC @ self.dphi
-        #
-        B = np.zeros((3, self.DOFS_PER_ELEMENT), dtype=float)
-        #
-        B[0, :] = dphi_t[0, :]
-        B[1, :] = dphi_t[1, :]
-        B[2, :] = dphi_t[2, :]
+
+        # shape functions
+        N = self.phi
+
+        # derivative of shape functions
+        B = dphi_t
 
         Ke = self.nint * (1 / 6) * B.T @ B * (detJAC * self.wps)
-        Me = (1 / 6) * self.phi.T @ self.phi * (detJAC * self.wps)
+        Me = (1 / 6) * N.T @ N * (detJAC * self.wps)
 
         return Ke, Me
     
@@ -151,6 +150,34 @@ class ACT_TETRAHEDRON_4C(Element3D):
                 Ve = -(1 / (1j * rho * omega)) * (B @ Pe)
 
                 return Ve
+
+    # def elementary_matrices_reference(self, el_index: int):
+    #     """
+    #     Stiffness and mass matrices.
+    #     """
+
+    #     ie = self.connectivity[el_index, 1:]
+    #     JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
+
+    #     detJAC, invJAC = get_detJAC_and_invJAC(JAC)
+    #     dphi_t = invJAC @ self.dphi
+
+    #     B = np.zeros((3, self.DOFS_PER_ELEMENT), dtype=float)
+    #     B[0, :] = dphi_t[0, :]
+    #     B[1, :] = dphi_t[1, :]
+    #     B[2, :] = dphi_t[2, :]
+
+    #     N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
+    #     N[:, 0, :] = self.phi
+
+    #     # integration loop
+    #     Ke, Me = 0, 0
+    #     for i in range(self.nint):
+    #         Ke += (1 / 6) * B.T @ B * (detJAC * self.wps)
+    #         Me += (1 / 6) * N[i, :, :].T @ N[i, :, :] * (detJAC * self.wps)
+    #         # Me += (1 / 6) * (1 / c_0**2) * N[i, :, :].T @ N[i, :, :] * (detJAC * self.wps)
+
+    #     return Ke, Me
 
     # def velpartT4C(self, element_id, node_id, rho, freq, pressures):
     #     """ Stiffness and mass matrices.
