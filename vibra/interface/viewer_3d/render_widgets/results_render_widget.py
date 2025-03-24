@@ -130,6 +130,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         app().project.thumbnail = self.get_thumbnail()
 
         self.update_info_text()
+        self.update_colorbar_unit()
     
 
     def clear_cache(self):
@@ -388,4 +389,16 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             text += analysis_info_text(self.mode_index)
 
         self.set_info_text(text)
+        self.update()
+
+    def update_colorbar_unit(self):
+        if self.current_analysis == "":
+            return
+        unit = "--"
+        if self.current_analysis in ["structural_harmonic", "acoustic_harmonic"]:
+            unit = "m"
+        
+        self.colorbar_actor.SetTitle(f"Unit: [{unit}]")
+
+
         self.update()
