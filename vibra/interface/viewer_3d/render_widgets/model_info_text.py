@@ -479,7 +479,13 @@ def analysis_info_text(frequency_index: int):
 
     project = app().project
     if project.last_analysis is not None:
-        tree = TreeInfo(project.last_analysis)
+        display_name = {
+            "Modal Structural": "Structural Modal Analysis",
+            "Modal Acoustic": "Acoustic Modal Analysis",
+            "Harmonic Structural": "Structural Harmonic Analysis",
+            "Harmonic Acoustic": "Acoustic Harmonic Analysis",
+        }
+        tree = TreeInfo(display_name[project.last_analysis])
 
     if project.analysis_id in [2, 4]:
         frequencies = None
@@ -524,14 +530,13 @@ def analysis_info_text(frequency_index: int):
         if frequencies is None:
             return ""
 
-        if frequency_index >= len(frequencies):
+        if frequency_index-1 >= len(frequencies):
             return ""
 
-        # This works beacuse there is only this method for now
         # TODO: add logic for other methods
         tree.add_item("Method", "Direct")
 
-        frequency = frequencies[frequency_index]
+        frequency = frequencies[frequency_index-1]
         tree.add_item("Frequency", f"{frequency:.2f}", "Hz")
 
     return str(tree)

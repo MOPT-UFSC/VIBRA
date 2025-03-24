@@ -55,7 +55,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self._animation_cached_data = dict()
         self.min_value = 0
         self.max_value = 0
-        print("defini como None")
         self.frequency_index = None
         self.mode_index = None
 
