@@ -149,10 +149,10 @@ class ResultsViewerWidget(QWidget):
         # TODO: please, remove the hide after all it shouldn't be needed
         if isinstance(self.bottom_widget, QWidget):
             self.bottom_widget.hide()
-        widget.show()
 
         self.layout().replaceWidget(self.bottom_widget, widget)
         self.bottom_widget = widget
 
         # app().main_window.animation_toolbar.setEnabled(animation_widget)
         self.adjustSize()
+        widget.show()
