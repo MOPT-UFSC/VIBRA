@@ -1,6 +1,7 @@
 from vtkmodules.vtkFiltersCore import vtkAppendPolyData, vtkPolyDataNormals
 from vtkmodules.vtkFiltersSources import vtkConeSource, vtkSphereSource
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
+from vibra import app
 
 
 class ExampleActor(vtkActor):
@@ -51,6 +52,7 @@ class ExampleActor(vtkActor):
         self.SetMapper(mapper)
 
     def configure_appearance(self):
-        self.GetProperty().RenderPointsAsSpheresOn()
+        if not app().config.user_preferences.compatibility_mode:
+            self.GetProperty().RenderPointsAsSpheresOn()
         self.GetProperty().SetPointSize(4)
         self.GetProperty().SetLineWidth(2)

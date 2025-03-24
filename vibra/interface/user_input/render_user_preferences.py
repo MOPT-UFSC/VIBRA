@@ -41,6 +41,7 @@ class RendererUserPreferencesInput(QDialog):
     def _define_qt_variables(self):
         # QCheckBox
         self.checkBox_reference_scale : QCheckBox
+        self.checkBox_compatibility_mode : QCheckBox
 
         # QFrame
         self.frame_background_color : QFrame
@@ -249,6 +250,7 @@ class RendererUserPreferencesInput(QDialog):
     def update_settings(self):
         self.update_reference_scale_state()
         self.update_renderers_font_size()
+        self.update_compatibility_mode()
         self.main_window.update_plots()
 
     def reset_to_default(self):
@@ -277,6 +279,11 @@ class RendererUserPreferencesInput(QDialog):
         else:
             app().config.user_preferences.show_reference_scale_bar = False
             self.main_window.update_scale_bar(False)
+
+    def update_compatibility_mode(self):
+        is_checked = self.checkBox_compatibility_mode.isChecked()
+        app().config.user_preferences.compatibility_mode = is_checked        
+
 
     def update_show_reference_scalebar_checkbox(self):
         if app().config.user_preferences.show_reference_scale_bar:

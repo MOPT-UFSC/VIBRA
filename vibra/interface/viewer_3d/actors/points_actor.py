@@ -44,7 +44,8 @@ class PointsActor(vtkActor):
 
     def configure_appearance(self):
         points_size = app().config.user_preferences.points_size
-        self.GetProperty().RenderPointsAsSpheresOn()
+        if not app().config.user_preferences.compatibility_mode:
+            self.GetProperty().RenderPointsAsSpheresOn()
         self.GetProperty().SetPointSize(points_size)
         self.GetProperty().LightingOff()
         self.clear_colors()

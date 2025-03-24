@@ -19,6 +19,7 @@ class UserPreferences:
     lines_thickness: int = 5
     edges_thickness: int = 1
     show_reference_scale_bar: bool = True
+    compatibility_mode: bool = False
     color_map: str = "jet"
 
     def set_light_theme(self):
