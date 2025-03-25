@@ -394,13 +394,15 @@ class ResultsRenderWidget(AnimatedRenderWidget):
     def update_colorbar_unit(self):
         if self.current_analysis == "":
             return
-        unit = "--"
-        if self.current_analysis in ["structural_harmonic", "acoustic_harmonic"]:
-            unit = "m"
         
-        self.colorbar_actor.SetTitle(f"Unit: [{unit}]")
-
-
+        unit = {
+            "structural_modal": "--", 
+            "structural_harmonic": "m",
+            "acoustic_modal": "--",
+            "acoustic_harmonic": "Pa",
+        }
+        
+        self.colorbar_actor.SetTitle(f"Unit: [{unit[self.current_analysis]}]")
         self.update()
 
     def update_renderer_font_size(self):
