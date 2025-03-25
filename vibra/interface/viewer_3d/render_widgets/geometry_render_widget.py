@@ -587,7 +587,7 @@ class GeometryRenderWidget(CommonRenderWidget):
                     )
 
             else:
-                values = surface_velocity["values"]
+                values = specific_impedance.get("values")
                 text += _acoustic_format("Specific impedance", values[0], "Zs", "kg/m².s")
 
         return text
