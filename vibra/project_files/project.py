@@ -226,6 +226,7 @@ class Project:
         self.model.reset_dissipation_model_properties()
         self.model.process_porous_material_properties(self.model.frequencies)
         self.model.process_viscous_thermal_model_properties(self.model.frequencies)
+        self.model.process_perforated_plate_impendace(self.model.frequencies)
         self.acoustic_assembler.process_assemble()
         t0 = time()
         self.acoustic_harmonic_solver.solve()

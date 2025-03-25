@@ -111,10 +111,10 @@ class AcousticHarmonicSolver:
         Q = self.assembler.mass_flow_vectors
         Q_visc = self.assembler.Qvisc_damping_matrix * 0 # this effect is temporary disabled
         
-        condition_1 = self.assembler.model.porous_material_properties
-        condition_2 = self.assembler.model.viscous_thermal_model_properties
+        is_pm_active = self.assembler.model.porous_material_properties
+        is_vt_active = self.assembler.model.viscous_thermal_model_properties
 
-        if condition_1 or condition_2:
+        if is_pm_active or is_vt_active:
             freq_dependent = True
         else:
             freq_dependent = False

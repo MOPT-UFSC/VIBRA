@@ -4,10 +4,9 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
 from vibra.engine.properties.fluid import Fluid
-from vibra.engine.transfer_impedances.perforate_plate import PerforatedPlateModels
+from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
 from vibra.interface.mesh.mesher_inputs import MesherInputs
 from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input_simplified import SetFluidInputSimplified
-from vibra.interface.model_inputs.acoustic.get_sphere_selection_information import GetSphereSelectionInformation
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
@@ -41,10 +40,10 @@ class SetPerforatedPlateModelInputs(QDialog):
         self._initialize()
         self._config_window()
         self._define_qt_variables()
-        # self._create_connections()
-        # self._config_widgets()
+        self._create_connections()
+        self._config_widgets()
 
-        # self.load_info()
+        self.load_info()
 
         while self.keep_window_open:
             self.exec()
@@ -66,10 +65,6 @@ class SetPerforatedPlateModelInputs(QDialog):
         self.comboBox_attribution_type: QComboBox
         self.comboBox_plot_type: QComboBox
 
-        # QDoubleSpin
-        self.doubleSpinBox_selection_radius: QDoubleSpinBox
-        self.doubleSpinBox_evaluated_depth: QDoubleSpinBox
-
         # QFrame
         self.frame_fluid_info: QFrame
         self.frame_plot_buttons: QFrame
@@ -89,11 +84,12 @@ class SetPerforatedPlateModelInputs(QDialog):
         self.pushButton_confirm: QPushButton
         self.pushButton_remove: QPushButton
         self.pushButton_reset: QPushButton
-        # self.pushButton_get_fluid: QPushButton
-        # self.pushButton_plot_data: QPushButton
+        self.pushButton_get_fluid: QPushButton
+        self.pushButton_plot_data: QPushButton
 
         # QTabWidget
         self.tabWidget_main: QTabWidget
+        self.tabWidget_perforated_plate_models: QTabWidget
 
         # QTreeWidget
         self.treeWidget_perforated_plate_model: QTreeWidget
@@ -103,14 +99,12 @@ class SetPerforatedPlateModelInputs(QDialog):
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_type_callback)
         #
-        self.doubleSpinBox_selection_radius.valueChanged.connect(self.call_sphere_plotter)
-        #
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_confirm.clicked.connect(self.attribute_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
-        # self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
-        # self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
+        self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
+        self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
         #
@@ -121,61 +115,45 @@ class SetPerforatedPlateModelInputs(QDialog):
         #
         self.geometry_selection_callback()
         self.attribution_type_callback()
-        self.update_plot_buttons_access()
+        # self.update_plot_buttons_access()
 
     def update_plot_buttons_access(self):
         state = self.selected_fluid is None
         self.comboBox_plot_type.setDisabled(state)
-        self.pushButton_plot_data.setDisabled(state)
+        # self.pushButton_plot_data.setDisabled(state)
         self.plot_type_callback()
 
     def plot_type_callback(self):
-        if self.comboBox_plot_type.currentIndex() < 2:
-            self.doubleSpinBox_evaluated_depth.setDisabled(True)
-        else:
-            self.doubleSpinBox_evaluated_depth.setDisabled(False)
+        return
 
     def _config_widgets(self):
-        for i, w in enumerate([90, 60, 130, 120, 120]):
+        for i, w in enumerate([90, 100, 130,]):
             self.treeWidget_perforated_plate_model.setColumnWidth(i, w)
             self.treeWidget_perforated_plate_model.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def remove_callback(self):
         if self.lineEdit_selection_id.text() != "":
 
-            key = self.lineEdit_selection_id.text().split(" - ")
-            selection_type = key[0]
-            selection_id = int(key[1])
+            surface_id = int(self.lineEdit_selection_id.text())
+            self.properties._remove_surface_property("perforated_plate_model", surface_id)
 
-            if selection_type == "Volume":
-                self.properties._remove_volume_property("viscous_thermal_model", selection_id)
-            else:
-                self.properties._remove_group_property("viscous_thermal_model", selection_id)
-
-            app().file.write_model_properties_in_file()
+            self.actions_to_finalize()
             self.pushButton_remove.setDisabled(True)
-            self.load_info()
 
     def reset_callback(self):
 
-        volume_ids = list()
-        for key, data in self.properties.volume_properties.items():
-            property, volume_id = key
-            if property == "viscous_thermal_model":
-                volume_ids.append(volume_id)
+        surface_ids = list()
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "perforated_plate_model":
+                surface_ids.append(surface_id)
 
-        group_ids = list()
-        for key, data in self.properties.group_properties.items():
-            property, group_id = key
-            if property == "viscous_thermal_model":
-                group_ids.append(group_id)
-
-        if volume_ids or group_ids:
+        if surface_ids:
 
             self.hide()
 
-            title = "Viscous-thermal dissipation model resetting"
-            message = "Would you like to remove the Viscous-thermal dissipation effects from the model?"
+            title = "Perforated plate model resetting"
+            message = "Would you like to remove the perforated plate from the acoustic model?"
 
             buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
             read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -185,33 +163,29 @@ class SetPerforatedPlateModelInputs(QDialog):
 
             if read._continue:
 
-                for volume_id in volume_ids:
-                    self.properties._remove_volume_property("viscous_thermal_model", volume_id)
+                for surface_id in surface_ids:
+                    self.properties._remove_surface_property("perforated_plate_model", surface_id)
 
-                for group_id in group_ids:
-                    self.properties._remove_group_property("viscous_thermal_model", group_id)
-
-                app().file.write_model_properties_in_file()
-                self.load_info()
+                self.actions_to_finalize()
 
     def tabEvent_callback(self):
 
         self.pushButton_remove.setDisabled(True)
-        if self.tabWidget_main.currentIndex() == 2:
+        if self.tabWidget_main.currentIndex() == 1:
             self.comboBox_attribution_type.setCurrentIndex(1)
             self.comboBox_attribution_type.setDisabled(True)
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
-            self.frame_fluid_info.setDisabled(True)
-            self.frame_plot_buttons.setDisabled(True)
+            # self.frame_fluid_info.setDisabled(True)
+            # self.frame_plot_buttons.setDisabled(True)
 
         else:
 
             if "-" in self.lineEdit_selection_id.text():
                 self.lineEdit_selection_id.setText("")
 
-            self.frame_fluid_info.setDisabled(False)
-            self.frame_plot_buttons.setDisabled(False)
+            # self.frame_fluid_info.setDisabled(False)
+            # self.frame_plot_buttons.setDisabled(False)
 
             self.comboBox_attribution_type.setDisabled(False)
             if self.comboBox_attribution_type.currentIndex() == 0:
@@ -221,12 +195,10 @@ class SetPerforatedPlateModelInputs(QDialog):
 
     def on_click_item(self, item):
 
-        key = f"{item.text(0)} - {item.text(1)}"
-        if item.text(0) == "Volume":
-            volume_id = int(item.text(1))
-            app().main_window.set_geometry_selection(volumes=[volume_id])
+        surface_id = int(item.text(0))
+        app().main_window.set_geometry_selection(surfaces=[surface_id])
 
-        self.lineEdit_selection_id.setText(key)
+        self.lineEdit_selection_id.setText(item.text(0))
         self.pushButton_remove.setEnabled(True)
 
     def on_doubleclick_item(self, item):
@@ -234,16 +206,13 @@ class SetPerforatedPlateModelInputs(QDialog):
 
     def attribution_type_callback(self):
 
-        self.doubleSpinBox_selection_radius.setDisabled(True)
-
-        attribution_type = self.comboBox_attribution_type.currentIndex()
-        if attribution_type == 0:
+        if self.comboBox_attribution_type.currentIndex():
             surfaces = self.main_window.selected_geometry_surfaces
             if not surfaces:
                 self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setEnabled(True)
 
-        elif attribution_type == 1:
+        else:
             self.lineEdit_selection_id.setText("All faces")
             self.lineEdit_selection_id.setEnabled(False)
 
@@ -253,24 +222,22 @@ class SetPerforatedPlateModelInputs(QDialog):
 
         for key, data in self.properties.surface_properties.items():
 
-            property, face_id = key
-            if property == "perforate_plate_model":
+            property, surface_id = key
+            if property == "perforated_plate_model":
+                data: dict
 
-                section_type = ""
                 formulation = ""
-
                 model_inputs = list()
-                continue
 
                 for key, value in data.items():
-                    if key == "section_type":
-                        section_type = data["section_type"]
-                    elif key == "formulation":
+                    if key == "values":
+                        continue
+                    if key == "formulation":
                         formulation = data["formulation"]
                     else:
                         model_inputs.append(value)
 
-                new = QTreeWidgetItem([str(face_id), section_type, formulation, str(model_inputs)])
+                new = QTreeWidgetItem([str(surface_id), formulation, str(model_inputs)])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
@@ -280,19 +247,13 @@ class SetPerforatedPlateModelInputs(QDialog):
 
     def update_tabs_visibility(self):
 
-        for key, _ in self.properties.volume_properties.items():
+        for key, _ in self.properties.surface_properties.items():
             property, _ = key
-            if property == "perforate_plate_model":
-                self.tabWidget_main.setTabVisible(2, True)
+            if property == "perforated_plate_model":
+                self.tabWidget_main.setTabVisible(1, True)
                 return
 
-        for key, _ in self.properties.group_properties.items():
-            property, _ = key
-            if property == "perforate_plate_model":
-                self.tabWidget_main.setTabVisible(2, True)
-                return
-
-        self.tabWidget_main.setTabVisible(2, False)
+        self.tabWidget_main.setTabVisible(1, False)
         self.tabWidget_main.setCurrentIndex(0)
 
     def geometry_selection_callback(self):
@@ -302,84 +263,84 @@ class SetPerforatedPlateModelInputs(QDialog):
         if faces:
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(0)
+            self.comboBox_attribution_type.setCurrentIndex(1)
 
-    def get_perforate_plate_circular_hole_inputs(self):
+    def get_inputs_for_perforated_plate_with_circular_holes(self):
+
+        if self.tabWidget_perforated_plate_models.currentIndex() != 0:
+            return dict()
 
         lineEdit = self.lineEdit_plate_thickness
         plate_thickness = self.check_inputs(lineEdit, "Plate thickness")
         if plate_thickness is None:
             lineEdit.setFocus()
             return dict()
-        
+
         lineEdit = self.lineEdit_hole_diameter
         hole_diameter = self.check_inputs(lineEdit, "Hole diameter")
         if hole_diameter is None:
             lineEdit.setFocus()
             return dict()
-        
+
         lineEdit = self.lineEdit_porosity
         porosity = self.check_inputs(lineEdit, "Porosity")
         if porosity is None:
             lineEdit.setFocus()
             return dict()
-        
+
         lineEdit = self.lineEdit_discharge_coefficient
         discharge_coefficient = self.check_inputs(lineEdit, "Discharge coefficient")
         if discharge_coefficient is None:
             lineEdit.setFocus()
             return dict()
 
-        if self.tabWidget_main.currentIndex() == 0:
-            formulation = "circular_hole"
-        
         perforated_plate_data = {
-                                "formulation" : formulation,
-                                "plate_thickness" : plate_thickness,
-                                "hole_diameter" : hole_diameter,
-                                "porosity" : porosity,
-                                "discharge_coefficient" : discharge_coefficient
-                                }
+                                 "formulation" : "circular_hole",
+                                 "plate_thickness" : plate_thickness,
+                                 "hole_diameter" : hole_diameter,
+                                 "porosity" : porosity,
+                                 "discharge_coefficient" : discharge_coefficient
+                                 }
 
         return perforated_plate_data
 
     def attribute_callback(self):
 
-        if self.tabWidget_main.currentIndex() == 0:
-            model_data = self.get_perforate_plate_circular_hole_inputs()
-
-        else:
+        if self.tabWidget_main.currentIndex():
             return
+
+        model_data = self.get_inputs_for_perforated_plate_with_circular_holes()
 
         if model_data:
 
+            surface_ids = list()
             attribute_type = self.comboBox_attribution_type.currentIndex()
-            if attribute_type in [0, 1]:
-                
-                surface_ids = list()
-                if attribute_type == 1:
-                    if "surfaces" in self.mesh.geometry_information.keys():
-                        surface_ids = self.mesh.geometry_information["surfaces"]
 
-                elif attribute_type == 0:
-                    input_ids = self.lineEdit_selection_id.text()
-                    surface_ids = self.mesh.check_selected_ids(
-                                                               input_ids, 
-                                                               selection = "surfaces", 
-                                                               single_id = False
-                                                               )
+            if attribute_type == 0:
+                if "surfaces" in self.mesh.geometry_information.keys():
+                    surface_ids = self.mesh.geometry_information["surfaces"]
 
-                    if surface_ids is None:
-                        self.lineEdit_selection_id.setFocus()
-                        return True
+            elif attribute_type == 1:
+                input_ids = self.lineEdit_selection_id.text()
+                surface_ids = self.mesh.check_selected_ids(
+                                                           input_ids, 
+                                                           selection = "surfaces", 
+                                                           single_id = False
+                                                           )
 
-                for surface_id in surface_ids:
-                    self.properties._set_property("viscous_thermal_model", model_data, surface=surface_id)
+                if surface_ids is None:
+                    self.lineEdit_selection_id.setFocus()
+                    return True
 
-                print(f"The viscous_thermal {model_data['formulation']} model for '{model_data['section_type']}' has been attributed to the surfaces {surface_ids}.")
+            for surface_id in surface_ids:
+                self.properties._set_property("perforated_plate_model", model_data, surface=surface_id)
 
-            app().file.write_model_properties_in_file()
-            self.load_info()
+            print(f"The perforated plate has been attributed to the surfaces {surface_ids}.")
+            self.actions_to_finalize()
+
+    def actions_to_finalize(self):
+        app().file.write_model_properties_in_file()
+        self.load_info()
 
     def check_inputs(self, lineEdit: QLineEdit, label, _float=True):
 
@@ -411,6 +372,7 @@ class SetPerforatedPlateModelInputs(QDialog):
             message = f"Insert some value at the {label} input field."
 
         if message != "":
+            self.hide()
             PrintMessageInput([window_title_1, title, message])
             return None
         else:
@@ -435,14 +397,14 @@ class SetPerforatedPlateModelInputs(QDialog):
             self.lineEdit_fluid_density.setText(f"{self.selected_fluid.fluid_density}")
             self.lineEdit_speed_of_sound.setText(f"{self.selected_fluid.speed_of_sound}")
 
-    def get_effective_properties(self, fluid: Fluid):
+    def get_perforated_plate_impendance(self, fluid: Fluid):
 
         warnings.filterwarnings('ignore')
 
         frequencies = None
         analysis_data = app().project.analysis_data
         if isinstance(analysis_data, dict):
-            frequencies = analysis_data.get("frequencies", None)
+            frequencies = analysis_data.get("frequencies")
 
         if frequencies is None:
             df = 5
@@ -457,136 +419,58 @@ class SetPerforatedPlateModelInputs(QDialog):
 
         omega = 2 * np.pi * freq
 
-        model = PerforatedPlateModels(self)
+        model = PerforatedPlateModels(self.model)
 
         tab_index = self.tabWidget_main.currentIndex()
 
         if tab_index == 0:
-            pp_data = self.get_circular_hole_inputs()
+            pp_data = self.get_inputs_for_perforated_plate_with_circular_holes()
 
         if pp_data:
             if tab_index == 0:
-                rho_eff, C_eff = model.get_transfer_impedance_for_circular_holes(omega, fluid, pp_data)
+                U_rms = 0
+                a, b, Z_0 = model.get_transfer_impedance_for_circular_holes(omega, fluid, pp_data, None)
+                Z_tr = Z_0 * (a + b*U_rms)
 
-            k_cr = omega / C_eff
+            return freq, Z_tr
 
-            return freq, rho_eff, C_eff, k_cr
-
-        return None, None, None, None
+        return None, None
 
     def get_perforated_plate_model(self):
         tab_index = self.tabWidget_main.currentIndex()
         
         if tab_index == 0:
-            return "Circular hole"
-
+            return "circular hole"
 
     def plot_data_callback(self):
         plot_key = self.comboBox_plot_type.currentIndex()
         if plot_key == 0:
-            self.plot_effective_fluid_density()
-        elif plot_key == 1:
-            self.plot_effective_speed_of_sound()
-        elif plot_key == 2:
-            self.plot_surface_impedance()
-        else:
-            self.plot_absorption_coefficient()
+            self.plot_perforated_plate_impedance()
 
-    def plot_effective_fluid_density(self):
+    def plot_perforated_plate_impedance(self):
 
         if self.selected_fluid is None:
             self.get_fluid_callback()
 
-        freq, rho_eff, _, _ = self.get_effective_properties(self.selected_fluid)
+        # Z_0 = self.selected_fluid.speed_of_sound * self.selected_fluid.fluid_density
+        freq, Z_tr = self.get_perforated_plate_impendance(self.selected_fluid)
 
         if freq is None:
             return
 
-        tv_model = self.get_perforated_plate_model()
-        self.plot_data(freq, rho_eff, "effective fluid density", tv_model)
-
-    def plot_effective_speed_of_sound(self):
-
-        if self.selected_fluid is None:
-            self.get_fluid_callback()
-
-        freq, _, C_eff, _ = self.get_effective_properties(self.selected_fluid)
-
-        if freq is None:
-            return
-
-        tv_model = self.get_perforated_plate_model()
-        self.plot_data(freq, C_eff, "effective speed of sound", tv_model)
-
-    def plot_surface_impedance(self):
-
-        if self.selected_fluid is None:
-            self.get_fluid_callback()
-
-        return
-
-        h = self.spinBox_number_of_terms.value()
-        Z_0 = self.selected_fluid.speed_of_sound * self.selected_fluid.fluid_density
-
-        freq, rho_eff, C_eff, k_cr = self.get_effective_properties(self.selected_fluid)
-
-        if freq is None:
-            return
-
-        Z_pm = rho_eff * C_eff
-        Z_s = Z_pm * (1 / np.tanh(k_cr * h))
-        Z_norm = Z_s / Z_0
-
-        tv_model = self.get_perforated_plate_model()
-        self.plot_data(freq, Z_norm, "normalized surface impedance", tv_model)
-
-    def plot_absorption_coefficient(self):
-
-        if self.selected_fluid is None:
-            self.get_fluid_callback()
-
-        return
-
-        h = self.spinBox_number_of_terms.value()
-        Z_0 = self.selected_fluid.speed_of_sound * self.selected_fluid.fluid_density
-
-        freq, rho_eff, C_eff, k_cr = self.get_effective_properties(self.selected_fluid)
-
-        if freq is None:
-            return
-
-        Z_pm = rho_eff * C_eff
-        Z_s = Z_pm * (1 / np.tanh(k_cr * h))
-
-        R_r = (Z_s - Z_0) / (Z_s + Z_0)
-        alpha_n = 1 - np.abs(R_r)**2
-
-        pm_model = self.get_perforated_plate_model()
-        self.plot_data(freq, alpha_n, "absorption coefficient", pm_model)
+        pp_model = self.get_perforated_plate_model()
+        self.plot_data(freq, Z_tr, "Acoustic transfer impedance", pp_model)
 
     def join_model_data(self, x_data, y_data, label: str, section_label: str):
 
         self.hide()
         self.data_to_plot = dict()
 
-        if label == "effective fluid density":
-            unit_label = "kg/m³"
-            y_label = "Effective fluid density"
-
-        elif label == "effective speed of sound":
-            unit_label = "m/s"
-            y_label = "Effective speed of sound"
-
-        elif label == "normalized surface impedance":
-            unit_label = "--"
-            y_label = "Normalized surface impedance"
-
-        else:
-            unit_label = "--"
-            y_label = "Absorption coeffient"
+        y_label = label
+        unit_label = "kg/m².s"
 
         legend_label = label
-        title = f"Effective Properties for {section_label}"
+        title = f"{label} for {section_label}"
 
         key = ("property", (None))
 
@@ -620,8 +504,8 @@ class SetPerforatedPlateModelInputs(QDialog):
 
         try:
             warnings.filterwarnings('default')
-            geometry_widget = self.main_window.geometry_widget
-            geometry_widget.selection_changed.disconnect(self.geometry_selection_callback)
+        #     geometry_widget = self.main_window.geometry_widget
+        #     geometry_widget.selection_changed.disconnect(self.geometry_selection_callback)
         except TypeError:
             pass  # ignore if there is nothing to disconect
 

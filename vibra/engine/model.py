@@ -11,6 +11,7 @@ from vibra.interface.loading_bar import load_function
 from vibra.engine.dissipation_models.low_reduced_frequency_model import LowReducedFrequencyModel
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
+from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
@@ -57,6 +58,7 @@ class Model:
         self.reset_dissipation_model_properties()
 
     def reset_dissipation_model_properties(self):
+        self.perforated_plate_impedance_data = dict()
         self.porous_material_properties = dict()
         self.viscous_thermal_model_properties = dict()
 
@@ -356,6 +358,14 @@ class Model:
 
     def set_viscous_thermal_model_data(self, data, group=None, volume=None):
         self.properties._set_property("viscous_thermal_model", data, group=group, volume=volume)
+
+    def process_perforated_plate_impendace(self, frequencies: np.ndarray, solution: np.ndarray | None = None):
+
+        pp_model = PerforatedPlateModels(self)
+        pp_model.process_acoustic_transfer_impedances(frequencies)
+
+        self.perforated_plate_impedance_data.clear()
+        self.perforated_plate_impedance_data = pp_model.perforated_plate_impedance_data
 
     def process_surface_thickness(self):
         for key, data in self.properties.surface_properties.items():

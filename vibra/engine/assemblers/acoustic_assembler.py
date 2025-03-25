@@ -237,6 +237,55 @@ class AcousticAssembler:
             #     mesh_widget.select_multiple_faces(all_indexes)
 
         return connect, surface_data
+    
+    def get_perforated_plate_data_for_element_integration(self, solution: np.ndarray | None = None):
+                    
+        connect = None
+        surface_data = dict()
+        aux_connect = dict()
+        all_indexes = list()
+        # aux_ones = np.ones((1, self.number_frequencies), dtype=complex)
+
+        for key in self.properties.surface_properties.keys():
+
+            property_label, surface_id = key
+            if property_label == "perforated_plate_model":
+
+                pp_data = self.model.perforated_plate_impedance_data[surface_id]
+                a = pp_data.get("a", 0)
+                b = pp_data.get("b", 0)
+                Z_0 = pp_data.get("Z_0", 0)
+
+                surface_elements = list(self.model.mesh.elements_from_surface[surface_id])
+                all_indexes.extend(surface_elements)
+                surf_connect = self.model.mesh.connectivity_from_surfaces[surface_id]
+
+                for i, el in enumerate(surface_elements):
+
+                    aux_connect[el] = surf_connect[i]
+                    if solution is None:
+                        U_rms = 0
+                    else:
+                        p = solution[surf_connect[i], :]
+                        p2_avg = np.average((1/2)*np.real(p*np.conj(p)), axis=0)
+                        p_rms = np.sqrt(p2_avg)
+                        U_rms = p_rms / Z_0
+
+                    Z_tr = Z_0 * (a + b*U_rms)
+                    surface_data[el] = Z_tr
+
+        if aux_connect:
+            connect = np.array(list(aux_connect.values()), dtype=int)
+
+            if property_label == "perforated_plate_model":
+                from vibra import app
+            #     # element_indexes = np.array(all_indexes)
+            #     # filename = f"connect_data_{property_label}.dat"
+            #     # np.savetxt(filename, np.insert(connect, 0, element_indexes, axis=1), fmt="%i")
+                app().main_window.action_mesh_workspace_callback()
+                app().main_window.set_mesh_selection(faces=all_indexes)
+
+        return connect, surface_data
 
     def get_data_to_process_global_matrices(self, reorder=True):
         """ This method processes the data required to assemble the global matrices. """
@@ -253,12 +302,12 @@ class AcousticAssembler:
         self.data_Cvisc = np.zeros((nel, dofs, dofs), dtype=complex)
         self.data_Qvisc = np.zeros((nel, dofs, dofs), dtype=complex)
 
-        condition_1 = self.model.porous_material_properties
-        condition_2 = self.model.viscous_thermal_model_properties
+        pm_model_active = self.model.porous_material_properties
+        vt_model_active = self.model.viscous_thermal_model_properties
 
         last_progress = 0
 
-        if condition_1 or condition_2:
+        if pm_model_active or vt_model_active:
 
             nf = self.number_frequencies
             aux_ones = np.ones(nf, dtype=complex)
@@ -344,9 +393,10 @@ class AcousticAssembler:
                 self.data_Qvisc[el, :, :] = 0 * ((4 * mu_0) / (3 * rho_0)) * Ke
 
         self.process_indexes()
-        self.get_data_to_process_damping_matrix()
+        self.process_perforated_plate_impedance_data_to_assemble_damping_matrix()
+        self.get_specific_impendace_data_to_process_damping_matrix()
 
-    def get_data_to_process_damping_matrix(self):
+    def get_specific_impendace_data_to_process_damping_matrix(self):
         """
         """
 
@@ -371,6 +421,34 @@ class AcousticAssembler:
                 normalized_matrix_Z = element_2D.matrices_Z(i)
                 for j in range(self.number_frequencies):
                     self.data_Cimp[j][i, :, :] = normalized_matrix_Z / complex_values[0, j]
+
+    def process_perforated_plate_impedance_data_to_assemble_damping_matrix(self, solution: np.ndarray | None = None):
+        """
+        """
+
+        self.data_Zpp = dict()
+        self.ind_rows_Zpp = np.array([])
+        self.ind_cols_Zpp = np.array([])
+
+        _, element_2D = self.get_element()
+        dofs = element_2D.DOFS_PER_ELEMENT
+        self.total_dofs_2d = element_2D.DOFS_PER_NODE * len(element_2D.nodal_coordinates)
+
+        self.pp_connect, surface_data = self.get_perforated_plate_data_for_element_integration(solution)
+        if self.pp_connect is not None:
+
+            nel = self.pp_connect.shape[0]
+            for j in range(self.number_frequencies):
+                self.data_Zpp[j] = np.zeros((nel, dofs, dofs), dtype=complex)
+
+            self.ind_rows_Zpp, self.ind_cols_Zpp = element_2D.generate_ind_rows_cols(self.pp_connect)
+            for i, Z_tr in enumerate(surface_data.values()):
+                if i == 0:
+                    print(Z_tr.reshape(-1, 1))
+
+                normalized_matrix_Z = element_2D.matrices_Z(i)
+                for j in range(self.number_frequencies):
+                    self.data_Zpp[j][i, :, :] = normalized_matrix_Z / Z_tr[j]
 
     def assemble_global_stiffness_matrix(self, index=0):
         """
@@ -404,13 +482,22 @@ class AcousticAssembler:
     def assemble_global_damping_matrix_2d_elements(self, index=0):
         """
         """
-        if self.si_connect is None:
-            _damping_matrix_full = csr_matrix((self.total_dofs_2d, self.total_dofs_2d))
-        else:
-            _damping_matrix_full = csr_matrix((self.data_Cimp[index].flatten(), (self.ind_rows_Z, self.ind_cols_Z)), shape=(self.total_dofs_2d, self.total_dofs_2d))
+        N_dofs = self.total_dofs_2d
 
-        self.damping_matrix = _damping_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-        self.damping_matrix_r = _damping_matrix_full[:, self.prescribed_indexes]
+        if self.si_connect is None:
+            _matrix_full_A = csr_matrix((N_dofs, N_dofs))
+        else:
+            _matrix_full_A = csr_matrix((self.data_Cimp[index].flatten(), (self.ind_rows_Z, self.ind_cols_Z)), shape=(N_dofs, N_dofs))
+
+        if self.pp_connect is None:
+            _matrix_full_B = csr_matrix((N_dofs, N_dofs))
+        else:
+            _matrix_full_B = csr_matrix((self.data_Zpp[index].flatten(), (self.ind_rows_Zpp, self.ind_cols_Zpp)), shape=(N_dofs, N_dofs))
+
+        _matrix_full = _matrix_full_A + _matrix_full_B
+
+        self.damping_matrix = _matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+        self.damping_matrix_r = _matrix_full[:, self.prescribed_indexes]
 
     def get_acoustic_excitations_by_nodal_attribution(self):
         """ This method processes the acoustic model excitations and
