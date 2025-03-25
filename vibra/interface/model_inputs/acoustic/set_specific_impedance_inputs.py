@@ -119,6 +119,9 @@ class SpecificImpedanceInput(QDialog):
             property, surface_id = key
             if property == "specific_impedance":
 
+                if "anechoic_termination" in data.keys():
+                    continue
+
                 if "table_names" in data.keys():
                     str_value = "Table of values"
                 else:
