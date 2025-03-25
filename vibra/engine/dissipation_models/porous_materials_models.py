@@ -22,9 +22,6 @@ class PorousMaterialModels:
 
         self.effective_properties = dict()
 
-    def set_external_model(self, model):
-        self.external_model = model
-
     def process_effective_properties(self, frequencies: np.ndarray):
 
         self.effective_properties = dict()

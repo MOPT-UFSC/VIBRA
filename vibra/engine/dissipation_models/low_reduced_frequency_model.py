@@ -21,10 +21,6 @@ class LowReducedFrequencyModel:
         self.low_reduced_frequency_model = dict()
 
 
-    def set_external_model(self, model):
-        self.external_model = model
-
-
     def get_low_reduced_frequency_model_data(self, modal=False):
         """ """
 
