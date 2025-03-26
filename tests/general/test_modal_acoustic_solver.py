@@ -1,11 +1,12 @@
+import pytest
+
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 
-
+@pytest.mark.skip
 def test_modal_acoustic():
-    return
     path = "data/examples/geometry_files/cilindro.step"
     mesh_setup = dict(
         minimum_element_size=30,

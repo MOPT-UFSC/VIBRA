@@ -1,3 +1,5 @@
+import pytest
+
 from vibra.engine.mesher.element_type import (
     HEXAHEDRON_8,
     HEXAHEDRON_20,
@@ -6,9 +8,8 @@ from vibra.engine.mesher.element_type import (
 )
 from vibra.engine.mesher.mesh import Mesh
 
-
+@pytest.mark.skip
 def test_tetrahedron_4_mesh():
-    return
     path = "data/examples/geometry_files/cilindro.step"
     mesh = Mesh.from_cad(path, element_type=TETRAHEDRON_4)
 
@@ -20,9 +21,8 @@ def test_tetrahedron_4_mesh():
     assert mesh.faces_connectivity.shape[1] == 4 + 3
     assert mesh.solids_connectivity.shape[1] == 4 + 4
 
-
+@pytest.mark.skip
 def test_tetrahedron_10_mesh():
-    return
     path = "data/examples/geometry_files/cilindro.step"
     mesh = Mesh.from_cad(path, element_type=TETRAHEDRON_10)
 
@@ -34,9 +34,8 @@ def test_tetrahedron_10_mesh():
     # assert mesh.faces_connectivity.shape[1] == 4 + 3
     assert mesh.solids_connectivity.shape[1] == 4 + 10
 
-
+@pytest.mark.skip
 def test_hexahedron_8_mesh():
-    return
     path = "data/examples/geometry_files/cilindro.step"
     mesh = Mesh.from_cad(path, element_type=HEXAHEDRON_8)
 
@@ -45,9 +44,8 @@ def test_hexahedron_8_mesh():
     assert mesh.faces_connectivity.shape[1] == 4 + 4
     assert mesh.solids_connectivity.shape[1] == 4 + 8
 
-
+@pytest.mark.skip
 def test_hexahedron_20_mesh():
-    return
     path = "data/examples/geometry_files/cilindro.step"
     mesh = Mesh.from_cad(path, element_type=HEXAHEDRON_20)
 
@@ -56,8 +54,7 @@ def test_hexahedron_20_mesh():
     # assert mesh.faces_connectivity.shape[1] == 4 + 4
     assert mesh.solids_connectivity.shape[1] == 4 + 20
 
-
+@pytest.mark.skip
 def test_structured_mesh():
-    return
     path = "data/examples/geometry_files/cilindro.step"
     # ???
