@@ -56,9 +56,6 @@ class NewSymbolsActor(CommonSymbolsActorVariableSize):
             surface_nodes = mesh.nodes_from_surfaces[surface_id]
             center_coords = np.average(mesh.nodal_coordinates[surface_nodes, 1:], axis=0)
 
-            # TODO: Check the consistency of symbols in pointing outwards of surfaces and volumes
-            center_coords += (1/10) * normal_vector 
-
             orientation = np.average(list(elem_normals.values()), axis=0)
             self.add_normal_surface_velocity_symbol(center_coords, orientation)
 
@@ -98,7 +95,7 @@ class NewSymbolsActor(CommonSymbolsActorVariableSize):
 
     def add_normal_surface_velocity_symbol(self, position, orientation):
         self.add_symbol(
-            "arrow",
+            "outwards_arrow",
             position,
             orientation,
             color=color_names.RED,
