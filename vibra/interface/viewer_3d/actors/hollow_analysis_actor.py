@@ -36,3 +36,7 @@ class HollowAnalysisActor(HollowSolidsActor):
         self.GetMapper().SetScalarModeToUsePointData()
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
+    
+    def configure_appearance(self):
+        super().configure_appearance()
+        self.GetProperty().SetSpecular(0)
