@@ -116,6 +116,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         app().project.thumbnail = self.get_thumbnail()
 
+    def update_hidden_plot(self):
+        self.update_plot(reset_camera=False)
+
     def clear_cache(self):
         logging.info("Clearing animation cache")
         self._animation_cached_data.clear()
