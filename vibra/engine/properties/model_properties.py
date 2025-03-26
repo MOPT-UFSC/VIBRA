@@ -75,14 +75,8 @@ class ModelProperties:
         # self.global_properties["material", "global"] = DEFAULT_MATERIAL
         # self.global_properties["fluid", "global"] = DEFAULT_FLUID
 
-    def get_material(self, **kwargs) -> Material:
-        return self._get_property("material", **kwargs)
-
     def get_fluid(self, **kwargs) -> Fluid:
         return self._get_property("fluid", **kwargs)
-
-    def get_dissipation_model(self, **kwargs):
-        return self._get_property("dissipation_model", **kwargs)
 
     def set_material(self, material: Material, surface=None, volume=None):
         self._set_property("material", material, surface=surface, volume=volume)

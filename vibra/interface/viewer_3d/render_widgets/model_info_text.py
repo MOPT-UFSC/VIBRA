@@ -91,10 +91,10 @@ def material_info_text():
         return text
 
     elif len(volumes) == 1:
-        material = app().project.model.properties.get_material(volume=volumes[0])
+        material = app().project.model.properties._get_property("material", volume=volumes[0])
 
     elif len(surfaces) == 1:
-        material = app().project.model.properties.get_material(surface=surfaces[0])
+        material = app().project.model.properties._get_property("material", surface=surfaces[0])
 
     if material is None:
         return text
@@ -120,10 +120,10 @@ def fluid_info_text():
         return text
 
     elif len(volumes) == 1:
-        fluid = app().project.model.properties.get_fluid(volume=volumes[0])
+        fluid = app().project.model.properties._get_property("fluid", volume=volumes[0])
 
     elif len(surfaces) == 1:
-        fluid = app().project.model.properties.get_fluid(surface=surfaces[0])
+        fluid = app().project.model.properties._get_property("fluid", surface=surfaces[0])
 
     if fluid is None:
         return text
@@ -178,11 +178,13 @@ def perforated_plate_info_text():
         return text
 
     tree = TreeInfo("Perforated plate")
+ 
     tree.add_item("Formulation", pp_model["formulation"].replace("_", " "))
-    tree.add_item("Plate thickness", pp_model["plate_thickness"], "m")
-    tree.add_item("Hole diameter", pp_model["hole_diameter"], "m")
-    tree.add_item("Porosity", pp_model["porosity"], "--")
-    tree.add_item("Discharge coefficient", pp_model["discharge_coefficient"], "--")
+    if pp_model["formulation"] == "circular_hole":
+        tree.add_item("Plate thickness", pp_model["plate_thickness"], "m")
+        tree.add_item("Hole diameter", pp_model["hole_diameter"], "m")
+        tree.add_item("Porosity", pp_model["porosity"], "--")
+        tree.add_item("Discharge coefficient", pp_model["discharge_coefficient"], "--")
 
     text += str(tree)
 
@@ -220,7 +222,7 @@ def acoustic_boundary_conditions_info_text():
 
     if specific_impedance is not None:
         if "anechoic_termination" in specific_impedance.keys():
-            fluid = app().project.model.properties.get_fluid(surface=selected_faces[0])
+            fluid = app().project.model.properties._get_property("fluid", surface=selected_faces[0])
             if isinstance(fluid, Fluid):
                 density = fluid.fluid_density
                 speed_of_sound = fluid.speed_of_sound
@@ -376,7 +378,7 @@ def mesh_material_info_text():
 
     if len(elements) == 1:
         current_solid = app().project.model.mesh.volume_from_element[elements[0]]
-        material = app().project.model.properties.get_material(volume=current_solid)
+        material = app().project.model.properties._get_property("material", volume=current_solid)
         if material is None:
             return text
 
@@ -403,7 +405,7 @@ def mesh_fluid_info_text():
 
     if len(elements) == 1:
         current_solid = app().project.model.mesh.volume_from_element[elements[0]]
-        fluid = app().project.model.properties.get_fluid(volume=current_solid)
+        fluid = app().project.model.properties._get_property("fluid", volume=current_solid)
         if fluid is None:
             return text
 
