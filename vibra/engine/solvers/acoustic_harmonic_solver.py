@@ -2,6 +2,10 @@
 from vibra.utils.progress_status import ProgressStatus
 from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
+
 import logging
 import numpy as np
 
@@ -11,10 +15,10 @@ from pypardiso.pardiso_wrapper import Matrix_type
 
 
 class AcousticHarmonicSolver:
-    def __init__(self, assembler, analysis_data=None):
-        #
+    def __init__(self, assembler: "AcousticAssembler", analysis_data=None):
+
         self.assembler = assembler
-        #
+
         self.reset_variables()
         self.load_analysis_data(analysis_data)
 

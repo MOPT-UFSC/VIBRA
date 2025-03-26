@@ -2,6 +2,10 @@
 from vibra.engine.solvers.linear_solver import initialize_solver, SolverType
 from vibra.utils.progress_status import ProgressStatus
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+
 import logging
 import numpy as np
 
@@ -10,7 +14,7 @@ from functools import cache
 
 
 class StructuralHarmonicSolver:
-    def __init__(self, assembler, analysis_data=None):
+    def __init__(self, assembler: "StructuralAssembler", analysis_data=None):
 
         self.assembler = assembler
 
