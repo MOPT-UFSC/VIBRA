@@ -1,3 +1,5 @@
+import pytest
+
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.element_type import *
@@ -10,9 +12,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from time import time
 
+@pytest.mark.skip
 def test_load_external_mesh_and_solve(reorder_nodes=False):
-    return
-
     # Define the nodal coordinates and connectivity file path
     nodal_coordinates = np.loadtxt("data/examples/mesh/muffler/coord_muff.csv", delimiter=",")
     connectivity = np.loadtxt("data/examples/mesh/muffler/connect_muff.csv", delimiter=",", dtype=int)
