@@ -493,7 +493,7 @@ def analysis_info_text(frequency_index: int):
             frequencies = project.structural_modal_solver.natural_frequencies
 
         if project.last_analysis == "Modal Acoustic":
-            if project.acoustic_modal_solver.complex_natural_frequencies != np.ndarray([]):
+            if len(project.acoustic_modal_solver.complex_natural_frequencies):
                 frequencies = list(project.acoustic_modal_solver.complex_natural_frequencies)
             else:
                 frequencies = list(project.acoustic_modal_solver.natural_frequencies)
@@ -513,7 +513,7 @@ def analysis_info_text(frequency_index: int):
         mode = frequency_index + 1
         tree.add_item("Mode", mode)
 
-        if project.last_analysis == "Modal Acoustic" and project.acoustic_modal_solver.complex_natural_frequencies != np.ndarray([]):
+        if project.last_analysis == "Modal Acoustic" and isinstance(frequencies[0], complex):
             value = frequencies[frequency_index]
             damping_ratio = -np.real(value) / np.abs(value)
             damped_frequency = np.abs(value) * np.sqrt(1 - damping_ratio**2)
