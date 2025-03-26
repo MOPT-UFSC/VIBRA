@@ -145,6 +145,7 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.update()
 
         app().project.thumbnail = self.get_thumbnail()
+        app().project.thumbnail.show()
 
     def visualization_changed_callback(self):
         if not self.actors_exists():
