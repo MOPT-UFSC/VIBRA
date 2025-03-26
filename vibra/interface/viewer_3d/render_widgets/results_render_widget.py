@@ -4,6 +4,7 @@ import numpy as np
 
 from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import AnimatedRenderWidget
+from molde.utils import TreeInfo
 from PySide6.QtWidgets import QFileDialog
 from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import vtkPointData
@@ -25,6 +26,10 @@ from ..actors import (
     GhostActor,
     HollowAnalysisActor,
     SectionPlaneActor,
+)
+
+from .model_info_text import (
+    analysis_info_text,
 )
 
 # Just for type hints
@@ -50,6 +55,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self._animation_cached_data = dict()
         self.min_value = 0
         self.max_value = 0
+        self.frequency_index = None
+        self.mode_index = None
 
         self.remove_all_actors()
         self.create_axes()
@@ -122,6 +129,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         app().project.thumbnail = self.get_thumbnail()
 
+        self.update_info_text()
+        self.update_colorbar_unit()
+    
+
     def clear_cache(self):
         logging.info("Clearing animation cache")
         self._animation_cached_data.clear()
@@ -151,7 +162,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self._animation_cached_data[frame] = (
             point_data,
             point_position,
-        )
+        )        
 
     def update_animation(self, frame):
         if self.current_analysis == "":
@@ -193,12 +204,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         elif self.current_analysis == "structural_modal":
             analysis_widget = app().main_window.results_viewer_widget.plot_structural_modal
-            mode_index = analysis_widget.current_mode_index()
+            self.mode_index = analysis_widget.current_mode_index()
             displacement_type = analysis_widget.get_plot_type()
 
             data = compute_structural_modal_field(
                 app().project.structural_modal_solver,
-                mode_index,
+                self.mode_index,
                 phase,
                 displacement_type,
             )
@@ -209,12 +220,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         elif self.current_analysis == "structural_harmonic":
             analysis_widget = app().main_window.results_viewer_widget.plot_structural_harmonic
-            frequency_index = analysis_widget.current_frequency_index()
+            self.frequency_index = analysis_widget.current_frequency_index()
             displacement_type = analysis_widget.get_plot_type()
 
             data = compute_structural_harmonic_field(
                 app().project.structural_harmonic_solver,
-                frequency_index,
+                self.frequency_index,
                 phase,
                 displacement_type,
             )
@@ -225,12 +236,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         elif self.current_analysis == "acoustic_modal":
             analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_modal
-            mode_index = analysis_widget.current_mode_index()
+            self.mode_index = analysis_widget.current_mode_index()
             plot_type = analysis_widget.get_plot_type()
             
             data = compute_acoustic_modal_field(
                 app().project.acoustic_modal_solver,
-                mode_index,
+                self.mode_index,
                 phase,
                 plot_type,
             )
@@ -244,12 +255,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         elif self.current_analysis == "acoustic_harmonic":
             analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_harmonic
-            frequency_index = analysis_widget.current_frequency_index()
+            self.frequency_index = analysis_widget.current_frequency_index()
             plot_type = analysis_widget.get_plot_type()
 
             data = compute_acoustic_harmonic_field(
                 app().project.acoustic_harmonic_solver,
-                frequency_index,
+                self.frequency_index,
                 phase,
                 plot_type,
             )
@@ -365,3 +376,43 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
+
+    def update_info_text(self):
+        text = ""
+        if self.current_analysis == "" or (self.frequency_index is None and self.mode_index is None):
+            return
+
+        if self.current_analysis in ["structural_harmonic", "acoustic_harmonic"]:
+            text += analysis_info_text(self.frequency_index + 1)  
+
+        if self.current_analysis in ["structural_modal", "acoustic_modal"]:
+            text += analysis_info_text(self.mode_index)
+
+        self.set_info_text(text)
+        self.update()
+
+    def update_colorbar_unit(self):
+        if self.current_analysis == "":
+            return
+        
+        unit = {
+            "structural_modal": "--", 
+            "structural_harmonic": "m",
+            "acoustic_modal": "--",
+            "acoustic_harmonic": "Pa",
+        }
+        
+        self.colorbar_actor.SetTitle(f"Unit: [{unit[self.current_analysis]}]")
+        self.update()
+
+    def update_renderer_font_size(self):
+        user_preferences = app().config.user_preferences
+        font_size_px = int(user_preferences.renderer_font_size * 4 / 3)
+
+        info_text_property = self.text_actor.GetTextProperty()
+        info_text_property.SetFontSize(font_size_px)
+
+        scale_bar_title_property = self.scale_bar_actor.GetLegendTitleProperty()
+        scale_bar_label_property = self.scale_bar_actor.GetLegendLabelProperty()
+        scale_bar_title_property.SetFontSize(font_size_px)
+        scale_bar_label_property.SetFontSize(font_size_px)
