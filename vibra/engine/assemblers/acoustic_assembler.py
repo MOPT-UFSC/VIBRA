@@ -277,13 +277,13 @@ class AcousticAssembler:
         if aux_connect:
             connect = np.array(list(aux_connect.values()), dtype=int)
 
-            if property_label == "perforated_plate_model":
-                from vibra import app
-            #     # element_indexes = np.array(all_indexes)
-            #     # filename = f"connect_data_{property_label}.dat"
-            #     # np.savetxt(filename, np.insert(connect, 0, element_indexes, axis=1), fmt="%i")
-                app().main_window.action_mesh_workspace_callback()
-                app().main_window.set_mesh_selection(faces=all_indexes)
+            # if property_label == "perforated_plate_model":
+            #     from vibra import app
+            # #     # element_indexes = np.array(all_indexes)
+            # #     # filename = f"connect_data_{property_label}.dat"
+            # #     # np.savetxt(filename, np.insert(connect, 0, element_indexes, axis=1), fmt="%i")
+            #     app().main_window.action_mesh_workspace_callback()
+            #     app().main_window.set_mesh_selection(faces=all_indexes)
 
         return connect, surface_data
 
