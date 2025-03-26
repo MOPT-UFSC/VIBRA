@@ -164,6 +164,30 @@ def porous_material_info_text():
 
     return text
 
+def perforated_plate_info_text():
+    surfaces = list(app().main_window.selected_geometry_surfaces)
+    text = ""
+
+    if len(surfaces) != 1:
+        return text
+
+    pp_model = app().project.model.properties._get_property(
+        "perforated_plate_model", surface=surfaces[0]
+    )
+    if pp_model is None:
+        return text
+
+    tree = TreeInfo("Perforated plate")
+    tree.add_item("Formulation", pp_model["formulation"].replace("_", " "))
+    tree.add_item("Plate thickness", pp_model["plate_thickness"], "m")
+    tree.add_item("Hole diameter", pp_model["hole_diameter"], "m")
+    tree.add_item("Porosity", pp_model["porosity"], "--")
+    tree.add_item("Discharge coefficient", pp_model["discharge_coefficient"], "--")
+
+    text += str(tree)
+
+    return text
+
 def acoustic_boundary_conditions_info_text():
     text = ""
     selected_faces = list(app().main_window.selected_geometry_surfaces)

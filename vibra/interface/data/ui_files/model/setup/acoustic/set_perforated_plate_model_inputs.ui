@@ -55,7 +55,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Perforate plate model setup</string>
+         <string>Perforated plate model setup</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
