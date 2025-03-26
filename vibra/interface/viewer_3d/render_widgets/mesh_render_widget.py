@@ -21,6 +21,17 @@ from ..actors.solids_actor import SolidsActor
 from ..actors.symbols.symbols_actor import SymbolsActor
 from ..selection.mesh_selection import MeshSelection
 
+from .model_info_text import (
+    nodes_info_text,
+    mesh_faces_info_text,
+    mesh_faces_info_text,
+    mesh_solids_info_text,
+    mesh_material_info_text,
+    mesh_fluid_info_text,
+    mesh_structural_boundary_conditions_info_text,
+    mesh_structural_format, 
+)
+
 
 class MeshRenderWidget(CommonRenderWidget):
     selection_changed = Signal(list, list, list)
@@ -329,198 +340,13 @@ class MeshRenderWidget(CommonRenderWidget):
 
     def update_info_text(self):
         text = ""
-        text += self._nodes_info_text()
-        text += self._faces_info_text()
-        text += self._solids_info_text()
-        # text += self._material_info_text()
-        # text += self._fluid_info_text()
-        text += self._structural_boundary_conditions_info_text()
+        text += nodes_info_text()
+        text += mesh_faces_info_text()
+        text += mesh_solids_info_text()
+        # text += mesh_material_info_text()
+        # text += mesh_fluid_info_text()
+        text += mesh_structural_boundary_conditions_info_text()
 
         self.set_info_text(text)
         self.update()
 
-    def _nodes_info_text(self):
-        nodes = list(app().main_window.selected_mesh_nodes)
-        text = ""
-        if len(nodes) > 1:
-            text += f"{len(nodes)} nodes in selection\n{format_long_sequence(nodes)}\n\n"
-        elif len(nodes) == 1:
-            text += f"Node: {nodes[0]}\n"
-            coords = app().project.model.mesh.nodal_coordinates[nodes[0], 1:]
-            text += f"Coordinates: [{round(coords[0], 6)}, {round(coords[1], 6)}, {round(coords[2], 6)}] (m)\n\n"
-
-        return text
-
-    def _faces_info_text(self):
-        faces = list(app().main_window.selected_mesh_faces)
-        text = ""
-        if len(faces) > 1:
-            text += f"{len(faces)} faces in selection\n{format_long_sequence(faces)}\n\n"
-        elif len(faces) == 1:
-            text += f"Face element: {faces[0]}\n\n"
-
-        return text
-
-    def _solids_info_text(self):
-        solids_elem_ids = list(app().main_window.selected_mesh_solids)
-        text = ""
-        if len(solids_elem_ids) > 1:
-            text += (
-                f"{len(solids_elem_ids)} solids in selection\n"
-                f"{format_long_sequence(solids_elem_ids)}\n\n"
-            )
-        elif len(solids_elem_ids) == 1:
-            element_id = solids_elem_ids[0]
-            connect = app().project.model.mesh.solids_connectivity[element_id, 4:]
-            text += f"Solid element: {element_id}\n"
-            text += f"Connectivity: {[int(node_id) for node_id in connect]}\n\n"
-
-        return text
-
-    def _material_info_text(self):
-        elements = list(app().main_window.selected_mesh_faces)
-        text = ""
-
-        if not elements:
-            elements = list(app().main_window.selected_mesh_solids)
-
-        if len(elements) == 1:
-            current_solid = app().project.model.mesh.volume_from_element[elements[0]]
-            material = app().project.model.properties.get_material(volume=current_solid)
-            if material is None:
-                return text
-
-            tree = TreeInfo("Material")
-            tree.add_item("Name", material.name)
-            tree.add_item("Identifier", material.identifier)
-            tree.add_item("Density", material.density, "kg/m³")
-            tree.add_item("Young Modulus", material.elasticity_modulus / 1e9, "GPa")
-            tree.add_item("Poisson Ratio", material.poisson_ratio, "--")
-            tree.add_item(
-                "Thermal Expasion Coefficient", material.thermal_expansion_coefficient, "1/K"
-            )
-
-            text += str(tree)
-
-        return text
-
-    def _fluid_info_text(self):
-        elements = list(app().main_window.selected_mesh_faces)
-        text = ""
-
-        if not elements:
-            elements = list(app().main_window.selected_mesh_solids)
-
-        if len(elements) == 1:
-            current_solid = app().project.model.mesh.volume_from_element[elements[0]]
-            fluid = app().project.model.properties.get_fluid(volume=current_solid)
-            if fluid is None:
-                return text
-
-            tree = TreeInfo("Fluid")
-            tree.add_item("Name", fluid.name)
-            tree.add_item("Identifier", fluid.identifier)
-            tree.add_item("Pressure", fluid.pressure, "Pa")
-            tree.add_item("Temperature", fluid.temperature, "K")
-            tree.add_item("Density", fluid.fluid_density, "kg/m³")
-            tree.add_item("Speed of sound", fluid.speed_of_sound, "m/s")
-            tree.add_item("Molar mass", fluid.molar_mass, "kg/kmol")
-
-            text += str(tree)
-
-        return text
-
-    def _structural_boundary_conditions_info_text(self):
-        text = ""
-        selected_nodes = list(app().main_window.selected_mesh_nodes)
-
-        if len(selected_nodes) != 1:
-            return text
-
-        prescribed_dofs = app().project.model.properties._get_property(
-            "prescribed_dofs", node=selected_nodes[0]
-        )
-        nodal_loads = app().project.model.properties._get_property(
-            "nodal_loads", node=selected_nodes[0]
-        )
-        boundary_conditions_list = [prescribed_dofs, nodal_loads]
-
-        if all(condition is None for condition in boundary_conditions_list):
-            return text
-
-        if prescribed_dofs is not None:
-            values = prescribed_dofs["values"]
-            loaded_table = "table_names" in prescribed_dofs.keys()
-            text += _structural_format(
-                "Prescribed dofs", values, ("u", "r"), ("m", "rad"), loaded_table
-            )
-
-        if nodal_loads is not None:
-            values = nodal_loads["values"]
-            loaded_table = "table_names" in nodal_loads.keys()
-            text += _structural_format(
-                "Nodal loads", values, ("F", "M"), ("N", "N.m"), loaded_table
-            )
-
-        return text
-
-
-def _all_none(sequence) -> bool:
-    return all(i is None for i in sequence)
-
-
-def _structural_format(property_name, values, labels, units, has_table):
-    if _all_none(values):
-        return ""
-
-    u_values = list()
-    u_labels = list()
-    for val, label in zip(values[:3], "xyz"):
-        if val is None:
-            continue
-
-        if not isinstance(val, Number | complex | str):
-            val = "table"
-
-        u_values.append(val)
-        u_labels.append(labels[0] + label)
-
-    r_values = list()
-    r_labels = list()
-    for val, label in zip(values[3:], "xyz"):
-        if val is None:
-            continue
-
-        if not isinstance(val, Number | complex | str):
-            val = "table"
-
-        r_values.append(val)
-        r_labels.append(labels[1] + label)
-
-    tree = TreeInfo(property_name)
-    if has_table:
-        if u_values:
-            tree.add_item(", ".join(u_labels), "Table of values")
-        if r_values:
-            tree.add_item(", ".join(r_labels), "Table of values")
-
-    else:
-        if u_values:
-            tree.add_item(", ".join(u_labels), u_values, units[0])
-        if r_values:
-            tree.add_item(", ".join(r_labels), r_values, units[1])
-
-    return str(tree)
-
-
-def _acoustic_format(property_name, value, label, unit, additional_labels=[]):
-    tree = TreeInfo(property_name)
-    if isinstance(value, Number | str | float | complex):
-        tree.add_item(label, np.round(value, 4), unit)
-    else:
-        tree.add_item(label, "Table of values")
-
-    if len(additional_labels) == 2:
-        tree.add_item(additional_labels[0], additional_labels[1])
-
-    return str(tree)
