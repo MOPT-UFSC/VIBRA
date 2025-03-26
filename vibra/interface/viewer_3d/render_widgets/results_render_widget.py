@@ -106,6 +106,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         with self.update_lock:
             self.update_theme()
+            self.visualization_changed_callback()
             self.update_section_plane()
             self.update_color_and_deformation()
 
