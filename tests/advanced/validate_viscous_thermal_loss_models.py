@@ -8,7 +8,6 @@ from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 
 import os
-import pytest
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,9 +17,7 @@ from openpyxl import load_workbook
 
 from time import time
 
-@pytest.mark.slow
 def load_external_mesh_and_solve():
-    # return
 
     # start decoding the Ansys script file (ds.dat file or input file)
     mesh_path = "data/validation/viscous_thermal_loss/mesh/ds_viscous_thermal_reference_geometry.dat"
