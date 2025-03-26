@@ -890,17 +890,7 @@
                    </item>
                    <item>
                     <property name="text">
-                     <string>Initial Mesh Only</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
                      <string>Frontal-Delaunay</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>MMG3D</string>
                     </property>
                    </item>
                    <item>
@@ -1073,7 +1063,7 @@
             </attribute>
             <column>
              <property name="text">
-              <string>Refining mesh size [mm]</string>
+              <string>Element size [mm]</string>
              </property>
              <property name="textAlignment">
               <set>AlignCenter</set>
