@@ -122,7 +122,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         else:
             self.update()
 
-        app().project.thumbnail = self.get_thumbnail()
+        if self.isVisible():
+            app().project.thumbnail = self.get_thumbnail()
 
     def update_hidden_plot(self):
         self.update_info_text()

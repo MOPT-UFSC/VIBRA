@@ -155,11 +155,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         else:
             self.update()
 
-        image = self.get_screenshot()
-        image.thumbnail((512, 512))
-        app().project.thumbnail = image
-
-        # app().project.thumbnail = self.get_thumbnail()
+        if self.isVisible():
+            app().project.thumbnail = self.get_thumbnail()
 
     def visualization_changed_callback(self):
         if not self.actors_exists():
