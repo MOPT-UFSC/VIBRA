@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>540</width>
-    <height>560</height>
+    <width>520</width>
+    <height>534</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -152,16 +152,6 @@
            <item>
             <property name="text">
              <string>Hexahedral</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Triangular</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Quadrangular</string>
             </property>
            </item>
           </widget>
@@ -742,7 +732,7 @@
                     </font>
                    </property>
                    <property name="text">
-                    <string>3D algoithm:</string>
+                    <string>3D algorithm:</string>
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -796,7 +786,7 @@
                     </font>
                    </property>
                    <property name="text">
-                    <string>2D algoithm:</string>
+                    <string>2D algorithm:</string>
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
