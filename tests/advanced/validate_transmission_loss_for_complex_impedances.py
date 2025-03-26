@@ -107,10 +107,10 @@ def load_external_mesh_and_solve():
     model.generated_mesh = True
 
     for vol_id in [1]:
-        model.set_fluid(fluid, volume=vol_id)
+        model.properties._set_property("fluid", fluid, volume=vol_id)
 
-    model.set_fluid(fluid, surface=1)
-    model.set_fluid(fluid, surface=2)
+    model.properties._set_property("fluid", fluid, surface=1)
+    model.properties._set_property("fluid", fluid, surface=2)
 
     # Normal surface velocity data
     data_Vn = { "real_values" : [1],
@@ -654,7 +654,7 @@ def process_external_TL(model):
                     speed_of_sound = C_eff_tv
 
                 else:
-                    fluid = model.properties.get_fluid(surface=input_surface_id)
+                    fluid = model.properties._get_property("fluid", surface=input_surface_id)
                     density = fluid.fluid_density
                     speed_of_sound = fluid.speed_of_sound
 

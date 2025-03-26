@@ -1,5 +1,6 @@
-from vibra import app
-from vibra.interface.loading_bar import load_function
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.model import Model
 
 import numpy as np
 from scipy.special import jv
@@ -9,16 +10,13 @@ from scipy.special import jv
 
 class ViscousThermalLossModels:
 
-    def __init__(self, model):
+    def __init__(self, model: "Model"):
         super().__init__()
 
         self.model = model
         self.properties = model.properties
 
         self.effective_properties = dict()
-
-    def set_external_model(self, model):
-        self.external_model = model
 
     def process_effective_properties(self, frequencies: np.ndarray):
 
@@ -35,7 +33,7 @@ class ViscousThermalLossModels:
             if property == "viscous_thermal_model":
 
                 # surfaces_from_volume = self.project.model.mesh.surfaces_from_volumes[volume_id]
-                fluid = self.properties.get_fluid(volume = volume_id)
+                fluid = self.properties._get_property("fluid", volume = volume_id)
 
                 if data["section_type"] in ["Rectangular duct", "Quadrangular duct"]:
                     rho_eff, C_eff = self.get_rectangular_section_effective_properties(omega, fluid, data)

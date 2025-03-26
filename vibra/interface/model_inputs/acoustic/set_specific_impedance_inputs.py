@@ -119,6 +119,9 @@ class SpecificImpedanceInput(QDialog):
             property, surface_id = key
             if property == "specific_impedance":
 
+                if "anechoic_termination" in data.keys():
+                    continue
+
                 if "table_names" in data.keys():
                     str_value = "Table of values"
                 else:
@@ -397,9 +400,12 @@ class SpecificImpedanceInput(QDialog):
     def remove_callback(self):
 
         if self.lineEdit_selection_id.text() != "":
-
             surface_id = int(self.lineEdit_selection_id.text())
             self.remove_table_files_from_surfaces(surface_id)
+
+            data = self.properties._get_property("specific_impedance", surface=surface_id)
+            if "anechoic_termination" in data.keys():
+                return
 
             self.properties._remove_surface_property("specific_impedance", surface_id)
             self.actions_to_finalize()
@@ -422,12 +428,14 @@ class SpecificImpedanceInput(QDialog):
             surface_ids = list()
             for (property, *args), data in self.properties.surface_properties.items():
                 if property == "specific_impedance":
-                    surface_id = args[0]
-                    surface_ids.append(surface_id)
+                    if "anechoic_termination" in data.keys():
+                        continue
+                    surface_ids.append(args[0])
 
             self.remove_table_files_from_surfaces(surface_ids)
+            for surface_id in surface_ids:
+                self.properties._remove_surface_property("specific_impedance", surface_id)
 
-            self.properties._reset_property("specific_impedance")
             self.actions_to_finalize()
 
     def actions_to_finalize(self):

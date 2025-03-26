@@ -42,20 +42,22 @@ class NewSymbolsActor(CommonSymbolsActorVariableSize):
     def _build_surface_velocity(self):
         mesh = app().project.model.mesh
         surface_properties = app().project.model.properties.surface_properties
-        orientation = np.array([1, 0, 0], dtype=float)
 
         for (property_name, surface_id), data in surface_properties.items():
             if property_name != "surface_velocity":
                 continue
 
-            surface_nodes = mesh.nodes_from_surfaces[surface_id]
-            nodal_coords = mesh.nodal_coordinates[surface_nodes, 1:]
+            elem_normals = dict()
+            for elem_id in mesh.elements_from_surface[surface_id]:
+                connect = mesh.faces_connectivity[elem_id, 4:]
+                normal_vector = mesh.get_element_face_normal(connect)
+                elem_normals[elem_id] = normal_vector
 
-            for coords in nodal_coords:
-                # I am not sure if this name is adequate.
-                # We may either rename the function or
-                # use different symbols for each velocity condition
-                self.add_volume_velocity_symbol(coords, orientation)
+            surface_nodes = mesh.nodes_from_surfaces[surface_id]
+            center_coords = np.average(mesh.nodal_coordinates[surface_nodes, 1:], axis=0)
+
+            orientation = np.average(list(elem_normals.values()), axis=0)
+            self.add_normal_surface_velocity_symbol(center_coords, orientation)
 
     def _build_nodal_normals(self):
         mesh = app().project.model.mesh
@@ -91,9 +93,9 @@ class NewSymbolsActor(CommonSymbolsActorVariableSize):
             scale=0.4,
         )
 
-    def add_volume_velocity_symbol(self, position, orientation):
+    def add_normal_surface_velocity_symbol(self, position, orientation):
         self.add_symbol(
-            "long_arrow",
+            "outwards_arrow",
             position,
             orientation,
             color=color_names.RED,

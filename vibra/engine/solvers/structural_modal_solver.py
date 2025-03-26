@@ -2,15 +2,19 @@
 from vibra.engine.solvers.linear_solver import initialize_solver, SolverType
 from vibra.utils.progress_status import ProgressStatus
 
-import logging
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 
+import logging
 import numpy as np
+
 from functools import cache
 from scipy.sparse.linalg import eigs
 
 
 class StructuralModalSolver:
-    def __init__(self, assembler, analysis_data=None):
+    def __init__(self, assembler: "StructuralAssembler", analysis_data=None):
 
         self.assembler = assembler
 
