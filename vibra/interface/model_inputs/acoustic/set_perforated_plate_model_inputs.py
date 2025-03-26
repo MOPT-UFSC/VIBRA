@@ -265,6 +265,36 @@ class SetPerforatedPlateModelInputs(QDialog):
             self.lineEdit_selection_id.setText(text)
             self.comboBox_attribution_type.setCurrentIndex(1)
 
+            if len(faces) == 1:
+                surface_id = list(faces)[0]
+                pp_data = self.properties._get_property("perforated_plate_model", surface=surface_id)
+                if pp_data is None:
+                    return
+
+                self.load_perforated_plate_inputs(pp_data)
+
+    def load_perforated_plate_inputs(self, data: dict):
+
+        formulation = data.get("formulation")
+        if formulation == "circular_hole":
+            self.tabWidget_perforated_plate_models.setCurrentIndex(0)
+        
+        t_p = data.get("plate_thickness")
+        if isinstance(t_p, float | int):
+            self.lineEdit_plate_thickness.setText(str(t_p))
+
+        d_h = data.get("hole_diameter")
+        if isinstance(t_p, float | int):
+            self.lineEdit_hole_diameter.setText(str(d_h))
+            
+        sigma = data.get("porosity")
+        if isinstance(t_p, float | int):
+            self.lineEdit_porosity.setText(str(sigma))
+
+        C_d = data.get("discharge_coefficient")
+        if isinstance(t_p, float | int):
+            self.lineEdit_discharge_coefficient.setText(str(C_d))
+
     def get_inputs_for_perforated_plate_with_circular_holes(self):
 
         if self.tabWidget_perforated_plate_models.currentIndex() != 0:
