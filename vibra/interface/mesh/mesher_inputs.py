@@ -18,6 +18,10 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
+algorithms_2d = { 2 : 1, 1 : 0, 3 : 2, 5 : 3, 6 : 4, 11 : 5}
+algorithms_3d = { 1 : 0, 3 : 1, 4 : 2, 7 : 3, 10 : 4}
+
+
 class MesherInputs(QDialog):
     def __init__(self, **kwargs):
         super().__init__()
@@ -37,7 +41,9 @@ class MesherInputs(QDialog):
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
+        self._config_widgets()
 
+        self.update_gmsh_controls()
         self._load_current_mesh_setup()
 
         while self.keep_window_open:
@@ -62,6 +68,12 @@ class MesherInputs(QDialog):
         # QComboBox
         self.comboBox_element_type: QComboBox
         self.comboBox_shape_function: QComboBox
+        self.comboBox_2d_algorithm: QComboBox
+        self.comboBox_3d_algorithm: QComboBox
+        self.comboBox_recombination_algorithm: QComboBox
+        self.comboBox_subdivision_algorithm: QComboBox
+        self.comboBox_recombine_all: QComboBox
+        self.comboBox_second_order_incomplete: QComboBox
 
         # QDoubleSpinBox
         self.doubleSpinBox_maximum_element_size: QDoubleSpinBox
@@ -85,10 +97,18 @@ class MesherInputs(QDialog):
 
         # QTableWidget
         self.tableWidget_refining_mesh_data: QTableWidget
-        self._config_tableWidget_appearance()
 
-    def _config_tableWidget_appearance(self):
+    def _config_widgets(self):
 
+        #
+        self.comboBox_2d_algorithm.setDisabled(True)
+        self.comboBox_2d_algorithm.setDisabled(True)
+        self.comboBox_recombination_algorithm.setDisabled(True)
+        self.comboBox_subdivision_algorithm.setDisabled(True)
+        self.comboBox_second_order_incomplete.setDisabled(True)
+        self.comboBox_recombine_all.setDisabled(True)
+
+        #
         widths = [180, 160, 180]
         header = ["Refining mesh size [mm]", "Selection type", "Selection IDs"]
 
@@ -102,6 +122,9 @@ class MesherInputs(QDialog):
         self.tableWidget_refining_mesh_data.horizontalHeader().setStretchLastSection(True)
 
     def _create_connections(self):
+        #
+        self.comboBox_shape_function.currentIndexChanged.connect(self.update_gmsh_controls)
+        self.comboBox_element_type.currentIndexChanged.connect(self.update_gmsh_controls)
         #
         self.pushButton_add.clicked.connect(self.add_button_callback)
         self.pushButton_exit.clicked.connect(self.close)
@@ -228,6 +251,10 @@ class MesherInputs(QDialog):
                 size_factor = minimum_element_size / maximum_element_size
                 mesh_refinement_parameters = mesh_setup["mesh_refinement_parameters"]
                 mesh_connection = mesh_setup["mesh_connection"]
+
+                algorithm_3d = mesh_setup.get("algorithm_3d")
+                if algorithm_3d is not None:
+                    self.comboBox_3d_algorithm.setCurrentIndex(algorithms_3d[algorithm_3d])
 
                 self.update_element_type(element_type)
                 
@@ -359,20 +386,14 @@ class MesherInputs(QDialog):
         if self.stop:
             lineEdit.setFocus()
             return True
-
-        _element_type = self.comboBox_element_type.currentText()
-        _shape_function = self.comboBox_shape_function.currentText()
-
-        if _element_type == " Tetrahedral" and _shape_function == " Linear":
-            solid_element = TETRAHEDRON_4
-        elif _element_type == " Tetrahedral" and _shape_function == " Quadratic":
-            solid_element = TETRAHEDRON_10
-        elif _element_type == " Hexahedral" and _shape_function == " Linear":
-            solid_element = HEXAHEDRON_8
-        elif _element_type == " Hexahedral" and _shape_function == " Quadratic":
-            solid_element = HEXAHEDRON_20
-        else:
-            raise NotImplementedError(f"Element type not defined!")
+        
+        solid_element = self.get_element_type()
+        if solid_element is None:
+            return True
+        
+        algorithms_3d = { 0 : 1, 1 : 3, 2 : 4, 3 : 7, 4 : 10}
+        alg3d_index = self.comboBox_3d_algorithm.currentIndex()
+        solid_element.algorithm_3d = algorithms_3d[alg3d_index]
 
         connected_mesh = self.checkBox_mesh_connection.isChecked()
         self.mesh_setup = { 
@@ -386,15 +407,47 @@ class MesherInputs(QDialog):
                            }
 
         self.file_mesh_setup = { 
-                                "element_type" : _element_type,
-                                "shape_function" : _shape_function,
+                                "element_type" : self.comboBox_element_type.currentText(),
+                                "shape_function" : self.comboBox_shape_function.currentText(),
                                 "geometry_tolerance" : geometry_tolerance,
                                 "size_factor" : 0,
                                 "minimum_element_size" : min_factor*maximum_element_size,
                                 "maximum_element_size" : maximum_element_size,
+                                "algorithm_3d" : solid_element.algorithm_3d,
                                 "mesh_refinement_parameters" : self.get_mesh_refinement_data(),
                                 "mesh_connection" : connected_mesh
                                 }
+        
+    def get_element_type(self) -> ElementType:
+
+        _element_type = self.comboBox_element_type.currentText()
+        _shape_function = self.comboBox_shape_function.currentText()
+
+        if _element_type == "Tetrahedral" and _shape_function == "Linear":
+            return TETRAHEDRON_4
+        elif _element_type == "Tetrahedral" and _shape_function == "Quadratic":
+            return TETRAHEDRON_10
+        elif _element_type == "Hexahedral" and _shape_function == "Linear":
+            return HEXAHEDRON_8
+        elif _element_type == "Hexahedral" and _shape_function == "Quadratic":
+            return HEXAHEDRON_20
+        else:
+            return None
+            # raise NotImplementedError(f"Element type not defined!")
+
+    def update_gmsh_controls(self):
+
+        element_type = self.get_element_type()
+        if element_type is None:
+            return
+
+        self.comboBox_2d_algorithm.setCurrentIndex(algorithms_2d[element_type.algorithm_2d])
+        self.comboBox_3d_algorithm.setCurrentIndex(algorithms_3d[element_type.algorithm_3d])
+
+        self.comboBox_recombination_algorithm.setCurrentIndex(element_type.recombination_algorithm)
+        self.comboBox_subdivision_algorithm.setCurrentIndex(element_type.subdivision_algorithm)
+        self.comboBox_recombine_all.setCurrentIndex(int(element_type.recombine_all))
+        self.comboBox_second_order_incomplete.setCurrentIndex(int(element_type.second_order_incomplete))
 
     def check_inputs(self, lineEdit, label, only_positive=True, zero_included=False, _float=True):
 

@@ -335,10 +335,10 @@ class Mesh:
 
     def _configure_mesh(
                         self,
-                        element_type,
-                        minimum_element_size,
-                        maximum_element_size,
-                        size_factor,
+                        element_type : ElementType,
+                        minimum_element_size: float,
+                        maximum_element_size: float,
+                        size_factor: float,
                         refinement_parameters = list()
                         ):
 
