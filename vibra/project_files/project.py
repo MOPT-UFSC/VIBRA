@@ -1,6 +1,3 @@
-import logging
-from pathlib import Path
-from time import sleep, time
 
 from vibra import app
 from vibra.engine.model import Model
@@ -17,7 +14,9 @@ from vibra.interface.mesh.mesher_inputs import MesherInputs
 from vibra.interface.loading_bar import load_function
 from vibra.utils.progress_status import ProgressStatus
 
-import numpy as np
+import logging
+from time import sleep, time
+
 
 class Project:
     def __init__(self):
@@ -87,12 +86,6 @@ class Project:
         self.model.set_geometry_path(path)
         logging.info(f"Importing geometry file...")
         return self.model.process_visual_geometry_mesh(path)
-
-    def set_fluid(self, fluid, **kwargs):
-        self.model.set_fluid(fluid, **kwargs)
-
-    def set_material(self, material, **kwargs):
-        self.model.set_material(material, **kwargs)
 
     def set_mesh_setup(self, mesh_setup):
         self.model.set_mesh_setup(mesh_setup)

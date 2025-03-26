@@ -30,7 +30,7 @@ class PerforatedPlateModels:
             property, surface_id = key
             if property == "perforated_plate_model":
 
-                fluid = self.properties.get_fluid(surface = surface_id)
+                fluid = self.properties._get_property("fluid", surface = surface_id)
                 if data["formulation"] == "circular_hole":
                     a, b, Z_0 = self.get_transfer_impedance_for_circular_holes(omega, fluid, data, solution)
 

@@ -16,6 +16,7 @@ class LowReducedFrequencyModel:
         super().__init__()
 
         self.model = model
+        self.mesh = model.mesh
         self.properties = model.properties
 
         self.low_reduced_frequency_model = dict()
@@ -40,33 +41,35 @@ class LowReducedFrequencyModel:
                 averaged = data["averaged"]
                 filter_type = data["filter_type"]
 
-                post_process = load_function(self.model.mesh.get_elements_and_nodes_from_sphere, app().main_window)
+                post_process = load_function(self.mesh.get_elements_and_nodes_from_sphere, app().main_window)
                 post_process(   surface_ids, 
                                 selection_radius,
                                 averaged = averaged,
                                 filter_type = filter_type   )
 
-                selected_elements = self.model.mesh.selected_elements
+                selected_elements = self.mesh.selected_elements
 
                 for element_id in selected_elements:
-                    #
-                    fluid, _ = self.get_fluid(element=element_id)
+
+                    volume_id = self.mesh.volume_from_element[element_id]
+                    fluid, _ = self.properties._get_property("fluid", volume=volume_id)
+
                     c_0, rho_0, mu, gamma, Pr, P_0 = fluid.get_lrf_properties()
                     properties = [d, c_0, rho_0, mu, gamma, Pr, P_0]
-                    #
+
                     self.lrf_model_data[element_id] = properties
 
         for key, data in self.properties.volume_properties.items():
             property, volume_id = key
             if property == "lrf_eq_model":
-                #
+
                 d = data["diameter"]
-                fluid, _ = self.get_fluid(volume=volume_id)
+                fluid, _ = self.properties._get_property("fluid", volume=volume_id)
                 c_0, rho_0, mu, gamma, Pr, P_0 = fluid.get_lrf_properties()
-                #
+
                 properties = [d, c_0, rho_0, mu, gamma, Pr, P_0]
-                #
-                for element_id in self.model.mesh.elements_from_volume[volume_id]:
+
+                for element_id in self.mesh.elements_from_volume[volume_id]:
                     self.lrf_model_data[element_id] = properties
 
 

@@ -178,9 +178,9 @@ class SetFluidInput(QDialog):
                     return True
 
                 for volume_id in volume_ids:
-                    app().project.set_fluid(selected_fluid, volume=volume_id)
+                    self.properties._set_property("fluid", selected_fluid, volume=volume_id)
                     for surface_id in self.model.mesh.surfaces_from_volumes[volume_id]:
-                        app().project.set_fluid(selected_fluid, surface=surface_id)
+                        self.properties._set_property("fluid", selected_fluid, surface=surface_id)
 
                 if len(volume_ids) <= 20:
                     print("[Set Fluid] - {} defined at bodies: {}".format(selected_fluid.name, volume_ids))
@@ -196,10 +196,10 @@ class SetFluidInput(QDialog):
                     surface_ids = self.model.mesh.geometry_information["surfaces"]
 
                 for volume_id in volume_ids:
-                    app().project.set_fluid(selected_fluid, volume=volume_id)
+                    self.properties._set_property("fluid", selected_fluid, volume=volume_id)
 
                 for surface_id in surface_ids:
-                    app().project.set_fluid(selected_fluid, surface=surface_id)
+                    self.properties._set_property("fluid", selected_fluid, surface=surface_id)
 
                 print("[Set Fluid] - {} defined at all bodies.".format(selected_fluid.name))
 

@@ -37,7 +37,7 @@ class PorousMaterialModels:
             if property == "porous_material_model":
 
                 # surfaces_from_volume = self.project.model.mesh.surfaces_from_volumes[volume_id]
-                fluid = self.properties.get_fluid(volume = volume_id)
+                fluid = self.properties._get_property("fluid", volume = volume_id)
 
                 if data["model"] in ["Delany-Bazley", "Delany-Bazley-Miki"]:
                     rho_eff, C_eff = self.get_Delany_Bazley_Miki_effective_properties(omega, fluid, data)

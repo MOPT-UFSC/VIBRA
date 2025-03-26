@@ -184,7 +184,7 @@ class AcousticAssembler:
                         speed_of_sound = C_eff_tv
 
                     else:
-                        fluid = self.model.properties.get_fluid(surface=surface_id)
+                        fluid = self.model.properties._get_property("fluid", surface=surface_id)
                         density = fluid.fluid_density
                         speed_of_sound = fluid.speed_of_sound
 
@@ -346,7 +346,7 @@ class AcousticAssembler:
                 else:
 
                     volume_id = self.model.get_volume(element=el)
-                    fluid = self.properties.get_fluid(volume=volume_id)
+                    fluid = self.model.properties._get_property("fluid", volume=volume_id)
                     proportional_damping = self.properties._get_property("proportional_damping", volume=volume_id)
 
                     rho_0 = self.properties.get_fluid_density(fluid, proportional_damping)
@@ -375,7 +375,7 @@ class AcousticAssembler:
                 last_progress = progress
 
                 volume_id = self.model.get_volume(element=el)
-                fluid = self.properties.get_fluid(volume=volume_id)
+                fluid = self.model.properties._get_property("fluid", volume=volume_id)
                 proportional_damping = self.properties._get_property("proportional_damping", volume=volume_id)
 
                 rho_0 = self.properties.get_fluid_density(fluid, proportional_damping)

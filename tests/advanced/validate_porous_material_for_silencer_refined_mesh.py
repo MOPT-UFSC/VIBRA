@@ -104,12 +104,12 @@ def load_external_mesh_and_solve():
     model.mesh =  mesh
     model.generated_mesh = True
 
-    model.set_fluid(fluid, volume=1)
-    model.set_fluid(fluid, volume=2)
-    model.set_fluid(fluid, volume=3)
+    model.properties._set_property("fluid", fluid, volume=1)
+    model.properties._set_property("fluid", fluid, volume=2)
+    model.properties._set_property("fluid", fluid, volume=3)
 
-    model.set_fluid(fluid, surface=1)
-    model.set_fluid(fluid, surface=2)
+    model.properties._set_property("fluid", fluid, surface=1)
+    model.properties._set_property("fluid", fluid, surface=2)
 
     # Normal surface velocity data
     data_Vn = { "real_values" : [1],

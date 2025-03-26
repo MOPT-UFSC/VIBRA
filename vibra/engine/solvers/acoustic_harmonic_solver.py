@@ -292,9 +292,6 @@ class AcousticHarmonicSolver:
         solid_elements_connected_to_nodes = self.assembler.model.mesh.get_solid_elements_connected_to_nodes(node_ids)
         face_elements_connected_to_nodes = self.assembler.model.mesh.get_face_elements_connected_to_nodes(node_ids, surface_id)
 
-        # fluid = self.assembler.model.properties.get_fluid(surface=surface_id)
-        # rho = fluid.fluid_density
-
         data_vp = dict()
         data_normals = dict()
 
@@ -371,8 +368,8 @@ class AcousticHarmonicSolver:
         # volume_out = model.mesh.volume_from_surface[output_surface_id][0]
         # volume_in = model.mesh.volume_from_surface[input_surface_id][0]
 
-        # fluid_out, _ = model.get_fluid(volume=volume_out)
-        # fluid_in, _ = model.get_fluid(volume=volume_in)
+        # fluid_out, _ = model.properties._get_property("fluid", volume=volume_out)
+        # fluid_in, _ = model.properties._get_property("fluid", volume=volume_in)
 
         # rho_out = fluid_out.fluid_density
         # c0_out = fluid_out.speed_of_sound
@@ -456,7 +453,7 @@ class AcousticHarmonicSolver:
                     speed_of_sound = C_eff_tv
 
                 else:
-                    fluid = model.properties.get_fluid(surface=input_surface_id)
+                    fluid = model.properties._get_property("fluid", surface=input_surface_id)
                     density = fluid.fluid_density
                     speed_of_sound = fluid.speed_of_sound
 
