@@ -75,9 +75,6 @@ class ModelProperties:
         # self.global_properties["material", "global"] = DEFAULT_MATERIAL
         # self.global_properties["fluid", "global"] = DEFAULT_FLUID
 
-    def set_material(self, material: Material, surface=None, volume=None):
-        self._set_property("material", material, surface=surface, volume=volume)
-
     def get_fluid_density(self, fluid: Fluid, proportional_damping: dict | None) -> float | complex:
         rho_0 = fluid.fluid_density
         if proportional_damping is None:
