@@ -265,19 +265,19 @@ class LoadProject:
         if "element_type" in mesh_setup.keys():
             if "shape_function" in mesh_setup.keys():
 
-                element_type = mesh_setup["element_type"]
-                shape_function = mesh_setup["shape_function"]
+                element_type = mesh_setup.get("element_type", "").strip().lower()
+                shape_function = mesh_setup.get("shape_function", "").strip().lower()
                 
-                if element_type in " Tetrahedral" and shape_function in " Linear":
+                if element_type == "tetrahedral" and shape_function == "linear":
                     solid_element = TETRAHEDRON_4
 
-                elif element_type in " Tetrahedral" and shape_function in " Quadratic":
+                elif element_type == "tetrahedral" and shape_function == "quadratic":
                     solid_element = TETRAHEDRON_10
 
-                elif element_type in " Hexahedral" and shape_function in " Linear":
+                elif element_type == "hexahedral" and shape_function == "linear":
                     solid_element = HEXAHEDRON_8
 
-                elif element_type in " Hexahedral" and shape_function in " Quadratic":
+                elif element_type == "hexahedral" and shape_function == "quadratic":
                     solid_element = HEXAHEDRON_20
 
                 else:

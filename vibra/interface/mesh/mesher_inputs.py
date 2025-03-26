@@ -410,8 +410,8 @@ class MesherInputs(QDialog):
                            }
 
         self.file_mesh_setup = { 
-                                "element_type" : self.comboBox_element_type.currentText(),
-                                "shape_function" : self.comboBox_shape_function.currentText(),
+                                "element_type" : self.comboBox_element_type.currentText().lower(),
+                                "shape_function" : self.comboBox_shape_function.currentText().lower(),
                                 "geometry_tolerance" : geometry_tolerance,
                                 "size_factor" : 0,
                                 "minimum_element_size" : min_factor*maximum_element_size,
@@ -423,16 +423,16 @@ class MesherInputs(QDialog):
         
     def get_element_type(self) -> ElementType:
 
-        _element_type = self.comboBox_element_type.currentText()
-        _shape_function = self.comboBox_shape_function.currentText()
+        _element_type = self.comboBox_element_type.currentText().lower()
+        _shape_function = self.comboBox_shape_function.currentText().lower()
 
-        if _element_type == "Tetrahedral" and _shape_function == "Linear":
+        if _element_type == "tetrahedral" and _shape_function == "linear":
             return TETRAHEDRON_4
-        elif _element_type == "Tetrahedral" and _shape_function == "Quadratic":
+        elif _element_type == "tetrahedral" and _shape_function == "quadratic":
             return TETRAHEDRON_10
-        elif _element_type == "Hexahedral" and _shape_function == "Linear":
+        elif _element_type == "hexahedral" and _shape_function == "linear":
             return HEXAHEDRON_8
-        elif _element_type == "Hexahedral" and _shape_function == "Quadratic":
+        elif _element_type == "hexahedral" and _shape_function == "quadratic":
             return HEXAHEDRON_20
         else:
             return None
