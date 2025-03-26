@@ -443,9 +443,6 @@ class AcousticAssembler:
 
             self.ind_rows_Zpp, self.ind_cols_Zpp = element_2D.generate_ind_rows_cols(self.pp_connect)
             for i, Z_tr in enumerate(surface_data.values()):
-                if i == 0:
-                    print(Z_tr.reshape(-1, 1))
-
                 normalized_matrix_Z = element_2D.matrices_Z(i)
                 for j in range(self.number_frequencies):
                     self.data_Zpp[j][i, :, :] = normalized_matrix_Z / Z_tr[j]
