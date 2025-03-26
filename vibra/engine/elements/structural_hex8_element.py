@@ -1,6 +1,7 @@
 import numpy as np
 
 from vibra.engine.elements.solid_elements import Element3D
+from vibra.engine.properties.material import Material
 
 
 def get_detJAC_and_invJAC(JAC):
@@ -129,12 +130,12 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         self.phi = phi
         self.dphi = dphi
 
-    def get_constitutive_model(self, el_index, model_type="linear-isotropic"):
+    def get_constitutive_model(self, material: Material, model_type="linear-isotropic"):
         """This methdo returns the material constitutive model."""
-        self.material = self.model.properties.get_material(element=el_index)
+
+        self.material = material
         vv = self.material.poisson_ratio
         E = self.material.elasticity_modulus
-        # print(self.material.density, self.material.elasticity_modulus, self.material.poisson_ratio)
 
         if model_type == "linear-isotropic":
             # Constititive model - Linear isotropic material
@@ -156,22 +157,20 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
             return tempc * const_law
 
-    def elementary_matrices(self, el_index):
+    def elementary_matrices(self, el_index: int, material: Material):
         """This method returns elementary stiffness and mass matrices for HEXAHEDRON-8 nodes.
         ANSYS SOLID45 w/o extra diplacements (very simple)
         """
-        #
-        ie = self.connectivity[el_index, 1:]
-        const_mat = self.get_constitutive_model(ie, model_type="linear-isotropic")
+
+        const_mat = self.get_constitutive_model(material, model_type="linear-isotropic")
         rho = self.material.density
-        #
+
+        ie = self.connectivity[el_index, 1:]
         JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
         detJAC, invJAC = get_detJAC_and_invJAC(JAC)
         dphi_t = invJAC @ self.dphi
-        #
+
         B = np.zeros((self.nint, 6, self.DOFS_PER_ELEMENT), dtype=float)
-        N = np.zeros((self.nint, 3, self.DOFS_PER_ELEMENT), dtype=float)
-        #
         B[:, 0, 0::3] = dphi_t[:, 0, :]
         B[:, 1, 1::3] = dphi_t[:, 1, :]
         B[:, 2, 2::3] = dphi_t[:, 2, :]
@@ -181,17 +180,18 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         B[:, 4, 2::3] = dphi_t[:, 0, :]
         B[:, 5, 1::3] = dphi_t[:, 2, :]
         B[:, 5, 2::3] = dphi_t[:, 1, :]
-        #
+
+        N = np.zeros((self.nint, 3, self.DOFS_PER_ELEMENT), dtype=float)
         N[:, 0, 0::3] = self.phi
         N[:, 1, 1::3] = self.phi
         N[:, 2, 2::3] = self.phi
-        #
+
         # integration loop
         Ke, Me = 0, 0
         for i in range(self.nint):
             Ke += B[i, :, :].T @ const_mat @ B[i, :, :] * (detJAC[i, :, :] * self.wps)
             Me += rho * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps)
-        #
+
         return Ke, Me
 
     def reorder_connect(self):

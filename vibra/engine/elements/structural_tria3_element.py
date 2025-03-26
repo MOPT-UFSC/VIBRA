@@ -293,8 +293,6 @@ class STRUCT_TRIANGULAR_3(Element2D):
         """This methdo returns the material constitutive model."""
 
         self.material = material
-        # surface_id = self.model.mesh.surface_from_element[el_index]
-        # self.material = self.model.properties.get_material(surface=surface_id)
         E = self.material.elasticity_modulus
         nu = self.material.poisson_ratio
         rho = self.material.density
