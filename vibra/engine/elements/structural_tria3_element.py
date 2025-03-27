@@ -4,7 +4,6 @@ from vibra.engine.elements.surface_elements import Element2D
 from vibra.engine.properties.material import Material
 
 import numpy as np
-from numba import njit
 np.set_printoptions(precision=18)#threshold=sys.maxsize)
 
 
@@ -85,7 +84,7 @@ def get_batoz_constants(x_loc: np.ndarray, y_loc: np.ndarray):
 
     return batoz_const
 
-# @njit
+
 def get_batoz_shape_functions(r, s, batoz_const):
 
     N = len(r)
@@ -154,7 +153,7 @@ def get_batoz_shape_functions(r, s, batoz_const):
 
     return H_xr, H_yr, H_xs, H_ys
 
-# @njit
+
 def get_allman_constants(rho, thick, area, x_loc, y_loc):
 
     # Auxiliary constants
