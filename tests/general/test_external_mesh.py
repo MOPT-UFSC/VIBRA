@@ -52,7 +52,9 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
     model = Model()
     model.mesh =  mesh
     model.generated_mesh = True
-    model.set_fluid(fluid, volume=1)
+
+    # define the fluid
+    model.properties._set_property("fluid", fluid, volume=1)
 
     # Normal surface velocity data
     data_Vn = { "real_values" : [1],

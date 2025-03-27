@@ -2,6 +2,10 @@
 from vibra.engine.solvers.linear_solver import initialize_solver, SolverType
 from vibra.utils.progress_status import ProgressStatus
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+
 import logging
 import numpy as np
 
@@ -10,7 +14,7 @@ from functools import cache
 
 
 class StructuralHarmonicSolver:
-    def __init__(self, assembler, analysis_data=None):
+    def __init__(self, assembler: "StructuralAssembler", analysis_data=None):
 
         self.assembler = assembler
 
@@ -21,7 +25,7 @@ class StructuralHarmonicSolver:
         self.analysis_type = None
         self.frequencies = None
         self.disp_dofs = None
-        self.solution_full = None
+        self.solution = None
         self.loads = None
         self.global_damping = (0, 0, 0, 0)
 
@@ -53,7 +57,7 @@ class StructuralHarmonicSolver:
 
         """
 
-        data = self.solution_full[self.displacement_dofs, column]
+        data = self.solution[self.displacement_dofs, column]
 
         amplitudes = np.abs(data)
         phases = np.angle(data)
@@ -189,12 +193,12 @@ class StructuralHarmonicSolver:
         if len(self.assembler.active_2d_element_dofs):
             unprescribed_shell_dofs = self.assembler.unprescribed_shell_dofs
             full_solution[unprescribed_shell_dofs, :] = solution
-            self.solution_full = full_solution
+            self.solution = full_solution
             # print("reinserted dofs -> ", len(self.displacement_dofs))
 
         else:
             full_solution[self.unprescribed_dofs_indexes, :] = solution
-            self.solution_full = full_solution
+            self.solution = full_solution
     
     def get_prescribed_dofs_model_excitation(self, freq_dependent=False, index=0):
         """

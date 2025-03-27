@@ -1,14 +1,12 @@
+
 from vibra import app
-
-import numpy as np
-
-from numbers import Number
-
 from vibra.engine.properties.fluid import Fluid
-
 
 from molde.utils import TreeInfo
 from molde.utils.format_sequences import format_long_sequence
+
+import numpy as np
+from numbers import Number
 
 
 # GEOMETRY RENDER WIDGET INFO TEXTS
@@ -91,10 +89,10 @@ def material_info_text():
         return text
 
     elif len(volumes) == 1:
-        material = app().project.model.properties.get_material(volume=volumes[0])
+        material = app().project.model.properties._get_property("material", volume=volumes[0])
 
     elif len(surfaces) == 1:
-        material = app().project.model.properties.get_material(surface=surfaces[0])
+        material = app().project.model.properties._get_property("material", surface=surfaces[0])
 
     if material is None:
         return text
@@ -120,10 +118,10 @@ def fluid_info_text():
         return text
 
     elif len(volumes) == 1:
-        fluid = app().project.model.properties.get_fluid(volume=volumes[0])
+        fluid = app().project.model.properties._get_property("fluid", volume=volumes[0])
 
     elif len(surfaces) == 1:
-        fluid = app().project.model.properties.get_fluid(surface=surfaces[0])
+        fluid = app().project.model.properties._get_property("fluid", surface=surfaces[0])
 
     if fluid is None:
         return text
@@ -164,6 +162,32 @@ def porous_material_info_text():
 
     return text
 
+def perforated_plate_info_text():
+    surfaces = list(app().main_window.selected_geometry_surfaces)
+    text = ""
+
+    if len(surfaces) != 1:
+        return text
+
+    pp_model = app().project.model.properties._get_property(
+        "perforated_plate_model", surface=surfaces[0]
+    )
+    if pp_model is None:
+        return text
+
+    tree = TreeInfo("Perforated plate")
+ 
+    tree.add_item("Formulation", pp_model["formulation"].replace("_", " "))
+    if pp_model["formulation"] == "circular_hole":
+        tree.add_item("Plate thickness", pp_model["plate_thickness"], "m")
+        tree.add_item("Hole diameter", pp_model["hole_diameter"], "m")
+        tree.add_item("Porosity", pp_model["porosity"], "--")
+        tree.add_item("Discharge coefficient", pp_model["discharge_coefficient"], "--")
+
+    text += str(tree)
+
+    return text
+
 def acoustic_boundary_conditions_info_text():
     text = ""
     selected_faces = list(app().main_window.selected_geometry_surfaces)
@@ -196,7 +220,7 @@ def acoustic_boundary_conditions_info_text():
 
     if specific_impedance is not None:
         if "anechoic_termination" in specific_impedance.keys():
-            fluid = app().project.model.properties.get_fluid(surface=selected_faces[0])
+            fluid = app().project.model.properties._get_property("fluid", surface=selected_faces[0])
             if isinstance(fluid, Fluid):
                 density = fluid.fluid_density
                 speed_of_sound = fluid.speed_of_sound
@@ -210,7 +234,7 @@ def acoustic_boundary_conditions_info_text():
                 )
 
         else:
-            values = surface_velocity["values"]
+            values = specific_impedance["values"]
             text += acoustic_format("Specific impedance", values[0], "Zs", "kg/m².s")
 
     return text
@@ -352,7 +376,7 @@ def mesh_material_info_text():
 
     if len(elements) == 1:
         current_solid = app().project.model.mesh.volume_from_element[elements[0]]
-        material = app().project.model.properties.get_material(volume=current_solid)
+        material = app().project.model.properties._get_property("material", volume=current_solid)
         if material is None:
             return text
 
@@ -379,7 +403,7 @@ def mesh_fluid_info_text():
 
     if len(elements) == 1:
         current_solid = app().project.model.mesh.volume_from_element[elements[0]]
-        fluid = app().project.model.properties.get_fluid(volume=current_solid)
+        fluid = app().project.model.properties._get_property("fluid", volume=current_solid)
         if fluid is None:
             return text
 
@@ -490,9 +514,13 @@ def analysis_info_text(frequency_index: int):
     if project.analysis_id in [2, 4]:
         frequencies = None
         if project.last_analysis == "Modal Structural":
+            if project.structural_modal_solver.solution is None:
+                return ""
             frequencies = project.structural_modal_solver.natural_frequencies
 
         if project.last_analysis == "Modal Acoustic":
+            if project.acoustic_modal_solver.solution is None:
+                return ""
             if len(project.acoustic_modal_solver.complex_natural_frequencies):
                 frequencies = list(project.acoustic_modal_solver.complex_natural_frequencies)
             else:
@@ -525,6 +553,14 @@ def analysis_info_text(frequency_index: int):
             tree.add_item("Natural Frequency", f"{frequency : .4f}", "Hz")
 
     else:
+
+        if project.last_analysis == "Harmonic Acoustic":
+            if project.acoustic_harmonic_solver.solution is None:
+                return ""
+            
+        if project.last_analysis == "Harmonic Structural":
+            if project.structural_harmonic_solver.solution is None:
+                return ""
 
         frequencies = project.model.frequencies
         if frequencies is None:

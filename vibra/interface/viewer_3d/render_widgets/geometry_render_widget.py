@@ -27,6 +27,7 @@ from .model_info_text import(
     material_info_text, 
     fluid_info_text, 
     porous_material_info_text, 
+    perforated_plate_info_text, 
     acoustic_boundary_conditions_info_text, 
     structural_boundary_conditions_info_text
 )
@@ -305,6 +306,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.update_info_text()
 
     def clear_selection_spheres(self):
+        if self.selection_spheres_actor is None:
+            return
         self.selection_spheres_actor.VisibilityOff()
 
     def set_selection_spheres(self, all_centers, all_radius):
@@ -390,6 +393,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         text += material_info_text()
         text += fluid_info_text()
         text += porous_material_info_text()
+        text += perforated_plate_info_text()
         text += acoustic_boundary_conditions_info_text()
         text += structural_boundary_conditions_info_text()
 

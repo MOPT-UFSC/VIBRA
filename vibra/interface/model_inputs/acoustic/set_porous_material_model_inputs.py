@@ -570,7 +570,7 @@ class SetPorousMaterialModelInputs(QDialog):
 
         omega = 2 * np.pi * freq
 
-        model = PorousMaterialModels(self)
+        model = PorousMaterialModels(self.model)
 
         tab_index = self.tabWidget_main.currentIndex()
 

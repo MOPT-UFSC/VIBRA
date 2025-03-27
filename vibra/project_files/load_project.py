@@ -265,24 +265,28 @@ class LoadProject:
         if "element_type" in mesh_setup.keys():
             if "shape_function" in mesh_setup.keys():
 
-                element_type = mesh_setup["element_type"]
-                shape_function = mesh_setup["shape_function"]
+                element_type = mesh_setup.get("element_type", "").strip().lower()
+                shape_function = mesh_setup.get("shape_function", "").strip().lower()
                 
-                if element_type == " Tetrahedral" and shape_function == " Linear":
+                if element_type == "tetrahedral" and shape_function == "linear":
                     solid_element = TETRAHEDRON_4
 
-                elif element_type == " Tetrahedral" and shape_function == " Quadratic":
+                elif element_type == "tetrahedral" and shape_function == "quadratic":
                     solid_element = TETRAHEDRON_10
 
-                elif element_type == " Hexahedral" and shape_function == " Linear":
+                elif element_type == "hexahedral" and shape_function == "linear":
                     solid_element = HEXAHEDRON_8
 
-                elif element_type == " Hexahedral" and shape_function == " Quadratic":
+                elif element_type == "hexahedral" and shape_function == "quadratic":
                     solid_element = HEXAHEDRON_20
 
                 else:
                     raise NotImplementedError(f"Element type not defined!")
-                
+
+                algorithm_3d = mesh_setup.get("algorithm_3d")
+                if algorithm_3d is not None:
+                    solid_element.algorithm_3d = algorithm_3d
+
                 mesh_setup["element_type"] = solid_element
                 mesh_setup.pop("shape_function")
 
@@ -411,7 +415,7 @@ class LoadProject:
                 elif key == "modal_structural" and app().project.structural_modal_solver is not None:
                     str_modal_analysis = True
                     app().project.structural_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
-                    app().project.structural_modal_solver.solution_full = data.get("solution")
+                    app().project.structural_modal_solver.solution = data.get("solution")
                     app().project.structural_modal_solver.displacement_dofs = data["displacement_dofs"]
 
                 elif key == "harmonic_acoustic" and app().project.acoustic_harmonic_solver is not None:
@@ -423,7 +427,7 @@ class LoadProject:
                 elif key == "harmonic_structural" and app().project.structural_harmonic_solver is not None:
                     str_harmonic_analysis = True
                     app().project.structural_harmonic_solver.frequencies = data.get("frequencies")
-                    app().project.structural_harmonic_solver.solution_full = data.get("solution")
+                    app().project.structural_harmonic_solver.solution = data.get("solution")
                     app().project.structural_harmonic_solver.displacement_dofs = data["displacement_dofs"]
 
                 else:

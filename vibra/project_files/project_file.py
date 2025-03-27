@@ -431,9 +431,9 @@ class ProjectFile:
 
                 structural_modal_solver = app().project.structural_modal_solver
                 if structural_modal_solver is not None:
-                    if structural_modal_solver.solution_full is not None:
+                    if structural_modal_solver.solution is not None:
                         natural_frequencies = structural_modal_solver.natural_frequencies
-                        solution_full = structural_modal_solver.solution_full
+                        solution_full = structural_modal_solver.solution
                         displacement_dofs = structural_modal_solver.displacement_dofs
                         f.create_dataset("modal_structural/natural_frequencies", data=natural_frequencies, dtype=float)
                         f.create_dataset("modal_structural/solution", data=solution_full, dtype=complex)
@@ -449,9 +449,9 @@ class ProjectFile:
                 
                 structural_harmonic_solver = app().project.structural_harmonic_solver
                 if structural_harmonic_solver is not None:
-                    if structural_harmonic_solver.solution_full is not None:
+                    if structural_harmonic_solver.solution is not None:
                         frequencies = structural_harmonic_solver.frequencies
-                        solution = structural_harmonic_solver.solution_full
+                        solution = structural_harmonic_solver.solution
                         displacement_dofs = structural_harmonic_solver.displacement_dofs
                         f.create_dataset("harmonic_structural/frequencies", data=frequencies, dtype=float)
                         f.create_dataset("harmonic_structural/solution", data=solution, dtype=complex)
