@@ -1,22 +1,18 @@
-import os
-import logging
-from pathlib import Path
-from collections import defaultdict
-
-import numpy as np
-from scipy.special import jv
 
 from vibra import app
-from vibra.interface.loading_bar import load_function
-from vibra.engine.dissipation_models.low_reduced_frequency_model import LowReducedFrequencyModel
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
+from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.errors import IncompleteSetupError
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.utils.progress_status import ProgressStatus
+
+import logging
+import numpy as np
+
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -57,6 +53,7 @@ class Model:
         self.reset_dissipation_model_properties()
 
     def reset_dissipation_model_properties(self):
+        self.perforated_plate_impedance_data = dict()
         self.porous_material_properties = dict()
         self.viscous_thermal_model_properties = dict()
 
@@ -114,12 +111,6 @@ class Model:
 
         # logging.info("Renumbering nodes..." + ProgressStatus(90, 100))
         # self.mesh._process_nodes_reordering()
-
-    def set_material(self, material, **kwargs):
-        self.properties.set_material(material, **kwargs)
-
-    def set_fluid(self, fluid, **kwargs):
-        self.properties.set_fluid(fluid, **kwargs)
 
     def set_mesh(self, mesh):
         self.mesh = mesh
@@ -193,12 +184,6 @@ class Model:
                 # temporary solution to allow running external mesh file
                 volume = 1
         return volume
-
-    def get_fluid(self, **kwargs):
-        """ This method returns the fluid relative to an element or volume and the volume id itself. """
-        volume = self.get_volume(**kwargs)
-        fluid = self.properties.get_fluid(volume=volume)
-        return fluid, volume
 
     def set_acoustic_element(self, element):
         self.solid_acoustic_element, self.surface_acoustic_element = element
@@ -280,14 +265,14 @@ class Model:
                         pm_model.process_effective_properties(frequencies)
                         return pm_model.effective_properties[volume_id]["rho_eff"]
 
-            fluid = self.properties.get_fluid(surface=surface_id)
+            fluid = self.properties._get_property("fluid", surface=surface_id)
             rho = fluid.fluid_density
         
         elif len(volume_ids) > 1:
 
             fluids = list()
             for volume_id in volume_ids:
-                fluid = self.properties.get_fluid(volume=volume_id)
+                fluid = self.properties._get_property("fluid", volume=volume_id)
                 if isinstance(fluid, Fluid):
                     if fluid not in fluids:
                         fluids.append(fluid)
@@ -356,6 +341,14 @@ class Model:
 
     def set_viscous_thermal_model_data(self, data, group=None, volume=None):
         self.properties._set_property("viscous_thermal_model", data, group=group, volume=volume)
+
+    def process_perforated_plate_impendace(self, frequencies: np.ndarray, solution: np.ndarray | None = None):
+
+        pp_model = PerforatedPlateModels(self)
+        pp_model.process_acoustic_transfer_impedances(frequencies)
+
+        self.perforated_plate_impedance_data.clear()
+        self.perforated_plate_impedance_data = pp_model.perforated_plate_impedance_data
 
     def process_surface_thickness(self):
         for key, data in self.properties.surface_properties.items():

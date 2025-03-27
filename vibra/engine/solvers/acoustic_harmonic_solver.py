@@ -2,6 +2,10 @@
 from vibra.utils.progress_status import ProgressStatus
 from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
+
 import logging
 import numpy as np
 
@@ -11,10 +15,10 @@ from pypardiso.pardiso_wrapper import Matrix_type
 
 
 class AcousticHarmonicSolver:
-    def __init__(self, assembler, analysis_data=None):
-        #
+    def __init__(self, assembler: "AcousticAssembler", analysis_data=None):
+
         self.assembler = assembler
-        #
+
         self.reset_variables()
         self.load_analysis_data(analysis_data)
 
@@ -111,10 +115,10 @@ class AcousticHarmonicSolver:
         Q = self.assembler.mass_flow_vectors
         Q_visc = self.assembler.Qvisc_damping_matrix * 0 # this effect is temporary disabled
         
-        condition_1 = self.assembler.model.porous_material_properties
-        condition_2 = self.assembler.model.viscous_thermal_model_properties
+        is_pm_active = self.assembler.model.porous_material_properties
+        is_vt_active = self.assembler.model.viscous_thermal_model_properties
 
-        if condition_1 or condition_2:
+        if is_pm_active or is_vt_active:
             freq_dependent = True
         else:
             freq_dependent = False
@@ -288,9 +292,6 @@ class AcousticHarmonicSolver:
         solid_elements_connected_to_nodes = self.assembler.model.mesh.get_solid_elements_connected_to_nodes(node_ids)
         face_elements_connected_to_nodes = self.assembler.model.mesh.get_face_elements_connected_to_nodes(node_ids, surface_id)
 
-        # fluid = self.assembler.model.properties.get_fluid(surface=surface_id)
-        # rho = fluid.fluid_density
-
         data_vp = dict()
         data_normals = dict()
 
@@ -367,8 +368,8 @@ class AcousticHarmonicSolver:
         # volume_out = model.mesh.volume_from_surface[output_surface_id][0]
         # volume_in = model.mesh.volume_from_surface[input_surface_id][0]
 
-        # fluid_out, _ = model.get_fluid(volume=volume_out)
-        # fluid_in, _ = model.get_fluid(volume=volume_in)
+        # fluid_out, _ = model.properties._get_property("fluid", volume=volume_out)
+        # fluid_in, _ = model.properties._get_property("fluid", volume=volume_in)
 
         # rho_out = fluid_out.fluid_density
         # c0_out = fluid_out.speed_of_sound
@@ -452,7 +453,7 @@ class AcousticHarmonicSolver:
                     speed_of_sound = C_eff_tv
 
                 else:
-                    fluid = model.properties.get_fluid(surface=input_surface_id)
+                    fluid = model.properties._get_property("fluid", surface=input_surface_id)
                     density = fluid.fluid_density
                     speed_of_sound = fluid.speed_of_sound
 

@@ -40,7 +40,7 @@ TETRAHEDRON_10 = ElementType(
 
 HEXAHEDRON_8 = ElementType(
     algorithm_2d=gmsh_constants.QUASI_STRUCTURED_QUADS_2D,
-    algorithm_3d=gmsh_constants.HXT_3D,
+    algorithm_3d=gmsh_constants.DELAUNAY_3D,
     subdivision_algorithm=gmsh_constants.ALL_HEXAHEDRA_SUBDIVISION,
     recombination_algorithm=gmsh_constants.BLOSSOM_FULL_QUAD_RECOMBINATION,
     recombine_all=True,
@@ -51,7 +51,7 @@ HEXAHEDRON_8 = ElementType(
 
 HEXAHEDRON_20 = ElementType(
     algorithm_2d=gmsh_constants.QUASI_STRUCTURED_QUADS_2D,
-    algorithm_3d=gmsh_constants.HXT_3D,
+    algorithm_3d=gmsh_constants.DELAUNAY_3D,
     subdivision_algorithm=gmsh_constants.ALL_HEXAHEDRA_SUBDIVISION,
     recombination_algorithm=gmsh_constants.BLOSSOM_FULL_QUAD_RECOMBINATION,
     recombine_all=True,
