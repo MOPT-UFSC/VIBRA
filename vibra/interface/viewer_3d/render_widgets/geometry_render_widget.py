@@ -311,6 +311,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.update_info_text()
 
     def clear_selection_spheres(self):
+        if self.selection_spheres_actor is None:
+            return
         self.selection_spheres_actor.VisibilityOff()
 
     def set_selection_spheres(self, all_centers, all_radius):
