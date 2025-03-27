@@ -26,7 +26,7 @@ class StructuralModalSolver:
         self.sigma_factor = 0.01
         self.analysis_type = None
         self.natural_frequencies = None
-        self.solution_full = None
+        self.solution = None
 
     def load_analysis_data(self, analysis_data):
         if analysis_data is not None:
@@ -55,7 +55,7 @@ class StructuralModalSolver:
 
         """
 
-        data = self.solution_full[self.displacement_dofs, column]
+        data = self.solution[self.displacement_dofs, column]
 
         amplitudes = np.abs(data)
         phases = np.angle(data)
@@ -176,11 +176,11 @@ class StructuralModalSolver:
         if len(self.assembler.active_2d_element_dofs):
             unprescribed_shell_dofs = self.assembler.unprescribed_shell_dofs
             solution_full[unprescribed_shell_dofs, :] = solution
-            self.solution_full = solution_full
+            self.solution = solution_full
             # print("reinserted dofs -> ", len(self.displacement_dofs))
 
         else:
             solution_full[self.unprescribed_dofs_indexes, :] = solution
-            self.solution_full = solution_full
+            self.solution = solution_full
 
 # fmt: on

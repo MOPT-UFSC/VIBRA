@@ -415,7 +415,7 @@ class LoadProject:
                 elif key == "modal_structural" and app().project.structural_modal_solver is not None:
                     str_modal_analysis = True
                     app().project.structural_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
-                    app().project.structural_modal_solver.solution_full = data.get("solution")
+                    app().project.structural_modal_solver.solution = data.get("solution")
                     app().project.structural_modal_solver.displacement_dofs = data["displacement_dofs"]
 
                 elif key == "harmonic_acoustic" and app().project.acoustic_harmonic_solver is not None:
@@ -427,7 +427,7 @@ class LoadProject:
                 elif key == "harmonic_structural" and app().project.structural_harmonic_solver is not None:
                     str_harmonic_analysis = True
                     app().project.structural_harmonic_solver.frequencies = data.get("frequencies")
-                    app().project.structural_harmonic_solver.solution_full = data.get("solution")
+                    app().project.structural_harmonic_solver.solution = data.get("solution")
                     app().project.structural_harmonic_solver.displacement_dofs = data["displacement_dofs"]
 
                 else:

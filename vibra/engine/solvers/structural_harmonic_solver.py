@@ -25,7 +25,7 @@ class StructuralHarmonicSolver:
         self.analysis_type = None
         self.frequencies = None
         self.disp_dofs = None
-        self.solution_full = None
+        self.solution = None
         self.loads = None
         self.global_damping = (0, 0, 0, 0)
 
@@ -57,7 +57,7 @@ class StructuralHarmonicSolver:
 
         """
 
-        data = self.solution_full[self.displacement_dofs, column]
+        data = self.solution[self.displacement_dofs, column]
 
         amplitudes = np.abs(data)
         phases = np.angle(data)
@@ -193,12 +193,12 @@ class StructuralHarmonicSolver:
         if len(self.assembler.active_2d_element_dofs):
             unprescribed_shell_dofs = self.assembler.unprescribed_shell_dofs
             full_solution[unprescribed_shell_dofs, :] = solution
-            self.solution_full = full_solution
+            self.solution = full_solution
             # print("reinserted dofs -> ", len(self.displacement_dofs))
 
         else:
             full_solution[self.unprescribed_dofs_indexes, :] = solution
-            self.solution_full = full_solution
+            self.solution = full_solution
     
     def get_prescribed_dofs_model_excitation(self, freq_dependent=False, index=0):
         """
