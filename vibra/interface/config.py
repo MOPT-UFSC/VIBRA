@@ -49,6 +49,7 @@ class Config:
         "lines_thickness" : self.user_preferences.lines_thickness,
         "edges_thickness" : self.user_preferences.edges_thickness,
         "show_reference_scale_bar" : self.user_preferences.show_reference_scale_bar,
+        "compatibility_mode" : self.user_preferences.compatibility_mode,
         "color_map" : self.user_preferences.color_map
         }
         

@@ -10,7 +10,6 @@ from molde.colors import Color
 from molde import load_ui
 
 from vibra.interface.user_input.model.color_selector import PickColorInput
-from vibra.interface.user_preferences import UserPreferences
 
 
 class RendererUserPreferencesInput(QDialog):
@@ -282,14 +281,13 @@ class RendererUserPreferencesInput(QDialog):
 
     def update_compatibility_mode(self):
         is_checked = self.checkBox_compatibility_mode.isChecked()
-        app().config.user_preferences.compatibility_mode = is_checked        
+        app().config.user_preferences.compatibility_mode = is_checked     
 
+    def update_compatibility_mode_checkbox(self): 
+        self.checkBox_compatibility_mode.setChecked(app().config.user_preferences.compatibility_mode)
 
     def update_show_reference_scalebar_checkbox(self):
-        if app().config.user_preferences.show_reference_scale_bar:
-            self.checkBox_reference_scale.setChecked(1)
-        else:
-            self.checkBox_reference_scale.setChecked(0)
+        self.checkBox_reference_scale.setChecked(app().config.user_preferences.show_reference_scale_bar)
         
     def update_renderers_font_size(self):
         self.main_window.update_renderer_font_size()
@@ -311,6 +309,7 @@ class RendererUserPreferencesInput(QDialog):
         self.update_spin_box_lines_thickness()
         self.update_spin_box_edges_thickness()
         self.update_show_reference_scalebar_checkbox()
+        self.update_compatibility_mode_checkbox()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
