@@ -514,9 +514,13 @@ def analysis_info_text(frequency_index: int):
     if project.analysis_id in [2, 4]:
         frequencies = None
         if project.last_analysis == "Modal Structural":
+            if project.structural_modal_solver.solution is None:
+                return ""
             frequencies = project.structural_modal_solver.natural_frequencies
 
         if project.last_analysis == "Modal Acoustic":
+            if project.acoustic_modal_solver.solution is None:
+                return ""
             if len(project.acoustic_modal_solver.complex_natural_frequencies):
                 frequencies = list(project.acoustic_modal_solver.complex_natural_frequencies)
             else:
@@ -549,6 +553,14 @@ def analysis_info_text(frequency_index: int):
             tree.add_item("Natural Frequency", f"{frequency : .4f}", "Hz")
 
     else:
+
+        if project.last_analysis == "Harmonic Acoustic":
+            if project.acoustic_harmonic_solver.solution is None:
+                return ""
+            
+        if project.last_analysis == "Harmonic Structural":
+            if project.structural_harmonic_solver.solution is None:
+                return ""
 
         frequencies = project.model.frequencies
         if frequencies is None:
