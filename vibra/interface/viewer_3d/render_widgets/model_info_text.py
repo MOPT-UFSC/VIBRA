@@ -1,14 +1,12 @@
+
 from vibra import app
-
-import numpy as np
-
-from numbers import Number
-
 from vibra.engine.properties.fluid import Fluid
-
 
 from molde.utils import TreeInfo
 from molde.utils.format_sequences import format_long_sequence
+
+import numpy as np
+from numbers import Number
 
 
 # GEOMETRY RENDER WIDGET INFO TEXTS
@@ -236,7 +234,7 @@ def acoustic_boundary_conditions_info_text():
                 )
 
         else:
-            values = surface_velocity["values"]
+            values = specific_impedance["values"]
             text += acoustic_format("Specific impedance", values[0], "Zs", "kg/m².s")
 
     return text
