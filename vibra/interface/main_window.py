@@ -618,7 +618,8 @@ class MainWindow(QMainWindow):
 
     def reset_temporary_vibra_folder(self):
         if TEMP_PROJECT_DIR.exists():
-            rmtree(TEMP_PROJECT_DIR)
+            rmtree(TEMP_PROJECT_DIR)  # delete the directory
+        TEMP_PROJECT_DIR.mkdir(parents=True, exist_ok=True)  # create a new empty directory
 
     def is_temporary_vibra_folder_empty(self):
         if TEMP_PROJECT_DIR.exists():
