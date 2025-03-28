@@ -159,7 +159,8 @@ class MeshRenderWidget(CommonRenderWidget):
         else:
             self.update()
 
-        app().project.thumbnail = self.get_thumbnail()
+        if self.isVisible():
+            app().project.thumbnail = self.get_thumbnail()
 
     def visualization_changed_callback(self):
         if not self.actors_exists():
@@ -168,12 +169,16 @@ class MeshRenderWidget(CommonRenderWidget):
         visualization = app().main_window.visualization_filter
         has_hidden_part = bool(app().main_window.hidden_surfaces)
 
-        self.nodes_actor.SetVisibility(visualization.points)
+        # Nodes actor are always visible.
+        # We hide them painting the cells as transparent.
+        self.nodes_actor.SetVisibility(True)
+
         self.edges_actor.SetVisibility(visualization.lines)
         self.faces_actor.SetVisibility(visualization.faces)
         self.solids_actor.SetVisibility(visualization.solids)
         self.ghost_actor.SetVisibility(has_hidden_part)
 
+        self.update_selection()
         self.update()
 
     def update_symbols(self):
@@ -229,12 +234,17 @@ class MeshRenderWidget(CommonRenderWidget):
             return
 
         self.update_info_text()
+        visualization = app().main_window.visualization_filter
 
         # In this renderer the faces should be transparent
         # all the time, except when they are selected
         self.faces_actor.set_color((0, 0, 0, 0))
-        self.nodes_actor.clear_colors()
         self.solids_actor.clear_colors()
+
+        if visualization.points:
+            self.nodes_actor.clear_colors()
+        else:
+            self.nodes_actor.set_color((0, 0, 0, 0))
 
         nodes = app().main_window.selected_mesh_nodes
         faces = app().main_window.selected_mesh_faces

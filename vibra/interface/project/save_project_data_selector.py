@@ -66,9 +66,9 @@ class SaveProjectDataSelector(QDialog):
         self.pushButton_proceed.clicked.connect(self.proceed_callback)
 
     def get_required_memory(self):
-        if os.path.exists(TEMP_PROJECT_FILE):
-            size_of_file = os.path.getsize(TEMP_PROJECT_FILE) / 1e6
-            self.lineEdit_required_memory.setText(str(round(size_of_file, 4)))
+        if TEMP_PROJECT_FILE.exists():
+            size_of_file = TEMP_PROJECT_FILE.stat().st_size / 1e6
+            self.lineEdit_required_memory.setText(f"{size_of_file:.4}")
 
     def remove_solution_data(self):
         if self.checkBox_mesh_data.isChecked():

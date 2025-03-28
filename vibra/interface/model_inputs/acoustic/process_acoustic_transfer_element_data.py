@@ -325,7 +325,7 @@ class ProcessAcousticTransferElementData(QDialog):
         solve_harmonic = load_function(callback, app().main_window)
         solve_harmonic()
 
-        app().main_window.configure_acoustic_harmonic_analysis_render_widget()
+        app().main_window.configure_results_render_widget()
         app().main_window.menu_widget.update_items()
         self.print_final_message()
 
