@@ -769,7 +769,7 @@ vtk = "^9.3.1"
 type = "git"
 url = "https://github.com/andrefpf/molde.git"
 reference = "update_color_class"
-resolved_reference = "b39b557e8d43939f08f737c42950f61236b57b60"
+resolved_reference = "90deb243737de8b4a9d8392713027036bbf50a09"
 
 [[package]]
 name = "moviepy"
