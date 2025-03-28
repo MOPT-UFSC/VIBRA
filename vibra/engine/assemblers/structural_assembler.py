@@ -377,11 +377,17 @@ class StructuralAssembler:
 
         ind_rows = np.zeros((nel, dofs, dofs), dtype=int)
         ind_cols = np.zeros((nel, dofs, dofs), dtype=int)
-        data_K_se = np.zeros((nel, dofs, dofs), dtype=float)
-        data_M_se = np.zeros((nel, dofs, dofs), dtype=float)
+        data_K_se = np.zeros((nel, dofs, dofs), dtype=complex)
+        data_M_se = np.zeros((nel, dofs, dofs), dtype=complex)
+
+        last_progress = 0
 
         # loop for solid elements
         for el_index, vol_id, *_ in self.model.mesh.solids_connectivity:
+
+            progress = 100 * np.round(el_index/nel, 2)
+            if progress != last_progress:
+                logging.info( "Processing the elementary matrices data for solid elements..." + ProgressStatus(int(progress), 100))
 
             material = self.model.properties._get_property("material", volume=vol_id)
             if material is None:
@@ -416,11 +422,17 @@ class StructuralAssembler:
             self.ind_cols = np.append(self.ind_cols, cols_fe)
             # np.savetxt("indexes.dat", np.array([ind_rows, ind_cols], dtype=int).T, fmt="%i")
 
-            data_K_fe = np.zeros((nel, dofs, dofs), dtype=float)
-            data_M_fe = np.zeros((nel, dofs, dofs), dtype=float)
+            data_K_fe = np.zeros((nel, dofs, dofs), dtype=complex)
+            data_M_fe = np.zeros((nel, dofs, dofs), dtype=complex)
+
+            last_progress = 0
 
             # loop for face elements
             for el_index, surf_id, _, _, *connect_nodes in self.model.mesh.faces_connectivity:
+
+                progress = 100 * np.round(el_index/nel, 2)
+                if progress != last_progress:
+                    logging.info( "Processing the elementary matrices data for face elements..." + ProgressStatus(int(progress), 100))
 
                 material = self.model.properties._get_property("material", surface=surf_id)
                 if material is None:

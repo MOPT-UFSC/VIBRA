@@ -1,6 +1,4 @@
-from time import time
-
-import numpy as np
+from vtkmodules.util.numpy_support import numpy_to_vtk
 from vtkmodules.vtkCommonCore import (
     vtkIntArray,
     vtkPoints,
@@ -12,14 +10,23 @@ from vtkmodules.vtkCommonDataModel import (
     VTK_QUADRATIC_TETRA,
     VTK_TETRA,
     vtkPlane,
+    vtkPolyData,
+    vtkSphere,
     vtkUnstructuredGrid,
 )
 from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
 from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
-from vtkmodules.util.numpy_support import numpy_to_vtk
 
 from vibra import app
-from vibra.engine.mesher.element_type import *
+from vibra.engine.mesher.element_type import (
+    HEXAHEDRON_8,
+    HEXAHEDRON_20,
+    TETRAHEDRON_4,
+    TETRAHEDRON_10,
+)
+
+ALWAYS_FALSE = vtkSphere()
+ALWAYS_FALSE.SetRadius(0)
 
 
 class SolidsActor(vtkActor):
@@ -62,7 +69,12 @@ class SolidsActor(vtkActor):
 
         elif self.mesh.element_type == HEXAHEDRON_20:
             cell_type = VTK_QUADRATIC_HEXAHEDRON
-            nodes_order = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 17, 13, 20, 22, 23, 21, 14, 16, 18, 19)
+            # fmt: off
+            nodes_order = (
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 
+                15, 17, 13, 20, 22, 23, 21, 14, 16, 18, 19
+            )
+            # fmt: on
             nodes_connectivity = self.mesh.solids_connectivity[:, nodes_order]
 
         else:
@@ -79,13 +91,13 @@ class SolidsActor(vtkActor):
         cell_colors.SetNumberOfComponents(3)
         cell_colors.SetNumberOfTuples(number_of_elements)
         solid_indexes.Allocate(number_of_elements)
-        
+
         coordinates = self.get_coordinates()
         points.SetData(numpy_to_vtk(coordinates))
 
         hidden_volumes = app().main_window.hidden_volumes if self.allow_hidding else set()
         self.visible_indexes = dict()
-        # for i, nodes in enumerate(nodes_connectivity):
+
         for i, volume, _, _, *nodes in nodes_connectivity:
             if volume in hidden_volumes:
                 continue
@@ -100,9 +112,22 @@ class SolidsActor(vtkActor):
         data.GetCellData().SetScalars(cell_colors)
         data.GetCellData().AddArray(solid_indexes)
 
-        self.data = data
-        mapper.SetInputData(self.data)
+        self.data: vtkPolyData = data
+        self.clipper = vtkExtractGeometry()
+        self.clipper.SetInputData(self.data)
+        self.clipper.SetImplicitFunction(ALWAYS_FALSE)
+        self.clipper.ExtractInsideOff()
+        self.clipper.Update()
+
+        mapper.InterpolateScalarsBeforeMappingOn()
+        mapper.SetInputConnection(self.clipper.GetOutputPort())
         self.SetMapper(mapper)
+
+    def replace_data(self, data: vtkPolyData):
+        self.data = data
+        self.clipper.SetInputData(data)
+        self.clipper.Modified()
+        self.clipper.Update()
 
     def update_coordinates(self, coordinates):
         points = self.data.GetPoints()
@@ -144,6 +169,8 @@ class SolidsActor(vtkActor):
 
         point_colors = self.data.GetPointData().GetScalars()
         for i in points:
+            if point_colors.GetNumberOfTuples() <= i:
+                break
             point_colors.SetTuple(i, color)
 
         self.GetMapper().SetScalarModeToUsePointData()
@@ -169,20 +196,7 @@ class SolidsActor(vtkActor):
         plane = vtkPlane()
         plane.SetOrigin(origin)
         plane.SetNormal(normal)
-
-        clipper = vtkExtractGeometry()
-        clipper.SetInputData(self.data)
-        clipper.SetImplicitFunction(plane)
-        clipper.ExtractInsideOff()
-        clipper.Update()
-        self.clipped_data = clipper.GetOutput()
-
-        mapper = self.GetMapper()
-        mapper.InterpolateScalarsBeforeMappingOn()
-        mapper.SetInputConnection(clipper.GetOutputPort())
-        mapper.Modified()
+        self.clipper.SetImplicitFunction(plane)
 
     def disable_cut(self):
-        self.GetMapper().RemoveAllClippingPlanes()
-        self.GetMapper().RemoveAllInputConnections(0)
-        self.GetMapper().SetInputData(self.data)
+        self.clipper.SetImplicitFunction(ALWAYS_FALSE)

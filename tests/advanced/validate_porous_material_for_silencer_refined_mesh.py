@@ -25,7 +25,7 @@ def load_external_mesh_and_solve():
     # return
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = "validation/data/porous_material_models/mesh/silencer/ds_silencer_suction_stg1_refined.dat"
+    mesh_path = "data/validation/porous_material_models/mesh/silencer/ds_silencer_suction_stg1_refined.dat"
 
     
     if pm_model not in ["DB", "DBM", "JCA"]:
@@ -104,12 +104,12 @@ def load_external_mesh_and_solve():
     model.mesh =  mesh
     model.generated_mesh = True
 
-    model.set_fluid(fluid, volume=1)
-    model.set_fluid(fluid, volume=2)
-    model.set_fluid(fluid, volume=3)
+    model.properties._set_property("fluid", fluid, volume=1)
+    model.properties._set_property("fluid", fluid, volume=2)
+    model.properties._set_property("fluid", fluid, volume=3)
 
-    model.set_fluid(fluid, surface=1)
-    model.set_fluid(fluid, surface=2)
+    model.properties._set_property("fluid", fluid, surface=1)
+    model.properties._set_property("fluid", fluid, surface=2)
 
     # Normal surface velocity data
     data_Vn = { "real_values" : [1],
@@ -160,7 +160,9 @@ def load_external_mesh_and_solve():
     # t0 = time()
     # # Run modal analysis
     # modal_solver = AcousticModalSolver(assembler)
-    # natural_frequencies, modal_shape = modal_solver.solve()
+    # modal_solver.solve()
+    # natural_frequencies = modal_solver.natural_frequencies
+    # modal_shape = modal_solver.solution
     # dt = time() - t0
     # print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
     # return
@@ -474,7 +476,7 @@ def get_porous_material_data(model="DB"):
 def get_external_results():
 
     imported_results = dict()
-    results_path = f"validation/data/porous_material_models/results/silencer/WB_results_silencer_{pm_model}_Vn1_Z1_Z2_20mm.xlsx"
+    results_path = f"data/validation/porous_material_models/results/silencer/WB_results_silencer_{pm_model}_Vn1_Z1_Z2_20mm.xlsx"
 
     if not os.path.exists(results_path):
         return imported_results

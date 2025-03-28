@@ -1,3 +1,5 @@
+import pytest
+
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.element_type import *
@@ -10,9 +12,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from time import time
 
+@pytest.mark.skip
 def test_load_external_mesh_and_solve(reorder_nodes=False):
-    return
-
     # Define the nodal coordinates and connectivity file path
     nodal_coordinates = np.loadtxt("data/examples/mesh/muffler/coord_muff.csv", delimiter=",")
     connectivity = np.loadtxt("data/examples/mesh/muffler/connect_muff.csv", delimiter=",", dtype=int)
@@ -51,7 +52,9 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
     model = Model()
     model.mesh =  mesh
     model.generated_mesh = True
-    model.set_fluid(fluid, volume=1)
+
+    # define the fluid
+    model.properties._set_property("fluid", fluid, volume=1)
 
     # Normal surface velocity data
     data_Vn = { "real_values" : [1],
@@ -83,7 +86,9 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
     # t0 = time()
     # # Run modal analysis
     # modal_solver = AcousticModalSolver(assembler)
-    # natural_frequencies, modal_shape = modal_solver.solve()
+    # modal_solver.solve()
+    # natural_frequencies = modal_solver.natural_frequencies
+    # modal_shape = modal_solver.solution
     # dt = time() - t0
     # print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
     # return

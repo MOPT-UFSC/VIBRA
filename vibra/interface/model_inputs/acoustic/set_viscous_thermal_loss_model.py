@@ -395,6 +395,8 @@ class SetViscousThermalLossModel(QDialog):
         mesh_widget.select_multiple_volumes(elements)
 
     def geometry_selection_callback(self):
+        if not self.isVisible():
+            return
 
         faces = self.main_window.selected_geometry_surfaces
         volumes = self.main_window.selected_geometry_volumes
@@ -941,8 +943,7 @@ class SetViscousThermalLossModel(QDialog):
         self.hide_sphere()
         try:
             warnings.filterwarnings('default')
-            geometry_widget = self.main_window.geometry_widget
-            geometry_widget.selection_changed.disconnect(self.geometry_selection_callback)
+            app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
         except TypeError:
             pass  # ignore if there is nothing to disconect
         self.keep_window_open = False

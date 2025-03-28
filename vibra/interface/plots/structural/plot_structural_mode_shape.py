@@ -29,14 +29,14 @@ class PlotStructuralModeShape(QWidget):
     def showEvent(self, event):
         super().showEvent(event)
 
-        render_widget = app().main_window.structural_modal_analysis
+        render_widget = app().main_window.results_widget
         app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
         app().main_window.render_widget_changed.emit()
 
         app().main_window.animation_toolbar.setDisabled(False)
 
     def _initialize(self):
-        self.mode_index = None
+        self.mode_index = -1
         
         # self.colormaps = ["jet",
         #                   "viridis",
@@ -136,7 +136,6 @@ class PlotStructuralModeShape(QWidget):
         self.update_plot()
 
     def update_plot(self):
-
         self.update_animation_widget_visibility()
         if self.lineEdit_natural_frequency.text() == "":
             return
@@ -146,8 +145,12 @@ class PlotStructuralModeShape(QWidget):
         self.mode_index = self.natural_frequencies.index(frequency)
         # color_scale_setup = self.get_user_color_scale_setup()
 
+        results_widget = app().main_window.results_widget
+        results_widget.configure_analysis("structural_modal")
+        results_widget.update_plot()
+
         # app().project.set_color_scale_setup(color_scale_setup)
-        app().main_window.structural_modal_analysis.update_plot()
+        # app().main_window.structural_modal_analysis.update_plot()
         # app().main_window.results_widget.clear_cache()
     
     def update_displacements(self):
@@ -157,6 +160,16 @@ class PlotStructuralModeShape(QWidget):
         return
         transparency = self.slider_transparency.value() / 100
         app().main_window.results_widget.set_tube_actors_transparency(transparency)
+
+    def get_plot_type(self):
+        plot_types = [
+            "u_sum",
+            "u_x",
+            "u_y",
+            "u_z",
+        ]
+        index = self.comboBox_displacements.currentIndex()
+        return plot_types[index]
 
     def get_user_color_scale_setup(self):
         return
@@ -225,6 +238,8 @@ class PlotStructuralModeShape(QWidget):
         return color_scale_setup
 
     def load_natural_frequencies(self):
+        if app().project.structural_modal_solver is None:
+            return
         
         self.natural_frequencies = list(app().project.structural_modal_solver.natural_frequencies)
         modes = np.arange(1, len(self.natural_frequencies) + 1, 1)

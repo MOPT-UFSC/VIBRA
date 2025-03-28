@@ -1,17 +1,20 @@
 # fmt: off
+from vibra.engine.solvers.linear_solver import initialize_solver, SolverType
+from vibra.utils.progress_status import ProgressStatus
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 
 import logging
-
 import numpy as np
-from functools import cache
-from scipy.linalg import eig
-from scipy.sparse.linalg import LinearOperator, eigs, eigsh, inv, lobpcg
 
-from vibra.utils.progress_status import ProgressStatus
+from functools import cache
+from scipy.sparse.linalg import eigs
 
 
 class StructuralModalSolver:
-    def __init__(self, assembler, analysis_data=None):
+    def __init__(self, assembler: "StructuralAssembler", analysis_data=None):
 
         self.assembler = assembler
 
@@ -23,9 +26,7 @@ class StructuralModalSolver:
         self.sigma_factor = 0.01
         self.analysis_type = None
         self.natural_frequencies = None
-        self.solution_full = None
-        self.eigen_values = None
-        self.eigen_vectors = None
+        self.solution = None
 
     def load_analysis_data(self, analysis_data):
         if analysis_data is not None:
@@ -54,7 +55,7 @@ class StructuralModalSolver:
 
         """
 
-        data = self.solution_full[self.displacement_dofs, column]
+        data = self.solution[self.displacement_dofs, column]
 
         amplitudes = np.abs(data)
         phases = np.angle(data)
@@ -98,8 +99,8 @@ class StructuralModalSolver:
 
         return r_min, r_max
 
-    def solve(self, K=[], M=[], which="LM", normalize=True, harmonic_analysis=False):
-        """ 
+    def solve(self, K=[], M=[], which="LM", harmonic_analysis=False):
+        """ This method solves the structural modal analysis for undamped problems.
         """
         self.get_max_min_values_of_displacements.cache_clear()
 
@@ -107,13 +108,27 @@ class StructuralModalSolver:
             K = self.assembler.stiffness_matrix
             M = self.assembler.mass_matrix
 
-        logging.info("Solving the eigenproblem..." + ProgressStatus(7, 100))
-        self.eigen_values, self.eigen_vectors = eigs(K, M=M, k=self.modes, which=which, sigma=self.sigma_factor)
+        sigma = self.sigma_factor
+        logging.info("Solving the eigenproblem..." + ProgressStatus(75, 100))
+
+        is_M_complex = np.any(np.imag(M.data))
+        is_K_complex = np.any(np.imag(K.data))
+        is_complex = is_M_complex or is_K_complex
+
+        if not is_complex:
+            M.data = np.real(M.data)
+            K.data = np.real(K.data)
+
+        linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=True)
+        opinv = linear_solver.build_linear_operator(K - sigma * M)
+
+        eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
+        linear_solver.clear_memory()
 
         logging.info("Post-processing the solution..." + ProgressStatus(95, 100))
-        positive_real = np.absolute(np.real(self.eigen_values))
+        positive_real = np.absolute(np.real(eigen_values))
         natural_frequencies = np.sqrt(positive_real) / (2 * np.pi)
-        modal_shape = np.real(self.eigen_vectors)
+        modal_shape = np.real(eigen_vectors)
         # print(f"\nNatural frequencies: \n {natural_frequencies.reshape(-1, 1)}")
 
         index_order = np.argsort(natural_frequencies)
@@ -161,11 +176,11 @@ class StructuralModalSolver:
         if len(self.assembler.active_2d_element_dofs):
             unprescribed_shell_dofs = self.assembler.unprescribed_shell_dofs
             solution_full[unprescribed_shell_dofs, :] = solution
-            self.solution_full = solution_full
+            self.solution = solution_full
             # print("reinserted dofs -> ", len(self.displacement_dofs))
 
         else:
             solution_full[self.unprescribed_dofs_indexes, :] = solution
-            self.solution_full = solution_full
+            self.solution = solution_full
 
 # fmt: on

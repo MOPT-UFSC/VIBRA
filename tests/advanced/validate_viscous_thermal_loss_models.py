@@ -8,7 +8,6 @@ from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 
 import os
-import pytest
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,9 +17,7 @@ from openpyxl import load_workbook
 
 from time import time
 
-@pytest.mark.slow
 def load_external_mesh_and_solve():
-    # return
 
     # start decoding the Ansys script file (ds.dat file or input file)
     mesh_path = "data/validation/viscous_thermal_loss/mesh/ds_viscous_thermal_reference_geometry.dat"
@@ -103,10 +100,10 @@ def load_external_mesh_and_solve():
     model.generated_mesh = True
 
     for vol_id in [1, 2, 3, 4, 5]:
-        model.set_fluid(fluid, volume=vol_id)
+        model.properties._set_property("fluid", fluid, volume=vol_id)
 
-    model.set_fluid(fluid, surface=1)
-    model.set_fluid(fluid, surface=2)
+    model.properties._set_property("fluid", fluid, surface=1)
+    model.properties._set_property("fluid", fluid, surface=2)
 
     # Normal surface velocity data
     data_Vn = { "real_values" : [1],
@@ -166,11 +163,13 @@ def load_external_mesh_and_solve():
     # t0 = time()
     # # Run modal analysis
     # modal_solver = AcousticModalSolver(assembler)
-    # natural_frequencies, modal_shape = modal_solver.solve()
+    # modal_solver.solve()
+    # natural_frequencies = modal_solver.natural_frequencies
+    # modal_shape = modal_solver.solution
     # dt = time() - t0
     # print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
     # return
-    
+
     # Define the analysis type and load setup
     analysis_data = {"analysis_id" : 3, "frequencies" : frequencies}
     harmonic_solver = AcousticHarmonicSolver(assembler, analysis_data=analysis_data)

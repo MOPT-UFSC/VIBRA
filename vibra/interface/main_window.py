@@ -1,15 +1,8 @@
-import logging
-import os
-import sys
-from pathlib import Path
-from shutil import copy, rmtree
-from time import time
 
 from PySide6.QtWidgets import (
      QAbstractButton,
      QDialog,
-     QFileDialog, QFrame,
-     QGridLayout, 
+     QFileDialog,
      QMainWindow, 
      QMenu,
      QMessageBox,
@@ -33,33 +26,17 @@ from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
 from vibra.interface.user_input.input_ui import InputUi
 from vibra.interface.exception_message import ErrorMessage
-from vibra.interface.plots.acoustic.export_element_transfer_data_input import (
-    ExportElementTransferDataInput,
-)
-from vibra.interface.plots.acoustic.plot_particle_velocity_frequency_response_input import (
-    PlotParticleVelocityFrequencyResponseInput,
-)
-from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import (
-    PlotSpecificAcousticImpedanceInput,
-)
+from vibra.interface.plots.acoustic.export_element_transfer_data_input import ExportElementTransferDataInput
+from vibra.interface.plots.acoustic.plot_particle_velocity_frequency_response_input import PlotParticleVelocityFrequencyResponseInput
+from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
 
-# from vibra.config import UserConfig
 from vibra.interface.section_plane_widget import SectionPlaneWidget
 from vibra.interface.status_bar import StatusBar
-from vibra.interface.viewer_3d.render_widgets.acoustic_harmonic_analysis_render_widget import (
-    AcousticHarmonicAnalysisRenderWidget,
-)
-from vibra.interface.viewer_3d.render_widgets.acoustic_modal_analysis_render_widget import (
-    AcousticModalAnalysisRenderWidget,
-)
-from vibra.interface.viewer_3d.render_widgets.geometry_render_widget import GeometryRenderWidget
-from vibra.interface.viewer_3d.render_widgets.mesh_render_widget import MeshRenderWidget
-from vibra.interface.viewer_3d.render_widgets.structural_harmonic_analysis_render_widget import (
-    StructuralHarmonicAnalysisRenderWidget,
-)
-from vibra.interface.viewer_3d.render_widgets.structural_modal_analysis_render_widget import (
-    StructuralModalAnalysisRenderWidget,
+from vibra.interface.viewer_3d.render_widgets import (
+    GeometryRenderWidget,
+    MeshRenderWidget,
+    ResultsRenderWidget,
 )
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
@@ -70,6 +47,15 @@ from vibra.interface.user_input.render_user_preferences import RendererUserPrefe
 from molde.render_widgets import CommonRenderWidget
 from molde import stylesheets
 from molde import load_ui
+
+import logging
+import os
+import sys
+from pathlib import Path
+from shutil import copy, rmtree
+from time import time
+
+# import qdarktheme
 
 
 class MainWindow(QMainWindow):
@@ -151,16 +137,15 @@ class MainWindow(QMainWindow):
         #QSplitter
         self.splitter: QSplitter
 
+        # QToolBar
+        self.renderer_toolbar: QToolBar
+
         # QMenu
         self.menu_project: QMenu
         self.menu_settings: QMenu
         self.menu_view_mode: QMenu
         self.menu_advanced_results: QMenu
         self.menu_help: QMenu
-
-        # QToolBar
-        self.renderer_toolbar: QToolBar
-        self.animation_toolbar: QToolBar
 
         # QStackedWidget
         self.stacked_setup: QStackedWidget
@@ -179,6 +164,7 @@ class MainWindow(QMainWindow):
         the function named "action_new_callback" if it exists.
         '''
         for action in self.findChildren(QAction):
+            action: QAction
             function_name = action.objectName() + "_callback"
             function_exists = hasattr(self, function_name)
             if not function_exists:
@@ -188,7 +174,7 @@ class MainWindow(QMainWindow):
             if callable(function):
                 action.triggered.connect(function)
 
-    def create_basic_layout(self):      
+    def _create_basic_layout(self):      
         self.status_bar = StatusBar(self)
         self.analysis_toolbar = AnalysisToolbar()
         self.animation_toolbar = AnimationToolbar()
@@ -198,10 +184,7 @@ class MainWindow(QMainWindow):
 
         self.render_widgets_stack.addWidget(self.geometry_widget)
         self.render_widgets_stack.addWidget(self.mesh_widget)
-        self.render_widgets_stack.addWidget(self.structural_modal_analysis)
-        self.render_widgets_stack.addWidget(self.structural_harmonic_analysis)
-        self.render_widgets_stack.addWidget(self.acoustic_modal_analysis)
-        self.render_widgets_stack.addWidget(self.acoustic_harmonic_analysis)
+        self.render_widgets_stack.addWidget(self.results_widget)
         self.render_widgets_stack.addWidget(self.help_widget)
         self.render_widgets_stack.addWidget(self.welcome_widget)
         self.render_widgets_stack.currentChanged.connect(self.render_changed_callback)
@@ -243,9 +226,9 @@ class MainWindow(QMainWindow):
         }
 
     def configure_main_window(self):
-
         app().splash.update_progress(10)
-        self.configure_window()
+        self._config_window()
+        self._connect_actions()
 
         app().splash.update_progress(30)
         self._load_menu_widgets()
@@ -253,7 +236,7 @@ class MainWindow(QMainWindow):
 
         app().splash.update_progress(60)
         self._define_qt_variables()
-        self.create_basic_layout()
+        self._create_basic_layout()
         self._configure_render_widgets_stack()
         self._configure_stacked_setup()
 
@@ -312,10 +295,6 @@ class MainWindow(QMainWindow):
             widget = self.render_widgets_stack.widget(i)
             if hasattr(widget, "set_theme"):
                 widget.set_theme(theme)
-
-    def configure_window(self):
-        self._config_window()
-        self._connect_actions()
     
     def closeEvent(self, event):
         self.close_app()
@@ -379,10 +358,8 @@ class MainWindow(QMainWindow):
         self.section_plane = SectionPlaneWidget(self)
         self.geometry_widget = GeometryRenderWidget()
         self.mesh_widget = MeshRenderWidget()
-        self.structural_modal_analysis = StructuralModalAnalysisRenderWidget()
-        self.structural_harmonic_analysis = StructuralHarmonicAnalysisRenderWidget()
-        self.acoustic_modal_analysis = AcousticModalAnalysisRenderWidget()
-        self.acoustic_harmonic_analysis = AcousticHarmonicAnalysisRenderWidget()
+        self.results_widget = ResultsRenderWidget()
+
         self.welcome_widget = WelcomeWidget()
         self.help_widget = HelpWidget()
     
@@ -400,7 +377,6 @@ class MainWindow(QMainWindow):
         self.update_renderer_font_size()
 
     def set_geometry_selection(self, *, points=None, lines=None, surfaces=None, volumes=None, join=False, remove=False):
-        s = time()
         if points is None:
             points = set()
         
@@ -419,15 +395,6 @@ class MainWindow(QMainWindow):
         for volume in volumes:
             volume_surfaces = mesh.surfaces_from_volumes.get(volume, [])
             surfaces |= set(volume_surfaces)
-
-        # Select the mesh elements associated with the selected geometry
-        # mesh_faces = []
-        # mesh_solids = []
-        # for surface in surfaces:
-        #     mesh_faces.extend(mesh.elements_from_surface.get(surface, []))
-        # for volume in volumes:
-        #     mesh_solids.extend(mesh.elements_from_volume.get(volume, []))
-        # self.set_mesh_selection(faces=mesh_faces, solids=mesh_solids, join=join, remove=remove)
 
         if join and remove:
             self.selected_geometry_points ^= set(points)
@@ -451,7 +418,6 @@ class MainWindow(QMainWindow):
             self.selected_geometry_volumes = set(volumes)
 
         self.selection_changed.emit()
-        # print("COMBINING SELECTION", time() - s)
     
     def create_recents_menu(self):
         color = QColor("#448cff") 
@@ -516,10 +482,17 @@ class MainWindow(QMainWindow):
         nodes, face_elements, solid_elements = app().project.model.mesh.get_mesh_info()
         self.update_mesh_information(nodes, face_elements, solid_elements)
     
-    def configure_acoustic_modal_analysis_render_widget(self, show_renderer_widget=False):
-        self.acoustic_modal_analysis.update_plot()
+    def configure_results_render_widget(self, show_render_widget=False):
+        self.results_widget.update_plot()
+
+        if show_render_widget:
+            ...
+    
+    def configure_acoustic_modal_analysis_render_widget(self, show_render_widget=False):
+        self.results_widget.configure_analysis("acoustic_modal")
+        # self.acoustic_modal_analysis.update_plot()
         
-        if show_renderer_widget:
+        if show_render_widget:
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
             self.results_viewer_widget.hide_bottom_widget()
 
@@ -532,9 +505,12 @@ class MainWindow(QMainWindow):
                 self.action_mesh_workspace.setEnabled(True)
 
             self.animation_toolbar.setDisabled(True)
+        
+        self.configure_results_render_widget(show_render_widget)
     
     def configure_structural_modal_analysis_render_widget(self, show_render_widget=False):
-        self.structural_modal_analysis.update_plot()
+        self.results_widget.configure_analysis("structural_modal")
+        # self.structural_modal_analysis.update_plot()
 
         if show_render_widget:
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
@@ -549,9 +525,12 @@ class MainWindow(QMainWindow):
                 self.action_mesh_workspace.setEnabled(True)
             
             self.animation_toolbar.setDisabled(True)
+        
+        self.configure_results_render_widget(show_render_widget)
             
     def configure_structural_harmonic_analysis_render_widget(self, show_render_widget=False):
-        self.structural_harmonic_analysis.update_plot()
+        self.results_widget.configure_analysis("structural_harmonic")
+        # self.structural_harmonic_analysis.update_plot()
 
         if show_render_widget:
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
@@ -566,9 +545,12 @@ class MainWindow(QMainWindow):
                 self.action_mesh_workspace.setEnabled(True)
             
             self.animation_toolbar.setDisabled(True)
+        
+        self.configure_results_render_widget(show_render_widget)
 
     def configure_acoustic_harmonic_analysis_render_widget(self, show_render_widget=False):
-        self.acoustic_harmonic_analysis.update_plot()
+        self.results_widget.configure_analysis("acoustic_harmonic")
+        # self.acoustic_harmonic_analysis.update_plot()
 
         if show_render_widget:
             self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
@@ -583,6 +565,8 @@ class MainWindow(QMainWindow):
                 self.action_mesh_workspace.setEnabled(True)
             
             self.animation_toolbar.setDisabled(True)
+        
+        self.configure_results_render_widget(show_render_widget)
             
     def show_geometry_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
@@ -596,20 +580,23 @@ class MainWindow(QMainWindow):
             if isinstance(widget, CommonRenderWidget):
                 widget.update_plot(reset_camera)
     
+    def update_symbols(self):
+        for i in range(self.render_widgets_stack.count()):
+            widget = self.render_widgets_stack.widget(i)
+            if hasattr(widget, "update_symbols"):
+                widget.update_symbols()
+
     def update_info_text(self):
         for i in range(self.render_widgets_stack.count()):
             widget = self.render_widgets_stack.widget(i)
             if hasattr(widget, "update_info_text"):
                 widget.update_info_text()
             
-    def update_scale_bar(self, show=True):
+    def update_scale_bar(self, show: bool):
         for i in range(self.render_widgets_stack.count()):
             widget = self.render_widgets_stack.widget(i)
             if hasattr(widget, "scale_bar_actor"):
-                if show:
-                    widget.enable_scale_bar()
-                else:
-                    widget.disable_scale_bar()
+                widget.scale_bar_actor.SetVisibility(show)
                 
     def update_renderer_font_size(self):
         for i in range(self.render_widgets_stack.count()):
@@ -914,6 +901,9 @@ class MainWindow(QMainWindow):
         load = load_function(app().load_project.load, self)
         load()
 
+        self.configure_mesh_information()
+        self.update_plots()
+
     def import_geometry(self, path : str):
 
         import_geometry = load_function(app().project.import_geometry, self)
@@ -1100,29 +1090,29 @@ class MainWindow(QMainWindow):
             if hasattr(widget, "update_hidden_plot"):
                 widget.update_hidden_plot()
     
-    def process_acoustic_modal_analysis(self):
-        try:
-            self.project.solve_acoustic_modal_analysis()
-        except NotImplementedError as e:
-            ErrorMessage(e)
-        else:
-            self.configure_acoustic_modal_analysis_render_widget(True)
+    # def process_acoustic_modal_analysis(self):
+    #     try:
+    #         self.project.solve_acoustic_modal_analysis()
+    #     except NotImplementedError as e:
+    #         ErrorMessage(e)
+    #     else:
+    #         self.configure_acoustic_modal_analysis_render_widget(True)
 
-    def process_structural_modal_analysis(self):
-        try:
-            self.project.solve_structural_modal_analysis()
-        except NotImplementedError as e:
-            ErrorMessage(e)
-        else:
-            self.configure_structural_modal_analysis_render_widget(True)
+    # def process_structural_modal_analysis(self):
+    #     try:
+    #         self.project.solve_structural_modal_analysis()
+    #     except NotImplementedError as e:
+    #         ErrorMessage(e)
+    #     else:
+    #         self.configure_structural_modal_analysis_render_widget(True)
     
-    def process_acoustic_harmonic_analysis(self):
-        try:
-            self.project.solve_acoustic_harmonic_analysis()
-        except NotImplementedError as e:
-            ErrorMessage(e)
-        else:
-            self.configure_acoustic_harmonic_analysis_render_widget(True)
+    # def process_acoustic_harmonic_analysis(self):
+    #     try:
+    #         self.project.solve_acoustic_harmonic_analysis()
+    #     except NotImplementedError as e:
+    #         ErrorMessage(e)
+    #     else:
+    #         self.configure_acoustic_harmonic_analysis_render_widget(True)
     
     def disable_advanced_acoustic_plots_buttons(self, disabled : bool):
         self.action_plot_specific_acoustic_impedance.setDisabled(disabled)

@@ -120,7 +120,7 @@ class PlotStructuralFrequencyResponseInput(QWidget):
                 self.analysis_method = "Mode Superposition method"
 
         self.frequencies = app().project.structural_harmonic_solver.frequencies
-        self.solution_full = app().project.structural_harmonic_solver.solution_full
+        self.solution = app().project.structural_harmonic_solver.solution
 
     def check_inputs(self):
 
@@ -210,9 +210,9 @@ class PlotStructuralFrequencyResponseInput(QWidget):
             rows = gdofs[:, dof_index]
 
         if isinstance(rows, int):
-            response = self.solution_full[rows,:]
+            response = self.solution[rows,:]
         else:
-            response = np.average(self.solution_full[rows,:], axis=0)
+            response = np.average(self.solution[rows,:], axis=0)
 
         # if complex(0) in response:
         #     response += 1e-12

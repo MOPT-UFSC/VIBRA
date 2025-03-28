@@ -26,7 +26,7 @@ class PlotDisplacementField(QWidget):
     def showEvent(self, event):
         super().showEvent(event)
 
-        render_widget = app().main_window.structural_harmonic_analysis
+        render_widget = app().main_window.results_widget
         app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
         app().main_window.render_widget_changed.emit()
 
@@ -119,6 +119,16 @@ class PlotDisplacementField(QWidget):
         app().main_window.results_widget.set_colormap(colormap)
         self.update_plot()
 
+    def get_plot_type(self):
+        plot_types = [
+            "u_sum",
+            "u_x",
+            "u_y",
+            "u_z",
+        ]
+        index = self.comboBox_displacements.currentIndex()
+        return plot_types[index]
+
     def _config_treeWidget(self):
         widths = [80, 140]
         for i, width in enumerate(widths):
@@ -139,11 +149,16 @@ class PlotDisplacementField(QWidget):
 
         frequency_selected = float(self.lineEdit_selected_frequency.text())
         if frequency_selected in self.frequencies:
+            
+            results_widget = app().main_window.results_widget
+            results_widget.configure_analysis("structural_harmonic")
+            results_widget.update_plot()
+
             # frequency = self.frequency_to_index[frequency_selected]
             self.frequency_index = self.frequencies.index(frequency_selected)
             # color_scale_setup = self.get_user_color_scale_setup()
             # app().project.set_color_scale_setup(color_scale_setup)
-            app().main_window.structural_harmonic_analysis.update_plot()
+            # app().main_window.structural_harmonic_analysis.update_plot()
             # app().main_window.results_widget.clear_cache()
         
     def current_frequency_index(self):
@@ -218,11 +233,11 @@ class PlotDisplacementField(QWidget):
         return color_scale_setup
 
     def load_frequencies(self):
-
         self.treeWidget_frequencies.setDisabled(False)
         if isinstance(app().project.model.frequencies, np.ndarray):
-            _frequencies = app().project.model.frequencies
-            self.frequencies = list(_frequencies)
+            self.frequencies = list(app().project.model.frequencies)
+        else:
+            return
 
         self.frequency_to_index = dict(zip(self.frequencies, np.arange(len(self.frequencies), dtype=int)))
 

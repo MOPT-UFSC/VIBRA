@@ -1,14 +1,16 @@
 # fmt: off
 
-from PySide6.QtWidgets import QCheckBox, QComboBox, QDialog, QLabel, QLineEdit, QPushButton, QDoubleSpinBox, QTableWidget, QTableWidgetItem, QAbstractItemView, QHeaderView
+from PySide6.QtWidgets import QAbstractItemView, QCheckBox, QComboBox, QDialog, QHeaderView, QLabel, QLineEdit, QPushButton, QDoubleSpinBox, QTableWidget, QTableWidgetItem
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import Qt
 
 from vibra import app, UI_DIR
+from vibra.engine.mesher import gmsh_constants
 from vibra.engine.mesher.element_type import *
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_bar import load_function
 from vibra.utils.progress_status import ProgressStatus
+
 
 import logging
 from collections import defaultdict
@@ -16,6 +18,25 @@ from molde import load_ui
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
+
+
+gmsh_algorithms_2d = [
+                      gmsh_constants.MESH_ADAPT_2D,
+                      gmsh_constants.AUTOMATIC_2D,
+                      gmsh_constants.INITIAL_MESH_ONLY_2D,
+                      gmsh_constants.DELAUNAY_2D,
+                      gmsh_constants.FRONTAL_DELAUNAY_2D,
+                      gmsh_constants.QUASI_STRUCTURED_QUADS_2D
+                      ]
+
+gmsh_algorithms_3d = [
+                      gmsh_constants.DELAUNAY_3D, 
+                      gmsh_constants.FRONTAL_3D, 
+                      gmsh_constants.HXT_3D
+                      ]
+                      
+map_algorithms_2d = dict(zip(gmsh_algorithms_2d, [0, 1, 2, 3, 4, 5]))
+map_algorithms_3d = dict(zip(gmsh_algorithms_3d, [0, 1, 2]))
 
 
 class MesherInputs(QDialog):
@@ -37,7 +58,9 @@ class MesherInputs(QDialog):
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
+        self._config_widgets()
 
+        self.update_gmsh_controls()
         self._load_current_mesh_setup()
 
         while self.keep_window_open:
@@ -62,6 +85,12 @@ class MesherInputs(QDialog):
         # QComboBox
         self.comboBox_element_type: QComboBox
         self.comboBox_shape_function: QComboBox
+        self.comboBox_2d_algorithm: QComboBox
+        self.comboBox_3d_algorithm: QComboBox
+        self.comboBox_recombination_algorithm: QComboBox
+        self.comboBox_subdivision_algorithm: QComboBox
+        self.comboBox_recombine_all: QComboBox
+        self.comboBox_second_order_incomplete: QComboBox
 
         # QDoubleSpinBox
         self.doubleSpinBox_maximum_element_size: QDoubleSpinBox
@@ -85,16 +114,19 @@ class MesherInputs(QDialog):
 
         # QTableWidget
         self.tableWidget_refining_mesh_data: QTableWidget
-        self._config_tableWidget_appearance()
 
-    def _config_tableWidget_appearance(self):
+    def _config_widgets(self):
 
-        widths = [180, 160, 180]
-        header = ["Refining mesh size [mm]", "Selection type", "Selection IDs"]
+        self.comboBox_2d_algorithm.setDisabled(True)
+        self.comboBox_2d_algorithm.setDisabled(True)
+        self.comboBox_recombination_algorithm.setDisabled(True)
+        self.comboBox_subdivision_algorithm.setDisabled(True)
+        self.comboBox_second_order_incomplete.setDisabled(True)
+        self.comboBox_recombine_all.setDisabled(True)
 
+        widths = [160, 160]
         for i, width in enumerate(widths):
             self.tableWidget_refining_mesh_data.setColumnWidth(i, width)
-            self.tableWidget_refining_mesh_data.horizontalHeaderItem(i).setText(header[i])
             self.tableWidget_refining_mesh_data.horizontalHeaderItem(i).setTextAlignment(Qt.AlignCenter)
 
         self.tableWidget_refining_mesh_data.setSelectionBehavior(QAbstractItemView.SelectionBehavior(1))
@@ -102,6 +134,9 @@ class MesherInputs(QDialog):
         self.tableWidget_refining_mesh_data.horizontalHeader().setStretchLastSection(True)
 
     def _create_connections(self):
+        #
+        self.comboBox_shape_function.currentIndexChanged.connect(self.update_gmsh_controls)
+        self.comboBox_element_type.currentIndexChanged.connect(self.update_gmsh_controls)
         #
         self.pushButton_add.clicked.connect(self.add_button_callback)
         self.pushButton_exit.clicked.connect(self.close)
@@ -229,6 +264,10 @@ class MesherInputs(QDialog):
                 mesh_refinement_parameters = mesh_setup["mesh_refinement_parameters"]
                 mesh_connection = mesh_setup["mesh_connection"]
 
+                gmsh_algorithm_3d = mesh_setup.get("algorithm_3d")
+                if gmsh_algorithm_3d is not None:
+                    self.comboBox_3d_algorithm.setCurrentIndex(map_algorithms_3d[gmsh_algorithm_3d])
+
                 self.update_element_type(element_type)
                 
                 self.doubleSpinBox_maximum_element_size.setValue(maximum_element_size)
@@ -297,40 +336,32 @@ class MesherInputs(QDialog):
 
     def generate_mesh_callback(self):
 
-        try:
+        if self.check_mesh_inputs():
+            return
 
-            if self.check_mesh_inputs():
-                return
+        self.hide()
 
-            self.hide()
+        def generate_function():
 
-            def generate_function():
+            logging.info("Processing mesh..." + ProgressStatus(20, 100))
+            app().project.reset_solutions()
 
-                logging.info("Processing mesh..." + ProgressStatus(20, 100))
-                app().project.reset_solutions()
+            logging.info("Processing mesh..." + ProgressStatus(30, 100))
+            app().project.set_mesh_setup(self.mesh_setup)
+            app().file.write_mesh_setup_in_file(self.file_mesh_setup)
 
-                logging.info("Processing mesh..." + ProgressStatus(30, 100))
-                app().project.set_mesh_setup(self.mesh_setup)
-                app().file.write_mesh_setup_in_file(self.file_mesh_setup)
+            logging.info("Processing mesh..." + ProgressStatus(40, 100))
+            app().project.generate_mesh()
 
-                logging.info("Processing mesh..." + ProgressStatus(40, 100))
-                app().project.generate_mesh()
+        generate_mesh = load_function(generate_function, app().main_window)
+        generate_mesh()
 
-            generate_mesh = load_function(generate_function, app().main_window)
-            generate_mesh()
+        app().file.write_mesh_data_in_file()
 
-            app().file.write_mesh_data_in_file()
+        actions_to_finalize = load_function(self.actions_to_finalize, self.main_window)
+        actions_to_finalize()
 
-            actions_to_finalize = load_function(self.actions_to_finalize, self.main_window)
-            actions_to_finalize()
-
-            self.complete = True
-
-        except Exception as error_log:
-            window_title = "Error"
-            title = "Error while processing mesh"
-            message = str(error_log)
-            PrintMessageInput([window_title, title, message])
+        self.complete = True
 
     def actions_to_finalize(self):
 
@@ -359,20 +390,13 @@ class MesherInputs(QDialog):
         if self.stop:
             lineEdit.setFocus()
             return True
-
-        _element_type = self.comboBox_element_type.currentText()
-        _shape_function = self.comboBox_shape_function.currentText()
-
-        if _element_type == " Tetrahedral" and _shape_function == " Linear":
-            solid_element = TETRAHEDRON_4
-        elif _element_type == " Tetrahedral" and _shape_function == " Quadratic":
-            solid_element = TETRAHEDRON_10
-        elif _element_type == " Hexahedral" and _shape_function == " Linear":
-            solid_element = HEXAHEDRON_8
-        elif _element_type == " Hexahedral" and _shape_function == " Quadratic":
-            solid_element = HEXAHEDRON_20
-        else:
-            raise NotImplementedError(f"Element type not defined!")
+        
+        solid_element = self.get_element_type()
+        if solid_element is None:
+            return True
+        
+        alg3d_index = self.comboBox_3d_algorithm.currentIndex()
+        solid_element.algorithm_3d = gmsh_algorithms_3d[alg3d_index]
 
         connected_mesh = self.checkBox_mesh_connection.isChecked()
         self.mesh_setup = { 
@@ -386,15 +410,47 @@ class MesherInputs(QDialog):
                            }
 
         self.file_mesh_setup = { 
-                                "element_type" : _element_type,
-                                "shape_function" : _shape_function,
+                                "element_type" : self.comboBox_element_type.currentText().lower(),
+                                "shape_function" : self.comboBox_shape_function.currentText().lower(),
                                 "geometry_tolerance" : geometry_tolerance,
                                 "size_factor" : 0,
                                 "minimum_element_size" : min_factor*maximum_element_size,
                                 "maximum_element_size" : maximum_element_size,
+                                "algorithm_3d" : solid_element.algorithm_3d,
                                 "mesh_refinement_parameters" : self.get_mesh_refinement_data(),
                                 "mesh_connection" : connected_mesh
                                 }
+        
+    def get_element_type(self) -> ElementType:
+
+        _element_type = self.comboBox_element_type.currentText().lower()
+        _shape_function = self.comboBox_shape_function.currentText().lower()
+
+        if _element_type == "tetrahedral" and _shape_function == "linear":
+            return TETRAHEDRON_4
+        elif _element_type == "tetrahedral" and _shape_function == "quadratic":
+            return TETRAHEDRON_10
+        elif _element_type == "hexahedral" and _shape_function == "linear":
+            return HEXAHEDRON_8
+        elif _element_type == "hexahedral" and _shape_function == "quadratic":
+            return HEXAHEDRON_20
+        else:
+            return None
+            # raise NotImplementedError(f"Element type not defined!")
+
+    def update_gmsh_controls(self):
+
+        element_type = self.get_element_type()
+        if element_type is None:
+            return
+
+        self.comboBox_2d_algorithm.setCurrentIndex(map_algorithms_2d[element_type.algorithm_2d])
+        self.comboBox_3d_algorithm.setCurrentIndex(map_algorithms_3d[element_type.algorithm_3d])
+
+        self.comboBox_recombination_algorithm.setCurrentIndex(element_type.recombination_algorithm)
+        self.comboBox_subdivision_algorithm.setCurrentIndex(element_type.subdivision_algorithm)
+        self.comboBox_recombine_all.setCurrentIndex(int(element_type.recombine_all))
+        self.comboBox_second_order_incomplete.setCurrentIndex(int(element_type.second_order_incomplete))
 
     def check_inputs(self, lineEdit, label, only_positive=True, zero_included=False, _float=True):
 

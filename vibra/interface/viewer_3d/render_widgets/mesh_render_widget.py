@@ -1,36 +1,36 @@
+from numbers import Number
+
+import numpy as np
+from molde.interactor_styles import BoxSelectionInteractorStyle
+from molde.render_widgets import CommonRenderWidget
+from molde.utils import TreeInfo
+from molde.utils.format_sequences import format_long_sequence
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QApplication
 
 from vibra import app
-# from vibra.interface.tabs.mesh_info_bar import MeshInfoBar
-from ..actors.section_plane_actor import SectionPlaneActor
+
 from ..actors.edges_actor import EdgesActor
 from ..actors.faces_actor import FacesActor
-from ..actors.nodes_actor import NodesActor
-from ..actors.solids_actor import SolidsActor
-from ..actors.hollow_solids_actor import HollowSolidsActor
-from ..actors.selection_spheres import SelectionSpheres
-from ..actors.symbols.symbols_actor import SymbolsActor
 from ..actors.ghost_actor import GhostActor
+from ..actors.hollow_solids_actor import HollowSolidsActor
+from ..actors.nodes_actor import NodesActor
+from ..actors.section_plane_actor import SectionPlaneActor
+from ..actors.selection_spheres import SelectionSpheres
+from ..actors.solids_actor import SolidsActor
+from ..actors.symbols.symbols_actor import SymbolsActor
 from ..selection.mesh_selection import MeshSelection
 
-from molde.render_widgets import CommonRenderWidget
-from molde.utils import TreeInfo
-from molde.utils.format_sequences import format_long_sequence
-from molde.interactor_styles import BoxSelectionInteractorStyle
-
-import numpy as np
-from numbers import Number
-
-from vtkmodules.vtkCommonCore import vtkIntArray
-from vtkmodules.vtkCommonDataModel import vtkPolyData
-from vtkmodules.vtkRenderingCore import vtkActor, vtkCellPicker
-
-
-# SHOW_POINTS = 0
-# SHOW_LINES = 1
-# SHOW_FACES = 2
-# SHOW_VOLUMES = 3
+from .model_info_text import (
+    nodes_info_text,
+    mesh_faces_info_text,
+    mesh_faces_info_text,
+    mesh_solids_info_text,
+    mesh_material_info_text,
+    mesh_fluid_info_text,
+    mesh_structural_boundary_conditions_info_text,
+    mesh_structural_format, 
+)
 
 
 class MeshRenderWidget(CommonRenderWidget):
@@ -39,42 +39,31 @@ class MeshRenderWidget(CommonRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.set_interactor_style(BoxSelectionInteractorStyle())
-        self.mouse_click = (0, 0)
 
-        self.main_window = app().main_window
+        self.mesh_selection = MeshSelection(self)
+        self.selection_color = (20, 106, 245)
+        self.mouse_click = (0, 0)
 
         self.left_clicked.connect(self.click_callback)
         self.left_released.connect(self.selection_callback)
-        self.main_window.theme_changed.connect(self.update_theme)
-        self.main_window.visualization_changed.connect(self.visualization_changed_callback)
-        self.main_window.selection_changed.connect(self.update_selection)
-        self.main_window.section_plane.value_changed.connect(self.update_section_plane)
-
-        self.mesh_selection = MeshSelection(self)
-        self.section_plane_active = False
-        self.section_plane_args = tuple()
-
-        self.nodes_actor = None
-        self.faces_actor = None
-        self.solids_actor = None
-        self.edges_actor = None
-        self.selection_spheres_actor = None
-        self.ghost_actor = None
-        self.plane_actor = None
-        self.symbols_actor = None
+        app().main_window.theme_changed.connect(self.update_theme)
+        app().main_window.visualization_changed.connect(self.visualization_changed_callback)
+        app().main_window.selection_changed.connect(self.update_selection)
+        app().main_window.section_plane.value_changed.connect(self.update_section_plane)
 
         # The fast area selection just works if it is on
         self.renderer.GetActiveCamera().ParallelProjectionOn()
         self.renderer.RemoveAllLights()
 
+        self.remove_all_actors()
         self.create_axes()
         self.create_scale_bar()
         self.create_camera_light(0.1, 0.1)
         self.update_plot()
-    
+
     def set_theme(self, *args, **kwargs):
         self.update_theme()
-    
+
     def update_theme(self):
         user_preferences = app().config.user_preferences
         bkg_1 = user_preferences.renderer_background_color_1
@@ -98,9 +87,9 @@ class MeshRenderWidget(CommonRenderWidget):
         if hasattr(self, "scale_bar_actor"):
             self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
             self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
-        
+
         self.update_selection()
-    
+
     def update_scale_bar_visibility(self):
         user_preferences = app().config.user_preferences
 
@@ -108,16 +97,16 @@ class MeshRenderWidget(CommonRenderWidget):
             self.enable_scale_bar()
         else:
             self.disable_scale_bar()
-    
+
     def enable_scale_bar(self):
         self.scale_bar_actor.VisibilityOn()
 
     def disable_scale_bar(self):
         self.scale_bar_actor.VisibilityOff()
-    
+
     def update_renderer_font_size(self):
         user_preferences = app().config.user_preferences
-        font_size_px = int(user_preferences.renderer_font_size * 4/3)
+        font_size_px = int(user_preferences.renderer_font_size * 4 / 3)
 
         info_text_property = self.text_actor.GetTextProperty()
         info_text_property.SetFontSize(font_size_px)
@@ -140,11 +129,10 @@ class MeshRenderWidget(CommonRenderWidget):
         self.faces_actor = FacesActor(mesh)
         self.edges_actor = EdgesActor(self.faces_actor.data)
         self.solids_actor: SolidsActor | HollowSolidsActor = HollowSolidsActor(mesh)
-        # self.solids_actor: SolidsActor | HollowSolidsActor = SolidsActor(mesh)
         self.symbols_actor = SymbolsActor(self.renderer)
         self.selection_spheres_actor = SelectionSpheres()
 
-        has_hidden_part = bool(self.main_window.hidden_surfaces)
+        has_hidden_part = bool(app().main_window.hidden_surfaces)
         self.ghost_actor = GhostActor(mesh)
         self.ghost_actor.SetVisibility(has_hidden_part)
 
@@ -161,21 +149,24 @@ class MeshRenderWidget(CommonRenderWidget):
             self.symbols_actor,
         )
 
-        self.update_theme()
+        with self.update_lock:
+            self.update_theme()
+            self.visualization_changed_callback()
+            self.update_section_plane()
 
         if reset_camera:
             self.renderer.ResetCamera()
+        else:
+            self.update()
 
-        self.visualization_changed_callback()
-        self.update_section_plane()
         app().project.thumbnail = self.get_thumbnail()
 
     def visualization_changed_callback(self):
-        if not self._actors_exists():
+        if not self.actors_exists():
             return
 
         visualization = app().main_window.visualization_filter
-        has_hidden_part = bool(self.main_window.hidden_surfaces)
+        has_hidden_part = bool(app().main_window.hidden_surfaces)
 
         self.nodes_actor.SetVisibility(visualization.points)
         self.edges_actor.SetVisibility(visualization.lines)
@@ -192,48 +183,23 @@ class MeshRenderWidget(CommonRenderWidget):
 
     def update_hidden_plot(self):
         self.update_plot(reset_camera=False)
-        return 
-        # We could just call the update_plot function,
-        # but this is much simpler and faster
-        if app().project is None:
-            return
-
-        model = app().project.model
-        if model is None:
-            return
-
-        mesh = model.mesh
-        if mesh is None:
-            return
-
-        if not self._actors_exists():
-            self.update_plot()
-            return
-
-        self.renderer.RemoveActor(self.solids_actor)
-        self.solids_actor = SolidsActor(mesh)
-        self.renderer.AddActor(self.solids_actor)
-
-        self.renderer.RemoveActor(self.edges_actor)
-        self.edges_actor = EdgesActor(self.solids_actor.data)
-        self.edges_actor.GetProperty().SetColor(0, 0, 0)
-        self.renderer.AddActor(self.edges_actor)
-
-        has_hidden_part = bool(self.main_window.hidden_surfaces)
-        self.ghost_actor.SetVisibility(has_hidden_part)
-
-        # has_hidden_part = bool(self.main_window.hidden_surfaces)
-        # faces_alpha = 12 if has_hidden_part else 0
-        # self.faces_actor.clear_colors((255, 255, 255, faces_alpha))
-
-        self.update_section_plane()
 
     def click_callback(self, x, y):
         self.mouse_click = (x, y)
 
     def selection_callback(self, x, y):
-        if not self._actors_exists():
+        if not self.actors_exists():
             return
+
+        section_plane_widget = app().main_window.section_plane
+        if section_plane_widget.cutting:
+            xyz = self.plane_actor.calculate_xyz_position(section_plane_widget.get_position())
+            normal = self.plane_actor.calculate_normal_vector(section_plane_widget.get_rotation())
+            if section_plane_widget.get_inverted():
+                normal = -normal
+            self.mesh_selection.set_section_plane(xyz, normal)            
+        else:
+            self.mesh_selection.clear_section_plane()
 
         x0, y0 = self.mouse_click
         mouse_moved = (abs(x0 - x) > 10) or (abs(y0 - y) > 10)
@@ -259,22 +225,20 @@ class MeshRenderWidget(CommonRenderWidget):
         """
         Update the visualization of selected data.
         """
-        # This is a optimization, may imply side effects
-        # if not self.isVisible():
-        #     return
-
-        if not self._actors_exists():
+        if not self.actors_exists():
             return
 
         self.update_info_text()
 
+        # In this renderer the faces should be transparent
+        # all the time, except when they are selected
+        self.faces_actor.set_color((0, 0, 0, 0))
         self.nodes_actor.clear_colors()
-        self.faces_actor.clear_colors()
         self.solids_actor.clear_colors()
 
-        nodes = self.main_window.selected_mesh_nodes
-        faces = self.main_window.selected_mesh_faces
-        solids = self.main_window.selected_mesh_solids
+        nodes = app().main_window.selected_mesh_nodes
+        faces = app().main_window.selected_mesh_faces
+        solids = app().main_window.selected_mesh_solids
     
         selection_color = app().config.user_preferences.selection_color
         faces_selection_color = selection_color.apply_factor(1.2).to_rgb()
@@ -309,17 +273,17 @@ class MeshRenderWidget(CommonRenderWidget):
         self.nodes_actor = None
         self.ghost_actor = None
 
-    def _actors_exists(self):
+    def actors_exists(self):
         return len(self._widget_actors) > 0
 
     def _get_info_tab(self):
         pass
 
     def update_section_plane(self):
-        if not self._actors_exists():
+        if not self.actors_exists():
             return
-        
-        section_plane = self.main_window.section_plane
+
+        section_plane = app().main_window.section_plane
 
         if not section_plane.cutting:
             self._disable_section_plane()
@@ -340,7 +304,7 @@ class MeshRenderWidget(CommonRenderWidget):
             self._apply_section_plane(position, rotation, inverted, show_plane)
 
     def _disable_section_plane(self):
-        has_hidden_part = bool(self.main_window.hidden_surfaces)
+        has_hidden_part = bool(app().main_window.hidden_surfaces)
         self.ghost_actor.SetVisibility(has_hidden_part)
         self.plane_actor.VisibilityOff()
 
@@ -366,6 +330,7 @@ class MeshRenderWidget(CommonRenderWidget):
         if inverted:
             normal = -normal
 
+        self.nodes_actor.apply_cut(xyz, normal)
         self.faces_actor.apply_cut(xyz, normal)
         self.solids_actor.apply_cut(xyz, normal)
         self.edges_actor.apply_cut(xyz, normal)
@@ -378,192 +343,13 @@ class MeshRenderWidget(CommonRenderWidget):
 
     def update_info_text(self):
         text = ""
-        text += self._nodes_info_text()
-        text += self._faces_info_text()
-        text += self._solids_info_text()
-        # text += self._material_info_text()
-        # text += self._fluid_info_text()
-        text += self._structural_boundary_conditions_info_text()
+        text += nodes_info_text()
+        text += mesh_faces_info_text()
+        text += mesh_solids_info_text()
+        # text += mesh_material_info_text()
+        # text += mesh_fluid_info_text()
+        text += mesh_structural_boundary_conditions_info_text()
 
         self.set_info_text(text)
         self.update()
 
-    def _nodes_info_text(self):
-        nodes = list(self.main_window.selected_mesh_nodes)
-        text = ""
-        if len(nodes) > 1:
-            text += f"{len(nodes)} nodes in selection\n" f"{format_long_sequence(nodes)}\n\n"
-        elif len(nodes) == 1:
-            text += f"Node: {nodes[0]}\n"
-            coords = app().project.model.mesh.nodal_coordinates[nodes[0], 1:]
-            text += f"Coordinates: [{round(coords[0], 6)}, {round(coords[1], 6)}, {round(coords[2], 6)}] (m)\n\n"
-
-        return text
-
-    def _faces_info_text(self):
-        faces = list(self.main_window.selected_mesh_faces)
-        text = ""
-        if len(faces) > 1:
-            text += f"{len(faces)} faces in selection\n" f"{format_long_sequence(faces)}\n\n"
-        elif len(faces) == 1:
-            text += f"Face element: {faces[0]}\n\n"
-
-        return text
-
-    def _solids_info_text(self):
-        solids_elem_ids = list(self.main_window.selected_mesh_solids)
-        text = ""
-        if len(solids_elem_ids) > 1:
-            text += (
-                f"{len(solids_elem_ids)} solids in selection\n"
-                f"{format_long_sequence(solids_elem_ids)}\n\n"
-            )
-        elif len(solids_elem_ids) == 1:
-            element_id = solids_elem_ids[0]
-            connect = app().project.model.mesh.solids_connectivity[element_id, 4:]
-            text += f"Solid element: {element_id}\n"
-            text += f"Connectivity: {[int(node_id) for node_id in connect]}\n\n"
-
-        return text
-
-    def _material_info_text(self):
-        elements = list(self.main_window.selected_mesh_faces)
-        text = ""
-
-        if not elements:
-            elements = list(self.main_window.selected_mesh_solids)
-
-        if len(elements) == 1:
-            current_solid = app().project.model.mesh.volume_from_element[elements[0]]
-            material = app().project.model.properties.get_material(volume=current_solid)
-            if material is None:
-                return text
-
-            tree = TreeInfo("Material")
-            tree.add_item("Name", material.name)
-            tree.add_item("Identifier", material.identifier)
-            tree.add_item("Density", material.density, "kg/m³")
-            tree.add_item("Young Modulus", material.elasticity_modulus / 1e9, "GPa")
-            tree.add_item("Poisson Ratio", material.poisson_ratio, "--")
-            tree.add_item(
-                "Thermal Expasion Coefficient", material.thermal_expansion_coefficient, "1/K"
-            )
-
-            text += str(tree)
-
-        return text
-
-    def _fluid_info_text(self):
-        elements = list(self.main_window.selected_mesh_faces)
-        text = ""
-
-        if not elements:
-            elements = list(self.main_window.selected_mesh_solids)
-
-        if len(elements) == 1:
-            current_solid = app().project.model.mesh.volume_from_element[elements[0]]
-            fluid = app().project.model.properties.get_fluid(volume=current_solid)
-            if fluid is None:
-                return text
-
-            tree = TreeInfo("Fluid")
-            tree.add_item("Name", fluid.name)
-            tree.add_item("Identifier", fluid.identifier)
-            tree.add_item("Pressure", fluid.pressure, "Pa")
-            tree.add_item("Temperature", fluid.temperature, "K")
-            tree.add_item("Density", fluid.fluid_density, "kg/m³")
-            tree.add_item("Speed of sound", fluid.speed_of_sound, "m/s")
-            tree.add_item("Molar mass", fluid.molar_mass, "kg/kmol")
-
-            text += str(tree)
-
-        return text
-
-
-    def _structural_boundary_conditions_info_text(self):
-
-        text = ""
-        selected_nodes = list(self.main_window.selected_mesh_nodes)
-
-        if len(selected_nodes) != 1:
-            return text
-
-        prescribed_dofs = app().project.model.properties._get_property("prescribed_dofs", node=selected_nodes[0])
-        nodal_loads = app().project.model.properties._get_property("nodal_loads", node=selected_nodes[0])
-        boundary_conditions_list = [prescribed_dofs, nodal_loads]
-
-        if all(condition is None for condition in boundary_conditions_list):
-            return text
-
-        if prescribed_dofs is not None:
-            values = prescribed_dofs["values"]
-            loaded_table = "table_names" in prescribed_dofs.keys()
-            text += _structural_format("Prescribed dofs",  values, ("u", "r"), ("m", "rad"), loaded_table)
-
-        if nodal_loads is not None:
-            values = nodal_loads["values"]
-            loaded_table = "table_names" in nodal_loads.keys()
-            text += _structural_format("Nodal loads",  values, ("F", "M"), ("N", "N.m"), loaded_table)
-
-        return text
-
-def _all_none(sequence) -> bool:
-    return all(i is None for i in sequence)
-
-def _structural_format(property_name, values, labels, units, has_table):
-
-    if _all_none(values):
-        return ""
-
-
-    u_values = list()
-    u_labels = list()
-    for val, label in zip(values[:3], "xyz"):
-        if val is None:
-            continue
-
-        if not isinstance(val, Number | complex | str):
-            val = "table"
-        
-        u_values.append(val)
-        u_labels.append(labels[0] + label)
-
-    r_values = list()
-    r_labels = list()
-    for val, label in zip(values[3:], "xyz"):
-        if val is None:
-            continue
-
-        if not isinstance(val, Number | complex | str):
-            val = "table"
-
-        r_values.append(val)
-        r_labels.append(labels[1] + label)
-
-    tree = TreeInfo(property_name)
-    if has_table:
-        if u_values:
-            tree.add_item(", ".join(u_labels), "Table of values")
-        if r_values:
-            tree.add_item(", ".join(r_labels), "Table of values")
-
-    else:
-        if u_values:
-            tree.add_item(", ".join(u_labels), u_values, units[0])
-        if r_values:
-            tree.add_item(", ".join(r_labels), r_values, units[1])
-
-    return str(tree)
-
-def _acoustic_format(property_name, value, label, unit, additional_labels=[]):
-
-    tree = TreeInfo(property_name)
-    if isinstance(value, Number | str | float | complex):
-        tree.add_item(label, np.round(value, 4), unit)
-    else:
-        tree.add_item(label, "Table of values")
-
-    if len(additional_labels) == 2:
-        tree.add_item(additional_labels[0], additional_labels[1])
-
-    return str(tree)

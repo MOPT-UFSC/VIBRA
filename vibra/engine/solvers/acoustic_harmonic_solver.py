@@ -1,27 +1,24 @@
-import logging
-# import os
-import numpy as np
-from scipy.sparse.linalg import spsolve
-from scipy.sparse import triu
-
-#
-# os.environ["OMP_DYNAMIC"] = "FALSE"
-# os.environ["OMP_THREAD_LIMIT"] = "8"
-# os.environ["OMP_NUM_THREADS"] = "4"
-# 
-
-from pypardiso.pardiso_wrapper import PyPardisoSolver
-
-from functools import cache
 
 from vibra.utils.progress_status import ProgressStatus
+from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
+
+import logging
+import numpy as np
+
+from functools import cache
+from scipy.sparse import triu
+from pypardiso.pardiso_wrapper import Matrix_type
 
 
 class AcousticHarmonicSolver:
-    def __init__(self, assembler, analysis_data=None):
-        #
+    def __init__(self, assembler: "AcousticAssembler", analysis_data=None):
+
         self.assembler = assembler
-        #
+
         self.reset_variables()
         self.load_analysis_data(analysis_data)
 
@@ -45,7 +42,7 @@ class AcousticHarmonicSolver:
         self.dissipation_model = data
 
     @cache
-    def get_max_min_values_of_pressures(self, column):
+    def get_min_max_values_of_pressures(self, column: int, plot_type: str):
         """ This method returns the minimum and maximum pressure values
             of selected frequency for animation purposes.
 
@@ -58,6 +55,7 @@ class AcousticHarmonicSolver:
             p_min, p_max: float values for minimum and maximum pressures,
 
         """
+    
         data = self.solution[:, column]
 
         amplitudes = np.abs(data)
@@ -65,10 +63,24 @@ class AcousticHarmonicSolver:
 
         p_min = 1
         p_max = 0
-        thetas = np.arange(0, 360, 2) * (np.pi / 180)
+
+        divisions = 36
+        thetas = np.linspace(0, 2 * np.pi, divisions + 1, endpoint=True)
+
+        if plot_type == "absolute_values":
+            return 0, max(np.abs(data))
+
+        if plot_type == "real_values":
+            return min(np.real(data)), max(np.real(data))
+
+        if plot_type == "imag_values":
+            return min(np.imag(data)), max(np.imag(data))
 
         for theta in thetas:
-            pressures = amplitudes * np.cos(phases + theta)
+            pressures = amplitudes * np.cos(theta + phases)
+
+            if plot_type == "absolute_animation":
+                pressures = np.abs(pressures)
 
             p_min_i = min(pressures)
             p_max_i = max(pressures)
@@ -78,32 +90,35 @@ class AcousticHarmonicSolver:
             if p_max_i > p_max:
                 p_max = p_max_i
 
+        if plot_type == "absolute_animation":
+            p_min = 0
+
+        if plot_type == "non_absolute_animation":
+            max_value = np.max(np.abs([p_min, p_max]))
+            p_min = -max_value
+            p_max = max_value
+
         return p_min, p_max
 
     def solve(self, print_log=False):
-        """ """
-        self.get_max_min_values_of_pressures.cache_clear()
+        """ This method solves the acoustic harmonic analysis for both damped and undamped problems.
+        """
+        self.get_min_max_values_of_pressures.cache_clear()
 
-        # Note: use mtype=3 for full symmetric complex matrix and mtype=6 for upper triangular complex matrix
-        ps = PyPardisoSolver(mtype=6)
-        #
         self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
-        #
+
         M = self.assembler.mass_matrix
         K = self.assembler.stiffness_matrix
-        #
+
         C_imp = self.assembler.damping_matrix
         C_visc = self.assembler.visc_damping_matrix
         Q = self.assembler.mass_flow_vectors
-        Q_visc = self.assembler.Qvisc_damping_matrix*0
-        # np.savetxt("mass_flow_vectors.dat", Q)
-        #
-        # self.plot_graph(M)
+        Q_visc = self.assembler.Qvisc_damping_matrix * 0 # this effect is temporary disabled
         
-        condition_1 = self.assembler.model.porous_material_properties
-        condition_2 = self.assembler.model.viscous_thermal_model_properties
+        is_pm_active = self.assembler.model.porous_material_properties
+        is_vt_active = self.assembler.model.viscous_thermal_model_properties
 
-        if condition_1 or condition_2:
+        if is_pm_active or is_vt_active:
             freq_dependent = True
         else:
             freq_dependent = False
@@ -147,14 +162,28 @@ class AcousticHarmonicSolver:
                 F = Q_visc @ Q[:, i] - 1j * omega * Q[:, i] - F_eq[:, i]
 
             C = C_imp + C_visc
+
+            if i == 0:
+
+                # evaluates A matrix for omega = 1
+                A = K - M + 1j * C
+
+                is_A_complex = np.any(np.imag(A.data))
+                is_F_complex = np.any(np.imag(F)) or np.any(np.imag(F_eq))
+                is_complex = is_A_complex or is_F_complex
+
+                linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=True)
+                del A
+
             A = K - (omega**2) * M + 1j * omega * C
+            if not is_complex:
+                A.data = np.real(A.data)
+                F = np.real(F)
 
             A = triu(A, format="csr")
-            # ps.factorize(A)
 
-            # solution[:, i] = spsolve(A, F)
-            solution[:, i] = ps.solve(A, F)
-            ps.free_memory(everything=True)
+            solution[:, i] = linear_solver.solve(A, F)
+            linear_solver.clear_memory()
             del A, F
 
         self.solution = self._reinsert_prescribed_dofs(solution)
@@ -263,9 +292,6 @@ class AcousticHarmonicSolver:
         solid_elements_connected_to_nodes = self.assembler.model.mesh.get_solid_elements_connected_to_nodes(node_ids)
         face_elements_connected_to_nodes = self.assembler.model.mesh.get_face_elements_connected_to_nodes(node_ids, surface_id)
 
-        # fluid = self.assembler.model.properties.get_fluid(surface=surface_id)
-        # rho = fluid.fluid_density
-
         data_vp = dict()
         data_normals = dict()
 
@@ -342,8 +368,8 @@ class AcousticHarmonicSolver:
         # volume_out = model.mesh.volume_from_surface[output_surface_id][0]
         # volume_in = model.mesh.volume_from_surface[input_surface_id][0]
 
-        # fluid_out, _ = model.get_fluid(volume=volume_out)
-        # fluid_in, _ = model.get_fluid(volume=volume_in)
+        # fluid_out, _ = model.properties._get_property("fluid", volume=volume_out)
+        # fluid_in, _ = model.properties._get_property("fluid", volume=volume_in)
 
         # rho_out = fluid_out.fluid_density
         # c0_out = fluid_out.speed_of_sound
@@ -427,7 +453,7 @@ class AcousticHarmonicSolver:
                     speed_of_sound = C_eff_tv
 
                 else:
-                    fluid = model.properties.get_fluid(surface=input_surface_id)
+                    fluid = model.properties._get_property("fluid", surface=input_surface_id)
                     density = fluid.fluid_density
                     speed_of_sound = fluid.speed_of_sound
 

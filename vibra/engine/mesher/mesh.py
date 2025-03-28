@@ -93,51 +93,6 @@ class Mesh:
 
         self.principal_diagonal = None
 
-
-    @classmethod
-    def from_cad(
-                 cls,
-                 path: str,
-                 *,
-                 minimum_element_size: float = 30.0,
-                 maximum_element_size: float = 30.0,
-                 element_type: ElementType = DEFAULT_ELEMENT_TYPE,
-                 geometry_tolerance: float = 1e-8,
-                 size_factor: float = 0.5,
-                 dimension: int = 3,
-                 threads: int = 1,
-                 gmsh_gui: bool = False,
-                 mesh_refinement_parameters = None, 
-                 mesh_connection = True,
-                 ):
-        """
-        Custom constructor so you can create a mesh with this sintax:
-        mesh = Mesh.from_cad(...)
-
-        I am not puting it in the default constructor because maybe
-        we need to create a mesh from data that is not a CAD.
-
-        Then you can create other constructor like this and avoid a
-        lot of confusing if statements in the __init__ method.
-        """
-
-        obj = Mesh()
-        obj.load_cad(
-                     path,
-                     minimum_element_size = minimum_element_size,
-                     maximum_element_size = maximum_element_size,
-                     element_type = element_type,
-                     geometry_tolerance = geometry_tolerance,
-                     size_factor = size_factor,
-                     dimension = dimension,
-                     threads = threads,
-                     gmsh_gui = gmsh_gui,
-                     mesh_refinement_parameters = mesh_refinement_parameters,
-                     mesh_connection = mesh_connection,
-                     )
-
-        return obj
-
     def load_cad(
                  self,
                  path: (str | Path),
@@ -148,7 +103,7 @@ class Mesh:
                  geometry_tolerance: float = 1e-8,
                  size_factor: float = 0.50,
                  dimension: int = 3,
-                 threads: int = 4,
+                 threads: int = 0,
                  gmsh_gui: bool = False,
                  mesh_refinement_parameters = list(),
                  mesh_connection = True,
@@ -380,10 +335,10 @@ class Mesh:
 
     def _configure_mesh(
                         self,
-                        element_type,
-                        minimum_element_size,
-                        maximum_element_size,
-                        size_factor,
+                        element_type : ElementType,
+                        minimum_element_size: float,
+                        maximum_element_size: float,
+                        size_factor: float,
                         refinement_parameters = list()
                         ):
 

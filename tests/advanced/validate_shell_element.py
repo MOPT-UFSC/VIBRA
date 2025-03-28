@@ -123,11 +123,15 @@ def load_external_mesh_and_solve():
     analysis_data = {"analysis_id" : 2, "modes" : 40, "sigma_factor" : 1e-2}
     modal_solver = StructuralModalSolver(assembler, analysis_data=analysis_data)
 
-    # Run modal analysis
-    t0 = time()
-    natural_frequencies, modal_shape = modal_solver.solve()
-    dt = time() - t0
-    print(f"Elapsed time to solve modal analysis: {round(dt, 4)}")
+    # t0 = time()
+    # # Run modal analysis
+    # modal_solver = StructuralModalSolver(assembler)
+    # modal_solver.solve()
+    # natural_frequencies = modal_solver.natural_frequencies
+    # modal_shape = modal_solver.solution
+    # dt = time() - t0
+    # print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
+    # return
 
     t0 = time()
 

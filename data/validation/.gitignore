@@ -2,6 +2,9 @@
 !ds_silencer_suction_stg1.dat
 !ds_only_fluid_of_silencer_suction_stg1.dat
 !ds_viscous_thermal_reference_geometry.dat
+!ds_connected_rectangular_cavities_34mm.dat
+!ds_connected_rectangular_cavities_200mm.dat
+!ds_connected_rectangular_cavities_400mm.dat
 
 # Validation files for structural shell DKT-CST element
 !Ke_ref.dat

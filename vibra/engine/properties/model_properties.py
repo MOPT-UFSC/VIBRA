@@ -75,56 +75,21 @@ class ModelProperties:
         # self.global_properties["material", "global"] = DEFAULT_MATERIAL
         # self.global_properties["fluid", "global"] = DEFAULT_FLUID
 
-    def get_material(self, **kwargs) -> Material:
-        return self._get_property("material", **kwargs)
-
-    def get_fluid(self, **kwargs) -> Fluid:
-        return self._get_property("fluid", **kwargs)
-
-    def get_dissipation_model(self, **kwargs):
-        return self._get_property("dissipation_model", **kwargs)
-
-    def set_material(self, material: Material, surface=None, volume=None):
-        self._set_property("material", material, surface=surface, volume=volume)
-
-    def set_fluid(self, fluid: Fluid, surface=None, volume=None):
-        self._set_property("fluid", fluid, surface=surface, volume=volume)
-
-    def get_fluid_density(self, fluid: Fluid, **kwargs):
+    def get_fluid_density(self, fluid: Fluid, proportional_damping: dict | None) -> float | complex:
         rho_0 = fluid.fluid_density
-        dissipation_model = self.get_dissipation_model(**kwargs)
-        if dissipation_model is None:
+        if proportional_damping is None:
             return rho_0
-        elif dissipation_model["model"] == "proportional damping":
-            factor = dissipation_model["fluid density factor"]
+        else:
+            factor = proportional_damping.get("fluid_density_factor", 0)
             return (1 + factor * 1j) * rho_0
 
-    def get_speed_of_sound(self, fluid: Fluid, **kwargs):
+    def get_speed_of_sound(self, fluid: Fluid, proportional_damping: dict | None) -> float | complex:
         c_0 = fluid.speed_of_sound
-        dissipation_model = self.get_dissipation_model(**kwargs)
-        if dissipation_model is None:
+        if proportional_damping is None:
             return c_0
-        elif dissipation_model["model"] == "proportional damping":
-            factor = dissipation_model["speed of sound factor"]
+        else:
+            factor = proportional_damping.get("speed_of_sound_factor", 0)
             return (1 + factor * 1j) * c_0
-
-    def get_structural_load(self, surface):
-        return self._get_property("structural_load", surface=surface)
-
-    def get_acoustic_pressure(self, surface):
-        return self._get_property("acoustic_pressure", surface=surface)
-
-    def get_mass_flow_rate(self, surface):
-        return self._get_property("mass_flow_rate", surface=surface)
-
-    def get_volume_velocity(self, surface):
-        return self._get_property("volume_velocity", surface=surface)
-
-    def get_surface_velocity(self, surface):
-        return self._get_property("surface_velocity", surface=surface)
-
-    def get_specific_impedance(self, surface):
-        return self._get_property("specific_impedance", surface=surface)
 
     def _set_property(self, property: str, data: dict | Fluid | Material, node=None, element=None, point=None, line=None, surface=None, volume=None, group=None):
         """
