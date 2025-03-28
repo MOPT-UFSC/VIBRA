@@ -42,7 +42,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.mouse_click = (0, 0)
 
         self.main_window = app().main_window
-        self.selection_color = app().config.user_preferences.selection_color.to_rgb()
 
         self.left_clicked.connect(self.click_callback)
         self.left_released.connect(self.selection_callback)
@@ -276,10 +275,13 @@ class MeshRenderWidget(CommonRenderWidget):
         nodes = self.main_window.selected_mesh_nodes
         faces = self.main_window.selected_mesh_faces
         solids = self.main_window.selected_mesh_solids
+    
+        selection_color = app().config.user_preferences.selection_color
+        faces_selection_color = selection_color.apply_factor(1.2).to_rgb()
 
-        self.nodes_actor.paint_cells([255, 0, 0], nodes)
-        self.faces_actor.paint_cells((70, 170, 255), faces)
-        self.solids_actor.paint_cells(self.selection_color, solids)
+        self.nodes_actor.paint_cells(selection_color.to_rgb(), nodes)
+        self.faces_actor.paint_cells(faces_selection_color, faces)
+        self.solids_actor.paint_cells(selection_color.to_rgb(), solids)
         self.edges_actor.configure_appearance()
         self.update()
 
