@@ -31785,6 +31785,20 @@ CMBLOCK,MIDDLE_FACE,NODE,       71
       1149      1150      1151      1152      1153      1154      1155      1156
       1157      1158      1159      1160      1161      1162      1163      1164
       1165      1166      1167      1168      1169      1170      1171
+/com,*********** Send Named Selection as Node Component ***********
+CMBLOCK,INPUT_EDGES,NODE,       30
+(8i10)
+        11        41        42        43        44        45        46        47
+        48        49        85       115       116       117       118       119
+       129       159       160       161       162       163       164       165
+       166       172       173       174       175       176
+/com,*********** Send Named Selection as Node Component ***********
+CMBLOCK,OUTPUT_EDGES,NODE,       30
+(8i10)
+       177       207       208       209       210       211       212       213
+       214       215       245       275       276       277       278       279
+       280       310       311       312       313       314       315       316
+       317       318       319       320       321       322
 /golist
 /wb,load,start             !  starting to send loads
 
@@ -31819,7 +31833,7 @@ allsel,all
 
 esel,s,type,,1
 esel,a,type,,2
-CMBLOCK,_CM_EQV_SRC_SURFACE107,NODE,      144
+CMBLOCK,_CM_EQV_SRC_SURFACE138,NODE,      144
 (8i10)
         11        41        42        43        44        45        46        47
         48        49        85       115       116       117       118       119
@@ -31840,12 +31854,30 @@ CMBLOCK,_CM_EQV_SRC_SURFACE107,NODE,      144
       1197      1198      1199      1200      1201      1202      1203      1204
       1205      1206      1207      1208      1209      1210      1211      1212
 
-cmsel,s,_CM_EQV_SRC_SURFACE107
-sf,_CM_EQV_SRC_SURFACE107,mxwf,
+cmsel,s,_CM_EQV_SRC_SURFACE138
+sf,_CM_EQV_SRC_SURFACE138,mxwf,
 allsel,all
 
 
 /com,*********** End Program Controlled Acoustic Far-field Radiation Surface ***********
+
+
+/com,*********** Create Impedance Sheet ***********
+CMBLOCK,_CMACOUSTICBFIMPD49,NODE,       71
+(8i10)
+         1         2         3         4         5         6         7         8
+         9        10        79        80        81        82        83        84
+       120       121       122       123       124       125       126       127
+       128       167       168       169       170       171      1131      1132
+      1133      1134      1135      1136      1137      1138      1139      1140
+      1141      1142      1143      1144      1145      1146      1147      1148
+      1149      1150      1151      1152      1153      1154      1155      1156
+      1157      1158      1159      1160      1161      1162      1163      1164
+      1165      1166      1167      1168      1169      1170      1171
+cmsel,s,_CMACOUSTICBFIMPD49
+/com, Need to implement based on new inputs from Sam
+bf,all,impd,10,0
+allsel,all
 
 
 /com,*********** Create Surface Velocity ***********
@@ -31887,8 +31919,8 @@ antype,harm
 hropt,auto
 thexpand,off     ! ignore thermal strains
 kbc,1
-harfrq,0,600
-nsub,300
+harfrq,0,1400
+nsub,280
 asol,scat,off
 outres,erase
 outres,all,none
@@ -31903,6 +31935,7 @@ cm,_elmisc,elem
 esel,all
 /gopr
 outres,misc,all,_elmisc
+outres,fgrad,all
 ! *********** WB SOLVE COMMAND ***********
 ! check interactive state
 *get,ANSINTER_,active,,int

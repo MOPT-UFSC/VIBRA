@@ -16,14 +16,15 @@ from time import time
 from pandas import read_excel
 from openpyxl import load_workbook
 
+# valid mesh sizes: 34mm, 200mm and 400mm.
+mesh_size = "400mm"
 
 # @pytest.mark.slow
 # @pytest.mark.skip
 def load_external_mesh_and_solve():
-    # return
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = "data/validation/perforated_plate/mesh/ds_connected_rectangular_cavities.dat"
+    mesh_path = f"data/validation/perforated_plate/mesh/ds_connected_rectangular_cavities_{mesh_size}.dat"
 
     if not os.path.exists(mesh_path):
         return
@@ -33,11 +34,12 @@ def load_external_mesh_and_solve():
                              "input_face" : 1,
                              "output_face" : 2,
                              "middle_face" : 3,
+                             "input_edges" : 4,
+                             "output_edges" : 5,
                             }
 
     # define surfaces from each volume
     surfaces_from_volume = { 1 : [1, 3], 2 : [2]}
-
 
     t0 = time()
     external_mesh = ExternalMeshData()
@@ -45,6 +47,10 @@ def load_external_mesh_and_solve():
     external_mesh.read_file(mesh_path)
     external_mesh.set_named_selections(list(named_selecion_to_tag.keys()))
     external_mesh.decode_mesh_data_from_file()
+
+    nodes_from_named_selection = external_mesh.nodes_from_named_selection
+    for ns, nodes in nodes_from_named_selection.items():
+        print(ns, nodes)
     
     dt = time() - t0
     print(f"\n\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
@@ -57,6 +63,10 @@ def load_external_mesh_and_solve():
     mesh.element_type = TETRAHEDRON_4
 
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
+
+        if named_selection in ["input_edges", "output_edges"]:
+            continue
+
         tag = named_selecion_to_tag[named_selection]
         mesh.elements_from_surface[tag] = surf_data["element_indexes"] - 1
         mesh.connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
@@ -226,22 +236,37 @@ def load_external_mesh_and_solve():
 
     if solution is not None:
 
+        if mesh_size == "400mm":    
+            node_in = 3
+            node_out = 17
+
+        elif mesh_size == "200mm":
+            node_in = 28
+            node_out = 34
+
+        elif mesh_size == "34mm":
+            node_in = 1179
+            node_out = 327
+
+        else:
+            return
+
         imported_results = get_external_results()
         
         pressure_at_input_face = imported_results["input_face_pressure"]
         pressure_at_output_face = imported_results["output_face_pressure"]
         velocity_at_input_face = imported_results["input_face_velocity"]
         velocity_at_output_face = imported_results["output_face_velocity"]
-        pressure_at_node_1179 = imported_results["pressure_at_node_1179"]
-        pressure_at_node_327 = imported_results["pressure_at_node_327"]
-        velocity_at_node_1179 = imported_results["velocity_at_node_1179"]
-        velocity_at_node_327 = imported_results["velocity_at_node_327"]
+        pressure_at_node_in = imported_results[f"pressure_at_node_{node_in}"]
+        pressure_at_node_out = imported_results[f"pressure_at_node_{node_out}"]
+        velocity_at_node_in = imported_results[f"velocity_at_node_{node_in}"]
+        velocity_at_node_out = imported_results[f"velocity_at_node_{node_out}"]
         TL_data = imported_results["transmission_loss"] # ports enabled
 
-        _pressure_at_node_1179 = pressure_at_node_1179[:, 1] + 1j * pressure_at_node_1179[: ,2]
-        _velocity_at_node_1179 = velocity_at_node_1179[:, 1] + 1j * velocity_at_node_1179[: ,2]
-        _pressure_at_node_327 = pressure_at_node_327[:, 1] + 1j * pressure_at_node_327[: ,2]
-        _velocity_at_node_327 = velocity_at_node_327[:, 1] + 1j * velocity_at_node_327[: ,2]
+        _pressure_at_node_in = pressure_at_node_in[:, 1] + 1j * pressure_at_node_in[: ,2]
+        _velocity_at_node_in = velocity_at_node_in[:, 1] + 1j * velocity_at_node_in[: ,2]
+        _pressure_at_node_out = pressure_at_node_out[:, 1] + 1j * pressure_at_node_out[: ,2]
+        _velocity_at_node_out = velocity_at_node_out[:, 1] + 1j * velocity_at_node_out[: ,2]
 
         _pressure_at_input_face = pressure_at_input_face[:, 1] + 1j * pressure_at_input_face[: ,2]
         _velocity_at_input_face = velocity_at_input_face[:, 1] + 1j * velocity_at_input_face[: ,2]
@@ -249,17 +274,17 @@ def load_external_mesh_and_solve():
         _velocity_at_output_face = velocity_at_output_face[:, 1] + 1j * velocity_at_output_face[: ,2]
 
         # Print the nodal results deviations
-        abs_diff_node_1179 = np.abs((_pressure_at_node_1179 - solution[1179-1, :]) / (_pressure_at_node_1179))
-        print(f"\nDeviation of pressure (node 1179): {100 * np.max(abs_diff_node_1179)} %")
+        abs_diff_node_Pin = np.abs((_pressure_at_node_in - solution[node_in-1, :]) / (_pressure_at_node_in))
+        print(f"\nDeviation of pressure (node {node_in}): {100 * np.max(abs_diff_node_Pin)} %")
 
-        abs_diff_node_327 = np.abs((_pressure_at_node_327 - solution[327-1, :]) / (_pressure_at_node_327))
-        print(f"Deviation of pressure (node 327): {100 * np.max(abs_diff_node_327)} %")
+        abs_diff_node_Pout = np.abs((_pressure_at_node_out - solution[node_out-1, :]) / (_pressure_at_node_out))
+        print(f"Deviation of pressure (node {node_out}): {100 * np.max(abs_diff_node_Pout)} %")
 
-        abs_diff_node_1179 = np.abs((_velocity_at_node_1179 - particle_velocity[1179-1][0, :]) / (_velocity_at_node_1179))
-        print(f"Deviation of particle velocity (node 1179): {100 * np.max(abs_diff_node_1179)} %")
+        abs_diff_node_Vin = np.abs((_velocity_at_node_in - particle_velocity[node_in-1][0, :]) / (_velocity_at_node_in))
+        print(f"Deviation of particle velocity (node {node_in}): {100 * np.max(abs_diff_node_Vin)} %")
 
-        abs_diff_node_327 = np.abs((_velocity_at_node_327 - particle_velocity[327-1][0, :]) / (_velocity_at_node_327))
-        print(f"Deviation of particle velocity (node 327): {100 * np.max(abs_diff_node_327)} %")
+        abs_diff_node_Vout = np.abs((_velocity_at_node_out - particle_velocity[node_out-1][0, :]) / (_velocity_at_node_out))
+        print(f"Deviation of particle velocity (node {node_out}): {100 * np.max(abs_diff_node_Vout)} %")
 
         abs_diff_Pinput_face = np.abs((_pressure_at_input_face - input_pressure) / _pressure_at_input_face)
         print(f"Deviation of pressure (input face): {100 * np.max(abs_diff_Pinput_face)} %")
@@ -315,12 +340,12 @@ def load_external_mesh_and_solve():
         data_type = np.real
         type_label = "imaginary"
 
-        x_data_WB = pressure_at_node_1179[:, 0]
-        y_data_WB = _pressure_at_node_1179
+        x_data_WB = pressure_at_node_in[:, 0]
+        y_data_WB = _pressure_at_node_in
 
         fig5, ax5 = plt.subplots()
-        title = "Acoustic pressure at node 1179"
-        ax5.plot(frequencies, data_type(solution[1179-1, :]), 'r', label='VIBRA')
+        title = f"Acoustic pressure at node {node_in}"
+        ax5.plot(frequencies, data_type(solution[node_in-1, :]), 'r', label='VIBRA')
         ax5.plot(x_data_WB, data_type(y_data_WB), 'k--', label='ANSYS')
         ax5.set_xlabel('Frequency [Hz]')
         ax5.set_ylabel(f'Acoustic Pressure [Pa] - {type_label}')
@@ -328,12 +353,12 @@ def load_external_mesh_and_solve():
         ax5.grid()
         ax5.legend()
 
-        x_data_WB = pressure_at_node_327[:, 0]
-        y_data_WB = _pressure_at_node_327
+        x_data_WB = pressure_at_node_out[:, 0]
+        y_data_WB = _pressure_at_node_out
 
         fig6, ax6 = plt.subplots()
-        title = "Acoustic pressure at node 327"
-        ax6.plot(frequencies, data_type(solution[327-1, :]), 'r', label='VIBRA')
+        title = f"Acoustic pressure at node {node_out}"
+        ax6.plot(frequencies, data_type(solution[node_out-1, :]), 'r', label='VIBRA')
         ax6.plot(x_data_WB, data_type(y_data_WB), 'k--', label='ANSYS')
         ax6.set_xlabel('Frequency [Hz]')
         ax6.set_ylabel(f'Acoustic Pressure [Pa] - {type_label}')
@@ -341,12 +366,12 @@ def load_external_mesh_and_solve():
         ax6.grid()
         ax5.legend()
 
-        x_data_WB = velocity_at_node_1179[:, 0]
-        y_data_WB = _velocity_at_node_1179
+        x_data_WB = velocity_at_node_in[:, 0]
+        y_data_WB = _velocity_at_node_in
 
         fig7, ax7 = plt.subplots()
-        title = "Particle velocity at node 1179"
-        ax7.plot(frequencies, data_type(particle_velocity[1179-1][0, :]), 'r', label='VIBRA')
+        title = f"Particle velocity at node {node_in}"
+        ax7.plot(frequencies, data_type(particle_velocity[node_in-1][0, :]), 'r', label='VIBRA')
         ax7.plot(x_data_WB, data_type(y_data_WB), 'k--', label='ANSYS')
         ax7.set_xlabel('Frequency [Hz]')
         ax7.set_ylabel(f'Particle velocity [m/s] - {type_label}')
@@ -354,12 +379,12 @@ def load_external_mesh_and_solve():
         ax7.grid()
         ax7.legend()
 
-        x_data_WB = velocity_at_node_327[:, 0]
-        y_data_WB = _velocity_at_node_327
+        x_data_WB = velocity_at_node_out[:, 0]
+        y_data_WB = _velocity_at_node_out
 
         fig8, ax8 = plt.subplots()
-        title = "Particle velocity at node 327"
-        ax8.plot(frequencies, data_type(particle_velocity[327-1][0, :]), 'r', label='VIBRA')
+        title = f"Particle velocity at node {node_out}"
+        ax8.plot(frequencies, data_type(particle_velocity[node_out-1][0, :]), 'r', label='VIBRA')
         ax8.plot(x_data_WB, data_type(y_data_WB), 'k--', label='ANSYS')
         ax8.set_xlabel('Frequency [Hz]')
         ax8.set_ylabel(f'Particle velocity [m/s] - {type_label}')
@@ -395,9 +420,9 @@ def load_external_mesh_and_solve():
 
         x_data_WB = TL_data[:, 0]
         y_data_WB = TL_data[:, 1]
-        title = "Transmission loss"
 
         fig11, ax11 = plt.subplots()
+        title = "Transmission loss"
         ax11.plot(freq_TL, TL_model, 'r', label='VIBRA')
         ax11.plot(x_data_WB, y_data_WB, 'k--', label='ANSYS')
         ax11.set_xlabel('Frequency [Hz]')
@@ -412,7 +437,7 @@ def load_external_mesh_and_solve():
 def get_external_results():
 
     imported_results = dict()
-    results_path = f"data/validation/perforated_plate/results/connected_rectangular_cavities.xlsx"
+    results_path = f"data/validation/perforated_plate/results/connected_rectangular_cavities_{mesh_size}.xlsx"
     # results_path = f"data/validation/perforated_plate/results/connected_rectangular_cavities_Zin_10.xlsx"
 
 
