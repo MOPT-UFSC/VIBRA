@@ -27,7 +27,8 @@ def load_external_mesh_and_solve():
     # return
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = "data/validation/porous_material_models/mesh/silencer/ds_only_fluid_of_silencer_suction_stg1.dat"
+    # mesh_path = "data/validation/porous_material_models/mesh/silencer/ds_only_fluid_of_silencer_suction_stg1.dat"
+    mesh_path = "data/validation/transmission_loss/mesh/silencer/ds_only_fluid_of_silencer_suction_stg1.dat"
 
     
     if pm_model not in ["DB", "DBM", "JCA"]:
@@ -39,7 +40,9 @@ def load_external_mesh_and_solve():
     # define the known 'Named selections' from model
     named_selecion_to_tag = { 
                                 "input_face" : 1,
-                                "output_face" : 2
+                                "output_face" : 2,
+                                "input_cylinder" : 3,
+                                "output_cylinder" : 4,
                             }
 
     t0 = time()
@@ -48,7 +51,7 @@ def load_external_mesh_and_solve():
     external_mesh.read_file(mesh_path)
     external_mesh.set_named_selections(list(named_selecion_to_tag.keys()))
     external_mesh.decode_mesh_data_from_file()
-    
+
     dt = time() - t0
     print(f"\n\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
 
@@ -69,7 +72,7 @@ def load_external_mesh_and_solve():
 
         mesh.volume_from_surface[tag] = [1]
 
-    mesh.surfaces_from_volumes[1] = [1, 2]
+    mesh.surfaces_from_volumes[1] = [1, 2, 3, 4]
 
     # if reorder_nodes:
     #     mesh._process_nodes_reordering()

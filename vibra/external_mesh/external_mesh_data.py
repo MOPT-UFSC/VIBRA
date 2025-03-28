@@ -272,11 +272,13 @@ class ExternalMeshData():
                 other_nodes = list()
                 face_connectivity = list()
 
-                filt_1 = 0
-                for ns_node in ns_nodes:
-                    filt_1 += np.sum((connect[:, 3:] == ns_node), axis=1)
+                #TODO: remove the commented lines as soon as possible
+                # filt_1 = 0
+                # for ns_node in ns_nodes:
+                #     filt_1 += np.sum((connect[:, 3:] == ns_node), axis=1)
+                # mask = filt_1 == 3
 
-                mask = filt_1 == 3
+                mask = np.sum(np.isin(connect[:, 3:], ns_nodes), axis=1) == 3
 
                 if np.sum(mask):
 
@@ -306,7 +308,7 @@ class ExternalMeshData():
                             # TODO: implement same structure to other element types
                             # print("processed data: ", ns_key, normal_vector, face_elements, other_nodes)
 
-                        face_connectivity.append(face_elements)
+                            face_connectivity.append(face_elements)
 
                 if face_connectivity:
 

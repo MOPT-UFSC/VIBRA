@@ -16,8 +16,8 @@ from time import time
 from pandas import read_excel
 from openpyxl import load_workbook
 
-# valid mesh sizes: 34mm, 200mm and 400mm.
-mesh_size = "400mm"
+# valid mesh sizes: 10mm, 34mm, 200mm and 400mm.
+mesh_size = "34mm"
 
 # @pytest.mark.slow
 # @pytest.mark.skip
@@ -48,10 +48,10 @@ def load_external_mesh_and_solve():
     external_mesh.set_named_selections(list(named_selecion_to_tag.keys()))
     external_mesh.decode_mesh_data_from_file()
 
-    nodes_from_named_selection = external_mesh.nodes_from_named_selection
-    for ns, nodes in nodes_from_named_selection.items():
-        print(ns, nodes)
-    
+    # nodes_from_named_selection = external_mesh.nodes_from_named_selection
+    # for ns, nodes in nodes_from_named_selection.items():
+    #     print(ns, nodes)
+
     dt = time() - t0
     print(f"\n\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
 
@@ -247,6 +247,10 @@ def load_external_mesh_and_solve():
         elif mesh_size == "34mm":
             node_in = 1179
             node_out = 327
+
+        elif mesh_size == "10mm":
+            node_in = 12802
+            node_out = 1304
 
         else:
             return
