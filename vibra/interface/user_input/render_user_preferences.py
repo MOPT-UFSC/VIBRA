@@ -250,7 +250,7 @@ class RendererUserPreferencesInput(QDialog):
         self.update_reference_scale_state()
         self.update_renderers_font_size()
         self.update_compatibility_mode()
-        self.main_window.update_plots()
+        self.main_window.update_plots(reset_camera=False)
 
     def reset_to_default(self):
         if self.config.user_preferences.interface_theme == "dark":
