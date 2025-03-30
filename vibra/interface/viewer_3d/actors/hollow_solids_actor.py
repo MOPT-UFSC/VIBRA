@@ -38,9 +38,6 @@ class HollowSolidsActor(FacesActor):
 
     def configure_appearance(self):
         super().configure_appearance()
-        # Change the specular color to purple to differentiate
-        # from the massive solids actor
-        self.GetProperty().SetSpecularColor(1, 0, 1)
 
         mapper = self.GetMapper()
         mapper.SetResolveCoincidentTopologyToPolygonOffset()

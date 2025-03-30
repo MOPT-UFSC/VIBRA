@@ -1,15 +1,24 @@
-from PySide6.QtWidgets import QComboBox, QFrame, QLineEdit, QPushButton, QSlider, QTreeWidget, QTreeWidgetItem, QWidget
-from PySide6.QtGui import QFont
-from PySide6.QtCore import Qt, QModelIndex
-
-from vibra import app, UI_DIR
-
-from molde import load_ui
-
 import numpy as np
+from molde import load_ui
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
+    QComboBox,
+    QFrame,
+    QLineEdit,
+    QPushButton,
+    QSlider,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QWidget,
+)
+
+from vibra import UI_DIR, app
+from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
+
 
 class PlotAcousticModeShape(QWidget):
     def __init__(self, *args, **kwargs):
@@ -21,7 +30,7 @@ class PlotAcousticModeShape(QWidget):
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
-    
+
     def showEvent(self, event):
         super().showEvent(event)
 
@@ -30,49 +39,35 @@ class PlotAcousticModeShape(QWidget):
         app().main_window.render_widget_changed.emit()
 
         app().main_window.animation_toolbar.setDisabled(False)
-       
+
     def _initialize(self):
         self.mode_index = None
-        self.colormaps = [
-            "jet",
-            "viridis",
-            "inferno",
-            "magma",
-            "plasma",
-            "bwr",
-            "PiYG",
-            "PRGn",
-            "BrBG",
-            "PuOR",
-            "grayscale",
-        ]
 
     def _define_qt_variables(self):
-
         # QComboBox
-        self.comboBox_color_scale : QComboBox
-        self.comboBox_colormaps : QComboBox
+        self.comboBox_color_scale: QComboBox
+        self.comboBox_colormaps: QComboBox
 
         # QFrame
-        self.frame_button : QFrame
+        self.frame_button: QFrame
 
         # QLineEdit
-        self.lineEdit_natural_frequency : QLineEdit
+        self.lineEdit_natural_frequency: QLineEdit
 
         # QPushButton
-        self.pushButton_plot : QPushButton
+        self.pushButton_plot: QPushButton
 
         # QLineEdit
-        self.lineEdit_selected_frequency : QLineEdit
+        self.lineEdit_selected_frequency: QLineEdit
 
         # QPushButton
-        self.pushButton_plot : QPushButton
+        self.pushButton_plot: QPushButton
 
         # QSlider
-        self.slider_transparency : QSlider
+        self.slider_transparency: QSlider
 
         # QTreeWidget
-        self.treeWidget_frequencies : QTreeWidget
+        self.treeWidget_frequencies: QTreeWidget
 
     def _create_connections(self):
         #
@@ -82,16 +77,14 @@ class PlotAcousticModeShape(QWidget):
         self.pushButton_plot.clicked.connect(self.update_plot)
         #
         self.slider_transparency.valueChanged.connect(self.update_transparency_callback)
-        #      
+        #
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.load_user_preference_colormap()
-        self.update_colormap_type()
-                    
-    def _config_widgets(self):
 
-        self.comboBox_colormaps.setDisabled(True)
+    def _config_widgets(self):
+        # self.comboBox_colormaps.setDisabled(True)
         self.slider_transparency.setDisabled(True)
 
         self.frame_button.setVisible(False)
@@ -121,24 +114,30 @@ class PlotAcousticModeShape(QWidget):
         if index >= 2:
             app().main_window.animation_toolbar.setDisabled(True)
         else:
-            app().main_window.animation_toolbar.setDisabled(False) 
+            app().main_window.animation_toolbar.setDisabled(False)
 
     def load_user_preference_colormap(self):
-        return
         try:
             colormap = app().config.user_preferences.color_map
-            if colormap in self.colormaps:
-                index = self.colormaps.index(colormap)
+            if colormap in COLORMAP_NAMES:
+                index = COLORMAP_NAMES.index(colormap)
                 self.comboBox_colormaps.setCurrentIndex(index)
-        except:
+        except Exception:
             self.comboBox_colormaps.setCurrentIndex(0)
 
     def update_colormap_type(self):
-        return
+        app().config.user_preferences.color_map = self.get_colormap()
+        app().config.update_config_file()
+        try:
+            app().main_window.results_widget.update_color_and_deformation()
+        except AttributeError:
+            pass
+
+    def get_colormap(self) -> str:
         index = self.comboBox_colormaps.currentIndex()
-        colormap = self.colormaps[index]
-        app().main_window.results_widget.set_colormap(colormap)
-        self.update_plot()
+        if not (0 <= index < len(COLORMAP_NAMES)):
+            return "jet"
+        return COLORMAP_NAMES[index]
 
     def update_plot(self):
         self.update_animation_widget_visibility()
@@ -181,13 +180,15 @@ class PlotAcousticModeShape(QWidget):
         elif index == 4:
             imag_values = True
 
-        color_scale_setup = {   "absolute" : absolute,
-                                "real_values" : real_values,
-                                "imag_values" : imag_values,
-                                "absolute_animation" : absolute_animation   }
+        color_scale_setup = {
+            "absolute": absolute,
+            "real_values": real_values,
+            "imag_values": imag_values,
+            "absolute_animation": absolute_animation,
+        }
 
         return color_scale_setup
-    
+
     def get_plot_type(self):
         plot_types = [
             "absolute_animation",
@@ -199,15 +200,16 @@ class PlotAcousticModeShape(QWidget):
         index = self.comboBox_color_scale.currentIndex()
         return plot_types[index]
 
-
     def load_natural_frequencies(self):
         if app().project.acoustic_modal_solver is None:
             return
-        
+
         self._config_widgets()
 
         if len(app().project.acoustic_modal_solver.complex_natural_frequencies):
-            self.natural_frequencies = list(app().project.acoustic_modal_solver.complex_natural_frequencies)
+            self.natural_frequencies = list(
+                app().project.acoustic_modal_solver.complex_natural_frequencies
+            )
         else:
             self.natural_frequencies = list(app().project.acoustic_modal_solver.natural_frequencies)
 
@@ -219,37 +221,38 @@ class PlotAcousticModeShape(QWidget):
             if isinstance(value, complex):
                 cols = 3
                 damping_ratio = -np.real(value) / np.abs(value)
-                damped_frequency = np.abs(value) * ((1-damping_ratio**2)**(1/2))
-                new = QTreeWidgetItem([str(mode), str(round(damped_frequency, 4)), str(round(damping_ratio, 4))])
+                damped_frequency = np.abs(value) * ((1 - damping_ratio**2) ** (1 / 2))
+                new = QTreeWidgetItem(
+                    [str(mode), str(round(damped_frequency, 4)), str(round(damping_ratio, 4))]
+                )
             else:
                 cols = 2
-                new = QTreeWidgetItem([str(mode), str(round(value,4))])
+                new = QTreeWidgetItem([str(mode), str(round(value, 4))])
 
             if mode == 1:
                 new.setSelected(True)
 
             for i in range(cols):
                 new.setTextAlignment(i, Qt.AlignCenter)
-            
+
             self.treeWidget_frequencies.addTopLevelItem(new)
 
         first_item = self.treeWidget_frequencies.topLevelItem(0)
         if first_item is not None:
             first_item.setSelected(True)
             self.treeWidget_frequencies.itemClicked.emit(first_item, 0)
-    
+
     def current_mode_index(self):
         if self.mode_index is not None:
             return self.mode_index
         return 0
 
     def on_click_item(self, item):
-
         selected_frequency = self.modes_to_frequencies[int(item.text(0))]
 
         if isinstance(selected_frequency, complex):
             damping_ratio = -np.real(selected_frequency) / np.abs(selected_frequency)
-            damped_frequency = np.abs(selected_frequency) * ((1-damping_ratio**2)**(1/2))
+            damped_frequency = np.abs(selected_frequency) * ((1 - damping_ratio**2) ** (1 / 2))
             self.lineEdit_natural_frequency.setText(str(round(damped_frequency, 4)))
         else:
             self.lineEdit_natural_frequency.setText(str(round(selected_frequency, 4)))
