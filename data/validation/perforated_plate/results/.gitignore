@@ -1,0 +1,4 @@
+# Files that should not be ignored
+!*.dat
+
+mesh_size_10mm

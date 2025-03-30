@@ -107503,10 +107503,6 @@ _ASMDIAG=(_xmax-_xmin)*(_xmax-_xmin)+(_ymax-_ymin)*(_ymax-_ymin)+(_zmax-_zmin)*(
 _ASMDIAG=SQRT(_ASMDIAG)
 /wb,contact,start          !  starting to send contact
 /wb,contact,end            !  done creating contacts
-/com,*********** Send Named Selection as Element Component ***********
-esel,s,type,,1
-cm,NONE,elem
-esel,all
 /com,*********** Send Named Selection as Node Component ***********
 CMBLOCK,INPUT_FACE,NODE,       98
 (8i10)
@@ -107679,7 +107675,7 @@ allsel,all
 /com,*********** Begin Program Controlled Acoustic Far-field Radiation Surface ***********
 
 esel,s,type,,1
-CMBLOCK,_CM_EQV_SRC_SURFACE273,NODE,      247
+CMBLOCK,_CM_EQV_SRC_SURFACE275,NODE,      247
 (8i10)
         39        40        41        42        43        44        45        46
         47        48        49        50        51        52        53        54
@@ -107712,8 +107708,8 @@ CMBLOCK,_CM_EQV_SRC_SURFACE273,NODE,      247
       6590      6591      6592      6593      6594      6595      6596      6597
       6598      6599      6600      6601      6602      6603      6604      6605
       6606      6607      6608      6609      6610      6611      6612
-cmsel,s,_CM_EQV_SRC_SURFACE273
-sf,_CM_EQV_SRC_SURFACE273,mxwf,
+cmsel,s,_CM_EQV_SRC_SURFACE275
+sf,_CM_EQV_SRC_SURFACE275,mxwf,
 allsel,all
 
 

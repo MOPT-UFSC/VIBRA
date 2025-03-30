@@ -559,23 +559,18 @@ class Mesh:
 
         for tag in selected_ids:
             connect_data = self.connectivity_from_surfaces[tag]
-           
+
+           # integrate the total surface area by the summation of element areas
             area = 0.
             for element_nodes in connect_data:
                 area += self.process_triangular_area_by_nodal_coordinates(element_nodes)
 
             self.surface_area_from_element_integration[tag] = area
+            face_nodes = np.array([*set(connect_data.flatten())], dtype=int)
 
-            flat_data = connect_data.flatten()
-            face_nodes = np.array([*set(flat_data)], dtype=int)
             for node in face_nodes:
-
-                aux = 0
-                for col in range(connect_data.shape[1]):
-                    aux += connect_data[:, col] == node
-
-                mask = aux == 1
-                self.face_elements_connected_to_nodes[node].append(connect_data[mask, :])
+                mask = np.sum(np.isin(connect_data, node), axis=1) == 1
+                self.face_elements_connected_to_nodes[node].extend(connect_data[mask, :])
 
         # import json
         # with open("areas_data.json", "r") as file:
@@ -713,11 +708,11 @@ class Mesh:
         return solid_elements_connected_to_nodes
 
 
-    def _process_nodal_areas(self, node=None):
+    def _process_nodal_areas(self):
         self.nodal_area.clear()
-        for node, data in self.face_elements_connected_to_nodes.items():
-            for element_nodes in data[0]:
-                area = self.process_triangular_area_by_nodal_coordinates(element_nodes)
+        for node, connectivities in self.face_elements_connected_to_nodes.items():
+            for connect in connectivities:
+                area = self.process_triangular_area_by_nodal_coordinates(connect)
                 if area is not None:
                     self.nodal_area[node].append(area)
 
