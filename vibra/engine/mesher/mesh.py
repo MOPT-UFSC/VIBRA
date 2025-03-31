@@ -757,16 +757,19 @@ class Mesh:
 
         gmsh.open(path)
 
-        volumes = gmsh.model.getEntities(3)
-        if volumes:
-            bb_sides, volume = self.compute_bounding_box_sizes(volumes)
-            bb_largest_area = bb_sides[0] * bb_sides[1]
+        try:
+            volumes = gmsh.model.getEntities(3)
+            if volumes:
+                bb_sides, volume = self.compute_bounding_box_sizes(volumes)
+                bb_largest_area = bb_sides[0] * bb_sides[1]
 
-            return volume / bb_largest_area / 5
-        else:
-            surfaces = gmsh.model.getEntities(2)
-            bb_sides, _ = self.compute_bounding_box_sizes(surfaces)
-            return bb_sides[1] / 5
+                return volume / bb_largest_area / 5
+            else:
+                surfaces = gmsh.model.getEntities(2)
+                bb_sides, _ = self.compute_bounding_box_sizes(surfaces)
+                return bb_sides[1] / 5
+        finally:
+            gmsh.finalize()
 
 
     def compute_bounding_box_sizes(self, geo_entities):
