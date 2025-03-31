@@ -172,9 +172,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         color = Color(247, 0, 255)
         self.renderer.SetBackground(color.to_rgb_f())
         self.renderer.SetBackground2(color.to_rgb_f())
-        self.faces_actor.clear_colors(Color(255, 255, 255))
-        self.lines_actor.clear_colors(Color(0, 0, 0))
+        self.faces_actor.set_color((255, 255, 255))
+        self.lines_actor.set_color(Color(0, 0, 0))
 
+        self.disable_scale_bar()
         thumbnail = self.get_thumbnail()
         app().project.thumbnail = removes_image_background(thumbnail)
         

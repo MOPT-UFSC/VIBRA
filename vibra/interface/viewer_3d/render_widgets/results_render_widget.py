@@ -20,6 +20,9 @@ from vibra.engine.postprocessing import (
 from vibra.interface.loading_bar import load_function
 from vibra.utils.math_functions import lerp
 from vibra.utils.progress_status import ProgressStatus
+from vibra.utils.image_functions import removes_image_background
+
+from molde import Color
 
 from ..actors import (
     AnalysisActor,
@@ -123,8 +126,38 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         else:
             self.update()
 
-        if self.isVisible():
-            app().project.thumbnail = self.get_thumbnail()
+        self.save_thumbnail()
+    
+    def enable_scale_bar(self):
+        self.scale_bar_actor.VisibilityOn()
+
+    def disable_scale_bar(self):
+        self.scale_bar_actor.VisibilityOff()
+    
+    def save_thumbnail(self):
+        t0 = time()
+        thumbnail = app().project.thumbnail
+
+        if not self.isVisible():
+            return
+
+        self.render_interactor.GetRenderWindow().OffScreenRenderingOn()
+
+        color = Color(247, 0, 255)
+        self.renderer.SetBackground(color.to_rgb_f())
+        self.renderer.SetBackground2(color.to_rgb_f())
+
+        self.disable_scale_bar()
+        thumbnail = self.get_thumbnail()
+        app().project.thumbnail = removes_image_background(thumbnail)
+
+        if app().config.user_preferences.show_reference_scale_bar:
+            self.enable_scale_bar()
+
+        self.update_theme()
+        self.render_interactor.GetRenderWindow().OffScreenRenderingOff()
+        tf = time()
+        print(tf - t0)
 
     def update_hidden_plot(self):
         self.update_info_text()

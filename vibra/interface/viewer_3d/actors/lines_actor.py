@@ -72,13 +72,15 @@ class LinesActor(vtkActor):
         self.GetProperty().SetPointSize(6)
         self.clear_colors()
 
-    def clear_colors(self, alternative_color: None | Color = None):
+    def clear_colors(self):
+        color = app().config.user_preferences.lines_color
+        self.set_color(color)
+    
+    def set_color(self, color: Color):
         data = self.GetMapper().GetInput()
         cell_colors: vtkUnsignedCharArray = data.GetCellData().GetScalars()
-        r, g, b = app().config.user_preferences.lines_color.to_rgb()
 
-        if alternative_color is not None:
-            r, g, b = alternative_color.to_rgb()
+        r, g, b = color.to_rgb()
 
         cell_colors.FillComponent(0, r)
         cell_colors.FillComponent(1, g)
