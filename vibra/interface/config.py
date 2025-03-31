@@ -20,7 +20,8 @@ class Config:
             with open(self.config_path, "r") as file:
                 user_preferences = json.load(file)
         except Exception:
-            self._write_config_file()
+            self.update_config_file()
+            return
 
         for field in fields(UserPreferences):
             read_value = user_preferences.get(field.name)
@@ -31,29 +32,6 @@ class Config:
                 read_value = Color(*read_value)
 
             setattr(self.user_preferences, field.name, read_value)
-
-    
-    def _write_config_file(self):
-        data = { 
-        "interface_theme" : self.user_preferences.interface_theme,
-        "renderer_background_color_1" : self.user_preferences.renderer_background_color_1.to_rgb(),
-        "renderer_background_color_2" : self.user_preferences.renderer_background_color_2.to_rgb(),
-        "nodes_points_color" : self.user_preferences.nodes_points_color.to_rgb(),
-        "lines_color" : self.user_preferences.lines_color.to_rgb(),
-        "edges_color" : self.user_preferences.edges_color.to_rgb(),
-        "faces_color" : self.user_preferences.faces_color.to_rgb(),
-        "renderer_font_color" : self.user_preferences.renderer_font_color.to_rgb(),
-        "renderer_font_size" : self.user_preferences.renderer_font_size,
-        "points_size" : self.user_preferences.points_size,
-        "nodes_size" : self.user_preferences.nodes_size,
-        "lines_thickness" : self.user_preferences.lines_thickness,
-        "edges_thickness" : self.user_preferences.edges_thickness,
-        "show_reference_scale_bar" : self.user_preferences.show_reference_scale_bar,
-        "compatibility_mode" : self.user_preferences.compatibility_mode,
-        "color_map" : self.user_preferences.color_map
-        }
-        
-        self.write_data_in_file(data)
 
     def update_config_file(self):
         data = self.get_config_data()
@@ -145,8 +123,11 @@ class Config:
         return None
     
     def get_config_data(self) -> dict:
-        with open(self.config_path, "r") as file:
-            return json.load(file)
+        try:
+            with open(self.config_path, "r") as file:
+                return json.load(file)
+        except FileNotFoundError:
+            return dict()
     
     def write_data_in_file(self, data: dict):
         with open(self.config_path, "w") as file:
