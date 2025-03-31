@@ -245,7 +245,7 @@ class Project:
     def run_analysis(self):
 
         if not self.model.generated_mesh:
-            obj = MesherInputs()
+            obj = MesherInputs(close_after_generate=True)
             if obj.complete:
                 app().main_window.update_plots()
             else:
@@ -253,15 +253,6 @@ class Project:
 
         if len(self.analysis_data) == 0:
             return
-
-        # if not app().project.model.generated_mesh:
-        #     try:
-        #         self.generate_mesh()
-        #     except IncompleteSetupError or IncompleteMeshSetup as error:
-        #         # Please use this error message. It is easy to use,
-        #         # is very clean and follows the operational system standard.
-        #         ErrorMessage(error)
-        #         return
 
         analysis = ProcessAnalysis()
         analysis_id = self.analysis_data["analysis_id"]

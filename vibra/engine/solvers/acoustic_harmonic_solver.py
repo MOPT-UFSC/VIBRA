@@ -11,7 +11,6 @@ import numpy as np
 
 from functools import cache
 from scipy.sparse import triu
-from pypardiso.pardiso_wrapper import Matrix_type
 
 
 class AcousticHarmonicSolver:
@@ -280,7 +279,7 @@ class AcousticHarmonicSolver:
         return F_eq
 
 
-    def get_particle_velocity_from_surface(self, surface_id: int, rho: float | np.ndarray):
+    def get_particle_velocity_from_surface(self, surface_id: int, rho: float | np.ndarray, TL=False):
         """ Process the nodal average particle velocity to selected surface.
             Returns the partcicle velocity in components x, y, z and normal
         """
@@ -297,9 +296,12 @@ class AcousticHarmonicSolver:
 
         for node_id, solid_element_ids in solid_elements_connected_to_nodes.items():
 
-            n = 0.
-            face_elem_connect = face_elements_connected_to_nodes[node_id, surface_id]
+            if TL:
+                face_elem_connect = self.assembler.model.mesh.face_elements_connected_to_nodes[node_id]
+            else:
+                face_elem_connect = face_elements_connected_to_nodes[node_id, surface_id]
 
+            n = 0.
             for face_connect in face_elem_connect:
                 n += element_2d.get_element_face_normal(face_connect)
                 # print(node_id, face_connect, element_2d.get_element_face_normal(face_connect))

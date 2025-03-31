@@ -1,12 +1,19 @@
-from PySide6.QtWidgets import QComboBox, QFrame, QLineEdit, QPushButton, QSlider, QTreeWidget, QTreeWidgetItem, QWidget
-from PySide6.QtGui import QIcon
-from PySide6.QtCore import Qt, Signal
-
-from vibra import app, UI_DIR
-
-from molde import load_ui
-
 import numpy as np
+from molde import load_ui
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import (
+    QComboBox,
+    QFrame,
+    QLineEdit,
+    QPushButton,
+    QSlider,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QWidget,
+)
+
+from vibra import UI_DIR, app
+from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
 
 
 class PlotAcousticPressureField(QWidget):
@@ -14,7 +21,7 @@ class PlotAcousticPressureField(QWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         ui_path = UI_DIR / "plots/acoustic/plot_acoustic_pressure_field.ui"
         load_ui(ui_path, self, ui_path.parent)
 
@@ -23,7 +30,7 @@ class PlotAcousticPressureField(QWidget):
         self._create_connections()
         self.load_frequencies()
         self.load_user_preference_colormap()
-    
+
     def showEvent(self, event):
         super().showEvent(event)
 
@@ -35,45 +42,32 @@ class PlotAcousticPressureField(QWidget):
 
     def _initialize(self):
         self.current_frequency = None
-        self.colormaps = ["jet",
-                          "viridis",
-                          "inferno",
-                          "magma",
-                          "plasma",
-                          "bwr",
-                          "PiYG",
-                          "PRGn",
-                          "BrBG",
-                          "PuOR",
-                          "grayscale",
-                          ]
-        
-    def _define_qt_variables(self):
 
+    def _define_qt_variables(self):
         # QComboBox
-        self.comboBox_color_scale : QComboBox
-        self.comboBox_colormaps : QComboBox
+        self.comboBox_color_scale: QComboBox
+        self.comboBox_colormaps: QComboBox
 
         # QFrame
-        self.frame_button : QFrame
+        self.frame_button: QFrame
         self.frame_button.setVisible(False)
 
         # QLineEdit
-        self.lineEdit_selected_frequency : QLineEdit
+        self.lineEdit_selected_frequency: QLineEdit
         self.lineEdit_selected_frequency.setProperty("status", "information")
 
         # QPushButton
-        self.pushButton_plot : QPushButton
+        self.pushButton_plot: QPushButton
 
         # QSlider
-        self.slider_transparency : QSlider
+        self.slider_transparency: QSlider
 
         # QTreeWidget
-        self.treeWidget_frequencies : QTreeWidget
+        self.treeWidget_frequencies: QTreeWidget
         self._config_treeWidget()
 
     def _create_connections(self):
-        self.comboBox_colormaps.setDisabled(True)
+        # self.comboBox_colormaps.setDisabled(True)
         self.slider_transparency.setDisabled(True)
         #
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
@@ -87,7 +81,6 @@ class PlotAcousticPressureField(QWidget):
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.load_user_preference_colormap()
-        self.update_colormap_type()
 
     def _config_treeWidget(self):
         widths = [80, 140]
@@ -100,24 +93,24 @@ class PlotAcousticPressureField(QWidget):
         if index >= 2:
             app().main_window.animation_toolbar.setDisabled(True)
         else:
-            app().main_window.animation_toolbar.setDisabled(False) 
+            app().main_window.animation_toolbar.setDisabled(False)
 
     def load_user_preference_colormap(self):
-        return
         try:
             colormap = app().config.user_preferences.color_map
-            if colormap in self.colormaps:
-                index = self.colormaps.index(colormap)
+            if colormap in COLORMAP_NAMES:
+                index = COLORMAP_NAMES.index(colormap)
                 self.comboBox_colormaps.setCurrentIndex(index)
-        except:
+        except Exception:
             self.comboBox_colormaps.setCurrentIndex(0)
 
     def update_colormap_type(self):
-        return
-        index = self.comboBox_colormaps.currentIndex()
-        colormap = self.colormaps[index]
-        app().main_window.results_widget.set_colormap(colormap)
-        self.update_plot()
+        app().config.user_preferences.color_map = self.get_colormap()
+        app().config.update_config_file()
+        try:
+            app().main_window.results_widget.update_color_and_deformation()
+        except AttributeError:
+            pass
 
     def update_transparency_callback(self):
         return
@@ -125,7 +118,6 @@ class PlotAcousticPressureField(QWidget):
         app().main_window.results_widget.set_tube_actors_transparency(transparency)
 
     def update_plot(self):
-
         self.update_animation_widget_visibility()
         if self.lineEdit_selected_frequency.text() == "":
             return
@@ -143,6 +135,12 @@ class PlotAcousticPressureField(QWidget):
         # app().project.set_color_scale_setup(color_scale_setup)
         # app().main_window.results_widget.show_pressure_field(self.frequency)
         # app().main_window.results_widget.clear_cache()
+
+    def get_colormap(self) -> str:
+        index = self.comboBox_colormaps.currentIndex()
+        if not (0 <= index < len(COLORMAP_NAMES)):
+            return "jet"
+        return COLORMAP_NAMES[index]
 
     def get_user_color_scale_setup(self):
         return
@@ -162,11 +160,13 @@ class PlotAcousticPressureField(QWidget):
             real_values = True
         elif index == 4:
             imag_values = True
-        
-        color_scale_setup = {   "absolute" : absolute,
-                                "real_values" : real_values,
-                                "imag_values" : imag_values,
-                                "absolute_animation" : absolute_animation   }
+
+        color_scale_setup = {
+            "absolute": absolute,
+            "real_values": real_values,
+            "imag_values": imag_values,
+            "absolute_animation": absolute_animation,
+        }
 
         return color_scale_setup
 
@@ -187,19 +187,21 @@ class PlotAcousticPressureField(QWidget):
         else:
             return
 
-        self.frequency_to_index = dict(zip(self.frequencies, np.arange(len(self.frequencies), dtype=int)))
+        self.frequency_to_index = dict(
+            zip(self.frequencies, np.arange(len(self.frequencies), dtype=int))
+        )
 
         self.treeWidget_frequencies.clear()
         for index, frequency in enumerate(self.frequencies):
-            new = QTreeWidgetItem([str(index+1), str(frequency)])
+            new = QTreeWidgetItem([str(index + 1), str(frequency)])
             new.setTextAlignment(0, Qt.AlignCenter)
             new.setTextAlignment(1, Qt.AlignCenter)
             self.treeWidget_frequencies.addTopLevelItem(new)
-        
+
         first_item = self.treeWidget_frequencies.topLevelItem(0)
         first_item.setSelected(True)
         self.treeWidget_frequencies.itemClicked.emit(first_item, 0)
-        
+
     def current_frequency_index(self):
         if self.current_frequency is not None:
             return self.current_frequency

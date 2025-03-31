@@ -141,7 +141,7 @@ class FluidWidget(QWidget):
 
     def load_data_from_fluids_library(self):
 
-        if not os.path.exists(TEMP_PROJECT_FILE):
+        if not TEMP_PROJECT_FILE.exists():
             self.reset_library_to_default()
             return
 

@@ -17,8 +17,8 @@ class AnalysisActor(SolidsActor):
 
         self.update_coordinates(deformed_coordinates)
 
-    def plot_color_bar(self, values, min_value, max_value):
-        color_table = ColorTable(values, min_value, max_value)
+    def plot_color_bar(self, values, min_value, max_value, colormap="jet"):
+        color_table = ColorTable(values, min_value, max_value, colormap)
         self.set_color_table(color_table)
 
     def set_color_table(self, color_table: ColorTable):
@@ -37,3 +37,7 @@ class AnalysisActor(SolidsActor):
         self.GetMapper().SetScalarModeToUsePointData()
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
+
+    def configure_appearance(self):
+        super().configure_appearance()
+        self.GetProperty().SetSpecular(0)

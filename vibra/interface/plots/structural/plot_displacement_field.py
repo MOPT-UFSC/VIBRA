@@ -1,16 +1,22 @@
-from PySide6.QtWidgets import QComboBox, QFrame, QLineEdit, QPushButton, QSlider, QTreeWidget, QTreeWidgetItem, QWidget
-from PySide6.QtGui import QIcon
-from PySide6.QtCore import Qt, Signal
-
-from vibra import app, UI_DIR
-
-from molde import load_ui
-
 import numpy as np
+from molde import load_ui
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QComboBox,
+    QFrame,
+    QLineEdit,
+    QPushButton,
+    QSlider,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QWidget,
+)
+
+from vibra import UI_DIR, app
+from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
 
 
 class PlotDisplacementField(QWidget):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -22,7 +28,7 @@ class PlotDisplacementField(QWidget):
         self._create_connections()
         self.load_frequencies()
         self.load_user_preference_colormap()
-    
+
     def showEvent(self, event):
         super().showEvent(event)
 
@@ -35,47 +41,33 @@ class PlotDisplacementField(QWidget):
     def _initialize(self):
         self.frequency_index = None
 
-        self.colormaps = ["jet",
-                          "viridis",
-                          "inferno",
-                          "magma",
-                          "plasma",
-                          "bwr",
-                          "PiYG",
-                          "PRGn",
-                          "BrBG",
-                          "PuOR",
-                          "grayscale",
-                          ]
-
     def _define_qt_variables(self):
-
         # QComboBox
-        self.comboBox_color_scale : QComboBox
-        self.comboBox_colormaps : QComboBox
+        self.comboBox_color_scale: QComboBox
+        self.comboBox_colormaps: QComboBox
         self.comboBox_displacements: QComboBox
 
         # QFrame
-        self.frame_button : QFrame
+        self.frame_button: QFrame
         self.frame_button.setVisible(False)
 
         # QLineEdit
-        self.lineEdit_selected_frequency : QLineEdit
+        self.lineEdit_selected_frequency: QLineEdit
         self.lineEdit_selected_frequency.setProperty("status", "information")
 
         # QPushButton
-        self.pushButton_plot : QPushButton
+        self.pushButton_plot: QPushButton
 
         # QSlider
-        self.slider_transparency : QSlider
+        self.slider_transparency: QSlider
 
         # QTreeWidget
-        self.treeWidget_frequencies : QTreeWidget
+        self.treeWidget_frequencies: QTreeWidget
         self._config_treeWidget()
 
     def _create_connections(self):
         #
-        self.comboBox_colormaps.setDisabled(True)
+        # self.comboBox_colormaps.setDisabled(True)
         self.comboBox_color_scale.setDisabled(True)
         self.slider_transparency.setDisabled(True)
 
@@ -92,7 +84,6 @@ class PlotDisplacementField(QWidget):
         #
         self.update_animation_widget_visibility()
         self.load_user_preference_colormap()
-        self.update_colormap_type()
 
     def update_animation_widget_visibility(self):
         return
@@ -100,24 +91,24 @@ class PlotDisplacementField(QWidget):
         if index >= 4:
             app().main_window.animation_toolbar.setDisabled(True)
         else:
-            app().main_window.animation_toolbar.setDisabled(False) 
+            app().main_window.animation_toolbar.setDisabled(False)
 
     def load_user_preference_colormap(self):
-        return
         try:
             colormap = app().config.user_preferences.color_map
-            if colormap in self.colormaps:
-                index = self.colormaps.index(colormap)
+            if colormap in COLORMAP_NAMES:
+                index = COLORMAP_NAMES.index(colormap)
                 self.comboBox_colormaps.setCurrentIndex(index)
-        except:
+        except Exception:
             self.comboBox_colormaps.setCurrentIndex(0)
 
     def update_colormap_type(self):
-        return
-        index = self.comboBox_colormaps.currentIndex()
-        colormap = self.colormaps[index]
-        app().main_window.results_widget.set_colormap(colormap)
-        self.update_plot()
+        app().config.user_preferences.color_map = self.get_colormap()
+        app().config.update_config_file()
+        try:
+            app().main_window.results_widget.update_color_and_deformation()
+        except AttributeError:
+            pass
 
     def get_plot_type(self):
         plot_types = [
@@ -149,7 +140,6 @@ class PlotDisplacementField(QWidget):
 
         frequency_selected = float(self.lineEdit_selected_frequency.text())
         if frequency_selected in self.frequencies:
-            
             results_widget = app().main_window.results_widget
             results_widget.configure_analysis("structural_harmonic")
             results_widget.update_plot()
@@ -160,11 +150,17 @@ class PlotDisplacementField(QWidget):
             # app().project.set_color_scale_setup(color_scale_setup)
             # app().main_window.structural_harmonic_analysis.update_plot()
             # app().main_window.results_widget.clear_cache()
-        
+
     def current_frequency_index(self):
         if self.frequency_index is not None:
             return self.frequency_index
         return 0
+
+    def get_colormap(self) -> str:
+        index = self.comboBox_colormaps.currentIndex()
+        if not (0 <= index < len(COLORMAP_NAMES)):
+            return "jet"
+        return COLORMAP_NAMES[index]
 
     def get_user_color_scale_setup(self):
         return
@@ -215,20 +211,22 @@ class PlotDisplacementField(QWidget):
         elif index == 13:
             uz_imag_values = True
 
-        color_scale_setup = {   "absolute" : absolute,
-                                "ux_abs_values" : ux_abs_values,
-                                "uy_abs_values" : uy_abs_values,
-                                "uz_abs_values" : uz_abs_values,
-                                "ux_real_values" : ux_real_values,
-                                "uy_real_values" : uy_real_values,
-                                "uz_real_values" : uz_real_values,
-                                "ux_imag_values" : ux_imag_values,
-                                "uy_imag_values" : uy_imag_values,
-                                "uz_imag_values" : uz_imag_values,
-                                "absolute_animation" : absolute_animation,
-                                "ux_animation" : ux_animation,
-                                "uy_animation" : uy_animation,
-                                "uz_animation" : uz_animation   }
+        color_scale_setup = {
+            "absolute": absolute,
+            "ux_abs_values": ux_abs_values,
+            "uy_abs_values": uy_abs_values,
+            "uz_abs_values": uz_abs_values,
+            "ux_real_values": ux_real_values,
+            "uy_real_values": uy_real_values,
+            "uz_real_values": uz_real_values,
+            "ux_imag_values": ux_imag_values,
+            "uy_imag_values": uy_imag_values,
+            "uz_imag_values": uz_imag_values,
+            "absolute_animation": absolute_animation,
+            "ux_animation": ux_animation,
+            "uy_animation": uy_animation,
+            "uz_animation": uz_animation,
+        }
 
         return color_scale_setup
 
@@ -239,16 +237,17 @@ class PlotDisplacementField(QWidget):
         else:
             return
 
-        self.frequency_to_index = dict(zip(self.frequencies, np.arange(len(self.frequencies), dtype=int)))
+        self.frequency_to_index = dict(
+            zip(self.frequencies, np.arange(len(self.frequencies), dtype=int))
+        )
 
         self.treeWidget_frequencies.clear()
         for index, frequency in enumerate(self.frequencies):
-
-            item = QTreeWidgetItem([str(index+1), str(frequency)])
+            item = QTreeWidgetItem([str(index + 1), str(frequency)])
             for i in range(2):
                 item.setTextAlignment(i, Qt.AlignCenter)
             self.treeWidget_frequencies.addTopLevelItem(item)
-        
+
         first_item = self.treeWidget_frequencies.topLevelItem(0)
         first_item.setSelected(True)
         self.treeWidget_frequencies.itemClicked.emit(first_item, 0)

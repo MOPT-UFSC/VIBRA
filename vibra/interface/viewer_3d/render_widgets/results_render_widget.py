@@ -1,10 +1,11 @@
 import logging
+from threading import Lock
+from time import time
 from typing import Literal
-import numpy as np
 
+import numpy as np
 from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import AnimatedRenderWidget
-from molde.utils import TreeInfo
 from PySide6.QtWidgets import QFileDialog
 from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import vtkPointData
@@ -27,7 +28,6 @@ from ..actors import (
     HollowAnalysisActor,
     SectionPlaneActor,
 )
-
 from .model_info_text import (
     analysis_info_text,
 )
@@ -53,6 +53,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         self.current_analysis: AnalysisType = ""
         self._animation_cached_data = dict()
+        self._animation_cache_lock = Lock()
         self.min_value = 0
         self.max_value = 0
         self.frequency_index = None
@@ -66,12 +67,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def configure_analysis(self, analysis: AnalysisType):
         self.current_analysis = analysis
-
-    def toggle_animation(self, *args, **kwargs):
-        if self.playing_animation:
-            self.stop_animation()
-        else:
-            self.start_animation(*args, **kwargs)
 
     def update_theme(self):
         user_preferences = app().config.user_preferences
@@ -119,6 +114,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         with self.update_lock:
             self.update_theme()
+            self.visualization_changed_callback()
             self.update_section_plane()
             self.update_color_and_deformation()
 
@@ -127,33 +123,50 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         else:
             self.update()
 
-        app().project.thumbnail = self.get_thumbnail()
+        if self.isVisible():
+            app().project.thumbnail = self.get_thumbnail()
 
+    def update_hidden_plot(self):
         self.update_info_text()
         self.update_colorbar_unit()
-    
+        self.update_plot(reset_camera=False)
 
     def clear_cache(self):
         logging.info("Clearing animation cache")
-        self._animation_cached_data.clear()
-        self.min_value = 0
-        self.max_value = 0
+        with self._animation_cache_lock:
+            timestamp = time()
+            self.timestamp = timestamp
+            self._animation_cached_data.clear()
+            self.min_value = 0
+            self.max_value = 0
+        return timestamp
 
     def cache_animation_frames(self):
-        self.clear_cache()
+        # Everytime the cache is cleared we store the timestamp
+        # to check if the cache is still valid.
+        # The only time "timestamp != self.timestamp" is when
+        # the cache was cleared from another thread, so we do not
+        # need to continue the processing
 
-        with self.update_lock:
-            for frame in range(self._animation_total_frames):
-                logging.info(
-                    f"Caching animation frames [{frame}/{self._animation_total_frames}]"
-                    + ProgressStatus(frame, self._animation_total_frames)
-                )
+        timestamp = self.clear_cache()
+
+        for frame in range(self._animation_total_frames):
+            logging.info(
+                f"Caching animation frames [{frame}/{self._animation_total_frames}]"
+                + ProgressStatus(frame, self._animation_total_frames)
+            )
+
+            with self._animation_cache_lock:
+                if self.timestamp != timestamp:
+                    break
                 self.cache_frame(frame)
 
     def cache_frame(self, frame):
         t = frame / (self._animation_total_frames - 1)
         phase = lerp(0, 2 * np.pi, t)
-        self.update_color_and_deformation(phase, clear_cache=False)
+
+        with self.update_lock:
+            self.update_color_and_deformation(phase, clear_cache=False)
 
         point_data = vtkPointData()
         point_position = vtkPoints()
@@ -162,11 +175,22 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self._animation_cached_data[frame] = (
             point_data,
             point_position,
-        )        
+        )
+
+    def start_animation(self, *args, **kwargs):
+        super().start_animation(*args, **kwargs)
+
+    def stop_animation(self, *args, **kwargs):
+        app().main_window.animation_toolbar.pushButton_animate.setChecked(False)
+        app().main_window.animation_toolbar.update_animate_button_icons(False)
+        super().stop_animation(*args, **kwargs)
 
     def update_animation(self, frame):
         if self.current_analysis == "":
             self.stop_animation()
+            return
+
+        if self._animation_cache_lock.locked():
             return
 
         if not self._animation_cached_data:
@@ -194,7 +218,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         animation_toolbar = app().main_window.animation_toolbar
         magnification_factor = animation_toolbar.magnification_factor_slider.value() / 16
+
         displacements = None
+        colormap = app().config.user_preferences.color_map
 
         if phase is None:
             phase = np.radians(animation_toolbar.phase_slider.value())
@@ -238,7 +264,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_modal
             self.mode_index = analysis_widget.current_mode_index()
             plot_type = analysis_widget.get_plot_type()
-            
+
             data = compute_acoustic_modal_field(
                 app().project.acoustic_modal_solver,
                 self.mode_index,
@@ -282,7 +308,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             )
             self.edges_actor.extract_data(self.analysis_actor.data)
 
-        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value)
+        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
@@ -383,7 +409,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         if self.current_analysis in ["structural_harmonic", "acoustic_harmonic"]:
-            text += analysis_info_text(self.frequency_index + 1)  
+            text += analysis_info_text(self.frequency_index + 1)
 
         if self.current_analysis in ["structural_modal", "acoustic_modal"]:
             text += analysis_info_text(self.mode_index)
@@ -394,14 +420,14 @@ class ResultsRenderWidget(AnimatedRenderWidget):
     def update_colorbar_unit(self):
         if self.current_analysis == "":
             return
-        
+
         unit = {
-            "structural_modal": "--", 
+            "structural_modal": "--",
             "structural_harmonic": "m",
             "acoustic_modal": "--",
             "acoustic_harmonic": "Pa",
         }
-        
+
         self.colorbar_actor.SetTitle(f"Unit: [{unit[self.current_analysis]}]")
         self.update()
 
