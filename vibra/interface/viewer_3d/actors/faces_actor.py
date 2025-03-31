@@ -16,6 +16,7 @@ from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
 from vtkmodules.util.numpy_support import numpy_to_vtk
 
 from vibra import app
+from molde import Color
 
 
 class FacesActor(vtkActor):
@@ -119,11 +120,15 @@ class FacesActor(vtkActor):
         self.GetProperty().SetSpecularColor(1, 1, 1)
         self.clear_colors()
 
-    def clear_colors(self):
+    def clear_colors(self, alternative_color: None | Color = None):
         if self.data is None:
             return
 
         color = app().config.user_preferences.faces_color.to_rgba()
+
+        if alternative_color is not None:
+            color = alternative_color.to_rgb()
+
         self.set_color(color)
 
     def set_color(self, color: tuple[int, int, int, int] | tuple[int, int, int]):
