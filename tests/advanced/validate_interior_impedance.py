@@ -23,13 +23,13 @@ from pandas import read_excel
 from openpyxl import load_workbook
 
 # valid mesh sizes: 10mm, 34mm, 200mm and 400mm.
-mesh_size = "400mm"
+mesh_size = "34mm"
 
 
 # @pytest.mark.slow
 # @pytest.mark.skip
 
-def load_external_mesh_and_solve():
+def load_external_mesh_and_solve(interior_impedance: bool = False):
 
     # start decoding the Ansys script file (ds.dat file or input file)
     mesh_path = f"data/validation/perforated_plate/mesh/ds_connected_rectangular_cavities_{mesh_size}.dat"
@@ -113,7 +113,11 @@ def load_external_mesh_and_solve():
                     molar_mass = molar_mass  )
     
     # Load the external data
-    path = f"data/validation/perforated_plate/results/mesh_size_{mesh_size}"
+    if interior_impedance:
+        path = f"data/validation/perforated_plate/results/interior_impedance/mesh_size_{mesh_size}"
+    else:
+        path = f"data/validation/perforated_plate/results/mesh_size_{mesh_size}"
+
     ext_data = LoadExternalData(path, rho_0)
 
     # assign the created fluid
@@ -147,14 +151,15 @@ def load_external_mesh_and_solve():
     model.properties._set_property("specific_impedance", data_Z, surface=2)
 
     # interior impedance setup
-    # data_Zin = {  
-    #             "real_values" : [10],
-    #             "imag_values" : [0],
-    #             "nodal_attribution" : False,
-    #             "averaged" : False
-    #             }
+    if interior_impedance:
+        data_Zin = {  
+                    "real_values" : [10],
+                    "imag_values" : [0],
+                    "nodal_attribution" : False,
+                    "averaged" : False
+                    }
 
-    # model.properties._set_property("specific_impedance", data_Zin, surface=3)
+        model.properties._set_property("specific_impedance", data_Zin, surface=3)
 
     # Define the analysis frequency setup
     df = 5
@@ -264,7 +269,7 @@ def load_external_mesh_and_solve():
             return
 
         # import the WB transmission loss data from spreadsheet file
-        imported_results = get_external_results()
+        imported_results = get_external_results(interior_impedance)
         TL_data = imported_results["transmission_loss"] # ports enabled
 
         WB_pressure_data = ext_data.load_nodal_pressures()
@@ -532,12 +537,13 @@ def process_external_TL(model: "Model", ext_data: LoadExternalData):
         return freq_WB, TL
 
 
-def get_external_results():
+def get_external_results(interior_impedance: bool):
 
     imported_results = dict()
-    results_path = f"data/validation/perforated_plate/results/connected_rectangular_cavities_{mesh_size}.xlsx"
-    # results_path = f"data/validation/perforated_plate/results/connected_rectangular_cavities_Zin_10.xlsx"
-
+    if interior_impedance:
+        results_path = f"data/validation/perforated_plate/results/interior_impedance/connected_rectangular_cavities_{mesh_size}.xlsx"
+    else:
+        results_path = f"data/validation/perforated_plate/results/connected_rectangular_cavities_{mesh_size}.xlsx"
 
     if not os.path.exists(results_path):
         return imported_results
@@ -570,4 +576,4 @@ def get_external_results():
 
 
 if __name__ == "__main__":
-    load_external_mesh_and_solve()
+    load_external_mesh_and_solve(interior_impedance=False)
