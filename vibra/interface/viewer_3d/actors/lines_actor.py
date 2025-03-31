@@ -10,6 +10,7 @@ from vtkmodules.vtkCommonDataModel import (
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
 
 from vibra import app
+from molde import Color
 
 
 class LinesActor(vtkActor):
@@ -71,10 +72,13 @@ class LinesActor(vtkActor):
         self.GetProperty().SetPointSize(6)
         self.clear_colors()
 
-    def clear_colors(self):
+    def clear_colors(self, alternative_color: None | Color = None):
         data = self.GetMapper().GetInput()
         cell_colors: vtkUnsignedCharArray = data.GetCellData().GetScalars()
         r, g, b = app().config.user_preferences.lines_color.to_rgb()
+
+        if alternative_color is not None:
+            r, g, b = alternative_color.to_rgb()
 
         cell_colors.FillComponent(0, r)
         cell_colors.FillComponent(1, g)
