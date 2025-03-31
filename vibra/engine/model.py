@@ -72,10 +72,11 @@ class Model:
     def process_visual_geometry_mesh(self, path : str):
 
         try:
-
             try:
                 self.mesh = Mesh()
-                self.mesh.load_cad(path, dimension=2, size_factor=0.0, minimum_element_size=10, maximum_element_size=30)
+                maximum_element_size = self.mesh.compute_initial_max_mesh_size(path)
+
+                self.mesh.load_cad(path, dimension=2, size_factor=0.0, minimum_element_size=maximum_element_size*0.9, maximum_element_size=maximum_element_size)
             except:
                 self.mesh = Mesh()
                 self.mesh.load_cad(path, dimension=2, size_factor=0.0, minimum_element_size=5, maximum_element_size=10)
