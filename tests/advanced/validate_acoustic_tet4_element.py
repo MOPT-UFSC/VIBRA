@@ -91,7 +91,7 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     pressure = 101325
     rho_0 = 1.204263
     c_0 = 343.395034
-    mu = 1.8247e-5
+    mu = 0 * 1.8247e-5
     Cp = 1006.400178
     kt = 2.5503e-02
     gamma = 1.401985
@@ -172,14 +172,12 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
                         "f_step" : df,
                         "frequencies" : frequencies
                        }
-    
+
+    # Set the analysis frequency setup
     model.set_frequency_setup(frequency_setup)
 
     assembler = AcousticAssembler(model)
-
-    # Set the analysis frequency setup
-    assembler.process_assemble()
-    
+   
     # t0 = time()
     # # Run modal analysis
     # modal_solver = AcousticModalSolver(assembler)
@@ -191,10 +189,13 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     # return
     
     # Define the analysis type and load setup
+    model.set_acoustic_element(assembler.get_element())
     analysis_data = {"analysis_id" : 3, "frequencies" : frequencies}
     harmonic_solver = AcousticHarmonicSolver(assembler, analysis_data=analysis_data)
 
     # Run harmonic analysis
+
+    assembler.process_assemble()
 
     t0 = time()
     solution = harmonic_solver.solve(print_log=True)
@@ -210,9 +211,9 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     M_mat = np.real(M_matrix.toarray())
     C_mat = np.real(C_matrix.toarray())
 
-    # np.savetxt("K_mat_vibra.csv", K_mat, delimiter=",")
+    np.savetxt("K_mat_vibra.csv", K_mat, delimiter=",")
     # np.savetxt("M_mat_vibra.csv", M_mat, delimiter=",")
-    # np.savetxt("C_mat_vibra.csv", C_mat, delimiter=",")
+    np.savetxt("C_mat_vibra.csv", C_mat, delimiter=",")
     # np.savetxt("Q_vect_vibra.csv", Q_vect, delimiter=",")
 
     # K_imp = np.loadtxt("data/validation/elementar/results/Kdense.csv", delimiter=",")
@@ -383,7 +384,7 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
         ax6.set_ylabel(f'Acoustic Pressure [Pa] - {type_label}')
         ax6.set_title(title)
         ax6.grid()
-        ax5.legend()
+        ax6.legend()
 
         fig7, ax7 = plt.subplots()
         title = f"Particle velocity at node {node_in}"
