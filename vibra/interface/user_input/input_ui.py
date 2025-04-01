@@ -34,6 +34,7 @@ from vibra.interface.plots.structural.plot_displacement_field import PlotDisplac
 #
 from vibra.interface.process_analysis import ProcessAnalysis
 
+from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.loading_bar import load_function
 from vibra.interface.general.print_message_input import PrintMessageInput
 
@@ -76,9 +77,7 @@ class InputUi:
                 self.model_setup_items.modify_items_access_after_geometry_importing()
             
     def generate_mesh(self):
-        generate_mesh = load_function(app().project.generate_mesh, self.main_window)
-        generate_mesh()
-
+        LoadingWindow(app().project.generate_mesh).run()
         self.main_window.action_mesh_workspace_callback()
         self.model_setup_items.item_child_generate_mesh.setDisabled(True)
 
