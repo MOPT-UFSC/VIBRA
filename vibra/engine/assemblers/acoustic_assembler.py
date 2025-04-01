@@ -22,6 +22,7 @@ from collections import defaultdict
 from scipy.sparse import csr_matrix
 from sys import getsizeof
 from time import time
+from threading import Thread, Lock
 
 
 class AcousticAssembler:
@@ -43,6 +44,9 @@ class AcousticAssembler:
         self.prescribed_values = list()
         self.prescribed_indexes = list()
         self.unprescribed_indexes = list()
+        self.progress = 0
+        self.last_progress = 0
+        self.lock = Lock()
 
     def get_element(self):
         element_type = self.model.mesh.element_type
@@ -360,41 +364,85 @@ class AcousticAssembler:
                     # self.data_Qvisc[el, :, :] = 0 * ((4 * mu_0) / (3 * rho_0)) * Ke
 
         else:
-
             nf = 1
             aux_ones = np.ones(nf, dtype=float)
             self.den_M = np.zeros((nel, nf), dtype=complex)
             self.den_K = np.zeros((nel, nf), dtype=complex)
 
-            for el in range(nel):
+            threads_quantity = 8
+            threads_iterations = nel // threads_quantity
 
-                progress = 100 * np.round(el/nel, 2)
-                if progress != last_progress:
-                    logging.info( "Processing the elementary matrices data..." + ProgressStatus(int(progress), 100))
+            threads = list()
+            for i in range(threads_quantity):
+                start = i * threads_iterations
+                end = (i+1) * threads_iterations
 
-                last_progress = progress
+                if i == threads_quantity -1:
+                    end += nel % threads_quantity
+                threads.append(Thread(target= lambda: self.process_global_matrices(start, end, nel, aux_ones, element_3D)))
 
-                volume_id = self.model.get_volume(element=el)
-                fluid = self.model.properties._get_property("fluid", volume=volume_id)
-                proportional_damping = self.properties._get_property("proportional_damping", volume=volume_id)
+                threads[i].start()
+            
+            for i in range(threads_quantity):
+                threads[i].join()
 
-                rho_0 = self.properties.get_fluid_density(fluid, proportional_damping)
-                C_0 = self.properties.get_speed_of_sound(fluid, proportional_damping)
-                mu_0 = fluid.dynamic_viscosity
+            # for el in range(nel):
 
-                self.den_K[el, :] = aux_ones / (rho_0)
-                self.den_M[el, :] = aux_ones / (rho_0 * C_0**2)
+            #     progress = 100 * np.round(el/nel, 2)
+            #     if progress != last_progress:
+            #         logging.info( "Processing the elementary matrices data..." + ProgressStatus(int(progress), 100))
 
-                Ke, Me = element_3D.elementary_matrices(el)
-                self.data_K[el, :, :] = Ke
-                self.data_M[el, :, :] = Me
+            #     last_progress = progress
 
-                self.data_Cvisc[el, :, :] = ((4 * mu_0) / (3 * rho_0 * C_0**2)) * Ke
-                self.data_Qvisc[el, :, :] = 0 * ((4 * mu_0) / (3 * rho_0)) * Ke
+            #     volume_id = self.model.get_volume(element=el)
+            #     fluid = self.model.properties._get_property("fluid", volume=volume_id)
+            #     proportional_damping = self.properties._get_property("proportional_damping", volume=volume_id)
+
+            #     rho_0 = self.properties.get_fluid_density(fluid, proportional_damping)
+            #     C_0 = self.properties.get_speed_of_sound(fluid, proportional_damping)
+            #     mu_0 = fluid.dynamic_viscosity
+
+            #     self.den_K[el, :] = aux_ones / (rho_0)
+            #     self.den_M[el, :] = aux_ones / (rho_0 * C_0**2)
+
+            #     Ke, Me = element_3D.elementary_matrices(el)
+            #     self.data_K[el, :, :] = Ke
+            #     self.data_M[el, :, :] = Me
+
+            #     self.data_Cvisc[el, :, :] = ((4 * mu_0) / (3 * rho_0 * C_0**2)) * Ke
+            #     self.data_Qvisc[el, :, :] = 0 * ((4 * mu_0) / (3 * rho_0)) * Ke
 
         self.process_indexes()
         self.process_perforated_plate_impedance_data_to_assemble_damping_matrix()
         self.get_specific_impendace_data_to_process_damping_matrix()
+    
+    def process_global_matrices(self, start: int, end: int, nel: int, aux_ones: np.ndarray, element_3D: tuple):
+
+        for el in range(start, end):
+            with self.lock:
+                self.progress += 100 * np.round(self.progress/nel, 2)
+                if self.progress != self.last_progress:
+                    logging.info( "Processing the elementary matrices data..." + ProgressStatus(int(self.progress), 100))
+
+                self.last_progress = self.progress
+
+            volume_id = self.model.get_volume(element=el)
+            fluid = self.model.properties._get_property("fluid", volume=volume_id)
+            proportional_damping = self.properties._get_property("proportional_damping", volume=volume_id)
+
+            rho_0 = self.properties.get_fluid_density(fluid, proportional_damping)
+            C_0 = self.properties.get_speed_of_sound(fluid, proportional_damping)
+            mu_0 = fluid.dynamic_viscosity
+
+            self.den_K[el, :] = aux_ones / (rho_0)
+            self.den_M[el, :] = aux_ones / (rho_0 * C_0**2)
+
+            Ke, Me = element_3D.elementary_matrices(el)
+            self.data_K[el, :, :] = Ke
+            self.data_M[el, :, :] = Me
+
+            self.data_Cvisc[el, :, :] = ((4 * mu_0) / (3 * rho_0 * C_0**2)) * Ke
+            self.data_Qvisc[el, :, :] = 0 * ((4 * mu_0) / (3 * rho_0)) * Ke
 
     def get_specific_impendace_data_to_process_damping_matrix(self):
         """
