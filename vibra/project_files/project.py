@@ -12,7 +12,6 @@ from vibra.engine.checkers.analysis_requirements_checker import AnalysisRequirem
 from vibra.interface.process_analysis import ProcessAnalysis
 from vibra.interface.mesh.mesher_inputs import MesherInputs
 from vibra.interface.loading_bar import load_function
-from vibra.utils.progress_status import ProgressStatus
 
 import logging
 from time import sleep, time
@@ -299,5 +298,5 @@ class Project:
 
     def long_function(self):
         for i in range(20):
-            logging.info("long_function" + ProgressStatus(i, 20))
+            logging.info(f"long_function [{i}/20]")
             sleep(0.1)

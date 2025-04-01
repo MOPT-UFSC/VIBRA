@@ -6,7 +6,6 @@ from vibra import app, UI_DIR
 from vibra.interface.mesh.mesher_inputs import MesherInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_bar import load_function
-from vibra.utils.progress_status import ProgressStatus
 
 from molde import load_ui
 
@@ -305,7 +304,7 @@ class ProcessAcousticTransferElementData(QDialog):
         def callback():
             for i, surface_id in enumerate([self.input_selection_id, self.output_selection_id]):
 
-                logging.info(f"Solving model [{i+1}/2]..." + ProgressStatus(5+50*i, 100))
+                logging.info(f"Solving model [{5+50*i}/100]...")
                 sleep(1)
 
                 self.remove_model_excitations()
@@ -313,14 +312,14 @@ class ProcessAcousticTransferElementData(QDialog):
                 self.project.solve_acoustic_harmonic_analysis()
                 self.join_model_data(surface_id)
 
-            logging.info(f"Exporting the admittance matrix data..." + ProgressStatus(20, 100))
+            logging.info("Exporting the admittance matrix data... [20/100]")
             sleep(0.5)
 
-            logging.info(f"Exporting the admittance matrix data..." + ProgressStatus(90, 100))
+            logging.info("Exporting the admittance matrix data... [90/100]")
             self.export_data_callback()
 
             sleep(0.5)
-            logging.info(f"Exporting the admittance matrix data..." + ProgressStatus(100, 100))
+            logging.info("Exporting the admittance matrix data... [100/100]")
 
         solve_harmonic = load_function(callback, app().main_window)
         solve_harmonic()
@@ -361,7 +360,7 @@ class ProcessAcousticTransferElementData(QDialog):
 
         def function_callback():
             surface_ids = [self.input_selection_id, self.output_selection_id]
-            logging.info("Processing area..." + ProgressStatus(60, 100))
+            logging.info("Processing area... [60/100]")
             self.mesh._process_face_elements_connected_to_nodes(surface_ids)
 
         process_area = load_function(function_callback, app().main_window)

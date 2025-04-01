@@ -1,5 +1,4 @@
 
-from vibra.utils.progress_status import ProgressStatus
 from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
 
 from typing import TYPE_CHECKING
@@ -128,12 +127,11 @@ class AcousticHarmonicSolver:
         cols = len(self.frequencies)
         solution = np.zeros((rows, cols), dtype=complex)
         #
-        logging.info( "Solving harmonic analysis..." + ProgressStatus(0, len(self.frequencies)))
+        logging.info(f"Solving harmonic analysis... [0/{len(self.frequencies)}]")
 
         for i, freq in enumerate(self.frequencies):
 
-            message = f"Solution step {i+1} and frequency {freq} Hz"
-            logging.info( message + ProgressStatus(i, len(self.frequencies)))
+            logging.info(f"Solution step {i+1} and frequency {freq} Hz [{i}/{len(self.frequencies)}]")
 
             if print_log:
                 print(f"Solution step {i} -> frequency {freq} Hz")
@@ -225,15 +223,12 @@ class AcousticHarmonicSolver:
             F_eq. Each column corresponds to a frequency of analysis.
         """
 
-        # logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(0, len(self.frequencies)))
         self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_dofs_values()
         #
         Kr = (self.assembler.stiffness_matrix_r.toarray())[self.unprescribed_indexes, :]
         Mr = (self.assembler.mass_matrix_r.toarray())[self.unprescribed_indexes, :]
         Cr = (self.assembler.damping_matrix_r.toarray())[self.unprescribed_indexes, :]
         Cr_visc = (self.assembler.visc_damping_matrix_r.toarray())[self.unprescribed_indexes, :]
-
-        # logging.info( "Processing prescribed pressure model excitation..." + ProgressStatus(10, len(self.frequencies)))
 
         rows = Kr.shape[0]
         if freq_dependent:
@@ -246,9 +241,6 @@ class AcousticHarmonicSolver:
         if len(self.prescribed_values) != 0:
 
             if freq_dependent:
-                #
-                # logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(index + 10, len(self.frequencies) + 10))
-                #
                 Kr_add = np.sum((Kr * self.array_prescribed_values[:, index]), axis=1)
                 Mr_add = np.sum((Mr * self.array_prescribed_values[:, index]), axis=1)
                 Cr_add = np.sum(((Cr + Cr_visc) * self.array_prescribed_values[:, index]), axis=1)
@@ -262,8 +254,7 @@ class AcousticHarmonicSolver:
             else:
 
                 for i, freq in enumerate(self.frequencies):
-                    #
-                    logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(i + 10, len(self.frequencies) + 10))
+                    logging.info(f"Processing prescribed pressure model excitation... [{i+10}/{len(self.frequencies) + 10}]")
                     #
                     Kr_add = np.sum((Kr * self.array_prescribed_values[:, i]), axis=1)
                     Mr_add = np.sum((Mr * self.array_prescribed_values[:, i]), axis=1)
@@ -275,7 +266,7 @@ class AcousticHarmonicSolver:
                     F_Cadd = 1j * omega * Cr_add
                     F_eq[:, i] = F_Kadd + F_Madd + F_Cadd
 
-                logging.info("Processing prescribed pressure model excitation..." + ProgressStatus(100, 100))
+                logging.info("Processing prescribed pressure model excitation... [100/100]")
 
         return F_eq
 
@@ -383,7 +374,7 @@ class AcousticHarmonicSolver:
         # print(f"A_in: {A_in} [m²]")
         # print(f"A_out: {A_out} [m²]")
 
-        logging.info("Processing the transmission loss..." + ProgressStatus(40, 100))
+        logging.info("Processing the transmission loss... [40/100]")
 
         nodal_areas_in = np.zeros(len(nodes_input), dtype=float)
         for i, node in enumerate(nodes_input):
@@ -412,10 +403,10 @@ class AcousticHarmonicSolver:
         if rho_out is None:
             return None, None
 
-        logging.info("Processing the transmission loss..." + ProgressStatus(50, 100))
+        logging.info("Processing the transmission loss... [50/100]")
         input_pv_data = self.get_particle_velocity_from_surface(input_surface_id, rho_in)
 
-        logging.info("Processing the transmission loss..." + ProgressStatus(90, 100))
+        logging.info("Processing the transmission loss... [90/100]")
         output_pv_data = self.get_particle_velocity_from_surface(output_surface_id, rho_out)
 
         # Transmission loss

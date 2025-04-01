@@ -43,7 +43,6 @@ from vibra.interface.viewer_3d.render_widgets import (
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import VisualizationFilter
-from vibra.utils.progress_status import ProgressStatus
 from vibra.interface.user_input.render_user_preferences import RendererUserPreferencesInput
 
 from molde.render_widgets import CommonRenderWidget
@@ -706,16 +705,16 @@ class MainWindow(QMainWindow):
             app().project.save_path = path
             app().file.write_thumbnail()
             app().config.add_recent_file(path)
-            logging.info("Saving project data..." + ProgressStatus(10, 100))
+            logging.info("Saving project data... [10/100]")
 
             app().config.write_last_folder_path_in_file("project_folder", path)
             self.update_recents_menu()
-            logging.info("Saving project data..." + ProgressStatus(60, 100))
+            logging.info("Saving project data... [60/100]")
 
             copy(TEMP_PROJECT_FILE, path)
             self.update_window_title(path)
             self.project_data_modified = False
-            logging.info("The project data has been saved." + ProgressStatus(100, 100))
+            logging.info("The project data has been saved. [100/100]")
 
         save_func = load_function(save_data, self)
         save_func(path)
@@ -770,13 +769,13 @@ class MainWindow(QMainWindow):
         app().file.write_geometry_in_file(geometry_path)
 
         def remove_callback():
-            logging.info("Removing the model properties from project file..." + ProgressStatus(10, 100))
+            logging.info("Removing the model properties from project file... [10/100]")
             app().file.remove_model_properties_from_project_file()
 
-            logging.info("Removing the mesh data from project file..." + ProgressStatus(40, 100))
+            logging.info("Removing the mesh data from project file... [40/100]")
             app().file.remove_mesh_data_from_project_file()
 
-            logging.info("Removing the results data from project file..." + ProgressStatus(75, 100))
+            logging.info("Removing the results data from project file... [75/100]")
             app().file.remove_results_data_from_project_file()
 
         remove = load_function(remove_callback, self)

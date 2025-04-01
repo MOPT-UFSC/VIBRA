@@ -1,15 +1,29 @@
-# fmt: off
-
-from PySide6.QtWidgets import QAbstractItemView, QCheckBox, QComboBox, QDialog, QHeaderView, QLabel, QLineEdit, QPushButton, QDoubleSpinBox, QTableWidget, QTableWidgetItem
-from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QHeaderView,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QDoubleSpinBox,
+    QTableWidget,
+    QTableWidgetItem,
+)
 from PySide6.QtCore import Qt
 
 from vibra import app, UI_DIR
 from vibra.engine.mesher import gmsh_constants
-from vibra.engine.mesher.element_type import *
+from vibra.engine.mesher.element_type import (
+    TETRAHEDRON_4,
+    TETRAHEDRON_10,
+    HEXAHEDRON_8,
+    HEXAHEDRON_20,
+    ElementType,
+)
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_bar import load_function
-from vibra.utils.progress_status import ProgressStatus
 
 
 import logging
@@ -189,7 +203,7 @@ class MesherInputs(QDialog):
         try:
             str_selected_ids = self.lineEdit_selected_ids.text()
             selected_ids = [int(_id) for _id in str_selected_ids.split(",")]
-        except:
+        except Exception:
             pass
 
         return selected_ids
@@ -245,7 +259,7 @@ class MesherInputs(QDialog):
 
             app().main_window.set_geometry_selection()
 
-        except:
+        except Exception:
             return
 
     def _load_current_mesh_setup(self):
@@ -343,14 +357,14 @@ class MesherInputs(QDialog):
 
         def generate_function():
 
-            logging.info("Processing mesh..." + ProgressStatus(20, 100))
+            logging.info("Processing mesh... [20/100]")
             app().project.reset_solutions()
 
-            logging.info("Processing mesh..." + ProgressStatus(30, 100))
+            logging.info("Processing mesh... [30/100]")
             app().project.set_mesh_setup(self.mesh_setup)
             app().file.write_mesh_setup_in_file(self.file_mesh_setup)
 
-            logging.info("Processing mesh..." + ProgressStatus(40, 100))
+            logging.info("Processing mesh... [40/100]")
             app().project.generate_mesh()
 
         generate_mesh = load_function(generate_function, app().main_window)
@@ -368,7 +382,7 @@ class MesherInputs(QDialog):
         if self.close_after_generate:
             self.close()
 
-        logging.info("Updating render..." + ProgressStatus(95, 100))
+        logging.info("Updating render... [95/100]")
         app().main_window.action_mesh_workspace_callback()
         app().main_window.update_plots()
 
@@ -503,5 +517,3 @@ class MesherInputs(QDialog):
     def closeEvent(self, a0):
         self.keep_window_open = False
         return super().closeEvent(a0)
-
-# fmt: on

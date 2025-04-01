@@ -1,6 +1,5 @@
 from vibra import app
 from vibra.interface.loading_bar import load_function
-from vibra.utils.progress_status import ProgressStatus
 
 import logging
 import numpy as np
@@ -81,7 +80,7 @@ class LowReducedFrequencyModel:
 
         self.get_low_reduced_frequency_model_data()
 
-        logging.info( "Processing lrf properties (2/2)..." + ProgressStatus(20, 100))
+        logging.info( "Processing lrf properties (2/2)... [20/100]")
         
         aux = defaultdict(list)
         self.low_reduced_frequency_properties = dict()

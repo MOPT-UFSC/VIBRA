@@ -8,7 +8,6 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.loading_bar import load_function
-from vibra.utils.progress_status import ProgressStatus
 
 from molde import load_ui
 
@@ -220,10 +219,10 @@ class PlotTransmissionLossInput(QWidget):
 
                 surface_ids = [self.input_surface_id, self.output_surface_id]
 
-                logging.info("Processing the transmission loss..." + ProgressStatus(10, 100))
+                logging.info("Processing the transmission loss... [10/100]")
                 self.mesh._process_face_elements_connected_to_nodes(surface_ids)
 
-                logging.info("Processing the transmission loss..." + ProgressStatus(20, 100))
+                logging.info("Processing the transmission loss... [20/100]")
                 self.mesh._process_nodal_areas()
 
                 x_data, y_data = self.project.acoustic_harmonic_solver.get_transmission_loss(

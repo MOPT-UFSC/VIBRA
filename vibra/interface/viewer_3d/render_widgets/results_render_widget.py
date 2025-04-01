@@ -19,7 +19,6 @@ from vibra.engine.postprocessing import (
 )
 from vibra.interface.loading_bar import load_function
 from vibra.utils.math_functions import lerp
-from vibra.utils.progress_status import ProgressStatus
 
 from ..actors import (
     AnalysisActor,
@@ -151,10 +150,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         timestamp = self.clear_cache()
 
         for frame in range(self._animation_total_frames):
-            logging.info(
-                f"Caching animation frames [{frame}/{self._animation_total_frames}]"
-                + ProgressStatus(frame, self._animation_total_frames)
-            )
+            logging.info(f"Caching animation frames [{frame}/{self._animation_total_frames}]")
 
             with self._animation_cache_lock:
                 if self.timestamp != timestamp:

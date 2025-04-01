@@ -3,11 +3,9 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
-from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.loading_bar import load_function
-from vibra.utils.progress_status import ProgressStatus
 
 from molde import load_ui
 
@@ -173,7 +171,7 @@ class PlotParticleVelocityFrequencyResponseInput(QDialog):
         def function_callback():
             
             selection_type = self.comboBox_selector_filter.currentIndex()
-            logging.info("Processing particle velocity..." + ProgressStatus(15, 100))
+            logging.info("Processing particle velocity... [15/100]")
 
             if selection_type == 0:
                 particle_velocity = self.get_surface_particle_velocity(selected_id)
@@ -181,7 +179,7 @@ class PlotParticleVelocityFrequencyResponseInput(QDialog):
             else:
                 particle_velocity = self.get_nodal_particle_velocity(selected_id)
 
-            logging.info("Processing particle velocity..." + ProgressStatus(95, 100))
+            logging.info("Processing particle velocity... [95/100]")
 
             return particle_velocity
 
