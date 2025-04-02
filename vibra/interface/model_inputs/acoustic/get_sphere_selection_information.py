@@ -72,7 +72,6 @@ class GetSphereSelectionInformation(QDialog):
 
         list_elements = self.mesh.selected_elements
         list_nodes = self.mesh.nodes_inside_sphere
-                                                                      filter_type = self.filter_type)
 
         list_center_coords = self.mesh.get_average_nodal_coordinates(  self.selection_id,
                                                                         averaged=self.averaged  )
