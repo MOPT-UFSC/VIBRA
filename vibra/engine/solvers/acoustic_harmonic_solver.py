@@ -112,7 +112,7 @@ class AcousticHarmonicSolver:
         C_imp = self.assembler.damping_matrix
         C_visc = self.assembler.visc_damping_matrix
         Q = self.assembler.mass_flow_vectors
-        Q_visc = self.assembler.Qvisc_damping_matrix * 0 # this effect is temporary disabled
+        Q_visc = self.assembler.Qvisc_damping_matrix * 1 # this effect is temporary disabled
         
         is_pm_active = self.assembler.model.porous_material_properties
         is_vt_active = self.assembler.model.viscous_thermal_model_properties

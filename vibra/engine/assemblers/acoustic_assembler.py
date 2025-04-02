@@ -390,8 +390,8 @@ class AcousticAssembler:
                 self.data_K[el, :, :] = Ke
                 self.data_M[el, :, :] = Me
 
-                self.data_Cvisc[el, :, :] = ((4 * mu_0) / (3 * rho_0 * C_0**2)) * Ke
-                self.data_Qvisc[el, :, :] = 0 * ((4 * mu_0) / (3 * rho_0)) * Ke
+                self.data_Cvisc[el, :, :] = ((4 * mu_0) / (3 * ((rho_0 * C_0)**2))) * Ke
+                self.data_Qvisc[el, :, :] = ((4 * mu_0) / (3 * rho_0**2)) * Ke
 
         self.process_indexes()
         self.process_perforated_plate_impedance_data_to_assemble_damping_matrix()
