@@ -144,9 +144,6 @@ class ProgressBarLogUpdater(logging.Handler):
         will update the LoadingWindow associated with this class.
         """
 
-        if not isinstance(record, str):
-            return
-
         # Updates QT to prevent freezing
         QApplication.processEvents()
 
