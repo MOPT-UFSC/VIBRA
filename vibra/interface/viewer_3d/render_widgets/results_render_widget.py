@@ -117,6 +117,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.visualization_changed_callback()
             self.update_section_plane()
             self.update_color_and_deformation()
+            self.update_info_text()
+            self.update_colorbar_unit()
 
         if reset_camera:
             self.renderer.ResetCamera()
