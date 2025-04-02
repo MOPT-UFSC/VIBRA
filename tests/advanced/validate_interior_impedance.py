@@ -137,6 +137,8 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
                 "nodal_attribution" : False,
                 "averaged" : False }
 
+    model.properties._set_property("surface_velocity", data_Vn, surface=1)
+
     # boundary impedance setup
     Zo = fluid.impedance
     data_Z = {  
@@ -146,7 +148,6 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
               "averaged" : False
               }
 
-    model.properties._set_property("surface_velocity", data_Vn, surface=1)
     model.properties._set_property("specific_impedance", data_Z, surface=1)
     model.properties._set_property("specific_impedance", data_Z, surface=2)
 
