@@ -86,7 +86,7 @@ class SetMaterialInput(QDialog):
         # QTableWidget
         self.tableWidget_material_data = self.material_widget.tableWidget_material_data
 
-        # QTreeWidget
+        # QTabWidget
         self.tabWidget_main : QTabWidget
 
         # QTreeWidget

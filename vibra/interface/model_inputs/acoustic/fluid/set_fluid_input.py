@@ -1,9 +1,11 @@
-from PySide6.QtWidgets import QDialog, QComboBox, QFrame, QGridLayout, QLineEdit, QPushButton, QScrollArea, QTableWidget
+from PySide6.QtWidgets import QDialog, QComboBox, QFrame, QGridLayout, QLineEdit, QPushButton, QScrollArea, QTableWidget, QTabWidget, QTreeWidget, QTreeWidgetItem
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
 
 from vibra import app, UI_DIR
+from vibra.engine.properties.fluid import Fluid
 from vibra.interface.model_inputs.acoustic.fluid.fluid_widget import FluidWidget
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from molde import load_ui
 
@@ -39,10 +41,12 @@ class SetFluidInput(QDialog):
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
+        self._config_widgets()
 
         if self.state_properties:
             self.load_compressor_info()
 
+        self.load_model_info()
         self.geometry_selection_callback()
 
         while self.keep_window_open:
@@ -81,9 +85,17 @@ class SetFluidInput(QDialog):
         # QPushButton
         self.pushButton_attribute = self.fluid_widget.pushButton_attribute
         self.pushButton_exit = self.fluid_widget.pushButton_exit
+        self.pushButton_remove : QPushButton
+        self.pushButton_reset : QPushButton
 
         # QTableWidget
         self.tableWidget_fluid_data = self.fluid_widget.tableWidget_fluid_data
+
+        # QTabWidget
+        self.tabWidget_main : QTabWidget
+
+        # QTreeWidget
+        self.treeWidget_fluid: QTreeWidget
 
     def _add_fluid_widget(self):
         self.fluid_widget = FluidWidget(dialog=self, state_properties=self.state_properties)
@@ -98,17 +110,23 @@ class SetFluidInput(QDialog):
 
     def _create_connections(self):
         #
-        self.comboBox_attribution_type.currentIndexChanged.connect(self.update_attribution_type)
+        self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
         self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_remove.clicked.connect(self.remove_callback)
+        self.pushButton_reset.clicked.connect(self.reset_callback)
         self.fluid_widget.pushButton_reset_library.clicked.connect(self.reset_fluid_library_callback)
         #
         self.tableWidget_fluid_data.currentCellChanged.connect(self.current_cell_changed)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
+        #
+        self.treeWidget_fluid.itemClicked.connect(self.on_click_item)
+        self.treeWidget_fluid.itemDoubleClicked.connect(self.on_double_click_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
         #
-        self.update_attribution_type()
+        self.attribution_type_callback()
 
     def current_cell_changed(self, current_row, current_col, previous_row, previous_col):
         self.selected_column = current_col
@@ -127,6 +145,12 @@ class SetFluidInput(QDialog):
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selection_id.setText(text)
 
+    def _config_widgets(self):
+        #
+        for i, width in enumerate([100, 160, 120, 140, 80]):
+            self.treeWidget_fluid.setColumnWidth(i, width)
+            self.treeWidget_fluid.headerItem().setTextAlignment(i, Qt.AlignCenter)
+
     def update_fluid_selection(self):
 
         if self.selected_column is None:
@@ -141,7 +165,7 @@ class SetFluidInput(QDialog):
         if fluid_name != "":
             self.lineEdit_selected_fluid_name.setText(fluid_name)
 
-    def update_attribution_type(self):
+    def attribution_type_callback(self):
 
         index = self.comboBox_attribution_type.currentIndex()
         if index == 0:
@@ -215,11 +239,152 @@ class SetFluidInput(QDialog):
             PrintMessageInput([window_title_1, title, message])
             return
 
+    def remove_callback(self):
+
+        text = self.lineEdit_selection_id.text()
+
+        if "-" in text:
+
+            selection, _selected_id = text.split("-")
+            selected_id = int(_selected_id)
+
+            if selection == "Surface":
+                self.properties._remove_surface_property("fluid", selected_id)
+                self.properties._remove_surface_property("fluid_id", selected_id)
+
+            elif selection == "Volume":
+                self.properties._remove_volume_property("fluid", selected_id)
+                self.properties._remove_volume_property("fluid_id", selected_id)
+
+            self.actions_to_finalize()
+
+            app().main_window.set_geometry_selection()
+
+    def reset_callback(self):
+
+        self.hide()
+
+        title = "Fluids resetting"
+        message = "Would you like to remove the all assigned fluids from model?"
+
+        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+
+        if obj._cancel:
+            return
+
+        if obj._continue:
+
+            self.properties._reset_property("fluid")
+            self.properties._reset_property("fluid_id")
+            self.actions_to_finalize()
+
+            app().main_window.set_geometry_selection()
+
+    def actions_to_finalize(self):
+
+        self.lineEdit_selection_id.setText("")
+        self.lineEdit_selected_fluid_name.setText("")
+
+        self.load_model_info()
+        app().main_window.update_info_text()
+        app().file.write_model_properties_in_file()
+        self.complete = True
+
+    def load_model_info(self):
+
+        self.treeWidget_fluid.clear()
+        properties = {
+                      "Surface" : self.properties.surface_properties,
+                      "Volume" : self.properties.volume_properties
+                      }
+
+        for selection, _property in properties.items():
+            for key, data in _property.items():
+                property, surface_id = key
+                if property == "fluid":
+
+                    selection_id = f"{selection}-{surface_id}"
+
+                    data : Fluid
+                    fluid_name = data.name
+                    density = f"{data.fluid_density : .6}"
+                    speed_of_sound = f"{data.speed_of_sound : .4f}"
+                    dynamic_viscosity = f"{data.dynamic_viscosity : .4e}"
+
+                    new = QTreeWidgetItem([selection_id, 
+                                           fluid_name, 
+                                           density, 
+                                           speed_of_sound, 
+                                           dynamic_viscosity])
+
+                    for col in range(5):
+                        new.setTextAlignment(col, Qt.AlignCenter)
+
+                    self.treeWidget_fluid.addTopLevelItem(new)
+
+        self.update_tabs_visibility()
+
+    def update_tabs_visibility(self):
+
+        for key in self.properties.volume_properties.keys():
+            property, _ = key
+            if property == "fluid":
+                self.tabWidget_main.setTabVisible(1, True)
+                return
+
+        for key in self.properties.surface_properties.keys():
+            property, _ = key
+            if property == "fluid":
+                self.tabWidget_main.setTabVisible(1, True)
+                return
+
+        self.tabWidget_main.setTabVisible(1, False)
+
+    def tab_event_callback(self):
+
+        self.lineEdit_selected_fluid_name.setText("")
+
+        if self.tabWidget_main.currentIndex() == 1:
+            self.lineEdit_selection_id.setText("")
+            self.lineEdit_selection_id.setDisabled(True)
+            self.pushButton_remove.setDisabled(True)
+            self.comboBox_attribution_type.setDisabled(True)
+
+        else:
+            self.comboBox_attribution_type.setDisabled(False)
+            self.attribution_type_callback()
+
+    def on_click_item(self, item):
+
+        self.pushButton_remove.setDisabled(False)
+
+        if item.text(0) != "":
+            selection, _selected_id = item.text(0).split("-")
+            selected_id = int(_selected_id)
+
+            if selection == "Surface":
+                app().main_window.set_geometry_selection(surfaces = [int(selected_id)])
+
+            elif selection == "Volume":
+                app().main_window.set_geometry_selection(volumes = [int(selected_id)])
+
+            app().main_window.action_model_workspace_callback()
+
+            self.lineEdit_selection_id.setText(item.text(0))
+            self.lineEdit_selected_fluid_name.setText(item.text(1))
+
+    def on_double_click_item(self, item):
+        self.on_click_item(item)
+
     def keyPressEvent(self, event):
+
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.attribute_callback()
-        # elif event.key() == Qt.Key_Delete:
-        #     self.fluid_widget.remove_selected_row()
+
+        elif event.key() == Qt.Key_Delete:
+            self.remove_callback()
+
         elif event.key() == Qt.Key_Escape:
             self.close()
 
