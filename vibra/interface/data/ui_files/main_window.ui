@@ -136,7 +136,7 @@
      <x>0</x>
      <y>0</y>
      <width>1055</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_project">
@@ -154,7 +154,7 @@
    </widget>
    <widget class="QMenu" name="menu_settings">
     <property name="title">
-     <string>Visibility settings</string>
+     <string>Settings</string>
     </property>
     <addaction name="action_theme"/>
     <addaction name="action_user_preferences"/>
