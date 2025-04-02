@@ -23,7 +23,7 @@ from vibra.engine.mesher.element_type import (
     ElementType,
 )
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.loading_bar import load_function
+from vibra.interface.loading_window import LoadingWindow
 
 
 import logging
@@ -367,13 +367,11 @@ class MesherInputs(QDialog):
             logging.info("Processing mesh... [40/100]")
             app().project.generate_mesh()
 
-        generate_mesh = load_function(generate_function, app().main_window)
-        generate_mesh()
+        LoadingWindow(generate_function, app().main_window).run()
 
         app().file.write_mesh_data_in_file()
 
-        actions_to_finalize = load_function(self.actions_to_finalize, self.main_window)
-        actions_to_finalize()
+        LoadingWindow(self.actions_to_finalize, self.main_window).run()
 
         self.complete = True
 

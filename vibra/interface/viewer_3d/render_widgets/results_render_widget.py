@@ -17,7 +17,7 @@ from vibra.engine.postprocessing import (
     compute_structural_harmonic_field,
     compute_structural_modal_field,
 )
-from vibra.interface.loading_bar import load_function
+from vibra.interface.loading_window import LoadingWindow
 from vibra.utils.math_functions import lerp
 
 from ..actors import (
@@ -190,8 +190,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         if not self._animation_cached_data:
-            load = load_function(self.cache_animation_frames, app().main_window)
-            load()
+            LoadingWindow(self.cache_animation_frames).run()
 
         if frame in self._animation_cached_data:
             logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]")

@@ -20,7 +20,8 @@ from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.formatters.icons import get_vibra_icon, change_icon_color_for_widgets
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.help_widget import HelpWidget
-from vibra.interface.loading_bar import load_function
+from vibra.interface.loading_window import LoadingWindow
+
 from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
 from vibra.interface.user_input.input_ui import InputUi
@@ -716,8 +717,7 @@ class MainWindow(QMainWindow):
             self.project_data_modified = False
             logging.info("The project data has been saved. [100/100]")
 
-        save_func = load_function(save_data, self)
-        save_func(path)
+        LoadingWindow(save_data).run(path)
 
         from datetime import datetime
 
@@ -778,8 +778,7 @@ class MainWindow(QMainWindow):
             logging.info("Removing the results data from project file... [75/100]")
             app().file.remove_results_data_from_project_file()
 
-        remove = load_function(remove_callback, self)
-        remove()
+        LoadingWindow(remove_callback).run()
 
         _geometry_path = app().file.read_geometry_from_file()
         self.import_geometry(_geometry_path)
@@ -824,8 +823,7 @@ class MainWindow(QMainWindow):
         self.update_plots()
 
     def import_geometry(self, path: str):
-        import_geometry = load_function(app().project.import_geometry, self)
-        if import_geometry(path) == -1:
+        if LoadingWindow(app().project.import_geometry).run(path) == -1:
             return
 
         try:

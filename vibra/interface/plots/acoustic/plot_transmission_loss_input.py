@@ -7,7 +7,7 @@ from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppe
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.loading_bar import load_function
+from vibra.interface.loading_window import LoadingWindow
 
 from molde import load_ui
 
@@ -232,8 +232,7 @@ class PlotTransmissionLossInput(QWidget):
 
                 return x_data, y_data
 
-            tl_callback = load_function(transmission_loss_callback, self.main_window)
-            x_data, y_data = tl_callback()
+            x_data, y_data = LoadingWindow(transmission_loss_callback).run()
 
         else:
             plot_type = "Noise reduction"

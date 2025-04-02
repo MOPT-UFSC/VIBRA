@@ -5,7 +5,7 @@ from PySide6.QtGui import QCloseEvent
 from vibra import app, UI_DIR
 from vibra.interface.mesh.mesher_inputs import MesherInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.loading_bar import load_function
+from vibra.interface.loading_window import LoadingWindow
 
 from molde import load_ui
 
@@ -321,8 +321,7 @@ class ProcessAcousticTransferElementData(QDialog):
             sleep(0.5)
             logging.info("Exporting the admittance matrix data... [100/100]")
 
-        solve_harmonic = load_function(callback, app().main_window)
-        solve_harmonic()
+        LoadingWindow(callback).run()
 
         app().main_window.configure_results_render_widget()
         app().main_window.menu_widget.update_items()
@@ -363,8 +362,7 @@ class ProcessAcousticTransferElementData(QDialog):
             logging.info("Processing area... [60/100]")
             self.mesh._process_face_elements_connected_to_nodes(surface_ids)
 
-        process_area = load_function(function_callback, app().main_window)
-        process_area()
+        LoadingWindow(function_callback).run()
 
     def get_response(self, excitation_id: int, surface_id: int):
 

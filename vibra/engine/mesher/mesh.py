@@ -1,9 +1,12 @@
 
-from vibra.engine.mesher.element_type import *
-from vibra.engine.mesher.geometry_setup import GeometrySetup
+from vibra.engine.mesher.element_type import (
+    DEFAULT_ELEMENT_TYPE,
+    TETRAHEDRON_10,
+    TETRAHEDRON_4,
+    ElementType,
+)
 from vibra.engine.mesher.reordering import Reordering
 
-from vibra.interface.loading_bar import load_function
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 from vtkmodules.vtkCommonCore import vtkPoints
@@ -93,32 +96,32 @@ class Mesh:
         self.principal_diagonal = None
 
     def load_cad(
-                 self,
-                 path: (str | Path),
-                 *,
-                 minimum_element_size: float = 30.0,
-                 maximum_element_size: float = 30.0,
-                 element_type: ElementType = DEFAULT_ELEMENT_TYPE,
-                 geometry_tolerance: float = 1e-8,
-                 size_factor: float = 0.50,
-                 dimension: int = 3,
-                 threads: int = 0,
-                 gmsh_gui: bool = False,
-                 mesh_refinement_parameters = list(),
-                 mesh_connection = True,
-                 ):
+        self,
+        path: (str | Path),
+        *,
+        minimum_element_size: float = 30.0,
+        maximum_element_size: float = 30.0,
+        element_type: ElementType = DEFAULT_ELEMENT_TYPE,
+        geometry_tolerance: float = 1e-8,
+        size_factor: float = 0.50,
+        dimension: int = 3,
+        threads: int = 0,
+        gmsh_gui: bool = False,
+        mesh_refinement_parameters=list(),
+        mesh_connection=True,
+    ):
 
         self.mesh_setup = dict(
-                               minimum_element_size = minimum_element_size,
-                               maximum_element_size = maximum_element_size,
-                               element_type = element_type,
-                               geometry_tolerance = geometry_tolerance,
-                               size_factor = size_factor,
-                               dimension = dimension,
-                               threads = threads,
-                               mesh_refinement_parameters = mesh_refinement_parameters,
-                               mesh_connection = mesh_connection
-                               )
+            minimum_element_size=minimum_element_size,
+            maximum_element_size=maximum_element_size,
+            element_type=element_type,
+            geometry_tolerance=geometry_tolerance,
+            size_factor=size_factor,
+            dimension=dimension,
+            threads=threads,
+            mesh_refinement_parameters=mesh_refinement_parameters,
+            mesh_connection=mesh_connection,
+        )
 
         self.mesh_connection = mesh_connection
 
@@ -132,13 +135,13 @@ class Mesh:
         gmsh.open(path)
 
         logging.info("Configuring mesh... [20/100]")
-        self._configure_mesh(   
-                             element_type,
-                             minimum_element_size,
-                             maximum_element_size,
-                             size_factor,
-                             mesh_refinement_parameters,
-                             )
+        self._configure_mesh(
+            element_type,
+            minimum_element_size,
+            maximum_element_size,
+            size_factor,
+            mesh_refinement_parameters,
+        )
 
         # gmsh.model.occ.removeAllDuplicates()
         gmsh.model.occ.synchronize()

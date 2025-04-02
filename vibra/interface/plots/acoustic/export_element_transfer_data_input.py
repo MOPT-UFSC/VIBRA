@@ -5,8 +5,7 @@ from PySide6.QtGui import QCloseEvent
 from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.loading_bar import load_function
+from vibra.interface.loading_window import LoadingWindow
 
 from molde import load_ui
 
@@ -209,8 +208,7 @@ class ExportElementTransferDataInput(QDialog):
             logging.info("Processing area... [60/100]")
             self.mesh._process_face_elements_connected_to_nodes(surface_ids)
 
-        process_area = load_function(function_callback, app().main_window)
-        process_area()
+        LoadingWindow(function_callback).run()
 
     def get_response(self, surface_id: int):
 

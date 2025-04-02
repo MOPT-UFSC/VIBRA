@@ -32,10 +32,7 @@ from vibra.interface.plots.structural.plot_structural_frequency_response_input i
 from vibra.interface.plots.structural.plot_structural_mode_shape import PlotStructuralModeShape
 from vibra.interface.plots.structural.plot_displacement_field import PlotDisplacementField
 #
-from vibra.interface.process_analysis import ProcessAnalysis
-
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.loading_bar import load_function
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 from vibra import app
