@@ -30,7 +30,7 @@ class LoadingWindow(QWidget):
 
     To run this function with a progress bar you just need to write
     ```
-    value_c = LoadingWindow(long_function, param_a, param_b=1234)
+    value_c = LoadingWindow(long_function).run(param_a, param_b=1234)
     ```
 
     Disclaimers:
@@ -46,13 +46,16 @@ class LoadingWindow(QWidget):
 
     GMSH, for some reason, refuses to run in secondary thread.
     And GMSH is an important part of our software, that of course
-    need a progress bar when it is running.
+    needs a progress bar when it is running.
     So this is an attempt to run everything (both GMSH and QT) in the
     main thread without conflicts.
 
     I also don't want to mix the interface code with the engine code
     because it can easily became a mess and make the creation of
     automated tests really hard.
+
+    The idea was to use the logging callbacks and a bunch of regex to
+    update the progress bar and progress label.
     """
 
     def __init__(self, _function):
@@ -96,7 +99,7 @@ class LoadingWindow(QWidget):
         progress_handler = ProgressBarLogUpdater(logging.DEBUG, loading_window=self)
         logging.getLogger().addHandler(progress_handler)
 
-        # Waits the loading bar to appear and uptates pyqt
+        # Waits for the loading bar to appear and updates pyqt
         sleep(0.1)
         QApplication.processEvents()
 
