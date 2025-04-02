@@ -124,7 +124,7 @@ class LoadingWindow(QWidget):
         return return_value
 
     def __call__(self, *args, **kwargs):
-        return self.run(self._function, *args, **kwargs)
+        return self.run(*args, **kwargs)
 
 
 class ProgressBarLogUpdater(logging.Handler):
