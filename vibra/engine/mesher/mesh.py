@@ -743,6 +743,49 @@ class Mesh:
         n_solid_elements = self.solids_connectivity.shape[0]
         return n_nodes, n_face_elements, n_solid_elements
 
+    def compute_initial_max_mesh_size(self, path, geometry_tolerance: float = 1e-8, threads: int = 0):
+        gmsh.initialize("", False)
+        gmsh.option.setNumber("General.Terminal", 0)
+        gmsh.option.setNumber("General.Verbosity", 0)
+        gmsh.option.setNumber("General.NumThreads", threads)
+        gmsh.option.setNumber("Geometry.Tolerance", geometry_tolerance)
+
+        gmsh.open(path)
+
+        try:
+            volumes = gmsh.model.getEntities(3)
+            if volumes:
+                bb_sides, volume = self.compute_bounding_box_sizes(volumes)
+                bb_largest_area = bb_sides[0] * bb_sides[1]
+
+                return volume / bb_largest_area / 5
+            else:
+                surfaces = gmsh.model.getEntities(2)
+                bb_sides, _ = self.compute_bounding_box_sizes(surfaces)
+                return bb_sides[1] / 5
+        finally:
+            gmsh.finalize()
+
+
+    def compute_bounding_box_sizes(self, geo_entities):
+        xmin = ymin = zmin = xmax = ymax = zmax = 0
+        volume = 0
+        for dim, tag in geo_entities:
+            # This mass is considering a density of 1, so it is equal the solid volume
+            volume += gmsh.model.occ.getMass(dim, tag)
+            xmin2, ymin2, zmin2, xmax2, ymax2, zmax2 = gmsh.model.getBoundingBox(dim, tag)
+            xmin = min(xmin, xmin2)
+            ymin = min(ymin, ymin2)
+            zmin = min(zmin, zmin2)
+
+            xmax = max(xmax, xmax2)
+            ymax = max(ymax, ymax2)
+            zmax = max(zmax, zmax2)
+
+        bb_sides = sorted([(xmax - xmin), (ymax - ymin), (zmax - zmin)], reverse=True)
+                
+        return bb_sides, volume
+
 
     def get_geometry_info(self):
         self.geometry_information.clear()

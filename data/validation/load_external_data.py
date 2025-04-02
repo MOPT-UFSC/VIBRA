@@ -15,7 +15,7 @@ class LoadExternalData:
 
     def get_frequencies(self):
         path = self.folder_path / "analysis_frequencies.dat"
-        return np.loadtxt(path)
+        return np.loadtxt(path).reshape(-1, 1)
 
     def load_nodal_pressures(self):
 

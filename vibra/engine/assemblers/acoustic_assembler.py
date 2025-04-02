@@ -130,6 +130,8 @@ class AcousticAssembler:
         return global_prescribed, array_prescribed_values
 
     def get_prescribed_indexes(self):
+        """
+        """
         _prescribed_indexes = list()
         for key, _ in self.properties.surface_properties.items():
             property, surface_id = key
@@ -138,12 +140,11 @@ class AcousticAssembler:
                 for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
                     _prescribed_indexes.append(index)
 
-        if len(_prescribed_indexes) == 0:
-            return _prescribed_indexes
-        else:
-            return _prescribed_indexes
+        return _prescribed_indexes
 
     def get_unprescribed_indexes(self):
+        """
+        """
         element_3D, _ = self.get_element()
         total_dofs = element_3D.DOFS_PER_NODE * len(element_3D.nodal_coordinates)
         all_indexes = np.arange(total_dofs, dtype=int)
@@ -536,12 +537,10 @@ class AcousticAssembler:
 
                 _complex_values = data["values"][0]
                 if isinstance(_complex_values, complex):
-                    # print("complex")
                     complex_values = _complex_values * aux_ones
 
                 #TODO: check compressor excitation
                 elif isinstance(_complex_values, np.ndarray):
-                    print("array")
                     if _complex_values.shape[0] == 1:
                         complex_values = _complex_values * aux_ones
                     elif len(_complex_values.shape) == 1:
@@ -568,7 +567,6 @@ class AcousticAssembler:
         output = np.zeros((total_dofs, self.number_frequencies), dtype=complex)
 
         if acoustic_excitation:
-            print("entrei -> acoustic_excitation")
             indexes = list(acoustic_excitation.keys())
             excitation = list(acoustic_excitation.values())
             output[indexes, :] = np.array(excitation)

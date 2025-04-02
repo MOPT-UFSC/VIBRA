@@ -22,7 +22,7 @@ from time import time
 from pandas import read_excel
 from openpyxl import load_workbook
 
-# valid mesh sizes: 10mm, 34mm, 200mm and 400mm.
+# valid mesh sizes: 20mm and 200mm.
 mesh_size = "200mm"
 
 
@@ -32,7 +32,7 @@ mesh_size = "200mm"
 def load_external_mesh_and_solve(interior_impedance: bool = False):
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"data/validation/perforated_plate/mesh/ds_connected_rectangular_cavities_{mesh_size}.dat"
+    mesh_path = f"data/validation/elementar/mesh/ds_tet4_double_{mesh_size}.dat"
 
     if not os.path.exists(mesh_path):
         return
@@ -42,8 +42,6 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
                              "input_face" : 1,
                              "output_face" : 2,
                              "middle_face" : 3,
-                             "input_connected_faces" : 4,
-                             "output_connected_faces" : 5,
                             }
 
     # define surfaces from each volume
@@ -56,9 +54,9 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     external_mesh.set_named_selections(list(named_selecion_to_tag.keys()))
     external_mesh.decode_mesh_data_from_file()
 
-    # nodes_from_named_selection = external_mesh.nodes_from_named_selection
-    # for ns, nodes in nodes_from_named_selection.items():
-    #     print(ns, nodes)
+    nodes_from_named_selection = external_mesh.nodes_from_named_selection
+    for ns, nodes in nodes_from_named_selection.items():
+        print(ns, nodes)
 
     dt = time() - t0
     print(f"\n\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
@@ -93,7 +91,7 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     pressure = 101325
     rho_0 = 1.204263
     c_0 = 343.395034
-    mu = 1.8247e-5
+    mu = 0 * 1.8247e-5
     Cp = 1006.400178
     kt = 2.5503e-02
     gamma = 1.401985
@@ -114,9 +112,9 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     
     # Load the external data
     if interior_impedance:
-        path = f"data/validation/perforated_plate/results/interior_impedance/mesh_size_{mesh_size}"
+        path = f"data/validation/elementar/interior_impedance/results/mesh_size_{mesh_size}"
     else:
-        path = f"data/validation/perforated_plate/results/mesh_size_{mesh_size}"
+        path = f"data/validation/elementar/results/mesh_size_{mesh_size}"
 
     ext_data = LoadExternalData(path, rho_0)
 
@@ -137,6 +135,8 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
                 "nodal_attribution" : False,
                 "averaged" : False }
 
+    model.properties._set_property("surface_velocity", data_Vn, surface=1)
+
     # boundary impedance setup
     Zo = fluid.impedance
     data_Z = {  
@@ -146,20 +146,19 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
               "averaged" : False
               }
 
-    model.properties._set_property("surface_velocity", data_Vn, surface=1)
     model.properties._set_property("specific_impedance", data_Z, surface=1)
     model.properties._set_property("specific_impedance", data_Z, surface=2)
 
-    # interior impedance setup
-    if interior_impedance:
-        data_Zin = {  
-                    "real_values" : [10],
-                    "imag_values" : [0],
-                    "nodal_attribution" : False,
-                    "averaged" : False
-                    }
+    # # interior impedance setup
+    # if interior_impedance:
+    #     data_Zin = {  
+    #                 "real_values" : [10],
+    #                 "imag_values" : [0],
+    #                 "nodal_attribution" : False,
+    #                 "averaged" : False
+    #                 }
 
-        model.properties._set_property("specific_impedance", data_Zin, surface=3)
+    #     model.properties._set_property("specific_impedance", data_Zin, surface=3)
 
     # Define the analysis frequency setup
     df = 5
@@ -173,14 +172,12 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
                         "f_step" : df,
                         "frequencies" : frequencies
                        }
-    
+
+    # Set the analysis frequency setup
     model.set_frequency_setup(frequency_setup)
 
     assembler = AcousticAssembler(model)
-
-    # Set the analysis frequency setup
-    assembler.process_assemble()
-    
+   
     # t0 = time()
     # # Run modal analysis
     # modal_solver = AcousticModalSolver(assembler)
@@ -192,15 +189,41 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     # return
     
     # Define the analysis type and load setup
+    model.set_acoustic_element(assembler.get_element())
     analysis_data = {"analysis_id" : 3, "frequencies" : frequencies}
     harmonic_solver = AcousticHarmonicSolver(assembler, analysis_data=analysis_data)
 
     # Run harmonic analysis
 
+    assembler.process_assemble()
+
     t0 = time()
     solution = harmonic_solver.solve(print_log=True)
     dt = time() - t0
     print(f"Elapsed time to solve harmonic analysis: {round(dt, 4)}")
+
+    K_matrix = harmonic_solver.assembler.stiffness_matrix
+    M_matrix = harmonic_solver.assembler.mass_matrix
+    C_matrix = harmonic_solver.assembler.damping_matrix
+    Q_vect = harmonic_solver.assembler.mass_flow_vectors
+
+    K_mat = np.real(K_matrix.toarray())
+    M_mat = np.real(M_matrix.toarray())
+    C_mat = np.real(C_matrix.toarray())
+
+    np.savetxt("K_mat_vibra.csv", K_mat, delimiter=",")
+    # np.savetxt("M_mat_vibra.csv", M_mat, delimiter=",")
+    np.savetxt("C_mat_vibra.csv", C_mat, delimiter=",")
+    # np.savetxt("Q_vect_vibra.csv", Q_vect, delimiter=",")
+
+    # K_imp = np.loadtxt("data/validation/elementar/results/Kdense.csv", delimiter=",")
+    # C_imp = np.loadtxt("data/validation/elementar/results/Cdense.csv", delimiter=",")
+
+    # from pprint import pprint
+    # pprint(C_mat*rho_0)
+    # print(K_mat*rho_0)
+    # print(M_mat*rho_0)
+    # return
 
     input_rows = mesh.nodes_from_surfaces[1]
     output_rows = mesh.nodes_from_surfaces[2]
@@ -238,44 +261,31 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
             Vk += element_3d.process_particle_velocity(_element_id, _node_id, rho_0, frequencies, solution)
         particle_velocity[_node_id] = Vk / len(element_ids)
 
-    # nodal area calculation
-    mesh._process_face_elements_connected_to_nodes([1, 2])
-    mesh._process_nodal_areas()
+    # # nodal area calculation
+    # mesh._process_face_elements_connected_to_nodes([1, 2])
+    # mesh._process_nodal_areas()
 
-    freq_TL, TL_model = harmonic_solver.get_transmission_loss(1, 2)
+    # freq_TL, TL_model = harmonic_solver.get_transmission_loss(1, 2)
 
     dt = time() - t0
     print(f"Elapsed time to post-process data: {round(dt, 4)}")
 
     if solution is not None:
 
-        if mesh_size == "400mm":    
-            node_in = 3
-            node_out = 17
+        if mesh_size == "200mm":
+            node_in = 5
+            node_out = 1
 
-        elif mesh_size == "200mm":
-            node_in = 28
-            node_out = 34
-
-        elif mesh_size == "34mm":
-            node_in = 1179
-            node_out = 327
-
-        elif mesh_size == "10mm":
-            node_in = 12802
-            node_out = 1304
+        elif mesh_size == "20mm":
+            node_in = 42
+            node_out = 73
 
         else:
             return
 
-        if interior_impedance:
-            results_path = f"data/validation/perforated_plate/results/interior_impedance/connected_rectangular_cavities_{mesh_size}.xlsx"
-        else:
-            results_path = f"data/validation/perforated_plate/results/connected_rectangular_cavities_{mesh_size}.xlsx"
-
-        # import the WB transmission loss data from spreadsheet file
-        results_WB = get_external_results(results_path)
-        TL_data_WB = results_WB["transmission_loss"] # ports enabled
+        # # import the WB transmission loss data from spreadsheet file
+        # imported_results = get_external_results(interior_impedance)
+        # TL_data = imported_results["transmission_loss"] # ports enabled
 
         WB_pressure_data = ext_data.load_nodal_pressures()
         WB_particle_velocities_data = ext_data.load_particle_velocities()
@@ -322,15 +332,15 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
         title = f"Harmonic response at input face"
 
         fig1, ax1 = plt.subplots()
-        ax1.plot(frequencies, np.real(input_pressure), 'r', label='Vibra')
-        ax1.plot(freq_WB, np.real(input_pressure_WB), 'k--', label='Ansys')
+        ax1.plot(frequencies, np.real(input_pressure), 'r', label='VIBRA')
+        ax1.plot(freq_WB, np.real(input_pressure_WB), 'k--', label='ANSYS')
         ax1.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Real', title=title)
         ax1.grid()
         ax1.legend()
 
         fig2, ax2 = plt.subplots()
-        ax2.plot(frequencies, np.imag(input_pressure), 'r', label='Vibra')
-        ax2.plot(freq_WB, np.imag(input_pressure_WB), 'k--', label='Ansys')
+        ax2.plot(frequencies, np.imag(input_pressure), 'r', label='VIBRA')
+        ax2.plot(freq_WB, np.imag(input_pressure_WB), 'k--', label='ANSYS')
         ax2.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Imaginary', title=title)
         ax2.grid()
         ax2.legend()
@@ -338,15 +348,15 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
         title = f"Harmonic response at output face"
 
         fig3, ax3 = plt.subplots()
-        ax3.plot(frequencies, np.real(output_pressure), 'r', label='Vibra')
-        ax3.plot(freq_WB, np.real(output_pressure_WB), 'k--', label='Ansys')
+        ax3.plot(frequencies, np.real(output_pressure), 'r', label='VIBRA')
+        ax3.plot(freq_WB, np.real(output_pressure_WB), 'k--', label='ANSYS')
         ax3.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Real', title=title)
         ax3.grid()
         ax3.legend()
 
         fig4, ax4 = plt.subplots()
-        ax4.plot(frequencies, np.imag(output_pressure), 'r', label='Vibra')
-        ax4.plot(freq_WB, np.imag(output_pressure_WB), 'k--', label='Ansys')
+        ax4.plot(frequencies, np.imag(output_pressure), 'r', label='VIBRA')
+        ax4.plot(freq_WB, np.imag(output_pressure_WB), 'k--', label='ANSYS')
         ax4.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Imaginary', title=title)
         ax4.grid()
         ax4.legend()
@@ -358,8 +368,8 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
 
         fig5, ax5 = plt.subplots()
         title = f"Acoustic pressure at node {node_in}"
-        ax5.plot(frequencies, data_type(solution[node_in-1, :]), 'r', label='Vibra')
-        ax5.plot(freq_WB, data_type(input_pressures_WB[node_in]), 'k--', label='Ansys')
+        ax5.plot(frequencies, data_type(solution[node_in-1, :]), 'r', label='VIBRA')
+        ax5.plot(freq_WB, data_type(input_pressures_WB[node_in]), 'k--', label='ANSYS')
         ax5.set_xlabel('Frequency [Hz]')
         ax5.set_ylabel(f'Acoustic Pressure [Pa] - {type_label}')
         ax5.set_title(title)
@@ -368,18 +378,18 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
 
         fig6, ax6 = plt.subplots()
         title = f"Acoustic pressure at node {node_out}"
-        ax6.plot(frequencies, data_type(solution[node_out-1, :]), 'r', label='Vibra')
-        ax6.plot(freq_WB, data_type(output_pressures_WB[node_out]), 'k--', label='Ansys')
+        ax6.plot(frequencies, data_type(solution[node_out-1, :]), 'r', label='VIBRA')
+        ax6.plot(freq_WB, data_type(output_pressures_WB[node_out]), 'k--', label='ANSYS')
         ax6.set_xlabel('Frequency [Hz]')
         ax6.set_ylabel(f'Acoustic Pressure [Pa] - {type_label}')
         ax6.set_title(title)
         ax6.grid()
-        ax5.legend()
+        ax6.legend()
 
         fig7, ax7 = plt.subplots()
         title = f"Particle velocity at node {node_in}"
-        ax7.plot(frequencies, data_type(particle_velocity[node_in-1][0, :]), 'r', label='Vibra')
-        ax7.plot(freq_WB, data_type(input_velocities_WB[node_in]), 'k--', label='Ansys')
+        ax7.plot(frequencies, data_type(particle_velocity[node_in-1][0, :]), 'r', label='VIBRA')
+        ax7.plot(freq_WB, data_type(input_velocities_WB[node_in]), 'k--', label='ANSYS')
         ax7.set_xlabel('Frequency [Hz]')
         ax7.set_ylabel(f'Particle velocity [m/s] - {type_label}')
         ax7.set_title(title)
@@ -388,8 +398,8 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
 
         fig8, ax8 = plt.subplots()
         title = f"Particle velocity at node {node_out}"
-        ax8.plot(frequencies, data_type(particle_velocity[node_out-1][0, :]), 'r', label='Vibra')
-        ax8.plot(freq_WB, data_type(output_velocities_WB[node_out]), 'k--', label='Ansys')
+        ax8.plot(frequencies, data_type(particle_velocity[node_out-1][0, :]), 'r', label='VIBRA')
+        ax8.plot(freq_WB, data_type(output_velocities_WB[node_out]), 'k--', label='ANSYS')
         ax8.set_xlabel('Frequency [Hz]')
         ax8.set_ylabel(f'Particle velocity [m/s] - {type_label}')
         ax8.set_title(title)
@@ -398,8 +408,8 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
 
         fig9, ax9 = plt.subplots()
         title = "Input face particle velocity - average"
-        ax9.plot(frequencies, data_type(input_Vx), 'r', label='Vibra')
-        ax9.plot(freq_WB, data_type(input_Vx_WB), 'k--', label='Ansys')
+        ax9.plot(frequencies, data_type(input_Vx), 'r', label='VIBRA')
+        ax9.plot(freq_WB, data_type(input_Vx_WB), 'k--', label='ANSYS')
         ax9.set_xlabel('Frequency [Hz]')
         ax9.set_ylabel(f'Particle velocity [m/s] - {type_label}')
         ax9.set_title(title)
@@ -408,8 +418,8 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
 
         fig10, ax10 = plt.subplots()
         title = "Output face particle velocity - average"
-        ax10.plot(frequencies, data_type(output_Vx), 'r', label='Vibra')
-        ax10.plot(freq_WB, data_type(output_Vx_WB), 'k--', label='Ansys')
+        ax10.plot(frequencies, data_type(output_Vx), 'r', label='VIBRA')
+        ax10.plot(freq_WB, data_type(output_Vx_WB), 'k--', label='ANSYS')
         ax10.set_xlabel('Frequency [Hz]')
         ax10.set_ylabel(f'Particle velocity [m/s] - {type_label}')
         ax10.set_title(title)
@@ -418,37 +428,25 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
 
         # Transmission loss
 
-        freq_WB_evaluated, TL_WB_evaluated = process_external_TL(model, ext_data)
+        # freq_WB_evaluated, TL_WB_evaluated = process_external_TL(model, ext_data)
         
-        mask = TL_data_WB[:, 0] <= f_max
-        freq_WB_direct = TL_data_WB[:, 0][mask]
-        TL_WB_direct = TL_data_WB[:, 1][mask]
+        # mask = TL_data[:, 0] <= f_max
+        # freq_WB_direct = TL_data[:, 0][mask]
+        # TL_WB_direct = TL_data[:, 1][mask]
 
-        freq_WB_direct = TL_data_WB[:, 0]
-        TL_WB_direct = TL_data_WB[:, 1]
+        # freq_WB_direct = TL_data[:, 0]
+        # TL_WB_direct = TL_data[:, 1]
 
-        fig11, ax11 = plt.subplots()
-        title = "Transmission loss"
-        ax11.plot(freq_TL, TL_model, 'r', label='Vibra')
-        ax11.plot(freq_WB_direct, TL_WB_direct, 'k--', label='Ansys')
-        ax11.plot(freq_WB_evaluated, TL_WB_evaluated, 'b--', label='Ansys (ext.)')
-
-        #TODO: remove this
-        path = f"data/validation/perforated_plate/results/TL_cavidades_retangulares_comsol_{mesh_size}.xlsx"
-        if os.path.exists(path):
-            results_Comsol = get_external_results(path)
-            TL_data_Comsol = results_Comsol["transmission_loss"]
-
-            freq_Comsol = TL_data_Comsol[:, 0]
-            TL_Comsol = TL_data_Comsol[:, 1]
-
-            ax11.plot(freq_Comsol, TL_Comsol, 'g--', label='Comsol')
-
-        ax11.set_xlabel('Frequency [Hz]')
-        ax11.set_ylabel(f'Transmission loss [dB]')
-        ax11.set_title(title)
-        ax11.grid()
-        ax11.legend()
+        # fig11, ax11 = plt.subplots()
+        # title = "Transmission loss"
+        # ax11.plot(freq_TL, TL_model, 'r', label='VIBRA')
+        # ax11.plot(freq_WB_direct, TL_WB_direct, 'k--', label='ANSYS')
+        # ax11.plot(freq_WB_evaluated, TL_WB_evaluated, 'b--', label='ANSYS (ext.)')
+        # ax11.set_xlabel('Frequency [Hz]')
+        # ax11.set_ylabel(f'Transmission loss [dB]')
+        # ax11.set_title(title)
+        # ax11.grid()
+        # ax11.legend()
 
         plt.show()
 
@@ -554,14 +552,18 @@ def process_external_TL(model: "Model", ext_data: LoadExternalData):
         return freq_WB, TL
 
 
-def get_external_results(path: str):
+def get_external_results(interior_impedance: bool):
 
     imported_results = dict()
+    if interior_impedance:
+        results_path = f"data/validation/elementar/results/interior_impedance/connected_rectangular_cavities_{mesh_size}.xlsx"
+    else:
+        results_path = f"data/validation/elementar/results/connected_rectangular_cavities_{mesh_size}.xlsx"
 
-    if not os.path.exists(path):
+    if not os.path.exists(results_path):
         return imported_results
 
-    wb = load_workbook(path)
+    wb = load_workbook(results_path)
 
     skiprows = 0
 
@@ -570,14 +572,14 @@ def get_external_results(path: str):
 
         try:
             sheet_data = read_excel(
-                                    path, 
+                                    results_path, 
                                     sheet_name = sheetname, 
                                     header = skiprows, 
                                     usecols = [0,1,2]
                                     ).to_numpy()
         except:
             sheet_data = read_excel(
-                                    path, 
+                                    results_path, 
                                     sheet_name = sheetname, 
                                     header = skiprows, 
                                     usecols = [0,1]
