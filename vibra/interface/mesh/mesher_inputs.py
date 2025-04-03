@@ -367,11 +367,11 @@ class MesherInputs(QDialog):
             logging.info("Processing mesh... [40/100]")
             app().project.generate_mesh()
 
-        LoadingWindow(generate_function, app().main_window).run()
+        LoadingWindow(generate_function).run()
 
         app().file.write_mesh_data_in_file()
 
-        LoadingWindow(self.actions_to_finalize, self.main_window).run()
+        LoadingWindow(self.actions_to_finalize).run()
 
         self.complete = True
 
