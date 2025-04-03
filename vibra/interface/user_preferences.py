@@ -13,7 +13,7 @@ class UserPreferences:
     faces_color: Color = color_names.WHITE
     selection_color: Color = Color("#146AF5")
     renderer_font_color: Color = color_names.BLACK
-    renderer_font_size: int  = 12
+    renderer_font_size: int  = 11
     points_size: int = 15
     nodes_size: int = 10
     lines_thickness: int = 5
@@ -26,35 +26,33 @@ class UserPreferences:
         self.interface_theme = "light"
         self.renderer_background_color_1 = Color("#8092A6")
         self.renderer_background_color_2 = Color("#EEF2F3")
-        self.renderer_font_color = Color("#111111")
+        self.renderer_font_color = color_names.BLACK
         self.nodes_points_color = Color("#FFB432")
         self.lines_color = color_names.BLACK
         self.edges_color = color_names.BLACK
         self.faces_color = color_names.WHITE
         self.selection_color = Color("#146AF5")
-        self.renderer_font_color = color_names.BLACK
-    
+
     def set_dark_theme(self):
         self.interface_theme = "dark"
         self.renderer_background_color_1 = Color("#0b0f17")
         self.renderer_background_color_2 = Color("#3e424d")
-        self.renderer_font_color = Color("#CCCCCC")
+        self.renderer_font_color = color_names.WHITE
         self.nodes_points_color = Color("#FFB432")
         self.lines_color = color_names.BLACK
         self.edges_color = color_names.BLACK
         self.faces_color = color_names.WHITE
         self.selection_color = Color("#146AF5")
-        self.renderer_font_color = color_names.WHITE
-    
-    def reset_sizes(self):
-        self.renderer_font_size = 12
-        self.points_size: int = 15
-        self.nodes_size: int = 10
-        self.lines_thickness: int = 5
-        self.edges_thickness: int = 1
-    
-    def reset_reference_scale_bar(self):
+
+    def reset_attributes(self):
+        self.renderer_font_size = 11
+        self.points_size = 15
+        self.nodes_size = 10
+        self.lines_thickness = 5
+        self.edges_thickness = 1
         self.show_reference_scale_bar = True
+        self.compatibility_mode = False
+        self.color_map = "jet"
 
     def get_attributes(self):
         attributes = dict()

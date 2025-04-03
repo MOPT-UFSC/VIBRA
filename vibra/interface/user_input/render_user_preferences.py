@@ -106,7 +106,7 @@ class RendererUserPreferencesInput(QDialog):
             self.tmp_user_preferences.renderer_background_color_1 = Color(*renderer_background_color_1)
 
     def update_line_edit_renderer_background_color_1(self):
-        str_color = str(app().config.user_preferences.renderer_background_color_1.to_rgb())[1:-1]
+        str_color = str(self.tmp_user_preferences.renderer_background_color_1.to_rgb())[1:-1]
         self.lineEdit_renderer_background_color_1.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
 
     def update_renderer_background_color_2(self):
@@ -119,7 +119,7 @@ class RendererUserPreferencesInput(QDialog):
             self.tmp_user_preferences.renderer_background_color_2 = Color(*renderer_background_color_2)
 
     def update_line_edit_renderer_background_color_2(self):
-        str_color = str(app().config.user_preferences.renderer_background_color_2.to_rgb())[1:-1]
+        str_color = str(self.tmp_user_preferences.renderer_background_color_2.to_rgb())[1:-1]
         self.lineEdit_renderer_background_color_2.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
     
     def update_renderer_font_color(self):
@@ -132,7 +132,7 @@ class RendererUserPreferencesInput(QDialog):
             self.tmp_user_preferences.renderer_font_color = Color(*renderer_font_color)
 
     def update_line_edit_renderer_font_color(self):
-        str_color = str(app().config.user_preferences.renderer_font_color.to_rgb())[1:-1]
+        str_color = str(self.tmp_user_preferences.renderer_font_color.to_rgb())[1:-1]
         self.lineEdit_renderer_font_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
 
     def update_nodes_points_color(self):
@@ -145,7 +145,7 @@ class RendererUserPreferencesInput(QDialog):
             self.tmp_user_preferences.nodes_points_color = Color(*nodes_points_color)
         
     def update_line_edit_nodes_points_color(self):
-        str_color = str(app().config.user_preferences.nodes_points_color.to_rgb())[1:-1]
+        str_color = str(self.tmp_user_preferences.nodes_points_color.to_rgb())[1:-1]
         self.lineEdit_nodes_points_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
         
     def update_lines_color(self):
@@ -158,7 +158,7 @@ class RendererUserPreferencesInput(QDialog):
             self.tmp_user_preferences.lines_color = Color(*lines_color)
     
     def update_line_edit_lines_color(self):
-        str_color = str(app().config.user_preferences.lines_color.to_rgb())[1:-1]
+        str_color = str(self.tmp_user_preferences.lines_color.to_rgb())[1:-1]
         self.lineEdit_lines_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
     
     def update_edges_color(self):
@@ -171,7 +171,7 @@ class RendererUserPreferencesInput(QDialog):
             self.tmp_user_preferences.edges_color = Color(*edges_color)
     
     def update_line_edit_edges_color(self):
-        str_color = str(app().config.user_preferences.edges_color.to_rgb())[1:-1]
+        str_color = str(self.tmp_user_preferences.edges_color.to_rgb())[1:-1]
         self.lineEdit_edges_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
 
     def update_faces_color(self):
@@ -184,7 +184,7 @@ class RendererUserPreferencesInput(QDialog):
             self.tmp_user_preferences.faces_color = Color(*faces_color)
 
     def update_line_edit_faces_color(self):
-        str_color = str(app().config.user_preferences.faces_color.to_rgb())[1:-1]
+        str_color = str(self.tmp_user_preferences.faces_color.to_rgb())[1:-1]
         self.lineEdit_faces_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
 
     def update_selection_color(self):
@@ -197,42 +197,42 @@ class RendererUserPreferencesInput(QDialog):
             self.tmp_user_preferences.selection_color = Color(*selection_color)
 
     def update_line_edit_selection_color(self):
-        str_color = str(app().config.user_preferences.selection_color.to_rgb())[1:-1]
+        str_color = str(self.tmp_user_preferences.selection_color.to_rgb())[1:-1]
         self.lineEdit_selection_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
     
     def update_renderer_font_size(self):
         self.tmp_user_preferences.renderer_font_size = self.spinBox_renderer_font_size.value()
 
     def update_spin_box_renderer_font_size(self):
-        renderer_font_size = app().config.user_preferences.renderer_font_size
+        renderer_font_size = self.tmp_user_preferences.renderer_font_size
         self.spinBox_renderer_font_size.setValue(renderer_font_size)
     
     def update_points_size(self):
         self.tmp_user_preferences.points_size = self.spinBox_points_size.value()
 
     def update_spin_box_points_size(self):
-        points_size = app().config.user_preferences.points_size
+        points_size = self.tmp_user_preferences.points_size
         self.spinBox_points_size.setValue(points_size)
     
     def update_nodes_size(self):
         self.tmp_user_preferences.nodes_size = self.spinBox_nodes_size.value()
 
     def update_spin_box_nodes_size(self):
-        nodes_size = app().config.user_preferences.nodes_size
+        nodes_size = self.tmp_user_preferences.nodes_size
         self.spinBox_nodes_size.setValue(nodes_size)
     
     def update_lines_thickness(self):
         self.tmp_user_preferences.lines_thickness = self.spinBox_lines_thickness.value()
 
     def update_spin_box_lines_thickness(self):
-        lines_thickness = app().config.user_preferences.lines_thickness
+        lines_thickness = self.tmp_user_preferences.lines_thickness
         self.spinBox_lines_thickness.setValue(lines_thickness)
     
     def update_edges_thickness(self):
         self.tmp_user_preferences.edges_thickness = self.spinBox_edges_thickness.value()
 
     def update_spin_box_edges_thickness(self):
-        edges_thickness = app().config.user_preferences.edges_thickness
+        edges_thickness = self.tmp_user_preferences.edges_thickness
         self.spinBox_edges_thickness.setValue(edges_thickness)
 
     def apply_user_preferences(self):
@@ -258,43 +258,34 @@ class RendererUserPreferencesInput(QDialog):
         else:
             app().config.user_preferences.set_light_theme()
 
+        app().config.user_preferences.reset_attributes()
         self.tmp_user_preferences = deepcopy(app().config.user_preferences)
 
-        app().config.user_preferences.reset_sizes()
-        self.reset_reference_scale_state()
         self.load_user_preferences()
-
-        self.update_settings()
-        self.config.update_config_file()
-
-    def reset_reference_scale_state(self):
-        app().config.user_preferences.reset_reference_scale_bar()
-        self.checkBox_reference_scale.setChecked(1)
+        self.apply_user_preferences()
     
     def update_reference_scale_state(self):
         if self.checkBox_reference_scale.isChecked():
-            app().config.user_preferences.show_reference_scale_bar = True
+            self.tmp_user_preferences.show_reference_scale_bar = True
             self.main_window.update_scale_bar(True)
         else:
-            app().config.user_preferences.show_reference_scale_bar = False
+            self.tmp_user_preferences.show_reference_scale_bar = False
             self.main_window.update_scale_bar(False)
 
     def update_compatibility_mode(self):
         is_checked = self.checkBox_compatibility_mode.isChecked()
-        app().config.user_preferences.compatibility_mode = is_checked     
+        self.tmp_user_preferences.compatibility_mode = is_checked     
 
     def update_compatibility_mode_checkbox(self): 
-        self.checkBox_compatibility_mode.setChecked(app().config.user_preferences.compatibility_mode)
+        self.checkBox_compatibility_mode.setChecked(self.tmp_user_preferences.compatibility_mode)
 
     def update_show_reference_scalebar_checkbox(self):
-        self.checkBox_reference_scale.setChecked(app().config.user_preferences.show_reference_scale_bar)
+        self.checkBox_reference_scale.setChecked(self.tmp_user_preferences.show_reference_scale_bar)
         
     def update_renderers_font_size(self):
         self.main_window.update_renderer_font_size()
 
     def load_user_preferences(self):
-        app().config.user_preferences = self.tmp_user_preferences
-
         self.update_line_edit_renderer_background_color_1()
         self.update_line_edit_renderer_background_color_2()
         self.update_line_edit_renderer_font_color()
