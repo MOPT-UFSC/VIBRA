@@ -24,7 +24,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(650, 470)
+        Dialog.resize(720, 470)
         Dialog.setMinimumSize(QSize(600, 470))
         Dialog.setMaximumSize(QSize(900, 470))
         self.gridLayout = QGridLayout(Dialog)
@@ -89,8 +89,7 @@ class Ui_Dialog(object):
         self.lineEdit_selection_id.setMaximumSize(QSize(180, 26))
         self.lineEdit_selection_id.setFont(font)
         self.lineEdit_selection_id.setFocusPolicy(Qt.ClickFocus)
-        self.lineEdit_selection_id.setStyleSheet(u"QLineEdit{background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)}\n"
-"QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 120)}")
+        self.lineEdit_selection_id.setStyleSheet(u"")
         self.lineEdit_selection_id.setAlignment(Qt.AlignCenter)
 
         self.gridLayout_2.addWidget(self.lineEdit_selection_id, 0, 2, 1, 1)
@@ -110,8 +109,7 @@ class Ui_Dialog(object):
         self.lineEdit_selected_material_name.setMaximumSize(QSize(180, 26))
         self.lineEdit_selected_material_name.setFont(font)
         self.lineEdit_selected_material_name.setFocusPolicy(Qt.ClickFocus)
-        self.lineEdit_selected_material_name.setStyleSheet(u"QLineEdit{background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)}\n"
-"QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 120)}")
+        self.lineEdit_selected_material_name.setStyleSheet(u"")
         self.lineEdit_selected_material_name.setAlignment(Qt.AlignCenter)
 
         self.gridLayout_2.addWidget(self.lineEdit_selected_material_name, 1, 2, 1, 1)
@@ -137,7 +135,7 @@ class Ui_Dialog(object):
         self.scrollArea_table_of_materials.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 620, 293))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 690, 293))
         self.scrollArea_table_of_materials.setWidget(self.scrollAreaWidgetContents)
 
         self.gridLayout_5.addWidget(self.scrollArea_table_of_materials, 0, 0, 1, 1)
