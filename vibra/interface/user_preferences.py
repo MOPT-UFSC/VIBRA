@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 
 from molde.colors import Color, color_names
 
@@ -16,7 +16,7 @@ class UserPreferences:
     renderer_font_size: int  = 11
     points_size: int = 15
     nodes_size: int = 10
-    lines_thickness: int = 5
+    lines_thickness: int = 3
     edges_thickness: int = 1
     show_reference_scale_bar: bool = True
     compatibility_mode: bool = False
@@ -45,14 +45,8 @@ class UserPreferences:
         self.selection_color = Color("#146AF5")
 
     def reset_attributes(self):
-        self.renderer_font_size = 11
-        self.points_size = 15
-        self.nodes_size = 10
-        self.lines_thickness = 5
-        self.edges_thickness = 1
-        self.show_reference_scale_bar = True
-        self.compatibility_mode = False
-        self.color_map = "jet"
+        for field in fields(UserPreferences):
+            setattr(self, field.name, field.default)
 
     def get_attributes(self):
         attributes = dict()
