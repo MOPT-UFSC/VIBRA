@@ -32,8 +32,6 @@ from vibra.interface.plots.acoustic.plot_particle_velocity_frequency_response_in
 from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
 
-from vibra.interface.loading_window import LoadingWindow
-
 from vibra.interface.section_plane_widget import SectionPlaneWidget
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.viewer_3d.render_widgets import (
