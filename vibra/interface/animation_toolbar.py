@@ -8,7 +8,8 @@ from PySide6.QtWidgets import QFileDialog, QLabel, QPushButton, QSlider, QSpinBo
 from vibra import ICON_DIR, app
 from vibra.interface.formatters import icons
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.loading_bar import load_function
+from vibra.interface.loading_window import LoadingWindow
+
 from vibra.utils.icons import load_icon
 
 window_title_1 = "Error"
@@ -300,11 +301,9 @@ class AnimationToolbar(QToolBar):
 
         try:
             if file_path.suffix.lower() in [".gif", ".webp"]:
-                save_animation = load_function(self.current_render_widget.save_animation, app().main_window)
-                save_animation(file_path)
+                LoadingWindow(self.current_render_widget.save_animation).run(file_path)
             else:
-                save_video = load_function(self.current_render_widget.save_video, app().main_window)
-                save_video(file_path)
+                LoadingWindow(self.current_render_widget.save_video).run(file_path)
 
         except Exception as error_log:
             title = "Error while exporting animation"

@@ -1,6 +1,4 @@
-# fmt: off
 from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
-from vibra.utils.progress_status import ProgressStatus
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -117,7 +115,7 @@ class AcousticModalSolver:
 
         C_imp = self.assembler.damping_matrix
 
-        logging.info("Solving the eigenproblem..." + ProgressStatus(75, 100))
+        logging.info("Solving the eigenproblem... [75/100]")
         sigma = self.sigma_factor
 
         is_M_complex = np.any(np.imag(M.data))
@@ -140,7 +138,7 @@ class AcousticModalSolver:
             eigen_values, eigen_vectors = eigs(A, M=B, k=2*self.modes, sigma=sigma, which=which, OPinv=opinv)
             linear_solver.clear_memory()
 
-            logging.info("Post-processing the solution..." + ProgressStatus(95, 100))
+            logging.info("Post-processing the solution... [95/100]")
 
             n_dofs = int(eigen_vectors.shape[0] / 2)
 
@@ -188,7 +186,7 @@ class AcousticModalSolver:
                 print_exception(error_log)
                 eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which)
 
-            logging.info("Post-processing the solution..." + ProgressStatus(95, 100))
+            logging.info("Post-processing the solution... [95/100]")
 
             Wn2 = np.absolute(np.real(eigen_values))
             natural_frequencies = np.sqrt(Wn2) / (2 * np.pi)
@@ -238,5 +236,3 @@ class AcousticModalSolver:
         plt.cla()
         plt.spy(graph, color=(0.25,0.25,0.25))
         plt.show()
-
-# fmt: on

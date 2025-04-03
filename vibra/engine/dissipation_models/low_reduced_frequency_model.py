@@ -1,14 +1,11 @@
 from vibra import app
-from vibra.interface.loading_bar import load_function
-from vibra.utils.progress_status import ProgressStatus
+from vibra.interface.loading_window import LoadingWindow
 
 import logging
 import numpy as np
 
 from collections import defaultdict
 from scipy.special import jv
-
-# fmt: off
 
 class LowReducedFrequencyModel:
 
@@ -41,16 +38,15 @@ class LowReducedFrequencyModel:
                 averaged = data["averaged"]
                 filter_type = data["filter_type"]
 
-                post_process = load_function(self.mesh.get_elements_and_nodes_from_sphere, app().main_window)
-                post_process(   surface_ids, 
-                                selection_radius,
-                                averaged = averaged,
-                                filter_type = filter_type   )
+                LoadingWindow(self.mesh.get_elements_and_nodes_from_sphere).run(
+                    surface_ids,
+                    selection_radius,
+                    averaged=averaged,
+                    filter_type=filter_type,
+                )
 
                 selected_elements = self.mesh.selected_elements
-
                 for element_id in selected_elements:
-
                     volume_id = self.mesh.volume_from_element[element_id]
                     fluid, _ = self.properties._get_property("fluid", volume=volume_id)
 
@@ -81,7 +77,7 @@ class LowReducedFrequencyModel:
 
         self.get_low_reduced_frequency_model_data()
 
-        logging.info( "Processing lrf properties (2/2)..." + ProgressStatus(20, 100))
+        logging.info( "Processing lrf properties (2/2)... [20/100]")
         
         aux = defaultdict(list)
         self.low_reduced_frequency_properties = dict()

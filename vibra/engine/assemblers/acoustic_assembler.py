@@ -1,4 +1,3 @@
-
 from vibra.engine.model import Model
 
 # 3D elements
@@ -11,8 +10,12 @@ from vibra.engine.elements.acoustic_tet10_element import ACT_TETRAHEDRON_10C
 from vibra.engine.elements.acoustic_face3_element import ACT_FACE_3
 from vibra.engine.elements.acoustic_face4_element import ACT_FACE_4
 #
-from vibra.engine.mesher.element_type import *
-from vibra.utils.progress_status import ProgressStatus
+from vibra.engine.mesher.element_type import (
+    TETRAHEDRON_4,
+    TETRAHEDRON_10,
+    HEXAHEDRON_8,
+    HEXAHEDRON_20,
+)
 
 import logging
 import numpy as np
@@ -56,7 +59,7 @@ class AcousticAssembler:
         elif element_type == HEXAHEDRON_20:
             return ACT_HEXAHEDRON_20C(self.model), None
         else:
-            raise NotImplementedError(f"Element type is not supported yet.")
+            raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
 
     def set_element_formulation(self, element):
         self.element = element
@@ -320,7 +323,7 @@ class AcousticAssembler:
 
                 progress = 100 * np.round(el/nel, 2)
                 if progress != last_progress:
-                    logging.info( "Processing the elementary matrices data..." + ProgressStatus(int(progress), 100))
+                    logging.info(f"Processing the elementary matrices data... [{int(progress)}/100]")
 
                 last_progress = progress
 
@@ -371,7 +374,7 @@ class AcousticAssembler:
 
                 progress = 100 * np.round(el/nel, 2)
                 if progress != last_progress:
-                    logging.info( "Processing the elementary matrices data..." + ProgressStatus(int(progress), 100))
+                    logging.info(f"Processing the elementary matrices data... [{int(progress)}/100]")
 
                 last_progress = progress
 
@@ -656,25 +659,25 @@ class AcousticAssembler:
 
         self.update_number_of_frequencies()
 
-        logging.info( "Gathering data to assemble global matrices..." + ProgressStatus(10, 100))
+        logging.info("Gathering data to assemble global matrices... [10/100]")
         t0 = time()
         self.get_data_to_process_global_matrices()
         dt = time() - t0
         print(f"Elapsed time to process data to assemble global matrices: {round(dt, 4)} [s]")
         
-        logging.info( "Assembling global stiffness matrix..." + ProgressStatus(50, 100))
+        logging.info( "Assembling global stiffness matrix... [50/100]")
         t0 = time()
         self.assemble_global_stiffness_matrix()
         dt = time() - t0
         print(f"Elapsed time to assemble the global stiffness matrix: {round(dt, 4)} [s]")
         
-        logging.info( "Assembling global mass matrix..." + ProgressStatus(60, 100))
+        logging.info( "Assembling global mass matrix... [60/100]")
         t0 = time()
         self.assemble_global_mass_matrix()
         dt = time() - t0
         print(f"Elapsed time to assemble the global mass matrix: {round(dt, 4)} [s]")
         
-        logging.info( "Assembling global mass matrix..." + ProgressStatus(70, 100))
+        logging.info( "Assembling global mass matrix... [70/100]")
         t0 = time()
         # self.assemble_global_damping_matrix()
         self.assemble_global_damping_matrix_3d_elements()
@@ -684,11 +687,11 @@ class AcousticAssembler:
 
         # self.show_required_memory()
 
-        logging.info( "Processing element related loads..." + ProgressStatus(80, 100))
+        logging.info( "Processing element related loads... [80/100]")
         B = self.get_acoustic_excitations_by_element_integration()
         
-        logging.info( "Processing nodal related loads..." + ProgressStatus(90, 100))
+        logging.info( "Processing nodal related loads... [90/100]")
         A = self.get_acoustic_excitations_by_nodal_attribution()
         
-        logging.info( "Finishing the model building..." + ProgressStatus(100, 100))
+        logging.info( "Finishing the model building... [90/100]")
         self.mass_flow_vectors = A + B

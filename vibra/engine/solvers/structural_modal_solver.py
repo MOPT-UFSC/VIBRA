@@ -1,6 +1,5 @@
 # fmt: off
 from vibra.engine.solvers.linear_solver import initialize_solver, SolverType
-from vibra.utils.progress_status import ProgressStatus
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -109,7 +108,7 @@ class StructuralModalSolver:
             M = self.assembler.mass_matrix
 
         sigma = self.sigma_factor
-        logging.info("Solving the eigenproblem..." + ProgressStatus(75, 100))
+        logging.info("Solving the eigenproblem... [75/100]")
 
         is_M_complex = np.any(np.imag(M.data))
         is_K_complex = np.any(np.imag(K.data))
@@ -125,7 +124,7 @@ class StructuralModalSolver:
         eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
         linear_solver.clear_memory()
 
-        logging.info("Post-processing the solution..." + ProgressStatus(95, 100))
+        logging.info("Post-processing the solution... [95/100]")
         positive_real = np.absolute(np.real(eigen_values))
         natural_frequencies = np.sqrt(positive_real) / (2 * np.pi)
         modal_shape = np.real(eigen_vectors)

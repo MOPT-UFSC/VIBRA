@@ -1,12 +1,10 @@
-# fmt: off
-
 from PySide6.QtWidgets import QDialog, QLineEdit, QPushButton
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 
 from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.loading_bar import load_function
+from vibra.interface.loading_window import LoadingWindow
 
 from molde import load_ui
 
@@ -65,20 +63,15 @@ class GetSphereSelectionInformation(QDialog):
         self.lineEdit_selection_radius.setText(str(round(self.selection_radius, 6)))
 
     def get_selection_info(self):
+        LoadingWindow(self.mesh.get_elements_and_nodes_from_sphere).run(
+            self.selection_id,
+            self.selection_radius,
+            averaged=self.averaged,
+            filter_type=self.filter_type,
+        )
 
-        post_process = load_function(self.mesh.get_elements_and_nodes_from_sphere, app().main_window)
-        post_process(   self.selection_id, 
-                        self.selection_radius, 
-                        averaged = self.averaged,
-                        filter_type = self.filter_type   )
-        
         list_elements = self.mesh.selected_elements
         list_nodes = self.mesh.nodes_inside_sphere
-
-        # list_elements, list_nodes = self.mesh.get_elements_and_nodes_from_sphere(  self.selection_id, 
-        #                                                                             self.selection_radius, 
-        #                                                                             averaged = self.averaged,
-        #                                                                             filter_type = self.filter_type)
 
         list_center_coords = self.mesh.get_average_nodal_coordinates(  self.selection_id,
                                                                         averaged=self.averaged  )

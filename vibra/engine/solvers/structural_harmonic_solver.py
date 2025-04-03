@@ -1,6 +1,5 @@
 
 from vibra.engine.solvers.linear_solver import initialize_solver, SolverType
-from vibra.utils.progress_status import ProgressStatus
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -119,12 +118,10 @@ class StructuralHarmonicSolver:
         cols = len(self.frequencies)
         solution = np.zeros((rows, cols), dtype=complex)
 
-        logging.info( "Solving harmonic analysis..." + ProgressStatus(0, len(self.frequencies)))
+        logging.info(f"Solving harmonic analysis... [0/{len(self.frequencies)}]")
 
         for i, freq in enumerate(self.frequencies):
-
-            message = f"Solution step {i+1} and frequency {freq} Hz"
-            logging.info( message + ProgressStatus(i, len(self.frequencies)))
+            logging.info(f"Solution step {i+1} and frequency {freq} Hz [{i}/{len(self.frequencies)}]")
 
             if print_log:
                 print(f"Solution step {i} -> frequency {freq} Hz")
@@ -220,7 +217,7 @@ class StructuralHarmonicSolver:
 
         alpha_v, beta_v, alpha_h, beta_h = self.global_damping
 
-        logging.info( "Processing prescribed dofs model excitation..." + ProgressStatus(10, len(self.frequencies)))
+        logging.info(f"Processing prescribed dofs model excitation... [10/{len(self.frequencies)}]")
 
         rows = Kr.shape[0]
         if freq_dependent:
@@ -235,7 +232,7 @@ class StructuralHarmonicSolver:
 
             for i, freq in enumerate(self.frequencies):
                 #
-                logging.info("Processing prescribed dofs model excitation..." + ProgressStatus(i + 10, len(self.frequencies) + 10))
+                logging.info(f"Processing prescribed dofs model excitation... [{i + 10}/{len(self.frequencies) + 10}]")
                 #
                 Kr_add = np.sum((Kr * self.array_prescribed_dofs_values[:, i]), axis=1)
                 Mr_add = np.sum((Mr * self.array_prescribed_dofs_values[:, i]), axis=1)
@@ -246,7 +243,7 @@ class StructuralHarmonicSolver:
                 F_Cadd = 1j * ((beta_h + omega * beta_v) * Kr_add + (alpha_h + omega * alpha_v) * Mr_add)
                 F_eq[:, i] = F_Madd + F_Cadd + F_Kadd
 
-            logging.info("Processing prescribed dofs model excitation..." + ProgressStatus(100, 100))
+            logging.info("Processing prescribed dofs model excitation... [100/100]")
 
         F_combined = structural_loads - F_eq
 

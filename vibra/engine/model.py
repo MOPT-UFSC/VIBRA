@@ -8,7 +8,6 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.errors import IncompleteSetupError
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.utils.progress_status import ProgressStatus
 
 import logging
 import numpy as np
@@ -103,15 +102,12 @@ class Model:
                         "You should to configure the mesher to proceed." )
             raise IncompleteSetupError(message, context=context)
 
-        logging.info("Processing mesh..." + ProgressStatus(80, 100))
+        logging.info("Processing mesh [80/100]")
         self.mesh.load_cad(self.geometry_path, **self.mesh_setup)
         self.generated_mesh = True
 
-        logging.info("Processing mesh..." + ProgressStatus(90, 100))
+        logging.info("Processing mesh... [90/100]")
         self.mesh._process_solid_elements_connected_to_nodes()
-
-        # logging.info("Renumbering nodes..." + ProgressStatus(90, 100))
-        # self.mesh._process_nodes_reordering()
 
     def set_mesh(self, mesh):
         self.mesh = mesh

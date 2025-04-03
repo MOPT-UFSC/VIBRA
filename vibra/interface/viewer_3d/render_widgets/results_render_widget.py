@@ -17,9 +17,8 @@ from vibra.engine.postprocessing import (
     compute_structural_harmonic_field,
     compute_structural_modal_field,
 )
-from vibra.interface.loading_bar import load_function
+from vibra.interface.loading_window import LoadingWindow
 from vibra.utils.math_functions import lerp
-from vibra.utils.progress_status import ProgressStatus
 
 from ..actors import (
     AnalysisActor,
@@ -153,10 +152,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         timestamp = self.clear_cache()
 
         for frame in range(self._animation_total_frames):
-            logging.info(
-                f"Caching animation frames [{frame}/{self._animation_total_frames}]"
-                + ProgressStatus(frame, self._animation_total_frames)
-            )
+            logging.info(f"Caching animation frames [{frame}/{self._animation_total_frames}]")
 
             with self._animation_cache_lock:
                 if self.timestamp != timestamp:
@@ -196,8 +192,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         if not self._animation_cached_data:
-            load = load_function(self.cache_animation_frames, app().main_window)
-            load()
+            LoadingWindow(self.cache_animation_frames).run()
 
         if frame in self._animation_cached_data:
             logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]")
