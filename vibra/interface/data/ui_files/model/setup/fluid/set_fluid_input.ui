@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>738</width>
-    <height>620</height>
+    <width>740</width>
+    <height>600</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>600</width>
-    <height>300</height>
+    <width>740</width>
+    <height>600</height>
    </size>
   </property>
   <property name="maximumSize">
@@ -113,37 +113,6 @@
          <property name="bottomMargin">
           <number>6</number>
          </property>
-         <item row="0" column="3">
-          <widget class="QComboBox" name="comboBox_attribution_type">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>26</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>26</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
-           <item>
-            <property name="text">
-             <string> All bodies</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string> Selected bodies</string>
-            </property>
-           </item>
-          </widget>
-         </item>
          <item row="1" column="1">
           <widget class="QLabel" name="label_4">
            <property name="font">
@@ -222,6 +191,32 @@
            </property>
           </widget>
          </item>
+         <item row="0" column="4">
+          <spacer name="horizontalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="0">
+          <spacer name="horizontalSpacer_4">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
          <item row="1" column="2">
           <widget class="QLineEdit" name="lineEdit_selected_fluid_name">
            <property name="enabled">
@@ -258,31 +253,56 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="4">
-          <spacer name="horizontalSpacer_3">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
+         <item row="0" column="3">
+          <widget class="QComboBox" name="comboBox_attribution_type">
+           <property name="minimumSize">
             <size>
-             <width>40</width>
-             <height>20</height>
+             <width>140</width>
+             <height>26</height>
             </size>
            </property>
-          </spacer>
-         </item>
-         <item row="0" column="0">
-          <spacer name="horizontalSpacer_4">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
+           <property name="maximumSize">
             <size>
-             <width>40</width>
-             <height>20</height>
+             <width>16777215</width>
+             <height>26</height>
             </size>
            </property>
-          </spacer>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <item>
+            <property name="text">
+             <string>All bodies/faces</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>All bodies</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>All faces</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Selected bodies</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Selected faces</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Selected bodies/faces</string>
+            </property>
+           </item>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -351,8 +371,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>698</width>
-                  <height>433</height>
+                  <width>700</width>
+                  <height>413</height>
                  </rect>
                 </property>
                </widget>
@@ -366,43 +386,12 @@
             </attribute>
             <layout class="QGridLayout" name="gridLayout_6">
              <item row="0" column="0">
-              <widget class="QTreeWidget" name="treeWidget_fluid">
-               <property name="minimumSize">
-                <size>
-                 <width>560</width>
-                 <height>100</height>
-                </size>
+              <widget class="QTableWidget" name="tableWidget_model_fluids">
+               <property name="sizeAdjustPolicy">
+                <enum>QAbstractScrollArea::AdjustToContents</enum>
                </property>
-               <property name="maximumSize">
-                <size>
-                 <width>800</width>
-                 <height>300</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <family>MS Shell Dlg 2</family>
-                 <pointsize>10</pointsize>
-                 <italic>false</italic>
-                </font>
-               </property>
-               <property name="toolTip">
-                <string/>
-               </property>
-               <property name="indentation">
-                <number>1</number>
-               </property>
-               <property name="headerHidden">
+               <attribute name="verticalHeaderVisible">
                 <bool>false</bool>
-               </property>
-               <attribute name="headerHighlightSections">
-                <bool>false</bool>
-               </attribute>
-               <attribute name="headerShowSortIndicator" stdset="0">
-                <bool>false</bool>
-               </attribute>
-               <attribute name="headerStretchLastSection">
-                <bool>true</bool>
                </attribute>
                <column>
                 <property name="text">
@@ -422,6 +411,14 @@
                </column>
                <column>
                 <property name="text">
+                 <string>Identifier</string>
+                </property>
+                <property name="textAlignment">
+                 <set>AlignCenter</set>
+                </property>
+               </column>
+               <column>
+                <property name="text">
                  <string>Density [kg/m³]</string>
                 </property>
                 <property name="textAlignment">
@@ -430,7 +427,7 @@
                </column>
                <column>
                 <property name="text">
-                 <string>Speed of sound [m³/s]</string>
+                 <string>Speed of sound [m/s]</string>
                 </property>
                 <property name="textAlignment">
                  <set>AlignCenter</set>
@@ -456,7 +453,7 @@
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>800</width>
+                 <width>16777215</width>
                  <height>40</height>
                 </size>
                </property>
