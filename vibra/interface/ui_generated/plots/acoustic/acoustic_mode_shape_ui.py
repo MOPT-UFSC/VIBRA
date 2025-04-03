@@ -80,6 +80,9 @@ class Ui_Form(object):
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
         self.treeWidget_frequencies = QTreeWidget(self.frame_treeWidget)
+        __qtreewidgetitem = QTreeWidgetItem()
+        __qtreewidgetitem.setText(0, u"1");
+        self.treeWidget_frequencies.setHeaderItem(__qtreewidgetitem)
         self.treeWidget_frequencies.setObjectName(u"treeWidget_frequencies")
         self.treeWidget_frequencies.setMinimumSize(QSize(260, 0))
         self.treeWidget_frequencies.setMaximumSize(QSize(480, 600))
@@ -292,6 +295,9 @@ class Ui_Form(object):
         self.comboBox_color_scale = QComboBox(self.frame_3)
         self.comboBox_color_scale.addItem("")
         self.comboBox_color_scale.addItem("")
+        self.comboBox_color_scale.addItem("")
+        self.comboBox_color_scale.addItem("")
+        self.comboBox_color_scale.addItem("")
         self.comboBox_color_scale.setObjectName(u"comboBox_color_scale")
         self.comboBox_color_scale.setMinimumSize(QSize(176, 26))
         self.comboBox_color_scale.setMaximumSize(QSize(200, 26))
@@ -342,8 +348,11 @@ class Ui_Form(object):
         self.label_2.setText(QCoreApplication.translate("Form", u"Colormaps:", None))
         self.label_3.setText(QCoreApplication.translate("Form", u"Transparency:", None))
         self.label_color_scalling.setText(QCoreApplication.translate("Form", u"Color scale:", None))
-        self.comboBox_color_scale.setItemText(0, QCoreApplication.translate("Form", u"Absolute", None))
-        self.comboBox_color_scale.setItemText(1, QCoreApplication.translate("Form", u"Real part", None))
+        self.comboBox_color_scale.setItemText(0, QCoreApplication.translate("Form", u"Absolute (animation)", None))
+        self.comboBox_color_scale.setItemText(1, QCoreApplication.translate("Form", u"Non-absolute (animation)", None))
+        self.comboBox_color_scale.setItemText(2, QCoreApplication.translate("Form", u"Absolute values", None))
+        self.comboBox_color_scale.setItemText(3, QCoreApplication.translate("Form", u"Real values", None))
+        self.comboBox_color_scale.setItemText(4, QCoreApplication.translate("Form", u"Imag values", None))
 
     # retranslateUi
 

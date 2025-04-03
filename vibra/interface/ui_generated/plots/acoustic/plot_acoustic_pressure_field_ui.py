@@ -113,10 +113,6 @@ class Ui_Form(object):
         self.gridLayout_9.setHorizontalSpacing(6)
         self.gridLayout_9.setVerticalSpacing(0)
         self.gridLayout_9.setContentsMargins(0, 0, 0, 0)
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_9.addItem(self.horizontalSpacer, 0, 0, 1, 1)
-
         self.label_color_scalling = QLabel(self.frame_3)
         self.label_color_scalling.setObjectName(u"label_color_scalling")
         self.label_color_scalling.setMinimumSize(QSize(90, 26))
@@ -130,7 +126,14 @@ class Ui_Form(object):
 
         self.gridLayout_9.addItem(self.horizontalSpacer_2, 0, 3, 1, 1)
 
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_9.addItem(self.horizontalSpacer, 0, 0, 1, 1)
+
         self.comboBox_color_scale = QComboBox(self.frame_3)
+        self.comboBox_color_scale.addItem("")
+        self.comboBox_color_scale.addItem("")
+        self.comboBox_color_scale.addItem("")
         self.comboBox_color_scale.addItem("")
         self.comboBox_color_scale.addItem("")
         self.comboBox_color_scale.setObjectName(u"comboBox_color_scale")
@@ -326,8 +329,7 @@ class Ui_Form(object):
         QWidget.setTabOrder(self.lineEdit_selected_frequency, self.treeWidget_frequencies)
         QWidget.setTabOrder(self.treeWidget_frequencies, self.comboBox_colormaps)
         QWidget.setTabOrder(self.comboBox_colormaps, self.slider_transparency)
-        QWidget.setTabOrder(self.slider_transparency, self.comboBox_color_scale)
-        QWidget.setTabOrder(self.comboBox_color_scale, self.pushButton_plot)
+        QWidget.setTabOrder(self.slider_transparency, self.pushButton_plot)
 
         self.retranslateUi(Form)
 
@@ -353,8 +355,11 @@ class Ui_Form(object):
 
         self.label_6.setText(QCoreApplication.translate("Form", u"Colormaps:", None))
         self.label_color_scalling.setText(QCoreApplication.translate("Form", u"Color scale:", None))
-        self.comboBox_color_scale.setItemText(0, QCoreApplication.translate("Form", u"Absolute", None))
-        self.comboBox_color_scale.setItemText(1, QCoreApplication.translate("Form", u"Real part", None))
+        self.comboBox_color_scale.setItemText(0, QCoreApplication.translate("Form", u"Absolute (animation)", None))
+        self.comboBox_color_scale.setItemText(1, QCoreApplication.translate("Form", u"Non-absolute (animation)", None))
+        self.comboBox_color_scale.setItemText(2, QCoreApplication.translate("Form", u"Absolute values", None))
+        self.comboBox_color_scale.setItemText(3, QCoreApplication.translate("Form", u"Real values", None))
+        self.comboBox_color_scale.setItemText(4, QCoreApplication.translate("Form", u"Imag values", None))
 
         self.pushButton_plot.setText(QCoreApplication.translate("Form", u"Plot pressure field", None))
         self.lineEdit_selected_frequency.setText("")
