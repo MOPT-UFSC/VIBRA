@@ -128,8 +128,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             app().project.thumbnail = self.get_thumbnail()
 
     def update_hidden_plot(self):
-        self.update_info_text()
-        self.update_colorbar_unit()
         self.update_plot(reset_camera=False)
 
     def clear_cache(self):
@@ -439,3 +437,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         scale_bar_label_property = self.scale_bar_actor.GetLegendLabelProperty()
         scale_bar_title_property.SetFontSize(font_size_px)
         scale_bar_label_property.SetFontSize(font_size_px)
+
+        colorbar_title_property = self.colorbar_actor.GetTitleTextProperty()
+        colorbar_label_property = self.colorbar_actor.GetLabelTextProperty()
+        colorbar_title_property.SetFontSize(font_size_px)
+        colorbar_label_property.SetFontSize(font_size_px)
+
+

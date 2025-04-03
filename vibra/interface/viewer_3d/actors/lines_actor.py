@@ -64,11 +64,13 @@ class LinesActor(vtkActor):
         self.clear_colors()
 
     def configure_appearance(self):
+        lines_thickness = app().config.user_preferences.lines_thickness
+        self.GetProperty().SetLineWidth(lines_thickness)
+        self.GetProperty().SetPointSize(lines_thickness)
+
         self.GetProperty().LightingOff()
         self.GetProperty().RenderLinesAsTubesOn()
         self.GetProperty().RenderPointsAsSpheresOn()
-        self.GetProperty().SetLineWidth(6)
-        self.GetProperty().SetPointSize(6)
         self.clear_colors()
 
     def clear_colors(self):
