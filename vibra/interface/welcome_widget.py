@@ -8,9 +8,11 @@ from fileboxes import Filebox
 from vibra import app, EXAMPLES_DIR, ICON_DIR
 
 import numpy as np
+from PIL import Image, ImageDraw, ImageFont
 
 from functools import partial
 from pathlib import Path
+
 
 class WelcomeWidget(QWidget):
     def __init__(self):
@@ -150,7 +152,10 @@ class WelcomeItem(QWidget):
         if icon is not None:
             button.setIcon(icon)
 
-        label = QLabel(text)
+        font = ImageFont.load_default()
+        item_text = self.shorten_text(text, 76, font)                  
+                                    
+        label = QLabel(item_text)
         label.setAlignment(Qt.AlignCenter)
 
         layout = QVBoxLayout()
@@ -158,4 +163,18 @@ class WelcomeItem(QWidget):
         layout.addWidget(label)
         layout.setAlignment(Qt.AlignCenter)
         self.setLayout(layout)
+    
+    def shorten_text(self, text: str, max_width: int, font):
+        draw = ImageDraw.Draw(Image.new("RGB", (1,1)))
+
+        if draw.textlength(text, font) <= max_width:
+            return text
+    
+        for i in range(len(text), 0, -1):
+            subtext = text[:i] + "..."
+
+            if draw.textlength(subtext, font) <= max_width:
+                return subtext
+
+
     
