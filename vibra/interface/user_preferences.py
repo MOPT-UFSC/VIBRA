@@ -45,8 +45,14 @@ class UserPreferences:
         self.selection_color = Color("#146AF5")
 
     def reset_attributes(self):
+        theme = self.interface_theme
         for field in fields(UserPreferences):
             setattr(self, field.name, field.default)
+        
+        if theme == "dark":
+            self.set_dark_theme()
+        else:
+            self.set_light_theme()
 
     def get_attributes(self):
         attributes = dict()
