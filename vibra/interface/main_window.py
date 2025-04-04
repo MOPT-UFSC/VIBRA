@@ -22,6 +22,8 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.help_widget import HelpWidget
 from vibra.interface.loading_window import LoadingWindow
 
+from vibra.interface.project.geometry_setup import GeometrySetup
+
 from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
 from vibra.interface.user_input.input_ui import InputUi
@@ -760,6 +762,11 @@ class MainWindow(QMainWindow):
             return False
 
         app().config.write_last_folder_path_in_file("geometry_folder", geometry_path)
+
+        # call geometry setup
+        read = GeometrySetup()
+        if not read.complete:
+            return False
 
         app().project.reset_variables()
         app().project.reset_solutions()
