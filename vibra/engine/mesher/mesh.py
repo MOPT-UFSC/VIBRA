@@ -81,8 +81,9 @@ class Mesh:
 
         self.nodes_out_of_face_element = dict()
 
-        self.surfaces_areas = dict()
-        self.bodies_volumes = dict()
+        self.length_from_curve = dict()
+        self.area_from_surface = dict()
+        self.volume_from_body = dict()
         self.surface_area_from_element_integration = dict()
 
         self.nodal_area = defaultdict(list)
@@ -746,7 +747,7 @@ class Mesh:
         n_solid_elements = self.solids_connectivity.shape[0]
         return n_nodes, n_face_elements, n_solid_elements
 
-    def compute_initial_max_mesh_size(self, path, geometry_tolerance: float = 1e-8, threads: int = 0):
+    def compute_initial_max_mesh_size(self, path, geometry_tolerance: float = 1e-10, threads: int = 0):
         gmsh.initialize("", False)
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
@@ -756,19 +757,20 @@ class Mesh:
         gmsh.open(path)
 
         try:
+
             volumes = gmsh.model.getEntities(3)
             if volumes:
                 bb_sides, volume = self.compute_bounding_box_sizes(volumes)
                 bb_largest_area = bb_sides[0] * bb_sides[1]
-
                 return volume / bb_largest_area / 5
+
             else:
                 surfaces = gmsh.model.getEntities(2)
                 bb_sides, _ = self.compute_bounding_box_sizes(surfaces)
                 return bb_sides[1] / 5
+
         finally:
             gmsh.finalize()
-
 
     def compute_bounding_box_sizes(self, geo_entities):
         xmin = ymin = zmin = xmax = ymax = zmax = 0
@@ -791,77 +793,27 @@ class Mesh:
 
 
     def get_geometry_info(self):
+
+        self.length_from_curve.clear()
+        self.area_from_surface.clear()
+        self.volume_from_body.clear()
         self.geometry_information.clear()
         labels = ["points", "curves", "surfaces", "volumes"]
+
         for dim, tag in gmsh.model.getEntities():
             label = labels[dim]
             self.geometry_information[label].append(tag)
+            
+            if dim == 0:
+                continue
 
-
-    def get_model_areas(self, path):
-        """This method returns returns the all surface area processed using
-        gmsh internal functions.
-
-        """
-
-        self.surfaces_areas.clear()
-        self.bodies_volumes.clear()
-
-        # The adoption of quadratic elements ensures better results for area calculations.
-        element_type = TETRAHEDRON_10
-
-        gmsh.initialize("", False)
-        gmsh.option.setNumber("General.Terminal", 0)
-        gmsh.option.setNumber("General.Verbosity", 0)
-        gmsh.option.setNumber("General.NumThreads", 4)
-        gmsh.merge(str(path))
-        # gmsh.open(str(path))
-
-        if self.mesh_connection:
-            self._merge_nodes_from_adjacent_volumes()
-
-        gmsh.option.setNumber("Geometry.Tolerance", 1e-6)
-        gmsh.option.setNumber("Mesh.MeshSizeFactor", 0.1)
-        gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
-        gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
-        gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_type.recombination_algorithm)
-        gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", element_type.subdivision_algorithm)
-        gmsh.option.setNumber("Mesh.RecombineAll", element_type.recombine_all)
-
-        gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
-        gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_type.second_order_incomplete)
-
-        gmsh.model.mesh.generate(dim=2)
-
-        for dim, tag in gmsh.model.getEntities():
-
-            if dim == 2:  # Surfaces
-
-                p = gmsh.model.addPhysicalGroup(2, [tag])
-                gmsh.plugin.setNumber("MeshVolume", "Dimension", 2)
-                gmsh.plugin.setNumber("MeshVolume", "PhysicalGroup", p)
-                gmsh.plugin.run("MeshVolume")
-
-                views = gmsh.view.getTags()
-                _, _, data = gmsh.view.getListData(views[-1])
-
-                self.surfaces_areas[tag] = data[-1][-1] / (1e6)
-                # if tag in [32, 36]:
-                #     print(tag, data[-1][-1] / (1e6))
-
-            # maybe it is going to be necessary evaluate the bodies volumes too
-            # elif dim == 3:  # Solids
-
-            #     p = gmsh.model.addPhysicalGroup(3, [tag])
-            #     gmsh.plugin.setNumber("MeshVolume", "Dimension", 3)
-            #     gmsh.plugin.setNumber("MeshVolume", "PhysicalGroup", p)
-            #     gmsh.plugin.run("MeshVolume")
-            #     views = gmsh.view.getTags()
-            #     _, _, data = gmsh.view.getListData(views[-1])
-
-            #     self.bodies_volumes[tag] = data[-1][-1]
-
-        gmsh.finalize()
+            value = gmsh.model.occ.getMass(dim, tag)
+            if dim == 3:
+                self.volume_from_body[tag] = value# / 1e9
+            elif dim == 2:
+                self.area_from_surface[tag] = value# / 1e6
+            else:
+                self.length_from_curve[tag] = value# / 1e3
 
 
     def _get_connectivity_array(self, input_dict):
