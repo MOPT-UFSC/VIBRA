@@ -185,6 +185,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.points_actor.SetPickable(visualization.faces)
         self.lines_actor.SetPickable(visualization.faces)
         self.faces_actor.SetPickable(visualization.faces)
+
+        self.update_selection()
         self.update()
 
     def update_hidden_plot(self):
