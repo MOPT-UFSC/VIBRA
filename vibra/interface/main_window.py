@@ -464,6 +464,7 @@ class MainWindow(QMainWindow):
         app().config.update_config_file()
 
     def action_user_preferences_callback(self):
+        self.close_dialogs()
         self.render_user_preferences = RendererUserPreferencesInput()
 
     def configure_mesh_information(self):
