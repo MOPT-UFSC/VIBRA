@@ -757,52 +757,31 @@ class Mesh:
         gmsh.open(path)
 
         try:
+            areas = []
+            bb_areas = []
+            for dim, tag in gmsh.model.getEntities(2):
+                bb_sides, area = self.compute_bounding_box_sizes(dim, tag)
+                areas.append(area)
+                bb_areas.append(bb_sides)
 
-            geometry_info = defaultdict(list)
-            for dim, tag in gmsh.model.getEntities():
+            smallest_area = min(areas)
+            index = bb_areas.index(smallest_area)
+            bb_largest_side = bb_areas[index][0]
 
-                if dim == 0:
-                    continue
+            equivalent_rectangle_height = smallest_area / bb_largest_side
 
-                value = gmsh.model.occ.getMass(dim, tag)
-                if dim == 1:
-                    geometry_info["lengths"].append(value)
-
-                elif dim == 2:
-                    geometry_info["areas"].append(value)
-
-                elif dim == 3:
-                    geometry_info["volumes"].append(value)
-
-            # 40k face elements seem to be enough to model curved surfaces
-            area_elem = np.sum(geometry_info["areas"]) / 4e4
-
-            # the length side of equilateral triangle 
-            length = np.ceil(np.sqrt(2 * area_elem))
-
-            return length
+            return equivalent_rectangle_height / 3
 
         finally:
             gmsh.finalize()
 
-    def compute_bounding_box_sizes(self, geo_entities):
-        xmin = ymin = zmin = xmax = ymax = zmax = 0
-        volume = 0
-        for dim, tag in geo_entities:
-            # This mass is considering a density of 1, so it is equal the solid volume
-            volume += gmsh.model.occ.getMass(dim, tag)
-            xmin2, ymin2, zmin2, xmax2, ymax2, zmax2 = gmsh.model.getBoundingBox(dim, tag)
-            xmin = min(xmin, xmin2)
-            ymin = min(ymin, ymin2)
-            zmin = min(zmin, zmin2)
-
-            xmax = max(xmax, xmax2)
-            ymax = max(ymax, ymax2)
-            zmax = max(zmax, zmax2)
+    def compute_bounding_box_sizes(self, dim, tag):
+        value = gmsh.model.occ.getMass(dim, tag)
+        xmin, ymin, zmin, xmax, ymax, zmax = gmsh.model.getBoundingBox(dim, tag)
 
         bb_sides = sorted([(xmax - xmin), (ymax - ymin), (zmax - zmin)], reverse=True)
                 
-        return bb_sides, volume
+        return bb_sides, value
 
 
     def get_geometry_info(self):
