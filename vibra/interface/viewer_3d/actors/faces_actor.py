@@ -130,21 +130,23 @@ class FacesActor(vtkActor):
         mesh = app().project.model.mesh
         properties = app().project.model.properties
         color_mode = app().main_window.visualization_filter.color_mode
-        base_color = app().config.user_preferences.faces_color.to_rgba()
-
-        self.set_color(base_color)
+        no_info_color = Color(20, 20, 20)
 
         if color_mode == ColorMode.MATERIAL:
             for surface, face_elements in mesh.elements_from_surface.items():
                 material: Material | None = properties._get_property("material", surface=surface)
-                if material is not None:
-                    self.paint_cells(Color(*material.color).to_rgba(), face_elements)
+                color = Color(*material.color) if (material is not None) else no_info_color
+                self.paint_cells(color.to_rgba(), face_elements)
 
         elif color_mode == ColorMode.FLUID:
             for surface, face_elements in mesh.elements_from_surface.items():
                 fluid: Fluid | None = properties._get_property("fluid", surface=surface)
-                if fluid is not None:
-                    self.paint_cells(Color(*fluid.color).to_rgba(), face_elements)
+                color = Color(*fluid.color) if (fluid is not None) else no_info_color
+                self.paint_cells(color.to_rgba(), face_elements)
+        
+        elif color_mode == ColorMode.EMPTY:
+            color = app().config.user_preferences.faces_color
+            self.set_color(color.to_rgba())
 
     def set_color(self, color: tuple[int, int, int, int] | tuple[int, int, int]):
         # TODO: update these functions to work with the molde.Colors instead of tuples
