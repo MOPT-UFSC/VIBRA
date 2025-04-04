@@ -1,25 +1,25 @@
+from molde import Color
+from vtkmodules.util.numpy_support import numpy_to_vtk
 from vtkmodules.vtkCommonCore import (
     vtkIntArray,
     vtkPoints,
     vtkUnsignedCharArray,
 )
 from vtkmodules.vtkCommonDataModel import (
+    VTK_QUAD,
+    VTK_QUADRATIC_QUAD,
+    VTK_QUADRATIC_TRIANGLE,
+    VTK_TRIANGLE,
     vtkPlane,
     vtkPolyData,
-    VTK_TRIANGLE,
-    VTK_QUADRATIC_TRIANGLE,
-    VTK_QUAD,
-    VTK_QUADRATIC_QUAD
 )
 from vtkmodules.vtkFiltersCore import vtkPolyDataNormals
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
-from vtkmodules.util.numpy_support import numpy_to_vtk
 
-from molde import Color
-
+from vibra import app
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-from vibra import app
+from vibra.utils.interface_utils import ColorMode
 
 
 class FacesActor(vtkActor):
@@ -127,21 +127,20 @@ class FacesActor(vtkActor):
         if self.data is None:
             return
 
-        properties = app().project.model.properties
         mesh = app().project.model.mesh
+        properties = app().project.model.properties
+        color_mode = app().main_window.visualization_filter.color_mode
+        base_color = app().config.user_preferences.faces_color.to_rgba()
 
-        color = app().config.user_preferences.faces_color.to_rgba()
-        self.set_color(color)
+        self.set_color(base_color)
 
-        color_mode = ""
-
-        if color_mode == "material":
+        if color_mode == ColorMode.MATERIAL:
             for surface, face_elements in mesh.elements_from_surface.items():
                 material: Material | None = properties._get_property("material", surface=surface)
                 if material is not None:
                     self.paint_cells(Color(*material.color).to_rgba(), face_elements)
 
-        elif color_mode == "fluid":
+        elif color_mode == ColorMode.FLUID:
             for surface, face_elements in mesh.elements_from_surface.items():
                 fluid: Fluid | None = properties._get_property("fluid", surface=surface)
                 if fluid is not None:

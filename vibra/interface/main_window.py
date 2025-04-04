@@ -41,7 +41,7 @@ from vibra.interface.viewer_3d.render_widgets import (
 )
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
-from vibra.utils.interface_utils import VisualizationFilter
+from vibra.utils.interface_utils import VisualizationFilter, ColorMode
 from vibra.interface.user_input.render_user_preferences import RendererUserPreferencesInput
 
 from molde.render_widgets import CommonRenderWidget
