@@ -15,6 +15,10 @@ from vtkmodules.vtkFiltersCore import vtkPolyDataNormals
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
 from vtkmodules.util.numpy_support import numpy_to_vtk
 
+from molde import Color
+
+from vibra.engine.properties.fluid import Fluid
+from vibra.engine.properties.material import Material
 from vibra import app
 
 
@@ -123,10 +127,28 @@ class FacesActor(vtkActor):
         if self.data is None:
             return
 
+        properties = app().project.model.properties
+        mesh = app().project.model.mesh
+
         color = app().config.user_preferences.faces_color.to_rgba()
         self.set_color(color)
 
+        color_mode = ""
+
+        if color_mode == "material":
+            for surface, face_elements in mesh.elements_from_surface.items():
+                material: Material | None = properties._get_property("material", surface=surface)
+                if material is not None:
+                    self.paint_cells(Color(*material.color).to_rgba(), face_elements)
+
+        elif color_mode == "fluid":
+            for surface, face_elements in mesh.elements_from_surface.items():
+                fluid: Fluid | None = properties._get_property("fluid", surface=surface)
+                if fluid is not None:
+                    self.paint_cells(Color(*fluid.color).to_rgba(), face_elements)
+
     def set_color(self, color: tuple[int, int, int, int] | tuple[int, int, int]):
+        # TODO: update these functions to work with the molde.Colors instead of tuples
         cell_colors = self.data.GetCellData().GetScalars()
         cell_colors.Fill(255)
 
