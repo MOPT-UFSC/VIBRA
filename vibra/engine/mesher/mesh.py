@@ -758,16 +758,29 @@ class Mesh:
 
         try:
 
-            volumes = gmsh.model.getEntities(3)
-            if volumes:
-                bb_sides, volume = self.compute_bounding_box_sizes(volumes)
-                bb_largest_area = bb_sides[0] * bb_sides[1]
-                return volume / bb_largest_area / 5
+            geometry_info = defaultdict(list)
+            for dim, tag in gmsh.model.getEntities():
 
-            else:
-                surfaces = gmsh.model.getEntities(2)
-                bb_sides, _ = self.compute_bounding_box_sizes(surfaces)
-                return bb_sides[1] / 5
+                if dim == 0:
+                    continue
+
+                value = gmsh.model.occ.getMass(dim, tag)
+                if dim == 1:
+                    geometry_info["lengths"].append(value)
+
+                elif dim == 2:
+                    geometry_info["areas"].append(value)
+
+                elif dim == 3:
+                    geometry_info["volumes"].append(value)
+
+            # 40k face elements seem to be enough to model curved surfaces
+            area_elem = np.sum(geometry_info["areas"]) / 4e4
+
+            # the length side of equilateral triangle 
+            length = np.ceil(np.sqrt(2 * area_elem))
+
+            return length
 
         finally:
             gmsh.finalize()
