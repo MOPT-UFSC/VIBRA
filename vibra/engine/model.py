@@ -71,24 +71,23 @@ class Model:
 
             try:
                 self.mesh = Mesh()
-                maximum_element_size = self.mesh.compute_initial_max_mesh_size(path)
+                element_size = self.mesh.compute_initial_max_mesh_size(path)
                 self.mesh.load_cad(
                                    path, 
-                                   dimension=2, 
-                                   size_factor=0.08, 
-                                   minimum_element_size=maximum_element_size*0.4, 
-                                   maximum_element_size=maximum_element_size
+                                   dimension = 2, 
+                                   size_factor = 0.08, 
+                                   minimum_element_size = element_size*0.4, 
+                                   maximum_element_size = element_size
                                    )
 
             except:
-                print("algo deu errado")
                 self.mesh = Mesh()
                 self.mesh.load_cad(
                                    path, 
-                                   dimension=2, 
-                                   size_factor=0.0, 
-                                   minimum_element_size=5, 
-                                   maximum_element_size=10
+                                   dimension = 2, 
+                                   size_factor = 0.0, 
+                                   minimum_element_size = 5, 
+                                   maximum_element_size = 10
                                    )
 
             self.generated_mesh = False
