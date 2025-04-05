@@ -764,13 +764,17 @@ class Mesh:
                 areas.append(area)
                 bb_areas.append(bb_sides)
 
-            smallest_area = min(areas)
-            index = bb_areas.index(smallest_area)
+            index = np.argsort(areas)[0]
+            smallest_area = areas[index]
             bb_largest_side = bb_areas[index][0]
 
             equivalent_rectangle_height = smallest_area / bb_largest_side
 
             return equivalent_rectangle_height / 3
+        
+        except Exception as error_log:
+            from traceback import print_exception
+            print_exception(error_log)
 
         finally:
             gmsh.finalize()
