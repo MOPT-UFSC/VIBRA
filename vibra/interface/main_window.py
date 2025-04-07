@@ -46,7 +46,6 @@ from vibra.interface.user_input.render_user_preferences import RendererUserPrefe
 
 from molde.render_widgets import CommonRenderWidget
 from molde import stylesheets
-from molde import load_ui
 
 import logging
 import os
@@ -90,65 +89,6 @@ class MainWindow(MainWindow_UI):
         self.dialog = None
         self.project_data_modified = False
         self.user_path = Path().home()
-
-    def _define_qt_variables(self):
-        """
-        This function is doing nothing. Every variable was
-        already defined in the UI file.
-
-        Despite that, it is nice to list the variables to
-        help future maintainers and the code editor with
-        type inference.
-        """
-        # QAction
-        self.action_new_project: QAction
-        self.action_open_project: QAction
-        self.action_save: QAction
-        self.action_save_as: QAction
-        self.action_export_mesh: QAction
-        self.action_top_view: QAction
-        self.action_capture_image: QAction
-        self.action_theme: QAction
-        self.action_exit: QAction
-        self.action_bottom_view: QAction
-        self.action_right_view: QAction
-        self.action_left_view: QAction
-        self.action_front_view: QAction
-        self.action_back_view: QAction
-        self.action_isometric_view: QAction
-        self.action_zoom_to_fit: QAction
-        self.action_node_view: QAction
-        self.action_line_view: QAction
-        self.action_face_view: QAction
-        self.action_hide_show_symbols: QAction
-        self.action_section_plane: QAction
-        self.action_plot_particle_velocity: QAction
-        self.action_plot_specific_acoustic_impedance: QAction
-        self.action_export_element_transfer_data: QAction
-        self.action_model_workspace: QAction
-        self.action_mesh_workspace: QAction
-        self.action_results_workspace: QAction
-        self.action_home_exit: QAction
-
-        # QSplitter
-        self.splitter: QSplitter
-
-        # QToolBar
-        self.renderer_toolbar: QToolBar
-
-        # QMenu
-        self.menu_project: QMenu
-        self.menu_settings: QMenu
-        self.menu_view_mode: QMenu
-        self.menu_advanced_results: QMenu
-        self.menu_help: QMenu
-
-        # QStackedWidget
-        self.stacked_setup: QStackedWidget
-        self.render_widgets_stack: QStackedWidget
-
-        # QSplitter
-        self.splitter: QSplitter
 
     def _connect_actions(self):
         """
@@ -236,7 +176,6 @@ class MainWindow(MainWindow_UI):
         self._load_render_widgets()
 
         app().splash.update_progress(60)
-        self._define_qt_variables()
         self._create_basic_layout()
         self._configure_render_widgets_stack()
         self._configure_stacked_setup()

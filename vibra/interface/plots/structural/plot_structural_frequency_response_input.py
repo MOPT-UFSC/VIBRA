@@ -2,26 +2,21 @@ from PySide6.QtWidgets import QComboBox, QWidget, QLineEdit, QPushButton, QRadio
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
 
-from vibra import app, UI_DIR
 from vibra.engine import AnalysisID
+from vibra import app
+from vibra.interface.ui_generated.plots.structural.plot_structural_frequency_response_ui import PlotStructuralFrequencyResponse_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-
-from molde import load_ui
 
 import numpy as np
 
 window_title1 = "Error"
 window_title2 = "Warning"
 
-class PlotStructuralFrequencyResponseInput(QWidget):
+class PlotStructuralFrequencyResponseInput(PlotStructuralFrequencyResponse_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "plots/structural/plot_structural_frequency_response.ui"
-        ui_dir = ui_path.parent
-        load_ui(ui_path, self, ui_path.parent)
 
         app().main_window.show_geometry_render_widget()
 
@@ -30,7 +25,6 @@ class PlotStructuralFrequencyResponseInput(QWidget):
 
         self._config_window()
         self._initialize()
-        self._define_qt_variables()
         self._create_connections()
 
         self._load_analysis_data_and_solution()
@@ -49,19 +43,6 @@ class PlotStructuralFrequencyResponseInput(QWidget):
         self.plotter = None
         self.exporter = None
         self.dof_labels = ["Ux", "Uy", "Uz", "Rx", "Ry", "Rz"]
-
-    def _define_qt_variables(self):
-
-        # QComboBox
-        self.comboBox_selector_filter : QComboBox
-        self.comboBox_dof_selector : QComboBox
-
-        # QLineEdit
-        self.lineEdit_selection_id : QLineEdit
-
-        # QPushButton
-        self.pushButton_export_data : QPushButton
-        self.pushButton_plot_data : QPushButton
 
     def _create_connections(self):
         #

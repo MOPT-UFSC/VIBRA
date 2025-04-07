@@ -3,23 +3,20 @@ from PySide6.QtGui import QCloseEvent, QIcon
 from PySide6.QtCore import Qt
 from pathlib import Path
 
-from vibra import app, UI_DIR
+from vibra import app
+from vibra.interface.ui_generated.model.setup.fluid.load_fluid_composition_ui import LoadFluidComposition_UI
 from vibra.interface.formatters.icons import *
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
-from molde import load_ui
 
 import os
 
 
-class LoadFluidCompositionInput(QDialog):
+class LoadFluidCompositionInput(LoadFluidComposition_UI):
     def __init__(self, *args, **kwargs):
         super().__init__()
 
-        ui_path = UI_DIR / "model/setup/fluid/load_fluid_composition.ui"
-        load_ui(ui_path, self, ui_path.parent)
-        
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
 
@@ -27,7 +24,6 @@ class LoadFluidCompositionInput(QDialog):
        
         self._initialize()
         self._config_window()
-        self._define_qt_variables()
         self._create_connections()
 
         self._config_widgets()
@@ -48,19 +44,6 @@ class LoadFluidCompositionInput(QDialog):
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle(f"Vibra")
-
-    def _define_qt_variables(self):
-
-        # QComboBox
-        self.comboBox_sheet_names : QComboBox
-
-        # QLineEdit
-        self.lineEdit_file_path : QLineEdit
-
-        # QPushButton
-        self.pushButton_exit : QPushButton
-        self.pushButton_confirm : QPushButton
-        self.pushButton_search : QPushButton
 
     def _create_connections(self):
         self.pushButton_exit.clicked.connect(self.close)
