@@ -1,20 +1,20 @@
 from PIL import Image
 import numpy as np
+from scipy.ndimage import binary_dilation
 
 
 def removes_image_background(image: Image):
     image = image.convert("RGBA")
-    data_rgba = image.getdata()
-    new_data = []
-    transparent = (255, 255, 255, 0)
-    pink = np.array([247, 0, 255])
+    np_image = np.array(image)
+    # calculate difference between pixel color and pink background color
+    diff = np_image[:,:,:3] - np.array((247, 0, 255))
+    # calculate norm of difference
+    norm = np.linalg.norm(diff, axis=2)
+    # create mask where norm is less than 20
+    mask = norm < 20
+    # apply dilation to the mask to remove any remaining lines near the edge
+    mask = binary_dilation(mask, iterations=1)
+    # set alpha channel to 0 where mask is True
+    np_image[:,:,3][mask] = 0
 
-    for pixel in data_rgba:
-        dist_color = np.linalg.norm(pink - pixel[:3])
-        if dist_color < 190:
-            new_data.append(transparent)
-        else:
-            new_data.append(pixel)
-
-    image.putdata(new_data)
-    return image
+    return Image.fromarray(np_image)
