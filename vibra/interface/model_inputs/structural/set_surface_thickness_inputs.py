@@ -30,7 +30,6 @@ class SetSurfaceThicknessInput(SurfaceThicknessInput_UI):
 
         self._config_window()
         self._initialize()
-        self._define_qt_variables()
         self._create_connections()
         self._config_widgets()
 

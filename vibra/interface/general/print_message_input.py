@@ -31,7 +31,6 @@ class PrintMessageInput(PrintMessage_UI):
         self.setWindowModality(Qt.WindowModal)
 
     def _define_qt_variables(self):
-        # QTimer
         self.timer = QTimer()
 
     def _create_connections(self):
