@@ -3,28 +3,23 @@ from PySide6.QtWidgets import QCheckBox, QComboBox, QDialog, QFileDialog, QLabel
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
-from vibra import app, UI_DIR
+from vibra import app
+from vibra.interface.ui_generated.model.setup.structural.nodal_loads_input_ui import NodalLoadsInput_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-
-from molde import load_ui
 
 import numpy as np
 from os.path import basename
 from pathlib import Path
 
-
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class SetNodalLoadsInputs(QDialog):
+class SetNodalLoadsInputs(NodalLoadsInput_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "model/setup/structural/nodal_loads_input.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         self.model = app().project.model
         self.properties = app().project.model.properties
@@ -34,7 +29,7 @@ class SetNodalLoadsInputs(QDialog):
 
         self._config_window()
         self._initialize()
-        self._define_qt_variables()
+        self._create_list_lineEdits()
         self._create_connections()
 
         self._config_widgets()
@@ -83,81 +78,6 @@ class SetNodalLoadsInputs(QDialog):
         self.Mx_table_name = None
         self.My_table_name = None
         self.Mz_table_name = None
-
-    def _define_qt_variables(self):
-
-        # QCheckBox
-        self.checkBox_averaged_constant_values: QCheckBox
-        self.checkBox_averaged_table_values: QCheckBox
-
-        # QComboBox
-        self.comboBox_attribution_type: QComboBox
-        self.comboBox_element_type: QComboBox
-
-        # QLabel
-        self.label_Fx_constant: QLabel
-        self.label_Fy_constant: QLabel
-        self.label_Fz_constant: QLabel
-        self.label_Mx_constant: QLabel
-        self.label_My_constant: QLabel
-        self.label_Mz_constant: QLabel
-        #
-        self.label_Fx_unit: QLabel
-        self.label_Fy_unit: QLabel
-        self.label_Fz_unit: QLabel
-        self.label_Mx_unit: QLabel
-        self.label_My_unit: QLabel
-        self.label_Mz_unit: QLabel
-        #
-        self.label_Fx_table: QLabel
-        self.label_Fy_table: QLabel
-        self.label_Fz_table: QLabel
-        self.label_Mx_table: QLabel
-        self.label_My_table: QLabel
-        self.label_Mz_table: QLabel
-
-        # QLineEdit
-        self.lineEdit_selection_id: QLineEdit
-        self.lineEdit_real_Fx: QLineEdit
-        self.lineEdit_real_Fy: QLineEdit
-        self.lineEdit_real_Fz: QLineEdit
-        self.lineEdit_real_Mx: QLineEdit
-        self.lineEdit_real_My: QLineEdit
-        self.lineEdit_real_Mz: QLineEdit
-        #
-        self.lineEdit_imag_Fx: QLineEdit
-        self.lineEdit_imag_Fy: QLineEdit
-        self.lineEdit_imag_Fz: QLineEdit
-        self.lineEdit_imag_Mx: QLineEdit
-        self.lineEdit_imag_My: QLineEdit
-        self.lineEdit_imag_Mz: QLineEdit
-        #
-        self.lineEdit_path_table_Fx: QLineEdit
-        self.lineEdit_path_table_Fy: QLineEdit
-        self.lineEdit_path_table_Fz: QLineEdit
-        self.lineEdit_path_table_Mx: QLineEdit
-        self.lineEdit_path_table_My: QLineEdit
-        self.lineEdit_path_table_Mz: QLineEdit
-        #
-        self._create_list_lineEdits()
-
-        # QPushButton
-        self.pushButton_attribute: QPushButton
-        self.pushButton_exit: QPushButton
-        self.pushButton_load_Fx_table: QPushButton
-        self.pushButton_load_Fy_table: QPushButton
-        self.pushButton_load_Fz_table: QPushButton
-        self.pushButton_load_Mx_table: QPushButton
-        self.pushButton_load_My_table: QPushButton
-        self.pushButton_load_Mz_table: QPushButton
-        self.pushButton_remove: QPushButton
-        self.pushButton_reset: QPushButton
-
-        # QTabWidget
-        self.tabWidget_main: QTabWidget
-
-        # QTreeWidget
-        self.treeWidget_nodal_loads: QTreeWidget
 
     def _create_list_lineEdits(self):
 

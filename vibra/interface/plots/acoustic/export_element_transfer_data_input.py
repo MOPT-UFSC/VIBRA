@@ -2,14 +2,13 @@ from PySide6.QtWidgets import QComboBox, QDialog, QFileDialog, QLineEdit, QPushB
 from PySide6.QtCore import Qt, QEvent, QObject, Signal
 from PySide6.QtGui import QCloseEvent
 
-from vibra import app, UI_DIR
+from vibra import app
+from vibra.interface.ui_generated.data_handler.export_element_transfer_data_ui import ExportElementTransferData_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.loading_bar import load_function
 from vibra.utils.progress_status import ProgressStatus
-
-from molde import load_ui
 
 import logging
 import numpy as np
@@ -18,12 +17,10 @@ from pathlib import Path
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class ExportElementTransferDataInput(QDialog):
+
+class ExportElementTransferDataInput(ExportElementTransferData_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "data_handler/export_element_transfer_data.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -36,7 +33,7 @@ class ExportElementTransferDataInput(QDialog):
 
         self._config_window()
         self._reset_variables()
-        self._define_qt_variables()
+        self._configure_qt_variables()
         self._create_connections()
 
         self._load_analysis_data_and_solution()
@@ -67,22 +64,8 @@ class ExportElementTransferDataInput(QDialog):
         self.particle_velocity = dict()
         self.element_transfer_data = dict()
 
-    def _define_qt_variables(self):
-
-        # QComboBox
-        self.comboBox_excitation_surface: QComboBox
-
-        # QLineEdit
-        self.lineEdit_input_selected_id: QLineEdit
-        self.lineEdit_output_selected_id: QLineEdit
-        self.lineEdit_spreadsheet_path: QLineEdit
+    def _configure_qt_variables(self):
         self.current_lineEdit = self.lineEdit_output_selected_id
-
-        # QPushButton
-        self.pushButton_exit: QPushButton
-        self.pushButton_export_data: QPushButton
-        self.pushButton_invert_selection: QPushButton
-        self.pushButton_search: QPushButton
 
     def _create_connections(self):
         #

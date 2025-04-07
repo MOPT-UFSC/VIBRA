@@ -4,12 +4,11 @@ from PySide6.QtWidgets import QCheckBox, QDialog, QFileDialog, QLineEdit, QPushB
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
-from vibra import app, UI_DIR
+from vibra import app
+from vibra.interface.ui_generated.model.setup.acoustic.acoustic_pressure_input_ui import AcousticPressureInput_UI
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-
-from molde import load_ui
 
 import os
 import numpy as np
@@ -18,12 +17,9 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class AcousticPressureInput(QDialog):
+class AcousticPressureInput(AcousticPressureInput_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "model/setup/acoustic/acoustic_pressure_input.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -36,7 +32,7 @@ class AcousticPressureInput(QDialog):
 
         self._config_window()
         self._initialize()
-        self._define_qt_variables()
+        self._configure_qt_variables()
         self._create_connections()
 
         self.load_info()
@@ -55,29 +51,8 @@ class AcousticPressureInput(QDialog):
         self.imported_values = None
         self.keep_window_open = True
 
-    def _define_qt_variables(self):
-
-        # QLineEdit
-        self.lineEdit_selection_id : QLineEdit
-        self.lineEdit_real_value : QLineEdit
-        self.lineEdit_imag_value : QLineEdit
-        self.lineEdit_table_path : QLineEdit
-
-        # QPushButton
-        self.pushButton_attribute : QPushButton
-        self.pushButton_exit : QPushButton
-        self.pushButton_change_frequency_setup : QPushButton
-        self.pushButton_load_table : QPushButton
-        self.pushButton_remove : QPushButton
-        self.pushButton_reset : QPushButton
-        #
+    def _configure_qt_variables(self):
         self.pushButton_change_frequency_setup.setDisabled(True)
-
-        # QTabWidget
-        self.tabWidget_main : QTabWidget
-
-        # QTreeWidget
-        self.treeWidget_acoustic_pressure : QTreeWidget
         self.treeWidget_acoustic_pressure.setColumnWidth(1, 20)
         self.treeWidget_acoustic_pressure.setColumnWidth(2, 80)
 

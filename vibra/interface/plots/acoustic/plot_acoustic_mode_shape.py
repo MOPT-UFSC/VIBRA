@@ -1,5 +1,4 @@
 import numpy as np
-from molde import load_ui
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
@@ -13,22 +12,19 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from vibra import UI_DIR, app
+from vibra import app
+from vibra.interface.ui_generated.plots.acoustic.acoustic_mode_shape_ui import AcousticModeShape_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class PlotAcousticModeShape(QWidget):
+class PlotAcousticModeShape(AcousticModeShape_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "plots/acoustic/acoustic_mode_shape.ui"
-        load_ui(ui_path, self, ui_path.parent)
-
         self._initialize()
-        self._define_qt_variables()
         self._create_connections()
 
     def showEvent(self, event):
@@ -42,32 +38,6 @@ class PlotAcousticModeShape(QWidget):
 
     def _initialize(self):
         self.mode_index = None
-
-    def _define_qt_variables(self):
-        # QComboBox
-        self.comboBox_color_scale: QComboBox
-        self.comboBox_colormaps: QComboBox
-
-        # QFrame
-        self.frame_button: QFrame
-
-        # QLineEdit
-        self.lineEdit_natural_frequency: QLineEdit
-
-        # QPushButton
-        self.pushButton_plot: QPushButton
-
-        # QLineEdit
-        self.lineEdit_selected_frequency: QLineEdit
-
-        # QPushButton
-        self.pushButton_plot: QPushButton
-
-        # QSlider
-        self.slider_transparency: QSlider
-
-        # QTreeWidget
-        self.treeWidget_frequencies: QTreeWidget
 
     def _create_connections(self):
         #

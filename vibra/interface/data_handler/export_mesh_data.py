@@ -2,7 +2,8 @@ from PySide6.QtWidgets import QCheckBox, QDialog, QFileDialog, QLineEdit, QPushB
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QColor
 
-from vibra import app, UI_DIR
+from vibra import app
+from vibra.interface.ui_generated.data_handler.export_mesh_ui import ExportMesh_UI
 from vibra.interface.mesh.mesher_inputs import MesherInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
@@ -11,15 +12,11 @@ from vibra.interface.formatters.icons import change_icon_color_for_widgets
 
 import os
 from pathlib import Path
-from molde import load_ui
 
 
-class ExportMeshData(QDialog):
+class ExportMeshData(ExportMesh_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "data_handler/export_mesh.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -36,7 +33,6 @@ class ExportMeshData(QDialog):
 
         self._configure_window()
         self._reset_variables()
-        self._define_qt_variables()
         self._create_connections()
         self.update_icons_color()
         self.exec()
@@ -47,29 +43,14 @@ class ExportMeshData(QDialog):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Export mesh data")
 
-    def _reset_variables(self):
-        self.folder_path = ""
-        self.temp_path = os.path.expanduser('~')
-
-    def _define_qt_variables(self):
-
-        # QCheckBox
-        self.checkBox_nodal_coordinates : QCheckBox
-        self.checkBox_solid_elements_connectivity : QCheckBox
-        self.checkBox_face_elements_connectivity : QCheckBox
-        self.checkBox_export_vtu_file : QCheckBox
-        #
         self.checkBox_nodal_coordinates.setChecked(True)
         self.checkBox_face_elements_connectivity.setChecked(True)
         self.checkBox_solid_elements_connectivity.setChecked(True)
         self.checkBox_export_vtu_file.setChecked(True)
 
-        # QLineEdit
-        self.lineEdit_folder_path : QLineEdit
-
-        # QPushButton
-        self.pushButton_export_mesh : QPushButton
-        self.pushButton_search_folder : QPushButton
+    def _reset_variables(self):
+        self.folder_path = ""
+        self.temp_path = os.path.expanduser('~')
     
     def _create_connections(self):
         self.pushButton_export_mesh.clicked.connect(self.export_mesh_data)

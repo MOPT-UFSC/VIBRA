@@ -3,28 +3,23 @@ from PySide6.QtWidgets import QCheckBox, QComboBox, QDialog, QFileDialog, QLabel
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
-from vibra import app, UI_DIR
+from vibra import app
+from vibra.interface.ui_generated.model.setup.structural.distributed_loads_input_ui import DistributedLoadsInput_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-
-from molde import load_ui
 
 import numpy as np
 from os.path import basename
 from pathlib import Path
 
-
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class SetDistributedLoadsInputs(QDialog):
+class SetDistributedLoadsInputs(DistributedLoadsInput_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "model/setup/structural/distributed_loads_input.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         self.model = app().project.model
         self.properties = app().project.model.properties
@@ -34,7 +29,7 @@ class SetDistributedLoadsInputs(QDialog):
 
         self._config_window()
         self._initialize()
-        self._define_qt_variables()
+        self._create_list_lineEdits()
         self._create_connections()
 
         self._config_widgets()
@@ -71,56 +66,6 @@ class SetDistributedLoadsInputs(QDialog):
         self.Fx_table_name = None
         self.Fy_table_name = None
         self.Fz_table_name = None
-
-    def _define_qt_variables(self):
-
-        # QComboBox
-        self.comboBox_attribution_type: QComboBox
-        self.comboBox_element_type: QComboBox
-
-        # QLabel
-        self.label_constant_Fx: QLabel
-        self.label_constant_Fy: QLabel
-        self.label_constant_Fz: QLabel
-        #
-        self.label_unit_Fx: QLabel
-        self.label_unit_Fy: QLabel
-        self.label_unit_Fz: QLabel
-        #
-        self.label_table_Fx: QLabel
-        self.label_table_Fy: QLabel
-        self.label_table_Fz: QLabel
-
-        # QLineEdit
-        self.lineEdit_selection_id: QLineEdit
-        self.lineEdit_real_Fx: QLineEdit
-        self.lineEdit_real_Fy: QLineEdit
-        self.lineEdit_real_Fz: QLineEdit
-        #
-        self.lineEdit_imag_Fx: QLineEdit
-        self.lineEdit_imag_Fy: QLineEdit
-        self.lineEdit_imag_Fz: QLineEdit
-        #
-        self.lineEdit_path_table_Fx: QLineEdit
-        self.lineEdit_path_table_Fy: QLineEdit
-        self.lineEdit_path_table_Fz: QLineEdit
-        #
-        self._create_list_lineEdits()
-
-        # QPushButton
-        self.pushButton_attribute: QPushButton
-        self.pushButton_exit: QPushButton
-        self.pushButton_load_Fx_table: QPushButton
-        self.pushButton_load_Fy_table: QPushButton
-        self.pushButton_load_Fz_table: QPushButton
-        self.pushButton_remove: QPushButton
-        self.pushButton_reset: QPushButton
-
-        # QTabWidget
-        self.tabWidget_main: QTabWidget
-
-        # QTreeWidget
-        self.treeWidget_distributed_loads: QTreeWidget
 
     def _create_list_lineEdits(self):
 

@@ -2,27 +2,23 @@ from PySide6.QtWidgets import QComboBox, QCheckBox, QDialog, QFrame, QPushButton
 from PySide6.QtGui import QCloseEvent, QColor
 from PySide6.QtCore import Qt
 
-from vibra import app, UI_DIR
+from vibra import app
+from vibra.interface.ui_generated.plots.general.frequency_response_plot_ui import FrequencyResponsePlot_UI
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.data_handler.import_data_to_compare import ImportDataToCompare
 from vibra.interface.formatters import icons
 from vibra.interface.plots.general.advanced_cursor import AdvancedCursor
 
-from molde import load_ui
 import numpy as np
 
 
-class FrequencyResponsePlotter(QDialog):
+class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "plots/general/frequency_response_plot.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         self._config_window()
         self._initialize()
         self._initialize_canvas()
-        self._define_qt_variables()
         self._create_connections()
 
     def _config_window(self):
@@ -55,39 +51,6 @@ class FrequencyResponsePlotter(QDialog):
                         [0.75,0.75,0.75],
                         [0.5, 0.5, 0.5],
                         [0.25, 0.25, 0.25] ]
-
-    def _define_qt_variables(self):
-
-        # QCheckBox
-        self.checkBox_grid : QCheckBox
-        self.checkBox_legends : QCheckBox
-        self.checkBox_cursor_legends : QCheckBox
-
-        # QComboBox
-        self.comboBox_plot_type : QComboBox
-        self.comboBox_differentiate_data : QComboBox
-
-        # QFrame
-        self.frame_vertical_lines : QFrame
-
-        # QPushButton
-        self.pushButton_import_data : QPushButton
-
-        # QRadioButton
-        self.radioButton_absolute : QRadioButton
-        self.radioButton_real : QRadioButton
-        self.radioButton_imaginary : QRadioButton
-        self.radioButton_decibel_scale : QRadioButton
-        self.radioButton_disable_cursors : QRadioButton
-        self.radioButton_cross_cursor : QRadioButton
-        self.radioButton_harmonic_cursor : QRadioButton
-        self.pushButton_export_data : QPushButton
-
-        # QSpinBox
-        self.spinBox_vertical_lines : QSpinBox
-
-        # QWidget
-        self.widget_plot : QWidget
 
     def _create_connections(self):
         #

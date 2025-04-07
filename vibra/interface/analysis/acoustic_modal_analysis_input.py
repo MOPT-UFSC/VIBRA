@@ -5,27 +5,23 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
-from vibra import app, UI_DIR
+from vibra import app
 from vibra.interface.general.print_message_input import PrintMessageInput
-from molde import load_ui
+from vibra.interface.ui_generated.analysis.acoustic.acoustic_modal_analysis_input_ui import AcousticModalAnalysisInput_UI
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class AcousticModalAnalysisInput(QDialog):
+class AcousticModalAnalysisInput(AcousticModalAnalysisInput_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "analysis/acoustic/acoustic_modal_analysis_input.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         app().main_window.close_dialogs()
         app().main_window.set_input_widget(self)
 
         self._initialize()
         self._config_window()
-        self._define_qt_variables()
         self._create_connections()
         self._load_analysis_setup()
         self.exec()
@@ -40,16 +36,6 @@ class AcousticModalAnalysisInput(QDialog):
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
-
-    def _define_qt_variables(self):
-
-        # QLineEdit
-        self.lineEdit_number_modes: QLineEdit
-        self.lineEdit_sigma_factor: QLineEdit
-
-        # QPushButton
-        self.pushButton_run_analysis: QPushButton
-        self.pushButton_enter_setup: QPushButton
 
     def _create_connections(self):
         self.pushButton_run_analysis.clicked.connect(self.run_analysis)

@@ -7,6 +7,7 @@ from PySide6.QtWidgets import *
 from vibra import app, UI_DIR
 from molde import load_ui
 
+
 class StructuralHarmonicAnalysisInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

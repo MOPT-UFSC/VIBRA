@@ -4,11 +4,10 @@ from PySide6.QtWidgets import QDialog, QDoubleSpinBox, QPushButton
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
-from vibra import app, UI_DIR
+from vibra import app
+from vibra.interface.ui_generated.model.setup.data_filter.change_frequency_data_range_input_ui import ChangeFrequencyDataRangeInput_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-
-from molde import load_ui
 
 import os
 import numpy as np
@@ -17,12 +16,9 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class ChangeFrequencyDataRangeInput(QDialog):
+class ChangeFrequencyDataRangeInput(ChangeFrequencyDataRangeInput_UI):
     def __init__(self, imported_values, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "model/setup/data_filter/change_frequency_data_range_input.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -37,7 +33,7 @@ class ChangeFrequencyDataRangeInput(QDialog):
 
         self._config_window()
         self._initialize()
-        self._define_qt_variables()
+        self._configure_qt_variables()
         self._create_connections()
 
         self.load_freq_setup()
@@ -55,17 +51,8 @@ class ChangeFrequencyDataRangeInput(QDialog):
         self.filter_data = None
         self.keep_window_open = True
 
-    def _define_qt_variables(self):
-
-        # QDoubleSpinBox
-        self.doubleSpinBox_freq_min : QDoubleSpinBox
-        self.doubleSpinBox_freq_max : QDoubleSpinBox
-        self.doubleSpinBox_freq_step : QDoubleSpinBox
-        #
+    def _configure_qt_variables(self):
         self.doubleSpinBox_freq_step.setDisabled(True)
-
-        # QPushButton
-        self.pushButton_confirm : QPushButton
 
     def _create_connections(self):
         self.pushButton_confirm.clicked.connect(self.confirm_frequency_range)

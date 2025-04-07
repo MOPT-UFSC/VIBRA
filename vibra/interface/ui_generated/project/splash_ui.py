@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'splash.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.8.2
+## Created by: Qt User Interface Compiler version 6.9.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -90,7 +90,7 @@ class Ui_Form(object):
         font1.setBold(False)
         font1.setKerning(False)
         self.label.setFont(font1)
-        self.label.setPixmap(QPixmap(u"../../icons/azul cinza.png"))
+        self.label.setPixmap(QPixmap(u":/icons/azul cinza.png"))
         self.label.setScaledContents(True)
         self.label.setAlignment(Qt.AlignCenter)
 

@@ -2,15 +2,14 @@ from PySide6.QtWidgets import QComboBox, QLineEdit, QPushButton, QWidget
 from PySide6.QtCore import Qt, QEvent, QObject, Signal
 from PySide6.QtGui import QCloseEvent
 
-from vibra import app, UI_DIR
+from vibra import app
+from vibra.interface.ui_generated.plots.acoustic.plot_transmission_loss_ui import PlotTransmissionLoss_UI
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.loading_bar import load_function
 from vibra.utils.progress_status import ProgressStatus
-
-from molde import load_ui
 
 import os
 import logging
@@ -22,13 +21,10 @@ from pathlib import Path
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class PlotTransmissionLossInput(QWidget):
+
+class PlotTransmissionLossInput(PlotTransmissionLoss_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "plots/acoustic/plot_transmission_loss.ui"
-        ui_dir = ui_path.parent
-        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.show_geometry_render_widget()
@@ -39,7 +35,6 @@ class PlotTransmissionLossInput(QWidget):
         self.properties = app().project.model.properties
 
         self._initialize()
-        self._define_qt_variables()
         self._create_connections()
 
         self._config_widgets()
@@ -65,20 +60,6 @@ class PlotTransmissionLossInput(QWidget):
         self.exporter = None
         self.plotter = None
         self.unit_label = "dB"
-
-    def _define_qt_variables(self):
-
-        # QComboBox
-        self.comboBox_processing_selector: QComboBox
-
-        # QLineEdit
-        self.lineEdit_output_surface_id: QLineEdit
-        self.lineEdit_input_surface_id: QLineEdit
-
-        # QPushButton
-        self.pushButton_export_data: QPushButton
-        self.pushButton_plot_data: QPushButton
-        self.pushButton_flip_selection: QPushButton
 
     def _create_connections(self):
         #

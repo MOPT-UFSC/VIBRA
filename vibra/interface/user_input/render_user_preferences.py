@@ -2,18 +2,15 @@ from PySide6.QtWidgets import QDialog, QCheckBox, QFrame, QLineEdit, QPushButton
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtCore import Qt
 
-from vibra import app, UI_DIR
+from vibra import app
+from vibra.interface.ui_generated.project.render.renderer_user_preferences_ui import RendererUserPreferences_UI
 from molde.colors import Color
-from molde import load_ui
 
 from vibra.interface.user_input.model.color_selector import PickColorInput
 
 class RendererUserPreferencesInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "project/render/renderer_user_preferences.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         app().main_window.set_input_widget(self)
 
@@ -31,7 +28,6 @@ class RendererUserPreferencesInput(QDialog):
         self.renderer_font_size = None
 
         self._config_window()
-        self._define_qt_variables()
         self._create_connections()
         self.load_user_preferences()
         self.exec()
@@ -41,41 +37,6 @@ class RendererUserPreferencesInput(QDialog):
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setStyleSheet("QLineEdit { border: 1px solid gray; }")
-                                           
-
-    def _define_qt_variables(self):
-        # QCheckBox
-        self.checkBox_reference_scale : QCheckBox
-
-        # QFrame
-        self.frame_background_color : QFrame
-
-        # QSlider
-        self.slider_transparency : QSlider
-
-        # QLineEdit
-        self.lineEdit_renderer_background_color_1 : QLineEdit
-        self.lineEdit_renderer_background_color_2 : QLineEdit
-        self.lineEdit_renderer_font_color : QLineEdit
-        self.lineEdit_nodes_points_color : QLineEdit
-        self.lineEdit_lines_color : QLineEdit
-        self.lineEdit_edges_color : QLineEdit
-        self.lineEdit_faces_color : QLineEdit
-
-        # QSpinBox
-        self.spinBox_renderer_font_size: QSpinBox
-
-        # QPushButton
-        self.pushButton_renderer_background_color_1 : QPushButton
-        self.pushButton_renderer_background_color_2 : QPushButton
-        self.pushButton_renderer_font_color : QPushButton
-        self.pushButton_nodes_points_color : QPushButton
-        self.pushButton_lines_color : QPushButton
-        self.pushButton_edges_color : QPushButton
-        self.pushButton_faces_color : QPushButton
-        self.pushButton_reset_to_default : QPushButton
-        self.pushButton_update_settings : QPushButton
-        self.pushButton_apply_settings: QPushButton
 
     def _create_connections(self):
         self.pushButton_renderer_background_color_1.clicked.connect(self.update_renderer_background_color_1)

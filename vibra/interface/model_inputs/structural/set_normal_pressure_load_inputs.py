@@ -3,28 +3,23 @@ from PySide6.QtWidgets import QCheckBox, QComboBox, QDialog, QFileDialog, QLabel
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
-from vibra import app, UI_DIR
+from vibra import app
+from vibra.interface.ui_generated.model.setup.structural.normal_pressure_load_input_ui import NormalPressureLoadInput_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-
-from molde import load_ui
 
 import numpy as np
 from os.path import basename
 from pathlib import Path
 
-
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class SetNormalPressureLoadInputs(QDialog):
+class SetNormalPressureLoadInputs(NormalPressureLoadInput_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "model/setup/structural/normal_pressure_load_input.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         self.model = app().project.model
         self.properties = app().project.model.properties
@@ -34,7 +29,6 @@ class SetNormalPressureLoadInputs(QDialog):
 
         self._config_window()
         self._initialize()
-        self._define_qt_variables()
         self._create_connections()
 
         self._config_widgets()
@@ -57,36 +51,6 @@ class SetNormalPressureLoadInputs(QDialog):
     def reset_table_variables(self):
         self.pressure_table_values = None
         self.pressure_table_path = None
-
-    def _define_qt_variables(self):
-
-        # QComboBox
-        self.comboBox_attribution_type: QComboBox
-        self.comboBox_element_type: QComboBox
-
-        # QLabel
-        self.label_constant: QLabel
-        self.label_table: QLabel
-        self.label_unit: QLabel
-
-        # QLineEdit
-        self.lineEdit_selection_id: QLineEdit
-        self.lineEdit_real_value: QLineEdit
-        self.lineEdit_imag_value: QLineEdit
-        self.lineEdit_table_path: QLineEdit
-
-        # QPushButton
-        self.pushButton_attribute: QPushButton
-        self.pushButton_exit: QPushButton
-        self.pushButton_load_table: QPushButton
-        self.pushButton_remove: QPushButton
-        self.pushButton_reset: QPushButton
-
-        # QTabWidget
-        self.tabWidget_main: QTabWidget
-
-        # QTreeWidget
-        self.treeWidget_normal_pressure_loads: QTreeWidget
 
     def _config_widgets(self):
         #
