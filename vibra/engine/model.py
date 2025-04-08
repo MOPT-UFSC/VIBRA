@@ -8,7 +8,6 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.errors import IncompleteSetupError
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.utils.progress_status import ProgressStatus
 
 import logging
 import numpy as np
@@ -34,6 +33,7 @@ class Model:
         self.mesh_setup = None
         self.generated_mesh = False
         self.geometry_path = None
+        self.initial_element_size = None
 
         self.f_min = 2
         self.f_max = 600
@@ -72,11 +72,27 @@ class Model:
 
             try:
                 self.mesh = Mesh()
-                self.mesh.load_cad(path, dimension=2, size_factor=0.0, minimum_element_size=10, maximum_element_size=30)
+                element_size = self.mesh.compute_initial_max_mesh_size(path)
+                self.mesh.load_cad(
+                                   path,
+                                   dimension = 2,
+                                   size_factor = 0.12,
+                                   minimum_element_size = element_size*0.4,
+                                   maximum_element_size = element_size
+                                   )
+
             except:
                 self.mesh = Mesh()
-                self.mesh.load_cad(path, dimension=2, size_factor=0.0, minimum_element_size=5, maximum_element_size=10)
+                element_size = 10
+                self.mesh.load_cad(
+                                   path,
+                                   dimension = 2,
+                                   size_factor = 0.0,
+                                   minimum_element_size = element_size*0.5, 
+                                   maximum_element_size = element_size
+                                   )
 
+            self.initial_element_size = element_size
             self.generated_mesh = False
             app().main_window.update_geometry_information(self.mesh.geometry_information)
 
@@ -102,15 +118,12 @@ class Model:
                         "You should to configure the mesher to proceed." )
             raise IncompleteSetupError(message, context=context)
 
-        logging.info("Processing mesh..." + ProgressStatus(80, 100))
+        logging.info("Processing mesh [80/100]")
         self.mesh.load_cad(self.geometry_path, **self.mesh_setup)
         self.generated_mesh = True
 
-        logging.info("Processing mesh..." + ProgressStatus(90, 100))
+        logging.info("Processing mesh... [90/100]")
         self.mesh._process_solid_elements_connected_to_nodes()
-
-        # logging.info("Renumbering nodes..." + ProgressStatus(90, 100))
-        # self.mesh._process_nodes_reordering()
 
     def set_mesh(self, mesh):
         self.mesh = mesh

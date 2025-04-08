@@ -1,5 +1,5 @@
-from PySide6.QtWidgets import QDialog, QPushButton, QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QWidget, QHeaderView
-from PySide6.QtGui import QIcon, QColor, QBrush, QFont
+from PySide6.QtWidgets import QDialog, QHeaderView, QPushButton, QTableWidget, QTableWidgetItem, QWidget
+from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt
 
 from vibra import app, UI_DIR, TEMP_PROJECT_FILE
@@ -521,7 +521,7 @@ class FluidWidget(QWidget):
             PrintMessageInput([window_title_1, title, message])
             return True
 
-    def remove_fluid_from_file(self, fluid : Fluid):
+    def remove_fluid_from_file(self, fluid: Fluid):
 
         config = app().file.read_fluid_library_from_file()
 
@@ -650,6 +650,9 @@ class FluidWidget(QWidget):
 
         app().file.write_model_properties_in_file()
 
+        if isinstance(self.dialog, QDialog):
+            self.dialog.load_model_info()
+
     def call_refprop_interface(self):
 
         if isinstance(self.dialog, QDialog):
@@ -751,9 +754,16 @@ class FluidWidget(QWidget):
                     self.state_properties["molar_mass"] = self.fluid_data_refprop["molar_mass"]
 
     def keyPressEvent(self, event):
+
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            return
+            if isinstance(self.dialog, QDialog):
+                self.dialog.attribute_callback()
+
         elif event.key() == Qt.Key_Delete:
             self.remove_selected_column()
+
         elif event.key() == Qt.Key_Escape:
-            self.close()
+            if isinstance(self.dialog, QDialog):
+                self.dialog.close()
+            else:
+                self.close()

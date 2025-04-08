@@ -1,4 +1,5 @@
 from pathlib import Path
+from dataclasses import fields
 import json
 
 from vibra.interface.user_preferences import UserPreferences
@@ -18,52 +19,29 @@ class Config:
         try:
             with open(self.config_path, "r") as file:
                 user_preferences = json.load(file)
+        except Exception:
+            self.update_config_file()
+            return
 
-                self.user_preferences.interface_theme = user_preferences["interface_theme"]
-                self.user_preferences.renderer_background_color_1 = Color(*user_preferences["renderer_background_color_1"])
-                self.user_preferences.renderer_background_color_2 = Color(*user_preferences["renderer_background_color_2"])
-                self.user_preferences.nodes_points_color = Color(*user_preferences["nodes_points_color"])
-                self.user_preferences.lines_color = Color(*user_preferences["lines_color"])
-                self.user_preferences.edges_color = Color(*user_preferences["edges_color"])
-                self.user_preferences.faces_color = Color(*user_preferences["faces_color"])
-                self.user_preferences.renderer_font_color = Color(*user_preferences["renderer_font_color"])
-                self.user_preferences.renderer_font_size = user_preferences["renderer_font_size"]
-                self.user_preferences.show_reference_scale_bar = user_preferences["show_reference_scale_bar"]
-                self.user_preferences.color_map = user_preferences["color_map"]
-        except:
-            self._write_config_file()
-    
-    def _write_config_file(self):
-        data = { 
-        "interface_theme" : self.user_preferences.interface_theme,
-        "renderer_background_color_1" : self.user_preferences.renderer_background_color_1.to_rgb(),
-        "renderer_background_color_2" : self.user_preferences.renderer_background_color_2.to_rgb(),
-        "nodes_points_color" : self.user_preferences.nodes_points_color.to_rgb(),
-        "lines_color" : self.user_preferences.lines_color.to_rgb(),
-        "edges_color" : self.user_preferences.edges_color.to_rgb(),
-        "faces_color" : self.user_preferences.faces_color.to_rgb(),
-        "renderer_font_color" : self.user_preferences.renderer_font_color.to_rgb(),
-        "renderer_font_size" : self.user_preferences.renderer_font_size,
-        "show_reference_scale_bar" : self.user_preferences.show_reference_scale_bar,
-        "color_map" : self.user_preferences.color_map
-        }
-        
-        self.write_data_in_file(data)
+        for field in fields(UserPreferences):
+            read_value = user_preferences.get(field.name)
+            if read_value is None:
+                continue
+
+            if field.type is Color:
+                read_value = Color(*read_value)
+
+            setattr(self.user_preferences, field.name, read_value)
 
     def update_config_file(self):
         data = self.get_config_data()
 
-        data["interface_theme"] = self.user_preferences.interface_theme
-        data["renderer_background_color_1"] = self.user_preferences.renderer_background_color_1.to_rgb()
-        data["renderer_background_color_2"] = self.user_preferences.renderer_background_color_2.to_rgb()
-        data["nodes_points_color"] = self.user_preferences.nodes_points_color.to_rgb()
-        data["lines_color"] = self.user_preferences.lines_color.to_rgb()
-        data["edges_color"] = self.user_preferences.edges_color.to_rgb()
-        data["faces_color"] = self.user_preferences.faces_color.to_rgb()
-        data["renderer_font_color"] = self.user_preferences.renderer_font_color.to_rgb()
-        data["renderer_font_size"] = self.user_preferences.renderer_font_size
-        data["show_reference_scale_bar"] = self.user_preferences.show_reference_scale_bar
-        data["color_map"] = self.user_preferences.color_map
+        user_preferences_attr = self.user_preferences.get_attributes()
+        for attr, value in user_preferences_attr.items():
+            if isinstance(value, Color):
+                value = value.to_rgb()
+
+            data[attr] = value
 
         self.write_data_in_file(data)
     
@@ -145,8 +123,11 @@ class Config:
         return None
     
     def get_config_data(self) -> dict:
-        with open(self.config_path, "r") as file:
-            return json.load(file)
+        try:
+            with open(self.config_path, "r") as file:
+                return json.load(file)
+        except FileNotFoundError:
+            return dict()
     
     def write_data_in_file(self, data: dict):
         with open(self.config_path, "w") as file:

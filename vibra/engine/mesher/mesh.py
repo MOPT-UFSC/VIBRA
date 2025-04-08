@@ -1,10 +1,12 @@
 
-from vibra.engine.mesher.element_type import *
-from vibra.engine.mesher.geometry_setup import GeometrySetup
+from vibra.engine.mesher.element_type import (
+    DEFAULT_ELEMENT_TYPE,
+    TETRAHEDRON_10,
+    TETRAHEDRON_4,
+    ElementType,
+)
 from vibra.engine.mesher.reordering import Reordering
-from vibra.utils.progress_status import ProgressStatus
 
-from vibra.interface.loading_bar import load_function
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 from vtkmodules.vtkCommonCore import vtkPoints
@@ -79,8 +81,9 @@ class Mesh:
 
         self.nodes_out_of_face_element = dict()
 
-        self.surfaces_areas = dict()
-        self.bodies_volumes = dict()
+        self.length_from_curve = dict()
+        self.area_from_surface = dict()
+        self.volume_from_body = dict()
         self.surface_area_from_element_integration = dict()
 
         self.nodal_area = defaultdict(list)
@@ -94,32 +97,32 @@ class Mesh:
         self.principal_diagonal = None
 
     def load_cad(
-                 self,
-                 path: (str | Path),
-                 *,
-                 minimum_element_size: float = 30.0,
-                 maximum_element_size: float = 30.0,
-                 element_type: ElementType = DEFAULT_ELEMENT_TYPE,
-                 geometry_tolerance: float = 1e-8,
-                 size_factor: float = 0.50,
-                 dimension: int = 3,
-                 threads: int = 0,
-                 gmsh_gui: bool = False,
-                 mesh_refinement_parameters = list(),
-                 mesh_connection = True,
-                 ):
+        self,
+        path: (str | Path),
+        *,
+        minimum_element_size: float = 30.0,
+        maximum_element_size: float = 30.0,
+        element_type: ElementType = DEFAULT_ELEMENT_TYPE,
+        geometry_tolerance: float = 1e-8,
+        size_factor: float = 0.50,
+        dimension: int = 3,
+        threads: int = 0,
+        gmsh_gui: bool = False,
+        mesh_refinement_parameters=list(),
+        mesh_connection=True,
+    ):
 
         self.mesh_setup = dict(
-                               minimum_element_size = minimum_element_size,
-                               maximum_element_size = maximum_element_size,
-                               element_type = element_type,
-                               geometry_tolerance = geometry_tolerance,
-                               size_factor = size_factor,
-                               dimension = dimension,
-                               threads = threads,
-                               mesh_refinement_parameters = mesh_refinement_parameters,
-                               mesh_connection = mesh_connection
-                               )
+            minimum_element_size=minimum_element_size,
+            maximum_element_size=maximum_element_size,
+            element_type=element_type,
+            geometry_tolerance=geometry_tolerance,
+            size_factor=size_factor,
+            dimension=dimension,
+            threads=threads,
+            mesh_refinement_parameters=mesh_refinement_parameters,
+            mesh_connection=mesh_connection,
+        )
 
         self.mesh_connection = mesh_connection
 
@@ -129,17 +132,17 @@ class Mesh:
         gmsh.option.setNumber("General.NumThreads", threads)
         gmsh.option.setNumber("Geometry.Tolerance", geometry_tolerance)
 
-        logging.info("Loading geometry..." + ProgressStatus(10, 100))
+        logging.info("Loading geometry... [10/100]")
         gmsh.open(path)
 
-        logging.info("Configuring mesh..." + ProgressStatus(20, 100))
-        self._configure_mesh(   
-                             element_type,
-                             minimum_element_size,
-                             maximum_element_size,
-                             size_factor,
-                             mesh_refinement_parameters,
-                             )
+        logging.info("Configuring mesh... [20/100]")
+        self._configure_mesh(
+            element_type,
+            minimum_element_size,
+            maximum_element_size,
+            size_factor,
+            mesh_refinement_parameters,
+        )
 
         # gmsh.model.occ.removeAllDuplicates()
         gmsh.model.occ.synchronize()
@@ -150,17 +153,17 @@ class Mesh:
             self._merge_nodes_from_adjacent_volumes()
 
         try:
-            logging.info("Generating mesh..." + ProgressStatus(45, 100))
+            logging.info("Generating mesh... [45/100]")
             # gmsh.model.mesh.generate(dim=element_type.dimensions)
             gmsh.model.mesh.generate(dim=dimension)
-            logging.info("Generating mesh..." + ProgressStatus(60, 100))
+            logging.info("Generating mesh... [60/100]")
             self.get_geometry_info()
             gmsh.model.mesh.removeDuplicateNodes()
 
         except:
             gmsh.finalize()
 
-        logging.info("Post-processing mesh..." + ProgressStatus(70, 100))
+        logging.info("Post-processing mesh... [70/100]")
         self._process_mesh()
 
         if gmsh_gui:
@@ -458,7 +461,7 @@ class Mesh:
                 self.nodes_from_volumes[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
                 self.gmsh_elements_from_volumes[tag] = np.array([*set(element_indexes[0])], dtype=int)
 
-        logging.info("Post-processing mesh..." + ProgressStatus(80, 100))
+        logging.info("Post-processing mesh... [80/100]")
 
         self.lines_connectivity, self.map_line_elements = self._get_connectivity_array(connectivity_dim1)
         self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)
@@ -559,23 +562,18 @@ class Mesh:
 
         for tag in selected_ids:
             connect_data = self.connectivity_from_surfaces[tag]
-           
+
+           # integrate the total surface area by the summation of element areas
             area = 0.
             for element_nodes in connect_data:
                 area += self.process_triangular_area_by_nodal_coordinates(element_nodes)
 
             self.surface_area_from_element_integration[tag] = area
+            face_nodes = np.array([*set(connect_data.flatten())], dtype=int)
 
-            flat_data = connect_data.flatten()
-            face_nodes = np.array([*set(flat_data)], dtype=int)
             for node in face_nodes:
-
-                aux = 0
-                for col in range(connect_data.shape[1]):
-                    aux += connect_data[:, col] == node
-
-                mask = aux == 1
-                self.face_elements_connected_to_nodes[node].append(connect_data[mask, :])
+                mask = np.sum(np.isin(connect_data, node), axis=1) == 1
+                self.face_elements_connected_to_nodes[node].extend(connect_data[mask, :])
 
         # import json
         # with open("areas_data.json", "r") as file:
@@ -680,8 +678,9 @@ class Mesh:
                 mask = np.sum(connect_from_surface == node_id, axis=1) == 1
                 face_elements_connected_to_nodes[node_id, surface_id] = connect_from_surface[mask, :]                
 
-            text = f"Obtaining face elements connected to nodes... \nSurface [{surface_id}]"
-            logging.info(text + ProgressStatus(int(100 * i / Nel), 100))
+            percentage = int(100 * i / Nel)
+            text = f"Obtaining face elements connected to nodes... [{percentage}/100]\nSurface [{surface_id}]"
+            logging.info(text)
 
         # dt = time() - t0
         # print(f"Loop time: {dt} s")
@@ -705,7 +704,7 @@ class Mesh:
             mask = np.sum(filtered_data[:, 4:] == node_id, axis=1) == 1
             solid_elements_connected_to_nodes[node_id] = filtered_data[:, 0][mask]
 
-            logging.info("Obtaining solid elements connected to nodes..." + ProgressStatus(int(100 * i / Nel), 100))
+            logging.info(f"Obtaining solid elements connected to nodes... [{int(100 * i / Nel)}/100]")
 
         # dt = time() - t0
         # print(f"Loop time: {dt} s")
@@ -713,11 +712,11 @@ class Mesh:
         return solid_elements_connected_to_nodes
 
 
-    def _process_nodal_areas(self, node=None):
+    def _process_nodal_areas(self):
         self.nodal_area.clear()
-        for node, data in self.face_elements_connected_to_nodes.items():
-            for element_nodes in data[0]:
-                area = self.process_triangular_area_by_nodal_coordinates(element_nodes)
+        for node, connectivities in self.face_elements_connected_to_nodes.items():
+            for connect in connectivities:
+                area = self.process_triangular_area_by_nodal_coordinates(connect)
                 if area is not None:
                     self.nodal_area[node].append(area)
 
@@ -748,79 +747,91 @@ class Mesh:
         n_solid_elements = self.solids_connectivity.shape[0]
         return n_nodes, n_face_elements, n_solid_elements
 
-
-    def get_geometry_info(self):
-        self.geometry_information.clear()
-        labels = ["points", "curves", "surfaces", "volumes"]
-        for dim, tag in gmsh.model.getEntities():
-            label = labels[dim]
-            self.geometry_information[label].append(tag)
-
-
-    def get_model_areas(self, path):
-        """This method returns returns the all surface area processed using
-        gmsh internal functions.
-
-        """
-
-        self.surfaces_areas.clear()
-        self.bodies_volumes.clear()
-
-        # The adoption of quadratic elements ensures better results for area calculations.
-        element_type = TETRAHEDRON_10
-
+    def compute_initial_max_mesh_size(self, path, geometry_tolerance: float = 1e-10, threads: int = 0):
         gmsh.initialize("", False)
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
-        gmsh.option.setNumber("General.NumThreads", 4)
-        gmsh.merge(str(path))
-        # gmsh.open(str(path))
+        gmsh.option.setNumber("General.NumThreads", threads)
+        gmsh.option.setNumber("Geometry.Tolerance", geometry_tolerance)
 
-        if self.mesh_connection:
-            self._merge_nodes_from_adjacent_volumes()
+        gmsh.open(path)
 
-        gmsh.option.setNumber("Geometry.Tolerance", 1e-6)
-        gmsh.option.setNumber("Mesh.MeshSizeFactor", 0.1)
-        gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
-        gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
-        gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_type.recombination_algorithm)
-        gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", element_type.subdivision_algorithm)
-        gmsh.option.setNumber("Mesh.RecombineAll", element_type.recombine_all)
+        try:
 
-        gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
-        gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_type.second_order_incomplete)
+            geometry_info = defaultdict(list)
+            for dim, tag in gmsh.model.getEntities():
 
-        gmsh.model.mesh.generate(dim=2)
+                if dim == 0:
+                    continue
+
+                value = gmsh.model.occ.getMass(dim, tag)
+                if dim == 1:
+                    geometry_info["lengths"].append(value)
+
+                elif dim == 2:
+                    geometry_info["areas"].append(value)
+
+                elif dim == 3:
+                    geometry_info["volumes"].append(value)
+
+            total_area = np.sum(geometry_info["areas"])
+            if total_area <= 5e7:
+                number_of_elements = 4e4
+            else:
+                number_of_elements = 1e5
+
+            area_elem = total_area / number_of_elements
+
+            # the length side of equilateral triangle 
+            length = np.ceil(np.sqrt(2 * area_elem))
+
+            return length
+
+        finally:
+            gmsh.finalize()
+
+    def compute_bounding_box_sizes(self, geo_entities):
+        xmin = ymin = zmin = xmax = ymax = zmax = 0
+        volume = 0
+        for dim, tag in geo_entities:
+            # This mass is considering a density of 1, so it is equal the solid volume
+            volume += gmsh.model.occ.getMass(dim, tag)
+            xmin2, ymin2, zmin2, xmax2, ymax2, zmax2 = gmsh.model.getBoundingBox(dim, tag)
+            xmin = min(xmin, xmin2)
+            ymin = min(ymin, ymin2)
+            zmin = min(zmin, zmin2)
+
+            xmax = max(xmax, xmax2)
+            ymax = max(ymax, ymax2)
+            zmax = max(zmax, zmax2)
+
+        bb_sides = sorted([(xmax - xmin), (ymax - ymin), (zmax - zmin)], reverse=True)
+                
+        return bb_sides, volume
+
+
+    def get_geometry_info(self):
+
+        self.length_from_curve.clear()
+        self.area_from_surface.clear()
+        self.volume_from_body.clear()
+        self.geometry_information.clear()
+        labels = ["points", "curves", "surfaces", "volumes"]
 
         for dim, tag in gmsh.model.getEntities():
+            label = labels[dim]
+            self.geometry_information[label].append(tag)
+            
+            if dim == 0:
+                continue
 
-            if dim == 2:  # Surfaces
-
-                p = gmsh.model.addPhysicalGroup(2, [tag])
-                gmsh.plugin.setNumber("MeshVolume", "Dimension", 2)
-                gmsh.plugin.setNumber("MeshVolume", "PhysicalGroup", p)
-                gmsh.plugin.run("MeshVolume")
-
-                views = gmsh.view.getTags()
-                _, _, data = gmsh.view.getListData(views[-1])
-
-                self.surfaces_areas[tag] = data[-1][-1] / (1e6)
-                # if tag in [32, 36]:
-                #     print(tag, data[-1][-1] / (1e6))
-
-            # maybe it is going to be necessary evaluate the bodies volumes too
-            # elif dim == 3:  # Solids
-
-            #     p = gmsh.model.addPhysicalGroup(3, [tag])
-            #     gmsh.plugin.setNumber("MeshVolume", "Dimension", 3)
-            #     gmsh.plugin.setNumber("MeshVolume", "PhysicalGroup", p)
-            #     gmsh.plugin.run("MeshVolume")
-            #     views = gmsh.view.getTags()
-            #     _, _, data = gmsh.view.getListData(views[-1])
-
-            #     self.bodies_volumes[tag] = data[-1][-1]
-
-        gmsh.finalize()
+            value = gmsh.model.occ.getMass(dim, tag)
+            if dim == 3:
+                self.volume_from_body[tag] = value# / 1e9
+            elif dim == 2:
+                self.area_from_surface[tag] = value# / 1e6
+            else:
+                self.length_from_curve[tag] = value# / 1e3
 
 
     def _get_connectivity_array(self, input_dict):
@@ -1338,14 +1349,14 @@ class Mesh:
         if print_log:
             dt = time()  - t0
             print(f"Time to process - reordering (1/4): {dt}")
-        logging.info("Reordering nodes (1/4)..." + ProgressStatus(20, 100))
+        logging.info("Reordering nodes (1/4)... [20/100]")
 
         t0 = time()
         self.reordering._process_reordering()
         if print_log:
             dt = time()  - t0
             print(f"Time to process - reordering (2/4): {dt}")
-        logging.info("Reordering nodes (2/4)..." + ProgressStatus(60, 100))
+        logging.info("Reordering nodes (2/4)... [60/100]")
 
         t0 = time()
         self.lines_connectivity = self.reordering.get_new_connectivity(self.lines_connectivity)
@@ -1354,7 +1365,7 @@ class Mesh:
         if print_log:
             dt = time()  - t0
             print(f"Time to process - reordering (3/4): {dt}")
-        logging.info("Reordering nodes (3/4)..." + ProgressStatus(80, 100))
+        logging.info("Reordering nodes (3/4)... [80/100]")
 
         t0 = time()
         self.nodal_coordinates = self.reordering.get_new_nodal_coordinates()        
@@ -1365,7 +1376,7 @@ class Mesh:
         if print_log:
             dt = time()  - t0
             print(f"Time to process - reordering (4/4): {dt}")
-        logging.info("Reordering nodes (4/4)..." + ProgressStatus(100, 100))
+        logging.info("Reordering nodes (4/4)... [100/100]")
         
         t0 = time()
         self._process_solid_elements_connected_to_nodes()

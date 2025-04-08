@@ -1,5 +1,3 @@
-# fmt: off
-
 from PySide6.QtWidgets import  QComboBox, QDialog, QDoubleSpinBox, QFrame, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
@@ -14,7 +12,6 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 # from vibra.interface.exception_message import ErrorMessage
 # from vibra.errors import IncompleteMeshSetup, IncompleteSetupError
 
-from vibra.interface.loading_bar import load_function
 
 from molde import load_ui
 
@@ -512,5 +509,3 @@ class LowReducedFrequencyEquivalentModelInput(QDialog):
 
         self.keep_window_open = False
         return super().closeEvent(a0)
-
-# fmt: on

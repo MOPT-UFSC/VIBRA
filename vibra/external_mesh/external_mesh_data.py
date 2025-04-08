@@ -272,39 +272,42 @@ class ExternalMeshData():
                 other_nodes = list()
                 face_connectivity = list()
 
-                filt_1 = 0
-                for ns_node in ns_nodes:
-                    filt_1 += np.sum((connect[:, 3:] == ns_node), axis=1)
+                #TODO: remove the commented lines as soon as possible
+                # filt_1 = 0
+                # for ns_node in ns_nodes:
+                #     filt_1 += np.sum((connect[:, 3:] == ns_node), axis=1)
+                # mask = filt_1 == 3
 
-                mask = filt_1 == 3
+                mask = np.sum(np.isin(connect[:, 3:], ns_nodes), axis=1) == 3
 
-                if np.sum(mask):
+                if np.sum(mask) == 0:
+                    continue
 
-                    for _nodes in connect[mask, 3:]:
+                for _nodes in connect[mask, 3:]:
 
-                        face_elements = list()
-                        for _node in _nodes:
-                            if _node in ns_nodes:
-                                face_elements.append(_node)
-                            else:
-                                other_nodes.append(_node)
+                    face_elements = list()
+                    for _node in _nodes:
+                        if _node in ns_nodes:
+                            face_elements.append(_node)
+                        else:
+                            other_nodes.append(_node)
 
-                        # verifies if the surface normals are pointed out to the
-                        # outside of the solid element and revert it otherwise
+                    # verifies if the surface normals are pointed out to the
+                    # outside of the solid element and revert it otherwise
 
-                        if len(face_elements) == 3: # tet4/face3 elements
-                            
-                            normal_vector = self.get_element_face_normal(face_elements)
-                            edge_vector = self.get_edge_vector(face_elements, other_nodes[-1])
+                    if len(face_elements) == 3: # tet4/face3 elements
+                        
+                        normal_vector = self.get_element_face_normal(face_elements)
+                        edge_vector = self.get_edge_vector(face_elements, other_nodes[-1])
 
-                            if np.dot(normal_vector, edge_vector) > 0:
-                                node_2 = face_elements[1]
-                                face_elements.remove(node_2)
-                                face_elements.append(node_2)
-                                normal_vector *= -1
+                        if np.dot(normal_vector, edge_vector) > 0:
+                            node_2 = face_elements[1]
+                            face_elements.remove(node_2)
+                            face_elements.append(node_2)
+                            normal_vector *= -1
 
-                            # TODO: implement same structure to other element types
-                            # print("processed data: ", ns_key, normal_vector, face_elements, other_nodes)
+                        # TODO: implement same structure to other element types
+                        # print("processed data: ", ns_key, normal_vector, face_elements, other_nodes)
 
                         face_connectivity.append(face_elements)
 
@@ -317,9 +320,16 @@ class ExternalMeshData():
                     connect_data = np.array(face_connectivity, dtype=int)
                     other_data = np.array(other_nodes, dtype=int)
 
-                    self.elements_from_named_selection[ns_key] = {  "element_indexes" : indexes,
-                                                                       "connectivity" : connect_data,
-                                                                        "outer_nodes" : other_data  }
+                    if ns_key in self.elements_from_named_selection.keys():
+                        actual_connect_data = self.elements_from_named_selection[ns_key]["connectivity"]
+                        if len(connect_data) < len(actual_connect_data):
+                            continue
+
+                    self.elements_from_named_selection[ns_key] = {  
+                                                                  "element_indexes" : indexes,
+                                                                  "connectivity" : connect_data,
+                                                                  "outer_nodes" : other_data
+                                                                  }
 
                     if export:
 

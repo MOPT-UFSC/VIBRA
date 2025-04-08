@@ -6,8 +6,7 @@ from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.loading_bar import load_function
-from vibra.utils.progress_status import ProgressStatus
+from vibra.interface.loading_window import LoadingWindow
 
 from molde import load_ui
 
@@ -167,13 +166,11 @@ class PlotSpecificAcousticImpedanceInput(QDialog):
             else:
                 acoustic_impedance = self.get_nodal_specific_acoustic_impedance(selected_id)
 
-            logging.info("Processing particle velocity..." + ProgressStatus(95, 100))
+            logging.info("Processing particle velocity... [95/100]")
 
             return acoustic_impedance
 
-        get_acoustic_impedance = load_function(function_callback, self.main_window)
-
-        return get_acoustic_impedance()
+        return LoadingWindow(function_callback).run()
 
     def get_surface_specific_acoustic_impedance(self, surface_id : int):
 

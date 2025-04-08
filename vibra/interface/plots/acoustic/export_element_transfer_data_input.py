@@ -5,9 +5,7 @@ from PySide6.QtGui import QCloseEvent
 from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.loading_bar import load_function
-from vibra.utils.progress_status import ProgressStatus
+from vibra.interface.loading_window import LoadingWindow
 
 from molde import load_ui
 
@@ -152,13 +150,13 @@ class ExportElementTransferDataInput(QDialog):
         if last_path is None:
             last_path = str(Path().home())
 
-        caption = f"Choose a file to import element transfer data"
+        caption = "Choose a file to import element transfer data"
         path, check = QFileDialog.getOpenFileName(
-                                                  self,
-                                                  caption, 
-                                                  last_path, 
-                                                  'Table File (*.xls; *.xlsx;)'
-                                                  )
+            self,
+            caption,
+            last_path,
+            "Table File (*.xls; *.xlsx;)",
+        )
 
         if not check:
             return True
@@ -207,11 +205,10 @@ class ExportElementTransferDataInput(QDialog):
 
         def function_callback():
             surface_ids = [self.input_selection_id, self.output_selection_id]
-            logging.info("Processing area..." + ProgressStatus(60, 100))
+            logging.info("Processing area... [60/100]")
             self.mesh._process_face_elements_connected_to_nodes(surface_ids)
 
-        process_area = load_function(function_callback, app().main_window)
-        process_area()
+        LoadingWindow(function_callback).run()
 
     def get_response(self, surface_id: int):
 

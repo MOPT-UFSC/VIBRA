@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QDialog, QComboBox, QFrame, QGridLayout, QLineEdit, QPushButton, QScrollArea, QTableWidget,  QTabWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QAbstractItemView, QDialog, QComboBox, QGridLayout, QHeaderView, QLineEdit, QPushButton, QScrollArea, QTableWidget, QTableWidgetItem, QTabWidget, QTreeWidget, QTreeWidgetItem
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
 
@@ -85,12 +85,10 @@ class SetMaterialInput(QDialog):
 
         # QTableWidget
         self.tableWidget_material_data = self.material_widget.tableWidget_material_data
+        self.tableWidget_model_materials : QTableWidget
 
-        # QTreeWidget
+        # QTabWidget
         self.tabWidget_main : QTabWidget
-
-        # QTreeWidget
-        self.treeWidget_material : QTreeWidget
 
     def _add_material_widget(self):
         self.material_widget = MaterialWidget(dialog=self)
@@ -112,9 +110,6 @@ class SetMaterialInput(QDialog):
         #
         self.tableWidget_material_data.currentCellChanged.connect(self.current_cell_changed)
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
-        #
-        self.treeWidget_material.itemClicked.connect(self.on_click_item)
-        self.treeWidget_material.itemDoubleClicked.connect(self.on_double_click_item)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
         #
@@ -152,10 +147,9 @@ class SetMaterialInput(QDialog):
             self.lineEdit_selection_id.setText(text)
 
     def _config_widgets(self):
-        #
-        for i, width in enumerate([100, 130, 150, 120, 80]):
-            self.treeWidget_material.setColumnWidth(i, width)
-            self.treeWidget_material.headerItem().setTextAlignment(i, Qt.AlignCenter)
+        self.tableWidget_model_materials.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
+        # self.tableWidget_model_materials.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
+        self.tableWidget_model_materials.setEditTriggers(QAbstractItemView.EditTrigger(0))
 
     def update_material_selection(self):
 
@@ -174,19 +168,14 @@ class SetMaterialInput(QDialog):
     def attribution_type_callback(self):
 
         index = self.comboBox_attribution_type.currentIndex()
-        if index == 0:
-            self.lineEdit_selection_id.setText("All bodies/faces")
-        elif index == 1:
-            self.lineEdit_selection_id.setText("All bodies")
-        elif index == 2:
-            self.lineEdit_selection_id.setText("All faces")
-        else:
-            self.lineEdit_selection_id.setText("")
+        selection_texts = ["All bodies/faces", "All bodies", "All faces"]
 
         if index in [0, 1, 2]:
             self.lineEdit_selection_id.setEnabled(False)
+            self.lineEdit_selection_id.setText(selection_texts[index])
         else:
             self.lineEdit_selection_id.setEnabled(True)
+            self.lineEdit_selection_id.setText("")
 
     def attribute_callback(self):
 
@@ -307,18 +296,16 @@ class SetMaterialInput(QDialog):
 
         self.load_model_info()
         app().main_window.update_info_text()
-        # app().main_window.geometry_widget.update_info_text()
-        # app().main_window.mesh_widget.update_info_text()
         app().file.write_model_properties_in_file()
-        self.complete = True
 
     def load_model_info(self):
 
-        self.treeWidget_material.clear()
         properties = {
                       "Surface" : self.properties.surface_properties,
                       "Volume" : self.properties.volume_properties
                       }
+
+        self.materials_from_model = dict()
 
         for selection, _property in properties.items():
             for key, data in _property.items():
@@ -326,18 +313,63 @@ class SetMaterialInput(QDialog):
                 if property == "material":
 
                     data : Material
-                    material_name = data.name
-                    elasticity_modulus = round(data.elasticity_modulus / 1e9, 3)
-                    density = round(data.density, 3)
-                    poisson_ratio = round(data.poisson_ratio, 3)
+                    selection_id = f"{selection}-{surface_id}"
+                    self.materials_from_model[(data.identifier, selection_id)] = data
 
-                    new = QTreeWidgetItem([f"{selection}-{surface_id}", material_name, str(elasticity_modulus), str(density), str(poisson_ratio)])
-                    for col in range(5):
-                        new.setTextAlignment(col, Qt.AlignCenter)
-
-                    self.treeWidget_material.addTopLevelItem(new)
-
+        self.load_table_info()
         self.update_tabs_visibility()
+
+    def load_table_info(self):
+
+        self.tableWidget_model_materials.clearContents()
+        self.tableWidget_model_materials.blockSignals(True)
+        self.tableWidget_model_materials.setRowCount(len(self.materials_from_model))
+        self.tableWidget_model_materials.setColumnCount(6)
+
+        for i, (key, maeterial) in enumerate(self.materials_from_model.items()):
+            maeterial: Material
+            _, selection_id = key
+            if isinstance(maeterial, Material):
+                
+                self.tableWidget_model_materials.setItem(i, 0, QTableWidgetItem(selection_id))
+                self.tableWidget_model_materials.setItem(i, 1, QTableWidgetItem(str(maeterial.name)))
+                self.tableWidget_model_materials.setItem(i, 2, QTableWidgetItem(str(maeterial.identifier)))
+                self.tableWidget_model_materials.setItem(i, 3, QTableWidgetItem(str(maeterial.density)))
+                self.tableWidget_model_materials.setItem(i, 4, QTableWidgetItem(str(maeterial.elasticity_modulus / 1e9)))
+                self.tableWidget_model_materials.setItem(i, 5, QTableWidgetItem(str(maeterial.poisson_ratio)))
+
+        for i in range(self.tableWidget_model_materials.rowCount()):
+            for j in range(self.tableWidget_model_materials.columnCount()):
+                self.tableWidget_model_materials.item(i, j).setTextAlignment(Qt.AlignCenter)
+
+        self.tableWidget_model_materials.blockSignals(False)
+
+    # def load_model_info(self):
+
+    #     self.treeWidget_material.clear()
+    #     properties = {
+    #                   "Surface" : self.properties.surface_properties,
+    #                   "Volume" : self.properties.volume_properties
+    #                   }
+
+    #     for selection, _property in properties.items():
+    #         for key, data in _property.items():
+    #             property, surface_id = key
+    #             if property == "material":
+
+    #                 data : Material
+    #                 material_name = data.name
+    #                 elasticity_modulus = round(data.elasticity_modulus / 1e9, 3)
+    #                 density = round(data.density, 3)
+    #                 poisson_ratio = round(data.poisson_ratio, 3)
+
+    #                 new = QTreeWidgetItem([f"{selection}-{surface_id}", material_name, str(elasticity_modulus), str(density), str(poisson_ratio)])
+    #                 for col in range(5):
+    #                     new.setTextAlignment(col, Qt.AlignCenter)
+
+    #                 self.treeWidget_material.addTopLevelItem(new)
+
+    #     self.update_tabs_visibility()
 
     def update_tabs_visibility(self):
 

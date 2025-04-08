@@ -5,7 +5,7 @@ from vibra import app
 def default_material_library():
     config = configparser.ConfigParser()
 
-    config["Steel"] = {
+    config["1"] = {
         "name" : "Carbon_Steel",
         "identifier" : 1,
         "color" : "[170,170,170]",  # Light Gray
@@ -15,7 +15,7 @@ def default_material_library():
         "thermal_expansion_coefficient" : 1.2e-5,
     }
 
-    config["Stainless_steel"] = {
+    config["2"] = {
         "name" : "Stainless_steel",
         "identifier" : 2,
         "color" : "[126,46,31]",  # Wood color
@@ -25,7 +25,7 @@ def default_material_library():
         "thermal_expansion_coefficient" : 1.7e-5,
     }
 
-    config["Ni-Co-Cr_alloy"] = {
+    config["3"] = {
         "name" : "Ni-Co-Cr_alloy",
         "identifier" : 3,
         "color" : "[0,255,255]",  # Cyan
@@ -35,7 +35,7 @@ def default_material_library():
         "thermal_expansion_coefficient" : 1.2e-5,
     }
 
-    config["Cast_iron"] = {
+    config["4"] = {
         "name" : "Cast_iron",
         "identifier" : 4,
         "color" : "[50,50,50]",  # Dark Grey
@@ -45,7 +45,7 @@ def default_material_library():
         "thermal_expansion_coefficient" : 1.1e-5,
     }
 
-    config["Aluminum"] = {
+    config["5"] = {
         "name" : "Aluminum",
         "identifier" : 5,
         "color" : "[255,255,255]",  # White
@@ -55,7 +55,7 @@ def default_material_library():
         "thermal_expansion_coefficient" : 2.3e-5,
     }
 
-    config["Brass"] = {
+    config["6"] = {
         "name" : "Brass",
         "identifier" : 6,
         "color" : "[181,166,66]",  # Brass color

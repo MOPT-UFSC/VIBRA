@@ -18,7 +18,7 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class SurfaceVelocityInput(QDialog):
+class SetSurfaceVelocityInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -134,7 +134,7 @@ class SurfaceVelocityInput(QDialog):
         if self.tabWidget_main.currentIndex() == 2:
             return
 
-        data = self.model.properties._get_property("surface_velocity", surface=surface_id)
+        data = self.properties._get_property("surface_velocity", surface=surface_id)
 
         if isinstance(data, dict):
 
@@ -169,6 +169,7 @@ class SurfaceVelocityInput(QDialog):
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
             self.pushButton_attribute.setDisabled(True)
+            self.pushButton_remove.setDisabled(True)
         else:
             self.lineEdit_selection_id.setDisabled(False)
             self.pushButton_attribute.setEnabled(True)
@@ -522,7 +523,7 @@ class SurfaceVelocityInput(QDialog):
 
     def update_tabs_visibility(self):
         surface_ids = list()
-        for key, data in self.properties.surface_properties.items():
+        for key in self.properties.surface_properties.keys():
             property, surface_id = key
             if property == "surface_velocity":
                 surface_ids.append(surface_id)
@@ -533,6 +534,7 @@ class SurfaceVelocityInput(QDialog):
             self.tabWidget_main.setTabVisible(2, True)
 
     def on_click_item(self, item):
+        self.pushButton_remove.setDisabled(False)
         if item.text(0) != "":
             surface_id = int(item.text(0))
             self.lineEdit_selection_id.setText(item.text(0))

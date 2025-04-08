@@ -12,49 +12,96 @@ from numbers import Number
 # GEOMETRY RENDER WIDGET INFO TEXTS
 
 def points_info_text():
-    points = list(app().main_window.selected_geometry_points)
-    text = ""
 
-    if len(points) > 1:
-        text += f"{len(points)} points in selection\n{format_long_sequence(points)}\n\n"
-    elif len(points) == 1:
-        text += f"Point: {points[0]}\n\n"
+    point_ids = list(app().main_window.selected_geometry_points)
+
+    node_ids = list()
+    for point_id in point_ids:
+        node_id = int(app().project.model.mesh.nodes_from_points[point_id])
+        node_ids.append(node_id)
+
+    text = ""
+    if len(point_ids) > 1:
+        text += f"{len(point_ids)} points in selection: {format_long_sequence(point_ids)}\n\n"
+        if len(point_ids) == 2:
+            coord_A = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:]
+            coord_B = app().project.model.mesh.nodal_coordinates[node_ids[1], 1:]
+            dx, dy, dz = np.round(np.abs(coord_A - coord_B), 6)
+
+            tree = TreeInfo("Distance")
+            tree.add_item("dx", f"{dx : .6f}", "m")
+            tree.add_item("dy", f"{dy : .6f}", "m")
+            tree.add_item("dz", f"{dz : .6f}", "m")
+            text += str(tree)
+
+    elif len(point_ids) == 1:
+        text += f"Point: {point_ids[0]}\n"
+        coords = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:]
+        coords = np.round(coords, 6)
+        text += "Position: ({:.6f}, {:.6f}, {:.6f}) m\n\n".format(*coords)
 
     return text
 
 def lines_info_text():
-    lines = list(app().main_window.selected_geometry_lines)
+
     text = ""
+    lines = list(app().main_window.selected_geometry_lines)
+
+    length = 0.
+    for line_id in lines:
+        length += app().project.model.mesh.length_from_curve[line_id]
+    length /= 1e3
 
     if len(lines) > 1:
-        text += f"{len(lines)} lines in selection\n{format_long_sequence(lines)}\n\n"
+        text += f"{len(lines)} lines in selection: {format_long_sequence(lines)}\n"
+        text += f"Length (compound): {length : .6e} m\n\n"
+
     elif len(lines) == 1:
-        text += f"Line: {lines[0]}\n\n"
+        text += f"Selected line: {lines[0]}\n"
+        text += f"Length: {length : .6e} m\n\n"
 
     return text
 
 def faces_info_text():
+
     text = ""
     volumes = list(app().main_window.selected_geometry_volumes)
 
     if len(volumes) == 0:
-        faces = list(app().main_window.selected_geometry_surfaces)
+        surface_ids = list(app().main_window.selected_geometry_surfaces)
 
-        if len(faces) > 1:
-            text += f"{len(faces)} surfaces in selection\n{format_long_sequence(faces)}\n\n"
-        elif len(faces) == 1:
-            text += f"Surface: {faces[0]}\n\n"
+        area = 0.
+        for surface_id in surface_ids:
+            area += app().project.model.mesh.area_from_surface[surface_id]
+        area /= 1e6
+
+        if len(surface_ids) > 1:
+            text += f"{len(surface_ids)} surfaces in selection: {format_long_sequence(surface_ids)}\n"
+            text += f"Area (compound): {area : .6e} m²\n"
+
+        elif len(surface_ids) == 1:
+            text += f"Selected surface: {surface_ids[0]}\n"
+            text += f"Area: {area : .6e} m²\n\n"
 
     return text
 
 def volumes_info_text():
-    volumes = list(app().main_window.selected_geometry_volumes)
-    text = ""
 
-    if len(volumes) > 1:
-        text += f"{len(volumes)} volumes in selection\n{format_long_sequence(volumes)}\n\n"
-    elif len(volumes) == 1:
-        text += f"Volume: {volumes[0]}\n\n"
+    text = ""
+    volume_ids = list(app().main_window.selected_geometry_volumes)
+
+    volume = 0.
+    for volume_id in volume_ids:
+        volume += app().project.model.mesh.volume_from_body[volume_id]
+    volume /= 1e9
+
+    if len(volume_ids) > 1:
+        text += f"{len(volume_ids)} volumes in selection: {format_long_sequence(volume_ids)}\n"
+        text += f"Volume (compound): {volume : .6e} m³\n\n"
+
+    elif len(volume_ids) == 1:
+        text += f"Selected volume: {volume_ids[0]}\n"
+        text += f"Volume: {volume : .6e} m³\n\n"
 
     return text
 
@@ -333,11 +380,12 @@ def nodes_info_text():
     nodes = list(app().main_window.selected_mesh_nodes)
     text = ""
     if len(nodes) > 1:
-        text += f"{len(nodes)} nodes in selection\n{format_long_sequence(nodes)}\n\n"
+        text += f"{len(nodes)} nodes in selection: {format_long_sequence(nodes)}\n\n"
     elif len(nodes) == 1:
         text += f"Node: {nodes[0]}\n"
         coords = app().project.model.mesh.nodal_coordinates[nodes[0], 1:]
-        text += f"Coordinates: [{round(coords[0], 6)}, {round(coords[1], 6)}, {round(coords[2], 6)}] (m)\n\n"
+        coords = np.round(coords, 6)
+        text += "Nodal coordinates: ({:.6f}, {:.6f}, {:.6f}) m\n\n".format(*coords)
 
     return text
 
@@ -345,7 +393,7 @@ def mesh_faces_info_text():
     faces = list(app().main_window.selected_mesh_faces)
     text = ""
     if len(faces) > 1:
-        text += f"{len(faces)} faces in selection\n{format_long_sequence(faces)}\n\n"
+        text += f"{len(faces)} faces in selection: {format_long_sequence(faces)}\n\n"
     elif len(faces) == 1:
         text += f"Face element: {faces[0]}\n\n"
 
@@ -356,7 +404,7 @@ def mesh_solids_info_text():
     text = ""
     if len(solids_elem_ids) > 1:
         text += (
-            f"{len(solids_elem_ids)} solids in selection\n"
+            f"{len(solids_elem_ids)} solids in selection: "
             f"{format_long_sequence(solids_elem_ids)}\n\n"
         )
     elif len(solids_elem_ids) == 1:

@@ -48,10 +48,19 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.left_clicked.connect(self.click_callback)
         self.left_released.connect(self.selection_callback)
-        app().main_window.theme_changed.connect(self.update_theme)
-        app().main_window.visualization_changed.connect(self.visualization_changed_callback)
         app().main_window.selection_changed.connect(self.update_selection)
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
+        app().main_window.theme_changed.connect(self.update_theme)
+        app().main_window.visualization_changed.connect(self.visualization_changed_callback)
+
+        self.geometry_selection = GeometrySelection(self)
+
+        self.points_actor = None
+        self.lines_actor = None
+        self.faces_actor = None
+        self.ghost_actor = None
+        self.selection_spheres_actor = None
+        self.selection_color = app().config.user_preferences.selection_color.to_rgb()
 
         # The fast area selection just works if it is on
         self.renderer.GetActiveCamera().ParallelProjectionOn()
@@ -328,6 +337,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.points_actor.paint_cells(self.selection_color, point_cells)
         self.lines_actor.paint_lines(self.selection_color, lines)
         self.faces_actor.paint_cells(self.selection_color, all_faces_elements)
+        self.selection_color = app().config.user_preferences.selection_color.to_rgb()
 
         self.update_info_text()
 

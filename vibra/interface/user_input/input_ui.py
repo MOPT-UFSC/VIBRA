@@ -4,7 +4,7 @@ from vibra.interface.mesh.mesher_inputs import MesherInputs
 #
 from vibra.interface.model_inputs.acoustic.set_acoustic_pressure import AcousticPressureInput
 from vibra.interface.model_inputs.acoustic.set_mass_flow_rate_inputs import MassFlowRateInput
-from vibra.interface.model_inputs.acoustic.set_surface_velocity_inputs import SurfaceVelocityInput
+from vibra.interface.model_inputs.acoustic.set_surface_velocity_inputs import SetSurfaceVelocityInput
 from vibra.interface.model_inputs.acoustic.set_specific_impedance_inputs import SpecificImpedanceInput
 from vibra.interface.model_inputs.acoustic.set_anechoic_termination_inputs import SetAnechoicTerminationInputs
 from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import DissipationModelInput
@@ -32,9 +32,7 @@ from vibra.interface.plots.structural.plot_structural_frequency_response_input i
 from vibra.interface.plots.structural.plot_structural_mode_shape import PlotStructuralModeShape
 from vibra.interface.plots.structural.plot_displacement_field import PlotDisplacementField
 #
-from vibra.interface.process_analysis import ProcessAnalysis
-
-from vibra.interface.loading_bar import load_function
+from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 from vibra import app
@@ -76,9 +74,7 @@ class InputUi:
                 self.model_setup_items.modify_items_access_after_geometry_importing()
             
     def generate_mesh(self):
-        generate_mesh = load_function(app().project.generate_mesh, self.main_window)
-        generate_mesh()
-
+        LoadingWindow(app().project.generate_mesh).run()
         self.main_window.action_mesh_workspace_callback()
         self.model_setup_items.item_child_generate_mesh.setDisabled(True)
 
@@ -120,7 +116,7 @@ class InputUi:
         
     def set_surface_velocity(self):
         if not self.model_setup_items.item_child_set_surface_velocity.isDisabled():
-            self.process_input(SurfaceVelocityInput)
+            self.process_input(SetSurfaceVelocityInput)
         
     def set_anechoic_termination(self):
         if not self.model_setup_items.item_child_set_anechoic_termination.isDisabled():

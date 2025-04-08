@@ -6,20 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>650</width>
-    <height>470</height>
+    <width>720</width>
+    <height>500</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>600</width>
-    <height>470</height>
+    <height>500</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>900</width>
-    <height>470</height>
+    <height>600</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -140,32 +140,32 @@
            </property>
            <item>
             <property name="text">
-             <string> All bodies/faces</string>
+             <string>All bodies/faces</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string> All bodies</string>
+             <string>All bodies</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string> All faces</string>
+             <string>All faces</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string> Selected bodies</string>
+             <string>Selected bodies</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string> Selected faces</string>
+             <string>Selected faces</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string> Selected bodies/faces</string>
+             <string>Selected bodies/faces</string>
             </property>
            </item>
           </widget>
@@ -217,8 +217,7 @@
             <enum>Qt::ClickFocus</enum>
            </property>
            <property name="styleSheet">
-            <string notr="true">QLineEdit{background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)}
-QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 120)}</string>
+            <string notr="true"/>
            </property>
            <property name="text">
             <string/>
@@ -275,8 +274,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
             <enum>Qt::ClickFocus</enum>
            </property>
            <property name="styleSheet">
-            <string notr="true">QLineEdit{background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)}
-QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 120)}</string>
+            <string notr="true"/>
            </property>
            <property name="text">
             <string/>
@@ -342,8 +340,8 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>620</width>
-               <height>293</height>
+               <width>690</width>
+               <height>323</height>
               </rect>
              </property>
             </widget>
@@ -356,87 +354,6 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
           <string>List</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_6">
-          <item row="0" column="0">
-           <widget class="QTreeWidget" name="treeWidget_material">
-            <property name="minimumSize">
-             <size>
-              <width>560</width>
-              <height>100</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>640</width>
-              <height>200</height>
-             </size>
-            </property>
-            <property name="font">
-             <font>
-              <family>MS Shell Dlg 2</family>
-              <pointsize>10</pointsize>
-              <italic>false</italic>
-             </font>
-            </property>
-            <property name="toolTip">
-             <string/>
-            </property>
-            <property name="indentation">
-             <number>1</number>
-            </property>
-            <property name="headerHidden">
-             <bool>false</bool>
-            </property>
-            <attribute name="headerHighlightSections">
-             <bool>false</bool>
-            </attribute>
-            <attribute name="headerShowSortIndicator" stdset="0">
-             <bool>false</bool>
-            </attribute>
-            <attribute name="headerStretchLastSection">
-             <bool>true</bool>
-            </attribute>
-            <column>
-             <property name="text">
-              <string>Selection-ID</string>
-             </property>
-             <property name="textAlignment">
-              <set>AlignCenter</set>
-             </property>
-            </column>
-            <column>
-             <property name="text">
-              <string>Material name</string>
-             </property>
-             <property name="textAlignment">
-              <set>AlignCenter</set>
-             </property>
-            </column>
-            <column>
-             <property name="text">
-              <string>Elasticity modulus [GPa]</string>
-             </property>
-             <property name="textAlignment">
-              <set>AlignCenter</set>
-             </property>
-            </column>
-            <column>
-             <property name="text">
-              <string>Density [kg/m³]</string>
-             </property>
-             <property name="textAlignment">
-              <set>AlignCenter</set>
-             </property>
-            </column>
-            <column>
-             <property name="text">
-              <string>Poisson ratio</string>
-             </property>
-             <property name="textAlignment">
-              <set>AlignCenter</set>
-             </property>
-            </column>
-           </widget>
-          </item>
           <item row="1" column="0">
            <widget class="QFrame" name="frame_reset_remove_buttons">
             <property name="minimumSize">
@@ -447,7 +364,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
             </property>
             <property name="maximumSize">
              <size>
-              <width>560</width>
+              <width>16777215</width>
               <height>40</height>
              </size>
             </property>
@@ -536,6 +453,64 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
               </widget>
              </item>
             </layout>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QTableWidget" name="tableWidget_model_materials">
+            <property name="sizeAdjustPolicy">
+             <enum>QAbstractScrollArea::AdjustToContents</enum>
+            </property>
+            <attribute name="verticalHeaderVisible">
+             <bool>false</bool>
+            </attribute>
+            <column>
+             <property name="text">
+              <string>Selection-ID</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Name</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Identifier</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Density [kg/m³]</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Elasticity modulus [GPa]</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Poisson ratio [--]</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </column>
            </widget>
           </item>
          </layout>

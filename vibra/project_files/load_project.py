@@ -2,11 +2,13 @@
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-from vibra.engine.mesher.element_type import *
-from vibra.utils.utils import *
-from vibra.utils.progress_status import ProgressStatus
-
-from vibra.interface.loading_bar import load_function
+from vibra.engine.mesher.element_type import (
+    TETRAHEDRON_4,
+    TETRAHEDRON_10,
+    HEXAHEDRON_8,
+    HEXAHEDRON_20,
+)
+from vibra.utils.utils import get_color_rgb
 
 import logging
 import numpy as np
@@ -157,7 +159,7 @@ class LoadProject:
 
     def load_mesh_data_from_file(self, mesh_data: dict):
 
-        logging.info("Loading mesh..." + ProgressStatus(20, 100))
+        logging.info("Loading mesh... [20/100]")
 
         self.model.mesh.nodal_coordinates = mesh_data["nodal_coordinates"]
         self.model.mesh.lines_connectivity = mesh_data["lines_connectivity"]
@@ -186,7 +188,7 @@ class LoadProject:
         surfaces_from_volumes = dict()
         volume_from_surface = defaultdict(list)
 
-        logging.info("Loading mesh..." + ProgressStatus(60, 100))
+        logging.info("Loading mesh... [60/100]")
 
         for key, data in mesh_data.items():
 
@@ -247,15 +249,15 @@ class LoadProject:
         self.model.mesh.surfaces_from_volumes = surfaces_from_volumes
         self.model.mesh.volume_from_surface = volume_from_surface
 
-        logging.info("Loading mesh..." + ProgressStatus(80, 100))
+        logging.info("Loading mesh... [80/100]")
 
         self.model.mesh.create_element_mappings()
         self.model.generated_mesh = True
 
-        logging.info("Loading mesh..." + ProgressStatus(95, 100))
+        logging.info("Loading mesh... [95/100]")
         self.model.mesh._process_solid_elements_connected_to_nodes()
 
-        # logging.info("Loading mesh..." + ProgressStatus(95, 100))
+        # logging.info("Loading mesh... [95/100]")
         # self.model.mesh._process_element_average_coordinates()
 
     def load_mesh_setup(self):
@@ -281,7 +283,7 @@ class LoadProject:
                     solid_element = HEXAHEDRON_20
 
                 else:
-                    raise NotImplementedError(f"Element type not defined!")
+                    raise NotImplementedError(f'Element type "{element_type}" not defined!')
 
                 algorithm_3d = mesh_setup.get("algorithm_3d")
                 if algorithm_3d is not None:
@@ -305,10 +307,10 @@ class LoadProject:
 
     def update_render(self):
 
-        logging.info("Updating render..." + ProgressStatus(20, 100))
+        logging.info("Updating render... [20/100]")
         app().main_window.configure_mesh_information()
 
-        logging.info("Updating render..." + ProgressStatus(90, 100))
+        logging.info("Updating render... [90/100]")
         app().main_window.update_plots()
 
     def load_imported_table_data_from_file(self):
@@ -400,7 +402,7 @@ class LoadProject:
         results_data = self.file.read_results_data_from_file()
 
         if results_data:
-            logging.info("Loading results..." + ProgressStatus(20, 100))
+            logging.info("Loading results... [20/100]")
             for key, data in results_data.items():
                 data: dict
 
@@ -433,5 +435,5 @@ class LoadProject:
                 else:
                     continue
             
-            logging.info("Updating analysis render..." + ProgressStatus(85, 100))
+            logging.info("Updating analysis render... [85/100]")
             app().main_window.configure_results_render_widget()

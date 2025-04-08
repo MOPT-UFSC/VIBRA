@@ -1,6 +1,3 @@
-
-# fmt: off
-
 from vibra.engine.model import Model
 
 from vibra.engine.elements.structural_hex8_element import STRUCT_HEXAHEDRON_8
@@ -9,8 +6,12 @@ from vibra.engine.elements.structural_tet4_element import STRUCT_TETRAHEDRON_4S
 from vibra.engine.elements.structural_tet10_element import STRUCT_TETRAHEDRON_10S
 from vibra.engine.elements.structural_tria3_element import STRUCT_TRIANGULAR_3
 
-from vibra.engine.mesher.element_type import *
-from vibra.utils.progress_status import ProgressStatus
+from vibra.engine.mesher.element_type import (
+    TETRAHEDRON_4,
+    TETRAHEDRON_10,
+    HEXAHEDRON_8,
+    HEXAHEDRON_20,
+)
 
 from collections import defaultdict
 from time import time
@@ -18,6 +19,7 @@ from time import time
 import logging
 import numpy as np
 from scipy.sparse import coo_matrix, csr_matrix
+
 
 class StructuralAssembler:
     def __init__(self, model : Model):
@@ -53,7 +55,7 @@ class StructuralAssembler:
             return STRUCT_HEXAHEDRON_20(self.model), None
 
         else:
-            raise NotImplementedError(f"Element type is not supported yet.")
+            raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
 
     def set_element_formulation(self, element):
         self.element = element
@@ -387,7 +389,7 @@ class StructuralAssembler:
 
             progress = 100 * np.round(el_index/nel, 2)
             if progress != last_progress:
-                logging.info( "Processing the elementary matrices data for solid elements..." + ProgressStatus(int(progress), 100))
+                logging.info(f"Processing the elementary matrices data for solid elements... [{int(progress)}/100]")
 
             material = self.model.properties._get_property("material", volume=vol_id)
             if material is None:
@@ -432,7 +434,7 @@ class StructuralAssembler:
 
                 progress = 100 * np.round(el_index/nel, 2)
                 if progress != last_progress:
-                    logging.info( "Processing the elementary matrices data for face elements..." + ProgressStatus(int(progress), 100))
+                    logging.info(f"Processing the elementary matrices data for face elements... [{int(progress)}/100]")
 
                 material = self.model.properties._get_property("material", surface=surf_id)
                 if material is None:
@@ -496,13 +498,13 @@ class StructuralAssembler:
         self.update_number_of_frequencies()
         self.model.process_surface_thickness()
 
-        logging.info( "Gathering data to assemble global matrices..." + ProgressStatus(10, 100))
+        logging.info("Gathering data to assemble global matrices... [10/100]")
         t0 = time()
         self.get_data_to_process_global_matrices()
         dt = time() - t0
         print(f"Elapsed time to process data to assemble global matrices: {round(dt, 4)} [s]")
 
-        logging.info( "Assembling global matrices..." + ProgressStatus(50, 100))
+        logging.info("Assembling global matrices... [50/100]")
         t0 = time()
         self.assemble_global_matrices()
         dt = time() - t0
@@ -521,5 +523,3 @@ class StructuralAssembler:
         # indB = np.arange(0, len(B), 1)
         # np.savetxt("excitation_nodal.dat", np.array([indA, A[:,-1]]).T, delimiter=",")
         # np.savetxt("excitation_element.dat", np.array([indB, B[:,-1]]).T, delimiter=",")
-
-# fmt: on

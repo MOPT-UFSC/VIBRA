@@ -11,8 +11,7 @@ from vibra.engine.checkers.analysis_requirements_checker import AnalysisRequirem
 
 from vibra.interface.process_analysis import ProcessAnalysis
 from vibra.interface.mesh.mesher_inputs import MesherInputs
-from vibra.interface.loading_bar import load_function
-from vibra.utils.progress_status import ProgressStatus
+from vibra.interface.loading_window import LoadingWindow
 
 import logging
 from time import sleep, time
@@ -84,7 +83,7 @@ class Project:
 
     def import_geometry(self, path : str):
         self.model.set_geometry_path(path)
-        logging.info(f"Importing geometry file...")
+        logging.info("Importing geometry file...")
         return self.model.process_visual_geometry_mesh(path)
 
     def set_mesh_setup(self, mesh_setup):
@@ -245,7 +244,7 @@ class Project:
     def run_analysis(self):
 
         if not self.model.generated_mesh:
-            obj = MesherInputs()
+            obj = MesherInputs(close_after_generate=True)
             if obj.complete:
                 app().main_window.update_plots()
             else:
@@ -253,15 +252,6 @@ class Project:
 
         if len(self.analysis_data) == 0:
             return
-
-        # if not app().project.model.generated_mesh:
-        #     try:
-        #         self.generate_mesh()
-        #     except IncompleteSetupError or IncompleteMeshSetup as error:
-        #         # Please use this error message. It is easy to use,
-        #         # is very clean and follows the operational system standard.
-        #         ErrorMessage(error)
-        #         return
 
         analysis = ProcessAnalysis()
         analysis_id = self.analysis_data["analysis_id"]
@@ -271,26 +261,22 @@ class Project:
         if analysis_id in [0, 1]:
             if checker.check_structural_harmonic_analysis():
                 return True
-            solve_harmonic = load_function(analysis.process_structural_harmonic_analysis, app().main_window)
-            solve_harmonic()
+            LoadingWindow(analysis.process_structural_harmonic_analysis).run()
 
         elif analysis_id == 2:
             if checker.check_structural_modal_analysis():
                 return True
-            solve_modal = load_function(analysis.process_structural_modal_analysis, app().main_window)
-            solve_modal()
+            LoadingWindow(analysis.process_structural_modal_analysis).run()
 
         elif analysis_id == 3:
             if checker.check_acoustic_harmonic_analysis():
                 return True
-            solve_harmonic = load_function(analysis.process_acoustic_harmonic_analysis, app().main_window)
-            solve_harmonic()
+            LoadingWindow(analysis.process_acoustic_harmonic_analysis).run()
 
         elif analysis_id == 4:
             if checker.check_acoustic_modal_analysis():
                 return True
-            solve_modal = load_function(analysis.process_acoustic_modal_analysis, app().main_window)
-            solve_modal()
+            LoadingWindow(analysis.process_acoustic_modal_analysis).run()
 
         else:
             raise NotImplementedError("Not implemented analysis")
@@ -299,5 +285,5 @@ class Project:
 
     def long_function(self):
         for i in range(20):
-            logging.info("long_function" + ProgressStatus(i, 20))
+            logging.info(f"long_function [{i}/20]")
             sleep(0.1)

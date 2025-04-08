@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import QDialog, QFrame, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QWidget, QHeaderView
-from PySide6.QtGui import QCloseEvent, QColor
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QDialog, QPushButton, QTableWidget, QTableWidgetItem, QWidget, QHeaderView
+from PySide6.QtGui import QColor
+from PySide6.QtCore import Qt, Signal
 
 from vibra import app, UI_DIR, TEMP_PROJECT_FILE
 from vibra.interface.formatters.icons import *
@@ -392,17 +392,18 @@ class MaterialWidget(QWidget):
             PrintMessageInput([window_title_1, title, message])
             return True
 
-    def remove_material_from_file(self, material : Material):
+    def remove_material_from_file(self, material: Material):
 
         config = app().file.read_material_library_from_file()
 
-        if not material.name in config.sections():
+        identifier = str(material.identifier)
+        if not identifier in config.sections():
             return
 
-        config.remove_section(material.name)
+        config.remove_section(identifier)
         app().file.write_material_library_in_file(config)
 
-        self.reset_materials_from_bodies_and_surfaces([material.name])
+        self.reset_materials_from_bodies_and_surfaces([material.identifier])
         self.load_data_from_materials_library()
 
     def new_identifier(self):
@@ -469,15 +470,16 @@ class MaterialWidget(QWidget):
 
         config = app().file.read_material_library_from_file()
 
-        material_names = list()
+        material_identifiers = list()
         for section_cache in sections_cache:
             if section_cache not in config.sections():
-                material_names.append(config_cache[section_cache]["name"])
+                identifier = config_cache[section_cache]["identifier"]
+                material_identifiers.append(int(identifier))
 
-        self.reset_materials_from_bodies_and_surfaces(material_names)
+        self.reset_materials_from_bodies_and_surfaces(material_identifiers)
         self.load_data_from_materials_library()
 
-    def reset_materials_from_bodies_and_surfaces(self, material_names : list):
+    def reset_materials_from_bodies_and_surfaces(self, material_identifiers: list):
 
         surfaces_to_remove_material = list()
         volumes_to_remove_material = list()
@@ -486,7 +488,7 @@ class MaterialWidget(QWidget):
             property, volume_id = key
             if property == "material":
                 if isinstance(data, Material):
-                    if data.name in material_names:
+                    if data.identifier in material_identifiers:
                         volumes_to_remove_material.append(volume_id)
                         surface_ids = self.model.mesh.surfaces_from_volumes[volume_id]
                         for surface_id in surface_ids:
@@ -498,6 +500,11 @@ class MaterialWidget(QWidget):
         for surf_id in surfaces_to_remove_material:
             self.model.properties._remove_surface_property("material", surface_id=surf_id)
 
+        app().file.write_model_properties_in_file()
+
+        if isinstance(self.dialog, QDialog):
+            self.dialog.load_model_info()
+
     def keyPressEvent(self, event):
 
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
@@ -508,7 +515,10 @@ class MaterialWidget(QWidget):
             self.remove_selected_column()
 
         elif event.key() == Qt.Key_Escape:
-            self.close()
+            if isinstance(self.dialog, QDialog):
+                self.dialog.close()
+            else:
+                self.close()
 
     def closeEvent(self, event):
         super().closeEvent(event)

@@ -20,7 +20,8 @@ from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.formatters.icons import get_vibra_icon, change_icon_color_for_widgets
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.help_widget import HelpWidget
-from vibra.interface.loading_bar import load_function
+from vibra.interface.loading_window import LoadingWindow
+
 from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
 from vibra.interface.user_input.input_ui import InputUi
@@ -41,7 +42,6 @@ from vibra.interface.viewer_3d.render_widgets import (
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import VisualizationFilter
-from vibra.utils.progress_status import ProgressStatus
 from vibra.interface.user_input.render_user_preferences import RendererUserPreferencesInput
 
 from molde.render_widgets import CommonRenderWidget
@@ -464,6 +464,7 @@ class MainWindow(QMainWindow):
         app().config.update_config_file()
 
     def action_user_preferences_callback(self):
+        self.close_dialogs()
         self.render_user_preferences = RendererUserPreferencesInput()
 
     def configure_mesh_information(self):
@@ -496,7 +497,9 @@ class MainWindow(QMainWindow):
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
 
     def update_plots(self, reset_camera=True):
-        for i in range(self.render_widgets_stack.count()):
+        renders_number = self.render_widgets_stack.count()
+        for i in range(renders_number):
+            logging.info(f"Updating renders... [{i}/{renders_number}]")
             widget = self.render_widgets_stack.widget(i)
             if isinstance(widget, CommonRenderWidget):
                 widget.update_plot(reset_camera)
@@ -704,19 +707,18 @@ class MainWindow(QMainWindow):
             app().project.save_path = path
             app().file.write_thumbnail()
             app().config.add_recent_file(path)
-            logging.info("Saving project data..." + ProgressStatus(10, 100))
+            logging.info("Saving project data... [10/100]")
 
             app().config.write_last_folder_path_in_file("project_folder", path)
             self.update_recents_menu()
-            logging.info("Saving project data..." + ProgressStatus(60, 100))
+            logging.info("Saving project data... [60/100]")
 
             copy(TEMP_PROJECT_FILE, path)
             self.update_window_title(path)
             self.project_data_modified = False
-            logging.info("The project data has been saved." + ProgressStatus(100, 100))
+            logging.info("The project data has been saved. [100/100]")
 
-        save_func = load_function(save_data, self)
-        save_func(path)
+        LoadingWindow(save_data).run(path)
 
         from datetime import datetime
 
@@ -768,17 +770,16 @@ class MainWindow(QMainWindow):
         app().file.write_geometry_in_file(geometry_path)
 
         def remove_callback():
-            logging.info("Removing the model properties from project file..." + ProgressStatus(10, 100))
+            logging.info("Removing the model properties from project file... [10/100]")
             app().file.remove_model_properties_from_project_file()
 
-            logging.info("Removing the mesh data from project file..." + ProgressStatus(40, 100))
+            logging.info("Removing the mesh data from project file... [40/100]")
             app().file.remove_mesh_data_from_project_file()
 
-            logging.info("Removing the results data from project file..." + ProgressStatus(75, 100))
+            logging.info("Removing the results data from project file... [75/100]")
             app().file.remove_results_data_from_project_file()
 
-        remove = load_function(remove_callback, self)
-        remove()
+        LoadingWindow(remove_callback).run()
 
         _geometry_path = app().file.read_geometry_from_file()
         self.import_geometry(_geometry_path)
@@ -808,27 +809,23 @@ class MainWindow(QMainWindow):
         app().project.reset_variables()
         app().project.reset_solutions()
 
-        # self.file = ProjectFile(TEMP_PROJECT_FILE, override=False)
-
         if project_path is not None:
             path = Path(project_path)
             app().project.name = path.stem
             app().project.save_path = path
 
-        # self.load_project = LoadProject()
         app().load_project.initialize()
-        load = load_function(app().load_project.load, self)
-        load()
+        LoadingWindow(app().load_project.load).run()
 
         self.configure_mesh_information()
-        self.update_plots()
+        LoadingWindow(self.update_plots).run()
 
     def import_geometry(self, path: str):
-        import_geometry = load_function(app().project.import_geometry, self)
-        if import_geometry(path) == -1:
+        if LoadingWindow(app().project.import_geometry).run(path) == -1:
             return
 
         try:
+
             self.action_model_workspace_callback()
 
             self.renderer_toolbar.setDisabled(False)
@@ -837,7 +834,8 @@ class MainWindow(QMainWindow):
 
             app().project.reset_solutions()
             app().project.model.properties._reset_variables()
-            self.update_plots()
+
+            LoadingWindow(self.update_plots).run()
 
         except Exception as error_log:
             window_title = "Error"
