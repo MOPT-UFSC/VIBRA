@@ -50,7 +50,6 @@ def lines_info_text():
     length = 0.
     for line_id in lines:
         length += app().project.model.mesh.length_from_curve[line_id]
-    length /= 1e3
 
     if len(lines) > 1:
         text += f"{len(lines)} lines in selection: {format_long_sequence(lines)}\n"
@@ -73,7 +72,6 @@ def faces_info_text():
         area = 0.
         for surface_id in surface_ids:
             area += app().project.model.mesh.area_from_surface[surface_id]
-        area /= 1e6
 
         if len(surface_ids) > 1:
             text += f"{len(surface_ids)} surfaces in selection: {format_long_sequence(surface_ids)}\n"
@@ -93,7 +91,6 @@ def volumes_info_text():
     volume = 0.
     for volume_id in volume_ids:
         volume += app().project.model.mesh.volume_from_body[volume_id]
-    volume /= 1e9
 
     if len(volume_ids) > 1:
         text += f"{len(volume_ids)} volumes in selection: {format_long_sequence(volume_ids)}\n"

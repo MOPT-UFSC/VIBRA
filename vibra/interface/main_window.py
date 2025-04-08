@@ -747,6 +747,8 @@ class MainWindow(QMainWindow):
         self.open_project(project_path)
 
     def import_geometry_dialog(self):
+
+        self.close_dialogs()
         last_path = app().config.get_last_folder_for("geometry_folder")
         if last_path is None:
             path = os.path.expanduser("~")
@@ -765,13 +767,13 @@ class MainWindow(QMainWindow):
 
         app().config.write_last_folder_path_in_file("geometry_folder", geometry_path)
 
+        app().project.reset_variables()
+        app().project.reset_solutions()
+
         # call geometry setup
         read = GeometrySetup()
         if not read.complete:
             return False
-
-        app().project.reset_variables()
-        app().project.reset_solutions()
 
         # self.file = ProjectFile(TEMP_PROJECT_FILE)
         app().file.write_geometry_in_file(geometry_path)

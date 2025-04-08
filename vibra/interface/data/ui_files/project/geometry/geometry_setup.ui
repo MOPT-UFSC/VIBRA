@@ -59,17 +59,17 @@
         </property>
         <item>
          <property name="text">
-          <string>milimeters</string>
+          <string>milimeter</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>meters</string>
+          <string>meter</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>inches</string>
+          <string>inch</string>
          </property>
         </item>
        </widget>
@@ -107,7 +107,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Geometry length units:</string>
+         <string>Length unit:</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -292,7 +292,7 @@
          </font>
         </property>
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Confirm material attribution&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="styleSheet">
          <string notr="true"/>
@@ -326,7 +326,7 @@
          </font>
         </property>
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Confirm material attribution&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="styleSheet">
          <string notr="true"/>
