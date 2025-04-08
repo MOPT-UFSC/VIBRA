@@ -76,7 +76,7 @@ class Model:
                 self.mesh.load_cad(
                                    path,
                                    dimension = 2,
-                                   size_factor = 0.08,
+                                   size_factor = 0.12,
                                    minimum_element_size = element_size*0.4,
                                    maximum_element_size = element_size
                                    )

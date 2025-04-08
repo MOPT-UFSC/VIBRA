@@ -774,8 +774,13 @@ class Mesh:
                 elif dim == 3:
                     geometry_info["volumes"].append(value)
 
-            # 40k face elements seem to be enough to model curved surfaces
-            area_elem = np.sum(geometry_info["areas"]) / 4e4
+            total_area = np.sum(geometry_info["areas"])
+            if total_area <= 5e7:
+                number_of_elements = 4e4
+            else:
+                number_of_elements = 1e5
+
+            area_elem = total_area / number_of_elements
 
             # the length side of equilateral triangle 
             length = np.ceil(np.sqrt(2 * area_elem))
