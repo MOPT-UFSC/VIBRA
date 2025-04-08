@@ -497,7 +497,9 @@ class MainWindow(QMainWindow):
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
 
     def update_plots(self, reset_camera=True):
-        for i in range(self.render_widgets_stack.count()):
+        renders_number = self.render_widgets_stack.count()
+        for i in range(renders_number):
+            logging.info(f"Updating renders... [{i}/{renders_number}]")
             widget = self.render_widgets_stack.widget(i)
             if isinstance(widget, CommonRenderWidget):
                 widget.update_plot(reset_camera)
@@ -807,25 +809,23 @@ class MainWindow(QMainWindow):
         app().project.reset_variables()
         app().project.reset_solutions()
 
-        # self.file = ProjectFile(TEMP_PROJECT_FILE, override=False)
-
         if project_path is not None:
             path = Path(project_path)
             app().project.name = path.stem
             app().project.save_path = path
 
-        # self.load_project = LoadProject()
         app().load_project.initialize()
         LoadingWindow(app().load_project.load).run()
 
         self.configure_mesh_information()
-        self.update_plots()
+        LoadingWindow(self.update_plots).run()
 
     def import_geometry(self, path: str):
         if LoadingWindow(app().project.import_geometry).run(path) == -1:
             return
 
         try:
+
             self.action_model_workspace_callback()
 
             self.renderer_toolbar.setDisabled(False)
@@ -834,7 +834,8 @@ class MainWindow(QMainWindow):
 
             app().project.reset_solutions()
             app().project.model.properties._reset_variables()
-            self.update_plots()
+
+            LoadingWindow(self.update_plots).run()
 
         except Exception as error_log:
             window_title = "Error"
