@@ -27,10 +27,12 @@ def points_info_text():
             coord_A = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:]
             coord_B = app().project.model.mesh.nodal_coordinates[node_ids[1], 1:]
             dx, dy, dz = np.round(np.abs(coord_A - coord_B), 6)
-            text += "Distance:\n"
-            text += f"dx: {dx : .6f} m\n"
-            text += f"dy: {dy : .6f} m\n"
-            text += f"dz: {dz : .6f} m\n"
+
+            tree = TreeInfo("Distance")
+            tree.add_item("dx", f"{dx : .6f}", "m")
+            tree.add_item("dy", f"{dy : .6f}", "m")
+            tree.add_item("dz", f"{dz : .6f}", "m")
+            text += str(tree)
 
     elif len(point_ids) == 1:
         text += f"Point: {point_ids[0]}\n"

@@ -261,12 +261,21 @@ class MesherInputs(QDialog):
 
         except Exception:
             return
+        
+    def _load_initial_element_size(self):
+        element_size = app().project.model.initial_element_size
+        if element_size is not None:
+            self.doubleSpinBox_maximum_element_size.setValue(element_size)
 
     def _load_current_mesh_setup(self):
 
         mesh_setup = app().project.model.mesh_setup
 
-        if mesh_setup:
+        if mesh_setup is None:
+            self._load_initial_element_size()
+            return
+
+        if isinstance(mesh_setup, dict):
 
             try:
 
