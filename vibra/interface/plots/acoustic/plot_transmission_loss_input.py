@@ -168,7 +168,7 @@ class PlotTransmissionLossInput(QWidget):
         if self.join_model_data():
             return
 
-        self.plotter = FrequencyResponsePlotter()
+        self.plotter = FrequencyResponsePlotter(close_dialogs=True)
         self.plotter.imported_dB_data()
         self.plotter._set_model_results_data_to_plot(self.model_results)
         app().main_window.update_symbols()
