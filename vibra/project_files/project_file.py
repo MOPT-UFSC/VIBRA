@@ -45,7 +45,7 @@ class ProjectFile:
     def _default_foldernames(self):
         pass
 
-    def write_geometry_in_file(self, path):
+    def write_geometry_in_file(self, path, length_unit: str = "milimeter", geometry_qf: float = 1.0):
 
         basename = os.path.basename(path)
         internal_path = f"geometry_file/{basename}"
@@ -62,9 +62,11 @@ class ProjectFile:
             project_setup = self.filebox.read(self.project_setup_filename)
             if project_setup is None:
                 project_setup = {   
-                                    "geometry_filename" : basename,
-                                    "mesh_setup" : dict(),
-                                    "analysis_setup" : dict()   
+                                 "geometry_filename" : basename,
+                                 "length_unit" : length_unit,
+                                 "geometry_qf" : geometry_qf,
+                                 "mesh_setup" : dict(),
+                                 "analysis_setup" : dict()
                                 }
 
             else:
@@ -75,7 +77,8 @@ class ProjectFile:
             app().main_window.project_data_modified = True
 
         except Exception as error_log:
-            print(str(error_log))
+            from traceback import print_exception
+            print_exception(error_log)
 
     def read_geometry_from_file(self):
 
@@ -99,6 +102,12 @@ class ProjectFile:
 
         return str(temp_path)
 
+    def read_geometry_setup_from_file(self):
+        project_setup = self.filebox.read(self.project_setup_filename)
+        length_unit = project_setup.get("length_unit", "milimeter")  
+        geometry_qf = project_setup.get("geometry_qf", 3.0)  
+        return length_unit, geometry_qf
+
     def write_mesh_setup_in_file(self, mesh_setup):
 
         project_setup = self.filebox.read(self.project_setup_filename)
@@ -111,14 +120,11 @@ class ProjectFile:
     
     def read_mesh_setup_from_file(self):
 
-        mesh_setup = None
         project_setup = self.filebox.read(self.project_setup_filename)
-
         if project_setup is None:
             return
 
-        if "mesh_setup" in project_setup.keys():
-            mesh_setup = project_setup["mesh_setup"]
+        mesh_setup = project_setup.get("mesh_setup")
 
         return mesh_setup
 

@@ -775,8 +775,11 @@ class MainWindow(QMainWindow):
         if not read.complete:
             return False
 
-        # self.file = ProjectFile(TEMP_PROJECT_FILE)
-        app().file.write_geometry_in_file(geometry_path)
+        app().file.write_geometry_in_file(
+                                          geometry_path, 
+                                          app().project.model.length_unit, 
+                                          app().project.model.geometry_qf
+                                          )
 
         def remove_callback():
             logging.info("Removing the model properties from project file... [10/100]")
