@@ -42,7 +42,7 @@ class LoadProject:
 
     def load_geometry(self):
         geometry_path = self.file.read_geometry_from_file()
-        app().main_window.import_geometry(geometry_path)
+        app().main_window.import_geometry(geometry_path, update_render=False)
 
     def load_project_libraries(self):
         self.load_fluid_library()

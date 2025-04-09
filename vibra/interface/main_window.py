@@ -497,7 +497,7 @@ class MainWindow(QMainWindow):
     def update_plots(self, reset_camera=True):
         renders_number = self.render_widgets_stack.count()
         for i in range(renders_number):
-            logging.info(f"Updating renders... [{i}/{renders_number}]")
+            logging.info(f"Updating renders... [{i+1}/{renders_number}]")
             widget = self.render_widgets_stack.widget(i)
             if isinstance(widget, CommonRenderWidget):
                 widget.update_plot(reset_camera)
@@ -828,7 +828,7 @@ class MainWindow(QMainWindow):
         self.configure_mesh_information()
         LoadingWindow(self.update_plots).run()
 
-    def import_geometry(self, path: str):
+    def import_geometry(self, path: str, update_render: bool = True):
         if LoadingWindow(app().project.import_geometry).run(path) == -1:
             return
 
@@ -843,7 +843,8 @@ class MainWindow(QMainWindow):
             app().project.reset_solutions()
             app().project.model.properties._reset_variables()
 
-            LoadingWindow(self.update_plots).run()
+            if update_render:
+                LoadingWindow(self.update_plots).run()
 
         except Exception as error_log:
             window_title = "Error"
