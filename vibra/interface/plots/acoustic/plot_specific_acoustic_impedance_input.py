@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QComboBox, QDialog, QLineEdit, QPushButton, QFileDialog
+from PySide6.QtWidgets import QComboBox, QLineEdit, QPushButton, QWidget
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
@@ -16,7 +16,7 @@ import numpy as np
 window_title1 = "Error"
 window_title2 = "Warning"
 
-class PlotSpecificAcousticImpedanceInput(QDialog):
+class PlotSpecificAcousticImpedanceInput(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -24,13 +24,11 @@ class PlotSpecificAcousticImpedanceInput(QDialog):
         load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
+        self.main_window.show_geometry_render_widget()
 
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
 
         self._config_window()
         self._reset_variables()
@@ -39,9 +37,6 @@ class PlotSpecificAcousticImpedanceInput(QDialog):
 
         self._load_analysis_data_and_solution()
         self.geometry_selection_callback()
-
-        while self.keep_window_open:
-            self.exec()
 
     def _load_analysis_data_and_solution(self):
         self.analysis_method = ""
@@ -276,8 +271,6 @@ class PlotSpecificAcousticImpedanceInput(QDialog):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.plot_data_callback()
-        elif event.key() == Qt.Key_Escape:
-            self.close()
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
 

@@ -44,6 +44,7 @@ class ResultsViewerWidget(QWidget):
         self.adjustSize()
     
     def _create_connections(self):
+
         # Structural
         self.results_viewer_items.item_child_plot_structural_mode_shapes.clicked.connect(self.add_structural_modal_widget)
         self.results_viewer_items.item_child_plot_structural_frequency_response.clicked.connect(self.add_structural_frequency_response_widget)
@@ -55,7 +56,9 @@ class ResultsViewerWidget(QWidget):
         self.results_viewer_items.item_child_plot_acoustic_pressure_frequency_response_function.clicked.connect(self.add_acoustic_pressure_frequency_response_function_widget)
         self.results_viewer_items.item_child_plot_TL_NR.clicked.connect(self.add_TL_NR_widget)
         self.results_viewer_items.item_child_plot_acoustic_mode_shapes.clicked.connect(self.add_acoustic_modal_widget)
-    
+        self.results_viewer_items.item_child_plot_particle_velocity.clicked.connect(self.add_particle_velocity_plot_widget)
+        self.results_viewer_items.item_child_plot_acoustic_specific_impendace.clicked.connect(self.add_acoustic_specific_impedance_plot_widget)
+
     def get_item(self):
         return self.results_viewer_items
 
@@ -141,6 +144,26 @@ class ResultsViewerWidget(QWidget):
         # self.add_widget(self.current_widget)
 
         # app().main_window.acoustic_modal_analysis.update_plot()
+
+    def add_particle_velocity_plot_widget(self):
+        self.current_widget = app().main_window.input_ui.plot_particle_velocity()
+
+        if app().main_window.results_widget.playing_animation:
+            app().main_window.results_widget.stop_animation()
+        
+        app().main_window.animation_toolbar.setDisabled(True)
+
+        self.add_widget(self.current_widget)
+
+    def add_acoustic_specific_impedance_plot_widget(self):
+        self.current_widget = app().main_window.input_ui.plot_acoustic_specific_impedance_from_surface()
+
+        if app().main_window.results_widget.playing_animation:
+            app().main_window.results_widget.stop_animation()
+        
+        app().main_window.animation_toolbar.setDisabled(True)
+
+        self.add_widget(self.current_widget)
 
     def add_widget(self, widget: QWidget, animation_widget=False):
 

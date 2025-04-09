@@ -28,10 +28,6 @@ from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
 from vibra.interface.user_input.input_ui import InputUi
 from vibra.interface.plots.acoustic.export_element_transfer_data_input import ExportElementTransferDataInput
-from vibra.interface.plots.acoustic.plot_particle_velocity_frequency_response_input import (
-    PlotParticleVelocityFrequencyResponseInput,
-)
-from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
 
 from vibra.interface.section_plane_widget import SectionPlaneWidget
@@ -1001,16 +997,6 @@ class MainWindow(QMainWindow):
         if isinstance(self.dialog, (QDialog, QWidget)):
             self.dialog.close()
             self.dialog = None
-
-    def action_plot_specific_acoustic_impedance_callback(self):
-        if app().project.acoustic_harmonic_solver.solution is None:
-            return
-        PlotSpecificAcousticImpedanceInput()
-
-    def action_plot_particle_velocity_callback(self):
-        if app().project.acoustic_harmonic_solver.solution is None:
-            return
-        PlotParticleVelocityFrequencyResponseInput()
 
     def action_export_element_transfer_data_callback(self):
         if app().project.acoustic_harmonic_solver.solution is None:

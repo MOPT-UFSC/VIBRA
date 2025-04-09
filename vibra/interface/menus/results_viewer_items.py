@@ -43,10 +43,14 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_plot_acoustic_pressure_frequency_response = self.add_item("Plot Acoustic Pressure Frequency Response")
         self.item_child_plot_acoustic_pressure_frequency_response_function = self.add_item("Plot Acoustic Presssure Frequency Response Function")
         self.item_child_plot_TL_NR = self.add_item("Plot Transmission Loss or Attenuation")
+        self.item_child_plot_particle_velocity = self.add_item("Plot Particle Velocity")
+        self.item_child_plot_acoustic_specific_impendace = self.add_item("Plot Acoustic Specific Impendace")
 
-        self.top_level_items = [self.item_top_results_viewer_acoustic,
-                                self.item_top_results_viewer_structural]
-        
+        self.top_level_items = [
+                                self.item_top_results_viewer_acoustic,
+                                self.item_top_results_viewer_structural
+                                ]
+
     def _create_connections(self):
         """
         This function iterates through all child items, connecting the items one by one

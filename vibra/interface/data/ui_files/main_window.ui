@@ -177,8 +177,6 @@
     <property name="title">
      <string>Advanced Results</string>
     </property>
-    <addaction name="action_plot_particle_velocity"/>
-    <addaction name="action_plot_specific_acoustic_impedance"/>
     <addaction name="action_export_element_transfer_data"/>
    </widget>
    <addaction name="menu_project"/>
