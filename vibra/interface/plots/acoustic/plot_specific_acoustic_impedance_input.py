@@ -3,7 +3,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
-from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.loading_window import LoadingWindow
@@ -259,10 +258,16 @@ class PlotSpecificAcousticImpedanceInput(QWidget):
 
     def get_color(self, index):
 
-        colors = [  (0,0,1), (0,0,0), (1,0,0),
-                    (0,1,1), (1,0,1), (1,1,0),
-                    (0.25,0.25,0.25)  ]
-        
+        colors = [  
+                  (0,0,1), 
+                  (0,0,0), 
+                  (1,0,0),
+                  (0,1,1), 
+                  (1,0,1), 
+                  (1,1,0),
+                  (0.25,0.25,0.25)
+                  ]
+
         if index <= 6:
             return colors[index]
         else:

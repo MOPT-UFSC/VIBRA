@@ -102,9 +102,6 @@ class ResultsViewerWidget(QWidget):
 
     def add_acoustic_pressure_frequency_response_widget(self):
         self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_frequency_response()
-
-        # if app().main_window.acoustic_harmonic_analysis.playing_animation:
-        #     app().main_window.acoustic_harmonic_analysis.stop_animation()
         
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -119,10 +116,6 @@ class ResultsViewerWidget(QWidget):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
-        # if app().main_window.acoustic_harmonic_analysis.playing_animation:
-        #     app().main_window.acoustic_harmonic_analysis.stop_animation()
-        #     app().main_window.animation_toolbar.setDisabled(True)
-
         self.add_widget(self.current_widget)
     
     def add_TL_NR_widget(self):
@@ -130,20 +123,10 @@ class ResultsViewerWidget(QWidget):
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
-
-        # if app().main_window.acoustic_harmonic_analysis.playing_animation:
-        #     app().main_window.acoustic_harmonic_analysis.stop_animation()
         
         app().main_window.animation_toolbar.setDisabled(True)
 
         self.add_widget(self.current_widget)
-
-
-        # self.current_widget = app().main_window.input_ui.plot_acoustic_mode_shapes()
-        # app().main_window.acoustic_modal_analysis.configure_menu_widget(self.current_widget)
-        # self.add_widget(self.current_widget)
-
-        # app().main_window.acoustic_modal_analysis.update_plot()
 
     def add_particle_velocity_plot_widget(self):
         self.current_widget = app().main_window.input_ui.plot_particle_velocity()
@@ -165,9 +148,7 @@ class ResultsViewerWidget(QWidget):
 
         self.add_widget(self.current_widget)
 
-    def add_widget(self, widget: QWidget, animation_widget=False):
-
-        # app().main_window.animation_toolbar.setEnabled(False)
+    def add_widget(self, widget: QWidget):
 
         # TODO: please, remove the hide after all it shouldn't be needed
         if isinstance(self.bottom_widget, QWidget):
@@ -176,6 +157,5 @@ class ResultsViewerWidget(QWidget):
         self.layout().replaceWidget(self.bottom_widget, widget)
         self.bottom_widget = widget
 
-        # app().main_window.animation_toolbar.setEnabled(animation_widget)
         self.adjustSize()
         widget.show()
