@@ -137,7 +137,7 @@ class PlotParticleVelocityFrequencyResponseInput(QWidget):
             return
 
         self.join_model_data()
-        self.plotter = FrequencyResponsePlotter()
+        self.plotter = FrequencyResponsePlotter(close_dialogs=True)
         self.plotter._set_model_results_data_to_plot(self.model_results)
         app().main_window.update_symbols()
 
@@ -231,7 +231,6 @@ class PlotParticleVelocityFrequencyResponseInput(QWidget):
 
     def join_model_data(self):
 
-        self.hide()
         index = self.comboBox_selector_filter.currentIndex()
 
         if index == 0:

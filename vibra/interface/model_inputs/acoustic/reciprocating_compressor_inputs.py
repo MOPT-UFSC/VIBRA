@@ -894,7 +894,6 @@ class ReciprocatingCompressorInputs(QDialog):
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
         app().main_window.set_geometry_selection()
-        # app().main_window.update_plots()
 
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
