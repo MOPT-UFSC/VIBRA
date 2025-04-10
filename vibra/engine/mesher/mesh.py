@@ -5,7 +5,6 @@ from vibra.engine.mesher.element_type import (
     TETRAHEDRON_4,
     ElementType,
 )
-from vibra.engine.mesher.reordering import Reordering
 
 from vibra.interface.general.print_message_input import PrintMessageInput
 
@@ -46,12 +45,12 @@ class Mesh:
 
     def reset_variables(self):
 
-        self.reordering = None
         self.element_type = DEFAULT_ELEMENT_TYPE
-        self.nodal_coordinates = np.array([])
-        self.lines_connectivity = np.array([])
-        self.faces_connectivity = np.array([])
-        self.solids_connectivity = np.array([])
+
+        self.nodal_coordinates = np.zeros((0, 4), dtype=float)
+        self.lines_connectivity = np.zeros((0, 4), dtype=int)
+        self.faces_connectivity = np.zeros((0, 4), dtype=int)
+        self.solids_connectivity = np.zeros((0, 4), dtype=int)
 
         self.geometry_information = defaultdict(list)
 
@@ -236,20 +235,18 @@ class Mesh:
         self.nodal_coordinates[:,0] = indexes
         self.nodal_coordinates[:,1:] = data[:,1:]
 
-    def import_external_connectivity(self, connectivity, index_zero=True, etype_tag=1):
+    def import_external_solids_connectivity(self, connectivity: dict, index_zero: bool = True, etype_tag: float = 1):
         """
         """
         self.elements_from_volume.clear()
 
-        data = list()
+        aux = list()
         for key, connect_data in connectivity.items():
-
             self.elements_from_volume[key[0]] = connect_data[:, 0] - 1
-
             for nodes in connect_data:
-                data.append(nodes)
+                aux.append(nodes)
 
-        data = np.array(data, dtype=int)
+        data = np.array(aux, dtype=int)
         rows, cols = data.shape
 
         indexes = data[:, 0]
@@ -268,6 +265,48 @@ class Mesh:
         self.solids_connectivity[:, 2] = aux*etype_tag
         self.solids_connectivity[:, 3] = nodes_per_element
         self.solids_connectivity[:, 4:] = connect
+
+    def import_external_faces_connectivity(self, connectivity: dict, index_zero: bool = True, etype_tag: float = 1):
+        """
+        """
+        self.elements_from_surface.clear()
+
+        aux_list = list()
+        for key, connect_data in connectivity.items():
+            self.elements_from_surface[key[0]] = connect_data[:, 0] - 1
+            for nodes in connect_data:
+                aux_list.append(nodes)
+
+        data = np.array(aux_list, dtype=int)
+        rows, cols = data.shape
+
+        aux_dict = defaultdict(list)
+        for _, surface_id, _, *nodes in  data:
+            aux_dict[surface_id].extend(list(nodes))
+
+        self.nodes_from_surfaces.clear()
+        for surface_id, nodes in aux_dict.items():
+            ordered_nodes = np.array([*set(nodes)], dtype=int)
+            if index_zero:
+                ordered_nodes -= 1
+            self.nodes_from_surfaces[surface_id] = ordered_nodes
+
+        indexes = data[:, 0]
+        surface = data[:, 1]
+        nodes_per_element = data[:, 2]
+        connect = data[:, 3:]
+
+        if index_zero:
+            connect -= 1
+            indexes -= 1    
+
+        aux = np.ones(rows)
+        self.faces_connectivity = np.zeros((rows, cols+1), dtype=int)
+        self.faces_connectivity[:, 0] = indexes
+        self.faces_connectivity[:, 1] = surface
+        self.faces_connectivity[:, 2] = aux*etype_tag
+        self.faces_connectivity[:, 3] = nodes_per_element
+        self.faces_connectivity[:, 4:] = connect
 
     def export_nodal_coordinates(self, filename):
         fmt = ["%i", "%.16f", "%.16f", "%.16f"]
@@ -1350,70 +1389,6 @@ class Mesh:
             return False, list_ids[0]
         else:
             return False, list_ids
-
-
-    def _process_nodes_reordering(self, print_log=False):
-        return
-        """ This method processes the nodes reordering to reduce the global matrices 
-            bandwidth and improve the solution performance.
-        """
-        # print(f"Nodal coordinates: {self.nodal_coordinates.shape}")
-        # print(f"Connectivity: {self.solids_connectivity.shape}")
-        # np.savetxt("nodal_coordinates.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
-        # np.savetxt("faces_connectivity.dat", self.faces_connectivity, delimiter=",", fmt='%i')
-        # np.savetxt("solids_connectivity.dat", self.solids_connectivity, delimiter=",", fmt='%i')
-
-        t0 = time()
-        self.reordering = Reordering(self)
-        if print_log:
-            dt = time()  - t0
-            print(f"Time to process - reordering (1/4): {dt}")
-        logging.info("Reordering nodes (1/4)... [20/100]")
-
-        t0 = time()
-        self.reordering._process_reordering()
-        if print_log:
-            dt = time()  - t0
-            print(f"Time to process - reordering (2/4): {dt}")
-        logging.info("Reordering nodes (2/4)... [60/100]")
-
-        t0 = time()
-        self.lines_connectivity = self.reordering.get_new_connectivity(self.lines_connectivity)
-        self.faces_connectivity = self.reordering.get_new_connectivity(self.faces_connectivity)
-        self.solids_connectivity = self.reordering.get_new_connectivity(self.solids_connectivity)
-        if print_log:
-            dt = time()  - t0
-            print(f"Time to process - reordering (3/4): {dt}")
-        logging.info("Reordering nodes (3/4)... [80/100]")
-
-        t0 = time()
-        self.nodal_coordinates = self.reordering.get_new_nodal_coordinates()        
-        self.nodes_from_lines = self.reordering.updates_nodes_from(self.nodes_from_lines)
-        self.nodes_from_surfaces = self.reordering.updates_nodes_from(self.nodes_from_surfaces)
-        self.nodes_from_volumes = self.reordering.updates_nodes_from(self.nodes_from_volumes)
-        self.connectivity_from_surfaces = self.reordering.updates_nodes_from(self.connectivity_from_surfaces)
-        if print_log:
-            dt = time()  - t0
-            print(f"Time to process - reordering (4/4): {dt}")
-        logging.info("Reordering nodes (4/4)... [100/100]")
-        
-        t0 = time()
-        self._process_solid_elements_connected_to_nodes()
-        if print_log:
-            dt = time()  - t0
-            print(f"Time to post-process - reordering (1/2): {dt}")
-        
-        t0 = time()
-        self._process_element_average_coordinates()
-        if print_log:    
-            dt = time()  - t0
-            print(f"Time to post-process - reordering (2/2): {dt}")
-         
-        # print(f"Nodal coordinates (after): {self.nodal_coordinates.shape}")
-        # print(f"Connectivity (after): {self.solids_connectivity.shape}")
-        # np.savetxt("nodal_coordinates_reordered.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
-        # np.savetxt("faces_connectivity_reordered.dat", self.faces_connectivity, delimiter=",", fmt='%i')
-        # np.savetxt("solids_connectivity_reordered.dat", self.solids_connectivity, delimiter=",", fmt='%i')
 
 
 if __name__ == "__main__":
