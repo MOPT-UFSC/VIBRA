@@ -328,7 +328,8 @@ class AcousticHarmonicSolver:
         particle_velocities["Vn"] = Vn
         particle_velocities["nodal_normals"] = data_normals
 
-        self.assembler.model.mesh.set_nodal_normals_data(data_normals)
+        ## Uncomment the line below to plot the average normals at the nodes
+        # self.assembler.model.mesh.set_nodal_normals_data(data_normals)
 
         ## Only for validation purposes
         # output_data = np.zeros((len(ordered_nodes), 4), dtype=float)

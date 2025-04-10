@@ -44,6 +44,7 @@ class ResultsViewerWidget(QWidget):
         self.adjustSize()
     
     def _create_connections(self):
+
         # Structural
         self.results_viewer_items.item_child_plot_structural_mode_shapes.clicked.connect(self.add_structural_modal_widget)
         self.results_viewer_items.item_child_plot_structural_frequency_response.clicked.connect(self.add_structural_frequency_response_widget)
@@ -55,7 +56,9 @@ class ResultsViewerWidget(QWidget):
         self.results_viewer_items.item_child_plot_acoustic_pressure_frequency_response_function.clicked.connect(self.add_acoustic_pressure_frequency_response_function_widget)
         self.results_viewer_items.item_child_plot_TL_NR.clicked.connect(self.add_TL_NR_widget)
         self.results_viewer_items.item_child_plot_acoustic_mode_shapes.clicked.connect(self.add_acoustic_modal_widget)
-    
+        self.results_viewer_items.item_child_plot_particle_velocity.clicked.connect(self.add_particle_velocity_plot_widget)
+        self.results_viewer_items.item_child_plot_acoustic_specific_impendace.clicked.connect(self.add_acoustic_specific_impedance_plot_widget)
+
     def get_item(self):
         return self.results_viewer_items
 
@@ -67,25 +70,25 @@ class ResultsViewerWidget(QWidget):
         self.plot_structural_modal.load_natural_frequencies()
         self.plot_structural_modal.load_user_preference_colormap()
         self.plot_structural_modal.update_plot()
-        self.add_widget(self.plot_structural_modal, animation_widget=True)
+        self.add_widget(self.plot_structural_modal)
 
     def add_structural_harmonic_widget(self):
         self.plot_structural_harmonic.load_frequencies()
         self.plot_structural_harmonic.load_user_preference_colormap()
         self.plot_structural_harmonic.update_plot()
-        self.add_widget(self.plot_structural_harmonic, animation_widget=True)
+        self.add_widget(self.plot_structural_harmonic)
 
     def add_acoustic_modal_widget(self):
         self.plot_acoustic_modal.load_natural_frequencies()
         self.plot_acoustic_modal.load_user_preference_colormap()
         self.plot_acoustic_modal.update_plot()
-        self.add_widget(self.plot_acoustic_modal, animation_widget=True)
+        self.add_widget(self.plot_acoustic_modal)
 
     def add_acoustic_harmonic_widget(self):
         self.plot_acoustic_harmonic.load_frequencies()
         self.plot_acoustic_harmonic.load_user_preference_colormap()
         self.plot_acoustic_harmonic.update_plot()
-        self.add_widget(self.plot_acoustic_harmonic, animation_widget=True)
+        self.add_widget(self.plot_acoustic_harmonic)
 
     def add_structural_frequency_response_widget(self):
         self.current_widget = app().main_window.input_ui.plot_structural_frequency_response()
@@ -99,9 +102,6 @@ class ResultsViewerWidget(QWidget):
 
     def add_acoustic_pressure_frequency_response_widget(self):
         self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_frequency_response()
-
-        # if app().main_window.acoustic_harmonic_analysis.playing_animation:
-        #     app().main_window.acoustic_harmonic_analysis.stop_animation()
         
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -116,10 +116,6 @@ class ResultsViewerWidget(QWidget):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
-        # if app().main_window.acoustic_harmonic_analysis.playing_animation:
-        #     app().main_window.acoustic_harmonic_analysis.stop_animation()
-        #     app().main_window.animation_toolbar.setDisabled(True)
-
         self.add_widget(self.current_widget)
     
     def add_TL_NR_widget(self):
@@ -127,24 +123,32 @@ class ResultsViewerWidget(QWidget):
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
-
-        # if app().main_window.acoustic_harmonic_analysis.playing_animation:
-        #     app().main_window.acoustic_harmonic_analysis.stop_animation()
         
         app().main_window.animation_toolbar.setDisabled(True)
 
         self.add_widget(self.current_widget)
 
+    def add_particle_velocity_plot_widget(self):
+        self.current_widget = app().main_window.input_ui.plot_particle_velocity()
 
-        # self.current_widget = app().main_window.input_ui.plot_acoustic_mode_shapes()
-        # app().main_window.acoustic_modal_analysis.configure_menu_widget(self.current_widget)
-        # self.add_widget(self.current_widget)
+        if app().main_window.results_widget.playing_animation:
+            app().main_window.results_widget.stop_animation()
+        
+        app().main_window.animation_toolbar.setDisabled(True)
 
-        # app().main_window.acoustic_modal_analysis.update_plot()
+        self.add_widget(self.current_widget)
 
-    def add_widget(self, widget: QWidget, animation_widget=False):
+    def add_acoustic_specific_impedance_plot_widget(self):
+        self.current_widget = app().main_window.input_ui.plot_acoustic_specific_impedance_from_surface()
 
-        # app().main_window.animation_toolbar.setEnabled(False)
+        if app().main_window.results_widget.playing_animation:
+            app().main_window.results_widget.stop_animation()
+        
+        app().main_window.animation_toolbar.setDisabled(True)
+
+        self.add_widget(self.current_widget)
+
+    def add_widget(self, widget: QWidget):
 
         # TODO: please, remove the hide after all it shouldn't be needed
         if isinstance(self.bottom_widget, QWidget):
@@ -153,6 +157,5 @@ class ResultsViewerWidget(QWidget):
         self.layout().replaceWidget(self.bottom_widget, widget)
         self.bottom_widget = widget
 
-        # app().main_window.animation_toolbar.setEnabled(animation_widget)
         self.adjustSize()
         widget.show()

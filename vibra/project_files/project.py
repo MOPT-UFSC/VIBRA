@@ -69,6 +69,11 @@ class Project:
 
         self.create_solver()
 
+    def import_geometry(self, path : str):
+        self.model.set_geometry_path(path)
+        logging.info("Importing geometry file...")
+        return self.model.process_visual_geometry_mesh(path)
+
     def get_fluid_list_path(self):
         return self.fluid_list_path
 
@@ -80,11 +85,6 @@ class Project:
 
     def set_material_list_path(self, path):
         self.material_list_path = path
-
-    def import_geometry(self, path : str):
-        self.model.set_geometry_path(path)
-        logging.info("Importing geometry file...")
-        return self.model.process_visual_geometry_mesh(path)
 
     def set_mesh_setup(self, mesh_setup):
         self.model.set_mesh_setup(mesh_setup)

@@ -89,7 +89,7 @@ class AcousticModalAnalysisBar(QWidget):
         if frequencies is None:
             return
 
-        analysis_data = app().main_window.project.analysis_data
+        analysis_data = app().project.analysis_data
         if analysis_data is None:
             return
 

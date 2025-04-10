@@ -166,7 +166,7 @@ class PlotAcousticPressureFrequencyResponseFunctionInput(QWidget):
             return
 
         self.join_model_data()
-        self.plotter = FrequencyResponsePlotter()
+        self.plotter = FrequencyResponsePlotter(close_dialogs=True)
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
     def export_data_callback(self):

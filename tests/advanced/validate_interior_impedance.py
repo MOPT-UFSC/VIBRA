@@ -65,7 +65,7 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
 
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(external_mesh.nodal_coordinates, index_zero=True)
-    mesh.import_external_connectivity(external_mesh.connectivity_arrays, index_zero=True, etype_tag=4)
+    mesh.import_external_solids_connectivity(external_mesh.connectivity_arrays, index_zero=True, etype_tag=4)
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
     mesh.element_type = TETRAHEDRON_4
@@ -154,7 +154,7 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     # interior impedance setup
     if interior_impedance:
         data_Zin = {  
-                    "real_values" : [10],
+                    "real_values" : [2*10],
                     "imag_values" : [0],
                     "nodal_attribution" : False,
                     "averaged" : False
@@ -163,6 +163,7 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
         model.properties._set_property("specific_impedance", data_Zin, surface=3)
 
     # Define the analysis frequency setup
+
     df = 5
     f_min = 5
     f_max = 1400
@@ -176,6 +177,20 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
                        }
     
     model.set_frequency_setup(frequency_setup)
+
+    ## Define the perforated plate setup
+
+    # if interior_impedance:
+    #     pp_data = {
+    #                "formulation" : "circular_hole",
+    #                "plate_thickness" : 0.008,
+    #                "porosity" : 0.26,
+    #                "hole_diameter" : 0.005,
+    #                "discharge_coefficient" : 0.76,
+    #                }
+
+    #     model.properties._set_property("perforated_plate_model", pp_data, surface=3)
+    #     model.process_perforated_plate_impendace(frequencies)
 
     assembler = AcousticAssembler(model)
 
@@ -268,15 +283,6 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
 
         else:
             return
-
-        if interior_impedance:
-            results_path = f"data/validation/perforated_plate/results/interior_impedance/connected_rectangular_cavities_{mesh_size}.xlsx"
-        else:
-            results_path = f"data/validation/perforated_plate/results/connected_rectangular_cavities_{mesh_size}.xlsx"
-
-        # import the WB transmission loss data from spreadsheet file
-        results_WB = get_external_results(results_path)
-        TL_data_WB = results_WB["transmission_loss"] # ports enabled
 
         WB_pressure_data = ext_data.load_nodal_pressures()
         WB_particle_velocities_data = ext_data.load_particle_velocities()
@@ -419,6 +425,15 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
 
         # Transmission loss
 
+        if interior_impedance:
+            results_path = f"data/validation/perforated_plate/results/interior_impedance/connected_rectangular_cavities_transmission_loss.xlsx"
+        else:
+            results_path = f"data/validation/perforated_plate/results/connected_rectangular_cavities_transmission_loss.xlsx"
+
+        # import the WB transmission loss data from spreadsheet file
+        results_WB = get_external_results(results_path)
+        TL_data_WB = results_WB[f"transmission_loss_{mesh_size}"] # ports enabled
+
         freq_WB_evaluated, TL_WB_evaluated = process_external_TL(model, ext_data)
         
         mask = TL_data_WB[:, 0] <= f_max
@@ -434,16 +449,16 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
         ax11.plot(freq_WB_direct, TL_WB_direct, 'k--', label='Ansys')
         ax11.plot(freq_WB_evaluated, TL_WB_evaluated, 'b--', label='Ansys (ext.)')
 
-        #TODO: remove this
-        path = f"data/validation/perforated_plate/results/TL_cavidades_retangulares_comsol_{mesh_size}.xlsx"
-        if os.path.exists(path):
-            results_Comsol = get_external_results(path)
-            TL_data_Comsol = results_Comsol["transmission_loss"]
+        # #TODO: remove this
+        # path = f"data/validation/perforated_plate/results/TL_cavidades_retangulares_comsol_{mesh_size}.xlsx"
+        # if os.path.exists(path):
+        #     results_Comsol = get_external_results(path)
+        #     TL_data_Comsol = results_Comsol["transmission_loss"]
 
-            freq_Comsol = TL_data_Comsol[:, 0]
-            TL_Comsol = TL_data_Comsol[:, 1]
+        #     freq_Comsol = TL_data_Comsol[:, 0]
+        #     TL_Comsol = TL_data_Comsol[:, 1]
 
-            ax11.plot(freq_Comsol, TL_Comsol, 'g--', label='Comsol')
+        #     ax11.plot(freq_Comsol, TL_Comsol, 'g--', label='Comsol')
 
         ax11.set_xlabel('Frequency [Hz]')
         ax11.set_ylabel(f'Transmission loss [dB]')
@@ -590,4 +605,4 @@ def get_external_results(path: str):
 
 
 if __name__ == "__main__":
-    load_external_mesh_and_solve(interior_impedance=False)
+    load_external_mesh_and_solve(interior_impedance=True)

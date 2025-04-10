@@ -57,6 +57,12 @@ class Model:
         self.porous_material_properties = dict()
         self.viscous_thermal_model_properties = dict()
 
+    def set_length_unit(self, length_unit: str = "milimeter"):
+        self.length_unit = length_unit
+
+    def set_geometry_quality_factor(self, geometry_qf: float = 1.0):
+        self.geometry_qf = geometry_qf
+
     def set_geometry_path(self, path : str):
         self.geometry_path = path
 
@@ -71,18 +77,28 @@ class Model:
         try:
 
             try:
-                self.mesh = Mesh()
-                element_size = self.mesh.compute_initial_max_mesh_size(path)
+
+                self.mesh = Mesh(
+                                 length_unit = self.length_unit, 
+                                 geometry_qf = self.geometry_qf
+                                 )
+
+                element_size = self.mesh.compute_initial_mesh_size(path)
                 self.mesh.load_cad(
                                    path,
                                    dimension = 2,
-                                   size_factor = 0.12,
+                                   size_factor = 0.0,
                                    minimum_element_size = element_size*0.4,
                                    maximum_element_size = element_size
                                    )
 
             except:
-                self.mesh = Mesh()
+
+                self.mesh = Mesh(
+                                 length_unit = self.length_unit, 
+                                 geometry_qf = self.geometry_qf
+                                 )
+
                 element_size = 10
                 self.mesh.load_cad(
                                    path,
@@ -305,7 +321,6 @@ class Model:
         for volume_id, data in pm_model.effective_properties.items():
             for element_id in self.mesh.elements_from_volume[volume_id]:
                 self.porous_material_properties[element_id] = data
-            # print(len(self.mesh.elements_from_volume[volume_id]))
 
     def is_porous_material_model_active(self, surface_id):
 
@@ -333,7 +348,6 @@ class Model:
         for volume_id, data in model.effective_properties.items():
             for element_id in self.mesh.elements_from_volume[volume_id]:
                 self.viscous_thermal_model_properties[element_id] = data
-            # print(len(self.mesh.elements_from_volume[volume_id]))
 
     def is_viscous_thermal_model_active(self, surface_id):
 

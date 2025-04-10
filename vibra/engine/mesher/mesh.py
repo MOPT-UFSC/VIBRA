@@ -33,15 +33,19 @@ import numpy as np
 
 
 class Mesh:
-    def __init__(self):
+    def __init__(self, **kwargs):
+
+        self.length_unit = kwargs.get("length_unit", "milimeter")
+        self.geometry_qf = kwargs.get("geometry_qf", 1.0)
+
         self.geometry_setup = None
         self.mesh_setup = None
+
         self.reset_variables()
         self.list_elements = list()
 
     def reset_variables(self):
 
-        # self.dimension = 0
         self.reordering = None
         self.element_type = DEFAULT_ELEMENT_TYPE
         self.nodal_coordinates = np.array([])
@@ -95,6 +99,17 @@ class Mesh:
         self.nodal_normals_data = dict()
 
         self.principal_diagonal = None
+
+    def set_length_unit(self, length_unit: str = "milimeter"):
+        self.length_unit = length_unit
+
+    def get_length_unit_factor(self):
+        if self.length_unit == "milimeter":
+            return 1e-3
+        elif self.length_unit == "inch":
+            return 0.0254
+        else:
+            return 1
 
     def load_cad(
         self,
@@ -370,8 +385,10 @@ class Mesh:
         """
         indexes, coords, _ = gmsh.model.mesh.getNodes(includeBoundary=True)
         total_nodes = int(np.max(indexes))
+
+        unit_length_factor = self.get_length_unit_factor()
         self.nodal_coordinates = np.zeros((total_nodes, 4))
-        self.nodal_coordinates[indexes - 1, 1:] = coords.reshape(-1, 3) / 1000
+        self.nodal_coordinates[indexes - 1, 1:] = coords.reshape(-1, 3) * unit_length_factor
         self.nodal_coordinates[indexes - 1, :1] = indexes.reshape(-1, 1) - 1
 
         connectivity_dim1 = dict()
@@ -747,7 +764,7 @@ class Mesh:
         n_solid_elements = self.solids_connectivity.shape[0]
         return n_nodes, n_face_elements, n_solid_elements
 
-    def compute_initial_max_mesh_size(self, path, geometry_tolerance: float = 1e-10, threads: int = 0):
+    def compute_initial_mesh_size(self, path, geometry_tolerance: float = 1e-10, threads: int = 0):
         gmsh.initialize("", False)
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
@@ -785,7 +802,7 @@ class Mesh:
             # the length side of equilateral triangle 
             length = np.ceil(np.sqrt(2 * area_elem))
 
-            return length
+            return length * self.geometry_qf
 
         finally:
             gmsh.finalize()
@@ -826,12 +843,14 @@ class Mesh:
                 continue
 
             value = gmsh.model.occ.getMass(dim, tag)
+
+            unit_factor = self.get_length_unit_factor()
             if dim == 3:
-                self.volume_from_body[tag] = value# / 1e9
+                self.volume_from_body[tag] = value * (unit_factor**3)
             elif dim == 2:
-                self.area_from_surface[tag] = value# / 1e6
+                self.area_from_surface[tag] = value * (unit_factor**2)
             else:
-                self.length_from_curve[tag] = value# / 1e3
+                self.length_from_curve[tag] = value * (unit_factor**1)
 
 
     def _get_connectivity_array(self, input_dict):

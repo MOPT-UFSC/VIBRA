@@ -25,6 +25,7 @@ class LoadProject:
         self.properties = app().project.model.properties
 
     def load(self):
+        self.load_geometry_setup()
         self.load_geometry()
         self.load_project_libraries()
         self.load_mesh_setup()
@@ -34,9 +35,14 @@ class LoadProject:
         # self.load_thumbnail()
         self.load_analysis_results()
 
+    def load_geometry_setup(self):
+        length_unit, geometry_qf = self.file.read_geometry_setup_from_file()
+        self.model.set_length_unit(length_unit=length_unit)
+        self.model.set_geometry_quality_factor(geometry_qf=geometry_qf)
+
     def load_geometry(self):
         geometry_path = self.file.read_geometry_from_file()
-        app().main_window.import_geometry(geometry_path)
+        app().main_window.import_geometry(geometry_path, update_render=False)
 
     def load_project_libraries(self):
         self.load_fluid_library()

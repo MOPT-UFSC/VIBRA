@@ -22,14 +22,12 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.help_widget import HelpWidget
 from vibra.interface.loading_window import LoadingWindow
 
+from vibra.interface.project.geometry_setup import GeometrySetup
+
 from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
 from vibra.interface.user_input.input_ui import InputUi
 from vibra.interface.plots.acoustic.export_element_transfer_data_input import ExportElementTransferDataInput
-from vibra.interface.plots.acoustic.plot_particle_velocity_frequency_response_input import (
-    PlotParticleVelocityFrequencyResponseInput,
-)
-from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
 
 from vibra.interface.section_plane_widget import SectionPlaneWidget
@@ -499,7 +497,7 @@ class MainWindow(QMainWindow):
     def update_plots(self, reset_camera=True):
         renders_number = self.render_widgets_stack.count()
         for i in range(renders_number):
-            logging.info(f"Updating renders... [{i}/{renders_number}]")
+            logging.info(f"Updating renders... [{i+1}/{renders_number}]")
             widget = self.render_widgets_stack.widget(i)
             if isinstance(widget, CommonRenderWidget):
                 widget.update_plot(reset_camera)
@@ -745,6 +743,8 @@ class MainWindow(QMainWindow):
         self.open_project(project_path)
 
     def import_geometry_dialog(self):
+
+        self.close_dialogs()
         last_path = app().config.get_last_folder_for("geometry_folder")
         if last_path is None:
             path = os.path.expanduser("~")
@@ -766,8 +766,16 @@ class MainWindow(QMainWindow):
         app().project.reset_variables()
         app().project.reset_solutions()
 
-        # self.file = ProjectFile(TEMP_PROJECT_FILE)
-        app().file.write_geometry_in_file(geometry_path)
+        # call geometry setup
+        read = GeometrySetup()
+        if not read.complete:
+            return False
+
+        app().file.write_geometry_in_file(
+                                          geometry_path, 
+                                          app().project.model.length_unit, 
+                                          app().project.model.geometry_qf
+                                          )
 
         def remove_callback():
             logging.info("Removing the model properties from project file... [10/100]")
@@ -820,7 +828,7 @@ class MainWindow(QMainWindow):
         self.configure_mesh_information()
         LoadingWindow(self.update_plots).run()
 
-    def import_geometry(self, path: str):
+    def import_geometry(self, path: str, update_render: bool = True):
         if LoadingWindow(app().project.import_geometry).run(path) == -1:
             return
 
@@ -835,7 +843,8 @@ class MainWindow(QMainWindow):
             app().project.reset_solutions()
             app().project.model.properties._reset_variables()
 
-            LoadingWindow(self.update_plots).run()
+            if update_render:
+                LoadingWindow(self.update_plots).run()
 
         except Exception as error_log:
             window_title = "Error"
@@ -989,16 +998,6 @@ class MainWindow(QMainWindow):
         if isinstance(self.dialog, (QDialog, QWidget)):
             self.dialog.close()
             self.dialog = None
-
-    def action_plot_specific_acoustic_impedance_callback(self):
-        if app().project.acoustic_harmonic_solver.solution is None:
-            return
-        PlotSpecificAcousticImpedanceInput()
-
-    def action_plot_particle_velocity_callback(self):
-        if app().project.acoustic_harmonic_solver.solution is None:
-            return
-        PlotParticleVelocityFrequencyResponseInput()
 
     def action_export_element_transfer_data_callback(self):
         if app().project.acoustic_harmonic_solver.solution is None:

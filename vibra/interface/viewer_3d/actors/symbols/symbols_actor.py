@@ -61,6 +61,7 @@ class SymbolsActor(SymbolActorFixedSize):
         return transforms
 
     def show_nodal_normals(self):
+        return
 
         try:
             scale = self.mesh.principal_diagonal / 20
