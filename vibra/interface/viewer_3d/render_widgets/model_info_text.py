@@ -427,7 +427,9 @@ def nodes_info_text():
     nodes = list(app().main_window.selected_mesh_nodes)
     text = ""
     if len(nodes) > 1:
-        text += f"{len(nodes)} nodes in selection: {format_long_sequence(nodes)}\n\n"
+        text += f"{len(nodes)} NODES IN SELECTION:\n"
+        text += f"{format_long_sequence(nodes)}\n\n"
+
     elif len(nodes) == 1:
         text += f"Node: {nodes[0]}\n"
         coords = app().project.model.mesh.nodal_coordinates[nodes[0], 1:]
@@ -440,7 +442,9 @@ def mesh_faces_info_text():
     faces = list(app().main_window.selected_mesh_faces)
     text = ""
     if len(faces) > 1:
-        text += f"{len(faces)} faces in selection: {format_long_sequence(faces)}\n\n"
+        text += f"{len(faces)} FACES IN SELECTION:\n"
+        text += f"{format_long_sequence(faces)}\n\n"
+
     elif len(faces) == 1:
         text += f"Face element: {faces[0]}\n\n"
 
@@ -450,10 +454,9 @@ def mesh_solids_info_text():
     solids_elem_ids = list(app().main_window.selected_mesh_solids)
     text = ""
     if len(solids_elem_ids) > 1:
-        text += (
-            f"{len(solids_elem_ids)} solids in selection: "
-            f"{format_long_sequence(solids_elem_ids)}\n\n"
-        )
+        text += f"{len(solids_elem_ids)} SOLIDS IN SELECTION:\n"
+        text += f"{format_long_sequence(solids_elem_ids)}\n\n"
+
     elif len(solids_elem_ids) == 1:
         element_id = solids_elem_ids[0]
         connect = app().project.model.mesh.solids_connectivity[element_id, 4:]
