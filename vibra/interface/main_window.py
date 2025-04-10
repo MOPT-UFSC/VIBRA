@@ -799,8 +799,8 @@ class MainWindow(QMainWindow):
         the file to a temporary folder and then load it.
         """
         try:
-            project_path = Path(project_path)
             if project_path is not None:
+                project_path = Path(project_path)
                 app().config.add_recent_file(project_path)
                 app().config.write_last_folder_path_in_file("project_folder", project_path)
                 self.update_recents_menu()
@@ -811,15 +811,15 @@ class MainWindow(QMainWindow):
             app().project.reset_solutions()
 
             if project_path is not None:
-                path = Path(project_path)
-                app().project.name = path.stem
-                app().project.save_path = path
+                app().project.name = project_path.stem
+                app().project.save_path = project_path
 
             app().load_project.initialize()
             LoadingWindow(app().load_project.load).run()
 
             self.configure_mesh_information()
             LoadingWindow(self.update_plots).run()
+            
         except Exception as error_log:
             window_title = "Error"
             title = "Error to open project"
