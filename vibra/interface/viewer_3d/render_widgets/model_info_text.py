@@ -16,7 +16,7 @@ def points_info_text():
     point_ids = list(app().main_window.selected_geometry_points)
 
     if len(point_ids) == 0:
-        return text
+        return ""
     
     nodes_from_points = app().project.model.mesh.nodes_from_points
     node_ids = [int(nodes_from_points[i]) for i in point_ids]
@@ -54,7 +54,7 @@ def lines_info_text():
     line_ids = list(app().main_window.selected_geometry_lines)
 
     if len(line_ids) == 0:
-        return text
+        return ""
 
     length = 0
     for line_id in line_ids:
@@ -79,27 +79,31 @@ def lines_info_text():
 def faces_info_text():
 
     text = ""
-    tree = TreeInfo("Surface information")
     volumes = list(app().main_window.selected_geometry_volumes)
 
-    if len(volumes) == 0:
-        surface_ids = list(app().main_window.selected_geometry_surfaces)
+    if len(volumes) != 0:
+        return ""
+    
+    surface_ids = list(app().main_window.selected_geometry_surfaces)
 
-        if len(surface_ids) == 0:
-            return text
+    if len(surface_ids) == 0:
+        return text
 
-        area = 0.
-        for surface_id in surface_ids:
-            area += app().project.model.mesh.area_from_surface[surface_id]
+    area = 0
+    for surface_id in surface_ids:
+        area += app().project.model.mesh.area_from_surface[surface_id]
+    
+    if len(surface_ids) == 1:
+        tree = TreeInfo(f"SURFACE {surface_ids[0]}")
+        tree.add_item("Area", f"{area : .6e}", "m²")
 
-        if len(surface_ids) > 1:
-            text += f"{len(surface_ids)} surfaces in selection: {format_long_sequence(surface_ids)}\n"
-            tree.add_item("Area (compound)", f"{area : .6e}", "m²")
+    else:
+        sequence = ", ".join(str(i) for i in surface_ids)
+        if len(sequence) > 20:
+            sequence = sequence[:20 - 3] + " ..."
 
-        elif len(surface_ids) == 1:
-            text += f"Selected surface: {surface_ids[0]}\n"
-            tree.add_item("Area", f"{area : .6e}", "m²")
-
+        tree = TreeInfo(f"{len(surface_ids)} SURFACES IN SELECTION: {sequence}")
+        tree.add_item("Area (compound)", f"{area : .6e}", "m²")
         text += str(tree)
 
     return text
