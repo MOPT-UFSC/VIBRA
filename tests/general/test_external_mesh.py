@@ -23,7 +23,7 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
 
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(nodal_coordinates, index_zero=True)
-    mesh.import_external_connectivity(solid_connectivity, index_zero=True, etype_tag=4)
+    mesh.import_external_solids_connectivity(solid_connectivity, index_zero=True, etype_tag=4)
     mesh.element_type = TETRAHEDRON_4
 
     for tag, surf_data in get_faces_connectivities().items():
@@ -31,10 +31,6 @@ def test_load_external_mesh_and_solve(reorder_nodes=False):
         mesh.connectivity_from_surfaces[tag] = surf_data["connectivity"]
         flat_data = (surf_data["connectivity"]).flatten()
         mesh.nodes_from_surfaces[tag] = np.array([*set(flat_data)], dtype=int)
-
-    # if reorder_nodes:
-    #     mesh._process_nodes_reordering()
-    #     map_nodes_indexes = mesh.reordering.map_nodes_indexes
 
     # Define the fluid properties
     rho_0 = 1.18

@@ -68,7 +68,7 @@ def load_external_mesh_and_solve():
 
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(nodal_coordinates, index_zero=False)
-    # mesh.import_external_connectivity(connectivity, index_zero=True, etype_tag=4)
+    # mesh.import_external_solids_connectivity(connectivity, index_zero=True, etype_tag=4)
     # mesh.export_nodal_coordinates("nodal_coordinates.dat")
     # mesh.export_solid_elements_connectivity("solids_connectivity.dat")
     mesh.element_type = TETRAHEDRON_4

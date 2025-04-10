@@ -35,7 +35,7 @@ def process_external_model():
     
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(coord_path)
-    mesh.import_external_connectivity(connect_path)
+    mesh.import_external_solids_connectivity(connect_path)
 
     model = Model()
     model.generated_mesh = True

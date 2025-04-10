@@ -23,7 +23,7 @@ from pandas import read_excel
 from openpyxl import load_workbook
 
 # valid mesh sizes: 10mm, 34mm, 200mm and 400mm.
-mesh_size = "200mm"
+mesh_size = "34mm"
 
 
 # @pytest.mark.slow
@@ -120,7 +120,7 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
 
     ext_data = LoadExternalData(path, rho_0)
 
-    # assign the created fluid
+    ## assign the created fluid
     model = Model()
     model.mesh =  mesh
     model.generated_mesh = True
@@ -131,7 +131,7 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     for _surf_id in [1, 2, 3]:
         model.properties._set_property("fluid", fluid, surface=_surf_id)
 
-    # normal surface velocity data
+    ## normal surface velocity data
     data_Vn = { "real_values" : [1],
                 "imag_values" : [0],
                 "nodal_attribution" : False,
@@ -139,7 +139,7 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
 
     model.properties._set_property("surface_velocity", data_Vn, surface=1)
 
-    # boundary impedance setup
+    ## boundary impedance setup
     Zo = fluid.impedance
     data_Z = {  
               "real_values" : [Zo],
@@ -151,18 +151,19 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     model.properties._set_property("specific_impedance", data_Z, surface=1)
     model.properties._set_property("specific_impedance", data_Z, surface=2)
 
-    # interior impedance setup
-    if interior_impedance:
-        data_Zin = {  
-                    "real_values" : [2*10],
-                    "imag_values" : [0],
-                    "nodal_attribution" : False,
-                    "averaged" : False
-                    }
+    ## interior impedance setup
 
-        model.properties._set_property("specific_impedance", data_Zin, surface=3)
+    # if interior_impedance:
+    #     data_Zin = {  
+    #                 "real_values" : [2*10],
+    #                 "imag_values" : [0],
+    #                 "nodal_attribution" : False,
+    #                 "averaged" : False
+    #                 }
 
-    # Define the analysis frequency setup
+    #     model.properties._set_property("specific_impedance", data_Zin, surface=3)
+
+    ## Define the analysis frequency setup
 
     df = 5
     f_min = 5
@@ -180,23 +181,23 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
 
     ## Define the perforated plate setup
 
-    # if interior_impedance:
-    #     pp_data = {
-    #                "formulation" : "circular_hole",
-    #                "plate_thickness" : 0.008,
-    #                "porosity" : 0.26,
-    #                "hole_diameter" : 0.005,
-    #                "discharge_coefficient" : 0.76,
-    #                }
+    if interior_impedance:
+        pp_data = {
+                   "formulation" : "circular_hole",
+                   "plate_thickness" : 0.008,
+                   "porosity" : 0.26,
+                   "hole_diameter" : 0.005,
+                   "discharge_coefficient" : 0.76,
+                   }
 
-    #     model.properties._set_property("perforated_plate_model", pp_data, surface=3)
-    #     model.process_perforated_plate_impendace(frequencies)
+        model.properties._set_property("perforated_plate_model", pp_data, surface=3)
+        model.process_perforated_plate_impendace(frequencies)
 
     assembler = AcousticAssembler(model)
 
     # Set the analysis frequency setup
     assembler.process_assemble()
-    
+
     # t0 = time()
     # # Run modal analysis
     # modal_solver = AcousticModalSolver(assembler)
@@ -206,7 +207,7 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     # dt = time() - t0
     # print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
     # return
-    
+
     # Define the analysis type and load setup
     analysis_data = {"analysis_id" : 3, "frequencies" : frequencies}
     harmonic_solver = AcousticHarmonicSolver(assembler, analysis_data=analysis_data)
