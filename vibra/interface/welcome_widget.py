@@ -55,9 +55,7 @@ class WelcomeWidget(QWidget):
 
     def update_recent_projects(self):
         if not self.recents_layout.isEmpty():
-            for _ in range(5):
-                recents_item = self.recents_layout.itemAt(0)
-                recents_item.widget().setParent(None)
+            self.remove_all_recent_widgets()
             
         number_of_recent = 5
         recent_paths = app().config.get_recent_files()
@@ -139,6 +137,11 @@ class WelcomeWidget(QWidget):
         # Complete the remaining with empty items
         # for _ in range(number_of_examples - len(example_paths)):
         #     examples_layout.addWidget(WelcomeItem())
+    
+    def remove_all_recent_widgets(self):
+        for _ in range(5):
+            recents_item = self.recents_layout.itemAt(0)
+            recents_item.widget().setParent(None)
 
     def new_project(self):
         self.main_window.new_project_dialog()
