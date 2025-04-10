@@ -70,25 +70,25 @@ class ResultsViewerWidget(QWidget):
         self.plot_structural_modal.load_natural_frequencies()
         self.plot_structural_modal.load_user_preference_colormap()
         self.plot_structural_modal.update_plot()
-        self.add_widget(self.plot_structural_modal, animation_widget=True)
+        self.add_widget(self.plot_structural_modal)
 
     def add_structural_harmonic_widget(self):
         self.plot_structural_harmonic.load_frequencies()
         self.plot_structural_harmonic.load_user_preference_colormap()
         self.plot_structural_harmonic.update_plot()
-        self.add_widget(self.plot_structural_harmonic, animation_widget=True)
+        self.add_widget(self.plot_structural_harmonic)
 
     def add_acoustic_modal_widget(self):
         self.plot_acoustic_modal.load_natural_frequencies()
         self.plot_acoustic_modal.load_user_preference_colormap()
         self.plot_acoustic_modal.update_plot()
-        self.add_widget(self.plot_acoustic_modal, animation_widget=True)
+        self.add_widget(self.plot_acoustic_modal)
 
     def add_acoustic_harmonic_widget(self):
         self.plot_acoustic_harmonic.load_frequencies()
         self.plot_acoustic_harmonic.load_user_preference_colormap()
         self.plot_acoustic_harmonic.update_plot()
-        self.add_widget(self.plot_acoustic_harmonic, animation_widget=True)
+        self.add_widget(self.plot_acoustic_harmonic)
 
     def add_structural_frequency_response_widget(self):
         self.current_widget = app().main_window.input_ui.plot_structural_frequency_response()
