@@ -33,6 +33,7 @@ class Model:
         self.mesh_setup = None
         self.generated_mesh = False
         self.geometry_path = None
+        self.initial_element_size = None
 
         self.f_min = 2
         self.f_max = 600
@@ -71,26 +72,27 @@ class Model:
 
             try:
                 self.mesh = Mesh()
-                maximum_element_size = self.mesh.compute_initial_max_mesh_size(path)
+                element_size = self.mesh.compute_initial_max_mesh_size(path)
                 self.mesh.load_cad(
-                                   path, 
-                                   dimension=2, 
-                                   size_factor=0.08, 
-                                   minimum_element_size=maximum_element_size*0.4, 
-                                   maximum_element_size=maximum_element_size
+                                   path,
+                                   dimension = 2,
+                                   size_factor = 0.12,
+                                   minimum_element_size = element_size*0.4,
+                                   maximum_element_size = element_size
                                    )
 
             except:
-                print("algo deu errado")
                 self.mesh = Mesh()
+                element_size = 10
                 self.mesh.load_cad(
-                                   path, 
-                                   dimension=2, 
-                                   size_factor=0.0, 
-                                   minimum_element_size=5, 
-                                   maximum_element_size=10
+                                   path,
+                                   dimension = 2,
+                                   size_factor = 0.0,
+                                   minimum_element_size = element_size*0.5, 
+                                   maximum_element_size = element_size
                                    )
 
+            self.initial_element_size = element_size
             self.generated_mesh = False
             app().main_window.update_geometry_information(self.mesh.geometry_information)
 

@@ -162,7 +162,7 @@ class RendererUserPreferencesInput(QDialog):
         self.lineEdit_lines_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
     
     def update_edges_color(self):
-        read = PickColorInput(title="Pick the lines color")
+        read = PickColorInput(title="Pick the edges color")
         if read.complete:
             edges_color = tuple(read.color)
             str_color = str(edges_color)[1:-1]
@@ -175,7 +175,7 @@ class RendererUserPreferencesInput(QDialog):
         self.lineEdit_edges_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
 
     def update_faces_color(self):
-        read = PickColorInput(title="Pick the surfaces color")
+        read = PickColorInput(title="Pick the faces color")
         if read.complete:
             faces_color = tuple(read.color)
             str_color = str(faces_color)[1:-1]

@@ -123,9 +123,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.renderer.ResetCamera()
         else:
             self.update()
+    
+    def enable_scale_bar(self):
+        self.scale_bar_actor.VisibilityOn()
 
-        if self.isVisible():
-            app().project.thumbnail = self.get_thumbnail()
+    def disable_scale_bar(self):
+        self.scale_bar_actor.VisibilityOff()
 
     def update_hidden_plot(self):
         self.update_plot(reset_camera=False)
