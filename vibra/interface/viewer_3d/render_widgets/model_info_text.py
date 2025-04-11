@@ -13,113 +13,118 @@ from numbers import Number
 # GEOMETRY RENDER WIDGET INFO TEXTS
 
 def points_info_text():
-
-    text = ""
-    tree = TreeInfo("Point information")
     point_ids = list(app().main_window.selected_geometry_points)
 
     if len(point_ids) == 0:
-        return text
-
-    node_ids = list()
-    for point_id in point_ids:
-        node_id = int(app().project.model.mesh.nodes_from_points[point_id])
-        node_ids.append(node_id)
+        return ""
+    
+    text = ""
+    nodes_from_points = app().project.model.mesh.nodes_from_points
+    node_ids = [int(nodes_from_points[i]) for i in point_ids]
 
     if len(point_ids) == 1:
-        text += f"Point: {point_ids[0]}\n"
         coords = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:]
         coords = np.round(coords, 6)
+        
+        tree = TreeInfo(f"POINT {point_ids[0]}")
         tree.add_item("Position", "({:.6f}, {:.6f}, {:.6f})".format(*coords), "m")
+        text += str(tree)
+
+    elif len(point_ids) == 2:
+        coord_A = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:]
+        coord_B = app().project.model.mesh.nodal_coordinates[node_ids[1], 1:]
+        dx, dy, dz = np.round(np.abs(coord_A - coord_B), 6)
+        distance = np.linalg.norm(coord_A - coord_B)
+
+        tree = TreeInfo(f"2 POINTS IN SELECTION: {point_ids[0]}, {point_ids[1]}")
+        tree.add_item("Total distance", f"{distance : .6f}", "m")
+        tree.add_item("Distance dx", f"{dx : .6f}", "m")
+        tree.add_item("Distance dy", f"{dy : .6f}", "m")
+        tree.add_item("Distance dz", f"{dz : .6f}", "m")
+        text += str(tree)
 
     else:
-
-        text += f"{len(point_ids)} points in selection: {format_long_sequence(point_ids)}\n\n"
-        if len(point_ids) == 2:
-            coord_A = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:]
-            coord_B = app().project.model.mesh.nodal_coordinates[node_ids[1], 1:]
-            dx, dy, dz = np.round(np.abs(coord_A - coord_B), 6)
-
-            tree.add_item("Distance dx", f"{dx : .6f}", "m")
-            tree.add_item("Distance dy", f"{dy : .6f}", "m")
-            tree.add_item("Distance dz", f"{dz : .6f}", "m")
-
-        else:
-            return text
+        text += f"{len(point_ids)} POINTS IN SELECTION:\n{format_long_sequence(point_ids)}\n\n"
     
-    text += str(tree)
     return text
 
 def lines_info_text():
-
-    text = ""
-    tree = TreeInfo("Line information")
     line_ids = list(app().main_window.selected_geometry_lines)
 
     if len(line_ids) == 0:
-        return text
+        return ""
 
-    length = 0.
+    text = ""
+    length = 0
     for line_id in line_ids:
         length += app().project.model.mesh.length_from_curve[line_id]
 
-    if len(line_ids) > 1:
-        text += f"{len(line_ids)} lines in selection: {format_long_sequence(line_ids)}\n"
-        tree.add_item("Length (compound)", f"{length : .6e}", "m")
-
-    elif len(line_ids) == 1:
-        text += f"Selected line: {line_ids[0]}\n"
+    if len(line_ids) == 1:
+        tree = TreeInfo(f"LINE {line_ids[0]}")
         tree.add_item("Length", f"{length : .6e}", "m")
+
+    else:
+        sequence = ", ".join(str(i) for i in line_ids)
+        if len(sequence) > 20:
+            sequence = sequence[:20 - 3] + " ..."
+
+        tree = TreeInfo(f"{len(line_ids)} LINES IN SELECTION: {sequence}")
+        tree.add_item("Length (compound)", f"{length : .6e}", "m")
 
     text += str(tree)
     return text
 
 def faces_info_text():
-
-    text = ""
-    tree = TreeInfo("Surface information")
     volumes = list(app().main_window.selected_geometry_volumes)
 
-    if len(volumes) == 0:
-        surface_ids = list(app().main_window.selected_geometry_surfaces)
+    if len(volumes) != 0:
+        return ""
+    
+    text = ""
+    surface_ids = list(app().main_window.selected_geometry_surfaces)
 
-        if len(surface_ids) == 0:
-            return text
+    if len(surface_ids) == 0:
+        return text
 
-        area = 0.
-        for surface_id in surface_ids:
-            area += app().project.model.mesh.area_from_surface[surface_id]
+    area = 0.
+    for surface_id in surface_ids:
+        area += app().project.model.mesh.area_from_surface[surface_id]
 
-        if len(surface_ids) > 1:
-            text += f"{len(surface_ids)} surfaces in selection: {format_long_sequence(surface_ids)}\n"
-            tree.add_item("Area (compound)", f"{area : .6e}", "m²")
+    if len(surface_ids) == 1:
+        tree = TreeInfo(f"SURFACE {surface_ids[0]}")
+        tree.add_item("Area", f"{area : .6e}", "m²")
 
-        elif len(surface_ids) == 1:
-            text += f"Selected surface: {surface_ids[0]}\n"
-            tree.add_item("Area", f"{area : .6e}", "m²")
+    else:
+        sequence = ", ".join(str(i) for i in surface_ids)
+        if len(sequence) > 20:
+            sequence = sequence[:20 - 3] + " ..."
 
-        text += str(tree)
+        tree = TreeInfo(f"{len(surface_ids)} SURFACES IN SELECTION: {sequence}")
+        tree.add_item("Area (compound)", f"{area : .6e}", "m²")
+
+    text += str(tree)
 
     return text
 
 def volumes_info_text():
-    
-    text = ""
-    tree = TreeInfo("Body information")
-
     volume_ids = list(app().main_window.selected_geometry_volumes)
     if len(volume_ids) == 0:
-        return text
+        return ""
 
+    text = ""
     volume, fluid_mass, material_mass = process_volumes_and_masses(volume_ids)
 
-    if len(volume_ids) > 1:
-        text += f"{len(volume_ids)} volumes in selection: {format_long_sequence(volume_ids)}\n"
-        tree.add_item("Volume (compound)", f"{volume : .6e}", "m³")
-
-    elif len(volume_ids) == 1:
-        text += f"Selected volume: {volume_ids[0]}\n"
+    if len(volume_ids) == 1:
+        tree = TreeInfo(f"VOLUME {volume_ids[0]}")
         tree.add_item("Volume", f"{volume : .6e}", "m³")
+
+    else:
+        sequence = ", ".join(str(i) for i in volume_ids)
+        if len(sequence) > 20:
+            sequence = sequence[:20 - 3] + " ..."
+
+        tree = TreeInfo(f"{len(volume_ids)} VOLUMES IN SELECTION: {sequence}")
+        tree.add_item("Volume (compound)", f"{volume : .6e}", "m³")
 
     if fluid_mass:
         tree.add_item("Fluid mass", f"{fluid_mass : .6e}", "kg")
@@ -131,7 +136,6 @@ def volumes_info_text():
     return text
 
 def process_volumes_and_masses(volume_ids: list):
-
     fluid_mass = 0.
     material_mass = 0.
     volume_compound = 0.
