@@ -11,7 +11,6 @@ from numbers import Number
 
 
 # GEOMETRY RENDER WIDGET INFO TEXTS
-
 def points_info_text():
     point_ids = list(app().main_window.selected_geometry_points)
 
@@ -23,9 +22,7 @@ def points_info_text():
     node_ids = [int(nodes_from_points[i]) for i in point_ids]
 
     if len(point_ids) == 1:
-        coords = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:]
-        coords = np.round(coords, 6)
-        
+        coords = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:].round(6)
         tree = TreeInfo(f"POINT {point_ids[0]}")
         tree.add_item("Position", "({:.6f}, {:.6f}, {:.6f})".format(*coords), "m")
         text += str(tree)
@@ -86,10 +83,10 @@ def faces_info_text():
     if len(surface_ids) == 0:
         return text
 
-    area = 0.
+    area = 0
     for surface_id in surface_ids:
         area += app().project.model.mesh.area_from_surface[surface_id]
-
+    
     if len(surface_ids) == 1:
         tree = TreeInfo(f"SURFACE {surface_ids[0]}")
         tree.add_item("Area", f"{area : .6e}", "m²")
@@ -294,13 +291,16 @@ def acoustic_boundary_conditions_info_text():
         return text
 
     acoustic_pressure = app().project.model.properties._get_property(
-        "acoustic_pressure", surface=selected_faces[0]
+        "acoustic_pressure",
+        surface=selected_faces[0],
     )
     surface_velocity = app().project.model.properties._get_property(
-        "surface_velocity", surface=selected_faces[0]
+        "surface_velocity",
+        surface=selected_faces[0],
     )
     specific_impedance = app().project.model.properties._get_property(
-        "specific_impedance", surface=selected_faces[0]
+        "specific_impedance",
+        surface=selected_faces[0],
     )
 
     boundary_conditions_list = [acoustic_pressure, surface_velocity, specific_impedance]
