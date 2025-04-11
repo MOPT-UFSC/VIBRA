@@ -91,6 +91,11 @@ def faces_info_text():
         tree = TreeInfo(f"SURFACE {surface_ids[0]}")
         tree.add_item("Area", f"{area : .6e}", "m²")
 
+        surface_data = app().project.model.properties._get_property("surface_thickness", surface=surface_ids[0])
+        if isinstance(surface_data, dict):
+            tree.add_item("Thickness", surface_data["surface_thickness"], "m")
+            tree.add_item("Offset", surface_data["thickness_offset"])
+
     else:
         sequence = ", ".join(str(i) for i in surface_ids)
         if len(sequence) > 20:
@@ -152,28 +157,6 @@ def process_volumes_and_masses(volume_ids: list):
             material_mass += volume * material_density
     
     return volume_compound, fluid_mass, material_mass
-
-def surface_thickness_info_text():
-    surfaces = list(app().main_window.selected_geometry_surfaces)
-    text = ""
-
-    if len(surfaces) == 1:
-        surface_data = app().project.model.properties._get_property(
-            "surface_thickness", surface=surfaces[0]
-        )
-    else:
-        return text
-
-    if surface_data is None:
-        return text
-
-    tree = TreeInfo("Shell data")
-    tree.add_item("Thickness", surface_data["surface_thickness"], "m")
-    tree.add_item("Offset", surface_data["thickness_offset"])
-
-    text += str(tree)
-
-    return text
 
 def material_info_text():
     volumes = list(app().main_window.selected_geometry_volumes)
