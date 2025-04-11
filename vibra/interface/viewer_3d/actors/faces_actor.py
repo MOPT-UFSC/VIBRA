@@ -160,6 +160,10 @@ class FacesActor(vtkActor):
 
     def set_color(self, color: tuple[int, int, int, int] | tuple[int, int, int]):
         # TODO: update these functions to work with the molde.Colors instead of tuples
+
+        if self.data is None:
+            return
+
         cell_colors = self.data.GetCellData().GetScalars()
         cell_colors.Fill(255)
 

@@ -3,10 +3,12 @@ from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import CommonRenderWidget
 from molde.utils import TreeInfo
 from molde.utils.format_sequences import format_long_sequence
+from molde import Color
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QApplication
 
 from vibra import app
+from vibra.utils.image_functions import removes_image_background
 from vibra.engine.properties.fluid import Fluid
 
 from ..actors.faces_actor import FacesActor
@@ -165,8 +167,32 @@ class GeometryRenderWidget(CommonRenderWidget):
         else:
             self.update()
 
-        if self.isVisible():
-            app().project.thumbnail = self.get_thumbnail()
+        if app().project.thumbnail is None:
+            self.save_thumbnail()
+    
+    def save_thumbnail(self):
+        thumbnail = app().project.thumbnail
+
+        if not self.isVisible():
+            return
+
+        self.render_interactor.GetRenderWindow().OffScreenRenderingOn()
+
+        color = Color(247, 0, 255)
+        self.renderer.SetBackground(color.to_rgb_f())
+        self.renderer.SetBackground2(color.to_rgb_f())
+        self.faces_actor.set_color((255, 255, 255))
+        self.lines_actor.set_color(Color(0, 0, 0))
+
+        self.disable_scale_bar()
+        thumbnail = self.get_thumbnail()
+        app().project.thumbnail = removes_image_background(thumbnail)
+        
+        if app().config.user_preferences.show_reference_scale_bar:
+            self.enable_scale_bar()
+
+        self.update_theme()
+        self.render_interactor.GetRenderWindow().OffScreenRenderingOff()
 
     def visualization_changed_callback(self):
         if not self.actors_exists():

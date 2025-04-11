@@ -19,7 +19,7 @@ class PickColorInput(QColorDialog):
         self.setFixedSize(QSize(540, 410))
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Vibra")
+        self.setWindowTitle(self.title)
     
     def _initialize(self):
         self.color = [] 

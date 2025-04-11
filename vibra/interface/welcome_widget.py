@@ -1,16 +1,20 @@
 
-from PySide6.QtCore import QSize, Qt, Signal
+from PySide6.QtCore import QSize, Qt, Signal, QByteArray
 from PySide6.QtGui import QIcon, QImage, QPixmap
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget, QBoxLayout
-
 from fileboxes import Filebox
 
 from vibra import app, EXAMPLES_DIR, ICON_DIR
 
 import numpy as np
+import io
+from PIL import Image, ImageDraw, ImageFont
 
 from functools import partial
 from pathlib import Path
+from PIL import Image
+
+
 
 class WelcomeWidget(QWidget):
     def __init__(self):
@@ -75,9 +79,11 @@ class WelcomeWidget(QWidget):
                     thumbnail = fb.read("thumbnail.png")
 
             if thumbnail is not None:
-                array = np.array(thumbnail)
-                image = QImage(array, array.shape[1], array.shape[0], QImage.Format_RGB888)
-                icon = QIcon(QPixmap(image))
+                bytes = io.BytesIO()
+                thumbnail.save(bytes, format="PNG")
+                bytes_data = bytes.getvalue()
+                image = QImage.fromData(QByteArray(bytes_data))
+                icon = QIcon(QPixmap.fromImage(image))
 
             handler = partial(self.main_window.open_project, path)
             item = WelcomeItem(path.stem, icon, False)
@@ -114,9 +120,11 @@ class WelcomeWidget(QWidget):
                     thumbnail = fb.read("thumbnail.png")
 
             if thumbnail is not None:
-                array = np.array(thumbnail)
-                image = QImage(array, array.shape[1], array.shape[0], QImage.Format_RGB888)
-                icon = QIcon(QPixmap(image))
+                bytes = io.BytesIO()
+                thumbnail.save(bytes, format="PNG")
+                bytes_data = bytes.getvalue()
+                image = QImage.fromData(QByteArray(bytes_data))
+                icon = QIcon(QPixmap.fromImage(image))
 
             handler = partial(self.main_window.open_project, path)
             item = WelcomeItem(path.stem, icon, False)
@@ -150,7 +158,10 @@ class WelcomeItem(QWidget):
         if icon is not None:
             button.setIcon(icon)
 
-        label = QLabel(text)
+        font = ImageFont.load_default()
+        item_text = self.shorten_text(text, 76, font)                  
+                                    
+        label = QLabel(item_text)
         label.setAlignment(Qt.AlignCenter)
 
         layout = QVBoxLayout()
@@ -158,4 +169,18 @@ class WelcomeItem(QWidget):
         layout.addWidget(label)
         layout.setAlignment(Qt.AlignCenter)
         self.setLayout(layout)
+    
+    def shorten_text(self, text: str, max_width: int, font):
+        draw = ImageDraw.Draw(Image.new("RGB", (1,1)))
+
+        if draw.textlength(text, font) <= max_width:
+            return text
+    
+        for i in range(len(text), 0, -1):
+            subtext = text[:i] + "..."
+
+            if draw.textlength(subtext, font) <= max_width:
+                return subtext
+
+
     
