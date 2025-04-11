@@ -11,93 +11,99 @@ from numbers import Number
 
 
 # GEOMETRY RENDER WIDGET INFO TEXTS
-
 def points_info_text():
-
     text = ""
-    tree = TreeInfo("Point information")
     point_ids = list(app().main_window.selected_geometry_points)
 
     if len(point_ids) == 0:
-        return text
-
-    node_ids = list()
-    for point_id in point_ids:
-        node_id = int(app().project.model.mesh.nodes_from_points[point_id])
-        node_ids.append(node_id)
+        return ""
+    
+    nodes_from_points = app().project.model.mesh.nodes_from_points
+    node_ids = [int(nodes_from_points[i]) for i in point_ids]
 
     if len(point_ids) == 1:
-        text += f"Point: {point_ids[0]}\n"
-        coords = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:]
-        coords = np.round(coords, 6)
+        coords = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:].round(6)
+        tree = TreeInfo(f"POINT {point_ids[0]}")
         tree.add_item("Position", "({:.6f}, {:.6f}, {:.6f})".format(*coords), "m")
+        text += str(tree)
+
+    elif len(point_ids) == 2:
+        tree = TreeInfo(f"2 POINTS IN SELECTION: {point_ids[0]}, {point_ids[1]}")
+        coord_A = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:]
+        coord_B = app().project.model.mesh.nodal_coordinates[node_ids[1], 1:]
+        dx, dy, dz = np.round(np.abs(coord_A - coord_B), 6)
+        total = np.linalg.norm(coord_A - coord_B)
+
+        tree.add_item("Total distance", f"{total : .6f}", "m")
+        tree.add_item("Distance dx", f"{dx : .6f}", "m")
+        tree.add_item("Distance dy", f"{dy : .6f}", "m")
+        tree.add_item("Distance dz", f"{dz : .6f}", "m")
+        text += str(tree)
 
     else:
+        sequence = ", ".join(str(i) for i in point_ids)
+        if len(sequence) > 20:
+            sequence = sequence[:20 - 3] + " ..."
+        text += f"{len(point_ids)} POINTS IN SELECTION: {sequence}\n\n"
 
-        text += f"{len(point_ids)} points in selection: {format_long_sequence(point_ids)}\n\n"
-        if len(point_ids) == 2:
-            coord_A = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:]
-            coord_B = app().project.model.mesh.nodal_coordinates[node_ids[1], 1:]
-            dx, dy, dz = np.round(np.abs(coord_A - coord_B), 6)
-
-            tree.add_item("Distance dx", f"{dx : .6f}", "m")
-            tree.add_item("Distance dy", f"{dy : .6f}", "m")
-            tree.add_item("Distance dz", f"{dz : .6f}", "m")
-
-        else:
-            return text
-    
-    text += str(tree)
     return text
 
 def lines_info_text():
-
     text = ""
     tree = TreeInfo("Line information")
     line_ids = list(app().main_window.selected_geometry_lines)
 
     if len(line_ids) == 0:
-        return text
+        return ""
 
-    length = 0.
+    length = 0
     for line_id in line_ids:
         length += app().project.model.mesh.length_from_curve[line_id]
-
-    if len(line_ids) > 1:
-        text += f"{len(line_ids)} lines in selection: {format_long_sequence(line_ids)}\n"
-        tree.add_item("Length (compound)", f"{length : .6e}", "m")
-
-    elif len(line_ids) == 1:
-        text += f"Selected line: {line_ids[0]}\n"
+    
+    if len(line_ids) == 1:
+        tree = TreeInfo(f"LINE {line_ids[0]}")
         tree.add_item("Length", f"{length : .6e}", "m")
+        text += str(tree)
 
-    text += str(tree)
+    else:
+        sequence = ", ".join(str(i) for i in line_ids)
+        if len(sequence) > 20:
+            sequence = sequence[:20 - 3] + " ..."
+
+        tree = TreeInfo(f"{len(line_ids)} LINES IN SELECTION: {sequence}")
+        tree.add_item("Length (compound)", f"{length : .6e}", "m")
+        text += str(tree)
+
     return text
 
 def faces_info_text():
 
     text = ""
-    tree = TreeInfo("Surface information")
     volumes = list(app().main_window.selected_geometry_volumes)
 
-    if len(volumes) == 0:
-        surface_ids = list(app().main_window.selected_geometry_surfaces)
+    if len(volumes) != 0:
+        return ""
+    
+    surface_ids = list(app().main_window.selected_geometry_surfaces)
 
-        if len(surface_ids) == 0:
-            return text
+    if len(surface_ids) == 0:
+        return text
 
-        area = 0.
-        for surface_id in surface_ids:
-            area += app().project.model.mesh.area_from_surface[surface_id]
+    area = 0
+    for surface_id in surface_ids:
+        area += app().project.model.mesh.area_from_surface[surface_id]
+    
+    if len(surface_ids) == 1:
+        tree = TreeInfo(f"SURFACE {surface_ids[0]}")
+        tree.add_item("Area", f"{area : .6e}", "m²")
 
-        if len(surface_ids) > 1:
-            text += f"{len(surface_ids)} surfaces in selection: {format_long_sequence(surface_ids)}\n"
-            tree.add_item("Area (compound)", f"{area : .6e}", "m²")
+    else:
+        sequence = ", ".join(str(i) for i in surface_ids)
+        if len(sequence) > 20:
+            sequence = sequence[:20 - 3] + " ..."
 
-        elif len(surface_ids) == 1:
-            text += f"Selected surface: {surface_ids[0]}\n"
-            tree.add_item("Area", f"{area : .6e}", "m²")
-
+        tree = TreeInfo(f"{len(surface_ids)} SURFACES IN SELECTION: {sequence}")
+        tree.add_item("Area (compound)", f"{area : .6e}", "m²")
         text += str(tree)
 
     return text
