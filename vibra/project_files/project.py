@@ -174,12 +174,12 @@ class Project:
                 self.last_analysis = "Modal Acoustic"
                 self.analysis_id = 4
             
-            # couled harmonic analysis (direct method)
+            # coupled harmonic analysis (direct method)
             elif data["analysis_id"] == 5:
                 print("Coupled harmonic analysis (direct method) not implemented")
                 raise NotImplementedError("Not implemented solver")
 
-            # couled harmonic analysis (mode superposition method)
+            # coupled harmonic analysis (mode superposition method)
             elif data["analysis_id"] == 6:
                 print("Coupled harmonic analysis (mode superposition method) not implemented")
                 raise NotImplementedError("Not implemented solver")
