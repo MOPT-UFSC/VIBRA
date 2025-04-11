@@ -674,10 +674,9 @@ class STRUCT_TRIANGULAR_3(Element2D):
 
         return g_dofs.flatten(), F_elem
 
-    def process_forces_for_distributed_load_over_area(self, element_id: int, distributed_load: np.ndarray):
+    def process_forces_for_distributed_load_over_area(self, connect: np.ndarray, distributed_load: np.ndarray):
 
         # Local coordinate system definition
-        connect = self.connectivity[element_id, 1:]
         nodal_coords = self.nodal_coordinates[connect, 1:]
         x_loc, y_loc, *_ = get_local_coordinates(nodal_coords)
 
@@ -710,10 +709,9 @@ class STRUCT_TRIANGULAR_3(Element2D):
 
         return g_dofs.flatten(), F_elem
 
-    def process_forces_for_normal_pressure_load(self, element_id: int, normal_pressure_load: np.ndarray):
+    def process_forces_for_normal_pressure_load(self, connect: np.ndarray, normal_pressure_load: np.ndarray):
 
         # Local coordinate system definition
-        connect = self.connectivity[element_id, 1:]
         nodal_coords = self.nodal_coordinates[connect, 1:]
         normal_unit_vector = self.model.mesh.get_element_face_normal(connect)
 

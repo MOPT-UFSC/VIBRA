@@ -131,19 +131,26 @@ class ExternalMeshData():
                             element_id = connect_data[10]
                             _connect_data = self.filter_collapsed_nodes(connect_data[11:])
                             nodes_per_element = len(_connect_data)
-                            # print(body_id, nodes_per_element)
 
                         else:
                             _connect_data = connect_data
 
-                        if nodes_per_element == 4:
+                        if nodes_per_element == 3:
+                            if len(connect_data) == number_of_cols - 4:
+                                _connect_data.insert(0, element_id)
+                                _connect_data.insert(1, body_id)
+                                _connect_data.insert(2, nodes_per_element)
+                                # print(f"solid181 - tria3: {_connect_data}")
+                                self.connectivity[body_id, "solid181_tria3"].append(_connect_data)
+
+                        elif nodes_per_element == 4:
                             if len(connect_data) == number_of_cols:
                                 _connect_data.insert(0, element_id)
                                 _connect_data.insert(1, body_id)
                                 _connect_data.insert(2, nodes_per_element)
                                 # print(f"solid285 - tet4: {_connect_data}")
                                 self.connectivity[body_id, "solid285_tet4"].append(_connect_data)
-                        
+
                         elif nodes_per_element == 8:
                             if len(connect_data) == number_of_cols:
                                 _connect_data.insert(0, element_id)
@@ -151,7 +158,7 @@ class ExternalMeshData():
                                 _connect_data.insert(2, nodes_per_element)
                                 # print(f"solid185 - hex8: {_connect_data}")
                                 self.connectivity[body_id, "solid185_hex8"].append(_connect_data)
-                        
+
                         elif nodes_per_element == 10:
                             if len(connect_data) == number_of_cols:
                                 cache_nodes = _connect_data
@@ -298,7 +305,11 @@ class ExternalMeshData():
                     if len(face_elements) == 3: # tet4/face3 elements
                         
                         normal_vector = self.get_element_face_normal(face_elements)
-                        edge_vector = self.get_edge_vector(face_elements, other_nodes[-1])
+
+                        if other_nodes:
+                            edge_vector = self.get_edge_vector(face_elements, other_nodes[-1])
+                        else:
+                            edge_vector = np.array([0, 0, 0], dtype=float)
 
                         if np.dot(normal_vector, edge_vector) > 0:
                             node_2 = face_elements[1]
@@ -333,11 +344,21 @@ class ExternalMeshData():
 
                     if export:
 
+                        if other_nodes:
+                            add_col = 2
+                        else:
+                            add_col = 1
+
                         rows, cols = connect_data.shape
-                        exp_data = np.zeros((rows,cols+2), dtype=int)
+                        exp_data = np.zeros((rows, cols + add_col), dtype=int)
+
                         exp_data[:, 0] = indexes
-                        exp_data[:, 1:-1] = connect_data
-                        exp_data[:, -1] = other_data
+
+                        if other_nodes:
+                            exp_data[:, 1:-1] = connect_data
+                            exp_data[:, -1] = other_data
+                        else:
+                            exp_data[:, 1:] = connect_data
 
                         self.create_output_data_folder()
 
