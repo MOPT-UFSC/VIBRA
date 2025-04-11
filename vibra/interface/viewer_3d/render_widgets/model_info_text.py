@@ -41,7 +41,7 @@ def points_info_text():
         text += str(tree)
 
     else:
-        text += f"{len(point_ids)} POINTS IN SELECTION:\n{format_long_sequence(point_ids)}\n\n"
+        text += f"{len(point_ids)} POINTS IN SELECTION:\n{format_long_sequence(point_ids, identation="  ")}\n\n"
     
     return text
 
@@ -61,11 +61,8 @@ def lines_info_text():
         tree.add_item("Length", f"{length : .6e}", "m")
 
     else:
-        sequence = ", ".join(str(i) for i in line_ids)
-        if len(sequence) > 20:
-            sequence = sequence[:20 - 3] + " ..."
-
-        tree = TreeInfo(f"{len(line_ids)} LINES IN SELECTION: {sequence}")
+        sequence = format_long_sequence(line_ids, identation="│ ")
+        tree = TreeInfo(f"{len(line_ids)} LINES IN SELECTION:\n{sequence}\n│")
         tree.add_item("Length (compound)", f"{length : .6e}", "m")
 
     text += str(tree)
@@ -92,11 +89,8 @@ def faces_info_text():
         tree.add_item("Area", f"{area : .6e}", "m²")
 
     else:
-        sequence = ", ".join(str(i) for i in surface_ids)
-        if len(sequence) > 20:
-            sequence = sequence[:20 - 3] + " ..."
-
-        tree = TreeInfo(f"{len(surface_ids)} SURFACES IN SELECTION: {sequence}")
+        sequence = format_long_sequence(surface_ids, identation="│ ")
+        tree = TreeInfo(f"{len(surface_ids)} SURFACES IN SELECTION:\n{sequence}\n│")
         tree.add_item("Area (compound)", f"{area : .6e}", "m²")
 
     text += str(tree)
@@ -116,11 +110,8 @@ def volumes_info_text():
         tree.add_item("Volume", f"{volume : .6e}", "m³")
 
     else:
-        sequence = ", ".join(str(i) for i in volume_ids)
-        if len(sequence) > 20:
-            sequence = sequence[:20 - 3] + " ..."
-
-        tree = TreeInfo(f"{len(volume_ids)} VOLUMES IN SELECTION: {sequence}")
+        sequence = format_long_sequence(volume_ids, identation="│ ")
+        tree = TreeInfo(f"{len(volume_ids)} VOLUMES IN SELECTION:\n{sequence}\n│")
         tree.add_item("Volume (compound)", f"{volume : .6e}", "m³")
 
     if fluid_mass:
@@ -455,7 +446,7 @@ def nodes_info_text():
         text += str(tree)
 
     else:
-        text += f"{len(node_ids)} NODES IN SELECTION:\n{format_long_sequence(node_ids)}\n\n"
+        text += f"{len(node_ids)} NODES IN SELECTION:\n{format_long_sequence(node_ids, identation="  ")}\n\n"
 
     return text
 
@@ -465,7 +456,7 @@ def mesh_faces_info_text():
 
     if len(faces) > 1:
         text += f"{len(faces)} FACES IN SELECTION:\n"
-        text += f"{format_long_sequence(faces)}\n\n"
+        text += f"{format_long_sequence(faces, identation="  ")}\n\n"
 
     elif len(faces) == 1:
         text += f"FACE ELEMENT {faces[0]}\n\n"
@@ -478,7 +469,7 @@ def mesh_solids_info_text():
 
     if len(solids_elem_ids) > 1:
         text += f"{len(solids_elem_ids)} SOLIDS IN SELECTION:\n"
-        text += f"{format_long_sequence(solids_elem_ids)}\n\n"
+        text += f"{format_long_sequence(solids_elem_ids, identation="  ")}\n\n"
 
     elif len(solids_elem_ids) == 1:
         element_id = solids_elem_ids[0]
