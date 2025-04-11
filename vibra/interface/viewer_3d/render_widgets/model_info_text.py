@@ -41,7 +41,11 @@ def points_info_text():
         text += str(tree)
 
     else:
-        text += f"{len(point_ids)} POINTS IN SELECTION:\n{format_long_sequence(point_ids, identation="  ")}\n\n"
+        sequence = ", ".join(str(i) for i in point_ids)
+        if len(sequence) > 20:
+            sequence = sequence[:20 - 4] + " ..."
+
+        text += f"{len(point_ids)} POINTS IN SELECTION: {sequence}\n\n"
     
     return text
 
@@ -61,8 +65,11 @@ def lines_info_text():
         tree.add_item("Length", f"{length : .6e}", "m")
 
     else:
-        sequence = format_long_sequence(line_ids, identation="│ ")
-        tree = TreeInfo(f"{len(line_ids)} LINES IN SELECTION:\n{sequence}\n│")
+        sequence = ", ".join(str(i) for i in line_ids)
+        if len(sequence) > 20:
+            sequence = sequence[:20 - 4] + " ..."
+
+        tree = TreeInfo(f"{len(line_ids)} LINES IN SELECTION: {sequence}")
         tree.add_item("Length (compound)", f"{length : .6e}", "m")
 
     text += str(tree)
@@ -88,14 +95,12 @@ def faces_info_text():
         tree = TreeInfo(f"SURFACE {surface_ids[0]}")
         tree.add_item("Area", f"{area : .6e}", "m²")
 
-        surface_data = app().project.model.properties._get_property("surface_thickness", surface=surface_ids[0])
-        if isinstance(surface_data, dict):
-            tree.add_item("Thickness", surface_data["surface_thickness"], "m")
-            tree.add_item("Offset", surface_data["thickness_offset"])
-
     else:
-        sequence = format_long_sequence(surface_ids, identation="│ ")
-        tree = TreeInfo(f"{len(surface_ids)} SURFACES IN SELECTION:\n{sequence}\n│")
+        sequence = ", ".join(str(i) for i in surface_ids)
+        if len(sequence) > 20:
+            sequence = sequence[:20 - 4] + " ..."
+
+        tree = TreeInfo(f"{len(surface_ids)} SURFACES IN SELECTION: {sequence}")
         tree.add_item("Area (compound)", f"{area : .6e}", "m²")
 
     text += str(tree)
@@ -115,8 +120,11 @@ def volumes_info_text():
         tree.add_item("Volume", f"{volume : .6e}", "m³")
 
     else:
-        sequence = format_long_sequence(volume_ids, identation="│ ")
-        tree = TreeInfo(f"{len(volume_ids)} VOLUMES IN SELECTION:\n{sequence}\n│")
+        sequence = ", ".join(str(i) for i in volume_ids)
+        if len(sequence) > 20:
+            sequence = sequence[:20 - 4] + " ..."
+
+        tree = TreeInfo(f"{len(volume_ids)} VOLUMES IN SELECTION: {sequence}")
         tree.add_item("Volume (compound)", f"{volume : .6e}", "m³")
 
     if fluid_mass:
@@ -148,6 +156,28 @@ def process_volumes_and_masses(volume_ids: list):
             material_mass += volume * material_density
     
     return volume_compound, fluid_mass, material_mass
+
+def surface_thickness_info_text():
+    surfaces = list(app().main_window.selected_geometry_surfaces)
+    text = ""
+
+    if len(surfaces) == 1:
+        surface_data = app().project.model.properties._get_property(
+            "surface_thickness", surface=surfaces[0]
+        )
+    else:
+        return text
+
+    if surface_data is None:
+        return text
+
+    tree = TreeInfo("Shell data")
+    tree.add_item("Thickness", surface_data["surface_thickness"], "m")
+    tree.add_item("Offset", surface_data["thickness_offset"])
+
+    text += str(tree)
+
+    return text
 
 def material_info_text():
     volumes = list(app().main_window.selected_geometry_volumes)
@@ -429,7 +459,7 @@ def nodes_info_text():
         text += str(tree)
 
     else:
-        text += f"{len(node_ids)} NODES IN SELECTION:\n{format_long_sequence(node_ids, identation="  ")}\n\n"
+        text += f"{len(node_ids)} NODES IN SELECTION:\n{format_long_sequence(node_ids)}\n\n"
 
     return text
 
@@ -439,7 +469,7 @@ def mesh_faces_info_text():
 
     if len(faces) > 1:
         text += f"{len(faces)} FACES IN SELECTION:\n"
-        text += f"{format_long_sequence(faces, identation="  ")}\n\n"
+        text += f"{format_long_sequence(faces)}\n\n"
 
     elif len(faces) == 1:
         text += f"FACE ELEMENT {faces[0]}\n\n"
@@ -452,7 +482,7 @@ def mesh_solids_info_text():
 
     if len(solids_elem_ids) > 1:
         text += f"{len(solids_elem_ids)} SOLIDS IN SELECTION:\n"
-        text += f"{format_long_sequence(solids_elem_ids, identation="  ")}\n\n"
+        text += f"{format_long_sequence(solids_elem_ids)}\n\n"
 
     elif len(solids_elem_ids) == 1:
         element_id = solids_elem_ids[0]
