@@ -135,12 +135,22 @@ class FacesActor(vtkActor):
         if color_mode == ColorMode.MATERIAL:
             for surface, face_elements in mesh.elements_from_surface.items():
                 material: Material | None = properties._get_property("material", surface=surface)
+                
+                if (material is None) and (surface in mesh.volume_from_surface):
+                    volume = mesh.volume_from_surface[surface][0]
+                    material = properties._get_property("material", volume=volume)
+
                 color = Color(*material.color) if (material is not None) else no_info_color
                 self.paint_cells(color.to_rgba(), face_elements)
 
         elif color_mode == ColorMode.FLUID:
             for surface, face_elements in mesh.elements_from_surface.items():
                 fluid: Fluid | None = properties._get_property("fluid", surface=surface)
+
+                if (fluid is None) and (surface in mesh.volume_from_surface):
+                    volume = mesh.volume_from_surface[surface][0]
+                    fluid = properties._get_property("fluid", volume=volume)
+
                 color = Color(*fluid.color) if (fluid is not None) else no_info_color
                 self.paint_cells(color.to_rgba(), face_elements)
         
