@@ -1,0 +1,9 @@
+from vibra.interface.analysis.analysis_setup_input import AnalysisSetupInput
+from vibra.interface.ui_generated.analysis.structural.harmonic_analysis_direct_method_ui import HarmonicAnalysisDirectMethod_UI
+
+
+class StructuralHarmonicAnalysisDirectMethodInput(AnalysisSetupInput, HarmonicAnalysisDirectMethod_UI):
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+
+
