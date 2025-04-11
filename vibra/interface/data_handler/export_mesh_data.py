@@ -5,8 +5,6 @@ from PySide6.QtGui import QIcon, QColor
 from vibra import app, UI_DIR
 from vibra.interface.mesh.mesher_inputs import MesherInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.data_handler.export_model_results import ExportModelResults
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 
 import os

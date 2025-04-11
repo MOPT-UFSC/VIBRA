@@ -127,6 +127,9 @@ class SetFluidInputSimplified(QDialog):
     def get_selected_fluid(self):
         return self.fluid_widget.get_selected_fluid()
 
+    def load_model_info(self):
+        pass
+
     def exec_and_keep_window_open(self):
         self.keep_window_open = True
         while self.keep_window_open:

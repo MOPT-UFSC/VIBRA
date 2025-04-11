@@ -25,6 +25,7 @@ from vibra.interface.plots.acoustic.plot_acoustic_pressure_field import PlotAcou
 from vibra.interface.plots.acoustic.plot_acoustic_pressure_frequency_response_input import PlotAcousticPressureFrequencyResponseInput
 from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_input import PlotAcousticPressureFrequencyResponseFunctionInput
 from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
+from vibra.interface.plots.acoustic.plot_particle_velocity_frequency_response_input import PlotParticleVelocityFrequencyResponseInput
 from vibra.interface.plots.acoustic.plot_transmission_loss_input import PlotTransmissionLossInput
 from vibra.interface.plots.acoustic.plot_acoustic_mode_shape import PlotAcousticModeShape
 #
@@ -198,7 +199,15 @@ class InputUi:
     def plot_TL_NR(self):
        if self.project.analysis_id in [3]:
            return self.process_input(PlotTransmissionLossInput)
-            
+     
+    def plot_particle_velocity(self):
+       if self.project.analysis_id in [3]:
+           return self.process_input(PlotParticleVelocityFrequencyResponseInput)
+                   
+    def plot_acoustic_specific_impedance_from_surface(self):
+       if self.project.analysis_id in [3]:
+           return self.process_input(PlotSpecificAcousticImpedanceInput)
+     
     def empty_project_action_message(self):
         title = 'EMPTY PROJECT'
         message = "Please, you should create a new project or load an already existing one before start to set up the model. "

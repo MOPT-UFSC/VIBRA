@@ -14,10 +14,15 @@ import numpy as np
 
 class FrequencyResponsePlotter(QDialog):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__()
 
         ui_path = UI_DIR / "plots/general/frequency_response_plot.ui"
         load_ui(ui_path, self, ui_path.parent)
+
+        close_dialogs = kwargs.get("close_dialogs", False)
+        if close_dialogs:
+            app().main_window.close_dialogs()
+            app().main_window.set_input_widget(self)
 
         self._config_window()
         self._initialize()

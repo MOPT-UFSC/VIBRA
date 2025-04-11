@@ -127,6 +127,9 @@ class FacesActor(vtkActor):
         self.set_color(color)
 
     def set_color(self, color: tuple[int, int, int, int] | tuple[int, int, int]):
+        if self.data is None:
+            return
+
         cell_colors = self.data.GetCellData().GetScalars()
         cell_colors.Fill(255)
 

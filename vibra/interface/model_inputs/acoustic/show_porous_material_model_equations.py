@@ -1,7 +1,6 @@
 
 from PySide6.QtWidgets import QDialog, QPushButton, QWidget
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
 from molde import load_ui

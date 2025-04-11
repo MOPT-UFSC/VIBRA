@@ -5,7 +5,7 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
 from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input_simplified import SetFluidInputSimplified
-from vibra.interface.model_inputs.acoustic.show_porous_material_mode_equations import ShowPorousMaterialModelEquations
+from vibra.interface.model_inputs.acoustic.show_porous_material_model_equations import ShowPorousMaterialModelEquations
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
