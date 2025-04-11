@@ -36,7 +36,7 @@ mesh_size = "200mm"
 def load_external_mesh_and_solve():
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"data/validation/structural/shell/pipes/mesh/ds_Lpipe_with_caps.dat"
+    mesh_path = f"data/validation/structural/shell/L_pipe/mesh/ds_Lpipe_with_caps.dat"
 
     if not os.path.exists(mesh_path):
         return
@@ -201,8 +201,7 @@ def load_external_mesh_and_solve():
     # print(":: PLOTTING THE OBTAINED RESULTS FOR HARMONIC ANALYSIS ::")
     # print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n")
 
-    # input_rows = mesh.nodes_from_surfaces[2]
-    output_nodes = mesh.nodes_from_surfaces[3]
+    selected_nodes = mesh.nodes_from_surfaces[3]
 
     dofs_index = {
                   "ux" : 0,
@@ -213,9 +212,8 @@ def load_external_mesh_and_solve():
                   "rz" : 5
                   }
 
-    selected_dof = "ux"
     dofs_per_node = model.surface_structural_element.DOFS_PER_NODE
-    gdofs = dofs_per_node * output_nodes.reshape(-1, 1) + np.arange(dofs_per_node, dtype=int)
+    gdofs = dofs_per_node * selected_nodes.reshape(-1, 1) + np.arange(dofs_per_node, dtype=int)
 
     ux_rows = gdofs[:, dofs_index["ux"]]
     uy_rows = gdofs[:, dofs_index["uy"]]
@@ -307,7 +305,7 @@ def load_external_mesh_and_solve():
 def get_external_results():
 
     imported_results = dict()
-    results_path = f"data/validation/structural/shell/pipes/results/results_for_L_pipe.xlsx"
+    results_path = f"data/validation/structural/shell/L_pipe/results/results_for_L_pipe.xlsx"
 
     if not os.path.exists(results_path):
         return imported_results
