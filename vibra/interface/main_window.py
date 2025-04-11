@@ -39,7 +39,7 @@ from vibra.interface.viewer_3d.render_widgets import (
 )
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
-from vibra.utils.interface_utils import VisualizationFilter
+from vibra.utils.interface_utils import VisualizationFilter, ColorMode
 from vibra.interface.user_input.render_user_preferences import RendererUserPreferencesInput
 
 from molde.render_widgets import CommonRenderWidget
@@ -298,41 +298,6 @@ class MainWindow(QMainWindow):
     def _configure_stacked_setup(self):
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
 
-    def set_mesh_selection(self, *, nodes=None, faces=None, solids=None, join=False, remove=False):
-        if nodes is None:
-            nodes = set()
-
-        if faces is None:
-            faces = set()
-
-        if solids is None:
-            solids = set()
-
-        if join and remove:
-            self.selected_mesh_nodes ^= set(nodes)
-            self.selected_mesh_faces ^= set(faces)
-            self.selected_mesh_solids ^= set(solids)
-        elif join:
-            self.selected_mesh_nodes |= set(nodes)
-            self.selected_mesh_faces |= set(faces)
-            self.selected_mesh_solids |= set(solids)
-        elif remove:
-            self.selected_mesh_nodes -= set(nodes)
-            self.selected_mesh_faces -= set(faces)
-            self.selected_mesh_solids -= set(solids)
-        else:
-            self.selected_mesh_nodes = set(nodes)
-            self.selected_mesh_faces = set(faces)
-            self.selected_mesh_solids = set(solids)
-
-            # Clear the other type of selection
-            self.selected_geometry_points.clear()
-            self.selected_geometry_lines.clear()
-            self.selected_geometry_surfaces.clear()
-            self.selected_geometry_volumes.clear()
-
-        self.selection_changed.emit()
-
     def create_status_bar(self):
         self.setStatusBar(self.status_bar)
 
@@ -361,6 +326,10 @@ class MainWindow(QMainWindow):
         show = app().config.user_preferences.show_reference_scale_bar
         self.update_scale_bar(show)
         self.update_renderer_font_size()
+
+    def clear_selection(self):
+        self.set_geometry_selection()
+        self.set_mesh_selection()
 
     def set_geometry_selection(self, *, points=None, lines=None, surfaces=None, volumes=None, join=False, remove=False):
         if points is None:
@@ -402,6 +371,41 @@ class MainWindow(QMainWindow):
             self.selected_geometry_lines = set(lines)
             self.selected_geometry_surfaces = set(surfaces)
             self.selected_geometry_volumes = set(volumes)
+
+        self.selection_changed.emit()
+
+    def set_mesh_selection(self, *, nodes=None, faces=None, solids=None, join=False, remove=False):
+        if nodes is None:
+            nodes = set()
+
+        if faces is None:
+            faces = set()
+
+        if solids is None:
+            solids = set()
+
+        if join and remove:
+            self.selected_mesh_nodes ^= set(nodes)
+            self.selected_mesh_faces ^= set(faces)
+            self.selected_mesh_solids ^= set(solids)
+        elif join:
+            self.selected_mesh_nodes |= set(nodes)
+            self.selected_mesh_faces |= set(faces)
+            self.selected_mesh_solids |= set(solids)
+        elif remove:
+            self.selected_mesh_nodes -= set(nodes)
+            self.selected_mesh_faces -= set(faces)
+            self.selected_mesh_solids -= set(solids)
+        else:
+            self.selected_mesh_nodes = set(nodes)
+            self.selected_mesh_faces = set(faces)
+            self.selected_mesh_solids = set(solids)
+
+            # Clear the other type of selection
+            self.selected_geometry_points.clear()
+            self.selected_geometry_lines.clear()
+            self.selected_geometry_surfaces.clear()
+            self.selected_geometry_volumes.clear()
 
         self.selection_changed.emit()
 
@@ -460,6 +464,18 @@ class MainWindow(QMainWindow):
             self.action_theme.setIcon(self.theme_moon_icon)
 
         app().config.update_config_file()
+    
+    def action_show_materials_callback(self):
+        self.visualization_filter.color_mode = ColorMode.MATERIAL
+        self.visualization_changed.emit()
+
+    def action_show_fluids_callback(self):
+        self.visualization_filter.color_mode = ColorMode.FLUID
+        self.visualization_changed.emit()
+
+    def action_show_empty_callback(self):
+        self.visualization_filter.color_mode = ColorMode.EMPTY
+        self.visualization_changed.emit()
 
     def action_user_preferences_callback(self):
         self.close_dialogs()

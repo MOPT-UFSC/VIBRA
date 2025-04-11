@@ -21,7 +21,7 @@
        <number>1</number>
       </property>
       <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+       <enum>Qt::Orientation::Horizontal</enum>
       </property>
       <property name="opaqueResize">
        <bool>true</bool>
@@ -37,7 +37,7 @@
         </sizepolicy>
        </property>
        <property name="contextMenuPolicy">
-        <enum>Qt::DefaultContextMenu</enum>
+        <enum>Qt::ContextMenuPolicy::DefaultContextMenu</enum>
        </property>
        <property name="styleSheet">
         <string notr="true"/>
@@ -136,7 +136,7 @@
      <x>0</x>
      <y>0</y>
      <width>1055</width>
-     <height>21</height>
+     <height>33</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_project">
@@ -157,6 +157,11 @@
      <string>Settings</string>
     </property>
     <addaction name="action_theme"/>
+    <addaction name="separator"/>
+    <addaction name="action_show_materials"/>
+    <addaction name="action_show_fluids"/>
+    <addaction name="action_show_empty"/>
+    <addaction name="separator"/>
     <addaction name="action_user_preferences"/>
    </widget>
    <widget class="QMenu" name="menu_view_mode">
@@ -621,6 +626,21 @@
    </property>
    <property name="text">
     <string>User Preferences</string>
+   </property>
+  </action>
+  <action name="action_show_materials">
+   <property name="text">
+    <string>Show Materials</string>
+   </property>
+  </action>
+  <action name="action_show_fluids">
+   <property name="text">
+    <string>Show Fluids</string>
+   </property>
+  </action>
+  <action name="action_show_empty">
+   <property name="text">
+    <string>Show Empty</string>
    </property>
   </action>
  </widget>

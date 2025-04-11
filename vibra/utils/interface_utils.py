@@ -1,9 +1,16 @@
 from dataclasses import dataclass
+from enum import IntEnum, auto
 
 import numpy as np
 from vtkmodules.vtkRenderingCore import vtkCoordinate
 
 window_title = "Error"
+
+
+class ColorMode(IntEnum):
+    EMPTY = auto()
+    MATERIAL = auto()
+    FLUID = auto()
 
 
 @dataclass
@@ -14,6 +21,7 @@ class VisualizationFilter:
     solids: bool = False
     acoustic_symbols: bool = False
     structural_symbols: bool = False
+    color_mode: ColorMode = ColorMode.EMPTY
 
     @classmethod
     def all_false(cls):
@@ -34,6 +42,7 @@ def world_to_screen_coords(xyz, renderer):
     coordinate.SetValue(xyz)
     view_coords = coordinate.GetComputedViewportValue(renderer)
     return np.array(view_coords)
+
 
 def screen_to_world_coords(xyz, renderer):
     coordinate = vtkCoordinate()
