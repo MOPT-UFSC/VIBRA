@@ -2,6 +2,7 @@ from enum import Enum
 
 
 class AnalysisID(Enum):
+    NO_ANALYSIS = -1
     STRUCTURAL_HARMONIC_DIRECT_METHOD = 0
     STRUCTURAL_HARMONIC_MODE_SUPERPOSITION = 1
     STRUCTURAL_MODAL = 2

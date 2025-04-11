@@ -1,15 +1,12 @@
-import numpy as np
 from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import CommonRenderWidget
-from molde.utils import TreeInfo
-from molde.utils.format_sequences import format_long_sequence
 from molde import Color
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QApplication
 
 from vibra import app
+from vibra.engine import AnalysisID
 from vibra.utils.image_functions import removes_image_background
-from vibra.engine.properties.fluid import Fluid
 
 from ..actors.faces_actor import FacesActor
 from ..actors.ghost_actor import GhostActor
