@@ -290,12 +290,12 @@ class SetMaterialInput(QDialog):
             app().main_window.set_geometry_selection()
 
     def actions_to_finalize(self):
-
         self.lineEdit_selection_id.setText("")
         self.lineEdit_selected_material_name.setText("")
 
         self.load_model_info()
         app().main_window.update_info_text()
+        app().main_window.clear_selection()  # this also updates
         app().file.write_model_properties_in_file()
 
     def load_model_info(self):
