@@ -41,7 +41,6 @@ class Mesh:
         self.mesh_setup = None
 
         self.reset_variables()
-        self.list_elements = list()
 
     def reset_variables(self):
 

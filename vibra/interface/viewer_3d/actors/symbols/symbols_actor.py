@@ -99,22 +99,23 @@ class SymbolsActor(SymbolActorFixedSize):
 
     # temporary
     def show_2d_element_normals_by_list(self):
+        return
 
-        try:
-            scale = self.mesh.principal_diagonal / 20
-        except:
-            return
+        # try:
+        #     scale = self.mesh.principal_diagonal / 20
+        # except:
+        #     return
 
-        self.transforms.clear()
+        # self.transforms.clear()
 
-        for elem_id in self.mesh.list_elements:
+        # for elem_id in self.mesh.list_elements:
 
-            connect = self.mesh.faces_connectivity[elem_id, 4:]
-            coords = np.average(self.mesh.nodal_coordinates[connect, 1:], axis=0)
-            normal_vector = self.mesh.get_element_face_normal(connect)
-            shifted_coords = coords + (1/100) * normal_vector
-            t = SymbolTranform(position=shifted_coords, orientation = normal_vector, size = scale)
-            self.transforms.append(t)
+        #     connect = self.mesh.faces_connectivity[elem_id, 4:]
+        #     coords = np.average(self.mesh.nodal_coordinates[connect, 1:], axis=0)
+        #     normal_vector = self.mesh.get_element_face_normal(connect)
+        #     shifted_coords = coords + (1/100) * normal_vector
+        #     t = SymbolTranform(position=shifted_coords, orientation = normal_vector, size = scale)
+        #     self.transforms.append(t)
 
     def configure_appearance(self):
         self.GetProperty().SetColor(1, 0, 1)
