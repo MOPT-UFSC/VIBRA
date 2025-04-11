@@ -428,35 +428,54 @@ def acoustic_format(property_name, value, label, unit, additional_labels=[]):
 # MESH RENDER WIDGET INFO TEXTS
 
 def nodes_info_text():
-    nodes = list(app().main_window.selected_mesh_nodes)
     text = ""
-    if len(nodes) > 1:
-        text += f"{len(nodes)} NODES IN SELECTION:\n"
-        text += f"{format_long_sequence(nodes)}\n\n"
+    node_ids = list(app().main_window.selected_mesh_nodes)
 
-    elif len(nodes) == 1:
-        text += f"Node: {nodes[0]}\n"
-        coords = app().project.model.mesh.nodal_coordinates[nodes[0], 1:]
-        coords = np.round(coords, 6)
-        text += "Nodal coordinates: ({:.6f}, {:.6f}, {:.6f}) m\n\n".format(*coords)
+    if len(node_ids) == 0:
+        return ""
+
+    elif len(node_ids) == 1:
+        coords = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:].round(6)
+
+        tree = TreeInfo(f"NODE {node_ids[0]}")
+        tree.add_item("Position", "({:.6f}, {:.6f}, {:.6f})".format(*coords), "m")
+        text += str(tree)
+
+    elif len(node_ids) == 2:
+        coord_A = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:]
+        coord_B = app().project.model.mesh.nodal_coordinates[node_ids[1], 1:]
+        dx, dy, dz = np.round(np.abs(coord_A - coord_B), 6)
+        distance = np.linalg.norm(coord_A - coord_B)
+
+        tree = TreeInfo(f"2 NODES IN SELECTION: {node_ids[0]}, {node_ids[1]}")
+        tree.add_item("Total distance", f"{distance : .6f}", "m")
+        tree.add_item("Distance dx", f"{dx : .6f}", "m")
+        tree.add_item("Distance dy", f"{dy : .6f}", "m")
+        tree.add_item("Distance dz", f"{dz : .6f}", "m")
+        text += str(tree)
+
+    else:
+        text += f"{len(node_ids)} NODES IN SELECTION:\n{format_long_sequence(node_ids)}\n\n"
 
     return text
 
 def mesh_faces_info_text():
-    faces = list(app().main_window.selected_mesh_faces)
     text = ""
+    faces = list(app().main_window.selected_mesh_faces)
+
     if len(faces) > 1:
         text += f"{len(faces)} FACES IN SELECTION:\n"
         text += f"{format_long_sequence(faces)}\n\n"
 
     elif len(faces) == 1:
-        text += f"Face element: {faces[0]}\n\n"
+        text += f"FACE ELEMENT {faces[0]}\n\n"
 
     return text
 
 def mesh_solids_info_text():
     solids_elem_ids = list(app().main_window.selected_mesh_solids)
     text = ""
+
     if len(solids_elem_ids) > 1:
         text += f"{len(solids_elem_ids)} SOLIDS IN SELECTION:\n"
         text += f"{format_long_sequence(solids_elem_ids)}\n\n"
@@ -464,8 +483,10 @@ def mesh_solids_info_text():
     elif len(solids_elem_ids) == 1:
         element_id = solids_elem_ids[0]
         connect = app().project.model.mesh.solids_connectivity[element_id, 4:]
-        text += f"Solid element: {element_id}\n"
-        text += f"Connectivity: {[int(node_id) for node_id in connect]}\n\n"
+
+        tree = TreeInfo(f"SOLID ELEMENT {element_id}")
+        tree.add_item("Connectivity", f"{connect}")
+        text += str(tree)
 
     return text
 
