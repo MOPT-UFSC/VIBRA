@@ -806,27 +806,37 @@ class MainWindow(QMainWindow):
         If you pass a valid vibra file to this function, it will first copy
         the file to a temporary folder and then load it.
         """
+        try:
+            if project_path is not None:
+                project_path = Path(project_path)
+                app().config.add_recent_file(project_path)
+                app().config.write_last_folder_path_in_file("project_folder", project_path)
+                self.update_recents_menu()
+                copy(project_path, TEMP_PROJECT_FILE)
+                self.update_window_title(project_path)
 
-        if project_path is not None:
-            app().config.add_recent_file(project_path)
-            app().config.write_last_folder_path_in_file("project_folder", project_path)
+            app().project.reset_variables()
+            app().project.reset_solutions()
+
+            if project_path is not None:
+                app().project.name = project_path.stem
+                app().project.save_path = project_path
+
+            app().load_project.initialize()
+            LoadingWindow(app().load_project.load).run()
+
+            self.configure_mesh_information()
+            LoadingWindow(self.update_plots).run()
+            
+        except Exception as error_log:
+            window_title = "Error"
+            title = "Error to open project"
+            message = str(error_log)
+            PrintMessageInput([window_title, title, message])
+
+            app().config.remove_path_from_config_file(project_path)
+            self.welcome_widget.update_recent_projects()
             self.update_recents_menu()
-            copy(project_path, TEMP_PROJECT_FILE)
-            self.update_window_title(project_path)
-
-        app().project.reset_variables()
-        app().project.reset_solutions()
-
-        if project_path is not None:
-            path = Path(project_path)
-            app().project.name = path.stem
-            app().project.save_path = path
-
-        app().load_project.initialize()
-        LoadingWindow(app().load_project.load).run()
-
-        self.configure_mesh_information()
-        LoadingWindow(self.update_plots).run()
 
     def import_geometry(self, path: str, update_render: bool = True):
         if LoadingWindow(app().project.import_geometry).run(path) == -1:

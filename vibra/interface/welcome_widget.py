@@ -21,13 +21,13 @@ class WelcomeWidget(QWidget):
         super().__init__()
 
         self.main_window = app().main_window
-
-        layout = QVBoxLayout(self)
-        self.setLayout(layout)
-        self.setup_image(layout)
-        self.setup_labels(layout)
-        self.setup_recent_projects(layout)
-        self.setup_example_projects(layout)
+        self.widget_layout = QVBoxLayout(self)
+        self.setLayout(self.widget_layout)
+        self.setup_image(self.widget_layout)
+        self.setup_labels(self.widget_layout)
+        self.create_recents_setup()
+        self.update_recent_projects()
+        self.setup_example_projects(self.widget_layout)
 
     def setup_image(self, layout):
         image_label = QLabel(self)
@@ -55,22 +55,20 @@ class WelcomeWidget(QWidget):
         layout.addLayout(labels_layout)
         layout.addStretch()
 
-    def setup_recent_projects(self, layout):
-        recent_label = QLabel("Recent Projects", self)
-        recent_label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(recent_label)
-
-        recents_layout = QHBoxLayout()
-        recents_layout.setAlignment(Qt.AlignCenter)
-        layout.addLayout(recents_layout)
-        layout.addStretch()
-
+    def update_recent_projects(self):
+        if not self.recents_layout.isEmpty():
+            self.remove_all_recent_widgets()
+            
         number_of_recent = 5
         recent_paths = app().config.get_recent_files()
         recent_paths = recent_paths[-number_of_recent:]
 
-        for path in reversed(recent_paths):
+        for path in recent_paths:
             path = Path(path)
+            if not path.exists():
+                app().config.remove_path_from_config_file(path)
+                continue
+            
             thumbnail = None
             icon = None
 
@@ -89,10 +87,20 @@ class WelcomeWidget(QWidget):
             item = WelcomeItem(path.stem, icon, False)
             item.setToolTip(str(path))
             item.clicked.connect(handler)
-            recents_layout.addWidget(item)
+            self.recents_layout.addWidget(item)
 
         for _ in range(number_of_recent - len(recent_paths)):
-            recents_layout.addWidget(WelcomeItem())
+            self.recents_layout.addWidget(WelcomeItem())
+        
+    def create_recents_setup(self):
+        self.recent_label = QLabel("Recent Projects", self)
+        self.recent_label.setAlignment(Qt.AlignCenter)
+        self.widget_layout.addWidget(self.recent_label)
+
+        self.recents_layout = QHBoxLayout()
+        self.recents_layout.setAlignment(Qt.AlignCenter)
+        self.widget_layout.addLayout(self.recents_layout)
+        self.widget_layout.addStretch()
 
     def setup_example_projects(self, layout: QBoxLayout):
         example_label = QLabel("Example Projects", self)
@@ -135,6 +143,13 @@ class WelcomeWidget(QWidget):
         # Complete the remaining with empty items
         # for _ in range(number_of_examples - len(example_paths)):
         #     examples_layout.addWidget(WelcomeItem())
+    
+    def remove_all_recent_widgets(self):
+        widgets = [self.recents_layout.itemAt(item_index).widget() 
+                   for item_index in range(self.recents_layout.count())]
+
+        for widget in widgets:
+           widget.setParent(None)
 
     def new_project(self):
         self.main_window.new_project_dialog()
