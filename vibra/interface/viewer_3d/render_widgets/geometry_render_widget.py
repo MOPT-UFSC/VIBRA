@@ -164,8 +164,8 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         if reset_camera:
             self.renderer.ResetCamera()
-        else:
-            self.update()
+
+        self.update()
 
         if app().project.thumbnail is None:
             self.save_thumbnail()
