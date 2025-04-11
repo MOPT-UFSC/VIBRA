@@ -145,9 +145,11 @@ class WelcomeWidget(QWidget):
         #     examples_layout.addWidget(WelcomeItem())
     
     def remove_all_recent_widgets(self):
-        for _ in range(5):
-            recents_item = self.recents_layout.itemAt(0)
-            recents_item.widget().setParent(None)
+        widgets = [self.recents_layout.itemAt(item_index).widget() 
+                   for item_index in range(self.recents_layout.count())]
+
+        for widget in widgets:
+           widget.setParent(None)
 
     def new_project(self):
         self.main_window.new_project_dialog()
