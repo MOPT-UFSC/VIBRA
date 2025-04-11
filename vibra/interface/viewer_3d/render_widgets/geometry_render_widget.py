@@ -25,7 +25,6 @@ from .model_info_text import(
     lines_info_text, 
     faces_info_text, 
     volumes_info_text, 
-    surface_thickness_info_text, 
     material_info_text, 
     fluid_info_text, 
     porous_material_info_text, 
@@ -425,7 +424,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         text += lines_info_text()
         text += faces_info_text()
         text += volumes_info_text()
-        text += surface_thickness_info_text()
         text += material_info_text()
         text += fluid_info_text()
         text += porous_material_info_text()
