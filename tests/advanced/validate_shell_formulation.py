@@ -33,10 +33,10 @@ mesh_size = "200mm"
 # @pytest.mark.slow
 # @pytest.mark.skip
 
-def load_external_mesh_and_solve(interior_impedance: bool = False):
+def load_external_mesh_and_solve():
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"data/validation/structural/shell_element/pipes/ds_Lpipe_with_caps.dat"
+    mesh_path = f"data/validation/structural/shell/pipes/mesh/ds_Lpipe_with_caps.dat"
 
     if not os.path.exists(mesh_path):
         return
@@ -57,6 +57,8 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     # nodes_from_named_selection = external_mesh.nodes_from_named_selection
     # for ns, nodes in nodes_from_named_selection.items():
     #     print(ns, nodes)
+
+    # return
 
     dt = time() - t0
     print(f"\n\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
@@ -81,6 +83,23 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
         mesh.nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
 
 
+    # # Load the external data
+    # path = f"data/validation/structural/shell/pipes/results/results_for_L_pipe.xlsx"
+    # ext_data = LoadExternalData(path, rho_0)
+
+    # assign the created fluid
+    model = Model()
+    model.mesh =  mesh
+    model.generated_mesh = True
+
+    data_thick = {
+                  "surface_thickness": 0.008,
+                  "thickness_offset": "middle",
+                  }
+
+    model.properties._set_property("surface_thickness", data_thick, surface=1)
+
+
     # Define the material properties
 
     density = 7850
@@ -98,28 +117,8 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
                         thermal_expansion_coefficient = thermal_expansion_coefficient
                         )
 
+    model.properties._set_property("material", material, surface=1)
 
-    # # Load the external data
-    # if interior_impedance:
-    #     path = f"data/validation/elementar/interior_impedance/results/mesh_size_{mesh_size}"
-    # else:
-    #     path = f"data/validation/elementar/results/mesh_size_{mesh_size}"
-
-    # ext_data = LoadExternalData(path, rho_0)
-
-    # assign the created fluid
-    model = Model()
-    model.mesh =  mesh
-    model.generated_mesh = True
-
-    data_thick = {
-                  "surface_thickness": 0.008,
-                  "thickness_offset": "middle",
-                  }
-    
-    for _surf_id in [1]:
-        model.properties._set_property("material", material, surface=_surf_id)
-        model.properties._set_property("surface_thickness", data_thick, surface=_surf_id)
 
     # Prescribed dofs data
     prescribed_dofs_data = {
@@ -131,267 +130,184 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     model.properties._set_property("prescribed_dofs", prescribed_dofs_data, surface=2)
 
 
+    # Nodal loads data
+    distributed_load_data = {
+                             "element_type" : "2d_element",
+                             "real_values" : [100.0, None, None],
+                             "imag_values" : [0.0, None, None],
+                             "unit" : "N/m²"
+                             }
+
+    model.properties._set_property("distributed_loads", distributed_load_data, surface=3)
+
+
     ## Create an object of the Structural Assembler class
     assembler = StructuralAssembler(model)  
 
 
     ## Define the analysis type and frequency setup
 
-    # df = 5
-    # f_min = 5
-    # f_max = 1400
-    # frequencies = np.arange(f_min, f_max + df, df)
+    df = 2
+    f_min = 2
+    f_max = 300
+    frequencies = np.arange(f_min, f_max + df, df)
 
-    # frequency_setup = {
-    #                    "f_min" : f_min,
-    #                    "f_max" : f_max,
-    #                    "f_step" : df,
-    #                    "frequencies" : frequencies
-    #                    }
+    frequency_setup = {
+                       "f_min" : f_min,
+                       "f_max" : f_max,
+                       "f_step" : df,
+                       "frequencies" : frequencies
+                       }
 
-    # # Set the analysis frequency setup
-    # model.set_frequency_setup(frequency_setup)
+    # Set the analysis frequency setup
+    model.set_frequency_setup(frequency_setup)
 
-    # model.set_structural_element(assembler.get_element())
-    # analysis_data = {"analysis_id" : 3, "frequencies" : frequencies}
-    # harmonic_solver = StructuralHarmonicSolver(assembler, analysis_data=analysis_data)
+    model.set_structural_element(assembler.get_element())
+    analysis_data = {"analysis_id" : 0, "frequencies" : frequencies, "global_damping" : (0, 0, 1e-3, 1e-7)}
+    harmonic_solver = StructuralHarmonicSolver(assembler, analysis_data=analysis_data)
 
 
     # Define the analysis type and load setup
-    model.set_structural_element(assembler.get_element())
-    analysis_data = {"analysis_id" : 2, "modes" : 40, "sigma_factor" : 1e-2}
-    modal_solver = StructuralModalSolver(assembler, analysis_data=analysis_data)
+    # model.set_structural_element(assembler.get_element())
+    # analysis_data = {"analysis_id" : 2, "modes" : 40, "sigma_factor" : 1e-2}
+    # modal_solver = StructuralModalSolver(assembler, analysis_data=analysis_data)
 
 
-    # Run modal analysis
-
+    # Process the assemble
     assembler.process_assemble()
 
+
+    # t0 = time()
+    # # solution = modal_solver.solve()
+    # dt = time() - t0
+    # print(f"Elapsed time to solve modal analysis: {round(dt, 4)}\n\n")
+
+    # print("::::::::::::::::::::::::::::::::::::::::::::::::::::::")
+    # print(":: PLOTTING THE OBTAINED RESULTS FOR MODAL ANALYSIS ::")
+    # print("::::::::::::::::::::::::::::::::::::::::::::::::::::::\n")
+
+    # for k, freq in enumerate(modal_solver.natural_frequencies):
+    #     print(f"Mode: {k+1} ==> Natural frequency: {freq : .4f} Hz")
+
+
     t0 = time()
-    solution = modal_solver.solve()
+    # solution = modal_solver.solve()
+    harmonic_solver.solve_direct_method()
     dt = time() - t0
-    print(f"Elapsed time to solve modal analysis: {round(dt, 4)}\n\n")
+    print(f"Elapsed time to solve the analysis: {round(dt, 4)}")
 
-    print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
-    print(":: PLOTTING THE OBTAINED RESULTS FOR NATURAL FREQUENCIES ::")
-    print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n")
 
-    for k, freq in enumerate(modal_solver.natural_frequencies):
-        print(f"Mode: {k+1} ==> Natural frequency: {freq : .4f} Hz")
+    # print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
+    # print(":: PLOTTING THE OBTAINED RESULTS FOR HARMONIC ANALYSIS ::")
+    # print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n")
 
-    return
+    # input_rows = mesh.nodes_from_surfaces[2]
+    output_nodes = mesh.nodes_from_surfaces[3]
 
-    input_rows = mesh.nodes_from_surfaces[1]
-    output_rows = mesh.nodes_from_surfaces[2]
+    dofs_index = {
+                  "ux" : 0,
+                  "uy" : 1,
+                  "uz" : 2,
+                  "rx" : 3,
+                  "ry" : 4,
+                  "rz" : 5
+                  }
 
-    input_pressure = np.average(solution[input_rows, :], axis=0).flatten()
-    output_pressure = np.average(solution[output_rows, :], axis=0).flatten()
+    selected_dof = "ux"
+    dofs_per_node = model.surface_structural_element.DOFS_PER_NODE
+    gdofs = dofs_per_node * output_nodes.reshape(-1, 1) + np.arange(dofs_per_node, dtype=int)
 
-    t0 = time()
+    ux_rows = gdofs[:, dofs_index["ux"]]
+    uy_rows = gdofs[:, dofs_index["uy"]]
+    solution = harmonic_solver.solution
 
-    element_3d, _ = assembler.get_element()
-    element_3d.reorder_connect()
+    response_ux = np.average(solution[ux_rows, :], axis=0).flatten()
+    response_uy = np.average(solution[uy_rows, :], axis=0).flatten()
 
-    list_nodes = list()
-    for tag, surface_nodes in mesh.nodes_from_surfaces.items():
-        list_nodes.extend(surface_nodes)
-
-    rho_eff_v1 = model.get_fluid_density_for_particle_velocity_calculation(1, frequencies)
-    rho_eff_v2 = model.get_fluid_density_for_particle_velocity_calculation(2, frequencies)
-
-    input_particle_velocity = harmonic_solver.get_particle_velocity_from_surface(1, rho_eff_v1)
-    output_particle_velocity = harmonic_solver.get_particle_velocity_from_surface(2, rho_eff_v2)
-
-    input_velocities = np.array(list(input_particle_velocity["Vx"].values()), dtype=complex)
-    output_velocities = np.array(list(output_particle_velocity["Vx"].values()), dtype=complex)
-
-    input_Vx = np.average(input_velocities, axis=0)
-    output_Vx = np.average(output_velocities, axis=0)
-
-    solid_elements_connected_to_nodes =  mesh.get_solid_elements_connected_to_nodes(list_nodes)
-
-    particle_velocity = dict()
-    for _node_id, element_ids in solid_elements_connected_to_nodes.items():
-        Vk = 0.
-        for _element_id in element_ids:
-            Vk += element_3d.process_particle_velocity(_element_id, _node_id, rho_0, frequencies, solution)
-        particle_velocity[_node_id] = Vk / len(element_ids)
-
-    # # nodal area calculation
-    # mesh._process_face_elements_connected_to_nodes([1, 2])
-    # mesh._process_nodal_areas()
-
-    # freq_TL, TL_model = harmonic_solver.get_transmission_loss(1, 2)
 
     dt = time() - t0
     print(f"Elapsed time to post-process data: {round(dt, 4)}")
 
     if solution is not None:
 
-        if mesh_size == "200mm":
-            node_in = 5
-            node_out = 1
+        ## load external results data
+        imported_results = get_external_results()
+        output_face_ux_lin = imported_results[f"output_face_ux_lin"]
+        output_face_ux_quad = imported_results[f"output_face_ux_quad"]
 
-        elif mesh_size == "20mm":
-            node_in = 42
-            node_out = 73
+        output_face_uy_lin = imported_results[f"output_face_uy_lin"]
+        output_face_uy_quad = imported_results[f"output_face_uy_quad"]
 
-        else:
-            return
+        freq_WB = output_face_ux_lin[:, 0]
+        output_face_ux_lin_WB = output_face_ux_lin[:, 1] + 1j*output_face_ux_lin[:, 2]
 
-        # # import the WB transmission loss data from spreadsheet file
-        # imported_results = get_external_results(interior_impedance)
-        # TL_data = imported_results["transmission_loss"] # ports enabled
+        freq_WB = output_face_ux_quad[:, 0]
+        output_face_ux_quad_WB = output_face_ux_quad[:, 1] + 1j*output_face_ux_quad[:, 2]
 
-        WB_pressure_data = ext_data.load_nodal_pressures()
-        WB_particle_velocities_data = ext_data.load_particle_velocities()
-        # WB_nodal_area_data = load_nodal_area()
+        freq_WB = output_face_uy_lin[:, 0]
+        output_face_uy_lin_WB = output_face_uy_lin[:, 1] + 1j*output_face_uy_lin[:, 2]
 
-        freq_WB, _, input_velocities_WB = WB_particle_velocities_data["Vx", "input_face"]
-        input_Vx_WB = np.average(list(input_velocities_WB.values()), axis=0)
+        freq_WB = output_face_uy_quad[:, 0]
+        output_face_uy_quad_WB = output_face_uy_quad[:, 1] + 1j*output_face_uy_quad[:, 2]
 
-        freq_WB, _, input_pressures_WB = WB_pressure_data["input_face"]
-        input_pressure_WB = np.average(list(input_pressures_WB.values()), axis=0)
-
-        freq_WB, _, output_velocities_WB = WB_particle_velocities_data["Vx", "output_face"]
-        output_Vx_WB = np.average(list(output_velocities_WB.values()), axis=0)
-
-        freq_WB, _, output_pressures_WB = WB_pressure_data["output_face"]
-        output_pressure_WB = np.average(list(output_pressures_WB.values()), axis=0)
-
-        # Print the nodal results deviations
-        abs_diff_node_Pin = np.abs((input_pressures_WB[node_in] - solution[node_in-1, :]) / (input_pressures_WB[node_in]))
-        print(f"\nDeviation of pressure (node {node_in}): {100 * np.max(abs_diff_node_Pin)} %")
-
-        abs_diff_node_Pout = np.abs((output_pressures_WB[node_out] - solution[node_out-1, :]) / (output_pressures_WB[node_out]))
-        print(f"Deviation of pressure (node {node_out}): {100 * np.max(abs_diff_node_Pout)} %")
-
-        abs_diff_node_Vin = np.abs((input_velocities_WB[node_in] - particle_velocity[node_in-1][0, :]) / (input_velocities_WB[node_in]))
-        print(f"Deviation of particle velocity (node {node_in}): {100 * np.max(abs_diff_node_Vin)} %")
-
-        abs_diff_node_Vout = np.abs((output_velocities_WB[node_out] - particle_velocity[node_out-1][0, :]) / (output_velocities_WB[node_out]))
-        print(f"Deviation of particle velocity (node {node_out}): {100 * np.max(abs_diff_node_Vout)} %")
-
-        abs_diff_Pinput_face = np.abs((input_pressure_WB - input_pressure) / input_pressure_WB)
-        print(f"Deviation of pressure (input face): {100 * np.max(abs_diff_Pinput_face)} %")
-
-        abs_diff_Poutput_face = np.abs((output_pressure_WB - output_pressure) / output_pressure_WB)
-        print(f"Deviation of pressure (output face): {100 * np.max(abs_diff_Poutput_face)} %")
-
-        abs_diff_Vinput_face = np.abs((input_Vx_WB - input_Vx) / input_Vx_WB)
-        print(f"Deviation of particle velocity (input face): {100 * np.max(abs_diff_Vinput_face)} %")
-
-        abs_diff_Voutput_face = np.abs((output_Vx_WB - output_Vx) / output_Vx_WB)
-        print(f"Deviation of particle velocity (output face): {100 * np.max(abs_diff_Voutput_face)} %")
-
-
-        title = f"Harmonic response at input face"
-
-        fig1, ax1 = plt.subplots()
-        ax1.plot(frequencies, np.real(input_pressure), 'r', label='VIBRA')
-        ax1.plot(freq_WB, np.real(input_pressure_WB), 'k--', label='ANSYS')
-        ax1.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Real', title=title)
-        ax1.grid()
-        ax1.legend()
-
-        fig2, ax2 = plt.subplots()
-        ax2.plot(frequencies, np.imag(input_pressure), 'r', label='VIBRA')
-        ax2.plot(freq_WB, np.imag(input_pressure_WB), 'k--', label='ANSYS')
-        ax2.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Imaginary', title=title)
-        ax2.grid()
-        ax2.legend()
 
         title = f"Harmonic response at output face"
 
-        fig3, ax3 = plt.subplots()
-        ax3.plot(frequencies, np.real(output_pressure), 'r', label='VIBRA')
-        ax3.plot(freq_WB, np.real(output_pressure_WB), 'k--', label='ANSYS')
-        ax3.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Real', title=title)
-        ax3.grid()
-        ax3.legend()
+        fig1, ax1 = plt.subplots()
+        ax1.semilogy(frequencies, np.abs(response_ux), 'r', label='VIBRA')
+        ax1.semilogy(freq_WB, np.abs(output_face_ux_lin_WB), 'k--', label='ANSYS (lin.)')
+        ax1.semilogy(freq_WB, np.abs(output_face_ux_quad_WB), 'b--', label='ANSYS (quad.)')
+        ax1.set(xlabel='Frequency [Hz]', ylabel='Magnitude of displacement Ux [m]', title=title)
+        ax1.grid()
+        ax1.legend()
+
+        # fig2, ax2 = plt.subplots()
+        # ax2.plot(frequencies, np.real(response_ux), 'r', label='VIBRA')
+        # ax2.plot(freq_WB, np.real(output_face_ux_lin_WB), 'k--', label='ANSYS (lin.)')
+        # ax2.plot(freq_WB, np.real(output_face_ux_quad_WB), 'b--', label='ANSYS (quad.)')
+        # ax2.set(xlabel='Frequency [Hz]', ylabel='Real part of displacement Ux [m]', title=title)
+        # ax2.grid()
+        # ax2.legend()
+
+        # fig3, ax3 = plt.subplots()
+        # ax3.plot(frequencies, np.imag(response_ux), 'r', label='VIBRA')
+        # ax3.plot(freq_WB, np.imag(output_face_ux_lin_WB), 'k--', label='ANSYS (lin.)')
+        # ax3.plot(freq_WB, np.real(output_face_ux_quad_WB), 'b--', label='ANSYS (quad.)')
+        # ax3.set(xlabel='Frequency [Hz]', ylabel='Imaginary part of displacement Ux [m]', title=title)
+        # ax3.grid()
+        # ax3.legend()
 
         fig4, ax4 = plt.subplots()
-        ax4.plot(frequencies, np.imag(output_pressure), 'r', label='VIBRA')
-        ax4.plot(freq_WB, np.imag(output_pressure_WB), 'k--', label='ANSYS')
-        ax4.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Imaginary', title=title)
+        ax4.semilogy(frequencies, np.abs(response_uy), 'r', label='VIBRA')
+        ax4.semilogy(freq_WB, np.abs(output_face_uy_lin_WB), 'k--', label='ANSYS (lin.)')
+        ax4.semilogy(freq_WB, np.abs(output_face_uy_quad_WB), 'b--', label='ANSYS (quad.)')
+        ax4.set(xlabel='Frequency [Hz]', ylabel='Magnitude of displacement Ux [m]', title=title)
         ax4.grid()
         ax4.legend()
 
-        # Plot the nodal results for pressure and particle velocity
+        # fig5, ax5 = plt.subplots()
+        # ax5.plot(frequencies, np.real(response_uy), 'r', label='VIBRA')
+        # ax5.plot(freq_WB, np.real(output_face_uy_lin_WB), 'k--', label='ANSYS (lin.)')
+        # ax5.plot(freq_WB, np.real(output_face_uy_quad_WB), 'b--', label='ANSYS (quad.)')
+        # ax5.set(xlabel='Frequency [Hz]', ylabel='Real part of displacement Ux [m]', title=title)
+        # ax5.grid()
+        # ax5.legend()
 
-        data_type = np.real
-        type_label = "imaginary"
-
-        fig5, ax5 = plt.subplots()
-        title = f"Acoustic pressure at node {node_in}"
-        ax5.plot(frequencies, data_type(solution[node_in-1, :]), 'r', label='VIBRA')
-        ax5.plot(freq_WB, data_type(input_pressures_WB[node_in]), 'k--', label='ANSYS')
-        ax5.set_xlabel('Frequency [Hz]')
-        ax5.set_ylabel(f'Acoustic Pressure [Pa] - {type_label}')
-        ax5.set_title(title)
-        ax5.grid()
-        ax5.legend()
-
-        fig6, ax6 = plt.subplots()
-        title = f"Acoustic pressure at node {node_out}"
-        ax6.plot(frequencies, data_type(solution[node_out-1, :]), 'r', label='VIBRA')
-        ax6.plot(freq_WB, data_type(output_pressures_WB[node_out]), 'k--', label='ANSYS')
-        ax6.set_xlabel('Frequency [Hz]')
-        ax6.set_ylabel(f'Acoustic Pressure [Pa] - {type_label}')
-        ax6.set_title(title)
-        ax6.grid()
-        ax6.legend()
-
-        fig7, ax7 = plt.subplots()
-        title = f"Particle velocity at node {node_in}"
-        ax7.plot(frequencies, data_type(particle_velocity[node_in-1][0, :]), 'r', label='VIBRA')
-        ax7.plot(freq_WB, data_type(input_velocities_WB[node_in]), 'k--', label='ANSYS')
-        ax7.set_xlabel('Frequency [Hz]')
-        ax7.set_ylabel(f'Particle velocity [m/s] - {type_label}')
-        ax7.set_title(title)
-        ax7.grid()
-        ax7.legend()
-
-        fig8, ax8 = plt.subplots()
-        title = f"Particle velocity at node {node_out}"
-        ax8.plot(frequencies, data_type(particle_velocity[node_out-1][0, :]), 'r', label='VIBRA')
-        ax8.plot(freq_WB, data_type(output_velocities_WB[node_out]), 'k--', label='ANSYS')
-        ax8.set_xlabel('Frequency [Hz]')
-        ax8.set_ylabel(f'Particle velocity [m/s] - {type_label}')
-        ax8.set_title(title)
-        ax8.grid()
-        ax8.legend()
-
-        fig9, ax9 = plt.subplots()
-        title = "Input face particle velocity - average"
-        ax9.plot(frequencies, data_type(input_Vx), 'r', label='VIBRA')
-        ax9.plot(freq_WB, data_type(input_Vx_WB), 'k--', label='ANSYS')
-        ax9.set_xlabel('Frequency [Hz]')
-        ax9.set_ylabel(f'Particle velocity [m/s] - {type_label}')
-        ax9.set_title(title)
-        ax9.grid()
-        ax9.legend()
-
-        fig10, ax10 = plt.subplots()
-        title = "Output face particle velocity - average"
-        ax10.plot(frequencies, data_type(output_Vx), 'r', label='VIBRA')
-        ax10.plot(freq_WB, data_type(output_Vx_WB), 'k--', label='ANSYS')
-        ax10.set_xlabel('Frequency [Hz]')
-        ax10.set_ylabel(f'Particle velocity [m/s] - {type_label}')
-        ax10.set_title(title)
-        ax10.grid()
-        ax10.legend()
+        # fig6, ax6 = plt.subplots()
+        # ax6.plot(frequencies, np.imag(response_uy), 'r', label='VIBRA')
+        # ax6.plot(freq_WB, np.imag(output_face_uy_lin_WB), 'k--', label='ANSYS (lin.)')
+        # ax6.plot(freq_WB, np.real(output_face_uy_quad_WB), 'b--', label='ANSYS (quad.)')
+        # ax6.set(xlabel='Frequency [Hz]', ylabel='Imaginary part of displacement Ux [m]', title=title)
+        # ax6.grid()
+        # ax6.legend()
 
         plt.show()
 
 
-def get_external_results(interior_impedance: bool):
+def get_external_results():
 
     imported_results = dict()
-    if interior_impedance:
-        results_path = f"data/validation/elementar/results/interior_impedance/connected_rectangular_cavities_{mesh_size}.xlsx"
-    else:
-        results_path = f"data/validation/elementar/results/connected_rectangular_cavities_{mesh_size}.xlsx"
+    results_path = f"data/validation/structural/shell/pipes/results/results_for_L_pipe.xlsx"
 
     if not os.path.exists(results_path):
         return imported_results
@@ -424,4 +340,4 @@ def get_external_results(interior_impedance: bool):
 
 
 if __name__ == "__main__":
-    load_external_mesh_and_solve(interior_impedance=False)
+    load_external_mesh_and_solve()
