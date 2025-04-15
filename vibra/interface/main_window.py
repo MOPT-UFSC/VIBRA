@@ -202,6 +202,7 @@ class MainWindow(QMainWindow):
         self.disable_advanced_acoustic_plots_buttons(True)
 
         self.splitter.setSizes([100, 400])
+        self.splitter.widget(0).setVisible(False)
         self.splitter.widget(0).setMinimumWidth(360)
 
     def _config_window(self):
@@ -552,6 +553,7 @@ class MainWindow(QMainWindow):
         if not self.action_results_workspace.isEnabled():
             self.action_results_workspace.setEnabled(True)
 
+        self.splitter.widget(0).setVisible(True)
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
         self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
@@ -569,9 +571,10 @@ class MainWindow(QMainWindow):
         if not self.action_results_workspace.isEnabled():
             self.action_results_workspace.setEnabled(True)
 
+        self.configure_mesh_information()
+        self.splitter.widget(0).setVisible(True)
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
-        self.configure_mesh_information()
         self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
 
         self.animation_toolbar.setDisabled(True)
@@ -599,6 +602,12 @@ class MainWindow(QMainWindow):
 
     def action_open_project_callback(self):
         self.open_project_dialog()
+
+    def action_import_geometry_callback(self):
+        # return
+        if self.import_geometry_dialog():
+            pass
+            # self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
 
     def action_hide_selection_callback(self):
         mesh = app().project.model.mesh
