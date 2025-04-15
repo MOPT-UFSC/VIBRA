@@ -521,7 +521,6 @@ class MainWindow(QMainWindow):
         for i in range(renders_number):
             logging.info(f"Updating renders... [{i+1}/{renders_number}]")
             widget = self.render_widgets_stack.widget(i)
-            print(widget)
             if isinstance(widget, CommonRenderWidget):
                 widget.update_plot(reset_camera)
 
