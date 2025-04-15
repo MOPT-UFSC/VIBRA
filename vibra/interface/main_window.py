@@ -178,6 +178,7 @@ class MainWindow(QMainWindow):
         self.create_recents_menu()
         self.create_status_bar()
 
+        self.clear_render_widgets_stack()
         self.render_widgets_stack.addWidget(self.geometry_widget)
         self.render_widgets_stack.addWidget(self.mesh_widget)
         self.render_widgets_stack.addWidget(self.results_widget)
@@ -510,6 +511,11 @@ class MainWindow(QMainWindow):
 
     def show_mesh_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
+    
+    def clear_render_widgets_stack(self):
+        for _ in range(self.render_widgets_stack.count()):
+            widget = self.render_widgets_stack.widget(0)
+            self.render_widgets_stack.removeWidget(widget)
 
     def update_plots(self, reset_camera=True):
         renders_number = self.render_widgets_stack.count()
