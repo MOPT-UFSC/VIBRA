@@ -136,7 +136,7 @@
      <x>0</x>
      <y>0</y>
      <width>1055</width>
-     <height>21</height>
+     <height>31</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_project">
@@ -159,19 +159,20 @@
     </property>
     <addaction name="action_theme"/>
     <addaction name="separator"/>
-    <addaction name="action_show_materials"/>
-    <addaction name="action_show_fluids"/>
-    <addaction name="action_show_empty"/>
     <addaction name="separator"/>
     <addaction name="action_user_preferences"/>
    </widget>
    <widget class="QMenu" name="menu_view_mode">
     <property name="title">
-     <string>View mode</string>
+     <string>View</string>
     </property>
     <addaction name="action_node_view"/>
     <addaction name="action_line_view"/>
     <addaction name="action_face_view"/>
+    <addaction name="separator"/>
+    <addaction name="action_show_materials"/>
+    <addaction name="action_show_fluids"/>
+    <addaction name="action_show_empty"/>
    </widget>
    <widget class="QMenu" name="menu_help">
     <property name="title">
