@@ -40,7 +40,7 @@ from vibra.interface.viewer_3d.render_widgets import (
 )
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
-from vibra.utils.interface_utils import VisualizationFilter
+from vibra.utils.interface_utils import VisualizationFilter, ColorMode
 from vibra.interface.user_input.render_user_preferences import RendererUserPreferencesInput
 
 from molde.render_widgets import CommonRenderWidget
@@ -180,6 +180,7 @@ class MainWindow(QMainWindow):
         self.create_recents_menu()
         self.create_status_bar()
 
+        self.clear_render_widgets_stack()
         self.render_widgets_stack.addWidget(self.geometry_widget)
         self.render_widgets_stack.addWidget(self.mesh_widget)
         self.render_widgets_stack.addWidget(self.results_widget)
@@ -204,6 +205,7 @@ class MainWindow(QMainWindow):
         self.disable_advanced_acoustic_plots_buttons(True)
 
         self.splitter.setSizes([100, 400])
+        self.splitter.widget(0).setVisible(False)
         self.splitter.widget(0).setMinimumWidth(360)
 
     def _config_window(self):
@@ -300,41 +302,6 @@ class MainWindow(QMainWindow):
     def _configure_stacked_setup(self):
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
 
-    def set_mesh_selection(self, *, nodes=None, faces=None, solids=None, join=False, remove=False):
-        if nodes is None:
-            nodes = set()
-
-        if faces is None:
-            faces = set()
-
-        if solids is None:
-            solids = set()
-
-        if join and remove:
-            self.selected_mesh_nodes ^= set(nodes)
-            self.selected_mesh_faces ^= set(faces)
-            self.selected_mesh_solids ^= set(solids)
-        elif join:
-            self.selected_mesh_nodes |= set(nodes)
-            self.selected_mesh_faces |= set(faces)
-            self.selected_mesh_solids |= set(solids)
-        elif remove:
-            self.selected_mesh_nodes -= set(nodes)
-            self.selected_mesh_faces -= set(faces)
-            self.selected_mesh_solids -= set(solids)
-        else:
-            self.selected_mesh_nodes = set(nodes)
-            self.selected_mesh_faces = set(faces)
-            self.selected_mesh_solids = set(solids)
-
-            # Clear the other type of selection
-            self.selected_geometry_points.clear()
-            self.selected_geometry_lines.clear()
-            self.selected_geometry_surfaces.clear()
-            self.selected_geometry_volumes.clear()
-
-        self.selection_changed.emit()
-
     def create_status_bar(self):
         self.setStatusBar(self.status_bar)
 
@@ -363,6 +330,10 @@ class MainWindow(QMainWindow):
         show = app().config.user_preferences.show_reference_scale_bar
         self.update_scale_bar(show)
         self.update_renderer_font_size()
+
+    def clear_selection(self):
+        self.set_geometry_selection()
+        self.set_mesh_selection()
 
     def set_geometry_selection(self, *, points=None, lines=None, surfaces=None, volumes=None, join=False, remove=False):
         if points is None:
@@ -404,6 +375,41 @@ class MainWindow(QMainWindow):
             self.selected_geometry_lines = set(lines)
             self.selected_geometry_surfaces = set(surfaces)
             self.selected_geometry_volumes = set(volumes)
+
+        self.selection_changed.emit()
+
+    def set_mesh_selection(self, *, nodes=None, faces=None, solids=None, join=False, remove=False):
+        if nodes is None:
+            nodes = set()
+
+        if faces is None:
+            faces = set()
+
+        if solids is None:
+            solids = set()
+
+        if join and remove:
+            self.selected_mesh_nodes ^= set(nodes)
+            self.selected_mesh_faces ^= set(faces)
+            self.selected_mesh_solids ^= set(solids)
+        elif join:
+            self.selected_mesh_nodes |= set(nodes)
+            self.selected_mesh_faces |= set(faces)
+            self.selected_mesh_solids |= set(solids)
+        elif remove:
+            self.selected_mesh_nodes -= set(nodes)
+            self.selected_mesh_faces -= set(faces)
+            self.selected_mesh_solids -= set(solids)
+        else:
+            self.selected_mesh_nodes = set(nodes)
+            self.selected_mesh_faces = set(faces)
+            self.selected_mesh_solids = set(solids)
+
+            # Clear the other type of selection
+            self.selected_geometry_points.clear()
+            self.selected_geometry_lines.clear()
+            self.selected_geometry_surfaces.clear()
+            self.selected_geometry_volumes.clear()
 
         self.selection_changed.emit()
 
@@ -464,6 +470,18 @@ class MainWindow(QMainWindow):
             self.action_theme.setIcon(self.theme_moon_icon)
 
         app().config.update_config_file()
+    
+    def action_show_materials_callback(self):
+        self.visualization_filter.color_mode = ColorMode.MATERIAL
+        self.visualization_changed.emit()
+
+    def action_show_fluids_callback(self):
+        self.visualization_filter.color_mode = ColorMode.FLUID
+        self.visualization_changed.emit()
+
+    def action_show_empty_callback(self):
+        self.visualization_filter.color_mode = ColorMode.EMPTY
+        self.visualization_changed.emit()
 
     def action_user_preferences_callback(self):
         self.close_dialogs()
@@ -497,6 +515,11 @@ class MainWindow(QMainWindow):
 
     def show_mesh_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
+    
+    def clear_render_widgets_stack(self):
+        for _ in range(self.render_widgets_stack.count()):
+            widget = self.render_widgets_stack.widget(0)
+            self.render_widgets_stack.removeWidget(widget)
 
     def update_plots(self, reset_camera=True):
         renders_number = self.render_widgets_stack.count()
@@ -540,6 +563,7 @@ class MainWindow(QMainWindow):
         if not self.action_results_workspace.isEnabled():
             self.action_results_workspace.setEnabled(True)
 
+        self.splitter.widget(0).setVisible(True)
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
         self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
@@ -557,9 +581,10 @@ class MainWindow(QMainWindow):
         if not self.action_results_workspace.isEnabled():
             self.action_results_workspace.setEnabled(True)
 
+        self.configure_mesh_information()
+        self.splitter.widget(0).setVisible(True)
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
-        self.configure_mesh_information()
         self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
 
         self.animation_toolbar.setDisabled(True)
@@ -590,8 +615,15 @@ class MainWindow(QMainWindow):
     
     def action_home_exit_callback(self):
         self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
-        self.model_setup_widget.model_setup_items._initial_configuration()
+        self.stacked_setup.setVisible(False)
+        self.status_bar.setVisible(False)
         self.welcome_widget.update_recent_projects()
+
+    def action_import_geometry_callback(self):
+        # return
+        if self.import_geometry_dialog():
+            pass
+            # self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
 
     def action_hide_selection_callback(self):
         mesh = app().project.model.mesh
@@ -833,6 +865,8 @@ class MainWindow(QMainWindow):
 
             app().load_project.initialize()
             LoadingWindow(app().load_project.load).run()
+            
+            self.status_bar.setVisible(True)
 
             self.configure_mesh_information()
             LoadingWindow(self.update_plots).run()

@@ -20,9 +20,6 @@
       <property name="lineWidth">
        <number>1</number>
       </property>
-      <property name="orientation">
-       <enum>Qt::Orientation::Horizontal</enum>
-      </property>
       <property name="opaqueResize">
        <bool>true</bool>
       </property>
@@ -37,7 +34,7 @@
         </sizepolicy>
        </property>
        <property name="contextMenuPolicy">
-        <enum>Qt::ContextMenuPolicy::DefaultContextMenu</enum>
+        <enum>Qt::NoContextMenu</enum>
        </property>
        <property name="styleSheet">
         <string notr="true"/>
@@ -136,7 +133,7 @@
      <x>0</x>
      <y>0</y>
      <width>1055</width>
-     <height>33</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_project">
@@ -145,6 +142,7 @@
     </property>
     <addaction name="action_new_project"/>
     <addaction name="action_open_project"/>
+    <addaction name="action_import_geometry"/>
     <addaction name="action_save"/>
     <addaction name="action_save_as"/>
     <addaction name="action_export_mesh"/>
@@ -158,15 +156,21 @@
      <string>Settings</string>
     </property>
     <addaction name="action_theme"/>
+    <addaction name="separator"/>
+    <addaction name="separator"/>
     <addaction name="action_user_preferences"/>
    </widget>
    <widget class="QMenu" name="menu_view_mode">
     <property name="title">
-     <string>View mode</string>
+     <string>View</string>
     </property>
     <addaction name="action_node_view"/>
     <addaction name="action_line_view"/>
     <addaction name="action_face_view"/>
+    <addaction name="separator"/>
+    <addaction name="action_show_materials"/>
+    <addaction name="action_show_fluids"/>
+    <addaction name="action_show_empty"/>
    </widget>
    <widget class="QMenu" name="menu_help">
     <property name="title">
@@ -211,15 +215,6 @@
    </property>
    <property name="text">
     <string>Recent</string>
-   </property>
-  </action>
-  <action name="action_import_geometry">
-   <property name="icon">
-    <iconset>
-     <normaloff>../../../data/icons/image-plus.png</normaloff>../../../data/icons/image-plus.png</iconset>
-   </property>
-   <property name="text">
-    <string>Import geometry</string>
    </property>
   </action>
   <action name="action_save">
@@ -534,15 +529,6 @@
     <string>Configure Section Plane</string>
    </property>
   </action>
-  <action name="action_theme_2">
-   <property name="icon">
-    <iconset>
-     <normaloff>../icons/sun_icon.png</normaloff>../icons/sun_icon.png</iconset>
-   </property>
-   <property name="text">
-    <string>Theme</string>
-   </property>
-  </action>
   <action name="action_plot_particle_velocity">
    <property name="icon">
     <iconset>
@@ -622,6 +608,30 @@
    </property>
    <property name="text">
     <string>User Preferences</string>
+   </property>
+  </action>
+  <action name="action_show_materials">
+   <property name="text">
+    <string>Show Materials</string>
+   </property>
+  </action>
+  <action name="action_show_fluids">
+   <property name="text">
+    <string>Show Fluids</string>
+   </property>
+  </action>
+  <action name="action_show_empty">
+   <property name="text">
+    <string>Show Empty</string>
+   </property>
+  </action>
+  <action name="action_import_geometry">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/geometry_icon.png</normaloff>../icons/geometry_icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Import geometry</string>
    </property>
   </action>
   <action name="action_home_exit">

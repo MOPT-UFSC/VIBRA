@@ -156,8 +156,8 @@ class MeshRenderWidget(CommonRenderWidget):
 
         if reset_camera:
             self.renderer.ResetCamera()
-        else:
-            self.update()
+
+        self.update()
 
         if self.isVisible():
             app().project.thumbnail = self.get_thumbnail()
