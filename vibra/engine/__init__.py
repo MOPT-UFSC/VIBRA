@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import IntEnum
 
 
-class AnalysisID(Enum):
+class AnalysisID(IntEnum):
     NO_ANALYSIS = -1
     STRUCTURAL_HARMONIC_DIRECT_METHOD = 0
     STRUCTURAL_HARMONIC_MODE_SUPERPOSITION = 1
