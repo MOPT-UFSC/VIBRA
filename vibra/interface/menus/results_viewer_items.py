@@ -3,11 +3,12 @@ from PySide6.QtGui import QIcon, QFont, QPixmap, QColor, QLinearGradient, QBrush
 from PySide6.QtCore import Qt, QSize, QRect
 from pathlib import Path
 
+from vibra import app
+from vibra.engine import AnalysisID
 from vibra.interface.menus.border_item_delegate import BorderItemDelegate
 from vibra.interface.menus.common_menu_items import CommonMenuItems
 from vibra.interface.general.print_message_input import PrintMessageInput
 
-from vibra import app
 
 class ResultsViewerItems(CommonMenuItems):
     """Menu Items
@@ -138,35 +139,52 @@ class ResultsViewerItems(CommonMenuItems):
 
         analysis_id = app().project.analysis_data["analysis_id"]
 
-        if analysis_id in [0, 1, 2]:
+        if analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+            AnalysisID.STRUCTURAL_MODAL,
+        ]:
             self.update_structural_analysis_visibility_items()
         
-        elif analysis_id in [3, 4]:
+        elif analysis_id in [
+            AnalysisID.ACOUSTIC_HARMONIC,
+            AnalysisID.ACOUSTIC_MODAL,
+        ]:
             self.update_acoustic_analysis_visibility_items()
         
-        elif analysis_id in [5, 6]:    
+        elif analysis_id in [
+            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
+            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
+        ]:    
             self.update_coupled_analysis_visibility_items()
 
-        if analysis_id in [0, 1]:
+        if analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+        ]:
             self.item_child_plot_structural_frequency_response.setDisabled(False)
             self.item_child_plot_displacement_field.setDisabled(False)
             # self.item_child_plot_reaction_frequency_response.setDisabled(False)
             # self.item_child_plot_stress_field.setDisabled(False)
             # self.item_child_plot_stress_frequency_response.setDisabled(False)
         
-        elif analysis_id == 2:
+        elif analysis_id == AnalysisID.STRUCTURAL_MODAL:
             self.item_child_plot_structural_mode_shapes.setDisabled(False)
             # if self.project.get_acoustic_solution() is not None:
             #     self.item_child_plot_acoustic_mode_shapes.setDisabled(False)    
         
-        elif analysis_id == 4:
+        elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
             self.item_child_plot_acoustic_mode_shapes.setDisabled(False)
             # if self.project.get_structural_solution() is not None:
             #     self.item_child_plot_structural_mode_shapes.setDisabled(False)  
         
-        elif analysis_id in [3, 5, 6]:
+        elif analysis_id in [
+            AnalysisID.ACOUSTIC_HARMONIC,
+            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
+            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
+        ]:
 
-            if analysis_id != 3:
+            if analysis_id != AnalysisID.ACOUSTIC_HARMONIC:
                 self.item_child_plot_displacement_field.setDisabled(False)
                 self.item_child_plot_structural_frequency_response.setDisabled(False)
                 # self.item_child_plot_stress_field.setDisabled(False)
@@ -186,11 +204,23 @@ class ResultsViewerItems(CommonMenuItems):
         """
         analysis_id = app().project.analysis_data["analysis_id"]
 
-        if analysis_id in [0, 1, 2]:
+        if analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+            AnalysisID.STRUCTURAL_MODAL,
+        ]:
             self.expandItem(self.item_top_results_viewer_structural)
-        elif analysis_id in [3, 4]:
+
+        elif analysis_id in [
+            AnalysisID.ACOUSTIC_HARMONIC,
+            AnalysisID.ACOUSTIC_MODAL,
+        ]:
             self.expandItem(self.item_top_results_viewer_acoustic)
-        elif analysis_id in [5, 6]:
+
+        elif analysis_id in [
+            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
+            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
+        ]:
             self.expandItem(self.item_top_results_viewer_structural)
             self.expandItem(self.item_top_results_viewer_acoustic)
 

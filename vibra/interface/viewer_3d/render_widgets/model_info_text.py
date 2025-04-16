@@ -1,5 +1,6 @@
 
 from vibra import app
+from vibra.engine import AnalysisID
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 
@@ -612,7 +613,10 @@ def analysis_info_text(frequency_index: int):
         }
         tree = TreeInfo(display_name[project.last_analysis])
 
-    if project.analysis_id in [2, 4]:
+    if project.analysis_id in [
+        AnalysisID.STRUCTURAL_MODAL,
+        AnalysisID.ACOUSTIC_MODAL,
+    ]:
         frequencies = None
         if project.last_analysis == "Modal Structural":
             if project.structural_modal_solver.solution is None:

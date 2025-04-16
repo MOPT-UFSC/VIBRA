@@ -3,6 +3,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
+from vibra.engine import AnalysisID
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.loading_window import LoadingWindow
@@ -41,7 +42,7 @@ class PlotParticleVelocityFrequencyResponseInput(QWidget):
         self.analysis_method = ""
         analysis_data = self.project.analysis_data
         if "analysis_id" in analysis_data.keys():
-            if analysis_data["analysis_id"] == 3:
+            if analysis_data["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
                 self.analysis_method = "Direct method"
 
         self.frequencies = self.project.acoustic_harmonic_solver.frequencies

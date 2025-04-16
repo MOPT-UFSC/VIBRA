@@ -3,6 +3,7 @@ from PySide6.QtCore import Qt, QEvent, QObject, Signal
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
+from vibra.engine import AnalysisID
 from vibra.interface.mesh.mesher_inputs import MesherInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
@@ -265,7 +266,7 @@ class ProcessAcousticTransferElementData(QDialog):
 
     def configure_analysis(self):
 
-        self.analysis_data = {"analysis_id": 3}
+        self.analysis_data = {"analysis_id": AnalysisID.ACOUSTIC_HARMONIC}
 
         if self.check_frequency_entries():
             return True

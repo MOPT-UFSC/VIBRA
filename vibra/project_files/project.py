@@ -1,5 +1,6 @@
 
 from vibra import app
+from vibra.engine import AnalysisID
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
@@ -109,7 +110,10 @@ class Project:
         analysis_setup = app().file.read_analysis_setup_from_file()
         if isinstance(analysis_setup, dict):
             analysis_id = analysis_setup.get("analysis_id")
-            if analysis_id in [2, 4]:
+            if analysis_id in [
+                AnalysisID.STRUCTURAL_MODAL,
+                AnalysisID.ACOUSTIC_MODAL,
+            ]:
                 if "modes" in analysis_setup.keys():
                     if not isinstance(analysis_setup["modes"], int):
                         return False
@@ -124,7 +128,11 @@ class Project:
 
                 return True
 
-            elif analysis_id in [0, 1, 3]:
+            elif analysis_id in [
+                AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+                AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+                AnalysisID.ACOUSTIC_HARMONIC,
+            ]:
                 for f_type in ["f_min", "f_max", "f_step"]:    
                     if f_type in analysis_setup.keys():
                         if not isinstance(analysis_setup[f_type], int | float):
@@ -142,50 +150,50 @@ class Project:
         if "analysis_id" in data.keys():
 
             # structural harmonic analysis - direct method
-            if data["analysis_id"] == 0:
+            if data["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
                 self.set_structural_element_to_model()
                 self.structural_harmonic_solver = StructuralHarmonicSolver(self.structural_assembler, analysis_data=data)
                 self.last_analysis = "Harmonic Structural"
-                self.analysis_id = 0
+                self.analysis_id = AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD
 
             # structural harmonic analysis - mode superposition method
-            elif data["analysis_id"] == 1:
+            elif data["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION:
                 print("Structural harmonic analysis (mode superposition method) not implemented")
                 raise NotImplementedError("Not implemented solver")
 
             # structural modal analysis
-            elif data["analysis_id"] == 2:
+            elif data["analysis_id"] == AnalysisID.STRUCTURAL_MODAL:
                 self.set_structural_element_to_model()
                 self.structural_modal_solver = StructuralModalSolver(self.structural_assembler, analysis_data=data)
                 self.last_analysis = "Modal Structural"
-                self.analysis_id = 2
+                self.analysis_id = AnalysisID.STRUCTURAL_MODAL
            
             # acoustic harmonic analysis
-            elif data["analysis_id"] == 3:
+            elif data["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
                 self.set_acoustic_element_to_model()
                 self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_assembler, analysis_data=data)
                 self.last_analysis = "Harmonic Acoustic"
-                self.analysis_id = 3
+                self.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
             
             # acoustic modal analysis
-            elif data["analysis_id"] == 4:
+            elif data["analysis_id"] == AnalysisID.ACOUSTIC_MODAL:
                 self.set_acoustic_element_to_model()
                 self.acoustic_modal_solver = AcousticModalSolver(self.acoustic_assembler, analysis_data=data)
                 self.last_analysis = "Modal Acoustic"
-                self.analysis_id = 4
+                self.analysis_id = AnalysisID.ACOUSTIC_MODAL
             
             # coupled harmonic analysis (direct method)
-            elif data["analysis_id"] == 5:
+            elif data["analysis_id"] == AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD:
                 print("Coupled harmonic analysis (direct method) not implemented")
                 raise NotImplementedError("Not implemented solver")
 
             # coupled harmonic analysis (mode superposition method)
-            elif data["analysis_id"] == 6:
+            elif data["analysis_id"] == AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION:
                 print("Coupled harmonic analysis (mode superposition method) not implemented")
                 raise NotImplementedError("Not implemented solver")
 
             # static analysis
-            elif data["analysis_id"] == 7:
+            elif data["analysis_id"] == AnalysisID.STATIC_ANALYSIS:
                 print("Static analysis not implemented")
                 raise NotImplementedError("Not implemented solver")
 
@@ -231,7 +239,7 @@ class Project:
     def solve_structural_harmonic_analysis(self):
         self.structural_assembler.process_assemble()
         t0 = time()
-        if self.analysis_data["analysis_id"] == 0:
+        if self.analysis_data["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
             self.structural_harmonic_solver.solve_direct_method()
         else:
             self.structural_harmonic_solver.solve_mode_superposition_method()
@@ -258,22 +266,25 @@ class Project:
 
         checker = AnalysisRequirementsChecker()
 
-        if analysis_id in [0, 1]:
+        if analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+        ]:
             if checker.check_structural_harmonic_analysis():
                 return True
             LoadingWindow(analysis.process_structural_harmonic_analysis).run()
 
-        elif analysis_id == 2:
+        elif analysis_id == AnalysisID.STRUCTURAL_MODAL:
             if checker.check_structural_modal_analysis():
                 return True
             LoadingWindow(analysis.process_structural_modal_analysis).run()
 
-        elif analysis_id == 3:
+        elif analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             if checker.check_acoustic_harmonic_analysis():
                 return True
             LoadingWindow(analysis.process_acoustic_harmonic_analysis).run()
 
-        elif analysis_id == 4:
+        elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
             if checker.check_acoustic_modal_analysis():
                 return True
             LoadingWindow(analysis.process_acoustic_modal_analysis).run()
