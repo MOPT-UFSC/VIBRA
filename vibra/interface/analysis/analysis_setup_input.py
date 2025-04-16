@@ -6,6 +6,7 @@ from PySide6.QtGui import *
 from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPushButton, QTabWidget
 
 from vibra import app, UI_DIR
+from vibra.engine import AnalysisID
 from vibra.interface.general.print_message_input import PrintMessageInput
 from molde import load_ui
 
@@ -36,13 +37,19 @@ class AnalysisSetupInput(QDialog):
         |--------------------------------------------------------------------|
         """
 
-        if self.analysis_id in [0, 5]:
+        if self.analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
+        ]:
             ui_path = UI_DIR / "analysis/structural/harmonic_analysis_direct_method.ui"
 
-        elif self.analysis_id in [1, 6]:
+        elif self.analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
+        ]:
             ui_path = UI_DIR / "analysis/structural/harmonic_analysis_mode_superposition_method.ui"
 
-        elif self.analysis_id in [3]:
+        elif self.analysis_id in [AnalysisID.ACOUSTIC_HARMONIC]:
             ui_path = UI_DIR / "analysis/acoustic/harmonic_analysis_direct_method.ui"
 
         else:
@@ -84,7 +91,10 @@ class AnalysisSetupInput(QDialog):
         self.label_subtitle : QLabel
 
         # QLineEdit
-        if self.analysis_id in [1, 6]:
+        if self.analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
+        ]:
             self.lineEdit_modes : QLineEdit
 
         self.lineEdit_av : QLineEdit
@@ -126,9 +136,12 @@ class AnalysisSetupInput(QDialog):
         self.load_frequency_setup_inputs(f_min, f_max, f_step)
 
     def load_damping_inputs(self, analysis_id: int, global_damping: tuple | list):
-
-        if analysis_id in [0, 1, 5, 6] and sum(global_damping):
-
+        if sum(global_damping) and analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
+            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,            
+        ]:
             if global_damping[0]:
                 self.lineEdit_av.setText(str(global_damping[0]))
 
@@ -163,9 +176,17 @@ class AnalysisSetupInput(QDialog):
 
         f_min = f_max = f_step = 0.
 
-        if self.analysis_id in [0, 1, 3, 5, 6]:
-
-            if self.analysis_id in [1, 6]:
+        if self.analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+            AnalysisID.ACOUSTIC_HARMONIC,
+            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
+            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
+        ]:
+            if self.analysis_id in [
+                AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+                AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
+            ]:
                 number_of_modes = self.check_inputs(self.lineEdit_modes, "'number of modes'")
                 if self.stop:
                     self.lineEdit_modes.setFocus()
@@ -201,8 +222,12 @@ class AnalysisSetupInput(QDialog):
 
         alpha_v = beta_v = alpha_h = beta_h = 0.0
         
-        if self.analysis_id in [0, 1, 5, 6]:    
-
+        if self.analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
+            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
+        ]:
             alpha_v = self.check_inputs(self.lineEdit_av, "'proportional viscous damping (alpha_v)'", zero_included=True, _float=True)
             if self.stop:
                 self.lineEdit_av.setFocus()
@@ -231,7 +256,10 @@ class AnalysisSetupInput(QDialog):
         else:
             self.model.set_frequency_setup(analysis_setup)
 
-        if self.analysis_id in [1, 6]:
+        if self.analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
+        ]:
             analysis_setup["modes"] = number_of_modes
 
         app().file.write_analysis_setup_in_file(analysis_setup)
