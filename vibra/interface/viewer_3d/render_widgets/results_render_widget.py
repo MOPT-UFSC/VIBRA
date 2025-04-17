@@ -239,6 +239,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 phase,
                 displacement_type,
             )
+            if data is None:
+                return
+
             displacements, color_scalars, min_value, max_value = data
             if clear_cache:
                 self.min_value = min_value
@@ -258,6 +261,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 phase,
                 displacement_type,
             )
+            if data is None:
+                return
+
             displacements, color_scalars, min_value, max_value = data
             if clear_cache:
                 self.min_value = min_value
