@@ -246,6 +246,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if not self.actors_exists():
             return
         self.symbols_actor.build()
+        self.update()
 
     #
     def click_callback(self, x, y):

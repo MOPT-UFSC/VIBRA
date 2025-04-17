@@ -27,6 +27,7 @@ class NewSymbolsActor(CommonSymbolsActorVariableSize):
         self.PickableOff()
 
     def build(self):
+        self.clear_symbols()
         self._build_nodal_normals()
         self._build_surface_velocity()
         super().build()
