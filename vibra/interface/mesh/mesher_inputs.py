@@ -397,7 +397,6 @@ class MesherInputs(QDialog):
         app().file.remove_results_data_from_project_file()
         app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
-        app().project.last_analysis = None
 
     def get_mesh_refinement_data(self):
 
