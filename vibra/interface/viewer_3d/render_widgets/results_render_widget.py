@@ -430,7 +430,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         }
 
         analysis_id = app().project.analysis_id
-        self.colorbar_actor.SetTitle(f"Unit: [{unit.get(analysis_id, "--")}]")
+        self.colorbar_actor.SetTitle(f"Unit: [{unit.get(analysis_id, '--')}]")
         self.update()
 
     def update_renderer_font_size(self):
