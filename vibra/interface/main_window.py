@@ -1,3 +1,4 @@
+from functools import partial
 from PySide6.QtWidgets import (
     QAbstractButton,
     QDialog,
@@ -129,6 +130,7 @@ class MainWindow(QMainWindow):
         self.action_model_workspace: QAction
         self.action_mesh_workspace: QAction
         self.action_results_workspace: QAction
+        self.action_home_exit: QAction
 
         # QSplitter
         self.splitter: QSplitter
@@ -425,9 +427,11 @@ class MainWindow(QMainWindow):
     def update_recents_menu(self):
         self.recents_menu.clear()
         recent_paths = app().config.get_recent_files()
-        recent_paths[-8:]
-        for path in reversed(recent_paths):
-            self.recents_menu.addAction(QAction(str(path), self))
+        for path in recent_paths:
+            import_action = QAction(str(path), self)
+            import_action.triggered.connect(partial(self.open_project, path))
+            self.recents_menu.addAction(import_action)
+
 
     def render_changed_callback(self, new_index):
         if self.last_render_index is None:
@@ -608,6 +612,21 @@ class MainWindow(QMainWindow):
 
     def action_open_project_callback(self):
         self.open_project_dialog()
+    
+    def action_home_exit_callback(self):
+        self.results_widget.remove_all_actors()
+        self.mesh_widget.remove_all_actors()
+        self.geometry_widget.remove_all_actors()
+
+        self.analysis_toolbar.setDisabled(True)
+        self.renderer_toolbar.setDisabled(True)
+        self.animation_toolbar.setDisabled(True)
+        self.disable_advanced_acoustic_plots_buttons(True)
+        
+        self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
+        self.stacked_setup.setVisible(False)
+        self.status_bar.setVisible(False)
+        self.welcome_widget.update_recent_projects()
 
     def action_import_geometry_callback(self):
         # return
@@ -855,6 +874,8 @@ class MainWindow(QMainWindow):
 
             app().load_project.initialize()
             LoadingWindow(app().load_project.load).run()
+            
+            self.status_bar.setVisible(True)
 
             self.configure_mesh_information()
             LoadingWindow(self.update_plots).run()

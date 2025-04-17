@@ -20,9 +20,6 @@
       <property name="lineWidth">
        <number>1</number>
       </property>
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
       <property name="opaqueResize">
        <bool>true</bool>
       </property>
@@ -136,7 +133,7 @@
      <x>0</x>
      <y>0</y>
      <width>1055</width>
-     <height>31</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_project">
@@ -149,8 +146,9 @@
     <addaction name="action_save"/>
     <addaction name="action_save_as"/>
     <addaction name="action_export_mesh"/>
-    <addaction name="separator"/>
     <addaction name="action_capture_image"/>
+    <addaction name="separator"/>
+    <addaction name="action_home_exit"/>
     <addaction name="action_exit"/>
    </widget>
    <widget class="QMenu" name="menu_settings">
@@ -634,6 +632,15 @@
    </property>
    <property name="text">
     <string>Import geometry</string>
+   </property>
+  </action>
+  <action name="action_home_exit">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/home.png</normaloff>../icons/home.png</iconset>
+   </property>
+   <property name="text">
+    <string>Home Exit</string>
    </property>
   </action>
  </widget>
