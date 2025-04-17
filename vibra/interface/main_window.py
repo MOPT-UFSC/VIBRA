@@ -614,6 +614,10 @@ class MainWindow(QMainWindow):
         self.open_project_dialog()
     
     def action_home_exit_callback(self):
+        self.results_widget.remove_all_actors()
+        self.mesh_widget.remove_all_actors()
+        self.geometry_widget.remove_all_actors()
+        
         self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
         self.stacked_setup.setVisible(False)
         self.status_bar.setVisible(False)
