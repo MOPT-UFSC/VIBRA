@@ -240,7 +240,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 displacement_type,
             )
             displacements, color_scalars, min_value, max_value = data
-            if self.clear_cache:
+            if clear_cache:
                 self.min_value = min_value
                 self.max_value = max_value
 
@@ -259,7 +259,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 displacement_type,
             )
             displacements, color_scalars, min_value, max_value = data
-            if self.clear_cache:
+            if clear_cache:
                 self.min_value = min_value
                 self.max_value = max_value
 
@@ -278,7 +278,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 return
 
             color_scalars, min_value, max_value = data
-            if self.clear_cache:
+            if clear_cache:
                 self.min_value = min_value
                 self.max_value = max_value
 
@@ -297,7 +297,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 return
 
             color_scalars, min_value, max_value = data
-            if self.clear_cache:
+            if clear_cache:
                 self.min_value = min_value
                 self.max_value = max_value
 
