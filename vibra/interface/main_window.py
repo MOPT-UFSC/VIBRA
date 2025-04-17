@@ -617,6 +617,11 @@ class MainWindow(QMainWindow):
         self.results_widget.remove_all_actors()
         self.mesh_widget.remove_all_actors()
         self.geometry_widget.remove_all_actors()
+
+        self.analysis_toolbar.setDisabled(True)
+        self.renderer_toolbar.setDisabled(True)
+        self.animation_toolbar.setDisabled(True)
+        self.disable_advanced_acoustic_plots_buttons(True)
         
         self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
         self.stacked_setup.setVisible(False)
