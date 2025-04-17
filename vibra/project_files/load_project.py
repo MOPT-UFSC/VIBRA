@@ -372,7 +372,6 @@ class LoadProject:
     def load_analysis_setup(self):
 
         analysis_setup = self.file.read_analysis_setup_from_file()
-
         if analysis_setup:
 
             f_min = None

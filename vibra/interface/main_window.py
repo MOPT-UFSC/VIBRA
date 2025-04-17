@@ -614,9 +614,12 @@ class MainWindow(QMainWindow):
         self.open_project_dialog()
     
     def action_home_exit_callback(self):
+        self.clear_selection()
         self.results_widget.remove_all_actors()
         self.mesh_widget.remove_all_actors()
         self.geometry_widget.remove_all_actors()
+
+        self.results_widget.configure_analysis("")
 
         self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)
@@ -626,6 +629,7 @@ class MainWindow(QMainWindow):
         self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
         self.stacked_setup.setVisible(False)
         self.status_bar.setVisible(False)
+        self.results_viewer_widget.hide_bottom_widget()
         self.welcome_widget.update_recent_projects()
 
     def action_import_geometry_callback(self):
@@ -939,7 +943,11 @@ class MainWindow(QMainWindow):
         if not check:
             return
 
-        # self.viewer_3d.save_png(path)
+        widget = self.render_widgets_stack.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            image = widget.get_screenshot()
+            with open(path, "wb") as file:
+                image.save(file)
 
     def action_exit_callback(self):
         self.close_app()
