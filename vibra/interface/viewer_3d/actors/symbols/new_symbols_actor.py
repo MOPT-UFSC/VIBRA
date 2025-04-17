@@ -43,21 +43,29 @@ class NewSymbolsActor(CommonSymbolsActorVariableSize):
         mesh = app().project.model.mesh
         surface_properties = app().project.model.properties.surface_properties
 
-        for (property_name, surface_id), data in surface_properties.items():
+        for (property_name, surface_id), in surface_properties.keys():
             if property_name != "surface_velocity":
                 continue
 
-            elem_normals = dict()
-            for elem_id in mesh.elements_from_surface[surface_id]:
-                connect = mesh.faces_connectivity[elem_id, 4:]
-                normal_vector = mesh.get_element_face_normal(connect)
-                elem_normals[elem_id] = normal_vector
+            surface_normals = mesh.surface_normals[surface_id]
+            surface_curvatures = mesh.surface_curvatures[surface_id]
 
             surface_nodes = mesh.nodes_from_surfaces[surface_id]
-            center_coords = np.average(mesh.nodal_coordinates[surface_nodes, 1:], axis=0)
+            surface_coordinates = mesh.nodal_coordinates[surface_nodes, 1:]
 
-            orientation = np.average(list(elem_normals.values()), axis=0)
-            self.add_normal_surface_velocity_symbol(center_coords, orientation)
+            center_coords = np.average(surface_coordinates, axis=0)
+
+            if surface_curvatures.any():
+                dist = np.linalg.norm(surface_coordinates - center_coords, axis=1)
+                node_id = surface_nodes[np.argmin(dist)]
+                orientation = surface_normals[node_id, :]
+                coords = surface_coordinates[node_id, :]
+
+            else:
+                coords = center_coords
+                orientation = np.average(surface_normals, axis=0)
+
+            self.add_normal_surface_velocity_symbol(coords, orientation)
 
     def _build_nodal_normals(self):
         mesh = app().project.model.mesh
