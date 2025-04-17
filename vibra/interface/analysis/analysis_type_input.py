@@ -45,7 +45,7 @@ class AnalysisTypeInput(QDialog):
         # Analysis ID 6 ==> Coupled Harmonic Analysis - Mode Superposition Method
         #
         self.analysis_data = {}
-        self.analysis_id = None
+        self.analysis_id = AnalysisID.NO_ANALYSIS
         self.analysis_type_label = None
         self.analysis_method_label = None
         self.complete = False

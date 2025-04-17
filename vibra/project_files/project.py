@@ -33,7 +33,7 @@ class Project:
         self.material_list_path = ""
 
         self.analysis_data = dict()
-        self.analysis_id = None
+        self.analysis_id = AnalysisID.NO_ANALYSIS
         self.dissipation_model = None
         #
         self.model = Model()
@@ -109,7 +109,8 @@ class Project:
 
         analysis_setup = app().file.read_analysis_setup_from_file()
         if isinstance(analysis_setup, dict):
-            analysis_id = analysis_setup.get("analysis_id")
+            analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+
             if analysis_id in [
                 AnalysisID.STRUCTURAL_MODAL,
                 AnalysisID.ACOUSTIC_MODAL,
@@ -262,7 +263,7 @@ class Project:
             return
 
         analysis = ProcessAnalysis()
-        analysis_id = self.analysis_data["analysis_id"]
+        analysis_id = self.analysis_data.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         checker = AnalysisRequirementsChecker()
 

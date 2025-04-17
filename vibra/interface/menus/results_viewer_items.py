@@ -133,7 +133,7 @@ class ResultsViewerItems(CommonMenuItems):
         if len(app().project.analysis_data) == 0:
             return
 
-        analysis_id = app().project.analysis_data["analysis_id"]
+        analysis_id = app().project.analysis_data.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         if analysis_id in [
             AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
@@ -196,7 +196,7 @@ class ResultsViewerItems(CommonMenuItems):
         """ Expands and collapses the Top Level Items on 
             the menu after the solution is done.
         """
-        analysis_id = app().project.analysis_data["analysis_id"]
+        analysis_id = app().project.analysis_data.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         if analysis_id in [
             AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
