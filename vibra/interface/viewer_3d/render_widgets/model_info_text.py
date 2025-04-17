@@ -13,12 +13,12 @@ from numbers import Number
 
 # GEOMETRY RENDER WIDGET INFO TEXTS
 def points_info_text():
-    text = ""
     point_ids = list(app().main_window.selected_geometry_points)
 
     if len(point_ids) == 0:
         return ""
     
+    text = ""
     nodes_from_points = app().project.model.mesh.nodes_from_points
     node_ids = [int(nodes_from_points[i]) for i in point_ids]
 
@@ -29,13 +29,13 @@ def points_info_text():
         text += str(tree)
 
     elif len(point_ids) == 2:
-        tree = TreeInfo(f"2 POINTS IN SELECTION: {point_ids[0]}, {point_ids[1]}")
         coord_A = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:]
         coord_B = app().project.model.mesh.nodal_coordinates[node_ids[1], 1:]
         dx, dy, dz = np.round(np.abs(coord_A - coord_B), 6)
-        total = np.linalg.norm(coord_A - coord_B)
+        distance = np.linalg.norm(coord_A - coord_B)
 
-        tree.add_item("Total distance", f"{total : .6f}", "m")
+        tree = TreeInfo(f"2 POINTS IN SELECTION: {point_ids[0]}, {point_ids[1]}")
+        tree.add_item("Total distance", f"{distance : .6f}", "m")
         tree.add_item("Distance dx", f"{dx : .6f}", "m")
         tree.add_item("Distance dy", f"{dy : .6f}", "m")
         tree.add_item("Distance dz", f"{dz : .6f}", "m")
@@ -44,47 +44,45 @@ def points_info_text():
     else:
         sequence = ", ".join(str(i) for i in point_ids)
         if len(sequence) > 20:
-            sequence = sequence[:20 - 3] + " ..."
-        text += f"{len(point_ids)} POINTS IN SELECTION: {sequence}\n\n"
+            sequence = sequence[:20 - 4] + " ..."
 
+        text += f"{len(point_ids)} POINTS IN SELECTION: {sequence}\n\n"
+    
     return text
 
 def lines_info_text():
-    text = ""
-    tree = TreeInfo("Line information")
     line_ids = list(app().main_window.selected_geometry_lines)
 
     if len(line_ids) == 0:
         return ""
 
+    text = ""
     length = 0
     for line_id in line_ids:
         length += app().project.model.mesh.length_from_curve[line_id]
-    
+
     if len(line_ids) == 1:
         tree = TreeInfo(f"LINE {line_ids[0]}")
         tree.add_item("Length", f"{length : .6e}", "m")
-        text += str(tree)
 
     else:
         sequence = ", ".join(str(i) for i in line_ids)
         if len(sequence) > 20:
-            sequence = sequence[:20 - 3] + " ..."
+            sequence = sequence[:20 - 4] + " ..."
 
         tree = TreeInfo(f"{len(line_ids)} LINES IN SELECTION: {sequence}")
         tree.add_item("Length (compound)", f"{length : .6e}", "m")
-        text += str(tree)
 
+    text += str(tree)
     return text
 
 def faces_info_text():
-
-    text = ""
     volumes = list(app().main_window.selected_geometry_volumes)
 
     if len(volumes) != 0:
         return ""
     
+    text = ""
     surface_ids = list(app().main_window.selected_geometry_surfaces)
 
     if len(surface_ids) == 0:
@@ -98,35 +96,42 @@ def faces_info_text():
         tree = TreeInfo(f"SURFACE {surface_ids[0]}")
         tree.add_item("Area", f"{area : .6e}", "m²")
 
+        surface_data = app().project.model.properties._get_property("surface_thickness", surface=surface_ids[0])
+        if isinstance(surface_data, dict):
+            tree.add_item("Thickness", surface_data["surface_thickness"], "m")
+            tree.add_item("Offset", surface_data["thickness_offset"])
+
     else:
         sequence = ", ".join(str(i) for i in surface_ids)
         if len(sequence) > 20:
-            sequence = sequence[:20 - 3] + " ..."
+            sequence = sequence[:20 - 4] + " ..."
 
         tree = TreeInfo(f"{len(surface_ids)} SURFACES IN SELECTION: {sequence}")
         tree.add_item("Area (compound)", f"{area : .6e}", "m²")
-        text += str(tree)
+
+    text += str(tree)
 
     return text
 
 def volumes_info_text():
-    
-    text = ""
-    tree = TreeInfo("Body information")
-
     volume_ids = list(app().main_window.selected_geometry_volumes)
     if len(volume_ids) == 0:
-        return text
+        return ""
 
+    text = ""
     volume, fluid_mass, material_mass = process_volumes_and_masses(volume_ids)
 
-    if len(volume_ids) > 1:
-        text += f"{len(volume_ids)} volumes in selection: {format_long_sequence(volume_ids)}\n"
-        tree.add_item("Volume (compound)", f"{volume : .6e}", "m³")
-
-    elif len(volume_ids) == 1:
-        text += f"Selected volume: {volume_ids[0]}\n"
+    if len(volume_ids) == 1:
+        tree = TreeInfo(f"VOLUME {volume_ids[0]}")
         tree.add_item("Volume", f"{volume : .6e}", "m³")
+
+    else:
+        sequence = ", ".join(str(i) for i in volume_ids)
+        if len(sequence) > 20:
+            sequence = sequence[:20 - 4] + " ..."
+
+        tree = TreeInfo(f"{len(volume_ids)} VOLUMES IN SELECTION: {sequence}")
+        tree.add_item("Volume (compound)", f"{volume : .6e}", "m³")
 
     if fluid_mass:
         tree.add_item("Fluid mass", f"{fluid_mass : .6e}", "kg")
@@ -138,7 +143,6 @@ def volumes_info_text():
     return text
 
 def process_volumes_and_masses(volume_ids: list):
-
     fluid_mass = 0.
     material_mass = 0.
     volume_compound = 0.
@@ -158,28 +162,6 @@ def process_volumes_and_masses(volume_ids: list):
             material_mass += volume * material_density
     
     return volume_compound, fluid_mass, material_mass
-
-def surface_thickness_info_text():
-    surfaces = list(app().main_window.selected_geometry_surfaces)
-    text = ""
-
-    if len(surfaces) == 1:
-        surface_data = app().project.model.properties._get_property(
-            "surface_thickness", surface=surfaces[0]
-        )
-    else:
-        return text
-
-    if surface_data is None:
-        return text
-
-    tree = TreeInfo("Shell data")
-    tree.add_item("Thickness", surface_data["surface_thickness"], "m")
-    tree.add_item("Offset", surface_data["thickness_offset"])
-
-    text += str(tree)
-
-    return text
 
 def material_info_text():
     volumes = list(app().main_window.selected_geometry_volumes)
@@ -297,13 +279,16 @@ def acoustic_boundary_conditions_info_text():
         return text
 
     acoustic_pressure = app().project.model.properties._get_property(
-        "acoustic_pressure", surface=selected_faces[0]
+        "acoustic_pressure",
+        surface=selected_faces[0],
     )
     surface_velocity = app().project.model.properties._get_property(
-        "surface_velocity", surface=selected_faces[0]
+        "surface_velocity",
+        surface=selected_faces[0],
     )
     specific_impedance = app().project.model.properties._get_property(
-        "specific_impedance", surface=selected_faces[0]
+        "specific_impedance",
+        surface=selected_faces[0],
     )
 
     boundary_conditions_list = [acoustic_pressure, surface_velocity, specific_impedance]
@@ -431,41 +416,65 @@ def acoustic_format(property_name, value, label, unit, additional_labels=[]):
 # MESH RENDER WIDGET INFO TEXTS
 
 def nodes_info_text():
-    nodes = list(app().main_window.selected_mesh_nodes)
     text = ""
-    if len(nodes) > 1:
-        text += f"{len(nodes)} nodes in selection: {format_long_sequence(nodes)}\n\n"
-    elif len(nodes) == 1:
-        text += f"Node: {nodes[0]}\n"
-        coords = app().project.model.mesh.nodal_coordinates[nodes[0], 1:]
-        coords = np.round(coords, 6)
-        text += "Nodal coordinates: ({:.6f}, {:.6f}, {:.6f}) m\n\n".format(*coords)
+    node_ids = list(app().main_window.selected_mesh_nodes)
+
+    if len(node_ids) == 0:
+        return ""
+
+    elif len(node_ids) == 1:
+        coords = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:].round(6)
+
+        tree = TreeInfo(f"NODE {node_ids[0]}")
+        tree.add_item("Position", "({:.6f}, {:.6f}, {:.6f})".format(*coords), "m")
+        text += str(tree)
+
+    elif len(node_ids) == 2:
+        coord_A = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:]
+        coord_B = app().project.model.mesh.nodal_coordinates[node_ids[1], 1:]
+        dx, dy, dz = np.round(np.abs(coord_A - coord_B), 6)
+        distance = np.linalg.norm(coord_A - coord_B)
+
+        tree = TreeInfo(f"2 NODES IN SELECTION: {node_ids[0]}, {node_ids[1]}")
+        tree.add_item("Total distance", f"{distance : .6f}", "m")
+        tree.add_item("Distance dx", f"{dx : .6f}", "m")
+        tree.add_item("Distance dy", f"{dy : .6f}", "m")
+        tree.add_item("Distance dz", f"{dz : .6f}", "m")
+        text += str(tree)
+
+    else:
+        text += f"{len(node_ids)} NODES IN SELECTION:\n{format_long_sequence(node_ids)}\n\n"
 
     return text
 
 def mesh_faces_info_text():
-    faces = list(app().main_window.selected_mesh_faces)
     text = ""
+    faces = list(app().main_window.selected_mesh_faces)
+
     if len(faces) > 1:
-        text += f"{len(faces)} faces in selection: {format_long_sequence(faces)}\n\n"
+        text += f"{len(faces)} FACES IN SELECTION:\n"
+        text += f"{format_long_sequence(faces)}\n\n"
+
     elif len(faces) == 1:
-        text += f"Face element: {faces[0]}\n\n"
+        text += f"FACE ELEMENT {faces[0]}\n\n"
 
     return text
 
 def mesh_solids_info_text():
     solids_elem_ids = list(app().main_window.selected_mesh_solids)
     text = ""
+
     if len(solids_elem_ids) > 1:
-        text += (
-            f"{len(solids_elem_ids)} solids in selection: "
-            f"{format_long_sequence(solids_elem_ids)}\n\n"
-        )
+        text += f"{len(solids_elem_ids)} SOLIDS IN SELECTION:\n"
+        text += f"{format_long_sequence(solids_elem_ids)}\n\n"
+
     elif len(solids_elem_ids) == 1:
         element_id = solids_elem_ids[0]
         connect = app().project.model.mesh.solids_connectivity[element_id, 4:]
-        text += f"Solid element: {element_id}\n"
-        text += f"Connectivity: {[int(node_id) for node_id in connect]}\n\n"
+
+        tree = TreeInfo(f"SOLID ELEMENT {element_id}")
+        tree.add_item("Connectivity", f"{connect}")
+        text += str(tree)
 
     return text
 

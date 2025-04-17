@@ -122,8 +122,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         if reset_camera:
             self.renderer.ResetCamera()
-        else:
-            self.update()
+
+        self.update()
     
     def enable_scale_bar(self):
         self.scale_bar_actor.VisibilityOn()

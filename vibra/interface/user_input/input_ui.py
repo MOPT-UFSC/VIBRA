@@ -56,25 +56,20 @@ class InputUi:
         self._reset()
 
     def _reset(self):
-        self.project.none_project_action = False
+        pass
 
     def process_input(self, working_class, *args, **kwargs):
         app().main_window.close_dialogs()
         read = working_class(*args, **kwargs)
         return read
-
-    def import_geometry(self):
-        if not self.model_setup_items.item_child_import_geometry.isDisabled():
-            if self.main_window.import_geometry_dialog():
-                self.model_setup_items.modify_items_access_after_geometry_importing()
-            
+    
     def mesh_setup(self):
         if not self.model_setup_items.item_child_mesh_setup.isDisabled():
             self.main_window.action_model_workspace_callback()
             obj = self.process_input(MesherInputs)
             if obj.complete:
                 self.model_setup_items.modify_items_access_after_geometry_importing()
-            
+ 
     def generate_mesh(self):
         LoadingWindow(app().project.generate_mesh).run()
         self.main_window.action_mesh_workspace_callback()

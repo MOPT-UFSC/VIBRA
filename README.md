@@ -49,7 +49,7 @@ python -m vibra
 
 If some package changed since the generation, the environment can be updated using the following command: 
 ```
-conda env update --file local.yml --prune
+conda env update --f environment.yml --prune
 ```
 
 ## Generate Installer

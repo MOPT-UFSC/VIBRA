@@ -28,7 +28,6 @@ class ModelSetupItems(CommonMenuItems):
     def _create_items(self):
         """Creates all TreeWidgetItems."""
         self.item_top_general_settings = self.add_top_item('General Settings')
-        self.item_child_import_geometry = self.add_item('Import Geometry')
         self.item_child_set_material = self.add_item("Set Material")
         self.item_child_set_fluid = self.add_item('Set Fluid')
         self.item_child_mesh_setup = self.add_item("Mesh Setup")
@@ -110,17 +109,14 @@ class ModelSetupItems(CommonMenuItems):
                 return attr_name
 
     # Callbacks
-    def item_child_import_geometry_callback(self):
-        app().main_window.input_ui.import_geometry()
-    
-    def item_child_mesh_setup_callback(self):
-        app().main_window.input_ui.mesh_setup()
-
     def item_child_set_material_callback(self):
         app().main_window.input_ui.set_material()
 
     def item_child_set_fluid_callback(self):
         app().main_window.input_ui.set_fluid()
+
+    def item_child_mesh_setup_callback(self):
+        app().main_window.input_ui.mesh_setup()
 
     def item_child_set_surface_thickness_callback(self):
         app().main_window.input_ui.set_surface_thickness()
@@ -175,7 +171,6 @@ class ModelSetupItems(CommonMenuItems):
         app().main_window.input_ui.set_acoustic_transfer_element_setup()
     
     def modify_general_settings_items_access(self, key: bool):
-        self.item_child_import_geometry.setDisabled(key)
         self.item_child_mesh_setup.setDisabled(key)
         self.item_child_set_material.setDisabled(key)
         self.item_child_set_fluid.setDisabled(key)

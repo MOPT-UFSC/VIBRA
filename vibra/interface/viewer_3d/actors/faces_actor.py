@@ -1,21 +1,25 @@
+from molde import Color
+from vtkmodules.util.numpy_support import numpy_to_vtk
 from vtkmodules.vtkCommonCore import (
     vtkIntArray,
     vtkPoints,
     vtkUnsignedCharArray,
 )
 from vtkmodules.vtkCommonDataModel import (
+    VTK_QUAD,
+    VTK_QUADRATIC_QUAD,
+    VTK_QUADRATIC_TRIANGLE,
+    VTK_TRIANGLE,
     vtkPlane,
     vtkPolyData,
-    VTK_TRIANGLE,
-    VTK_QUADRATIC_TRIANGLE,
-    VTK_QUAD,
-    VTK_QUADRATIC_QUAD
 )
 from vtkmodules.vtkFiltersCore import vtkPolyDataNormals
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
-from vtkmodules.util.numpy_support import numpy_to_vtk
 
 from vibra import app
+from vibra.engine.properties.fluid import Fluid
+from vibra.engine.properties.material import Material
+from vibra.utils.interface_utils import ColorMode
 
 
 class FacesActor(vtkActor):
@@ -123,10 +127,40 @@ class FacesActor(vtkActor):
         if self.data is None:
             return
 
-        color = app().config.user_preferences.faces_color.to_rgba()
-        self.set_color(color)
+        mesh = app().project.model.mesh
+        properties = app().project.model.properties
+        color_mode = app().main_window.visualization_filter.color_mode
+        no_info_color = Color(20, 20, 20)
+
+        if color_mode == ColorMode.MATERIAL:
+            for surface, face_elements in mesh.elements_from_surface.items():
+                material: Material | None = properties._get_property("material", surface=surface)
+                
+                if (material is None) and (surface in mesh.volume_from_surface):
+                    volume = mesh.volume_from_surface[surface][0]
+                    material = properties._get_property("material", volume=volume)
+
+                color = Color(*material.color) if (material is not None) else no_info_color
+                self.paint_cells(color.to_rgba(), face_elements)
+
+        elif color_mode == ColorMode.FLUID:
+            for surface, face_elements in mesh.elements_from_surface.items():
+                fluid: Fluid | None = properties._get_property("fluid", surface=surface)
+
+                if (fluid is None) and (surface in mesh.volume_from_surface):
+                    volume = mesh.volume_from_surface[surface][0]
+                    fluid = properties._get_property("fluid", volume=volume)
+
+                color = Color(*fluid.color) if (fluid is not None) else no_info_color
+                self.paint_cells(color.to_rgba(), face_elements)
+        
+        elif color_mode == ColorMode.EMPTY:
+            color = app().config.user_preferences.faces_color
+            self.set_color(color.to_rgba())
 
     def set_color(self, color: tuple[int, int, int, int] | tuple[int, int, int]):
+        # TODO: update these functions to work with the molde.Colors instead of tuples
+
         if self.data is None:
             return
 

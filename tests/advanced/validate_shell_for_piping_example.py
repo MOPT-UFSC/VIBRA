@@ -47,6 +47,8 @@ def load_external_mesh_and_solve():
                              "output_face" : 3,
                              "top_left_face" : 4,
                              "top_right_face" : 5,
+                             "branch1_top_face" : 6,
+                             "branch2_top_face" : 7,
                             }
 
     t0 = time()
@@ -61,7 +63,7 @@ def load_external_mesh_and_solve():
     #     print(ns, nodes)
 
     dt = time() - t0
-    print(f"\n\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
+    print(f"\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
 
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(external_mesh.nodal_coordinates, index_zero=True)
@@ -202,7 +204,11 @@ def load_external_mesh_and_solve():
     # print(":: PLOTTING THE OBTAINED RESULTS FOR HARMONIC ANALYSIS ::")
     # print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n")
 
-    selected_nodes = mesh.nodes_from_surfaces[5]
+    solution = harmonic_solver.solution
+    dofs_per_node = model.surface_structural_element.DOFS_PER_NODE
+
+    top_right_face_nodes = mesh.nodes_from_surfaces[5]
+    branch2_top_face_nodes = mesh.nodes_from_surfaces[7]
 
     dofs_index = {
                   "ux" : 0,
@@ -213,15 +219,22 @@ def load_external_mesh_and_solve():
                   "rz" : 5
                   }
 
-    dofs_per_node = model.surface_structural_element.DOFS_PER_NODE
-    gdofs = dofs_per_node * selected_nodes.reshape(-1, 1) + np.arange(dofs_per_node, dtype=int)
+    gdofs = dofs_per_node * top_right_face_nodes.reshape(-1, 1) + np.arange(dofs_per_node, dtype=int)
+
+    ux_rows = gdofs[:, dofs_index["ux"]]
+    uy_rows = gdofs[:, dofs_index["uy"]]
+
+    top_right_face_response_ux = np.average(solution[ux_rows, :], axis=0).flatten()
+    top_right_face_response_uy = np.average(solution[uy_rows, :], axis=0).flatten()
+
+    gdofs = dofs_per_node * branch2_top_face_nodes.reshape(-1, 1) + np.arange(dofs_per_node, dtype=int)
 
     ux_rows = gdofs[:, dofs_index["ux"]]
     uy_rows = gdofs[:, dofs_index["uy"]]
     solution = harmonic_solver.solution
 
-    response_ux = np.average(solution[ux_rows, :], axis=0).flatten()
-    response_uy = np.average(solution[uy_rows, :], axis=0).flatten()
+    branch2_top_face_response_ux = np.average(solution[ux_rows, :], axis=0).flatten()
+    branch2_top_face_response_uy = np.average(solution[uy_rows, :], axis=0).flatten()
 
 
     dt = time() - t0
@@ -238,6 +251,12 @@ def load_external_mesh_and_solve():
         top_right_face_uy_lin = imported_results[f"top_right_face_uy_lin"]
         top_right_face_uy_quad = imported_results[f"top_right_face_uy_quad"]
 
+        branch2_top_face_ux_lin = imported_results[f"branch2_top_face_ux_lin"]
+        branch2_top_face_ux_quad = imported_results[f"branch2_top_face_ux_quad"]
+
+        branch2_top_face_uy_lin = imported_results[f"branch2_top_face_uy_lin"]
+        branch2_top_face_uy_quad = imported_results[f"branch2_top_face_uy_quad"]
+
         freq_WB = top_right_face_ux_lin[:, 0]
         top_right_face_ux_lin_WB = top_right_face_ux_lin[:, 1] + 1j*top_right_face_ux_lin[:, 2]
 
@@ -250,56 +269,53 @@ def load_external_mesh_and_solve():
         freq_WB = top_right_face_uy_quad[:, 0]
         top_right_face_uy_quad_WB = top_right_face_uy_quad[:, 1] + 1j*top_right_face_uy_quad[:, 2]
 
+        freq_WB = branch2_top_face_ux_lin[:, 0]
+        branch2_top_face_ux_lin_WB = branch2_top_face_ux_lin[:, 1] + 1j*branch2_top_face_ux_lin[:, 2]
 
-        title = f"Harmonic response at top right face"
+        freq_WB = branch2_top_face_ux_quad[:, 0]
+        branch2_top_face_ux_quad_WB = branch2_top_face_ux_quad[:, 1] + 1j*branch2_top_face_ux_quad[:, 2]
+
+        freq_WB = branch2_top_face_uy_lin[:, 0]
+        branch2_top_face_uy_lin_WB = branch2_top_face_uy_lin[:, 1] + 1j*branch2_top_face_uy_lin[:, 2]
+
+        freq_WB = branch2_top_face_uy_quad[:, 0]
+        branch2_top_face_uy_quad_WB = branch2_top_face_uy_quad[:, 1] + 1j*branch2_top_face_uy_quad[:, 2]
+
+        title = f"Harmonic response (right top face)"
 
         fig1, ax1 = plt.subplots()
-        ax1.semilogy(frequencies, np.abs(response_ux), 'r', label='VIBRA')
+        ax1.semilogy(frequencies, np.abs(top_right_face_response_ux), 'r', label='VIBRA')
         ax1.semilogy(freq_WB, np.abs(top_right_face_ux_lin_WB), 'k--', label='ANSYS (lin.)')
         ax1.semilogy(freq_WB, np.abs(top_right_face_ux_quad_WB), 'b--', label='ANSYS (quad.)')
         ax1.set(xlabel='Frequency [Hz]', ylabel='Magnitude of displacement Ux [m]', title=title)
         ax1.grid()
         ax1.legend()
 
-        # fig2, ax2 = plt.subplots()
-        # ax2.plot(frequencies, np.real(response_ux), 'r', label='VIBRA')
-        # ax2.plot(freq_WB, np.real(top_right_face_ux_lin_WB), 'k--', label='ANSYS (lin.)')
-        # ax2.plot(freq_WB, np.real(top_right_face_ux_quad_WB), 'b--', label='ANSYS (quad.)')
-        # ax2.set(xlabel='Frequency [Hz]', ylabel='Real part of displacement Ux [m]', title=title)
-        # ax2.grid()
-        # ax2.legend()
+        fig2, ax2 = plt.subplots()
+        ax2.semilogy(frequencies, np.abs(top_right_face_response_uy), 'r', label='VIBRA')
+        ax2.semilogy(freq_WB, np.abs(top_right_face_uy_lin_WB), 'k--', label='ANSYS (lin.)')
+        ax2.semilogy(freq_WB, np.abs(top_right_face_uy_quad_WB), 'b--', label='ANSYS (quad.)')
+        ax2.set(xlabel='Frequency [Hz]', ylabel='Magnitude of displacement Ux [m]', title=title)
+        ax2.grid()
+        ax2.legend()
 
-        # fig3, ax3 = plt.subplots()
-        # ax3.plot(frequencies, np.imag(response_ux), 'r', label='VIBRA')
-        # ax3.plot(freq_WB, np.imag(top_right_face_ux_lin_WB), 'k--', label='ANSYS (lin.)')
-        # ax3.plot(freq_WB, np.real(top_right_face_ux_quad_WB), 'b--', label='ANSYS (quad.)')
-        # ax3.set(xlabel='Frequency [Hz]', ylabel='Imaginary part of displacement Ux [m]', title=title)
-        # ax3.grid()
-        # ax3.legend()
+        title = f"Harmonic response (branch2 top face)"
+
+        fig3, ax3 = plt.subplots()
+        ax3.semilogy(frequencies, np.abs(branch2_top_face_response_ux), 'r', label='VIBRA')
+        ax3.semilogy(freq_WB, np.abs(branch2_top_face_ux_lin_WB), 'k--', label='ANSYS (lin.)')
+        ax3.semilogy(freq_WB, np.abs(branch2_top_face_ux_quad_WB), 'b--', label='ANSYS (quad.)')
+        ax3.set(xlabel='Frequency [Hz]', ylabel='Magnitude of displacement Ux [m]', title=title)
+        ax3.grid()
+        ax3.legend()
 
         fig4, ax4 = plt.subplots()
-        ax4.semilogy(frequencies, np.abs(response_uy), 'r', label='VIBRA')
-        ax4.semilogy(freq_WB, np.abs(top_right_face_uy_lin_WB), 'k--', label='ANSYS (lin.)')
-        ax4.semilogy(freq_WB, np.abs(top_right_face_uy_quad_WB), 'b--', label='ANSYS (quad.)')
-        ax4.set(xlabel='Frequency [Hz]', ylabel='Magnitude of displacement Ux [m]', title=title)
+        ax4.semilogy(frequencies, np.abs(branch2_top_face_response_uy), 'r', label='VIBRA')
+        ax4.semilogy(freq_WB, np.abs(branch2_top_face_uy_lin_WB), 'k--', label='ANSYS (lin.)')
+        ax4.semilogy(freq_WB, np.abs(branch2_top_face_uy_quad_WB), 'b--', label='ANSYS (quad.)')
+        ax4.set(xlabel='Frequency [Hz]', ylabel='Magnitude of displacement Uy [m]', title=title)
         ax4.grid()
         ax4.legend()
-
-        # fig5, ax5 = plt.subplots()
-        # ax5.plot(frequencies, np.real(response_uy), 'r', label='VIBRA')
-        # ax5.plot(freq_WB, np.real(top_right_face_uy_lin_WB), 'k--', label='ANSYS (lin.)')
-        # ax5.plot(freq_WB, np.real(top_right_face_uy_quad_WB), 'b--', label='ANSYS (quad.)')
-        # ax5.set(xlabel='Frequency [Hz]', ylabel='Real part of displacement Ux [m]', title=title)
-        # ax5.grid()
-        # ax5.legend()
-
-        # fig6, ax6 = plt.subplots()
-        # ax6.plot(frequencies, np.imag(response_uy), 'r', label='VIBRA')
-        # ax6.plot(freq_WB, np.imag(top_right_face_uy_lin_WB), 'k--', label='ANSYS (lin.)')
-        # ax6.plot(freq_WB, np.real(top_right_face_uy_quad_WB), 'b--', label='ANSYS (quad.)')
-        # ax6.set(xlabel='Frequency [Hz]', ylabel='Imaginary part of displacement Ux [m]', title=title)
-        # ax6.grid()
-        # ax6.legend()
 
         plt.show()
 

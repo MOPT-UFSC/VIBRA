@@ -22,7 +22,6 @@ from .model_info_text import(
     lines_info_text, 
     faces_info_text, 
     volumes_info_text, 
-    surface_thickness_info_text, 
     material_info_text, 
     fluid_info_text, 
     porous_material_info_text, 
@@ -161,8 +160,8 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         if reset_camera:
             self.renderer.ResetCamera()
-        else:
-            self.update()
+
+        self.update()
 
         if app().project.thumbnail is None:
             self.save_thumbnail()
@@ -208,6 +207,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.points_actor.SetPickable(visualization.faces)
         self.lines_actor.SetPickable(visualization.faces)
         self.faces_actor.SetPickable(visualization.faces)
+
+        self.update_selection()
         self.update()
 
     def update_hidden_plot(self):
@@ -422,7 +423,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         text += lines_info_text()
         text += faces_info_text()
         text += volumes_info_text()
-        text += surface_thickness_info_text()
         text += material_info_text()
         text += fluid_info_text()
         text += porous_material_info_text()
