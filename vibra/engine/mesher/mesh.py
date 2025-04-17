@@ -94,6 +94,8 @@ class Mesh:
         self.line_from_point = defaultdict(list)
         self.face_elements_connected_to_nodes = defaultdict(list)
 
+        self.surface_normals = dict()
+        self.surface_curvatures = dict()
         self.nodal_normals_data = dict()
 
         self.principal_diagonal = None
@@ -417,6 +419,48 @@ class Mesh:
         gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_type.second_order_incomplete)
 
 
+    def clear_dictionaries(self):
+
+        self.nodes_from_points.clear()
+        self.nodes_from_lines.clear()
+        self.nodes_from_surfaces.clear()
+        self.nodes_from_volumes.clear()
+        self.surfaces_from_node.clear()
+
+        self.gmsh_elements_from_lines.clear()
+        self.gmsh_elements_from_surfaces.clear()
+        self.gmsh_elements_from_volumes.clear()
+
+        self.points_from_line.clear()
+        self.line_from_point.clear()
+
+        self.lines_from_surface.clear()
+        self.surface_from_line.clear()
+
+        self.surfaces_from_volumes.clear()
+        self.volume_from_surface.clear()
+
+        self.solid_elements_center.clear()
+        self.connectivity_from_surfaces.clear()
+
+        self.surface_curvatures.clear()
+        self.surface_normals.clear()
+
+
+    def process_surface_normals_and_curvatures(self, tag: int):
+        """ This method processes the surface curvatures and normal
+            at surface nodes.
+
+            Parameters
+            ----------
+            tag : int
+                It represents the gmsh surface's tag.
+        """
+        _, _, param = gmsh.model.mesh.getNodes(2, tag, True)
+        self.surface_normals[tag] = gmsh.model.getNormal(tag, param).reshape(-1, 3)
+        self.surface_curvatures[tag] = gmsh.model.getCurvature(2, tag, param)
+
+
     def _process_mesh(self):
         """
         Transform gmsh data in a more manageable format (aka nodal coords and connectivity).
@@ -429,32 +473,11 @@ class Mesh:
         self.nodal_coordinates[indexes - 1, 1:] = coords.reshape(-1, 3) * unit_length_factor
         self.nodal_coordinates[indexes - 1, :1] = indexes.reshape(-1, 1) - 1
 
+        self.clear_dictionaries()
+
         connectivity_dim1 = dict()
         connectivity_dim2 = dict()
         connectivity_dim3 = dict()
-
-        self.nodes_from_points.clear()
-        self.nodes_from_lines.clear()
-        self.nodes_from_surfaces.clear()
-        self.nodes_from_volumes.clear()
-        self.surfaces_from_node.clear()
-
-        self.gmsh_elements_from_lines.clear()
-        self.gmsh_elements_from_surfaces.clear()
-        self.gmsh_elements_from_volumes.clear()
-
-        self.connectivity_from_surfaces.clear()
-
-        self.surfaces_from_volumes.clear()
-        self.volume_from_surface.clear()
-
-        self.lines_from_surface.clear()
-        self.surface_from_line.clear()
-
-        self.points_from_line.clear()
-        self.line_from_point.clear()
-
-        self.solid_elements_center.clear()
 
         for dim, tag in gmsh.model.getEntities():
 
@@ -471,6 +494,8 @@ class Mesh:
                     self.lines_from_surface[tag] = list(downwards)
                     for line_id in list(downwards):
                         self.surface_from_line[line_id].append(tag)
+
+                    self.process_surface_normals_and_curvatures(tag)
 
                 elif dim == 1:
                     self.points_from_line[tag] = list(downwards)
