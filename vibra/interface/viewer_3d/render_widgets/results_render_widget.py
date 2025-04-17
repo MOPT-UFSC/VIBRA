@@ -1,7 +1,6 @@
 import logging
 from threading import Lock
 from time import time
-from typing import Literal
 
 import numpy as np
 from molde.interactor_styles import BoxSelectionInteractorStyle
@@ -32,15 +31,6 @@ from .model_info_text import (
     analysis_info_text,
 )
 
-# Just for type hints
-AnalysisType = Literal[
-    "",
-    "structural_modal",
-    "structural_harmonic",
-    "acoustic_modal",
-    "acoustic_harmonic",
-]
-
 
 class ResultsRenderWidget(AnimatedRenderWidget):
     def __init__(self, parent=None):
@@ -51,7 +41,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
         app().main_window.visualization_changed.connect(self.visualization_changed_callback)
 
-        self.current_analysis: AnalysisType = ""
         self._animation_cached_data = dict()
         self._animation_cache_lock = Lock()
         self.min_value = 0
@@ -64,9 +53,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.create_color_bar()
         self.create_scale_bar()
         self.update_plot()
-
-    def configure_analysis(self, analysis: AnalysisType):
-        self.current_analysis = analysis
 
     def update_theme(self):
         user_preferences = app().config.user_preferences
@@ -437,9 +423,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def update_colorbar_unit(self):
-        if self.current_analysis == "":
-            return
-
         unit = {
             AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD: "m",
             AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION: "m",

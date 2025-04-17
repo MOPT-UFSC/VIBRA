@@ -138,18 +138,9 @@ class PlotStructuralModeShape(QWidget):
         if self.lineEdit_natural_frequency.text() == "":
             return
 
-        # app().project.analysis_type_label = "Structural Modal Analysis"
         frequency = self.selected_natural_frequency
         self.mode_index = self.natural_frequencies.index(frequency)
-        # color_scale_setup = self.get_user_color_scale_setup()
-
-        results_widget = app().main_window.results_widget
-        results_widget.configure_analysis("structural_modal")
-        results_widget.update_plot()
-
-        # app().project.set_color_scale_setup(color_scale_setup)
-        # app().main_window.structural_modal_analysis.update_plot()
-        # app().main_window.results_widget.clear_cache()
+        app().main_window.results_widget.update_plot()
 
     def update_displacements(self):
         pass
