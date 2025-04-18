@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QDialog, QComboBox, QFileDialog, QLabel, QLineEdit, QPushButton, QTableWidget, QTabWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QAbstractItemView, QDialog, QComboBox, QFileDialog, QHeaderView, QLabel, QLineEdit, QPushButton, QTableWidget, QTabWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtCore import Qt
 
@@ -383,10 +383,10 @@ class SetFluidCompositionInput(QDialog):
         
         self.tableWidget_new_fluid.setColumnCount(len(header))
         self.tableWidget_new_fluid.setHorizontalHeaderLabels(header)
-        self.tableWidget_new_fluid.setSelectionBehavior(1)
+        self.tableWidget_new_fluid.setSelectionBehavior(QAbstractItemView.SelectionBehavior(1))
         self.tableWidget_new_fluid.resizeColumnsToContents()
 
-        self.tableWidget_new_fluid.horizontalHeader().setSectionResizeMode(0)
+        self.tableWidget_new_fluid.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(0))
         self.tableWidget_new_fluid.horizontalHeader().setStretchLastSection(True)
 
         for j, width in enumerate([220, 120]):
