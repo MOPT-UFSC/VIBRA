@@ -43,7 +43,7 @@ class NewSymbolsActor(CommonSymbolsActorVariableSize):
         mesh = app().project.model.mesh
         surface_properties = app().project.model.properties.surface_properties
 
-        for (property_name, surface_id), in surface_properties.keys():
+        for (property_name, surface_id) in surface_properties.keys():
             if property_name != "surface_velocity":
                 continue
 
@@ -57,15 +57,20 @@ class NewSymbolsActor(CommonSymbolsActorVariableSize):
 
             if surface_curvatures.any():
                 dist = np.linalg.norm(surface_coordinates - center_coords, axis=1)
-                node_id = surface_nodes[np.argmin(dist)]
-                orientation = surface_normals[node_id, :]
-                coords = surface_coordinates[node_id, :]
+                arg_min = np.argmin(dist)
+                coords = surface_coordinates[arg_min, :]
+                orientation = surface_normals[arg_min, :]
 
             else:
                 coords = center_coords
                 orientation = np.average(surface_normals, axis=0)
 
             self.add_normal_surface_velocity_symbol(coords, orientation)
+
+            ## plot all surface normals at nodes
+            # for i, coords in enumerate(surface_coordinates):
+            #     self.add_normal_surface_velocity_symbol(coords, surface_normals[i, :])
+
 
     def _build_nodal_normals(self):
         mesh = app().project.model.mesh

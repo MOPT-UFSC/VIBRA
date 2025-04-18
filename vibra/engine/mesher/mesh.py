@@ -456,9 +456,12 @@ class Mesh:
             tag : int
                 It represents the gmsh surface's tag.
         """
-        _, _, param = gmsh.model.mesh.getNodes(2, tag, True)
-        self.surface_normals[tag] = gmsh.model.getNormal(tag, param).reshape(-1, 3)
-        self.surface_curvatures[tag] = gmsh.model.getCurvature(2, tag, param)
+        node_tags, _, param = gmsh.model.mesh.getNodes(2, tag, True)
+        surface_normals = gmsh.model.getNormal(tag, param).reshape(-1, 3)
+        surface_curvatures = gmsh.model.getCurvature(2, tag, param)
+        sorted_indexes = np.argsort(node_tags)
+        self.surface_normals[tag] = surface_normals[sorted_indexes, :]
+        self.surface_curvatures[tag] = surface_curvatures[sorted_indexes]
 
 
     def _process_mesh(self):
