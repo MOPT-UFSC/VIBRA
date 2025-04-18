@@ -32,7 +32,7 @@ class ViscousThermalLossModels:
             property, volume_id = key
             if property == "viscous_thermal_model":
 
-                # surfaces_from_volume = self.project.model.mesh.surfaces_from_volumes[volume_id]
+                # surfaces_from_volume = self.project.model.mesh.surfaces_from_volume[volume_id]
                 fluid = self.properties._get_property("fluid", volume = volume_id)
 
                 if data["section_type"] in ["Rectangular duct", "Quadrangular duct"]:

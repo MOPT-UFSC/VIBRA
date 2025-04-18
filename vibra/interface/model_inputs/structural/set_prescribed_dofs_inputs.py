@@ -828,7 +828,7 @@ class SetPrescribedDofsInputs(QDialog):
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
-                for surface_id in app().project.model.mesh.surface_from_line[selected_id]:
+                for surface_id in app().project.model.mesh.surfaces_from_line[selected_id]:
                     data = self.properties._get_property("prescribed_dofs", surface=surface_id)
                     if isinstance(data, dict):
                         self.properties._remove_surface_property("prescribed_dofs", surface_id)
@@ -848,13 +848,13 @@ class SetPrescribedDofsInputs(QDialog):
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
-                for line_id in app().project.model.mesh.line_from_point[selected_id]:
+                for line_id in app().project.model.mesh.lines_from_point[selected_id]:
                     data = self.properties._get_property("prescribed_dofs", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("prescribed_dofs", line_id)
                         table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", line_id, "lines"))
 
-                    for surface_id in self.model.mesh.surface_from_line[line_id]:
+                    for surface_id in self.model.mesh.surfaces_from_line[line_id]:
                         data = self.properties._get_property("prescribed_dofs", surface=surface_id)
                         if isinstance(data, dict):
                             self.properties._remove_surface_property("prescribed_dofs", surface_id)
@@ -868,13 +868,13 @@ class SetPrescribedDofsInputs(QDialog):
                     self.properties._remove_point_property("prescribed_dofs", point_id)
                     table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", point_id, "points"))
 
-                for line_id in app().project.model.mesh.line_from_point[point_id]:
+                for line_id in app().project.model.mesh.lines_from_point[point_id]:
                     data = self.properties._get_property("prescribed_dofs", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("prescribed_dofs", line_id)
                         table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", line_id, "lines"))
 
-                    for surface_id in self.model.mesh.surface_from_line[line_id]:
+                    for surface_id in self.model.mesh.surfaces_from_line[line_id]:
                         data = self.properties._get_property("prescribed_dofs", surface=surface_id)
                         if isinstance(data, dict):
                             self.properties._remove_surface_property("prescribed_dofs", surface_id)

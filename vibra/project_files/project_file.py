@@ -152,7 +152,13 @@ class ProjectFile:
                             gmsh_elements_from_surfaces = mesh.gmsh_elements_from_surfaces,
                             gmsh_elements_from_volumes = mesh.gmsh_elements_from_volumes,
 
-                            surfaces_from_volumes = mesh.surfaces_from_volumes
+                            surfaces_from_volume = mesh.surfaces_from_volume,
+                            lines_from_surface = mesh.lines_from_surface,
+                            points_from_line = mesh.points_from_line,
+
+                            normals_surface = mesh.normals_surface,
+                            curvatures_surface = mesh.curvatures_surface,
+
                         )
 
         with self.filebox.open(self.mesh_data_filename, "w") as internal_file:
@@ -161,38 +167,47 @@ class ProjectFile:
                 for key, data in mesh_data.items():
 
                     if "nodes" in key or "nodal" in key:
-                        _key = f"nodal_data/{key}"
+                        prefix = f"nodal_data/{key}"
 
                     elif "connectivity" in key:
-                        _key = f"connectivity/{key}"
+                        prefix = f"connectivity/{key}"
 
                     elif "map" in key:
-                        _key = f"maps/{key}"
+                        prefix = f"maps/{key}"
 
                     elif "gmsh" in key:
-                        _key = f"gmsh_data/{key}"
+                        prefix = f"gmsh_data/{key}"
 
-                    elif key == "surfaces_from_volumes":
-                        _key = f"geometry_info/{key}"
+                    elif key in ["surfaces_from_volume", "lines_from_surface", "points_from_line"]:
+                        prefix = f"geometry_info/{key}"
+
+                    elif "normals_surface" in key:
+                        prefix = f"normals/{key}"
+
+                    elif "curvatures_surface" in key:
+                        prefix = f"curvatures/{key}"
 
                     else:
-                        _key = key
+                        prefix = key
 
                     if isinstance(data, dict):
+                        for _id, values in data.items():
+                            name = f"{prefix}_{_id}"
+                            if key == "curvatures_surface" or key == "normals_surface":
+                                dtype = float
+                            else:
+                                dtype = int
 
-                        for _id, _values in data.items():
-                            name = f"{_key}_{_id}"
-                            f.create_dataset(name, data=_values, dtype=int)
+                            f.create_dataset(name, data=values, dtype=dtype)
 
                     else:
-
                         if key == "nodal_coordinates":
-                            dtype = float 
+                            dtype = float
                         else:
                             dtype = int
 
-                        f.create_dataset(_key, data=data, dtype=dtype)
-        
+                        f.create_dataset(prefix, data=data, dtype=dtype)
+
         self.filebox.remove(self.results_data_filename)
         app().main_window.project_data_modified = True
 
@@ -359,9 +374,6 @@ class ProjectFile:
         self.filebox.remove(self.imported_table_data_filename)
         acoustic_imported_tables = app().project.model.properties.acoustic_imported_tables
         structural_imported_tables = app().project.model.properties.structural_imported_tables
-
-        # print(acoustic_imported_tables)
-        # print(structural_imported_tables)
 
         if acoustic_imported_tables or structural_imported_tables:
 

@@ -490,7 +490,7 @@ class MaterialWidget(QWidget):
                 if isinstance(data, Material):
                     if data.identifier in material_identifiers:
                         volumes_to_remove_material.append(volume_id)
-                        surface_ids = self.model.mesh.surfaces_from_volumes[volume_id]
+                        surface_ids = self.model.mesh.surfaces_from_volume[volume_id]
                         for surface_id in surface_ids:
                             surfaces_to_remove_material.append(surface_id)
 

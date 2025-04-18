@@ -63,6 +63,10 @@ class Mesh:
         self.gmsh_elements_from_surfaces = dict()
         self.gmsh_elements_from_volumes = dict()
 
+        self.map_solid_elements = dict()
+        self.map_face_elements = dict()
+        self.map_line_elements = dict()
+
         self.elements_from_line = dict()
         self.elements_from_surface = dict()
         self.elements_from_volume = dict()
@@ -73,7 +77,7 @@ class Mesh:
         self.volume_from_element = dict()
         self.surface_from_solid_element = defaultdict(list)
 
-        self.surfaces_from_volumes = dict()
+        self.surfaces_from_volume = dict()
         self.lines_from_surface = dict()
         self.points_from_line = dict()
         self.connectivity_from_surfaces = dict()
@@ -89,13 +93,13 @@ class Mesh:
         self.surface_area_from_element_integration = dict()
 
         self.nodal_area = defaultdict(list)
-        self.volume_from_surface = defaultdict(list)
-        self.surface_from_line = defaultdict(list)
-        self.line_from_point = defaultdict(list)
+        self.volumes_from_surface = defaultdict(list)
+        self.surfaces_from_line = defaultdict(list)
+        self.lines_from_point = defaultdict(list)
         self.face_elements_connected_to_nodes = defaultdict(list)
 
-        self.surface_normals = dict()
-        self.surface_curvatures = dict()
+        self.normals_surface = dict()
+        self.curvatures_surface = dict()
         self.nodal_normals_data = dict()
 
         self.principal_diagonal = None
@@ -419,7 +423,7 @@ class Mesh:
         gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_type.second_order_incomplete)
 
 
-    def clear_dictionaries(self):
+    def clear_mesh_data(self):
 
         self.nodes_from_points.clear()
         self.nodes_from_lines.clear()
@@ -431,20 +435,24 @@ class Mesh:
         self.gmsh_elements_from_surfaces.clear()
         self.gmsh_elements_from_volumes.clear()
 
+        self.map_solid_elements.clear()
+        self.map_face_elements.clear()
+        self.map_line_elements.clear()
+
         self.points_from_line.clear()
-        self.line_from_point.clear()
+        self.lines_from_point.clear()
 
         self.lines_from_surface.clear()
-        self.surface_from_line.clear()
+        self.surfaces_from_line.clear()
 
-        self.surfaces_from_volumes.clear()
-        self.volume_from_surface.clear()
+        self.surfaces_from_volume.clear()
+        self.volumes_from_surface.clear()
 
         self.solid_elements_center.clear()
         self.connectivity_from_surfaces.clear()
 
-        self.surface_curvatures.clear()
-        self.surface_normals.clear()
+        self.curvatures_surface.clear()
+        self.normals_surface.clear()
 
 
     def process_surface_normals_and_curvatures(self, tag: int):
@@ -457,11 +465,11 @@ class Mesh:
                 It represents the gmsh surface's tag.
         """
         node_tags, _, param = gmsh.model.mesh.getNodes(2, tag, True)
-        surface_normals = gmsh.model.getNormal(tag, param).reshape(-1, 3)
-        surface_curvatures = gmsh.model.getCurvature(2, tag, param)
+        normals_surface = gmsh.model.getNormal(tag, param).reshape(-1, 3)
+        curvatures_surface = gmsh.model.getCurvature(2, tag, param)
         sorted_indexes = np.argsort(node_tags)
-        self.surface_normals[tag] = surface_normals[sorted_indexes, :]
-        self.surface_curvatures[tag] = surface_curvatures[sorted_indexes]
+        self.normals_surface[tag] = normals_surface[sorted_indexes, :]
+        self.curvatures_surface[tag] = curvatures_surface[sorted_indexes]
 
 
     def _process_mesh(self):
@@ -476,7 +484,7 @@ class Mesh:
         self.nodal_coordinates[indexes - 1, 1:] = coords.reshape(-1, 3) * unit_length_factor
         self.nodal_coordinates[indexes - 1, :1] = indexes.reshape(-1, 1) - 1
 
-        self.clear_dictionaries()
+        self.clear_mesh_data()
 
         connectivity_dim1 = dict()
         connectivity_dim2 = dict()
@@ -489,21 +497,21 @@ class Mesh:
                 _, downwards = gmsh.model.getAdjacencies(dim, tag)
 
                 if dim == 3:
-                    self.surfaces_from_volumes[tag] = list(downwards)
+                    self.surfaces_from_volume[tag] = list(downwards)
                     for surf_id in list(downwards):
-                        self.volume_from_surface[surf_id].append(tag)
+                        self.volumes_from_surface[surf_id].append(tag)
 
                 elif dim == 2:
                     self.lines_from_surface[tag] = list(downwards)
                     for line_id in list(downwards):
-                        self.surface_from_line[line_id].append(tag)
+                        self.surfaces_from_line[line_id].append(tag)
 
                     self.process_surface_normals_and_curvatures(tag)
 
                 elif dim == 1:
                     self.points_from_line[tag] = list(downwards)
                     for point_id in list(downwards):
-                        self.line_from_point[point_id].append(tag)
+                        self.lines_from_point[point_id].append(tag)
 
             elements_data = dict()
             element_types, element_indexes, element_nodes = gmsh.model.mesh.getElements(dim, tag)

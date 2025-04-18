@@ -609,7 +609,7 @@ class SetDistributedLoadsInputs(QDialog):
                         table_names.extend(self.properties.get_property_related_table_names("distributed_loads", line_id, "lines"))
 
             elif selection == "lines":
-                for surface_id in app().project.model.mesh.surface_from_line[selected_id]:
+                for surface_id in app().project.model.mesh.surfaces_from_line[selected_id]:
                     data = self.properties._get_property("distributed_loads", surface=surface_id)
                     if isinstance(data, dict):
                         self.properties._remove_surface_property("distributed_loads", surface_id)

@@ -361,8 +361,8 @@ class AcousticHarmonicSolver:
         P_in = self.solution[nodes_input, :]
         P_out = self.solution[nodes_output, :]
 
-        # volume_out = model.mesh.volume_from_surface[output_surface_id][0]
-        # volume_in = model.mesh.volume_from_surface[input_surface_id][0]
+        # volume_out = model.mesh.volumes_from_surface[output_surface_id][0]
+        # volume_in = model.mesh.volumes_from_surface[input_surface_id][0]
 
         # fluid_out, _ = model.properties._get_property("fluid", volume=volume_out)
         # fluid_in, _ = model.properties._get_property("fluid", volume=volume_in)

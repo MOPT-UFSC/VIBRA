@@ -32,7 +32,6 @@ class LoadProject:
         self.load_imported_table_data_from_file()
         self.load_model_properties()
         self.load_analysis_setup()
-        # self.load_thumbnail()
         self.load_analysis_results()
 
     def load_geometry_setup(self):
@@ -167,93 +166,89 @@ class LoadProject:
 
         logging.info("Loading mesh... [20/100]")
 
+        self.model.mesh.clear_mesh_data()
+
         self.model.mesh.nodal_coordinates = mesh_data["nodal_coordinates"]
         self.model.mesh.lines_connectivity = mesh_data["lines_connectivity"]
         self.model.mesh.faces_connectivity = mesh_data["faces_connectivity"]
         self.model.mesh.solids_connectivity = mesh_data["solids_connectivity"]
 
-        map_line_elements = dict(zip(   mesh_data["map_line_elements"][:, 0],
-                                        mesh_data["map_line_elements"][:, 1]   ))
+        self.model.mesh.map_line_elements = dict(zip( mesh_data["map_line_elements"][:, 0],
+                                                mesh_data["map_line_elements"][:, 1] ))
 
-        map_face_elements = dict(zip(   mesh_data["map_face_elements"][:, 0],
-                                        mesh_data["map_face_elements"][:, 1]   ))
+        self.model.mesh.map_face_elements = dict(zip( mesh_data["map_face_elements"][:, 0],
+                                                mesh_data["map_face_elements"][:, 1] ))
 
-        map_solid_elements = dict(zip(  mesh_data["map_solid_elements"][:, 0],
-                                        mesh_data["map_solid_elements"][:, 1]  ))
-
-        nodes_from_points = dict()
-        nodes_from_lines = dict()
-        nodes_from_surfaces = dict()
-        nodes_from_volumes = dict()
-
-        gmsh_elements_from_lines = dict()
-        gmsh_elements_from_surfaces = dict()
-        gmsh_elements_from_volumes = dict()
-
-        connectivity_from_surfaces = dict()
-        surfaces_from_volumes = dict()
-        volume_from_surface = defaultdict(list)
+        self.model.mesh.map_solid_elements = dict(zip(mesh_data["map_solid_elements"][:, 0],
+                                                mesh_data["map_solid_elements"][:, 1] ))
 
         logging.info("Loading mesh... [60/100]")
 
         for key, data in mesh_data.items():
 
             if "nodes_from_points" in key:
-                id = int(key.replace("nodes_from_points_", ""))
-                nodes_from_points[id] = data              
+                id = int(key.split("_")[-1])
+                self.model.mesh.nodes_from_points[id] = data              
             
             elif "nodes_from_lines" in key:
-                id = int(key.replace("nodes_from_lines_", ""))
-                nodes_from_lines[id] = data
+                id = int(key.split("_")[-1])
+                self.model.mesh.nodes_from_lines[id] = data
 
             elif "nodes_from_surfaces" in key:
-                id = int(key.replace("nodes_from_surfaces_", ""))
-                nodes_from_surfaces[id] = data
+                id = int(key.split("_")[-1])
+                self.model.mesh.nodes_from_surfaces[id] = data
 
             elif "nodes_from_volumes" in key:
-                id = int(key.replace("nodes_from_volumes_", ""))
-                nodes_from_volumes[id] = data
+                id = int(key.split("_")[-1])
+                self.model.mesh.nodes_from_volumes[id] = data
 
             elif "gmsh_elements_from_lines" in key:
-                id = int(key.replace("gmsh_elements_from_lines_", ""))
-                gmsh_elements_from_lines[id] = data
+                id = int(key.split("_")[-1])
+                self.model.mesh.gmsh_elements_from_lines[id] = data
 
             elif "gmsh_elements_from_surfaces" in key:
-                id = int(key.replace("gmsh_elements_from_surfaces_", ""))
-                gmsh_elements_from_surfaces[id] = data
+                id = int(key.split("_")[-1])
+                self.model.mesh.gmsh_elements_from_surfaces[id] = data
 
             elif "gmsh_elements_from_volumes" in key:
-                id = int(key.replace("gmsh_elements_from_volumes_", ""))
-                gmsh_elements_from_volumes[id] = data
+                id = int(key.split("_")[-1])
+                self.model.mesh.gmsh_elements_from_volumes[id] = data
 
             elif "connectivity_from_surfaces" in key:
-                id = int(key.replace("connectivity_from_surfaces_", ""))
-                connectivity_from_surfaces[id] = data
+                id = int(key.split("_")[-1])
+                self.model.mesh.connectivity_from_surfaces[id] = data
 
-            elif "surfaces_from_volumes" in key:
-                id = int(key.replace("surfaces_from_volumes_", ""))
-                surfaces_from_volumes[id] = data
+            elif "surfaces_from_volume" in key:
+                id = int(key.split("_")[-1])
+                self.model.mesh.surfaces_from_volume[id] = data
 
-        for vol_id, face_ids in surfaces_from_volumes.items():
+            elif "lines_from_surface" in key:
+                id = int(key.split("_")[-1])
+                self.model.mesh.lines_from_surface[id] = data
+
+            elif "points_from_line" in key:
+                id = int(key.split("_")[-1])
+                self.model.mesh.points_from_line[id] = data
+
+            elif "normals_surface" in key:
+                id = int(key.split("_")[-1])
+                self.model.mesh.normals_surface[id] = data
+
+            elif "curvatures_surface" in key:
+                id = int(key.split("_")[-1])
+                self.model.mesh.curvatures_surface[id] = data
+
+        for vol_id, face_ids in self.model.mesh.surfaces_from_volume.items():
             for face_id in face_ids:
-                volume_from_surface[face_id].append(vol_id) 
+                self.model.mesh.volumes_from_surface[face_id].append(vol_id) 
 
-        self.model.mesh.nodes_from_points = nodes_from_points
-        self.model.mesh.nodes_from_lines = nodes_from_lines
-        self.model.mesh.nodes_from_surfaces = nodes_from_surfaces
-        self.model.mesh.nodes_from_volumes = nodes_from_volumes
+        for surf_id, line_ids in self.model.mesh.lines_from_surface.items():
+            for line_id in line_ids:
+                self.model.mesh.surfaces_from_line[line_id].append(surf_id) 
 
-        self.model.mesh.map_line_elements = map_line_elements
-        self.model.mesh.map_face_elements = map_face_elements
-        self.model.mesh.map_solid_elements = map_solid_elements
-
-        self.model.mesh.gmsh_elements_from_lines = gmsh_elements_from_lines
-        self.model.mesh.gmsh_elements_from_surfaces = gmsh_elements_from_surfaces
-        self.model.mesh.gmsh_elements_from_volumes = gmsh_elements_from_volumes
-
-        self.model.mesh.connectivity_from_surfaces = connectivity_from_surfaces
-        self.model.mesh.surfaces_from_volumes = surfaces_from_volumes
-        self.model.mesh.volume_from_surface = volume_from_surface
+        for line_id, point_ids in self.model.mesh.points_from_line.items():
+            for point_id in point_ids:
+                self.model.mesh.lines_from_point[point_id].append(line_id)
 
         logging.info("Loading mesh... [80/100]")
 
@@ -305,6 +300,7 @@ class LoadProject:
 
                 if mesh_data:
                     self.load_mesh_data_from_file(mesh_data)
+
                 else:
                     app().project.generate_mesh()
                     app().file.write_mesh_data_in_file()

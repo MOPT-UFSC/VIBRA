@@ -330,7 +330,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         # Get the face elements of all selected volumes
         for volume in volumes:
-            surfaces = app().project.model.mesh.surfaces_from_volumes[volume]
+            surfaces = app().project.model.mesh.surfaces_from_volume[volume]
             for face in surfaces:
                 indexes = app().project.model.mesh.elements_from_surface.get(face, [])
                 all_faces_elements.extend(indexes)

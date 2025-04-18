@@ -75,7 +75,7 @@ class FacesActor(vtkActor):
         points.SetData(numpy_to_vtk(coordinates))
 
         surface_to_volume = dict()
-        for volume, surfaces in self.mesh.surfaces_from_volumes.items():
+        for volume, surfaces in self.mesh.surfaces_from_volume.items():
             for surface in surfaces:
                 surface_to_volume[surface] = volume
 
@@ -136,8 +136,8 @@ class FacesActor(vtkActor):
             for surface, face_elements in mesh.elements_from_surface.items():
                 material: Material | None = properties._get_property("material", surface=surface)
                 
-                if (material is None) and (surface in mesh.volume_from_surface):
-                    volume = mesh.volume_from_surface[surface][0]
+                if (material is None) and (surface in mesh.volumes_from_surface):
+                    volume = mesh.volumes_from_surface[surface][0]
                     material = properties._get_property("material", volume=volume)
 
                 color = Color(*material.color) if (material is not None) else no_info_color
@@ -147,8 +147,8 @@ class FacesActor(vtkActor):
             for surface, face_elements in mesh.elements_from_surface.items():
                 fluid: Fluid | None = properties._get_property("fluid", surface=surface)
 
-                if (fluid is None) and (surface in mesh.volume_from_surface):
-                    volume = mesh.volume_from_surface[surface][0]
+                if (fluid is None) and (surface in mesh.volumes_from_surface):
+                    volume = mesh.volumes_from_surface[surface][0]
                     fluid = properties._get_property("fluid", volume=volume)
 
                 color = Color(*fluid.color) if (fluid is not None) else no_info_color

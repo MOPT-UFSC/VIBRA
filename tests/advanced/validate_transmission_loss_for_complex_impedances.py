@@ -72,9 +72,9 @@ def load_external_mesh_and_solve():
         ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
         mesh.nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
 
-        mesh.volume_from_surface[tag] = [1]
+        mesh.volumes_from_surface[tag] = [1]
 
-    mesh.surfaces_from_volumes[1] = [1, 2, 3, 4]
+    mesh.surfaces_from_volume[1] = [1, 2, 3, 4]
 
     # Define the fluid properties
 

@@ -252,7 +252,7 @@ class StructuralAssembler:
                     continue
 
                 nodes_from_line = self.model.mesh.nodes_from_lines[line_id]
-                for surface_id in self.model.mesh.surface_from_line[line_id]:
+                for surface_id in self.model.mesh.surfaces_from_line[line_id]:
                     connectivities = self.model.mesh.connectivity_from_surfaces[surface_id]
                     mask = np.sum(np.isin(connectivities, nodes_from_line), axis=1) == 2
 

@@ -277,7 +277,7 @@ class Model:
     def get_fluid_density_for_particle_velocity_calculation(self, surface_id: int, frequencies: np.ndarray):
 
         rho = None
-        volume_ids = self.mesh.volume_from_surface[surface_id]
+        volume_ids = self.mesh.volumes_from_surface[surface_id]
 
         if len(volume_ids) == 1:
 
@@ -328,8 +328,8 @@ class Model:
             prop, volume_id = key
             if prop == "porous_material_model":
 
-                if volume_id in self.mesh.surfaces_from_volumes.keys():
-                    surfaces_from_volume = self.mesh.surfaces_from_volumes[volume_id]
+                if volume_id in self.mesh.surfaces_from_volume.keys():
+                    surfaces_from_volume = self.mesh.surfaces_from_volume[volume_id]
 
                     if surface_id in surfaces_from_volume:
                         elements = self.mesh.elements_from_volume[volume_id]
@@ -355,8 +355,8 @@ class Model:
             prop, volume_id = key
             if prop == "viscous_thermal_model":
 
-                if volume_id in self.mesh.surfaces_from_volumes.keys():
-                    surfaces_from_volume = self.mesh.surfaces_from_volumes[volume_id]
+                if volume_id in self.mesh.surfaces_from_volume.keys():
+                    surfaces_from_volume = self.mesh.surfaces_from_volume[volume_id]
 
                     if surface_id in surfaces_from_volume:
                         elements = self.mesh.elements_from_volume[volume_id]

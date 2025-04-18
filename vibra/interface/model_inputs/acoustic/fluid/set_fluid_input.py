@@ -257,7 +257,7 @@ class SetFluidInput(QDialog):
                 self.properties._set_property("fluid", selected_fluid, volume=volume_id)
 
                 if attribution_type == 5:
-                    for surface_id in self.model.mesh.surfaces_from_volumes[volume_id]:
+                    for surface_id in self.model.mesh.surfaces_from_volume[volume_id]:
                         self.properties._set_property("fluid", selected_fluid, surface=surface_id)
 
         elif attribution_type == 4:

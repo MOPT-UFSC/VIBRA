@@ -178,7 +178,7 @@ class PlotStructuralFrequencyResponseInput(QWidget):
             nodes = self.mesh.nodes_from_surfaces[selected_id]
 
         elif selection_type == "line":           
-            surface_ids = self.mesh.surface_from_line[selected_id]
+            surface_ids = self.mesh.surfaces_from_line[selected_id]
             nodes = self.mesh.nodes_from_lines[selected_id]
 
         elif selection_type == "point":

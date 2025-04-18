@@ -82,8 +82,8 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
 
     for vol_id, surf_ids in surfaces_from_volume.items():
         for surf_id in surf_ids:
-            mesh.volume_from_surface[surf_id] = [vol_id]
-        mesh.surfaces_from_volumes[vol_id] = surf_ids
+            mesh.volumes_from_surface[surf_id] = [vol_id]
+        mesh.surfaces_from_volume[vol_id] = surf_ids
 
     # return
     # define the fluid properties

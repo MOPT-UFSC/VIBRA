@@ -502,7 +502,7 @@ class ReciprocatingCompressorInputs(QDialog):
             lineEdit.selectAll()
             return None
 
-        volumes_from_surface = self.model.mesh.volume_from_surface[surface_id]
+        volumes_from_surface = self.model.mesh.volumes_from_surface[surface_id]
 
         if len(volumes_from_surface) == 1:
             return surface_id
@@ -827,7 +827,7 @@ class ReciprocatingCompressorInputs(QDialog):
             connection_type = "discharge"
             surface_id = self.discharge_surface_id
 
-        volume_id = self.model.mesh.volume_from_surface[surface_id]
+        volume_id = self.model.mesh.volumes_from_surface[surface_id]
 
         compressor_info = { 
                             "temperature_at_suction" : self.T_suction,

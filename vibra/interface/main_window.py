@@ -352,7 +352,7 @@ class MainWindow(QMainWindow):
 
         # Select the surfaces associated to the selected volumes
         for volume in volumes:
-            volume_surfaces = mesh.surfaces_from_volumes.get(volume, [])
+            volume_surfaces = mesh.surfaces_from_volume.get(volume, [])
             surfaces |= set(volume_surfaces)
 
         if join and remove:
@@ -642,14 +642,14 @@ class MainWindow(QMainWindow):
             volumes_to_hide |= self.selected_geometry_volumes
         elif self.selected_geometry_surfaces:
             for surface in self.selected_geometry_surfaces:
-                volumes_to_hide |= set(mesh.volume_from_surface[surface])
+                volumes_to_hide |= set(mesh.volumes_from_surface[surface])
         elif self.selected_mesh_solids:
             for element in self.selected_mesh_solids:
                 volumes_to_hide.add(mesh.volume_from_element[element])
 
         selected_volume_surfaces = set()
         visible_volume_surfaces = set()
-        for volume, surfaces in mesh.surfaces_from_volumes.items():
+        for volume, surfaces in mesh.surfaces_from_volume.items():
             if volume in volumes_to_hide:
                 selected_volume_surfaces |= set(surfaces)
             elif volume not in self.hidden_volumes:
@@ -876,13 +876,15 @@ class MainWindow(QMainWindow):
             LoadingWindow(app().load_project.load).run()
             
             self.status_bar.setVisible(True)
-
+            
             self.configure_mesh_information()
             LoadingWindow(self.update_plots).run()
             
         except Exception as error_log:
+            from traceback import print_exception
+            print_exception(error_log)
             window_title = "Error"
-            title = "Error to open project"
+            title = "Error while processing the 'open_project' method"
             message = str(error_log)
             PrintMessageInput([window_title, title, message])
 
