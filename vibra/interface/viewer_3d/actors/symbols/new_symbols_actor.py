@@ -32,13 +32,6 @@ class NewSymbolsActor(CommonSymbolsActorVariableSize):
         self._build_surface_velocity()
         super().build()
         return
-        # pos = (3, 0, 0)
-        # self.add_force_symbol(pos, (1, 0, 0))
-        # self.add_damper_symbol(pos, (1, 1, 0))
-        # self.add_spring_symbol(pos, (1, 1, 0))
-        # self.add_mass_symbol(pos, (-1, -1, 0))
-        # self.add_normal_symbol(pos, (1, 1, 1))
-        # super().build()
 
     def _build_surface_velocity(self):
         mesh = app().project.model.mesh
