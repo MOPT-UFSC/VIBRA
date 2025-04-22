@@ -23,30 +23,29 @@ class Project:
         self.reset_variables()
 
     def reset_variables(self):
-        #
-        self.name = "Project"
-        self.thumbnail = None
-        #
-        self.save_path = None
 
+        self.name = "Project"
         self.fluid_list_path = ""
         self.material_list_path = ""
 
+        self.thumbnail = None
+        self.save_path = None
+
         self.analysis_data = dict()
         self.analysis_id = AnalysisID.NO_ANALYSIS
-        self.dissipation_model = None
-        #
+
         self.model = Model()
         self.acoustic_assembler = AcousticAssembler(self.model)
         self.structural_assembler = StructuralAssembler(self.model)
-        #
+
         self.static_solver = None
         self.acoustic_modal_solver = None
         self.structural_modal_solver = None
         self.acoustic_harmonic_solver = None
         self.structural_harmonic_solver = None
-        #
+
         self.last_analysis = None
+        self.dissipation_model = None
 
     def reset_solutions(self):
 

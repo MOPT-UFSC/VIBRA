@@ -394,11 +394,9 @@ class LoadProject:
             app().project.thumbnail = thumbnail
 
     def load_analysis_results(self):
-    
-        act_modal_analysis = False
-        str_modal_analysis = False
-        act_harmonic_analysis = False
-        str_harmonic_analysis = False
+
+        project = app().project
+        project.last_analysis = None
 
         results_data = self.file.read_results_data_from_file()
 
@@ -407,34 +405,34 @@ class LoadProject:
             for key, data in results_data.items():
                 data: dict
 
-                if key == "modal_acoustic" and app().project.acoustic_modal_solver is not None:
-                    act_modal_analysis = True
+                if key == "modal_acoustic" and project.acoustic_modal_solver is not None:
                     if np.iscomplexobj(data["natural_frequencies"]):
-                        app().project.acoustic_modal_solver.complex_natural_frequencies = data.get("natural_frequencies", np.array([]))
+                        project.acoustic_modal_solver.complex_natural_frequencies = data.get("natural_frequencies", np.array([]))
                     else:
-                        app().project.acoustic_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
-                    app().project.acoustic_modal_solver.solution = data.get("solution")
+                        project.acoustic_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
+                    project.acoustic_modal_solver.solution = data.get("solution")
+                    project.last_analysis = "Modal Acoustic"
 
-                elif key == "modal_structural" and app().project.structural_modal_solver is not None:
-                    str_modal_analysis = True
-                    app().project.structural_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
-                    app().project.structural_modal_solver.solution = data.get("solution")
-                    app().project.structural_modal_solver.displacement_dofs = data["displacement_dofs"]
+                elif key == "modal_structural" and project.structural_modal_solver is not None:
+                    project.structural_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
+                    project.structural_modal_solver.solution = data.get("solution")
+                    project.structural_modal_solver.displacement_dofs = data["displacement_dofs"]
+                    project.last_analysis = "Modal Structural"
 
-                elif key == "harmonic_acoustic" and app().project.acoustic_harmonic_solver is not None:
-                    act_harmonic_analysis = True
-                    app().project.acoustic_harmonic_solver.frequencies = data.get("frequencies")
-                    app().project.acoustic_harmonic_solver.solution = data.get("solution")
+                elif key == "harmonic_acoustic" and project.acoustic_harmonic_solver is not None:
+                    project.acoustic_harmonic_solver.frequencies = data.get("frequencies")
+                    project.acoustic_harmonic_solver.solution = data.get("solution")
                     app().main_window.disable_advanced_acoustic_plots_buttons(False)
+                    project.last_analysis = "Harmonic Acoustic"
 
-                elif key == "harmonic_structural" and app().project.structural_harmonic_solver is not None:
-                    str_harmonic_analysis = True
-                    app().project.structural_harmonic_solver.frequencies = data.get("frequencies")
-                    app().project.structural_harmonic_solver.solution = data.get("solution")
-                    app().project.structural_harmonic_solver.displacement_dofs = data["displacement_dofs"]
+                elif key == "harmonic_structural" and project.structural_harmonic_solver is not None:
+                    project.structural_harmonic_solver.frequencies = data.get("frequencies")
+                    project.structural_harmonic_solver.solution = data.get("solution")
+                    project.structural_harmonic_solver.displacement_dofs = data["displacement_dofs"]
+                    project.last_analysis = "Harmonic Structural"
 
                 else:
                     continue
-            
+
             logging.info("Updating analysis render... [85/100]")
             app().main_window.configure_results_render_widget()
