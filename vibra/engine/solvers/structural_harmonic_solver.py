@@ -1,5 +1,6 @@
 
 from vibra.engine.solvers.linear_solver import initialize_solver, SolverType
+from vibra.engine import AnalysisID
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -31,11 +32,15 @@ class StructuralHarmonicSolver:
     def load_analysis_data(self, analysis_data):
 
         if analysis_data is not None:
-
-            if analysis_data["analysis_id"] in [0, 1]:
+            if analysis_data["analysis_id"] in [
+                AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+                AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+            ]:
                 self.analysis_type = "structural"
+
                 if "frequencies" in analysis_data.keys():
                     self.frequencies = analysis_data["frequencies"]
+
                 else:
                     self.frequencies = self.assembler.model.frequencies
 

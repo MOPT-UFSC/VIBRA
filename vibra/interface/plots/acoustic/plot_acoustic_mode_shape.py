@@ -145,16 +145,7 @@ class PlotAcousticModeShape(QWidget):
             return
 
         self.mode_index = self.natural_frequencies.index(self.selected_frequency)
-        # app().main_window.acoustic_modal_analysis.update_deformation()
-
-        results_widget = app().main_window.results_widget
-        results_widget.configure_analysis("acoustic_modal")
-        results_widget.update_plot()
-
-        # color_scale_setup = self.get_user_color_scale_setup()
-        # app().project.set_color_scale_setup(color_scale_setup)
-        # app().main_window.results_widget.show_pressure_field(self.mode_index)
-        # app().main_window.results_widget.clear_cache()
+        app().main_window.results_widget.update_plot()
 
     def update_transparency_callback(self):
         return

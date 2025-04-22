@@ -1,4 +1,5 @@
 from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
+from vibra.engine import AnalysisID
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -31,13 +32,19 @@ class AcousticModalSolver:
 
     def load_analysis_data(self, analysis_data):
         if analysis_data is not None:
-            if analysis_data["analysis_id"] in [2, 4]:
+            if analysis_data["analysis_id"] in [
+                AnalysisID.STRUCTURAL_MODAL,
+                AnalysisID.ACOUSTIC_MODAL,
+            ]:
                 if "modes" in analysis_data.keys():
                     self.modes = analysis_data["modes"]
+
                 if "sigma_factor" in analysis_data.keys():
                     self.sigma_factor = analysis_data["sigma_factor"]
-                if analysis_data["analysis_id"] == 2:
+
+                if analysis_data["analysis_id"] == AnalysisID.STRUCTURAL_MODAL:
                     self.analysis_type = "structural"
+
                 else:
                     self.analysis_type = "acoustic"
 

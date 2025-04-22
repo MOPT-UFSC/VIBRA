@@ -1,5 +1,6 @@
 
 from vibra import app
+from vibra.engine import AnalysisID
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 
@@ -612,16 +613,22 @@ def mesh_structural_format(property_name, values, labels, units, has_table):
 def analysis_info_text(frequency_index: int):
 
     project = app().project
-    if project.last_analysis is not None:
-        display_name = {
-            "Modal Structural": "Structural Modal Analysis",
-            "Modal Acoustic": "Acoustic Modal Analysis",
-            "Harmonic Structural": "Structural Harmonic Analysis",
-            "Harmonic Acoustic": "Acoustic Harmonic Analysis",
-        }
-        tree = TreeInfo(display_name[project.last_analysis])
+    if project.last_analysis is None:
+        return ""
 
-    if project.analysis_id in [2, 4]:
+    display_name = {
+                    "Modal Structural": "Structural Modal Analysis",
+                    "Modal Acoustic": "Acoustic Modal Analysis",
+                    "Harmonic Structural": "Structural Harmonic Analysis",
+                    "Harmonic Acoustic": "Acoustic Harmonic Analysis",
+                    }
+
+    tree = TreeInfo(display_name[project.last_analysis])
+
+    if project.analysis_id in [
+        AnalysisID.STRUCTURAL_MODAL,
+        AnalysisID.ACOUSTIC_MODAL,
+    ]:
         frequencies = None
         if project.last_analysis == "Modal Structural":
             if project.structural_modal_solver.solution is None:

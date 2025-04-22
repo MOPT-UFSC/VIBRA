@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt, QSize, Signal
 
 
 from vibra import ICON_DIR, app
+from vibra.engine import AnalysisID
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
 from vibra.interface.analysis.harmonic_analysis_method_selector_input import StructuralHarmonicAnalysisMethodSelecorInput
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
@@ -218,7 +219,7 @@ class AnalysisToolbar(QToolBar):
             app().main_window.update_symbols()
 
     def harmonic_acoustic(self):
-        analysis_data = {"analysis_id": 3}
+        analysis_data = {"analysis_id": AnalysisID.ACOUSTIC_HARMONIC}
         self.finalize(analysis_data)
         harmonic = AnalysisSetupInput()
         if harmonic.solve_analysis:
@@ -257,7 +258,12 @@ class AnalysisToolbar(QToolBar):
         app().project.set_analysis_data(analysis_data)
         app().project.create_solver()
 
-        if analysis_data["analysis_id"] in [0, 2, 3, 4]:
+        if analysis_data["analysis_id"] in [
+            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+            AnalysisID.STRUCTURAL_MODAL,
+            AnalysisID.ACOUSTIC_HARMONIC,
+            AnalysisID.ACOUSTIC_MODAL,
+        ]:
             app().file.write_analysis_setup_in_file(analysis_data)
 
     def load_analysis_settings(self):
@@ -268,21 +274,42 @@ class AnalysisToolbar(QToolBar):
         if analysis_setup is None:
             return
 
-        analysis_id = analysis_setup.get("analysis_id")
-        if analysis_id in [0, 1, 3, 5, 6]:
+        analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        if analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+            AnalysisID.ACOUSTIC_HARMONIC,
+            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
+            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
+        ]:
             self.combo_box_analysis_type.setCurrentIndex(0)
-        elif analysis_id in [2, 4]:
+
+        elif analysis_id in [AnalysisID.STRUCTURAL_MODAL, AnalysisID.ACOUSTIC_MODAL]:
             self.combo_box_analysis_type.setCurrentIndex(1)
-        elif analysis_id == 7:
+
+        elif analysis_id == AnalysisID.STATIC_ANALYSIS:
             # coming soon
             return
             self.combo_box_analysis_type.setCurrentIndex(2)
 
-        if analysis_id in [0, 1, 2, 7]:
+        if analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+            AnalysisID.STRUCTURAL_MODAL,
+            AnalysisID.STATIC_ANALYSIS,
+        ]:
             self.combo_box_analysis_domain.setCurrentIndex(0)
-        elif analysis_id in [3, 4]:
+
+        elif analysis_id in [
+            AnalysisID.ACOUSTIC_HARMONIC,
+            AnalysisID.ACOUSTIC_MODAL,
+        ]:
             self.combo_box_analysis_domain.setCurrentIndex(1)
-        elif analysis_id in [5, 6]:
+
+        elif analysis_id in [
+            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
+            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
+        ]:
             # coming soon
             return
             self.combo_box_analysis_domain.setCurrentIndex(2)

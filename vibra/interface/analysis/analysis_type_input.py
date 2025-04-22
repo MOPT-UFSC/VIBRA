@@ -3,6 +3,8 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 
 from vibra import app, UI_DIR
+from vibra.engine import AnalysisID
+
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
 from vibra.interface.analysis.harmonic_analysis_method_selector_input import StructuralHarmonicAnalysisMethodSelecorInput
@@ -43,7 +45,7 @@ class AnalysisTypeInput(QDialog):
         # Analysis ID 6 ==> Coupled Harmonic Analysis - Mode Superposition Method
         #
         self.analysis_data = {}
-        self.analysis_id = None
+        self.analysis_id = AnalysisID.NO_ANALYSIS
         self.analysis_type_label = None
         self.analysis_method_label = None
         self.complete = False
@@ -85,16 +87,15 @@ class AnalysisTypeInput(QDialog):
             return
 
         if select.index == 0:
-            analysis_id = 0
+            analysis_id = AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD
         else:
-            analysis_id = 1
+            analysis_id = AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION
 
         self.analysis_data = {"analysis_id": analysis_id}
         self.finalize()
 
     def harmonic_acoustic(self):
-
-        self.analysis_data = {"analysis_id": 3}
+        self.analysis_data = {"analysis_id": AnalysisID.ACOUSTIC_HARMONIC}
         self.finalize()
 
     def harmonic_coupled(self):
@@ -105,9 +106,9 @@ class AnalysisTypeInput(QDialog):
             return
 
         if select.index == 0:
-            analysis_id = 5
+            analysis_id = AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD
         else:
-            analysis_id = 6
+            analysis_id = AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION
 
         self.analysis_data = {"analysis_id": analysis_id}
         self.finalize()
@@ -145,7 +146,10 @@ class AnalysisTypeInput(QDialog):
         app().project.set_analysis_data(self.analysis_data)
         app().project.create_solver()
 
-        if self.analysis_data["analysis_id"] in [2, 4]:
+        if self.analysis_data["analysis_id"] in [
+            AnalysisID.STRUCTURAL_MODAL,
+            AnalysisID.ACOUSTIC_MODAL,
+        ]:
             app().file.write_analysis_setup_in_file(self.analysis_data)
 
         self.close()

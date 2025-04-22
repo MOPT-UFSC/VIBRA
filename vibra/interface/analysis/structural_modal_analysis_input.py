@@ -6,6 +6,7 @@ from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
 from vibra import app, UI_DIR
+from vibra.engine import AnalysisID
 from vibra.interface.general.print_message_input import PrintMessageInput
 from molde import load_ui
 
@@ -59,7 +60,10 @@ class StructuralModalAnalysisInput(QDialog):
 
         analysis_setup = app().file.read_analysis_setup_from_file()
         if isinstance(analysis_setup, dict):
-            if analysis_setup.get("analysis_id", None) in [2, 4]:
+            if analysis_setup.get("analysis_id") in [
+                AnalysisID.STRUCTURAL_MODAL,
+                AnalysisID.ACOUSTIC_MODAL,
+            ]:
                 modes = analysis_setup["modes"]
                 sigma = analysis_setup["sigma_factor"]
                 self.lineEdit_number_modes.setText(str(modes))
@@ -98,10 +102,10 @@ class StructuralModalAnalysisInput(QDialog):
             return True
 
         self.analysis_setup = {
-                                "analysis_id" : 2,
-                                "modes" : self.modes,
-                                "sigma_factor" : self.sigma_factor
-                                }
+            "analysis_id": AnalysisID.STRUCTURAL_MODAL,
+            "modes": self.modes,
+            "sigma_factor": self.sigma_factor,
+        }
 
         self.setup_defined = True
         app().main_window.analysis_toolbar.enable_pushbutons.emit()

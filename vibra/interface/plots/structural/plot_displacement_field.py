@@ -140,16 +140,8 @@ class PlotDisplacementField(QWidget):
 
         frequency_selected = float(self.lineEdit_selected_frequency.text())
         if frequency_selected in self.frequencies:
-            results_widget = app().main_window.results_widget
-            results_widget.configure_analysis("structural_harmonic")
-            results_widget.update_plot()
-
-            # frequency = self.frequency_to_index[frequency_selected]
+            app().main_window.results_widget.update_plot()
             self.frequency_index = self.frequencies.index(frequency_selected)
-            # color_scale_setup = self.get_user_color_scale_setup()
-            # app().project.set_color_scale_setup(color_scale_setup)
-            # app().main_window.structural_harmonic_analysis.update_plot()
-            # app().main_window.results_widget.clear_cache()
 
     def current_frequency_index(self):
         if self.frequency_index is not None:

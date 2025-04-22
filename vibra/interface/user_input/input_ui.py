@@ -37,6 +37,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 from vibra import app
+from vibra.engine import AnalysisID
 
 import logging
 
@@ -149,15 +150,24 @@ class InputUi:
         self.process_input(ReciprocatingCompressorInputs)
 
     def plot_structural_mode_shapes(self):
-        if self.project.analysis_id in [2, 4]:
+        if self.project.analysis_id in [
+            AnalysisID.STRUCTURAL_MODAL,
+            AnalysisID.ACOUSTIC_MODAL,
+        ]:
             return self.process_input(PlotStructuralModeShape)     
 
     def plot_displacement_field(self):
-        if self.project.analysis_id in [0, 1]:
+        if self.project.analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+        ]:
             return self.process_input(PlotDisplacementField)
 
     def plot_structural_frequency_response(self):
-        if self.project.analysis_id in [0, 1]:
+        if self.project.analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+        ]:
             return self.process_input(PlotStructuralFrequencyResponseInput)
 
     def plot_reaction_frequency_response(self):
@@ -173,34 +183,34 @@ class InputUi:
             self.main_window.show_geometry_render_widget() 
 
     def plot_acoustic_mode_shapes(self):
-        if self.project.analysis_id in [4]:
+        if self.project.analysis_id == AnalysisID.ACOUSTIC_MODAL:
             return self.process_input(PlotAcousticModeShape)
 
     def plot_acoustic_pressure_field(self):
-        if self.project.analysis_id in [3]:
+        if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             return self.process_input(PlotAcousticPressureField)
 
     def plot_acoustic_pressure_frequency_response(self):
-        if self.project.analysis_id in [3]:
+        if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             return self.process_input(PlotAcousticPressureFrequencyResponseInput)
 
     def plot_acoustic_pressure_frequency_response_function(self):
-        if self.project.analysis_id in [3]:
+        if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             return self.process_input(PlotAcousticPressureFrequencyResponseFunctionInput)
 
     def plot_acoustic_delta_pressures(self):
         pass
 
     def plot_TL_NR(self):
-       if self.project.analysis_id in [3]:
+       if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
            return self.process_input(PlotTransmissionLossInput)
      
     def plot_particle_velocity(self):
-       if self.project.analysis_id in [3]:
+       if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
            return self.process_input(PlotParticleVelocityFrequencyResponseInput)
                    
     def plot_acoustic_specific_impedance_from_surface(self):
-       if self.project.analysis_id in [3]:
+       if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
            return self.process_input(PlotSpecificAcousticImpedanceInput)
      
     def empty_project_action_message(self):

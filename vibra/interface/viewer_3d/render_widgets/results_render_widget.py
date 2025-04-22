@@ -1,7 +1,6 @@
 import logging
 from threading import Lock
 from time import time
-from typing import Literal
 
 import numpy as np
 from molde.interactor_styles import BoxSelectionInteractorStyle
@@ -11,6 +10,7 @@ from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import vtkPointData
 
 from vibra import app
+from vibra.engine import AnalysisID
 from vibra.engine.postprocessing import (
     compute_acoustic_harmonic_field,
     compute_acoustic_modal_field,
@@ -31,15 +31,6 @@ from .model_info_text import (
     analysis_info_text,
 )
 
-# Just for type hints
-AnalysisType = Literal[
-    "",
-    "structural_modal",
-    "structural_harmonic",
-    "acoustic_modal",
-    "acoustic_harmonic",
-]
-
 
 class ResultsRenderWidget(AnimatedRenderWidget):
     def __init__(self, parent=None):
@@ -50,7 +41,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
         app().main_window.visualization_changed.connect(self.visualization_changed_callback)
 
-        self.current_analysis: AnalysisType = ""
         self._animation_cached_data = dict()
         self._animation_cache_lock = Lock()
         self.min_value = 0
@@ -63,9 +53,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.create_color_bar()
         self.create_scale_bar()
         self.update_plot()
-
-    def configure_analysis(self, analysis: AnalysisType):
-        self.current_analysis = analysis
 
     def update_theme(self):
         user_preferences = app().config.user_preferences
@@ -185,7 +172,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         super().stop_animation(*args, **kwargs)
 
     def update_animation(self, frame):
-        if self.current_analysis == "":
+        if app().project.analysis_id == AnalysisID.NO_ANALYSIS:
             self.stop_animation()
             return
 
@@ -219,14 +206,15 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         displacements = None
         colormap = app().config.user_preferences.color_map
+        analysis_id = app().project.analysis_id
 
         if phase is None:
             phase = np.radians(animation_toolbar.phase_slider.value())
 
-        if self.current_analysis == "":
+        if analysis_id == AnalysisID.NO_ANALYSIS:
             return
 
-        elif self.current_analysis == "structural_modal":
+        elif analysis_id == AnalysisID.STRUCTURAL_MODAL:
             analysis_widget = app().main_window.results_viewer_widget.plot_structural_modal
             self.mode_index = analysis_widget.current_mode_index()
             displacement_type = analysis_widget.get_plot_type()
@@ -237,12 +225,18 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 phase,
                 displacement_type,
             )
+            if data is None:
+                return
+
             displacements, color_scalars, min_value, max_value = data
-            if self.clear_cache:
+            if clear_cache:
                 self.min_value = min_value
                 self.max_value = max_value
 
-        elif self.current_analysis == "structural_harmonic":
+        elif analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+        ]:
             analysis_widget = app().main_window.results_viewer_widget.plot_structural_harmonic
             self.frequency_index = analysis_widget.current_frequency_index()
             displacement_type = analysis_widget.get_plot_type()
@@ -253,12 +247,15 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 phase,
                 displacement_type,
             )
+            if data is None:
+                return
+
             displacements, color_scalars, min_value, max_value = data
-            if self.clear_cache:
+            if clear_cache:
                 self.min_value = min_value
                 self.max_value = max_value
 
-        elif self.current_analysis == "acoustic_modal":
+        elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
             analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_modal
             self.mode_index = analysis_widget.current_mode_index()
             plot_type = analysis_widget.get_plot_type()
@@ -273,11 +270,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 return
 
             color_scalars, min_value, max_value = data
-            if self.clear_cache:
+            if clear_cache:
                 self.min_value = min_value
                 self.max_value = max_value
 
-        elif self.current_analysis == "acoustic_harmonic":
+        elif analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_harmonic
             self.frequency_index = analysis_widget.current_frequency_index()
             plot_type = analysis_widget.get_plot_type()
@@ -290,13 +287,14 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             )
             if data is None:
                 return
+
             color_scalars, min_value, max_value = data
-            if self.clear_cache:
+            if clear_cache:
                 self.min_value = min_value
                 self.max_value = max_value
 
         else:
-            raise ValueError(f"Unknown analysis: {self.current_analysis}")
+            raise ValueError(f"Unknown analysis: {analysis_id}")
 
         if displacements is not None:
             self.analysis_actor.apply_deformation(
@@ -403,30 +401,41 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def update_info_text(self):
         text = ""
-        if self.current_analysis == "" or (self.frequency_index is None and self.mode_index is None):
+        analysis_id = app().project.analysis_id
+
+        if analysis_id == AnalysisID.NO_ANALYSIS or (self.frequency_index is None and self.mode_index is None):
             return
 
-        if self.current_analysis in ["structural_harmonic", "acoustic_harmonic"]:
+        if analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+            AnalysisID.ACOUSTIC_HARMONIC,
+        ]:
             text += analysis_info_text(self.frequency_index + 1)
 
-        if self.current_analysis in ["structural_modal", "acoustic_modal"]:
+        if analysis_id in [
+            AnalysisID.STRUCTURAL_MODAL,
+            AnalysisID.ACOUSTIC_MODAL,
+        ]:
             text += analysis_info_text(self.mode_index)
 
         self.set_info_text(text)
         self.update()
 
     def update_colorbar_unit(self):
-        if self.current_analysis == "":
+        if not hasattr(self, "colorbar_actor"):
             return
 
-        unit = {
-            "structural_modal": "--",
-            "structural_harmonic": "m",
-            "acoustic_modal": "--",
-            "acoustic_harmonic": "Pa",
+        unit_mapping = {
+            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD: "m",
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION: "m",
+            AnalysisID.ACOUSTIC_HARMONIC: "Pa",
         }
 
-        self.colorbar_actor.SetTitle(f"Unit: [{unit[self.current_analysis]}]")
+        analysis_id = app().project.analysis_id
+        unit = unit_mapping.get(analysis_id, '--')
+
+        self.colorbar_actor.SetTitle(f"Unit: [{unit}]")
         self.update()
 
     def update_renderer_font_size(self):

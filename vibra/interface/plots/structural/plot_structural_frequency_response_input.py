@@ -3,6 +3,7 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
 
 from vibra import app, UI_DIR
+from vibra.engine import AnalysisID
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
@@ -113,10 +114,10 @@ class PlotStructuralFrequencyResponseInput(QWidget):
         analysis_data = app().project.analysis_data
 
         if "analysis_id" in analysis_data.keys():
-            if analysis_data["analysis_id"] == 0:
+            if analysis_data["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
                 self.analysis_method = "Direct method"
 
-            elif analysis_data["analysis_id"] == 1:
+            elif analysis_data["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION:
                 self.analysis_method = "Mode Superposition method"
 
         self.frequencies = app().project.structural_harmonic_solver.frequencies
