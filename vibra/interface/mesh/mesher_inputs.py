@@ -358,9 +358,11 @@ class MesherInputs(QDialog):
             NotImplementedError()
 
     def generate_mesh_callback(self):
-
+        
         if self.check_mesh_inputs():
             return
+
+        self.main_window.clear_selection()
 
         self.hide()
 
