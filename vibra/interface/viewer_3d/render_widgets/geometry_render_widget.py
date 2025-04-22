@@ -5,7 +5,6 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QApplication
 
 from vibra import app
-from vibra.engine import AnalysisID
 from vibra.utils.image_functions import removes_image_background
 
 from ..actors.faces_actor import FacesActor
