@@ -154,7 +154,6 @@ class Project:
             if data["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
                 self.set_structural_element_to_model()
                 self.structural_harmonic_solver = StructuralHarmonicSolver(self.structural_assembler, analysis_data=data)
-                self.last_analysis = "Harmonic Structural"
                 self.analysis_id = AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD
 
             # structural harmonic analysis - mode superposition method
@@ -166,23 +165,20 @@ class Project:
             elif data["analysis_id"] == AnalysisID.STRUCTURAL_MODAL:
                 self.set_structural_element_to_model()
                 self.structural_modal_solver = StructuralModalSolver(self.structural_assembler, analysis_data=data)
-                self.last_analysis = "Modal Structural"
                 self.analysis_id = AnalysisID.STRUCTURAL_MODAL
-           
+
             # acoustic harmonic analysis
             elif data["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
                 self.set_acoustic_element_to_model()
                 self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_assembler, analysis_data=data)
-                self.last_analysis = "Harmonic Acoustic"
                 self.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
-            
+
             # acoustic modal analysis
             elif data["analysis_id"] == AnalysisID.ACOUSTIC_MODAL:
                 self.set_acoustic_element_to_model()
                 self.acoustic_modal_solver = AcousticModalSolver(self.acoustic_assembler, analysis_data=data)
-                self.last_analysis = "Modal Acoustic"
                 self.analysis_id = AnalysisID.ACOUSTIC_MODAL
-            
+
             # coupled harmonic analysis (direct method)
             elif data["analysis_id"] == AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD:
                 print("Coupled harmonic analysis (direct method) not implemented")

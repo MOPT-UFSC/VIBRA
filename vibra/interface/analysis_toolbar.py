@@ -174,20 +174,19 @@ class AnalysisToolbar(QToolBar):
             self.combo_box_analysis_domain.setCurrentIndex(0)
         else:
             self.combo_box_analysis_domain.setCurrentIndex(1)
-    
+
     def run_analysis(self):
         if app().project.run_analysis():
             return
         self.update_pushbutton_reset_solution()
-    
+
     def reset_solution(self):
         app().project.reset_solutions()
         app().file.remove_results_data_from_project_file()
-        
-        self.pushButton_reset_solution.setDisabled(True)
-
         app().main_window.action_model_workspace_callback()
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
+
+        self.pushButton_reset_solution.setDisabled(True)
         app().project.last_analysis = None
 
     def configure_analysis(self):

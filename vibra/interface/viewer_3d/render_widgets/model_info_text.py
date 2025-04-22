@@ -674,7 +674,7 @@ def analysis_info_text(frequency_index: int):
         if project.last_analysis == "Harmonic Acoustic":
             if project.acoustic_harmonic_solver.solution is None:
                 return ""
-            
+
         if project.last_analysis == "Harmonic Structural":
             if project.structural_harmonic_solver.solution is None:
                 return ""
