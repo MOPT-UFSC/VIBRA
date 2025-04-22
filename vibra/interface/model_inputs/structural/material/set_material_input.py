@@ -148,7 +148,7 @@ class SetMaterialInput(QDialog):
 
     def _config_widgets(self):
         self.tableWidget_model_materials.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
-        # self.tableWidget_model_materials.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
+        self.tableWidget_model_materials.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
         self.tableWidget_model_materials.setEditTriggers(QAbstractItemView.EditTrigger(0))
 
     def update_material_selection(self):

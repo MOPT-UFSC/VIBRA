@@ -180,7 +180,7 @@ class SetFluidInput(QDialog):
 
     def _config_widgets(self):
         self.tableWidget_model_fluids.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
-        # self.tableWidget_model_fluids.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
+        self.tableWidget_model_fluids.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
         self.tableWidget_model_fluids.setEditTriggers(QAbstractItemView.EditTrigger(0))
 
     def update_fluid_selection(self):
