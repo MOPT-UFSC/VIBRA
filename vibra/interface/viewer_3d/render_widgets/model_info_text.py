@@ -613,14 +613,17 @@ def mesh_structural_format(property_name, values, labels, units, has_table):
 def analysis_info_text(frequency_index: int):
 
     project = app().project
-    if project.last_analysis is not None:
-        display_name = {
-            "Modal Structural": "Structural Modal Analysis",
-            "Modal Acoustic": "Acoustic Modal Analysis",
-            "Harmonic Structural": "Structural Harmonic Analysis",
-            "Harmonic Acoustic": "Acoustic Harmonic Analysis",
-        }
-        tree = TreeInfo(display_name[project.last_analysis])
+    if project.last_analysis is None:
+        return ""
+
+    display_name = {
+                    "Modal Structural": "Structural Modal Analysis",
+                    "Modal Acoustic": "Acoustic Modal Analysis",
+                    "Harmonic Structural": "Structural Harmonic Analysis",
+                    "Harmonic Acoustic": "Acoustic Harmonic Analysis",
+                    }
+
+    tree = TreeInfo(display_name[project.last_analysis])
 
     if project.analysis_id in [
         AnalysisID.STRUCTURAL_MODAL,
