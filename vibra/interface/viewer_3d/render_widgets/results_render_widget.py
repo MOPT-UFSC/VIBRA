@@ -423,14 +423,19 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def update_colorbar_unit(self):
-        unit = {
+        if not hasattr(self, "colorbar_actor"):
+            return
+
+        unit_mapping = {
             AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD: "m",
             AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION: "m",
             AnalysisID.ACOUSTIC_HARMONIC: "Pa",
         }
 
         analysis_id = app().project.analysis_id
-        self.colorbar_actor.SetTitle(f"Unit: [{unit.get(analysis_id, '--')}]")
+        unit = unit_mapping.get(analysis_id, '--')
+
+        self.colorbar_actor.SetTitle(f"Unit: [{unit}]")
         self.update()
 
     def update_renderer_font_size(self):
