@@ -140,8 +140,8 @@ class PlotDisplacementField(QWidget):
 
         frequency_selected = float(self.lineEdit_selected_frequency.text())
         if frequency_selected in self.frequencies:
-            app().main_window.results_widget.update_plot()
             self.frequency_index = self.frequencies.index(frequency_selected)
+            app().main_window.results_widget.update_plot()
 
     def current_frequency_index(self):
         if self.frequency_index is not None:
