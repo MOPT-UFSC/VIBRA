@@ -369,7 +369,7 @@ class Model:
     def set_viscous_thermal_model_data(self, data, group=None, volume=None):
         self.properties._set_property("viscous_thermal_model", data, group=group, volume=volume)
 
-    def process_perforated_plate_impendace(self, frequencies: np.ndarray, solution: np.ndarray | None = None):
+    def process_perforated_plate_impedance(self, frequencies: np.ndarray, solution: np.ndarray | None = None):
 
         pp_model = PerforatedPlateModels(self)
         pp_model.process_acoustic_transfer_impedances(frequencies)

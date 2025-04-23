@@ -42,7 +42,7 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_plot_acoustic_pressure_frequency_response_function = self.add_item("Plot Acoustic Presssure Frequency Response Function")
         self.item_child_plot_TL_NR = self.add_item("Plot Transmission Loss or Attenuation")
         self.item_child_plot_particle_velocity = self.add_item("Plot Particle Velocity")
-        self.item_child_plot_acoustic_specific_impendace = self.add_item("Plot Acoustic Specific Impendace")
+        self.item_child_plot_acoustic_specific_impedance = self.add_item("Plot Acoustic Specific Impedance")
 
         self.top_level_items = [
                                 self.item_top_results_viewer_acoustic,
@@ -100,7 +100,7 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_plot_acoustic_pressure_field.setDisabled(key)
         self.item_child_plot_TL_NR.setDisabled(key)
         self.item_child_plot_particle_velocity.setDisabled(key)
-        self.item_child_plot_acoustic_specific_impendace.setDisabled(key)
+        self.item_child_plot_acoustic_specific_impedance.setDisabled(key)
 
     def modify_structural_results_viewer_items(self, key: bool):
         self.item_top_results_viewer_structural.setHidden(key)
@@ -133,7 +133,12 @@ class ResultsViewerItems(CommonMenuItems):
         if len(app().project.analysis_data) == 0:
             return
 
-        analysis_id = app().project.analysis_data.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        analysis_setup = app().file.read_analysis_setup_from_file()
+        if analysis_setup is None:
+            return
+
+        analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        # analysis_id = app().project.analysis_data.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         if analysis_id in [
             AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
@@ -188,7 +193,7 @@ class ResultsViewerItems(CommonMenuItems):
             self.item_child_plot_acoustic_pressure_field.setDisabled(False)
             self.item_child_plot_TL_NR.setDisabled(False)
             self.item_child_plot_particle_velocity.setDisabled(False)
-            self.item_child_plot_acoustic_specific_impendace.setDisabled(False)
+            self.item_child_plot_acoustic_specific_impedance.setDisabled(False)
 
         self.update_tree_visibility_after_solution()
     

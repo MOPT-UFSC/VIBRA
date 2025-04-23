@@ -398,9 +398,9 @@ class AcousticAssembler:
 
         self.process_indexes()
         self.process_perforated_plate_impedance_data_to_assemble_damping_matrix()
-        self.get_specific_impendace_data_to_process_damping_matrix()
+        self.get_specific_impedance_data_to_process_damping_matrix()
 
-    def get_specific_impendace_data_to_process_damping_matrix(self):
+    def get_specific_impedance_data_to_process_damping_matrix(self):
         """
         """
 

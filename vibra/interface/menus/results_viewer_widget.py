@@ -57,7 +57,7 @@ class ResultsViewerWidget(QWidget):
         self.results_viewer_items.item_child_plot_TL_NR.clicked.connect(self.add_TL_NR_widget)
         self.results_viewer_items.item_child_plot_acoustic_mode_shapes.clicked.connect(self.add_acoustic_modal_widget)
         self.results_viewer_items.item_child_plot_particle_velocity.clicked.connect(self.add_particle_velocity_plot_widget)
-        self.results_viewer_items.item_child_plot_acoustic_specific_impendace.clicked.connect(self.add_acoustic_specific_impedance_plot_widget)
+        self.results_viewer_items.item_child_plot_acoustic_specific_impedance.clicked.connect(self.add_acoustic_specific_impedance_plot_widget)
 
     def get_item(self):
         return self.results_viewer_items

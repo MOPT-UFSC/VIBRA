@@ -191,7 +191,7 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
                    }
 
         model.properties._set_property("perforated_plate_model", pp_data, surface=3)
-        model.process_perforated_plate_impendace(frequencies)
+        model.process_perforated_plate_impedance(frequencies)
 
     assembler = AcousticAssembler(model)
 

@@ -42,7 +42,7 @@
    <enum>Qt::DefaultContextMenu</enum>
   </property>
   <property name="windowTitle">
-   <string>Set specific impendace</string>
+   <string>Set specific impendance</string>
   </property>
   <property name="whatsThis">
    <string/>
