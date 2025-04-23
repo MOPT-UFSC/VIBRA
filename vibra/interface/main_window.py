@@ -614,12 +614,15 @@ class MainWindow(QMainWindow):
         self.open_project_dialog()
     
     def action_home_exit_callback(self):
+        self.setWindowTitle("Vibra")
         self.clear_selection()
         self.results_widget.remove_all_actors()
         self.mesh_widget.remove_all_actors()
         self.geometry_widget.remove_all_actors()
 
         self.results_widget.configure_analysis("")
+        self.section_plane.keep_section_plane = False
+        self.section_plane.closeEvent(None)
 
         self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)

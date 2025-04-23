@@ -56,7 +56,8 @@ class RendererUserPreferencesInput(QDialog):
         self.lineEdit_lines_color : QLineEdit
         self.lineEdit_edges_color : QLineEdit
         self.lineEdit_faces_color : QLineEdit
-        self.lineEdit_selection_color : QLineEdit
+        self.lineEdit_selection_faces_color : QLineEdit
+        self.lineEdit_selection_nodes_points_color : QLineEdit
 
         # QSpinBox
         self.spinBox_renderer_font_size: QSpinBox
@@ -73,7 +74,8 @@ class RendererUserPreferencesInput(QDialog):
         self.pushButton_lines_color : QPushButton
         self.pushButton_edges_color : QPushButton
         self.pushButton_faces_color : QPushButton
-        self.pushButton_selection_color : QPushButton
+        self.pushButton_selection_faces_color : QPushButton
+        self.pushButton_selection_nodes_points_color : QPushButton
         self.pushButton_reset_to_default : QPushButton
         self.pushButton_update_settings : QPushButton
         self.pushButton_apply_settings: QPushButton
@@ -85,7 +87,8 @@ class RendererUserPreferencesInput(QDialog):
         self.pushButton_nodes_points_color.clicked.connect(self.update_nodes_points_color)
         self.pushButton_lines_color.clicked.connect(self.update_lines_color)
         self.pushButton_faces_color.clicked.connect(self.update_faces_color)
-        self.pushButton_selection_color.clicked.connect(self.update_selection_color)
+        self.pushButton_selection_faces_color.clicked.connect(self.update_selection_faces_color)
+        self.pushButton_selection_nodes_points_color.clicked.connect(self.update_selection_nodes_points_color)
         self.pushButton_edges_color.clicked.connect(self.update_edges_color)
         self.pushButton_reset_to_default.clicked.connect(self.reset_to_default)
         self.pushButton_update_settings.clicked.connect(self.confirm_and_update_user_preferences)
@@ -187,18 +190,31 @@ class RendererUserPreferencesInput(QDialog):
         str_color = str(self.tmp_user_preferences.faces_color.to_rgb())[1:-1]
         self.lineEdit_faces_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
 
-    def update_selection_color(self):
-        read = PickColorInput(title="Pick the selection color")
+    def update_selection_faces_color(self):
+        read = PickColorInput(title="Pick the selection faces color")
         if read.complete:
-            selection_color = tuple(read.color)
-            str_color = str(selection_color)[1:-1]
-            self.lineEdit_selection_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+            selection_faces_color = tuple(read.color)
+            str_color = str(selection_faces_color)[1:-1]
+            self.lineEdit_selection_faces_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
 
-            self.tmp_user_preferences.selection_color = Color(*selection_color)
+            self.tmp_user_preferences.selection_faces_color = Color(*selection_faces_color)
 
-    def update_line_edit_selection_color(self):
-        str_color = str(self.tmp_user_preferences.selection_color.to_rgb())[1:-1]
-        self.lineEdit_selection_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+    def update_line_edit_selection_faces_color(self):
+        str_color = str(self.tmp_user_preferences.selection_faces_color.to_rgb())[1:-1]
+        self.lineEdit_selection_faces_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+    
+    def update_selection_nodes_points_color(self):
+        read = PickColorInput(title="Pick the selection nodes/points color")
+        if read.complete:
+            selection_nodes_points_color = tuple(read.color)
+            str_color = str(selection_nodes_points_color)[1:-1]
+            self.lineEdit_selection_nodes_points_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+
+            self.tmp_user_preferences.selection_nodes_points_color = Color(*selection_nodes_points_color)
+
+    def update_line_edit_selection_nodes_points_color(self):
+        str_color = str(self.tmp_user_preferences.selection_nodes_points_color.to_rgb())[1:-1]
+        self.lineEdit_selection_nodes_points_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
     
     def update_renderer_font_size(self):
         self.tmp_user_preferences.renderer_font_size = self.spinBox_renderer_font_size.value()
@@ -293,7 +309,8 @@ class RendererUserPreferencesInput(QDialog):
         self.update_line_edit_lines_color()
         self.update_line_edit_edges_color()
         self.update_line_edit_faces_color()
-        self.update_line_edit_selection_color()
+        self.update_line_edit_selection_faces_color()
+        self.update_line_edit_selection_nodes_points_color()
         self.update_spin_box_renderer_font_size()
         self.update_spin_box_points_size()
         self.update_spin_box_nodes_size()
