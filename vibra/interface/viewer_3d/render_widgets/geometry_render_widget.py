@@ -241,7 +241,14 @@ class GeometryRenderWidget(CommonRenderWidget):
     def update_symbols(self):
         if not self.actors_exists():
             return
-        self.symbols_actor.build()
+
+        # self.symbols_actor.build() should be enough
+        # but for some reason that I can't understand
+        # it causes segmentation fault
+        self.remove_actors(self.symbols_actor)
+        self.symbols_actor = NewSymbolsActor(self.renderer)
+        self.add_actors(self.symbols_actor)
+        self.update()
 
     #
     def click_callback(self, x, y):
