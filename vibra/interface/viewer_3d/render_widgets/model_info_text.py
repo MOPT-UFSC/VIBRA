@@ -613,31 +613,29 @@ def mesh_structural_format(property_name, values, labels, units, has_table):
 def analysis_info_text(frequency_index: int):
 
     project = app().project
-    if project.last_analysis is None:
+    if not project.is_there_a_valid_solution():
         return ""
 
     display_name = {
-                    "Modal Structural": "Structural Modal Analysis",
-                    "Modal Acoustic": "Acoustic Modal Analysis",
-                    "Harmonic Structural": "Structural Harmonic Analysis",
-                    "Harmonic Acoustic": "Acoustic Harmonic Analysis",
+                    AnalysisID.STRUCTURAL_MODAL : "Structural Modal Analysis",
+                    AnalysisID.ACOUSTIC_MODAL : "Acoustic Modal Analysis",
+                    AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD : "Structural Harmonic Analysis",
+                    AnalysisID.ACOUSTIC_HARMONIC : "Acoustic Harmonic Analysis",
                     }
 
-    tree = TreeInfo(display_name[project.last_analysis])
+    analysis_id = project.analysis_id
+    tree = TreeInfo(display_name[analysis_id])
 
     if project.analysis_id in [
         AnalysisID.STRUCTURAL_MODAL,
         AnalysisID.ACOUSTIC_MODAL,
     ]:
+
         frequencies = None
-        if project.last_analysis == "Modal Structural":
-            if project.structural_modal_solver.solution is None:
-                return ""
+        if analysis_id == AnalysisID.STRUCTURAL_MODAL:
             frequencies = project.structural_modal_solver.natural_frequencies
 
-        if project.last_analysis == "Modal Acoustic":
-            if project.acoustic_modal_solver.solution is None:
-                return ""
+        if analysis_id == AnalysisID.ACOUSTIC_MODAL:
             if len(project.acoustic_modal_solver.complex_natural_frequencies):
                 frequencies = list(project.acoustic_modal_solver.complex_natural_frequencies)
             else:
@@ -658,7 +656,7 @@ def analysis_info_text(frequency_index: int):
         mode = frequency_index + 1
         tree.add_item("Mode", mode)
 
-        if project.last_analysis == "Modal Acoustic" and isinstance(frequencies[0], complex):
+        if analysis_id == AnalysisID.ACOUSTIC_MODAL and isinstance(frequencies[0], complex):
             value = frequencies[frequency_index]
             damping_ratio = -np.real(value) / np.abs(value)
             damped_frequency = np.abs(value) * np.sqrt(1 - damping_ratio**2)
@@ -671,20 +669,15 @@ def analysis_info_text(frequency_index: int):
 
     else:
 
-        if project.last_analysis == "Harmonic Acoustic":
-            if project.acoustic_harmonic_solver.solution is None:
-                return ""
-
-        if project.last_analysis == "Harmonic Structural":
-            if project.structural_harmonic_solver.solution is None:
-                return ""
-
         frequencies = project.model.frequencies
         if frequencies is None:
             return ""
 
         if frequency_index-1 >= len(frequencies):
             return ""
+
+        print("analysis_info_text")
+        print(f"{frequency_index}, {frequencies[frequency_index-1]}")
 
         # TODO: add logic for other methods
         tree.add_item("Method", "Direct")
