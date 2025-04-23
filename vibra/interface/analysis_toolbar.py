@@ -53,7 +53,7 @@ class AnalysisToolbar(QToolBar):
 
         # QComboBox
         self.combo_box_analysis_type = QComboBox()
-        self.combo_box_analysis_domain = QComboBox()
+        self.combo_box_physical_domain = QComboBox()
 
         # QLabel
         self.label_analysis_type = QLabel("Analysis type:")
@@ -70,7 +70,7 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_reset_solution.clicked.connect(self.reset_solution)
         self.enable_pushbutons.connect(self.update_pushbutton_run_analysis)
         self.enable_pushbutons.connect(self.update_pushbutton_reset_solution)
-        self.combo_box_analysis_domain.currentTextChanged.connect(lambda: self.update_pushbutton_run_analysis(True))
+        self.combo_box_physical_domain.currentTextChanged.connect(lambda: self.update_pushbutton_run_analysis(True))
         self.combo_box_analysis_type.currentTextChanged.connect(lambda: self.update_pushbutton_run_analysis(True))
 
     def _configure_appearance(self):
@@ -109,7 +109,7 @@ class AnalysisToolbar(QToolBar):
         self.addWidget(self.get_spacer())
         #
         self.addWidget(self.label_analysis_domain)
-        self.addWidget(self.combo_box_analysis_domain)
+        self.addWidget(self.combo_box_physical_domain)
         self.addWidget(self.get_spacer())
         #
         self.addSeparator()
@@ -126,7 +126,7 @@ class AnalysisToolbar(QToolBar):
 
         # QComboBox
         self.combo_box_analysis_type.setFixedSize(100, 28)
-        self.combo_box_analysis_domain.setFixedSize(100, 28)
+        self.combo_box_physical_domain.setFixedSize(100, 28)
 
         # QPushButton
         self.pushButton_configure_analysis.setFixedSize(50, 30)
@@ -150,12 +150,13 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_reset_solution.setDisabled(True)
     
     def _load_analysis_types(self):
-        self.combo_box_analysis_type.addItem("Harmonic")
-        self.combo_box_analysis_type.addItem("Modal")
 
-        self.combo_box_analysis_domain.addItem("Structural")
-        self.combo_box_analysis_domain.addItem("Acoustic")
-    
+        for analysis_type in ["Harmonic", "Modal"]:
+            self.combo_box_analysis_type.addItem(analysis_type)
+
+        for physical_domain in ["Structural", "Acoustic"]:
+            self.combo_box_physical_domain.addItem(physical_domain)
+
     def update_pushbutton_run_analysis(self, disable=False):
         self.pushButton_run_analysis.setDisabled(disable)
     
@@ -174,11 +175,11 @@ class AnalysisToolbar(QToolBar):
             self.combo_box_analysis_type.setCurrentIndex(2)
 
         if physical_domain == "structural":
-            self.combo_box_analysis_domain.setCurrentIndex(0)
+            self.combo_box_physical_domain.setCurrentIndex(0)
         elif physical_domain == "acoustic":
-            self.combo_box_analysis_domain.setCurrentIndex(1)
+            self.combo_box_physical_domain.setCurrentIndex(1)
         else:
-            self.combo_box_analysis_domain.setCurrentIndex(2)
+            self.combo_box_physical_domain.setCurrentIndex(2)
 
     def run_analysis(self):
         if app().project.run_analysis():
@@ -194,7 +195,7 @@ class AnalysisToolbar(QToolBar):
 
     def configure_analysis(self):
         analysis_type : AnalysisType = self.combo_box_analysis_type.currentText()
-        physical_domain : PhysicalDomain = self.combo_box_analysis_domain.currentText()
+        physical_domain : PhysicalDomain = self.combo_box_physical_domain.currentText()
 
         if analysis_type == "Harmonic":
             if physical_domain == "Structural":
@@ -275,54 +276,3 @@ class AnalysisToolbar(QToolBar):
         self.reset_solution()
         app().project.create_solver()
         app().file.write_analysis_setup_in_file(app().project.analysis_data)
-
-    # def load_analysis_settings(self):
-
-    #     self.pushButton_run_analysis.setDisabled(True)
-
-    #     analysis_setup = app().file.read_analysis_setup_from_file()
-    #     if analysis_setup is None:
-    #         return
-
-    #     analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
-    #     if analysis_id in [
-    #         AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-    #         AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-    #         AnalysisID.ACOUSTIC_HARMONIC,
-    #         AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
-    #         AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
-    #     ]:
-    #         self.combo_box_analysis_type.setCurrentIndex(0)
-
-    #     elif analysis_id in [AnalysisID.STRUCTURAL_MODAL, AnalysisID.ACOUSTIC_MODAL]:
-    #         self.combo_box_analysis_type.setCurrentIndex(1)
-
-    #     elif analysis_id == AnalysisID.STATIC_ANALYSIS:
-    #         # coming soon
-    #         return
-    #         self.combo_box_analysis_type.setCurrentIndex(2)
-
-    #     if analysis_id in [
-    #         AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-    #         AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-    #         AnalysisID.STRUCTURAL_MODAL,
-    #         AnalysisID.STATIC_ANALYSIS,
-    #     ]:
-    #         self.combo_box_analysis_domain.setCurrentIndex(0)
-
-    #     elif analysis_id in [
-    #         AnalysisID.ACOUSTIC_HARMONIC,
-    #         AnalysisID.ACOUSTIC_MODAL,
-    #     ]:
-    #         self.combo_box_analysis_domain.setCurrentIndex(1)
-
-    #     elif analysis_id in [
-    #         AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
-    #         AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
-    #     ]:
-    #         # coming soon
-    #         return
-    #         self.combo_box_analysis_domain.setCurrentIndex(2)
-
-    #     setup_complete = app().project.is_analysis_setup_complete()
-    #     self.pushButton_run_analysis.setEnabled(setup_complete)
