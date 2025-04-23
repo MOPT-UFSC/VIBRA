@@ -163,17 +163,22 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_reset_solution.setDisabled(False)
 
     def update_analysis_combo_boxes(self):
-        analysis_type, analysis_domain = app().project.last_analysis.split()
-        
-        if analysis_type == "Harmonic":
-            self.combo_box_analysis_type.setCurrentIndex(0)
-        else:
-            self.combo_box_analysis_type.setCurrentIndex(1)
 
-        if analysis_domain == "Structural":
-            self.combo_box_analysis_domain.setCurrentIndex(0)
+        analysis_type, physical_domain = app().project.get_analysis_type_and_physical_domain()
+
+        if analysis_type == "harmonic":
+            self.combo_box_analysis_type.setCurrentIndex(0)
+        elif analysis_type == "modal":
+            self.combo_box_analysis_type.setCurrentIndex(1)
         else:
+            self.combo_box_analysis_type.setCurrentIndex(2)
+
+        if physical_domain == "structural":
+            self.combo_box_analysis_domain.setCurrentIndex(0)
+        elif physical_domain == "acoustic":
             self.combo_box_analysis_domain.setCurrentIndex(1)
+        else:
+            self.combo_box_analysis_domain.setCurrentIndex(2)
 
     def run_analysis(self):
         if app().project.run_analysis():
@@ -185,9 +190,7 @@ class AnalysisToolbar(QToolBar):
         app().file.remove_results_data_from_project_file()
         app().main_window.action_model_workspace_callback()
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
-
         self.pushButton_reset_solution.setDisabled(True)
-        app().project.last_analysis = None
 
     def configure_analysis(self):
         analysis_type : AnalysisType = self.combo_box_analysis_type.currentText()
@@ -198,6 +201,7 @@ class AnalysisToolbar(QToolBar):
                 self.harmonic_structural()
             elif physical_domain == "Acoustic":
                 self.harmonic_acoustic()
+
         elif analysis_type == "Modal":
             if physical_domain == "Structural":
                 self.modal_structural()
@@ -211,16 +215,25 @@ class AnalysisToolbar(QToolBar):
             return
  
         analysis_data = {"analysis_id": select.index}
-        self.finalize(analysis_data)
+        self.update_analysis_data(analysis_data)
         harmonic = AnalysisSetupInput()
+
+        if harmonic.setup_defined:
+            self.final_actions()
+
         if harmonic.solve_analysis:
             self.run_analysis()
             app().main_window.update_symbols()
 
     def harmonic_acoustic(self):
+
         analysis_data = {"analysis_id": AnalysisID.ACOUSTIC_HARMONIC}
-        self.finalize(analysis_data)
+        self.update_analysis_data(analysis_data)
         harmonic = AnalysisSetupInput()
+
+        if harmonic.setup_defined:
+            self.final_actions()
+
         if harmonic.solve_analysis:
             self.run_analysis()
     
@@ -231,8 +244,9 @@ class AnalysisToolbar(QToolBar):
             return
 
         if modal.setup_defined:
-            self.finalize(modal.analysis_setup)
-       
+            self.update_analysis_data(modal.analysis_setup)
+            self.final_actions()
+
         if modal.proceed_solution:
             self.run_analysis()
 
@@ -241,77 +255,74 @@ class AnalysisToolbar(QToolBar):
 
         if modal.modes is None:
             return
-        
+
         if modal.setup_defined:
-            self.finalize(modal.analysis_setup)
-        
+            self.update_analysis_data(modal.analysis_setup)
+            self.final_actions()
+
         if modal.proceed_solution:
             self.run_analysis()
 
-    def finalize(self, analysis_data: dict):
+    def update_analysis_data(self, analysis_data: dict):
         if app().project.analysis_data is not None:
             for key, value in app().project.analysis_data.items():
                 if key in ["f_min", "f_max", "f_step", "frequencies", "global_damping"]:
                     analysis_data[key] = value
 
         app().project.set_analysis_data(analysis_data)
+
+    def final_actions(self):
+        self.reset_solution()
         app().project.create_solver()
+        app().file.write_analysis_setup_in_file(app().project.analysis_data)
 
-        if analysis_data["analysis_id"] in [
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-            AnalysisID.STRUCTURAL_MODAL,
-            AnalysisID.ACOUSTIC_HARMONIC,
-            AnalysisID.ACOUSTIC_MODAL,
-        ]:
-            app().file.write_analysis_setup_in_file(analysis_data)
+    # def load_analysis_settings(self):
 
-    def load_analysis_settings(self):
+    #     self.pushButton_run_analysis.setDisabled(True)
 
-        self.pushButton_run_analysis.setDisabled(True)
+    #     analysis_setup = app().file.read_analysis_setup_from_file()
+    #     if analysis_setup is None:
+    #         return
 
-        analysis_setup = app().file.read_analysis_setup_from_file()
-        if analysis_setup is None:
-            return
+    #     analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+    #     if analysis_id in [
+    #         AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+    #         AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+    #         AnalysisID.ACOUSTIC_HARMONIC,
+    #         AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
+    #         AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
+    #     ]:
+    #         self.combo_box_analysis_type.setCurrentIndex(0)
 
-        analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
-        if analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-            AnalysisID.ACOUSTIC_HARMONIC,
-            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
-            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
-        ]:
-            self.combo_box_analysis_type.setCurrentIndex(0)
+    #     elif analysis_id in [AnalysisID.STRUCTURAL_MODAL, AnalysisID.ACOUSTIC_MODAL]:
+    #         self.combo_box_analysis_type.setCurrentIndex(1)
 
-        elif analysis_id in [AnalysisID.STRUCTURAL_MODAL, AnalysisID.ACOUSTIC_MODAL]:
-            self.combo_box_analysis_type.setCurrentIndex(1)
+    #     elif analysis_id == AnalysisID.STATIC_ANALYSIS:
+    #         # coming soon
+    #         return
+    #         self.combo_box_analysis_type.setCurrentIndex(2)
 
-        elif analysis_id == AnalysisID.STATIC_ANALYSIS:
-            # coming soon
-            return
-            self.combo_box_analysis_type.setCurrentIndex(2)
+    #     if analysis_id in [
+    #         AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+    #         AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+    #         AnalysisID.STRUCTURAL_MODAL,
+    #         AnalysisID.STATIC_ANALYSIS,
+    #     ]:
+    #         self.combo_box_analysis_domain.setCurrentIndex(0)
 
-        if analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-            AnalysisID.STRUCTURAL_MODAL,
-            AnalysisID.STATIC_ANALYSIS,
-        ]:
-            self.combo_box_analysis_domain.setCurrentIndex(0)
+    #     elif analysis_id in [
+    #         AnalysisID.ACOUSTIC_HARMONIC,
+    #         AnalysisID.ACOUSTIC_MODAL,
+    #     ]:
+    #         self.combo_box_analysis_domain.setCurrentIndex(1)
 
-        elif analysis_id in [
-            AnalysisID.ACOUSTIC_HARMONIC,
-            AnalysisID.ACOUSTIC_MODAL,
-        ]:
-            self.combo_box_analysis_domain.setCurrentIndex(1)
+    #     elif analysis_id in [
+    #         AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
+    #         AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
+    #     ]:
+    #         # coming soon
+    #         return
+    #         self.combo_box_analysis_domain.setCurrentIndex(2)
 
-        elif analysis_id in [
-            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
-            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
-        ]:
-            # coming soon
-            return
-            self.combo_box_analysis_domain.setCurrentIndex(2)
-
-        setup_complete = app().project.is_analysis_setup_complete()
-        self.pushButton_run_analysis.setEnabled(setup_complete)
+    #     setup_complete = app().project.is_analysis_setup_complete()
+    #     self.pushButton_run_analysis.setEnabled(setup_complete)

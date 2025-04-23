@@ -73,8 +73,8 @@ class AnalysisSetupInput(QDialog):
             self.exec()
 
     def _initialize(self):
-        self.frequencies = []
-        self.complete = False
+        self.frequencies = list()
+        self.setup_defined = False
         self.solve_analysis = False
         self.keep_window_open = True
 
@@ -116,7 +116,7 @@ class AnalysisSetupInput(QDialog):
     def _create_connections(self):
         #
         self.pushButton_enter_setup.clicked.connect(self.enter_setup_callback)
-        self.pushButton_run_analysis.clicked.connect(self.check_run)
+        self.pushButton_run_analysis.clicked.connect(self.run_analysis)
 
     def _update_fmin(self):
         df = self.lineEdit_fstep.text()
@@ -267,7 +267,7 @@ class AnalysisSetupInput(QDialog):
         self.project.set_analysis_data(analysis_setup)
         self.project.create_solver()
 
-        self.complete = True
+        self.setup_defined = True
         app().main_window.analysis_toolbar.update_pushbutton_run_analysis()
         self.close()
 
@@ -312,7 +312,7 @@ class AnalysisSetupInput(QDialog):
             return None
         return out
 
-    def check_run(self):
+    def run_analysis(self):
         if self.enter_setup_callback():
             return
         self.solve_analysis = True
@@ -324,6 +324,6 @@ class AnalysisSetupInput(QDialog):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.check_run()
+            self.run_analysis()
         elif event.key() == Qt.Key_Escape:
             self.close()
