@@ -145,11 +145,11 @@ class PlotTransmissionLossInput(QWidget):
             self.lineEdit_output_surface_id.setFocus()
         else:
             self.close()
-            title = "Surface velocity not detected"
-            message = "The surface velocity excitation was not detected in the model settings, therefore, "
-            message += "the transmission loss calculation has been aborted. To calculate the transmission loss properly, "
-            message += " it is recommended that the surface velocity be applied at the input face also "
-            message += "the specific impedances be applied in both input and output faces."
+            title = "Invalid inputs detected"
+            message = "The transmission loss calculation requires only one active excitation source "
+            message += "at the input face, commonly in the form of a surface velocity, combined with  "
+            message += "the anechoic terminations in the both input and output faces. Any mismatch "
+            message += "in these requirements will interrupt the transmission loss calculation."
             PrintMessageInput([window_title_1, title, message])
             return True
 
