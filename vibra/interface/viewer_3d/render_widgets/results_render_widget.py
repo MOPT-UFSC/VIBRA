@@ -400,10 +400,17 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.plane_actor.GetProperty().SetOpacity(0.2)
 
     def update_info_text(self):
+
+        if not app().project.is_there_a_valid_solution():
+            return
+
         text = ""
         analysis_id = app().project.analysis_id
 
-        if analysis_id == AnalysisID.NO_ANALYSIS or (self.frequency_index is None and self.mode_index is None):
+        if analysis_id == AnalysisID.NO_ANALYSIS:
+            return
+        
+        if  self.frequency_index is None and self.mode_index is None:
             return
 
         if analysis_id in [

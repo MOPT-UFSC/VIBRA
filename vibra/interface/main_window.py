@@ -591,7 +591,8 @@ class MainWindow(QMainWindow):
         self.animation_toolbar.pause_animation()
 
     def action_results_workspace_callback(self):
-        if app().project.last_analysis is None:
+
+        if not app().project.is_there_a_valid_solution():
             return
 
         self.action_results_workspace.setEnabled(False)
@@ -906,7 +907,7 @@ class MainWindow(QMainWindow):
 
             self.renderer_toolbar.setDisabled(False)
             self.analysis_toolbar.setDisabled(False)
-            self.analysis_toolbar.load_analysis_settings()
+            self.analysis_toolbar.update_analysis_combo_boxes()
 
             app().project.reset_solutions()
             app().project.model.properties._reset_variables()

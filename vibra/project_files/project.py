@@ -207,14 +207,14 @@ class Project:
         self.acoustic_modal_solver.solve()
         dt = time() - t0
         print(f"Elapsed time to solve modal analysis: {round(dt, 6)} [s]")
-        self.last_analysis = "Modal Acoustic"
+        # self.last_analysis = "Modal Acoustic"
         app().file.write_results_data_in_file()
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_structural_modal_analysis(self):
         self.structural_assembler.process_assemble()
         self.structural_modal_solver.solve()
-        self.last_analysis = "Modal Structural"
+        # self.last_analysis = "Modal Structural"
         app().file.write_results_data_in_file()
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
@@ -222,12 +222,12 @@ class Project:
         self.model.reset_dissipation_model_properties()
         self.model.process_porous_material_properties(self.model.frequencies)
         self.model.process_viscous_thermal_model_properties(self.model.frequencies)
-        self.model.process_perforated_plate_impendace(self.model.frequencies)
+        self.model.process_perforated_plate_impedance(self.model.frequencies)
         self.acoustic_assembler.process_assemble()
         t0 = time()
         self.acoustic_harmonic_solver.solve()
         dt = time() - t0
-        self.last_analysis = "Harmonic Acoustic"
+        # self.last_analysis = "Harmonic Acoustic"
         print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
         app().file.write_results_data_in_file()
         app().main_window.disable_advanced_acoustic_plots_buttons(False)
@@ -241,7 +241,7 @@ class Project:
             self.structural_harmonic_solver.solve_mode_superposition_method()
             return
         dt = time() - t0
-        self.last_analysis = "Harmonic Structural"
+        # self.last_analysis = "Harmonic Structural"
         print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
         app().file.write_results_data_in_file()
     
@@ -289,6 +289,76 @@ class Project:
             raise NotImplementedError("Not implemented analysis")
 
         app().main_window.results_viewer_widget.results_viewer_items.update_items()
+
+    def is_there_a_valid_solution(self):
+
+        analysis_setup = app().file.read_analysis_setup_from_file()
+        if analysis_setup is None:
+            return
+
+        analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+
+        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD]:
+            solution  = self.structural_harmonic_solver.solution
+            if solution is not None:
+                return True
+
+        elif analysis_id == AnalysisID.STRUCTURAL_MODAL:
+            solution  = self.structural_modal_solver.solution
+            if solution is not None:
+                return True
+
+        elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
+            solution  = self.acoustic_modal_solver.solution
+            if solution is not None:
+                return True
+
+        elif analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            solution  = self.acoustic_harmonic_solver.solution
+            if solution is not None:
+                return True
+
+        return False
+
+    def get_analysis_type_and_physical_domain(self):
+
+        analysis_setup = app().file.read_analysis_setup_from_file()
+        if analysis_setup is None:
+            return
+
+        analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+
+        if analysis_id in [
+                           AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+                           AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+                           AnalysisID.ACOUSTIC_HARMONIC, 
+                           AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
+                           AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION
+                           ]:
+            analysis_type = "harmonic"
+
+        elif analysis_id == AnalysisID.STATIC_ANALYSIS:
+            analysis_type = "static"
+
+        else:
+            analysis_type = "modal"
+
+        if analysis_id in [
+                           AnalysisID.ACOUSTIC_HARMONIC, 
+                           AnalysisID.ACOUSTIC_MODAL
+                           ]:
+            physical_domain = "acoustic"
+
+        elif analysis_id in [
+                            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
+                            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION
+                            ]:
+            physical_domain = "coupled"
+
+        else:
+            physical_domain = "structural"
+
+        return analysis_type, physical_domain
 
     def long_function(self):
         for i in range(20):

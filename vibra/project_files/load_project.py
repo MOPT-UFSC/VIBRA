@@ -396,7 +396,7 @@ class LoadProject:
     def load_analysis_results(self):
 
         project = app().project
-        project.last_analysis = None
+        # project.last_analysis = None
 
         results_data = self.file.read_results_data_from_file()
 
@@ -411,25 +411,25 @@ class LoadProject:
                     else:
                         project.acoustic_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
                     project.acoustic_modal_solver.solution = data.get("solution")
-                    project.last_analysis = "Modal Acoustic"
+                    # project.last_analysis = "Modal Acoustic"
 
                 elif key == "modal_structural" and project.structural_modal_solver is not None:
                     project.structural_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
                     project.structural_modal_solver.solution = data.get("solution")
                     project.structural_modal_solver.displacement_dofs = data["displacement_dofs"]
-                    project.last_analysis = "Modal Structural"
+                    # project.last_analysis = "Modal Structural"
 
                 elif key == "harmonic_acoustic" and project.acoustic_harmonic_solver is not None:
                     project.acoustic_harmonic_solver.frequencies = data.get("frequencies")
                     project.acoustic_harmonic_solver.solution = data.get("solution")
                     app().main_window.disable_advanced_acoustic_plots_buttons(False)
-                    project.last_analysis = "Harmonic Acoustic"
+                    # project.last_analysis = "Harmonic Acoustic"
 
                 elif key == "harmonic_structural" and project.structural_harmonic_solver is not None:
                     project.structural_harmonic_solver.frequencies = data.get("frequencies")
                     project.structural_harmonic_solver.solution = data.get("solution")
                     project.structural_harmonic_solver.displacement_dofs = data["displacement_dofs"]
-                    project.last_analysis = "Harmonic Structural"
+                    # project.last_analysis = "Harmonic Structural"
 
                 else:
                     continue
