@@ -67,11 +67,6 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.remove_all_actors()
         self.create_axes()
-        
-        self.axes.SetOutlineColor(0, 0, 0)
-        self.axes.SetViewport(0, 0, 0.2, 0.2)
-        self.axes.SetZoom(1.2)
-        
         self.create_scale_bar()
         self.create_camera_light(0.1, 0.1)
         self.update_plot()
