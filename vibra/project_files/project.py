@@ -44,7 +44,6 @@ class Project:
         self.acoustic_harmonic_solver = None
         self.structural_harmonic_solver = None
 
-        self.last_analysis = None
         self.dissipation_model = None
 
     def reset_solutions(self):
@@ -207,14 +206,12 @@ class Project:
         self.acoustic_modal_solver.solve()
         dt = time() - t0
         print(f"Elapsed time to solve modal analysis: {round(dt, 6)} [s]")
-        # self.last_analysis = "Modal Acoustic"
         app().file.write_results_data_in_file()
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_structural_modal_analysis(self):
         self.structural_assembler.process_assemble()
         self.structural_modal_solver.solve()
-        # self.last_analysis = "Modal Structural"
         app().file.write_results_data_in_file()
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
@@ -227,7 +224,6 @@ class Project:
         t0 = time()
         self.acoustic_harmonic_solver.solve()
         dt = time() - t0
-        # self.last_analysis = "Harmonic Acoustic"
         print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
         app().file.write_results_data_in_file()
         app().main_window.disable_advanced_acoustic_plots_buttons(False)
@@ -241,10 +237,9 @@ class Project:
             self.structural_harmonic_solver.solve_mode_superposition_method()
             return
         dt = time() - t0
-        # self.last_analysis = "Harmonic Structural"
         print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
         app().file.write_results_data_in_file()
-    
+
     def run_analysis(self):
 
         if not self.model.generated_mesh:
