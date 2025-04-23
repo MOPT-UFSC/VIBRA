@@ -676,9 +676,6 @@ def analysis_info_text(frequency_index: int):
         if frequency_index-1 >= len(frequencies):
             return ""
 
-        print("analysis_info_text")
-        print(f"{frequency_index}, {frequencies[frequency_index-1]}")
-
         # TODO: add logic for other methods
         tree.add_item("Method", "Direct")
 
