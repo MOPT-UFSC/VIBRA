@@ -63,15 +63,17 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_run_analysis = QPushButton(self)
         self.pushButton_configure_analysis = QPushButton(self)
         self.pushButton_reset_solution = QPushButton(self)
-    
+
     def _create_connections(self):
+        #
+        self.combo_box_physical_domain.currentTextChanged.connect(self.check_analysis_setup_callback)
+        self.combo_box_analysis_type.currentTextChanged.connect(self.check_analysis_setup_callback)
+        #
         self.pushButton_run_analysis.clicked.connect(self.run_analysis)
         self.pushButton_configure_analysis.clicked.connect(self.configure_analysis)
         self.pushButton_reset_solution.clicked.connect(self.reset_solution)
-        self.enable_pushbutons.connect(self.update_pushbutton_run_analysis)
+        self.enable_pushbutons.connect(self.check_analysis_setup_callback)
         self.enable_pushbutons.connect(self.update_pushbutton_reset_solution)
-        self.combo_box_physical_domain.currentTextChanged.connect(lambda: self.update_pushbutton_run_analysis(True))
-        self.combo_box_analysis_type.currentTextChanged.connect(lambda: self.update_pushbutton_run_analysis(True))
 
     def _configure_appearance(self):
         self.setMinimumHeight(40)
@@ -157,11 +159,9 @@ class AnalysisToolbar(QToolBar):
         for physical_domain in ["Structural", "Acoustic"]:
             self.combo_box_physical_domain.addItem(physical_domain)
 
-    def update_pushbutton_run_analysis(self, disable=False):
-        self.pushButton_run_analysis.setDisabled(disable)
-    
-    def update_pushbutton_reset_solution(self):
-        self.pushButton_reset_solution.setDisabled(False)
+        # default setup
+        self.combo_box_analysis_type.setCurrentText("Harmonic")
+        self.combo_box_physical_domain.setCurrentText("Acoustic")
 
     def update_analysis_combo_boxes(self):
 
@@ -171,15 +171,25 @@ class AnalysisToolbar(QToolBar):
             self.combo_box_analysis_type.setCurrentIndex(0)
         elif analysis_type == "modal":
             self.combo_box_analysis_type.setCurrentIndex(1)
-        else:
+        elif analysis_type == "static":
             self.combo_box_analysis_type.setCurrentIndex(2)
 
         if physical_domain == "structural":
             self.combo_box_physical_domain.setCurrentIndex(0)
         elif physical_domain == "acoustic":
             self.combo_box_physical_domain.setCurrentIndex(1)
-        else:
+        elif physical_domain == "coupled":
             self.combo_box_physical_domain.setCurrentIndex(2)
+
+    def set_pushbutton_run_analysis_enabled(self, enable=True):
+        self.pushButton_run_analysis.setEnabled(enable)
+
+    def update_pushbutton_reset_solution(self):
+        self.pushButton_reset_solution.setDisabled(False)
+
+    def check_analysis_setup_callback(self):
+        valid_setup = app().project.is_there_a_valid_analysis_setup()
+        self.set_pushbutton_run_analysis_enabled(valid_setup)
 
     def run_analysis(self):
         if app().project.run_analysis():

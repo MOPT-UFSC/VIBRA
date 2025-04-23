@@ -324,9 +324,11 @@ class Project:
 
         analysis_setup = app().file.read_analysis_setup_from_file()
         if analysis_setup is None:
-            return
+            return "", ""
 
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        if analysis_id == AnalysisID.NO_ANALYSIS:
+            return "", ""
 
         if analysis_id in [
                            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
@@ -359,6 +361,37 @@ class Project:
             physical_domain = "structural"
 
         return analysis_type, physical_domain
+
+    def is_there_a_valid_analysis_setup(self):
+
+        analysis_setup = app().file.read_analysis_setup_from_file()
+        if analysis_setup is None:
+            return True
+
+        analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        if analysis_id == AnalysisID.NO_ANALYSIS:
+            return True
+
+        if analysis_id in [
+                            AnalysisID.ACOUSTIC_HARMONIC,
+                            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+                            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+                            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
+                            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION
+                            ]:
+            for key in ["f_min", "f_max", "f_step"]:
+                if key not in analysis_setup.keys():
+                    return False
+            return True
+
+        elif analysis_id in [
+                             AnalysisID.ACOUSTIC_MODAL, 
+                             AnalysisID.STRUCTURAL_MODAL
+                             ]:
+            for key in ["modes", "sigma"]:
+                if key not in analysis_setup.keys():
+                    return False
+            return True
 
     def long_function(self):
         for i in range(20):

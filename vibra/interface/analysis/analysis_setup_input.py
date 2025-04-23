@@ -268,7 +268,7 @@ class AnalysisSetupInput(QDialog):
         self.project.create_solver()
 
         self.setup_defined = True
-        app().main_window.analysis_toolbar.update_pushbutton_run_analysis()
+        app().main_window.analysis_toolbar.check_analysis_setup_callback()
         self.close()
 
         return False

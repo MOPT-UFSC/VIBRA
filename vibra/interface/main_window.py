@@ -879,9 +879,10 @@ class MainWindow(QMainWindow):
 
             app().load_project.initialize()
             LoadingWindow(app().load_project.load).run()
-            
+
+            self.analysis_toolbar.check_analysis_setup_callback()
             self.status_bar.setVisible(True)
-            
+
             self.configure_mesh_information()
             LoadingWindow(self.update_plots).run()
             
@@ -907,6 +908,7 @@ class MainWindow(QMainWindow):
 
             self.renderer_toolbar.setDisabled(False)
             self.analysis_toolbar.setDisabled(False)
+            self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
             self.analysis_toolbar.update_analysis_combo_boxes()
 
             app().project.reset_solutions()
