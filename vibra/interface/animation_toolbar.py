@@ -65,7 +65,7 @@ class AnimationToolbar(QToolBar):
     def _config_widgets(self):
         # QLabel
         self.label_degrees.setFixedWidth(42)
-        self.label_factor.setFixedWidth(60)
+        self.label_factor.setFixedWidth(100)
 
         # QPushButton
         self.pushButton_animate.setFixedSize(50, 30)
@@ -83,13 +83,13 @@ class AnimationToolbar(QToolBar):
 
         # QSlider
         self.phase_slider.setOrientation(Qt.Orientation.Horizontal)
-        self.phase_slider.setMaximumWidth(150)
+        self.phase_slider.setMaximumWidth(160)
         self.phase_slider.setCursor(Qt.PointingHandCursor)
         self.phase_slider.setMinimum(0)
         self.phase_slider.setMaximum(360)
 
         self.magnification_factor_slider.setOrientation(Qt.Orientation.Horizontal)
-        self.magnification_factor_slider.setMaximumWidth(150)
+        self.magnification_factor_slider.setMaximumWidth(160)
         self.magnification_factor_slider.setCursor(Qt.PointingHandCursor)
         self.magnification_factor_slider.setMinimum(0)
         self.magnification_factor_slider.setMaximum(32)
@@ -129,7 +129,7 @@ class AnimationToolbar(QToolBar):
         self.update_phase_slider_steps()
 
     def update_toolbar(self):
-        if app().main_window.analysis_toolbar.combo_box_analysis_domain.currentIndex() == 1:
+        if app().main_window.analysis_toolbar.combo_box_physical_domain.currentIndex() == 1:
             self.magnification_factor_slider.setDisabled(True)
             self.label_magnification_factor.setDisabled(True)
             self.label_factor.setDisabled(True)
@@ -266,9 +266,11 @@ class AnimationToolbar(QToolBar):
         value = self.phase_slider.value()
         self.label_degrees.setText(f"({value}°)")
 
-    def update_factor_label(self):
-        value = self.magnification_factor_slider.value() * 2 / 32
-        self.label_factor.setText(f"({value}x)")
+    def update_factor_label(self, max_value=None):
+        value = self.magnification_factor_slider.value() / 16
+        if isinstance(max_value, float | int):
+            value /= (10 * max_value)
+        self.label_factor.setText(f"({value : .4e}x)")
 
     def update_phase_slider_steps(self):
         frames = self.spinBox_frames.value()

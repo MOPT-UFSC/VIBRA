@@ -297,6 +297,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             raise ValueError(f"Unknown analysis: {analysis_id}")
 
         if displacements is not None:
+            app().main_window.animation_toolbar.update_factor_label(max_value=max_value)
             self.analysis_actor.apply_deformation(
                 displacements,
                 magnification_factor,
