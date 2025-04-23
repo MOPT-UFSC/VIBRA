@@ -388,7 +388,7 @@ class Project:
                              AnalysisID.ACOUSTIC_MODAL, 
                              AnalysisID.STRUCTURAL_MODAL
                              ]:
-            for key in ["modes", "sigma"]:
+            for key in ["modes", "sigma_factor"]:
                 if key not in analysis_setup.keys():
                     return False
             return True
