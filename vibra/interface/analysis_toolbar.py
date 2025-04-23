@@ -73,7 +73,7 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_configure_analysis.clicked.connect(self.configure_analysis)
         self.pushButton_reset_solution.clicked.connect(self.reset_solution)
         self.enable_pushbutons.connect(self.check_analysis_setup_callback)
-        self.enable_pushbutons.connect(self.update_pushbutton_reset_solution)
+        self.enable_pushbutons.connect(self.set_pushbutton_reset_solution_enabled)
 
     def _configure_appearance(self):
         self.setMinimumHeight(40)
@@ -184,17 +184,18 @@ class AnalysisToolbar(QToolBar):
     def set_pushbutton_run_analysis_enabled(self, enable=True):
         self.pushButton_run_analysis.setEnabled(enable)
 
-    def update_pushbutton_reset_solution(self):
-        self.pushButton_reset_solution.setDisabled(False)
+    def set_pushbutton_reset_solution_enabled(self):
+        self.pushButton_reset_solution.setEnabled(True)
 
     def check_analysis_setup_callback(self):
         valid_setup = app().project.is_there_a_valid_analysis_setup()
         self.set_pushbutton_run_analysis_enabled(valid_setup)
 
     def run_analysis(self):
+        self.update_analysis_combo_boxes()
         if app().project.run_analysis():
             return
-        self.update_pushbutton_reset_solution()
+        self.set_pushbutton_reset_solution_enabled()
 
     def reset_solution(self):
         app().project.reset_solutions()
