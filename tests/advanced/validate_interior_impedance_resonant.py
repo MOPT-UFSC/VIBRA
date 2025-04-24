@@ -25,7 +25,7 @@ from openpyxl import load_workbook
 # @pytest.mark.slow
 # @pytest.mark.skip
 
-def load_external_mesh_and_solve(mesh_size: str = "200mm", interior_impedance: bool = False):
+def load_external_mesh_and_solve(mesh_size: str = "5mm", interior_impedance: bool = False):
 
     # start decoding the Ansys script file (ds.dat file or input file)
     mesh_path = f"data/validation/perforated_plate/mesh/ds_connected_rectangular_resonant_cavities_{mesh_size}.dat"
@@ -548,7 +548,7 @@ def get_external_results(path: str):
 
 if __name__ == "__main__":
 
-    # valid mesh sizes: 10mm, 34mm, 200mm and 400mm.
-    mesh_size = "2mm"
+    # valid mesh sizes: 2mm and 5mm.
+    mesh_size = "5mm"
 
     load_external_mesh_and_solve(mesh_size=mesh_size, interior_impedance=True)
