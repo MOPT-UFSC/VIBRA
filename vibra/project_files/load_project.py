@@ -429,4 +429,3 @@ class LoadProject:
                     continue
 
             logging.info("Updating analysis render... [85/100]")
-            app().main_window.configure_results_render_widget()
