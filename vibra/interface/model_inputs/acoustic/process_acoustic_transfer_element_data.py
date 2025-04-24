@@ -324,7 +324,6 @@ class ProcessAcousticTransferElementData(QDialog):
 
         LoadingWindow(callback).run()
 
-        app().main_window.configure_results_render_widget()
         app().main_window.menu_widget.update_items()
         self.print_final_message()
 

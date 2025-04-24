@@ -491,12 +491,7 @@ class MainWindow(QMainWindow):
         nodes, face_elements, solid_elements = app().project.model.mesh.get_mesh_info()
         self.update_mesh_information(nodes, face_elements, solid_elements)
 
-    def configure_results_render_widget(self, show_render_widget=False):
-        self.results_widget.update_plot()
-
-        if not show_render_widget:
-            return
-
+    def configure_results_render_widget(self):
         self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
         self.results_viewer_widget.hide_bottom_widget()
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
@@ -884,7 +879,8 @@ class MainWindow(QMainWindow):
             self.status_bar.setVisible(True)
 
             self.configure_mesh_information()
-            LoadingWindow(self.update_plots).run()
+            LoadingWindow(self.mesh_widget.update_plot).run()
+            LoadingWindow(self.geometry_widget.update_plot).run()
             
         except Exception as error_log:
             from traceback import print_exception

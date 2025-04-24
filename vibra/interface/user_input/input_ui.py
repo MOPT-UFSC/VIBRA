@@ -176,7 +176,7 @@ class InputUi:
 
     def plot_stress_field(self):
         if not self.results_viewer_items.item_child_plot_stress_field.isDisabled():
-            self.main_window.configure_results_render_widget(True)
+            self.main_window.configure_results_render_widget()
 
     def plot_stress_frequency_response(self):
         if not self.results_viewer_items.item_child_plot_stress_frequency_response.isDisabled():
