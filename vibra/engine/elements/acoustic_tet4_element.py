@@ -67,6 +67,12 @@ class ACT_TETRAHEDRON_4C(Element3D):
         self.number_of_nodes = len(self.nodal_coordinates)
         self.number_of_elements = len(self.connectivity)
 
+    def update_nodal_coordinates(self, nodal_coordinates: np.ndarray):
+        self.nodal_coordinates = nodal_coordinates
+
+    def update_solids_connectivity(self, connectivity: np.ndarray):
+        self.connectivity = connectivity
+
     def define_integration_points(self):
         """ """
         self.nint = 4

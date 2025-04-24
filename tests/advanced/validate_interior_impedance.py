@@ -604,6 +604,6 @@ def get_external_results(path: str):
 if __name__ == "__main__":
 
     # valid mesh sizes: 10mm, 34mm, 200mm and 400mm.
-    mesh_size = "34mm"
+    mesh_size = "200mm"
 
-    load_external_mesh_and_solve(mesh_size=mesh_size, interior_impedance=True)
+    load_external_mesh_and_solve(mesh_size=mesh_size, interior_impedance=False)
