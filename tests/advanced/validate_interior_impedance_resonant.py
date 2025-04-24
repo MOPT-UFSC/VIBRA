@@ -28,7 +28,7 @@ from openpyxl import load_workbook
 def load_external_mesh_and_solve(mesh_size: str = "200mm", interior_impedance: bool = False):
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"data/validation/perforated_plate/mesh/ds_connected_rectangular_cavities_{mesh_size}.dat"
+    mesh_path = f"data/validation/perforated_plate/mesh/ds_connected_rectangular_resonant_cavities_{mesh_size}.dat"
 
     if not os.path.exists(mesh_path):
         return
@@ -38,8 +38,6 @@ def load_external_mesh_and_solve(mesh_size: str = "200mm", interior_impedance: b
                              "input_face" : 1,
                              "output_face" : 2,
                              "middle_face" : 3,
-                             "input_connected_faces" : 4,
-                             "output_connected_faces" : 5,
                             }
 
     # define surfaces from each volume
@@ -110,9 +108,9 @@ def load_external_mesh_and_solve(mesh_size: str = "200mm", interior_impedance: b
     
     # Load the external data
     if interior_impedance:
-        path = f"data/validation/perforated_plate/results/interior_impedance/mesh_size_{mesh_size}"
+        path = f"data/validation/perforated_plate/results/interior_impedance/resonant/mesh_size_{mesh_size}"
     else:
-        path = f"data/validation/perforated_plate/results/mesh_size_{mesh_size}"
+        path = f"data/validation/perforated_plate/results/resonant/mesh_size_{mesh_size}"
 
     ext_data = LoadExternalData(path, rho_0)
 
@@ -144,14 +142,14 @@ def load_external_mesh_and_solve(mesh_size: str = "200mm", interior_impedance: b
               "averaged" : False
               }
 
-    model.properties._set_property("specific_impedance", data_Z, surface=1)
+    # model.properties._set_property("specific_impedance", data_Z, surface=1)
     model.properties._set_property("specific_impedance", data_Z, surface=2)
 
     ## interior impedance setup
 
     # if interior_impedance:
     #     data_Zin = {  
-    #                 "real_values" : [2*10],
+    #                 "real_values" : [10],
     #                 "imag_values" : [0],
     #                 "nodal_attribution" : False,
     #                 "averaged" : False
@@ -161,9 +159,9 @@ def load_external_mesh_and_solve(mesh_size: str = "200mm", interior_impedance: b
 
     ## Define the analysis frequency setup
 
-    df = 5
-    f_min = 5
-    f_max = 1400
+    df = 10
+    f_min = 10
+    f_max = 3000
     frequencies = np.arange(f_min, f_max + df, df)
 
     frequency_setup = {
@@ -255,28 +253,18 @@ def load_external_mesh_and_solve(mesh_size: str = "200mm", interior_impedance: b
     mesh._process_face_elements_connected_to_nodes([1, 2])
     mesh._process_nodal_areas()
 
-    freq_TL, TL_model = harmonic_solver.get_transmission_loss(1, 2)
-
     dt = time() - t0
     print(f"Elapsed time to post-process data: {round(dt, 4)}")
 
     if solution is not None:
 
-        if mesh_size == "400mm":    
-            node_in = 3
-            node_out = 17
+        if mesh_size == "2mm":    
+            node_in = 57
+            node_out = 313
 
-        elif mesh_size == "200mm":
-            node_in = 28
-            node_out = 34
-
-        elif mesh_size == "34mm":
-            node_in = 1179
-            node_out = 327
-
-        elif mesh_size == "10mm":
-            node_in = 12802
-            node_out = 1304
+        elif mesh_size == "5mm":
+            node_in = 23
+            node_out = 120
 
         else:
             return
@@ -358,7 +346,7 @@ def load_external_mesh_and_solve(mesh_size: str = "200mm", interior_impedance: b
         # Plot the nodal results for pressure and particle velocity
 
         data_type = np.real
-        type_label = "imaginary"
+        type_label = "real"
 
         fig5, ax5 = plt.subplots()
         title = f"Acoustic pressure at node {node_in}"
@@ -419,49 +407,6 @@ def load_external_mesh_and_solve(mesh_size: str = "200mm", interior_impedance: b
         ax10.set_title(title)
         ax10.grid()
         ax10.legend()
-
-        # Transmission loss
-
-        if interior_impedance:
-            results_path = f"data/validation/perforated_plate/results/interior_impedance/connected_rectangular_cavities_transmission_loss.xlsx"
-        else:
-            results_path = f"data/validation/perforated_plate/results/connected_rectangular_cavities_transmission_loss.xlsx"
-
-        # import the WB transmission loss data from spreadsheet file
-        results_WB = get_external_results(results_path)
-        TL_data_WB = results_WB[f"transmission_loss_{mesh_size}"] # ports enabled
-
-        freq_WB_evaluated, TL_WB_evaluated = process_external_TL(model, ext_data)
-        
-        mask = TL_data_WB[:, 0] <= f_max
-        freq_WB_direct = TL_data_WB[:, 0][mask]
-        TL_WB_direct = TL_data_WB[:, 1][mask]
-
-        freq_WB_direct = TL_data_WB[:, 0]
-        TL_WB_direct = TL_data_WB[:, 1]
-
-        fig11, ax11 = plt.subplots()
-        title = "Transmission loss"
-        ax11.plot(freq_TL, TL_model, 'r', label='Vibra')
-        ax11.plot(freq_WB_direct, TL_WB_direct, 'k--', label='Ansys')
-        ax11.plot(freq_WB_evaluated, TL_WB_evaluated, 'b--', label='Ansys (ext.)')
-
-        # #TODO: remove this
-        # path = f"data/validation/perforated_plate/results/TL_cavidades_retangulares_comsol_{mesh_size}.xlsx"
-        # if os.path.exists(path):
-        #     results_Comsol = get_external_results(path)
-        #     TL_data_Comsol = results_Comsol["transmission_loss"]
-
-        #     freq_Comsol = TL_data_Comsol[:, 0]
-        #     TL_Comsol = TL_data_Comsol[:, 1]
-
-        #     ax11.plot(freq_Comsol, TL_Comsol, 'g--', label='Comsol')
-
-        ax11.set_xlabel('Frequency [Hz]')
-        ax11.set_ylabel(f'Transmission loss [dB]')
-        ax11.set_title(title)
-        ax11.grid()
-        ax11.legend()
 
         plt.show()
 
@@ -604,6 +549,6 @@ def get_external_results(path: str):
 if __name__ == "__main__":
 
     # valid mesh sizes: 10mm, 34mm, 200mm and 400mm.
-    mesh_size = "34mm"
+    mesh_size = "2mm"
 
     load_external_mesh_and_solve(mesh_size=mesh_size, interior_impedance=True)

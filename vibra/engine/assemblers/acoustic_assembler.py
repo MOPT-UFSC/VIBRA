@@ -276,6 +276,8 @@ class AcousticAssembler:
                         U_rms = p_rms / Z_0
 
                     Z_tr = Z_0 * (a + b*U_rms)
+                    #TODO: remove this "by-pass" as soon as possible
+                    Z_tr = Z_0
                     surface_data[el] = Z_tr
 
         if aux_connect:
@@ -449,7 +451,8 @@ class AcousticAssembler:
             for i, Z_tr in enumerate(surface_data.values()):
                 normalized_matrix_Z = element_2D.matrices_Z(i)
                 for j in range(self.number_frequencies):
-                    self.data_Zpp[j][i, :, :] = normalized_matrix_Z / Z_tr[j]
+                    #TODO: confirm the factor 2 from the denominator
+                    self.data_Zpp[j][i, :, :] = normalized_matrix_Z / (2 * Z_tr)#[j]
 
     def assemble_global_stiffness_matrix(self, index=0):
         """

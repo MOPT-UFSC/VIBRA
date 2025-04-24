@@ -88,7 +88,7 @@ class ACT_FACE_3(Element2D):
         #
         self.phi, self.dphi = shapeFZ3(ssx, ttx)
 
-    def matrices_Z(self, el_index, rho=1, impedance=1):
+    def matrices_Z(self, el_index: int, rho: float = 1.0, impedance: float = 1.0):
         """ Z matrices
         """
 
@@ -107,9 +107,13 @@ class ACT_FACE_3(Element2D):
         for i in range(self.nint):
             Ze += -(1/2) * (rho/impedance) * N[i, :, :].T @ N[i, :, :] * (detJAC*self.wps)
             # print(f"matrices_Z: index - {el_index} k - {i} {N[i, :, :]}")
+
+        # N = self.phi
+        # Ze = -(1 / 2) * (rho / impedance) * N.T @ N * (detJAC * self.wps)
+
         return Ze
 
-    def excitation_F(self, el_index, Vn=1):
+    def excitation_F(self, el_index: int, Vn: float = 1.0):
         """ F matrices
         """
 
@@ -138,7 +142,7 @@ class ACT_FACE_3(Element2D):
 
         self.reorder_connect(connect_face)
         dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT
-        ind_dofs = dofs*self.connect_face[:, :]
+        ind_dofs = dofs * self.connect_face[:, :]
 
         vect_indices = ind_dofs.flatten()
         ind_rows_face = ((np.tile(vect_indices, (edofs,1))).T).flatten()
