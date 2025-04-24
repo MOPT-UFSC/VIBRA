@@ -879,7 +879,8 @@ class MainWindow(QMainWindow):
             self.status_bar.setVisible(True)
 
             self.configure_mesh_information()
-            LoadingWindow(self.update_plots).run()
+            LoadingWindow(self.mesh_widget.update_plot).run()
+            LoadingWindow(self.geometry_widget.update_plot).run()
             
         except Exception as error_log:
             from traceback import print_exception
