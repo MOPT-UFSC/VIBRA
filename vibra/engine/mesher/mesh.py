@@ -271,6 +271,13 @@ class Mesh:
         self.solids_connectivity[:, 3] = nodes_per_element
         self.solids_connectivity[:, 4:] = connect
 
+        nodes_from_volume = defaultdict(list)
+        for elem_id, vol_id, _, _, *node_ids in self.solids_connectivity:
+            nodes_from_volume[vol_id].extend(node_ids)
+
+        for key, values in nodes_from_volume.items():
+            self.nodes_from_volumes[key] = np.array([*set(values)], dtype=int)
+
     def import_external_faces_connectivity(self, connectivity: dict, index_zero: bool = True, etype_tag: float = 1):
         """
         """
@@ -312,6 +319,13 @@ class Mesh:
         self.faces_connectivity[:, 2] = aux*etype_tag
         self.faces_connectivity[:, 3] = nodes_per_element
         self.faces_connectivity[:, 4:] = connect
+
+        nodes_from_surface = defaultdict(list)
+        for elem_id, vol_id, _, _, *node_ids in self.faces_connectivity:
+            nodes_from_surface[vol_id].extend(node_ids)
+
+        for key, values in nodes_from_surface.items():
+            self.nodes_from_surfaces[key] = np.array([*set(values)], dtype=int)
 
     def export_nodal_coordinates(self, filename):
         fmt = ["%i", "%.16f", "%.16f", "%.16f"]

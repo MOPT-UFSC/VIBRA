@@ -187,6 +187,8 @@ class AcousticHarmonicSolver:
             del A, F
 
         self.solution = self._reinsert_prescribed_dofs(solution)
+        # print(self.solution[12, :])
+        # print(self.solution[308, :])
 
         return self.solution
 

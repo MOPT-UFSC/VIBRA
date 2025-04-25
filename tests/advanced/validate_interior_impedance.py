@@ -228,7 +228,8 @@ def load_external_mesh_and_solve(mesh_size: str = "200mm", interior_impedance: b
 
     list_nodes = list()
     for tag, surface_nodes in mesh.nodes_from_surfaces.items():
-        list_nodes.extend(surface_nodes)
+        if tag in [1, 2]:
+            list_nodes.extend(surface_nodes)
 
     rho_eff_v1 = model.get_fluid_density_for_particle_velocity_calculation(1, frequencies)
     rho_eff_v2 = model.get_fluid_density_for_particle_velocity_calculation(2, frequencies)
