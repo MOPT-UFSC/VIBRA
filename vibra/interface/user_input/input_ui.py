@@ -76,71 +76,71 @@ class InputUi:
         self.model_setup_items.item_child_generate_mesh.setDisabled(True)
 
     def set_material(self):
-        if not self.model_setup_items.item_child_set_material.isDisabled():
+        if not self.model_setup_items.item_child_material.isDisabled():
             self.process_input(SetMaterialInput)   
 
     def set_fluid(self):
-        if not self.model_setup_items.item_child_set_fluid.isDisabled():
+        if not self.model_setup_items.item_child_fluid.isDisabled():
             self.process_input(SetFluidInput)
         
     def set_surface_thickness(self):
-        if not self.model_setup_items.item_child_set_surface_thickness.isDisabled():
+        if not self.model_setup_items.item_child_surface_thickness.isDisabled():
             self.process_input(SetSurfaceThicknessInput)
         
     def set_prescribed_dofs(self):
-        if not self.model_setup_items.item_child_set_prescribed_dofs.isDisabled():
+        if not self.model_setup_items.item_child_prescribed_dofs.isDisabled():
             self.process_input(SetPrescribedDofsInputs)
         
     def set_nodal_loads(self):
-        if not self.model_setup_items.item_child_set_nodal_loads.isDisabled():
+        if not self.model_setup_items.item_child_nodal_loads.isDisabled():
             self.process_input(SetNodalLoadsInputs)
         
     def set_distributed_loads(self):
-        if not self.model_setup_items.item_child_set_distributed_loads.isDisabled():
+        if not self.model_setup_items.item_child_distributed_loads.isDisabled():
             self.process_input(SetDistributedLoadsInputs)
     
     def set_normal_pressure_load(self):
-        if not self.model_setup_items.item_child_set_normal_pressure_load.isDisabled():
+        if not self.model_setup_items.item_child_normal_pressure_load.isDisabled():
             self.process_input(SetNormalPressureLoadInputs)
 
     def set_acoustic_pressure(self):
-        if not self.model_setup_items.item_child_set_acoustic_pressure.isDisabled():
+        if not self.model_setup_items.item_child_acoustic_pressure.isDisabled():
             self.process_input(AcousticPressureInput)
         
     def set_mass_flow_rate(self):
-        if not self.model_setup_items.item_child_set_mass_flow_rate.isDisabled():
+        if not self.model_setup_items.item_child_mass_flow_rate.isDisabled():
             self.process_input(MassFlowRateInput)
         
     def set_surface_velocity(self):
-        if not self.model_setup_items.item_child_set_surface_velocity.isDisabled():
+        if not self.model_setup_items.item_child_surface_velocity.isDisabled():
             self.process_input(SetSurfaceVelocityInput)
         
     def set_anechoic_termination(self):
-        if not self.model_setup_items.item_child_set_anechoic_termination.isDisabled():
+        if not self.model_setup_items.item_child_anechoic_termination.isDisabled():
             self.process_input(SetAnechoicTerminationInputs)
         
     def set_dissipation_model(self):
-        if not self.model_setup_items.item_child_set_dissipation_model.isDisabled():
+        if not self.model_setup_items.item_child_dissipation_model.isDisabled():
             self.process_input(DissipationModelInput)
         
     def set_porous_material_model(self):
-        if not self.model_setup_items.item_child_set_porous_material_model.isDisabled():
+        if not self.model_setup_items.item_child_porous_material_model.isDisabled():
             self.process_input(SetPorousMaterialModelInputs)
         
     def set_viscous_thermal_model(self):
-        if not self.model_setup_items.item_child_set_viscous_thermal_model.isDisabled():
+        if not self.model_setup_items.item_child_viscous_thermal_model.isDisabled():
             self.process_input(SetViscousThermalLossModel)
 
     def set_perforated_plate_model(self):
-        if not self.model_setup_items.item_child_set_perforated_plate_model.isDisabled():
+        if not self.model_setup_items.item_child_perforated_plate_model.isDisabled():
             self.process_input(SetPerforatedPlateModelInputs)
 
     def set_acoustic_properties_grandient(self):
-        if not self.model_setup_items.item_child_set_acoustic_properties_gradient.isDisabled():
+        if not self.model_setup_items.item_child_acoustic_properties_gradient.isDisabled():
             self.process_input(SetAcousticPropertiesGradientInputs)
         
     def set_acoustic_transfer_element_setup(self):
-        if not self.model_setup_items.item_child_set_acoustic_transfer_element_setup.isDisabled():
+        if not self.model_setup_items.item_child_acoustic_transfer_element_setup.isDisabled():
             self.process_input(ProcessAcousticTransferElementData)
 
     def set_specific_impedance(self):
@@ -175,11 +175,11 @@ class InputUi:
             self.main_window.show_geometry_render_widget()
 
     def plot_stress_field(self):
-        if not self.results_viewer_items.item_child_plot_stress_field.isDisabled():
+        if not self.results_viewer_items.item_child_stress_field.isDisabled():
             self.main_window.configure_results_render_widget()
 
     def plot_stress_frequency_response(self):
-        if not self.results_viewer_items.item_child_plot_stress_frequency_response.isDisabled():
+        if not self.results_viewer_items.item_child_stress_frequency_response.isDisabled():
             self.main_window.show_geometry_render_widget() 
 
     def plot_acoustic_mode_shapes(self):

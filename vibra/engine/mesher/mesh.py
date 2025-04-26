@@ -22,13 +22,13 @@ import logging
 import os
 import gmsh
 import sys
+import numpy as np
 
-from itertools import combinations
+from copy import deepcopy
 from collections import defaultdict
+from itertools import combinations
 from pathlib import Path
 from time import time
-
-import numpy as np
 
 
 class Mesh:
@@ -50,6 +50,13 @@ class Mesh:
         self.lines_connectivity = np.zeros((0, 4), dtype=int)
         self.faces_connectivity = np.zeros((0, 4), dtype=int)
         self.solids_connectivity = np.zeros((0, 4), dtype=int)
+
+        self.cache_nodal_coordinates = None
+        self.cache_lines_connectivity = None
+        self.cache_faces_connectivity = None
+        self.cache_solids_connectivity = None
+        self.cache_connectivity_from_lines = dict()
+        self.cache_connectivity_from_surfaces = dict()
 
         self.geometry_information = defaultdict(list)
 
@@ -80,7 +87,10 @@ class Mesh:
         self.surfaces_from_volume = dict()
         self.lines_from_surface = dict()
         self.points_from_line = dict()
+
+        self.connectivity_from_lines = dict()
         self.connectivity_from_surfaces = dict()
+
         self.nodes_from_face_element = dict()
         self.nodes_from_solid_element = dict()
         self.solid_elements_center = dict()
@@ -439,6 +449,16 @@ class Mesh:
 
     def clear_mesh_data(self):
 
+        self.nodal_coordinates = np.zeros((0, 4), dtype=float)
+        self.lines_connectivity = np.zeros((0, 4), dtype=int)
+        self.faces_connectivity = np.zeros((0, 4), dtype=int)
+        self.solids_connectivity = np.zeros((0, 4), dtype=int)
+
+        self.cache_nodal_coordinates = None
+        self.cache_lines_connectivity = None
+        self.cache_faces_connectivity = None
+        self.cache_solids_connectivity = None
+
         self.nodes_from_points.clear()
         self.nodes_from_lines.clear()
         self.nodes_from_surfaces.clear()
@@ -463,7 +483,10 @@ class Mesh:
         self.volumes_from_surface.clear()
 
         self.solid_elements_center.clear()
+        self.connectivity_from_lines.clear()
         self.connectivity_from_surfaces.clear()
+        self.cache_connectivity_from_lines.clear()
+        self.cache_connectivity_from_surfaces.clear()
 
         self.curvatures_surface.clear()
         self.normals_surface.clear()
@@ -490,6 +513,9 @@ class Mesh:
         """
         Transform gmsh data in a more manageable format (aka nodal coords and connectivity).
         """
+
+        self.clear_mesh_data()
+
         indexes, coords, _ = gmsh.model.mesh.getNodes(includeBoundary=True)
         total_nodes = int(np.max(indexes))
 
@@ -497,8 +523,7 @@ class Mesh:
         self.nodal_coordinates = np.zeros((total_nodes, 4))
         self.nodal_coordinates[indexes - 1, 1:] = coords.reshape(-1, 3) * unit_length_factor
         self.nodal_coordinates[indexes - 1, :1] = indexes.reshape(-1, 1) - 1
-
-        self.clear_mesh_data()
+        self.cache_nodal_coordinates = deepcopy(self.nodal_coordinates)
 
         connectivity_dim1 = dict()
         connectivity_dim2 = dict()
@@ -550,13 +575,14 @@ class Mesh:
             elif dim == 1:  # Lines
                 connectivity_dim1[dim, tag] = elements_data
                 self.nodes_from_lines[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
+                # self.connectivity_from_lines[tag] = array_element_nodes
                 self.gmsh_elements_from_lines[tag] = np.array([*set(element_indexes[0])], dtype=int)
 
             elif dim == 2:  # Surfaces
                 connectivity_dim2[dim, tag] = elements_data
                 surface_nodes = np.array([*set(element_nodes[0])], dtype=int) - 1
                 self.nodes_from_surfaces[tag] = surface_nodes
-                self.connectivity_from_surfaces[tag] = array_element_nodes
+                # self.connectivity_from_surfaces[tag] = array_element_nodes
                 self.gmsh_elements_from_surfaces[tag] = np.array([*set(element_indexes[0])], dtype=int)
                 self._update_surfaces_from_nodes(tag, surface_nodes)
                 del surface_nodes
@@ -572,18 +598,36 @@ class Mesh:
         self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity, self.map_solid_elements = self._get_connectivity_array(connectivity_dim3)
 
-        # np.savetxt("nodal_coordinates.dat", self.nodal_coordinates, delimiter=",", fmt=["%i", "%.16f", "%.16f", "%.16f"])
-        # np.savetxt("faces_connectivity.dat", self.faces_connectivity, delimiter=",", fmt="%i")
-        # np.savetxt("solids_connectivity.dat", self.solids_connectivity, delimiter=",", fmt="%i")
+        self.process_mesh_related_mappings()
 
-        # # internal check for solid connectivity
-        # aux_zeros = np.zeros(len(self.solids_connectivity[0,4:]))
-        # for i, values in enumerate(self.solids_connectivity[:,4:]):
-        #     if (aux_zeros == values).all():
-        #         print(f"The solid element #{i} doesn't have valid connectivity")
+        self.cache_lines_connectivity = deepcopy(self.lines_connectivity)
+        self.cache_faces_connectivity = deepcopy(self.faces_connectivity)
+        self.cache_solids_connectivity = deepcopy(self.solids_connectivity)
+        self.cache_connectivity_from_lines = deepcopy(self.connectivity_from_lines)
+        self.cache_connectivity_from_surfaces = deepcopy(self.connectivity_from_surfaces)
 
-        self.create_element_mappings()
 
+    def process_connectivities_from_lines_and_surfaces(self):
+
+        if not self.geometry_information:
+            return
+
+        for dim in [1, 2]:
+
+            if dim == 1:
+                tags = list(self.nodes_from_lines.keys())
+                connect_data = self.lines_connectivity
+
+            elif dim == 2:
+                tags = list(self.nodes_from_surfaces.keys())
+                connect_data = self.faces_connectivity
+
+            else:
+                continue
+
+            for tag in tags:
+                rows = connect_data[:, 1] == tag
+                self.connectivity_from_surfaces[tag] = connect_data[rows, 4:]
 
     def _update_surfaces_from_nodes(self, surface_id, node_ids):
         for node_id in node_ids:
@@ -599,7 +643,8 @@ class Mesh:
                 self.surface_from_solid_element[el_index].append(surface_id)
 
 
-    def create_element_mappings(self):
+    def process_mesh_related_mappings(self):
+        self.process_connectivities_from_lines_and_surfaces()
         self._maps_lines_by_elements()
         self._maps_surfaces_by_elements()
         self._maps_volumes_by_elements()
@@ -976,16 +1021,16 @@ class Mesh:
 
                 end += n_list[ind]
                 indexes = data["indexes"]
-                nodes = data["array_element_nodes"]
+                connectivity = data["array_element_nodes"]
 
                 rows = len(indexes)
-                cols = nodes.shape[1]
+                cols = connectivity.shape[1]
                 aux = np.ones(rows, dtype=int)
 
                 output_data[start:end, 1] = aux * entity_tag
                 output_data[start:end, 2] = aux * etype_tag
                 output_data[start:end, 3] = aux * cols
-                output_data[start:end, 4 : 4 + cols] = nodes
+                output_data[start:end, 4 : 4 + cols] = connectivity
                 gmsh_elements[start:end] = indexes
 
                 start = end
@@ -1091,7 +1136,7 @@ class Mesh:
         x_min, y_min, z_min = np.min(nodal_coordinates[:,1:], axis=0)
         x_max, y_max, z_max = np.max(nodal_coordinates[:,1:], axis=0)
         self.principal_diagonal = np.sqrt((x_max-x_min)**2 + (y_max-y_min)**2 + (z_max-z_min)**2)
-        # print('The base length is: {}[m]'.format(round(self.principal_diagonal,6)))
+        # print('The base length is: {}[m]'.format(round(self.principal_diagonal, 6)))
 
 
     def get_elements_and_nodes_from_sphere(self, surface_ids, selection_radius, averaged=False, filter_type=0, export_data=False):

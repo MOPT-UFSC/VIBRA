@@ -1,17 +1,17 @@
 
 from vibra import app
-from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
-from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
-from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
+from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
+from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
+from vibra.engine.mesh_modifiers.dofs_decoupling import DofsDecoupling
+from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
 from vibra.errors import IncompleteSetupError
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 import logging
 import numpy as np
-from copy import deepcopy
 
 
 window_title_1 = "Error"
@@ -117,6 +117,8 @@ class Model:
             app().main_window.update_geometry_information(self.mesh.geometry_information)
 
         except Exception as error_log:
+            from traceback import print_exception
+            print_exception(error_log)
             title = "Error while processing geometry"
             message = str(error_log)
             PrintMessageInput([window_title_1, title, message])
@@ -387,110 +389,8 @@ class Model:
             if property == "surface_thickness":
                 self.mesh.set_face_element_thickness(surface_id, data)
 
-    def process_decoupling_information(self):
+    def process_decoupling_of_dofs_for_acoustic_analysis(self):
         """
         """
-
-        self.properties._set_property("duplicated_nodes", dict(), surface=6)
-
-        surfaces_to_decouple = list()
-        for (property, surface_id) in self.properties.surface_properties.keys():
-            if property == "duplicated_nodes":
-                surfaces_to_decouple.append(surface_id)
-
-        max_surface_id = max(self.mesh.nodes_from_surfaces.keys())
-
-        self.decouple_info.clear()
-        for surf_id in surfaces_to_decouple:
-            max_surface_id += 1
-            vol_ids = self.mesh.volumes_from_surface[surf_id]
-            self.decouple_info[vol_ids[0]] = {
-                                              "surface_id" : surf_id,
-                                              "new_surface_id" : int(max_surface_id)
-                                              }
-
-    def update_nodal_coordinates_from_decoupled_volumes(self):
-        """
-        """
-        self.process_decoupling_information()
-
-        max_node_id = max(self.mesh.nodal_coordinates[:, 0])
-        shift_value = max_node_id + 1
-
-        self.nodes_mapping.clear()
-        nodal_coordinates = deepcopy(self.mesh.nodal_coordinates)
-
-        for vol_id, data in self.decouple_info.items():
-            data: dict
-
-            # update the nodes from surface
-            nodes_from_surface = self.mesh.nodes_from_surfaces[data.get("surface_id")]
-            twin_nodes = np.arange(0, len(nodes_from_surface), dtype=int) + int(shift_value)
-
-            # add the twin nodes from the new surface
-            self.mesh.nodes_from_surfaces[data.get("new_surface_id")] = twin_nodes
-            shift_value += len(nodes_from_surface)
-
-            # update the nodes from volume
-            nodes_from_volume = deepcopy(self.mesh.nodes_from_volumes[vol_id])
-            self.mesh.nodes_from_volumes[vol_id] = self.get_updated_array(nodes_from_volume)
-
-            for k, node_id in enumerate(nodes_from_surface):
-                self.nodes_mapping[node_id] = twin_nodes[k]
-
-            coords_from_nodes = np.zeros((len(nodes_from_surface), 4), dtype=float)
-            coords_from_nodes[:, 0 ] = twin_nodes
-            coords_from_nodes[:, 1:] = self.mesh.nodal_coordinates[nodes_from_surface, 1:] 
-            nodal_coordinates = np.append(nodal_coordinates, coords_from_nodes, axis=0)
-
-        if self.decouple_info:
-            self.mesh.nodal_coordinates = nodal_coordinates
-
-        # np.savetxt("expanded_nodal_coordinates.dat", nodal_coordinates, delimiter=",", fmt="%i, %.8f, %.8f, %.8f")
-        from pprint import pprint
-        pprint(self.nodes_mapping)
-
-    def update_connectivities_from_decoupled_volumes(self):
-        """
-        """
-
-        if self.decouple_info:
-
-            for elem3d_id, vol_id, _, _, *connect in deepcopy(self.mesh.solids_connectivity):
-                if vol_id in self.decouple_info.keys():
-                    self.mesh.solids_connectivity[elem3d_id, 4:] = self.get_updated_array(connect)
-
-            for elem2d_id, surf_id, _, _, *connect in deepcopy(self.mesh.faces_connectivity):
-                if surf_id in self.decouple_info.values():
-                    self.mesh.faces_connectivity[elem2d_id, 4:] = self.get_updated_array(connect)
-
-            for surf_id, connectivities in deepcopy(self.mesh.connectivity_from_surfaces).items():
-                new_connectivity = np.zeros_like(connectivities, dtype=int)
-                for data in self.decouple_info.values():
-                    data: dict
-                    if surf_id == data.get("surface_id"):
-                        for k, connect in enumerate(connectivities):
-                            new_connectivity[k, :] = self.get_updated_array(connect)
-
-                        new_surface_id = data.get("new_surface_id")
-                        self.mesh.connectivity_from_surfaces[new_surface_id] = new_connectivity
-                        break
-
-    def get_updated_array(self, values: np.ndarray):
-        # start = values.copy()
-        # is_valid = False
-        for j, node_id in enumerate(values.copy()):
-            if node_id in self.nodes_mapping.keys():
-                values[j] = self.nodes_mapping[node_id]
-                # is_valid = True
-
-        # if is_valid:
-        #     print(start) 
-        #     print(values)
-
-        return values
-
-    def process_volumes_decoupling(self):
-        return
-        self.update_nodal_coordinates_from_decoupled_volumes()
-        self.update_connectivities_from_decoupled_volumes()
+        self.dofs_decoupling = DofsDecoupling(self)
+        self.dofs_decoupling.process_dofs_decoupling()

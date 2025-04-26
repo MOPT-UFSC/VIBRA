@@ -22,7 +22,7 @@ class LinesActor(vtkActor):
         self.configure_appearance()
 
     def create_geometry(self):
-        nodes_per_line = self.mesh.lines_connectivity.shape[1] - 4
+        nodes_per_line = len(self.mesh.lines_connectivity[0, 4:])
         number_of_lines = self.mesh.lines_connectivity.shape[0]
 
         data = vtkPolyData()

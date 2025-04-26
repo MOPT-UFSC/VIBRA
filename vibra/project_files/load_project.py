@@ -173,14 +173,25 @@ class LoadProject:
         self.model.mesh.faces_connectivity = mesh_data["faces_connectivity"]
         self.model.mesh.solids_connectivity = mesh_data["solids_connectivity"]
 
-        self.model.mesh.map_line_elements = dict(zip( mesh_data["map_line_elements"][:, 0],
-                                                mesh_data["map_line_elements"][:, 1] ))
+        self.model.mesh.cache_nodal_coordinates = mesh_data.get("cache_nodal_coordinates")
+        self.model.mesh.cache_lines_connectivity = mesh_data.get("cache_lines_connectivity")
+        self.model.mesh.cache_faces_connectivity = mesh_data.get("cache_faces_connectivity")
+        self.model.mesh.cache_solids_connectivity = mesh_data.get("cache_solids_connectivity")
 
-        self.model.mesh.map_face_elements = dict(zip( mesh_data["map_face_elements"][:, 0],
-                                                mesh_data["map_face_elements"][:, 1] ))
+        self.model.mesh.map_line_elements = dict(zip( 
+                                                    mesh_data["map_line_elements"][:, 0],
+                                                    mesh_data["map_line_elements"][:, 1] 
+                                                    ))
 
-        self.model.mesh.map_solid_elements = dict(zip(mesh_data["map_solid_elements"][:, 0],
-                                                mesh_data["map_solid_elements"][:, 1] ))
+        self.model.mesh.map_face_elements = dict(zip( 
+                                                    mesh_data["map_face_elements"][:, 0],  
+                                                    mesh_data["map_face_elements"][:, 1] 
+                                                    ))
+
+        self.model.mesh.map_solid_elements = dict(zip(
+                                                      mesh_data["map_solid_elements"][:, 0],
+                                                      mesh_data["map_solid_elements"][:, 1]
+                                                      ))
 
         logging.info("Loading mesh... [60/100]")
 
@@ -216,7 +227,17 @@ class LoadProject:
 
             elif "connectivity_from_surfaces" in key:
                 id = int(key.split("_")[-1])
-                self.model.mesh.connectivity_from_surfaces[id] = data
+                if "cache" in key:
+                    self.model.mesh.cache_connectivity_from_surfaces[id] = data
+                else:
+                    self.model.mesh.connectivity_from_surfaces[id] = data
+
+            elif "connectivity_from_lines" in key:
+                id = int(key.split("_")[-1])
+                if "cache" in key:
+                    self.model.mesh.cache_connectivity_from_lines[id] = data
+                else:
+                    self.model.mesh.connectivity_from_lines[id] = data
 
             elif "surfaces_from_volume" in key:
                 id = int(key.split("_")[-1])
@@ -252,7 +273,7 @@ class LoadProject:
 
         logging.info("Loading mesh... [80/100]")
 
-        self.model.mesh.create_element_mappings()
+        self.model.mesh.process_mesh_related_mappings()
         self.model.generated_mesh = True
 
         logging.info("Loading mesh... [95/100]")

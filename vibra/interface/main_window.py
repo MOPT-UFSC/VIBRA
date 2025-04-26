@@ -504,6 +504,7 @@ class MainWindow(QMainWindow):
 
         self.action_results_workspace.setEnabled(False)
         self.animation_toolbar.setEnabled(False)
+        self.configure_mesh_information()
 
     def show_geometry_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
@@ -598,7 +599,6 @@ class MainWindow(QMainWindow):
             self.action_mesh_workspace.setEnabled(True)
 
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-
         self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
         self.results_viewer_widget.results_viewer_items.update_items()
         self.analysis_toolbar.update_analysis_combo_boxes()
@@ -914,10 +914,14 @@ class MainWindow(QMainWindow):
                 LoadingWindow(self.update_plots).run()
 
         except Exception as error_log:
+            from traceback import print_exception
+            print_exception(error_log)
+            
             window_title = "Error"
             title = "Error while processing geometry"
             message = str(error_log)
             PrintMessageInput([window_title, title, message])
+
 
     def action_save_as_callback(self):
         self.save_project_as_dialog()

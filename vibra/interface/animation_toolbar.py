@@ -63,8 +63,9 @@ class AnimationToolbar(QToolBar):
         self.spinBox_cycles = QSpinBox(self)
 
     def _config_widgets(self):
+
         # QLabel
-        self.label_degrees.setFixedWidth(42)
+        self.label_degrees.setFixedWidth(60)
         self.label_factor.setFixedWidth(100)
 
         # QPushButton

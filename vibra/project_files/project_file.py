@@ -38,6 +38,7 @@ class ProjectFile:
         self.material_library_filename = "material_library.config"
         self.model_properties = "model_properties.json"
         self.mesh_data_filename = "mesh_data.hdf5"
+        self.cache_mesh_data_filename = "cache_mesh_data.hdf5"
         self.imported_table_data_filename = "imported_tables_data.hdf5"
         self.results_data_filename = "results_data.hdf5"
         self.thumbnail_filename = "thumbnail.png"
@@ -142,7 +143,7 @@ class ProjectFile:
                             lines_connectivity = mesh.lines_connectivity,
                             faces_connectivity = mesh.faces_connectivity,
                             solids_connectivity = mesh.solids_connectivity,
-                            connectivity_from_surfaces = mesh.connectivity_from_surfaces,
+                            # connectivity_from_surfaces = mesh.connectivity_from_surfaces,
 
                             map_line_elements = mesh.get_array_based_elements_mapping(entity = "lines"),
                             map_face_elements = mesh.get_array_based_elements_mapping(entity = "faces"),
@@ -158,6 +159,13 @@ class ProjectFile:
 
                             normals_surface = mesh.normals_surface,
                             curvatures_surface = mesh.curvatures_surface,
+
+                            cache_nodal_coordinates = mesh.cache_nodal_coordinates,
+                            cache_solids_connectivity = mesh.cache_solids_connectivity,
+                            cache_faces_connectivity = mesh.cache_faces_connectivity,
+                            cache_lines_connectivity = mesh.cache_lines_connectivity,
+                            cache_connectivity_from_lines = mesh.cache_connectivity_from_lines,
+                            cache_connectivity_from_surfaces = mesh.cache_connectivity_from_surfaces,
 
                         )
 
@@ -201,7 +209,8 @@ class ProjectFile:
                             f.create_dataset(name, data=values, dtype=dtype)
 
                     else:
-                        if key == "nodal_coordinates":
+
+                        if "nodal_coordinates" in key:
                             dtype = float
                         else:
                             dtype = int
@@ -232,6 +241,7 @@ class ProjectFile:
             return dict()
 
         return mesh_data
+
 
     def write_analysis_setup_in_file(self, analysis_setup: dict):
 
