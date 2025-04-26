@@ -608,6 +608,10 @@ class Mesh:
 
 
     def process_connectivities_from_lines_and_surfaces(self):
+        """ This method processes the connectivities from lines
+            and surfaces, gathering the information in dictionaries
+            with entity tags as keys.
+        """
 
         if not self.geometry_information:
             return
@@ -626,8 +630,13 @@ class Mesh:
                 continue
 
             for tag in tags:
+
                 rows = connect_data[:, 1] == tag
-                self.connectivity_from_surfaces[tag] = connect_data[rows, 4:]
+                if dim == 1:
+                    self.connectivity_from_lines[tag] = connect_data[rows, 4:]
+
+                elif dim == 2:
+                    self.connectivity_from_surfaces[tag] = connect_data[rows, 4:]
 
     def _update_surfaces_from_nodes(self, surface_id, node_ids):
         for node_id in node_ids:

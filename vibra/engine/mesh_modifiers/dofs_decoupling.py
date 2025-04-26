@@ -1,4 +1,5 @@
 
+from vibra import app
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
@@ -253,15 +254,13 @@ class DofsDecoupling:
         for surface_id in self.mesh.nodes_from_surfaces.keys():
             for data in self.decouple_info.values():
                 data: dict
-                if surf_id == data.get("surface_id"):
+                if surface_id == data.get("surface_id"):
                     new_surface_id = data.get("new_surface_id")
                     self.modify_the_connectivities_from_lines(surface_id)
                     self.modify_the_connectivities_from_surfaces(surface_id, new_surface_id)
                     break
 
         self.mesh.process_mesh_related_mappings()
-        # print(self.mesh.connectivity_from_surfaces[6])
-        # print(self.mesh.connectivity_from_surfaces[12])
 
 
     def process_dofs_decoupling(self):
