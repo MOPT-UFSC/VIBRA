@@ -46,18 +46,18 @@ class ResultsViewerWidget(QWidget):
     def _create_connections(self):
 
         # Structural
-        self.results_viewer_items.item_child_plot_structural_mode_shapes.clicked.connect(self.add_structural_modal_widget)
-        self.results_viewer_items.item_child_plot_structural_frequency_response.clicked.connect(self.add_structural_frequency_response_widget)
-        self.results_viewer_items.item_child_plot_displacement_field.clicked.connect(self.add_structural_harmonic_widget)
+        self.results_viewer_items.item_child_structural_mode_shapes.clicked.connect(self.add_structural_modal_widget)
+        self.results_viewer_items.item_child_structural_frequency_response.clicked.connect(self.add_structural_frequency_response_widget)
+        self.results_viewer_items.item_child_displacement_field.clicked.connect(self.add_structural_harmonic_widget)
 
         # Acoustic
-        self.results_viewer_items.item_child_plot_acoustic_pressure_field.clicked.connect(self.add_acoustic_harmonic_widget)
-        self.results_viewer_items.item_child_plot_acoustic_pressure_frequency_response.clicked.connect(self.add_acoustic_pressure_frequency_response_widget)
-        self.results_viewer_items.item_child_plot_acoustic_pressure_frequency_response_function.clicked.connect(self.add_acoustic_pressure_frequency_response_function_widget)
-        self.results_viewer_items.item_child_plot_TL_NR.clicked.connect(self.add_TL_NR_widget)
-        self.results_viewer_items.item_child_plot_acoustic_mode_shapes.clicked.connect(self.add_acoustic_modal_widget)
-        self.results_viewer_items.item_child_plot_particle_velocity.clicked.connect(self.add_particle_velocity_plot_widget)
-        self.results_viewer_items.item_child_plot_acoustic_specific_impedance.clicked.connect(self.add_acoustic_specific_impedance_plot_widget)
+        self.results_viewer_items.item_child_acoustic_pressure_field.clicked.connect(self.add_acoustic_harmonic_widget)
+        self.results_viewer_items.item_child_acoustic_pressure_frequency_response.clicked.connect(self.add_acoustic_pressure_frequency_response_widget)
+        self.results_viewer_items.item_child_acoustic_pressure_frequency_response_function.clicked.connect(self.add_acoustic_pressure_frequency_response_function_widget)
+        self.results_viewer_items.item_child_TL_NR.clicked.connect(self.add_TL_NR_widget)
+        self.results_viewer_items.item_child_acoustic_mode_shapes.clicked.connect(self.add_acoustic_modal_widget)
+        self.results_viewer_items.item_child_particle_velocity.clicked.connect(self.add_particle_velocity_plot_widget)
+        self.results_viewer_items.item_child_acoustic_specific_impedance.clicked.connect(self.add_acoustic_specific_impedance_plot_widget)
 
     def get_item(self):
         return self.results_viewer_items
