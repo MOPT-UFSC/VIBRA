@@ -48,8 +48,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         app().main_window.theme_changed.connect(self.update_theme)
         app().main_window.visualization_changed.connect(self.visualization_changed_callback)
 
-        self.geometry_selection = GeometrySelection(self)
-
         self.points_actor = None
         self.lines_actor = None
         self.faces_actor = None
