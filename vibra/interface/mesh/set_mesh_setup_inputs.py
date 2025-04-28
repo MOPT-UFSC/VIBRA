@@ -53,7 +53,7 @@ map_algorithms_2d = dict(zip(gmsh_algorithms_2d, [0, 1, 2, 3, 4, 5]))
 map_algorithms_3d = dict(zip(gmsh_algorithms_3d, [0, 1, 2]))
 
 
-class MesherInputs(QDialog):
+class MeshSetupInputs(QDialog):
     def __init__(self, **kwargs):
         super().__init__()
 

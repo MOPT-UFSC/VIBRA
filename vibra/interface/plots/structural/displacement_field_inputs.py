@@ -16,11 +16,11 @@ from vibra import UI_DIR, app
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
 
 
-class PlotDisplacementField(QWidget):
+class PlotDisplacementFieldInputs(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "plots/structural/plot_displacement_field.ui"
+        ui_path = UI_DIR / "plots/structural/displacement_field_inputs.ui"
         load_ui(ui_path, self, ui_path.parent)
 
         self._initialize()

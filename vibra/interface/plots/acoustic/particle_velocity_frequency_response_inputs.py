@@ -16,11 +16,11 @@ import numpy as np
 window_title1 = "Error"
 window_title2 = "Warning"
 
-class PlotParticleVelocityFrequencyResponseInput(QWidget):
+class ParticleVelocityFrequencyResponseInputs(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "plots/acoustic/plot_particle_velocity_frequency_response_input.ui"
+        ui_path = UI_DIR / "plots/acoustic/particle_velocity_frequency_response_inputs.ui"
         load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window

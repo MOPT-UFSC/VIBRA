@@ -16,13 +16,13 @@ from vibra import UI_DIR, app
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
 
 
-class PlotAcousticPressureField(QWidget):
+class AcousticPressureFieldInputs(QWidget):
     value_changed = Signal()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "plots/acoustic/plot_acoustic_pressure_field.ui"
+        ui_path = UI_DIR / "plots/acoustic/acoustic_pressure_field_inputs.ui"
         load_ui(ui_path, self, ui_path.parent)
 
         self._initialize()

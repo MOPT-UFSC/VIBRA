@@ -4,7 +4,7 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
 from vibra.engine import AnalysisID
-from vibra.interface.mesh.mesher_inputs import MesherInputs
+from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 
@@ -20,11 +20,11 @@ from time import sleep
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class ProcessAcousticTransferElementData(QDialog):
+class AcousticTransferElementInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/setup/acoustic/process_acoustic_transfer_element_data.ui"
+        ui_path = UI_DIR / "model/setup/acoustic/acoustic_transfer_element_inputs.ui"
         load_ui(ui_path, self, ui_path.parent)
 
         app().main_window.set_input_widget(self)
@@ -294,7 +294,7 @@ class ProcessAcousticTransferElementData(QDialog):
             return   
 
         if not app().project.model.generated_mesh:
-            obj = MesherInputs()
+            obj = MeshSetupInputs()
             if obj.complete:
                 app().main_window.update_plots()
             else:

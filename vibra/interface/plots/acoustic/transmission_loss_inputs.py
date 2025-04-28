@@ -22,11 +22,11 @@ from pathlib import Path
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class PlotTransmissionLossInput(QWidget):
+class TransmissionLossInputs(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "plots/acoustic/plot_transmission_loss.ui"
+        ui_path = UI_DIR / "plots/acoustic/transmission_loss_inputs.ui"
         ui_dir = ui_path.parent
         load_ui(ui_path, self, ui_path.parent)
 

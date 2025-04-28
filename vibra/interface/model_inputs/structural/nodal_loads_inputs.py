@@ -19,11 +19,11 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class SetDistributedLoadsInputs(QDialog):
+class NodalLoadsInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/setup/structural/distributed_loads_input.ui"
+        ui_path = UI_DIR / "model/setup/structural/nodal_loads_inputs.ui"
         load_ui(ui_path, self, ui_path.parent)
 
         self.model = app().project.model
@@ -48,7 +48,7 @@ class SetDistributedLoadsInputs(QDialog):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Set structural distributed loads")
+        self.setWindowTitle("Set structural external loads")
 
     def _initialize(self):
         self.keep_window_open = True
@@ -59,51 +59,85 @@ class SetDistributedLoadsInputs(QDialog):
         self.Fx_table_values = None
         self.Fy_table_values = None
         self.Fz_table_values = None
+        self.Mx_table_values = None
+        self.My_table_values = None
+        self.Mz_table_values = None
 
         self.Fx_array = None
         self.Fy_array = None
         self.Fz_array = None
+        self.Mx_array = None
+        self.My_array = None
+        self.Mz_array = None
 
         self.Fx_table_path = None
         self.Fy_table_path = None
         self.Fz_table_path = None
+        self.Mx_table_path = None
+        self.My_table_path = None
+        self.Mz_table_path = None
 
         self.Fx_table_name = None
         self.Fy_table_name = None
         self.Fz_table_name = None
+        self.Mx_table_name = None
+        self.My_table_name = None
+        self.Mz_table_name = None
 
     def _define_qt_variables(self):
+
+        # QCheckBox
+        self.checkBox_averaged_constant_values: QCheckBox
+        self.checkBox_averaged_table_values: QCheckBox
 
         # QComboBox
         self.comboBox_attribution_type: QComboBox
         self.comboBox_element_type: QComboBox
 
         # QLabel
-        self.label_constant_Fx: QLabel
-        self.label_constant_Fy: QLabel
-        self.label_constant_Fz: QLabel
+        self.label_Fx_constant: QLabel
+        self.label_Fy_constant: QLabel
+        self.label_Fz_constant: QLabel
+        self.label_Mx_constant: QLabel
+        self.label_My_constant: QLabel
+        self.label_Mz_constant: QLabel
         #
-        self.label_unit_Fx: QLabel
-        self.label_unit_Fy: QLabel
-        self.label_unit_Fz: QLabel
+        self.label_Fx_unit: QLabel
+        self.label_Fy_unit: QLabel
+        self.label_Fz_unit: QLabel
+        self.label_Mx_unit: QLabel
+        self.label_My_unit: QLabel
+        self.label_Mz_unit: QLabel
         #
-        self.label_table_Fx: QLabel
-        self.label_table_Fy: QLabel
-        self.label_table_Fz: QLabel
+        self.label_Fx_table: QLabel
+        self.label_Fy_table: QLabel
+        self.label_Fz_table: QLabel
+        self.label_Mx_table: QLabel
+        self.label_My_table: QLabel
+        self.label_Mz_table: QLabel
 
         # QLineEdit
         self.lineEdit_selection_id: QLineEdit
         self.lineEdit_real_Fx: QLineEdit
         self.lineEdit_real_Fy: QLineEdit
         self.lineEdit_real_Fz: QLineEdit
+        self.lineEdit_real_Mx: QLineEdit
+        self.lineEdit_real_My: QLineEdit
+        self.lineEdit_real_Mz: QLineEdit
         #
         self.lineEdit_imag_Fx: QLineEdit
         self.lineEdit_imag_Fy: QLineEdit
         self.lineEdit_imag_Fz: QLineEdit
+        self.lineEdit_imag_Mx: QLineEdit
+        self.lineEdit_imag_My: QLineEdit
+        self.lineEdit_imag_Mz: QLineEdit
         #
         self.lineEdit_path_table_Fx: QLineEdit
         self.lineEdit_path_table_Fy: QLineEdit
         self.lineEdit_path_table_Fz: QLineEdit
+        self.lineEdit_path_table_Mx: QLineEdit
+        self.lineEdit_path_table_My: QLineEdit
+        self.lineEdit_path_table_Mz: QLineEdit
         #
         self._create_list_lineEdits()
 
@@ -113,6 +147,9 @@ class SetDistributedLoadsInputs(QDialog):
         self.pushButton_load_Fx_table: QPushButton
         self.pushButton_load_Fy_table: QPushButton
         self.pushButton_load_Fz_table: QPushButton
+        self.pushButton_load_Mx_table: QPushButton
+        self.pushButton_load_My_table: QPushButton
+        self.pushButton_load_Mz_table: QPushButton
         self.pushButton_remove: QPushButton
         self.pushButton_reset: QPushButton
 
@@ -120,7 +157,7 @@ class SetDistributedLoadsInputs(QDialog):
         self.tabWidget_main: QTabWidget
 
         # QTreeWidget
-        self.treeWidget_distributed_loads: QTreeWidget
+        self.treeWidget_nodal_loads: QTreeWidget
 
     def _create_list_lineEdits(self):
 
@@ -128,19 +165,25 @@ class SetDistributedLoadsInputs(QDialog):
                                               [self.lineEdit_real_Fx, self.lineEdit_imag_Fx],
                                               [self.lineEdit_real_Fy, self.lineEdit_imag_Fy],
                                               [self.lineEdit_real_Fz, self.lineEdit_imag_Fz],
+                                              [self.lineEdit_real_Mx, self.lineEdit_imag_Mx],
+                                              [self.lineEdit_real_My, self.lineEdit_imag_My],
+                                              [self.lineEdit_real_Mz, self.lineEdit_imag_Mz],
                                               ]
 
-        self.table_lineEdits = {
+        self.table_lineEdits = { 
                                 "Fx" : self.lineEdit_path_table_Fx,
                                 "Fy" : self.lineEdit_path_table_Fy,
                                 "Fz" : self.lineEdit_path_table_Fz,
+                                "Mx" : self.lineEdit_path_table_Mx,
+                                "My" : self.lineEdit_path_table_My,
+                                "Mz" : self.lineEdit_path_table_Mz,
                                 }
 
     def _config_widgets(self):
         #
         for i, w in enumerate([110, 150, 100]):
-            self.treeWidget_distributed_loads.setColumnWidth(i, w)
-            self.treeWidget_distributed_loads.headerItem().setTextAlignment(i, Qt.AlignCenter)
+            self.treeWidget_nodal_loads.setColumnWidth(i, w)
+            self.treeWidget_nodal_loads.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
         #
@@ -153,12 +196,15 @@ class SetDistributedLoadsInputs(QDialog):
         self.pushButton_load_Fx_table.clicked.connect(self.load_Fx_table)
         self.pushButton_load_Fy_table.clicked.connect(self.load_Fy_table)
         self.pushButton_load_Fz_table.clicked.connect(self.load_Fz_table)
+        self.pushButton_load_Mx_table.clicked.connect(self.load_Mx_table)
+        self.pushButton_load_My_table.clicked.connect(self.load_My_table)
+        self.pushButton_load_Mz_table.clicked.connect(self.load_Mz_table)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
-        self.treeWidget_distributed_loads.itemClicked.connect(self.on_click_item)
-        self.treeWidget_distributed_loads.itemDoubleClicked.connect(self.on_double_click_item)
+        self.treeWidget_nodal_loads.itemClicked.connect(self.on_click_item)
+        self.treeWidget_nodal_loads.itemDoubleClicked.connect(self.on_double_click_item)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
 
@@ -166,6 +212,8 @@ class SetDistributedLoadsInputs(QDialog):
 
         faces = app().main_window.selected_geometry_surfaces
         lines = app().main_window.selected_geometry_lines
+        points = app().main_window.selected_geometry_points
+        nodes = app().main_window.selected_mesh_nodes
 
         if faces:
 
@@ -175,7 +223,7 @@ class SetDistributedLoadsInputs(QDialog):
 
             if len(faces) == 1:
                 surface_id = list(faces)[0]
-                data = self.properties._get_property("distributed_loads", surface=surface_id)
+                data = self.properties._get_property("nodal_loads", surface=surface_id)
                 self.update_input_fields(data)
                 if data is None:
                     self.update_formulation_callback(surface_id=surface_id)
@@ -188,10 +236,36 @@ class SetDistributedLoadsInputs(QDialog):
 
             if len(lines) == 1:
                 line_id = list(lines)[0]
-                data = self.properties._get_property("distributed_loads", line=line_id)
+                data = self.properties._get_property("nodal_loads", line=line_id)
                 self.update_input_fields(data)
                 if data is None:
                     self.update_formulation_callback(line_id=line_id)
+
+        elif points:
+
+            text = ", ".join([str(i) for i in points])
+            self.lineEdit_selection_id.setText(text)
+            self.comboBox_attribution_type.setCurrentIndex(2)
+
+            if len(points) == 1:
+                point_id = list(points)[0]
+                data = self.properties._get_property("nodal_loads", point=point_id)
+                self.update_input_fields(data)
+                if data is None:
+                    self.update_formulation_callback(point_id=point_id)
+
+        elif nodes:
+
+            text = ", ".join([str(i) for i in nodes])
+            self.lineEdit_selection_id.setText(text)
+            self.comboBox_attribution_type.setCurrentIndex(3)
+
+            if len(nodes) == 1:
+                node_id = list(nodes)[0]
+                data = self.properties._get_property("nodal_loads", node=node_id)
+                self.update_input_fields(data)
+                if data is None:
+                    self.update_formulation_callback(node_id=node_id)
 
     def update_input_fields(self, data: dict | None):
 
@@ -228,6 +302,8 @@ class SetDistributedLoadsInputs(QDialog):
 
         surface_id = kwargs.get("surface_id", None)
         line_id = kwargs.get("line_id", None)
+        point_id = kwargs.get("point_id", None)
+        node_id = kwargs.get("node_id", None)
 
         if isinstance(surface_id, int):
             data = self.properties._get_property("surface_thickness", surface=surface_id)
@@ -243,28 +319,54 @@ class SetDistributedLoadsInputs(QDialog):
                         self.comboBox_element_type.setCurrentIndex(0)
                         return
 
+        if isinstance(point_id, int):
+            for node_id in app().project.model.mesh.nodes_from_points[line_id]:
+                for surface_id in self.model.mesh.surfaces_from_node[node_id]:
+                    data = self.properties._get_property("surface_thickness", surface=surface_id)
+                    if isinstance(data, dict):
+                        self.comboBox_element_type.setCurrentIndex(0)
+                        return
+
+        if isinstance(node_id, int):
+            for surface_id in self.model.mesh.surfaces_from_node[node_id]:
+                    data = self.properties._get_property("surface_thickness", surface=surface_id)
+                    if isinstance(data, dict):
+                        self.comboBox_element_type.setCurrentIndex(0)
+                        return
+
     def attribution_type_callback(self):
-        if self.comboBox_attribution_type.currentIndex() == 0:
-            unit_label = "[N/m²]"
-            load_label = "F{} / area:".format
+        if self.comboBox_attribution_type.currentIndex() == 3:
+            app().main_window.action_mesh_workspace_callback()
         else:
-            unit_label = "[N/m]"
-            load_label = "F{} / length:".format
-
-        self.label_unit_Fx.setText(unit_label)
-        self.label_unit_Fy.setText(unit_label)
-        self.label_unit_Fz.setText(unit_label)
-
-        self.label_constant_Fx.setText(load_label("x"))
-        self.label_constant_Fy.setText(load_label("y"))
-        self.label_constant_Fz.setText(load_label("z"))
-
-        self.label_table_Fx.setText(load_label("x"))
-        self.label_table_Fy.setText(load_label("y"))
-        self.label_table_Fz.setText(load_label("z"))
+            app().main_window.action_model_workspace_callback()
 
     def element_type_callback(self):
-        return
+
+        key = self.comboBox_element_type.currentIndex() == 0
+
+        self.label_Mx_constant.setEnabled(key)
+        self.label_My_constant.setEnabled(key)
+        self.label_Mz_constant.setEnabled(key)
+
+        self.label_Mx_unit.setEnabled(key)
+        self.label_My_unit.setEnabled(key)
+        self.label_Mz_unit.setEnabled(key)
+
+        self.label_Mx_table.setEnabled(key)
+        self.label_My_table.setEnabled(key)
+        self.label_Mz_table.setEnabled(key)
+
+        self.lineEdit_real_Mx.setEnabled(key)
+        self.lineEdit_real_My.setEnabled(key)
+        self.lineEdit_real_Mz.setEnabled(key)
+
+        self.lineEdit_imag_Mx.setEnabled(key)
+        self.lineEdit_imag_My.setEnabled(key)
+        self.lineEdit_imag_Mz.setEnabled(key)
+
+        self.pushButton_load_Mx_table.setEnabled(key)
+        self.pushButton_load_My_table.setEnabled(key)
+        self.pushButton_load_Mz_table.setEnabled(key)
 
     def check_complex_entries(self, real_input: str, imag_input: str, label: str):
 
@@ -314,11 +416,15 @@ class SetDistributedLoadsInputs(QDialog):
 
         if attribution_type == 0:
             selection = "surfaces"
-            unit = "N/m²"
 
         elif attribution_type == 1:
             selection = "lines"
-            unit = "N/m"
+
+        elif attribution_type == 2:
+            selection = "points"
+
+        else:
+            selection = "nodes"
 
         selected_ids = app().project.model.mesh.check_selected_ids(
                                                                    input_ids, 
@@ -337,22 +443,38 @@ class SetDistributedLoadsInputs(QDialog):
         else:
             element_type = "3d_element"
 
-        stop, Fx= self.check_complex_entries(self.lineEdit_real_Fx.text(), self.lineEdit_imag_Fx.text(), "Fx")
+        stop, Fx = self.check_complex_entries(self.lineEdit_real_Fx.text(), self.lineEdit_imag_Fx.text(), "Fx")
         if stop:
             return
 
-        stop, Fy= self.check_complex_entries(self.lineEdit_real_Fy.text(), self.lineEdit_imag_Fy.text(), "Fy")
+        stop, Fy = self.check_complex_entries(self.lineEdit_real_Fy.text(), self.lineEdit_imag_Fy.text(), "Fy")
         if stop:
             return
 
-        stop, Fz= self.check_complex_entries(self.lineEdit_real_Fz.text(), self.lineEdit_imag_Fz.text(), "Fz")
+        stop, Fz = self.check_complex_entries(self.lineEdit_real_Fz.text(), self.lineEdit_imag_Fz.text(), "Fz")
         if stop:
             return
 
-        distributed_loads = [Fx, Fy, Fz]
+        nodal_loads = [Fx, Fy, Fz]
 
-        condition_1 = self.comboBox_element_type.currentIndex() == 0 and distributed_loads.count(None) == 3
-        condition_2 = self.comboBox_element_type.currentIndex() == 1 and distributed_loads.count(None) == 3
+        if self.comboBox_element_type.currentIndex() == 0:
+            
+            stop, rx = self.check_complex_entries(self.lineEdit_real_Mx.text(), self.lineEdit_imag_Mx.text(), "rx")
+            if stop:
+                return
+
+            stop, ry = self.check_complex_entries(self.lineEdit_real_My.text(), self.lineEdit_imag_My.text(), "ry")
+            if stop:
+                return
+
+            stop, Mz = self.check_complex_entries(self.lineEdit_real_Mz.text(), self.lineEdit_imag_Mz.text(), "Mz")
+            if stop:
+                return
+
+            nodal_loads.extend([rx, ry, Mz])
+
+        condition_1 = self.comboBox_element_type.currentIndex() == 0 and nodal_loads.count(None) == 6
+        condition_2 = self.comboBox_element_type.currentIndex() == 1 and nodal_loads.count(None) == 3
 
         if condition_1 or condition_2:
             self.hide()
@@ -362,24 +484,33 @@ class SetDistributedLoadsInputs(QDialog):
             PrintMessageInput([window_title_1, title, message])
             return
 
-        real_values = [value if value is None else np.real(value) for value in distributed_loads]
-        imag_values = [value if value is None else np.imag(value) for value in distributed_loads]
+        real_values = [value if value is None else np.real(value) for value in nodal_loads]
+        imag_values = [value if value is None else np.imag(value) for value in nodal_loads]
+
+        key_avg = self.checkBox_averaged_constant_values.isChecked()
 
         for selected_id in selected_ids:
 
             data = {
                     "element_type" : element_type,
-                    "values" : distributed_loads,
+                    "values" : nodal_loads,
                     "real_values" : real_values,
                     "imag_values" : imag_values,
-                    "unit" : unit,
+                    "nodal_attribution": True,
+                    "averaged": key_avg,
                     }
 
             if attribution_type == 0:
-                self.properties._set_property("distributed_loads", data, surface=selected_id)
+                self.properties._set_property("nodal_loads", data, surface=selected_id)
 
             elif attribution_type == 1:
-                self.properties._set_property("distributed_loads", data, line=selected_id)
+                self.properties._set_property("nodal_loads", data, line=selected_id)
+
+            elif attribution_type == 2:
+                self.properties._set_property("nodal_loads", data, point=selected_id)
+
+            elif attribution_type == 3:
+                self.properties._set_property("nodal_loads", data, node=selected_id)
 
         self.actions_to_finalize()
 
@@ -417,7 +548,7 @@ class SetDistributedLoadsInputs(QDialog):
             app().config.write_last_folder_path_in_file("imported_table_folder", imported_table_path)
 
             imported_file = np.loadtxt(imported_table_path, delimiter=",")
-            # imported_filename = basename(imported_table_path)
+            imported_filename = basename(imported_table_path)
 
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum "
@@ -428,6 +559,30 @@ class SetDistributedLoadsInputs(QDialog):
 
             imported_values = imported_file[:, 1] + 1j * imported_file[:, 2]
             self.frequencies = imported_file[:, 0]
+        
+            if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
+
+                self.lineEdit_reset(lineEdit)
+
+                title = "Project frequency setup cannot be modified"
+                message = f"The following imported table of values has a frequency setup\n"
+                message += "different from the others already imported ones. The current\n"
+                message += "project frequency setup is not going to be modified."
+                message += f"\n\n{imported_filename}"
+                PrintMessageInput([window_title_1, title, message])
+                return None, None
+
+            # else:
+
+            #     f_min = self.frequencies[0]
+            #     f_max = self.frequencies[-1]
+            #     f_step = self.frequencies[1] - self.frequencies[0] 
+
+            #     frequency_setup = { "f_min" : f_min,
+            #                         "f_max" : f_max,
+            #                         "f_step" : f_step }
+
+            #     app().project.model.set_frequency_setup(frequency_setup)
 
             return imported_values, imported_table_path
 
@@ -455,6 +610,21 @@ class SetDistributedLoadsInputs(QDialog):
         self.Fz_table_values, self.Fz_table_path = self.load_table(self.lineEdit_path_table_Fz, "Fz")
         if self.Fz_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Fz)
+            
+    def load_Mx_table(self):
+        self.Mx_table_values, self.Mx_table_path = self.load_table(self.lineEdit_path_table_Mx, "Mx")
+        if self.Mx_table_path is None:
+            self.lineEdit_reset(self.lineEdit_path_table_Mx)
+            
+    def load_My_table(self):
+        self.My_table_values, self.My_table_path = self.load_table(self.lineEdit_path_table_My, "My")
+        if self.My_table_path is None:
+            self.lineEdit_reset(self.lineEdit_path_table_My)
+            
+    def load_Mz_table(self):
+        self.Mz_table_values, self.Mz_table_path = self.load_table(self.lineEdit_path_table_Mz, "Mz")
+        if self.Mz_table_path is None:
+            self.lineEdit_reset(self.lineEdit_path_table_Mz)
 
     def update_analysis_setup_in_file(self, frequencies: np.ndarray):
 
@@ -497,7 +667,7 @@ class SetDistributedLoadsInputs(QDialog):
 
             return None, None
 
-        table_name = f"distributed_loads_{load_label}_from_{selection[:-1]}_{selected_id}"
+        table_name = f"nodal_loads_{load_label}_from_{selection[:-1]}_{selected_id}"
 
         real_values = np.real(values)
         imag_values = np.imag(values)
@@ -515,11 +685,15 @@ class SetDistributedLoadsInputs(QDialog):
 
         if attribution_type == 0:
             selection = "surfaces"
-            unit = "N/m²"
 
         elif attribution_type == 1:
             selection = "lines"
-            unit = "N/m"
+
+        elif attribution_type == 2:
+            selection = "points"
+
+        else:
+            selection = "nodes"
 
         selected_ids = app().project.model.mesh.check_selected_ids(
                                                                    input_ids, 
@@ -547,18 +721,29 @@ class SetDistributedLoadsInputs(QDialog):
         if self.Fz_table_path is None:
             self.Fz_table_values, self.Fz_table_path = self.load_table(self.lineEdit_path_table_Fz, "Fz", direct_load = True)
 
+        if self.Mx_table_path is None:
+            self.Mx_table_values, self.Mx_table_path = self.load_table(self.lineEdit_path_table_Mx, "Mx", direct_load = True)
+
+        if self.My_table_path is None:
+            self.My_table_values, self.My_table_path = self.load_table(self.lineEdit_path_table_My, "My", direct_load = True)
+
+        if self.Mz_table_path is None:
+            self.Mz_table_values, self.Mz_table_path = self.load_table(self.lineEdit_path_table_Mz, "Mz", direct_load = True)
+
+        key_avg = self.checkBox_averaged_table_values.isChecked()
+
         for selected_id in selected_ids:
             
             if self.Fx_table_values is not None:
                 self.Fx_table_name, self.Fx_array = self.save_table_files("Fx", selected_id, selection, self.Fx_table_values)
                 if self.Fx_array is None:
                     return
-
+                
             if self.Fy_table_values is not None:
                 self.Fy_table_name, self.Fy_array = self.save_table_files("Fy", selected_id, selection, self.Fy_table_values)
                 if self.Fy_array is None:
                     return
-
+                
             if self.Fz_table_values is not None:
                 self.Fz_table_name, self.Fz_array = self.save_table_files("Fz", selected_id, selection, self.Fz_table_values)
                 if self.Fz_array is None:
@@ -566,15 +751,36 @@ class SetDistributedLoadsInputs(QDialog):
 
             table_names = [self.Fx_table_name, self.Fy_table_name, self.Fz_table_name]
             table_paths = [self.Fx_table_path, self.Fy_table_path, self.Fz_table_path]
-            distributed_loads = [self.Fx_table_values, self.Fy_table_values, self.Fz_table_values]
+            nodal_loads = [self.Fx_table_values, self.Fy_table_values, self.Fz_table_values]
 
-            condition_1 = self.comboBox_element_type.currentIndex() == 0 and table_names.count(None) == 3
+            if self.comboBox_element_type.currentIndex() == 0:
+
+                if self.Mx_table_values is not None:
+                    self.Mx_table_name, self.Mx_array = self.save_table_files("Mx", selected_id, selection, self.Mx_table_values)
+                    if self.Mx_array is None:
+                        return
+
+                if self.My_table_values is not None:
+                    self.My_table_name, self.Mx_array = self.save_table_files("My", selected_id, selection, self.My_table_values)
+                    if self.My_array is None:
+                        return
+
+                if self.Mz_table_values is not None:
+                    self.Mz_table_name, self.Mx_array = self.save_table_files("Mz", selected_id, selection, self.Mz_table_values)
+                    if self.Mz_array is None:
+                        return
+
+                table_names.extend([self.Mx_table_name, self.My_table_name, self.Mz_table_name])
+                table_paths.extend([self.Mx_table_path, self.My_table_path, self.Mz_table_path])
+                nodal_loads.extend([self.Mx_table_values, self.My_table_values, self.Mz_table_values])
+
+            condition_1 = self.comboBox_element_type.currentIndex() == 0 and table_names.count(None) == 6
             condition_2 = self.comboBox_element_type.currentIndex() == 1 and table_names.count(None) == 3
 
             if condition_1 or condition_2:
                 self.hide()
                 title = "Additional inputs required"
-                message = "It is necessary to enter at least one distributed load "
+                message = "It is necessary to enter at least one external load "
                 message += "before confirming the property assignment."
                 PrintMessageInput([window_title_1, title, message]) 
                 return
@@ -583,15 +789,22 @@ class SetDistributedLoadsInputs(QDialog):
                     "element_type" : element_type,
                     "table_names" : table_names,
                     "table_paths" : table_paths,
-                    "values" : distributed_loads,
-                    "unit" : unit,
+                    "values" : nodal_loads,
+                    "nodal_attribution": True,
+                    "averaged": key_avg,
                     }
 
             if attribution_type == 0:
-                self.properties._set_property("distributed_loads", data, surface=selected_id)
+                self.properties._set_property("nodal_loads", data, surface=selected_id)
 
             elif attribution_type == 1:
-                self.properties._set_property("distributed_loads", data, line=selected_id)
+                self.properties._set_property("nodal_loads", data, line=selected_id)
+
+            elif attribution_type == 2:
+                self.properties._set_property("nodal_loads", data, point=selected_id)
+
+            elif attribution_type == 3:
+                self.properties._set_property("nodal_loads", data, node=selected_id)
 
         self.reset_table_variables()
         self.actions_to_finalize()
@@ -599,21 +812,92 @@ class SetDistributedLoadsInputs(QDialog):
     def remove_duplicated_attributions(self, selected_ids: list, selection: str):
 
         table_names = list()
+        nodes_to_remove = list()
         for selected_id in selected_ids:
 
             if selection == "surfaces":
+
+                nodes_from_surface = self.model.mesh.nodes_from_surfaces[selected_id]
+                for (property, node_id) in self.properties.nodal_properties.keys():
+                    if property == "nodal_loads" and node_id in nodes_from_surface:
+                        if node_id not in nodes_to_remove:
+                            nodes_to_remove.append(node_id)
+
                 for line_id in app().project.model.mesh.lines_from_surface[selected_id]:
-                    data = self.properties._get_property("distributed_loads", line=line_id)
+                    data = self.properties._get_property("nodal_loads", line=line_id)
                     if isinstance(data, dict):
-                        self.properties._remove_line_property("distributed_loads", line_id)
-                        table_names.extend(self.properties.get_property_related_table_names("distributed_loads", line_id, "lines"))
+                        self.properties._remove_line_property("nodal_loads", line_id)
+                        table_names.extend(self.properties.get_property_related_table_names("nodal_loads", line_id, "lines"))
+
+                    for point_id in app().project.model.mesh.points_from_line[line_id]:
+                        data = self.properties._get_property("nodal_loads", point=point_id)
+                        if isinstance(data, dict):
+                            self.properties._remove_point_property("nodal_loads", point_id)
+                            table_names.extend(self.properties.get_property_related_table_names("nodal_loads", point_id, "points"))
 
             elif selection == "lines":
+
+                nodes_from_line = self.model.mesh.nodes_from_lines[selected_id]
+                for (property, node_id) in self.properties.nodal_properties.keys():
+                    if property == "nodal_loads" and node_id in nodes_from_line:
+                        if node_id not in nodes_to_remove:
+                            nodes_to_remove.append(node_id)
+
                 for surface_id in app().project.model.mesh.surfaces_from_line[selected_id]:
-                    data = self.properties._get_property("distributed_loads", surface=surface_id)
+                    data = self.properties._get_property("nodal_loads", surface=surface_id)
                     if isinstance(data, dict):
-                        self.properties._remove_surface_property("distributed_loads", surface_id)
-                        table_names.extend(self.properties.get_property_related_table_names("distributed_loads", surface_id, "surfaces"))
+                        self.properties._remove_surface_property("nodal_loads", surface_id)
+                        table_names.extend(self.properties.get_property_related_table_names("nodal_loads", surface_id, "surfaces"))
+
+                for point_id in app().project.model.mesh.points_from_line[selected_id]:
+                    data = self.properties._get_property("nodal_loads", point=point_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_point_property("nodal_loads", point_id)
+                        table_names.extend(self.properties.get_property_related_table_names("nodal_loads", point_id, "points"))
+
+            elif selection == "points":
+
+                nodes_from_point = self.model.mesh.nodes_from_points[selected_id]
+                for (property, node_id) in self.properties.nodal_properties.keys():
+                    if property == "nodal_loads" and node_id in nodes_from_point:
+                        if node_id not in nodes_to_remove:
+                            nodes_to_remove.append(node_id)
+
+                for line_id in app().project.model.mesh.lines_from_point[selected_id]:
+                    data = self.properties._get_property("nodal_loads", line=line_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_line_property("nodal_loads", line_id)
+                        table_names.extend(self.properties.get_property_related_table_names("nodal_loads", line_id, "lines"))
+
+                    for surface_id in self.model.mesh.surfaces_from_line[line_id]:
+                        data = self.properties._get_property("nodal_loads", surface=surface_id)
+                        if isinstance(data, dict):
+                            self.properties._remove_surface_property("nodal_loads", surface_id)
+                            table_names.extend(self.properties.get_property_related_table_names("nodal_loads", surface_id, "surfaces"))
+
+            elif selection == "nodes":
+
+                point_id = selected_id + 1
+                data = self.properties._get_property("nodal_loads", point=point_id)
+                if isinstance(data, dict):
+                    self.properties._remove_point_property("nodal_loads", point_id)
+                    table_names.extend(self.properties.get_property_related_table_names("nodal_loads", point_id, "points"))
+
+                for line_id in app().project.model.mesh.lines_from_point[point_id]:
+                    data = self.properties._get_property("nodal_loads", line=line_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_line_property("nodal_loads", line_id)
+                        table_names.extend(self.properties.get_property_related_table_names("nodal_loads", line_id, "lines"))
+
+                    for surface_id in self.model.mesh.surfaces_from_line[line_id]:
+                        data = self.properties._get_property("nodal_loads", surface=surface_id)
+                        if isinstance(data, dict):
+                            self.properties._remove_surface_property("nodal_loads", surface_id)
+                            table_names.extend(self.properties.get_property_related_table_names("nodal_loads", surface_id, "surfaces"))
+
+            for node_id in nodes_to_remove:
+                self.properties._remove_nodal_property("nodal_loads", node_id)
+                table_names.extend(self.properties.get_property_related_table_names("nodal_loads", node_id, "nodes"))
 
             self.process_table_file_removal(table_names)
 
@@ -626,22 +910,36 @@ class SetDistributedLoadsInputs(QDialog):
 
     def text_label(self, mask):
 
-        load_labels = np.array(['Fx','Fy','Fz'])
+        if len(mask) == 6:
+            load_labels = np.array(['Fx','Fy','Fz','Mx','My','Mz'])
+
+        elif len(mask) == 3:
+            load_labels = np.array(['Fx','Fy','Fz'])
+
         labels = load_labels[mask]
 
-        if list(mask).count(True) == 3:
-            return "[{}, {}, {}]".format(*labels)
+        text = ""
+        if list(mask).count(True) == 6:
+            text = "[{}, {}, {}, {}, {}, {}]".format(*labels)
+        elif list(mask).count(True) == 5:
+            text = "[{}, {}, {}, {}, {}]".format(*labels)
+        elif list(mask).count(True) == 4:
+            text = "[{}, {}, {}, {}]".format(*labels)
+        elif list(mask).count(True) == 3:
+            text = "[{}, {}, {}]".format(*labels)
         elif list(mask).count(True) == 2:
-            return "[{}, {}]".format(*labels)
+            text = "[{}, {}]".format(*labels)
         elif list(mask).count(True) == 1:
-            return "[{}]".format(*labels)
+            text = "[{}]".format(*labels)
+
+        return text
 
     def load_model_info(self):
 
-        self.treeWidget_distributed_loads.clear()
+        self.treeWidget_nodal_loads.clear()
         for (property, *args), data in self.properties.surface_properties.items():
 
-            if property == "distributed_loads":
+            if property == "nodal_loads":
                 values = data["values"]
                 element_type = data["element_type"]
                 constrained_loads_mask = [False if value is None else True for value in values]
@@ -650,11 +948,11 @@ class SetDistributedLoadsInputs(QDialog):
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-                self.treeWidget_distributed_loads.addTopLevelItem(new)
+                self.treeWidget_nodal_loads.addTopLevelItem(new)
 
         for (property, *args), data in self.properties.line_properties.items():
 
-            if property == "distributed_loads":
+            if property == "nodal_loads":
                 values = data["values"]
                 element_type = data["element_type"]
                 constrained_loads_mask = [False if value is None else True for value in values]
@@ -663,11 +961,11 @@ class SetDistributedLoadsInputs(QDialog):
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-                self.treeWidget_distributed_loads.addTopLevelItem(new)
+                self.treeWidget_nodal_loads.addTopLevelItem(new)
 
         for (property, *args), data in self.properties.point_properties.items():
 
-            if property == "distributed_loads":
+            if property == "nodal_loads":
                 values = data["values"]
                 element_type = data["element_type"]
                 constrained_loads_mask = [False if value is None else True for value in values]
@@ -676,11 +974,11 @@ class SetDistributedLoadsInputs(QDialog):
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-                self.treeWidget_distributed_loads.addTopLevelItem(new)
+                self.treeWidget_nodal_loads.addTopLevelItem(new)
 
         for (property, *args), data in self.properties.nodal_properties.items():
 
-            if property == "distributed_loads":
+            if property == "nodal_loads":
                 values = data["values"]
                 element_type = data["element_type"]
                 constrained_loads_mask = [False if value is None else True for value in values]
@@ -689,7 +987,7 @@ class SetDistributedLoadsInputs(QDialog):
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-                self.treeWidget_distributed_loads.addTopLevelItem(new)
+                self.treeWidget_nodal_loads.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 
@@ -704,7 +1002,7 @@ class SetDistributedLoadsInputs(QDialog):
 
         for current_property in properties_to_check:
             for (property, _) in current_property.keys():
-                if property == "distributed_loads":
+                if property == "nodal_loads":
                     self.tabWidget_main.setTabVisible(2, True)
                     return
 
@@ -745,7 +1043,18 @@ class SetDistributedLoadsInputs(QDialog):
             elif selection == "Line":
                 app().main_window.set_geometry_selection(lines = [int(selected_id)])
 
-            # app().main_window.action_model_workspace_callback()
+            elif selection == "Point":
+                app().main_window.set_geometry_selection(points = [int(selected_id)])
+
+            elif selection == "Node":
+                app().main_window.set_mesh_selection(nodes=[int(selected_id)])
+
+            if selection == "Node":
+                app().main_window.action_mesh_workspace_callback()
+
+            else:
+                app().main_window.action_model_workspace_callback()
+
             self.lineEdit_selection_id.setText(item.text(0))
 
     def on_double_click_item(self, item):
@@ -772,7 +1081,13 @@ class SetDistributedLoadsInputs(QDialog):
         elif selection == "lines":
             remove_function = self.properties._remove_line_property
 
-        properties = ["distributed_loads", "prescribed_dofs"]
+        elif selection == "points":
+            remove_function = self.properties._remove_point_property
+
+        elif selection == "nodes":
+            remove_function = self.properties._remove_nodal_property
+
+        properties = ["nodal_loads", "prescribed_dofs"]
 
         for selected_id in selected_ids:
             for property in properties:
@@ -781,7 +1096,7 @@ class SetDistributedLoadsInputs(QDialog):
                 self.process_table_file_removal(table_names)
 
     def remove_table_files_from(self, selected_id : list, selection: str):
-        table_names = self.properties.get_property_related_table_names("distributed_loads", selected_id, selection)
+        table_names = self.properties.get_property_related_table_names("nodal_loads", selected_id, selection)
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
@@ -794,16 +1109,16 @@ class SetDistributedLoadsInputs(QDialog):
             selected_id = int(_selected_id)
 
             if selection == "Surface":
-                self.properties._remove_surface_property("distributed_loads", selected_id)
+                self.properties._remove_surface_property("nodal_loads", selected_id)
 
             elif selection == "Line":
-                self.properties._remove_line_property("distributed_loads", selected_id)
+                self.properties._remove_line_property("nodal_loads", selected_id)
 
             elif selection == "Point":
-                self.properties._remove_point_property("distributed_loads", selected_id)
+                self.properties._remove_point_property("nodal_loads", selected_id)
 
             elif selection == "Node":
-                self.properties._remove_nodal_property("distributed_loads", selected_id)
+                self.properties._remove_nodal_property("nodal_loads", selected_id)
 
             self.remove_table_files_from(selected_id, f"{selection.lower()}s")
             self.actions_to_finalize()
@@ -815,8 +1130,8 @@ class SetDistributedLoadsInputs(QDialog):
 
         self.hide()
 
-        title = "Distributed loads resetting"
-        message = "Would you like to remove the all distributed loads from model?"
+        title = "Nodal loads resetting"
+        message = "Would you like to remove the all external loads from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
         obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -827,14 +1142,22 @@ class SetDistributedLoadsInputs(QDialog):
         if obj._continue:
 
             for (property, *args) in self.properties.surface_properties.keys():
-                if property == "distributed_loads":
+                if property == "nodal_loads":
                     self.remove_table_files_from(args[0], "surfaces")
 
             for (property, *args) in self.properties.line_properties.keys():
-                if property == "distributed_loads":
+                if property == "nodal_loads":
                     self.remove_table_files_from(args[0], "lines")
 
-            self.properties._reset_property("distributed_loads")
+            for (property, *args) in self.properties.point_properties.keys():
+                if property == "nodal_loads":
+                    self.remove_table_files_from(args[0], "points")
+
+            for (property, *args) in self.properties.nodal_properties.keys():
+                if property == "nodal_loads":
+                    self.remove_table_files_from(args[0], "nodes")
+
+            self.properties._reset_property("nodal_loads")
             self.actions_to_finalize()
 
             app().main_window.set_geometry_selection()
@@ -859,7 +1182,7 @@ class SetDistributedLoadsInputs(QDialog):
 
         for key, data in self.properties.surface_properties.items():
             property, _ = key
-            if property in ["distributed_loads", "prescribed_dofs"]:
+            if property in ["nodal_loads", "prescribed_dofs"]:
                 if "table_names" in data.keys():
                     return
 

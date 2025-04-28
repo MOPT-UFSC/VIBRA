@@ -15,11 +15,11 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class SetSurfaceThicknessInput(QDialog):
+class SurfaceThicknessInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/setup/structural/surface_thickness_input.ui"
+        ui_path = UI_DIR / "model/setup/structural/surface_thickness_inputs.ui"
         load_ui(ui_path, self, ui_path.parent)
 
         app().main_window.set_input_widget(self)

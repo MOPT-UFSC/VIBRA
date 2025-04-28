@@ -123,7 +123,7 @@ class ModelSetupItems(CommonMenuItems):
         app().main_window.input_ui.set_surface_thickness()
 
     def item_child_prescribed_dofs_callback(self):
-        app().main_window.input_ui.set_prescribed_dofs()
+        app().main_window.input_ui.prescribe_structural_dofs()
 
     def item_child_nodal_loads_callback(self):
        app().main_window.input_ui.set_nodal_loads()
