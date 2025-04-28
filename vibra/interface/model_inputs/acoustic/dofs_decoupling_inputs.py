@@ -18,7 +18,7 @@ class DofsDecouplingInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/setup/acoustic/dofs_decoupling_inputs.ui"
+        ui_path = UI_DIR / "model/setup/acoustic/acoustic_dofs_decoupling_inputs.ui"
         load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
@@ -71,9 +71,9 @@ class DofsDecouplingInputs(QDialog):
         self.tabWidget_main : QTabWidget
 
         # QTreeWidget
-        self.treeWidget_anechoic_termination : QTreeWidget
-        self.treeWidget_anechoic_termination.setColumnWidth(1, 20)
-        self.treeWidget_anechoic_termination.setColumnWidth(2, 80)
+        self.treeWidget_dofs_decoupling : QTreeWidget
+        self.treeWidget_dofs_decoupling.setColumnWidth(1, 20)
+        self.treeWidget_dofs_decoupling.setColumnWidth(2, 80)
 
     def _create_connections(self):
         #
@@ -83,8 +83,8 @@ class DofsDecouplingInputs(QDialog):
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
-        self.treeWidget_anechoic_termination.itemClicked.connect(self.on_click_item)
-        self.treeWidget_anechoic_termination.itemDoubleClicked.connect(self.on_doubleclick_item)
+        self.treeWidget_dofs_decoupling.itemClicked.connect(self.on_click_item)
+        self.treeWidget_dofs_decoupling.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
 
@@ -117,17 +117,32 @@ class DofsDecouplingInputs(QDialog):
         if surface_ids is None:
             return
 
-        list_volumes = list()
-        for face_id in surface_ids:            
-            for volume_id in self.model.mesh.volumes_from_surface[face_id]:
-                if volume_id not in list_volumes:
-                    list_volumes.append(volume_id)
+        volume_ids = list()
+        for surface_id in surface_ids:            
+            for volume_id in self.model.mesh.volumes_from_surface[surface_id]:
+                if volume_id not in volume_ids:
+                    volume_ids.append(volume_id)
+
+        for volume_id in volume_ids:
+            for surface_id in self.model.mesh.surfaces_from_volume[volume_id]:
+                if surface_id in surface_ids:
+                    continue
+
+                # surface_velocity = self.model.properties._get_property("surface_velocity", surface=surface_id)
+                # if isinstance(surface_velocity, dict):
+                #     current_volume = volume_id
+                #     break
+
+                # acoustic_pressure = self.model.properties._get_property("acoustic_pressure", surface=surface_id)
+                # if isinstance(acoustic_pressure, dict):
+                #     current_volume = volume_id
+                #     break
 
         self.comboBox_volume_id.clear()
-        for vol_id in list_volumes:
+        for vol_id in volume_ids:
             self.comboBox_volume_id.addItem(str(vol_id))
         
-        if len(list_volumes) == 1:
+        if len(volume_ids) == 1:
             self.comboBox_volume_id.setDisabled(True)
         else:
             if len(surface_ids) == 1:
@@ -143,23 +158,20 @@ class DofsDecouplingInputs(QDialog):
         if stop:
             self.lineEdit_selection_id.setFocus()
             return
-        
-        self.remove_conflicting_excitations(surface_ids)
 
         for surface_id in surface_ids:
 
             volume_ids = self.model.mesh.volumes_from_surface[surface_ids[0]]
             if len(surface_ids) > 1 and len(volume_ids) > 1:
                 
-                self.hide()
                 title = "Undefined volume"
-                
-                # message = f"The selected face ID [{face_id}] is associated to the volumes {volume_ids}. "
+
                 message = "The multiple selection of faces related to more than one volume is not allowed. "
                 message += "In this case, it is necessary to select the Face ID and the respective Volume ID "
                 message += "to proceed."
-                PrintMessageInput([window_title_2, title, message])
 
+                self.hide()
+                PrintMessageInput([window_title_2, title, message])
                 return
 
             if self.comboBox_volume_id.currentText() == "multiple":
@@ -168,12 +180,11 @@ class DofsDecouplingInputs(QDialog):
                 volume_id = int(self.comboBox_volume_id.currentText())
 
             data = {
-                    "anechoic_termination" : True,
                     "volume_id" : volume_id,
                     "nodal_attribution": False
                     }
 
-            self.properties._set_property("specific_impedance", data, surface=surface_id)
+            self.properties._set_property("acoustic_dofs_decoupling", data, surface=surface_id)
 
         self.actions_to_finalize()
 
@@ -185,31 +196,19 @@ class DofsDecouplingInputs(QDialog):
         if table_names:
             app().file.write_imported_table_data_in_file()
 
-    def remove_conflicting_excitations(self, surface_ids: int | list):
-
-        if isinstance(surface_ids, int):
-            surface_ids = [surface_ids]
-
-        labels = ["specific_impedance"]
-
-        for surface_id in surface_ids:
-            for label in labels:
-                table_names = self.properties.get_property_related_table_names(label, surface_id, "surface")
-                self.properties._remove_surface_property(label, surface_id)
-                self.process_table_file_removal(table_names)
-
-    def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("specific_impedance", surface_id, "surface")
-        self.process_table_file_removal(table_names)
-
     def remove_callback(self):
 
         if self.lineEdit_selection_id.text() != "":
 
             surface_id = int(self.lineEdit_selection_id.text())
-            self.remove_table_files_from_surfaces(surface_id)
+            data = self.properties._get_property("acoustic_dofs_decoupling", surface=surface_id)
+            if isinstance(data, dict):
+                new_surface_id = data.get("new_surface_id")
+                if isinstance(new_surface_id, int):
+                    self.properties._remove_surface_property("fluid", new_surface_id)
+                    self.properties._remove_surface_property("fluid_id", new_surface_id)
 
-            self.properties._remove_surface_property("specific_impedance", surface_id)
+            self.properties._remove_surface_property("acoustic_dofs_decoupling", surface_id)
             self.actions_to_finalize()
 
     def reset_callback(self):
@@ -227,46 +226,34 @@ class DofsDecouplingInputs(QDialog):
 
         if read._continue:
 
-            surface_ids = list()
+            new_surface_ids = list()
             for (property, *args), data in self.properties.surface_properties.items():
-                if property == "specific_impedance":
-                    if "anechoic_termination" in data.keys():
-                        surface_id = args[0]
-                        surface_ids.append(surface_id)
+                if property == "acoustic_dofs_decoupling":
+                    data: dict
+                    new_surface_id = data.get("new_surface_id")
+                    if isinstance(new_surface_id, int):
+                        new_surface_ids.append(new_surface_id)
 
-            self.remove_table_files_from_surfaces(surface_ids)
+            for _new_surface_id in new_surface_ids:
+                self.properties._remove_surface_property("fluid", _new_surface_id)
+                self.properties._remove_surface_property("fluid_id", _new_surface_id)
 
-            self.properties._reset_property("specific_impedance")
+            self.properties._reset_property("acoustic_dofs_decoupling")
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
         self.load_info()
-        self.check_model_frequency_controls()
         self.main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
         app().main_window.mesh_widget.update_symbols()
 
-    def check_model_frequency_controls(self):
-
-        for key, data in self.properties.surface_properties.items():
-            property, _ = key
-            if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
-                if "table_names" in data.keys():
-                    return
-
-        if isinstance(self.project.analysis_data, dict):
-            analysis_data = self.project.analysis_data
-            self.project.set_analysis_data(analysis_data)
-            app().file.write_analysis_setup_in_file(analysis_data)
-
     def update_tabs_visibility(self):
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
-            if property == "specific_impedance":
-                if "anechoic_termination" in data.keys():
-                    self.tabWidget_main.setTabVisible(1, True)
-                    return
+        for key in self.properties.surface_properties.keys():
+            property, _ = key
+            if property == "acoustic_dofs_decoupling":
+                self.tabWidget_main.setTabVisible(1, True)
+                return
 
         self.tabWidget_main.setTabVisible(1, False)
 
@@ -280,16 +267,20 @@ class DofsDecouplingInputs(QDialog):
         self.on_click_item(item)
 
     def load_info(self):
-        self.treeWidget_anechoic_termination.clear()
+        self.treeWidget_dofs_decoupling.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
-            if property == "specific_impedance":
-                if "anechoic_termination" in data.keys():
-                    volume_id = data["volume_id"]
-                    new = QTreeWidgetItem([str(surface_id), str(volume_id)])
-                    new.setTextAlignment(0, Qt.AlignCenter)
-                    new.setTextAlignment(1, Qt.AlignCenter)
-                    self.treeWidget_anechoic_termination.addTopLevelItem(new)
+            if property == "acoustic_dofs_decoupling":
+
+                volume_id = data.get("volume_to_decouple")
+                if volume_id is None:
+                    continue
+
+                new = QTreeWidgetItem([str(surface_id), str(volume_id)])
+                new.setTextAlignment(0, Qt.AlignCenter)
+                new.setTextAlignment(1, Qt.AlignCenter)
+                self.treeWidget_dofs_decoupling.addTopLevelItem(new)
+
         self.update_tabs_visibility()
 
     def keyPressEvent(self, event):

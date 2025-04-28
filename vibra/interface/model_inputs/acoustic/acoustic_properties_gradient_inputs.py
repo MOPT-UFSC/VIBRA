@@ -22,11 +22,11 @@ import numpy as np
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class SetAcousticPropertiesGradientInputs(QDialog):
+class AcousticPropertiesGradientInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/setup/acoustic/set_acoustic_properties_gradient_inputs.ui"
+        ui_path = UI_DIR / "model/setup/acoustic/acoustic_properties_gradient_inputs.ui"
         load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window

@@ -2,18 +2,19 @@ from vibra.interface.model_inputs.structural.material.set_material_inputs import
 from vibra.interface.model_inputs.acoustic.fluid.set_fluid_inputs import SetFluidInputs
 from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
 #
-from vibra.interface.model_inputs.acoustic.set_acoustic_pressure_inputs import AcousticPressureInputs
+from vibra.interface.model_inputs.acoustic.acoustic_pressure_inputs import AcousticPressureInputs
 from vibra.interface.model_inputs.acoustic.mass_flow_rate_inputs import MassFlowRateInputs
 from vibra.interface.model_inputs.acoustic.surface_velocity_inputs import SurfaceVelocityInputs
 from vibra.interface.model_inputs.acoustic.specific_impedance_inputs import SpecificImpedanceInputs
-from vibra.interface.model_inputs.acoustic.set_anechoic_termination_inputs import AnechoicTerminationInputs
+from vibra.interface.model_inputs.acoustic.anechoic_termination_inputs import AnechoicTerminationInputs
 from vibra.interface.model_inputs.acoustic.dissipation_model_inputs import DissipationModelInput
 from vibra.interface.model_inputs.acoustic.porous_material_model_inputs import PorousMaterialModelInputs
 from vibra.interface.model_inputs.acoustic.viscous_thermal_loss_model_inputs import ViscousThermalLossModelInputs
 from vibra.interface.model_inputs.acoustic.perforated_plate_model_inputs import PerforatedPlateModelInputs
-from vibra.interface.model_inputs.acoustic.set_acoustic_properties_gradient_inputs import SetAcousticPropertiesGradientInputs
+from vibra.interface.model_inputs.acoustic.acoustic_properties_gradient_inputs import AcousticPropertiesGradientInputs
 from vibra.interface.model_inputs.acoustic.reciprocating_compressor_inputs import ReciprocatingCompressorInputs
 from vibra.interface.model_inputs.acoustic.acoustic_transfer_element_inputs import AcousticTransferElementInputs
+from vibra.interface.model_inputs.acoustic.dofs_decoupling_inputs import DofsDecouplingInputs
 #
 from vibra.interface.model_inputs.structural.surface_thickness_inputs import SurfaceThicknessInputs
 from vibra.interface.model_inputs.structural.dofs_prescription_inputs import DofsPrescriptionInputs
@@ -114,7 +115,10 @@ class InputUi:
     def set_surface_velocity(self):
         if not self.model_setup_items.item_child_surface_velocity.isDisabled():
             self.process_input(SurfaceVelocityInputs)
-        
+
+    def set_specific_impedance(self):
+        self.process_input(SpecificImpedanceInputs)
+
     def set_anechoic_termination(self):
         if not self.model_setup_items.item_child_anechoic_termination.isDisabled():
             self.process_input(AnechoicTerminationInputs)
@@ -122,7 +126,11 @@ class InputUi:
     def set_dissipation_model(self):
         if not self.model_setup_items.item_child_dissipation_model.isDisabled():
             self.process_input(DissipationModelInput)
-        
+
+    def set_perforated_plate_model(self):
+        if not self.model_setup_items.item_child_perforated_plate_model.isDisabled():
+            self.process_input(PerforatedPlateModelInputs)
+    
     def set_porous_material_model(self):
         if not self.model_setup_items.item_child_porous_material_model.isDisabled():
             self.process_input(PorousMaterialModelInputs)
@@ -131,20 +139,17 @@ class InputUi:
         if not self.model_setup_items.item_child_viscous_thermal_model.isDisabled():
             self.process_input(ViscousThermalLossModelInputs)
 
-    def set_perforated_plate_model(self):
-        if not self.model_setup_items.item_child_perforated_plate_model.isDisabled():
-            self.process_input(PerforatedPlateModelInputs)
+    def set_acoustic_dofs_decoupling(self):
+        if not self.model_setup_items.item_child_acoustic_dofs_decoupling.isDisabled():
+            self.process_input(DofsDecouplingInputs)
 
     def set_acoustic_properties_grandient(self):
         if not self.model_setup_items.item_child_acoustic_properties_gradient.isDisabled():
-            self.process_input(SetAcousticPropertiesGradientInputs)
+            self.process_input(AcousticPropertiesGradientInputs)
         
     def set_acoustic_transfer_element_setup(self):
         if not self.model_setup_items.item_child_acoustic_transfer_element_setup.isDisabled():
             self.process_input(AcousticTransferElementInputs)
-
-    def set_specific_impedance(self):
-        self.process_input(SpecificImpedanceInputs)
 
     def add_reciprocating_compressor_excitation(self):
         self.process_input(ReciprocatingCompressorInputs)
