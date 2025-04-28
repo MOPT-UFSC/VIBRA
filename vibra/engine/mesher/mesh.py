@@ -88,6 +88,10 @@ class Mesh:
         self.lines_from_surface = dict()
         self.points_from_line = dict()
 
+        self.cache_surfaces_from_volume = dict()
+        self.cache_lines_from_surface = dict()
+        self.cache_points_from_line = dict()
+
         self.connectivity_from_lines = dict()
         self.connectivity_from_surfaces = dict()
 
@@ -139,6 +143,7 @@ class Mesh:
         gmsh_gui: bool = False,
         mesh_refinement_parameters=list(),
         mesh_connection=True,
+        **kwargs
     ):
 
         self.mesh_setup = dict(
@@ -482,6 +487,10 @@ class Mesh:
         self.surfaces_from_volume.clear()
         self.volumes_from_surface.clear()
 
+        self.cache_surfaces_from_volume.clear()
+        self.cache_lines_from_surface.clear()
+        self.cache_points_from_line.clear()
+
         self.solid_elements_center.clear()
         self.connectivity_from_lines.clear()
         self.connectivity_from_surfaces.clear()
@@ -599,6 +608,14 @@ class Mesh:
         self.solids_connectivity, self.map_solid_elements = self._get_connectivity_array(connectivity_dim3)
 
         self.process_mesh_related_mappings()
+        self.cache_mesh_information()
+
+
+    def cache_mesh_information(self):
+
+        self.cache_surfaces_from_volume = deepcopy(self.surfaces_from_volume)
+        self.cache_lines_from_surface = deepcopy(self.lines_from_surface)
+        self.cache_points_from_line = deepcopy(self.points_from_line)
 
         self.cache_lines_connectivity = deepcopy(self.lines_connectivity)
         self.cache_faces_connectivity = deepcopy(self.faces_connectivity)

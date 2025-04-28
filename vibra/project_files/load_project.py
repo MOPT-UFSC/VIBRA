@@ -241,15 +241,24 @@ class LoadProject:
 
             elif "surfaces_from_volume" in key:
                 id = int(key.split("_")[-1])
-                self.model.mesh.surfaces_from_volume[id] = data
+                if "cache" in key:
+                    self.model.mesh.cache_surfaces_from_volume[id] = data
+                else:
+                    self.model.mesh.surfaces_from_volume[id] = data
 
             elif "lines_from_surface" in key:
                 id = int(key.split("_")[-1])
-                self.model.mesh.lines_from_surface[id] = data
+                if "cache" in key:
+                    self.model.mesh.cache_lines_from_surface[id] = data
+                else:
+                    self.model.mesh.lines_from_surface[id] = data
 
             elif "points_from_line" in key:
                 id = int(key.split("_")[-1])
-                self.model.mesh.points_from_line[id] = data
+                if "cache" in key:
+                    self.model.mesh.cache_points_from_line[id] = data
+                else:    
+                    self.model.mesh.points_from_line[id] = data
 
             elif "normals_surface" in key:
                 id = int(key.split("_")[-1])
@@ -312,7 +321,6 @@ class LoadProject:
                     solid_element.algorithm_3d = algorithm_3d
 
                 mesh_setup["element_type"] = solid_element
-                mesh_setup.pop("shape_function")
 
                 app().project.reset_solutions()
                 app().project.set_mesh_setup(mesh_setup)

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
+from collections import defaultdict
 from copy import deepcopy
 import numpy as np
 
@@ -26,23 +27,33 @@ class DofsDecoupling:
         """
         """
 
-        # self.properties._set_property("acoustic_dofs_decoupling", dict(), surface=6)
-
-        surfaces_to_decouple = list()
-        for (property, surface_id) in self.properties.surface_properties.keys():
-            if property == "acoustic_dofs_decoupling":
-                surfaces_to_decouple.append(surface_id)
-
-        max_surface_id = max(self.mesh.nodes_from_surfaces.keys())
+        decouple_data = {
+                         "volume_to_preserve" : 2,
+                         "volume_to_decouple" : 1,
+                         }
+        self.properties._set_property("acoustic_dofs_decoupling", decouple_data, surface=6)
 
         self.decouple_info.clear()
-        for surf_id in surfaces_to_decouple:
-            max_surface_id += 1
-            vol_ids = self.mesh.volumes_from_surface[surf_id]
-            self.decouple_info[vol_ids[0]] = {
-                                              "surface_id" : surf_id,
-                                              "new_surface_id" : int(max_surface_id)
-                                              }
+        max_surface_id = int(np.max(self.mesh.cache_faces_connectivity[:, 1]))
+
+        for key, data in self.properties.surface_properties.items():
+            (property, surface_id) = key
+            if property == "acoustic_dofs_decoupling":
+
+                data: dict
+                max_surface_id += 1
+                vol_id =  data.get("volume_to_decouple")
+
+                if isinstance(vol_id, int):    
+                    self.decouple_info[vol_id] = {
+                                                  "surface_id" : surface_id,
+                                                  "new_surface_id" : int(max_surface_id),
+                                                  }
+
+                    # apply the same fluid to the new surface
+                    aux_data = deepcopy(data)
+                    aux_data.update(new_surface_id=int(max_surface_id))
+                    self.properties.surface_properties[key] = aux_data
 
 
     def update_nodal_coordinates(self):
@@ -96,7 +107,7 @@ class DofsDecoupling:
     def get_new_line_ids(self, line_ids: list[int]):
         """
         """
-        max_line_id = max(list(self.mesh.geometry_information.get("curves")))
+        max_line_id = np.max(self.mesh.lines_connectivity[:, 1])
         shifted_line_ids = np.arange(len(line_ids), dtype=int) + int(max_line_id + 1)
         return list(shifted_line_ids)
 
@@ -104,6 +115,7 @@ class DofsDecoupling:
     def get_new_point_ids(self, point_ids: list[int]):
         """
         """
+        #TODO: modify this criterion
         max_point_id = max(list(self.mesh.geometry_information.get("points")))
         shifted_point_ids = np.arange(len(point_ids), dtype=int) + int(max_point_id + 1)
         return list(shifted_point_ids)
@@ -113,32 +125,22 @@ class DofsDecoupling:
         """
         """
 
+        surfaces_from_volume = deepcopy(self.mesh.cache_surfaces_from_volume)
+        lines_from_surface = deepcopy(self.mesh.cache_lines_from_surface)
+
         nodes_from_lines = list()
         valid_surface_ids = list()
 
-        #TODO: verify the necessity of updating the geometry-related data
         for vol_id, data in self.decouple_info.items():
             data: dict
+
             surf_id = data.get("surface_id")
-            # new_surf_id = data.get("new_surface_id")
-            valid_surface_ids.extend(self.mesh.surfaces_from_volume[vol_id])
+
+            valid_surface_ids.extend(surfaces_from_volume[vol_id])
             valid_surface_ids.remove(surf_id)
 
-            # self.mesh.volumes_from_surface[surf_id].remove(vol_id)
-            # self.mesh.volumes_from_surface[new_surf_id] = [vol_id]
-
-            # surfaces_from_volume = list(deepcopy(self.mesh.surfaces_from_volume[vol_id]))
-            # surfaces_from_volume.remove(surf_id)
-            # surfaces_from_volume.append(new_surf_id)
-            # self.mesh.surfaces_from_volume[vol_id] = np.sort((surfaces_from_volume))
-
-            lines_from_surface = self.mesh.lines_from_surface[surf_id]
-            # new_line_ids = self.get_new_line_ids(lines_from_surface)
-
-            for i, line_id in enumerate(lines_from_surface):
+            for i, line_id in enumerate(lines_from_surface[surf_id]):
                 nodes_from_lines.extend(self.mesh.nodes_from_lines[line_id])
-                # points_from_line = deepcopy(self.mesh.points_from_line[line_id])
-                # self.mesh.points_from_line[new_line_ids[i]] = self.get_new_point_ids(points_from_line)
 
         nodes_from_lines = list(set(nodes_from_lines))
 
@@ -263,8 +265,90 @@ class DofsDecoupling:
         self.mesh.process_mesh_related_mappings()
 
 
+    def update_geometry_related_information(self):
+        """
+        """
+
+        surfaces_from_volume = deepcopy(self.mesh.cache_surfaces_from_volume)
+        lines_from_surface = deepcopy(self.mesh.cache_lines_from_surface)
+        points_from_line = deepcopy(self.mesh.cache_points_from_line)
+
+        area_from_surface = deepcopy(self.mesh.area_from_surface)
+        length_from_curve = deepcopy(self.mesh.length_from_curve)
+
+        for vol_id, data in self.decouple_info.items():
+            data: dict
+
+            surf_id = data.get("surface_id")
+            new_surf_id = data.get("new_surface_id")
+            self.apply_fluid_at_new_surface(surf_id, new_surf_id)
+
+            surfaces_from_volume = list(deepcopy(surfaces_from_volume[vol_id]))
+            surfaces_from_volume.remove(surf_id)
+            surfaces_from_volume.append(new_surf_id)
+            
+            self.mesh.surfaces_from_volume[vol_id] = np.sort(surfaces_from_volume)
+            self.mesh.geometry_information["surfaces"].append(new_surf_id)
+            self.mesh.area_from_surface[new_surf_id] = area_from_surface[surf_id]
+
+            lines_from_surface = lines_from_surface[surf_id]
+            new_line_ids = self.get_new_line_ids(lines_from_surface)
+
+            self.mesh.lines_from_surface[new_surf_id] = new_line_ids
+
+            for i, line_id in enumerate(lines_from_surface):
+                new_line_id = new_line_ids[i]
+                self.mesh.geometry_information["curves"].append(new_line_id)
+                self.mesh.length_from_curve[new_line_id] = length_from_curve[line_id]
+                self.mesh.points_from_line[new_line_id] = self.get_new_point_ids(points_from_line[line_id])
+
+        if self.decouple_info:
+            self.mesh.volumes_from_surface = maps_values_to_keys(deepcopy(self.mesh.surfaces_from_volume))
+            self.mesh.surfaces_from_line = maps_values_to_keys(deepcopy(self.mesh.lines_from_surface))
+            self.mesh.lines_from_point = maps_values_to_keys(deepcopy(self.mesh.points_from_line))
+
+
+    def apply_fluid_at_new_surface(self, surface_id: int, new_surface_id: int):
+
+        fluid = self.model.properties._get_property("fluid", surface=surface_id)
+        self.model.properties._set_property("fluid", fluid, surface=new_surface_id)
+
+        fluid_id = self.model.properties._get_property("fluid_id", surface=surface_id)
+        self.model.properties._set_property("fluid_id", fluid_id, surface=new_surface_id)
+
+        print(new_surface_id, fluid, "apply_fluid_at_new_surface")
+
+
     def process_dofs_decoupling(self):
         """
         """
         self.update_nodal_coordinates()
         self.update_all_connectivity_related_attributes()
+        self.update_geometry_related_information()
+
+
+def maps_values_to_keys(input_data: dict):
+    """ This function returns a dictionary that maps the 
+        values of the original dictionary to its keys.
+
+        Parameters
+        ----------
+
+        input_data: dict,
+            The input dictionary to be reversed.
+
+        Returns
+        -------
+
+        output_data: dict,
+            The reversed output dictionary.
+
+    """
+
+    output_data = defaultdict(list)
+
+    for key, values in input_data.items():
+        for value in values:
+            output_data[value].append(key)
+
+    return output_data

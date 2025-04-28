@@ -166,7 +166,9 @@ class ProjectFile:
                             cache_lines_connectivity = mesh.cache_lines_connectivity,
                             cache_connectivity_from_lines = mesh.cache_connectivity_from_lines,
                             cache_connectivity_from_surfaces = mesh.cache_connectivity_from_surfaces,
-
+                            cache_surfaces_from_volume = mesh.cache_surfaces_from_volume,
+                            cache_lines_from_surface = mesh.cache_lines_from_surface,
+                            cache_points_from_line = mesh.cache_points_from_line,
                         )
 
         with self.filebox.open(self.mesh_data_filename, "w") as internal_file:
@@ -186,7 +188,12 @@ class ProjectFile:
                     elif "gmsh" in key:
                         prefix = f"gmsh_data/{key}"
 
-                    elif key in ["surfaces_from_volume", "lines_from_surface", "points_from_line"]:
+                    elif key in ["surfaces_from_volume", 
+                                 "lines_from_surface", 
+                                 "points_from_line", 
+                                 "cache_surfaces_from_volume", 
+                                 "cache_lines_from_surface", 
+                                 "cache_points_from_line"]:
                         prefix = f"geometry_info/{key}"
 
                     elif "normals_surface" in key:
@@ -237,7 +244,9 @@ class ProjectFile:
                             except:
                                 mesh_data[key] = int(values)
 
-        except:
+        except Exception as error_log:
+            # from traceback import print_exception
+            # print_exception(error_log)
             return dict()
 
         return mesh_data
@@ -441,10 +450,13 @@ class ProjectFile:
     def read_thumbnail(self):
         return self.filebox.read(self.thumbnail_filename)
     
-    def write_results_data_in_file(self, save_mesh: bool =True):
+    def write_results_data_in_file(self, save_mesh: bool =True, save_properties: bool =True):
 
         if save_mesh:
             app().file.write_mesh_data_in_file()
+
+        if save_properties:
+            app().file.write_model_properties_in_file()
 
         with self.filebox.open(self.results_data_filename, "w") as internal_file:
             with h5py.File(internal_file, "w") as f:
