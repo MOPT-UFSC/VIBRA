@@ -47,7 +47,7 @@ class SetSurfaceThicknessInput(QDialog):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Vibra")
+        self.setWindowTitle("Surface thickness")
 
     def _initialize(self):
         self.imported_values = None
@@ -255,6 +255,7 @@ class SetSurfaceThicknessInput(QDialog):
         app().main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
+        app().main_window.update_symbols()
         # app().main_window.mesh_widget.update_symbols()
 
     def update_tabs_visibility(self):

@@ -49,7 +49,7 @@ class SetSurfaceVelocityInput(QDialog):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(self.main_window.vibra_icon)
-        self.setWindowTitle("Vibra")
+        self.setWindowTitle("Surface velocity")
 
     def _initialize(self):
         self.imported_values = None

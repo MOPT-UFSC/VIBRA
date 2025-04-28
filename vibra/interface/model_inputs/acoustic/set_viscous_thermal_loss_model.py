@@ -53,7 +53,7 @@ class SetViscousThermalLossModel(QDialog):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Vibra")
+        self.setWindowTitle("Viscous thermal loss model")
 
     def _initialize(self):
         self.selected_fluid = None
@@ -634,6 +634,7 @@ class SetViscousThermalLossModel(QDialog):
                 print(f"The viscous_thermal {model_data['formulation']} model for '{model_data['section_type']}' has been attributed to the group {group_id}.")
 
             app().file.write_model_properties_in_file()
+            app().main_window.update_symbols()
             self.load_info()
 
     def check_inputs(self, lineEdit, label, _float=True):

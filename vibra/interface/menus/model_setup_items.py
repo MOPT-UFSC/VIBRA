@@ -153,13 +153,25 @@ class ModelSetupItems(CommonMenuItems):
             property.point_properties,
             property.element_properties,
             property.nodal_properties
-            ]   
+            ]
+           
+        # Not ideal, but it works. Since the mesh config is not part of the properties, the necessary check is performed here
+        if property_name == "setup" and app().project.model.mesh_setup is not None:
+            return True
         
+        # As anechoic_termination is a subproperty of specific_impedance, we need to test it separately
+        if property_name == "anechoic_termination":
+            for key, data in property.surface_properties.items():
+                if key[0] == "specific_impedance":
+                    if "anechoic_termination" in data.keys():
+                        return True
+        
+        # test other properties
         for dic in property_dicts:
             for key in dic.keys():
                 if key[0] == property_name:
                     return True
-
+        
         return False
     
     def update_items_icons(self):
@@ -168,32 +180,6 @@ class ModelSetupItems(CommonMenuItems):
                 if self._contains_property(attr.split('_', maxsplit=3)[-1]):
                     value.setIcon(0, QIcon(str(Path(ICON_DIR / str("home.png")))))
                     value.should_paint = False 
-                    
-        
-        # for attr, value in self.__dict__.items():
-        #     if isinstance(value, ChildTreeWidgetItem):
-        #         # if value app().project.model.properties
-        #         # print(attr, value)
-        #         # print(attr.split('_', maxsplit=3))
-        #         if attr.split('_', maxsplit=3)[-1] in app().project.model.properties.surface_properties:
-        #             value.setIcon(0, QIcon(str(Path(ICON_DIR / str("help.png")))))
-
-        # self.item_child_set_surface_thickness.setIcon(0, QIcon(str(Path(ICON_DIR / str("help.png")))))
-        # self.item_child_set_prescribed_dofs.setIcon(0, QIcon(str(Path(ICON_DIR / str("help.png")))))
-        # self.item_child_set_nodal_loads.setIcon(0, QIcon(str(Path(ICON_DIR / str("help.png")))))
-        # self.item_child_set_distributed_loads.setIcon(0, QIcon(str(Path(ICON_DIR / str("help.png")))))
-        # self.item_child_set_normal_pressure_load.setData(1, Qt.DecorationRole, QPixmap(ICON_DIR / str("help.png")))
-        # self.item_child_set_acoustic_pressure.setIcon(0, QIcon(str(Path(ICON_DIR / str("help.png")))))
-        # self.item_child_set_surface_velocity.setIcon(0, QIcon(str(Path(ICON_DIR / str("help.png")))))
-        # self.item_child_set_anechoic_termination.setIcon(0, QIcon(str(Path(ICON_DIR / str("help.png")))))
-        # self.item_child_set_specific_impedance.setIcon(0, QIcon(str(Path(ICON_DIR / str("help.png")))))
-        # self.item_child_set_dissipation_model.setIcon(0, QIcon(str(Path(ICON_DIR / str("help.png")))))
-        # self.item_child_set_porous_material_model.setIcon(0, QIcon(str(Path(ICON_DIR / str("help.png")))))
-        # self.item_child_set_viscous_thermal_model.setIcon(0, QIcon(str(Path(ICON_DIR / str("help.png")))))
-        # self.item_child_set_perforated_plate_model.setIcon(0, QIcon(str(Path(ICON_DIR / str("help.png")))))
-        # self.item_child_set_acoustic_properties_gradient.setIcon(0, QIcon(str(Path(ICON_DIR / str("help.png")))))
-        # self.item_child_add_reciprocating_compressor_excitation.setIcon(0, QIcon(str(Path(ICON_DIR / str("help.png")))))
-        # self.item_child_set_acoustic_transfer_element_setup.setIcon(0, QIcon(str(Path(ICON_DIR / str("help.png")))))
 
     # Callbacks
     def item_child_set_material_callback(self):

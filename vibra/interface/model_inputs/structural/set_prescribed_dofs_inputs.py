@@ -50,7 +50,7 @@ class SetPrescribedDofsInputs(QDialog):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Set Prescribed DOFs")
+        self.setWindowTitle("Prescribed DOFs")
 
     def _initialize(self):
         self.keep_window_open = True

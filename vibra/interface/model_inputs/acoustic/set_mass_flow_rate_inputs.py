@@ -456,6 +456,7 @@ class MassFlowRateInput(QDialog):
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
         app().main_window.mesh_widget.update_symbols()
+        app().main_window.update_symbols()
 
     def change_frequency_setup(self):
         if self.imported_values is not None:

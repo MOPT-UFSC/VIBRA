@@ -24,7 +24,7 @@ class ShowPorousMaterialModelEquations(QDialog):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Vibra")
+        self.setWindowTitle("Porous material model")
 
     def _define_qt_variables(self):
         self.pushButton_exit: QPushButton

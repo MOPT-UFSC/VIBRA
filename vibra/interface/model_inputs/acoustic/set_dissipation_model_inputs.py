@@ -46,7 +46,7 @@ class DissipationModelInput(QDialog):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Vibra")
+        self.setWindowTitle("Dissipation model")
 
     def _initialize(self):
         self.keep_window_open = True
@@ -244,13 +244,15 @@ class DissipationModelInput(QDialog):
             self.properties._set_property("dissipation_model", data, volume=volume_id)
 
         self.actions_to_finalize()
-
+        
         print(f"The dissipation model has been attributed to volumes: {volume_ids}")
 
     def actions_to_finalize(self):
         self.load_info()
         self.main_window.update_info_text()
         app().file.write_model_properties_in_file()
+        app().main_window.update_symbols()
+        print("boi")
 
     def check_inputs(self, lineEdit: QLineEdit, label: str, only_positive=False, zero_included=True, _float=True):
 

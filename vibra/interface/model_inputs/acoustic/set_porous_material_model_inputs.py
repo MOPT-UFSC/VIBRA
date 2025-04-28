@@ -53,7 +53,7 @@ class SetPorousMaterialModelInputs(QDialog):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Vibra")
+        self.setWindowTitle("Porous material model")
 
     def _initialize(self):
         self.selected_fluid = None
@@ -480,6 +480,7 @@ class SetPorousMaterialModelInputs(QDialog):
                 self.properties._set_property("porous_material_model", model_data, volume=volume_id)
 
             app().file.write_model_properties_in_file()
+            app().main_window.update_symbols()
 
             print(f"The porous material model '{model_data['model']}' has been attributed to the volumes {volume_ids}")
             self.load_info()

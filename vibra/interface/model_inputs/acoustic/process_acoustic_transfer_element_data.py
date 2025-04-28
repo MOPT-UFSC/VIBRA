@@ -50,7 +50,7 @@ class ProcessAcousticTransferElementData(QDialog):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Vibra")
+        self.setWindowTitle("Acoustic transfer element data")
 
     def _reset_variables(self):
         self.keep_window_open = True

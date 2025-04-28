@@ -45,7 +45,7 @@ class SetAnechoicTerminationInputs(QDialog):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Vibra")
+        self.setWindowTitle("Anechoic termination")
 
     def _reset(self):
         self.keep_window_open = True
@@ -246,6 +246,7 @@ class SetAnechoicTerminationInputs(QDialog):
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
         app().main_window.mesh_widget.update_symbols()
+        app().main_window.update_symbols()
 
     def check_model_frequency_controls(self):
 

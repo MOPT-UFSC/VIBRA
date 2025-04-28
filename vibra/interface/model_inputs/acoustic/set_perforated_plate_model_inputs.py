@@ -52,7 +52,7 @@ class SetPerforatedPlateModelInputs(QDialog):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Vibra")
+        self.setWindowTitle("Perforated plate model")
 
     def _initialize(self):
         self.selected_fluid = None
@@ -370,6 +370,7 @@ class SetPerforatedPlateModelInputs(QDialog):
 
     def actions_to_finalize(self):
         app().file.write_model_properties_in_file()
+        app().main_window.update_symbols()
         self.load_info()
 
     def check_inputs(self, lineEdit: QLineEdit, label, _float=True):

@@ -48,7 +48,7 @@ class SetDistributedLoadsInputs(QDialog):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Set structural distributed loads")
+        self.setWindowTitle("Structural distributed loads")
 
     def _initialize(self):
         self.keep_window_open = True
@@ -846,6 +846,7 @@ class SetDistributedLoadsInputs(QDialog):
         app().main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
+        app().main_window.update_symbols()
         # app().main_window.mesh_widget.update_symbols()
 
     def change_frequency_setup(self):
