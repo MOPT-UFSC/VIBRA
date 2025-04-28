@@ -17,11 +17,11 @@ from pathlib import Path
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class ExportElementTransferDataInput(QDialog):
+class ExportElementTransferDataInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "data_handler/export_element_transfer_data.ui"
+        ui_path = UI_DIR / "data_handler/export_element_transfer_data_inputs.ui"
         load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window

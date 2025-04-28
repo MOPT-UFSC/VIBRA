@@ -16,11 +16,11 @@ import numpy as np
 window_title1 = "Error"
 window_title2 = "Warning"
 
-class PlotSpecificAcousticImpedanceInput(QWidget):
+class SpecificAcousticImpedanceInputs(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "plots/acoustic/plot_specific_acoustic_impedance_input.ui"
+        ui_path = UI_DIR / "plots/acoustic/specific_acoustic_impedance_inputs.ui"
         load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window

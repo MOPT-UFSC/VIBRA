@@ -26,7 +26,7 @@ class DofsDecoupling:
         """
         """
 
-        self.properties._set_property("acoustic_dofs_decoupling", dict(), surface=6)
+        # self.properties._set_property("acoustic_dofs_decoupling", dict(), surface=6)
 
         surfaces_to_decouple = list()
         for (property, surface_id) in self.properties.surface_properties.keys():

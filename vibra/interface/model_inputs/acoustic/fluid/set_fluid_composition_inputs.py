@@ -3,7 +3,7 @@ from PySide6.QtGui import QIcon, QFont
 from PySide6.QtCore import Qt
 
 from vibra import app, UI_DIR
-from vibra.interface.model_inputs.acoustic.fluid.load_fluid_composition_input import LoadFluidCompositionInput
+from vibra.interface.model_inputs.acoustic.fluid.load_fluid_composition_inputs import LoadFluidCompositionInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.utils.utils import *
@@ -14,7 +14,7 @@ import os
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class SetFluidCompositionInput(QDialog):
+class SetFluidCompositionInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__()
 
@@ -1019,7 +1019,7 @@ class SetFluidCompositionInput(QDialog):
         self.fluid_data = dict()
         self.fluid_to_composition = dict()
 
-        read = LoadFluidCompositionInput(file_path = self.composition_file_path)
+        read = LoadFluidCompositionInputs(file_path = self.composition_file_path)
 
         if read.complete:
 

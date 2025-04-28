@@ -15,11 +15,11 @@ import numpy as np
 window_title1 = "Error"
 window_title2 = "Warning"
 
-class PlotStructuralFrequencyResponseInput(QWidget):
+class PlotStructuralFrequencyResponseInputs(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "plots/structural/plot_structural_frequency_response.ui"
+        ui_path = UI_DIR / "plots/structural/structural_frequency_response_inputs.ui"
         ui_dir = ui_path.parent
         load_ui(ui_path, self, ui_path.parent)
 

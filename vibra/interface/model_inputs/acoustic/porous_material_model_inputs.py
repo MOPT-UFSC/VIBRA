@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
-from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input_simplified import SetFluidInputSimplified
+from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
 from vibra.interface.model_inputs.acoustic.show_porous_material_model_equations import ShowPorousMaterialModelEquations
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -22,11 +22,11 @@ import numpy as np
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class SetPorousMaterialModelInputs(QDialog):
+class PorousMaterialModelInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/setup/acoustic/set_porous_material_model.ui"
+        ui_path = UI_DIR / "model/setup/acoustic/porous_material_model_inputs.ui"
         load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
@@ -533,7 +533,7 @@ class SetPorousMaterialModelInputs(QDialog):
 
     def get_fluid_callback(self):
         self.hide()
-        self.fluid_dialog = SetFluidInputSimplified()
+        self.fluid_dialog = SimplifiedFluidInputs()
         self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
         self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()

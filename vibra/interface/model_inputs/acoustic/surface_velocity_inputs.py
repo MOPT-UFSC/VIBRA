@@ -1,6 +1,6 @@
 # fmt: off
 
-from PySide6.QtWidgets import QDialog, QFileDialog, QLineEdit, QPushButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QCheckBox, QDialog, QFileDialog, QLineEdit, QPushButton, QRadioButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
@@ -17,11 +17,12 @@ import numpy as np
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class SpecificImpedanceInput(QDialog):
+
+class SurfaceVelocityInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/setup/acoustic/specific_impedance_input.ui"
+        ui_path = UI_DIR / "model/setup/acoustic/surface_velocity_inputs.ui"
         load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
@@ -32,7 +33,7 @@ class SpecificImpedanceInput(QDialog):
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
-        
+
         self._config_window()
         self._initialize()
         self._define_qt_variables()
@@ -40,7 +41,7 @@ class SpecificImpedanceInput(QDialog):
 
         self.load_info()
         self.geometry_selection_callback()
-
+        
         while self.keep_window_open:
             self.exec()
 
@@ -56,6 +57,10 @@ class SpecificImpedanceInput(QDialog):
 
     def _define_qt_variables(self):
 
+        # QCheckBox
+        self.checkBox_averaged_constant_values : QCheckBox
+        self.checkBox_averaged_table_values : QCheckBox
+
         # QLineEdit
         self.lineEdit_selection_id : QLineEdit
         self.lineEdit_real_value : QLineEdit
@@ -64,78 +69,53 @@ class SpecificImpedanceInput(QDialog):
 
         # QPushButton
         self.pushButton_attribute : QPushButton
-        self.pushButton_exit : QPushButton
         self.pushButton_change_frequency_setup : QPushButton
+        self.pushButton_exit : QPushButton
         self.pushButton_load_table : QPushButton
         self.pushButton_remove : QPushButton
         self.pushButton_reset : QPushButton
         #
         self.pushButton_change_frequency_setup.setDisabled(True)
 
+        # QRadioButton
+        self.radioButton_nodal_attribution_constant : QRadioButton
+        self.radioButton_element_integration_constant : QRadioButton
+        self.radioButton_element_integration_table : QRadioButton
+        self.radioButton_nodal_attribution_table : QRadioButton
+        #
+        self.radioButton_element_integration_constant.setChecked(True)
+        self.radioButton_element_integration_table.setChecked(True)
+
         # QTabWidget
         self.tabWidget_main : QTabWidget
 
         # QTreeWidget
-        self.treeWidget_specific_impedance : QTreeWidget
-        self.treeWidget_specific_impedance.setColumnWidth(1, 20)
-        self.treeWidget_specific_impedance.setColumnWidth(2, 80)
+        self.treeWidget_surface_velocity : QTreeWidget
+        self.treeWidget_surface_velocity.setColumnWidth(1, 20)
+        self.treeWidget_surface_velocity.setColumnWidth(2, 80)
 
     def _create_connections(self):
         #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
         self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_change_frequency_setup.clicked.connect(self.change_frequency_setup)
+        self.pushButton_load_table.clicked.connect(self.load_surface_velocity_table)
         self.pushButton_remove.clicked.connect(self.remove_callback)
-        self.pushButton_load_table.clicked.connect(self.load_specific_impedance_table)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
-        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
+        self.radioButton_nodal_attribution_constant.clicked.connect(self.update_controls_for_constant_value)
+        self.radioButton_element_integration_constant.clicked.connect(self.update_controls_for_constant_value)
+        self.radioButton_nodal_attribution_table.clicked.connect(self.update_controls_for_table_of_values)
+        self.radioButton_element_integration_table.clicked.connect(self.update_controls_for_table_of_values)
         #
-        self.treeWidget_specific_impedance.itemClicked.connect(self.on_click_item)
-        self.treeWidget_specific_impedance.itemDoubleClicked.connect(self.on_doubleclick_item)
+        self.update_controls_for_constant_value()
+        self.update_controls_for_table_of_values()
+        #
+        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
+        self.treeWidget_surface_velocity.itemClicked.connect(self.on_click_item)
+        self.treeWidget_surface_velocity.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
-
-    def tabEvent_callback(self):
-        if self.tabWidget_main.currentIndex() == 2:
-            self.lineEdit_selection_id.setText("")
-            self.lineEdit_selection_id.setDisabled(True)
-            self.pushButton_attribute.setDisabled(True)
-        else:
-            self.lineEdit_selection_id.setDisabled(False)
-            self.pushButton_attribute.setEnabled(True)
-
-    def on_click_item(self, item):
-        if item.text(0) != "":
-            surface_id = int(item.text(0))
-            self.lineEdit_selection_id.setText(item.text(0))
-            app().main_window.set_geometry_selection(surfaces=[surface_id])
-
-    def on_doubleclick_item(self, item):
-        self.on_click_item(item)
-
-    def load_info(self):
-        self.treeWidget_specific_impedance.clear()
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
-            if property == "specific_impedance":
-
-                if "anechoic_termination" in data.keys():
-                    continue
-
-                if "table_names" in data.keys():
-                    str_value = "Table of values"
-                else:
-                    real_values = np.array(data["real_values"])
-                    imag_values = np.array(data["imag_values"])
-                    complex_values = real_values + 1j * imag_values
-                    str_value = str(complex_values)
-
-                new = QTreeWidgetItem([str(surface_id), str_value])
-                new.setTextAlignment(0, Qt.AlignCenter)
-                new.setTextAlignment(1, Qt.AlignCenter)
-                self.treeWidget_specific_impedance.addTopLevelItem(new)
-
-        self.update_tabs_visibility()
 
     def geometry_selection_callback(self):
 
@@ -145,6 +125,55 @@ class SpecificImpedanceInput(QDialog):
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
 
+            if len(faces) == 1:
+                surface_id = list(faces)[0]
+                self.load_property_data(surface_id)
+
+    def load_property_data(self, surface_id: int):
+
+        if self.tabWidget_main.currentIndex() == 2:
+            return
+
+        data = self.properties._get_property("surface_velocity", surface=surface_id)
+
+        if isinstance(data, dict):
+
+            nodal_attribution = data.get("nodal_attribution", None)
+            averaged = data.get("averaged", None)
+
+            self.checkBox_averaged_constant_values.setEnabled(nodal_attribution)
+            self.checkBox_averaged_table_values.setEnabled(nodal_attribution)
+
+            if nodal_attribution:
+
+                self.radioButton_nodal_attribution_constant.setChecked(True)
+                self.radioButton_nodal_attribution_table.setChecked(True)
+                if "averaged" in data.keys():
+                    self.checkBox_averaged_constant_values.setChecked(averaged)
+                    self.checkBox_averaged_table_values.setChecked(averaged)
+
+            else:
+                self.radioButton_element_integration_constant.setChecked(True)
+                self.radioButton_element_integration_table.setChecked(True)
+
+            if "table_paths" in data.keys():
+                self.tabWidget_main.setCurrentIndex(1)
+                self.lineEdit_table_path.setText(data["table_paths"][0])
+            else:
+                self.tabWidget_main.setCurrentIndex(0)
+                self.lineEdit_real_value.setText(str(data["real_values"][0]))
+                self.lineEdit_imag_value.setText(str(data["imag_values"][0]))
+
+    def tabEvent_callback(self):
+        if self.tabWidget_main.currentIndex() == 2:
+            self.lineEdit_selection_id.setText("")
+            self.lineEdit_selection_id.setDisabled(True)
+            self.pushButton_attribute.setDisabled(True)
+            self.pushButton_remove.setDisabled(True)
+        else:
+            self.lineEdit_selection_id.setDisabled(False)
+            self.pushButton_attribute.setEnabled(True)
+
     def attribute_callback(self):
         tab_index = self.tabWidget_main.currentIndex()
         if tab_index == 0:
@@ -153,16 +182,15 @@ class SpecificImpedanceInput(QDialog):
             self.check_table_values()
 
     def check_complex_entries(self, lineEdit_real, lineEdit_imag):
-        self.stop = False
-        title = "Invalid entry to the specific impedance"
+
+        title = "Invalid entry to the surface velocity"
         if lineEdit_real.text() != "":
             try:
                 real_F = float(lineEdit_real.text())
             except Exception:
-                message = "Wrong input for real part of specific impedance."
+                message = "Wrong input for real part of surface velocity."
                 PrintMessageInput([window_title_1, title, message])
                 self.lineEdit_real_value.setFocus()
-                self.stop = True
                 return
         else:
             real_F = 0
@@ -171,10 +199,9 @@ class SpecificImpedanceInput(QDialog):
             try:
                 imag_F = float(lineEdit_imag.text())
             except Exception:
-                message = "Wrong input for imaginary part of specific impedance."
+                message = "Wrong input for imaginary part of surface velocity."
                 PrintMessageInput([window_title_1, title, message])
                 self.lineEdit_imag_value.setFocus()
-                self.stop = True
                 return
         else:
             imag_F = 0
@@ -194,40 +221,40 @@ class SpecificImpedanceInput(QDialog):
 
         self.remove_conflicting_excitations(surface_ids)
 
-        specific_impedance = self.check_complex_entries(
-                                                        self.lineEdit_real_value, 
-                                                        self.lineEdit_imag_value
-                                                        )
+        surface_velocity = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
 
-        if specific_impedance is not None:
+        if surface_velocity is not None:
 
-            real_values = [np.real(specific_impedance)]
-            imag_values = [np.imag(specific_impedance)]
+            real_values = [np.real(surface_velocity)]
+            imag_values = [np.imag(surface_velocity)]
+
+            nodal_attribution = self.radioButton_nodal_attribution_constant.isChecked()
+            key_avg = self.checkBox_averaged_constant_values.isChecked()
 
             data = {
-                    "real_values" : real_values,
-                    "imag_values" : imag_values,
-                    "nodal_attribution" : False,
-                    "averaged" : False
+                    "real_values": real_values,
+                    "imag_values": imag_values,
+                    "nodal_attribution": nodal_attribution,
+                    "averaged": key_avg,
                     }
 
             for surface_id in surface_ids:
-                self.properties._set_property("specific_impedance", data, surface=surface_id)
+                self.properties._set_property("surface_velocity", data, surface=surface_id)
 
             self.actions_to_finalize()
 
-            print(f"[Set specific impedance] - defined at surface(s) {surface_ids}")
+            print(f"[Set surface Velocity] - defined at surface(s) {surface_ids}")
 
         else:
             title = "Additional inputs required"
-            message = "You must enter the specific impedance to"
-            message += "proceed with the attribution."
+            message = "You must inform at least one surface velocity\n"
+            message += "before confirming the input!"
             PrintMessageInput([window_title_1, title, message])
             self.lineEdit_real_value.setFocus()
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
-        title = "Error reached while loading 'specific impedance' table"
+        title = "Error reached while loading 'surface velocity' table"
 
         try:
             if direct_load:
@@ -241,18 +268,19 @@ class SpecificImpedanceInput(QDialog):
                 else:
                     path = last_path
 
-                caption = "Choose a table to import the specific impedance"
-                imported_table_path, check = QFileDialog.getOpenFileName( 
-                                                                        None, 
-                                                                        caption, 
-                                                                        path, 
-                                                                        "Files (*.csv; *.dat; *.txt)"
+                caption = "Choose a table to import the surface velocity"
+                imported_table_path, check = QFileDialog.getOpenFileName(  None, 
+                                                                            caption, 
+                                                                            path, 
+                                                                            "Files (*.csv; *.dat; *.txt)"
                                                                         )
 
                 if not check:
                     return None
 
             lineEdit.setText(imported_table_path)
+            app().config.write_last_folder_path_in_file("imported_table_folder", imported_table_path)
+
             imported_file = np.loadtxt(imported_table_path, delimiter=",")
 
             if imported_file.shape[1] < 3:
@@ -267,7 +295,7 @@ class SpecificImpedanceInput(QDialog):
             message = str(log_error)
             PrintMessageInput([window_title_1, title, message])
             lineEdit.setFocus()
-            return None, None
+            return None
 
     def save_table_values(self, table_name: str, imported_values: np.ndarray):
 
@@ -313,14 +341,22 @@ class SpecificImpedanceInput(QDialog):
         app().project.set_analysis_data(analysis_setup)
         app().file.write_analysis_setup_in_file(analysis_setup)
 
-    def load_specific_impedance_table(self):
+    def load_surface_velocity_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
+        if isinstance(self.imported_values, np.ndarray):
+            self.pushButton_change_frequency_setup.setDisabled(False)
+        else:
+            self.pushButton_change_frequency_setup.setDisabled(True)
 
     def check_table_values(self):
 
-        lineEdit_selection_id = self.lineEdit_selection_id.text()
-        stop, surface_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
-        if stop:
+        input_ids = self.lineEdit_selection_id.text()
+        surface_ids = self.mesh.check_selected_ids(
+                                                   input_ids, 
+                                                   selection = "surfaces"
+                                                   )
+
+        if surface_ids is None:
             self.lineEdit_selection_id.setFocus()
             return
 
@@ -337,7 +373,7 @@ class SpecificImpedanceInput(QDialog):
                 if isinstance(self.imported_values, np.ndarray):
                     if self.imported_values.shape[1] >= 3:
 
-                        table_name = f"specific_impedance_at_surface_{surface_id}"
+                        table_name = f"surface_velocity_at_surface_{surface_id}"
                         if self.save_table_values(table_name, self.imported_values):
                             self.lineEdit_table_path.setFocus()
                             self.imported_values = None
@@ -349,31 +385,33 @@ class SpecificImpedanceInput(QDialog):
                 if self.imported_values is None:
                     return
 
-                real_values = list(self.imported_values[:, 1])
-                imag_values = list(self.imported_values[:, 2])
+                complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
+
                 table_path = self.lineEdit_table_path.text()
+                key_avg = self.checkBox_averaged_constant_values.isChecked()
+                nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
 
                 data = {
-                        "real_values": real_values,
-                        "imag_values": imag_values,
-                        "nodal_attribution": False,
-                        "averaged": False,
-                        "table_names": os.path.basename(table_path),
+                        "table_names" : [table_name],
+                        "table_paths" : [table_path],
+                        "values" : [complex_values],                   
+                        "averaged" : key_avg,
+                        "nodal_attribution" : nodal_attribution,
                         }
-                    
-                self.properties._set_property("specific_impedance", data, surface=surface_id)
+
+                self.properties._set_property("surface_velocity", data, surface=surface_id)
 
             self.actions_to_finalize()
 
-            print(f"[Set specific impedance] - defined at surface(s) {surface_ids}")
+            print(f"[Set surface Velocity] - defined at surface(s) {surface_ids}")
 
         else:
             title = "Additional inputs required"
-            message = "You must inform at least one specific impedance\n"
+            message = "You must inform at least one surface velocity\n"
             message += "table path before confirming the input!"
             PrintMessageInput([window_title_1, title, message])
             self.lineEdit_table_path.setFocus()
-
+    
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
@@ -385,7 +423,13 @@ class SpecificImpedanceInput(QDialog):
         if isinstance(surface_ids, int):
             surface_ids = [surface_ids]
 
-        labels = ["specific_impedance"]
+        labels = [
+                  "acoustic_pressure", 
+                  "surface_velocity", 
+                  "mass_flow_rate", 
+                  "reciprocating_compressor_excitation", 
+                  "reciprocating_pump_excitation"
+                  ]
 
         for surface_id in surface_ids:
             for label in labels:
@@ -393,29 +437,26 @@ class SpecificImpedanceInput(QDialog):
                 self.properties._remove_surface_property(label, surface_id)
                 self.process_table_file_removal(table_names)
 
-    def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("specific_impedance", surface_id, "surface")
+    def remove_table_files_from_surfaces(self, surface_id : int | list):
+        table_names = self.properties.get_property_related_table_names("surface_velocity", surface_id, "surface")
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
 
         if self.lineEdit_selection_id.text() != "":
+
             surface_id = int(self.lineEdit_selection_id.text())
             self.remove_table_files_from_surfaces(surface_id)
 
-            data = self.properties._get_property("specific_impedance", surface=surface_id)
-            if "anechoic_termination" in data.keys():
-                return
-
-            self.properties._remove_surface_property("specific_impedance", surface_id)
+            self.properties._remove_surface_property("surface_velocity", surface_id)
             self.actions_to_finalize()
 
     def reset_callback(self):
 
         self.hide()
 
-        title = "Specific impedance resetting"
-        message = "Would you like to remove the all applied specific impedances from model?"
+        title = "Surface velocity resetting"
+        message = "Would you like to remove the all applied surface velocities from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -426,16 +467,15 @@ class SpecificImpedanceInput(QDialog):
         if read._continue:
 
             surface_ids = list()
-            for (property, *args), data in self.properties.surface_properties.items():
-                if property == "specific_impedance":
-                    if "anechoic_termination" in data.keys():
-                        continue
-                    surface_ids.append(args[0])
+            for (property, *args) in self.properties.surface_properties.keys():
+                if property == "surface_velocity":
+
+                    surface_id = args[0]
+                    surface_ids.append(surface_id)
 
             self.remove_table_files_from_surfaces(surface_ids)
-            for surface_id in surface_ids:
-                self.properties._remove_surface_property("specific_impedance", surface_id)
 
+            self.properties._reset_property("surface_velocity")
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
@@ -444,7 +484,7 @@ class SpecificImpedanceInput(QDialog):
         self.main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
-        app().main_window.mesh_widget.update_symbols()
+        app().main_window.update_symbols()
 
     def change_frequency_setup(self):
         if self.imported_values is not None:
@@ -471,20 +511,58 @@ class SpecificImpedanceInput(QDialog):
         self.lineEdit_imag_value.setText("")
         self.lineEdit_table_path.setText("")
 
+    def update_controls_for_constant_value(self):
+        _bool = self.radioButton_element_integration_constant.isChecked()
+        self.checkBox_averaged_constant_values.setChecked(not _bool)
+        self.checkBox_averaged_constant_values.setDisabled(_bool)
+
+    def update_controls_for_table_of_values(self):
+        _bool = self.radioButton_element_integration_table.isChecked()
+        self.checkBox_averaged_table_values.setChecked(not _bool)
+        self.checkBox_averaged_table_values.setDisabled(_bool)
+
     def update_tabs_visibility(self):
         surface_ids = list()
-        for key, data in self.properties.surface_properties.items():
+        for key in self.properties.surface_properties.keys():
             property, surface_id = key
-            if property == "specific_impedance":
-                if "anechoic_termination" in data.keys():
-                    continue
-                else:
-                    surface_ids.append(surface_id)
+            if property == "surface_velocity":
+                surface_ids.append(surface_id)
 
         if len(surface_ids) == 0:
             self.tabWidget_main.setTabVisible(2, False)
         else:
             self.tabWidget_main.setTabVisible(2, True)
+
+    def on_click_item(self, item):
+        self.pushButton_remove.setDisabled(False)
+        if item.text(0) != "":
+            surface_id = int(item.text(0))
+            self.lineEdit_selection_id.setText(item.text(0))
+            app().main_window.set_geometry_selection(surfaces=[surface_id])
+
+    def on_doubleclick_item(self, item):
+        self.on_click_item(item)
+
+    def load_info(self):
+        self.treeWidget_surface_velocity.clear()
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "surface_velocity":
+
+                if "table_names" in data.keys():
+                    str_value = "Table of values"
+                else:
+                    real_values = np.array(data["real_values"])
+                    imag_values = np.array(data["imag_values"])
+                    complex_values = real_values + 1j * imag_values
+                    str_value = str(complex_values)
+
+                new = QTreeWidgetItem([str(surface_id), str_value])
+                new.setTextAlignment(0, Qt.AlignCenter)
+                new.setTextAlignment(1, Qt.AlignCenter)
+                self.treeWidget_surface_velocity.addTopLevelItem(new)
+
+        self.update_tabs_visibility()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

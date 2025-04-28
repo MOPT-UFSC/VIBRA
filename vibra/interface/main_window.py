@@ -28,7 +28,7 @@ from vibra.interface.project.geometry_setup import GeometrySetup
 from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
 from vibra.interface.user_input.input_ui import InputUi
-from vibra.interface.plots.acoustic.export_element_transfer_data_input import ExportElementTransferDataInput
+from vibra.interface.plots.acoustic.export_element_transfer_data_inputs import ExportElementTransferDataInputs
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
 
 from vibra.interface.section_plane_widget import SectionPlaneWidget
@@ -1077,7 +1077,7 @@ class MainWindow(QMainWindow):
     def action_export_element_transfer_data_callback(self):
         if app().project.acoustic_harmonic_solver.solution is None:
             return
-        ExportElementTransferDataInput()
+        ExportElementTransferDataInputs()
 
     def update_hidden_plots(self):
         for i in range(self.render_widgets_stack.count()):

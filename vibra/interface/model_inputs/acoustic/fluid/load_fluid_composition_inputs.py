@@ -13,7 +13,7 @@ from molde import load_ui
 import os
 
 
-class LoadFluidCompositionInput(QDialog):
+class LoadFluidCompositionInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__()
 

@@ -15,11 +15,11 @@ import numpy as np
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class PlotAcousticPressureFrequencyResponseFunctionInput(QWidget):
+class AcousticPressureFrequencyResponseFunctionInputs(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "plots/acoustic/plot_acoustic_pressure_frequency_response_function.ui"
+        ui_path = UI_DIR / "plots/acoustic/acoustic_pressure_frequency_response_function_inputs.ui"
         load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window

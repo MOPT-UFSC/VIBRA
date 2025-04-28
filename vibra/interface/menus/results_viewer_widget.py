@@ -3,10 +3,10 @@ from PySide6.QtWidgets import QFrame, QWidget
 
 from vibra import UI_DIR, app
 from vibra.interface.menus.results_viewer_items import ResultsViewerItems
-from vibra.interface.plots.acoustic.plot_acoustic_mode_shape import PlotAcousticModeShape
-from vibra.interface.plots.acoustic.plot_acoustic_pressure_field import PlotAcousticPressureField
-from vibra.interface.plots.structural.plot_displacement_field import PlotDisplacementField
-from vibra.interface.plots.structural.plot_structural_mode_shape import PlotStructuralModeShape
+from vibra.interface.plots.acoustic.acoustic_mode_shape_inputs import AcousticModeShapeInputs
+from vibra.interface.plots.acoustic.acoustic_pressure_field_inputs import AcousticPressureFieldInputs
+from vibra.interface.plots.structural.displacement_field_inputs import PlotDisplacementFieldInputs
+from vibra.interface.plots.structural.structural_mode_shape_inputs import PlotStructuralModeShapeInputs
 
 
 class ResultsViewerWidget(QWidget):
@@ -16,10 +16,10 @@ class ResultsViewerWidget(QWidget):
         ui_path = UI_DIR / "menu/left_menu_widget.ui"
         load_ui(ui_path, self, ui_path.parent)
 
-        self.plot_structural_modal = PlotStructuralModeShape()
-        self.plot_structural_harmonic = PlotDisplacementField()
-        self.plot_acoustic_modal = PlotAcousticModeShape()
-        self.plot_acoustic_harmonic = PlotAcousticPressureField()
+        self.plot_structural_modal = PlotStructuralModeShapeInputs()
+        self.plot_structural_harmonic = PlotDisplacementFieldInputs()
+        self.plot_acoustic_modal = AcousticModeShapeInputs()
+        self.plot_acoustic_harmonic = AcousticPressureFieldInputs()
 
         self._reset()
         self._define_qt_variables()

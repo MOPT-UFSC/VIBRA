@@ -20,11 +20,11 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class PlotAcousticModeShape(QWidget):
+class AcousticModeShapeInputs(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "plots/acoustic/acoustic_mode_shape.ui"
+        ui_path = UI_DIR / "plots/acoustic/acoustic_mode_shape_inputs.ui"
         load_ui(ui_path, self, ui_path.parent)
 
         self._initialize()

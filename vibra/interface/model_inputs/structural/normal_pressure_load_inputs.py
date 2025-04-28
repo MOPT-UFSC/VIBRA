@@ -19,11 +19,11 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class SetNormalPressureLoadInputs(QDialog):
+class NormalPressureLoadInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/setup/structural/normal_pressure_load_input.ui"
+        ui_path = UI_DIR / "model/setup/structural/normal_pressure_load_inputs.ui"
         load_ui(ui_path, self, ui_path.parent)
 
         self.model = app().project.model

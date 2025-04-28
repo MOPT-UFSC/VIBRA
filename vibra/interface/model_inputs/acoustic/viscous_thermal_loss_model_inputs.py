@@ -5,8 +5,8 @@ from PySide6.QtGui import QCloseEvent
 from vibra import app, UI_DIR
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
-from vibra.interface.mesh.mesher_inputs import MesherInputs
-from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input_simplified import SetFluidInputSimplified
+from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
+from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
 from vibra.interface.model_inputs.acoustic.get_sphere_selection_information import GetSphereSelectionInformation
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -22,11 +22,11 @@ import numpy as np
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class SetViscousThermalLossModel(QDialog):
+class ViscousThermalLossModelInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/setup/acoustic/set_viscous_thermal_model_inputs.ui"
+        ui_path = UI_DIR / "model/setup/acoustic/viscous_thermal_model_inputs.ui"
         load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
@@ -512,7 +512,7 @@ class SetViscousThermalLossModel(QDialog):
 
     def generate_mesh(self):
         if not app().project.model.generated_mesh:
-            self.mesher = MesherInputs(close_after_generate=True)
+            self.mesher = MeshSetupInputs(close_after_generate=True)
             if not self.mesher.complete:
                 self.mesher = None
                 return True
@@ -726,7 +726,7 @@ class SetViscousThermalLossModel(QDialog):
 
     def get_fluid_callback(self):
         self.hide()
-        self.fluid_dialog = SetFluidInputSimplified()
+        self.fluid_dialog = SimplifiedFluidInputs()
         self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
         self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()

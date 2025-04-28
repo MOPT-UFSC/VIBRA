@@ -1,5 +1,5 @@
 
-from PySide6.QtWidgets import QCheckBox, QComboBox, QDialog, QFileDialog, QLabel, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QComboBox, QDialog, QFileDialog, QLabel, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
@@ -19,18 +19,20 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class SetNodalLoadsInputs(QDialog):
+class DofsPrescriptionInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/setup/structural/nodal_loads_input.ui"
+        ui_path = UI_DIR / "model/setup/structural/dofs_prescription_inputs.ui"
         load_ui(ui_path, self, ui_path.parent)
 
-        self.model = app().project.model
+        self.main_window = app().main_window
+        self.project = app().project
+        self.model = self.project.model
         self.properties = app().project.model.properties
 
-        app().main_window.set_input_widget(self)
-        app().main_window.action_model_workspace_callback()
+        self.main_window.set_input_widget(self)
+        self.main_window.action_model_workspace_callback()
 
         self._config_window()
         self._initialize()
@@ -48,7 +50,7 @@ class SetNodalLoadsInputs(QDialog):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Set structural external loads")
+        self.setWindowTitle("Set Prescribed DOFs")
 
     def _initialize(self):
         self.keep_window_open = True
@@ -56,100 +58,102 @@ class SetNodalLoadsInputs(QDialog):
 
     def reset_table_variables(self):
 
-        self.Fx_table_values = None
-        self.Fy_table_values = None
-        self.Fz_table_values = None
-        self.Mx_table_values = None
-        self.My_table_values = None
-        self.Mz_table_values = None
+        self.ux_table_values = None
+        self.uy_table_values = None
+        self.uz_table_values = None
+        self.rx_table_values = None
+        self.ry_table_values = None
+        self.rz_table_values = None
 
-        self.Fx_array = None
-        self.Fy_array = None
-        self.Fz_array = None
-        self.Mx_array = None
-        self.My_array = None
-        self.Mz_array = None
+        self.ux_array = None
+        self.uy_array = None
+        self.uz_array = None
+        self.rx_array = None
+        self.ry_array = None
+        self.rz_array = None
 
-        self.Fx_table_path = None
-        self.Fy_table_path = None
-        self.Fz_table_path = None
-        self.Mx_table_path = None
-        self.My_table_path = None
-        self.Mz_table_path = None
+        self.ux_table_path = None
+        self.uy_table_path = None
+        self.uz_table_path = None
+        self.rx_table_path = None
+        self.ry_table_path = None
+        self.rz_table_path = None
 
-        self.Fx_table_name = None
-        self.Fy_table_name = None
-        self.Fz_table_name = None
-        self.Mx_table_name = None
-        self.My_table_name = None
-        self.Mz_table_name = None
+        self.ux_table_name = None
+        self.uy_table_name = None
+        self.uz_table_name = None
+        self.rx_table_name = None
+        self.ry_table_name = None
+        self.rz_table_name = None
 
     def _define_qt_variables(self):
 
-        # QCheckBox
-        self.checkBox_averaged_constant_values: QCheckBox
-        self.checkBox_averaged_table_values: QCheckBox
-
         # QComboBox
+        self.comboBox_angular_data_type: QComboBox
         self.comboBox_attribution_type: QComboBox
         self.comboBox_element_type: QComboBox
+        self.comboBox_linear_data_type: QComboBox
 
         # QLabel
-        self.label_Fx_constant: QLabel
-        self.label_Fy_constant: QLabel
-        self.label_Fz_constant: QLabel
-        self.label_Mx_constant: QLabel
-        self.label_My_constant: QLabel
-        self.label_Mz_constant: QLabel
+        self.label_Ux_constant: QLabel
+        self.label_Uy_constant: QLabel
+        self.label_Uz_constant: QLabel
+        self.label_Rx_constant: QLabel
+        self.label_Ry_constant: QLabel
+        self.label_Rz_constant: QLabel
         #
-        self.label_Fx_unit: QLabel
-        self.label_Fy_unit: QLabel
-        self.label_Fz_unit: QLabel
-        self.label_Mx_unit: QLabel
-        self.label_My_unit: QLabel
-        self.label_Mz_unit: QLabel
+        self.label_Ux_unit: QLabel
+        self.label_Uy_unit: QLabel
+        self.label_Uz_unit: QLabel
+        self.label_Rx_unit: QLabel
+        self.label_Ry_unit: QLabel
+        self.label_Rz_unit: QLabel
         #
-        self.label_Fx_table: QLabel
-        self.label_Fy_table: QLabel
-        self.label_Fz_table: QLabel
-        self.label_Mx_table: QLabel
-        self.label_My_table: QLabel
-        self.label_Mz_table: QLabel
+        self.label_linear: QLabel
+        self.label_angular: QLabel
+        self.label_Ux_table: QLabel
+        self.label_Uy_table: QLabel
+        self.label_Uz_table: QLabel
+        self.label_Rx_table: QLabel
+        self.label_Ry_table: QLabel
+        self.label_Rz_table: QLabel
 
         # QLineEdit
         self.lineEdit_selection_id: QLineEdit
-        self.lineEdit_real_Fx: QLineEdit
-        self.lineEdit_real_Fy: QLineEdit
-        self.lineEdit_real_Fz: QLineEdit
-        self.lineEdit_real_Mx: QLineEdit
-        self.lineEdit_real_My: QLineEdit
-        self.lineEdit_real_Mz: QLineEdit
+        self.lineEdit_real_ux: QLineEdit
+        self.lineEdit_real_uy: QLineEdit
+        self.lineEdit_real_uz: QLineEdit
+        self.lineEdit_real_rx: QLineEdit
+        self.lineEdit_real_ry: QLineEdit
+        self.lineEdit_real_rz: QLineEdit
+        self.lineEdit_real_alldofs: QLineEdit
         #
-        self.lineEdit_imag_Fx: QLineEdit
-        self.lineEdit_imag_Fy: QLineEdit
-        self.lineEdit_imag_Fz: QLineEdit
-        self.lineEdit_imag_Mx: QLineEdit
-        self.lineEdit_imag_My: QLineEdit
-        self.lineEdit_imag_Mz: QLineEdit
+        self.lineEdit_imag_ux: QLineEdit
+        self.lineEdit_imag_uy: QLineEdit
+        self.lineEdit_imag_uz: QLineEdit
+        self.lineEdit_imag_rx: QLineEdit
+        self.lineEdit_imag_ry: QLineEdit
+        self.lineEdit_imag_rz: QLineEdit
         #
-        self.lineEdit_path_table_Fx: QLineEdit
-        self.lineEdit_path_table_Fy: QLineEdit
-        self.lineEdit_path_table_Fz: QLineEdit
-        self.lineEdit_path_table_Mx: QLineEdit
-        self.lineEdit_path_table_My: QLineEdit
-        self.lineEdit_path_table_Mz: QLineEdit
+        self.lineEdit_imag_alldofs: QLineEdit
+        self.lineEdit_path_table_ux: QLineEdit
+        self.lineEdit_path_table_uy: QLineEdit
+        self.lineEdit_path_table_uz: QLineEdit
+        self.lineEdit_path_table_rx: QLineEdit
+        self.lineEdit_path_table_ry: QLineEdit
+        self.lineEdit_path_table_rz: QLineEdit
         #
         self._create_list_lineEdits()
 
         # QPushButton
         self.pushButton_attribute: QPushButton
         self.pushButton_exit: QPushButton
-        self.pushButton_load_Fx_table: QPushButton
-        self.pushButton_load_Fy_table: QPushButton
-        self.pushButton_load_Fz_table: QPushButton
-        self.pushButton_load_Mx_table: QPushButton
-        self.pushButton_load_My_table: QPushButton
-        self.pushButton_load_Mz_table: QPushButton
+        self.pushButton_load_ux_table: QPushButton
+        self.pushButton_load_uy_table: QPushButton
+        self.pushButton_load_uz_table: QPushButton
+        self.pushButton_load_rx_table: QPushButton
+        self.pushButton_load_ry_table: QPushButton
+        self.pushButton_load_rz_table: QPushButton
         self.pushButton_remove: QPushButton
         self.pushButton_reset: QPushButton
 
@@ -157,33 +161,34 @@ class SetNodalLoadsInputs(QDialog):
         self.tabWidget_main: QTabWidget
 
         # QTreeWidget
-        self.treeWidget_nodal_loads: QTreeWidget
+        self.treeWidget_prescribed_dofs: QTreeWidget
 
     def _create_list_lineEdits(self):
 
         self.list_lineEdit_constant_values = [  
-                                              [self.lineEdit_real_Fx, self.lineEdit_imag_Fx],
-                                              [self.lineEdit_real_Fy, self.lineEdit_imag_Fy],
-                                              [self.lineEdit_real_Fz, self.lineEdit_imag_Fz],
-                                              [self.lineEdit_real_Mx, self.lineEdit_imag_Mx],
-                                              [self.lineEdit_real_My, self.lineEdit_imag_My],
-                                              [self.lineEdit_real_Mz, self.lineEdit_imag_Mz],
+                                              [self.lineEdit_real_ux, self.lineEdit_imag_ux],
+                                              [self.lineEdit_real_uy, self.lineEdit_imag_uy],
+                                              [self.lineEdit_real_uz, self.lineEdit_imag_uz],
+                                              [self.lineEdit_real_rx, self.lineEdit_imag_rx],
+                                              [self.lineEdit_real_ry, self.lineEdit_imag_ry],
+                                              [self.lineEdit_real_rz, self.lineEdit_imag_rz],
+                                              [self.lineEdit_real_alldofs, self.lineEdit_imag_alldofs],
                                               ]
 
         self.table_lineEdits = { 
-                                "Fx" : self.lineEdit_path_table_Fx,
-                                "Fy" : self.lineEdit_path_table_Fy,
-                                "Fz" : self.lineEdit_path_table_Fz,
-                                "Mx" : self.lineEdit_path_table_Mx,
-                                "My" : self.lineEdit_path_table_My,
-                                "Mz" : self.lineEdit_path_table_Mz,
+                                "Ux" : self.lineEdit_path_table_ux,
+                                "Uy" : self.lineEdit_path_table_uy,
+                                "Uz" : self.lineEdit_path_table_uz,
+                                "Rx" : self.lineEdit_path_table_rx,
+                                "Ry" : self.lineEdit_path_table_ry,
+                                "Rz" : self.lineEdit_path_table_rz,
                                 }
 
     def _config_widgets(self):
         #
         for i, w in enumerate([110, 150, 100]):
-            self.treeWidget_nodal_loads.setColumnWidth(i, w)
-            self.treeWidget_nodal_loads.headerItem().setTextAlignment(i, Qt.AlignCenter)
+            self.treeWidget_prescribed_dofs.setColumnWidth(i, w)
+            self.treeWidget_prescribed_dofs.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
         #
@@ -193,18 +198,18 @@ class SetNodalLoadsInputs(QDialog):
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
-        self.pushButton_load_Fx_table.clicked.connect(self.load_Fx_table)
-        self.pushButton_load_Fy_table.clicked.connect(self.load_Fy_table)
-        self.pushButton_load_Fz_table.clicked.connect(self.load_Fz_table)
-        self.pushButton_load_Mx_table.clicked.connect(self.load_Mx_table)
-        self.pushButton_load_My_table.clicked.connect(self.load_My_table)
-        self.pushButton_load_Mz_table.clicked.connect(self.load_Mz_table)
+        self.pushButton_load_ux_table.clicked.connect(self.load_ux_table)
+        self.pushButton_load_uy_table.clicked.connect(self.load_uy_table)
+        self.pushButton_load_uz_table.clicked.connect(self.load_uz_table)
+        self.pushButton_load_rx_table.clicked.connect(self.load_rx_table)
+        self.pushButton_load_ry_table.clicked.connect(self.load_ry_table)
+        self.pushButton_load_rz_table.clicked.connect(self.load_rz_table)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
-        self.treeWidget_nodal_loads.itemClicked.connect(self.on_click_item)
-        self.treeWidget_nodal_loads.itemDoubleClicked.connect(self.on_double_click_item)
+        self.treeWidget_prescribed_dofs.itemClicked.connect(self.on_click_item)
+        self.treeWidget_prescribed_dofs.itemDoubleClicked.connect(self.on_double_click_item)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
 
@@ -223,7 +228,7 @@ class SetNodalLoadsInputs(QDialog):
 
             if len(faces) == 1:
                 surface_id = list(faces)[0]
-                data = self.properties._get_property("nodal_loads", surface=surface_id)
+                data = self.properties._get_property("prescribed_dofs", surface=surface_id)
                 self.update_input_fields(data)
                 if data is None:
                     self.update_formulation_callback(surface_id=surface_id)
@@ -236,33 +241,33 @@ class SetNodalLoadsInputs(QDialog):
 
             if len(lines) == 1:
                 line_id = list(lines)[0]
-                data = self.properties._get_property("nodal_loads", line=line_id)
+                data = self.properties._get_property("prescribed_dofs", line=line_id)
                 self.update_input_fields(data)
                 if data is None:
                     self.update_formulation_callback(line_id=line_id)
 
         elif points:
-
+            
             text = ", ".join([str(i) for i in points])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_attribution_type.setCurrentIndex(2)
 
             if len(points) == 1:
                 point_id = list(points)[0]
-                data = self.properties._get_property("nodal_loads", point=point_id)
+                data = self.properties._get_property("prescribed_dofs", point=point_id)
                 self.update_input_fields(data)
                 if data is None:
                     self.update_formulation_callback(point_id=point_id)
 
         elif nodes:
-
+            
             text = ", ".join([str(i) for i in nodes])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_attribution_type.setCurrentIndex(3)
 
             if len(nodes) == 1:
                 node_id = list(nodes)[0]
-                data = self.properties._get_property("nodal_loads", node=node_id)
+                data = self.properties._get_property("prescribed_dofs", node=node_id)
                 self.update_input_fields(data)
                 if data is None:
                     self.update_formulation_callback(node_id=node_id)
@@ -291,7 +296,7 @@ class SetNodalLoadsInputs(QDialog):
         else:
             for index, [lineEdit_real, lineEdit_imag] in enumerate(self.list_lineEdit_constant_values):
 
-                if element_type == "3d_element" and index >= 3:
+                if data["element_type"] == "3d_element" and index >= 3:
                     continue
                 
                 elif index <= 5 and values[index] is not None:
@@ -344,29 +349,32 @@ class SetNodalLoadsInputs(QDialog):
 
         key = self.comboBox_element_type.currentIndex() == 0
 
-        self.label_Mx_constant.setEnabled(key)
-        self.label_My_constant.setEnabled(key)
-        self.label_Mz_constant.setEnabled(key)
+        self.label_Rx_constant.setEnabled(key)
+        self.label_Ry_constant.setEnabled(key)
+        self.label_Rz_constant.setEnabled(key)
 
-        self.label_Mx_unit.setEnabled(key)
-        self.label_My_unit.setEnabled(key)
-        self.label_Mz_unit.setEnabled(key)
+        self.label_Rx_unit.setEnabled(key)
+        self.label_Ry_unit.setEnabled(key)
+        self.label_Rz_unit.setEnabled(key)
 
-        self.label_Mx_table.setEnabled(key)
-        self.label_My_table.setEnabled(key)
-        self.label_Mz_table.setEnabled(key)
+        self.label_angular.setEnabled(key)
+        self.label_Rx_table.setEnabled(key)
+        self.label_Ry_table.setEnabled(key)
+        self.label_Rz_table.setEnabled(key)
 
-        self.lineEdit_real_Mx.setEnabled(key)
-        self.lineEdit_real_My.setEnabled(key)
-        self.lineEdit_real_Mz.setEnabled(key)
+        self.lineEdit_real_rx.setEnabled(key)
+        self.lineEdit_real_ry.setEnabled(key)
+        self.lineEdit_real_rz.setEnabled(key)
 
-        self.lineEdit_imag_Mx.setEnabled(key)
-        self.lineEdit_imag_My.setEnabled(key)
-        self.lineEdit_imag_Mz.setEnabled(key)
+        self.lineEdit_imag_rx.setEnabled(key)
+        self.lineEdit_imag_ry.setEnabled(key)
+        self.lineEdit_imag_rz.setEnabled(key)
 
-        self.pushButton_load_Mx_table.setEnabled(key)
-        self.pushButton_load_My_table.setEnabled(key)
-        self.pushButton_load_Mz_table.setEnabled(key)
+        self.pushButton_load_rx_table.setEnabled(key)
+        self.pushButton_load_ry_table.setEnabled(key)
+        self.pushButton_load_rz_table.setEnabled(key)
+
+        self.comboBox_angular_data_type.setEnabled(key)
 
     def check_complex_entries(self, real_input: str, imag_input: str, label: str):
 
@@ -405,7 +413,13 @@ class SetNodalLoadsInputs(QDialog):
         else:
             values = _real + 1j * _imag
 
-        output = values
+        if label == "all_dofs":
+            if self.comboBox_element_type.currentIndex() == 0:
+                output = [values, values, values, values, values, values]
+            else:
+                output = [values, values, values]
+        else:
+            output = values
 
         return False, output
 
@@ -426,15 +440,15 @@ class SetNodalLoadsInputs(QDialog):
         else:
             selection = "nodes"
 
-        selected_ids = app().project.model.mesh.check_selected_ids(
-                                                                   input_ids, 
-                                                                   selection = selection
-                                                                   )
+        selected_ids = self.model.mesh.check_selected_ids(
+                                                         input_ids, 
+                                                         selection = selection
+                                                         )
 
         if selected_ids is None:
             self.lineEdit_selection_id.setFocus()
             return
-
+        
         self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
 
@@ -443,38 +457,45 @@ class SetNodalLoadsInputs(QDialog):
         else:
             element_type = "3d_element"
 
-        stop, Fx = self.check_complex_entries(self.lineEdit_real_Fx.text(), self.lineEdit_imag_Fx.text(), "Fx")
-        if stop:
-            return
-
-        stop, Fy = self.check_complex_entries(self.lineEdit_real_Fy.text(), self.lineEdit_imag_Fy.text(), "Fy")
-        if stop:
-            return
-
-        stop, Fz = self.check_complex_entries(self.lineEdit_real_Fz.text(), self.lineEdit_imag_Fz.text(), "Fz")
-        if stop:
-            return
-
-        nodal_loads = [Fx, Fy, Fz]
-
-        if self.comboBox_element_type.currentIndex() == 0:
-            
-            stop, rx = self.check_complex_entries(self.lineEdit_real_Mx.text(), self.lineEdit_imag_Mx.text(), "rx")
+        if self.lineEdit_real_alldofs.text() != "" or self.lineEdit_imag_alldofs.text() != "":
+            stop, prescribed_dofs = self.check_complex_entries(self.lineEdit_real_alldofs.text(), self.lineEdit_imag_alldofs.text(), "all_dofs")
             if stop:
                 return
 
-            stop, ry = self.check_complex_entries(self.lineEdit_real_My.text(), self.lineEdit_imag_My.text(), "ry")
+        else:
+
+            stop, ux= self.check_complex_entries(self.lineEdit_real_ux.text(), self.lineEdit_imag_ux.text(), "ux")
             if stop:
                 return
 
-            stop, Mz = self.check_complex_entries(self.lineEdit_real_Mz.text(), self.lineEdit_imag_Mz.text(), "Mz")
+            stop, uy= self.check_complex_entries(self.lineEdit_real_uy.text(), self.lineEdit_imag_uy.text(), "uy")
             if stop:
                 return
 
-            nodal_loads.extend([rx, ry, Mz])
+            stop, uz= self.check_complex_entries(self.lineEdit_real_uz.text(), self.lineEdit_imag_uz.text(), "uz")
+            if stop:
+                return
 
-        condition_1 = self.comboBox_element_type.currentIndex() == 0 and nodal_loads.count(None) == 6
-        condition_2 = self.comboBox_element_type.currentIndex() == 1 and nodal_loads.count(None) == 3
+            prescribed_dofs = [ux, uy, uz]
+
+            if self.comboBox_element_type.currentIndex() == 0:
+             
+                stop, rx= self.check_complex_entries(self.lineEdit_real_rx.text(), self.lineEdit_imag_rx.text(), "rx")
+                if stop:
+                    return
+
+                stop, ry= self.check_complex_entries(self.lineEdit_real_ry.text(), self.lineEdit_imag_ry.text(), "ry")
+                if stop:
+                    return
+
+                stop, rz= self.check_complex_entries(self.lineEdit_real_rz.text(), self.lineEdit_imag_rz.text(), "rz")
+                if stop:
+                    return
+
+                prescribed_dofs.extend([rx, ry, rz])
+
+        condition_1 = self.comboBox_element_type.currentIndex() == 0 and prescribed_dofs.count(None) == 6
+        condition_2 = self.comboBox_element_type.currentIndex() == 1 and prescribed_dofs.count(None) == 3
 
         if condition_1 or condition_2:
             self.hide()
@@ -484,37 +505,33 @@ class SetNodalLoadsInputs(QDialog):
             PrintMessageInput([window_title_1, title, message])
             return
 
-        real_values = [value if value is None else np.real(value) for value in nodal_loads]
-        imag_values = [value if value is None else np.imag(value) for value in nodal_loads]
-
-        key_avg = self.checkBox_averaged_constant_values.isChecked()
+        real_values = [value if value is None else np.real(value) for value in prescribed_dofs]
+        imag_values = [value if value is None else np.imag(value) for value in prescribed_dofs]
 
         for selected_id in selected_ids:
 
             data = {
                     "element_type" : element_type,
-                    "values" : nodal_loads,
+                    "values" : prescribed_dofs,
                     "real_values" : real_values,
-                    "imag_values" : imag_values,
-                    "nodal_attribution": True,
-                    "averaged": key_avg,
+                    "imag_values" : imag_values
                     }
 
             if attribution_type == 0:
-                self.properties._set_property("nodal_loads", data, surface=selected_id)
+                self.model.properties._set_property("prescribed_dofs", data, surface=selected_id)
 
             elif attribution_type == 1:
-                self.properties._set_property("nodal_loads", data, line=selected_id)
+                self.model.properties._set_property("prescribed_dofs", data, line=selected_id)
 
             elif attribution_type == 2:
-                self.properties._set_property("nodal_loads", data, point=selected_id)
+                self.model.properties._set_property("prescribed_dofs", data, point=selected_id)
 
             elif attribution_type == 3:
-                self.properties._set_property("nodal_loads", data, node=selected_id)
+                self.model.properties._set_property("prescribed_dofs", data, node=selected_id)
 
         self.actions_to_finalize()
 
-    def load_table(self, lineEdit : QLineEdit, load_label : str, direct_load = False):
+    def load_table(self, lineEdit : QLineEdit, dof_label : str, direct_load = False):
 
         title = "Error while loading table"
 
@@ -533,7 +550,7 @@ class SetNodalLoadsInputs(QDialog):
                 else:
                     path = last_path
 
-                caption = f"Choose a table to import the {load_label} data"
+                caption = f"Choose a table to import the {dof_label} data"
                 imported_table_path, check = QFileDialog.getOpenFileName(  
                                                                          None, 
                                                                          caption, 
@@ -559,30 +576,6 @@ class SetNodalLoadsInputs(QDialog):
 
             imported_values = imported_file[:, 1] + 1j * imported_file[:, 2]
             self.frequencies = imported_file[:, 0]
-        
-            if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
-
-                self.lineEdit_reset(lineEdit)
-
-                title = "Project frequency setup cannot be modified"
-                message = f"The following imported table of values has a frequency setup\n"
-                message += "different from the others already imported ones. The current\n"
-                message += "project frequency setup is not going to be modified."
-                message += f"\n\n{imported_filename}"
-                PrintMessageInput([window_title_1, title, message])
-                return None, None
-
-            # else:
-
-            #     f_min = self.frequencies[0]
-            #     f_max = self.frequencies[-1]
-            #     f_step = self.frequencies[1] - self.frequencies[0] 
-
-            #     frequency_setup = { "f_min" : f_min,
-            #                         "f_max" : f_max,
-            #                         "f_step" : f_step }
-
-            #     app().project.model.set_frequency_setup(frequency_setup)
 
             return imported_values, imported_table_path
 
@@ -596,35 +589,35 @@ class SetNodalLoadsInputs(QDialog):
         lineEdit.setText("")
         lineEdit.setFocus()
 
-    def load_Fx_table(self):
-        self.Fx_table_values, self.Fx_table_path = self.load_table(self.lineEdit_path_table_Fx, "Fx")
-        if  self.Fx_table_path is None:
-            self.lineEdit_reset(self.lineEdit_path_table_Fx)
+    def load_ux_table(self):
+        self.ux_table_values, self.ux_table_path = self.load_table(self.lineEdit_path_table_ux, "Ux")
+        if  self.ux_table_path is None:
+            self.lineEdit_reset(self.lineEdit_path_table_ux)
 
-    def load_Fy_table(self):
-        self.Fy_table_values, self.Fy_table_path = self.load_table(self.lineEdit_path_table_Fy, "Fy")
-        if self.Fy_table_path is None:
-            self.lineEdit_reset(self.lineEdit_path_table_Fy)
+    def load_uy_table(self):
+        self.uy_table_values, self.uy_table_path = self.load_table(self.lineEdit_path_table_uy, "Uy")
+        if self.uy_table_path is None:
+            self.lineEdit_reset(self.lineEdit_path_table_uy)
             
-    def load_Fz_table(self):
-        self.Fz_table_values, self.Fz_table_path = self.load_table(self.lineEdit_path_table_Fz, "Fz")
-        if self.Fz_table_path is None:
-            self.lineEdit_reset(self.lineEdit_path_table_Fz)
+    def load_uz_table(self):
+        self.uz_table_values, self.uz_table_path = self.load_table(self.lineEdit_path_table_uz, "Uz")
+        if self.uz_table_path is None:
+            self.lineEdit_reset(self.lineEdit_path_table_uz)
             
-    def load_Mx_table(self):
-        self.Mx_table_values, self.Mx_table_path = self.load_table(self.lineEdit_path_table_Mx, "Mx")
-        if self.Mx_table_path is None:
-            self.lineEdit_reset(self.lineEdit_path_table_Mx)
+    def load_rx_table(self):
+        self.rx_table_values, self.rx_table_path = self.load_table(self.lineEdit_path_table_rx, "Rx")
+        if self.rx_table_path is None:
+            self.lineEdit_reset(self.lineEdit_path_table_rx)
             
-    def load_My_table(self):
-        self.My_table_values, self.My_table_path = self.load_table(self.lineEdit_path_table_My, "My")
-        if self.My_table_path is None:
-            self.lineEdit_reset(self.lineEdit_path_table_My)
+    def load_ry_table(self):
+        self.ry_table_values, self.ry_table_path = self.load_table(self.lineEdit_path_table_ry, "Ry")
+        if self.ry_table_path is None:
+            self.lineEdit_reset(self.lineEdit_path_table_ry)
             
-    def load_Mz_table(self):
-        self.Mz_table_values, self.Mz_table_path = self.load_table(self.lineEdit_path_table_Mz, "Mz")
-        if self.Mz_table_path is None:
-            self.lineEdit_reset(self.lineEdit_path_table_Mz)
+    def load_rz_table(self):
+        self.rz_table_values, self.rz_table_path = self.load_table(self.lineEdit_path_table_rz, "Rz")
+        if self.rz_table_path is None:
+            self.lineEdit_reset(self.lineEdit_path_table_rz)
 
     def update_analysis_setup_in_file(self, frequencies: np.ndarray):
 
@@ -643,10 +636,18 @@ class SetNodalLoadsInputs(QDialog):
         app().project.set_analysis_data(analysis_setup)
         app().file.write_analysis_setup_in_file(analysis_setup)
 
-    def save_table_files(self, load_label: str, selected_id: int, selection: str, values: np.ndarray):
+    def integrate_and_save_table_files(self, dof_label: str, selected_id: int, selection: str, values: np.ndarray, linear=False, angular=False):
 
         if self.frequencies[0] == 0:
             self.frequencies[0] = float(1e-6)
+
+        if linear:
+            index_lin = self.comboBox_linear_data_type.currentIndex()
+            values /= ((1j*2*np.pi*self.frequencies)**index_lin)
+
+        if angular:
+            index_ang = self.comboBox_angular_data_type.currentIndex()
+            values /= ((1j*2*np.pi*self.frequencies)**index_ang)
 
         if self.frequencies[0] == float(1e-6):
             self.frequencies[0] = 0
@@ -654,7 +655,7 @@ class SetNodalLoadsInputs(QDialog):
         if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
 
             self.hide()
-            lineEdit = self.table_lineEdits[load_label]
+            lineEdit = self.table_lineEdits[dof_label]
             imported_filename = basename(lineEdit.text())
             self.lineEdit_reset(lineEdit)
 
@@ -667,7 +668,7 @@ class SetNodalLoadsInputs(QDialog):
 
             return None, None
 
-        table_name = f"nodal_loads_{load_label}_from_{selection[:-1]}_{selected_id}"
+        table_name = f"prescribed_dof_{dof_label}_from_{selection[:-1]}_{selected_id}"
 
         real_values = np.real(values)
         imag_values = np.imag(values)
@@ -695,10 +696,10 @@ class SetNodalLoadsInputs(QDialog):
         else:
             selection = "nodes"
 
-        selected_ids = app().project.model.mesh.check_selected_ids(
-                                                                   input_ids, 
-                                                                   selection = selection
-                                                                   )
+        selected_ids = self.model.mesh.check_selected_ids(
+                                                         input_ids, 
+                                                         selection = selection
+                                                         )
 
         if selected_ids is None:
             self.lineEdit_selection_id.setFocus()
@@ -712,67 +713,53 @@ class SetNodalLoadsInputs(QDialog):
         else:
             element_type = "3d_element"
 
-        if self.Fx_table_path is None:
-            self.Fx_table_values, self.Fx_table_path = self.load_table(self.lineEdit_path_table_Fx, "Fx", direct_load = True)
+        if self.ux_table_path is None:
+            self.ux_table_values, self.ux_table_path = self.load_table(self.lineEdit_path_table_ux, "Ux", direct_load = True)
 
-        if self.Fy_table_path is None:
-            self.Fy_table_values, self.Fy_table_path = self.load_table(self.lineEdit_path_table_Fy, "Fy", direct_load = True)
+        if self.uy_table_path is None:
+            self.uy_table_values, self.uy_table_path = self.load_table(self.lineEdit_path_table_uy, "Uy", direct_load = True)
 
-        if self.Fz_table_path is None:
-            self.Fz_table_values, self.Fz_table_path = self.load_table(self.lineEdit_path_table_Fz, "Fz", direct_load = True)
+        if self.uz_table_path is None:
+            self.uz_table_values, self.uz_table_path = self.load_table(self.lineEdit_path_table_uz, "Uz", direct_load = True)
 
-        if self.Mx_table_path is None:
-            self.Mx_table_values, self.Mx_table_path = self.load_table(self.lineEdit_path_table_Mx, "Mx", direct_load = True)
+        if self.rx_table_path is None:
+            self.rx_table_values, self.rx_table_path = self.load_table(self.lineEdit_path_table_rx, "Rx", direct_load = True)
 
-        if self.My_table_path is None:
-            self.My_table_values, self.My_table_path = self.load_table(self.lineEdit_path_table_My, "My", direct_load = True)
+        if self.ry_table_path is None:
+            self.ry_table_values, self.ry_table_path = self.load_table(self.lineEdit_path_table_ry, "Ry", direct_load = True)
 
-        if self.Mz_table_path is None:
-            self.Mz_table_values, self.Mz_table_path = self.load_table(self.lineEdit_path_table_Mz, "Mz", direct_load = True)
-
-        key_avg = self.checkBox_averaged_table_values.isChecked()
+        if self.rz_table_path is None:
+            self.rz_table_values, self.rz_table_path = self.load_table(self.lineEdit_path_table_rz, "Rz", direct_load = True)
 
         for selected_id in selected_ids:
             
-            if self.Fx_table_values is not None:
-                self.Fx_table_name, self.Fx_array = self.save_table_files("Fx", selected_id, selection, self.Fx_table_values)
-                if self.Fx_array is None:
-                    return
-                
-            if self.Fy_table_values is not None:
-                self.Fy_table_name, self.Fy_array = self.save_table_files("Fy", selected_id, selection, self.Fy_table_values)
-                if self.Fy_array is None:
-                    return
-                
-            if self.Fz_table_values is not None:
-                self.Fz_table_name, self.Fz_array = self.save_table_files("Fz", selected_id, selection, self.Fz_table_values)
-                if self.Fz_array is None:
-                    return
+            if self.ux_table_values is not None:
+                self.ux_table_name, self.ux_array = self.integrate_and_save_table_files("Ux", selected_id, selection, self.ux_table_values, self.ux_table_path, linear = True)
 
-            table_names = [self.Fx_table_name, self.Fy_table_name, self.Fz_table_name]
-            table_paths = [self.Fx_table_path, self.Fy_table_path, self.Fz_table_path]
-            nodal_loads = [self.Fx_table_values, self.Fy_table_values, self.Fz_table_values]
+            if self.uy_table_values is not None:
+                self.uy_table_name, self.uy_array = self.integrate_and_save_table_files("Uy", selected_id, selection, self.uy_table_values, self.uy_table_path, linear = True)
+
+            if self.uz_table_values is not None:
+                self.uz_table_name, self.uz_array = self.integrate_and_save_table_files("Uz", selected_id, selection, self.uz_table_values, self.uz_table_path, linear = True)
+
+            table_names = [self.ux_table_name, self.uy_table_name, self.uz_table_name]
+            table_paths = [self.ux_table_path, self.uy_table_path, self.uz_table_path]
+            prescribed_dofs = [self.ux_table_values, self.uy_table_values, self.uz_table_values]
 
             if self.comboBox_element_type.currentIndex() == 0:
 
-                if self.Mx_table_values is not None:
-                    self.Mx_table_name, self.Mx_array = self.save_table_files("Mx", selected_id, selection, self.Mx_table_values)
-                    if self.Mx_array is None:
-                        return
+                if self.rx_table_values is not None:
+                    self.rx_table_name, self.rx_array = self.integrate_and_save_table_files("Rx", selected_id, selection, self.rx_table_values, self.rx_table_path, angular = True)
 
-                if self.My_table_values is not None:
-                    self.My_table_name, self.Mx_array = self.save_table_files("My", selected_id, selection, self.My_table_values)
-                    if self.My_array is None:
-                        return
+                if self.ry_table_values is not None:
+                    self.ry_table_name, self.rx_array = self.integrate_and_save_table_files("Ry", selected_id, selection, self.ry_table_values, self.ry_table_path, angular = True)
 
-                if self.Mz_table_values is not None:
-                    self.Mz_table_name, self.Mx_array = self.save_table_files("Mz", selected_id, selection, self.Mz_table_values)
-                    if self.Mz_array is None:
-                        return
+                if self.rz_table_values is not None:
+                    self.rz_table_name, self.rx_array = self.integrate_and_save_table_files("Rz", selected_id, selection, self.rz_table_values, self.rz_table_path, angular = True)
 
-                table_names.extend([self.Mx_table_name, self.My_table_name, self.Mz_table_name])
-                table_paths.extend([self.Mx_table_path, self.My_table_path, self.Mz_table_path])
-                nodal_loads.extend([self.Mx_table_values, self.My_table_values, self.Mz_table_values])
+                table_names.extend([self.rx_table_name, self.ry_table_name, self.rz_table_name])
+                table_paths.extend([self.rx_table_path, self.ry_table_path, self.rz_table_path])
+                prescribed_dofs.extend([self.rx_table_values, self.ry_table_values, self.rz_table_values])
 
             condition_1 = self.comboBox_element_type.currentIndex() == 0 and table_names.count(None) == 6
             condition_2 = self.comboBox_element_type.currentIndex() == 1 and table_names.count(None) == 3
@@ -780,31 +767,29 @@ class SetNodalLoadsInputs(QDialog):
             if condition_1 or condition_2:
                 self.hide()
                 title = "Additional inputs required"
-                message = "It is necessary to enter at least one external load "
+                message = "It is necessary to enter at least one prescribed dof "
                 message += "before confirming the property assignment."
                 PrintMessageInput([window_title_1, title, message]) 
-                return
+                return 
 
             data = {
                     "element_type" : element_type,
                     "table_names" : table_names,
                     "table_paths" : table_paths,
-                    "values" : nodal_loads,
-                    "nodal_attribution": True,
-                    "averaged": key_avg,
+                    "values" : prescribed_dofs
                     }
 
             if attribution_type == 0:
-                self.properties._set_property("nodal_loads", data, surface=selected_id)
+                self.model.properties._set_property("prescribed_dofs", data, surface=selected_id)
 
             elif attribution_type == 1:
-                self.properties._set_property("nodal_loads", data, line=selected_id)
+                self.model.properties._set_property("prescribed_dofs", data, line=selected_id)
 
             elif attribution_type == 2:
-                self.properties._set_property("nodal_loads", data, point=selected_id)
+                self.model.properties._set_property("prescribed_dofs", data, point=selected_id)
 
             elif attribution_type == 3:
-                self.properties._set_property("nodal_loads", data, node=selected_id)
+                self.model.properties._set_property("prescribed_dofs", data, node=selected_id)
 
         self.reset_table_variables()
         self.actions_to_finalize()
@@ -819,85 +804,85 @@ class SetNodalLoadsInputs(QDialog):
 
                 nodes_from_surface = self.model.mesh.nodes_from_surfaces[selected_id]
                 for (property, node_id) in self.properties.nodal_properties.keys():
-                    if property == "nodal_loads" and node_id in nodes_from_surface:
+                    if property == "prescribed_dofs" and node_id in nodes_from_surface:
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
                 for line_id in app().project.model.mesh.lines_from_surface[selected_id]:
-                    data = self.properties._get_property("nodal_loads", line=line_id)
+                    data = self.properties._get_property("prescribed_dofs", line=line_id)
                     if isinstance(data, dict):
-                        self.properties._remove_line_property("nodal_loads", line_id)
-                        table_names.extend(self.properties.get_property_related_table_names("nodal_loads", line_id, "lines"))
+                        self.properties._remove_line_property("prescribed_dofs", line_id)
+                        table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", line_id, "lines"))
 
                     for point_id in app().project.model.mesh.points_from_line[line_id]:
-                        data = self.properties._get_property("nodal_loads", point=point_id)
+                        data = self.properties._get_property("prescribed_dofs", point=point_id)
                         if isinstance(data, dict):
-                            self.properties._remove_point_property("nodal_loads", point_id)
-                            table_names.extend(self.properties.get_property_related_table_names("nodal_loads", point_id, "points"))
+                            self.properties._remove_point_property("prescribed_dofs", point_id)
+                            table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", point_id, "points"))
 
             elif selection == "lines":
 
                 nodes_from_line = self.model.mesh.nodes_from_lines[selected_id]
                 for (property, node_id) in self.properties.nodal_properties.keys():
-                    if property == "nodal_loads" and node_id in nodes_from_line:
+                    if property == "prescribed_dofs" and node_id in nodes_from_line:
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
                 for surface_id in app().project.model.mesh.surfaces_from_line[selected_id]:
-                    data = self.properties._get_property("nodal_loads", surface=surface_id)
+                    data = self.properties._get_property("prescribed_dofs", surface=surface_id)
                     if isinstance(data, dict):
-                        self.properties._remove_surface_property("nodal_loads", surface_id)
-                        table_names.extend(self.properties.get_property_related_table_names("nodal_loads", surface_id, "surfaces"))
+                        self.properties._remove_surface_property("prescribed_dofs", surface_id)
+                        table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", surface_id, "surfaces"))
 
                 for point_id in app().project.model.mesh.points_from_line[selected_id]:
-                    data = self.properties._get_property("nodal_loads", point=point_id)
+                    data = self.properties._get_property("prescribed_dofs", point=point_id)
                     if isinstance(data, dict):
-                        self.properties._remove_point_property("nodal_loads", point_id)
-                        table_names.extend(self.properties.get_property_related_table_names("nodal_loads", point_id, "points"))
+                        self.properties._remove_point_property("prescribed_dofs", point_id)
+                        table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", point_id, "points"))
 
             elif selection == "points":
 
                 nodes_from_point = self.model.mesh.nodes_from_points[selected_id]
                 for (property, node_id) in self.properties.nodal_properties.keys():
-                    if property == "nodal_loads" and node_id in nodes_from_point:
+                    if property == "prescribed_dofs" and node_id in nodes_from_point:
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
                 for line_id in app().project.model.mesh.lines_from_point[selected_id]:
-                    data = self.properties._get_property("nodal_loads", line=line_id)
+                    data = self.properties._get_property("prescribed_dofs", line=line_id)
                     if isinstance(data, dict):
-                        self.properties._remove_line_property("nodal_loads", line_id)
-                        table_names.extend(self.properties.get_property_related_table_names("nodal_loads", line_id, "lines"))
+                        self.properties._remove_line_property("prescribed_dofs", line_id)
+                        table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", line_id, "lines"))
 
                     for surface_id in self.model.mesh.surfaces_from_line[line_id]:
-                        data = self.properties._get_property("nodal_loads", surface=surface_id)
+                        data = self.properties._get_property("prescribed_dofs", surface=surface_id)
                         if isinstance(data, dict):
-                            self.properties._remove_surface_property("nodal_loads", surface_id)
-                            table_names.extend(self.properties.get_property_related_table_names("nodal_loads", surface_id, "surfaces"))
+                            self.properties._remove_surface_property("prescribed_dofs", surface_id)
+                            table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", surface_id, "surfaces"))
 
             elif selection == "nodes":
 
                 point_id = selected_id + 1
-                data = self.properties._get_property("nodal_loads", point=point_id)
+                data = self.properties._get_property("prescribed_dofs", point=point_id)
                 if isinstance(data, dict):
-                    self.properties._remove_point_property("nodal_loads", point_id)
-                    table_names.extend(self.properties.get_property_related_table_names("nodal_loads", point_id, "points"))
+                    self.properties._remove_point_property("prescribed_dofs", point_id)
+                    table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", point_id, "points"))
 
                 for line_id in app().project.model.mesh.lines_from_point[point_id]:
-                    data = self.properties._get_property("nodal_loads", line=line_id)
+                    data = self.properties._get_property("prescribed_dofs", line=line_id)
                     if isinstance(data, dict):
-                        self.properties._remove_line_property("nodal_loads", line_id)
-                        table_names.extend(self.properties.get_property_related_table_names("nodal_loads", line_id, "lines"))
+                        self.properties._remove_line_property("prescribed_dofs", line_id)
+                        table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", line_id, "lines"))
 
                     for surface_id in self.model.mesh.surfaces_from_line[line_id]:
-                        data = self.properties._get_property("nodal_loads", surface=surface_id)
+                        data = self.properties._get_property("prescribed_dofs", surface=surface_id)
                         if isinstance(data, dict):
-                            self.properties._remove_surface_property("nodal_loads", surface_id)
-                            table_names.extend(self.properties.get_property_related_table_names("nodal_loads", surface_id, "surfaces"))
+                            self.properties._remove_surface_property("prescribed_dofs", surface_id)
+                            table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", surface_id, "surfaces"))
 
             for node_id in nodes_to_remove:
-                self.properties._remove_nodal_property("nodal_loads", node_id)
-                table_names.extend(self.properties.get_property_related_table_names("nodal_loads", node_id, "nodes"))
+                self.properties._remove_nodal_property("prescribed_dofs", node_id)
+                table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", node_id, "nodes"))
 
             self.process_table_file_removal(table_names)
 
@@ -911,12 +896,12 @@ class SetNodalLoadsInputs(QDialog):
     def text_label(self, mask):
 
         if len(mask) == 6:
-            load_labels = np.array(['Fx','Fy','Fz','Mx','My','Mz'])
+            dofs_labels = np.array(['Ux','Uy','Uz','Rx','Ry','Rz'])
 
         elif len(mask) == 3:
-            load_labels = np.array(['Fx','Fy','Fz'])
+            dofs_labels = np.array(['Ux','Uy','Uz'])
 
-        labels = load_labels[mask]
+        labels = dofs_labels[mask]
 
         text = ""
         if list(mask).count(True) == 6:
@@ -936,10 +921,10 @@ class SetNodalLoadsInputs(QDialog):
 
     def load_model_info(self):
 
-        self.treeWidget_nodal_loads.clear()
+        self.treeWidget_prescribed_dofs.clear()
         for (property, *args), data in self.properties.surface_properties.items():
 
-            if property == "nodal_loads":
+            if property == "prescribed_dofs":
                 values = data["values"]
                 element_type = data["element_type"]
                 constrained_loads_mask = [False if value is None else True for value in values]
@@ -948,11 +933,11 @@ class SetNodalLoadsInputs(QDialog):
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-                self.treeWidget_nodal_loads.addTopLevelItem(new)
+                self.treeWidget_prescribed_dofs.addTopLevelItem(new)
 
         for (property, *args), data in self.properties.line_properties.items():
 
-            if property == "nodal_loads":
+            if property == "prescribed_dofs":
                 values = data["values"]
                 element_type = data["element_type"]
                 constrained_loads_mask = [False if value is None else True for value in values]
@@ -961,11 +946,11 @@ class SetNodalLoadsInputs(QDialog):
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-                self.treeWidget_nodal_loads.addTopLevelItem(new)
+                self.treeWidget_prescribed_dofs.addTopLevelItem(new)
 
         for (property, *args), data in self.properties.point_properties.items():
 
-            if property == "nodal_loads":
+            if property == "prescribed_dofs":
                 values = data["values"]
                 element_type = data["element_type"]
                 constrained_loads_mask = [False if value is None else True for value in values]
@@ -974,11 +959,11 @@ class SetNodalLoadsInputs(QDialog):
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-                self.treeWidget_nodal_loads.addTopLevelItem(new)
+                self.treeWidget_prescribed_dofs.addTopLevelItem(new)
 
         for (property, *args), data in self.properties.nodal_properties.items():
 
-            if property == "nodal_loads":
+            if property == "prescribed_dofs":
                 values = data["values"]
                 element_type = data["element_type"]
                 constrained_loads_mask = [False if value is None else True for value in values]
@@ -987,7 +972,7 @@ class SetNodalLoadsInputs(QDialog):
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-                self.treeWidget_nodal_loads.addTopLevelItem(new)
+                self.treeWidget_prescribed_dofs.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 
@@ -1002,13 +987,13 @@ class SetNodalLoadsInputs(QDialog):
 
         for current_property in properties_to_check:
             for (property, _) in current_property.keys():
-                if property == "nodal_loads":
+                if property == "prescribed_dofs":
                     self.tabWidget_main.setTabVisible(2, True)
                     return
 
         self.tabWidget_main.setTabVisible(2, False)
         self.tabWidget_main.setCurrentIndex(0)
-        self.lineEdit_real_Fx.setFocus()
+        self.lineEdit_real_alldofs.setFocus()
         app().main_window.set_geometry_selection()
 
     def tab_event_callback(self):
@@ -1050,10 +1035,10 @@ class SetNodalLoadsInputs(QDialog):
                 app().main_window.set_mesh_selection(nodes=[int(selected_id)])
 
             if selection == "Node":
-                app().main_window.action_mesh_workspace_callback()
+                self.main_window.action_mesh_workspace_callback()
 
             else:
-                app().main_window.action_model_workspace_callback()
+                self.main_window.action_model_workspace_callback()
 
             self.lineEdit_selection_id.setText(item.text(0))
 
@@ -1096,7 +1081,7 @@ class SetNodalLoadsInputs(QDialog):
                 self.process_table_file_removal(table_names)
 
     def remove_table_files_from(self, selected_id : list, selection: str):
-        table_names = self.properties.get_property_related_table_names("nodal_loads", selected_id, selection)
+        table_names = self.properties.get_property_related_table_names("prescribed_dofs", selected_id, selection)
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
@@ -1109,16 +1094,19 @@ class SetNodalLoadsInputs(QDialog):
             selected_id = int(_selected_id)
 
             if selection == "Surface":
-                self.properties._remove_surface_property("nodal_loads", selected_id)
+                self.properties._remove_surface_property("prescribed_dofs", selected_id)
 
             elif selection == "Line":
-                self.properties._remove_line_property("nodal_loads", selected_id)
+                self.properties._remove_line_property("prescribed_dofs", selected_id)
 
             elif selection == "Point":
-                self.properties._remove_point_property("nodal_loads", selected_id)
+                self.properties._remove_point_property("prescribed_dofs", selected_id)
 
             elif selection == "Node":
-                self.properties._remove_nodal_property("nodal_loads", selected_id)
+                self.properties._remove_nodal_property("prescribed_dofs", selected_id)
+
+            else:
+                return
 
             self.remove_table_files_from(selected_id, f"{selection.lower()}s")
             self.actions_to_finalize()
@@ -1130,8 +1118,8 @@ class SetNodalLoadsInputs(QDialog):
 
         self.hide()
 
-        title = "Nodal loads resetting"
-        message = "Would you like to remove the all external loads from model?"
+        title = "Prescribed DOFs resetting"
+        message = "Would you like to remove the all prescribed DOFs from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
         obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -1142,22 +1130,22 @@ class SetNodalLoadsInputs(QDialog):
         if obj._continue:
 
             for (property, *args) in self.properties.surface_properties.keys():
-                if property == "nodal_loads":
+                if property == "prescribed_dofs":
                     self.remove_table_files_from(args[0], "surfaces")
 
             for (property, *args) in self.properties.line_properties.keys():
-                if property == "nodal_loads":
+                if property == "prescribed_dofs":
                     self.remove_table_files_from(args[0], "lines")
 
             for (property, *args) in self.properties.point_properties.keys():
-                if property == "nodal_loads":
+                if property == "prescribed_dofs":
                     self.remove_table_files_from(args[0], "points")
 
             for (property, *args) in self.properties.nodal_properties.keys():
-                if property == "nodal_loads":
+                if property == "prescribed_dofs":
                     self.remove_table_files_from(args[0], "nodes")
 
-            self.properties._reset_property("nodal_loads")
+            self.properties._reset_property("prescribed_dofs")
             self.actions_to_finalize()
 
             app().main_window.set_geometry_selection()
@@ -1186,9 +1174,9 @@ class SetNodalLoadsInputs(QDialog):
                 if "table_names" in data.keys():
                     return
 
-        if isinstance(app().project.analysis_data, dict):
-            analysis_data = app().project.analysis_data
-            app().project.set_analysis_data(analysis_data)
+        if isinstance(self.project.analysis_data, dict):
+            analysis_data = self.project.analysis_data
+            self.project.set_analysis_data(analysis_data)
             app().file.write_analysis_setup_in_file(analysis_data)
 
     def reset_input_fields(self, reset_all=False):
