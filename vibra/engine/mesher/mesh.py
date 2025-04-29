@@ -609,6 +609,9 @@ class Mesh:
         self.cache_lines_from_surface = deepcopy(self.lines_from_surface)
         self.cache_points_from_line = deepcopy(self.points_from_line)
 
+        self.cache_elements_from_surface = deepcopy(self.elements_from_surface)
+        self.cache_elements_from_line = deepcopy(self.elements_from_line)
+
         self.cache_lines_connectivity = deepcopy(self.lines_connectivity)
         self.cache_faces_connectivity = deepcopy(self.faces_connectivity)
         self.cache_solids_connectivity = deepcopy(self.solids_connectivity)
