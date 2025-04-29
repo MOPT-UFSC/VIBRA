@@ -30,6 +30,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.clear_symbols()
         self._build_nodal_normals()
         self._build_surface_velocity()
+        self._build_specific_impedance()
         self._build_prescribed_dofs()
         self._build_nodal_loads()
         super().build()
@@ -100,7 +101,15 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             orientation = np.real((x, y, z))
             is_pointing = np.dot(normal, orientation) < 0
             self.add_force_symbol(coords, orientation, is_pointing)
-
+    
+    def _build_specific_impedance(self):
+        surface_properties = app().project.model.properties.surface_properties
+        for (property_name, surface_id), property in surface_properties.items():
+            if property_name != "specific_impedance":
+                continue
+            
+            coords, normal = self._get_center_coords_and_normals(surface_id)
+            self.add_impedance_symbol(coords, normal)
 
     # Specifications on how each symbol should look like
     def add_force_symbol(self, position, orientation, pointing=True):
