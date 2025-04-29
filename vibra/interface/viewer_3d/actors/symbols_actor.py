@@ -33,39 +33,35 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         super().build()
         return
 
-    def _build_surface_velocity(self):
+    def _get_center_coords_and_normals(self, surface_id: int) -> float:
         mesh = app().project.model.mesh
-        surface_properties = app().project.model.properties.surface_properties
 
+        surface_nodes = mesh.nodes_from_surfaces[surface_id]
+        surface_normals = mesh.normals_surface.get(surface_id)
+        surface_coordinates = mesh.nodal_coordinates[surface_nodes, 1:]
+
+        curvatures_surface = mesh.curvatures_surface.get(surface_id)
+        contains_curvature = (curvatures_surface is not None) and np.any(curvatures_surface)
+        center_coords = np.average(surface_coordinates, axis=0)
+
+        if contains_curvature:
+            # Finds the node that is closest to the center coords
+            dist = np.linalg.norm(surface_coordinates - center_coords, axis=1)
+            index = np.argmin(dist)
+            return surface_coordinates[index, :], surface_normals[index, :]
+
+        else:
+            return center_coords, np.average(surface_normals, axis=0)
+
+
+    def _build_surface_velocity(self):
+        surface_properties = app().project.model.properties.surface_properties
         for (property_name, surface_id) in surface_properties.keys():
             if property_name != "surface_velocity":
                 continue
 
-            curvatures_surface = mesh.curvatures_surface.get(surface_id)
-            if curvatures_surface is None:
-                continue
-
-            normals_surface = mesh.normals_surface.get(surface_id)
-            surface_nodes = mesh.nodes_from_surfaces[surface_id]
-            surface_coordinates = mesh.nodal_coordinates[surface_nodes, 1:]
-            center_coords = np.average(surface_coordinates, axis=0)
-
-            if curvatures_surface.any():
-                dist = np.linalg.norm(surface_coordinates - center_coords, axis=1)
-                arg_min = np.argmin(dist)
-                coords = surface_coordinates[arg_min, :]
-                orientation = normals_surface[arg_min, :]
-
-            else:
-                coords = center_coords
-                orientation = np.average(normals_surface, axis=0)
-
+            coords, orientation = self._get_center_coords_and_normals(surface_id)
             self.add_normal_surface_velocity_symbol(coords, orientation)
-
-            ## plot all surface normals at nodes
-            # for i, coords in enumerate(surface_coordinates):
-            #     self.add_normal_surface_velocity_symbol(coords, normals_surface[i, :])
-
 
     def _build_nodal_normals(self):
         mesh = app().project.model.mesh
