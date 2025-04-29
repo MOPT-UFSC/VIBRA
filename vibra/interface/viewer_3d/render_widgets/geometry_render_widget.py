@@ -307,8 +307,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         if not self.actors_exists():
             return
 
-        1/0
-
         self.points_actor.clear_colors()
         self.lines_actor.clear_colors()
         self.faces_actor.clear_colors()
