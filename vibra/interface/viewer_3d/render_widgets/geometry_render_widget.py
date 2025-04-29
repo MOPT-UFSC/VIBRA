@@ -224,9 +224,9 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.update_plot()
             return
 
-        self.renderer.RemoveActor(self.faces_actor)
+        self.remove_actors(self.faces_actor)
         self.faces_actor = FacesActor(mesh)
-        self.renderer.AddActor(self.faces_actor)
+        self.add_actors(self.faces_actor)
 
         has_hidden_part = bool(app().main_window.hidden_surfaces)
         self.ghost_actor.SetVisibility(has_hidden_part)
