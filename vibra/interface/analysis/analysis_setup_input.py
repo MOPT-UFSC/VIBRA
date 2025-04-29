@@ -76,7 +76,12 @@ class AnalysisSetupInput():
         self.load_frequency_setup_inputs(f_min, f_max, f_step)
 
     def load_damping_inputs(self, analysis_id: int, global_damping: tuple | list):
-        if analysis_id in [0, 1, 5, 6] and sum(global_damping):
+        if sum(global_damping) and analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
+            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,            
+        ]:
 
             if global_damping[0]:
                 self.lineEdit_av.setText(str(global_damping[0]))
