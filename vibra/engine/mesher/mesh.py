@@ -101,6 +101,8 @@ class Mesh:
         self.cache_faces_connectivity = None
         self.cache_solids_connectivity = None
 
+        self.cache_elements_from_surface = dict()
+        self.cache_elements_from_line = dict()
         self.cache_surfaces_from_volume = dict()
         self.cache_lines_from_surface = dict()
         self.cache_points_from_line = dict()
@@ -484,6 +486,8 @@ class Mesh:
         self.cache_faces_connectivity = None
         self.cache_solids_connectivity = None
 
+        self.cache_elements_from_surface.clear()
+        self.cache_elements_from_line.clear()
         self.cache_surfaces_from_volume.clear()
         self.cache_lines_from_surface.clear()
         self.cache_points_from_line.clear()
