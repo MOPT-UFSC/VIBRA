@@ -31,6 +31,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self._build_nodal_normals()
         self._build_surface_velocity()
         self._build_prescribed_dofs()
+        self._build_nodal_loads()
         super().build()
         return
 
@@ -61,8 +62,8 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             if property_name != "surface_velocity":
                 continue
 
-            coords, orientation = self._get_center_coords_and_normals(surface_id)
-            self.add_normal_surface_velocity_symbol(coords, orientation)
+            coords, normal = self._get_center_coords_and_normals(surface_id)
+            self.add_normal_surface_velocity_symbol(coords, normal)
 
     def _build_nodal_normals(self):
         mesh = app().project.model.mesh
@@ -77,20 +78,35 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
                 continue
 
             coords, _ = self._get_center_coords_and_normals(surface_id)
+            x, y, z, *_ = property["values"]
 
-            if property["values"][0] is not None:
+            if x is not None:
                 self.add_prescribed_dof_symbol(coords, (1, 0, 0))
 
-            if property["values"][1] is not None:
+            if y is not None:
                 self.add_prescribed_dof_symbol(coords, (0, 1, 0))
 
-            if property["values"][2] is not None:
+            if z is not None:
                 self.add_prescribed_dof_symbol(coords, (0, 0, 1))
 
+    def _build_nodal_loads(self):
+        surface_properties = app().project.model.properties.surface_properties
+        for (property_name, surface_id), property in surface_properties.items():
+            if property_name != "nodal_loads":
+                continue
+
+            coords, normal = self._get_center_coords_and_normals(surface_id)
+            x, y, z, *_ = [(i if i is not None else 0) for i in property["values"]]
+            orientation = np.real((x, y, z))
+            is_pointing = np.dot(normal, orientation) < 0
+            self.add_force_symbol(coords, orientation, is_pointing)
+
+
     # Specifications on how each symbol should look like
-    def add_force_symbol(self, position, orientation):
+    def add_force_symbol(self, position, orientation, pointing=True):
+        shape_name = "arrow" if pointing else "outwards_arrow"
         self.add_symbol(
-            "arrow",
+            shape_name,
             position,
             orientation,
             color=color_names.RED,
