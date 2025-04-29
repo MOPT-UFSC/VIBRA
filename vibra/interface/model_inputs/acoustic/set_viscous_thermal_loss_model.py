@@ -140,6 +140,9 @@ class SetViscousThermalLossModel(QDialog):
         self.attribution_type_callback()
         self.update_plot_buttons_access()
 
+    def actions_to_finalize(self):
+        app().main_window.update_symbols()
+    
     def update_plot_buttons_access(self):
         state = self.selected_fluid is None
         self.comboBox_plot_type.setDisabled(state)
@@ -190,6 +193,7 @@ class SetViscousThermalLossModel(QDialog):
                 self.properties._remove_group_property("viscous_thermal_model", selection_id)
 
             app().file.write_model_properties_in_file()
+            self.actions_to_finalize()
             self.pushButton_remove.setDisabled(True)
             self.load_info()
 
@@ -230,6 +234,7 @@ class SetViscousThermalLossModel(QDialog):
 
                 app().file.write_model_properties_in_file()
                 self.load_info()
+        self.actions_to_finalize()
 
     def tabEvent_callback(self):
 
@@ -634,7 +639,7 @@ class SetViscousThermalLossModel(QDialog):
                 print(f"The viscous_thermal {model_data['formulation']} model for '{model_data['section_type']}' has been attributed to the group {group_id}.")
 
             app().file.write_model_properties_in_file()
-            app().main_window.update_symbols()
+            self.actions_to_finalize()
             self.load_info()
 
     def check_inputs(self, lineEdit, label, _float=True):

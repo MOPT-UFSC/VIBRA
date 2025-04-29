@@ -178,8 +178,10 @@ class ModelSetupItems(CommonMenuItems):
         for attr, value in self.__dict__.items():
             if isinstance(value, ChildTreeWidgetItem):
                 if self._contains_property(attr.split('_', maxsplit=3)[-1]):
-                    value.setIcon(0, QIcon(str(Path(ICON_DIR / str("home.png")))))
-                    value.should_paint = False 
+                    value.setIcon(0, QIcon(str(Path(ICON_DIR / str("home.png"))))) # placeholder until we have the icons
+                    value.should_paint = False
+                else:
+                    value.setIcon(0, QIcon())
 
     # Callbacks
     def item_child_set_material_callback(self):

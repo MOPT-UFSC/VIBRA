@@ -252,7 +252,6 @@ class DissipationModelInput(QDialog):
         self.main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().main_window.update_symbols()
-        print("boi")
 
     def check_inputs(self, lineEdit: QLineEdit, label: str, only_positive=False, zero_included=True, _float=True):
 

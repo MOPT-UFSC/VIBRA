@@ -150,6 +150,9 @@ class SetPorousMaterialModelInputs(QDialog):
         self.update_attribution_type()
         self.update_plot_buttons_access()
 
+    def actions_to_finalize(self):
+        app().main_window.update_symbols()
+    
     def geometry_selection_callback(self):
 
         volumes = self.main_window.selected_geometry_volumes
@@ -242,6 +245,7 @@ class SetPorousMaterialModelInputs(QDialog):
             self.properties._remove_volume_property("porous_material_model", volume_id)
             app().file.write_model_properties_in_file()
             self.load_info()
+            self.actions_to_finalize()
 
     def reset_callback(self):
 
@@ -270,6 +274,7 @@ class SetPorousMaterialModelInputs(QDialog):
                     self.properties._remove_volume_property("porous_material_model", volume_id)
 
                 app().file.write_model_properties_in_file()
+                self.actions_to_finalize()
                 self.close()
 
     def tabEvent_porous_material_model(self):
@@ -480,7 +485,7 @@ class SetPorousMaterialModelInputs(QDialog):
                 self.properties._set_property("porous_material_model", model_data, volume=volume_id)
 
             app().file.write_model_properties_in_file()
-            app().main_window.update_symbols()
+            self.actions_to_finalize()
 
             print(f"The porous material model '{model_data['model']}' has been attributed to the volumes {volume_ids}")
             self.load_info()

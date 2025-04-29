@@ -329,6 +329,8 @@ class SetFluidInput(QDialog):
         app().main_window.update_info_text()
         app().main_window.clear_selection()  # this also updates
         app().file.write_model_properties_in_file()
+        app().main_window.update_symbols()
+        
         self.complete = True
 
     def load_model_info(self):
