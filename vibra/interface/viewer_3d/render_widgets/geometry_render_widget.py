@@ -31,8 +31,6 @@ from .model_info_text import(
 
 
 class GeometryRenderWidget(CommonRenderWidget):
-    selection_changed = Signal(set, set, set, set)
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.set_interactor_style(BoxSelectionInteractorStyle())
@@ -293,6 +291,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if not shift_pressed:
             picked_volumes.clear()
 
+
         app().main_window.set_geometry_selection(
             points=picked_points,
             lines=picked_lines,
@@ -307,6 +306,8 @@ class GeometryRenderWidget(CommonRenderWidget):
     def update_selection(self):
         if not self.actors_exists():
             return
+
+        1/0
 
         self.points_actor.clear_colors()
         self.lines_actor.clear_colors()

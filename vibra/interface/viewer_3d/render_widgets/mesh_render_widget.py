@@ -34,8 +34,6 @@ from .model_info_text import (
 
 
 class MeshRenderWidget(CommonRenderWidget):
-    selection_changed = Signal(list, list, list)
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.set_interactor_style(BoxSelectionInteractorStyle())
