@@ -1,10 +1,6 @@
-from numbers import Number
 
-import numpy as np
 from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import CommonRenderWidget
-from molde.utils import TreeInfo
-from molde.utils.format_sequences import format_long_sequence
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QApplication
 
@@ -18,18 +14,12 @@ from ..actors.nodes_actor import NodesActor
 from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.selection_spheres import SelectionSpheres
 from ..actors.solids_actor import SolidsActor
-from ..actors.symbols.symbols_actor import SymbolsActor
 from ..selection.mesh_selection import MeshSelection
-
 from .model_info_text import (
-    nodes_info_text,
-    mesh_faces_info_text,
     mesh_faces_info_text,
     mesh_solids_info_text,
-    mesh_material_info_text,
-    mesh_fluid_info_text,
     mesh_structural_boundary_conditions_info_text,
-    mesh_structural_format, 
+    nodes_info_text,
 )
 
 
@@ -129,7 +119,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.faces_actor = FacesActor(mesh)
         self.edges_actor = EdgesActor(self.faces_actor.data)
         self.solids_actor: SolidsActor | HollowSolidsActor = HollowSolidsActor(mesh)
-        self.symbols_actor = SymbolsActor(self.renderer)
         self.selection_spheres_actor = SelectionSpheres()
 
         has_hidden_part = bool(app().main_window.hidden_surfaces)
@@ -146,7 +135,6 @@ class MeshRenderWidget(CommonRenderWidget):
             self.solids_actor,
             self.ghost_actor,
             self.plane_actor,
-            self.symbols_actor,
         )
 
         with self.update_lock:
@@ -177,11 +165,6 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.update_selection()
         self.update()
-
-    def update_symbols(self):
-        self.remove_actors(self.symbols_actor)
-        self.symbols_actor = SymbolsActor(self.renderer)
-        self.add_actors(self.symbols_actor)
 
     def update_hidden_plot(self):
         self.update_plot(reset_camera=False)
@@ -276,7 +259,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.solids_actor = None
         self.selection_spheres_actor = None
         self.plane_actor = None
-        self.symbols_actor = None
         self.nodes_actor = None
         self.ghost_actor = None
 
