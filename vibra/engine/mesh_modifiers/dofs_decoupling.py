@@ -27,11 +27,11 @@ class DofsDecoupling:
         """
         """
 
-        decouple_data = {
-                         "volume_to_preserve" : 2,
-                         "volume_to_decouple" : 1,
-                         }
-        self.properties._set_property("acoustic_dofs_decoupling", decouple_data, surface=6)
+        # decouple_data = {
+        #                  "volume_to_preserve" : 2,
+        #                  "volume_to_decouple" : 1,
+        #                  }
+        # self.properties._set_property("acoustic_dofs_decoupling", decouple_data, surface=6)
 
         self.decouple_info.clear()
         max_surface_id = int(np.max(self.mesh.cache_faces_connectivity[:, 1]))
