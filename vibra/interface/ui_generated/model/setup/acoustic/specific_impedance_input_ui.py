@@ -399,7 +399,7 @@ class Ui_Dialog(object):
     # setupUi
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Set specific impendace", None))
+        Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Set specific impendance", None))
 #if QT_CONFIG(whatsthis)
         Dialog.setWhatsThis("")
 #endif // QT_CONFIG(whatsthis)

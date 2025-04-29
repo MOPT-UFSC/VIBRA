@@ -76,28 +76,40 @@ class Ui_Form(object):
         if (self.tableWidget_fluid_data.rowCount() < 12):
             self.tableWidget_fluid_data.setRowCount(12)
         __qtablewidgetitem = QTableWidgetItem()
+        __qtablewidgetitem.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_fluid_data.setVerticalHeaderItem(0, __qtablewidgetitem)
         __qtablewidgetitem1 = QTableWidgetItem()
+        __qtablewidgetitem1.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_fluid_data.setVerticalHeaderItem(1, __qtablewidgetitem1)
         __qtablewidgetitem2 = QTableWidgetItem()
+        __qtablewidgetitem2.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_fluid_data.setVerticalHeaderItem(2, __qtablewidgetitem2)
         __qtablewidgetitem3 = QTableWidgetItem()
+        __qtablewidgetitem3.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_fluid_data.setVerticalHeaderItem(3, __qtablewidgetitem3)
         __qtablewidgetitem4 = QTableWidgetItem()
+        __qtablewidgetitem4.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_fluid_data.setVerticalHeaderItem(4, __qtablewidgetitem4)
         __qtablewidgetitem5 = QTableWidgetItem()
+        __qtablewidgetitem5.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_fluid_data.setVerticalHeaderItem(5, __qtablewidgetitem5)
         __qtablewidgetitem6 = QTableWidgetItem()
+        __qtablewidgetitem6.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_fluid_data.setVerticalHeaderItem(6, __qtablewidgetitem6)
         __qtablewidgetitem7 = QTableWidgetItem()
+        __qtablewidgetitem7.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_fluid_data.setVerticalHeaderItem(7, __qtablewidgetitem7)
         __qtablewidgetitem8 = QTableWidgetItem()
+        __qtablewidgetitem8.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_fluid_data.setVerticalHeaderItem(8, __qtablewidgetitem8)
         __qtablewidgetitem9 = QTableWidgetItem()
+        __qtablewidgetitem9.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_fluid_data.setVerticalHeaderItem(9, __qtablewidgetitem9)
         __qtablewidgetitem10 = QTableWidgetItem()
+        __qtablewidgetitem10.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_fluid_data.setVerticalHeaderItem(10, __qtablewidgetitem10)
         __qtablewidgetitem11 = QTableWidgetItem()
+        __qtablewidgetitem11.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_fluid_data.setVerticalHeaderItem(11, __qtablewidgetitem11)
         self.tableWidget_fluid_data.setObjectName(u"tableWidget_fluid_data")
         self.tableWidget_fluid_data.setColumnCount(0)
@@ -216,11 +228,11 @@ class Ui_Form(object):
         ___qtablewidgetitem6 = self.tableWidget_fluid_data.verticalHeaderItem(6)
         ___qtablewidgetitem6.setText(QCoreApplication.translate("Form", u"Isentropic exponent", None));
         ___qtablewidgetitem7 = self.tableWidget_fluid_data.verticalHeaderItem(7)
-        ___qtablewidgetitem7.setText(QCoreApplication.translate("Form", u"Thermal conductivity [W/mK]", None));
+        ___qtablewidgetitem7.setText(QCoreApplication.translate("Form", u"Thermal conductivity [W/m.K]", None));
         ___qtablewidgetitem8 = self.tableWidget_fluid_data.verticalHeaderItem(8)
-        ___qtablewidgetitem8.setText(QCoreApplication.translate("Form", u"Specific heat Cp [J/kgK]", None));
+        ___qtablewidgetitem8.setText(QCoreApplication.translate("Form", u"Specific heat Cp [J/kg.K]", None));
         ___qtablewidgetitem9 = self.tableWidget_fluid_data.verticalHeaderItem(9)
-        ___qtablewidgetitem9.setText(QCoreApplication.translate("Form", u"Dynamic viscosity [Ns/m\u00b2]", None));
+        ___qtablewidgetitem9.setText(QCoreApplication.translate("Form", u"Dynamic viscosity [N.s/m\u00b2]", None));
         ___qtablewidgetitem10 = self.tableWidget_fluid_data.verticalHeaderItem(10)
         ___qtablewidgetitem10.setText(QCoreApplication.translate("Form", u"Molar mass [kg/kmol]", None));
         ___qtablewidgetitem11 = self.tableWidget_fluid_data.verticalHeaderItem(11)

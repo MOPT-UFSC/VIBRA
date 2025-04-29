@@ -15,18 +15,19 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QFrame,
-    QGridLayout, QHeaderView, QLabel, QLineEdit,
-    QPushButton, QScrollArea, QSizePolicy, QSpacerItem,
-    QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget)
+from PySide6.QtWidgets import (QAbstractScrollArea, QApplication, QComboBox, QDialog,
+    QFrame, QGridLayout, QHeaderView, QLabel,
+    QLineEdit, QPushButton, QScrollArea, QSizePolicy,
+    QSpacerItem, QTabWidget, QTableWidget, QTableWidgetItem,
+    QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(720, 470)
-        Dialog.setMinimumSize(QSize(600, 470))
-        Dialog.setMaximumSize(QSize(900, 470))
+        Dialog.resize(720, 500)
+        Dialog.setMinimumSize(QSize(600, 500))
+        Dialog.setMaximumSize(QSize(900, 600))
         self.gridLayout = QGridLayout(Dialog)
         self.gridLayout.setSpacing(4)
         self.gridLayout.setObjectName(u"gridLayout")
@@ -135,7 +136,7 @@ class Ui_Dialog(object):
         self.scrollArea_table_of_materials.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 690, 293))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 690, 323))
         self.scrollArea_table_of_materials.setWidget(self.scrollAreaWidgetContents)
 
         self.gridLayout_5.addWidget(self.scrollArea_table_of_materials, 0, 0, 1, 1)
@@ -145,34 +146,10 @@ class Ui_Dialog(object):
         self.tab_list.setObjectName(u"tab_list")
         self.gridLayout_6 = QGridLayout(self.tab_list)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
-        self.treeWidget_material = QTreeWidget(self.tab_list)
-        __qtreewidgetitem = QTreeWidgetItem()
-        __qtreewidgetitem.setTextAlignment(4, Qt.AlignCenter);
-        __qtreewidgetitem.setTextAlignment(3, Qt.AlignCenter);
-        __qtreewidgetitem.setTextAlignment(2, Qt.AlignCenter);
-        __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
-        __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
-        self.treeWidget_material.setHeaderItem(__qtreewidgetitem)
-        self.treeWidget_material.setObjectName(u"treeWidget_material")
-        self.treeWidget_material.setMinimumSize(QSize(560, 100))
-        self.treeWidget_material.setMaximumSize(QSize(640, 200))
-        font2 = QFont()
-        font2.setFamilies([u"MS Shell Dlg 2"])
-        font2.setPointSize(10)
-        font2.setItalic(False)
-        self.treeWidget_material.setFont(font2)
-        self.treeWidget_material.setIndentation(1)
-        self.treeWidget_material.setHeaderHidden(False)
-        self.treeWidget_material.header().setHighlightSections(False)
-        self.treeWidget_material.header().setProperty(u"showSortIndicator", False)
-        self.treeWidget_material.header().setStretchLastSection(True)
-
-        self.gridLayout_6.addWidget(self.treeWidget_material, 0, 0, 1, 1)
-
         self.frame_reset_remove_buttons = QFrame(self.tab_list)
         self.frame_reset_remove_buttons.setObjectName(u"frame_reset_remove_buttons")
         self.frame_reset_remove_buttons.setMinimumSize(QSize(560, 40))
-        self.frame_reset_remove_buttons.setMaximumSize(QSize(560, 40))
+        self.frame_reset_remove_buttons.setMaximumSize(QSize(16777215, 40))
         self.frame_reset_remove_buttons.setFrameShape(QFrame.NoFrame)
         self.frame_reset_remove_buttons.setFrameShadow(QFrame.Raised)
         self.gridLayout_8 = QGridLayout(self.frame_reset_remove_buttons)
@@ -183,12 +160,12 @@ class Ui_Dialog(object):
         self.pushButton_reset.setObjectName(u"pushButton_reset")
         self.pushButton_reset.setMinimumSize(QSize(100, 28))
         self.pushButton_reset.setMaximumSize(QSize(100, 28))
-        font3 = QFont()
-        font3.setFamilies([u"MS Shell Dlg 2"])
-        font3.setPointSize(10)
-        font3.setBold(False)
-        font3.setItalic(False)
-        self.pushButton_reset.setFont(font3)
+        font2 = QFont()
+        font2.setFamilies([u"MS Shell Dlg 2"])
+        font2.setPointSize(10)
+        font2.setBold(False)
+        font2.setItalic(False)
+        self.pushButton_reset.setFont(font2)
         self.pushButton_reset.setStyleSheet(u"")
 
         self.gridLayout_8.addWidget(self.pushButton_reset, 0, 0, 1, 1)
@@ -197,13 +174,40 @@ class Ui_Dialog(object):
         self.pushButton_remove.setObjectName(u"pushButton_remove")
         self.pushButton_remove.setMinimumSize(QSize(100, 28))
         self.pushButton_remove.setMaximumSize(QSize(100, 28))
-        self.pushButton_remove.setFont(font3)
+        self.pushButton_remove.setFont(font2)
         self.pushButton_remove.setStyleSheet(u"")
 
         self.gridLayout_8.addWidget(self.pushButton_remove, 0, 1, 1, 1)
 
 
         self.gridLayout_6.addWidget(self.frame_reset_remove_buttons, 1, 0, 1, 1)
+
+        self.tableWidget_model_materials = QTableWidget(self.tab_list)
+        if (self.tableWidget_model_materials.columnCount() < 6):
+            self.tableWidget_model_materials.setColumnCount(6)
+        __qtablewidgetitem = QTableWidgetItem()
+        __qtablewidgetitem.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget_model_materials.setHorizontalHeaderItem(0, __qtablewidgetitem)
+        __qtablewidgetitem1 = QTableWidgetItem()
+        __qtablewidgetitem1.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget_model_materials.setHorizontalHeaderItem(1, __qtablewidgetitem1)
+        __qtablewidgetitem2 = QTableWidgetItem()
+        __qtablewidgetitem2.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget_model_materials.setHorizontalHeaderItem(2, __qtablewidgetitem2)
+        __qtablewidgetitem3 = QTableWidgetItem()
+        __qtablewidgetitem3.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget_model_materials.setHorizontalHeaderItem(3, __qtablewidgetitem3)
+        __qtablewidgetitem4 = QTableWidgetItem()
+        __qtablewidgetitem4.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget_model_materials.setHorizontalHeaderItem(4, __qtablewidgetitem4)
+        __qtablewidgetitem5 = QTableWidgetItem()
+        __qtablewidgetitem5.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget_model_materials.setHorizontalHeaderItem(5, __qtablewidgetitem5)
+        self.tableWidget_model_materials.setObjectName(u"tableWidget_model_materials")
+        self.tableWidget_model_materials.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+        self.tableWidget_model_materials.verticalHeader().setVisible(False)
+
+        self.gridLayout_6.addWidget(self.tableWidget_model_materials, 0, 0, 1, 1)
 
         self.tabWidget_main.addTab(self.tab_list, "")
 
@@ -224,11 +228,11 @@ class Ui_Dialog(object):
         self.gridLayout_3.setContentsMargins(4, 4, 4, 4)
         self.label_2 = QLabel(self.frame_title)
         self.label_2.setObjectName(u"label_2")
-        font4 = QFont()
-        font4.setFamilies([u"MS Shell Dlg 2"])
-        font4.setPointSize(11)
-        font4.setBold(False)
-        self.label_2.setFont(font4)
+        font3 = QFont()
+        font3.setFamilies([u"MS Shell Dlg 2"])
+        font3.setPointSize(11)
+        font3.setBold(False)
+        self.label_2.setFont(font3)
         self.label_2.setTextFormat(Qt.AutoText)
         self.label_2.setAlignment(Qt.AlignCenter)
 
@@ -248,29 +252,32 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
-        self.comboBox_attribution_type.setItemText(0, QCoreApplication.translate("Dialog", u" All bodies/faces", None))
-        self.comboBox_attribution_type.setItemText(1, QCoreApplication.translate("Dialog", u" All bodies", None))
-        self.comboBox_attribution_type.setItemText(2, QCoreApplication.translate("Dialog", u" All faces", None))
-        self.comboBox_attribution_type.setItemText(3, QCoreApplication.translate("Dialog", u" Selected bodies", None))
-        self.comboBox_attribution_type.setItemText(4, QCoreApplication.translate("Dialog", u" Selected faces", None))
-        self.comboBox_attribution_type.setItemText(5, QCoreApplication.translate("Dialog", u" Selected bodies/faces", None))
+        self.comboBox_attribution_type.setItemText(0, QCoreApplication.translate("Dialog", u"All bodies/faces", None))
+        self.comboBox_attribution_type.setItemText(1, QCoreApplication.translate("Dialog", u"All bodies", None))
+        self.comboBox_attribution_type.setItemText(2, QCoreApplication.translate("Dialog", u"All faces", None))
+        self.comboBox_attribution_type.setItemText(3, QCoreApplication.translate("Dialog", u"Selected bodies", None))
+        self.comboBox_attribution_type.setItemText(4, QCoreApplication.translate("Dialog", u"Selected faces", None))
+        self.comboBox_attribution_type.setItemText(5, QCoreApplication.translate("Dialog", u"Selected bodies/faces", None))
 
         self.label.setText(QCoreApplication.translate("Dialog", u"Selection:", None))
         self.lineEdit_selection_id.setText("")
         self.label_3.setText(QCoreApplication.translate("Dialog", u"Selected material:", None))
         self.lineEdit_selected_material_name.setText("")
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_setup), QCoreApplication.translate("Dialog", u"Setup", None))
-        ___qtreewidgetitem = self.treeWidget_material.headerItem()
-        ___qtreewidgetitem.setText(4, QCoreApplication.translate("Dialog", u"Poisson ratio", None));
-        ___qtreewidgetitem.setText(3, QCoreApplication.translate("Dialog", u"Density [kg/m\u00b3]", None));
-        ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Elasticity modulus [GPa]", None));
-        ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Material name", None));
-        ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Selection-ID", None));
-#if QT_CONFIG(tooltip)
-        self.treeWidget_material.setToolTip("")
-#endif // QT_CONFIG(tooltip)
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
+        ___qtablewidgetitem = self.tableWidget_model_materials.horizontalHeaderItem(0)
+        ___qtablewidgetitem.setText(QCoreApplication.translate("Dialog", u"Selection-ID", None));
+        ___qtablewidgetitem1 = self.tableWidget_model_materials.horizontalHeaderItem(1)
+        ___qtablewidgetitem1.setText(QCoreApplication.translate("Dialog", u"Name", None));
+        ___qtablewidgetitem2 = self.tableWidget_model_materials.horizontalHeaderItem(2)
+        ___qtablewidgetitem2.setText(QCoreApplication.translate("Dialog", u"Identifier", None));
+        ___qtablewidgetitem3 = self.tableWidget_model_materials.horizontalHeaderItem(3)
+        ___qtablewidgetitem3.setText(QCoreApplication.translate("Dialog", u"Density [kg/m\u00b3]", None));
+        ___qtablewidgetitem4 = self.tableWidget_model_materials.horizontalHeaderItem(4)
+        ___qtablewidgetitem4.setText(QCoreApplication.translate("Dialog", u"Elasticity modulus [GPa]", None));
+        ___qtablewidgetitem5 = self.tableWidget_model_materials.horizontalHeaderItem(5)
+        ___qtablewidgetitem5.setText(QCoreApplication.translate("Dialog", u"Poisson ratio [--]", None));
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_list), QCoreApplication.translate("Dialog", u"List", None))
         self.label_2.setText(QCoreApplication.translate("Dialog", u"Set material configuration", None))
     # retranslateUi
@@ -298,11 +305,11 @@ class SetMaterial_UI(QDialog, Ui_Dialog):
                                                 - scrollAreaWidgetContents: QWidget
                                 - tab_list: QWidget
                                     - (Layout): QGridLayout
-                                            - treeWidget_material: QTreeWidget
                                             - frame_reset_remove_buttons: QFrame
                                                 - (Layout): QGridLayout
                                                         - pushButton_reset: QPushButton
                                                         - pushButton_remove: QPushButton
+                                            - tableWidget_model_materials: QTableWidget
                 - frame_title: QFrame
                     - (Layout): QGridLayout
                             - label_2: QLabel

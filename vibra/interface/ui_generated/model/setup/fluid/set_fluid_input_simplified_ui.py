@@ -90,8 +90,7 @@ class Ui_Dialog(object):
         font1.setPointSize(10)
         self.lineEdit_selected_fluid_name.setFont(font1)
         self.lineEdit_selected_fluid_name.setFocusPolicy(Qt.ClickFocus)
-        self.lineEdit_selected_fluid_name.setStyleSheet(u"QLineEdit{background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)}\n"
-"QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 120)}")
+        self.lineEdit_selected_fluid_name.setStyleSheet(u"")
         self.lineEdit_selected_fluid_name.setAlignment(Qt.AlignCenter)
 
         self.gridLayout_4.addWidget(self.lineEdit_selected_fluid_name, 1, 2, 1, 1)
@@ -111,8 +110,7 @@ class Ui_Dialog(object):
         self.lineEdit_fluid_identifier.setMaximumSize(QSize(180, 26))
         self.lineEdit_fluid_identifier.setFont(font1)
         self.lineEdit_fluid_identifier.setFocusPolicy(Qt.ClickFocus)
-        self.lineEdit_fluid_identifier.setStyleSheet(u"QLineEdit{background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)}\n"
-"QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 120)}")
+        self.lineEdit_fluid_identifier.setStyleSheet(u"")
         self.lineEdit_fluid_identifier.setAlignment(Qt.AlignCenter)
 
         self.gridLayout_4.addWidget(self.lineEdit_fluid_identifier, 2, 2, 1, 1)

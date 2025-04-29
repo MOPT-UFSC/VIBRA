@@ -26,6 +26,8 @@ class Ui_Form(object):
         Form.resize(400, 235)
         self.gridLayout_4 = QGridLayout(Form)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
+        self.gridLayout_4.setVerticalSpacing(4)
+        self.gridLayout_4.setContentsMargins(4, 4, 4, 4)
         self.frame = QFrame(Form)
         self.frame.setObjectName(u"frame")
         self.frame.setMinimumSize(QSize(0, 48))
@@ -97,8 +99,7 @@ class Ui_Form(object):
         font2 = QFont()
         font2.setPointSize(10)
         self.lineEdit_selection_id.setFont(font2)
-        self.lineEdit_selection_id.setStyleSheet(u"color: rgb(0, 0, 255);\n"
-"background-color: rgb(255,255,255)")
+        self.lineEdit_selection_id.setStyleSheet(u"")
         self.lineEdit_selection_id.setAlignment(Qt.AlignCenter)
 
         self.gridLayout.addWidget(self.lineEdit_selection_id, 0, 2, 1, 1)

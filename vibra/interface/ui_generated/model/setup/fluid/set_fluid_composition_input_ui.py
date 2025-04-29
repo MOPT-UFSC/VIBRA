@@ -317,7 +317,7 @@ class Ui_Dialog(object):
         self.tableWidget_new_fluid.setEditTriggers(QAbstractItemView.DoubleClicked|QAbstractItemView.EditKeyPressed)
         self.tableWidget_new_fluid.setDragDropOverwriteMode(False)
         self.tableWidget_new_fluid.setDragDropMode(QAbstractItemView.DropOnly)
-        self.tableWidget_new_fluid.setAlternatingRowColors(True)
+        self.tableWidget_new_fluid.setAlternatingRowColors(False)
         self.tableWidget_new_fluid.setSelectionBehavior(QAbstractItemView.SelectItems)
         self.tableWidget_new_fluid.setSortingEnabled(True)
         self.tableWidget_new_fluid.horizontalHeader().setStretchLastSection(True)

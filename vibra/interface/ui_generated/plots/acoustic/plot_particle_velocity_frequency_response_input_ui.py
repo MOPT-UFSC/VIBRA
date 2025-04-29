@@ -15,29 +15,20 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QFrame,
-    QGridLayout, QLabel, QLineEdit, QPushButton,
-    QSizePolicy, QSpacerItem, QWidget)
+from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QGridLayout,
+    QLabel, QLineEdit, QPushButton, QSizePolicy,
+    QSpacerItem, QWidget)
 
-class Ui_Dialog(object):
-    def setupUi(self, Dialog):
-        if not Dialog.objectName():
-            Dialog.setObjectName(u"Dialog")
-        Dialog.setWindowModality(Qt.NonModal)
-        Dialog.resize(400, 300)
-        sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(Dialog.sizePolicy().hasHeightForWidth())
-        Dialog.setSizePolicy(sizePolicy)
-        Dialog.setMinimumSize(QSize(400, 240))
-        Dialog.setMaximumSize(QSize(400, 300))
-        Dialog.setContextMenuPolicy(Qt.DefaultContextMenu)
-        self.gridLayout_4 = QGridLayout(Dialog)
-        self.gridLayout_4.setSpacing(4)
+class Ui_Form(object):
+    def setupUi(self, Form):
+        if not Form.objectName():
+            Form.setObjectName(u"Form")
+        Form.resize(400, 300)
+        self.gridLayout_4 = QGridLayout(Form)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
+        self.gridLayout_4.setVerticalSpacing(4)
         self.gridLayout_4.setContentsMargins(4, 4, 4, 4)
-        self.frame = QFrame(Dialog)
+        self.frame = QFrame(Form)
         self.frame.setObjectName(u"frame")
         self.frame.setMinimumSize(QSize(0, 48))
         self.frame.setMaximumSize(QSize(520, 48))
@@ -66,7 +57,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_4.addWidget(self.frame, 0, 0, 1, 1)
 
-        self.frame_2 = QFrame(Dialog)
+        self.frame_2 = QFrame(Form)
         self.frame_2.setObjectName(u"frame_2")
         self.frame_2.setMinimumSize(QSize(0, 0))
         self.frame_2.setMaximumSize(QSize(520, 460))
@@ -108,8 +99,7 @@ class Ui_Dialog(object):
         font2 = QFont()
         font2.setPointSize(10)
         self.lineEdit_selection_id.setFont(font2)
-        self.lineEdit_selection_id.setStyleSheet(u"color: rgb(0, 0, 255);\n"
-"background-color: rgb(255,255,255)")
+        self.lineEdit_selection_id.setStyleSheet(u"")
         self.lineEdit_selection_id.setAlignment(Qt.AlignCenter)
 
         self.gridLayout.addWidget(self.lineEdit_selection_id, 0, 2, 1, 1)
@@ -281,47 +271,44 @@ class Ui_Dialog(object):
         self.gridLayout_4.addWidget(self.frame_2, 1, 0, 1, 1)
 
 
-        self.retranslateUi(Dialog)
+        self.retranslateUi(Form)
 
         self.comboBox_selector_filter.setCurrentIndex(0)
         self.comboBox_component_selector.setCurrentIndex(0)
 
 
-        QMetaObject.connectSlotsByName(Dialog)
+        QMetaObject.connectSlotsByName(Form)
     # setupUi
 
-    def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Plot frequency response", None))
-#if QT_CONFIG(whatsthis)
-        Dialog.setWhatsThis("")
-#endif // QT_CONFIG(whatsthis)
-        self.label.setText(QCoreApplication.translate("Dialog", u"Plot particle velocity frequency response", None))
-        self.label_10.setText(QCoreApplication.translate("Dialog", u"Selected ID: ", None))
+    def retranslateUi(self, Form):
+        Form.setWindowTitle(QCoreApplication.translate("Form", u"Plot particle velocity", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Plot particle velocity frequency response", None))
+        self.label_10.setText(QCoreApplication.translate("Form", u"Selected ID: ", None))
         self.lineEdit_selection_id.setText("")
 #if QT_CONFIG(tooltip)
-        self.pushButton_export_data.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p><span style=\" font-size:10pt; font-weight:400;\">Press to export the current response function</span></p></body></html>", None))
+        self.pushButton_export_data.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-size:10pt; font-weight:400;\">Press to export the current response function</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_export_data.setText("")
-        self.label_2.setText(QCoreApplication.translate("Dialog", u"Selector filter: ", None))
-        self.comboBox_selector_filter.setItemText(0, QCoreApplication.translate("Dialog", u"   Surfaces", None))
-        self.comboBox_selector_filter.setItemText(1, QCoreApplication.translate("Dialog", u"   Nodes", None))
+        self.label_2.setText(QCoreApplication.translate("Form", u"Selector filter: ", None))
+        self.comboBox_selector_filter.setItemText(0, QCoreApplication.translate("Form", u"   Surfaces", None))
+        self.comboBox_selector_filter.setItemText(1, QCoreApplication.translate("Form", u"   Nodes", None))
 
-        self.pushButton_plot_data.setText(QCoreApplication.translate("Dialog", u"Plot data", None))
-        self.pushButton_exit.setText(QCoreApplication.translate("Dialog", u"Exit", None))
-        self.label_4.setText(QCoreApplication.translate("Dialog", u"Component: ", None))
-        self.comboBox_component_selector.setItemText(0, QCoreApplication.translate("Dialog", u"   x-axis", None))
-        self.comboBox_component_selector.setItemText(1, QCoreApplication.translate("Dialog", u"   y-axis", None))
-        self.comboBox_component_selector.setItemText(2, QCoreApplication.translate("Dialog", u"   z-axis", None))
-        self.comboBox_component_selector.setItemText(3, QCoreApplication.translate("Dialog", u"  normal", None))
+        self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"Plot data", None))
+        self.pushButton_exit.setText(QCoreApplication.translate("Form", u"Exit", None))
+        self.label_4.setText(QCoreApplication.translate("Form", u"Component: ", None))
+        self.comboBox_component_selector.setItemText(0, QCoreApplication.translate("Form", u"   x-axis", None))
+        self.comboBox_component_selector.setItemText(1, QCoreApplication.translate("Form", u"   y-axis", None))
+        self.comboBox_component_selector.setItemText(2, QCoreApplication.translate("Form", u"   z-axis", None))
+        self.comboBox_component_selector.setItemText(3, QCoreApplication.translate("Form", u"  normal", None))
 
     # retranslateUi
 
 
 
-class PlotParticleVelocityFrequencyResponseInput_UI(QDialog, Ui_Dialog):
+class PlotParticleVelocityFrequencyResponseInput_UI(QWidget, Ui_Form):
     """
     Component Hierarchy:
-    - Dialog: QDialog
+    - Form: QWidget
         - (Layout): QGridLayout
                 - frame: QFrame
                     - (Layout): QGridLayout
