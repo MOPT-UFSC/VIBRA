@@ -13,7 +13,7 @@ from ..actors.lines_actor import LinesActor
 from ..actors.points_actor import PointsActor
 from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.selection_spheres import SelectionSpheres
-from ..actors.symbols.new_symbols_actor import NewSymbolsActor
+from ..actors.symbols_actor import SymbolsActor
 from ..selection.geometry_selection import GeometrySelection
 
 from .model_info_text import( 
@@ -133,7 +133,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.lines_actor = LinesActor(mesh)
         self.faces_actor = FacesActor(mesh)
         self.selection_spheres_actor = SelectionSpheres()
-        self.symbols_actor = NewSymbolsActor(self.renderer)
+        self.symbols_actor = SymbolsActor(self.renderer)
 
         has_hidden_part = bool(app().main_window.hidden_surfaces)
         self.ghost_actor = GhostActor(mesh)
@@ -246,7 +246,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         # but for some reason that I can't understand
         # it causes segmentation fault
         self.remove_actors(self.symbols_actor)
-        self.symbols_actor = NewSymbolsActor(self.renderer)
+        self.symbols_actor = SymbolsActor(self.renderer)
         self.add_actors(self.symbols_actor)
         self.update()
 

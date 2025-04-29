@@ -15,7 +15,7 @@ from vibra.interface.viewer_3d.sources import (
     create_spring_source,
 )
 
-class NewSymbolsActor(CommonSymbolsActorVariableSize):
+class SymbolsActor(CommonSymbolsActorVariableSize):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.configure_appearance()
