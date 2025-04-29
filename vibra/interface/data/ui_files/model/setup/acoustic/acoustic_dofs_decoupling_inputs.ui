@@ -468,7 +468,7 @@
             </attribute>
             <column>
              <property name="text">
-              <string>Surface ID</string>
+              <string>Surface</string>
              </property>
              <property name="textAlignment">
               <set>AlignCenter</set>
@@ -476,7 +476,7 @@
             </column>
             <column>
              <property name="text">
-              <string>Volume ID</string>
+              <string>Volume to decouple</string>
              </property>
              <property name="textAlignment">
               <set>AlignCenter</set>
