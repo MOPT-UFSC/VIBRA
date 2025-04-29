@@ -65,9 +65,6 @@ class MeshSetupInputs(QDialog):
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
 
-        geometry_widget = self.main_window.geometry_widget
-        geometry_widget.selection_changed.connect(self.geometry_selection_callback)
-
         self._config_window()
         self._initialize()
         self._define_qt_variables()
