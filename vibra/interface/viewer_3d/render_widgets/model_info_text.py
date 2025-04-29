@@ -59,7 +59,7 @@ def lines_info_text():
     text = ""
     length = 0
     for line_id in line_ids:
-        length += app().project.model.mesh.length_from_curve[line_id]
+        length += app().project.model.mesh.length_from_curve.get(line_id, 0)
 
     if len(line_ids) == 1:
         tree = TreeInfo(f"LINE {line_ids[0]}")
@@ -90,7 +90,7 @@ def faces_info_text():
 
     area = 0
     for surface_id in surface_ids:
-        area += app().project.model.mesh.area_from_surface[surface_id]
+        area += app().project.model.mesh.area_from_surface.get(surface_id, 0)
     
     if len(surface_ids) == 1:
         tree = TreeInfo(f"SURFACE {surface_ids[0]}")
