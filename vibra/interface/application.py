@@ -1,4 +1,4 @@
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QApplication
 
 from vibra import TEMP_PROJECT_FILE
@@ -9,6 +9,10 @@ from vibra.interface.splash_screen import SplashScreen
 from vibra.project_files.load_project import LoadProject
 from vibra.project_files.project import Project
 from vibra.project_files.project_file import ProjectFile
+
+
+QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
+
 
 class Application(QApplication):
     selection_changed = Signal()
