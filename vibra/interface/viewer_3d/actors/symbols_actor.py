@@ -13,6 +13,7 @@ from vibra.interface.viewer_3d.sources import (
     create_mass_source,
     create_outwards_arrow_source,
     create_spring_source,
+    create_perforated_plate_source,
 )
 
 class SymbolsActor(CommonSymbolsActorVariableSize):
@@ -34,8 +35,8 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self._build_specific_impedance()
         self._build_prescribed_dofs()
         self._build_nodal_loads()
+        self._build_perforated_plate()
         super().build()
-        return
 
     def _get_center_coords_and_normals(self, surface_id: int) -> float:
         mesh = app().project.model.mesh
@@ -112,6 +113,15 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             coords, normal = self._get_center_coords_and_normals(surface_id)
             self.add_impedance_symbol(coords, normal)
 
+    def _build_perforated_plate(self):
+        surface_properties = app().project.model.properties.surface_properties
+        for (property_name, surface_id), property in surface_properties.items():
+            if property_name != "perforated_plate_model":
+                continue
+
+            coords, normal = self._get_center_coords_and_normals(surface_id)
+            self.add_perforated_plate_symbol(coords, normal)
+
     # Specifications on how each symbol should look like
     def add_force_symbol(self, position, orientation, pointing=True):
         shape_name = "arrow" if pointing else "outwards_arrow"
@@ -119,7 +129,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             shape_name,
             position,
             orientation,
-            color=color_names.RED,
+            color=color_names.RED_2,
             scale=1,
         )
 
@@ -146,7 +156,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             "outwards_arrow",
             position,
             orientation,
-            color=color_names.RED,
+            color=color_names.RED_6,
             scale=1,
         )
 
@@ -194,6 +204,16 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             color=color_names.GRAY,
             scale=1,
         )
+    
+    def add_perforated_plate_symbol(self, position, orientation):
+        self.add_symbol(
+            "perforated_plate",
+            position,
+            orientation,
+            color=color_names.RED,
+            scale=1,
+        )
+
 
     # Preload the symbol shapes (they are likelly used in many symbols)
     def _register_shapes(self):
@@ -206,3 +226,4 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.register_shape("spring", create_spring_source())
         self.register_shape("damper", create_damper_source())
         self.register_shape("mass", create_mass_source())
+        self.register_shape("perforated_plate", create_perforated_plate_source())

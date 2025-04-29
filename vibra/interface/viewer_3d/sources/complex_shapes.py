@@ -24,3 +24,11 @@ def create_mass_source():
         read_obj_file(SYMBOLS_DIR / "structural/new_lumped_mass.obj"),
         rotation=(0, -90, 0),
     )
+
+def create_perforated_plate_source():
+    polydata = read_obj_file(SYMBOLS_DIR / "acoustic/perforated_plate_many_holes.obj")
+    return transform_polydata(
+        polydata,
+        rotation=(0, 0, 90),
+        scale=(0.1, 1, 1),
+    )
