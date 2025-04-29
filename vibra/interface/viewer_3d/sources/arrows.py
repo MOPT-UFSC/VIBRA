@@ -10,7 +10,8 @@ def create_arrow_source():
 
     return transform_polydata(
         source.GetOutput(),
-        position=(-1, 0, 0),
+        position=(-1.5, 0, 0),
+        scale=(1.5, 1.5, 1.5),
     )
 
 
@@ -51,4 +52,7 @@ def create_outwards_arrow_source():
     source = vtkArrowSource()
     source.SetTipLength(0.25)
     source.Update()
-    return source.GetOutput()
+    return transform_polydata(
+        source.GetOutput(),
+        scale=(1.5, 1.5, 1.5),
+    )
