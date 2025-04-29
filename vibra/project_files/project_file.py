@@ -143,7 +143,6 @@ class ProjectFile:
                             lines_connectivity = mesh.lines_connectivity,
                             faces_connectivity = mesh.faces_connectivity,
                             solids_connectivity = mesh.solids_connectivity,
-                            # connectivity_from_surfaces = mesh.connectivity_from_surfaces,
 
                             map_line_elements = mesh.get_array_based_elements_mapping(entity = "lines"),
                             map_face_elements = mesh.get_array_based_elements_mapping(entity = "faces"),
@@ -159,17 +158,24 @@ class ProjectFile:
 
                             normals_surface = mesh.normals_surface,
                             curvatures_surface = mesh.curvatures_surface,
-
-                            cache_nodal_coordinates = mesh.cache_nodal_coordinates,
-                            cache_solids_connectivity = mesh.cache_solids_connectivity,
-                            cache_faces_connectivity = mesh.cache_faces_connectivity,
-                            cache_lines_connectivity = mesh.cache_lines_connectivity,
-                            cache_connectivity_from_lines = mesh.cache_connectivity_from_lines,
-                            cache_connectivity_from_surfaces = mesh.cache_connectivity_from_surfaces,
-                            cache_surfaces_from_volume = mesh.cache_surfaces_from_volume,
-                            cache_lines_from_surface = mesh.cache_lines_from_surface,
-                            cache_points_from_line = mesh.cache_points_from_line,
                         )
+
+        for (property, _) in app().project.model.properties.surface_properties.keys():
+            if property == "acoustic_dofs_decoupling":
+                cache_data = dict(
+                                    cache_nodal_coordinates = mesh.cache_nodal_coordinates,
+
+                                    cache_solids_connectivity = mesh.cache_solids_connectivity,
+                                    cache_faces_connectivity = mesh.cache_faces_connectivity,
+                                    cache_lines_connectivity = mesh.cache_lines_connectivity,
+
+                                    cache_surfaces_from_volume = mesh.cache_surfaces_from_volume,
+                                    cache_lines_from_surface = mesh.cache_lines_from_surface,
+                                    cache_points_from_line = mesh.cache_points_from_line,
+                                )
+
+                mesh_data.update(cache_data)
+                break
 
         with self.filebox.open(self.mesh_data_filename, "w") as internal_file:
             with h5py.File(internal_file, "w") as f:
