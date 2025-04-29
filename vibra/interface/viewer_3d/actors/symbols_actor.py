@@ -30,6 +30,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.clear_symbols()
         self._build_nodal_normals()
         self._build_surface_velocity()
+        self._build_prescribed_dofs()
         super().build()
         return
 
@@ -68,6 +69,23 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         for node_id, normal_vector in mesh.nodal_normals_data.items():
             coords = mesh.nodal_coordinates[node_id, 1:]
             self.add_normal_symbol(coords, normal_vector)
+
+    def _build_prescribed_dofs(self):
+        surface_properties = app().project.model.properties.surface_properties
+        for (property_name, surface_id), property in surface_properties.items():
+            if property_name != "prescribed_dofs":
+                continue
+
+            coords, _ = self._get_center_coords_and_normals(surface_id)
+
+            if property["values"][0] is not None:
+                self.add_prescribed_dof_symbol(coords, (1, 0, 0))
+
+            if property["values"][1] is not None:
+                self.add_prescribed_dof_symbol(coords, (0, 1, 0))
+
+            if property["values"][2] is not None:
+                self.add_prescribed_dof_symbol(coords, (0, 0, 1))
 
     # Specifications on how each symbol should look like
     def add_force_symbol(self, position, orientation):
