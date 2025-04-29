@@ -225,20 +225,6 @@ class LoadProject:
                 id = int(key.split("_")[-1])
                 self.model.mesh.gmsh_elements_from_volumes[id] = data
 
-            elif "connectivity_from_surfaces" in key:
-                id = int(key.split("_")[-1])
-                if "cache" in key:
-                    self.model.mesh.cache_connectivity_from_surfaces[id] = data
-                else:
-                    self.model.mesh.connectivity_from_surfaces[id] = data
-
-            elif "connectivity_from_lines" in key:
-                id = int(key.split("_")[-1])
-                if "cache" in key:
-                    self.model.mesh.cache_connectivity_from_lines[id] = data
-                else:
-                    self.model.mesh.connectivity_from_lines[id] = data
-
             elif "surfaces_from_volume" in key:
                 id = int(key.split("_")[-1])
                 if "cache" in key:

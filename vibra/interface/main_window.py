@@ -504,7 +504,6 @@ class MainWindow(QMainWindow):
 
         self.action_results_workspace.setEnabled(False)
         self.animation_toolbar.setEnabled(False)
-        self.configure_mesh_information()
 
     def show_geometry_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)

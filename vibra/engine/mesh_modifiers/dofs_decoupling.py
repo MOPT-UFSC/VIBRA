@@ -6,6 +6,8 @@ if TYPE_CHECKING:
 
 from collections import defaultdict
 from copy import deepcopy
+from time import time
+
 import numpy as np
 
 
@@ -27,13 +29,11 @@ class DofsDecoupling:
         """
         """
 
-        # decouple_data = {
-        #                  "volume_to_preserve" : 2,
-        #                  "volume_to_decouple" : 1,
-        #                  }
-        # self.properties._set_property("acoustic_dofs_decoupling", decouple_data, surface=6)
-
         self.decouple_info.clear()
+        self.nodes_mapping.clear()
+        if self.mesh.cache_nodal_coordinates is None:
+            return
+
         max_surface_id = int(np.max(self.mesh.cache_faces_connectivity[:, 1]))
 
         for key, data in self.properties.surface_properties.items():
@@ -50,7 +50,6 @@ class DofsDecoupling:
                                                   "new_surface_id" : int(max_surface_id),
                                                   }
 
-                    # apply the same fluid to the new surface
                     aux_data = deepcopy(data)
                     aux_data.update(new_surface_id=int(max_surface_id))
                     self.properties.surface_properties[key] = aux_data
@@ -67,7 +66,6 @@ class DofsDecoupling:
         max_node_id = max(self.mesh.cache_nodal_coordinates[:, 0])
         shift_value = max_node_id + 1
 
-        self.nodes_mapping.clear()
         nodal_coordinates = deepcopy(self.mesh.cache_nodal_coordinates)
 
         for vol_id, data in self.decouple_info.items():
@@ -96,20 +94,14 @@ class DofsDecoupling:
             nodal_coordinates = np.append(nodal_coordinates, coords_from_twin_nodes, axis=0)
 
         self.mesh.nodal_coordinates = nodal_coordinates
-        # from pprint import pprint
-        # pprint(self.nodes_mapping)
-        # keys = list(self.nodes_mapping.keys())
-        # values = list(self.nodes_mapping.values())
-        # out_data = np.array([keys, values], dtype=int).T
-        # np.savetxt("out_data.dat", out_data, delimiter=",", fmt="%i, %i")
 
 
     def get_new_line_ids(self, line_ids: list[int]):
         """
         """
-        max_line_id = np.max(self.mesh.lines_connectivity[:, 1])
+        max_line_id = np.max(self.mesh.cache_lines_connectivity[:, 1])
         shifted_line_ids = np.arange(len(line_ids), dtype=int) + int(max_line_id + 1)
-        return list(shifted_line_ids)
+        return shifted_line_ids
 
 
     def get_new_point_ids(self, point_ids: list[int]):
@@ -124,7 +116,6 @@ class DofsDecoupling:
     def get_nodes_from_lines_that_bound_decoupled_surfaces(self):
         """
         """
-
         surfaces_from_volume = deepcopy(self.mesh.cache_surfaces_from_volume)
         lines_from_surface = deepcopy(self.mesh.cache_lines_from_surface)
 
@@ -132,14 +123,13 @@ class DofsDecoupling:
         valid_surface_ids = list()
 
         for vol_id, data in self.decouple_info.items():
+
             data: dict
-
-            surf_id = data.get("surface_id")
-
             valid_surface_ids.extend(surfaces_from_volume[vol_id])
-            valid_surface_ids.remove(surf_id)
+            surface_id = data.get("surface_id")
+            valid_surface_ids.remove(surface_id)
 
-            for i, line_id in enumerate(lines_from_surface[surf_id]):
+            for i, line_id in enumerate(lines_from_surface[surface_id]):
                 nodes_from_lines.extend(self.mesh.nodes_from_lines[line_id])
 
         nodes_from_lines = list(set(nodes_from_lines))
@@ -163,8 +153,10 @@ class DofsDecoupling:
         """
         """
         output_values = values.copy()
+        nodes_to_map = self.nodes_mapping.keys()
+
         for j, node_id in enumerate(values):
-            if node_id in self.nodes_mapping.keys():
+            if node_id in nodes_to_map:
                 output_values[j] = self.nodes_mapping[node_id]
 
         return output_values
@@ -180,14 +172,16 @@ class DofsDecoupling:
 
         for i, line_id in enumerate(lines_from_surface):
 
-            new_line_id = new_line_ids[i]
             line_connectivity = self.mesh.cache_connectivity_from_lines[line_id]
             new_connectivity = np.zeros_like(line_connectivity, dtype=int)
 
             for j, connect in enumerate(line_connectivity):
                 new_connectivity[j, :] = self.update_connectivity(connect)
 
+            new_line_id = int(new_line_ids[i])
             self.mesh.connectivity_from_lines[new_line_id] = new_connectivity
+            self.mesh.nodes_from_lines[new_line_id] = np.array([*set(new_connectivity.flatten())], dtype=int)
+
             etag, nodes_per_element = self.get_line_element_tag_and_nodes_number(line_id)
 
             rows = new_connectivity.shape[0]
@@ -234,15 +228,35 @@ class DofsDecoupling:
         self.mesh.faces_connectivity = np.append(self.mesh.faces_connectivity, connectivity_to_append, axis=0)
 
 
+    def get_lines_from_valid_surfaces(self):
+        """
+        """
+        line_ids = list()
+        for vol_id, data in self.decouple_info.items():
+            data: dict
+            surf_id = data.get("surface_id")
+            if surf_id is None:
+                return
+
+            for surface_id in self.mesh.cache_surfaces_from_volume[vol_id]:
+                if surf_id == surface_id:
+                    continue
+
+                line_ids.extend(self.mesh.cache_lines_from_surface[surface_id])
+
+        return list(set(line_ids))
+
+
     def update_all_connectivity_related_attributes(self):
         """
         """
-
+        t0 = time()
         if not self.decouple_info:
             return
-
+        
+        volume_ids = list(self.decouple_info.keys())
         for elem3d_id, vol_id, _, _, *connect_3d in deepcopy(self.mesh.cache_solids_connectivity):
-            if vol_id in self.decouple_info.keys():
+            if vol_id in volume_ids:
                 self.mesh.solids_connectivity[elem3d_id, 4:] = self.update_connectivity(connect_3d)
 
         valid_surface_ids, nodes_from_bound_lines = self.get_nodes_from_lines_that_bound_decoupled_surfaces()
@@ -252,6 +266,12 @@ class DofsDecoupling:
 
             if np.isin(nodes_from_bound_lines, connect_2d).any():
                 self.mesh.faces_connectivity[elem2d_id, 4:] = self.update_connectivity(connect_2d)
+
+        lines_from_valid_surfaces = self.get_lines_from_valid_surfaces()
+        for elem1d_id, line_id, _, _, *connect_1d in self.mesh.cache_lines_connectivity:
+            if line_id in lines_from_valid_surfaces:
+                if np.isin(nodes_from_bound_lines, connect_1d).any():
+                    self.mesh.lines_connectivity[elem1d_id, 4:] = self.update_connectivity(connect_1d)
 
         for surface_id in self.mesh.nodes_from_surfaces.keys():
             for data in self.decouple_info.values():
@@ -264,11 +284,22 @@ class DofsDecoupling:
 
         self.mesh.process_mesh_related_mappings()
 
+        dt = time() - t0
+        print(f"Elapsed time to update connectivities: {dt} s")
+
+
+    def apply_fluid_at_new_surface(self, surface_id: int, new_surface_id: int):
+
+        fluid = self.model.properties._get_property("fluid", surface=surface_id)
+        self.model.properties._set_property("fluid", fluid, surface=new_surface_id)
+
+        fluid_id = self.model.properties._get_property("fluid_id", surface=surface_id)
+        self.model.properties._set_property("fluid_id", fluid_id, surface=new_surface_id)
+
 
     def update_geometry_related_information(self):
         """
         """
-
         surfaces_from_volume = deepcopy(self.mesh.cache_surfaces_from_volume)
         lines_from_surface = deepcopy(self.mesh.cache_lines_from_surface)
         points_from_line = deepcopy(self.mesh.cache_points_from_line)
@@ -297,7 +328,7 @@ class DofsDecoupling:
             self.mesh.lines_from_surface[new_surf_id] = new_line_ids
 
             for i, line_id in enumerate(lines_from_surface):
-                new_line_id = new_line_ids[i]
+                new_line_id = int(new_line_ids[i])
                 self.mesh.geometry_information["curves"].append(new_line_id)
                 self.mesh.length_from_curve[new_line_id] = length_from_curve[line_id]
                 self.mesh.points_from_line[new_line_id] = self.get_new_point_ids(points_from_line[line_id])
@@ -306,17 +337,6 @@ class DofsDecoupling:
             self.mesh.volumes_from_surface = maps_values_to_keys(deepcopy(self.mesh.surfaces_from_volume))
             self.mesh.surfaces_from_line = maps_values_to_keys(deepcopy(self.mesh.lines_from_surface))
             self.mesh.lines_from_point = maps_values_to_keys(deepcopy(self.mesh.points_from_line))
-
-
-    def apply_fluid_at_new_surface(self, surface_id: int, new_surface_id: int):
-
-        fluid = self.model.properties._get_property("fluid", surface=surface_id)
-        self.model.properties._set_property("fluid", fluid, surface=new_surface_id)
-
-        fluid_id = self.model.properties._get_property("fluid_id", surface=surface_id)
-        self.model.properties._set_property("fluid_id", fluid_id, surface=new_surface_id)
-
-        print(new_surface_id, fluid, "apply_fluid_at_new_surface")
 
 
     def process_dofs_decoupling(self):

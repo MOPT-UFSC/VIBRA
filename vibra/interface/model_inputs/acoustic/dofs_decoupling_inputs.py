@@ -175,7 +175,7 @@ class DofsDecouplingInputs(QDialog):
             message = "The selected surface is connected to one volume, therefore, an external " 
             message += "surface has been picked. You should select an internal surface connected "
             message += "to two volumes to proceed with dofs decoupling."
-            
+
         if message != "":
             self.hide()
             title = "Invalid surface selected"
@@ -185,13 +185,11 @@ class DofsDecouplingInputs(QDialog):
         data = {"volume_to_decouple" : int(self.comboBox_volume_id.currentText())}
         self.properties._set_property("acoustic_dofs_decoupling", data, surface=surface_id)
 
-        self.actions_to_finalize()
+        if self.mesh.cache_nodal_coordinates is None:
+            self.mesh.cache_mesh_information()
+            app().file.write_mesh_data_in_file()
 
-    def process_table_file_removal(self, table_names: list):
-        for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
-        if table_names:
-            app().file.write_imported_table_data_in_file()
+        self.actions_to_finalize()
 
     def remove_callback(self):
 
@@ -237,7 +235,7 @@ class DofsDecouplingInputs(QDialog):
             for _new_surface_id in new_surface_ids:
                 self.properties._remove_surface_property("fluid", _new_surface_id)
                 self.properties._remove_surface_property("fluid_id", _new_surface_id)
-            
+
             self.properties._reset_property("acoustic_dofs_decoupling")
             app().project.model.generated_mesh = False
             app().file.remove_mesh_data_from_project_file()

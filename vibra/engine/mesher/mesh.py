@@ -1,22 +1,11 @@
+# fmt: off
 
-from vibra.engine.mesher.element_type import (
-    DEFAULT_ELEMENT_TYPE,
-    TETRAHEDRON_10,
-    TETRAHEDRON_4,
-    ElementType,
-)
-
+from vibra.engine.mesher.element_type import DEFAULT_ELEMENT_TYPE, TETRAHEDRON_4, ElementType
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
-from vtkmodules.vtkCommonDataModel import (
-    vtkUnstructuredGrid,
-    VTK_TETRA,
-    VTK_HEXAHEDRON,
-    VTK_QUADRATIC_TETRA,
-    VTK_QUADRATIC_HEXAHEDRON
-)
+from vtkmodules.vtkCommonDataModel import vtkUnstructuredGrid, VTK_TETRA, VTK_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_QUADRATIC_HEXAHEDRON
 
 import logging
 import os
@@ -51,13 +40,6 @@ class Mesh:
         self.faces_connectivity = np.zeros((0, 4), dtype=int)
         self.solids_connectivity = np.zeros((0, 4), dtype=int)
 
-        self.cache_nodal_coordinates = None
-        self.cache_lines_connectivity = None
-        self.cache_faces_connectivity = None
-        self.cache_solids_connectivity = None
-        self.cache_connectivity_from_lines = dict()
-        self.cache_connectivity_from_surfaces = dict()
-
         self.geometry_information = defaultdict(list)
 
         self.nodes_from_points = dict()
@@ -88,10 +70,6 @@ class Mesh:
         self.lines_from_surface = dict()
         self.points_from_line = dict()
 
-        self.cache_surfaces_from_volume = dict()
-        self.cache_lines_from_surface = dict()
-        self.cache_points_from_line = dict()
-
         self.connectivity_from_lines = dict()
         self.connectivity_from_surfaces = dict()
 
@@ -117,6 +95,18 @@ class Mesh:
         self.nodal_normals_data = dict()
 
         self.principal_diagonal = None
+
+        self.cache_nodal_coordinates = None
+        self.cache_lines_connectivity = None
+        self.cache_faces_connectivity = None
+        self.cache_solids_connectivity = None
+
+        self.cache_surfaces_from_volume = dict()
+        self.cache_lines_from_surface = dict()
+        self.cache_points_from_line = dict()
+
+        self.cache_connectivity_from_lines = dict()
+        self.cache_connectivity_from_surfaces = dict()
 
     def set_length_unit(self, length_unit: str = "milimeter"):
         self.length_unit = length_unit
@@ -459,11 +449,6 @@ class Mesh:
         self.faces_connectivity = np.zeros((0, 4), dtype=int)
         self.solids_connectivity = np.zeros((0, 4), dtype=int)
 
-        self.cache_nodal_coordinates = None
-        self.cache_lines_connectivity = None
-        self.cache_faces_connectivity = None
-        self.cache_solids_connectivity = None
-
         self.nodes_from_points.clear()
         self.nodes_from_lines.clear()
         self.nodes_from_surfaces.clear()
@@ -487,18 +472,24 @@ class Mesh:
         self.surfaces_from_volume.clear()
         self.volumes_from_surface.clear()
 
+        self.solid_elements_center.clear()
+        self.connectivity_from_lines.clear()
+        self.connectivity_from_surfaces.clear()
+
+        self.curvatures_surface.clear()
+        self.normals_surface.clear()
+
+        self.cache_nodal_coordinates = None
+        self.cache_lines_connectivity = None
+        self.cache_faces_connectivity = None
+        self.cache_solids_connectivity = None
+
         self.cache_surfaces_from_volume.clear()
         self.cache_lines_from_surface.clear()
         self.cache_points_from_line.clear()
 
-        self.solid_elements_center.clear()
-        self.connectivity_from_lines.clear()
-        self.connectivity_from_surfaces.clear()
         self.cache_connectivity_from_lines.clear()
         self.cache_connectivity_from_surfaces.clear()
-
-        self.curvatures_surface.clear()
-        self.normals_surface.clear()
 
 
     def process_surface_normals_and_curvatures(self, tag: int):
@@ -532,7 +523,6 @@ class Mesh:
         self.nodal_coordinates = np.zeros((total_nodes, 4))
         self.nodal_coordinates[indexes - 1, 1:] = coords.reshape(-1, 3) * unit_length_factor
         self.nodal_coordinates[indexes - 1, :1] = indexes.reshape(-1, 1) - 1
-        self.cache_nodal_coordinates = deepcopy(self.nodal_coordinates)
 
         connectivity_dim1 = dict()
         connectivity_dim2 = dict()
@@ -613,6 +603,8 @@ class Mesh:
 
     def cache_mesh_information(self):
 
+        self.cache_nodal_coordinates = deepcopy(self.nodal_coordinates)
+
         self.cache_surfaces_from_volume = deepcopy(self.surfaces_from_volume)
         self.cache_lines_from_surface = deepcopy(self.lines_from_surface)
         self.cache_points_from_line = deepcopy(self.points_from_line)
@@ -620,11 +612,11 @@ class Mesh:
         self.cache_lines_connectivity = deepcopy(self.lines_connectivity)
         self.cache_faces_connectivity = deepcopy(self.faces_connectivity)
         self.cache_solids_connectivity = deepcopy(self.solids_connectivity)
-        self.cache_connectivity_from_lines = deepcopy(self.connectivity_from_lines)
-        self.cache_connectivity_from_surfaces = deepcopy(self.connectivity_from_surfaces)
+
+        self.process_connectivities_from_lines_and_surfaces(from_cache=True)
 
 
-    def process_connectivities_from_lines_and_surfaces(self):
+    def process_connectivities_from_lines_and_surfaces(self, from_cache: bool=False):
         """ This method processes the connectivities from lines
             and surfaces, gathering the information in dictionaries
             with entity tags as keys.
@@ -636,24 +628,41 @@ class Mesh:
         for dim in [1, 2]:
 
             if dim == 1:
-                tags = list(self.nodes_from_lines.keys())
-                connect_data = self.lines_connectivity
+                # tags = list(self.nodes_from_lines.keys())
+                if from_cache:
+                    connect_data = self.cache_lines_connectivity
+                else:
+                    connect_data = self.lines_connectivity
 
             elif dim == 2:
-                tags = list(self.nodes_from_surfaces.keys())
-                connect_data = self.faces_connectivity
+                # tags = list(self.nodes_from_surfaces.keys())
+                if from_cache:
+                    connect_data = self.cache_faces_connectivity
+                else:
+                    connect_data = self.faces_connectivity
 
             else:
                 continue
 
+            tags = [*set(connect_data[:, 1])]
+
             for tag in tags:
 
+                tag = int(tag)
                 rows = connect_data[:, 1] == tag
+                connectivity = connect_data[rows, 4:]
+
                 if dim == 1:
-                    self.connectivity_from_lines[tag] = connect_data[rows, 4:]
+                    if from_cache:
+                        self.cache_connectivity_from_lines[tag] = connectivity
+                    else:
+                        self.connectivity_from_lines[tag] = connectivity
 
                 elif dim == 2:
-                    self.connectivity_from_surfaces[tag] = connect_data[rows, 4:]
+                    if from_cache:
+                        self.cache_connectivity_from_surfaces[tag] = connectivity
+                    else:
+                        self.connectivity_from_surfaces[tag] = connectivity
 
     def _update_surfaces_from_nodes(self, surface_id, node_ids):
         for node_id in node_ids:
@@ -1525,3 +1534,5 @@ if __name__ == "__main__":
 
     mesh = Mesh()
     mesh.load_cad(path, 100, element_type=TETRAHEDRON_4)
+
+# fmt: on
