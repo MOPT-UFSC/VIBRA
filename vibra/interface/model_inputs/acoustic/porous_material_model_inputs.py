@@ -356,8 +356,8 @@ class PorousMaterialModelInputs(QDialog):
         self.update_tabs_visibility()
 
     def check_selected_bodies(self):
-        lineEdit = self.lineEdit_selection_id.text()
-        self.stop, self.volume_ids = self.mesh.check_input_volume_id(lineEdit)
+        str_selection_ids = self.lineEdit_selection_id.text()
+        stop, surface_ids = self.mesh.check_selected_ids(str_selection_ids, selection="volumes")
         if self.stop:
             self.lineEdit_selection_id.setFocus()
             return True
