@@ -138,8 +138,8 @@ class AnechoicTerminationInputs(QDialog):
 
     def attribute_callback(self):
 
-        lineEdit_selection_id = self.lineEdit_selection_id.text()
-        stop, surface_ids = self.mesh.check_input_surface_id(lineEdit_selection_id)
+        str_selection_ids = self.lineEdit_selection_id.text()
+        stop, surface_ids = self.mesh.check_selected_ids(str_selection_ids, selection="surfaces")
         if stop:
             self.lineEdit_selection_id.setFocus()
             return
