@@ -214,6 +214,7 @@ class MainWindow(QMainWindow):
         self.vibra_icon = get_vibra_icon()
         self.setWindowIcon(self.vibra_icon)
         self.setWindowTitle("Vibra")
+        self.installEventFilter(self)
 
         # for qdarktheme
         self.custom_colors = {
@@ -1093,5 +1094,6 @@ class MainWindow(QMainWindow):
     def eventFilter(self, obj, event: QEvent):
         if event.type() == QEvent.ShortcutOverride:
             if event.key() == Qt.Key_F5:
+                print("updating")
                 self.update_plots()
         return super(MainWindow, self).eventFilter(obj, event)
