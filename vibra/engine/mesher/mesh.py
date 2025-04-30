@@ -97,8 +97,6 @@ class Mesh:
         self.cache_faces_connectivity = None
         self.cache_solids_connectivity = None
 
-        self.cache_elements_from_surface = dict()
-        self.cache_elements_from_line = dict()
         self.cache_surfaces_from_volume = dict()
         self.cache_lines_from_surface = dict()
         self.cache_points_from_line = dict()
@@ -473,14 +471,68 @@ class Mesh:
         self.cache_faces_connectivity = None
         self.cache_solids_connectivity = None
 
-        self.cache_elements_from_surface.clear()
-        self.cache_elements_from_line.clear()
         self.cache_surfaces_from_volume.clear()
         self.cache_lines_from_surface.clear()
         self.cache_points_from_line.clear()
 
         self.cache_connectivity_from_lines.clear()
         self.cache_connectivity_from_surfaces.clear()
+
+
+    def get_points_from_geometry(self, from_cache: bool=True):
+
+        output_ids = set()
+        if from_cache:
+            points_from_line = self.cache_points_from_line
+        else:
+            points_from_line = self.points_from_line
+
+        for point_ids in points_from_line.values():
+            output_ids |= set(point_ids)
+
+        return list(output_ids)
+
+
+    def get_lines_from_geometry(self, from_cache: bool=True):
+
+        output_ids = set()
+        if from_cache:
+            lines_from_surface = self.cache_lines_from_surface
+        else:
+            lines_from_surface = self.lines_from_surface
+
+        for line_ids in lines_from_surface.values():
+            output_ids |= set(line_ids)
+
+        return list(output_ids)
+
+
+    def get_surfaces_from_geometry(self, from_cache: bool=True):
+
+        output_ids = set()
+        if from_cache:
+            surfaces_from_volume = self.cache_surfaces_from_volume
+        else:
+            surfaces_from_volume = self.surfaces_from_volume
+
+        for surface_ids in surfaces_from_volume.values():
+            output_ids |= set(surface_ids)
+
+        return list(output_ids)
+
+
+    def get_points_and_lines_from_surfaces(self, surface_ids: list[int]):
+
+        point_ids = set()
+        line_ids = set()
+        for surface_id in surface_ids:
+            lines_from_surface = self.cache_lines_from_surface[surface_id]
+            line_ids |= set(lines_from_surface)
+            for line_id in lines_from_surface:
+                points_from_line = self.cache_points_from_line[line_id]
+                point_ids |= set(points_from_line)
+
+        return list(point_ids), list(line_ids)
 
 
     def process_surface_normals_and_curvatures(self, tag: int):
@@ -526,6 +578,9 @@ class Mesh:
 
             if not element_indexes:
                 continue
+
+            if dim == 2:
+                self.process_surface_normals_and_curvatures(tag)
 
             for i, element_type in enumerate(element_types):
                 _, _, _, nodes_per_element, _, _ = gmsh.model.mesh.getElementProperties(element_type)
@@ -577,14 +632,12 @@ class Mesh:
         self.cache_lines_from_surface = deepcopy(self.lines_from_surface)
         self.cache_points_from_line = deepcopy(self.points_from_line)
 
-        self.cache_elements_from_surface = deepcopy(self.elements_from_surface)
-        self.cache_elements_from_line = deepcopy(self.elements_from_line)
-
         self.cache_lines_connectivity = deepcopy(self.lines_connectivity)
         self.cache_faces_connectivity = deepcopy(self.faces_connectivity)
         self.cache_solids_connectivity = deepcopy(self.solids_connectivity)
 
         self.process_connectivities_from_lines_and_surfaces(from_cache=True)
+        self.get_points_from_geometry()
 
 
     def process_connectivities_from_lines_and_surfaces(self, from_cache: bool=False):
@@ -1072,8 +1125,6 @@ class Mesh:
                 area_from_surface[tag] = value * (unit_factor**2)
                 for line_id in downwards:
                     self.surfaces_from_line[line_id].append(tag)
-
-                self.process_surface_normals_and_curvatures(tag)
 
             elif dim == 1:
                 self.points_from_line[tag] = downwards
