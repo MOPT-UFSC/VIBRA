@@ -99,7 +99,7 @@ class DofsDecoupling:
         """
         max_line_id = np.max(self.mesh.cache_lines_connectivity[:, 1])
         shifted_line_ids = np.arange(len(line_ids), dtype=int) + int(max_line_id + 1)
-        return shifted_line_ids
+        return [int(line_id) for line_id in shifted_line_ids]
 
 
     def get_new_point_ids(self, point_ids: list[int]):
@@ -108,7 +108,7 @@ class DofsDecoupling:
         #TODO: modify this criterion
         max_point_id = max(list(self.mesh.geometry_information.get("points")))
         shifted_point_ids = np.arange(len(point_ids), dtype=int) + int(max_point_id + 1)
-        return list(shifted_point_ids)
+        return [int(point_id) for point_id in shifted_point_ids]
 
 
     def get_nodes_from_lines_that_bound_decoupled_surfaces(self):
@@ -321,7 +321,7 @@ class DofsDecoupling:
             surfaces_from_volume = set(surfaces_from_volume[vol_id])
             surfaces_from_volume -= set({surf_id})
             surfaces_from_volume |= set({new_surf_id})
-            self.mesh.surfaces_from_volume[vol_id] = np.sort(list(surfaces_from_volume))
+            self.mesh.surfaces_from_volume[vol_id] = [int(surf_id) for surf_id in list(surfaces_from_volume)]
 
             surface_ids = set(geometry_information["surfaces"])
             surface_ids |= set({new_surf_id})
