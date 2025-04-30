@@ -10,10 +10,11 @@ def create_cone_source():
     source.SetRadius(0.5)
     source.SetResolution(12)
     source.Update()
+    s = 0.6
     return transform_polydata(
         source.GetOutput(),
-        position=(-0.5, 0, 0),
-        scale=(0.7, 0.7, 0.7)
+        position=(-s/2, 0, 0),
+        scale=(s, s, s)
     )
 
 def create_cube_source():
