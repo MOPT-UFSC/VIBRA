@@ -532,7 +532,10 @@ class Mesh:
                 points_from_line = self.cache_points_from_line[line_id]
                 point_ids |= set(points_from_line)
 
-        return list(point_ids), list(line_ids)
+        point_ids = [int(point_id) for point_id in point_ids]
+        line_ids = [int(line_id) for line_id in line_ids]
+
+        return point_ids, line_ids
 
 
     def process_surface_normals_and_curvatures(self, tag: int):
@@ -637,7 +640,6 @@ class Mesh:
         self.cache_solids_connectivity = deepcopy(self.solids_connectivity)
 
         self.process_connectivities_from_lines_and_surfaces(from_cache=True)
-        self.get_points_from_geometry()
 
 
     def process_connectivities_from_lines_and_surfaces(self, from_cache: bool=False):
