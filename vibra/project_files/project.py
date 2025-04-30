@@ -280,7 +280,6 @@ class Project:
             raise NotImplementedError("Not implemented analysis")
 
         app().main_window.results_viewer_widget.results_viewer_items.update_items()
-        app().main_window.mesh_widget.mesh_selection.precompute_data()
 
     def is_there_a_valid_solution(self):
 

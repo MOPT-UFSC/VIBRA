@@ -201,6 +201,10 @@ class AnalysisToolbar(QToolBar):
         app().main_window.configure_mesh_information()
         app().main_window.update_geometry_information()
 
+        # This is needed specially when the geometry
+        # and mesh changes because of the analysis
+        app().main_window.update_plots(reset_camera=False)
+
         app().file.write_geometry_information_in_file()
         app().file.write_mesh_data_in_file()
         app().file.write_results_data_in_file()
