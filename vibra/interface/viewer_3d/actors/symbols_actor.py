@@ -22,7 +22,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.configure_appearance()
         self._register_shapes()
         self.build()
-        self.set_zbuffer_offsets(1, -66000)
+        self.set_zbuffer_offsets(1, -6600)
 
     def configure_appearance(self):
         self.GetProperty().SetAmbient(0.5)
