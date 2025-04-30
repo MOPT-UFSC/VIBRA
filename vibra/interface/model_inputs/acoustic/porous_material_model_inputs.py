@@ -355,12 +355,12 @@ class PorousMaterialModelInputs(QDialog):
 
         self.update_tabs_visibility()
 
-    def check_selected_bodies(self):
-        str_selection_ids = self.lineEdit_selection_id.text()
-        stop, surface_ids = self.mesh.check_selected_ids(str_selection_ids, selection="volumes")
-        if self.stop:
-            self.lineEdit_selection_id.setFocus()
-            return True
+    # def check_selected_bodies(self):
+    #     str_selection_ids = self.lineEdit_selection_id.text()
+    #     volume_ids = self.mesh.check_selected_ids(str_selection_ids, selection="volumes")
+    #     if volume_ids is None:
+    #         self.lineEdit_selection_id.setFocus()
+    #         return True
 
     def get_Delany_Bazley_model_inputs(self):
         material_model_data = {

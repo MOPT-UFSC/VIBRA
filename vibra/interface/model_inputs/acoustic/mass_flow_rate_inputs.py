@@ -197,8 +197,8 @@ class MassFlowRateInputs(QDialog):
     def check_constant_values(self):
 
         str_selection_ids = self.lineEdit_selection_id.text()
-        stop, surface_ids = self.mesh.check_selected_ids(str_selection_ids, selection="surfaces")
-        if stop:
+        surface_ids = self.mesh.check_selected_ids(str_selection_ids, selection="surfaces")
+        if surface_ids is None:
             self.lineEdit_selection_id.setFocus()
             return
 
