@@ -293,7 +293,8 @@ class MainWindow(QMainWindow):
     def update_mesh_information(self, nodes, face_elements, solid_elements):
         self.status_bar.update_mesh_information(nodes, face_elements, solid_elements)
 
-    def update_geometry_information(self, geometry_info: dict):
+    def update_geometry_information(self):
+        geometry_info = app().project.model.mesh.geometry_information
         self.status_bar.update_geometry_information(geometry_info)
 
     def _configure_render_widgets_stack(self):

@@ -269,6 +269,7 @@ class LoadProject:
         logging.info("Loading mesh... [80/100]")
 
         self.model.mesh.process_mesh_related_mappings()
+        self.model.mesh.process_connectivities_from_lines_and_surfaces(from_cache=True)
         self.model.generated_mesh = True
 
         logging.info("Loading mesh... [95/100]")
@@ -315,12 +316,34 @@ class LoadProject:
 
                 if mesh_data:
                     self.load_mesh_data_from_file(mesh_data)
+                    self.load_geometry_information()
 
                 else:
                     app().project.generate_mesh()
                     app().file.write_mesh_data_in_file()
+                    app().file.write_geometry_information_in_file()
 
         app().main_window.action_model_workspace_callback()
+
+    def load_geometry_information(self):
+
+        geometry_info = self.file.read_geometry_information_from_file()
+        if geometry_info is None:
+            return
+
+        self.model.mesh.geometry_information.clear()
+        for key, data in geometry_info.items():
+            if key in ["points", "curves", "surfaces", "volumes"]:
+                self.model.mesh.geometry_information[key] = data
+
+            else:
+                aux_data = dict()
+                for tag, values in data.items():
+                    aux_data[int(tag)] = values
+
+                self.model.mesh.geometry_information[key] = aux_data
+
+        app().main_window.update_geometry_information()
 
     def update_render(self):
 

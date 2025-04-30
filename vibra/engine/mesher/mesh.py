@@ -78,10 +78,6 @@ class Mesh:
         self.solid_elements_center = dict()
 
         self.nodes_out_of_face_element = dict()
-
-        self.length_from_curve = dict()
-        self.area_from_surface = dict()
-        self.volume_from_body = dict()
         self.surface_area_from_element_integration = dict()
 
         self.nodal_area = defaultdict(list)
@@ -630,6 +626,8 @@ class Mesh:
             if dim == 1:
                 # tags = list(self.nodes_from_lines.keys())
                 if from_cache:
+                    if self.cache_lines_connectivity is None:
+                        return
                     connect_data = self.cache_lines_connectivity
                 else:
                     connect_data = self.lines_connectivity
@@ -679,6 +677,8 @@ class Mesh:
 
 
     def process_mesh_related_mappings(self):
+        """
+        """
         self.process_connectivities_from_lines_and_surfaces()
         self._maps_lines_by_elements()
         self._maps_surfaces_by_elements()
@@ -997,16 +997,17 @@ class Mesh:
 
     def get_geometry_info(self):
 
-        self.length_from_curve.clear()
-        self.area_from_surface.clear()
-        self.volume_from_body.clear()
         self.geometry_information.clear()
         labels = ["points", "curves", "surfaces", "volumes"]
+
+        length_from_curve = dict()
+        area_from_surface = dict()
+        volume_from_body = dict()
 
         for dim, tag in gmsh.model.getEntities():
             label = labels[dim]
             self.geometry_information[label].append(tag)
-            
+
             if dim == 0:
                 continue
 
@@ -1014,12 +1015,19 @@ class Mesh:
 
             unit_factor = self.get_length_unit_factor()
             if dim == 3:
-                self.volume_from_body[tag] = value * (unit_factor**3)
+                volume_from_body[tag] = value * (unit_factor**3)
             elif dim == 2:
-                self.area_from_surface[tag] = value * (unit_factor**2)
+                area_from_surface[tag] = value * (unit_factor**2)
             else:
-                self.length_from_curve[tag] = value * (unit_factor**1)
+                length_from_curve[tag] = value * (unit_factor**1)
 
+        properties_data = dict(
+                               volume_from_body = volume_from_body,
+                               area_from_surface = area_from_surface,
+                               length_from_curve = length_from_curve
+                               )
+
+        self.geometry_information.update(properties_data) 
 
     def _get_connectivity_array(self, input_dict):
         """

@@ -36,7 +36,8 @@ class ProjectFile:
         self.project_setup_filename = "project_setup.json"
         self.fluid_library_filename = "fluid_library.config"
         self.material_library_filename = "material_library.config"
-        self.model_properties = "model_properties.json"
+        self.geometry_information_filename = "geometry_information.json"
+        self.model_properties_filename = "model_properties.json"
         self.mesh_data_filename = "mesh_data.hdf5"
         self.cache_mesh_data_filename = "cache_mesh_data.hdf5"
         self.imported_table_data_filename = "imported_tables_data.hdf5"
@@ -108,6 +109,14 @@ class ProjectFile:
         length_unit = project_setup.get("length_unit", "milimeter")  
         geometry_qf = project_setup.get("geometry_qf", 3.0)  
         return length_unit, geometry_qf
+    
+    def write_geometry_information_in_file(self):
+        mesh = app().project.model.mesh
+        self.filebox.write(self.geometry_information_filename, mesh.geometry_information)
+        app().main_window.project_data_modified = True
+
+    def read_geometry_information_from_file(self):
+        return self.filebox.read(self.geometry_information_filename)
 
     def write_mesh_setup_in_file(self, mesh_setup):
 
@@ -358,7 +367,7 @@ class ProjectFile:
                         nodal_properties = normalize(properties.nodal_properties),
                         )
 
-            self.filebox.write(self.model_properties, data)
+            self.filebox.write(self.model_properties_filename, data)
             app().main_window.project_data_modified = True
 
         except Exception as error_log:
@@ -378,7 +387,7 @@ class ProjectFile:
                 new_prop[p, i] = val
             return new_prop
 
-        data = self.filebox.read(self.model_properties)
+        data = self.filebox.read(self.model_properties_filename)
 
         if data is None:
             return dict()
@@ -534,9 +543,12 @@ class ProjectFile:
             return dict()
 
         return results_data
-    
+
+    def remove_geometry_information_from_project_file(self):
+        self.filebox.remove(self.geometry_information_filename)
+
     def remove_model_properties_from_project_file(self):
-        self.filebox.remove(self.model_properties)
+        self.filebox.remove(self.model_properties_filename)
 
     def remove_mesh_data_from_project_file(self):
         self.filebox.remove(self.mesh_data_filename)
