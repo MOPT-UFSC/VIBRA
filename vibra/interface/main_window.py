@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from PySide6.QtGui import QAction, QColor
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Signal, QEvent, Qt
 
 from vibra import UI_DIR, ICON_DIR, TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, app
 from vibra.interface.analysis_toolbar import AnalysisToolbar
@@ -1089,3 +1089,9 @@ class MainWindow(QMainWindow):
         self.action_plot_specific_acoustic_impedance.setDisabled(disabled)
         self.action_plot_particle_velocity.setDisabled(disabled)
         self.action_export_element_transfer_data.setDisabled(disabled)
+
+    def eventFilter(self, obj, event: QEvent):
+        if event.type() == QEvent.ShortcutOverride:
+            if event.key() == Qt.Key_F5:
+                self.update_plots()
+        return super(MainWindow, self).eventFilter(obj, event)

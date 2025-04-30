@@ -31,8 +31,6 @@ from .model_info_text import(
 
 
 class GeometryRenderWidget(CommonRenderWidget):
-    selection_changed = Signal(set, set, set, set)
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.set_interactor_style(BoxSelectionInteractorStyle())
@@ -226,9 +224,9 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.update_plot()
             return
 
-        self.renderer.RemoveActor(self.faces_actor)
+        self.remove_actors(self.faces_actor)
         self.faces_actor = FacesActor(mesh)
-        self.renderer.AddActor(self.faces_actor)
+        self.add_actors(self.faces_actor)
 
         has_hidden_part = bool(app().main_window.hidden_surfaces)
         self.ghost_actor.SetVisibility(has_hidden_part)
@@ -292,6 +290,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         if not shift_pressed:
             picked_volumes.clear()
+
 
         app().main_window.set_geometry_selection(
             points=picked_points,
