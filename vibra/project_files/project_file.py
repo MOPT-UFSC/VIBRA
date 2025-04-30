@@ -153,13 +153,13 @@ class ProjectFile:
                             faces_connectivity = mesh.faces_connectivity,
                             solids_connectivity = mesh.solids_connectivity,
 
-                            map_line_elements = mesh.get_array_based_elements_mapping(entity = "lines"),
-                            map_face_elements = mesh.get_array_based_elements_mapping(entity = "faces"),
-                            map_solid_elements = mesh.get_array_based_elements_mapping(entity = "solids"),
+                            # map_line_elements = mesh.get_array_based_elements_mapping(entity = "lines"),
+                            # map_face_elements = mesh.get_array_based_elements_mapping(entity = "faces"),
+                            # map_solid_elements = mesh.get_array_based_elements_mapping(entity = "solids"),
 
-                            gmsh_elements_from_lines = mesh.gmsh_elements_from_lines,
-                            gmsh_elements_from_surfaces = mesh.gmsh_elements_from_surfaces,
-                            gmsh_elements_from_volumes = mesh.gmsh_elements_from_volumes,
+                            # gmsh_elements_from_lines = mesh.gmsh_elements_from_lines,
+                            # gmsh_elements_from_surfaces = mesh.gmsh_elements_from_surfaces,
+                            # gmsh_elements_from_volumes = mesh.gmsh_elements_from_volumes,
 
                             surfaces_from_volume = mesh.surfaces_from_volume,
                             lines_from_surface = mesh.lines_from_surface,

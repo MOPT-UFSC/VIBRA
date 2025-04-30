@@ -178,20 +178,20 @@ class LoadProject:
         self.model.mesh.cache_faces_connectivity = mesh_data.get("cache_faces_connectivity")
         self.model.mesh.cache_solids_connectivity = mesh_data.get("cache_solids_connectivity")
 
-        self.model.mesh.map_line_elements = dict(zip( 
-                                                    mesh_data["map_line_elements"][:, 0],
-                                                    mesh_data["map_line_elements"][:, 1] 
-                                                    ))
+        # self.model.mesh.map_line_elements = dict(zip( 
+        #                                             mesh_data["map_line_elements"][:, 0],
+        #                                             mesh_data["map_line_elements"][:, 1] 
+        #                                             ))
 
-        self.model.mesh.map_face_elements = dict(zip( 
-                                                    mesh_data["map_face_elements"][:, 0],  
-                                                    mesh_data["map_face_elements"][:, 1] 
-                                                    ))
+        # self.model.mesh.map_face_elements = dict(zip( 
+        #                                             mesh_data["map_face_elements"][:, 0],  
+        #                                             mesh_data["map_face_elements"][:, 1] 
+        #                                             ))
 
-        self.model.mesh.map_solid_elements = dict(zip(
-                                                      mesh_data["map_solid_elements"][:, 0],
-                                                      mesh_data["map_solid_elements"][:, 1]
-                                                      ))
+        # self.model.mesh.map_solid_elements = dict(zip(
+        #                                               mesh_data["map_solid_elements"][:, 0],
+        #                                               mesh_data["map_solid_elements"][:, 1]
+        #                                               ))
 
         logging.info("Loading mesh... [60/100]")
 
@@ -213,17 +213,17 @@ class LoadProject:
                 id = int(key.split("_")[-1])
                 self.model.mesh.nodes_from_volumes[id] = data
 
-            elif "gmsh_elements_from_lines" in key:
-                id = int(key.split("_")[-1])
-                self.model.mesh.gmsh_elements_from_lines[id] = data
+            # elif "gmsh_elements_from_lines" in key:
+            #     id = int(key.split("_")[-1])
+            #     self.model.mesh.gmsh_elements_from_lines[id] = data
 
-            elif "gmsh_elements_from_surfaces" in key:
-                id = int(key.split("_")[-1])
-                self.model.mesh.gmsh_elements_from_surfaces[id] = data
+            # elif "gmsh_elements_from_surfaces" in key:
+            #     id = int(key.split("_")[-1])
+            #     self.model.mesh.gmsh_elements_from_surfaces[id] = data
 
-            elif "gmsh_elements_from_volumes" in key:
-                id = int(key.split("_")[-1])
-                self.model.mesh.gmsh_elements_from_volumes[id] = data
+            # elif "gmsh_elements_from_volumes" in key:
+            #     id = int(key.split("_")[-1])
+            #     self.model.mesh.gmsh_elements_from_volumes[id] = data
 
             elif "surfaces_from_volume" in key:
                 id = int(key.split("_")[-1])
