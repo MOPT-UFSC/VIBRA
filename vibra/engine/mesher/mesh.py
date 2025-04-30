@@ -179,7 +179,7 @@ class Mesh:
             # gmsh.model.mesh.generate(dim=element_type.dimensions)
             gmsh.model.mesh.generate(dim=dimension)
             logging.info("Generating mesh... [60/100]")
-            self.get_geometry_info()
+            self.process_geometry_information()
             gmsh.model.mesh.removeDuplicateNodes()
 
         except:
@@ -461,15 +461,6 @@ class Mesh:
         self.map_face_elements.clear()
         self.map_line_elements.clear()
 
-        self.points_from_line.clear()
-        self.lines_from_point.clear()
-
-        self.lines_from_surface.clear()
-        self.surfaces_from_line.clear()
-
-        self.surfaces_from_volume.clear()
-        self.volumes_from_surface.clear()
-
         self.solid_elements_center.clear()
         self.connectivity_from_lines.clear()
         self.connectivity_from_surfaces.clear()
@@ -530,27 +521,6 @@ class Mesh:
 
         for dim, tag in gmsh.model.getEntities():
 
-            if dim in [1, 2, 3]:
-
-                _, downwards = gmsh.model.getAdjacencies(dim, tag)
-
-                if dim == 3:
-                    self.surfaces_from_volume[tag] = list(downwards)
-                    for surf_id in list(downwards):
-                        self.volumes_from_surface[surf_id].append(tag)
-
-                elif dim == 2:
-                    self.lines_from_surface[tag] = list(downwards)
-                    for line_id in list(downwards):
-                        self.surfaces_from_line[line_id].append(tag)
-
-                    self.process_surface_normals_and_curvatures(tag)
-
-                elif dim == 1:
-                    self.points_from_line[tag] = list(downwards)
-                    for point_id in list(downwards):
-                        self.lines_from_point[point_id].append(tag)
-
             elements_data = dict()
             element_types, element_indexes, element_nodes = gmsh.model.mesh.getElements(dim, tag)
 
@@ -561,7 +531,7 @@ class Mesh:
                 _, _, _, nodes_per_element, _, _ = gmsh.model.mesh.getElementProperties(element_type)
 
                 array_element_nodes = np.array(element_nodes[i]).reshape(-1, nodes_per_element)
-                array_element_nodes -= 1  # index connectivity from 0
+                array_element_nodes -= 1
 
                 elements_data[element_type] = { 
                                                 "indexes" : element_indexes[i],
@@ -574,22 +544,20 @@ class Mesh:
             elif dim == 1:  # Lines
                 connectivity_dim1[dim, tag] = elements_data
                 self.nodes_from_lines[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
-                # self.connectivity_from_lines[tag] = array_element_nodes
-                self.gmsh_elements_from_lines[tag] = np.array([*set(element_indexes[0])], dtype=int)
+                # self.gmsh_elements_from_lines[tag] = np.array([*set(element_indexes[0])], dtype=int)
 
             elif dim == 2:  # Surfaces
                 connectivity_dim2[dim, tag] = elements_data
                 surface_nodes = np.array([*set(element_nodes[0])], dtype=int) - 1
                 self.nodes_from_surfaces[tag] = surface_nodes
-                # self.connectivity_from_surfaces[tag] = array_element_nodes
-                self.gmsh_elements_from_surfaces[tag] = np.array([*set(element_indexes[0])], dtype=int)
+                # self.gmsh_elements_from_surfaces[tag] = np.array([*set(element_indexes[0])], dtype=int)
                 self._update_surfaces_from_nodes(tag, surface_nodes)
                 del surface_nodes
 
             elif dim == 3:  # Solids
                 connectivity_dim3[dim, tag] = elements_data
                 self.nodes_from_volumes[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
-                self.gmsh_elements_from_volumes[tag] = np.array([*set(element_indexes[0])], dtype=int)
+                # self.gmsh_elements_from_volumes[tag] = np.array([*set(element_indexes[0])], dtype=int)
 
         logging.info("Post-processing mesh... [80/100]")
 
@@ -687,12 +655,66 @@ class Mesh:
         """
         """
         self.process_connectivities_from_lines_and_surfaces()
-        self._maps_lines_by_elements()
-        self._maps_surfaces_by_elements()
-        self._maps_volumes_by_elements()
+        self.process_the_elements_from_lines()
+        self.process_the_elements_from_surfaces()
+        self.process_the_elements_from_volumes()
+        # self._maps_lines_by_elements()
+        # self._maps_surfaces_by_elements()
+        # self._maps_volumes_by_elements()
         self._maps_face_elements_to_solid_elements()
         self.get_principal_diagonal_structure_parallelepiped()
 
+
+    def get_elements_from_lines(self, line_ids: list[int]):
+
+        element_ids = list()
+        for line_id in line_ids:
+            rows = np.isin(self.lines_connectivity[:, 1], line_id)
+            element_ids.extend(self.lines_connectivity[rows, 0])
+
+        return element_ids
+
+    def process_the_elements_from_lines(self):
+
+        self.elements_from_line.clear()
+        self.line_from_element.clear()
+        line_ids = list(set(self.lines_connectivity[:, 1]))
+
+        for line_id in line_ids:
+            rows = np.isin(self.lines_connectivity[:, 1], line_id)
+            element_ids = self.lines_connectivity[rows, 0]
+            self.elements_from_line[line_id] = element_ids
+
+            for element_id in element_ids:
+                self.line_from_element[element_id] = line_id
+
+    def process_the_elements_from_surfaces(self):
+
+        self.elements_from_surface.clear()
+        self.surface_from_element.clear()
+        surface_ids = list(set(self.faces_connectivity[:, 1]))
+
+        for surface_id in surface_ids:
+            rows = np.isin(self.faces_connectivity[:, 1], surface_id)
+            element_ids = self.faces_connectivity[rows, 0]
+            self.elements_from_surface[surface_id] = element_ids
+
+            for element_id in element_ids:
+                self.volume_from_element[element_id] = surface_id
+
+    def process_the_elements_from_volumes(self):
+
+        self.elements_from_volume.clear()
+        self.volume_from_element.clear()
+        volume_ids = list(set(self.solids_connectivity[:, 1]))
+
+        for volume_id in volume_ids:
+            rows = np.isin(self.solids_connectivity[:, 1], volume_id)
+            element_ids = self.solids_connectivity[rows, 0]
+            self.elements_from_volume[volume_id] = element_ids
+
+            for element_id in element_ids:
+                self.volume_from_element[element_id] = volume_id
 
     def _maps_lines_by_elements(self):
         self.line_from_element.clear()
@@ -708,7 +730,9 @@ class Mesh:
                 self.line_from_element[index] = tag
 
             self.elements_from_line[tag] = internal_indexes
-
+            if tag == 13:
+                print(internal_indexes)
+                print(self.get_elements_from_lines([tag]))
 
     def _maps_surfaces_by_elements(self):
         self.surface_from_element.clear()
@@ -1002,31 +1026,56 @@ class Mesh:
         return bb_sides, volume
 
 
-    def get_geometry_info(self):
+    def process_geometry_information(self):
 
         self.geometry_information.clear()
-        labels = ["points", "curves", "surfaces", "volumes"]
+        self.surfaces_from_volume.clear()
+        self.lines_from_surface.clear()
+        self.points_from_line.clear()
+
+        self.volumes_from_surface.clear()
+        self.surfaces_from_line.clear()
+        self.lines_from_point.clear()
 
         length_from_curve = dict()
         area_from_surface = dict()
         volume_from_body = dict()
 
+        unit_factor = self.get_length_unit_factor()
+        labels = ["points", "curves", "surfaces", "volumes"]
+
         for dim, tag in gmsh.model.getEntities():
+
             label = labels[dim]
             self.geometry_information[label].append(tag)
 
             if dim == 0:
                 continue
 
+            _, downwards = gmsh.model.getAdjacencies(dim, tag)
+            downwards = [int(_id) for _id in downwards]
+
             value = gmsh.model.occ.getMass(dim, tag)
 
-            unit_factor = self.get_length_unit_factor()
             if dim == 3:
+                self.surfaces_from_volume[tag] = downwards
                 volume_from_body[tag] = value * (unit_factor**3)
+                for surf_id in downwards:
+                    self.volumes_from_surface[surf_id].append(tag)
+
             elif dim == 2:
+                self.lines_from_surface[tag] = downwards
                 area_from_surface[tag] = value * (unit_factor**2)
-            else:
+                for line_id in downwards:
+                    self.surfaces_from_line[line_id].append(tag)
+
+                self.process_surface_normals_and_curvatures(tag)
+
+            elif dim == 1:
+                self.points_from_line[tag] = downwards
                 length_from_curve[tag] = value * (unit_factor**1)
+                for point_id in downwards:
+                    self.lines_from_point[point_id].append(tag)
 
         properties_data = dict(
                                volume_from_body = volume_from_body,
@@ -1034,21 +1083,34 @@ class Mesh:
                                length_from_curve = length_from_curve
                                )
 
-        self.geometry_information.update(properties_data) 
+        self.geometry_information.update(properties_data)
+
+        # TODO: fix bugs encountered while saving data
+        self.add_adjacencies_in_geometry_information()
+
+    def add_adjacencies_in_geometry_information(self):
+
+        data = dict(
+                    surfaces_from_volume = self.surfaces_from_volume,
+                    lines_from_surface = self.lines_from_surface,
+                    points_from_line = self.points_from_line,
+                    )
+
+        # self.geometry_information.update(data)
 
     def _get_connectivity_array(self, input_dict):
         """
         The returned value is an array where each line is a connectivity
         and the collums follow this order:
 
-        Index || Element index || Solid ID || Element type ID || Node IDS
+        Element index || Line/Face/Solid tag || Element type || Nodes per element || Connectivity
         """
 
         if not isinstance(input_dict, dict):
             raise TypeError("get_connectivity_data only accepts dicts as input.")
 
         max_cols = 0
-        n_list = []
+        n_list = list()
         for data_0 in input_dict.values():
             for data_1 in data_0.values():
                 if "indexes" in data_1.keys():

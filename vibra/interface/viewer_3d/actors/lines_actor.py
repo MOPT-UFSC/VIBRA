@@ -12,11 +12,15 @@ from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
 from vibra import app
 from molde import Color
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.mesher.mesh import Mesh
+
 
 class LinesActor(vtkActor):
     NODES_TO_VTK_CELL = {2: VTK_LINE, 3: VTK_QUADRATIC_EDGE}
 
-    def __init__(self, mesh):
+    def __init__(self, mesh: "Mesh"):
         self.mesh = mesh
         self.create_geometry()
         self.configure_appearance()
