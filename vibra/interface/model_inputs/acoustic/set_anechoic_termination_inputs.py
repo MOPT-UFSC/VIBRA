@@ -245,7 +245,6 @@ class SetAnechoicTerminationInputs(QDialog):
         self.main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
-        app().main_window.mesh_widget.update_symbols()
         app().main_window.update_symbols()
 
     def check_model_frequency_controls(self):
