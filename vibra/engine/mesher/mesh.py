@@ -599,7 +599,6 @@ class Mesh:
         for dim in [1, 2]:
 
             if dim == 1:
-                # tags = list(self.nodes_from_lines.keys())
                 if from_cache:
                     if self.cache_lines_connectivity is None:
                         return
@@ -608,7 +607,6 @@ class Mesh:
                     connect_data = self.lines_connectivity
 
             elif dim == 2:
-                # tags = list(self.nodes_from_surfaces.keys())
                 if from_cache:
                     connect_data = self.cache_faces_connectivity
                 else:
@@ -637,6 +635,7 @@ class Mesh:
                     else:
                         self.connectivity_from_surfaces[tag] = connectivity
 
+
     def _update_surfaces_from_nodes(self, surface_id, node_ids):
         for node_id in node_ids:
             self.surfaces_from_node[node_id].append(surface_id)
@@ -652,17 +651,16 @@ class Mesh:
 
 
     def process_mesh_related_mappings(self):
-        """
-        """
         self.process_connectivities_from_lines_and_surfaces()
-        self.process_the_elements_from_lines()
-        self.process_the_elements_from_surfaces()
-        self.process_the_elements_from_volumes()
-        # self._maps_lines_by_elements()
-        # self._maps_surfaces_by_elements()
-        # self._maps_volumes_by_elements()
-        self._maps_face_elements_to_solid_elements()
+        self.map_elements_from_lines_surfaces_and_volumes()
+        self.map_face_elements_to_solid_elements()
         self.get_principal_diagonal_structure_parallelepiped()
+
+
+    def map_elements_from_lines_surfaces_and_volumes(self):
+        self.map_elements_from_lines()
+        self.map_elements_from_surfaces()
+        self.map_elements_from_volumes()
 
 
     def get_elements_from_lines(self, line_ids: list[int]):
@@ -674,11 +672,12 @@ class Mesh:
 
         return element_ids
 
-    def process_the_elements_from_lines(self):
+
+    def map_elements_from_lines(self):
 
         self.elements_from_line.clear()
         self.line_from_element.clear()
-        line_ids = list(set(self.lines_connectivity[:, 1]))
+        line_ids = [int(_id) for _id in set(self.lines_connectivity[:, 1])]
 
         for line_id in line_ids:
             rows = np.isin(self.lines_connectivity[:, 1], line_id)
@@ -688,11 +687,12 @@ class Mesh:
             for element_id in element_ids:
                 self.line_from_element[element_id] = line_id
 
-    def process_the_elements_from_surfaces(self):
+
+    def map_elements_from_surfaces(self):
 
         self.elements_from_surface.clear()
         self.surface_from_element.clear()
-        surface_ids = list(set(self.faces_connectivity[:, 1]))
+        surface_ids = [int(_id) for _id in set(self.faces_connectivity[:, 1])]
 
         for surface_id in surface_ids:
             rows = np.isin(self.faces_connectivity[:, 1], surface_id)
@@ -700,13 +700,14 @@ class Mesh:
             self.elements_from_surface[surface_id] = element_ids
 
             for element_id in element_ids:
-                self.volume_from_element[element_id] = surface_id
+                self.surface_from_element[element_id] = surface_id
 
-    def process_the_elements_from_volumes(self):
+
+    def map_elements_from_volumes(self):
 
         self.elements_from_volume.clear()
         self.volume_from_element.clear()
-        volume_ids = list(set(self.solids_connectivity[:, 1]))
+        volume_ids = [int(_id) for _id in set(self.solids_connectivity[:, 1])]
 
         for volume_id in volume_ids:
             rows = np.isin(self.solids_connectivity[:, 1], volume_id)
@@ -716,55 +717,54 @@ class Mesh:
             for element_id in element_ids:
                 self.volume_from_element[element_id] = volume_id
 
-    def _maps_lines_by_elements(self):
-        self.line_from_element.clear()
-        self.elements_from_line.clear()
-        for tag, gmsh_indexes in self.gmsh_elements_from_lines.items():
 
-            n = len(gmsh_indexes)
-            internal_indexes = np.zeros(n, dtype=int)
+    # def _maps_lines_by_elements(self):
+    #     self.line_from_element.clear()
+    #     self.elements_from_line.clear()
+    #     for tag, gmsh_indexes in self.gmsh_elements_from_lines.items():
 
-            for i, gmsh_index in enumerate(gmsh_indexes):
-                index = self.map_line_elements[gmsh_index]
-                internal_indexes[i] = index
-                self.line_from_element[index] = tag
+    #         n = len(gmsh_indexes)
+    #         internal_indexes = np.zeros(n, dtype=int)
 
-            self.elements_from_line[tag] = internal_indexes
-            if tag == 13:
-                print(internal_indexes)
-                print(self.get_elements_from_lines([tag]))
+    #         for i, gmsh_index in enumerate(gmsh_indexes):
+    #             index = self.map_line_elements[gmsh_index]
+    #             internal_indexes[i] = index
+    #             self.line_from_element[index] = tag
 
-    def _maps_surfaces_by_elements(self):
-        self.surface_from_element.clear()
-        self.elements_from_surface.clear()
-        self.face_element_thickness.clear()
-        for tag, gmsh_indexes in self.gmsh_elements_from_surfaces.items():
-
-            n = len(gmsh_indexes)
-            internal_indexes = np.zeros(n, dtype=int)
-
-            for i, gmsh_index in enumerate(gmsh_indexes):
-                index = self.map_face_elements[gmsh_index]
-                internal_indexes[i] = index
-                self.surface_from_element[index] = tag
-
-            self.elements_from_surface[tag] = internal_indexes
+    #         self.elements_from_line[tag] = internal_indexes
 
 
-    def _maps_volumes_by_elements(self):
-        self.volume_from_element.clear()
-        self.elements_from_volume.clear()
-        for tag, gmsh_indexes in self.gmsh_elements_from_volumes.items():
+    # def _maps_surfaces_by_elements(self):
+    #     self.surface_from_element.clear()
+    #     self.elements_from_surface.clear()
+    #     self.face_element_thickness.clear()
+    #     for tag, gmsh_indexes in self.gmsh_elements_from_surfaces.items():
 
-            n = len(gmsh_indexes)
-            internal_indexes = np.zeros(n, dtype=int)
+    #         n = len(gmsh_indexes)
+    #         internal_indexes = np.zeros(n, dtype=int)
 
-            for i, gmsh_index in enumerate(gmsh_indexes):
-                index = self.map_solid_elements[gmsh_index]
-                internal_indexes[i] = index
-                self.volume_from_element[index] = tag
+    #         for i, gmsh_index in enumerate(gmsh_indexes):
+    #             index = self.map_face_elements[gmsh_index]
+    #             internal_indexes[i] = index
+    #             self.surface_from_element[index] = tag
 
-            self.elements_from_volume[tag] = internal_indexes
+    #         self.elements_from_surface[tag] = internal_indexes
+
+
+    # def _maps_volumes_by_elements(self):
+    #     self.volume_from_element.clear()
+    #     self.elements_from_volume.clear()
+    #     for tag, gmsh_indexes in self.gmsh_elements_from_volumes.items():
+
+    #         n = len(gmsh_indexes)
+    #         internal_indexes = np.zeros(n, dtype=int)
+
+    #         for i, gmsh_index in enumerate(gmsh_indexes):
+    #             index = self.map_solid_elements[gmsh_index]
+    #             internal_indexes[i] = index
+    #             self.volume_from_element[index] = tag
+
+    #         self.elements_from_volume[tag] = internal_indexes
 
 
     def _process_face_elements_connected_to_nodes(self, selected_ids : int | list):
@@ -795,6 +795,7 @@ class Mesh:
         # with open("areas_data.json", "r") as file:
         #     areas_data = json.load(file)
 
+
     def _process_solid_elements_connected_to_nodes(self):
         # t0 = time()
 
@@ -805,8 +806,7 @@ class Mesh:
         # dt = time() - t0
         # print(f"Elapsed '_process_solid_elements_connected_to_nodes': {dt} s")
 
-
-    # def _maps_face_elements_to_solid_elements(self):
+    # def map_face_elements_to_solid_elements(self):
     #     self.face_to_solid_element = dict()
     #     self.solid_to_face_elements = defaultdict(list)
 
@@ -825,7 +825,8 @@ class Mesh:
     #         self.face_to_solid_element[elf_id] = els_id
     #         self.solid_to_face_elements[els_id].append(elf_id)
 
-    def _maps_face_elements_to_solid_elements(self):
+
+    def map_face_elements_to_solid_elements(self):
         self.face_to_solid_element = dict()
         self.solid_to_face_elements = defaultdict(list)
 
@@ -871,6 +872,7 @@ class Mesh:
 
             self.face_to_solid_element[face_id] = solid_id
             self.solid_to_face_elements[solid_id].append(face_id)
+
 
     def get_face_elements_connected_to_nodes(self, node_ids, surface_id=None):
 
@@ -963,6 +965,7 @@ class Mesh:
         n_solid_elements = self.solids_connectivity.shape[0]
         return n_nodes, n_face_elements, n_solid_elements
 
+
     def compute_initial_mesh_size(self, path, geometry_tolerance: float = 1e-10, threads: int = 0):
         gmsh.initialize("", False)
         gmsh.option.setNumber("General.Terminal", 0)
@@ -1005,6 +1008,7 @@ class Mesh:
 
         finally:
             gmsh.finalize()
+
 
     def compute_bounding_box_sizes(self, geo_entities):
         xmin = ymin = zmin = xmax = ymax = zmax = 0
@@ -1085,7 +1089,6 @@ class Mesh:
 
         self.geometry_information.update(properties_data)
 
-        # TODO: fix bugs encountered while saving data
         self.add_adjacencies_in_geometry_information()
 
     def add_adjacencies_in_geometry_information(self):
@@ -1184,7 +1187,7 @@ class Mesh:
     def get_average_nodal_coordinates(self, surface_ids: list, averaged=False):
 
         nodal_coordinates = self.nodal_coordinates
-        stop, surface_ids = self.check_input_surface_id(surface_ids)
+        stop, surface_ids = self.check_selected_ids(surface_ids, selection="surfaces")
 
         if stop:
             return list()
@@ -1350,7 +1353,7 @@ class Mesh:
         return nodes_inside_sphere, list(selected_elements)
 
 
-    def check_selected_ids(self, selected_ids, selection = "nodes", single_id = False):
+    def check_selected_ids(self, selected_ids: str |int | list[int] | np.ndarray, selection: str="nodes", single_id: bool=False):
 
         try:
 
@@ -1368,6 +1371,9 @@ class Mesh:
 
             elif isinstance(selected_ids, (tuple, np.ndarray)):
                 list_ids = list(selected_ids)
+
+            elif isinstance(selected_ids, int):
+                list_ids = [selected_ids]
 
             all_ids = list()
             if selection == "nodes":
@@ -1401,11 +1407,13 @@ class Mesh:
             _size = len(all_ids)
 
             if len(list_ids) == 0:
-                message = "An empty input field for the Selection ID has been detected. Please, enter a valid Selection ID to proceed."
+                message = "An empty input field has been detected for the Selection ID. "
+                message += "You should enter a valid Selection ID to proceed."
 
             elif len(list_ids) >= 1:
                 if single_id and len(list_ids) > 1:
                     message = "Multiple Selected IDs"
+
                 else:
                     try:
                         for _id in list_ids:
@@ -1413,6 +1421,7 @@ class Mesh:
                                 message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
                                 message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
                                 break
+
                     except Exception as error_log:
                         message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
                         message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
@@ -1434,167 +1443,167 @@ class Mesh:
             return list_ids
 
 
-    def check_input_line_id(self, selected_ids, single_id=False):
-        try:
-            message = ""
-            if isinstance(selected_ids, str):
-                tokens = selected_ids.strip().split(",")
-                try:
-                    tokens.remove("")
-                except:
-                    pass
-                list_ids = list(map(int, tokens))
+    # def check_input_line_id(self, selected_ids, single_id=False):
+    #     try:
+    #         message = ""
+    #         if isinstance(selected_ids, str):
+    #             tokens = selected_ids.strip().split(",")
+    #             try:
+    #                 tokens.remove("")
+    #             except:
+    #                 pass
+    #             list_ids = list(map(int, tokens))
 
-            elif isinstance(selected_ids, list):
-                list_ids = selected_ids
+    #         elif isinstance(selected_ids, list):
+    #             list_ids = selected_ids
 
-            elif isinstance(selected_ids, (tuple, np.ndarray)):
-                list_ids = list(selected_ids)
+    #         elif isinstance(selected_ids, (tuple, np.ndarray)):
+    #             list_ids = list(selected_ids)
 
-            line_ids = self.nodes_from_lines.keys()
-            _size = len(line_ids)
+    #         line_ids = self.nodes_from_lines.keys()
+    #         _size = len(line_ids)
 
-            if len(list_ids) == 0:
-                message = "An empty input field for the Selected ID has been detected. Please, enter a valid Selected ID to proceed."
+    #         if len(list_ids) == 0:
+    #             message = "An empty input field for the Selected ID has been detected. Please, enter a valid Selected ID to proceed."
 
-            elif len(list_ids) >= 1:
-                if single_id and len(list_ids) > 1:
-                    message = "Multiple Selected IDs"
-                else:
-                    try:
-                        for _id in list_ids:
-                            if _id not in line_ids:
-                                message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                                message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
-                                break
-                    except Exception as error_log:
-                        message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                        message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
-                        message += f"\n\n{str(error_log)}"
+    #         elif len(list_ids) >= 1:
+    #             if single_id and len(list_ids) > 1:
+    #                 message = "Multiple Selected IDs"
+    #             else:
+    #                 try:
+    #                     for _id in list_ids:
+    #                         if _id not in line_ids:
+    #                             message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
+    #                             message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+    #                             break
+    #                 except Exception as error_log:
+    #                     message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
+    #                     message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+    #                     message += f"\n\n{str(error_log)}"
 
-        except Exception as log_error:
-            message = "Wrong input for the Selected ID's. "
-            message += f"\n\n{str(log_error)}"
+    #     except Exception as log_error:
+    #         message = "Wrong input for the Selected ID's. "
+    #         message += f"\n\n{str(log_error)}"
 
-        if message != "":
-            window_title = "Error"
-            title = "Invalid entry to the Selected ID"
-            PrintMessageInput([window_title, title, message])
-            return True, list()
+    #     if message != "":
+    #         window_title = "Error"
+    #         title = "Invalid entry to the Selected ID"
+    #         PrintMessageInput([window_title, title, message])
+    #         return True, list()
 
-        if single_id:
-            return False, list_ids[0]
-        else:
-            return False, list_ids
-
-
-    def check_input_surface_id(self, selected_ids, single_id=False):
-        try:
-            message = ""
-            if isinstance(selected_ids, str):
-                tokens = selected_ids.strip().split(",")
-                try:
-                    tokens.remove("")
-                except:
-                    pass
-                list_ids = list(map(int, tokens))
-
-            elif isinstance(selected_ids, list):
-                list_ids = selected_ids
-
-            elif isinstance(selected_ids, (tuple, np.ndarray)):
-                list_ids = list(selected_ids)
-
-            surface_ids = self.nodes_from_surfaces.keys()
-            _size = len(surface_ids)
-
-            if len(list_ids) == 0:
-                message = "An empty input field for the Surface ID has been detected. Please, enter a valid Surface ID to proceed."
-
-            elif len(list_ids) >= 1:
-                if single_id and len(list_ids) > 1:
-                    message = "Multiple Selected IDs"
-                else:
-                    try:
-                        for _id in list_ids:
-                            if _id not in surface_ids:
-                                message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                                message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
-                                break
-                    except Exception as error_log:
-                        message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                        message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
-                        message += f"\n\n{str(error_log)}"
-
-        except Exception as log_error:
-            message = "Wrong input for the Selected ID's. "
-            message += f"\n\n{str(log_error)}"
-
-        if message != "":
-            window_title = "Error"
-            title = "Invalid entry to the Surface ID"
-            PrintMessageInput([window_title, title, message])
-            return True, list()
-
-        if single_id:
-            return False, list_ids[0]
-        else:
-            return False, list_ids
+    #     if single_id:
+    #         return False, list_ids[0]
+    #     else:
+    #         return False, list_ids
 
 
-    def check_input_volume_id(self, selected_ids, single_id=False):
-        try:
+    # def check_input_surface_id(self, selected_ids, single_id=False):
+    #     try:
+    #         message = ""
+    #         if isinstance(selected_ids, str):
+    #             tokens = selected_ids.strip().split(",")
+    #             try:
+    #                 tokens.remove("")
+    #             except:
+    #                 pass
+    #             list_ids = list(map(int, tokens))
 
-            message = ""
-            if isinstance(selected_ids, str):
-                tokens = selected_ids.strip().split(",")
-                try:
-                    tokens.remove("")
-                except:
-                    pass
-                list_ids = list(map(int, tokens))
+    #         elif isinstance(selected_ids, list):
+    #             list_ids = selected_ids
 
-            elif isinstance(selected_ids, list):
-                list_ids = selected_ids
+    #         elif isinstance(selected_ids, (tuple, np.ndarray)):
+    #             list_ids = list(selected_ids)
 
-            elif isinstance(selected_ids, (tuple, np.ndarray)):
-                list_ids = list(selected_ids)
+    #         surface_ids = self.nodes_from_surfaces.keys()
+    #         _size = len(surface_ids)
 
-            volume_ids = self.nodes_from_volumes.keys()
-            _size = len(volume_ids)
+    #         if len(list_ids) == 0:
+    #             message = "An empty input field for the Surface ID has been detected. Please, enter a valid Surface ID to proceed."
 
-            if len(list_ids) == 0:
-                message = "An empty input field for the Volume ID has been detected. Please, enter a valid Volume ID to proceed."
+    #         elif len(list_ids) >= 1:
+    #             if single_id and len(list_ids) > 1:
+    #                 message = "Multiple Selected IDs"
+    #             else:
+    #                 try:
+    #                     for _id in list_ids:
+    #                         if _id not in surface_ids:
+    #                             message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
+    #                             message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+    #                             break
+    #                 except Exception as error_log:
+    #                     message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
+    #                     message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+    #                     message += f"\n\n{str(error_log)}"
 
-            elif len(list_ids) >= 1:
-                if single_id and len(list_ids) > 1:
-                    message = "Multiple Selected IDs"
-                else:
-                    try:
-                        for _id in list_ids:
-                            if _id not in volume_ids:
-                                message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                                message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
-                                break
-                    except Exception as error_log:
-                        message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                        message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
-                        message += f"\n\n{str(error_log)}"
+    #     except Exception as log_error:
+    #         message = "Wrong input for the Selected ID's. "
+    #         message += f"\n\n{str(log_error)}"
 
-        except Exception as log_error:
-            message = "Wrong input for the Selected ID's. "
-            message += f"\n\n{str(log_error)}"
+    #     if message != "":
+    #         window_title = "Error"
+    #         title = "Invalid entry to the Surface ID"
+    #         PrintMessageInput([window_title, title, message])
+    #         return True, list()
 
-        if message != "":
-            window_title = "Error"
-            title = "Invalid entry to the Volume ID"
-            PrintMessageInput([window_title, title, message])
-            return True, list()
+    #     if single_id:
+    #         return False, list_ids[0]
+    #     else:
+    #         return False, list_ids
 
-        if single_id:
-            return False, list_ids[0]
-        else:
-            return False, list_ids
+
+    # def check_input_volume_id(self, selected_ids, single_id=False):
+    #     try:
+
+    #         message = ""
+    #         if isinstance(selected_ids, str):
+    #             tokens = selected_ids.strip().split(",")
+    #             try:
+    #                 tokens.remove("")
+    #             except:
+    #                 pass
+    #             list_ids = list(map(int, tokens))
+
+    #         elif isinstance(selected_ids, list):
+    #             list_ids = selected_ids
+
+    #         elif isinstance(selected_ids, (tuple, np.ndarray)):
+    #             list_ids = list(selected_ids)
+
+    #         volume_ids = self.nodes_from_volumes.keys()
+    #         _size = len(volume_ids)
+
+    #         if len(list_ids) == 0:
+    #             message = "An empty input field for the Volume ID has been detected. Please, enter a valid Volume ID to proceed."
+
+    #         elif len(list_ids) >= 1:
+    #             if single_id and len(list_ids) > 1:
+    #                 message = "Multiple Selected IDs"
+    #             else:
+    #                 try:
+    #                     for _id in list_ids:
+    #                         if _id not in volume_ids:
+    #                             message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
+    #                             message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+    #                             break
+    #                 except Exception as error_log:
+    #                     message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
+    #                     message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+    #                     message += f"\n\n{str(error_log)}"
+
+    #     except Exception as log_error:
+    #         message = "Wrong input for the Selected ID's. "
+    #         message += f"\n\n{str(log_error)}"
+
+    #     if message != "":
+    #         window_title = "Error"
+    #         title = "Invalid entry to the Volume ID"
+    #         PrintMessageInput([window_title, title, message])
+    #         return True, list()
+
+    #     if single_id:
+    #         return False, list_ids[0]
+    #     else:
+    #         return False, list_ids
 
 
 if __name__ == "__main__":
