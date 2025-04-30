@@ -70,7 +70,7 @@ class DofsDecouplingInputs(QDialog):
 
         # QTreeWidget
         self.treeWidget_dofs_decoupling : QTreeWidget
-        self.treeWidget_dofs_decoupling.setColumnWidth(1, 20)
+        self.treeWidget_dofs_decoupling.setColumnWidth(1, 40)
         self.treeWidget_dofs_decoupling.setColumnWidth(2, 80)
 
     def _create_connections(self):
@@ -185,9 +185,9 @@ class DofsDecouplingInputs(QDialog):
         data = {"volume_to_decouple" : int(self.comboBox_volume_id.currentText())}
         self.properties._set_property("acoustic_dofs_decoupling", data, surface=surface_id)
 
-        if self.mesh.cache_nodal_coordinates is None:
-            self.mesh.cache_mesh_information()
-            app().file.write_mesh_data_in_file()
+        # if self.mesh.cache_nodal_coordinates is None:
+        #     # self.mesh.cache_mesh_information()
+        #     app().file.write_mesh_data_in_file()
 
         self.actions_to_finalize()
 

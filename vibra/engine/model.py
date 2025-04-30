@@ -114,7 +114,7 @@ class Model:
 
             self.initial_element_size = element_size
             self.generated_mesh = False
-            app().main_window.update_geometry_information(self.mesh.geometry_information)
+            app().main_window.update_geometry_information()
 
         except Exception as error_log:
             from traceback import print_exception

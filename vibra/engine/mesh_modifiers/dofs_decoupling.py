@@ -28,7 +28,6 @@ class DofsDecoupling:
     def gathering_decoupling_information(self):
         """
         """
-
         self.decouple_info.clear()
         self.nodes_mapping.clear()
         if self.mesh.cache_nodal_coordinates is None:
@@ -59,7 +58,6 @@ class DofsDecoupling:
         """
         """
         self.gathering_decoupling_information()
-
         if not self.decouple_info:
             return
 
@@ -253,9 +251,14 @@ class DofsDecoupling:
         t0 = time()
         if not self.decouple_info:
             return
-        
+
+        # reset the attributes with the aid of cache data
+        self.mesh.solids_connectivity = deepcopy(self.mesh.cache_solids_connectivity)
+        self.mesh.faces_connectivity = deepcopy(self.mesh.cache_faces_connectivity)
+        self.mesh.lines_connectivity = deepcopy(self.mesh.cache_lines_connectivity)
+
         volume_ids = list(self.decouple_info.keys())
-        for elem3d_id, vol_id, _, _, *connect_3d in deepcopy(self.mesh.cache_solids_connectivity):
+        for elem3d_id, vol_id, _, _, *connect_3d in self.mesh.cache_solids_connectivity:
             if vol_id in volume_ids:
                 self.mesh.solids_connectivity[elem3d_id, 4:] = self.update_connectivity(connect_3d)
 
@@ -304,8 +307,9 @@ class DofsDecoupling:
         lines_from_surface = deepcopy(self.mesh.cache_lines_from_surface)
         points_from_line = deepcopy(self.mesh.cache_points_from_line)
 
-        area_from_surface = deepcopy(self.mesh.area_from_surface)
-        length_from_curve = deepcopy(self.mesh.length_from_curve)
+        geometry_information = deepcopy(self.mesh.geometry_information)
+        area_from_surface = geometry_information.get("area_from_surface")
+        length_from_curve = geometry_information.get("length_from_curve")
 
         for vol_id, data in self.decouple_info.items():
             data: dict
@@ -314,24 +318,29 @@ class DofsDecoupling:
             new_surf_id = data.get("new_surface_id")
             self.apply_fluid_at_new_surface(surf_id, new_surf_id)
 
-            surfaces_from_volume = list(deepcopy(surfaces_from_volume[vol_id]))
-            surfaces_from_volume.remove(surf_id)
-            surfaces_from_volume.append(new_surf_id)
-            
-            self.mesh.surfaces_from_volume[vol_id] = np.sort(surfaces_from_volume)
-            self.mesh.geometry_information["surfaces"].append(new_surf_id)
-            self.mesh.area_from_surface[new_surf_id] = area_from_surface[surf_id]
+            surfaces_from_volume = set(surfaces_from_volume[vol_id])
+            surfaces_from_volume -= set({surf_id})
+            surfaces_from_volume |= set({new_surf_id})
+            self.mesh.surfaces_from_volume[vol_id] = np.sort(list(surfaces_from_volume))
+
+            surface_ids = set(geometry_information["surfaces"])
+            surface_ids |= set({new_surf_id})
+            self.mesh.geometry_information["surfaces"] = list(surface_ids)
+
+            self.mesh.geometry_information["area_from_surface"].update({new_surf_id : area_from_surface[surf_id]})
 
             lines_from_surface = lines_from_surface[surf_id]
             new_line_ids = self.get_new_line_ids(lines_from_surface)
-
             self.mesh.lines_from_surface[new_surf_id] = new_line_ids
 
+            line_ids = set(geometry_information["curves"])
             for i, line_id in enumerate(lines_from_surface):
                 new_line_id = int(new_line_ids[i])
-                self.mesh.geometry_information["curves"].append(new_line_id)
-                self.mesh.length_from_curve[new_line_id] = length_from_curve[line_id]
+                line_ids |= set({new_line_id})
+                self.mesh.geometry_information["length_from_curve"].update({new_line_id : length_from_curve[line_id]})
                 self.mesh.points_from_line[new_line_id] = self.get_new_point_ids(points_from_line[line_id])
+
+            self.mesh.geometry_information["curves"] = list(line_ids)
 
         if self.decouple_info:
             self.mesh.volumes_from_surface = maps_values_to_keys(deepcopy(self.mesh.surfaces_from_volume))

@@ -381,6 +381,8 @@ class MeshSetupInputs(QDialog):
         LoadingWindow(generate_function).run()
 
         app().file.write_mesh_data_in_file()
+        app().file.write_geometry_information_in_file()
+        app().main_window.update_geometry_information()
 
         LoadingWindow(self.actions_to_finalize).run()
 
