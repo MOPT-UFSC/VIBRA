@@ -109,7 +109,8 @@ class StatusBar(QStatusBar):
         else:
             self.selected_volumes_label.setText(f"Selected volume: {str_volumes}")
 
-    def update_mesh_information(self, nodes, surface_elements, solid_elements):
+    def update_mesh_information(self):
+        nodes, surface_elements, solid_elements = app().project.model.mesh.get_mesh_info()
         self.nodes_label.setText(f"Nodes: {nodes}")
         self.surface_elements_label.setText(f"Surface elements: {surface_elements}")
         self.solid_elements_label.setText(f"Solid elements: {solid_elements}")
