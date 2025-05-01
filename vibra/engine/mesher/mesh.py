@@ -488,6 +488,8 @@ class Mesh:
 
     def clear_geometry_data(self):
 
+        self.geometry_information.clear()
+
         self.surfaces_from_volume.clear()
         self.lines_from_surface.clear()
         self.points_from_line.clear()
