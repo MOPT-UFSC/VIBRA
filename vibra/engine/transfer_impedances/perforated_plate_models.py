@@ -26,6 +26,9 @@ class PerforatedPlateModels:
 
         omega = 2 * np.pi * freq
 
+        if not self.properties.is_the_surface_property_present_in_the_model("perforated_plate_model"):
+            return
+
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "perforated_plate_model":
