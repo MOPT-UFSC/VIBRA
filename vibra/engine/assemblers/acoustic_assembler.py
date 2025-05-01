@@ -296,9 +296,7 @@ class AcousticAssembler:
     def get_data_to_process_global_matrices(self, reorder=True):
         """ This method processes the data required to assemble the global matrices. """
 
-        self.model.process_decoupling_of_dofs_for_acoustic_analysis()
         element_3D, _ = self.get_element()
-
         self.ind_rows, self.ind_cols = element_3D.generate_ind_rows_cols(reorder=reorder)
 
         dofs = element_3D.DOFS_PER_ELEMENT

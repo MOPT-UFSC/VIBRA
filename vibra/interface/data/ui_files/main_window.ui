@@ -20,6 +20,9 @@
       <property name="lineWidth">
        <number>1</number>
       </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
       <property name="opaqueResize">
        <bool>true</bool>
       </property>
@@ -514,7 +517,7 @@
     <string>Unhide Selection</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+Shift+H, Ctrl+S</string>
+    <string>Ctrl+U</string>
    </property>
   </action>
   <action name="action_section_plane">

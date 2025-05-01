@@ -14,7 +14,7 @@ from vibra.interface.model_inputs.acoustic.perforated_plate_model_inputs import 
 from vibra.interface.model_inputs.acoustic.acoustic_properties_gradient_inputs import AcousticPropertiesGradientInputs
 from vibra.interface.model_inputs.acoustic.reciprocating_compressor_inputs import ReciprocatingCompressorInputs
 from vibra.interface.model_inputs.acoustic.acoustic_transfer_element_inputs import AcousticTransferElementInputs
-from vibra.interface.model_inputs.acoustic.dofs_decoupling_inputs import DofsDecouplingInputs
+from vibra.interface.model_inputs.acoustic.dofs_decoupling_inputs import DegreesOfFreedomDecouplingInputs
 #
 from vibra.interface.model_inputs.structural.surface_thickness_inputs import SurfaceThicknessInputs
 from vibra.interface.model_inputs.structural.dofs_prescription_inputs import DofsPrescriptionInputs
@@ -141,7 +141,7 @@ class InputUi:
 
     def set_acoustic_dofs_decoupling(self):
         if not self.model_setup_items.item_child_acoustic_dofs_decoupling.isDisabled():
-            self.process_input(DofsDecouplingInputs)
+            self.process_input(DegreesOfFreedomDecouplingInputs)
 
     def set_acoustic_properties_grandient(self):
         if not self.model_setup_items.item_child_acoustic_properties_gradient.isDisabled():

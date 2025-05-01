@@ -1,30 +1,13 @@
-from PySide6.QtWidgets import (
-    QAbstractItemView,
-    QCheckBox,
-    QComboBox,
-    QDialog,
-    QHeaderView,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QDoubleSpinBox,
-    QTableWidget,
-    QTableWidgetItem,
-)
+# fmt: off
+
+from PySide6.QtWidgets import QAbstractItemView, QCheckBox, QComboBox, QDialog, QHeaderView,QLabel, QLineEdit, QPushButton, QDoubleSpinBox, QTableWidget, QTableWidgetItem
 from PySide6.QtCore import Qt
 
 from vibra import app, UI_DIR
 from vibra.engine.mesher import gmsh_constants
-from vibra.engine.mesher.element_type import (
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-    ElementType,
-)
+from vibra.engine.mesher.element_type import TETRAHEDRON_4, TETRAHEDRON_10, HEXAHEDRON_8, HEXAHEDRON_20, ElementType
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-
 
 import logging
 from collections import defaultdict
@@ -377,14 +360,27 @@ class MeshSetupInputs(QDialog):
 
         LoadingWindow(generate_function).run()
 
+        self.process_degress_of_freedom_if_necessary()
+
         app().file.write_mesh_data_in_file()
-        app().file.write_geometry_information_in_file()
+        app().file.write_geometry_data_in_file()
+        app().main_window.update_mesh_information()
         app().main_window.update_geometry_information()
 
         LoadingWindow(self.actions_to_finalize).run()
-
         self.complete = True
 
+    def process_degress_of_freedom_if_necessary(self):
+
+        if not app().project.model.properties.is_the_surface_property_present_in_the_model("acoustic_dofs_decoupling"):
+            return
+
+        def process_decoupling():
+            app().project.model.mesh.cache_mesh_information()
+            app().project.model.process_degrees_of_freedom_decoupling()
+
+        LoadingWindow(process_decoupling).run()
+ 
     def actions_to_finalize(self):
 
         if self.close_after_generate:
@@ -530,3 +526,5 @@ class MeshSetupInputs(QDialog):
     def closeEvent(self, a0):
         self.keep_window_open = False
         return super().closeEvent(a0)
+
+# fmt: on

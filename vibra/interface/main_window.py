@@ -287,16 +287,11 @@ class MainWindow(QMainWindow):
 
         self.theme_changed.emit(theme)
 
-    def closeEvent(self, event):
-        self.close_app()
-        event.ignore()
-
-    def update_mesh_information(self, nodes, face_elements, solid_elements):
-        self.status_bar.update_mesh_information(nodes, face_elements, solid_elements)
+    def update_mesh_information(self):
+        self.status_bar.update_mesh_information()
 
     def update_geometry_information(self):
-        geometry_info = app().project.model.mesh.geometry_information
-        self.status_bar.update_geometry_information(geometry_info)
+        self.status_bar.update_geometry_information()
 
     def _configure_render_widgets_stack(self):
         self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
@@ -489,10 +484,6 @@ class MainWindow(QMainWindow):
         self.close_dialogs()
         self.render_user_preferences = RendererUserPreferencesInput()
 
-    def configure_mesh_information(self):
-        nodes, face_elements, solid_elements = app().project.model.mesh.get_mesh_info()
-        self.update_mesh_information(nodes, face_elements, solid_elements)
-
     def configure_results_render_widget(self):
         self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
         self.results_viewer_widget.hide_bottom_widget()
@@ -578,7 +569,7 @@ class MainWindow(QMainWindow):
         if not self.action_results_workspace.isEnabled():
             self.action_results_workspace.setEnabled(True)
 
-        self.configure_mesh_information()
+        self.update_mesh_information()
         self.splitter.widget(0).setVisible(True)
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
@@ -879,7 +870,7 @@ class MainWindow(QMainWindow):
             self.analysis_toolbar.check_analysis_setup_callback()
             self.status_bar.setVisible(True)
 
-            self.configure_mesh_information()
+            self.update_mesh_information()
             LoadingWindow(self.mesh_widget.update_plot).run()
             LoadingWindow(self.geometry_widget.update_plot).run()
             
@@ -1097,3 +1088,7 @@ class MainWindow(QMainWindow):
                 print("updating")
                 self.update_plots()
         return super(MainWindow, self).eventFilter(obj, event)
+
+    def closeEvent(self, event):
+        self.close_app()
+        event.ignore()
