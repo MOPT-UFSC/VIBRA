@@ -48,10 +48,6 @@ class Mesh:
         self.nodes_from_volumes = dict()
         self.surfaces_from_node = defaultdict(list)
 
-        self.gmsh_elements_from_lines = dict()
-        self.gmsh_elements_from_surfaces = dict()
-        self.gmsh_elements_from_volumes = dict()
-
         self.map_solid_elements = dict()
         self.map_face_elements = dict()
         self.map_line_elements = dict()
@@ -96,6 +92,10 @@ class Mesh:
         self.cache_lines_connectivity = None
         self.cache_faces_connectivity = None
         self.cache_solids_connectivity = None
+
+        # self.cache_nodes_from_lines = dict()
+        # self.cache_nodes_from_surfaces = dict()
+        # self.cache_nodes_from_volumes = dict()
 
         self.cache_surfaces_from_volume = dict()
         self.cache_lines_from_surface = dict()
@@ -451,10 +451,6 @@ class Mesh:
         self.nodes_from_volumes.clear()
         self.surfaces_from_node.clear()
 
-        self.gmsh_elements_from_lines.clear()
-        self.gmsh_elements_from_surfaces.clear()
-        self.gmsh_elements_from_volumes.clear()
-
         self.map_solid_elements.clear()
         self.map_face_elements.clear()
         self.map_line_elements.clear()
@@ -465,6 +461,8 @@ class Mesh:
 
         self.curvatures_surface.clear()
         self.normals_surface.clear()
+
+        # cache mesh attributes for degrees of freedom decoupling
 
         self.cache_nodal_coordinates = None
         self.cache_lines_connectivity = None
@@ -597,25 +595,22 @@ class Mesh:
                                               }
 
             if dim == 0:  # Points
-                self.nodes_from_points[tag] = np.array([int(element_nodes[0]) - 1], dtype=int)
+                self.nodes_from_points[tag] = int(element_nodes[0]) - 1
 
             elif dim == 1:  # Lines
                 connectivity_dim1[dim, tag] = elements_data
                 self.nodes_from_lines[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
-                # self.gmsh_elements_from_lines[tag] = np.array([*set(element_indexes[0])], dtype=int)
 
             elif dim == 2:  # Surfaces
                 connectivity_dim2[dim, tag] = elements_data
                 surface_nodes = np.array([*set(element_nodes[0])], dtype=int) - 1
                 self.nodes_from_surfaces[tag] = surface_nodes
-                # self.gmsh_elements_from_surfaces[tag] = np.array([*set(element_indexes[0])], dtype=int)
                 self._update_surfaces_from_nodes(tag, surface_nodes)
                 del surface_nodes
 
             elif dim == 3:  # Solids
                 connectivity_dim3[dim, tag] = elements_data
                 self.nodes_from_volumes[tag] = np.array([*set(element_nodes[0])], dtype=int) - 1
-                # self.gmsh_elements_from_volumes[tag] = np.array([*set(element_indexes[0])], dtype=int)
 
         logging.info("Post-processing mesh... [80/100]")
 
@@ -624,7 +619,6 @@ class Mesh:
         self.solids_connectivity, self.map_solid_elements = self._get_connectivity_array(connectivity_dim3)
 
         self.process_mesh_related_mappings()
-        self.cache_mesh_information()
 
 
     def cache_mesh_information(self):
@@ -651,7 +645,7 @@ class Mesh:
         if not self.geometry_information:
             return
 
-        for dim in [1, 2]:
+        for dim in [1, 2, 3]:
 
             if dim == 1:
                 if from_cache:
@@ -667,29 +661,41 @@ class Mesh:
                 else:
                     connect_data = self.faces_connectivity
 
-            else:
-                continue
+            elif dim == 3:
+                if from_cache:
+                    connect_data = self.cache_solids_connectivity
+                else:
+                    connect_data = self.solids_connectivity
 
             tags = [*set(connect_data[:, 1])]
+            tags = [int(_tag) for _tag in tags]
 
             for tag in tags:
 
                 tag = int(tag)
                 rows = connect_data[:, 1] == tag
                 connectivity = connect_data[rows, 4:]
+                nodes = np.array([*set(connectivity.flatten())], dtype=int)
 
                 if dim == 1:
                     if from_cache:
                         self.cache_connectivity_from_lines[tag] = connectivity
                     else:
+                        self.nodes_from_lines[tag] = nodes
                         self.connectivity_from_lines[tag] = connectivity
 
                 elif dim == 2:
                     if from_cache:
                         self.cache_connectivity_from_surfaces[tag] = connectivity
                     else:
+                        self.nodes_from_surfaces[tag] = nodes
                         self.connectivity_from_surfaces[tag] = connectivity
 
+                elif dim == 3:
+                    if from_cache:
+                        pass
+                    else:
+                        self.nodes_from_volumes[tag] = nodes
 
     def _update_surfaces_from_nodes(self, surface_id, node_ids):
         for node_id in node_ids:
@@ -771,55 +777,6 @@ class Mesh:
 
             for element_id in element_ids:
                 self.volume_from_element[element_id] = volume_id
-
-
-    # def _maps_lines_by_elements(self):
-    #     self.line_from_element.clear()
-    #     self.elements_from_line.clear()
-    #     for tag, gmsh_indexes in self.gmsh_elements_from_lines.items():
-
-    #         n = len(gmsh_indexes)
-    #         internal_indexes = np.zeros(n, dtype=int)
-
-    #         for i, gmsh_index in enumerate(gmsh_indexes):
-    #             index = self.map_line_elements[gmsh_index]
-    #             internal_indexes[i] = index
-    #             self.line_from_element[index] = tag
-
-    #         self.elements_from_line[tag] = internal_indexes
-
-
-    # def _maps_surfaces_by_elements(self):
-    #     self.surface_from_element.clear()
-    #     self.elements_from_surface.clear()
-    #     self.face_element_thickness.clear()
-    #     for tag, gmsh_indexes in self.gmsh_elements_from_surfaces.items():
-
-    #         n = len(gmsh_indexes)
-    #         internal_indexes = np.zeros(n, dtype=int)
-
-    #         for i, gmsh_index in enumerate(gmsh_indexes):
-    #             index = self.map_face_elements[gmsh_index]
-    #             internal_indexes[i] = index
-    #             self.surface_from_element[index] = tag
-
-    #         self.elements_from_surface[tag] = internal_indexes
-
-
-    # def _maps_volumes_by_elements(self):
-    #     self.volume_from_element.clear()
-    #     self.elements_from_volume.clear()
-    #     for tag, gmsh_indexes in self.gmsh_elements_from_volumes.items():
-
-    #         n = len(gmsh_indexes)
-    #         internal_indexes = np.zeros(n, dtype=int)
-
-    #         for i, gmsh_index in enumerate(gmsh_indexes):
-    #             index = self.map_solid_elements[gmsh_index]
-    #             internal_indexes[i] = index
-    #             self.volume_from_element[index] = tag
-
-    #         self.elements_from_volume[tag] = internal_indexes
 
 
     def _process_face_elements_connected_to_nodes(self, selected_ids : int | list):
@@ -1209,7 +1166,8 @@ class Mesh:
         return output_data, map_elements
 
 
-    def get_array_based_elements_mapping(self, entity="lines"):
+
+    def get_array_based_elements_mapping(self, entity: str="lines"):
 
         if entity == "lines":
             keys = list(self.map_line_elements.keys())
