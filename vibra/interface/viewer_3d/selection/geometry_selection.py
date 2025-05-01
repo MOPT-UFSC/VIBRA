@@ -223,7 +223,7 @@ class GeometrySelection:
             return set()
 
         node_indexes = list()
-        for _, (node_id,) in mesh.nodes_from_points.items():
+        for _, node_id in mesh.nodes_from_points.items():
             node_indexes.append(node_id)
 
         return mesh.nodal_coordinates[node_indexes]
