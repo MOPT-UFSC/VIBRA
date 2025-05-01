@@ -5,7 +5,7 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
-from vibra.engine.mesh_modifiers.dofs_decoupling import DofsDecoupling
+from vibra.engine.mesh_modifiers.dofs_decoupling import DegreesOfFreedomDecoupling
 from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
 from vibra.errors import IncompleteSetupError
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -389,8 +389,6 @@ class Model:
             if property == "surface_thickness":
                 self.mesh.set_face_element_thickness(surface_id, data)
 
-    def process_decoupling_of_dofs_for_acoustic_analysis(self):
-        """
-        """
-        self.dofs_decoupling = DofsDecoupling(self)
-        self.dofs_decoupling.process_dofs_decoupling()
+    def process_degrees_of_freedom_decoupling(self):
+        self.dofs_decoupling = DegreesOfFreedomDecoupling(self)
+        self.dofs_decoupling.process_degrees_of_freedom_decoupling()
