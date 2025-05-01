@@ -50,15 +50,32 @@ class DegreesOfFreedomDecoupling:
                 if isinstance(vol_id, int):    
                     self.decouple_info[vol_id] = {"surface_id" : surface_id}
 
-                    aux_data = deepcopy(data)
-                    aux_data.update(new_surface_id=int(max_surface_id))
-                    self.properties.surface_properties[key] = aux_data
-
 
     def process_mappings_for_all_new_entities(self):
+        """ This method performs the mappings between the existing entities
+            in relation to the new entities that will be created.
+        """
         self.surfaces_mapping = self.get_new_surfaces_mapping()
         self.lines_mapping = self.get_new_lines_mapping()
         self.points_mapping = self.get_new_points_mapping()
+
+
+    def update_surface_property_with_new_surface_id(self):
+        """ This method inserts the ID of the new surface into the
+            acoustic_dofs_decoupling surface property data.
+        """
+        property = "acoustic_dofs_decoupling"
+        for surface_id in self.decoupling_surfaces:
+
+            new_surface_id = self.surfaces_mapping.get(surface_id, -1)
+            if new_surface_id == -1:
+                continue
+
+            data = self.properties._get_property(property, surface=surface_id)
+            if isinstance(data, dict):
+                aux_data = deepcopy(data)
+                aux_data.update(new_surface_id=int(new_surface_id))
+                self.properties.surface_properties[property, surface_id] = aux_data
 
 
     def get_new_points_mapping(self):
@@ -124,13 +141,17 @@ class DegreesOfFreedomDecoupling:
     def update_nodal_coordinates(self):
         """
         """
-        logging.info("Processing degress of freedom decoupling... [20/100]")
         self.gathering_decoupling_information()
         if not self.decouple_info:
             return
 
+        logging.info("Processing degress of freedom decoupling... [35/100]")
+
         # process the mappings for new surfaces, lines, and points
         self.process_mappings_for_all_new_entities()
+
+        # update the corresponding surface property
+        self.update_surface_property_with_new_surface_id()
 
         max_node_id = max(self.mesh.cache_nodal_coordinates[:, 0])
         shift_value = max_node_id + 1
@@ -372,6 +393,9 @@ class DegreesOfFreedomDecoupling:
     def update_geometry_related_information(self):
         """
         """
+        if not self.decouple_info:
+            return
+
         logging.info("Processing degress of freedom decoupling... [90/100]")
 
         surfaces_from_volume = deepcopy(self.mesh.cache_surfaces_from_volume)
@@ -379,8 +403,8 @@ class DegreesOfFreedomDecoupling:
         points_from_line = deepcopy(self.mesh.cache_points_from_line)
 
         geometry_information = deepcopy(self.mesh.geometry_information)
-        area_from_surface = geometry_information.get("area_from_surface")
-        length_from_curve = geometry_information.get("length_from_curve")
+        area_from_surfaces = deepcopy(self.mesh.area_from_surfaces)
+        length_from_lines = deepcopy(self.mesh.length_from_lines)
 
         for vol_id, data in self.decouple_info.items():
             data: dict
@@ -397,7 +421,7 @@ class DegreesOfFreedomDecoupling:
             surface_ids |= set({new_surf_id})
             self.mesh.geometry_information["surfaces"] = list(surface_ids)
 
-            self.mesh.geometry_information["area_from_surface"].update({new_surf_id : area_from_surface[surf_id]})
+            self.mesh.area_from_surfaces.update({new_surf_id : area_from_surfaces[surf_id]})
 
             new_line_ids = [self.lines_mapping[_line_id] for _line_id in lines_from_surface[surf_id]]
             self.mesh.lines_from_surface[new_surf_id] = new_line_ids
@@ -408,7 +432,7 @@ class DegreesOfFreedomDecoupling:
             for i, line_id in enumerate(lines_from_surface[surf_id]):
                 new_line_id = int(new_line_ids[i])
                 line_ids |= set({new_line_id})
-                self.mesh.geometry_information["length_from_curve"].update({new_line_id : length_from_curve[line_id]})
+                self.mesh.length_from_lines.update({new_line_id : length_from_lines[line_id]})
                 new_point_ids = [self.points_mapping[point_id] for point_id in points_from_line[line_id]]
                 self.mesh.points_from_line[new_line_id] = new_point_ids
                 point_ids |= set(new_point_ids)
@@ -416,10 +440,9 @@ class DegreesOfFreedomDecoupling:
             self.mesh.geometry_information["curves"] = list(line_ids)
             self.mesh.geometry_information["points"] = list(point_ids)
 
-        if self.decouple_info:
-            self.mesh.volumes_from_surface = maps_values_to_keys(deepcopy(self.mesh.surfaces_from_volume))
-            self.mesh.surfaces_from_line = maps_values_to_keys(deepcopy(self.mesh.lines_from_surface))
-            self.mesh.lines_from_point = maps_values_to_keys(deepcopy(self.mesh.points_from_line))
+        self.mesh.volumes_from_surface = maps_values_to_keys(deepcopy(self.mesh.surfaces_from_volume))
+        self.mesh.surfaces_from_line = maps_values_to_keys(deepcopy(self.mesh.lines_from_surface))
+        self.mesh.lines_from_point = maps_values_to_keys(deepcopy(self.mesh.points_from_line))
 
 
     def process_degrees_of_freedom_decoupling(self):

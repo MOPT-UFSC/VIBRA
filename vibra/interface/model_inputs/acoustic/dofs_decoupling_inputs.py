@@ -103,25 +103,21 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
 
         faces = app().main_window.selected_geometry_surfaces
 
-        if faces:
+        if len(faces) == 1:
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
             self.update_volumes_from_faces()  
 
     def update_volumes_from_faces(self):
 
+        self.comboBox_volume_id.setDisabled(True)
         input_ids = self.lineEdit_selection_id.text()
         surface_ids = self.mesh.check_selected_ids(
                                                    input_ids, 
                                                    selection = "surfaces"
                                                    )
-        
-        self.comboBox_volume_id.setDisabled(True)
 
         if surface_ids is None:
-            return
-        
-        if len(surface_ids) != 1:
             return
 
         self.comboBox_volume_id.clear()
@@ -206,6 +202,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
 
             self.properties._remove_surface_property("acoustic_dofs_decoupling", surface_id)
             app().project.model.generated_mesh = False
+            app().file.remove_mesh_data_from_project_file
             app().file.remove_mesh_data_from_project_file()
             app().file.remove_results_data_from_project_file()
             self.actions_to_finalize()
@@ -296,11 +293,13 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
             self.close()
         else:
             return
-        
-    def is_there_any_acoustic_dofs_decoupling_property(self):
+
+    def is_the_surface_property_present_in_the_model(self, property_to_check: str):
+
         for (property, _) in app().project.model.properties.surface_properties.keys():
-            if property == "acoustic_dofs_decoupling":
+            if property == property_to_check:
                 return True
+
         return False
 
     def process_degress_of_freedom_decoupling(self):
@@ -308,7 +307,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
         if not self.setup_complete:
             return False
         
-        if not self.is_there_any_acoustic_dofs_decoupling_property():
+        if not self.properties.is_the_surface_property_present_in_the_model("acoustic_dofs_decoupling"):
             return False
 
         if not app().project.model.generated_mesh:
@@ -326,7 +325,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
         def process_decoupling():
             self.model.process_degrees_of_freedom_decoupling()
             app().file.write_mesh_data_in_file()
-            app().file.write_geometry_information_in_file()
+            app().file.write_geometry_data_in_file()
             app().main_window.update_mesh_information()
             app().main_window.update_geometry_information()
 
