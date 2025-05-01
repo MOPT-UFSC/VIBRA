@@ -116,7 +116,9 @@ class StatusBar(QStatusBar):
         self.solid_elements_label.setText(f"Solid elements: {solid_elements}")
         self.reset_mesh_info_visibility(key=True)
 
-    def update_geometry_information(self, geometry_info: dict):
+    def update_geometry_information(self):
+
+        geometry_info = app().project.model.mesh.geometry_information
 
         points = geometry_info.get("points", "--")
         if isinstance(points, list):

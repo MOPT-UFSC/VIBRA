@@ -112,8 +112,9 @@ class Model:
                                    maximum_element_size = element_size
                                    )
 
-            self.initial_element_size = element_size
             self.generated_mesh = False
+            self.initial_element_size = element_size
+
             app().main_window.update_geometry_information()
 
         except Exception as error_log:

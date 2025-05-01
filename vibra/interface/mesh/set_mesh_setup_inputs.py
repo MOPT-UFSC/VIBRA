@@ -363,22 +363,16 @@ class MeshSetupInputs(QDialog):
         self.process_degress_of_freedom_if_necessary()
 
         app().file.write_mesh_data_in_file()
-        app().file.write_geometry_information_in_file()
+        app().file.write_geometry_data_in_file()
         app().main_window.update_mesh_information()
         app().main_window.update_geometry_information()
 
         LoadingWindow(self.actions_to_finalize).run()
         self.complete = True
 
-    def is_there_any_acoustic_dofs_decoupling_property(self):
-        for (property, _) in app().project.model.properties.surface_properties.keys():
-            if property == "acoustic_dofs_decoupling":
-                return True
-        return False
-
     def process_degress_of_freedom_if_necessary(self):
 
-        if not self.is_there_any_acoustic_dofs_decoupling_property():
+        if not app().project.model.properties.is_the_surface_property_present_in_the_model("acoustic_dofs_decoupling"):
             return
 
         def process_decoupling():
