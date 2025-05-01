@@ -198,11 +198,6 @@ class AnalysisToolbar(QToolBar):
             return
 
         self.set_pushbutton_reset_solution_enabled()
-        app().main_window.configure_mesh_information()
-        app().main_window.update_geometry_information()
-
-        app().file.write_geometry_information_in_file()
-        app().file.write_mesh_data_in_file()
         app().file.write_results_data_in_file()
 
     def reset_solution(self):
