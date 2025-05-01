@@ -178,52 +178,18 @@ class LoadProject:
         self.model.mesh.cache_faces_connectivity = mesh_data.get("cache_faces_connectivity")
         self.model.mesh.cache_solids_connectivity = mesh_data.get("cache_solids_connectivity")
 
-        # self.model.mesh.map_line_elements = dict(zip( 
-        #                                             mesh_data["map_line_elements"][:, 0],
-        #                                             mesh_data["map_line_elements"][:, 1] 
-        #                                             ))
-
-        # self.model.mesh.map_face_elements = dict(zip( 
-        #                                             mesh_data["map_face_elements"][:, 0],  
-        #                                             mesh_data["map_face_elements"][:, 1] 
-        #                                             ))
-
-        # self.model.mesh.map_solid_elements = dict(zip(
-        #                                               mesh_data["map_solid_elements"][:, 0],
-        #                                               mesh_data["map_solid_elements"][:, 1]
-        #                                               ))
+        nodes_from_points = mesh_data.get("nodes_from_points")
+        if isinstance(nodes_from_points, np.ndarray):
+            self.model.mesh.nodes_from_points = convert_two_columns_array_into_numeric_dictionary(nodes_from_points)
 
         logging.info("Loading mesh... [60/100]")
 
         for key, data in mesh_data.items():
-
-            if "nodes_from_points" in key:
+            
+            # keep these lines for backwards compatibility
+            if "nodes_from_points_" in key:
                 id = int(key.split("_")[-1])
                 self.model.mesh.nodes_from_points[id] = data              
-            
-            elif "nodes_from_lines" in key:
-                id = int(key.split("_")[-1])
-                self.model.mesh.nodes_from_lines[id] = data
-
-            elif "nodes_from_surfaces" in key:
-                id = int(key.split("_")[-1])
-                self.model.mesh.nodes_from_surfaces[id] = data
-
-            elif "nodes_from_volumes" in key:
-                id = int(key.split("_")[-1])
-                self.model.mesh.nodes_from_volumes[id] = data
-
-            # elif "gmsh_elements_from_lines" in key:
-            #     id = int(key.split("_")[-1])
-            #     self.model.mesh.gmsh_elements_from_lines[id] = data
-
-            # elif "gmsh_elements_from_surfaces" in key:
-            #     id = int(key.split("_")[-1])
-            #     self.model.mesh.gmsh_elements_from_surfaces[id] = data
-
-            # elif "gmsh_elements_from_volumes" in key:
-            #     id = int(key.split("_")[-1])
-            #     self.model.mesh.gmsh_elements_from_volumes[id] = data
 
             elif "surfaces_from_volume" in key:
                 id = int(key.split("_")[-1])
@@ -348,7 +314,7 @@ class LoadProject:
     def update_render(self):
 
         logging.info("Updating render... [20/100]")
-        app().main_window.configure_mesh_information()
+        app().main_window.update_mesh_information()
 
         logging.info("Updating render... [90/100]")
         app().main_window.update_plots()
@@ -467,3 +433,28 @@ class LoadProject:
                     continue
 
             logging.info("Updating analysis render... [85/100]")
+
+
+def convert_two_columns_array_into_numeric_dictionary(input_data: np.ndarray):
+    """ This method converts a two columns array into an 
+        equivalent numeric dictionary. The elements of the 
+        first column are the keys, and the elements of 
+        second colum are the values.
+
+        Parameters
+        ----------
+        input_data: np.ndarray
+            the array of two columns to be converted 
+            into a numeric dictionary
+
+        Return
+        ------
+        output_data: dict
+            the output numeric dictionary
+    """
+    output_data = dict()
+    if len(input_data[0, :]) == 2:       
+        for k, v in input_data:
+            output_data[int(k)] = int(v)
+
+    return output_data

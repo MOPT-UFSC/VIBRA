@@ -144,22 +144,14 @@ class ProjectFile:
 
         mesh_data = dict(
                             nodal_coordinates = mesh.nodal_coordinates,
-                            nodes_from_points = mesh.nodes_from_points,
-                            nodes_from_lines = mesh.nodes_from_lines,
-                            nodes_from_surfaces = mesh.nodes_from_surfaces,
-                            nodes_from_volumes = mesh.nodes_from_volumes,
+                            nodes_from_points = convert_numeric_dictionary_in_array(mesh.nodes_from_points),
+                            # nodes_from_lines = mesh.nodes_from_lines,
+                            # nodes_from_surfaces = mesh.nodes_from_surfaces,
+                            # nodes_from_volumes = mesh.nodes_from_volumes,
 
                             lines_connectivity = mesh.lines_connectivity,
                             faces_connectivity = mesh.faces_connectivity,
                             solids_connectivity = mesh.solids_connectivity,
-
-                            # map_line_elements = mesh.get_array_based_elements_mapping(entity = "lines"),
-                            # map_face_elements = mesh.get_array_based_elements_mapping(entity = "faces"),
-                            # map_solid_elements = mesh.get_array_based_elements_mapping(entity = "solids"),
-
-                            # gmsh_elements_from_lines = mesh.gmsh_elements_from_lines,
-                            # gmsh_elements_from_surfaces = mesh.gmsh_elements_from_surfaces,
-                            # gmsh_elements_from_volumes = mesh.gmsh_elements_from_volumes,
 
                             surfaces_from_volume = mesh.surfaces_from_volume,
                             lines_from_surface = mesh.lines_from_surface,
@@ -555,3 +547,29 @@ class ProjectFile:
 
     def remove_results_data_from_project_file(self):
         self.filebox.remove(self.results_data_filename)
+
+def convert_numeric_dictionary_in_array(input_data: dict):
+    """ This function converts a numeric dictionary into an equivalent 
+        array with keys and values arranged in the first and second 
+        columns, respectively.
+
+        Parameters
+        ----------
+        input_data: dict
+            the numeric dictionary to be converted 
+            into an array of two columns
+
+        Return
+        ------
+        output_data: np.ndarray
+            the output array of two columns
+
+    """
+    keys = list(input_data.keys())
+    values = list(input_data.values())
+    if isinstance(values[0], np.ndarray):
+        values = [int(value) for value in values]
+
+    output_data = np.array([keys, values], dtype=int).T
+
+    return output_data
