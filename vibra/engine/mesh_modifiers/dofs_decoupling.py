@@ -1,5 +1,4 @@
 
-from vibra import app
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
@@ -8,10 +7,11 @@ from collections import defaultdict
 from copy import deepcopy
 from time import time
 
+import logging
 import numpy as np
 
 
-class DofsDecoupling:
+class DegreesOfFreedomDecoupling:
     def __init__(self, model: "Model"):
         self.model = model
         self.mesh = model.mesh
@@ -124,6 +124,7 @@ class DofsDecoupling:
     def update_nodal_coordinates(self):
         """
         """
+        logging.info("Processing degress of freedom decoupling... [20/100]")
         self.gathering_decoupling_information()
         if not self.decouple_info:
             return
@@ -309,6 +310,7 @@ class DofsDecoupling:
         if not self.decouple_info:
             return
 
+        logging.info("Processing degress of freedom decoupling... [50/100]")
         # reset the attributes from cache data
         self.mesh.solids_connectivity = deepcopy(self.mesh.cache_solids_connectivity)
         self.mesh.faces_connectivity = deepcopy(self.mesh.cache_faces_connectivity)
@@ -352,6 +354,8 @@ class DofsDecoupling:
             surfaces to their twin surfaces, respectively.
         """
 
+        logging.info("Processing degress of freedom decoupling... [100/100]")
+
         for data in self.decouple_info.values():
             data: dict
 
@@ -368,6 +372,7 @@ class DofsDecoupling:
     def update_geometry_related_information(self):
         """
         """
+        logging.info("Processing degress of freedom decoupling... [90/100]")
 
         surfaces_from_volume = deepcopy(self.mesh.cache_surfaces_from_volume)
         lines_from_surface = deepcopy(self.mesh.cache_lines_from_surface)
@@ -417,7 +422,7 @@ class DofsDecoupling:
             self.mesh.lines_from_point = maps_values_to_keys(deepcopy(self.mesh.points_from_line))
 
 
-    def process_dofs_decoupling(self):
+    def process_degrees_of_freedom_decoupling(self):
         """ This method processes all required actions to decouple
             degrees of freedom of connected volumes.
         """

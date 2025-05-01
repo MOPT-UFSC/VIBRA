@@ -7,14 +7,16 @@ from PySide6.QtGui import QCloseEvent
 from vibra import app, UI_DIR
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.loading_window import LoadingWindow
 
 from molde import load_ui
+from copy import deepcopy
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class DofsDecouplingInputs(QDialog):
+class DegreesOfFreedomDecouplingInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -47,7 +49,9 @@ class DofsDecouplingInputs(QDialog):
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
+        self.setup_complete = False
         self.keep_window_open = True
+        self.cache_surface_properties = deepcopy(self.properties.surface_properties)
 
     def _define_qt_variables(self):
 
@@ -168,13 +172,13 @@ class DofsDecouplingInputs(QDialog):
 
         if volumes_from_surface is None:
             message = "The selected surface is not connected to any volume. "
-            message += "You should select an internal surface connected "
-            message += "to two volumes to proceed with dofs decoupling."
+            message += "You must select an internal surface connected "
+            message += "with two volumes to proceed with dofs decoupling."
 
         elif len(volumes_from_surface) == 1:
-            message = "The selected surface is connected to one volume, therefore, an external " 
-            message += "surface has been picked. You should select an internal surface connected "
-            message += "to two volumes to proceed with dofs decoupling."
+            message = "The selected surface is connected to one volume, this means that an external " 
+            message += "surface has been selected. You must select an internal surface connected "
+            message += "with two volumes to proceed with dofs decoupling."
 
         if message != "":
             self.hide()
@@ -185,10 +189,7 @@ class DofsDecouplingInputs(QDialog):
         data = {"volume_to_decouple" : int(self.comboBox_volume_id.currentText())}
         self.properties._set_property("acoustic_dofs_decoupling", data, surface=surface_id)
 
-        # if self.mesh.cache_nodal_coordinates is None:
-        #     # self.mesh.cache_mesh_information()
-        #     app().file.write_mesh_data_in_file()
-
+        self.setup_complete = True
         self.actions_to_finalize()
 
     def remove_callback(self):
@@ -295,9 +296,49 @@ class DofsDecouplingInputs(QDialog):
             self.close()
         else:
             return
+        
+    def is_there_any_acoustic_dofs_decoupling_property(self):
+        for (property, _) in app().project.model.properties.surface_properties.keys():
+            if property == "acoustic_dofs_decoupling":
+                return True
+        return False
+
+    def process_degress_of_freedom_decoupling(self):
+
+        if not self.setup_complete:
+            return False
+        
+        if not self.is_there_any_acoustic_dofs_decoupling_property():
+            return False
+
+        if not app().project.model.generated_mesh:
+            self.hide()
+            app().main_window.input_ui.mesh_setup()
+            app().main_window.set_input_widget(self)
+            if not app().project.model.generated_mesh:
+                return True
+            else:
+                return False
+
+        if self.mesh.cache_nodal_coordinates is None:
+            self.mesh.cache_mesh_information()
+
+        def process_decoupling():
+            self.model.process_degrees_of_freedom_decoupling()
+            app().file.write_mesh_data_in_file()
+            app().file.write_geometry_information_in_file()
+            app().main_window.update_mesh_information()
+            app().main_window.update_geometry_information()
+
+        LoadingWindow(process_decoupling).run()
+        return False
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
+
+        if self.process_degress_of_freedom_decoupling():
+            return
+
         self.keep_window_open = False
         return super().closeEvent(a0)
-    
+
 # fmt: on
