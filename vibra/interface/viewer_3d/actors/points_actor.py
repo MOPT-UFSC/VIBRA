@@ -5,9 +5,13 @@ from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
 
 from vibra import app
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.mesher.mesh import Mesh
+
 
 class PointsActor(vtkActor):
-    def __init__(self, mesh):
+    def __init__(self, mesh: "Mesh"):
         self.mesh = mesh
         self.create_geometry()
         self.configure_appearance()
@@ -28,7 +32,7 @@ class PointsActor(vtkActor):
         point_indexes.SetName("point_indexes")
         point_indexes.Allocate(number_of_points)
 
-        for tag, (node_id,) in sorted(self.mesh.nodes_from_points.items()):
+        for tag, node_id in sorted(self.mesh.nodes_from_points.items()):
             _, x, y, z = self.mesh.nodal_coordinates[node_id]
             points.InsertNextPoint(x, y, z)
             data.InsertNextCell(VTK_VERTEX, 1, [node_id])
