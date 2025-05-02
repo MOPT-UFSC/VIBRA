@@ -327,7 +327,6 @@ class DegreesOfFreedomDecoupling:
     def update_all_connectivity_related_attributes(self):
         """
         """
-        t0 = time()
         if not self.decouple_info:
             return
 
@@ -338,12 +337,18 @@ class DegreesOfFreedomDecoupling:
         self.mesh.lines_connectivity = deepcopy(self.mesh.cache_lines_connectivity)
 
         volume_ids = list(self.decouple_info.keys())
-        for elem3d_id, vol_id, _, _, *connect_3d in self.mesh.cache_solids_connectivity:
+        node_ids = list(self.nodes_mapping.keys())
+
+        rows_3d = np.sum(np.isin(self.mesh.cache_solids_connectivity[:, 4:], node_ids), axis=1) >= 1
+        for elem3d_id, vol_id, _, _, *connect_3d in self.mesh.cache_solids_connectivity[rows_3d, :]:
+        # for elem3d_id, vol_id, _, _, *connect_3d in self.mesh.cache_solids_connectivity:
             if vol_id in volume_ids:
                 self.mesh.solids_connectivity[elem3d_id, 4:] = self.update_nodes_from_array(connect_3d)
 
         valid_surface_ids, nodes_from_bound_lines = self.get_nodes_from_lines_that_bound_decoupling_surfaces()
-        for elem2d_id, surf_id, _, _, *connect_2d in self.mesh.cache_faces_connectivity:
+        rows_2d = np.sum(np.isin(self.mesh.cache_faces_connectivity[:, 4:], node_ids), axis=1) >= 1
+        for elem2d_id, surf_id, _, _, *connect_2d in self.mesh.cache_faces_connectivity[rows_2d, :]:
+        # for elem2d_id, surf_id, _, _, *connect_2d in self.mesh.cache_faces_connectivity:
             if surf_id not in valid_surface_ids:
                 continue
 
@@ -351,7 +356,9 @@ class DegreesOfFreedomDecoupling:
                 self.mesh.faces_connectivity[elem2d_id, 4:] = self.update_nodes_from_array(connect_2d)
 
         lines_from_valid_surfaces = self.get_lines_from_valid_surfaces()
-        for elem1d_id, line_id, _, _, *connect_1d in self.mesh.cache_lines_connectivity:
+        rows_1d = np.sum(np.isin(self.mesh.cache_lines_connectivity[:, 4:], node_ids), axis=1) >= 1
+        for elem1d_id, line_id, _, _, *connect_1d in self.mesh.cache_lines_connectivity[rows_1d, :]:
+        # for elem1d_id, line_id, _, _, *connect_1d in self.mesh.cache_lines_connectivity:
             if line_id in lines_from_valid_surfaces:
                 if np.isin(nodes_from_bound_lines, connect_1d).any():
                     self.mesh.lines_connectivity[elem1d_id, 4:] = self.update_nodes_from_array(connect_1d)
@@ -365,9 +372,6 @@ class DegreesOfFreedomDecoupling:
                     break
 
         self.mesh.process_mesh_related_mappings()
-
-        dt = time() - t0
-        print(f"Elapsed time to update connectivities: {dt} s")
 
 
     def mimetize_the_fluid_from_decoupling_surfaces(self):
@@ -449,10 +453,15 @@ class DegreesOfFreedomDecoupling:
         """ This method processes all required actions to decouple
             degrees of freedom of connected volumes.
         """
+        t0 = time()
+
         self.update_nodal_coordinates()
         self.update_all_connectivity_related_attributes()
         self.update_geometry_related_information()
         self.mimetize_the_fluid_from_decoupling_surfaces()
+
+        dt = time() - t0
+        print(f"Elapsed time to process the degrees of freedom decoupling {dt} s")
 
 
 def maps_values_to_keys(input_data: dict):
