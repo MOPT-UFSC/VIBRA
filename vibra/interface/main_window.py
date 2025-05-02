@@ -15,6 +15,7 @@ from PySide6.QtGui import QAction, QColor
 from PySide6.QtCore import Signal
 
 from vibra import UI_DIR, ICON_DIR, TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, app
+from vibra.engine import AnalysisID
 from vibra.interface.analysis_toolbar import AnalysisToolbar
 from vibra.interface.animation_toolbar import AnimationToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
@@ -617,7 +618,7 @@ class MainWindow(QMainWindow):
         self.mesh_widget.remove_all_actors()
         self.geometry_widget.remove_all_actors()
 
-        self.results_widget.configure_analysis("")
+        app().project.analysis_id = AnalysisID.NO_ANALYSIS
 
         self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)
