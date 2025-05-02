@@ -29,6 +29,8 @@ from .model_info_text import(
     structural_boundary_conditions_info_text
 )
 
+import logging
+
 
 class GeometryRenderWidget(CommonRenderWidget):
     def __init__(self, parent=None):
@@ -123,6 +125,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
+        logging.info("Updating the geometry render... [25/100]")
         self.remove_all_actors()
 
         self.points_actor = PointsActor(mesh)
@@ -138,6 +141,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.plane_actor = SectionPlaneActor(self.faces_actor.GetBounds())
         self.plane_actor.VisibilityOff()
 
+        logging.info("Updating the mesh render... [75/100]")
         self.add_actors(
             self.points_actor,
             self.lines_actor,
@@ -156,6 +160,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if reset_camera:
             self.renderer.ResetCamera()
 
+        logging.info("Updating the mesh render... [95/100]")
         self.update()
 
         if app().project.thumbnail is None:

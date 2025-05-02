@@ -739,18 +739,22 @@ class MainWindow(QMainWindow):
 
         return obj.complete
 
-    def save_project_as(self, path):
+    def save_project_as(self, path: str):
+
         def save_data(path):
+
             path = Path(path)
             app().project.name = path.stem
             app().project.save_path = path
+            logging.info("Saving project data... [10/100]")
+
             app().file.write_thumbnail()
             app().config.add_recent_file(path)
-            logging.info("Saving project data... [10/100]")
+            logging.info("Saving project data... [30/100]")
 
             app().config.write_last_folder_path_in_file("project_folder", path)
             self.update_recents_menu()
-            logging.info("Saving project data... [60/100]")
+            logging.info("Saving project data... [75/100]")
 
             copy(TEMP_PROJECT_FILE, path)
             self.update_window_title(path)
@@ -868,8 +872,8 @@ class MainWindow(QMainWindow):
 
             self.analysis_toolbar.check_analysis_setup_callback()
             self.status_bar.setVisible(True)
-
             self.update_mesh_information()
+
             LoadingWindow(self.mesh_widget.update_plot).run()
             LoadingWindow(self.geometry_widget.update_plot).run()
             
