@@ -159,7 +159,6 @@ class ProjectFile:
                         output_data = deepcopy(input_data)
 
                     elif key in [
-                                 "length_from_curves",
                                  "length_from_lines",
                                  "area_from_surfaces",
                                  "volume_from_bodies",

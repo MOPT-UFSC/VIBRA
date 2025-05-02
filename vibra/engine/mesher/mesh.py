@@ -1077,7 +1077,7 @@ class Mesh:
         self.clear_geometry_data()
 
         unit_factor = self.get_length_unit_factor()
-        labels = ["points", "curves", "surfaces", "volumes"]
+        labels = ["points", "lines", "surfaces", "volumes"]
 
         for dim, tag in gmsh.model.getEntities():
 
@@ -1435,8 +1435,8 @@ class Mesh:
                     all_ids = self.geometry_information["points"]
 
             elif selection == "lines":
-                if "curves" in self.geometry_information.keys():
-                    all_ids = self.geometry_information["curves"]
+                if "lines" in self.geometry_information.keys():
+                    all_ids = self.geometry_information["lines"]
 
             elif selection == "surfaces":
                 if selection in self.geometry_information.keys():
