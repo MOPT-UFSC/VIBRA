@@ -371,7 +371,23 @@ class DegreesOfFreedomDecoupling:
                     self.modify_the_connectivities_from_surfaces(surface_id)
                     break
 
+        self.update_nodes_from_points()
         self.mesh.process_mesh_related_mappings()
+
+
+    def update_nodes_from_points(self):
+        """ This method updates the nodes from created points.
+        """
+        for point_id, new_point_id in self.points_mapping.items():
+            node_from_point = self.mesh.nodes_from_points.get(point_id)
+            if node_from_point is None:
+                continue
+
+            new_node_id = self.nodes_mapping.get(node_from_point)
+            if new_node_id is None:
+                continue
+        
+            self.mesh.nodes_from_points[new_point_id] = int(new_node_id)
 
 
     def mimetize_the_fluid_from_decoupling_surfaces(self):
@@ -431,7 +447,7 @@ class DegreesOfFreedomDecoupling:
             self.mesh.lines_from_surface[new_surf_id] = new_line_ids
 
             point_ids = set(geometry_information["points"])
-            line_ids = set(geometry_information["curves"])
+            line_ids = set(geometry_information["lines"])
 
             for i, line_id in enumerate(lines_from_surface[surf_id]):
                 new_line_id = int(new_line_ids[i])
@@ -441,7 +457,7 @@ class DegreesOfFreedomDecoupling:
                 self.mesh.points_from_line[new_line_id] = new_point_ids
                 point_ids |= set(new_point_ids)
 
-            self.mesh.geometry_information["curves"] = list(line_ids)
+            self.mesh.geometry_information["lines"] = list(line_ids)
             self.mesh.geometry_information["points"] = list(point_ids)
 
         self.mesh.volumes_from_surface = maps_values_to_keys(deepcopy(self.mesh.surfaces_from_volume))
@@ -461,7 +477,7 @@ class DegreesOfFreedomDecoupling:
         self.mimetize_the_fluid_from_decoupling_surfaces()
 
         dt = time() - t0
-        print(f"Elapsed time to process the degrees of freedom decoupling {dt} s")
+        print(f"Elapsed time to process the degrees of freedom decoupling {dt : .6f} s")
 
 
 def maps_values_to_keys(input_data: dict):
