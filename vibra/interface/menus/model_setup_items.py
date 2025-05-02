@@ -1,3 +1,4 @@
+import re
 from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QTextEdit
 from PySide6.QtGui import QIcon, QFont, QPixmap, QColor, QLinearGradient, QBrush, QPen
 from PySide6.QtCore import Qt, QSize, QRect
@@ -156,7 +157,7 @@ class ModelSetupItems(CommonMenuItems):
             ]
            
         # test for mesh. Not ideal, but it works. Since the mesh config is not part of the properties, the necessary check is performed here
-        if property_name == "setup":
+        if property_name == "mesh_setup":
             return app().project.model.mesh_setup is not None
 
         # As anechoic_termination is a subproperty of specific_impedance, 
@@ -194,17 +195,20 @@ class ModelSetupItems(CommonMenuItems):
         
         for attr, value in self.__dict__.items():
             if isinstance(value, ChildTreeWidgetItem):
-                # print(attr.split('_', maxsplit=3)[-1] + ".png")
-                property_name = attr.split('_', maxsplit=3)[-1]
+                property_name = re.match(r"item_child_(?:set_)?(.+)", attr).group(1)
+                
                 if self._contains_property(property_name):
                     self.set_item_icon(value, property_name)
                 else:
                     if property_name == "material":
                         self.set_item_icon(value, "warning_yellow")
+                        # value.setToolTip(0, QTextEdit(markdown=("**No material selected**.\n\n" + material_tool_tip)).toHtml())
                     elif property_name == "fluid":
                         self.set_item_icon(value, "warning_yellow")
-                    elif property_name == "setup":
+                        # value.setToolTip(0, QTextEdit(markdown=("**No fluid selected**.\n\n" + fluid_tool_tip)).toHtml())
+                    elif property_name == "mesh_setup":
                         self.set_item_icon(value, "warning_yellow")
+                        # value.setToolTip(0, QTextEdit(markdown=("**No mesh seted**.\n\n" + mesh_tool_tip)).toHtml())
                     else:
                         value.setIcon(0, QIcon())
 
