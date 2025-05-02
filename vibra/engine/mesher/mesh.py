@@ -62,6 +62,7 @@ class Mesh:
         self.geometry_information = defaultdict(list)
 
         self.nodes_from_points = dict()
+        self.points_from_nodes = dict()
         self.nodes_from_lines = dict()
         self.nodes_from_surfaces = dict()
         self.nodes_from_volumes = dict()
@@ -460,6 +461,7 @@ class Mesh:
         self.solids_connectivity = np.zeros((0, 4), dtype=int)
 
         self.nodes_from_points.clear()
+        self.points_from_nodes.clear()
         self.nodes_from_lines.clear()
         self.nodes_from_surfaces.clear()
         self.nodes_from_volumes.clear()
@@ -625,7 +627,9 @@ class Mesh:
                                                }
 
             if dim == 0:  # Points
-                self.nodes_from_points[tag] = int(element_nodes[0]) - 1
+                node_id = int(element_nodes[0]) - 1
+                self.nodes_from_points[tag] = node_id
+                self.points_from_nodes[node_id] = tag
 
             elif dim == 1:  # Lines
                 connectivity_dim1[dim, tag] = elements_data

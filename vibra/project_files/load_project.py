@@ -193,15 +193,15 @@ class LoadProject:
               
             if "length_from" in key:
                 data = geometry_data.get(key)
-                self.model.mesh.length_from_lines = convert_two_columns_array_into_numeric_dictionary(data, values_dtype=float)
+                self.model.mesh.length_from_lines = {int(key) : value for key, value in data}
 
             elif "area_from" in key:
                 data = geometry_data.get(key)
-                self.model.mesh.area_from_surfaces = convert_two_columns_array_into_numeric_dictionary(data, values_dtype=float)
+                self.model.mesh.area_from_surfaces = {int(key) : value for key, value in data}
 
             elif "volume_from" in key:
                 data = geometry_data.get(key)
-                self.model.mesh.volume_from_bodies = convert_two_columns_array_into_numeric_dictionary(data, values_dtype=float)
+                self.model.mesh.volume_from_bodies = {int(key) : value for key, value in data}
 
             elif "surfaces_from_volume" in key:
                 tag = int(key.split("_")[-1])
@@ -250,7 +250,8 @@ class LoadProject:
 
         nodes_from_points = mesh_data.get("nodes_from_points")
         if isinstance(nodes_from_points, np.ndarray):
-            self.model.mesh.nodes_from_points = convert_two_columns_array_into_numeric_dictionary(nodes_from_points, values_dtype=int)
+            self.model.mesh.nodes_from_points = {int(key) : int(value) for key, value in nodes_from_points}
+            self.model.mesh.points_from_nodes = {value : key for key, value in self.model.mesh.nodes_from_points.items()}
 
         logging.info("Loading mesh... [60/100]")
 
