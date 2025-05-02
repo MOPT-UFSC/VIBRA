@@ -156,8 +156,8 @@ class ModelSetupItems(CommonMenuItems):
             ]
            
         # test for mesh. Not ideal, but it works. Since the mesh config is not part of the properties, the necessary check is performed here
-        if property_name == "setup" and app().project.model.mesh_setup is not None:
-            return True
+        if property_name == "setup":
+            return app().project.model.mesh_setup is not None
 
         # As anechoic_termination is a subproperty of specific_impedance, 
         # we need to garantee there is a specific_impedance that is not anechoic_termination
@@ -184,15 +184,35 @@ class ModelSetupItems(CommonMenuItems):
         return False
     
     def update_items_icons(self):
+        try:
+            analysis_type = app().main_window.analysis_toolbar.combo_box_analysis_type.currentText()
+            physical_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
+        except Exception:
+            analysis_type, physical_domain = app().project.get_analysis_type_and_physical_domain()
+        
+        # print(app().project.model.mesh_setup)
+        
         for attr, value in self.__dict__.items():
             if isinstance(value, ChildTreeWidgetItem):
                 # print(attr.split('_', maxsplit=3)[-1] + ".png")
-                if self._contains_property(attr.split('_', maxsplit=3)[-1]):
-                    value.setIcon(0, QIcon(str(Path(ICON_DIR / "model_setup_items" / str(attr.split('_', maxsplit=3)[-1] + ".png"))))) # placeholder until we have the icons
-                    value.should_paint = False
+                property_name = attr.split('_', maxsplit=3)[-1]
+                if self._contains_property(property_name):
+                    self.set_item_icon(value, property_name)
                 else:
-                    value.setIcon(0, QIcon())
+                    if property_name == "material":
+                        self.set_item_icon(value, "warning_yellow")
+                    elif property_name == "fluid":
+                        self.set_item_icon(value, "warning_yellow")
+                    elif property_name == "setup":
+                        self.set_item_icon(value, "warning_yellow")
+                    else:
+                        value.setIcon(0, QIcon())
 
+    def set_item_icon(self, item, image_name):
+        path_image = str(Path(ICON_DIR / "model_setup_items" / str(image_name + ".png")))
+        item.setIcon(0, QIcon(path_image))
+        item.should_paint = False
+    
     # Callbacks
     def item_child_set_material_callback(self):
         app().main_window.input_ui.set_material()
