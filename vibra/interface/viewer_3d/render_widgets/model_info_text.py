@@ -13,11 +13,13 @@ from numbers import Number
 
 # GEOMETRY RENDER WIDGET INFO TEXTS
 def points_info_text():
-    point_ids = list(app().main_window.selected_geometry_points)
+
+    selected_points = app().main_window.selected_geometry_points
+    point_ids = [int(point_id) for point_id in selected_points]
 
     if len(point_ids) == 0:
         return ""
-    
+
     text = ""
     nodes_from_points = app().project.model.mesh.nodes_from_points
     node_ids = [int(nodes_from_points[i]) for i in point_ids]
@@ -56,12 +58,12 @@ def lines_info_text():
     if len(line_ids) == 0:
         return ""
     
-    length_from_curves = app().project.model.mesh.length_from_lines
+    length_from_lines = app().project.model.mesh.length_from_lines
 
     text = ""
     length = 0
     for line_id in line_ids:
-        length += length_from_curves.get(line_id, 0)
+        length += length_from_lines.get(line_id, 0)
 
     if len(line_ids) == 1:
         tree = TreeInfo(f"LINE {line_ids[0]}")
