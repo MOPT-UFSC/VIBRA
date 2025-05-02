@@ -197,6 +197,9 @@ class ModelSetupItems(CommonMenuItems):
             if isinstance(value, ChildTreeWidgetItem):
                 property_name = re.match(r"item_child_(?:set_)?(.+)", attr).group(1)
                 
+                if property_name is None:
+                    continue
+                
                 if self._contains_property(property_name):
                     self.set_item_icon(value, property_name)
                 else:
