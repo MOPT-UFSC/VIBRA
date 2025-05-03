@@ -183,6 +183,24 @@ class ModelSetupItems(CommonMenuItems):
                     return True
         
         return False
+
+    def _needs_property(self, property_name, analysis_type=None, physical_domain=None):
+        if property_name == "mesh_setup":
+            return True
+        
+        if property_name == "material":
+            return physical_domain == "structural"
+        
+        if property_name == "fluid":
+            return physical_domain == "acoustic"
+        
+        if property_name == "nodal_loads":
+            return analysis_type == "harmonic" and physical_domain == "structural"
+        
+        if property_name == "surface_velocity":
+            return analysis_type == "harmonic" and physical_domain == "acoustic"
+        
+        return False
     
     def update_items_icons(self):
         try:
@@ -191,7 +209,8 @@ class ModelSetupItems(CommonMenuItems):
         except Exception:
             analysis_type, physical_domain = app().project.get_analysis_type_and_physical_domain()
         
-        # print(app().project.model.mesh_setup)
+        analysis_type = analysis_type.lower()
+        physical_domain = physical_domain.lower()
         
         for attr, value in self.__dict__.items():
             if isinstance(value, ChildTreeWidgetItem):
@@ -202,18 +221,13 @@ class ModelSetupItems(CommonMenuItems):
                 
                 if self._contains_property(property_name):
                     self.set_item_icon(value, property_name)
+                    
+                elif self._needs_property(property_name, analysis_type, physical_domain):
+                    self.set_item_icon(value, "warning_yellow")
+                    # value.setToolTip(0, QTextEdit(markdown=("**No material selected**.\n\n" + material_tool_tip)).toHtml())
+
                 else:
-                    if property_name == "material":
-                        self.set_item_icon(value, "warning_yellow")
-                        # value.setToolTip(0, QTextEdit(markdown=("**No material selected**.\n\n" + material_tool_tip)).toHtml())
-                    elif property_name == "fluid":
-                        self.set_item_icon(value, "warning_yellow")
-                        # value.setToolTip(0, QTextEdit(markdown=("**No fluid selected**.\n\n" + fluid_tool_tip)).toHtml())
-                    elif property_name == "mesh_setup":
-                        self.set_item_icon(value, "warning_yellow")
-                        # value.setToolTip(0, QTextEdit(markdown=("**No mesh seted**.\n\n" + mesh_tool_tip)).toHtml())
-                    else:
-                        value.setIcon(0, QIcon())
+                    value.setIcon(0, QIcon())
 
     def set_item_icon(self, item, image_name):
         path_image = str(Path(ICON_DIR / "model_setup_items" / str(image_name + ".png")))
