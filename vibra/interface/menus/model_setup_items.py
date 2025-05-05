@@ -30,7 +30,7 @@ class ModelSetupItems(CommonMenuItems):
         self._create_items()
         self._create_connections()
         self._initial_configuration()
-        self.update_items_apperence()
+        self.update_items_appearance()
 
     def _create_items(self):
         """Creates all TreeWidgetItems."""
@@ -171,7 +171,7 @@ class ModelSetupItems(CommonMenuItems):
         
         return False
     
-    def update_items_apperence(self):
+    def update_items_appearance(self):
         # It may happen that the analysis toolbar has not been created yet. If so, retrieve the analysis type and physical domain from the project
         try:
             analysis_type = app().main_window.analysis_toolbar.combo_box_analysis_type.currentText()
@@ -182,26 +182,39 @@ class ModelSetupItems(CommonMenuItems):
         analysis_type = analysis_type.lower()
         physical_domain = physical_domain.lower()
         
-        for attr, value in self.__dict__.items():
-            if isinstance(value, ChildTreeWidgetItem):
-                property_name = re.match(r"item_child_(?:set_|add_)*(.+)", attr).group(1)
+        for top_level_items in self.top_level_items:
+            for index in range(top_level_items.childCount()):
+                item_child = top_level_items.child(index)
+                item_child_name = self._find_qtree_widget_item_name(item_child)
+                
+                if item_child_name is None:
+                    continue
+                
+                property_name = re.match(r"item_child_(?:set_|add_)*(.+)", item_child_name).group(1)
                 
                 if property_name is None:
                     continue
                 
                 if self._contains_property(property_name):
-                    self.set_item_icon(value, property_name)
-                    value.setToolTip(0, QTextEdit(markdown=(tool_tips.get(property_name))).toHtml())
+                    self.set_item_icon(item_child, property_name)
+                    item_child.setToolTip(0, QTextEdit(markdown=(tool_tips.get(property_name))).toHtml())
                     
                 elif self._needs_property(property_name, analysis_type, physical_domain):
-                    self.set_item_icon(value, "warning_yellow")
-                    warn = "<b style='color:red'>Required for the selected analysis and domain.</b>"
-                    value.setToolTip(0, warn + QTextEdit(markdown=tool_tips.get(property_name)).toHtml())
+                    self.set_item_icon(item_child, "warning_yellow")
+                    message = "<b style='color:red'>Required for the selected analysis and domain.</b>"
+                    item_child.setToolTip(0, message + QTextEdit(markdown=tool_tips.get(property_name)).toHtml())
 
                 else:
-                    value.setIcon(0, QIcon())
-                    value.setToolTip(0, QTextEdit(markdown=(tool_tips.get(property_name))).toHtml())
+                    item_child.setIcon(0, QIcon())
+                    item_child.setToolTip(0, QTextEdit(markdown=(tool_tips.get(property_name))).toHtml())
 
+    def reset_items_appearance(self):
+        for top_level_items in self.top_level_items:
+            for index in range(top_level_items.childCount()):
+                item_child = top_level_items.child(index)
+                item_child.setIcon(0, QIcon())
+                item_child.setToolTip(0, "")
+    
     def set_item_icon(self, item, image_name):
         path_image = str(Path(ICON_DIR / "model_setup_items" / str(image_name + ".png")))
         item.setIcon(0, QIcon(path_image))
