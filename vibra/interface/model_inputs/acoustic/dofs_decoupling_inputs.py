@@ -358,9 +358,10 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
         return False
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
-
         if self.process_degress_of_freedom_decoupling():
             return
+
+        app().main_window.update_plots()
 
         self.keep_window_open = False
         return super().closeEvent(a0)
