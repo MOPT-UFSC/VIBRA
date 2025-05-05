@@ -109,6 +109,8 @@ class MaterialInputs(QDialog):
         self.material_widget.pushButton_reset_library.clicked.connect(self.reset_material_library_callback)
         #
         self.tableWidget_material_data.currentCellChanged.connect(self.current_cell_changed)
+        self.tableWidget_model_materials.cellClicked.connect(self.cell_clicked_callback)       
+        #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
@@ -118,6 +120,28 @@ class MaterialInputs(QDialog):
     def current_cell_changed(self, current_row, current_col, previous_row, previous_col):
         self.selected_column = current_col
         self.update_material_selection()
+
+    def cell_clicked_callback(self, row, col):
+
+        selection_id = self.tableWidget_model_materials.item(row, 0).text()
+        fluid_name = self.tableWidget_model_materials.item(row, 1).text()
+
+        if "-" in selection_id:
+
+            selection, _selected_id = selection_id.split("-")
+            selected_id = int(_selected_id)
+
+            if selection == "Surface":
+                app().main_window.set_geometry_selection(surfaces = [selected_id])
+
+            elif selection == "Volume":
+                app().main_window.set_geometry_selection(volumes = [selected_id])
+
+            self.pushButton_remove.setEnabled(True)
+            self.lineEdit_selection_id.setText(selection_id)
+            self.lineEdit_selected_material_name.setText(fluid_name)
+
+            app().main_window.action_model_workspace_callback()
 
     def reset_material_library_callback(self):
         self.hide()
@@ -265,7 +289,6 @@ class MaterialInputs(QDialog):
                 self.properties._remove_volume_property("material_id", selected_id)
 
             self.actions_to_finalize()
-
             app().main_window.set_geometry_selection()
 
     def reset_callback(self):
@@ -292,6 +315,7 @@ class MaterialInputs(QDialog):
     def actions_to_finalize(self):
         self.lineEdit_selection_id.setText("")
         self.lineEdit_selected_material_name.setText("")
+        self.pushButton_remove.setDisabled(True)
 
         self.load_model_info()
         app().main_window.update_info_text()
@@ -343,33 +367,6 @@ class MaterialInputs(QDialog):
                 self.tableWidget_model_materials.item(i, j).setTextAlignment(Qt.AlignCenter)
 
         self.tableWidget_model_materials.blockSignals(False)
-
-    # def load_model_info(self):
-
-    #     self.treeWidget_material.clear()
-    #     properties = {
-    #                   "Surface" : self.properties.surface_properties,
-    #                   "Volume" : self.properties.volume_properties
-    #                   }
-
-    #     for selection, _property in properties.items():
-    #         for key, data in _property.items():
-    #             property, surface_id = key
-    #             if property == "material":
-
-    #                 data : Material
-    #                 material_name = data.name
-    #                 elasticity_modulus = round(data.elasticity_modulus / 1e9, 3)
-    #                 density = round(data.density, 3)
-    #                 poisson_ratio = round(data.poisson_ratio, 3)
-
-    #                 new = QTreeWidgetItem([f"{selection}-{surface_id}", material_name, str(elasticity_modulus), str(density), str(poisson_ratio)])
-    #                 for col in range(5):
-    #                     new.setTextAlignment(col, Qt.AlignCenter)
-
-    #                 self.treeWidget_material.addTopLevelItem(new)
-
-    #     self.update_tabs_visibility()
 
     def update_tabs_visibility(self):
 
