@@ -254,13 +254,32 @@ class MainWindow(QMainWindow):
 
         app().processEvents()
 
-        if len(sys.argv) > 1:
-            path = Path(sys.argv[1])
-            if path.exists():
-                self.open_project(path)
-
-        elif not self.is_temporary_vibra_folder_empty():
+        if not self.is_temporary_vibra_folder_empty():
             self.recovery_dialog()
+        
+        else:
+            self.try_to_open_argv_path()
+    
+    def try_to_open_argv_path(self):
+        '''
+        Check every argument passed in the command line and try to open it if it is a valid file.
+        '''
+
+        if len(sys.argv) <= 1:
+            return
+        
+        for arg in sys.argv[1:]:
+            path = Path(arg)
+            
+            if not path.is_file():
+                continue
+            
+            if not path.exists():
+                continue
+            
+            if path.suffix == ".vibra":
+                self.open_project(path)
+                break
 
     # External functions that may be usefull
     def set_theme(self, theme: str):
@@ -696,6 +715,7 @@ class MainWindow(QMainWindow):
             self.open_project()
         else:
             self.reset_temporary_vibra_folder()
+            self.try_to_open_argv_path()
 
     def new_project_dialog(self):
         self.reset_temporary_vibra_folder()
