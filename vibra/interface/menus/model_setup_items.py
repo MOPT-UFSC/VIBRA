@@ -4,15 +4,7 @@ from PySide6.QtGui import QIcon, QFont, QPixmap, QColor, QLinearGradient, QBrush
 from PySide6.QtCore import Qt, QSize, QRect
 from pathlib import Path
 
-from vibra.interface.menus.tool_tips_model_setup_items import (
-    material_tool_tip, fluid_tool_tip, mesh_tool_tip, surface_thickness_tool_tip,
-    prescribed_dofs_tool_tip, nodal_loads_tool_tip, distributed_loads_tool_tip,
-    normal_pressure_load_tool_tip, acoustic_pressure_tool_tip, surface_velocity_tool_tip,
-    anechoic_termination_tool_tip, specific_impedance_tool_tip, dissipation_model_tool_tip,
-    porous_material_model_tool_tip, viscous_thermal_model_tool_tip, perforated_plate_model_tool_tip,
-    acoustic_properties_gradient_tool_tip, reciprocating_compressor_excitation_tool_tip,
-    process_acoustic_transfer_element_data_tool_tip
-)
+from vibra.interface.menus.tool_tips_model_setup_items import tool_tips
 
 
 from vibra import app, ICON_DIR
@@ -38,7 +30,7 @@ class ModelSetupItems(CommonMenuItems):
         self._create_items()
         self._create_connections()
         self._initial_configuration()
-        self.update_items_icons()
+        self.update_items_apperence()
 
     def _create_items(self):
         """Creates all TreeWidgetItems."""
@@ -46,11 +38,6 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_set_material = self.add_item("Set Material")
         self.item_child_set_fluid = self.add_item("Set Fluid")
         self.item_child_mesh_setup = self.add_item("Mesh Setup")
-        # tool tips
-        self.item_child_set_material.setToolTip(0, QTextEdit(markdown=material_tool_tip).toHtml())
-        self.item_child_set_fluid.setToolTip(0, QTextEdit(markdown=fluid_tool_tip).toHtml())
-        self.item_child_mesh_setup.setToolTip(0, QTextEdit(markdown=mesh_tool_tip).toHtml())
-
         #
         self.item_top_structural_model_setup = self.add_top_item("Structural Model Setup")
         self.item_child_set_surface_thickness = self.add_item("Set Surface Thickness")
@@ -58,13 +45,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_set_nodal_loads = self.add_item("Set Nodal Loads")
         self.item_child_set_distributed_loads = self.add_item("Set Distributed Loads")
         self.item_child_set_normal_pressure_load = self.add_item("Set Normal Pressure Load")
-        # tool tips
-        self.item_child_set_surface_thickness.setToolTip(0, QTextEdit(markdown=surface_thickness_tool_tip).toHtml())
-        self.item_child_set_prescribed_dofs.setToolTip(0, QTextEdit(markdown=prescribed_dofs_tool_tip).toHtml())
-        self.item_child_set_nodal_loads.setToolTip(0, QTextEdit(markdown=nodal_loads_tool_tip).toHtml())
-        self.item_child_set_distributed_loads.setToolTip(0, QTextEdit(markdown=distributed_loads_tool_tip).toHtml())
-        self.item_child_set_normal_pressure_load.setToolTip(0, QTextEdit(markdown=normal_pressure_load_tool_tip).toHtml())
-
+        #
         self.item_top_acoustic_model_setup = self.add_top_item("Acoustic Model Setup")
         self.item_child_set_acoustic_pressure = self.add_item("Set Acoustic Pressure")
         # self.item_child_set_mass_flow_rate = self.add_item("Set Mass Flow Rate")
@@ -78,20 +59,8 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_set_acoustic_properties_gradient = self.add_item("Set Acoustic Properties Gradient")
         self.item_child_add_reciprocating_compressor_excitation = self.add_item("Add Reciprocating Compressor Excitation")
         self.item_child_set_acoustic_transfer_element_setup = self.add_item("Process Acoustic Transfer Element Data")
-        # tool tips
-        self.item_child_set_acoustic_pressure.setToolTip(0, QTextEdit(markdown=acoustic_pressure_tool_tip).toHtml())
-        self.item_child_set_surface_velocity.setToolTip(0, QTextEdit(markdown=surface_velocity_tool_tip).toHtml())
-        self.item_child_set_anechoic_termination.setToolTip(0, QTextEdit(markdown=anechoic_termination_tool_tip).toHtml())
-        self.item_child_set_specific_impedance.setToolTip(0, QTextEdit(markdown=specific_impedance_tool_tip).toHtml())
-        self.item_child_set_dissipation_model.setToolTip(0, QTextEdit(markdown=dissipation_model_tool_tip).toHtml())
-        self.item_child_set_porous_material_model.setToolTip(0, QTextEdit(markdown=porous_material_model_tool_tip).toHtml())    
-        self.item_child_set_viscous_thermal_model.setToolTip(0, QTextEdit(markdown=viscous_thermal_model_tool_tip).toHtml())
-        self.item_child_set_perforated_plate_model.setToolTip(0, QTextEdit(markdown=perforated_plate_model_tool_tip).toHtml())
-        self.item_child_set_acoustic_properties_gradient.setToolTip(0, QTextEdit(markdown=acoustic_properties_gradient_tool_tip).toHtml())
-        self.item_child_add_reciprocating_compressor_excitation.setToolTip(0, QTextEdit(markdown=reciprocating_compressor_excitation_tool_tip).toHtml())
-        self.item_child_set_acoustic_transfer_element_setup.setToolTip(0, QTextEdit(markdown=process_acoustic_transfer_element_data_tool_tip).toHtml())
-        #
-        self.item_child_set_anechoic_termination.setToolTip(0, "equivalent to the long pipe boundary condition")
+
+        # self.item_child_set_anechoic_termination.setToolTip(0, "equivalent to the long pipe boundary condition")
         #
         self.top_level_items = [
             self.item_top_general_settings,
@@ -202,7 +171,7 @@ class ModelSetupItems(CommonMenuItems):
         
         return False
     
-    def update_items_icons(self):
+    def update_items_apperence(self):
         # It may happen that the analysis toolbar has not been created yet. If so, retrieve the analysis type and physical domain from the project
         try:
             analysis_type = app().main_window.analysis_toolbar.combo_box_analysis_type.currentText()
@@ -215,20 +184,23 @@ class ModelSetupItems(CommonMenuItems):
         
         for attr, value in self.__dict__.items():
             if isinstance(value, ChildTreeWidgetItem):
-                property_name = re.match(r"item_child_(?:set_)?(.+)", attr).group(1)
+                property_name = re.match(r"item_child_(?:set_|add_)*(.+)", attr).group(1)
                 
                 if property_name is None:
                     continue
                 
                 if self._contains_property(property_name):
                     self.set_item_icon(value, property_name)
+                    value.setToolTip(0, QTextEdit(markdown=(tool_tips.get(property_name))).toHtml())
                     
                 elif self._needs_property(property_name, analysis_type, physical_domain):
                     self.set_item_icon(value, "warning_yellow")
-                    # value.setToolTip(0, QTextEdit(markdown=("**No material selected**.\n\n" + material_tool_tip)).toHtml())
+                    warn = "<b style='color:red'>Required for the selected analysis and domain.</b>"
+                    value.setToolTip(0, warn + QTextEdit(markdown=tool_tips.get(property_name)).toHtml())
 
                 else:
                     value.setIcon(0, QIcon())
+                    value.setToolTip(0, QTextEdit(markdown=(tool_tips.get(property_name))).toHtml())
 
     def set_item_icon(self, item, image_name):
         path_image = str(Path(ICON_DIR / "model_setup_items" / str(image_name + ".png")))

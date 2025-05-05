@@ -518,7 +518,7 @@ class MainWindow(QMainWindow):
             self.render_widgets_stack.removeWidget(widget)
 
     def update_plots(self, reset_camera=True):
-        self.model_setup_widget.model_setup_items.update_items_icons()
+        self.model_setup_widget.model_setup_items.update_items_apperence()
         renders_number = self.render_widgets_stack.count()
         for i in range(renders_number):
             logging.info(f"Updating renders... [{i+1}/{renders_number}]")
@@ -527,7 +527,7 @@ class MainWindow(QMainWindow):
                 widget.update_plot(reset_camera)
 
     def update_symbols(self):
-        self.model_setup_widget.model_setup_items.update_items_icons()
+        self.model_setup_widget.model_setup_items.update_items_apperence()
         for i in range(self.render_widgets_stack.count()):
             widget = self.render_widgets_stack.widget(i)
             if hasattr(widget, "update_symbols"):
@@ -884,7 +884,7 @@ class MainWindow(QMainWindow):
             self.configure_mesh_information()
             LoadingWindow(self.mesh_widget.update_plot).run()
             LoadingWindow(self.geometry_widget.update_plot).run()
-            self.model_setup_widget.model_setup_items.update_items_icons()
+            self.model_setup_widget.model_setup_items.update_items_apperence()
             
         except Exception as error_log:
             from traceback import print_exception
