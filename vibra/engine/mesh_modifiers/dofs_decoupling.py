@@ -388,6 +388,7 @@ class DegreesOfFreedomDecoupling:
                 continue
         
             self.mesh.nodes_from_points[new_point_id] = int(new_node_id)
+            self.mesh.points_from_nodes[int(new_node_id)] = new_point_id
 
 
     def mimetize_the_fluid_from_decoupling_surfaces(self):

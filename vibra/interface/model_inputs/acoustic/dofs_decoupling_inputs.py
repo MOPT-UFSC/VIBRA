@@ -188,6 +188,31 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
         self.setup_complete = True
         self.actions_to_finalize()
 
+    def remove_all_surface_properties_from_surface(self, new_surface_ids: list[int]):
+        if not new_surface_ids:
+            return
+
+        surface_properties = deepcopy(self.properties.surface_properties)
+        for new_surface_id in new_surface_ids:
+            for (property, surf_id) in surface_properties.keys():
+                if surf_id == new_surface_id:
+                    self.properties._remove_surface_property(property, new_surface_id)
+
+    def remove_all_line_properties_boundind_surface(self, new_surface_ids: list[int]):
+        if not new_surface_ids:
+            return
+
+        line_properties = deepcopy(self.properties.line_properties)
+        for new_surface_id in new_surface_ids:
+            lines_from_surface = self.mesh.lines_from_surface.get(new_surface_id)
+            if lines_from_surface is None:
+                continue
+
+            for line_from_surface in lines_from_surface:
+                for (property, line_id) in line_properties.keys():
+                    if line_from_surface == line_id:
+                        self.properties._remove_line_property(property, line_id)
+
     def remove_callback(self):
 
         if self.lineEdit_selection_id.text() != "":
@@ -196,11 +221,12 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
             data = self.properties._get_property("acoustic_dofs_decoupling", surface=surface_id)
             if isinstance(data, dict):
                 new_surface_id = data.get("new_surface_id")
-                if isinstance(new_surface_id, int):
-                    self.properties._remove_surface_property("fluid", new_surface_id)
-                    self.properties._remove_surface_property("fluid_id", new_surface_id)
+                if isinstance(new_surface_id, int):   
+                    self.remove_all_surface_properties_from_surface([new_surface_id])
+                    self.remove_all_line_properties_boundind_surface([new_surface_id]) 
 
             self.properties._remove_surface_property("acoustic_dofs_decoupling", surface_id)
+
             app().project.model.generated_mesh = False
             app().file.remove_mesh_data_from_project_file
             app().file.remove_mesh_data_from_project_file()
@@ -230,11 +256,10 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
                     if isinstance(new_surface_id, int):
                         new_surface_ids.append(new_surface_id)
 
-            for _new_surface_id in new_surface_ids:
-                self.properties._remove_surface_property("fluid", _new_surface_id)
-                self.properties._remove_surface_property("fluid_id", _new_surface_id)
-
+            self.remove_all_surface_properties_from_surface([new_surface_id])
+            self.remove_all_line_properties_boundind_surface([new_surface_id]) 
             self.properties._reset_property("acoustic_dofs_decoupling")
+
             app().project.model.generated_mesh = False
             app().file.remove_mesh_data_from_project_file()
             app().file.remove_results_data_from_project_file()
