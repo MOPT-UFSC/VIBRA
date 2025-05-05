@@ -377,7 +377,6 @@ class SetFluidInputs(QDialog):
 
         self.tableWidget_model_fluids.blockSignals(False)
 
-
     def update_tabs_visibility(self):
 
         for key in self.properties.volume_properties.keys():
