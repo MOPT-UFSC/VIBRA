@@ -203,6 +203,7 @@ class ModelSetupItems(CommonMenuItems):
         return False
     
     def update_items_icons(self):
+        # It may happen that the analysis toolbar has not been created yet. If so, retrieve the analysis type and physical domain from the project
         try:
             analysis_type = app().main_window.analysis_toolbar.combo_box_analysis_type.currentText()
             physical_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()

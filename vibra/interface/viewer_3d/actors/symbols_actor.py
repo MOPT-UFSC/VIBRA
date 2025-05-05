@@ -14,6 +14,7 @@ from vibra.interface.viewer_3d.sources import (
     create_outwards_arrow_source,
     create_spring_source,
     create_perforated_plate_source,
+    create_impedance_source,
 )
 
 class SymbolsActor(CommonSymbolsActorVariableSize):
@@ -189,10 +190,10 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
 
     def add_impedance_symbol(self, position, orientation):
         self.add_symbol(
-            "cube",
+            "impedance",
             position,
             orientation,
-            color=color_names.GREEN,
+            color=color_names.PURPLE_2,
             scale=1,
         )
 
@@ -227,3 +228,4 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.register_shape("damper", create_damper_source())
         self.register_shape("mass", create_mass_source())
         self.register_shape("perforated_plate", create_perforated_plate_source())
+        self.register_shape("impedance", create_impedance_source())

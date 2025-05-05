@@ -32,3 +32,11 @@ def create_perforated_plate_source():
         rotation=(0, 0, 90),
         scale=(0.1, 1, 1),
     )
+
+def create_impedance_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/impedance_symbol.STL")
+    return transform_polydata(
+        polydata,
+        rotation=(0, 90, 0),
+        scale=(2, 2, 2),
+    )

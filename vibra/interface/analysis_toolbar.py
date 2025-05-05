@@ -66,9 +66,9 @@ class AnalysisToolbar(QToolBar):
 
     def _create_connections(self):
         #
-        self.combo_box_physical_domain.currentIndexChanged.connect(self._update_state)
+        # self.combo_box_physical_domain.currentIndexChanged.connect(self._update_state)
+        # self.combo_box_analysis_type.currentIndexChanged.connect(self._update_state)
         self.combo_box_physical_domain.currentTextChanged.connect(self.check_analysis_setup_callback)
-        self.combo_box_analysis_type.currentIndexChanged.connect(self._update_state)
         self.combo_box_analysis_type.currentTextChanged.connect(self.check_analysis_setup_callback)
         #
         self.pushButton_run_analysis.clicked.connect(self.run_analysis)
@@ -77,8 +77,8 @@ class AnalysisToolbar(QToolBar):
         self.enable_pushbutons.connect(self.check_analysis_setup_callback)
         self.enable_pushbutons.connect(self.set_pushbutton_reset_solution_enabled)
     
-    def _update_state(self):
-        app().main_window.update_symbols()
+    # def _update_state(self):
+    #     app().main_window.update_symbols()
 
     def _configure_appearance(self):
         self.setMinimumHeight(40)
@@ -193,6 +193,7 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_reset_solution.setEnabled(True)
 
     def check_analysis_setup_callback(self):
+        app().main_window.update_symbols()
         valid_setup = app().project.is_there_a_valid_analysis_setup()
         self.set_pushbutton_run_analysis_enabled(valid_setup)
 

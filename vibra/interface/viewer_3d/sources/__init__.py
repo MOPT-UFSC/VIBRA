@@ -15,4 +15,5 @@ from .complex_shapes import (
     create_damper_source,
     create_mass_source,
     create_perforated_plate_source,
+    create_impedance_source,
 )
