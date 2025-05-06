@@ -13,7 +13,8 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 
-from vibra import app, UI_DIR
+from vibra import app
+from vibra.interface.ui_generated.mesh.mesher_setup_ui import MesherSetup_UI
 from vibra.engine.mesher import gmsh_constants
 from vibra.engine.mesher.element_type import (
     TETRAHEDRON_4,
@@ -28,7 +29,6 @@ from vibra.interface.loading_window import LoadingWindow
 
 import logging
 from collections import defaultdict
-from molde import load_ui
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -53,12 +53,9 @@ map_algorithms_2d = dict(zip(gmsh_algorithms_2d, [0, 1, 2, 3, 4, 5]))
 map_algorithms_3d = dict(zip(gmsh_algorithms_3d, [0, 1, 2]))
 
 
-class MesherInputs(QDialog):
+class MesherInputs(MesherSetup_UI):
     def __init__(self, **kwargs):
         super().__init__()
-
-        ui_path = UI_DIR / "mesh/mesher_setup.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         self.close_after_generate = kwargs.get("close_after_generate", False)
 
@@ -70,7 +67,6 @@ class MesherInputs(QDialog):
 
         self._config_window()
         self._initialize()
-        self._define_qt_variables()
         self._create_connections()
         self._config_widgets()
 
@@ -91,46 +87,8 @@ class MesherInputs(QDialog):
         self.setWindowIcon(self.main_window.vibra_icon)
         self.setWindowTitle("Mesher setup")
 
-    def _define_qt_variables(self):
-
-        # QCheckbox
-        self.checkBox_mesh_connection: QCheckBox
-
-        # QComboBox
-        self.comboBox_element_type: QComboBox
-        self.comboBox_shape_function: QComboBox
-        self.comboBox_2d_algorithm: QComboBox
-        self.comboBox_3d_algorithm: QComboBox
-        self.comboBox_recombination_algorithm: QComboBox
-        self.comboBox_subdivision_algorithm: QComboBox
-        self.comboBox_recombine_all: QComboBox
-        self.comboBox_second_order_incomplete: QComboBox
-
-        # QDoubleSpinBox
-        self.doubleSpinBox_maximum_element_size: QDoubleSpinBox
-        self.doubleSpinBox_minimum_element_size_factor: QDoubleSpinBox
-        self.doubleSpinBox_refined_element_size: QDoubleSpinBox
-
-        # QLabel
-        self.label_selected_ids: QLabel
-
-        # QLineEdit
-        self.lineEdit_maximum_element_size: QLineEdit
-        self.lineEdit_geometry_tolerance: QLineEdit
-        self.lineEdit_selected_ids: QLineEdit
-        self.lineEdit_selected_ids.setDisabled(True)
-
-        # QPushButton
-        self.pushButton_add: QPushButton
-        self.pushButton_exit: QPushButton
-        self.pushButton_delete: QPushButton
-        self.pushButton_generate_mesh: QPushButton
-
-        # QTableWidget
-        self.tableWidget_refining_mesh_data: QTableWidget
-
     def _config_widgets(self):
-
+        self.lineEdit_selected_ids.setDisabled(True)
         self.comboBox_2d_algorithm.setDisabled(True)
         self.comboBox_2d_algorithm.setDisabled(True)
         self.comboBox_recombination_algorithm.setDisabled(True)

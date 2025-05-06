@@ -8,7 +8,8 @@ from vibra.engine import AnalysisID
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
 from vibra.interface.analysis.harmonic_analysis_method_selector_input import StructuralHarmonicAnalysisMethodSelecorInput
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
-from vibra.interface.analysis.analysis_setup_input import AnalysisSetupInput
+from vibra.interface.analysis.structural_harmonic_analysis_direct_method_input import StructuralHarmonicAnalysisDirectMethodInput
+from vibra.interface.analysis.acoustic_harmonic_analysis_direct_method_input import AcousticHarmonicAnalysisDirectMethodInput
 
 from typing import Literal
 
@@ -228,7 +229,7 @@ class AnalysisToolbar(QToolBar):
  
         analysis_data = {"analysis_id": select.index}
         self.update_analysis_data(analysis_data)
-        harmonic = AnalysisSetupInput()
+        harmonic = StructuralHarmonicAnalysisDirectMethodInput()
 
         if harmonic.setup_defined:
             self.final_actions()
@@ -238,10 +239,9 @@ class AnalysisToolbar(QToolBar):
             app().main_window.update_symbols()
 
     def harmonic_acoustic(self):
-
         analysis_data = {"analysis_id": AnalysisID.ACOUSTIC_HARMONIC}
         self.update_analysis_data(analysis_data)
-        harmonic = AnalysisSetupInput()
+        harmonic = AcousticHarmonicAnalysisDirectMethodInput()
 
         if harmonic.setup_defined:
             self.final_actions()

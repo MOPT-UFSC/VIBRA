@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtCore import Signal
 
-from vibra import UI_DIR, ICON_DIR, TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, app
+from vibra import TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, app
 from vibra.interface.analysis_toolbar import AnalysisToolbar
 from vibra.interface.animation_toolbar import AnimationToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
@@ -38,6 +38,7 @@ from vibra.interface.viewer_3d.render_widgets import (
     MeshRenderWidget,
     ResultsRenderWidget,
 )
+from vibra.interface.ui_generated.main_window_ui import MainWindow_UI
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import VisualizationFilter, ColorMode
@@ -45,7 +46,6 @@ from vibra.interface.user_input.render_user_preferences import RendererUserPrefe
 
 from molde.render_widgets import CommonRenderWidget
 from molde import stylesheets
-from molde import load_ui
 
 import logging
 import os
@@ -54,18 +54,15 @@ from pathlib import Path
 from shutil import copy, rmtree
 
 
-class MainWindow(QMainWindow):
+class MainWindow(MainWindow_UI):
     theme_changed = Signal(str)
     visualization_changed = Signal()
     render_widget_changed = Signal()
     selection_changed = Signal()
 
     def __init__(self, parent=None):
-        QMainWindow.__init__(self, parent)
-
-        ui_path = UI_DIR / "main_window.ui"
-        load_ui(ui_path, self, UI_DIR)
-
+        super().__init__(parent)
+        
         self.visualization_filter = VisualizationFilter.all_true()
         self.visualization_filter.points = False
 
@@ -92,65 +89,6 @@ class MainWindow(QMainWindow):
         self.dialog = None
         self.project_data_modified = False
         self.user_path = Path().home()
-
-    def _define_qt_variables(self):
-        """
-        This function is doing nothing. Every variable was
-        already defined in the UI file.
-
-        Despite that, it is nice to list the variables to
-        help future maintainers and the code editor with
-        type inference.
-        """
-        # QAction
-        self.action_new_project: QAction
-        self.action_open_project: QAction
-        self.action_save: QAction
-        self.action_save_as: QAction
-        self.action_export_mesh: QAction
-        self.action_top_view: QAction
-        self.action_capture_image: QAction
-        self.action_theme: QAction
-        self.action_exit: QAction
-        self.action_bottom_view: QAction
-        self.action_right_view: QAction
-        self.action_left_view: QAction
-        self.action_front_view: QAction
-        self.action_back_view: QAction
-        self.action_isometric_view: QAction
-        self.action_zoom_to_fit: QAction
-        self.action_node_view: QAction
-        self.action_line_view: QAction
-        self.action_face_view: QAction
-        self.action_hide_show_symbols: QAction
-        self.action_section_plane: QAction
-        self.action_plot_particle_velocity: QAction
-        self.action_plot_specific_acoustic_impedance: QAction
-        self.action_export_element_transfer_data: QAction
-        self.action_model_workspace: QAction
-        self.action_mesh_workspace: QAction
-        self.action_results_workspace: QAction
-        self.action_home_exit: QAction
-
-        # QSplitter
-        self.splitter: QSplitter
-
-        # QToolBar
-        self.renderer_toolbar: QToolBar
-
-        # QMenu
-        self.menu_project: QMenu
-        self.menu_settings: QMenu
-        self.menu_view_mode: QMenu
-        self.menu_advanced_results: QMenu
-        self.menu_help: QMenu
-
-        # QStackedWidget
-        self.stacked_setup: QStackedWidget
-        self.render_widgets_stack: QStackedWidget
-
-        # QSplitter
-        self.splitter: QSplitter
 
     def _connect_actions(self):
         """
@@ -238,7 +176,6 @@ class MainWindow(QMainWindow):
         self._load_render_widgets()
 
         app().splash.update_progress(60)
-        self._define_qt_variables()
         self._create_basic_layout()
         self._configure_render_widgets_stack()
         self._configure_stacked_setup()
@@ -414,8 +351,8 @@ class MainWindow(QMainWindow):
         self.selection_changed.emit()
 
     def create_recents_menu(self):
-        color = QColor("#448cff")
-        self.recent_icon = load_icon(ICON_DIR / "recent.png", color)
+        color = QColor("#448cff") 
+        self.recent_icon = load_icon(":/icons/recent.png", color)
 
         self.recents_menu = QMenu("Recent projects", self)
         self.recents_menu.setIcon(self.recent_icon)
@@ -456,8 +393,8 @@ class MainWindow(QMainWindow):
     def action_theme_callback(self):
         color = QColor("#448cff")
 
-        self.theme_sun_icon = load_icon(Path(ICON_DIR / "sun_icon.png"), color)
-        self.theme_moon_icon = load_icon(Path(ICON_DIR / "moon_icon.png"), color)
+        self.theme_sun_icon = load_icon(":/icons/sun_icon.png", color)
+        self.theme_moon_icon = load_icon(":/icons/moon_icon.png", color)
 
         if app().config.user_preferences.interface_theme == "light":
             app().config.user_preferences.set_dark_theme()

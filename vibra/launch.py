@@ -70,7 +70,8 @@ def main():
         Todo:
             Fix the HighDPI part to not blurry the screen. See more by searching "PySide6 HighDPI".
     """
-    
+    # Import enabling compiled qt resources to be found from path `:/icons/{filepath_relative_to_qrc}`
+    import vibra.interface.data.icons.resources_rc
     configure_logs()
 
     # disables the terrible vtk error handler and its logs

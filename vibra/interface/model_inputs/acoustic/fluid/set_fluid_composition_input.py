@@ -2,24 +2,21 @@ from PySide6.QtWidgets import QAbstractItemView, QDialog, QComboBox, QFileDialog
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtCore import Qt
 
-from vibra import app, UI_DIR
+from vibra import app
+from vibra.interface.ui_generated.model.setup.fluid.set_fluid_composition_input_ui import SetFluidCompositionInput_UI
 from vibra.interface.model_inputs.acoustic.fluid.load_fluid_composition_input import LoadFluidCompositionInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.utils.utils import *
-from molde import load_ui
 
 import os
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class SetFluidCompositionInput(QDialog):
+class SetFluidCompositionInput(SetFluidCompositionInput_UI):
     def __init__(self, *args, **kwargs):
         super().__init__()
-
-        ui_path = UI_DIR / "model/setup/fluid/set_fluid_composition_input.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         self.selected_fluid_to_edit = kwargs.get("selected_fluid_to_edit", None)
         self.state_properties = kwargs.get("state_properties", dict())
@@ -34,7 +31,6 @@ class SetFluidCompositionInput(QDialog):
 
         self._config_window()
         self._initialize()
-        self._define_qt_variables()
         self._create_connections()
         self._config_widgets()
 
@@ -93,49 +89,6 @@ class SetFluidCompositionInput(QDialog):
         self.remaining_molar_fraction = 1
         self.fluid_to_composition = dict()
         self.fluid_to_row = dict()
-
-    def _define_qt_variables(self):
-
-        # QComboBox
-        self.comboBox_temperature_units : QComboBox
-        self.comboBox_pressure_units : QComboBox
-        self.comboBox_temperature_units_test : QComboBox
-        self.comboBox_pressure_units_test : QComboBox
-
-        # QLabel
-        self.label_selected_fluid : QLabel
-        self.label_title_remaining_fraction : QLabel
-        self.label_remaining_composition : QLabel
-        self.label_discharge : QLabel
-        self.label_suction : QLabel
-        self.label_spacing : QLabel
-
-        # QLineEdit
-        self.lineEdit_composition : QLineEdit
-        self.lineEdit_fluid_name : QLineEdit
-        self.lineEdit_temperature : QLineEdit
-        self.lineEdit_pressure : QLineEdit
-        self.lineEdit_pressure_disch : QLineEdit
-        self.lineEdit_temperature_disch : QLineEdit
-        self.lineEdit_temperature_test : QLineEdit
-        self.lineEdit_pressure_test : QLineEdit
-
-        # QPushButton
-        self.pushButton_add_gas : QPushButton
-        self.pushButton_confirm : QPushButton
-        self.pushButton_get_fluid_properties_info : QPushButton
-        self.pushButton_load_composition : QPushButton
-        self.pushButton_remove_gas : QPushButton
-        self.pushButton_reset_fluid : QPushButton
-
-        # QTabWidget
-        self.tabWidget_main : QTabWidget
-
-        # QTableWidget
-        self.tableWidget_new_fluid : QTableWidget
-
-        # QTreeWidget
-        self.treeWidget_reference_gases : QTreeWidget
 
     def _create_connections(self):
         #

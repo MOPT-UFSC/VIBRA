@@ -2,11 +2,10 @@ from PySide6.QtWidgets import QDialog, QLineEdit, QPushButton
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 
-from vibra import app, UI_DIR
+from vibra import app
+from vibra.interface.ui_generated.model.setup.acoustic.get_sphere_selection_information_ui import GetSphereSelectionInformation_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-
-from molde import load_ui
 
 import numpy as np
 from pathlib import Path
@@ -14,12 +13,10 @@ from pathlib import Path
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class GetSphereSelectionInformation(QDialog):
+
+class GetSphereSelectionInformation(GetSphereSelectionInformation_UI):
     def __init__(self, selection_id, selection_radius, averaged, filter_type, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "model/setup/acoustic/get_sphere_selection_information.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -35,7 +32,6 @@ class GetSphereSelectionInformation(QDialog):
         self.filter_type = filter_type
 
         self._config_window()
-        self._define_qt_variables()
         self._config_widgets()
         self.get_selection_info()
         self.exec()
@@ -45,16 +41,6 @@ class GetSphereSelectionInformation(QDialog):
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(self.main_window.vibra_icon)
         self.setWindowTitle("Vibra")
-
-    def _define_qt_variables(self):
-
-        # QLineEdit
-        self.lineEdit_coordinate_x : QLineEdit
-        self.lineEdit_coordinate_y : QLineEdit
-        self.lineEdit_coordinate_z : QLineEdit
-        self.lineEdit_number_of_elements : QLineEdit
-        self.lineEdit_number_of_nodes : QLineEdit
-        self.lineEdit_selection_radius : QLineEdit
 
     def _config_widgets(self):
         self.lineEdit_number_of_elements.setDisabled(True)

@@ -1505,6 +1505,6 @@
  <tabstops>
   <tabstop>pushButton_generate_mesh</tabstop>
  </tabstops>
- <resources/>
+ <resources><include location="../../icons/resources.qrc" /></resources>
  <connections/>
 </ui>

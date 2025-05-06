@@ -2,13 +2,12 @@ from PySide6.QtWidgets import QDialog, QFileDialog, QLineEdit, QPushButton, QTab
 from PySide6.QtCore import Qt, QEvent, QObject, Signal
 from PySide6.QtGui import QCloseEvent
 
-from vibra import app, UI_DIR
 from vibra.engine import AnalysisID
+from vibra import app
+from vibra.interface.ui_generated.model.setup.acoustic.process_acoustic_transfer_element_data_ui import ProcessAcousticTransferElementData_UI
 from vibra.interface.mesh.mesher_inputs import MesherInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-
-from molde import load_ui
 
 import logging
 import numpy as np
@@ -20,12 +19,10 @@ from time import sleep
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class ProcessAcousticTransferElementData(QDialog):
+
+class ProcessAcousticTransferElementData(ProcessAcousticTransferElementData_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "model/setup/acoustic/process_acoustic_transfer_element_data.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         app().main_window.set_input_widget(self)
         app().main_window.action_model_workspace_callback()
@@ -37,7 +34,7 @@ class ProcessAcousticTransferElementData(QDialog):
 
         self._config_window()
         self._reset_variables()
-        self._define_qt_variables()
+        self._configure_qt_variables()
         self._create_connections()
 
         self._load_analysis_data()
@@ -56,26 +53,8 @@ class ProcessAcousticTransferElementData(QDialog):
         self.keep_window_open = True
         self.element_transfer_data = dict()
 
-    def _define_qt_variables(self):
-
-        # QLineEdit
-        self.lineEdit_fmin : QLineEdit
-        self.lineEdit_fmax : QLineEdit
-        self.lineEdit_fstep : QLineEdit
-        self.lineEdit_input_selected_id: QLineEdit
-        self.lineEdit_output_selected_id: QLineEdit
-        self.lineEdit_spreadsheet_path: QLineEdit
-        #
+    def _configure_qt_variables(self):
         self.current_lineEdit = self.lineEdit_output_selected_id
-
-        # QPushButton
-        self.pushButton_exit: QPushButton
-        self.pushButton_process_data: QPushButton
-        self.pushButton_invert_selection: QPushButton
-        self.pushButton_search: QPushButton
-
-        # QTabWidget
-        self.tabWidget_main: QTabWidget
         self.tabWidget_main.setTabVisible(1, False)
 
     def _create_connections(self):

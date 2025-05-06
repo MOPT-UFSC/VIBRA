@@ -6,25 +6,20 @@ from pathlib import Path
 import os
 import numpy as np
 
-from vibra import app, UI_DIR
+from vibra import app
+from vibra.interface.ui_generated.data_handler.import_data_to_compare_ui import ImportDataToCompare_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 
-from molde import load_ui
-
-
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class ImportDataToCompare(QDialog):
+class ImportDataToCompare(ImportDataToCompare_UI):
     def __init__(self, plotter: 'FrequencyResponsePlotter', *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "data_handler/import_data_to_compare.ui"
-        load_ui(ui_path, self, ui_path.parent)
         
         self.plotter = plotter
 
@@ -32,7 +27,6 @@ class ImportDataToCompare(QDialog):
 
         self._config_window()
         self._initialize()
-        self._define_qt_variables()
         self._create_connections()
         self._config_widgets()
         
@@ -41,6 +35,7 @@ class ImportDataToCompare(QDialog):
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Import data to compare")
+        self.lineEdit_import_results_path.setDisabled(True)
 
     def _initialize(self):
 
@@ -58,28 +53,6 @@ class ImportDataToCompare(QDialog):
                         [0.75,0.75,0.75],
                         [0.5, 0.5, 0.5],
                         [0.25, 0.25, 0.25] ]
-
-    def _define_qt_variables(self):
-
-        # CheckBox
-        self.checkBox_skiprows : QCheckBox
-
-        # LineEdit
-        self.lineEdit_import_results_path : QLineEdit
-        self.lineEdit_import_results_path.setDisabled(True)
-
-        # PushButton
-        self.pushButton_add_imported_data_to_plot : QPushButton
-        self.pushButton_exit : QPushButton
-        self.pushButton_reset_imported_data : QPushButton
-        self.pushButton_search_file_to_import : QPushButton
-
-        # SpinBox
-        self.spinBox_skiprows : QSpinBox
-
-        # TreeWidget
-        self.treeWidget_import_text_files : QTreeWidget
-        self.treeWidget_import_sheet_files : QTreeWidget
 
     def _create_connections(self):
         #

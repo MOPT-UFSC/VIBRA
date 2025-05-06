@@ -2,27 +2,23 @@ from PySide6.QtWidgets import QDialog, QPushButton
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 
-from vibra import app, UI_DIR
 from vibra.engine import AnalysisID
 
+from vibra import app
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
 from vibra.interface.analysis.harmonic_analysis_method_selector_input import StructuralHarmonicAnalysisMethodSelecorInput
-from molde import load_ui
+from vibra.interface.ui_generated.analysis.general.analysis_type_input_ui import AnalysisTypeInput_UI
 
 
-class AnalysisTypeInput(QDialog):
+class AnalysisTypeInput(AnalysisTypeInput_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "analysis/general/analysis_type_input.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
 
         self._config_window()
         self._initialize()
-        self._define_qt_variables()
         self._create_connections()
 
         while self.keep_window_open:
@@ -33,6 +29,7 @@ class AnalysisTypeInput(QDialog):
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
+        self.pushButton_harmonic_coupled.setDisabled(True)
 
     def _initialize(self):
         #
@@ -52,19 +49,7 @@ class AnalysisTypeInput(QDialog):
         self.modes = 0
         self.sigma_factor = 1e-4
         self.run_modal = False
-
         self.keep_window_open = True
-
-    def _define_qt_variables(self):
-
-        # QPushButton
-        self.pushButton_harmonic_structural : QPushButton
-        self.pushButton_harmonic_acoustic : QPushButton
-        self.pushButton_harmonic_coupled : QPushButton
-        self.pushButton_modal_structural : QPushButton
-        self.pushButton_modal_acoustic : QPushButton
-        # temporary
-        self.pushButton_harmonic_coupled.setDisabled(True)
 
     def _create_connections(self):
         self.pushButton_harmonic_structural.clicked.connect(self.harmonic_structural)

@@ -1916,7 +1916,7 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources><include location="../../../icons/resources.qrc" /></resources>
  <connections/>
  <buttongroups>
   <buttongroup name="buttonGroup_cursor"/>

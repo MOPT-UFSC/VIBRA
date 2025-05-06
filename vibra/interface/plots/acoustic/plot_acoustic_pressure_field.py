@@ -1,5 +1,4 @@
 import numpy as np
-from molde import load_ui
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QComboBox,
@@ -12,21 +11,19 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from vibra import UI_DIR, app
+from vibra import app
+from vibra.interface.ui_generated.plots.acoustic.plot_acoustic_pressure_field_ui import PlotAcousticPressureField_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
 
 
-class PlotAcousticPressureField(QWidget):
+class PlotAcousticPressureField(PlotAcousticPressureField_UI):
     value_changed = Signal()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "plots/acoustic/plot_acoustic_pressure_field.ui"
-        load_ui(ui_path, self, ui_path.parent)
-
         self._initialize()
-        self._define_qt_variables()
+        self._configure_qt_variables()
         self._create_connections()
         self.load_frequencies()
         self.load_user_preference_colormap()
@@ -43,27 +40,11 @@ class PlotAcousticPressureField(QWidget):
     def _initialize(self):
         self.current_frequency = None
 
-    def _define_qt_variables(self):
-        # QComboBox
-        self.comboBox_color_scale: QComboBox
-        self.comboBox_colormaps: QComboBox
-
-        # QFrame
-        self.frame_button: QFrame
+    def _configure_qt_variables(self):
         self.frame_button.setVisible(False)
 
-        # QLineEdit
-        self.lineEdit_selected_frequency: QLineEdit
         self.lineEdit_selected_frequency.setProperty("status", "information")
 
-        # QPushButton
-        self.pushButton_plot: QPushButton
-
-        # QSlider
-        self.slider_transparency: QSlider
-
-        # QTreeWidget
-        self.treeWidget_frequencies: QTreeWidget
         self._config_treeWidget()
 
     def _create_connections(self):
