@@ -8,7 +8,7 @@ from vibra.interface.ui_generated.analysis.general.harmonic_analysis_method_ui i
 
 class StructuralHarmonicAnalysisMethodSelecorInput(HarmonicAnalysisMethod_UI):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__()
 
         app().main_window.close_dialogs()
         app().main_window.set_input_widget(self)
