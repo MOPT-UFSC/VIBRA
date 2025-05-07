@@ -151,7 +151,9 @@ class SetPorousMaterialModelInputs(SetPorousMaterialModel_UI):
             self.doubleSpinBox_flow_resistivity_JCAL.setValue(pm_data["flow_resistivity"])
 
     def show_equations_for_DBM_callback(self):
-        self.auxiliar_dialog = ShowPorousMaterialModelEquations()
+        file_path = "model/auxiliar/equations_for_DBM_porous_material_models.ui"
+        self.auxiliar_dialog = ShowPorousMaterialModelEquations(file_path)
+        self.auxiliar_dialog.exec()
 
     def update_plot_buttons_access(self):
         state = self.selected_fluid is None
