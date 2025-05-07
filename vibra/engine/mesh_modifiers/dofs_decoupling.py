@@ -220,24 +220,60 @@ class DegreesOfFreedomDecoupling:
     def get_line_element_tag_and_nodes_number(self, input_line_id: int):
         """ Returns the 1D element tag and the number of 
             nodes per element.
+
+            Parameters
+            ----------
+            input_line_id: int
+                Represents the line ID.
+
+            Return
+            ------
+            tag: int
+                The 1D element type tag.
+
+            n_nodes: int
+                The number of nodes from 1D element.
         """        
         for _, line_id, tag, n_nodes, *_ in self.mesh.lines_connectivity:
             if line_id == input_line_id:
                 return tag, n_nodes
 
 
-    def get_surface_element_tag_and_nodes_number(self, surface_id: int):
+    def get_surface_element_tag_and_nodes_number(self, input_surface_id: int):
         """ Returns the 2D element tag and the number of 
             nodes per element.
+
+            Parameters
+            ----------
+            input_surface_id: int
+                Represents the surface ID.
+
+            Return
+            ------
+            tag: int
+                The 2D element type tag.
+
+            n_nodes: int
+                The number of nodes from 2D element.
         """
         for _, surf_id, tag, n_nodes, *_ in self.mesh.faces_connectivity:
-            if surf_id == surface_id:
+            if surf_id == input_surface_id:
                 return tag, n_nodes
 
 
     def update_nodes_from_array(self, values: np.ndarray):
         """ This method returns an array whose elements are modified
             based on the nodes mapping previously processed.
+
+            Parameters
+            ----------
+            values: np.ndarray
+                The input array containing the node IDs.
+
+            Return
+            ------
+            output_values: np.ndarray
+                The output array with mapped elements.
         """
         output_values = values.copy()
         nodes_to_map = self.nodes_mapping.keys()
@@ -252,6 +288,12 @@ class DegreesOfFreedomDecoupling:
     def modify_the_connectivities_from_lines(self, surface_id: int):
         """ Modifies the connectivities from 1D elements, the
             nodes from lines and connectivity from lines.
+
+            Parameters
+            ----------
+            surface_id: int
+                Represents the surface ID.
+
         """
 
         cols = self.mesh.lines_connectivity.shape[1]
@@ -289,6 +331,12 @@ class DegreesOfFreedomDecoupling:
     def modify_the_connectivities_from_surfaces(self, surface_id: int):
         """ Modifies the connectivities from 2D elements, the
             nodes from surfaces and connectivity from surfaces.
+
+            Parameters
+            ----------
+            surface_id: int
+                Represents the surface ID.
+
         """
 
         cols = self.mesh.faces_connectivity.shape[1]
@@ -356,14 +404,12 @@ class DegreesOfFreedomDecoupling:
 
         rows_3d = np.sum(np.isin(self.mesh.cache_solids_connectivity[:, 4:], node_ids), axis=1) >= 1
         for elem3d_id, vol_id, _, _, *connect_3d in self.mesh.cache_solids_connectivity[rows_3d, :]:
-        # for elem3d_id, vol_id, _, _, *connect_3d in self.mesh.cache_solids_connectivity:
             if vol_id in volume_ids:
                 self.mesh.solids_connectivity[elem3d_id, 4:] = self.update_nodes_from_array(connect_3d)
 
         valid_surface_ids, nodes_from_bound_lines = self.get_nodes_from_lines_that_bound_decoupling_surfaces()
         rows_2d = np.sum(np.isin(self.mesh.cache_faces_connectivity[:, 4:], node_ids), axis=1) >= 1
         for elem2d_id, surf_id, _, _, *connect_2d in self.mesh.cache_faces_connectivity[rows_2d, :]:
-        # for elem2d_id, surf_id, _, _, *connect_2d in self.mesh.cache_faces_connectivity:
             if surf_id not in valid_surface_ids:
                 continue
 
@@ -373,7 +419,6 @@ class DegreesOfFreedomDecoupling:
         lines_from_unmodified_surfaces = self.get_lines_from_unmodified_surfaces()
         rows_1d = np.sum(np.isin(self.mesh.cache_lines_connectivity[:, 4:], node_ids), axis=1) >= 1
         for elem1d_id, line_id, _, _, *connect_1d in self.mesh.cache_lines_connectivity[rows_1d, :]:
-        # for elem1d_id, line_id, _, _, *connect_1d in self.mesh.cache_lines_connectivity:
             if line_id in lines_from_unmodified_surfaces:
                 if np.isin(nodes_from_bound_lines, connect_1d).any():
                     self.mesh.lines_connectivity[elem1d_id, 4:] = self.update_nodes_from_array(connect_1d)
@@ -505,13 +550,11 @@ def maps_values_to_keys(input_data: dict):
 
         Parameters
         ----------
-
         input_data: dict,
             The input dictionary to be reversed.
 
         Returns
         -------
-
         output_data: dict,
             The reversed output dictionary.
 
