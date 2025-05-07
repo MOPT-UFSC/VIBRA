@@ -4,7 +4,7 @@ from vibra.interface.ui_generated.analysis.acoustic.harmonic_analysis_direct_met
 
 class AcousticHarmonicAnalysisDirectMethodInput(AnalysisSetupInput, HarmonicAnalysisDirectMethod_UI):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__()
 
     
 
