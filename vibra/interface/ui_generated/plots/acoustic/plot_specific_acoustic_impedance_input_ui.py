@@ -15,20 +15,29 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QGridLayout,
-    QLabel, QLineEdit, QPushButton, QSizePolicy,
-    QSpacerItem, QWidget)
+from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QFrame,
+    QGridLayout, QLabel, QLineEdit, QPushButton,
+    QSizePolicy, QSpacerItem, QWidget)
 
-class Ui_Form(object):
-    def setupUi(self, Form):
-        if not Form.objectName():
-            Form.setObjectName(u"Form")
-        Form.resize(351, 252)
-        self.gridLayout_4 = QGridLayout(Form)
+class Ui_Dialog(object):
+    def setupUi(self, Dialog):
+        if not Dialog.objectName():
+            Dialog.setObjectName(u"Dialog")
+        Dialog.setWindowModality(Qt.NonModal)
+        Dialog.resize(400, 240)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(Dialog.sizePolicy().hasHeightForWidth())
+        Dialog.setSizePolicy(sizePolicy)
+        Dialog.setMinimumSize(QSize(400, 240))
+        Dialog.setMaximumSize(QSize(400, 240))
+        Dialog.setContextMenuPolicy(Qt.DefaultContextMenu)
+        self.gridLayout_4 = QGridLayout(Dialog)
+        self.gridLayout_4.setSpacing(4)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
-        self.gridLayout_4.setVerticalSpacing(4)
         self.gridLayout_4.setContentsMargins(4, 4, 4, 4)
-        self.frame = QFrame(Form)
+        self.frame = QFrame(Dialog)
         self.frame.setObjectName(u"frame")
         self.frame.setMinimumSize(QSize(0, 48))
         self.frame.setMaximumSize(QSize(520, 48))
@@ -57,7 +66,7 @@ class Ui_Form(object):
 
         self.gridLayout_4.addWidget(self.frame, 0, 0, 1, 1)
 
-        self.frame_2 = QFrame(Form)
+        self.frame_2 = QFrame(Dialog)
         self.frame_2.setObjectName(u"frame_2")
         self.frame_2.setMinimumSize(QSize(0, 0))
         self.frame_2.setMaximumSize(QSize(520, 460))
@@ -99,7 +108,8 @@ class Ui_Form(object):
         font2 = QFont()
         font2.setPointSize(10)
         self.lineEdit_selection_id.setFont(font2)
-        self.lineEdit_selection_id.setStyleSheet(u"")
+        self.lineEdit_selection_id.setStyleSheet(u"color: rgb(0, 0, 255);\n"
+"background-color: rgb(255,255,255)")
         self.lineEdit_selection_id.setAlignment(Qt.AlignCenter)
 
         self.gridLayout.addWidget(self.lineEdit_selection_id, 0, 2, 1, 1)
@@ -150,7 +160,6 @@ class Ui_Form(object):
         self.pushButton_plot_data.setMaximumSize(QSize(120, 32))
         self.pushButton_plot_data.setFont(font2)
         self.pushButton_plot_data.setStyleSheet(u"")
-        self.pushButton_plot_data.setAutoDefault(False)
         self.pushButton_plot_data.setFlat(False)
 
         self.gridLayout_47.addWidget(self.pushButton_plot_data, 0, 1, 1, 1)
@@ -161,7 +170,6 @@ class Ui_Form(object):
         self.pushButton_exit.setMaximumSize(QSize(120, 32))
         self.pushButton_exit.setFont(font2)
         self.pushButton_exit.setStyleSheet(u"")
-        self.pushButton_exit.setAutoDefault(False)
         self.pushButton_exit.setFlat(False)
 
         self.gridLayout_47.addWidget(self.pushButton_exit, 0, 0, 1, 1)
@@ -222,37 +230,40 @@ class Ui_Form(object):
         self.gridLayout_4.addWidget(self.frame_2, 1, 0, 1, 1)
 
 
-        self.retranslateUi(Form)
+        self.retranslateUi(Dialog)
 
         self.comboBox_selector_filter.setCurrentIndex(0)
 
 
-        QMetaObject.connectSlotsByName(Form)
+        QMetaObject.connectSlotsByName(Dialog)
     # setupUi
 
-    def retranslateUi(self, Form):
-        Form.setWindowTitle(QCoreApplication.translate("Form", u"Plot specific acoustic impedance", None))
-        self.label.setText(QCoreApplication.translate("Form", u"Plot the specific acoustic impedance", None))
-        self.label_10.setText(QCoreApplication.translate("Form", u"Selected ID: ", None))
+    def retranslateUi(self, Dialog):
+        Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Plot frequency response", None))
+#if QT_CONFIG(whatsthis)
+        Dialog.setWhatsThis("")
+#endif // QT_CONFIG(whatsthis)
+        self.label.setText(QCoreApplication.translate("Dialog", u"Plot the specific acoustic impedance", None))
+        self.label_10.setText(QCoreApplication.translate("Dialog", u"Selected ID: ", None))
         self.lineEdit_selection_id.setText("")
 #if QT_CONFIG(tooltip)
-        self.pushButton_export_data.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-size:10pt; font-weight:400;\">Press to export the current response function</span></p></body></html>", None))
+        self.pushButton_export_data.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p><span style=\" font-size:10pt; font-weight:400;\">Press to export the current response function</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_export_data.setText("")
-        self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"  Plot data", None))
-        self.pushButton_exit.setText(QCoreApplication.translate("Form", u"Exit", None))
-        self.label_2.setText(QCoreApplication.translate("Form", u"Selector filter: ", None))
-        self.comboBox_selector_filter.setItemText(0, QCoreApplication.translate("Form", u"   Surfaces", None))
-        self.comboBox_selector_filter.setItemText(1, QCoreApplication.translate("Form", u"   Nodes", None))
+        self.pushButton_plot_data.setText(QCoreApplication.translate("Dialog", u"  Plot data", None))
+        self.pushButton_exit.setText(QCoreApplication.translate("Dialog", u"Exit", None))
+        self.label_2.setText(QCoreApplication.translate("Dialog", u"Selector filter: ", None))
+        self.comboBox_selector_filter.setItemText(0, QCoreApplication.translate("Dialog", u"   Surfaces", None))
+        self.comboBox_selector_filter.setItemText(1, QCoreApplication.translate("Dialog", u"   Nodes", None))
 
     # retranslateUi
 
 
 
-class PlotSpecificAcousticImpedanceInput_UI(QWidget, Ui_Form):
+class PlotSpecificAcousticImpedanceInput_UI(QDialog, Ui_Dialog):
     """
     Component Hierarchy:
-    - Form: QWidget
+    - Dialog: QDialog
         - (Layout): QGridLayout
                 - frame: QFrame
                     - (Layout): QGridLayout

@@ -23,12 +23,9 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(400, 308)
+        Form.resize(400, 300)
         self.gridLayout_2 = QGridLayout(Form)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.gridLayout_2.setHorizontalSpacing(6)
-        self.gridLayout_2.setVerticalSpacing(4)
-        self.gridLayout_2.setContentsMargins(4, 4, 4, 4)
         self.frame = QFrame(Form)
         self.frame.setObjectName(u"frame")
         self.frame.setFrameShape(QFrame.Box)
@@ -199,7 +196,8 @@ class Ui_Form(object):
         font5.setBold(False)
         font5.setItalic(False)
         self.lineEdit_input_surface_id.setFont(font5)
-        self.lineEdit_input_surface_id.setStyleSheet(u"")
+        self.lineEdit_input_surface_id.setStyleSheet(u"color: rgb(0, 0, 255);\n"
+"background-color: rgb(255,255,255)")
         self.lineEdit_input_surface_id.setAlignment(Qt.AlignCenter)
 
         self.gridLayout_15.addWidget(self.lineEdit_input_surface_id, 0, 2, 1, 1)
@@ -239,7 +237,8 @@ class Ui_Form(object):
         self.lineEdit_output_surface_id.setMinimumSize(QSize(120, 30))
         self.lineEdit_output_surface_id.setMaximumSize(QSize(120, 30))
         self.lineEdit_output_surface_id.setFont(font5)
-        self.lineEdit_output_surface_id.setStyleSheet(u"")
+        self.lineEdit_output_surface_id.setStyleSheet(u"color: rgb(0, 0, 255);\n"
+"background-color: rgb(255,255,255)")
         self.lineEdit_output_surface_id.setAlignment(Qt.AlignCenter)
 
         self.gridLayout.addWidget(self.lineEdit_output_surface_id, 0, 2, 1, 1)

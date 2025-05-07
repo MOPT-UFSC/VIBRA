@@ -559,7 +559,6 @@ class Ui_Dialog(object):
         self.pushButton_generate_mesh.setMinimumSize(QSize(140, 30))
         self.pushButton_generate_mesh.setMaximumSize(QSize(140, 30))
         self.pushButton_generate_mesh.setFont(font1)
-        self.pushButton_generate_mesh.setAutoDefault(False)
 
         self.gridLayout_4.addWidget(self.pushButton_generate_mesh, 0, 1, 1, 1)
 
@@ -568,7 +567,6 @@ class Ui_Dialog(object):
         self.pushButton_exit.setMinimumSize(QSize(140, 30))
         self.pushButton_exit.setMaximumSize(QSize(140, 30))
         self.pushButton_exit.setFont(font1)
-        self.pushButton_exit.setAutoDefault(False)
 
         self.gridLayout_4.addWidget(self.pushButton_exit, 0, 0, 1, 1)
 
@@ -581,8 +579,8 @@ class Ui_Dialog(object):
         self.tabWidget_main.setCurrentIndex(0)
         self.tabWidget_global_settings.setCurrentIndex(0)
         self.comboBox_3d_algorithm.setCurrentIndex(0)
-        self.pushButton_generate_mesh.setDefault(False)
-        self.pushButton_exit.setDefault(False)
+        self.pushButton_generate_mesh.setDefault(True)
+        self.pushButton_exit.setDefault(True)
 
 
         QMetaObject.connectSlotsByName(Dialog)

@@ -24,7 +24,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(469, 664)
+        Form.resize(629, 664)
         Form.setMaximumSize(QSize(16777215, 16777215))
         self.gridLayout_2 = QGridLayout(Form)
         self.gridLayout_2.setSpacing(4)

@@ -173,7 +173,8 @@ class Ui_Form(object):
         self.lineEdit_selection_id.setMinimumSize(QSize(140, 30))
         self.lineEdit_selection_id.setMaximumSize(QSize(140, 30))
         self.lineEdit_selection_id.setFont(font1)
-        self.lineEdit_selection_id.setStyleSheet(u"")
+        self.lineEdit_selection_id.setStyleSheet(u"color: rgb(0, 0, 255);\n"
+"background-color: rgb(255,255,255)")
         self.lineEdit_selection_id.setAlignment(Qt.AlignCenter)
 
         self.gridLayout.addWidget(self.lineEdit_selection_id, 0, 2, 1, 1)

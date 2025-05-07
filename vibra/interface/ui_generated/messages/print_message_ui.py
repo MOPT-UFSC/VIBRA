@@ -51,7 +51,10 @@ class Ui_Dialog(object):
         font.setBold(False)
         font.setItalic(False)
         self.pushButton_close.setFont(font)
-        self.pushButton_close.setStyleSheet(u"")
+        self.pushButton_close.setStyleSheet(u"QPushButton{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(240, 240, 240)}\n"
+"QPushButton:hover{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgba(174, 213, 255, 100)}\n"
+"QPushButton:pressed{border-radius: 6px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; color: rgb(0, 0, 0); background-color: rgb(174, 213, 255)}\n"
+"QPushButton:disabled{border-radius: 6px; border-color: rgb(150, 150, 150); border-style: ridge; border-width: 0px; color: rgb(150,150, 150); background-color: rgb(220, 220, 220)}")
         self.pushButton_close.setFlat(False)
 
         self.gridLayout_2.addWidget(self.pushButton_close, 0, 0, 1, 1)
