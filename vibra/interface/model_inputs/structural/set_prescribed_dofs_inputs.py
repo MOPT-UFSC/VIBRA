@@ -3,11 +3,12 @@ from PySide6.QtWidgets import QComboBox, QDialog, QFileDialog, QLabel, QLineEdit
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
-from vibra import app
-from vibra.interface.ui_generated.model.setup.structural.prescribed_dofs_input_ui import PrescribedDofsInput_UI
+from vibra import app, UI_DIR
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+
+from molde import load_ui
 
 import numpy as np
 from os.path import basename
@@ -18,9 +19,12 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class SetPrescribedDofsInputs(PrescribedDofsInput_UI):
+class SetPrescribedDofsInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        ui_path = UI_DIR / "model/setup/structural/prescribed_dofs_input.ui"
+        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.project = app().project
@@ -32,7 +36,7 @@ class SetPrescribedDofsInputs(PrescribedDofsInput_UI):
 
         self._config_window()
         self._initialize()
-        self._create_list_lineEdits()
+        self._define_qt_variables()
         self._create_connections()
 
         self._config_widgets()
@@ -81,6 +85,83 @@ class SetPrescribedDofsInputs(PrescribedDofsInput_UI):
         self.rx_table_name = None
         self.ry_table_name = None
         self.rz_table_name = None
+
+    def _define_qt_variables(self):
+
+        # QComboBox
+        self.comboBox_angular_data_type: QComboBox
+        self.comboBox_attribution_type: QComboBox
+        self.comboBox_element_type: QComboBox
+        self.comboBox_linear_data_type: QComboBox
+
+        # QLabel
+        self.label_Ux_constant: QLabel
+        self.label_Uy_constant: QLabel
+        self.label_Uz_constant: QLabel
+        self.label_Rx_constant: QLabel
+        self.label_Ry_constant: QLabel
+        self.label_Rz_constant: QLabel
+        #
+        self.label_Ux_unit: QLabel
+        self.label_Uy_unit: QLabel
+        self.label_Uz_unit: QLabel
+        self.label_Rx_unit: QLabel
+        self.label_Ry_unit: QLabel
+        self.label_Rz_unit: QLabel
+        #
+        self.label_linear: QLabel
+        self.label_angular: QLabel
+        self.label_Ux_table: QLabel
+        self.label_Uy_table: QLabel
+        self.label_Uz_table: QLabel
+        self.label_Rx_table: QLabel
+        self.label_Ry_table: QLabel
+        self.label_Rz_table: QLabel
+
+        # QLineEdit
+        self.lineEdit_selection_id: QLineEdit
+        self.lineEdit_real_ux: QLineEdit
+        self.lineEdit_real_uy: QLineEdit
+        self.lineEdit_real_uz: QLineEdit
+        self.lineEdit_real_rx: QLineEdit
+        self.lineEdit_real_ry: QLineEdit
+        self.lineEdit_real_rz: QLineEdit
+        self.lineEdit_real_alldofs: QLineEdit
+        #
+        self.lineEdit_imag_ux: QLineEdit
+        self.lineEdit_imag_uy: QLineEdit
+        self.lineEdit_imag_uz: QLineEdit
+        self.lineEdit_imag_rx: QLineEdit
+        self.lineEdit_imag_ry: QLineEdit
+        self.lineEdit_imag_rz: QLineEdit
+        #
+        self.lineEdit_imag_alldofs: QLineEdit
+        self.lineEdit_path_table_ux: QLineEdit
+        self.lineEdit_path_table_uy: QLineEdit
+        self.lineEdit_path_table_uz: QLineEdit
+        self.lineEdit_path_table_rx: QLineEdit
+        self.lineEdit_path_table_ry: QLineEdit
+        self.lineEdit_path_table_rz: QLineEdit
+        #
+        self._create_list_lineEdits()
+
+        # QPushButton
+        self.pushButton_attribute: QPushButton
+        self.pushButton_exit: QPushButton
+        self.pushButton_load_ux_table: QPushButton
+        self.pushButton_load_uy_table: QPushButton
+        self.pushButton_load_uz_table: QPushButton
+        self.pushButton_load_rx_table: QPushButton
+        self.pushButton_load_ry_table: QPushButton
+        self.pushButton_load_rz_table: QPushButton
+        self.pushButton_remove: QPushButton
+        self.pushButton_reset: QPushButton
+
+        # QTabWidget
+        self.tabWidget_main: QTabWidget
+
+        # QTreeWidget
+        self.treeWidget_prescribed_dofs: QTreeWidget
 
     def _create_list_lineEdits(self):
 

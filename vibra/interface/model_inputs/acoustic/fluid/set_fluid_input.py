@@ -2,12 +2,12 @@ from PySide6.QtWidgets import QAbstractItemView, QDialog, QComboBox, QGridLayout
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
 
-from vibra import app
-from vibra.interface.ui_generated.model.setup.fluid.set_fluid_input_ui import SetFluidInput_UI
+from vibra import app, UI_DIR
 from vibra.engine.properties.fluid import Fluid
 from vibra.interface.model_inputs.acoustic.fluid.fluid_widget import FluidWidget
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from molde import load_ui
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -19,10 +19,12 @@ def getColorRGB(color):
     tokens = color.split(',')
     return list(map(int, tokens))
 
-
-class SetFluidInput(SetFluidInput_UI):
+class SetFluidInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__()
+
+        ui_path = UI_DIR / "model/setup/fluid/set_fluid_input.ui"
+        load_ui(ui_path, self, ui_path.parent)
 
         self.cache_selected_lines = kwargs.get("cache_selected_lines", list())
         self.state_properties = kwargs.get("state_properties", dict())
@@ -37,7 +39,7 @@ class SetFluidInput(SetFluidInput_UI):
 
         self._config_window()
         self._initialize()
-        self._configure_qt_variables()
+        self._define_qt_variables()
         self._create_connections()
         self._config_widgets()
 
@@ -62,18 +64,36 @@ class SetFluidInput(SetFluidInput_UI):
         self.fluid = None
         self.selected_column = None
 
-    def _configure_qt_variables(self):
+    def _define_qt_variables(self):
+
+        # QComboBox
+        self.comboBox_attribution_type : QComboBox
+
+        # QGridLayout
         self.grid_layout = QGridLayout()
         self.grid_layout.setContentsMargins(0,0,0,0)
 
+        # QLineEdit
+        self.lineEdit_selection_id : QLineEdit
+        self.lineEdit_selected_fluid_name : QLineEdit
+
+        # QScrollArea
+        self.scrollArea_table_of_fluids : QScrollArea
         self.scrollArea_table_of_fluids.setLayout(self.grid_layout)
         self._add_fluid_widget()
 
+        # QPushButton
         self.pushButton_attribute = self.fluid_widget.pushButton_attribute
         self.pushButton_exit = self.fluid_widget.pushButton_exit
+        self.pushButton_remove : QPushButton
+        self.pushButton_reset : QPushButton
 
+        # QTableWidget
         self.tableWidget_fluid_data = self.fluid_widget.tableWidget_fluid_data
         self.tableWidget_model_fluids : QTableWidget
+
+        # QTabWidget
+        self.tabWidget_main : QTabWidget
 
     def _add_fluid_widget(self):
         self.fluid_widget = FluidWidget(dialog=self, state_properties=self.state_properties)

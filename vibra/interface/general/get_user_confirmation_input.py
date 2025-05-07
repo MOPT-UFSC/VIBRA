@@ -2,15 +2,18 @@ from PySide6.QtWidgets import QDialog, QLabel, QPushButton
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtCore import Qt, QRect
 
-from vibra import app, __version__
-from vibra.interface.ui_generated.messages.get_user_confirmation_ui import GetUserConfirmation_UI
+from vibra import app, UI_DIR, __version__
 from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.formatters.icons import *
+from molde import load_ui
 
 
-class GetUserConfirmationInput(GetUserConfirmation_UI):
+class GetUserConfirmationInput(QDialog):
     def __init__(self, title, message, buttons_config={}, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        ui_path = UI_DIR / "messages/get_user_confirmation.ui"
+        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -27,6 +30,7 @@ class GetUserConfirmationInput(GetUserConfirmation_UI):
 
         self._config_window()
         self._reset_variables()
+        self._define_qt_variables()
         self._create_connections()
 
         self._configure_labels()
@@ -43,6 +47,14 @@ class GetUserConfirmationInput(GetUserConfirmation_UI):
         self._stop = True
         self._continue = False
         self._cancel = True
+
+    def _define_qt_variables(self):
+        # QLabel
+        self.label_message : QLabel
+        self.label_title : QLabel
+        # QPushButton
+        self.pushButton_rightButton : QPushButton
+        self.pushButton_leftButton : QPushButton
 
     def _create_connections(self):
         self.pushButton_rightButton.clicked.connect(self.confirm_action)

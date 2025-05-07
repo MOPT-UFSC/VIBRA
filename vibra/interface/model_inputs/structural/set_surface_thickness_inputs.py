@@ -4,20 +4,23 @@ from PySide6.QtWidgets import QComboBox, QDialog, QLineEdit, QPushButton, QTabWi
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
-from vibra import app
-from vibra.interface.ui_generated.model.setup.structural.surface_thickness_input_ui import SurfaceThicknessInput_UI
+from vibra import app, UI_DIR
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
+from molde import load_ui
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class SetSurfaceThicknessInput(SurfaceThicknessInput_UI):
+class SetSurfaceThicknessInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        ui_path = UI_DIR / "model/setup/structural/surface_thickness_input.ui"
+        load_ui(ui_path, self, ui_path.parent)
 
         app().main_window.set_input_widget(self)
         app().main_window.action_model_workspace_callback()
@@ -49,6 +52,28 @@ class SetSurfaceThicknessInput(SurfaceThicknessInput_UI):
     def _initialize(self):
         self.imported_values = None
         self.keep_window_open = True
+
+    def _define_qt_variables(self):
+
+        # QComboBox
+        self.comboBox_thickness_offset : QComboBox
+        self.comboBox_attribution_type: QComboBox
+
+        # QLineEdit
+        self.lineEdit_selection_id : QLineEdit
+        self.lineEdit_surface_thickness : QLineEdit
+
+        # QPushButton
+        self.pushButton_attribute : QPushButton
+        self.pushButton_exit : QPushButton
+        self.pushButton_remove : QPushButton
+        self.pushButton_reset : QPushButton
+
+        # QTabWidget
+        self.tabWidget_main : QTabWidget
+
+        # QTreeWidget
+        self.treeWidget_surface_thickness : QTreeWidget
 
     def _create_connections(self):
         #

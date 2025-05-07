@@ -5,24 +5,28 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
+from vibra import app, UI_DIR
 from vibra.engine import AnalysisID
-from vibra import app
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.analysis.structural.modal_analysis_input_ui import ModalAnalysisInput_UI
+from molde import load_ui
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class StructuralModalAnalysisInput(ModalAnalysisInput_UI):
+class StructuralModalAnalysisInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        ui_path = UI_DIR / "analysis/structural/modal_analysis_input.ui"
+        load_ui(ui_path, self, ui_path.parent)
 
         app().main_window.close_dialogs()
         app().main_window.set_input_widget(self)
 
         self._initialize()
         self._config_window()
+        self._define_qt_variables()
         self._create_connections()
         self._load_analysis_setup()
         self.exec()
@@ -37,6 +41,16 @@ class StructuralModalAnalysisInput(ModalAnalysisInput_UI):
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
+
+    def _define_qt_variables(self):
+
+        # QLineEdit
+        self.lineEdit_number_modes: QLineEdit
+        self.lineEdit_sigma_factor: QLineEdit
+
+        # QPushButton
+        self.pushButton_run_analysis: QPushButton
+        self.pushButton_enter_setup: QPushButton
 
     def _create_connections(self):
         self.pushButton_run_analysis.clicked.connect(self.run_analysis)

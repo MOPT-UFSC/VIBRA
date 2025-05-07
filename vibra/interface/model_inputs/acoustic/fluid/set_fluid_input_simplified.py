@@ -2,10 +2,11 @@ from PySide6.QtWidgets import QDialog, QComboBox, QFrame, QGridLayout, QLineEdit
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
 
-from vibra import app
-from vibra.interface.ui_generated.model.setup.fluid.set_fluid_input_simplified_ui import SetFluidInputSimplified_UI
+from vibra import app, UI_DIR
 from vibra.interface.model_inputs.acoustic.fluid.fluid_widget import FluidWidget
 from vibra.interface.general.print_message_input import PrintMessageInput
+
+from molde import load_ui
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -17,10 +18,12 @@ def getColorRGB(color):
     tokens = color.split(',')
     return list(map(int, tokens))
 
-
-class SetFluidInputSimplified(SetFluidInputSimplified_UI):
+class SetFluidInputSimplified(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__()
+
+        ui_path = UI_DIR / "model/setup/fluid/set_fluid_input_simplified.ui"
+        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -32,7 +35,7 @@ class SetFluidInputSimplified(SetFluidInputSimplified_UI):
 
         self._config_window()
         self._initialize()
-        self._configure_qt_variables()
+        self._define_qt_variables()
         self._create_connections()
 
     def _config_window(self):
@@ -47,16 +50,32 @@ class SetFluidInputSimplified(SetFluidInputSimplified_UI):
         self.complete = False
         self.keep_window_open = True
 
-    def _configure_qt_variables(self):
+    def _define_qt_variables(self):
+
+        # QComboBox
+        self.comboBox_attribution_type : QComboBox
+
+        # QFrame
+        # self.frame_main_widget : QFrame
+
+        # QGridLayout
         self.grid_layout = QGridLayout()
         self.grid_layout.setContentsMargins(0,0,0,0)
 
+        # QLineEdit
+        self.lineEdit_fluid_identifier : QLineEdit
+        self.lineEdit_selected_fluid_name : QLineEdit
+
+        # QScrollArea
+        self.scrollArea_table_of_fluids : QScrollArea
         self.scrollArea_table_of_fluids.setLayout(self.grid_layout)
         self._add_fluid_widget()
         # self.frame_main_widget.adjustSize()
 
+        # QPushButton
         self.pushButton_attribute = self.fluid_widget.pushButton_attribute
   
+        # QTableWidget
         self.tableWidget_fluid_data = self.fluid_widget.tableWidget_fluid_data
 
     def _create_connections(self):

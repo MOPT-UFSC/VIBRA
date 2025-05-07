@@ -4,18 +4,22 @@ from PySide6.QtWidgets import QComboBox, QDialog, QLineEdit, QPushButton, QTabWi
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
-from vibra import app
-from vibra.interface.ui_generated.model.setup.acoustic.set_anechoic_termination_input_ui import SetAnechoicTerminationInput_UI
+from vibra import app, UI_DIR
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+
+from molde import load_ui
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class SetAnechoicTerminationInputs(SetAnechoicTerminationInput_UI):
+class SetAnechoicTerminationInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        ui_path = UI_DIR / "model/setup/acoustic/set_anechoic_termination_input.ui"
+        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.project = app().project
@@ -28,7 +32,7 @@ class SetAnechoicTerminationInputs(SetAnechoicTerminationInput_UI):
 
         self._reset()
         self._config_window()
-        self._configure_qt_variables()
+        self._define_qt_variables()
         self._create_connections()
 
         self.load_info()
@@ -47,11 +51,27 @@ class SetAnechoicTerminationInputs(SetAnechoicTerminationInput_UI):
         self.keep_window_open = True
         self.anechoic_termination = None
 
-    def _configure_qt_variables(self):
+    def _define_qt_variables(self):
+
+        # QComboBox
+        self.comboBox_volume_id : QComboBox
         self.comboBox_volume_id.setDisabled(True)
 
+        # QLineEdit
+        self.lineEdit_selection_id : QLineEdit
         self.lineEdit_selection_id.setDisabled(True)
 
+        # QPushButton
+        self.pushButton_attribute : QPushButton
+        self.pushButton_exit : QPushButton
+        self.pushButton_remove : QPushButton
+        self.pushButton_reset : QPushButton
+
+        # QTabWidget
+        self.tabWidget_main : QTabWidget
+
+        # QTreeWidget
+        self.treeWidget_anechoic_termination : QTreeWidget
         self.treeWidget_anechoic_termination.setColumnWidth(1, 20)
         self.treeWidget_anechoic_termination.setColumnWidth(2, 80)
 

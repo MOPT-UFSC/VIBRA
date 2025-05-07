@@ -2,8 +2,7 @@ from PySide6.QtWidgets import QDialog, QComboBox, QLabel, QLineEdit, QPushButton
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
 
-from vibra import app
-from vibra.interface.ui_generated.model.setup.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
+from vibra import app, UI_DIR
 from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input import SetFluidInput
 from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input_simplified import SetFluidInputSimplified
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -12,7 +11,10 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.engine.properties.fluid import Fluid
 from vibra.model.machines.reciprocating_compressor_model import ReciprocatingCompressorModel
 
+from molde import load_ui   
+
 import numpy as np
+
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -21,10 +23,12 @@ psi_to_Pa = (0.45359237 * 9.80665) / ((0.0254)**2)
 kgf_cm2_to_Pa = 9.80665e4
 bar_to_Pa = 1e5
 
-
-class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
+class ReciprocatingCompressorInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        ui_path = UI_DIR / "model/setup/acoustic/reciprocating_compressor_inputs.ui"
+        load_ui(ui_path, self, ui_path.parent)
 
         app().main_window.set_input_widget(self)
         app().main_window.action_model_workspace_callback()
@@ -34,6 +38,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         self._config_window()
         self._initialize()
+        self._define_qt_variables()
         self._create_connections()
         self._config_widget()
 
@@ -56,6 +61,86 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         self.aquisition_parameters_processed = False
         self.not_update_event = False  
+
+    def _define_qt_variables(self):
+
+        # QComboBox
+        self.comboBox_connection_type: QComboBox
+        self.comboBox_cylinder_acting: QComboBox
+        self.comboBox_fluid_data_source: QComboBox
+        self.comboBox_frequency_resolution: QComboBox
+        self.comboBox_stage: QComboBox
+        self.comboBox_pressure_units: QComboBox
+        self.comboBox_temperature_units: QComboBox
+
+        # QLabel
+        self.label_molar_mass: QLabel
+        self.label_molar_mass_unit: QLabel
+        self.label_isentropic_exp: QLabel
+        self.label_isentropic_exp_unit: QLabel
+        self.label_suction_pressure_unit: QLabel
+        self.label_discharge_pressure_unit: QLabel
+        self.label_suction_temperature_unit: QLabel
+        self.label_discharge_temperature_unit: QLabel
+        
+        # QLineEdit
+        self.lineEdit_selected_surface_id: QLineEdit
+        self.lineEdit_frequency_resolution: QLineEdit
+        self.lineEdit_number_of_revolutions: QLineEdit
+        self.lineEdit_bore_diameter: QLineEdit
+        self.lineEdit_stroke: QLineEdit
+        self.lineEdit_connecting_rod_length: QLineEdit
+        self.lineEdit_rod_diameter: QLineEdit
+        self.lineEdit_pressure_ratio: QLineEdit
+        self.lineEdit_clearance_head_end: QLineEdit
+        self.lineEdit_clearance_crank_end: QLineEdit
+        self.lineEdit_rotational_speed: QLineEdit
+        self.lineEdit_isentropic_exponent: QLineEdit
+        self.lineEdit_molar_mass: QLineEdit
+        self.lineEdit_pressure_at_suction: QLineEdit
+        self.lineEdit_pressure_at_discharge: QLineEdit
+        self.lineEdit_temperature_at_suction: QLineEdit
+        self.lineEdit_temperature_at_discharge: QLineEdit
+        self.lineEdit_connection_type: QLineEdit
+        self.lineEdit_selected_fluid: QLineEdit
+
+        # QPushButton
+        self.pushButton_plot_PV_diagram_head_end: QPushButton
+        self.pushButton_plot_PV_diagram_crank_end: QPushButton
+        self.pushButton_plot_PV_diagram_both_ends: QPushButton
+        self.pushButton_plot_piston_position_and_velocity_time: QPushButton
+        self.pushButton_plot_volumetric_flow_rate_at_suction_time: QPushButton
+        self.pushButton_plot_volumetric_flow_rate_at_discharge_time: QPushButton
+        self.pushButton_plot_rod_pressure_load_frequency: QPushButton
+        self.pushButton_plot_rod_pressure_load_time: QPushButton
+        self.pushButton_plot_volumetric_flow_rate_at_suction_frequency: QPushButton
+        self.pushButton_plot_volumetric_flow_rate_at_discharge_frequency: QPushButton
+        self.pushButton_plot_pressure_head_end_angle: QPushButton
+        self.pushButton_plot_volume_head_end_angle: QPushButton
+        self.pushButton_plot_pressure_crank_end_angle: QPushButton
+        self.pushButton_plot_volume_crank_end_angle: QPushButton
+        self.pushButton_process_aquisition_parameters: QPushButton
+        #
+        self.pushButton_exit: QPushButton
+        self.pushButton_confirm: QPushButton
+        self.pushButton_get_fluid: QPushButton
+        self.pushButton_remove: QPushButton
+        self.pushButton_reset: QPushButton
+        self.pushButton_reset_entries: QPushButton
+
+        # QSpinBox
+        self.spinBox_number_of_points: QSpinBox
+        self.spinBox_max_frequency: QSpinBox
+        self.spinBox_number_of_cylinders: QSpinBox
+        self.spinBox_tdc1_crank_angle: QSpinBox
+        self.spinBox_tdc2_crank_angle: QSpinBox
+        self.spinBox_capacity: QSpinBox
+
+        # QTabWidget
+        self.tabWidget_compressor: QTabWidget
+
+        # QTreeWidget
+        self.treeWidget_compressor_excitation: QTreeWidget
 
     def _config_widget(self):
         self.treeWidget_compressor_excitation.setColumnWidth(0, 100)

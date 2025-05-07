@@ -2,8 +2,7 @@ from PySide6.QtWidgets import QDialog, QPushButton, QTableWidget, QTableWidgetIt
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt, Signal
 
-from vibra import app, TEMP_PROJECT_FILE
-from vibra.interface.ui_generated.model.setup.material.material_widget_ui import MaterialWidget_UI
+from vibra import app, UI_DIR, TEMP_PROJECT_FILE
 from vibra.interface.formatters.icons import *
 
 from vibra.interface.general.pick_color_input import PickColorInput
@@ -12,6 +11,7 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 
 from vibra.libraries.default_libraries import default_material_library
 from vibra.engine.properties.material import Material
+from molde import load_ui
 
 # import configparser
 from itertools import count
@@ -29,10 +29,12 @@ def getColorRGB(color):
     tokens = color.split(',')
     return list(map(int, tokens))
 
-
-class MaterialWidget(MaterialWidget_UI):
+class MaterialWidget(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__()
+
+        ui_path = UI_DIR / "model/setup/material/material_widget.ui"
+        load_ui(ui_path, self, ui_path.parent)
 
         app().main_window.action_model_workspace_callback()
 
@@ -43,6 +45,7 @@ class MaterialWidget(MaterialWidget_UI):
         self.dialog = kwargs.get("dialog", None)
 
         self._initialize()
+        self._define_qt_variables()
         self._create_connections()
         self._config_widgets()
         self.load_data_from_materials_library()
@@ -72,6 +75,18 @@ class MaterialWidget(MaterialWidget_UI):
                                     "thermal_expansion_coefficient",
                                     "color"
                                     ]
+
+    def _define_qt_variables(self):
+
+        # QPushButton
+        self.pushButton_attribute : QPushButton
+        self.pushButton_exit : QPushButton
+        self.pushButton_add_column : QPushButton
+        self.pushButton_remove_column : QPushButton
+        self.pushButton_reset_library : QPushButton
+
+        # QTableWidget
+        self.tableWidget_material_data : QTableWidget
 
     def _create_connections(self):
         #

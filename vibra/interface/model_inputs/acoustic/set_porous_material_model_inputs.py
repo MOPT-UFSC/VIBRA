@@ -3,8 +3,7 @@ from PySide6.QtWidgets import QComboBox, QDialog, QDoubleSpinBox, QLineEdit, QPu
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
-from vibra import app
-from vibra.interface.ui_generated.model.setup.acoustic.set_porous_material_model_ui import SetPorousMaterialModel_UI
+from vibra import app, UI_DIR
 from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input_simplified import SetFluidInputSimplified
 from vibra.interface.model_inputs.acoustic.show_porous_material_model_equations import ShowPorousMaterialModelEquations
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -14,16 +13,21 @@ from vibra.interface.plots.general.frequency_response_plotter import FrequencyRe
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
 
+from molde import load_ui
+
 import warnings
 import numpy as np
+
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-
-class SetPorousMaterialModelInputs(SetPorousMaterialModel_UI):
+class SetPorousMaterialModelInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        ui_path = UI_DIR / "model/setup/acoustic/set_porous_material_model.ui"
+        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -36,6 +40,7 @@ class SetPorousMaterialModelInputs(SetPorousMaterialModel_UI):
 
         self._initialize()
         self._config_window()
+        self._define_qt_variables()
         self._create_connections()
 
         self.load_info()
@@ -56,6 +61,70 @@ class SetPorousMaterialModelInputs(SetPorousMaterialModel_UI):
         self.update_tabs = True
         self.keep_window_open = True
         self.material_model_data = dict()
+
+    def _define_qt_variables(self):
+
+        # QComboBox
+        self.comboBox_attribution_type: QComboBox
+        self.comboBox_plot_type: QComboBox
+
+        # QDoubleSpinBox
+
+        self.doubleSpinBox_C1_DB: QDoubleSpinBox
+        self.doubleSpinBox_C2_DB: QDoubleSpinBox
+        self.doubleSpinBox_C3_DB: QDoubleSpinBox
+        self.doubleSpinBox_C4_DB: QDoubleSpinBox
+        self.doubleSpinBox_C5_DB: QDoubleSpinBox
+        self.doubleSpinBox_C6_DB: QDoubleSpinBox
+        self.doubleSpinBox_C7_DB: QDoubleSpinBox
+        self.doubleSpinBox_C8_DB: QDoubleSpinBox
+        self.doubleSpinBox_flow_resistivity_DB: QDoubleSpinBox
+
+        self.doubleSpinBox_C1_DBM: QDoubleSpinBox
+        self.doubleSpinBox_C2_DBM: QDoubleSpinBox
+        self.doubleSpinBox_C3_DBM: QDoubleSpinBox
+        self.doubleSpinBox_C4_DBM: QDoubleSpinBox
+        self.doubleSpinBox_C5_DBM: QDoubleSpinBox
+        self.doubleSpinBox_C6_DBM: QDoubleSpinBox
+        self.doubleSpinBox_C7_DBM: QDoubleSpinBox
+        self.doubleSpinBox_C8_DBM: QDoubleSpinBox
+        self.doubleSpinBox_flow_resistivity_DBM: QDoubleSpinBox
+
+        self.doubleSpinBox_porosity_JCA: QDoubleSpinBox
+        self.doubleSpinBox_tortuosity_JCA: QDoubleSpinBox
+        self.doubleSpinBox_flow_resistivity_JCA: QDoubleSpinBox
+
+        self.doubleSpinBox_porosity_JCAL: QDoubleSpinBox
+        self.doubleSpinBox_tortuosity_JCAL: QDoubleSpinBox
+        self.doubleSpinBox_flow_resistivity_JCAL: QDoubleSpinBox
+
+        self.doubleSpinBox_porous_material_depth: QDoubleSpinBox
+
+        # QLineEdit
+        self.lineEdit_selection_id: QLineEdit
+        self.lineEdit_selected_fluid: QLineEdit
+        self.lineEdit_fluid_density: QLineEdit
+        self.lineEdit_speed_of_sound: QLineEdit
+        self.lineEdit_thermal_characteristic_length_JCA: QLineEdit
+        self.lineEdit_viscous_characteristic_length_JCA: QLineEdit
+        self.lineEdit_thermal_characteristic_length_JCAL: QLineEdit
+        self.lineEdit_viscous_characteristic_length_JCAL: QLineEdit
+
+        # QPushButton
+        self.pushButton_exit: QPushButton
+        self.pushButton_confirm: QPushButton
+        self.pushButton_remove: QPushButton
+        self.pushButton_reset: QPushButton
+        self.pushButton_get_fluid: QPushButton
+        self.pushButton_plot_data: QPushButton
+        self.pushButton_DB_equations: QPushButton
+        self.pushButton_DBM_equations: QPushButton
+
+        # QTabWidget
+        self.tabWidget_main: QTabWidget
+
+        # QTreeWidget
+        self.treeWidget_porous_material_model: QTreeWidget
 
     def _create_connections(self):
         #

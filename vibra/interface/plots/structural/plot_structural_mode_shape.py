@@ -1,4 +1,5 @@
 import numpy as np
+from molde import load_ui
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QComboBox,
@@ -11,19 +12,22 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from vibra import app
-from vibra.interface.ui_generated.plots.structural.plot_structural_mode_shape_ui import PlotStructuralModeShape_UI
+from vibra import UI_DIR, app
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class PlotStructuralModeShape(PlotStructuralModeShape_UI):
+class PlotStructuralModeShape(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        ui_path = UI_DIR / "plots/structural/plot_structural_mode_shape.ui"
+        load_ui(ui_path, self, ui_path.parent)
+
         self._initialize()
+        self._define_qt_variables()
         self._create_connections()
         self._config_widgets()
         self.load_natural_frequencies()
@@ -40,6 +44,33 @@ class PlotStructuralModeShape(PlotStructuralModeShape_UI):
 
     def _initialize(self):
         self.mode_index = -1
+
+    def _define_qt_variables(self):
+        # QComboBox
+        self.comboBox_color_scale: QComboBox
+        self.comboBox_colormaps: QComboBox
+        self.comboBox_displacements: QComboBox
+
+        # QFrame
+        self.frame_button: QFrame
+
+        # QLineEdit
+        self.lineEdit_natural_frequency: QLineEdit
+
+        # QPushButton
+        self.pushButton_plot: QPushButton
+
+        # QLineEdit
+        self.lineEdit_selected_frequency: QLineEdit
+
+        # QSlider
+        self.slider_transparency: QSlider
+
+        # QPushButton
+        self.pushButton_plot: QPushButton
+
+        # QTreeWidget
+        self.treeWidget_frequencies: QTreeWidget
 
     def _create_connections(self):
         #

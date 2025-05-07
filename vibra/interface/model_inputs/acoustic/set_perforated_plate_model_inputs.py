@@ -2,8 +2,7 @@ from PySide6.QtWidgets import QComboBox, QDialog, QDoubleSpinBox, QFrame, QLineE
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
-from vibra import app
-from vibra.interface.ui_generated.model.setup.acoustic.set_perforated_plate_model_inputs_ui import SetPerforatedPlateModelInputs_UI
+from vibra import app, UI_DIR
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
 from vibra.interface.mesh.mesher_inputs import MesherInputs
@@ -11,6 +10,8 @@ from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input_simplified impo
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+
+from molde import load_ui
 
 import warnings
 import numpy as np
@@ -20,9 +21,12 @@ import numpy as np
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class SetPerforatedPlateModelInputs(SetPerforatedPlateModelInputs_UI):
+class SetPerforatedPlateModelInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        ui_path = UI_DIR / "model/setup/acoustic/set_perforated_plate_model_inputs.ui"
+        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -35,6 +39,7 @@ class SetPerforatedPlateModelInputs(SetPerforatedPlateModelInputs_UI):
 
         self._initialize()
         self._config_window()
+        self._define_qt_variables()
         self._create_connections()
         self._config_widgets()
 
@@ -53,6 +58,41 @@ class SetPerforatedPlateModelInputs(SetPerforatedPlateModelInputs_UI):
         self.selected_fluid = None
         self.keep_window_open = True
         self.pp_model_data = dict()
+
+    def _define_qt_variables(self):
+
+        # QComboBox
+        self.comboBox_attribution_type: QComboBox
+        self.comboBox_plot_type: QComboBox
+
+        # QFrame
+        self.frame_fluid_info: QFrame
+        self.frame_plot_buttons: QFrame
+
+        # QLineEdit
+        self.lineEdit_selection_id: QLineEdit
+        self.lineEdit_selected_fluid: QLineEdit
+        self.lineEdit_fluid_density: QLineEdit
+        self.lineEdit_speed_of_sound: QLineEdit
+        self.lineEdit_plate_thickness: QLineEdit
+        self.lineEdit_hole_diameter: QLineEdit
+        self.lineEdit_porosity: QLineEdit
+        self.lineEdit_discharge_coefficient: QLineEdit
+
+        # QPushButton
+        self.pushButton_exit: QPushButton
+        self.pushButton_confirm: QPushButton
+        self.pushButton_remove: QPushButton
+        self.pushButton_reset: QPushButton
+        self.pushButton_get_fluid: QPushButton
+        self.pushButton_plot_data: QPushButton
+
+        # QTabWidget
+        self.tabWidget_main: QTabWidget
+        self.tabWidget_perforated_plate_models: QTabWidget
+
+        # QTreeWidget
+        self.treeWidget_perforated_plate_model: QTreeWidget
 
     def _create_connections(self):
         #

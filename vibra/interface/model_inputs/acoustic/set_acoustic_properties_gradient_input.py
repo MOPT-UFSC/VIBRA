@@ -2,8 +2,7 @@ from PySide6.QtWidgets import QComboBox, QDialog, QDoubleSpinBox, QFrame, QLineE
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
-from vibra import app
-from vibra.interface.ui_generated.model.setup.acoustic.set_acoustic_properties_gradient_inputs_ui import SetAcousticPropertiesGradientInputs_UI
+from vibra import app, UI_DIR
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
 from vibra.interface.mesh.mesher_inputs import MesherInputs
@@ -13,6 +12,8 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 
+from molde import load_ui
+
 import warnings
 import numpy as np
 
@@ -21,9 +22,12 @@ import numpy as np
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class SetAcousticPropertiesGradientInputs(SetAcousticPropertiesGradientInputs_UI):
+class SetAcousticPropertiesGradientInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        ui_path = UI_DIR / "model/setup/acoustic/set_acoustic_properties_gradient_inputs.ui"
+        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -36,6 +40,7 @@ class SetAcousticPropertiesGradientInputs(SetAcousticPropertiesGradientInputs_UI
 
         self._initialize()
         self._config_window()
+        self._define_qt_variables()
         self._create_connections()
         # self._config_widgets()
 
@@ -54,6 +59,44 @@ class SetAcousticPropertiesGradientInputs(SetAcousticPropertiesGradientInputs_UI
         self.selected_fluid = None
         self.keep_window_open = True
         self.material_model_data = dict()
+
+    def _define_qt_variables(self):
+
+        # QComboBox
+        self.comboBox_attribution_type: QComboBox
+        self.comboBox_fluid_point_selector: QComboBox
+        self.comboBox_refinement_regions: QComboBox
+        self.comboBox_beyond_bounds_values: QComboBox
+        self.comboBox_interpolation_direction: QComboBox
+
+        # QFrame
+        self.frame_fluid_info: QFrame
+        self.frame_plot_buttons: QFrame
+
+        # QLineEdit
+        self.lineEdit_selection_id: QLineEdit
+        self.lineEdit_selected_fluid: QLineEdit
+        self.lineEdit_fluid_density: QLineEdit
+        self.lineEdit_speed_of_sound: QLineEdit
+        self.lineEdit_start_coords: QLineEdit
+        self.lineEdit_end_coords: QLineEdit
+        self.lineEdit_start_temperature: QLineEdit
+        self.lineEdit_end_temperature: QLineEdit
+        self.lineEdit_start_pressure: QLineEdit
+        self.lineEdit_end_pressure: QLineEdit
+
+        # QPushButton
+        self.pushButton_exit: QPushButton
+        self.pushButton_confirm: QPushButton
+        self.pushButton_remove: QPushButton
+        self.pushButton_reset: QPushButton
+        self.pushButton_get_fluid: QPushButton
+
+        # QTabWidget
+        self.tabWidget_main: QTabWidget
+
+        # QTreeWidget
+        self.treeWidget_viscous_thermal_model: QTreeWidget
 
     def _create_connections(self):
         #

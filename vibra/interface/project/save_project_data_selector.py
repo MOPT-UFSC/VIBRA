@@ -4,8 +4,9 @@ from PySide6.QtWidgets import QCheckBox, QDialog, QLineEdit, QPushButton
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
-from vibra import app, TEMP_PROJECT_FILE
-from vibra.interface.ui_generated.project.save_project_data_selector_ui import SaveProjectDataSelector_UI
+from vibra import app, UI_DIR, TEMP_PROJECT_FILE
+
+from molde import load_ui
 
 import os
 
@@ -13,16 +14,19 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class SaveProjectDataSelector(SaveProjectDataSelector_UI):
+class SaveProjectDataSelector(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        ui_path = UI_DIR / "project/save_project_data_selector.ui"
+        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
 
         self._config_window()
         self._initialize()
-        self._configure_qt_variables()
+        self._define_qt_variables()
         self._create_connections()
 
         self.get_required_memory()
@@ -40,8 +44,19 @@ class SaveProjectDataSelector(SaveProjectDataSelector_UI):
         self.keep_window_open = True
         self.complete = False
 
-    def _configure_qt_variables(self):
+    def _define_qt_variables(self):
+
+        # QCheckBox
+        self.checkBox_mesh_data : QCheckBox
+        self.checkBox_solution_data : QCheckBox
+
+        # QLineEdit
+        self.lineEdit_required_memory : QLineEdit
         self.lineEdit_required_memory.setDisabled(True)
+
+        # QPushButton
+        self.pushButton_exit : QPushButton
+        self.pushButton_proceed : QPushButton
 
     def _create_connections(self):
         #

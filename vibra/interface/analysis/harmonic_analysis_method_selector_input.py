@@ -2,19 +2,24 @@ from PySide6.QtWidgets import QDialog, QComboBox, QLabel, QPushButton
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import Qt
 
-from vibra import  app
-from vibra.interface.ui_generated.analysis.general.harmonic_analysis_method_ui import HarmonicAnalysisMethod_UI
+from molde import load_ui
 
 
-class StructuralHarmonicAnalysisMethodSelecorInput(HarmonicAnalysisMethod_UI):
+from vibra import  app, UI_DIR
+
+class StructuralHarmonicAnalysisMethodSelecorInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__()
+
+        ui_path = UI_DIR / "analysis/general/harmonic_analysis_method.ui"
+        load_ui(ui_path, self, ui_path.parent)
 
         app().main_window.close_dialogs()
         app().main_window.set_input_widget(self)
 
         self._initialize()
         self._config_window()
+        self._define_qt_variables()       
         self._create_connections()
         self.exec()
 
@@ -23,10 +28,22 @@ class StructuralHarmonicAnalysisMethodSelecorInput(HarmonicAnalysisMethod_UI):
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
-        self.label_method.setText("Harmonic Analysis - Structural")
 
     def _initialize(self):
         self.index = -1
+
+    def _define_qt_variables(self):
+
+        # QComboBox
+        self.comboBox_method : QComboBox
+
+        # QLabel
+        self.label_method : QLabel
+        self.label_method.setText("Harmonic Analysis - Structural")
+
+        # QPushButton
+        self.pushButton_cancel : QPushButton
+        self.pushButton_proceed : QPushButton
     
     def _create_connections(self):
         self.pushButton_cancel.clicked.connect(self.close_window)

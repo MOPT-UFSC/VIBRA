@@ -2,12 +2,12 @@ from PySide6.QtWidgets import QAbstractItemView, QDialog, QComboBox, QGridLayout
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
 
-from vibra import app
-from vibra.interface.ui_generated.model.setup.material.set_material_ui import SetMaterial_UI
+from vibra import app, UI_DIR
 from vibra.engine.properties.material import Material
 from vibra.interface.model_inputs.structural.material.material_widget import MaterialWidget
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from molde import load_ui
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -19,10 +19,12 @@ def getColorRGB(color):
     tokens = color.split(',')
     return list(map(int, tokens))
 
-
-class SetMaterialInput(SetMaterial_UI):
+class SetMaterialInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__()
+
+        ui_path = UI_DIR / "model/setup/material/set_material.ui"
+        load_ui(ui_path, self, ui_path.parent)
 
         self.cache_selected_lines = kwargs.get("cache_selected_lines", list())
 
@@ -35,7 +37,7 @@ class SetMaterialInput(SetMaterial_UI):
 
         self._config_window()
         self._initialize()
-        self._configure_qt_variables()
+        self._define_qt_variables()
         self._create_connections()
         self._config_widgets()
 
@@ -56,19 +58,37 @@ class SetMaterialInput(SetMaterial_UI):
         self.material = None
         self.selected_column = None
 
-    def _configure_qt_variables(self):
+    def _define_qt_variables(self):
+
+        # QComboBox
+        self.comboBox_attribution_type : QComboBox
+
+        # QGridLayout
         self.grid_layout = QGridLayout()
         self.grid_layout.setContentsMargins(0,0,0,0)
 
+        # QLineEdit
+        self.lineEdit_selection_id : QLineEdit
+        self.lineEdit_selected_material_name : QLineEdit
+
+        # QScrollArea
+        self.scrollArea_table_of_materials : QScrollArea
         self.scrollArea_table_of_materials.setLayout(self.grid_layout)
         self._add_material_widget()
         self.scrollArea_table_of_materials.adjustSize()
 
+        # QPushButton
         self.pushButton_attribute = self.material_widget.pushButton_attribute
         self.pushButton_exit = self.material_widget.pushButton_exit
+        self.pushButton_remove : QPushButton
+        self.pushButton_reset : QPushButton
 
+        # QTableWidget
         self.tableWidget_material_data = self.material_widget.tableWidget_material_data
         self.tableWidget_model_materials : QTableWidget
+
+        # QTabWidget
+        self.tabWidget_main : QTabWidget
 
     def _add_material_widget(self):
         self.material_widget = MaterialWidget(dialog=self)

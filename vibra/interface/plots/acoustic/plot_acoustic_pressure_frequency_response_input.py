@@ -2,21 +2,26 @@ from PySide6.QtWidgets import QComboBox, QWidget, QLineEdit, QPushButton
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
+from vibra import app, UI_DIR
 from vibra.engine import AnalysisID
-from vibra import app
-from vibra.interface.ui_generated.plots.acoustic.plot_acoustic_pressure_frequency_response_input_ui import PlotAcousticPressureFrequencyResponseInput_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+
+from molde import load_ui
 
 import numpy as np
 
 window_title1 = "Error"
 window_title2 = "Warning"
 
-class PlotAcousticPressureFrequencyResponseInput(PlotAcousticPressureFrequencyResponseInput_UI):
+class PlotAcousticPressureFrequencyResponseInput(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        ui_path = UI_DIR / "plots/acoustic/plot_acoustic_pressure_frequency_response_input.ui"
+        ui_dir = ui_path.parent
+        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.show_geometry_render_widget()
@@ -27,6 +32,7 @@ class PlotAcousticPressureFrequencyResponseInput(PlotAcousticPressureFrequencyRe
         self.properties = app().project.model.properties
 
         self._reset_variables()
+        self._define_qt_variables()
         self._create_connections()
 
         self._load_analysis_data_and_solution()
@@ -50,6 +56,17 @@ class PlotAcousticPressureFrequencyResponseInput(PlotAcousticPressureFrequencyRe
         self.exporter = None
         self.plotter = None
         self.unit_label = "Pa"
+
+    def _define_qt_variables(self):
+        # QComboBox
+        self.comboBox_selector_filter: QComboBox
+        
+        # QLineEdit
+        self.lineEdit_selection_id: QLineEdit
+
+        # QPushButton
+        self.pushButton_export_data: QPushButton
+        self.pushButton_plot_data: QPushButton
 
     def _create_connections(self):
         #

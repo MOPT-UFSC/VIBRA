@@ -2,16 +2,18 @@ from PySide6.QtWidgets import QDialog, QSlider, QSpinBox, QPushButton, QWidget
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
 
-from vibra import app
-from vibra.interface.ui_generated.render.section_plane_inputs_ui import SectionPlaneInputs_UI
+from vibra import app, UI_DIR
+from molde import load_ui
 
-
-class SectionPlaneWidget(SectionPlaneInputs_UI):
+class SectionPlaneWidget(QDialog):
     value_changed = Signal()
     closed = Signal()
 
     def __init__(self, parent):
         super().__init__(parent)
+
+        ui_path = UI_DIR / "render/section_plane_inputs.ui"
+        load_ui(ui_path, self, ui_path.parent)
 
         self.editing = False
         self.cutting = False
@@ -19,6 +21,7 @@ class SectionPlaneWidget(SectionPlaneInputs_UI):
         self.keep_section_plane = False
 
         self._configure_window()
+        self._define_qt_variables()
         self._create_connections()
 
     def _configure_window(self):
@@ -41,6 +44,31 @@ class SectionPlaneWidget(SectionPlaneInputs_UI):
         self.keep_section_plane = False
         self.cutting = True
         self.value_changed.emit()
+
+    def _define_qt_variables(self):
+        # QPushButton
+        self.pushButton_invert : QPushButton
+        self.pushButton_reset : QPushButton
+        self.pushButton_cancel : QPushButton
+        self.pushButton_apply : QPushButton
+
+        # QSlider
+        self.relative_plane_position_x_slider: QSlider
+        self.relative_plane_position_y_slider: QSlider
+        self.relative_plane_position_z_slider: QSlider
+
+        self.plane_rotation_x_slider: QSlider
+        self.plane_rotation_y_slider: QSlider
+        self.plane_rotation_z_slider: QSlider
+
+        # QSpinBox
+        self.relative_plane_position_x_spinbox: QSpinBox
+        self.relative_plane_position_y_spinbox: QSpinBox
+        self.relative_plane_position_z_spinbox: QSpinBox
+
+        self.plane_rotation_x_spinbox: QSpinBox
+        self.plane_rotation_y_spinbox: QSpinBox
+        self.plane_rotation_z_spinbox: QSpinBox
 
     def _create_connections(self):
         #

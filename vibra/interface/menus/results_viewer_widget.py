@@ -1,7 +1,7 @@
+from molde import load_ui
 from PySide6.QtWidgets import QFrame, QWidget
 
-from vibra import, app
-from vibra.interface.ui_generated.menu.left_menu_widget_ui import LeftMenuWidget_UI
+from vibra import UI_DIR, app
 from vibra.interface.menus.results_viewer_items import ResultsViewerItems
 from vibra.interface.plots.acoustic.plot_acoustic_mode_shape import PlotAcousticModeShape
 from vibra.interface.plots.acoustic.plot_acoustic_pressure_field import PlotAcousticPressureField
@@ -9,9 +9,12 @@ from vibra.interface.plots.structural.plot_displacement_field import PlotDisplac
 from vibra.interface.plots.structural.plot_structural_mode_shape import PlotStructuralModeShape
 
 
-class ResultsViewerWidget(LeftMenuWidget_UI):
+class ResultsViewerWidget(QWidget):
     def __init__(self):
         super().__init__()
+
+        ui_path = UI_DIR / "menu/left_menu_widget.ui"
+        load_ui(ui_path, self, ui_path.parent)
 
         self.plot_structural_modal = PlotStructuralModeShape()
         self.plot_structural_harmonic = PlotDisplacementField()
@@ -29,9 +32,14 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.bottom_widget.hide()
 
     def _define_qt_variables(self):
+
         self.main_frame = QFrame()
+
+        # QWidget
+        self.top_widget: QWidget
+        self.bottom_widget: QWidget
+
         self.results_viewer_items = ResultsViewerItems()
-        
         self.layout().replaceWidget(self.top_widget, self.results_viewer_items)
         self.adjustSize()
     
