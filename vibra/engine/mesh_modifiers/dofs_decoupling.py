@@ -27,7 +27,8 @@ class DegreesOfFreedomDecoupling:
 
 
     def gathering_decoupling_information(self):
-        """
+        """ This method gathers all existing decoupling 
+            information from surface properties.
         """
         self.decouple_info.clear()
         self.nodes_mapping.clear()
@@ -139,7 +140,9 @@ class DegreesOfFreedomDecoupling:
 
 
     def update_nodal_coordinates(self):
-        """
+        """ This method processes the indexes and nodal coordinates relative to
+            the new nodes, modifying the nodal_coordinates, nodes_from_surface, 
+            and nodes_from_volume attributes.
         """
         self.gathering_decoupling_information()
         if not self.decouple_info:
@@ -190,7 +193,8 @@ class DegreesOfFreedomDecoupling:
 
 
     def get_nodes_from_lines_that_bound_decoupling_surfaces(self):
-        """
+        """ This method returns the lines that bound decoupling
+            surfaces, and the nodes associated with these lines.
         """
         nodes_from_lines = list()
         valid_surface_ids = list()
@@ -214,19 +218,26 @@ class DegreesOfFreedomDecoupling:
 
 
     def get_line_element_tag_and_nodes_number(self, input_line_id: int):
+        """ Returns the 1D element tag and the number of 
+            nodes per element.
+        """        
         for _, line_id, tag, n_nodes, *_ in self.mesh.lines_connectivity:
             if line_id == input_line_id:
                 return tag, n_nodes
 
 
     def get_surface_element_tag_and_nodes_number(self, surface_id: int):
+        """ Returns the 2D element tag and the number of 
+            nodes per element.
+        """
         for _, surf_id, tag, n_nodes, *_ in self.mesh.faces_connectivity:
             if surf_id == surface_id:
                 return tag, n_nodes
 
 
     def update_nodes_from_array(self, values: np.ndarray):
-        """
+        """ This method returns an array whose elements are modified
+            based on the nodes mapping previously processed.
         """
         output_values = values.copy()
         nodes_to_map = self.nodes_mapping.keys()
@@ -236,10 +247,11 @@ class DegreesOfFreedomDecoupling:
                 output_values[j] = self.nodes_mapping[node_id]
 
         return output_values
-    
+
 
     def modify_the_connectivities_from_lines(self, surface_id: int):
-        """
+        """ Modifies the connectivities from 1D elements, the
+            nodes from lines and connectivity from lines.
         """
 
         cols = self.mesh.lines_connectivity.shape[1]
@@ -275,7 +287,8 @@ class DegreesOfFreedomDecoupling:
 
 
     def modify_the_connectivities_from_surfaces(self, surface_id: int):
-        """
+        """ Modifies the connectivities from 2D elements, the
+            nodes from surfaces and connectivity from surfaces.
         """
 
         cols = self.mesh.faces_connectivity.shape[1]
@@ -304,8 +317,9 @@ class DegreesOfFreedomDecoupling:
         self.mesh.faces_connectivity = np.append(self.mesh.faces_connectivity, connectivity_to_append, axis=0)
 
 
-    def get_lines_from_valid_surfaces(self):
-        """
+    def get_lines_from_unmodified_surfaces(self):
+        """ Returns the lines from unmodified surfaces, i.e.,
+            all lines from non-decoupled surfaces.
         """
         line_ids = list()
         for vol_id, data in self.decouple_info.items():
@@ -325,7 +339,8 @@ class DegreesOfFreedomDecoupling:
 
 
     def update_all_connectivity_related_attributes(self):
-        """
+        """ This method performs all necessary updates in
+            the connectivity-related attributes.
         """
         if not self.decouple_info:
             return
@@ -355,11 +370,11 @@ class DegreesOfFreedomDecoupling:
             if np.isin(nodes_from_bound_lines, connect_2d).any():
                 self.mesh.faces_connectivity[elem2d_id, 4:] = self.update_nodes_from_array(connect_2d)
 
-        lines_from_valid_surfaces = self.get_lines_from_valid_surfaces()
+        lines_from_unmodified_surfaces = self.get_lines_from_unmodified_surfaces()
         rows_1d = np.sum(np.isin(self.mesh.cache_lines_connectivity[:, 4:], node_ids), axis=1) >= 1
         for elem1d_id, line_id, _, _, *connect_1d in self.mesh.cache_lines_connectivity[rows_1d, :]:
         # for elem1d_id, line_id, _, _, *connect_1d in self.mesh.cache_lines_connectivity:
-            if line_id in lines_from_valid_surfaces:
+            if line_id in lines_from_unmodified_surfaces:
                 if np.isin(nodes_from_bound_lines, connect_1d).any():
                     self.mesh.lines_connectivity[elem1d_id, 4:] = self.update_nodes_from_array(connect_1d)
 
@@ -412,7 +427,10 @@ class DegreesOfFreedomDecoupling:
 
 
     def update_geometry_related_information(self):
-        """
+        """ This method updates the geometry-related information,
+            precisely, the number of each entity and the properties 
+            associated with them, beyond the upward and downward
+            adjacencies from entities.
         """
         if not self.decouple_info:
             return

@@ -126,6 +126,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
         if len(volumes_from_surface) != 2:
             return
 
+        self.comboBox_volume_id.setEnabled(True)
         for volume_id in volumes_from_surface:
             self.comboBox_volume_id.addItem(str(volume_id))
 
@@ -147,7 +148,6 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
             for volume_id in volume_ids:
                 if volume_id != volume_to_preserve:
                     self.comboBox_volume_id.setCurrentText(str(volume_id))
-                    self.comboBox_volume_id.setEnabled(True)
                     return
 
     def attribute_callback(self):
