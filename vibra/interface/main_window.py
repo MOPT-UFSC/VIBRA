@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtCore import Signal
 
-from vibra import TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, app
+from vibra import UI_DIR, ICON_DIR, TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, app
 from vibra.interface.analysis_toolbar import AnalysisToolbar
 from vibra.interface.animation_toolbar import AnimationToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
@@ -38,7 +38,6 @@ from vibra.interface.viewer_3d.render_widgets import (
     MeshRenderWidget,
     ResultsRenderWidget,
 )
-from vibra.interface.ui_generated.main_window_ui import MainWindow_UI
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import VisualizationFilter, ColorMode
@@ -55,15 +54,18 @@ from pathlib import Path
 from shutil import copy, rmtree
 
 
-class MainWindow(MainWindow_UI):
+class MainWindow(QMainWindow):
     theme_changed = Signal(str)
     visualization_changed = Signal()
     render_widget_changed = Signal()
     selection_changed = Signal()
 
     def __init__(self, parent=None):
-        super().__init__(parent)
-        
+        QMainWindow.__init__(self, parent)
+
+        ui_path = UI_DIR / "main_window.ui"
+        load_ui(ui_path, self, UI_DIR)
+
         self.visualization_filter = VisualizationFilter.all_true()
         self.visualization_filter.points = False
 
@@ -412,8 +414,8 @@ class MainWindow(MainWindow_UI):
         self.selection_changed.emit()
 
     def create_recents_menu(self):
-        color = QColor("#448cff") 
-        self.recent_icon = load_icon(":/icons/recent.png", color)
+        color = QColor("#448cff")
+        self.recent_icon = load_icon(ICON_DIR / "recent.png", color)
 
         self.recents_menu = QMenu("Recent projects", self)
         self.recents_menu.setIcon(self.recent_icon)
@@ -454,8 +456,8 @@ class MainWindow(MainWindow_UI):
     def action_theme_callback(self):
         color = QColor("#448cff")
 
-        self.theme_sun_icon = load_icon(":/icons/sun_icon.png", color)
-        self.theme_moon_icon = load_icon(":/icons/moon_icon.png", color)
+        self.theme_sun_icon = load_icon(Path(ICON_DIR / "sun_icon.png"), color)
+        self.theme_moon_icon = load_icon(Path(ICON_DIR / "moon_icon.png"), color)
 
         if app().config.user_preferences.interface_theme == "light":
             app().config.user_preferences.set_dark_theme()
