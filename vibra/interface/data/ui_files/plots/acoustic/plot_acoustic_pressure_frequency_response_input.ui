@@ -288,7 +288,7 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>:/icons/save_as.png</normaloff>:/icons/save_as.png</iconset>
+             <normaloff>../../../icons/save_as.png</normaloff>../../../icons/save_as.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -538,6 +538,6 @@
    </item>
   </layout>
  </widget>
- <resources><include location="../../../icons/resources.qrc" /></resources>
+ <resources/>
  <connections/>
 </ui>

@@ -307,6 +307,6 @@
    </item>
   </layout>
  </widget>
- <resources><include location="../../icons/resources.qrc" /></resources>
+ <resources/>
  <connections/>
 </ui>

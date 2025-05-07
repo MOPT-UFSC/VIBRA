@@ -344,7 +344,7 @@
                </property>
                <property name="icon">
                 <iconset>
-                 <normaloff>:/icons/new_file.png</normaloff>:/icons/new_file.png</iconset>
+                 <normaloff>../../../../icons/new_file.png</normaloff>../../../../icons/new_file.png</iconset>
                </property>
                <property name="iconSize">
                 <size>
@@ -859,7 +859,7 @@
                </property>
                <property name="icon">
                 <iconset>
-                 <normaloff>:/icons/invert_icon.png</normaloff>:/icons/invert_icon.png</iconset>
+                 <normaloff>../../../../icons/invert_icon.png</normaloff>../../../../icons/invert_icon.png</iconset>
                </property>
                <property name="iconSize">
                 <size>
@@ -1124,6 +1124,6 @@
   <tabstop>pushButton_process_data</tabstop>
   <tabstop>pushButton_exit</tabstop>
  </tabstops>
- <resources><include location="../../../../icons/resources.qrc" /></resources>
+ <resources/>
  <connections/>
 </ui>

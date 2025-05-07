@@ -380,6 +380,6 @@ QProgressBar::chunk {border-radius: 4px;   background-color:  rgb(20,150,255);  
    </item>
   </layout>
  </widget>
- <resources><include location="../../icons/resources.qrc" /></resources>
+ <resources/>
  <connections/>
 </ui>

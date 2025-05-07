@@ -1313,6 +1313,6 @@ QLineEdit:disabled{color: rgb(100, 100, 100); background-color: rgb(240, 240, 24
   <tabstop>treeWidget_reference_gases</tabstop>
   <tabstop>tableWidget_new_fluid</tabstop>
  </tabstops>
- <resources><include location="../../../../icons/resources.qrc" /></resources>
+ <resources/>
  <connections/>
 </ui>

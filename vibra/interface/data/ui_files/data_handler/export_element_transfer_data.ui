@@ -244,7 +244,7 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>:/icons/invert_icon.png</normaloff>:/icons/invert_icon.png</iconset>
+             <normaloff>../../icons/invert_icon.png</normaloff>../../icons/invert_icon.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -683,7 +683,7 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>:/icons/new_file.png</normaloff>:/icons/new_file.png</iconset>
+             <normaloff>../../icons/new_file.png</normaloff>../../icons/new_file.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -797,6 +797,6 @@
   <tabstop>lineEdit_input_selected_id</tabstop>
   <tabstop>pushButton_export_data</tabstop>
  </tabstops>
- <resources><include location="../../icons/resources.qrc" /></resources>
+ <resources/>
  <connections/>
 </ui>

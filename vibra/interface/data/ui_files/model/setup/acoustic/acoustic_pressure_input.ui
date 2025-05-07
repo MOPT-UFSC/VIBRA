@@ -565,7 +565,7 @@
             </property>
             <property name="icon">
              <iconset>
-              <normaloff>:/icons/recent.png</normaloff>:/icons/recent.png</iconset>
+              <normaloff>../../../../icons/recent.png</normaloff>../../../../icons/recent.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -1012,6 +1012,6 @@
    </item>
   </layout>
  </widget>
- <resources><include location="../../../../icons/resources.qrc" /></resources>
+ <resources/>
  <connections/>
 </ui>
