@@ -17,11 +17,11 @@ class AnalysisSetupInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.main_window = app().main_window
         self.project = app().project
 
         self.analysis_data = self.project.analysis_data
         self.analysis_id = self.analysis_data["analysis_id"]
-        self.model = app().project.model
 
         """
         |--------------------------------------------------------------------|
@@ -36,11 +36,35 @@ class AnalysisSetupInput(QDialog):
         |    6 - Coupled - Harmonic analysis through mode superposition      |
         |--------------------------------------------------------------------|
         """
+
+        if self.analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
+        ]:
+            ui_path = UI_DIR / "analysis/structural/harmonic_analysis_direct_method.ui"
+
+        elif self.analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
+        ]:
+            ui_path = UI_DIR / "analysis/structural/harmonic_analysis_mode_superposition_method.ui"
+
+        elif self.analysis_id in [AnalysisID.ACOUSTIC_HARMONIC]:
+            ui_path = UI_DIR / "analysis/acoustic/harmonic_analysis_direct_method.ui"
+
+        else:
+            return
+
+        load_ui(ui_path, self, ui_path.parent)
+
         app().main_window.close_dialogs()
         app().main_window.set_input_widget(self)
 
+        self.model = app().project.model
+
         self._initialize()
         self._config_window()
+        self._define_qt_variables()
         self._create_connections()
 
         self.load_analysis_data()
@@ -57,10 +81,40 @@ class AnalysisSetupInput(QDialog):
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(app().main_window.vibra_icon)
+        self.setWindowIcon(self.main_window.vibra_icon)
         self.setWindowTitle("Analysis setup")
 
+    def _define_qt_variables(self):
+
+        # QLabel
+        self.label_title : QLabel
+        self.label_subtitle : QLabel
+
+        # QLineEdit
+        if self.analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
+        ]:
+            self.lineEdit_modes : QLineEdit
+
+        self.lineEdit_av : QLineEdit
+        self.lineEdit_bv : QLineEdit
+        self.lineEdit_ah : QLineEdit
+        self.lineEdit_bh : QLineEdit
+
+        self.lineEdit_fmin : QLineEdit
+        self.lineEdit_fmax : QLineEdit
+        self.lineEdit_fstep : QLineEdit
+
+        # QPushButton
+        self.pushButton_enter_setup : QPushButton
+        self.pushButton_run_analysis : QPushButton
+
+        # QTabWidget
+        self.tabWidget : QTabWidget
+
     def _create_connections(self):
+        #
         self.pushButton_enter_setup.clicked.connect(self.enter_setup_callback)
         self.pushButton_run_analysis.clicked.connect(self.run_analysis)
 
@@ -69,6 +123,7 @@ class AnalysisSetupInput(QDialog):
         self.lineEdit_fmin.setText(df)
 
     def load_analysis_data(self):
+
         analysis_setup = app().project.analysis_data
         
         f_min = analysis_setup.get("f_min", 2)
@@ -81,8 +136,12 @@ class AnalysisSetupInput(QDialog):
         self.load_frequency_setup_inputs(f_min, f_max, f_step)
 
     def load_damping_inputs(self, analysis_id: int, global_damping: tuple | list):
-        if analysis_id in [0, 1, 5, 6] and sum(global_damping):
-
+        if sum(global_damping) and analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
+            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,            
+        ]:
             if global_damping[0]:
                 self.lineEdit_av.setText(str(global_damping[0]))
 
@@ -96,6 +155,7 @@ class AnalysisSetupInput(QDialog):
                 self.lineEdit_bh.setText(str(global_damping[3]))
 
     def load_frequency_setup_inputs(self, f_min: float, f_max: float, f_step: float):
+
         self.lineEdit_fmin.setText(str(round(f_min, 6)))
         self.lineEdit_fmax.setText(str(round(f_max, 6)))
         self.lineEdit_fstep.setText(str(round(f_step, 6)))
@@ -107,6 +167,7 @@ class AnalysisSetupInput(QDialog):
         self.lineEdit_fstep.setDisabled(key)        
 
     def enter_setup_callback(self):
+
         analysis_setup = app().file.read_analysis_setup_from_file()
         if analysis_setup is None:
             analysis_setup = dict()
