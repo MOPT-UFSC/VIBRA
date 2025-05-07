@@ -4,7 +4,7 @@ from vibra.interface.mesh.mesher_inputs import MesherInputs
 #
 from vibra.interface.model_inputs.acoustic.set_acoustic_pressure import AcousticPressureInput
 from vibra.interface.model_inputs.acoustic.set_mass_flow_rate_inputs import MassFlowRateInput
-from vibra.interface.model_inputs.acoustic.set_surface_velocity_inputs import SurfaceVelocityInput
+from vibra.interface.model_inputs.acoustic.set_surface_velocity_inputs import SetSurfaceVelocityInput
 from vibra.interface.model_inputs.acoustic.set_specific_impedance_inputs import SpecificImpedanceInput
 from vibra.interface.model_inputs.acoustic.set_anechoic_termination_inputs import SetAnechoicTerminationInputs
 from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import DissipationModelInput
@@ -113,7 +113,7 @@ class InputUi:
         
     def set_surface_velocity(self):
         if not self.model_setup_items.item_child_set_surface_velocity.isDisabled():
-            self.process_input(SurfaceVelocityInput)
+            self.process_input(SetSurfaceVelocityInput)
         
     def set_anechoic_termination(self):
         if not self.model_setup_items.item_child_set_anechoic_termination.isDisabled():
