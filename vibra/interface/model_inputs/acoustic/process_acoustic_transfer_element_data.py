@@ -34,7 +34,7 @@ class ProcessAcousticTransferElementData(ProcessAcousticTransferElementData_UI):
 
         self._config_window()
         self._reset_variables()
-        self._configure_qt_variables()
+        self._define_qt_variables()
         self._create_connections()
 
         self._load_analysis_data()
@@ -53,7 +53,7 @@ class ProcessAcousticTransferElementData(ProcessAcousticTransferElementData_UI):
         self.keep_window_open = True
         self.element_transfer_data = dict()
 
-    def _configure_qt_variables(self):
+    def _define_qt_variables(self):
         self.current_lineEdit = self.lineEdit_output_selected_id
         self.tabWidget_main.setTabVisible(1, False)
 

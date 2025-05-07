@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QFrame, QWidget
 
-from vibra import app
+from vibra import, app
 from vibra.interface.ui_generated.menu.left_menu_widget_ui import LeftMenuWidget_UI
 from vibra.interface.menus.results_viewer_items import ResultsViewerItems
 from vibra.interface.plots.acoustic.plot_acoustic_mode_shape import PlotAcousticModeShape

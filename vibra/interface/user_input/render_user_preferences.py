@@ -11,7 +11,8 @@ from molde.colors import Color
 
 from vibra.interface.user_input.model.color_selector import PickColorInput
 
-class RendererUserPreferencesInput(RendererUserPreferences_UI):
+
+class RendererUserPreferencesInput(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
