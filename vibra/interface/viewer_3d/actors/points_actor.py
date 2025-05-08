@@ -1,4 +1,3 @@
-from vtkmodules.vtkCommonCore import vtkIntArray
 from vtkmodules.vtkCommonCore import vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import VTK_VERTEX, vtkPlane, vtkPolyData
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
@@ -50,6 +49,8 @@ class PointsActor(vtkActor):
         points_size = app().config.user_preferences.points_size
         if not app().config.user_preferences.compatibility_mode:
             self.GetProperty().RenderPointsAsSpheresOn()
+
+        self.set_zbuffer_offsets(-5, -6600)
         self.GetProperty().SetPointSize(points_size)
         self.GetProperty().LightingOff()
         self.clear_colors()
@@ -61,8 +62,19 @@ class PointsActor(vtkActor):
         # By default prints the decoupled points as Transparent
         self.paint_points(
             (0, 0, 0, 0),  # transparent
-            self.mesh.decoupled_points,
+            self._get_decoupled_points(),
         )
+
+    def _get_decoupled_points(self):
+        if self.mesh.cache_nodal_coordinates is None:
+            return StopIteration()
+
+        current_number_of_nodes = self.mesh.nodal_coordinates.shape[0]
+        original_number_of_nodes = self.mesh.cache_nodal_coordinates.shape[0]
+
+        for point, node in self.mesh.nodes_from_points.items():
+            if node in range(original_number_of_nodes, current_number_of_nodes):
+                yield point
 
     def set_color(self, color: tuple):
         if len(color) == 3:
@@ -119,3 +131,16 @@ class PointsActor(vtkActor):
 
     def disable_cut(self):
         self.GetMapper().RemoveAllClippingPlanes()
+
+    def set_zbuffer_offsets(self, factor: float, units: float):
+        """
+        This functions is usefull to make a object appear in front of the others.
+        If the object should never be hidden, the parameters should be set to
+        factor = 1 and offset = -66000.
+        """
+        mapper = self.GetMapper()
+        mapper.SetResolveCoincidentTopologyToPolygonOffset()
+        mapper.SetRelativeCoincidentTopologyLineOffsetParameters(factor, units)
+        mapper.SetRelativeCoincidentTopologyPolygonOffsetParameters(factor, units)
+        mapper.SetRelativeCoincidentTopologyPointOffsetParameter(units)
+        mapper.Update()

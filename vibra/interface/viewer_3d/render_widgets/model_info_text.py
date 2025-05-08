@@ -15,15 +15,13 @@ from numbers import Number
 def points_info_text():
 
     selected_points = app().main_window.selected_geometry_points
-    #TODO: temporary solution
     node_ids = [int(point_id)-1 for point_id in selected_points]
+    point_ids = list(selected_points)
 
     if len(node_ids) == 0:
         return ""
 
     text = ""
-    points_from_nodes = app().project.model.mesh.points_from_nodes
-    point_ids = [int(points_from_nodes[node_id]) for node_id in node_ids]
 
     if len(point_ids) == 1:
         coords = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:].round(6)
