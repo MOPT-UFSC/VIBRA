@@ -90,7 +90,9 @@ class PointsActor(vtkActor):
     def paint_points(self, color: tuple, points: tuple[int]):
         cells = []
         for point in points:
-            cell = self.point_to_cell[point]
+            cell = self.point_to_cell.get(point)
+            if cell is None:
+                continue
             cells.append(cell)
         self.paint_cells(color, cells)
 
