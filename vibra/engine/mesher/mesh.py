@@ -1,5 +1,3 @@
-# fmt: off
-
 from vibra.engine.mesher.element_type import DEFAULT_ELEMENT_TYPE, TETRAHEDRON_4, ElementType
 from vibra.interface.general.print_message_input import PrintMessageInput
 
@@ -17,7 +15,6 @@ from copy import deepcopy
 from collections import defaultdict
 from itertools import combinations
 from pathlib import Path
-from time import time
 
 from traceback import print_exception
 
@@ -1403,6 +1400,8 @@ class Mesh:
 
 
     def check_selected_ids(self, selected_ids: str |int | list[int] | np.ndarray, selection: str="nodes", single_id: bool=False):
+        # TODO: This function is doing interface stuff (with the PrintMessageInput),
+        # therefore it should not be implemented here.
 
         try:
 
@@ -1506,5 +1505,3 @@ if __name__ == "__main__":
 
     mesh = Mesh()
     mesh.load_cad(path, 100, element_type=TETRAHEDRON_4)
-
-# fmt: on
