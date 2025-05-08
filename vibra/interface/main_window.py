@@ -617,6 +617,14 @@ class MainWindow(QMainWindow):
         self.results_widget.remove_all_actors()
         self.mesh_widget.remove_all_actors()
         self.geometry_widget.remove_all_actors()
+        self.action_front_view_callback()
+        
+        self.stacked_setup.setVisible(False)
+        self.status_bar.setVisible(False)
+        self.results_viewer_widget.hide_bottom_widget()
+        self.welcome_widget.update_recent_projects()
+        self.model_setup_widget.model_setup_items.reset_items_appearance()
+        self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
 
         app().project.analysis_id = AnalysisID.NO_ANALYSIS
 
@@ -624,13 +632,6 @@ class MainWindow(QMainWindow):
         self.renderer_toolbar.setDisabled(True)
         self.animation_toolbar.setDisabled(True)
         self.disable_advanced_acoustic_plots_buttons(True)
-        
-        self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
-        self.stacked_setup.setVisible(False)
-        self.status_bar.setVisible(False)
-        self.results_viewer_widget.hide_bottom_widget()
-        self.welcome_widget.update_recent_projects()
-        self.model_setup_widget.model_setup_items.reset_items_appearance()
 
     def action_import_geometry_callback(self):
         # return
