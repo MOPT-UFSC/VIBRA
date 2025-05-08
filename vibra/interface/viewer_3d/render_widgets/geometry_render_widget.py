@@ -323,12 +323,8 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         mesh = app().project.model.mesh
 
-        # the cells are 0-indexed
-        # but the points are 1-indexed
-        point_cells = {i - 1 for i in points}
-
-        all_faces_elements = list()
         # Get the face elements of all selected faces
+        all_faces_elements = list()
         for face in faces:
             indexes = mesh.elements_from_surface.get(face, [])
             all_faces_elements.extend(indexes)
@@ -340,7 +336,7 @@ class GeometryRenderWidget(CommonRenderWidget):
                 indexes = app().project.model.mesh.elements_from_surface.get(face, [])
                 all_faces_elements.extend(indexes)
 
-        self.points_actor.paint_cells(self.selection_color, point_cells)
+        self.points_actor.paint_points(self.selection_color, points)
         self.lines_actor.paint_lines(self.selection_color, lines)
         self.faces_actor.paint_cells(self.selection_color, all_faces_elements)
         self.selection_color = app().config.user_preferences.selection_color.to_rgb()

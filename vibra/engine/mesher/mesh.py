@@ -109,6 +109,7 @@ class Mesh:
 
         self.cache_connectivity_from_lines = dict()
         self.cache_connectivity_from_surfaces = dict()
+        self.decoupled_points = list()
 
     def set_length_unit(self, length_unit: str = "milimeter"):
         self.length_unit = length_unit
@@ -484,6 +485,7 @@ class Mesh:
 
         self.cache_connectivity_from_lines.clear()
         self.cache_connectivity_from_surfaces.clear()
+        self.decoupled_points.clear()
 
     def clear_geometry_data(self):
 
