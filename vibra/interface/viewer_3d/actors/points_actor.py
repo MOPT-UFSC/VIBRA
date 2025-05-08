@@ -50,7 +50,6 @@ class PointsActor(vtkActor):
         if not app().config.user_preferences.compatibility_mode:
             self.GetProperty().RenderPointsAsSpheresOn()
 
-        self.set_zbuffer_offsets(-5, -6600)
         self.GetProperty().SetPointSize(points_size)
         self.GetProperty().LightingOff()
         self.clear_colors()
