@@ -3,7 +3,7 @@ from PySide6.QtGui import QIcon, QFont
 from PySide6.QtCore import Qt
 
 from vibra import app
-from vibra.interface.ui_generated.model.setup.fluid.set_fluid_composition_inputs_ui import SetFluidCompositionInput_UI
+from vibra.interface.ui_generated.model.setup.fluid.set_fluid_composition_input_ui import SetFluidCompositionInput_UI
 from vibra.interface.model_inputs.acoustic.fluid.load_fluid_composition_inputs import LoadFluidCompositionInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput

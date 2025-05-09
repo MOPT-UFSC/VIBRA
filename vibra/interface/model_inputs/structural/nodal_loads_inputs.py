@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
-from vibra.interface.ui_generated.model.setup.structural.nodal_loads_input_ui import NodalLoadsInput_UI
+from vibra.interface.ui_generated.model.setup.structural.nodal_loads_inputs_ui import NodalLoadsInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -17,7 +17,7 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class NodalLoadsInputs(NodalLoadsInput_UI):
+class NodalLoadsInputs(NodalLoadsInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
