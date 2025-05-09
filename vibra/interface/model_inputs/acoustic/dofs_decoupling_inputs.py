@@ -276,6 +276,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
             return
 
         self.mesh.restore_data_from_cache()
+        self.mesh.process_upwards_adjacencies_from_entities()
         app().project.model.generated_mesh = True
 
         app().file.write_mesh_data_in_file()
