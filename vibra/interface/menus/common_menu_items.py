@@ -1,11 +1,17 @@
-from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QItemDelegate
 from PySide6.QtGui import QIcon, QFont, QPixmap, QColor, QLinearGradient, QBrush, QPen
 from PySide6.QtCore import Qt, QSize, QRect, Signal, QObject
 from pathlib import Path
 
 from vibra.interface.formatters.icons import *
-from vibra.interface.menus.border_item_delegate import BorderItemDelegate
+# from vibra.interface.menus.border_item_delegate import BorderItemDelegate
 
+# class MyDelegate(QItemDelegate):      
+#     def __init__(self):    
+#         QItemDelegate.__init__(self)  
+
+#     def sizeHint(self, option, index):  
+#         return QSize(32,32)
 
 class CommonMenuItems(QTreeWidget):
     """Common Menu Items
@@ -54,6 +60,8 @@ class CommonMenuItems(QTreeWidget):
         delegate = BorderItemDelegate(self, Qt.UserRole + 1)
         self.setItemDelegate(delegate)
         self.itemClicked.connect(self.item_clicked_callback)
+        
+        # self.setItemDelegate(MyDelegate())
 
     def item_clicked_callback(self, item, _):
         if item.isDisabled():
