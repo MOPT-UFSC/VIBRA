@@ -29,10 +29,10 @@ from .model_info_text import(
     structural_boundary_conditions_info_text
 )
 
+import logging
+
 
 class GeometryRenderWidget(CommonRenderWidget):
-    selection_changed = Signal(set, set, set, set)
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.set_interactor_style(BoxSelectionInteractorStyle())
@@ -47,8 +47,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
         app().main_window.theme_changed.connect(self.update_theme)
         app().main_window.visualization_changed.connect(self.visualization_changed_callback)
-
-        self.geometry_selection = GeometrySelection(self)
 
         self.points_actor = None
         self.lines_actor = None
@@ -127,6 +125,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
+        logging.info("Updating the geometry render... [25/100]")
         self.remove_all_actors()
 
         self.points_actor = PointsActor(mesh)
@@ -142,6 +141,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.plane_actor = SectionPlaneActor(self.faces_actor.GetBounds())
         self.plane_actor.VisibilityOff()
 
+        logging.info("Updating the mesh render... [75/100]")
         self.add_actors(
             self.points_actor,
             self.lines_actor,
@@ -160,6 +160,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if reset_camera:
             self.renderer.ResetCamera()
 
+        logging.info("Updating the mesh render... [95/100]")
         self.update()
 
         if app().project.thumbnail is None:
@@ -228,9 +229,9 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.update_plot()
             return
 
-        self.renderer.RemoveActor(self.faces_actor)
+        self.remove_actors(self.faces_actor)
         self.faces_actor = FacesActor(mesh)
-        self.renderer.AddActor(self.faces_actor)
+        self.add_actors(self.faces_actor)
 
         has_hidden_part = bool(app().main_window.hidden_surfaces)
         self.ghost_actor.SetVisibility(has_hidden_part)
@@ -295,6 +296,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if not shift_pressed:
             picked_volumes.clear()
 
+
         app().main_window.set_geometry_selection(
             points=picked_points,
             lines=picked_lines,
@@ -321,12 +323,8 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         mesh = app().project.model.mesh
 
-        # the cells are 0-indexed
-        # but the points are 1-indexed
-        point_cells = {i - 1 for i in points}
-
-        all_faces_elements = list()
         # Get the face elements of all selected faces
+        all_faces_elements = list()
         for face in faces:
             indexes = mesh.elements_from_surface.get(face, [])
             all_faces_elements.extend(indexes)
@@ -338,7 +336,7 @@ class GeometryRenderWidget(CommonRenderWidget):
                 indexes = app().project.model.mesh.elements_from_surface.get(face, [])
                 all_faces_elements.extend(indexes)
 
-        self.points_actor.paint_cells(self.selection_color, point_cells)
+        self.points_actor.paint_points(self.selection_color, points)
         self.lines_actor.paint_lines(self.selection_color, lines)
         self.faces_actor.paint_cells(self.selection_color, all_faces_elements)
         self.selection_color = app().config.user_preferences.selection_color.to_rgb()

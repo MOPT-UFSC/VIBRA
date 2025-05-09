@@ -356,6 +356,22 @@ class ModelProperties:
 
         return table_names
 
+    def is_the_volume_property_present_in_the_model(self, property_to_check: str):
+
+        for (property, _) in self.volume_properties.keys():
+            if property == property_to_check:
+                return True
+
+        return False
+
+    def is_the_surface_property_present_in_the_model(self, property_to_check: str):
+
+        for (property, _) in self.surface_properties.keys():
+            if property == property_to_check:
+                return True
+
+        return False
+
 if __name__ == "__main__":
     p = ModelProperties()
     with open("teste.json", "w") as file:

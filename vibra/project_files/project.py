@@ -11,7 +11,7 @@ from vibra.engine.solvers.structural_harmonic_solver import StructuralHarmonicSo
 from vibra.engine.checkers.analysis_requirements_checker import AnalysisRequirementsChecker
 
 from vibra.interface.process_analysis import ProcessAnalysis
-from vibra.interface.mesh.mesher_inputs import MesherInputs
+from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
 from vibra.interface.loading_window import LoadingWindow
 
 import logging
@@ -206,13 +206,11 @@ class Project:
         self.acoustic_modal_solver.solve()
         dt = time() - t0
         print(f"Elapsed time to solve modal analysis: {round(dt, 6)} [s]")
-        app().file.write_results_data_in_file()
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_structural_modal_analysis(self):
         self.structural_assembler.process_assemble()
         self.structural_modal_solver.solve()
-        app().file.write_results_data_in_file()
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_acoustic_harmonic_analysis(self):
@@ -225,7 +223,6 @@ class Project:
         self.acoustic_harmonic_solver.solve()
         dt = time() - t0
         print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
-        app().file.write_results_data_in_file()
         app().main_window.disable_advanced_acoustic_plots_buttons(False)
 
     def solve_structural_harmonic_analysis(self):
@@ -238,12 +235,11 @@ class Project:
             return
         dt = time() - t0
         print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
-        app().file.write_results_data_in_file()
 
     def run_analysis(self):
 
         if not self.model.generated_mesh:
-            obj = MesherInputs(close_after_generate=True)
+            obj = MeshSetupInputs(close_after_generate=True)
             if obj.complete:
                 app().main_window.update_plots()
             else:

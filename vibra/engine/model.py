@@ -1,11 +1,12 @@
 
 from vibra import app
-from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
-from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
-from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
+from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
+from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
+from vibra.engine.mesh_modifiers.dofs_decoupling import DegreesOfFreedomDecoupling
+from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
 from vibra.errors import IncompleteSetupError
 from vibra.interface.general.print_message_input import PrintMessageInput
 
@@ -39,8 +40,11 @@ class Model:
         self.f_max = 600
         self.f_step = 2
         self.frequencies = None
-        self.frequency_setup = dict()
         self.list_frequencies = list()
+
+        self.decouple_info = dict()
+        self.nodes_mapping = dict()
+        self.frequency_setup = dict()
 
         self.analysis_data = None
         self.solid_acoustic_element = None
@@ -108,11 +112,14 @@ class Model:
                                    maximum_element_size = element_size
                                    )
 
-            self.initial_element_size = element_size
             self.generated_mesh = False
-            app().main_window.update_geometry_information(self.mesh.geometry_information)
+            self.initial_element_size = element_size
+
+            app().main_window.update_geometry_information()
 
         except Exception as error_log:
+            from traceback import print_exception
+            print_exception(error_log)
             title = "Error while processing geometry"
             message = str(error_log)
             PrintMessageInput([window_title_1, title, message])
@@ -382,3 +389,7 @@ class Model:
             property, surface_id = key
             if property == "surface_thickness":
                 self.mesh.set_face_element_thickness(surface_id, data)
+
+    def process_degrees_of_freedom_decoupling(self):
+        self.dofs_decoupling = DegreesOfFreedomDecoupling(self)
+        self.dofs_decoupling.process_degrees_of_freedom_decoupling()
