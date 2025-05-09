@@ -79,7 +79,6 @@ class MainWindow(QMainWindow):
 
         self.hidden_mesh_faces = set()
         self.hidden_mesh_solids = set()
-
         self.hidden_surfaces = set()
         self.hidden_volumes = set()
 
@@ -658,22 +657,30 @@ class MainWindow(QMainWindow):
             for element in self.selected_mesh_solids:
                 volumes_to_hide.add(mesh.volume_from_element[element])
 
+        self.hide_volumes(volumes_to_hide)
+        self.clear_selection()
+
+    def recompute_hidden_volumes(self):
+        self.hidden_surfaces.clear()
+        self.hide_volumes(app().main_window.hidden_volumes)
+
+    def hide_volumes(self, volumes: set[int]):
+        mesh = app().project.model.mesh
+
+        volumes = set(volumes)
         selected_volume_surfaces = set()
         visible_volume_surfaces = set()
+
         for volume, surfaces in mesh.surfaces_from_volume.items():
-            if volume in volumes_to_hide:
+            if volume in volumes:
                 selected_volume_surfaces |= set(surfaces)
             elif volume not in self.hidden_volumes:
                 visible_volume_surfaces |= set(surfaces)
         surfaces_to_keep_visible = set.intersection(selected_volume_surfaces, visible_volume_surfaces)
 
-        self.hidden_volumes |= volumes_to_hide
+        self.hidden_volumes |= volumes
         self.hidden_surfaces |= selected_volume_surfaces - surfaces_to_keep_visible
         self.update_hidden_plots()
-
-        # Clear selection
-        self.set_mesh_selection()
-        self.set_geometry_selection()
 
     def action_unhide_all_callback(self):
         self.hidden_surfaces.clear()
@@ -1109,7 +1116,6 @@ class MainWindow(QMainWindow):
     def eventFilter(self, obj, event: QEvent):
         if event.type() == QEvent.ShortcutOverride:
             if event.key() == Qt.Key_F5:
-                print("updating")
                 self.update_plots()
         return super(MainWindow, self).eventFilter(obj, event)
 
