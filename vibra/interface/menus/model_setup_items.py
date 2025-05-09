@@ -158,7 +158,7 @@ class ModelSetupItems(CommonMenuItems):
         app().main_window.input_ui.set_porous_material_model()
 
     def item_child_degrees_of_freedom_decoupling_callback(self):
-        app().main_window.input_ui.set_acoustic_dofs_decoupling()
+        app().main_window.input_ui.set_degrees_of_freedom_decoupling()
     
     def item_child_viscous_thermal_model_callback(self):
         app().main_window.input_ui.set_viscous_thermal_model()

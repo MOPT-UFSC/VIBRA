@@ -18,7 +18,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/setup/acoustic/acoustic_dofs_decoupling_inputs.ui"
+        ui_path = UI_DIR / "model/setup/acoustic/degrees_of_freedom_decoupling_inputs.ui"
         load_ui(ui_path, self, ui_path.parent)
 
         self.project = app().project
@@ -361,6 +361,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
 
         def process_decoupling():
             self.model.process_degrees_of_freedom_decoupling()
+            app().file.write_model_properties_in_file()
             app().file.write_mesh_data_in_file()
             app().file.write_geometry_data_in_file()
             app().main_window.update_mesh_information()
