@@ -5,8 +5,6 @@ from pathlib import Path
 
 from vibra import app
 from vibra.interface.menus.common_menu_items import CommonMenuItems
-from vibra.interface.menus.border_item_delegate import BorderItemDelegate
-from vibra.interface.general.print_message_input import PrintMessageInput
 
 
 class ModelSetupItems(CommonMenuItems):
@@ -31,7 +29,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_material = self.add_item("Material")
         self.item_child_fluid = self.add_item('Fluid')
         self.item_child_mesh_setup = self.add_item("Mesh Setup")
-        self.item_child_degrees_of_freedom_decoupling = self.add_item("Degrees of Freedom Decoupling")
+        self.item_child_degrees_of_freedom_decoupling = self.add_item("DOFs Decoupling")
         #
         material_tool_tip = "Attribute material to selected bodies. \ndefault material: steel (E = 210 GPa; poisson = 0.30; density = 7860 kg/m³)"
         fluid_tool_tip = "Attribute fluid to selected bodies. \ndefault fluid: air (speed of sound 343.2021 m/s; fluid density = 1.215 kg/m³)"
