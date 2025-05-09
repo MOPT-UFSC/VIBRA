@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import QCheckBox, QDialog, QFileDialog, QLineEdit, QPushButton
+from PySide6.QtWidgets import QFileDialog, QPushButton
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon, QColor
+from PySide6.QtGui import QColor
 
 from vibra import app
 from vibra.interface.ui_generated.data_handler.export_mesh_ui import ExportMesh_UI

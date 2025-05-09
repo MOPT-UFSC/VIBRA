@@ -1,17 +1,9 @@
-from PySide6.QtWidgets import QComboBox, QDialog, QDoubleSpinBox, QFrame, QLineEdit, QPushButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.interface.ui_generated.model.setup.acoustic.acoustic_properties_gradient_inputs_ui import AcousticPropertiesGradientInputs_UI
 from vibra.engine.properties.fluid import Fluid
-from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
-from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
-from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
-from vibra.interface.model_inputs.acoustic.get_sphere_selection_information import GetSphereSelectionInformation
-from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 
 import warnings
 import numpy as np
