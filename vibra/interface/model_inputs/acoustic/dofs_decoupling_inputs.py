@@ -227,17 +227,17 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
 
             self.properties._remove_surface_property("acoustic_dofs_decoupling", surface_id)
 
-            app().project.model.generated_mesh = False
-            app().file.remove_mesh_data_from_project_file
+            # app().project.model.generated_mesh = False
             app().file.remove_mesh_data_from_project_file()
             app().file.remove_results_data_from_project_file()
+            self.revert_mesh_data_modified_by_decoupling()
             self.actions_to_finalize()
 
     def reset_callback(self):
 
         self.hide()
 
-        title = "Acoustic dofs decoupling resetting"
+        title = "Degrees of freedom decoupling resetting"
         message = "Would you like to revert the acoustic degrees of freedom decoupling from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
@@ -260,10 +260,29 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
             self.remove_all_line_properties_boundind_surface([new_surface_id]) 
             self.properties._reset_property("acoustic_dofs_decoupling")
 
-            app().project.model.generated_mesh = False
+            # app().project.model.generated_mesh = False
             app().file.remove_mesh_data_from_project_file()
             app().file.remove_results_data_from_project_file()
+            self.revert_mesh_data_modified_by_decoupling()
             self.actions_to_finalize()
+
+    def revert_mesh_data_modified_by_decoupling(self):
+
+        app().project.model.generated_mesh = False
+        if self.properties.is_the_surface_property_present_in_the_model("acoustic_dofs_decoupling"):
+            return
+        
+        if self.mesh.cache_nodal_coordinates is None:
+            return
+
+        self.mesh.revert_data_from_cache()
+        app().project.model.generated_mesh = True
+
+        app().file.write_mesh_data_in_file()
+        app().file.write_geometry_data_in_file()
+        app().main_window.update_mesh_information()
+        app().main_window.update_geometry_information()
+        app().main_window.update_plots()
 
     def actions_to_finalize(self):
         self.load_info()
@@ -318,14 +337,6 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
             self.close()
         else:
             return
-
-    def is_the_surface_property_present_in_the_model(self, property_to_check: str):
-
-        for (property, _) in app().project.model.properties.surface_properties.keys():
-            if property == property_to_check:
-                return True
-
-        return False
 
     def process_degress_of_freedom_decoupling(self):
 

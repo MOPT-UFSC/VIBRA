@@ -730,6 +730,67 @@ class Mesh:
                     else:
                         self.nodes_from_volumes[tag] = nodes
 
+
+    def revert_data_from_cache(self):
+
+        self.nodal_coordinates = deepcopy(self.cache_nodal_coordinates)
+        self.lines_connectivity = deepcopy(self.cache_lines_connectivity)
+        self.faces_connectivity = deepcopy(self.cache_faces_connectivity)
+        self.solids_connectivity = deepcopy(self.cache_solids_connectivity)
+
+        self.surfaces_from_volume = deepcopy(self.cache_surfaces_from_volume)
+        self.lines_from_surface = deepcopy(self.cache_lines_from_surface)
+        self.points_from_line = deepcopy(self.cache_points_from_line)
+
+        self.cache_nodal_coordinates = None
+        self.cache_lines_connectivity = None
+        self.cache_faces_connectivity = None
+        self.cache_solids_connectivity = None
+
+        self.cache_surfaces_from_volume.clear()
+        self.cache_lines_from_surface.clear()
+        self.cache_points_from_line.clear()
+
+        self.process_mesh_related_mappings()
+
+        surface_ids = set()
+        for line_surfaces in self.surfaces_from_volume.values():
+            surface_ids |= set(line_surfaces)
+        surface_ids = list(surface_ids)
+
+        line_ids = set()
+        for line_lines in self.lines_from_surface.values():
+            line_ids |= set(line_lines)
+        line_ids = list(line_ids)
+
+        point_ids = set()
+        for line_points in self.points_from_line.values():
+            point_ids |= set(line_points)
+        point_ids = list(point_ids)
+
+        for line_id in deepcopy(self.length_from_lines).keys():
+            if line_id in line_ids:
+                continue
+            self.length_from_lines.pop(line_id)
+
+        for surface_id in deepcopy(self.area_from_surfaces).keys():
+            if surface_id in surface_ids:
+                continue
+            self.area_from_surfaces.pop(surface_id)
+
+        self.geometry_information["surfaces"] = surface_ids
+        self.geometry_information["lines"] = line_ids
+        self.geometry_information["points"] = point_ids
+
+        for point_id in deepcopy(self.nodes_from_points).keys():
+            if point_id in point_ids:
+                continue
+            self.nodes_from_points.pop(point_id)
+
+        self.points_from_nodes.clear()
+        self.points_from_nodes = {v : k for k, v in self.nodes_from_points.items()}
+
+
     def _update_surfaces_from_nodes(self, surface_id, node_ids):
         for node_id in node_ids:
             self.surfaces_from_node[node_id].append(surface_id)
