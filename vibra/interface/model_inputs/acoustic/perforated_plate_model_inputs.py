@@ -336,9 +336,7 @@ class PerforatedPlateModelInputs(QDialog):
                 self.decouple_degrees_of_freedom(surface_id)
 
             self.setup_complete = True
-
             self.actions_to_finalize()
-            print(f"The perforated plate has been attributed to the surfaces {surface_ids}.")
 
     def decouple_degrees_of_freedom(self, surface_id: int):
 
@@ -458,6 +456,7 @@ class PerforatedPlateModelInputs(QDialog):
         app().main_window.update_mesh_information()
         app().main_window.update_geometry_information()
         app().main_window.update_plots()
+        app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
 
     def actions_to_finalize(self):
         self.load_info()

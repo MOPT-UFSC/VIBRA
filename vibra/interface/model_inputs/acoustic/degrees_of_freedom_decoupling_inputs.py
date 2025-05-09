@@ -225,7 +225,6 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
 
             self.properties._remove_surface_property("degrees_of_freedom_decoupling", surface_id)
 
-            # app().project.model.generated_mesh = False
             app().project.reset_solutions()
             app().file.remove_mesh_data_from_project_file()
             app().file.remove_results_data_from_project_file()
@@ -259,7 +258,6 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
             self.remove_all_line_properties_boundind_surface([new_surface_id]) 
             self.properties._reset_property("degrees_of_freedom_decoupling")
 
-            # app().project.model.generated_mesh = False
             app().project.reset_solutions()
             app().file.remove_mesh_data_from_project_file()
             app().file.remove_results_data_from_project_file()
@@ -284,6 +282,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
         app().main_window.update_mesh_information()
         app().main_window.update_geometry_information()
         app().main_window.update_plots()
+        app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
 
     def actions_to_finalize(self):
         self.load_info()
@@ -291,15 +290,6 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
         app().file.write_imported_table_data_in_file()
         app().main_window.update_info_text()
         app().main_window.mesh_widget.update_symbols()
-
-    def update_tabs_visibility(self):
-        for key in self.properties.surface_properties.keys():
-            property, _ = key
-            if property == "degrees_of_freedom_decoupling":
-                self.tabWidget_main.setTabVisible(1, True)
-                return
-
-        self.tabWidget_main.setTabVisible(1, False)
 
     def on_click_item(self, item):
         if item.text(0) != "":
@@ -315,8 +305,12 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "degrees_of_freedom_decoupling":
-                data: dict
 
+                data: dict
+                pp_data =  self.properties._get_property("perforated_plate_model", surface=surface_id)
+                if isinstance(pp_data, dict):
+                    continue
+ 
                 volume_id = data.get("volume_to_decouple")
                 if volume_id is None:
                     continue
@@ -327,6 +321,20 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
                 self.treeWidget_dofs_decoupling.addTopLevelItem(new)
 
         self.update_tabs_visibility()
+
+    def update_tabs_visibility(self):
+
+        for (property, surface_id) in self.properties.surface_properties.keys():
+            if property == "degrees_of_freedom_decoupling":
+
+                pp_data = self.properties._get_property("perforated_plate_model", surface=surface_id)
+                if isinstance(pp_data, dict):
+                    continue
+
+                self.tabWidget_main.setTabVisible(1, True)
+                return
+
+        self.tabWidget_main.setTabVisible(1, False)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
