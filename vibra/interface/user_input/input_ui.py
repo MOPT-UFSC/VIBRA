@@ -140,7 +140,7 @@ class InputUi:
             self.process_input(ViscousThermalLossModelInputs)
 
     def set_acoustic_dofs_decoupling(self):
-        if not self.model_setup_items.item_child_acoustic_dofs_decoupling.isDisabled():
+        if not self.model_setup_items.item_child_degrees_of_freedom_decoupling.isDisabled():
             self.process_input(DegreesOfFreedomDecouplingInputs)
 
     def set_acoustic_properties_grandient(self):

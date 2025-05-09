@@ -31,6 +31,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_material = self.add_item("Material")
         self.item_child_fluid = self.add_item('Fluid')
         self.item_child_mesh_setup = self.add_item("Mesh Setup")
+        self.item_child_degrees_of_freedom_decoupling = self.add_item("Degrees of Freedom Decoupling")
         #
         material_tool_tip = "Attribute material to selected bodies. \ndefault material: steel (E = 210 GPa; poisson = 0.30; density = 7860 kg/m³)"
         fluid_tool_tip = "Attribute fluid to selected bodies. \ndefault fluid: air (speed of sound 343.2021 m/s; fluid density = 1.215 kg/m³)"
@@ -54,7 +55,6 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_porous_material_model = self.add_item("Porous Material Model")
         self.item_child_viscous_thermal_model = self.add_item("Viscous-thermal Loss Model")
         self.item_child_perforated_plate_model = self.add_item("Perforated Plate Model")
-        self.item_child_acoustic_dofs_decoupling = self.add_item("Acoustic Dofs Decoupling")
         self.item_child_acoustic_properties_gradient = self.add_item("Acoustic Properties Gradient")
         self.item_child_reciprocating_compressor_excitation = self.add_item("Reciprocating Compressor Excitation")
         self.item_child_acoustic_transfer_element_setup = self.add_item("Acoustic Transfer Element Data")
@@ -157,7 +157,7 @@ class ModelSetupItems(CommonMenuItems):
     def item_child_porous_material_model_callback(self):
         app().main_window.input_ui.set_porous_material_model()
 
-    def item_child_acoustic_dofs_decoupling_callback(self):
+    def item_child_degrees_of_freedom_decoupling_callback(self):
         app().main_window.input_ui.set_acoustic_dofs_decoupling()
     
     def item_child_viscous_thermal_model_callback(self):
@@ -197,7 +197,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_porous_material_model.setDisabled(key)
         self.item_child_viscous_thermal_model.setDisabled(key)
         self.item_child_perforated_plate_model.setDisabled(key)
-        self.item_child_acoustic_dofs_decoupling.setDisabled(key)
+        self.item_child_degrees_of_freedom_decoupling.setDisabled(key)
         self.item_child_acoustic_properties_gradient.setDisabled(key)
         self.item_child_reciprocating_compressor_excitation.setDisabled(key)
         self.item_child_acoustic_transfer_element_setup.setDisabled(key)
