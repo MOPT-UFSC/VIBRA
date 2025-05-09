@@ -6,11 +6,15 @@ from vibra import app, UI_DIR
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
 from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
-from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.loading_window import LoadingWindow
+
 from molde import load_ui
+
+from copy import deepcopy
 
 import warnings
 import numpy as np
@@ -55,6 +59,7 @@ class PerforatedPlateModelInputs(QDialog):
 
     def _initialize(self):
         self.selected_fluid = None
+        self.setup_complete = False
         self.keep_window_open = True
         self.pp_model_data = dict()
 
@@ -130,43 +135,6 @@ class PerforatedPlateModelInputs(QDialog):
             self.treeWidget_perforated_plate_model.setColumnWidth(i, w)
             self.treeWidget_perforated_plate_model.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
-    def remove_callback(self):
-        if self.lineEdit_selection_id.text() != "":
-
-            surface_id = int(self.lineEdit_selection_id.text())
-            self.properties._remove_surface_property("perforated_plate_model", surface_id)
-
-            self.actions_to_finalize()
-            self.pushButton_remove.setDisabled(True)
-
-    def reset_callback(self):
-
-        surface_ids = list()
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
-            if property == "perforated_plate_model":
-                surface_ids.append(surface_id)
-
-        if surface_ids:
-
-            self.hide()
-
-            title = "Perforated plate model resetting"
-            message = "Would you like to remove the perforated plate from the acoustic model?"
-
-            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
-            read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
-
-            if read._cancel:
-                return
-
-            if read._continue:
-
-                for surface_id in surface_ids:
-                    self.properties._remove_surface_property("perforated_plate_model", surface_id)
-
-                self.actions_to_finalize()
-
     def tabEvent_callback(self):
 
         self.pushButton_remove.setDisabled(True)
@@ -207,7 +175,9 @@ class PerforatedPlateModelInputs(QDialog):
 
         if self.comboBox_attribution_type.currentIndex():
             surfaces = self.main_window.selected_geometry_surfaces
-            if not surfaces:
+            if surfaces:
+                self.geometry_selection_callback()
+            else:
                 self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setEnabled(True)
 
@@ -363,13 +333,138 @@ class PerforatedPlateModelInputs(QDialog):
 
             for surface_id in surface_ids:
                 self.properties._set_property("perforated_plate_model", model_data, surface=surface_id)
+                self.decouple_degrees_of_freedom(surface_id)
 
+            self.setup_complete = True
+
+            self.actions_to_finalize()
             print(f"The perforated plate has been attributed to the surfaces {surface_ids}.")
+
+    def decouple_degrees_of_freedom(self, surface_id: int):
+
+        volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id)
+        if volumes_from_surface is None:
+            return 
+
+        volume_id = volumes_from_surface[0]
+        data = {"volume_to_decouple" : volume_id}
+        self.properties._set_property("degrees_of_freedom_decoupling", data, surface=surface_id)
+
+    def remove_all_surface_properties_from_surface(self, new_surface_ids: list[int]):
+        if not new_surface_ids:
+            return
+
+        surface_properties = deepcopy(self.properties.surface_properties)
+        for new_surface_id in new_surface_ids:
+            for (property, surf_id) in surface_properties.keys():
+                if surf_id == new_surface_id:
+                    self.properties._remove_surface_property(property, new_surface_id)
+
+    def remove_all_line_properties_boundind_surface(self, new_surface_ids: list[int]):
+        if not new_surface_ids:
+            return
+
+        line_properties = deepcopy(self.properties.line_properties)
+        for new_surface_id in new_surface_ids:
+            lines_from_surface = self.mesh.lines_from_surface.get(new_surface_id)
+            if lines_from_surface is None:
+                continue
+
+            for line_from_surface in lines_from_surface:
+                for (property, line_id) in line_properties.keys():
+                    if line_from_surface == line_id:
+                        self.properties._remove_line_property(property, line_id)
+
+    def remove_callback(self):
+        if self.lineEdit_selection_id.text() != "":
+
+            surface_id = int(self.lineEdit_selection_id.text())
+            self.properties._remove_surface_property("perforated_plate_model", surface_id)
+
+            data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_id)
+            if isinstance(data, dict):
+                new_surface_id = data.get("new_surface_id")
+                if isinstance(new_surface_id, int):   
+                    self.remove_all_surface_properties_from_surface([new_surface_id])
+                    self.remove_all_line_properties_boundind_surface([new_surface_id]) 
+
+            self.properties._remove_surface_property("degrees_of_freedom_decoupling", surface_id)
+
+            # app().project.model.generated_mesh = False
+            app().file.remove_mesh_data_from_project_file()
+            app().file.remove_results_data_from_project_file()
+            self.restore_mesh_data_modified_by_decoupling()
             self.actions_to_finalize()
 
+            self.pushButton_remove.setDisabled(True)
+
+    def reset_callback(self):
+
+        surface_ids = list()
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "perforated_plate_model":
+                surface_ids.append(surface_id)
+
+        if surface_ids:
+
+            self.hide()
+
+            title = "Perforated plate model resetting"
+            message = "Would you like to remove the perforated plate from the acoustic model?"
+
+            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
+            read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+
+            if read._cancel:
+                return
+
+            if read._continue:
+
+                new_surface_ids = list()
+                for (property, _), data in self.properties.surface_properties.items():
+                    if property == "degrees_of_freedom_decoupling":
+                        data: dict
+                        new_surface_id = data.get("new_surface_id")
+                        if isinstance(new_surface_id, int):
+                            new_surface_ids.append(new_surface_id)
+
+                self.remove_all_surface_properties_from_surface([new_surface_id])
+                self.remove_all_line_properties_boundind_surface([new_surface_id]) 
+                self.properties._reset_property("degrees_of_freedom_decoupling")
+                self.properties._reset_property("perforated_plate_model")
+
+                # app().project.model.generated_mesh = False
+                app().file.remove_mesh_data_from_project_file()
+                app().file.remove_results_data_from_project_file()
+                self.restore_mesh_data_modified_by_decoupling()
+                self.actions_to_finalize()
+
+    def restore_mesh_data_modified_by_decoupling(self):
+
+        app().project.model.generated_mesh = False
+        if self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
+            return
+        
+        if self.mesh.cache_nodal_coordinates is None:
+            return
+
+        self.mesh.restore_data_from_cache()
+        self.mesh.process_upwards_adjacencies_from_entities()
+        app().project.model.generated_mesh = True
+
+        app().file.write_mesh_data_in_file()
+        app().file.write_geometry_data_in_file()
+        app().main_window.update_mesh_information()
+        app().main_window.update_geometry_information()
+        app().main_window.update_plots()
+
     def actions_to_finalize(self):
-        app().file.write_model_properties_in_file()
         self.load_info()
+        app().file.write_model_properties_in_file()
+        app().file.write_imported_table_data_in_file()
+        app().main_window.update_info_text()
+        app().main_window.mesh_widget.update_symbols()
 
     def check_inputs(self, lineEdit: QLineEdit, label, _float=True):
 
@@ -528,17 +623,50 @@ class PerforatedPlateModelInputs(QDialog):
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
+    
+    def process_degress_of_freedom_decoupling(self):
+
+        if not self.setup_complete:
+            return False
+        
+        if not self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
+            return False
+
+        if not app().project.model.generated_mesh:
+            self.hide()
+            app().main_window.input_ui.mesh_setup()
+            app().main_window.set_input_widget(self)
+            if not app().project.model.generated_mesh:
+                return True
+            else:
+                return False
+
+        if self.mesh.cache_nodal_coordinates is None:
+            self.mesh.cache_mesh_information()
+
+        def process_decoupling():
+            self.model.process_degrees_of_freedom_decoupling()
+            app().file.write_model_properties_in_file()
+            app().file.write_mesh_data_in_file()
+            app().file.write_geometry_data_in_file()
+            app().main_window.update_mesh_information()
+            app().main_window.update_geometry_information()
+            app().main_window.update_plots()
+
+        LoadingWindow(process_decoupling).run()
+        return False
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
 
         try:
             warnings.filterwarnings('default')
-        #     geometry_widget = self.main_window.geometry_widget
-        #     geometry_widget.selection_changed.disconnect(self.geometry_selection_callback)
         except TypeError:
-            pass  # ignore if there is nothing to disconect
+            pass
+
+        if self.process_degress_of_freedom_decoupling():
+            return
 
         self.keep_window_open = False
         return super().closeEvent(a0)
-    
+
 # fmt: on
