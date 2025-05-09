@@ -215,16 +215,9 @@ class AcousticAssembler:
                     surface_elements = list(self.model.mesh.elements_from_surface[surface_id])
                     surf_connect = self.model.mesh.connectivity_from_surfaces[surface_id]
 
-                    source_factor = 1
-                    if property_label == "surface_velocity":
-                        for _key in self.properties.surface_properties.keys():
-                            if _key[0] == "specific_impedance" and _key[1] == surface_id:
-                                source_factor = 1
-                                break
-
                     for i, el in enumerate(surface_elements):
                         aux_connect[el] = surf_connect[i]
-                        surface_data[el] = [complex_values, source_factor]
+                        surface_data[el] = complex_values
 
         if aux_connect:
             integration_data = {
@@ -235,8 +228,7 @@ class AcousticAssembler:
         return integration_data
     
     def get_perforated_plate_data_for_element_integration(self, solution: np.ndarray | None = None):
-                    
-        connect = None
+
         surface_data_A = dict()
         surface_data_B = dict()
         connectivity_surface_A = dict()
@@ -446,7 +438,7 @@ class AcousticAssembler:
             self.data_Zout[j] = np.zeros((nel, dofs, dofs), dtype=complex)
 
         self.ind_rows_Zout, self.ind_cols_Zout = element_2D.generate_ind_rows_cols(connectivities)
-        for i, [complex_values, _] in enumerate(surface_data.values()):
+        for i, complex_values in enumerate(surface_data.values()):
             normalized_matrix_Z = element_2D.matrices_Z(i)
             for j in range(self.number_frequencies):
                 self.data_Zout[j][i, :, :] = normalized_matrix_Z / complex_values[0, j]
@@ -660,7 +652,7 @@ class AcousticAssembler:
             surface_data_mf = integration_data_mf.get("surface_data")
 
             element_2D.reorder_connect(connectivities_mf)
-            for i, [complex_values, _] in enumerate(surface_data_mf.values()):
+            for i, complex_values in enumerate(surface_data_mf.values()):
 
                 indices = element_2D.connect_face[i, :]
                 normalized_excitation_matrix = element_2D.excitation_F(i)
@@ -676,10 +668,10 @@ class AcousticAssembler:
                 surface_data_sv = integration_data_sv.get("surface_data")
 
                 element_2D.reorder_connect(connectivities_sv)
-                for i, [complex_values, source_factor] in enumerate(surface_data_sv.values()):
+                for i, complex_values in enumerate(surface_data_sv.values()):
 
                     indices = element_2D.connect_face[i, :]
-                    normalized_excitation_matrix = source_factor * element_2D.excitation_F(i)
+                    normalized_excitation_matrix = element_2D.excitation_F(i)
 
                     output[indices, :] += normalized_excitation_matrix @ complex_values
 
@@ -695,11 +687,11 @@ class AcousticAssembler:
                      size_M = getsizeof(self.data_M),
                      size_Cvisc = getsizeof(self.data_Cvisc),
                      size_Qvisc = getsizeof(self.data_Qvisc),
-                     size_Cimp = getsizeof(self.data_Zin),
+                     size_Cimp = getsizeof(self.data_Zout),
                      size_ind_rows = getsizeof(self.ind_rows),
                      size_ind_cols = getsizeof(self.ind_cols),
-                     size_ind_rows_Z = getsizeof(self.ind_rows_Z),
-                     size_ind_cols_Z = getsizeof(self.ind_cols_Z)
+                     size_ind_rows_Z = getsizeof(self.ind_rows_Zout),
+                     size_ind_cols_Z = getsizeof(self.ind_cols_Zout)
                      )
 
         total_size = 0.
@@ -719,34 +711,31 @@ class AcousticAssembler:
         self.get_data_to_process_global_matrices()
         dt = time() - t0
         print(f"Elapsed time to process data to assemble global matrices: {round(dt, 4)} [s]")
-        
+
         logging.info( "Assembling global stiffness matrix... [50/100]")
         t0 = time()
         self.assemble_global_stiffness_matrix()
         dt = time() - t0
         print(f"Elapsed time to assemble the global stiffness matrix: {round(dt, 4)} [s]")
-        
+
         logging.info( "Assembling global mass matrix... [60/100]")
         t0 = time()
         self.assemble_global_mass_matrix()
         dt = time() - t0
         print(f"Elapsed time to assemble the global mass matrix: {round(dt, 4)} [s]")
-        
+
         logging.info( "Assembling global mass matrix... [70/100]")
         t0 = time()
-        # self.assemble_global_damping_matrix()
         self.assemble_global_damping_matrix_3d_elements()
         self.assemble_global_damping_matrix_2d_elements()
         dt = time() - t0
         print(f"Elapsed time to assemble the global damping matrix: {round(dt, 4)} [s]\n")
 
-        # self.show_required_memory()
-
         logging.info( "Processing element related loads... [80/100]")
         B = self.get_acoustic_excitations_by_element_integration()
-        
+
         logging.info( "Processing nodal related loads... [90/100]")
         A = self.get_acoustic_excitations_by_nodal_attribution()
-        
+
         logging.info( "Finishing the model building... [90/100]")
         self.mass_flow_vectors = A + B
