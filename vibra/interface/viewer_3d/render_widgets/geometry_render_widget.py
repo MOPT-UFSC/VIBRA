@@ -38,7 +38,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.set_interactor_style(BoxSelectionInteractorStyle())
 
         self.geometry_selection = GeometrySelection(self)
-        self.selection_color = (20, 106, 245)
         self.mouse_click = (0, 0)
 
         self.left_clicked.connect(self.click_callback)
@@ -55,7 +54,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.faces_actor = None
         self.ghost_actor = None
         self.selection_spheres_actor = None
-        self.selection_color = app().config.user_preferences.selection_color.to_rgb()
+        self.selection_faces_color = app().config.user_preferences.selection_faces_color.to_rgb()
+        self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color.to_rgb()
 
         # The fast area selection just works if it is on
         self.renderer.GetActiveCamera().ParallelProjectionOn()
@@ -338,10 +338,12 @@ class GeometryRenderWidget(CommonRenderWidget):
                 indexes = app().project.model.mesh.elements_from_surface.get(face, [])
                 all_faces_elements.extend(indexes)
 
-        self.points_actor.paint_cells(self.selection_color, point_cells)
-        self.lines_actor.paint_lines(self.selection_color, lines)
-        self.faces_actor.paint_cells(self.selection_color, all_faces_elements)
-        self.selection_color = app().config.user_preferences.selection_color.to_rgb()
+        self.points_actor.paint_cells(self.selection_nodes_points_color, point_cells)
+        self.lines_actor.paint_lines(self.selection_nodes_points_color, lines)
+        self.faces_actor.paint_cells(self.selection_faces_color, all_faces_elements)
+        
+        self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color.to_rgb()
+        self.selection_faces_color = app().config.user_preferences.selection_faces_color.to_rgb()
 
         self.update_info_text()
 

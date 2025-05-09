@@ -613,11 +613,13 @@ class MainWindow(QMainWindow):
         self.open_project_dialog()
     
     def action_home_exit_callback(self):
+        self.setWindowTitle("Vibra")
         self.clear_selection()
         self.results_widget.remove_all_actors()
         self.mesh_widget.remove_all_actors()
         self.geometry_widget.remove_all_actors()
         self.action_front_view_callback()
+        app().project.reset_variables()
         
         self.stacked_setup.setVisible(False)
         self.status_bar.setVisible(False)
@@ -626,7 +628,9 @@ class MainWindow(QMainWindow):
         self.model_setup_widget.model_setup_items.reset_items_appearance()
         self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
 
-        app().project.analysis_id = AnalysisID.NO_ANALYSIS
+
+        self.section_plane.keep_section_plane = False
+        self.section_plane.closeEvent(None)
 
         self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)
