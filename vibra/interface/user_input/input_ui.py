@@ -14,7 +14,7 @@ from vibra.interface.model_inputs.acoustic.perforated_plate_model_inputs import 
 from vibra.interface.model_inputs.acoustic.acoustic_properties_gradient_inputs import AcousticPropertiesGradientInputs
 from vibra.interface.model_inputs.acoustic.reciprocating_compressor_inputs import ReciprocatingCompressorInputs
 from vibra.interface.model_inputs.acoustic.acoustic_transfer_element_inputs import AcousticTransferElementInputs
-from vibra.interface.model_inputs.acoustic.dofs_decoupling_inputs import DegreesOfFreedomDecouplingInputs
+from vibra.interface.model_inputs.acoustic.degrees_of_freedom_decoupling_inputs import DegreesOfFreedomDecouplingInputs
 #
 from vibra.interface.model_inputs.structural.surface_thickness_inputs import SurfaceThicknessInputs
 from vibra.interface.model_inputs.structural.dofs_prescription_inputs import DofsPrescriptionInputs
@@ -139,7 +139,7 @@ class InputUi:
         if not self.model_setup_items.item_child_viscous_thermal_model.isDisabled():
             self.process_input(ViscousThermalLossModelInputs)
 
-    def set_acoustic_dofs_decoupling(self):
+    def set_degrees_of_freedom_decoupling(self):
         if not self.model_setup_items.item_child_degrees_of_freedom_decoupling.isDisabled():
             self.process_input(DegreesOfFreedomDecouplingInputs)
 

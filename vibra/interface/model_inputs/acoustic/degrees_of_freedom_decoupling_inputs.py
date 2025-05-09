@@ -20,7 +20,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/setup/acoustic/acoustic_dofs_decoupling_inputs.ui"
+        ui_path = UI_DIR / "model/setup/acoustic/degrees_of_freedom_decoupling_inputs.ui"
         load_ui(ui_path, self, ui_path.parent)
 
         self.project = app().project
