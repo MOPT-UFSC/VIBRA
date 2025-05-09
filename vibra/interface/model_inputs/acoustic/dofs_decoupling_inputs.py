@@ -183,7 +183,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
             return
 
         data = {"volume_to_decouple" : int(self.comboBox_volume_id.currentText())}
-        self.properties._set_property("acoustic_dofs_decoupling", data, surface=surface_id)
+        self.properties._set_property("degrees_of_freedom_decoupling", data, surface=surface_id)
 
         self.setup_complete = True
         self.actions_to_finalize()
@@ -218,19 +218,19 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
         if self.lineEdit_selection_id.text() != "":
 
             surface_id = int(self.lineEdit_selection_id.text())
-            data = self.properties._get_property("acoustic_dofs_decoupling", surface=surface_id)
+            data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_id)
             if isinstance(data, dict):
                 new_surface_id = data.get("new_surface_id")
                 if isinstance(new_surface_id, int):   
                     self.remove_all_surface_properties_from_surface([new_surface_id])
                     self.remove_all_line_properties_boundind_surface([new_surface_id]) 
 
-            self.properties._remove_surface_property("acoustic_dofs_decoupling", surface_id)
+            self.properties._remove_surface_property("degrees_of_freedom_decoupling", surface_id)
 
             # app().project.model.generated_mesh = False
             app().file.remove_mesh_data_from_project_file()
             app().file.remove_results_data_from_project_file()
-            self.revert_mesh_data_modified_by_decoupling()
+            self.restore_mesh_data_modified_by_decoupling()
             self.actions_to_finalize()
 
     def reset_callback(self):
@@ -250,7 +250,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
 
             new_surface_ids = list()
             for (property, _), data in self.properties.surface_properties.items():
-                if property == "acoustic_dofs_decoupling":
+                if property == "degrees_of_freedom_decoupling":
                     data: dict
                     new_surface_id = data.get("new_surface_id")
                     if isinstance(new_surface_id, int):
@@ -258,18 +258,18 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
 
             self.remove_all_surface_properties_from_surface([new_surface_id])
             self.remove_all_line_properties_boundind_surface([new_surface_id]) 
-            self.properties._reset_property("acoustic_dofs_decoupling")
+            self.properties._reset_property("degrees_of_freedom_decoupling")
 
             # app().project.model.generated_mesh = False
             app().file.remove_mesh_data_from_project_file()
             app().file.remove_results_data_from_project_file()
-            self.revert_mesh_data_modified_by_decoupling()
+            self.restore_mesh_data_modified_by_decoupling()
             self.actions_to_finalize()
 
-    def revert_mesh_data_modified_by_decoupling(self):
+    def restore_mesh_data_modified_by_decoupling(self):
 
         app().project.model.generated_mesh = False
-        if self.properties.is_the_surface_property_present_in_the_model("acoustic_dofs_decoupling"):
+        if self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
             return
         
         if self.mesh.cache_nodal_coordinates is None:
@@ -294,7 +294,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
     def update_tabs_visibility(self):
         for key in self.properties.surface_properties.keys():
             property, _ = key
-            if property == "acoustic_dofs_decoupling":
+            if property == "degrees_of_freedom_decoupling":
                 self.tabWidget_main.setTabVisible(1, True)
                 return
 
@@ -313,7 +313,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
         self.treeWidget_dofs_decoupling.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
-            if property == "acoustic_dofs_decoupling":
+            if property == "degrees_of_freedom_decoupling":
                 data: dict
 
                 volume_id = data.get("volume_to_decouple")
@@ -343,7 +343,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
         if not self.setup_complete:
             return False
         
-        if not self.properties.is_the_surface_property_present_in_the_model("acoustic_dofs_decoupling"):
+        if not self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
             return False
 
         if not app().project.model.generated_mesh:

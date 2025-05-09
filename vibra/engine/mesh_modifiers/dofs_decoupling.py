@@ -41,7 +41,7 @@ class DegreesOfFreedomDecoupling:
 
         for key, data in self.properties.surface_properties.items():
             (property, surface_id) = key
-            if property == "acoustic_dofs_decoupling":
+            if property == "degrees_of_freedom_decoupling":
 
                 data: dict
                 max_surface_id += 1
@@ -65,7 +65,7 @@ class DegreesOfFreedomDecoupling:
         """ This method inserts the ID of the new surface into the
             acoustic_dofs_decoupling surface property data.
         """
-        property = "acoustic_dofs_decoupling"
+        property = "degrees_of_freedom_decoupling"
         for surface_id in self.decoupling_surfaces:
 
             new_surface_id = self.surfaces_mapping.get(surface_id, -1)

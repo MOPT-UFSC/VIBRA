@@ -124,7 +124,7 @@ class ProjectFile:
                             points_from_line = mesh.points_from_line,
                             )
 
-        if app().project.model.properties.is_the_surface_property_present_in_the_model("acoustic_dofs_decoupling"):
+        if app().project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
 
             geometry_data.update(dict(
                                       cache_surfaces_from_volume = mesh.cache_surfaces_from_volume,
@@ -248,7 +248,7 @@ class ProjectFile:
                          curvatures_surface = mesh.curvatures_surface,
                          )
 
-        if app().project.model.properties.is_the_surface_property_present_in_the_model("acoustic_dofs_decoupling"):
+        if app().project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
 
             mesh_data.update(dict(
                                   cache_nodal_coordinates = mesh.cache_nodal_coordinates,

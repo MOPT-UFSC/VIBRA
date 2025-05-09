@@ -372,7 +372,7 @@ class MeshSetupInputs(QDialog):
 
     def process_degress_of_freedom_if_necessary(self):
 
-        if not app().project.model.properties.is_the_surface_property_present_in_the_model("acoustic_dofs_decoupling"):
+        if not app().project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
             return
 
         def process_decoupling():
