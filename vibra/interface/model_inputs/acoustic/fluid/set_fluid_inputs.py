@@ -344,8 +344,9 @@ class SetFluidInputs(QDialog):
             for key, data in _property.items():
                 property, surface_id = key
                 if property == "fluid":
+                    if not isinstance(data, Fluid):
+                        continue
 
-                    data : Fluid
                     selection_id = f"{selection}-{surface_id}"
                     self.model_fluids[(data.identifier, selection_id)] = data
 
