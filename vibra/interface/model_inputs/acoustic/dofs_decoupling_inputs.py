@@ -1,5 +1,3 @@
-# fmt: on
-
 from PySide6.QtWidgets import QComboBox, QDialog, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
@@ -228,6 +226,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
             self.properties._remove_surface_property("degrees_of_freedom_decoupling", surface_id)
 
             # app().project.model.generated_mesh = False
+            app().project.reset_solutions()
             app().file.remove_mesh_data_from_project_file()
             app().file.remove_results_data_from_project_file()
             self.restore_mesh_data_modified_by_decoupling()
@@ -261,6 +260,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
             self.properties._reset_property("degrees_of_freedom_decoupling")
 
             # app().project.model.generated_mesh = False
+            app().project.reset_solutions()
             app().file.remove_mesh_data_from_project_file()
             app().file.remove_results_data_from_project_file()
             self.restore_mesh_data_modified_by_decoupling()
@@ -376,5 +376,3 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
 
         self.keep_window_open = False
         return super().closeEvent(a0)
-
-# fmt: on
