@@ -275,7 +275,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
         if self.mesh.cache_nodal_coordinates is None:
             return
 
-        self.mesh.revert_data_from_cache()
+        self.mesh.restore_data_from_cache()
         app().project.model.generated_mesh = True
 
         app().file.write_mesh_data_in_file()

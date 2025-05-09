@@ -731,7 +731,7 @@ class Mesh:
                         self.nodes_from_volumes[tag] = nodes
 
 
-    def revert_data_from_cache(self):
+    def restore_data_from_cache(self):
 
         self.nodal_coordinates = deepcopy(self.cache_nodal_coordinates)
         self.lines_connectivity = deepcopy(self.cache_lines_connectivity)
