@@ -226,6 +226,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
             self.properties._remove_surface_property("degrees_of_freedom_decoupling", surface_id)
 
             app().project.reset_solutions()
+            app().main_window.recompute_hidden_volumes()
             app().file.remove_mesh_data_from_project_file()
             app().file.remove_results_data_from_project_file()
             self.restore_mesh_data_modified_by_decoupling()
@@ -259,6 +260,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
             self.properties._reset_property("degrees_of_freedom_decoupling")
 
             app().project.reset_solutions()
+            app().main_window.recompute_hidden_volumes()
             app().file.remove_mesh_data_from_project_file()
             app().file.remove_results_data_from_project_file()
             self.restore_mesh_data_modified_by_decoupling()
@@ -372,6 +374,8 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
             app().file.write_model_properties_in_file()
             app().file.write_mesh_data_in_file()
             app().file.write_geometry_data_in_file()
+            app().project.reset_solutions()
+            app().main_window.recompute_hidden_volumes()
             app().main_window.update_mesh_information()
             app().main_window.update_geometry_information()
             app().main_window.update_plots()
