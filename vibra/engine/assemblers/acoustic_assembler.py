@@ -256,8 +256,6 @@ class AcousticAssembler:
 
                 surface_elements_A = list(self.model.mesh.elements_from_surface[surface_id])
                 surface_elements_B = list(self.model.mesh.elements_from_surface[new_surface_id])
-                # surf_connect_A = self.model.mesh.connectivity_from_surfaces[surface_id]
-                # surf_connect_B = self.model.mesh.connectivity_from_surfaces[new_surface_id]
 
                 for i, el in enumerate(surface_elements_A):
 
@@ -532,13 +530,10 @@ class AcousticAssembler:
             _matrix_full_A = csr_matrix((N_dofs, N_dofs))
 
         if self.integration_data_Zin:
-
             rows_A = self.ind_rows_Zin_A
             rows_B = self.ind_rows_Zin_B
-
             cols_A = self.ind_cols_Zin_A
             cols_B = self.ind_cols_Zin_B
-
             Zin_A = self.data_Zin_A[index].flatten()
             Zin_B = self.data_Zin_B[index].flatten()
 
@@ -561,7 +556,6 @@ class AcousticAssembler:
             returns the output data in the form of mass flow rate.
         """
 
-        # aux_ones = np.ones((1, self.number_frequencies), dtype=complex)
         aux_ones = np.ones((self.number_frequencies), dtype=complex)
         acoustic_excitation = defaultdict(float)
 
