@@ -83,7 +83,7 @@ def main():
 
     if platform.system() == "Windows":
         sys.argv.append("--platform")
-        sys.argv.append("windows:dpiawareness=0")
+        # sys.argv.append("windows:dpiawareness=0")
 
     app = Application(sys.argv)
     sys.exit(app.exec_())
