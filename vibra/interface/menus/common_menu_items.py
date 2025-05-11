@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt, QSize, QRect, Signal, QObject
 from pathlib import Path
 
 from vibra.interface.formatters.icons import *
-# from vibra.interface.menus.border_item_delegate import BorderItemDelegate
+from vibra.interface.menus.border_item_delegate import BorderItemDelegate
 
 # class MyDelegate(QItemDelegate):      
 #     def __init__(self):    
