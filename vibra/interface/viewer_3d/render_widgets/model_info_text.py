@@ -272,7 +272,8 @@ def perforated_plate_info_text():
         tree.add_item("Plate thickness", pp_model["plate_thickness"], "m")
         tree.add_item("Hole diameter", pp_model["hole_diameter"], "m")
         tree.add_item("Porosity", pp_model["porosity"], "--")
-        tree.add_item("Discharge coefficient", pp_model["discharge_coefficient"], "--")
+        tree.add_item("Linear discharge coefficient", pp_model["linear_discharge_coefficient"], "--")
+        tree.add_item("Non-linear discharge coefficient", pp_model["non_linear_discharge_coefficient"], "--")
 
     text += str(tree)
 

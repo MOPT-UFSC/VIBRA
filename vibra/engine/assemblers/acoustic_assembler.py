@@ -252,6 +252,7 @@ class AcousticAssembler:
                 pp_data = self.model.perforated_plate_impedance_data[surface_id]
                 a = pp_data.get("a", 0)
                 b = pp_data.get("b", 0)
+                c = pp_data.get("c", 0)
                 Z_0 = pp_data.get("Z_0", 0)
 
                 surface_elements_A = list(self.model.mesh.elements_from_surface[surface_id])
@@ -259,38 +260,38 @@ class AcousticAssembler:
 
                 for i, el in enumerate(surface_elements_A):
 
+                    U_rms = 0
                     nodes_from_element = self.model.mesh.faces_connectivity[el, 4:]
                     connectivity_surface_A[el] = nodes_from_element
 
-                    if solution is None:
-                        U_rms = 0
-                    else:
-                        p = solution[nodes_from_element, :]
-                        p2_avg = np.average((1/2)*np.real(p*np.conj(p)), axis=0)
-                        p_rms = np.sqrt(p2_avg)
-                        U_rms = p_rms / Z_0
+                    # if solution is not None:
+                    #     p = solution[nodes_from_element, :]
+                    #     p2_avg = np.average((1/2)*np.real(p*np.conj(p)), axis=0)
+                    #     p_rms = np.sqrt(p2_avg)
+                    #     U_rms = p_rms / Z_0
 
-                    Z_tr = Z_0 * (a + b*U_rms)
+                    Z_tr = Z_0 * (a + b + c*U_rms)
                     #TODO: remove this "by-pass" as soon as possible
-                    Z_tr = Z_0
+                    # Z_tr = Z_0*(1 + 0.3*1j)
+
                     surface_data_A[el] = Z_tr
 
                 for i, el in enumerate(surface_elements_B):
 
+                    U_rms = 0
                     nodes_from_element = self.model.mesh.faces_connectivity[el, 4:]
                     connectivity_surface_B[el] = nodes_from_element
 
-                    if solution is None:
-                        U_rms = 0
-                    else:
-                        p = solution[nodes_from_element, :]
-                        p2_avg = np.average((1/2)*np.real(p*np.conj(p)), axis=0)
-                        p_rms = np.sqrt(p2_avg)
-                        U_rms = p_rms / Z_0
+                    # if solution is not None:
+                    #     p = solution[nodes_from_element, :]
+                    #     p2_avg = np.average((1/2)*np.real(p*np.conj(p)), axis=0)
+                    #     p_rms = np.sqrt(p2_avg)
+                    #     U_rms = p_rms / Z_0
 
-                    Z_tr = Z_0 * (a + b*U_rms)
+                    Z_tr = Z_0 * (a + b + c*U_rms)
                     #TODO: remove this "by-pass" as soon as possible
-                    Z_tr = Z_0
+                    # Z_tr = Z_0*(1 + 0.3*1j)
+
                     surface_data_B[el] = Z_tr
 
         if connectivity_surface_A and connectivity_surface_B:
@@ -477,13 +478,13 @@ class AcousticAssembler:
         for i, Z_tr in enumerate(surface_data_A.values()):
             normalized_matrix_Z = element_2D.matrices_Z(i)
             for j in range(self.number_frequencies):
-                self.data_Zin_A[j][i, :, :] = normalized_matrix_Z / Z_tr#[j]
+                self.data_Zin_A[j][i, :, :] = normalized_matrix_Z / Z_tr[j]
 
         self.ind_rows_Zin_B, self.ind_cols_Zin_B = element_2D.generate_ind_rows_cols(connectivities_B)
         for i, Z_tr in enumerate(surface_data_B.values()):
             normalized_matrix_Z = element_2D.matrices_Z(i)
             for j in range(self.number_frequencies):
-                self.data_Zin_B[j][i, :, :] = normalized_matrix_Z / Z_tr#[j]
+                self.data_Zin_B[j][i, :, :] = normalized_matrix_Z / Z_tr[j]
 
     def assemble_global_stiffness_matrix(self, index=0):
         """

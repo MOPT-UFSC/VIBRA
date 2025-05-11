@@ -81,7 +81,8 @@ class PerforatedPlateModelInputs(QDialog):
         self.lineEdit_plate_thickness: QLineEdit
         self.lineEdit_hole_diameter: QLineEdit
         self.lineEdit_porosity: QLineEdit
-        self.lineEdit_discharge_coefficient: QLineEdit
+        self.lineEdit_linear_discharge_coefficient: QLineEdit
+        self.lineEdit_non_linear_discharge_coefficient: QLineEdit
 
         # QPushButton
         self.pushButton_exit: QPushButton
@@ -253,16 +254,20 @@ class PerforatedPlateModelInputs(QDialog):
             self.lineEdit_plate_thickness.setText(str(t_p))
 
         d_h = data.get("hole_diameter")
-        if isinstance(t_p, float | int):
+        if isinstance(d_h, float | int):
             self.lineEdit_hole_diameter.setText(str(d_h))
             
         sigma = data.get("porosity")
-        if isinstance(t_p, float | int):
+        if isinstance(sigma, float | int):
             self.lineEdit_porosity.setText(str(sigma))
 
-        C_d = data.get("discharge_coefficient")
-        if isinstance(t_p, float | int):
-            self.lineEdit_discharge_coefficient.setText(str(C_d))
+        Cd_lin = data.get("linear_discharge_coefficient")
+        if isinstance(Cd_lin, float | int):
+            self.lineEdit_linear_discharge_coefficient.setText(str(Cd_lin))
+
+        Cd_nl = data.get("non_linear_discharge_coefficient")
+        if isinstance(Cd_nl, float | int):
+            self.lineEdit_non_linear_discharge_coefficient.setText(str(Cd_nl))
 
     def get_inputs_for_perforated_plate_with_circular_holes(self):
 
@@ -287,9 +292,15 @@ class PerforatedPlateModelInputs(QDialog):
             lineEdit.setFocus()
             return dict()
 
-        lineEdit = self.lineEdit_discharge_coefficient
-        discharge_coefficient = self.check_inputs(lineEdit, "Discharge coefficient")
-        if discharge_coefficient is None:
+        lineEdit = self.lineEdit_linear_discharge_coefficient
+        linear_discharge_coefficient = self.check_inputs(lineEdit, "Linear discharge coefficient")
+        if linear_discharge_coefficient is None:
+            lineEdit.setFocus()
+            return dict()
+
+        lineEdit = self.lineEdit_non_linear_discharge_coefficient
+        non_linear_discharge_coefficient = self.check_inputs(lineEdit, "Non-linear discharge coefficient")
+        if non_linear_discharge_coefficient is None:
             lineEdit.setFocus()
             return dict()
 
@@ -298,7 +309,8 @@ class PerforatedPlateModelInputs(QDialog):
                                  "plate_thickness" : plate_thickness,
                                  "hole_diameter" : hole_diameter,
                                  "porosity" : porosity,
-                                 "discharge_coefficient" : discharge_coefficient
+                                 "linear_discharge_coefficient" : linear_discharge_coefficient,
+                                 "non_linear_discharge_coefficient" : non_linear_discharge_coefficient
                                  }
 
         return perforated_plate_data
@@ -552,8 +564,8 @@ class PerforatedPlateModelInputs(QDialog):
         if pp_data:
             if tab_index == 0:
                 U_rms = 0
-                a, b, Z_0 = model.get_transfer_impedance_for_circular_holes(omega, fluid, pp_data, None)
-                Z_tr = Z_0 * (a + b*U_rms)
+                a, b, c, Z_0 = model.get_transfer_impedance_for_circular_holes(omega, fluid, pp_data)
+                Z_tr = Z_0 * (a + b + c*U_rms)
 
             return freq, Z_tr
 
