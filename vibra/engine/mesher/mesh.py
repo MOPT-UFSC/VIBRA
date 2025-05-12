@@ -198,6 +198,8 @@ class Mesh:
                         f", {len(self.faces_connectivity)} dim 2"
                         f"and {len(self.solids_connectivity)} dim 3 elements"   )
 
+        return self
+
     def _merge_nodes_from_adjacent_volumes(self):
         """ This method merges all nodes from adjacent volumes.
         """
