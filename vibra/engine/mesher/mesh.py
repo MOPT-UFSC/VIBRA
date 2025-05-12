@@ -401,13 +401,13 @@ class Mesh:
 
 
     def _configure_mesh(
-                        self,
-                        element_type : ElementType,
-                        minimum_element_size: float,
-                        maximum_element_size: float,
-                        size_factor: float,
-                        refinement_parameters = list()
-                        ):
+        self,
+        element_type: ElementType,
+        minimum_element_size: float,
+        maximum_element_size: float,
+        size_factor: float,
+        refinement_parameters=list(),
+    ):
 
         if size_factor != 0:
             gmsh.option.setNumber("Mesh.MeshSizeFactor", size_factor)
@@ -419,6 +419,7 @@ class Mesh:
             gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
             gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
 
+        gmsh.option.setNumber("Mesh.RandomSeed", 1234)
         gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
         gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
         gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_type.recombination_algorithm)
