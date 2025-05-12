@@ -130,7 +130,6 @@ class Mesh:
         mesh_refinement_parameters=list(),
         mesh_connection=True,
     ):
-
         self.mesh_setup = dict(
             minimum_element_size=minimum_element_size,
             maximum_element_size=maximum_element_size,
@@ -152,7 +151,7 @@ class Mesh:
         gmsh.option.setNumber("Geometry.Tolerance", geometry_tolerance)
 
         logging.info("Loading geometry... [10/100]")
-        gmsh.open(path)
+        gmsh.open(str(path))
 
         logging.info("Configuring mesh... [20/100]")
         self._configure_mesh(
