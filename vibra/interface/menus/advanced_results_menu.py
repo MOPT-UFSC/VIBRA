@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QMenu
 from PySide6.QtGui import QColor, QAction
 
-from vibra.interface.plots.acoustic.export_element_transfer_data_input import ExportElementTransferDataInput
+from vibra.interface.plots.acoustic.export_element_transfer_data_inputs import ExportElementTransferDataInputs
 
 from molde.render_widgets import CommonRenderWidget
 
@@ -42,7 +42,7 @@ class AdvancedResultsMenu(QMenu):
     def export_element_transfer_data_callback(self):
         if app().project.acoustic_harmonic_solver.solution is None:
             return
-        ExportElementTransferDataInput()
+        ExportElementTransferDataInputs()
 
     def disable_advanced_acoustic_plots_buttons(self, disabled : bool):
         self.plot_specific_acoustic_impedance_action.setDisabled(disabled)

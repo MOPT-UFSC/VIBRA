@@ -13,14 +13,15 @@ from numbers import Number
 
 # GEOMETRY RENDER WIDGET INFO TEXTS
 def points_info_text():
-    point_ids = list(app().main_window.selected_geometry_points)
 
-    if len(point_ids) == 0:
+    selected_points = app().main_window.selected_geometry_points
+    node_ids = [int(point_id)-1 for point_id in selected_points]
+    point_ids = list(selected_points)
+
+    if len(node_ids) == 0:
         return ""
-    
+
     text = ""
-    nodes_from_points = app().project.model.mesh.nodes_from_points
-    node_ids = [int(nodes_from_points[i]) for i in point_ids]
 
     if len(point_ids) == 1:
         coords = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:].round(6)
@@ -55,11 +56,13 @@ def lines_info_text():
 
     if len(line_ids) == 0:
         return ""
+    
+    length_from_lines = app().project.model.mesh.length_from_lines
 
     text = ""
     length = 0
     for line_id in line_ids:
-        length += app().project.model.mesh.length_from_curve[line_id]
+        length += length_from_lines.get(line_id, 0)
 
     if len(line_ids) == 1:
         tree = TreeInfo(f"LINE {line_ids[0]}")
@@ -82,16 +85,18 @@ def faces_info_text():
     if len(volumes) != 0:
         return ""
     
-    text = ""
     surface_ids = list(app().main_window.selected_geometry_surfaces)
 
     if len(surface_ids) == 0:
-        return text
+        return ""
 
+    area_from_surfaces = app().project.model.mesh.area_from_surfaces
+
+    text = ""
     area = 0
     for surface_id in surface_ids:
-        area += app().project.model.mesh.area_from_surface[surface_id]
-    
+        area += area_from_surfaces.get(surface_id, 0)
+
     if len(surface_ids) == 1:
         tree = TreeInfo(f"SURFACE {surface_ids[0]}")
         tree.add_item("Area", f"{area : .6e}", "m²")
@@ -147,8 +152,10 @@ def process_volumes_and_masses(volume_ids: list):
     material_mass = 0.
     volume_compound = 0.
 
+    volume_from_bodies = app().project.model.mesh.volume_from_bodies
+
     for volume_id in volume_ids:
-        volume = app().project.model.mesh.volume_from_body[volume_id]
+        volume = volume_from_bodies.get(volume_id, 0)
         volume_compound += volume
 
         fluid = app().project.model.properties._get_property("fluid", volume=volume_id)

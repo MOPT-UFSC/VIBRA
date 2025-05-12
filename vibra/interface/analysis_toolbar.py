@@ -193,10 +193,17 @@ class AnalysisToolbar(QToolBar):
         self.set_pushbutton_run_analysis_enabled(valid_setup)
 
     def run_analysis(self):
+
         self.update_analysis_combo_boxes()
         if app().project.run_analysis():
             return
+
         self.set_pushbutton_reset_solution_enabled()
+
+        # This is needed specially when the geometry
+        # and mesh changes because of the analysis
+        app().main_window.update_plots(reset_camera=False)
+        app().file.write_results_data_in_file()
 
     def reset_solution(self):
         app().project.reset_solutions()

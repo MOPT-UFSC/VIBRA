@@ -1,9 +1,8 @@
-from vibra import app
 
+from vibra import app
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 from vibra.interface.general.print_message_input import PrintMessageInput
-# from vibra.project_file import *
 
 from fileboxes import Filebox
 
@@ -11,6 +10,8 @@ import os
 import io
 import h5py
 import numpy as np
+
+from copy import deepcopy
 from pathlib import Path
 
 window_title_1 = "Error"
@@ -36,7 +37,8 @@ class ProjectFile:
         self.project_setup_filename = "project_setup.json"
         self.fluid_library_filename = "fluid_library.config"
         self.material_library_filename = "material_library.config"
-        self.model_properties = "model_properties.json"
+        self.geometry_data_filename = "geometry_data.hdf5"
+        self.model_properties_filename = "model_properties.json"
         self.mesh_data_filename = "mesh_data.hdf5"
         self.imported_table_data_filename = "imported_tables_data.hdf5"
         self.results_data_filename = "results_data.hdf5"
@@ -108,6 +110,110 @@ class ProjectFile:
         geometry_qf = project_setup.get("geometry_qf", 3.0)  
         return length_unit, geometry_qf
 
+    def write_geometry_data_in_file(self):
+
+        mesh = app().project.model.mesh
+
+        geometry_data = dict(
+                            geometry_info = mesh.geometry_information,
+                            length_from_lines = mesh.length_from_lines,
+                            area_from_surfaces = mesh.area_from_surfaces,
+                            volume_from_bodies = mesh.volume_from_bodies,
+                            surfaces_from_volume = mesh.surfaces_from_volume,
+                            lines_from_surface = mesh.lines_from_surface,
+                            points_from_line = mesh.points_from_line,
+                            )
+
+        if app().project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
+
+            geometry_data.update(dict(
+                                      cache_surfaces_from_volume = mesh.cache_surfaces_from_volume,
+                                      cache_lines_from_surface = mesh.cache_lines_from_surface,
+                                      cache_points_from_line = mesh.cache_points_from_line,
+                                      ))
+
+        with self.filebox.open(self.geometry_data_filename, "w") as internal_file:
+            with h5py.File(internal_file, "w") as f:
+
+                for key, input_data in geometry_data.items():
+
+                    if key == "geometry_info":
+                        dtype = int
+                        output_data = dict()
+
+                        for _key, _data in input_data.items():
+                            new_key = f"entities/{_key}"
+                            output_data[new_key] = _data
+
+                    elif key in [ 
+                                "surfaces_from_volume", 
+                                "lines_from_surface", 
+                                "points_from_line", 
+                                "cache_surfaces_from_volume", 
+                                "cache_lines_from_surface", 
+                                "cache_points_from_line",
+                                ]:
+
+                        dtype = int
+                        prefix = f"adjacencies/{key}"
+                        output_data = deepcopy(input_data)
+
+                    elif key in [
+                                 "length_from_lines",
+                                 "area_from_surfaces",
+                                 "volume_from_bodies",
+                                 ]:
+
+                        dtype = float
+                        prefix = f"properties/{key}"
+                        output_data = convert_numeric_dictionary_in_array(input_data, float)
+
+                    else:
+                        continue
+
+                    if isinstance(output_data, dict):
+                        for _key, values in output_data.items():
+                            if isinstance(_key, int):
+                                name = f"{prefix}_{_key}"
+
+                            elif isinstance(_key, str) and "entities" in _key:
+                                name = _key
+
+                            else:
+                                continue
+
+                            f.create_dataset(name, data=values, dtype=dtype)
+
+                    else:
+                        f.create_dataset(prefix, data=output_data, dtype=dtype)
+
+        self.filebox.remove(self.results_data_filename)
+        app().main_window.project_data_modified = True
+
+    def read_geometry_data_from_file(self):
+
+        geometry_data = dict()
+
+        try:
+            with self.filebox.open(self.geometry_data_filename) as internal_file:
+                with h5py.File(internal_file, "r") as f:
+
+                    for group in list(f.keys()):
+                        for key, values in f.get(group).items():
+
+                            try:
+                                geometry_data[key] = np.array(values)
+
+                            except:
+                                geometry_data[key] = int(values)
+
+        except Exception as error_log:
+            # from traceback import print_exception
+            # print_exception(error_log)
+            return dict()
+
+        return geometry_data
+
     def write_mesh_setup_in_file(self, mesh_setup):
 
         project_setup = self.filebox.read(self.project_setup_filename)
@@ -133,33 +239,23 @@ class ProjectFile:
         mesh = app().project.model.mesh
 
         mesh_data = dict(
-                            nodal_coordinates = mesh.nodal_coordinates,
-                            nodes_from_points = mesh.nodes_from_points,
-                            nodes_from_lines = mesh.nodes_from_lines,
-                            nodes_from_surfaces = mesh.nodes_from_surfaces,
-                            nodes_from_volumes = mesh.nodes_from_volumes,
+                         nodal_coordinates = mesh.nodal_coordinates,
+                         nodes_from_points = convert_numeric_dictionary_in_array(mesh.nodes_from_points, int),
+                         lines_connectivity = mesh.lines_connectivity,
+                         faces_connectivity = mesh.faces_connectivity,
+                         solids_connectivity = mesh.solids_connectivity,
+                         normals_surface = mesh.normals_surface,
+                         curvatures_surface = mesh.curvatures_surface,
+                         )
 
-                            lines_connectivity = mesh.lines_connectivity,
-                            faces_connectivity = mesh.faces_connectivity,
-                            solids_connectivity = mesh.solids_connectivity,
-                            connectivity_from_surfaces = mesh.connectivity_from_surfaces,
+        if app().project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
 
-                            map_line_elements = mesh.get_array_based_elements_mapping(entity = "lines"),
-                            map_face_elements = mesh.get_array_based_elements_mapping(entity = "faces"),
-                            map_solid_elements = mesh.get_array_based_elements_mapping(entity = "solids"),
-
-                            gmsh_elements_from_lines = mesh.gmsh_elements_from_lines,
-                            gmsh_elements_from_surfaces = mesh.gmsh_elements_from_surfaces,
-                            gmsh_elements_from_volumes = mesh.gmsh_elements_from_volumes,
-
-                            surfaces_from_volume = mesh.surfaces_from_volume,
-                            lines_from_surface = mesh.lines_from_surface,
-                            points_from_line = mesh.points_from_line,
-
-                            normals_surface = mesh.normals_surface,
-                            curvatures_surface = mesh.curvatures_surface,
-
-                        )
+            mesh_data.update(dict(
+                                  cache_nodal_coordinates = mesh.cache_nodal_coordinates,
+                                  cache_solids_connectivity = mesh.cache_solids_connectivity,
+                                  cache_faces_connectivity = mesh.cache_faces_connectivity,
+                                  cache_lines_connectivity = mesh.cache_lines_connectivity,
+                                  ))
 
         with self.filebox.open(self.mesh_data_filename, "w") as internal_file:
             with h5py.File(internal_file, "w") as f:
@@ -167,45 +263,31 @@ class ProjectFile:
                 for key, data in mesh_data.items():
 
                     if "nodes" in key or "nodal" in key:
+                        dtype = float
                         prefix = f"nodal_data/{key}"
 
                     elif "connectivity" in key:
+                        dtype = int
                         prefix = f"connectivity/{key}"
 
-                    elif "map" in key:
-                        prefix = f"maps/{key}"
-
-                    elif "gmsh" in key:
-                        prefix = f"gmsh_data/{key}"
-
-                    elif key in ["surfaces_from_volume", "lines_from_surface", "points_from_line"]:
-                        prefix = f"geometry_info/{key}"
-
                     elif "normals_surface" in key:
+                        dtype = float
                         prefix = f"normals/{key}"
 
                     elif "curvatures_surface" in key:
+                        dtype = float
                         prefix = f"curvatures/{key}"
 
                     else:
+                        dtype = int
                         prefix = key
 
                     if isinstance(data, dict):
                         for _id, values in data.items():
                             name = f"{prefix}_{_id}"
-                            if key == "curvatures_surface" or key == "normals_surface":
-                                dtype = float
-                            else:
-                                dtype = int
-
                             f.create_dataset(name, data=values, dtype=dtype)
 
                     else:
-                        if key == "nodal_coordinates":
-                            dtype = float
-                        else:
-                            dtype = int
-
                         f.create_dataset(prefix, data=data, dtype=dtype)
 
         self.filebox.remove(self.results_data_filename)
@@ -228,10 +310,13 @@ class ProjectFile:
                             except:
                                 mesh_data[key] = int(values)
 
-        except:
+        except Exception as error_log:
+            # from traceback import print_exception
+            # print_exception(error_log)
             return dict()
 
         return mesh_data
+
 
     def write_analysis_setup_in_file(self, analysis_setup: dict):
 
@@ -333,7 +418,7 @@ class ProjectFile:
                         nodal_properties = normalize(properties.nodal_properties),
                         )
 
-            self.filebox.write(self.model_properties, data)
+            self.filebox.write(self.model_properties_filename, data)
             app().main_window.project_data_modified = True
 
         except Exception as error_log:
@@ -353,7 +438,7 @@ class ProjectFile:
                 new_prop[p, i] = val
             return new_prop
 
-        data = self.filebox.read(self.model_properties)
+        data = self.filebox.read(self.model_properties_filename)
 
         if data is None:
             return dict()
@@ -431,7 +516,14 @@ class ProjectFile:
     def read_thumbnail(self):
         return self.filebox.read(self.thumbnail_filename)
     
-    def write_results_data_in_file(self):
+    def write_results_data_in_file(self, save_mesh: bool =True, save_properties: bool =True):
+
+        if save_mesh:
+            app().file.write_mesh_data_in_file()
+
+        if save_properties:
+            app().file.write_model_properties_in_file()
+
         with self.filebox.open(self.results_data_filename, "w") as internal_file:
             with h5py.File(internal_file, "w") as f:
 
@@ -502,12 +594,49 @@ class ProjectFile:
             return dict()
 
         return results_data
-    
+
+    def remove_geometry_data_from_project_file(self):
+        self.filebox.remove(self.geometry_data_filename)
+
     def remove_model_properties_from_project_file(self):
-        self.filebox.remove(self.model_properties)
+        self.filebox.remove(self.model_properties_filename)
 
     def remove_mesh_data_from_project_file(self):
         self.filebox.remove(self.mesh_data_filename)
 
     def remove_results_data_from_project_file(self):
         self.filebox.remove(self.results_data_filename)
+
+def convert_numeric_dictionary_in_array(input_data: dict, data_type: int | float):
+    """ This function converts a numeric dictionary into an equivalent 
+        array with keys and values arranged in the first and second 
+        columns, respectively.
+
+        Parameters
+        ----------
+        input_data: dict
+            the numeric dictionary to be converted 
+            into an array of two columns
+
+        dtype: str, int as default value
+            configures the data type from the
+            output array
+
+        Return
+        ------
+        output_data: np.ndarray
+            the output array of two columns
+
+    """
+    if len(input_data) == 0:
+        return np.array([[]])
+
+    keys = list(input_data.keys())
+    values = list(input_data.values())
+
+    # if isinstance(values[0], np.ndarray):
+    #     values = [int(value) for value in values]
+    
+    output_data = np.array([keys, values], dtype=data_type).T
+
+    return output_data

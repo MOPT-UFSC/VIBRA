@@ -1,11 +1,11 @@
-from PySide6.QtWidgets import QDialog, QComboBox, QLabel, QLineEdit, QPushButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
 
 from vibra import app
 from vibra.interface.ui_generated.model.setup.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
-from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input import SetFluidInput
-from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input_simplified import SetFluidInputSimplified
+from vibra.interface.model_inputs.acoustic.fluid.set_fluid_inputs import SetFluidInputs
+from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
@@ -251,7 +251,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         if state_properties:
             self.hide()
-            self.fluid_dialog = SetFluidInputSimplified(state_properties = state_properties)
+            self.fluid_dialog = SimplifiedFluidInputs(state_properties = state_properties)
             self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
             self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
             self.fluid_dialog.exec_and_keep_window_open()
@@ -757,7 +757,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
                             }
 
         self.hide()
-        read = SetFluidInput(state_properties = compressor_info)
+        read = SetFluidInputs(state_properties = compressor_info)
         app().main_window.set_input_widget(self)
 
         if not read.complete:
