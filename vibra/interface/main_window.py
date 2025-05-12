@@ -445,13 +445,11 @@ class MainWindow(MainWindow_UI):
         self.results_viewer_widget.hide_bottom_widget()
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
 
-        if not self.action_model_workspace.isEnabled():
-            self.action_model_workspace.setEnabled(True)
+        self.action_results_workspace.setEnabled(True)
+        self.action_results_workspace.setChecked(True)
+        self.action_mesh_workspace.setChecked(False)
+        self.action_model_workspace.setChecked(False)
 
-        if not self.action_mesh_workspace.isEnabled():
-            self.action_mesh_workspace.setEnabled(True)
-
-        self.action_results_workspace.setEnabled(False)
         self.animation_toolbar.setEnabled(False)
 
     def show_geometry_render_widget(self):
@@ -499,13 +497,14 @@ class MainWindow(MainWindow_UI):
 
     def action_model_workspace_callback(self):
         self.action_node_view.setToolTip("Points view")
-        self.action_model_workspace.setEnabled(False)
+        self.action_model_workspace.setChecked(True)
+        self.action_mesh_workspace.setChecked(False)
 
-        if not self.action_mesh_workspace.isEnabled():
-            self.action_mesh_workspace.setEnabled(True)
-
-        if not self.action_results_workspace.isEnabled():
+        if app().project.is_there_a_valid_solution():
             self.action_results_workspace.setEnabled(True)
+            self.action_results_workspace.setChecked(False)
+        else:
+            self.action_results_workspace.setEnabled(False)
 
         self.splitter.widget(0).setVisible(True)
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
@@ -517,13 +516,14 @@ class MainWindow(MainWindow_UI):
 
     def action_mesh_workspace_callback(self):
         self.action_node_view.setToolTip("Nodes view")
-        self.action_mesh_workspace.setEnabled(False)
+        self.action_mesh_workspace.setChecked(True)
+        self.action_model_workspace.setChecked(False)
 
-        if not self.action_model_workspace.isEnabled():
-            self.action_model_workspace.setEnabled(True)
-
-        if not self.action_results_workspace.isEnabled():
+        if app().project.is_there_a_valid_solution():
             self.action_results_workspace.setEnabled(True)
+            self.action_results_workspace.setChecked(False)
+        else:
+            self.action_results_workspace.setEnabled(False)
 
         self.update_mesh_information()
         self.splitter.widget(0).setVisible(True)
@@ -535,16 +535,13 @@ class MainWindow(MainWindow_UI):
         self.animation_toolbar.pause_animation()
 
     def action_results_workspace_callback(self):
-
         if not app().project.is_there_a_valid_solution():
             return
-
-        self.action_results_workspace.setEnabled(False)
-
-        if not self.action_model_workspace.isEnabled():
-            self.action_model_workspace.setEnabled(True)
-        if not self.action_mesh_workspace.isEnabled():
-            self.action_mesh_workspace.setEnabled(True)
+        
+        self.action_results_workspace.setEnabled(True)
+        self.action_results_workspace.setChecked(True)
+        self.action_model_workspace.setChecked(False)
+        self.action_mesh_workspace.setChecked(False)
 
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
         self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
@@ -833,7 +830,10 @@ class MainWindow(MainWindow_UI):
             self.update_mesh_information()
 
             LoadingWindow(self.mesh_widget.update_plot).run()
-            LoadingWindow(self.geometry_widget.update_plot).run()
+            LoadingWindow(self.geometry_widget.update_plot).run()                
+
+            self.action_results_workspace.setDisabled(True)
+            self.action_model_workspace_callback()
             
         except Exception as error_log:
             from traceback import print_exception
@@ -852,9 +852,6 @@ class MainWindow(MainWindow_UI):
             return
 
         try:
-
-            self.action_model_workspace_callback()
-
             self.renderer_toolbar.setDisabled(False)
             self.analysis_toolbar.setDisabled(False)
             self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
@@ -932,10 +929,6 @@ class MainWindow(MainWindow_UI):
 
     def action_about_vibra_callback(self):
         self.render_widgets_stack.setCurrentWidget(self.help_widget)
-
-        self.action_model_workspace.setDisabled(False)
-        self.action_mesh_workspace.setDisabled(False)
-        self.action_results_workspace.setDisabled(False)
 
     def action_top_view_callback(self):
         widget = self.render_widgets_stack.currentWidget()

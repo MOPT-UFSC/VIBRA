@@ -286,7 +286,7 @@ class Project:
         analysis_setup = app().file.read_analysis_setup_from_file()
         if analysis_setup is None:
             return
-
+    
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD]:

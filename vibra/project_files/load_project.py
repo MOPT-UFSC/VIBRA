@@ -354,8 +354,6 @@ class LoadProject:
         #     app().file.write_mesh_data_in_file()
         #     app().file.app().file.write_geometry_data_in_file()
 
-        app().main_window.action_model_workspace_callback()
-
     def update_render(self):
 
         logging.info("Updating render... [20/100]")
@@ -478,6 +476,7 @@ class LoadProject:
                     continue
 
             logging.info("Updating analysis render... [85/100]")
+            
 
 
 def convert_two_columns_array_into_numeric_dictionary(input_data: np.ndarray, values_dtype: int | float=int):

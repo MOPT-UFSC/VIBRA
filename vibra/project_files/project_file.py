@@ -166,6 +166,7 @@ class ProjectFile:
 
                         dtype = float
                         prefix = f"properties/{key}"
+                        print(input_data)
                         output_data = convert_numeric_dictionary_in_array(input_data, float)
 
                     else:

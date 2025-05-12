@@ -195,7 +195,7 @@
   </widget>
   <action name="action_new_project">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/new_file.png</normaloff>:/icons/new_file.png</iconset>
    </property>
    <property name="text">
@@ -204,7 +204,7 @@
   </action>
   <action name="action_open_project">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/import.png</normaloff>:/icons/import.png</iconset>
    </property>
    <property name="text">
@@ -213,7 +213,7 @@
   </action>
   <action name="action_recent">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/recent.png</normaloff>:/icons/recent.png</iconset>
    </property>
    <property name="text">
@@ -222,7 +222,7 @@
   </action>
   <action name="action_save">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/save.png</normaloff>:/icons/save.png</iconset>
    </property>
    <property name="text">
@@ -234,7 +234,7 @@
   </action>
   <action name="action_save_as">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/save_as.png</normaloff>:/icons/save_as.png</iconset>
    </property>
    <property name="text">
@@ -243,7 +243,7 @@
   </action>
   <action name="action_export_mesh">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/save.png</normaloff>:/icons/save.png</iconset>
    </property>
    <property name="text">
@@ -252,7 +252,7 @@
   </action>
   <action name="action_capture_image">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/cube-scan.png</normaloff>:/icons/cube-scan.png</iconset>
    </property>
    <property name="text">
@@ -261,7 +261,7 @@
   </action>
   <action name="action_exit">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/exit.png</normaloff>:/icons/exit.png</iconset>
    </property>
    <property name="text">
@@ -270,7 +270,7 @@
   </action>
   <action name="action_show_menu_items">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/new_file.png</normaloff>:/icons/new_file.png</iconset>
    </property>
    <property name="text">
@@ -279,7 +279,7 @@
   </action>
   <action name="action_set_fluid">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/new_file.png</normaloff>:/icons/new_file.png</iconset>
    </property>
    <property name="text">
@@ -288,7 +288,7 @@
   </action>
   <action name="action_set_material">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/new_file.png</normaloff>:/icons/new_file.png</iconset>
    </property>
    <property name="text">
@@ -297,7 +297,7 @@
   </action>
   <action name="action_mesher_setup">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/new_file.png</normaloff>:/icons/new_file.png</iconset>
    </property>
    <property name="text">
@@ -306,7 +306,7 @@
   </action>
   <action name="action_about_vibra">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/help.png</normaloff>:/icons/help.png</iconset>
    </property>
    <property name="text">
@@ -315,7 +315,7 @@
   </action>
   <action name="action_reset_project">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/recent.png</normaloff>:/icons/recent.png</iconset>
    </property>
    <property name="text">
@@ -324,7 +324,7 @@
   </action>
   <action name="action_top_view">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/views/top.png</normaloff>:/icons/views/top.png</iconset>
    </property>
    <property name="text">
@@ -333,7 +333,7 @@
   </action>
   <action name="action_bottom_view">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/views/bottom.png</normaloff>:/icons/views/bottom.png</iconset>
    </property>
    <property name="text">
@@ -345,7 +345,7 @@
   </action>
   <action name="action_right_view">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/views/right.png</normaloff>:/icons/views/right.png</iconset>
    </property>
    <property name="text">
@@ -357,7 +357,7 @@
   </action>
   <action name="action_left_view">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/views/left.png</normaloff>:/icons/views/left.png</iconset>
    </property>
    <property name="text">
@@ -369,7 +369,7 @@
   </action>
   <action name="action_front_view">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/views/front.png</normaloff>:/icons/views/front.png</iconset>
    </property>
    <property name="text">
@@ -381,7 +381,7 @@
   </action>
   <action name="action_back_view">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/views/back.png</normaloff>:/icons/views/back.png</iconset>
    </property>
    <property name="text">
@@ -393,7 +393,7 @@
   </action>
   <action name="action_isometric_view">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/views/orthogonal.png</normaloff>:/icons/views/orthogonal.png</iconset>
    </property>
    <property name="text">
@@ -411,7 +411,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/visibility/nodes.png</normaloff>:/icons/visibility/nodes.png</iconset>
    </property>
    <property name="text">
@@ -426,7 +426,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/visibility/lines.png</normaloff>:/icons/visibility/lines.png</iconset>
    </property>
    <property name="text">
@@ -441,7 +441,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/visibility/faces.png</normaloff>:/icons/visibility/faces.png</iconset>
    </property>
    <property name="text">
@@ -450,7 +450,7 @@
   </action>
   <action name="section_plane_show_action">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/visibility/section_plane_view.png</normaloff>:/icons/visibility/section_plane_view.png</iconset>
    </property>
    <property name="text">
@@ -465,7 +465,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/visibility/show_symbols.png</normaloff>:/icons/visibility/show_symbols.png</iconset>
    </property>
    <property name="text">
@@ -474,7 +474,7 @@
   </action>
   <action name="action_zoom_to_fit">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/views/zoom_icon.png</normaloff>:/icons/views/zoom_icon.png</iconset>
    </property>
    <property name="text">
@@ -498,7 +498,7 @@
   </action>
   <action name="action_hide_selection">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/visibility/hide_icon.png</normaloff>:/icons/visibility/hide_icon.png</iconset>
    </property>
    <property name="text">
@@ -510,7 +510,7 @@
   </action>
   <action name="action_unhide_all">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/visibility/unhide_all_icon.png</normaloff>:/icons/visibility/unhide_all_icon.png</iconset>
    </property>
    <property name="text">
@@ -525,7 +525,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/visibility/section_plane_config.png</normaloff>:/icons/visibility/section_plane_config.png</iconset>
    </property>
    <property name="text">
@@ -534,7 +534,7 @@
   </action>
   <action name="action_plot_particle_velocity">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/image-plus.png</normaloff>:/icons/image-plus.png</iconset>
    </property>
    <property name="text">
@@ -543,7 +543,7 @@
   </action>
   <action name="action_plot_specific_acoustic_impedance">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/image-plus.png</normaloff>:/icons/image-plus.png</iconset>
    </property>
    <property name="text">
@@ -552,7 +552,7 @@
   </action>
   <action name="action_export_element_transfer_data">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/exit.png</normaloff>:/icons/exit.png</iconset>
    </property>
    <property name="text">
@@ -561,7 +561,7 @@
   </action>
   <action name="action_generate_mesh">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/new_file.png</normaloff>:/icons/new_file.png</iconset>
    </property>
    <property name="text">
@@ -570,7 +570,7 @@
   </action>
   <action name="action_theme">
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/sun_icon.png</normaloff>:/icons/sun_icon.png</iconset>
    </property>
    <property name="text">
@@ -578,8 +578,11 @@
    </property>
   </action>
   <action name="action_model_workspace">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/model.png</normaloff>:/icons/model.png</iconset>
    </property>
    <property name="text">
@@ -587,8 +590,14 @@
    </property>
   </action>
   <action name="action_mesh_workspace">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/mesh.png</normaloff>:/icons/mesh.png</iconset>
    </property>
    <property name="text">
@@ -596,8 +605,14 @@
    </property>
   </action>
   <action name="action_results_workspace">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="../icons/resources.qrc">
      <normaloff>:/icons/results.png</normaloff>:/icons/results.png</iconset>
    </property>
    <property name="text">
@@ -647,6 +662,8 @@
    </property>
   </action>
  </widget>
- <resources><include location="../icons/resources.qrc" /></resources>
+ <resources>
+  <include location="../icons/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>
