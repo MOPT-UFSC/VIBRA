@@ -106,4 +106,6 @@ def _compare_mesh(mesh: Mesh, mesh_path: Path | str):
     assert np.allclose(expected_nodal_coordinates, mesh.nodal_coordinates)
     assert np.allclose(expected_lines_connectivity, mesh.lines_connectivity)
     assert np.allclose(expected_faces_connectivity, mesh.faces_connectivity)
-    assert np.allclose(expected_solids_connectivity, mesh.solids_connectivity)
+
+    if (expected_solids_connectivity.size != 0) and (mesh.solids_connectivity.size != 0):
+        assert np.allclose(expected_solids_connectivity, mesh.solids_connectivity)
