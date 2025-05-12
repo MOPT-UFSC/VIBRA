@@ -505,6 +505,7 @@ class MainWindow(MainWindow_UI):
             self.action_results_workspace.setChecked(False)
         else:
             self.action_results_workspace.setEnabled(False)
+            self.action_results_workspace.setChecked(False)
 
         self.splitter.widget(0).setVisible(True)
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)

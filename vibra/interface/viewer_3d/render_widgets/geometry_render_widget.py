@@ -169,9 +169,6 @@ class GeometryRenderWidget(CommonRenderWidget):
     def save_thumbnail(self):
         thumbnail = app().project.thumbnail
 
-        # if not self.isVisible():
-        #     return
-
         self.render_interactor.GetRenderWindow().OffScreenRenderingOn()
 
         color = Color(247, 0, 255)
