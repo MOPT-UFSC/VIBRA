@@ -320,6 +320,10 @@ class Mesh:
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
         np.savetxt(filename, self.nodal_coordinates, delimiter=",", header=header, fmt=fmt)
 
+    def export_line_elements_connectivity(self, filename):
+        header = "Index || Element ID || Line ID || Element type ID || Connected Node IDs"
+        np.savetxt(filename, self.lines_connectivity, delimiter=",", header=header, fmt="%i")
+
     def export_face_elements_connectivity(self, filename):
         header = "Index || Element ID || Face ID || Element type ID || Connected Node IDs"
         np.savetxt(filename, self.faces_connectivity, delimiter=",", header=header, fmt="%i")
