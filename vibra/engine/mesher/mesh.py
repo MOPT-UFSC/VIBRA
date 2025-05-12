@@ -123,7 +123,7 @@ class Mesh:
         maximum_element_size: float = 30.0,
         element_type: ElementType = DEFAULT_ELEMENT_TYPE,
         geometry_tolerance: float = 1e-8,
-        size_factor: float = 0.50,
+        size_factor: float = 1,
         dimension: int = 3,
         threads: int = 0,
         gmsh_gui: bool = False,
@@ -185,8 +185,7 @@ class Mesh:
         self._process_mesh()
 
         if gmsh_gui:
-            if "-nopopup" not in sys.argv:
-                gmsh.fltk.run()
+            gmsh.fltk.run()
 
         gmsh.finalize()
         # dt = time() - t0
@@ -409,10 +408,7 @@ class Mesh:
         refinement_parameters=list(),
     ):
 
-        if size_factor != 0:
-            gmsh.option.setNumber("Mesh.MeshSizeFactor", size_factor)
-
-        elif refinement_parameters:
+        if refinement_parameters:
             self.local_mesh_refine(maximum_element_size, refinement_parameters)
 
         else:
@@ -420,6 +416,7 @@ class Mesh:
             gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
 
         gmsh.option.setNumber("Mesh.RandomSeed", 1234)
+        gmsh.option.setNumber("Mesh.MeshSizeFactor", size_factor)
         gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
         gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
         gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_type.recombination_algorithm)
