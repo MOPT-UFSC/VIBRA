@@ -233,8 +233,8 @@ class AnalysisToolbar(QToolBar):
         if select.index == -1:
             return
  
-        analysis_data = {"analysis_id": select.index}
-        self.update_analysis_data(analysis_data)
+        analysis_setup = {"analysis_id": select.index}
+        self.update_analysis_setup(analysis_setup)
         harmonic = AnalysisSetupInput()
 
         if harmonic.setup_defined:
@@ -246,8 +246,8 @@ class AnalysisToolbar(QToolBar):
 
     def harmonic_acoustic(self):
 
-        analysis_data = {"analysis_id": AnalysisID.ACOUSTIC_HARMONIC}
-        self.update_analysis_data(analysis_data)
+        analysis_setup = {"analysis_id": AnalysisID.ACOUSTIC_HARMONIC}
+        self.update_analysis_setup(analysis_setup)
         harmonic = AnalysisSetupInput()
 
         if harmonic.setup_defined:
@@ -263,7 +263,7 @@ class AnalysisToolbar(QToolBar):
             return
 
         if modal.setup_defined:
-            self.update_analysis_data(modal.analysis_setup)
+            self.update_analysis_setup(modal.analysis_setup)
             self.final_actions()
 
         if modal.proceed_solution:
@@ -276,21 +276,21 @@ class AnalysisToolbar(QToolBar):
             return
 
         if modal.setup_defined:
-            self.update_analysis_data(modal.analysis_setup)
+            self.update_analysis_setup(modal.analysis_setup)
             self.final_actions()
 
         if modal.proceed_solution:
             self.run_analysis()
 
-    def update_analysis_data(self, analysis_data: dict):
-        if app().project.analysis_data is not None:
-            for key, value in app().project.analysis_data.items():
+    def update_analysis_setup(self, analysis_setup: dict):
+        if app().project.analysis_setup is not None:
+            for key, value in app().project.analysis_setup.items():
                 if key in ["f_min", "f_max", "f_step", "frequencies", "global_damping"]:
-                    analysis_data[key] = value
+                    analysis_setup[key] = value
 
-        app().project.set_analysis_data(analysis_data)
+        app().project.set_analysis_setup(analysis_setup)
 
     def final_actions(self):
         self.reset_solution()
         app().project.create_solver()
-        app().file.write_analysis_setup_in_file(app().project.analysis_data)
+        app().file.write_analysis_setup_in_file(app().project.analysis_setup)

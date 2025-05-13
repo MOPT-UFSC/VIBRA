@@ -33,7 +33,7 @@ class PlotStructuralFrequencyResponseInputs(QWidget):
         self._define_qt_variables()
         self._create_connections()
 
-        self._load_analysis_data_and_solution()
+        self._load_analysis_setup_and_solution()
         self.geometry_selection_callback()
     
     def showEvent(self, event):
@@ -108,19 +108,19 @@ class PlotStructuralFrequencyResponseInputs(QWidget):
         else:
             self.lineEdit_selection_id.setText("")
 
-    def _load_analysis_data_and_solution(self):
+    def _load_analysis_setup_and_solution(self):
 
         self.analysis_method = ""
-        analysis_data = app().project.analysis_data
+        analysis_setup = app().project.analysis_setup
 
-        if "analysis_id" in analysis_data.keys():
-            if analysis_data["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
+        if "analysis_id" in analysis_setup.keys():
+            if analysis_setup["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
                 self.analysis_method = "Direct method"
 
-            elif analysis_data["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION:
+            elif analysis_setup["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION:
                 self.analysis_method = "Mode Superposition method"
 
-        self.frequencies = app().project.structural_harmonic_solver.frequencies
+        self.frequencies = app().project.model.frequencies
         self.solution = app().project.structural_harmonic_solver.solution
 
     def check_inputs(self):
@@ -241,22 +241,22 @@ class PlotStructuralFrequencyResponseInputs(QWidget):
             y_data = self.get_response(selection_type, selected_id, self.local_dof)
 
             self.model_results[key] = { 
-                                        "x_data" : self.frequencies,
-                                        "y_data" : y_data,
-                                        "x_label" : "Frequency [Hz]",
-                                        "y_label" : self.y_label,
-                                        "title" : self.title,
-                                        "data_type" : self.y_label,
-                                        "legend" : legend_label,
-                                        "unit" : self.unit_label,
-                                        "color" : get_color(i),
-                                        "linestyle" : "-"  
-                                      }
+                                       "x_data" : self.frequencies,
+                                       "y_data" : y_data,
+                                       "x_label" : "Frequency [Hz]",
+                                       "y_label" : self.y_label,
+                                       "title" : self.title,
+                                       "data_type" : self.y_label,
+                                       "legend" : legend_label,
+                                       "unit" : self.unit_label,
+                                       "color" : get_color(i),
+                                       "linestyle" : "-"  
+                                       }
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.plot_data_callback()
-    
+
 def get_color(index):
 
     colors = [  (0,0,1), 

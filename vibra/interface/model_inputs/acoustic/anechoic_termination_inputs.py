@@ -253,10 +253,10 @@ class AnechoicTerminationInputs(QDialog):
                 if "table_names" in data.keys():
                     return
 
-        if isinstance(self.project.analysis_data, dict):
-            analysis_data = self.project.analysis_data
-            self.project.set_analysis_data(analysis_data)
-            app().file.write_analysis_setup_in_file(analysis_data)
+        if isinstance(self.project.analysis_setup, dict):
+            analysis_setup = self.project.analysis_setup
+            self.project.set_analysis_setup(analysis_setup)
+            app().file.write_analysis_setup_in_file(analysis_setup)
 
     def update_tabs_visibility(self):
         for key, data in self.properties.surface_properties.items():

@@ -90,11 +90,11 @@ class AcousticModalAnalysisBar(QWidget):
         if frequencies is None:
             return
 
-        analysis_data = app().project.analysis_data
-        if analysis_data is None:
+        analysis_setup = app().project.analysis_setup
+        if analysis_setup is None:
             return
 
-        if analysis_data["analysis_id"] == AnalysisID.ACOUSTIC_MODAL:
+        if analysis_setup["analysis_id"] == AnalysisID.ACOUSTIC_MODAL:
             prefix = "Mode"
         else:
             prefix = "Frequency"

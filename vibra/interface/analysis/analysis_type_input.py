@@ -44,7 +44,7 @@ class AnalysisTypeInput(QDialog):
         # Analysis ID 5 ==> Coupled Harmonic Analysis - Direct Method
         # Analysis ID 6 ==> Coupled Harmonic Analysis - Mode Superposition Method
         #
-        self.analysis_data = {}
+        self.analysis_setup = {}
         self.analysis_id = AnalysisID.NO_ANALYSIS
         self.analysis_type_label = None
         self.analysis_method_label = None
@@ -91,11 +91,11 @@ class AnalysisTypeInput(QDialog):
         else:
             analysis_id = AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION
 
-        self.analysis_data = {"analysis_id": analysis_id}
+        self.analysis_setup = {"analysis_id": analysis_id}
         self.finalize()
 
     def harmonic_acoustic(self):
-        self.analysis_data = {"analysis_id": AnalysisID.ACOUSTIC_HARMONIC}
+        self.analysis_setup = {"analysis_id": AnalysisID.ACOUSTIC_HARMONIC}
         self.finalize()
 
     def harmonic_coupled(self):
@@ -110,7 +110,7 @@ class AnalysisTypeInput(QDialog):
         else:
             analysis_id = AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION
 
-        self.analysis_data = {"analysis_id": analysis_id}
+        self.analysis_setup = {"analysis_id": analysis_id}
         self.finalize()
 
     def modal_structural(self):
@@ -120,7 +120,7 @@ class AnalysisTypeInput(QDialog):
         if not modal.setup_defined:
             return
 
-        self.analysis_data = modal.analysis_setup.copy()
+        self.analysis_setup = modal.analysis_setup.copy()
         self.run_modal = modal.proceed_solution
         self.finalize()
 
@@ -131,26 +131,26 @@ class AnalysisTypeInput(QDialog):
         if not modal.setup_defined:
             return
 
-        self.analysis_data = modal.analysis_setup.copy()
+        self.analysis_setup = modal.analysis_setup.copy()
         self.run_modal = modal.proceed_solution
         self.finalize()
 
     def finalize(self):
 
         self.complete = True
-        if len(app().project.analysis_data):
-            for key, value in app().project.analysis_data.items():
+        if len(app().project.analysis_setup):
+            for key, value in app().project.analysis_setup.items():
                 if key in ["f_min", "f_max", "f_step", "frequencies", "global_damping"]:
-                    self.analysis_data[key] = value
+                    self.analysis_setup[key] = value
 
-        app().project.set_analysis_data(self.analysis_data)
+        app().project.set_analysis_setup(self.analysis_setup)
         app().project.create_solver()
 
-        if self.analysis_data["analysis_id"] in [
+        if self.analysis_setup["analysis_id"] in [
             AnalysisID.STRUCTURAL_MODAL,
             AnalysisID.ACOUSTIC_MODAL,
         ]:
-            app().file.write_analysis_setup_in_file(self.analysis_data)
+            app().file.write_analysis_setup_in_file(self.analysis_setup)
 
         self.close()
 

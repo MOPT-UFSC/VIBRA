@@ -553,9 +553,9 @@ class PorousMaterialModelInputs(QDialog):
         warnings.filterwarnings('ignore')
 
         frequencies = None
-        analysis_data = app().project.analysis_data
-        if isinstance(analysis_data, dict):
-            frequencies = analysis_data.get("frequencies", None)
+        analysis_setup = app().project.analysis_setup
+        if isinstance(analysis_setup, dict):
+            frequencies = analysis_setup.get("frequencies", None)
 
         if frequencies is None:
             df = 5

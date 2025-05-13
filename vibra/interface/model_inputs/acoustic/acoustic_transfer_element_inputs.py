@@ -40,7 +40,7 @@ class AcousticTransferElementInputs(QDialog):
         self._define_qt_variables()
         self._create_connections()
 
-        self._load_analysis_data()
+        self._load_analysis_setup()
         self.geometry_selection_callback()
 
         while self.keep_window_open:
@@ -131,9 +131,9 @@ class AcousticTransferElementInputs(QDialog):
     def lineEdit_2_clicked(self):
         self.current_lineEdit = self.lineEdit_output_selected_id
 
-    def _load_analysis_data(self):
+    def _load_analysis_setup(self):
 
-        data = self.project.analysis_data
+        data = self.project.analysis_setup
         if isinstance(data, dict):
 
             if "f_min" in data.keys():
@@ -230,10 +230,10 @@ class AcousticTransferElementInputs(QDialog):
 
         self.frequencies = np.arange(input_fmin, input_fmax + input_fstep, input_fstep)
 
-        self.analysis_data["f_min"] = input_fmin
-        self.analysis_data["f_max"] = input_fmax
-        self.analysis_data["f_step"] = input_fstep
-        self.analysis_data["frequencies"] = self.frequencies
+        self.analysis_setup["f_min"] = input_fmin
+        self.analysis_setup["f_max"] = input_fmax
+        self.analysis_setup["f_step"] = input_fstep
+        self.analysis_setup["frequencies"] = self.frequencies
 
     def check_inputs(self, input_value: str, label: str):
 
@@ -266,14 +266,14 @@ class AcousticTransferElementInputs(QDialog):
 
     def configure_analysis(self):
 
-        self.analysis_data = {"analysis_id": AnalysisID.ACOUSTIC_HARMONIC}
+        self.analysis_setup = {"analysis_id": AnalysisID.ACOUSTIC_HARMONIC}
 
         if self.check_frequency_entries():
             return True
 
-        app().project.set_analysis_data(self.analysis_data)
+        app().project.set_analysis_setup(self.analysis_setup)
         app().project.create_solver()
-        app().file.write_analysis_setup_in_file(self.analysis_data)
+        app().file.write_analysis_setup_in_file(self.analysis_setup)
 
     def process_data_callback(self):
         """

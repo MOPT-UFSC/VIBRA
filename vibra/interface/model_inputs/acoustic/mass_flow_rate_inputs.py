@@ -312,7 +312,7 @@ class MassFlowRateInputs(QDialog):
         analysis_setup["f_max"] = float(f_max)
         analysis_setup["f_step"] = float(f_step)
 
-        app().project.set_analysis_data(analysis_setup)
+        app().project.set_analysis_setup(analysis_setup)
         app().file.write_analysis_setup_in_file(analysis_setup)
 
     def load_mass_flow_rate_table(self):
@@ -468,10 +468,10 @@ class MassFlowRateInputs(QDialog):
                 if "table_names" in data.keys():
                     return
 
-        if isinstance(self.project.analysis_data, dict):
-            analysis_data = self.project.analysis_data
-            self.project.set_analysis_data(analysis_data)
-            app().file.write_analysis_setup_in_file(analysis_data)
+        if isinstance(self.project.analysis_setup, dict):
+            analysis_setup = self.project.analysis_setup
+            self.project.set_analysis_setup(analysis_setup)
+            app().file.write_analysis_setup_in_file(analysis_setup)
 
     def reset_input_fields(self):
         self.lineEdit_real_value.setText("")

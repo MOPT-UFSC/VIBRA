@@ -34,7 +34,7 @@ class AcousticPressureFrequencyResponseFunctionInputs(QWidget):
         self._define_qt_variables()
         self._create_connections()
 
-        self._load_analysis_data_and_solution()
+        self._load_analysis_setup_and_solution()
         self.geometry_selection_callback()
     
     def showEvent(self, event):
@@ -105,16 +105,16 @@ class AcousticPressureFrequencyResponseFunctionInputs(QWidget):
     def lineEdit_2_clicked(self):
         self.current_lineEdit = self.lineEdit_output_selected_id
 
-    def _load_analysis_data_and_solution(self):
+    def _load_analysis_setup_and_solution(self):
 
         self.analysis_method = ""
-        analysis_data = self.project.analysis_data
+        analysis_setup = self.project.analysis_setup
 
-        if "analysis_id" in analysis_data.keys():
-            if analysis_data["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
+        if "analysis_id" in analysis_setup.keys():
+            if analysis_setup["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
                 self.analysis_method = "Direct method"
 
-        self.frequencies = self.project.acoustic_harmonic_solver.frequencies
+        self.frequencies = app().project.model.frequencies
         self.solution = self.project.acoustic_harmonic_solver.solution
 
     def geometry_selection_callback(self):

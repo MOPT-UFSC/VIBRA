@@ -349,7 +349,6 @@ class LoadProject:
             self.load_mesh_data_from_file(mesh_data)
 
         # else:
-        #     print("está vazio e será processada a malha")
         #     app().project.generate_mesh()
         #     app().file.write_mesh_data_in_file()
         #     app().file.app().file.write_geometry_data_in_file()
@@ -434,7 +433,7 @@ class LoadProject:
             if ([f_min, f_max, f_step]).count(None) == 0:
                 analysis_setup["frequencies"] = np.arange(f_min, f_max + f_step, f_step)
 
-        app().project.set_analysis_data(analysis_setup)
+        app().project.set_analysis_setup(analysis_setup)
         app().project.create_solver()
 
     def load_thumbnail(self):
@@ -465,12 +464,10 @@ class LoadProject:
                     project.structural_modal_solver.displacement_dofs = data["displacement_dofs"]
 
                 elif key == "harmonic_acoustic" and project.acoustic_harmonic_solver is not None:
-                    project.acoustic_harmonic_solver.frequencies = data.get("frequencies")
                     project.acoustic_harmonic_solver.solution = data.get("solution")
                     app().main_window.disable_advanced_acoustic_plots_buttons(False)
 
                 elif key == "harmonic_structural" and project.structural_harmonic_solver is not None:
-                    project.structural_harmonic_solver.frequencies = data.get("frequencies")
                     project.structural_harmonic_solver.solution = data.get("solution")
                     project.structural_harmonic_solver.displacement_dofs = data["displacement_dofs"]
 
