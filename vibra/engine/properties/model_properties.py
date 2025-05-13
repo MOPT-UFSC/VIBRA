@@ -319,19 +319,18 @@ class ModelProperties:
         else:
             return "structural"
 
-    def get_property_related_table_names(self, property : str, selected_ids : int | list, selection: str) -> list:
+    def get_property_related_table_names(self, property : str, selected_ids : int | list | tuple, selection: str) -> list:
         """
         """
         table_names = list()
         if isinstance(selected_ids, int):
             test_key = (property, selected_ids)
-
         elif isinstance(selected_ids, list) and len(selected_ids) == 1:
             test_key = (property, selected_ids[0])
-
         elif isinstance(selected_ids, list) and len(selected_ids) == 2:
             test_key = (property, selected_ids[0], selected_ids[1])
-
+        elif isinstance(selected_ids, tuple) and len(selected_ids) == 2:
+            test_key = (property, selected_ids)
         else:
             return table_names
 
@@ -346,9 +345,8 @@ class ModelProperties:
         else:
             return table_names
 
-        if test_key in _properties.keys():
-            data = _properties[test_key]
-
+        data = _properties.get(test_key)
+        if isinstance(data, dict):
             if "table_names" in data.keys():
                 for table_name in data["table_names"]:
                     if table_name is not None:

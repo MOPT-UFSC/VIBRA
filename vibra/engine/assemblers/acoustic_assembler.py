@@ -234,29 +234,42 @@ class AcousticAssembler:
         connectivity_surface_A = dict()
         connectivity_surface_B = dict()
 
-        # aux_ones = np.ones((1, self.number_frequencies), dtype=complex)
         integration_data = dict()
 
-        for (property_label, surface_id) in self.properties.surface_properties.keys():
+        for (property_label, surface_ids), pp_data in self.properties.surface_properties.items():
 
             if property_label == "perforated_plate_model":
+                pp_data: dict
 
-                decouple_data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_id)
-                if not isinstance(decouple_data, dict):
-                    continue
+                pp_model = self.model.perforated_plate_impedance_data[surface_ids]
+                pp_model: dict
 
-                new_surface_id = decouple_data.get("new_surface_id")
-                if new_surface_id is None:
-                    continue
+                z_orifice = pp_model.get("z_orifice", 0)
+                z_end = pp_model.get("z_end", 0)
+                z_nl_urms = pp_model.get("z_nl_urms", 0)
+                z_ud = pp_model.get("z_ud", 0)
+                Z_0 = pp_model.get("Z_0", 0)
 
-                pp_data = self.model.perforated_plate_impedance_data[surface_id]
-                a = pp_data.get("a", 0)
-                b = pp_data.get("b", 0)
-                c = pp_data.get("c", 0)
-                Z_0 = pp_data.get("Z_0", 0)
+                if pp_data.get("coupling_type") == "inside_surfaces":
 
-                surface_elements_A = list(self.model.mesh.elements_from_surface[surface_id])
-                surface_elements_B = list(self.model.mesh.elements_from_surface[new_surface_id])
+                    decouple_data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_ids)
+                    if not isinstance(decouple_data, dict):
+                        continue
+
+                    new_surface_id = decouple_data.get("new_surface_id")
+                    if new_surface_id is None:
+                        continue
+
+                    surface_elements_A = list(self.model.mesh.elements_from_surface[surface_ids])
+                    surface_elements_B = list(self.model.mesh.elements_from_surface[new_surface_id])
+
+                else:
+
+                    if len(surface_ids) != 2:
+                        return
+
+                    surface_elements_A = list(self.model.mesh.elements_from_surface[surface_ids[0]])
+                    surface_elements_B = list(self.model.mesh.elements_from_surface[surface_ids[1]])
 
                 for i, el in enumerate(surface_elements_A):
 
@@ -270,10 +283,7 @@ class AcousticAssembler:
                     #     p_rms = np.sqrt(p2_avg)
                     #     U_rms = p_rms / Z_0
 
-                    Z_tr = Z_0 * (a + b + c*U_rms)
-                    #TODO: remove this "by-pass" as soon as possible
-                    # Z_tr = Z_0*(1 + 0.3*1j)
-
+                    Z_tr = Z_0 * (z_orifice + z_end + z_nl_urms*U_rms + z_ud)
                     surface_data_A[el] = Z_tr
 
                 for i, el in enumerate(surface_elements_B):
@@ -288,10 +298,7 @@ class AcousticAssembler:
                     #     p_rms = np.sqrt(p2_avg)
                     #     U_rms = p_rms / Z_0
 
-                    Z_tr = Z_0 * (a + b + c*U_rms)
-                    #TODO: remove this "by-pass" as soon as possible
-                    # Z_tr = Z_0*(1 + 0.3*1j)
-
+                    Z_tr = Z_0 * (z_orifice + z_end + z_nl_urms*U_rms + z_ud)
                     surface_data_B[el] = Z_tr
 
         if connectivity_surface_A and connectivity_surface_B:
