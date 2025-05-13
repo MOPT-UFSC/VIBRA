@@ -62,7 +62,7 @@ class PerforatedPlateModelInputs(QDialog):
         self.imported_values = None
         self.setup_complete = False
         self.keep_window_open = True
-        self.pp_model_data = dict()
+        self.pp_data = dict()
 
     def _define_qt_variables(self):
 
@@ -132,16 +132,16 @@ class PerforatedPlateModelInputs(QDialog):
 
     def geometry_selection_callback(self):
 
-        faces = self.main_window.selected_geometry_surfaces
+        surfaces = self.main_window.selected_geometry_surfaces
 
-        if faces:
-            text = ", ".join([str(i) for i in faces])
+        if surfaces:
+            text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
 
-            if len(faces) == 1:
-                surface_ids = list(faces)[0]
-            elif len(faces) == 2:
-                surface_ids = tuple(faces)
+            if len(surfaces) == 1:
+                surface_ids = list(surfaces)[0]
+            elif len(surfaces) == 2:
+                surface_ids = tuple(surfaces)
             else:
                 return
 
@@ -154,7 +154,7 @@ class PerforatedPlateModelInputs(QDialog):
 
     def update_selection_type_based_on_surface_ids(self, surface_ids: int | tuple[int]):
 
-        if isinstance(surface_ids, int):
+        if isinstance(surface_ids, int | np.int64):
             if len(self.mesh.volumes_from_surface[surface_ids]) == 2:
                 self.comboBox_selection_type.setCurrentIndex(0)
 
@@ -200,7 +200,7 @@ class PerforatedPlateModelInputs(QDialog):
             self.lineEdit_non_linear_correction_factor.setEnabled(True)
 
         if "User-defined" in included_effects:
-            # self.lineEdit_user_defined_transfer_impedance_path.setEnabled(True)
+            self.lineEdit_user_defined_transfer_impedance_path.setEnabled(True)
             self.pushButton_load_path.setEnabled(True)
 
     def _config_widgets(self):
@@ -241,7 +241,7 @@ class PerforatedPlateModelInputs(QDialog):
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
 
-    def check_selection_type(self, pp_data: dict, surface_ids: list[int]):
+    def check_selection_type(self, surface_ids: list[int]):
 
         title = "Invalid selection detected"
 
@@ -254,7 +254,8 @@ class PerforatedPlateModelInputs(QDialog):
                     message += "Inside surfaces are surfaces that connect two neighboohrs volumes. "
                     message += "The perforated plate attribution will be ignored until all requirements are met."
                     PrintMessageInput([window_title_1, title, message])
-                    return None
+                    self.pp_data.clear()
+                    return
 
         else:
 
@@ -264,7 +265,8 @@ class PerforatedPlateModelInputs(QDialog):
                 message += "select a pair of outside surfaces. Outside surfaces are surfaces associated to only one volume. "
                 message += "The perforated plate attribution will be ignored until all requirements are met."
                 PrintMessageInput([window_title_1, title, message])
-                return None
+                self.pp_data.clear()
+                return
 
             for surface_id in surface_ids:
                 if len(self.mesh.volumes_from_surface[surface_id]) != 1:
@@ -273,7 +275,8 @@ class PerforatedPlateModelInputs(QDialog):
                     message += "Outside surfaces are surfaces associated to only one volume. The perforated plate "
                     message += "attribution will be ignored until all requirements are met."
                     PrintMessageInput([window_title_1, title, message])
-                    return None
+                    self.pp_data.clear()
+                    return
 
             fluid_A = self.properties._get_property("fluid", surface=surface_ids[0])
             fluid_B = self.properties._get_property("fluid", surface=surface_ids[1])
@@ -284,11 +287,10 @@ class PerforatedPlateModelInputs(QDialog):
                 message += "plate model cannot be computed satisfying the assumptions under which it has been "
                 message += "constructed. You need to choose surfaces that have the same fluid to continue."
                 PrintMessageInput([window_title_1, title, message])
-                return None
+                self.pp_data.clear()
+                return
 
-        pp_data["coupling_type"] = selection_type.lower().replace(" ", "_")
-
-        return pp_data
+        self.pp_data["coupling_type"] = selection_type.lower().replace(" ", "_")
 
     def load_model_info(self):
 
@@ -300,9 +302,7 @@ class PerforatedPlateModelInputs(QDialog):
             if property == "perforated_plate_model":
                 data: dict
 
-                formulation = ""
                 model_inputs = list()
-
                 for key, value in data.items():
 
                     if key in ["formulation", "values", "table_names", "table_paths"]:
@@ -375,6 +375,7 @@ class PerforatedPlateModelInputs(QDialog):
 
             self.pushButton_load_path.setEnabled(False)
             self.lineEdit_user_defined_transfer_impedance_path.setText("")
+            self.lineEdit_user_defined_transfer_impedance_path.setToolTip("")
             self.lineEdit_user_defined_transfer_impedance_path.setEnabled(False)
 
         elif isinstance(table_path, list):
@@ -384,8 +385,9 @@ class PerforatedPlateModelInputs(QDialog):
                 self.comboBox_include_effects.setCurrentIndex(2)
 
             self.pushButton_load_path.setEnabled(True)
-            self.lineEdit_user_defined_transfer_impedance_path.setText(table_path[0])
             self.lineEdit_user_defined_transfer_impedance_path.setEnabled(True)
+            self.lineEdit_user_defined_transfer_impedance_path.setText(table_path[0])
+            self.lineEdit_user_defined_transfer_impedance_path.setToolTip(table_path[0])
 
     def load_table(self, lineEdit : QLineEdit, direct_load: bool=False):
 
@@ -414,6 +416,7 @@ class PerforatedPlateModelInputs(QDialog):
                     return None
 
             lineEdit.setText(imported_table_path)
+            lineEdit.setToolTip(f"User-defined normalized transfer impedance table path: {imported_table_path}")
             app().config.write_last_folder_path_in_file("imported_table_folder", imported_table_path)
 
             imported_file = np.loadtxt(imported_table_path, delimiter=",")
@@ -476,7 +479,7 @@ class PerforatedPlateModelInputs(QDialog):
         analysis_setup["f_max"] = float(f_max)
         analysis_setup["f_step"] = float(f_step)
 
-        app().project.set_analysis_data(analysis_setup)
+        app().project.set_analysis_setup(analysis_setup)
         app().file.write_analysis_setup_in_file(analysis_setup)
 
     def get_inputs_for_perforated_plate_with_circular_holes(self):
@@ -508,17 +511,17 @@ class PerforatedPlateModelInputs(QDialog):
             lineEdit.setFocus()
             return dict()
 
-        perforated_plate_data = {
-                                 "formulation" : "circular_hole",
-                                 "plate_thickness" : plate_thickness,
-                                 "hole_diameter" : hole_diameter,
-                                 "porosity" : porosity,
-                                 "linear_discharge_coefficient" : linear_discharge_coefficient,
-                                 }
+        pp_data_general = dict(
+                                formulation = "circular_hole",
+                                plate_thickness = plate_thickness,
+                                hole_diameter = hole_diameter,
+                                porosity = porosity,
+                                linear_discharge_coefficient = linear_discharge_coefficient,
+                                )
 
-        included_effects = self.comboBox_include_effects.currentText()
+        self.pp_data.update(pp_data_general)
 
-        if "Non-linear" in included_effects:
+        if "Non-linear" in self.comboBox_include_effects.currentText():
 
             lineEdit = self.lineEdit_non_linear_discharge_coefficient
             non_linear_discharge_coefficient = self.check_inputs(lineEdit, "Non-linear discharge coefficient")
@@ -532,18 +535,25 @@ class PerforatedPlateModelInputs(QDialog):
                 lineEdit.setFocus()
                 return dict()
 
-            perforated_plate_data["non_linear_discharge_coefficient"] = non_linear_discharge_coefficient
-            perforated_plate_data["non_linear_correction_factor"] = non_linear_correction_factor
-
-        return perforated_plate_data
+            self.pp_data["non_linear_discharge_coefficient"] = non_linear_discharge_coefficient
+            self.pp_data["non_linear_correction_factor"] = non_linear_correction_factor
 
     def attribute_callback(self):
 
+        self.pp_data.clear()
         if self.tabWidget_main.currentIndex():
             return
+        
+        if self.selected_fluid is None:
+            self.get_fluid_callback()
 
-        pp_data = self.get_inputs_for_perforated_plate_with_circular_holes()
-        if not pp_data:
+        if not isinstance(self.selected_fluid, Fluid):
+            return
+
+        self.pp_data["fluid"] = self.selected_fluid
+
+        self.get_inputs_for_perforated_plate_with_circular_holes()
+        if not self.pp_data:
             return
     
         input_ids = self.lineEdit_selection_id.text()
@@ -557,66 +567,72 @@ class PerforatedPlateModelInputs(QDialog):
             self.lineEdit_selection_id.setFocus()
             return
 
-        pp_data = self.check_selection_type(pp_data, surface_ids)
-        if pp_data is None:
+        self.check_selection_type(surface_ids)
+        if not self.pp_data:
             return
 
         self.remove_conflicting_excitations(surface_ids)
 
-        if pp_data.get("coupling_type") == "inside_surfaces":
+        if self.pp_data.get("coupling_type") == "inside_surfaces":
 
             for surface_id in surface_ids:
                 if "User-defined" in self.comboBox_include_effects.currentText():
-                    pp_data = self.include_user_defined_transfer_impedance(pp_data, surface_id)
-                    if pp_data is None:
+                    self.include_user_defined_transfer_impedance(surface_id)
+                    if not self.pp_data:
                         return
 
-                self.properties._set_property("perforated_plate_model", pp_data, surface=surface_id)
+                self.properties._set_property("perforated_plate_model", self.pp_data, surface=surface_id)
                 self.decouple_degrees_of_freedom(surface_id)
 
         else:
 
             if "User-defined" in self.comboBox_include_effects.currentText():
-                pp_data = self.include_user_defined_transfer_impedance(pp_data, surface_ids)
-                if pp_data is None:
+                self.include_user_defined_transfer_impedance(surface_ids)
+                if not self.pp_data:
                     return
 
-            self.properties._set_property("perforated_plate_model", pp_data, surface=tuple(surface_ids))
+            self.properties._set_property("perforated_plate_model", self.pp_data, surface=tuple(surface_ids))
 
         self.setup_complete = True
         self.actions_to_finalize()
 
-    def include_user_defined_transfer_impedance(self, pp_data: dict, surface_id: int | list[int]):
+    def include_user_defined_transfer_impedance(self, surface_id: int | list[int]):
 
         if self.imported_values is None:
             self.imported_values = self.load_user_defined_transfer_impedance()
 
         if self.imported_values is None:
-            return None
-            
-        if isinstance(self.imported_values, np.ndarray):
-            if self.imported_values.shape[1] >= 3:
+            self.pp_data.clear()
+            return
 
-                if isinstance(surface_id, int):
-                    table_name = f"user_defined_transfer_impedance_at_surface_{surface_id}"
-                else:
-                    table_name = f"user_defined_transfer_impedance_between_surfaces_{surface_id[0]}_{surface_id[1]}"
+        if not isinstance(self.imported_values, np.ndarray):
+            self.pp_data.clear()
+            return
 
-                if self.save_table_values(table_name, self.imported_values):
-                    self.lineEdit_user_defined_transfer_impedance_path.setFocus()
-                    self.imported_values = None
-                    return None
+        if self.imported_values.shape[1] < 3:
+            self.pp_data.clear()
+            return
 
-                complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
-                table_path = self.lineEdit_user_defined_transfer_impedance_path.text()
+        if self.imported_values[0, 0] == 0:
+            self.imported_values = self.imported_values[1:, :]
 
-                pp_data["table_names"] = [table_name]
-                pp_data["table_paths"] = [table_path]
-                pp_data["values"] = [complex_values]
+        if isinstance(surface_id, int):
+            table_name = f"user_defined_transfer_impedance_at_surface_{surface_id}"
+        else:
+            table_name = f"user_defined_transfer_impedance_between_surfaces_{surface_id[0]}_{surface_id[1]}"
 
-                return pp_data
+        if self.save_table_values(table_name, self.imported_values):
+            self.lineEdit_user_defined_transfer_impedance_path.setFocus()
+            self.imported_values = None
+            self.pp_data.clear()
+            return
 
-        return None
+        complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
+        table_path = self.lineEdit_user_defined_transfer_impedance_path.text()
+
+        self.pp_data["table_names"] = [table_name]
+        self.pp_data["table_paths"] = [table_path]
+        self.pp_data["values"] = [complex_values]
 
     def decouple_degrees_of_freedom(self, surface_id: int):
 
@@ -857,9 +873,9 @@ class PerforatedPlateModelInputs(QDialog):
         warnings.filterwarnings('ignore')
 
         frequencies = None
-        analysis_data = app().project.analysis_data
-        if isinstance(analysis_data, dict):
-            frequencies = analysis_data.get("frequencies")
+        analysis_setup = app().project.analysis_setup
+        if isinstance(analysis_setup, dict):
+            frequencies = analysis_setup.get("frequencies")
 
         if frequencies is None:
             df = 5
@@ -879,12 +895,12 @@ class PerforatedPlateModelInputs(QDialog):
         tab_index = self.tabWidget_main.currentIndex()
 
         if tab_index == 0:
-            pp_data = self.get_inputs_for_perforated_plate_with_circular_holes()
+            self.get_inputs_for_perforated_plate_with_circular_holes()
 
-        if pp_data:
+        if self.pp_data:
             if tab_index == 0:
                 U_rms = 0
-                z_orifice, z_end, z_nl_urms, z_ud, Z_0 = model.get_transfer_impedance_for_circular_holes(omega, fluid, pp_data)
+                z_orifice, z_end, z_nl_urms, z_ud, Z_0 = model.get_transfer_impedance_for_circular_holes(omega, fluid, self.pp_data)
                 Z_tr = Z_0 * (z_orifice + z_end + z_ud + z_nl_urms*U_rms)
 
             return freq, Z_tr
@@ -990,6 +1006,8 @@ class PerforatedPlateModelInputs(QDialog):
             self.close()
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
+
+        self.hide()
 
         try:
             warnings.filterwarnings('default')

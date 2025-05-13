@@ -399,6 +399,8 @@ class ProjectFile:
                         for _key, _data in data.items():
                             if _key in ["values"]:
                                 continue
+                            if isinstance(_data, Fluid):
+                                aux["fluid_id"] = _data.identifier
                             else:
                                 aux[_key] = _data
 
@@ -570,7 +572,7 @@ class ProjectFile:
                 acoustic_harmonic_solver = app().project.acoustic_harmonic_solver
                 if acoustic_harmonic_solver is not None:
                     if acoustic_harmonic_solver.solution is not None:
-                        frequencies = acoustic_harmonic_solver.frequencies
+                        frequencies = app().project.model.frequencies
                         solution = acoustic_harmonic_solver.solution
                         f.create_dataset("harmonic_acoustic/frequencies", data=frequencies, dtype=float)
                         f.create_dataset("harmonic_acoustic/solution", data=solution, dtype=complex)
@@ -578,7 +580,7 @@ class ProjectFile:
                 structural_harmonic_solver = app().project.structural_harmonic_solver
                 if structural_harmonic_solver is not None:
                     if structural_harmonic_solver.solution is not None:
-                        frequencies = structural_harmonic_solver.frequencies
+                        frequencies = app().project.model.frequencies
                         solution = structural_harmonic_solver.solution
                         displacement_dofs = structural_harmonic_solver.displacement_dofs
                         f.create_dataset("harmonic_structural/frequencies", data=frequencies, dtype=float)

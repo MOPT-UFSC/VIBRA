@@ -32,16 +32,14 @@ class PerforatedPlateModels:
         for key, data in self.properties.surface_properties.items():
             property, surface_ids = key
             if property == "perforated_plate_model":
+                data: dict
 
-                if isinstance(surface_ids, tuple):
-                    surface_id = surface_ids[0]
+                pp_fluid = data.get("fluid")
+                if not isinstance(pp_fluid, Fluid):
+                    continue
 
-                elif isinstance(surface_ids, int):
-                    surface_id = surface_ids
-
-                fluid = self.properties._get_property("fluid", surface = surface_id)
                 if data["formulation"] == "circular_hole":
-                    z_orifice, z_end, z_nl_urms, z_ud, Z_0 = self.get_transfer_impedance_for_circular_holes(omega, fluid, data)
+                    z_orifice, z_end, z_nl_urms, z_ud, Z_0 = self.get_transfer_impedance_for_circular_holes(omega, pp_fluid, data)
                 else:
                     continue
 
@@ -114,6 +112,8 @@ class PerforatedPlateModels:
         # user-defined normalized transfer impedance
         z_ud = 0.
         if "table_names" in pp_data.keys():
-            z_ud = pp_data.get("values")
+            values = pp_data.get("values")[0]
+            if isinstance(values, list) and len(values) == 1:
+                z_ud = values[0]
 
         return z_orifice, z_end, z_nl_urms, z_ud, Z_0

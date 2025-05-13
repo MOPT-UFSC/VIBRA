@@ -301,17 +301,18 @@ class ModelProperties:
             if table_name in self.structural_imported_tables.keys():
                 self.structural_imported_tables.pop(table_name)
 
-    def get_data_group_label(self, property : str):
+    def get_data_group_label(self, property : str) -> str:
 
         acoustic_labels = [ 
-                            "acoustic_pressure",
-                            "surface_velocity",
-                            "mass_flow_rate",
-                            "specific_impedance",
-                            "radiation_impedance",
-                            "reciprocating_compressor_excitation",
-                            "reciprocating_pump_excitation",
-                            "acoustic_transfer_element"
+                           "acoustic_pressure",
+                           "surface_velocity",
+                           "mass_flow_rate",
+                           "specific_impedance",
+                           "radiation_impedance",
+                           "perforated_plate_model",
+                           "reciprocating_compressor_excitation",
+                           "reciprocating_pump_excitation",
+                           "acoustic_transfer_element",
                            ]
 
         if property in acoustic_labels:
