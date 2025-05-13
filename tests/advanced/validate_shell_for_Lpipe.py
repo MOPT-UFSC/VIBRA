@@ -3,9 +3,6 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.element_type import *
 from vibra.engine.model import Model
 
-# from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-# from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
-# from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
 from vibra.engine.solvers.structural_harmonic_solver import StructuralHarmonicSolver
@@ -141,9 +138,6 @@ def load_external_mesh_and_solve():
     model.properties._set_property("distributed_loads", distributed_load_data, surface=3)
 
 
-    ## Create an object of the Structural Assembler class
-    assembler = StructuralAssembler(model)  
-
 
     ## Define the analysis type and frequency setup
 
@@ -152,30 +146,37 @@ def load_external_mesh_and_solve():
     f_max = 300
     frequencies = np.arange(f_min, f_max + df, df)
 
-    frequency_setup = {
-                       "f_min" : f_min,
-                       "f_max" : f_max,
-                       "f_step" : df,
-                       "frequencies" : frequencies
-                       }
+    analysis_setup = {  
+                      "analysis_id" : 0,
+                      "global_damping" : (0, 0, 1e-3, 1e-7),
+                      "f_min" : f_min,
+                      "f_max" : f_max,
+                      "f_step" : df,
+                      "frequencies" : frequencies
+                      }
 
-    # Set the analysis frequency setup
-    model.set_frequency_setup(frequency_setup)
+    model.set_analysis_setup(analysis_setup)
 
-    model.set_structural_element(assembler.get_element())
-    analysis_data = {"analysis_id" : 0, "frequencies" : frequencies, "global_damping" : (0, 0, 1e-3, 1e-7)}
-    harmonic_solver = StructuralHarmonicSolver(assembler, analysis_data=analysis_data)
-
-
-    # Define the analysis type and load setup
     # model.set_structural_element(assembler.get_element())
-    # analysis_data = {"analysis_id" : 2, "modes" : 40, "sigma_factor" : 1e-2}
-    # modal_solver = StructuralModalSolver(assembler, analysis_data=analysis_data)
+    # harmonic_solver = StructuralHarmonicSolver(assembler)
+    # # Define the analysis setup
+    # analysis_setup = {
+    #                   "analysis_id" : 2, 
+    #                   "modes" : 40, 
+    #                   "sigma_factor" : 1e-2
+    #                   }
+    
+    # # Set the analysis setup
+    # model.set_analysis_setup(analysis_setup)
 
-
-    # Process the assemble
+    # Define and process the assemble
+    assembler = StructuralAssembler(model)
     assembler.process_assemble()
 
+    # Initialize the solver
+    model.set_structural_element(assembler.get_element())
+    # modal_solver = StructuralModalSolver(assembler)
+    harmonic_solver = StructuralHarmonicSolver(assembler)
 
     # t0 = time()
     # # solution = modal_solver.solve()

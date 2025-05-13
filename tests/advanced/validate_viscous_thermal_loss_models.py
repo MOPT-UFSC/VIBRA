@@ -124,14 +124,15 @@ def load_external_mesh_and_solve():
     f_max = 1600
     frequencies = np.arange(f_min, f_max + df, df, dtype=float)
 
-    frequency_setup = {
-                        "f_min" : f_min,
-                        "f_max" : f_max,
-                        "f_step" : df,
-                        "frequencies" : frequencies
-                       }
+    analysis_setup = {  
+                      "analysis_id" : 3,
+                      "f_min" : f_min,
+                      "f_max" : f_max,
+                      "f_step" : df,
+                      "frequencies" : frequencies
+                      }
 
-    model.set_frequency_setup(frequency_setup)
+    model.set_analysis_setup(analysis_setup)
 
     # Configure the viscous-thermal models
 
@@ -167,8 +168,7 @@ def load_external_mesh_and_solve():
     # return
 
     # Define the analysis type and load setup
-    analysis_data = {"analysis_id" : 3, "frequencies" : frequencies}
-    harmonic_solver = AcousticHarmonicSolver(assembler, analysis_data=analysis_data)
+    harmonic_solver = AcousticHarmonicSolver(assembler)
 
     # Run harmonic analysis
 

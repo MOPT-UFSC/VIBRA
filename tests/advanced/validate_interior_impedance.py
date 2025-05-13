@@ -166,14 +166,15 @@ def load_external_mesh_and_solve(mesh_size: str = "200mm", interior_impedance: b
     f_max = 1400
     frequencies = np.arange(f_min, f_max + df, df)
 
-    frequency_setup = {
-                        "f_min" : f_min,
-                        "f_max" : f_max,
-                        "f_step" : df,
-                        "frequencies" : frequencies
-                       }
-    
-    model.set_frequency_setup(frequency_setup)
+    analysis_setup = {  
+                      "analysis_id" : 3,
+                      "f_min" : f_min,
+                      "f_max" : f_max,
+                      "f_step" : df,
+                      "frequencies" : frequencies
+                      }
+
+    model.set_analysis_setup(analysis_setup)
 
     ## Define the perforated plate setup
 
@@ -205,8 +206,7 @@ def load_external_mesh_and_solve(mesh_size: str = "200mm", interior_impedance: b
     # return
 
     # Define the analysis type and load setup
-    analysis_data = {"analysis_id" : 3, "frequencies" : frequencies}
-    harmonic_solver = AcousticHarmonicSolver(assembler, analysis_data=analysis_data)
+    harmonic_solver = AcousticHarmonicSolver(assembler)
 
     # Run harmonic analysis
 
