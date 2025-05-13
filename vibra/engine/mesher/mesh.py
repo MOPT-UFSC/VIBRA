@@ -1026,11 +1026,11 @@ class Mesh:
                 self.face_to_solid_element[face_id] = solid_id
 
     def map_face_elements_to_solid_elements_v3(self):
-        faces_nodal_connectivity = self.faces_connectivity[:, 4:]
-        nodes_per_face = faces_nodal_connectivity.shape[1]
+        nodes_per_face = self.faces_connectivity[:, 4:].shape[1]
+        nodes_per_solid = self.solids_connectivity[:, 4:].shape[1]
 
         # Get the set of nodes that are part of a face
-        all_face_nodes = np.unique(faces_nodal_connectivity)
+        all_face_nodes = np.unique(self.faces_connectivity[:, 4:])
 
         # Counts how many nodes of a solid are touching a face
         face_nodes_per_solid = np.sum(
@@ -1043,10 +1043,13 @@ class Mesh:
 
         # Filters all solids that contains a external face
         external_solids = self.solids_connectivity[face_nodes_per_solid >= nodes_per_face][:, 4:]
+        external_solids.sort(axis=1)
 
         self.face_to_solid_element = dict()
         self.solid_to_face_elements = defaultdict(list)
-        sorted_indexes = np.argsort(external_solids, axis=0).T
+
+        columns_to_sort = nodes_per_solid - nodes_per_face + 1
+        sorted_indexes = np.argsort(external_solids[:, :columns_to_sort], axis=0).T
         
         for row in self.faces_connectivity:
             face_id = row[0]
@@ -1059,13 +1062,13 @@ class Mesh:
     def _search_face_in_solid(self, face_nodes: np.ndarray, solids_nodes: np.ndarray, sorted_indexes: np.ndarray):
         first_node = face_nodes[0]
 
-        for col in range(solids_nodes.shape[1]):
+        for col in range(sorted_indexes.shape[0]):
             sorted_col = solids_nodes[sorted_indexes[col], col]
 
             left = np.searchsorted(sorted_col, first_node, side="left")
-            right = np.searchsorted(sorted_col, first_node, side="right")
-
+            right = np.searchsorted(sorted_col[left:], first_node, side="right")
             solid_rows_containing_first_node = sorted_indexes[col, left:right]
+
             for row in solid_rows_containing_first_node:
                 face_is_subset_of_solid = np.isin(face_nodes, solids_nodes[row]).all()
                 if face_is_subset_of_solid:
