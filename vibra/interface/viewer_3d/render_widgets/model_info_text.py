@@ -253,27 +253,39 @@ def porous_material_info_text():
     return text
 
 def perforated_plate_info_text():
-    surfaces = list(app().main_window.selected_geometry_surfaces)
-    text = ""
 
-    if len(surfaces) != 1:
+    text = ""
+    surfaces = list(app().main_window.selected_geometry_surfaces)
+
+    if len(surfaces) == 1:
+        pp_data = app().project.model.properties._get_property("perforated_plate_model", surface=surfaces[0])
+
+    elif len(surfaces) == 2:
+        pp_data = app().project.model.properties._get_property("perforated_plate_model", surface=tuple(surfaces))
+
+    else:
         return text
 
-    pp_model = app().project.model.properties._get_property(
-        "perforated_plate_model", surface=surfaces[0]
-    )
-    if pp_model is None:
+    if not isinstance(pp_data, dict):
         return text
 
     tree = TreeInfo("Perforated plate")
- 
-    tree.add_item("Formulation", pp_model["formulation"].replace("_", " "))
-    if pp_model["formulation"] == "circular_hole":
-        tree.add_item("Plate thickness", pp_model["plate_thickness"], "m")
-        tree.add_item("Hole diameter", pp_model["hole_diameter"], "m")
-        tree.add_item("Porosity", pp_model["porosity"], "--")
-        tree.add_item("Linear discharge coefficient", pp_model["linear_discharge_coefficient"], "--")
-        tree.add_item("Non-linear discharge coefficient", pp_model["non_linear_discharge_coefficient"], "--")
+
+    tree.add_item("Formulation", pp_data["formulation"].replace("_", " "))
+    if pp_data["formulation"] == "circular_hole":
+
+        tree.add_item("Coupling type", pp_data.get("coupling_type").replace("_", " "))
+        tree.add_item("Plate thickness", pp_data.get("plate_thickness"), "m")
+        tree.add_item("Hole diameter", pp_data.get("hole_diameter"), "m")
+        tree.add_item("Porosity", pp_data.get("porosity"), "--")
+        tree.add_item("Linear discharge coefficient", pp_data.get("linear_discharge_coefficient"), "--")
+
+        if "non_linear_discharge_coefficient" in pp_data.keys():
+            tree.add_item("Non-linear discharge coefficient", pp_data.get("non_linear_discharge_coefficient"), "--")
+            tree.add_item("Non-linear correction factor", pp_data.get("non_linear_correction_factor"), "--")
+
+        if "table_names" in pp_data.keys():
+            tree.add_item("User-defined transfer impedance", "active")
 
     text += str(tree)
 
