@@ -525,6 +525,7 @@ class MainWindow(MainWindow_UI):
             self.action_results_workspace.setChecked(False)
         else:
             self.action_results_workspace.setEnabled(False)
+            self.action_results_workspace.setChecked(False)
 
         self.update_mesh_information()
         self.splitter.widget(0).setVisible(True)
@@ -863,6 +864,8 @@ class MainWindow(MainWindow_UI):
 
             if update_render:
                 LoadingWindow(self.update_plots).run()
+            
+            self.action_model_workspace_callback()
 
         except Exception as error_log:
             from traceback import print_exception

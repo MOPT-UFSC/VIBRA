@@ -286,6 +286,9 @@ class Project:
         analysis_setup = app().file.read_analysis_setup_from_file()
         if analysis_setup is None:
             return
+        
+        if not all([self.structural_harmonic_solver, self.structural_modal_solver, self.acoustic_modal_solver, self.acoustic_harmonic_solver]):
+            return False
     
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
