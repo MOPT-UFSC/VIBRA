@@ -5,9 +5,9 @@ from vtkmodules.vtkCommonDataModel import (
     VTK_QUADRATIC_EDGE,
     VTK_VERTEX,
     vtkPlane,
-    vtkPolyData,
+    vtkUnstructuredGrid,
 )
-from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
+from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
 
 from vibra import app
 from molde import Color
@@ -30,9 +30,9 @@ class LinesActor(vtkActor):
         nodes_per_line = len(self.mesh.lines_connectivity[0, 4:])
         number_of_lines = self.mesh.lines_connectivity.shape[0]
 
-        data = vtkPolyData()
+        data = vtkUnstructuredGrid()
         points = vtkPoints()
-        mapper = vtkPolyDataMapper()
+        mapper = vtkDataSetMapper()
         data.Allocate(number_of_lines * 3)
 
         line_indexes = vtkIntArray()
@@ -51,7 +51,7 @@ class LinesActor(vtkActor):
             line_indexes.InsertNextValue(line_id)
             cell_colors.InsertNextTuple4(0, 0, 0, 0)
 
-            data.InsertNextCell(VTK_VERTEX, 1, [values[-1]])
+            data.InsertNextCell(VTK_VERTEX, 1, [values[1]])
             line_indexes.InsertNextValue(line_id)
             cell_colors.InsertNextTuple4(0, 0, 0, 0)
 
