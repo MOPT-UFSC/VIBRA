@@ -17,7 +17,7 @@ from itertools import combinations
 from pathlib import Path
 
 from traceback import print_exception
-
+from time import time
 
 class Mesh:
     def __init__(self, **kwargs):
@@ -811,7 +811,7 @@ class Mesh:
     def process_mesh_related_mappings(self):
         self.process_connectivities_from_lines_and_surfaces()
         self.map_elements_from_lines_surfaces_and_volumes()
-        self.map_face_elements_to_solid_elements_v1()
+        self.map_face_elements_to_solid_elements_v3()
         self.get_principal_diagonal_structure_parallelepiped()
 
 
@@ -1024,6 +1024,54 @@ class Mesh:
             self.solid_to_face_elements[solid_id] = face_ids
             for face_id in face_ids:
                 self.face_to_solid_element[face_id] = solid_id
+
+    def map_face_elements_to_solid_elements_v3(self):
+        faces_nodal_connectivity = self.faces_connectivity[:, 4:]
+        nodes_per_face = faces_nodal_connectivity.shape[1]
+
+        # Get the set of nodes that are part of a face
+        all_face_nodes = np.unique(faces_nodal_connectivity)
+
+        # Counts how many nodes of a solid are touching a face
+        face_nodes_per_solid = np.sum(
+            np.isin(
+                self.solids_connectivity[:, 4:],
+                all_face_nodes,
+            ),
+            axis=1,
+        )
+
+        # Filters all solids that contains a external face
+        external_solids = self.solids_connectivity[face_nodes_per_solid >= nodes_per_face][:, 4:]
+
+        self.face_to_solid_element = dict()
+        self.solid_to_face_elements = defaultdict(list)
+        sorted_indexes = np.argsort(external_solids, axis=0).T
+        
+        for row in self.faces_connectivity:
+            face_id = row[0]
+            face_nodes = row[4:]
+            solid_id = self._search_face_in_solid(face_nodes, external_solids, sorted_indexes)
+            if solid_id >= 0:
+                self.face_to_solid_element[face_id] = solid_id
+                self.solid_to_face_elements[solid_id].append(face_id)
+
+    def _search_face_in_solid(self, face_nodes: np.ndarray, solids_nodes: np.ndarray, sorted_indexes: np.ndarray):
+        first_node = face_nodes[0]
+
+        for col in range(solids_nodes.shape[1]):
+            sorted_col = solids_nodes[sorted_indexes[col], col]
+
+            left = np.searchsorted(sorted_col, first_node, side="left")
+            right = np.searchsorted(sorted_col, first_node, side="right")
+
+            solid_rows_containing_first_node = sorted_indexes[col, left:right]
+            for row in solid_rows_containing_first_node:
+                face_is_subset_of_solid = np.isin(face_nodes, solids_nodes[row]).all()
+                if face_is_subset_of_solid:
+                    return row
+
+        return -1
 
     def get_face_elements_connected_to_nodes(self, node_ids, surface_id=None):
 
