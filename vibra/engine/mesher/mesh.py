@@ -811,7 +811,7 @@ class Mesh:
     def process_mesh_related_mappings(self):
         self.process_connectivities_from_lines_and_surfaces()
         self.map_elements_from_lines_surfaces_and_volumes()
-        self.map_face_elements_to_solid_elements()
+        self.map_face_elements_to_solid_elements_v1()
         self.get_principal_diagonal_structure_parallelepiped()
 
 
@@ -915,74 +915,76 @@ class Mesh:
         # dt = time() - t0
         # print(f"Elapsed '_process_solid_elements_connected_to_nodes': {dt} s")
 
-    # def map_face_elements_to_solid_elements(self):
-    #     self.face_to_solid_element = dict()
-    #     self.solid_to_face_elements = defaultdict(list)
+    def map_face_elements_to_solid_elements_v0(self):
+        self.face_to_solid_element = dict()
+        self.solid_to_face_elements = defaultdict(list)
 
-    #     if len(self.solids_connectivity) == 0:
-    #         return
+        if len(self.solids_connectivity) == 0:
+            return
 
-    #     nodes_per_face_element = len(self.faces_connectivity[0, 4:])
-    #     node_ids = np.array([*set(self.faces_connectivity[:, 4:].flatten())], dtype=int)
+        nodes_per_face_element = len(self.faces_connectivity[0, 4:])
+        node_ids = np.array([*set(self.faces_connectivity[:, 4:].flatten())], dtype=int)
 
-    #     mask_0 = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= nodes_per_face_element
-    #     filtered_data = self.solids_connectivity[mask_0, :]
+        mask_0 = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= nodes_per_face_element
+        filtered_data = self.solids_connectivity[mask_0, :]
 
-    #     for elf_id, _, _, _, *face_nodes in self.faces_connectivity:
-    #         mask_1 = np.sum(np.isin(filtered_data[:, 4:], face_nodes), axis=1) == nodes_per_face_element
-    #         els_id = filtered_data[mask_1, 0][0]
-    #         self.face_to_solid_element[elf_id] = els_id
-    #         self.solid_to_face_elements[els_id].append(elf_id)
+        for elf_id, _, _, _, *face_nodes in self.faces_connectivity:
+            mask_1 = np.sum(np.isin(filtered_data[:, 4:], face_nodes), axis=1) == nodes_per_face_element
+            els_id = filtered_data[mask_1, 0][0]
+            self.face_to_solid_element[elf_id] = els_id
+            self.solid_to_face_elements[els_id].append(elf_id)
 
 
-    # def map_face_elements_to_solid_elements(self):
-    #     self.face_to_solid_element = dict()
-    #     self.solid_to_face_elements = defaultdict(list)
+    def map_face_elements_to_solid_elements_v1(self):
+        self.face_to_solid_element = dict()
+        self.solid_to_face_elements = defaultdict(list)
 
-    #     if len(self.solids_connectivity) == 0:
-    #         return
+        if len(self.solids_connectivity) == 0:
+            return
 
-    #     nodes_per_face_element = len(self.faces_connectivity[0, 4:])
-    #     all_face_nodes = np.unique(self.faces_connectivity[:, 4:])
+        nodes_per_face_element = len(self.faces_connectivity[0, 4:])
+        all_face_nodes = np.unique(self.faces_connectivity[:, 4:])
 
-    #     mask_solid_nodes_touching_face = np.isin(self.solids_connectivity[:, 4:], all_face_nodes)
-    #     face_nodes_per_solid = np.sum(mask_solid_nodes_touching_face, axis=1)
+        mask_solid_nodes_touching_face = np.isin(self.solids_connectivity[:, 4:], all_face_nodes)
+        face_nodes_per_solid = np.sum(mask_solid_nodes_touching_face, axis=1)
 
-    #     # Be carefull with this number
-    #     # it makes the cache grow factorially
-    #     cache_range = 2
-    #     cache = dict()
+        # Be carefull with this number
+        # it makes the cache grow factorially
+        cache_range = 2
+        cache = dict()
 
-    #     mask_bruteforce = face_nodes_per_solid >= (nodes_per_face_element + cache_range)
-    #     mask_cache = (face_nodes_per_solid >= nodes_per_face_element) & ~mask_bruteforce
+        mask_bruteforce = face_nodes_per_solid >= (nodes_per_face_element + cache_range)
+        mask_cache = (face_nodes_per_solid >= nodes_per_face_element) & ~mask_bruteforce
 
-    #     submasks = mask_solid_nodes_touching_face[mask_cache]
-    #     masked_connectivity = self.solids_connectivity[mask_cache]
+        submasks = mask_solid_nodes_touching_face[mask_cache]
+        masked_connectivity = self.solids_connectivity[mask_cache]
 
-    #     # Populate the cache with all valid combinations of nodes_per_face_element
-    #     for submask, row in zip(submasks, masked_connectivity):
-    #         filtered_nodes = row[4:][submask]
-    #         for nodes in combinations(filtered_nodes, nodes_per_face_element):
-    #             key = tuple(sorted(nodes))
-    #             solid_id = row[0]
-    #             cache.setdefault(key, solid_id)
+        # Populate the cache with all valid combinations of nodes_per_face_element
+        for submask, row in zip(submasks, masked_connectivity):
+            filtered_nodes = row[4:][submask]
+            for nodes in combinations(filtered_nodes, nodes_per_face_element):
+                key = tuple(sorted(nodes))
+                solid_id = row[0]
+                cache.setdefault(key, solid_id)
 
-    #     # Populates the dictionaries using the cache or bruteforce
-    #     for row in self.faces_connectivity:
-    #         key = tuple(sorted(row[4:]))
-    #         face_id = row[0]
-    #         face_nodes = row[4:]
+        # Populates the dictionaries using the cache or bruteforce
+        for row in self.faces_connectivity:
+            key = tuple(sorted(row[4:]))
+            face_id = row[0]
+            face_nodes = row[4:]
 
-    #         if key in cache:
-    #             solid_id = cache[key]
-    #         else:
-    #             mask_1 = np.sum(np.isin(masked_connectivity[:, 4:], face_nodes), axis=1) == nodes_per_face_element
-    #             solid_id = masked_connectivity[mask_1, 0][0]
+            if key in cache:
+                solid_id = cache[key]
+            else:
+                mask_1 = np.sum(np.isin(masked_connectivity[:, 4:], face_nodes), axis=1) >= nodes_per_face_element
+                if masked_connectivity[mask_1, 0].size == 0:
+                    continue
+                solid_id = masked_connectivity[mask_1, 0][0]
 
-    #         self.face_to_solid_element[face_id] = solid_id
-    #         self.solid_to_face_elements[solid_id].append(face_id)
+            self.face_to_solid_element[face_id] = solid_id
+            self.solid_to_face_elements[solid_id].append(face_id)
 
-    def map_face_elements_to_solid_elements(self):
+    def map_face_elements_to_solid_elements_v2(self):
         # Get just the node indexes from faces connectivity
         faces_nodal_connectivity = self.faces_connectivity[:, 4:]
         nodes_per_face_element = len(self.faces_connectivity[0, 4:])
