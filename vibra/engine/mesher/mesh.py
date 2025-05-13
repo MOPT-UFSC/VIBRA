@@ -935,53 +935,93 @@ class Mesh:
     #         self.solid_to_face_elements[els_id].append(elf_id)
 
 
+    # def map_face_elements_to_solid_elements(self):
+    #     self.face_to_solid_element = dict()
+    #     self.solid_to_face_elements = defaultdict(list)
+
+    #     if len(self.solids_connectivity) == 0:
+    #         return
+
+    #     nodes_per_face_element = len(self.faces_connectivity[0, 4:])
+    #     all_face_nodes = np.unique(self.faces_connectivity[:, 4:])
+
+    #     mask_solid_nodes_touching_face = np.isin(self.solids_connectivity[:, 4:], all_face_nodes)
+    #     face_nodes_per_solid = np.sum(mask_solid_nodes_touching_face, axis=1)
+
+    #     # Be carefull with this number
+    #     # it makes the cache grow factorially
+    #     cache_range = 2
+    #     cache = dict()
+
+    #     mask_bruteforce = face_nodes_per_solid >= (nodes_per_face_element + cache_range)
+    #     mask_cache = (face_nodes_per_solid >= nodes_per_face_element) & ~mask_bruteforce
+
+    #     submasks = mask_solid_nodes_touching_face[mask_cache]
+    #     masked_connectivity = self.solids_connectivity[mask_cache]
+
+    #     # Populate the cache with all valid combinations of nodes_per_face_element
+    #     for submask, row in zip(submasks, masked_connectivity):
+    #         filtered_nodes = row[4:][submask]
+    #         for nodes in combinations(filtered_nodes, nodes_per_face_element):
+    #             key = tuple(sorted(nodes))
+    #             solid_id = row[0]
+    #             cache.setdefault(key, solid_id)
+
+    #     # Populates the dictionaries using the cache or bruteforce
+    #     for row in self.faces_connectivity:
+    #         key = tuple(sorted(row[4:]))
+    #         face_id = row[0]
+    #         face_nodes = row[4:]
+
+    #         if key in cache:
+    #             solid_id = cache[key]
+    #         else:
+    #             mask_1 = np.sum(np.isin(masked_connectivity[:, 4:], face_nodes), axis=1) == nodes_per_face_element
+    #             solid_id = masked_connectivity[mask_1, 0][0]
+
+    #         self.face_to_solid_element[face_id] = solid_id
+    #         self.solid_to_face_elements[solid_id].append(face_id)
+
     def map_face_elements_to_solid_elements(self):
+        # Get just the node indexes from faces connectivity
+        faces_nodal_connectivity = self.faces_connectivity[:, 4:]
+        nodes_per_face_element = faces_nodal_connectivity.shape[0]
+
+        # Get the set of nodes that are part of a face
+        all_face_nodes = np.unique(faces_nodal_connectivity)
+
+        # Counts how many nodes of a solid are touching a face
+        face_nodes_per_solid = np.sum(
+            np.isin(
+                self.solids_connectivity[:, 4:],
+                all_face_nodes,
+            ),
+            axis=1,
+        )
+
+        # Filters all solids that contains a external face
+        external_solids = self.solids_connectivity[face_nodes_per_solid >= nodes_per_face_element]
+
+        # Get just the node indexes from solids connectivity
+        external_solid_nodal_connectivity = external_solids[:, 4:]
+
+        # Extends external_solid_nodal_connectivity shape to allow the comparison
+        comparison = faces_nodal_connectivity == external_solid_nodal_connectivity[..., None, None]
+
+        # The shape of comparison is (n_solids, n_faces_per_solid, n_faces, n_nodes_per_face)
+        # any(axis=-3) reduces the dimension testing if any solid node is equal to each face node
+        # all(axis=-1) reduces the dimensions testing if all nodes of a face are part of a solid.
+        # The resulting array is a mask of shape (n_solids, n_faces)
+        mask = comparison.any(axis=-3).all(axis=-1)
+
+        # Iterates the mask and connectivities while populating the correspondent dicts
         self.face_to_solid_element = dict()
         self.solid_to_face_elements = defaultdict(list)
-
-        if len(self.solids_connectivity) == 0:
-            return
-
-        nodes_per_face_element = len(self.faces_connectivity[0, 4:])
-        all_face_nodes = np.unique(self.faces_connectivity[:, 4:])
-
-        mask_solid_nodes_touching_face = np.isin(self.solids_connectivity[:, 4:], all_face_nodes)
-        face_nodes_per_solid = np.sum(mask_solid_nodes_touching_face, axis=1)
-
-        # Be carefull with this number
-        # it makes the cache grow factorially
-        cache_range = 2
-        cache = dict()
-
-        mask_bruteforce = face_nodes_per_solid >= (nodes_per_face_element + cache_range)
-        mask_cache = (face_nodes_per_solid >= nodes_per_face_element) & ~mask_bruteforce
-
-        submasks = mask_solid_nodes_touching_face[mask_cache]
-        masked_connectivity = self.solids_connectivity[mask_cache]
-
-        # Populate the cache with all valid combinations of nodes_per_face_element
-        for submask, row in zip(submasks, masked_connectivity):
-            filtered_nodes = row[4:][submask]
-            for nodes in combinations(filtered_nodes, nodes_per_face_element):
-                key = tuple(sorted(nodes))
-                solid_id = row[0]
-                cache.setdefault(key, solid_id)
-
-        # Populates the dictionaries using the cache or bruteforce
-        for row in self.faces_connectivity:
-            key = tuple(sorted(row[4:]))
-            face_id = row[0]
-            face_nodes = row[4:]
-
-            if key in cache:
-                solid_id = cache[key]
-            else:
-                mask_1 = np.sum(np.isin(masked_connectivity[:, 4:], face_nodes), axis=1) == nodes_per_face_element
-                solid_id = masked_connectivity[mask_1, 0][0]
-
-            self.face_to_solid_element[face_id] = solid_id
-            self.solid_to_face_elements[solid_id].append(face_id)
-
+        for solid_id, faces_mask in zip(external_solids, mask):
+            face_ids = self.faces_connectivity[faces_mask, 0]
+            self.solid_to_face_elements[solid_id] = face_ids
+            for face_id in face_ids:
+                self.face_to_solid_element[face_id] = solid_id
 
     def get_face_elements_connected_to_nodes(self, node_ids, surface_id=None):
 
