@@ -985,7 +985,7 @@ class Mesh:
     def map_face_elements_to_solid_elements(self):
         # Get just the node indexes from faces connectivity
         faces_nodal_connectivity = self.faces_connectivity[:, 4:]
-        nodes_per_face_element = faces_nodal_connectivity.shape[0]
+        nodes_per_face_element = len(self.faces_connectivity[0, 4:])
 
         # Get the set of nodes that are part of a face
         all_face_nodes = np.unique(faces_nodal_connectivity)
@@ -1017,7 +1017,7 @@ class Mesh:
         # Iterates the mask and connectivities while populating the correspondent dicts
         self.face_to_solid_element = dict()
         self.solid_to_face_elements = defaultdict(list)
-        for solid_id, faces_mask in zip(external_solids, mask):
+        for solid_id, faces_mask in zip(external_solids[:, 0], mask):
             face_ids = self.faces_connectivity[faces_mask, 0]
             self.solid_to_face_elements[solid_id] = face_ids
             for face_id in face_ids:
