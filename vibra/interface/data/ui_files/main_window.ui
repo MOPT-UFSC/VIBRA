@@ -621,8 +621,8 @@
   </action>
   <action name="action_user_preferences">
    <property name="icon">
-    <iconset>
-     <normaloff>../icons/user_preferences_icon.png</normaloff>../icons/user_preferences_icon.png</iconset>
+    <iconset resource="../icons/resources.qrc">
+     <normaloff>:/icons/user_preferences_icon.png</normaloff>:/icons/user_preferences_icon.png</iconset>
    </property>
    <property name="text">
     <string>User Preferences</string>
@@ -645,8 +645,8 @@
   </action>
   <action name="action_import_geometry">
    <property name="icon">
-    <iconset>
-     <normaloff>../icons/geometry_icon.png</normaloff>../icons/geometry_icon.png</iconset>
+    <iconset resource="../icons/resources.qrc">
+     <normaloff>:/icons/geometry_icon.png</normaloff>:/icons/geometry_icon.png</iconset>
    </property>
    <property name="text">
     <string>Import geometry</string>
@@ -654,8 +654,8 @@
   </action>
   <action name="action_home_exit">
    <property name="icon">
-    <iconset>
-     <normaloff>../icons/home.png</normaloff>../icons/home.png</iconset>
+    <iconset resource="../icons/resources.qrc">
+     <normaloff>:/icons/home.png</normaloff>:/icons/home.png</iconset>
    </property>
    <property name="text">
     <string>Home Exit</string>
