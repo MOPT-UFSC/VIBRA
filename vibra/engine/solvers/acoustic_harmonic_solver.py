@@ -14,28 +14,15 @@ from scipy.sparse import triu
 
 
 class AcousticHarmonicSolver:
-    def __init__(self, assembler: "AcousticAssembler", analysis_data=None):
-
+    def __init__(self, assembler: "AcousticAssembler", **kwargs):
         self.assembler = assembler
-
         self.reset_variables()
-        self.load_analysis_data(analysis_data)
 
     def reset_variables(self):
-        self.analysis_type = None
-        self.frequencies = None
-        self.dissipation_model = None
-        self.solution = None
         self.loads = None
-
-    def load_analysis_data(self, analysis_data):
-        if analysis_data is not None:
-            if analysis_data["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
-                self.analysis_type = "acoustic"
-                if "frequencies" in analysis_data.keys():
-                    self.frequencies = analysis_data["frequencies"]
-                else:
-                    self.frequencies = self.assembler.model.frequencies
+        self.solution = None
+        self.dissipation_model = None
+        self.analysis_type = "acoustic"
 
     def load_dissipation_model(self, data):
         self.dissipation_model = data
@@ -104,6 +91,7 @@ class AcousticHarmonicSolver:
         """
         self.get_min_max_values_of_pressures.cache_clear()
 
+        frequencies = self.assembler.model.frequencies
         self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
 
         M = self.assembler.mass_matrix
@@ -126,14 +114,14 @@ class AcousticHarmonicSolver:
             F_eq = self.get_prescribed_pressure_model_excitation()
 
         rows = K.shape[0]
-        cols = len(self.frequencies)
+        cols = len(frequencies)
         solution = np.zeros((rows, cols), dtype=complex)
         #
-        logging.info(f"Solving harmonic analysis... [0/{len(self.frequencies)}]")
+        logging.info(f"Solving harmonic analysis... [0/{len(frequencies)}]")
 
-        for i, freq in enumerate(self.frequencies):
+        for i, freq in enumerate(frequencies):
 
-            logging.info(f"Solution step {i+1} and frequency {freq} Hz [{i}/{len(self.frequencies)}]")
+            logging.info(f"Solution step {i+1} and frequency {freq} Hz [{i}/{len(frequencies)}]")
 
             if print_log:
                 print(f"Solution step {i} -> frequency {freq} Hz")
@@ -187,8 +175,6 @@ class AcousticHarmonicSolver:
             del A, F
 
         self.solution = self._reinsert_prescribed_dofs(solution)
-        # print(self.solution[12, :])
-        # print(self.solution[308, :])
 
         return self.solution
 
@@ -227,6 +213,7 @@ class AcousticHarmonicSolver:
             F_eq. Each column corresponds to a frequency of analysis.
         """
 
+        frequencies = self.assembler.model.frequencies
         self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_dofs_values()
         #
         Kr = (self.assembler.stiffness_matrix_r.toarray())[self.unprescribed_indexes, :]
@@ -239,7 +226,7 @@ class AcousticHarmonicSolver:
             cols = 1
             F_eq = np.zeros(rows, dtype=complex)
         else:
-            cols = len(self.frequencies)
+            cols = len(frequencies)
             F_eq = np.zeros((rows,cols), dtype=complex)
 
         if len(self.prescribed_values) != 0:
@@ -249,7 +236,7 @@ class AcousticHarmonicSolver:
                 Mr_add = np.sum((Mr * self.array_prescribed_values[:, index]), axis=1)
                 Cr_add = np.sum(((Cr + Cr_visc) * self.array_prescribed_values[:, index]), axis=1)
                 #
-                omega = 2 * np.pi * self.frequencies[index]
+                omega = 2 * np.pi * frequencies[index]
                 F_Kadd = Kr_add
                 F_Madd = -(omega**2) * Mr_add 
                 F_Cadd = 1j * omega * Cr_add
@@ -257,8 +244,8 @@ class AcousticHarmonicSolver:
 
             else:
 
-                for i, freq in enumerate(self.frequencies):
-                    logging.info(f"Processing prescribed pressure model excitation... [{i+10}/{len(self.frequencies) + 10}]")
+                for i, freq in enumerate(frequencies):
+                    logging.info(f"Processing prescribed pressure model excitation... [{i}/{len(frequencies)}]")
                     #
                     Kr_add = np.sum((Kr * self.array_prescribed_values[:, i]), axis=1)
                     Mr_add = np.sum((Mr * self.array_prescribed_values[:, i]), axis=1)
@@ -280,6 +267,7 @@ class AcousticHarmonicSolver:
             Returns the partcicle velocity in components x, y, z and normal
         """
 
+        frequencies = self.assembler.model.frequencies
         element_3d, element_2d = self.assembler.get_element()
         element_3d.reorder_connect()
 
@@ -307,7 +295,7 @@ class AcousticHarmonicSolver:
 
             Vk = 0.
             for solid_element_id in solid_element_ids:
-                Vk += element_3d.process_particle_velocity(solid_element_id, node_id, rho, self.frequencies, self.solution)
+                Vk += element_3d.process_particle_velocity(solid_element_id, node_id, rho, frequencies, self.solution)
 
             data_vp[node_id] = Vk / len(solid_element_ids)
 
@@ -354,6 +342,7 @@ class AcousticHarmonicSolver:
         """
 
         model = self.assembler.model
+        frequencies = self.assembler.model.frequencies
 
         nodes_input = model.mesh.nodes_from_surfaces[input_surface_id]
         nodes_output = model.mesh.nodes_from_surfaces[output_surface_id]
@@ -403,11 +392,11 @@ class AcousticHarmonicSolver:
         Aeff_in = nodal_areas_in.reshape(-1, 1) * (A_in / np.sum(nodal_areas_in))
         Aeff_out = nodal_areas_out.reshape(-1, 1) * (A_out / np.sum(nodal_areas_out))
 
-        rho_in = model.get_fluid_density_for_particle_velocity_calculation(input_surface_id, self.frequencies)
+        rho_in = model.get_fluid_density_for_particle_velocity_calculation(input_surface_id, frequencies)
         if rho_in is None:
             return None, None
 
-        rho_out = model.get_fluid_density_for_particle_velocity_calculation(output_surface_id, self.frequencies)
+        rho_out = model.get_fluid_density_for_particle_velocity_calculation(output_surface_id, frequencies)
         if rho_out is None:
             return None, None
 
@@ -488,16 +477,16 @@ class AcousticHarmonicSolver:
 
         TL = W_in - W_out
 
-        if self.frequencies[0] == 0:
-            return self.frequencies[1:], TL[1:]
+        if frequencies[0] == 0:
+            return frequencies[1:], TL[1:]
         else:
-            return self.frequencies, TL#, Aeff_in, Aeff_out
+            return frequencies, TL#, Aeff_in, Aeff_out
 
     def get_noise_reduction(self, input_surface_id, output_surface_id):
         """ Returns the transmission loss.
 
         """
-
+        frequencies = self.assembler.model.frequencies
         rows_input = self.assembler.model.mesh.nodes_from_surfaces[input_surface_id]
         rows_output = self.assembler.model.mesh.nodes_from_surfaces[output_surface_id]
 
@@ -512,10 +501,10 @@ class AcousticHarmonicSolver:
 
         NR = 10*np.log10(Prms_in2/Prms_out2)
 
-        if 0 in self.frequencies:
-            return self.frequencies[1:], NR[1:]
+        if 0 in frequencies:
+            return frequencies[1:], NR[1:]
 
-        return self.frequencies, NR
+        return frequencies, NR
 
 
     def plot_graph(self, matrix):
