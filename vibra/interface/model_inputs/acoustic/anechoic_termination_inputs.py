@@ -177,8 +177,6 @@ class AnechoicTerminationInputs(QDialog):
 
         self.actions_to_finalize()
 
-        print(f"[Set anechoic termination] - defined at surface(s) {surface_ids}")
-
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
@@ -194,12 +192,12 @@ class AnechoicTerminationInputs(QDialog):
 
         for surface_id in surface_ids:
             for label in labels:
-                table_names = self.properties.get_property_related_table_names(label, surface_id, "surface")
+                table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
                 self.properties._remove_surface_property(label, surface_id)
                 self.process_table_file_removal(table_names)
 
     def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("specific_impedance", surface_id, "surface")
+        table_names = self.properties.get_property_related_table_names("specific_impedance", surface_id, "surfaces")
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):

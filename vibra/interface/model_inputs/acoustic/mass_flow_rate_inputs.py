@@ -225,8 +225,6 @@ class MassFlowRateInputs(QDialog):
                 self.properties._set_property("mass_flow_rate", data, surface=surface_id)
 
             self.actions_to_finalize()
-
-            print(f"[Set Mass Flow Rate] - defined at surface(s) {surface_ids}")
             
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
@@ -376,8 +374,6 @@ class MassFlowRateInputs(QDialog):
 
             self.actions_to_finalize()
 
-            print(f"[Set Volume Velocity] - defined at surface(s) {surface_ids}")
-
         else:
             title = "Additional inputs required"
             message = "You must inform at least one mass flow rate\n"
@@ -405,12 +401,12 @@ class MassFlowRateInputs(QDialog):
 
         for surface_id in surface_ids:
             for label in labels:
-                table_names = self.properties.get_property_related_table_names(label, surface_id, "surface")
+                table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
                 self.properties._remove_surface_property(label, surface_id)
                 self.process_table_file_removal(table_names)
 
     def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("mass_flow_rate", surface_id, "surface")
+        table_names = self.properties.get_property_related_table_names("mass_flow_rate", surface_id, "surfaces")
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):

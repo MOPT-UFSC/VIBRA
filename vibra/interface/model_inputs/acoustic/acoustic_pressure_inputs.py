@@ -196,8 +196,6 @@ class AcousticPressureInputs(QDialog):
             data = {
                     "real_values": real_values,
                     "imag_values": imag_values,
-                    # "nodal_attribution": True,
-                    # "averaged": True,
                     }
 
             for surface_id in surface_ids:
@@ -349,9 +347,7 @@ class AcousticPressureInputs(QDialog):
                 data = {
                         "table_names": [table_name],
                         "table_paths" : [table_path],
-                        "values" : [complex_values],                   
-                        # "averaged": True,
-                        # "nodal_attribution": True,
+                        "values" : [complex_values],
                         }
 
                 self.properties._set_property("acoustic_pressure", data, surface=surface_id)
@@ -388,12 +384,12 @@ class AcousticPressureInputs(QDialog):
 
         for surface_id in surface_ids:
             for label in labels:
-                table_names = self.properties.get_property_related_table_names(label, surface_id, "surface")
+                table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
                 self.properties._remove_surface_property(label, surface_id)
                 self.process_table_file_removal(table_names)
 
     def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("acoustic_pressure", surface_id, "surface")
+        table_names = self.properties.get_property_related_table_names("acoustic_pressure", surface_id, "surfaces")
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
