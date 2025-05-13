@@ -31,7 +31,7 @@ class Project:
         self.thumbnail = None
         self.save_path = None
 
-        self.analysis_data = dict()
+        self.analysis_setup = dict()
         self.analysis_id = AnalysisID.NO_ANALYSIS
 
         self.model = Model()
@@ -63,7 +63,7 @@ class Project:
         if self.structural_harmonic_solver is not None:
             self.structural_harmonic_solver.reset_variables()
 
-        if len(self.analysis_data) == 0:
+        if len(self.analysis_setup) == 0:
             return
 
         self.create_solver()
@@ -99,9 +99,9 @@ class Project:
             return
         self.model.process_mesh()
 
-    def set_analysis_data(self, data: dict):
-        self.analysis_data = data
-        self.model.set_frequency_setup(data)
+    def set_analysis_setup(self, data: dict):
+        self.analysis_setup = data
+        self.model.set_analysis_setup(data)
 
     def is_analysis_setup_complete(self):
 
@@ -145,13 +145,13 @@ class Project:
     def create_solver(self):
         """ """
 
-        data = self.analysis_data
+        data = self.analysis_setup
         if "analysis_id" in data.keys():
 
             # structural harmonic analysis - direct method
             if data["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
                 self.set_structural_element_to_model()
-                self.structural_harmonic_solver = StructuralHarmonicSolver(self.structural_assembler, analysis_data=data)
+                self.structural_harmonic_solver = StructuralHarmonicSolver(self.structural_assembler)
                 self.analysis_id = AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD
 
             # structural harmonic analysis - mode superposition method
@@ -162,19 +162,19 @@ class Project:
             # structural modal analysis
             elif data["analysis_id"] == AnalysisID.STRUCTURAL_MODAL:
                 self.set_structural_element_to_model()
-                self.structural_modal_solver = StructuralModalSolver(self.structural_assembler, analysis_data=data)
+                self.structural_modal_solver = StructuralModalSolver(self.structural_assembler)
                 self.analysis_id = AnalysisID.STRUCTURAL_MODAL
 
             # acoustic harmonic analysis
             elif data["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
                 self.set_acoustic_element_to_model()
-                self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_assembler, analysis_data=data)
+                self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_assembler)
                 self.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
 
             # acoustic modal analysis
             elif data["analysis_id"] == AnalysisID.ACOUSTIC_MODAL:
                 self.set_acoustic_element_to_model()
-                self.acoustic_modal_solver = AcousticModalSolver(self.acoustic_assembler, analysis_data=data)
+                self.acoustic_modal_solver = AcousticModalSolver(self.acoustic_assembler)
                 self.analysis_id = AnalysisID.ACOUSTIC_MODAL
 
             # coupled harmonic analysis (direct method)
@@ -228,7 +228,7 @@ class Project:
     def solve_structural_harmonic_analysis(self):
         self.structural_assembler.process_assemble()
         t0 = time()
-        if self.analysis_data["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
+        if self.analysis_setup["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
             self.structural_harmonic_solver.solve_direct_method()
         else:
             self.structural_harmonic_solver.solve_mode_superposition_method()
@@ -245,11 +245,11 @@ class Project:
             else:
                 return
 
-        if len(self.analysis_data) == 0:
+        if len(self.analysis_setup) == 0:
             return
 
         analysis = ProcessAnalysis()
-        analysis_id = self.analysis_data.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        analysis_id = self.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         checker = AnalysisRequirementsChecker()
 
