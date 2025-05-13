@@ -201,17 +201,7 @@ class Ui_Form(object):
         self.pushButton_plot_data.setStyleSheet(u"")
         self.pushButton_plot_data.setFlat(False)
 
-        self.gridLayout_47.addWidget(self.pushButton_plot_data, 0, 1, 1, 1)
-
-        self.pushButton_exit = QPushButton(self.frame_3)
-        self.pushButton_exit.setObjectName(u"pushButton_exit")
-        self.pushButton_exit.setMinimumSize(QSize(120, 32))
-        self.pushButton_exit.setMaximumSize(QSize(120, 32))
-        self.pushButton_exit.setFont(font2)
-        self.pushButton_exit.setStyleSheet(u"")
-        self.pushButton_exit.setFlat(False)
-
-        self.gridLayout_47.addWidget(self.pushButton_exit, 0, 0, 1, 1)
+        self.gridLayout_47.addWidget(self.pushButton_plot_data, 0, 0, 1, 1)
 
 
         self.gridLayout_3.addWidget(self.frame_3, 3, 0, 1, 1)
@@ -294,7 +284,6 @@ class Ui_Form(object):
         self.comboBox_selector_filter.setItemText(1, QCoreApplication.translate("Form", u"   Nodes", None))
 
         self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"Plot data", None))
-        self.pushButton_exit.setText(QCoreApplication.translate("Form", u"Exit", None))
         self.label_4.setText(QCoreApplication.translate("Form", u"Component: ", None))
         self.comboBox_component_selector.setItemText(0, QCoreApplication.translate("Form", u"   x-axis", None))
         self.comboBox_component_selector.setItemText(1, QCoreApplication.translate("Form", u"   y-axis", None))
@@ -328,7 +317,6 @@ class ParticleVelocityFrequencyResponseInputs_UI(QWidget, Ui_Form):
                             - frame_3: QFrame
                                 - (Layout): QGridLayout
                                         - pushButton_plot_data: QPushButton
-                                        - pushButton_exit: QPushButton
                             - frame_7: QFrame
                                 - (Layout): QGridLayout
                                         - label_4: QLabel

@@ -63,7 +63,6 @@ class ParticleVelocityFrequencyResponseInputs(ParticleVelocityFrequencyResponseI
         self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
         #
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
-        self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)

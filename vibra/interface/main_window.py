@@ -499,13 +499,12 @@ class MainWindow(MainWindow_UI):
         self.action_node_view.setToolTip("Points view")
         self.action_model_workspace.setChecked(True)
         self.action_mesh_workspace.setChecked(False)
+        self.action_results_workspace.setChecked(False)
 
         if app().project.is_there_a_valid_solution():
             self.action_results_workspace.setEnabled(True)
-            self.action_results_workspace.setChecked(False)
         else:
             self.action_results_workspace.setEnabled(False)
-            self.action_results_workspace.setChecked(False)
 
         self.splitter.widget(0).setVisible(True)
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
@@ -519,13 +518,12 @@ class MainWindow(MainWindow_UI):
         self.action_node_view.setToolTip("Nodes view")
         self.action_mesh_workspace.setChecked(True)
         self.action_model_workspace.setChecked(False)
+        self.action_results_workspace.setChecked(False)
 
         if app().project.is_there_a_valid_solution():
             self.action_results_workspace.setEnabled(True)
-            self.action_results_workspace.setChecked(False)
         else:
             self.action_results_workspace.setEnabled(False)
-            self.action_results_workspace.setChecked(False)
 
         self.update_mesh_information()
         self.splitter.widget(0).setVisible(True)
@@ -562,7 +560,7 @@ class MainWindow(MainWindow_UI):
         self.mesh_widget.remove_all_actors()
         self.geometry_widget.remove_all_actors()
 
-        self.results_widget.configure_analysis("")
+        # self.results_widget.configure_analysis("")
 
         self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)
@@ -864,7 +862,7 @@ class MainWindow(MainWindow_UI):
 
             if update_render:
                 LoadingWindow(self.update_plots).run()
-            
+
             self.action_model_workspace_callback()
 
         except Exception as error_log:

@@ -782,7 +782,7 @@ vtk = "^9.3.1"
 type = "git"
 url = "https://github.com/andrefpf/molde.git"
 reference = "main"
-resolved_reference = "6af42bd6333331d7228057cab55981c12e6190eb"
+resolved_reference = "8dac497d1445d47178890af634f9706bd5c7eff9"
 
 [[package]]
 name = "moviepy"
@@ -1678,4 +1678,4 @@ web = ["wslink (>=1.0.4)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.14"
-content-hash = "1b91c2f5dc735435daeba39869f9c87c520fef1cf4033d0b732fd33f3540ce15"
+content-hash = "0baa482fc6dbdcab4540e5ac554aefa4550b00064f16811559adcdeb1d21619c"
