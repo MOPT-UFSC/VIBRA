@@ -381,9 +381,18 @@ class ProjectFile:
                 "property id" = value
                 """
                 output = dict()
-                for (property, tag), data in prop.items():
+                for (property, tags), data in prop.items():
 
-                    key = f"{property} {tag}"
+                    if isinstance(tags, tuple):
+                        key = f"{property}"
+                        for tag in tags:
+                            key += f" {tag}"
+
+                    elif isinstance(tags, int):
+                        key = f"{property} {tags}"
+
+                    else:
+                        continue
 
                     aux = dict()
                     if isinstance(data, dict):
@@ -432,10 +441,19 @@ class ProjectFile:
         def denormalize(prop: dict):
             new_prop = dict()
             for key, val in prop.items():
-                p, i = key.split()
+
+                key: str
+                p, *_ids = key.split()
                 p = p.strip()
-                i = int(i)
-                new_prop[p, i] = val
+
+                if len(_ids) == 1:
+                    ids = int(_ids[0])
+
+                elif len(_ids) == 2:
+                    ids = tuple([int(_id) for _id in _ids])
+
+                new_prop[p, ids] = val
+
             return new_prop
 
         data = self.filebox.read(self.model_properties_filename)

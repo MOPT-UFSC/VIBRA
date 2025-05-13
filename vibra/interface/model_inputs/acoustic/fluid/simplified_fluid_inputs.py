@@ -22,7 +22,7 @@ class SimplifiedFluidInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__()
 
-        ui_path = UI_DIR / "model/setup/fluid/simplified_fluid_inputs.ui"
+        ui_path = UI_DIR / "model/setup/fluid/set_fluid_input_simplified.ui"
         load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
