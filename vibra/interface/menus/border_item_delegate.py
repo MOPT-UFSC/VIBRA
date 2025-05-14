@@ -35,7 +35,7 @@ class BorderItemDelegate(QStyledItemDelegate):
         if pen is not None:
             width = max(pen.width(), 1)
             # ...and remove the extra room we added in sizeHint...
-            option.rect.adjust(width, width, -width, -width)      
+            option.rect.adjust(width, width - 1, -width, -width + 3)
 
         icon = QIcon()
         tree = index.model().parent()
@@ -58,14 +58,6 @@ class BorderItemDelegate(QStyledItemDelegate):
         if pen is not None:
             painter.save() # Saves previous status
             
-            # Align rect 
-            painter.setClipRect(rect, Qt.ReplaceClip)       
-            pen.setWidth(2 * width)
-
-            # Paint the borders
-            painter.setPen(pen)
-            rect.adjust(0, 0, 0, 0)
-            painter.drawRoundedRect(rect, 7, 7)
-            painter.fillRect(rect, QBrush(QColor(10, 10, 10)))
+            painter.setClipRect(rect, Qt.ReplaceClip)
             
             painter.restore() # Recovers previous status
