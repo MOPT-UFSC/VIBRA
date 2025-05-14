@@ -32,14 +32,14 @@ class PerforatedPlateModels:
         for key, data in self.properties.surface_properties.items():
             property, surface_ids = key
             if property == "perforated_plate_model":
-                data: dict
-
-                pp_fluid = data.get("fluid")
-                if not isinstance(pp_fluid, Fluid):
-                    continue
-
                 if data["formulation"] == "circular_hole":
-                    z_orifice, z_end, z_nl_urms, z_ud, Z_0 = self.get_transfer_impedance_for_circular_holes(omega, pp_fluid, data)
+
+                    normalized_impedances = self.get_transfer_impedance_for_circular_holes(omega, data)
+                    if normalized_impedances is None:
+                        continue
+                
+                    z_orifice, z_end, z_nl_urms, z_ud, Z_0 = normalized_impedances
+
                 else:
                     continue
 
@@ -52,7 +52,7 @@ class PerforatedPlateModels:
                                                                      "Z_0" : Z_0,
                                                                      }
 
-    def get_transfer_impedance_for_circular_holes(self, omega: np.ndarray, fluid: Fluid, pp_data: dict, **kwargs):
+    def get_transfer_impedance_for_circular_holes(self, omega: np.ndarray, pp_data: dict, **kwargs):
         """
         """
 
@@ -63,12 +63,16 @@ class PerforatedPlateModels:
         Cd_nl = pp_data.get("non_linear_discharge_coefficient", 0.76)
         f_nl = pp_data.get("non_linear_correction_factor", 0)
 
-        rho_0 = fluid.fluid_density
-        c_0 = fluid.speed_of_sound
-        mu_0 = fluid.dynamic_viscosity
-        gamma = fluid.isentropic_exponent
-        Cp = fluid.specific_heat_Cp
-        k_t = fluid.thermal_conductivity
+        pp_fluid = pp_data.get("fluid_data")
+        if not isinstance(pp_fluid, dict):
+            return None
+
+        rho_0 = pp_fluid.get("fluid_density")
+        c_0 = pp_fluid.get("speed_of_sound")
+        mu_0 = pp_fluid.get("dynamic_viscosity")
+        gamma = pp_fluid.get("isentropic_exponent")
+        Cp = pp_fluid.get("specific_heat_Cp")
+        k_t = pp_fluid.get("thermal_conductivity")
 
         Z_0 = rho_0 * c_0
         Pr = mu_0 * Cp / k_t
@@ -116,4 +120,4 @@ class PerforatedPlateModels:
             if isinstance(values, list) and len(values) == 1:
                 z_ud = values[0]
 
-        return z_orifice, z_end, z_nl_urms, z_ud, Z_0
+        return (z_orifice, z_end, z_nl_urms, z_ud, Z_0)

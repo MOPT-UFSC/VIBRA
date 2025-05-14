@@ -399,12 +399,6 @@ class LoadProject:
                         self.properties._set_property(property, prop_data, volume=id)
 
                     elif key == "surface_properties":
-                        if isinstance(prop_data, dict):
-                            fluid_id = prop_data.get("fluid_id")
-                            if isinstance(fluid_id, int):
-                                fluid = self.library_fluids[fluid_id]
-                                prop_data.update({"fluid" : fluid})
-
                         self.properties._set_property(property, prop_data, surface=id)
 
                     elif key == "line_properties":

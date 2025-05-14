@@ -305,7 +305,7 @@ class PerforatedPlateModelInputs(QDialog):
                 model_inputs = list()
                 for key, value in data.items():
 
-                    if key in ["formulation", "values", "table_names", "table_paths"]:
+                    if key in ["formulation", "fluid_data", "values", "table_names", "table_paths"]:
                         continue
 
                     if key == "coupling_type":
@@ -486,6 +486,25 @@ class PerforatedPlateModelInputs(QDialog):
 
         if self.tabWidget_perforated_plate_models.currentIndex() != 0:
             return dict()
+        
+        if self.selected_fluid is None:
+            self.get_fluid_callback()
+
+        if not isinstance(self.selected_fluid, Fluid):
+            return dict()
+
+        self.pp_data["fluid_data"] = dict(
+                                          name = self.selected_fluid.name,
+                                          fluid_density = self.selected_fluid.fluid_density,
+                                          speed_of_sound = self.selected_fluid.speed_of_sound,
+                                          isentropic_exponent = self.selected_fluid.isentropic_exponent,
+                                          thermal_conductivity = self.selected_fluid.thermal_conductivity,
+                                          specific_heat_Cp = self.selected_fluid.specific_heat_Cp,
+                                          dynamic_viscosity = self.selected_fluid.dynamic_viscosity,
+                                          temperature = self.selected_fluid.temperature,
+                                          pressure = self.selected_fluid.pressure,
+                                          molar_mass = self.selected_fluid.molar_mass,
+                                          )
 
         lineEdit = self.lineEdit_plate_thickness
         plate_thickness = self.check_inputs(lineEdit, "Plate thickness")
@@ -543,14 +562,6 @@ class PerforatedPlateModelInputs(QDialog):
         self.pp_data.clear()
         if self.tabWidget_main.currentIndex():
             return
-        
-        if self.selected_fluid is None:
-            self.get_fluid_callback()
-
-        if not isinstance(self.selected_fluid, Fluid):
-            return
-
-        self.pp_data["fluid"] = self.selected_fluid
 
         self.get_inputs_for_perforated_plate_with_circular_holes()
         if not self.pp_data:
@@ -715,7 +726,7 @@ class PerforatedPlateModelInputs(QDialog):
 
             else:
                 return
-            
+
             self.remove_table_files_from_surfaces(surface_ids)
             self.properties._remove_surface_property("perforated_plate_model", surface_ids)
 
@@ -899,8 +910,13 @@ class PerforatedPlateModelInputs(QDialog):
 
         if self.pp_data:
             if tab_index == 0:
+
                 U_rms = 0
-                z_orifice, z_end, z_nl_urms, z_ud, Z_0 = model.get_transfer_impedance_for_circular_holes(omega, fluid, self.pp_data)
+                normalized_impedances = model.get_transfer_impedance_for_circular_holes(omega, self.pp_data)
+                if normalized_impedances is None:
+                    return
+
+                z_orifice, z_end, z_nl_urms, z_ud, Z_0 = normalized_impedances
                 Z_tr = Z_0 * (z_orifice + z_end + z_ud + z_nl_urms*U_rms)
 
             return freq, Z_tr

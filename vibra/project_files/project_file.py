@@ -399,8 +399,6 @@ class ProjectFile:
                         for _key, _data in data.items():
                             if _key in ["values"]:
                                 continue
-                            if isinstance(_data, Fluid):
-                                aux["fluid_id"] = _data.identifier
                             else:
                                 aux[_key] = _data
 
