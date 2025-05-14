@@ -207,8 +207,6 @@ class SpecificImpedanceInputs(QDialog):
             data = {
                     "real_values" : real_values,
                     "imag_values" : imag_values,
-                    "nodal_attribution" : False,
-                    "averaged" : False
                     }
 
             for surface_id in surface_ids:

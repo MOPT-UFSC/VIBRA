@@ -128,15 +128,12 @@ class PerforatedPlateModelInputs(QDialog):
         #
         self.geometry_selection_callback()
         self.include_effects_callback()
-        # self.update_plot_buttons_access()
 
     def geometry_selection_callback(self):
 
         surfaces = self.main_window.selected_geometry_surfaces
 
         if surfaces:
-            text = ", ".join([str(i) for i in surfaces])
-            self.lineEdit_selection_id.setText(text)
 
             if len(surfaces) == 1:
                 surface_ids = list(surfaces)[0]
@@ -156,16 +153,28 @@ class PerforatedPlateModelInputs(QDialog):
 
         if isinstance(surface_ids, int | np.int64):
             if len(self.mesh.volumes_from_surface[surface_ids]) == 2:
+                self.update_selected_ids(surface_ids)
                 self.comboBox_selection_type.setCurrentIndex(0)
 
         elif isinstance(surface_ids, tuple):
             if len(surface_ids) == 2:
                 volumes_from_surface_A = self.mesh.volumes_from_surface[surface_ids[0]]
                 volumes_from_surface_B = self.mesh.volumes_from_surface[surface_ids[1]]
-                if len(volumes_from_surface_A) == len(volumes_from_surface_B):
+                if len(volumes_from_surface_A) == len(volumes_from_surface_B) == 1:
+                    self.update_selected_ids(surface_ids)
                     self.comboBox_selection_type.setCurrentIndex(1)
-                    return
-                
+
+        else:
+            return
+
+    def update_selected_ids(self, surface_ids: int | tuple[int]):
+
+        if isinstance(surface_ids, int | np.int64):
+            surface_ids = [surface_ids]
+
+        text = ", ".join([str(i) for i in surface_ids])
+        self.lineEdit_selection_id.setText(text)
+
     def clear_all_inputs(self):
         self.lineEdit_plate_thickness.setText("")
         self.lineEdit_hole_diameter.setText("")
@@ -277,18 +286,6 @@ class PerforatedPlateModelInputs(QDialog):
                     PrintMessageInput([window_title_1, title, message])
                     self.pp_data.clear()
                     return
-
-            fluid_A = self.properties._get_property("fluid", surface=surface_ids[0])
-            fluid_B = self.properties._get_property("fluid", surface=surface_ids[1])
-
-            if fluid_A != fluid_B:
-                self.hide()
-                message = f"The fluids associated with the selected surfaces differ; therefore, the perforated "
-                message += "plate model cannot be computed satisfying the assumptions under which it has been "
-                message += "constructed. You need to choose surfaces that have the same fluid to continue."
-                PrintMessageInput([window_title_1, title, message])
-                self.pp_data.clear()
-                return
 
         self.pp_data["coupling_type"] = selection_type.lower().replace(" ", "_")
 
@@ -992,10 +989,12 @@ class PerforatedPlateModelInputs(QDialog):
             self.hide()
             app().main_window.input_ui.mesh_setup()
             app().main_window.set_input_widget(self)
-            if not app().project.model.generated_mesh:
-                return True
-            else:
-                return False
+            return False
+
+            # if not app().project.model.generated_mesh:
+            #     return True
+            # else:
+            #     return False
 
         if self.mesh.cache_nodal_coordinates is None:
             self.mesh.cache_mesh_information()
