@@ -13,7 +13,7 @@ import numpy as np
 
 from copy import deepcopy
 from collections import defaultdict
-from itertools import combinations
+from itertools import combinations, pairwise
 from pathlib import Path
 
 from traceback import print_exception
@@ -811,7 +811,7 @@ class Mesh:
     def process_mesh_related_mappings(self):
         self.process_connectivities_from_lines_and_surfaces()
         self.map_elements_from_lines_surfaces_and_volumes()
-        self.map_face_elements_to_solid_elements_v3()
+        self.map_face_elements_to_solid_elements_v4()
         self.get_principal_diagonal_structure_parallelepiped()
 
 
@@ -1075,6 +1075,87 @@ class Mesh:
                     return row
 
         return -1
+
+    def map_face_elements_to_solid_elements_v4(self):
+        nodes_per_face = self.faces_connectivity[:, 4:].shape[1]
+        nodes_per_solid = self.solids_connectivity[:, 4:].shape[1]
+
+        # Get the set of nodes that are part of a face
+        all_face_nodes = np.unique(self.faces_connectivity[:, 4:])
+
+        # Counts how many nodes of a solid are touching a face
+        face_nodes_per_solid = np.sum(
+            np.isin(
+                self.solids_connectivity[:, 4:],
+                all_face_nodes,
+            ),
+            axis=1,
+        )
+
+        # Filters all solids that contains a external face
+        external_solids = self.solids_connectivity[face_nodes_per_solid >= nodes_per_face]
+        external_solids_connectivity = external_solids[:, 4:]
+        external_solids_connectivity.sort(axis=1)
+
+        # Sort only the needed columns to find efficiently the smallest node of a face.
+        # If the node was not found in the first N columns the solid is not valid a candidate.
+        columns_to_sort = nodes_per_solid - nodes_per_face + 1
+        sorted_indexes = np.argsort(external_solids_connectivity[:, :columns_to_sort], axis=0)
+        sorted_columns = np.take_along_axis(external_solids_connectivity[:, :columns_to_sort], sorted_indexes, axis=0)
+
+        # Create a dict containing the positions 
+        # of each node per column
+        intervals = dict()
+        true_line = np.full(sorted_columns.shape[1], True)
+        value_changes = np.vstack(
+            [
+                true_line, # Forcing the 0 index
+                sorted_columns[:-1] != sorted_columns[1:],
+                true_line, # Forcing the last index
+            ]
+        )
+        for col, mask in enumerate(value_changes.T):
+            change_indexes = np.where(mask)[0]
+            for left, right in pairwise(change_indexes):
+                node = sorted_columns[left, col]
+                intervals[col, node] = (left, right)
+
+        self.face_to_solid_element = dict()
+        self.solid_to_face_elements = defaultdict(list)
+
+        for face_row in self.faces_connectivity:
+            face_id = face_row[0]
+            face_nodes = face_row[4:]
+            first_node = min(face_nodes)
+
+            correspondent_solid_found = False
+
+            for col in range(sorted_indexes.shape[1]):
+                key = (col, first_node)
+
+                if key not in intervals:
+                    continue
+
+                left, right = intervals[key]
+
+                interval = intervals.get((col, first_node))
+                if interval is None:
+                    continue
+
+                solid_rows_containing_first_node = sorted_indexes[left:right, col]
+
+                for solid_row_number in solid_rows_containing_first_node:
+                    face_is_subset_of_solid = np.isin(face_nodes, external_solids_connectivity[solid_row_number]).all()
+
+                    if face_is_subset_of_solid:
+                        solid_id = external_solids[solid_row_number, 0]
+                        self.face_to_solid_element[face_id] = solid_id
+                        self.solid_to_face_elements[solid_id].append(face_id)
+                        correspondent_solid_found = True
+                        break
+
+                if correspondent_solid_found:
+                    break
 
     def get_face_elements_connected_to_nodes(self, node_ids, surface_id=None):
 
