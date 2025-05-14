@@ -91,10 +91,21 @@ class ModelProperties:
             factor = proportional_damping.get("speed_of_sound_factor", 0)
             return (1 + factor * 1j) * c_0
 
-    def _set_property(self, property: str, data: dict | Fluid | Material, node=None, element=None, point=None, line=None, surface=None, volume=None, group=None):
+    def _set_property(
+                      self, 
+                      property: str, 
+                      data: dict | Fluid | Material, 
+                      node: int | None = None, 
+                      element: int | None = None, 
+                      point: int | None = None, 
+                      line: int | None = None, 
+                      surface: int | tuple[int] | None = None, 
+                      volume: int | None = None, 
+                      group: int | None = None
+                      ):
         """
-        Sets a data to a property by node, element, line, surface or volume
-        if any of these exists. Otherwise sets the property as global.
+            This method sets a data to a property by node, element, line, surface or volume
+            if any of these exists. Otherwise sets the property as global.
 
         """
 
@@ -308,6 +319,7 @@ class ModelProperties:
                            "surface_velocity",
                            "mass_flow_rate",
                            "specific_impedance",
+                           "transfer_impedance",
                            "radiation_impedance",
                            "perforated_plate_model",
                            "reciprocating_compressor_excitation",
