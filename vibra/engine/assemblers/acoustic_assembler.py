@@ -278,11 +278,13 @@ class AcousticAssembler:
 
             else:
 
-                if len(surface_ids) != 2:
-                    return
+                surface_elements_A = list()
+                for surface_id_A in p_data.get("surfaces_A"):
+                    surface_elements_A.extend(list(self.model.mesh.elements_from_surface[surface_id_A]))
 
-                surface_elements_A = list(self.model.mesh.elements_from_surface[surface_ids[0]])
-                surface_elements_B = list(self.model.mesh.elements_from_surface[surface_ids[1]])
+                surface_elements_B = list()
+                for surface_id_B in p_data.get("surfaces_B"):
+                    surface_elements_B.extend(list(self.model.mesh.elements_from_surface[surface_id_B]))
 
             for i, el in enumerate(surface_elements_A):
                 nodes_from_element = self.model.mesh.faces_connectivity[el, 4:]
@@ -344,11 +346,13 @@ class AcousticAssembler:
 
                 else:
 
-                    if len(surface_ids) != 2:
-                        return
+                    surface_elements_A = list()
+                    for surface_id_A in pp_data.get("surfaces_A"):
+                        surface_elements_A.extend(list(self.model.mesh.elements_from_surface[surface_id_A]))
 
-                    surface_elements_A = list(self.model.mesh.elements_from_surface[surface_ids[0]])
-                    surface_elements_B = list(self.model.mesh.elements_from_surface[surface_ids[1]])
+                    surface_elements_B = list()
+                    for surface_id_B in pp_data.get("surfaces_B"):
+                        surface_elements_B.extend(list(self.model.mesh.elements_from_surface[surface_id_B]))
 
                 for i, el in enumerate(surface_elements_A):
 

@@ -448,8 +448,7 @@ class ProjectFile:
 
                 if len(_ids) == 1:
                     ids = int(_ids[0])
-
-                elif len(_ids) == 2:
+                else:
                     ids = tuple([int(_id) for _id in _ids])
 
                 new_prop[p, ids] = val

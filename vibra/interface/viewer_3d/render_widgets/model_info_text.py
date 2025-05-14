@@ -257,14 +257,16 @@ def perforated_plate_info_text():
     text = ""
     surfaces = list(app().main_window.selected_geometry_surfaces)
 
+    if not surfaces:
+        return text
+
+    surfaces.sort()
+    surfaces = [int(surf_id) for surf_id in surfaces]
+
     if len(surfaces) == 1:
         pp_data = app().project.model.properties._get_property("perforated_plate_model", surface=surfaces[0])
-
-    elif len(surfaces) == 2:
-        pp_data = app().project.model.properties._get_property("perforated_plate_model", surface=tuple(surfaces))
-
     else:
-        return text
+        pp_data = app().project.model.properties._get_property("perforated_plate_model", surface=tuple(surfaces))
 
     if not isinstance(pp_data, dict):
         return text

@@ -1,5 +1,5 @@
-from PySide6.QtWidgets import QComboBox, QDialog, QFileDialog, QFrame, QLineEdit, QPushButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QComboBox, QDialog, QFileDialog, QFrame, QLabel, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtCore import Qt, QEvent, QObject, Signal
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
@@ -76,7 +76,8 @@ class PerforatedPlateModelInputs(QDialog):
         self.frame_plot_buttons: QFrame
 
         # QLineEdit
-        self.lineEdit_selection_id: QLineEdit
+        self.lineEdit_selection_id_A: QLineEdit
+        self.lineEdit_selection_id_B: QLineEdit
         self.lineEdit_selected_fluid: QLineEdit
         self.lineEdit_fluid_density: QLineEdit
         self.lineEdit_speed_of_sound: QLineEdit
@@ -87,6 +88,7 @@ class PerforatedPlateModelInputs(QDialog):
         self.lineEdit_non_linear_discharge_coefficient: QLineEdit
         self.lineEdit_non_linear_correction_factor: QLineEdit
         self.lineEdit_user_defined_transfer_impedance_path: QLineEdit
+        self.current_lineEdit = self.lineEdit_selection_id_A
 
         # QPushButton
         self.pushButton_exit: QPushButton
@@ -97,6 +99,10 @@ class PerforatedPlateModelInputs(QDialog):
         self.pushButton_plot_data: QPushButton
         self.pushButton_load_path: QPushButton
         self.pushButton_clean_inputs: QPushButton
+
+        # QLabel
+        self.label_selection_A: QLabel
+        self.label_selection_B: QLabel
 
         # QTabWidget
         self.tabWidget_main: QTabWidget
@@ -109,6 +115,7 @@ class PerforatedPlateModelInputs(QDialog):
         #
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_type_callback)
         self.comboBox_include_effects.currentIndexChanged.connect(self.include_effects_callback)
+        self.comboBox_selection_type.currentIndexChanged.connect(self.selection_type_callback)
         #
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_confirm.clicked.connect(self.attribute_callback)
@@ -126,10 +133,49 @@ class PerforatedPlateModelInputs(QDialog):
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
         #
+        self.clickable(self.lineEdit_selection_id_A).connect(self.lineEdit_selection_A_clicked)
+        self.clickable(self.lineEdit_selection_id_B).connect(self.lineEdit_selection_B_clicked)
+        #
         self.geometry_selection_callback()
         self.include_effects_callback()
 
+    def clickable(self, widget: QLineEdit):
+        class Filter(QObject):
+            clicked = Signal()
+
+            def eventFilter(self, obj, event):
+                if obj == widget and event.type() == QEvent.MouseButtonRelease and obj.rect().contains(event.pos()):
+                    self.clicked.emit()
+                    return True
+                else:
+                    return False
+
+        filter = Filter(widget)
+        widget.installEventFilter(filter)
+        return filter.clicked
+
+    def lineEdit_selection_A_clicked(self):
+        app().main_window.set_geometry_selection()
+        self.current_lineEdit = self.lineEdit_selection_id_A
+        self.highlight_line_edit()
+
+    def lineEdit_selection_B_clicked(self):
+        app().main_window.set_geometry_selection()
+        if self.lineEdit_selection_id_B.isEnabled():
+            self.current_lineEdit = self.lineEdit_selection_id_B
+            self.highlight_line_edit()
+
+    def highlight_line_edit(self):
+        self.current_lineEdit.setStyleSheet("border-color: rgb(255,0,0); border-width: 2px")
+        if self.current_lineEdit == self.lineEdit_selection_id_A:
+            self.lineEdit_selection_id_B.setStyleSheet("")
+        else:
+            self.lineEdit_selection_id_A.setStyleSheet("")
+
     def geometry_selection_callback(self):
+
+        if self.tabWidget_main.currentIndex() == 1:
+            return
 
         surfaces = self.main_window.selected_geometry_surfaces
 
@@ -137,8 +183,10 @@ class PerforatedPlateModelInputs(QDialog):
 
             if len(surfaces) == 1:
                 surface_ids = list(surfaces)[0]
-            elif len(surfaces) == 2:
-                surface_ids = tuple(surfaces)
+            elif len(surfaces) > 1:
+                surface_ids = list(surfaces)
+                surface_ids.sort()
+                surface_ids = tuple(surface_ids)
             else:
                 return
 
@@ -148,24 +196,27 @@ class PerforatedPlateModelInputs(QDialog):
                 return
 
             self.load_perforated_plate_inputs(pp_data)
+            return
+
+        self.selection_type_callback()
 
     def update_selection_type_based_on_surface_ids(self, surface_ids: int | tuple[int]):
 
-        if isinstance(surface_ids, int | np.int64):
-            if len(self.mesh.volumes_from_surface[surface_ids]) == 2:
-                self.update_selected_ids(surface_ids)
-                self.comboBox_selection_type.setCurrentIndex(0)
+        self.update_selected_ids(surface_ids)
 
-        elif isinstance(surface_ids, tuple):
-            if len(surface_ids) == 2:
-                volumes_from_surface_A = self.mesh.volumes_from_surface[surface_ids[0]]
-                volumes_from_surface_B = self.mesh.volumes_from_surface[surface_ids[1]]
-                if len(volumes_from_surface_A) == len(volumes_from_surface_B) == 1:
-                    self.update_selected_ids(surface_ids)
-                    self.comboBox_selection_type.setCurrentIndex(1)
+        # if isinstance(surface_ids, int | np.int64):
+        #     if len(self.mesh.volumes_from_surface[surface_ids]) == 2:
+        #         self.comboBox_selection_type.setCurrentIndex(0)
 
-        else:
-            return
+        # elif isinstance(surface_ids, tuple):
+        #     if len(surface_ids) == 2:
+        #         volumes_from_surface_A = self.mesh.volumes_from_surface[surface_ids[0]]
+        #         volumes_from_surface_B = self.mesh.volumes_from_surface[surface_ids[1]]
+        #         if len(volumes_from_surface_A) == len(volumes_from_surface_B) == 1:
+        #             self.comboBox_selection_type.setCurrentIndex(1)
+
+        # else:
+        #     return
 
     def update_selected_ids(self, surface_ids: int | tuple[int]):
 
@@ -173,7 +224,7 @@ class PerforatedPlateModelInputs(QDialog):
             surface_ids = [surface_ids]
 
         text = ", ".join([str(i) for i in surface_ids])
-        self.lineEdit_selection_id.setText(text)
+        self.current_lineEdit.setText(text)
 
     def clear_all_inputs(self):
         self.lineEdit_plate_thickness.setText("")
@@ -187,8 +238,15 @@ class PerforatedPlateModelInputs(QDialog):
     def update_plot_buttons_access(self):
         state = self.selected_fluid is None
         self.comboBox_plot_type.setDisabled(state)
-        # self.pushButton_plot_data.setDisabled(state)
         self.plot_type_callback()
+
+    def selection_type_callback(self):
+        if self.comboBox_selection_type.currentText() == "Inside surfaces":
+            self.label_selection_B.setEnabled(False)
+            self.lineEdit_selection_id_B.setEnabled(False)
+        else:
+            self.label_selection_B.setEnabled(True)
+            self.lineEdit_selection_id_B.setEnabled(True)
 
     def plot_type_callback(self):
         return
@@ -213,7 +271,7 @@ class PerforatedPlateModelInputs(QDialog):
             self.pushButton_load_path.setEnabled(True)
 
     def _config_widgets(self):
-        for i, w in enumerate([100, 130, 200]):
+        for i, w in enumerate([120, 130, 200]):
             self.treeWidget_perforated_plate_model.setColumnWidth(i, w)
             self.treeWidget_perforated_plate_model.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
@@ -221,31 +279,29 @@ class PerforatedPlateModelInputs(QDialog):
 
         self.pushButton_remove.setDisabled(True)
         if self.tabWidget_main.currentIndex() == 1:
-            self.lineEdit_selection_id.setText("")
-            self.lineEdit_selection_id.setDisabled(True)
-            # self.frame_fluid_info.setDisabled(True)
-            # self.frame_plot_buttons.setDisabled(True)
+            self.lineEdit_selection_id_A.setText("")
+            self.lineEdit_selection_id_B.setText("")
+            self.lineEdit_selection_id_A.setDisabled(True)
 
         else:
 
-            if "-" in self.lineEdit_selection_id.text():
-                self.lineEdit_selection_id.setText("")
+            if ("(" or ")") in self.lineEdit_selection_id_A.text():
+                self.lineEdit_selection_id_A.setText("")
+                self.lineEdit_selection_id_B.setText("")
+                app().main_window.set_geometry_selection()
 
-            # self.frame_fluid_info.setDisabled(False)
-            # self.frame_plot_buttons.setDisabled(False)
-
-            self.lineEdit_selection_id.setDisabled(False)
+            self.lineEdit_selection_id_A.setDisabled(False)
 
     def on_click_item(self, item):
 
+        self.pushButton_remove.setEnabled(True)
+        self.lineEdit_selection_id_A.setText(item.text(0))
+
         text = item.text(0).replace("(", "").replace(")", "").replace(",", "")
         str_surface_ids = text.split()
-
         surface_ids = [int(surf_id) for surf_id in str_surface_ids]
-        app().main_window.set_geometry_selection(surfaces=surface_ids)
 
-        self.lineEdit_selection_id.setText(item.text(0))
-        self.pushButton_remove.setEnabled(True)
+        app().main_window.set_geometry_selection(surfaces=surface_ids)
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
@@ -268,14 +324,14 @@ class PerforatedPlateModelInputs(QDialog):
 
         else:
 
-            if len(surface_ids) != 2:
-                self.hide()
-                message = f"An invalid number of selected surfaces has been detected. To proceed, you must "
-                message += "select a pair of outside surfaces. Outside surfaces are surfaces associated to only one volume. "
-                message += "The perforated plate attribution will be ignored until all requirements are met."
-                PrintMessageInput([window_title_1, title, message])
-                self.pp_data.clear()
-                return
+            # if len(surface_ids) != 2:
+            #     self.hide()
+            #     message = f"An invalid number of selected surfaces has been detected. To proceed, you must "
+            #     message += "select a pair of outside surfaces. Outside surfaces are surfaces associated to only one volume. "
+            #     message += "The perforated plate attribution will be ignored until all requirements are met."
+            #     PrintMessageInput([window_title_1, title, message])
+            #     self.pp_data.clear()
+            #     return
 
             for surface_id in surface_ids:
                 if len(self.mesh.volumes_from_surface[surface_id]) != 1:
@@ -330,6 +386,16 @@ class PerforatedPlateModelInputs(QDialog):
         self.tabWidget_main.setCurrentIndex(0)
 
     def load_perforated_plate_inputs(self, data: dict):
+
+        surfaces_A = data.get("surfaces_A")
+        if isinstance(surfaces_A, list):
+            self.current_lineEdit = self.lineEdit_selection_id_A
+            self.update_selected_ids(surfaces_A)
+
+        surfaces_B = data.get("surfaces_B")
+        if isinstance(surfaces_B, list):
+            self.current_lineEdit = self.lineEdit_selection_id_B
+            self.update_selected_ids(surfaces_B)
 
         formulation = data.get("formulation")
         if formulation == "circular_hole":
@@ -563,21 +629,69 @@ class PerforatedPlateModelInputs(QDialog):
         self.get_inputs_for_perforated_plate_with_circular_holes()
         if not self.pp_data:
             return
-    
-        input_ids = self.lineEdit_selection_id.text()
-        surface_ids = self.mesh.check_selected_ids(
-                                                    input_ids, 
-                                                    selection = "surfaces", 
-                                                    single_id = False,
-                                                    )
+        
+        if self.comboBox_selection_type.currentText() == "Inside surfaces":
+        
+            input_ids_A = self.lineEdit_selection_id_A.text()
+            surface_ids_A = self.mesh.check_selected_ids(
+                                                        input_ids_A, 
+                                                        selection = "surfaces", 
+                                                        single_id = False,
+                                                        )
 
-        if surface_ids is None:
-            self.lineEdit_selection_id.setFocus()
-            return
+            if surface_ids_A is None:
+                self.lineEdit_selection_id_A.setFocus()
+                return
 
-        self.check_selection_type(surface_ids)
-        if not self.pp_data:
-            return
+
+            self.check_selection_type(surface_ids_A)
+            if not self.pp_data:
+                return
+            
+            surface_ids = surface_ids_A.sort()
+            self.pp_data["surfaces_A"] = surface_ids_A.sort()
+
+        else:
+
+            input_ids_A = self.lineEdit_selection_id_A.text()
+            surface_ids_A = self.mesh.check_selected_ids(
+                                                        input_ids_A, 
+                                                        selection = "surfaces", 
+                                                        single_id = False,
+                                                        )
+
+            if surface_ids_A is None:
+                self.lineEdit_selection_id_A.setFocus()
+                return
+
+            input_ids_B = self.lineEdit_selection_id_B.text()
+            surface_ids_B = self.mesh.check_selected_ids(
+                                                        input_ids_B, 
+                                                        selection = "surfaces", 
+                                                        single_id = False,
+                                                        )
+
+            if surface_ids_B is None:
+                self.lineEdit_selection_id_A.setFocus()
+                return
+
+            self.check_selection_type(surface_ids_A)
+            if not self.pp_data:
+                return
+
+            self.check_selection_type(surface_ids_B)
+            if not self.pp_data:
+                return
+
+            surface_ids_A.sort()
+            surface_ids_B.sort()
+            self.pp_data["surfaces_A"] = surface_ids_A
+            self.pp_data["surfaces_B"] = surface_ids_B
+
+            surface_ids = list()
+            surface_ids.extend(surface_ids_A)
+            surface_ids.extend(surface_ids_B)
+            surface_ids.sort()
 
         self.remove_conflicting_excitations(surface_ids)
 
@@ -704,9 +818,9 @@ class PerforatedPlateModelInputs(QDialog):
                         self.properties._remove_line_property(property, line_id)
 
     def remove_callback(self):
-        if self.lineEdit_selection_id.text() != "":
+        if self.lineEdit_selection_id_A.text() != "":
 
-            input_ids = self.lineEdit_selection_id.text()
+            input_ids = self.lineEdit_selection_id_A.text()
             input_ids = input_ids.replace("(", "").replace(")", "")
 
             surface_ids = self.mesh.check_selected_ids(
@@ -714,15 +828,14 @@ class PerforatedPlateModelInputs(QDialog):
                                                         selection = "surfaces", 
                                                         single_id = False,
                                                         )
+            
+            if not surface_ids:
+                return
 
             if len(surface_ids) == 1:
                 surface_ids = surface_ids[0]
-
-            elif len(surface_ids) == 2:
-                surface_ids = tuple(surface_ids)
-
             else:
-                return
+                surface_ids = tuple(surface_ids)
 
             self.remove_table_files_from_surfaces(surface_ids)
             self.properties._remove_surface_property("perforated_plate_model", surface_ids)

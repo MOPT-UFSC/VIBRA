@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QComboBox, QLineEdit, QPushButton, QDialog, QWidget
+from PySide6.QtWidgets import QComboBox, QLineEdit, QPushButton, QWidget
 from PySide6.QtCore import Qt, QEvent, QObject, Signal
 from PySide6.QtGui import QCloseEvent
 
