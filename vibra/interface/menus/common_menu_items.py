@@ -1,10 +1,16 @@
-from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QItemDelegate
+from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QItemDelegate, QTextEdit
 from PySide6.QtGui import QIcon, QFont, QPixmap, QColor, QLinearGradient, QBrush, QPen
 from PySide6.QtCore import Qt, QSize, QRect, Signal, QObject
 from pathlib import Path
 
 from vibra.interface.formatters.icons import *
 from vibra.interface.menus.border_item_delegate import BorderItemDelegate
+from vibra import ICON_DIR
+from vibra.interface.menus.tool_tips_model_setup_items import tool_tips
+
+from molde.colors import color_names
+
+import re
 
 # class MyDelegate(QItemDelegate):      
 #     def __init__(self):    
@@ -34,6 +40,7 @@ class CommonMenuItems(QTreeWidget):
         self._last_top_level = item
         self.addTopLevelItem(item)
         item.setExpanded(expanded)
+        self.setUniformRowHeights(False)
         return item
 
     def add_item(self, name, callback=None):
@@ -41,6 +48,7 @@ class CommonMenuItems(QTreeWidget):
             self.add_top_item("")
 
         item = ChildTreeWidgetItem(name)
+        item.set_property_name(name)
         self._last_top_level.addChild(item)
         item.setFont(0, self.font_item)
 
@@ -135,17 +143,42 @@ class ChildTreeWidgetItem(QTreeWidgetItem):
     def __init__(self, name):
         super().__init__([name])
         self.clicked = CustomBoundSignal()
+        self.property_name = ""
+    
+    def set_property_name(self, name: str):
+        name = name.lower()
+        # just to erase set/add prefixe in name
+        name = re.match(r"(?:set|add)*(.+)", name).group(1)
+        name = name.strip()
+        name = name.replace(" ", "_")
+        self.property_name = name
 
     def set_warning(self, cond):
         if cond:
             font = QFont()
             font.setBold(True)
             self.setFont(0, font)
-            self.setForeground(0, QColor(210, 144, 0))
-            warning_icon = get_warning_icon()
+            self.setForeground(0, QColor(*color_names.YELLOW.to_rgb()))
+            warning_icon = QIcon(str(Path(ICON_DIR / "model_setup_items" / str("warning_yellow.png"))))
             self.setIcon(0, warning_icon)
         else:
             # Resets data to default
             self.setData(0, Qt.FontRole, None)  # reset color
             self.setData(0, Qt.ForegroundRole, None)  # reset color
             self.setData(0, Qt.DecorationRole, None)
+            
+    def set_icon(self, visible: bool = True):
+        if visible:
+            print(self.property_name)
+            path_image = str(Path(ICON_DIR / "model_setup_items" / str(self.property_name + ".png")))
+            self.setIcon(0, QIcon(path_image))
+        else:
+            self.setIcon(0, QIcon())
+
+        self.should_paint = False
+    
+    def set_tool_tip(self, requirement: bool = False, message_requirement: str = ""):
+        if requirement and message_requirement == "":
+            message_requirement = "<b style='color:red'>Required for the selected configuration.</b>"
+            
+        self.setToolTip(0, message_requirement + QTextEdit(markdown=(tool_tips.get(self.property_name))).toHtml())

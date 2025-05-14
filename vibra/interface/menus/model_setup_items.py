@@ -186,39 +186,31 @@ class ModelSetupItems(CommonMenuItems):
             for index in range(top_level_items.childCount()):
                 item_child = top_level_items.child(index)
                 item_child_name = self._find_qtree_widget_item_name(item_child)
-                
+
                 if item_child_name is None:
                     continue
                 
-                property_name = re.match(r"item_child_(?:set_|add_)*(.+)", item_child_name).group(1)
+                item_child.set_warning(False)
                 
-                if property_name is None:
-                    continue
-                
-                if self._contains_property(property_name):
-                    self.set_item_icon(item_child, property_name)
-                    item_child.setToolTip(0, QTextEdit(markdown=(tool_tips.get(property_name))).toHtml())
+                if self._contains_property(item_child.property_name):
+                    item_child.set_icon()
+                    item_child.set_tool_tip()
                     
-                elif self._needs_property(property_name, analysis_type, physical_domain):
-                    self.set_item_icon(item_child, "warning_yellow")
-                    message = "<b style='color:red'>Required for the selected analysis and domain.</b>"
-                    item_child.setToolTip(0, message + QTextEdit(markdown=tool_tips.get(property_name)).toHtml())
+                elif self._needs_property(item_child.property_name, analysis_type, physical_domain):
+                    item_child.set_warning(True)
+                    item_child.set_tool_tip(requirement=True)
 
                 else:
-                    item_child.setIcon(0, QIcon())
-                    item_child.setToolTip(0, QTextEdit(markdown=(tool_tips.get(property_name))).toHtml())
+                    item_child.set_icon(visible=False)
+                    item_child.set_tool_tip()
 
     def reset_items_appearance(self):
         for top_level_items in self.top_level_items:
             for index in range(top_level_items.childCount()):
                 item_child = top_level_items.child(index)
-                item_child.setIcon(0, QIcon())
-                item_child.setToolTip(0, "")
-    
-    def set_item_icon(self, item, image_name):
-        path_image = str(Path(ICON_DIR / "model_setup_items" / str(image_name + ".png")))
-        item.setIcon(0, QIcon(path_image))
-        item.should_paint = False
+                item_child.set_icon(visible=False)
+                item_child.set_warning(False)
+                item_child.set_tool_tip()
     
     # Callbacks
     def item_child_set_material_callback(self):
