@@ -730,6 +730,8 @@ class PerforatedPlateModelInputs(QDialog):
             self.remove_table_files_from_surfaces(surface_ids)
             self.properties._remove_surface_property("perforated_plate_model", surface_ids)
 
+            app().project.reset_solutions()
+
             data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_ids)
             if isinstance(data, dict):
                 new_surface_id = data.get("new_surface_id")
@@ -743,7 +745,6 @@ class PerforatedPlateModelInputs(QDialog):
                 app().file.remove_results_data_from_project_file()
                 self.restore_mesh_data_modified_by_decoupling()
 
-            app().project.reset_solutions()
             self.actions_to_finalize()
             self.pushButton_remove.setDisabled(True)
 
@@ -783,17 +784,15 @@ class PerforatedPlateModelInputs(QDialog):
                     self.properties._remove_surface_property("degrees_of_freedom_decoupling", surf_id)
 
         self.properties._reset_property("perforated_plate_model")
+        app().project.reset_solutions()
 
         if new_surface_ids:
-
             self.remove_all_surface_properties_from_surface(new_surface_ids)
             self.remove_all_line_properties_boundind_surface(new_surface_ids)
-
             app().file.remove_mesh_data_from_project_file()
             app().file.remove_results_data_from_project_file()
             self.restore_mesh_data_modified_by_decoupling()
 
-        app().project.reset_solutions()
         self.actions_to_finalize()
 
     def restore_mesh_data_modified_by_decoupling(self):
