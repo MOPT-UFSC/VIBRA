@@ -126,10 +126,12 @@ def load_external_mesh_and_solve(mesh_size: str = "5mm", interior_impedance: boo
         model.properties._set_property("fluid", fluid, surface=_surf_id)
 
     ## normal surface velocity data
-    data_Vn = { "real_values" : [1],
+    data_Vn = { 
+                "real_values" : [1],
                 "imag_values" : [0],
                 "nodal_attribution" : False,
-                "averaged" : False }
+                "averaged" : False
+                }
 
     model.properties._set_property("surface_velocity", data_Vn, surface=1)
 
@@ -138,8 +140,6 @@ def load_external_mesh_and_solve(mesh_size: str = "5mm", interior_impedance: boo
     data_Z = {  
               "real_values" : [Zo],
               "imag_values" : [0],
-              "nodal_attribution" : False,
-              "averaged" : False
               }
 
     # model.properties._set_property("specific_impedance", data_Z, surface=1)
@@ -148,12 +148,10 @@ def load_external_mesh_and_solve(mesh_size: str = "5mm", interior_impedance: boo
     ## interior impedance setup
 
     # if interior_impedance:
-    #     data_Zin = {  
-    #                 "real_values" : [10],
-    #                 "imag_values" : [0],
-    #                 "nodal_attribution" : False,
-    #                 "averaged" : False
-    #                 }
+    # data_Z = {  
+    #           "real_values" : [Zo],
+    #           "imag_values" : [0],
+    #           }
 
     #     model.properties._set_property("specific_impedance", data_Zin, surface=3)
 

@@ -160,7 +160,7 @@ class AcousticAssembler:
     def get_matrices_dropping_indexes(self):
         return self.unprescribed_indexes, self.prescribed_indexes
 
-    def get_surface_data_for_element_integration_by_property(self, property_label: str):
+    def get_surface_data_for_element_integration_by_property(self, property_label: str) -> dict:
         """ """
 
         surface_data = dict()
@@ -172,52 +172,52 @@ class AcousticAssembler:
         for key, data in self.properties.surface_properties.items():
 
             prop, surface_id = key
-            if prop == property_label:
-                if not data["nodal_attribution"]:
+            if prop != property_label:
+                continue
 
-                    pm_active, rho_eff_pm, C_eff_pm = self.model.is_porous_material_model_active(surface_id)
-                    tv_active, rho_eff_tv, C_eff_tv = self.model.is_viscous_thermal_model_active(surface_id)
+            pm_active, rho_eff_pm, C_eff_pm = self.model.is_porous_material_model_active(surface_id)
+            tv_active, rho_eff_tv, C_eff_tv = self.model.is_viscous_thermal_model_active(surface_id)
 
-                    if pm_active:
-                        density = rho_eff_pm
-                        speed_of_sound = C_eff_pm
+            if pm_active:
+                density = rho_eff_pm
+                speed_of_sound = C_eff_pm
 
-                    elif tv_active:
-                        density = rho_eff_tv
-                        speed_of_sound = C_eff_tv
+            elif tv_active:
+                density = rho_eff_tv
+                speed_of_sound = C_eff_tv
 
-                    else:
-                        fluid = self.model.properties._get_property("fluid", surface=surface_id)
-                        density = fluid.fluid_density
-                        speed_of_sound = fluid.speed_of_sound
+            else:
+                fluid = self.model.properties._get_property("fluid", surface=surface_id)
+                density = fluid.fluid_density
+                speed_of_sound = fluid.speed_of_sound
 
-                    if "anechoic_termination" in data.keys():
-                        _complex_values = density * speed_of_sound
+            if "anechoic_termination" in data.keys():
+                _complex_values = density * speed_of_sound
 
-                    else:
-                        if "values" in data.keys():
-                            _complex_values = data["values"][0]
+            else:
+                if "values" in data.keys():
+                    _complex_values = data["values"][0]
 
-                    if isinstance(_complex_values, complex | float):
-                        complex_values = _complex_values * aux_ones
+            if isinstance(_complex_values, complex | float):
+                complex_values = _complex_values * aux_ones
 
-                    elif isinstance(_complex_values, np.ndarray):
+            elif isinstance(_complex_values, np.ndarray):
 
-                        if _complex_values.shape[0] == 1:
-                            complex_values = _complex_values * aux_ones
+                if _complex_values.shape[0] == 1:
+                    complex_values = _complex_values * aux_ones
 
-                        elif len(_complex_values.shape) == 1:
-                            complex_values = _complex_values.reshape(1,-1)
+                elif len(_complex_values.shape) == 1:
+                    complex_values = _complex_values.reshape(1,-1)
 
-                        else:
-                            complex_values = _complex_values
+                else:
+                    complex_values = _complex_values
 
-                    surface_elements = list(self.model.mesh.elements_from_surface[surface_id])
-                    surf_connect = self.model.mesh.connectivity_from_surfaces[surface_id]
+            surface_elements = list(self.model.mesh.elements_from_surface[surface_id])
+            surf_connect = self.model.mesh.connectivity_from_surfaces[surface_id]
 
-                    for i, el in enumerate(surface_elements):
-                        aux_connect[el] = surf_connect[i]
-                        surface_data[el] = complex_values
+            for i, el in enumerate(surface_elements):
+                aux_connect[el] = surf_connect[i]
+                surface_data[el] = complex_values
 
         if aux_connect:
             integration_data = {
@@ -545,9 +545,9 @@ class AcousticAssembler:
             Zin_A = self.data_Zin_A[index].flatten()
             Zin_B = self.data_Zin_B[index].flatten()
 
-            values_Zin = np.array([Zin_A, -Zin_A, -Zin_B, Zin_B]).flatten()
-            rows_Zin = np.array([rows_A, rows_A, rows_B, rows_B]).flatten()
-            cols_Zin = np.array([cols_A, cols_B, cols_A, cols_B]).flatten()
+            values_Zin = np.concatenate((Zin_A, -Zin_A, -Zin_B, Zin_B))#.flatten()
+            rows_Zin = np.concatenate((rows_A, rows_A, rows_B, rows_B))#.flatten()
+            cols_Zin = np.concatenate((cols_A, cols_B, cols_A, cols_B))#.flatten()
 
             _matrix_full_B = csr_matrix((values_Zin, (rows_Zin, cols_Zin)), shape=(N_dofs, N_dofs))
 

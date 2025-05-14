@@ -127,23 +127,22 @@ def load_external_mesh_and_solve():
     # Impedance data - constant value
 
     Zo = fluid.impedance
-    data_Z = {  "real_values" : [Zo],
-                "imag_values" : [0],
-                "nodal_attribution" : False,
-                "averaged" : False  }
+    data_Z = {  
+              "real_values" : [Zo],
+              "imag_values" : [0],
+              }
 
     # Impedance data - table of values
 
     # complex_fluid_data = get_complex_impedance_data()
     # impedance_data = complex_fluid_data["complex_impedance"]
 
-    # data_Z = {  "values" : [impedance_data[:, 1] + 1j * impedance_data[:, 2]],
-    #             "nodal_attribution" : False,
-    #             "averaged" : False  }
+    # data_Z = {"values" : [impedance_data[:, 1] + 1j * impedance_data[:, 2]]}
 
-    # data_Z = {  "anechoic_termination": True,
-    #             "volume_id": 1,
-    #             "nodal_attribution": False  }
+    # data_Z = {
+    #           "anechoic_termination": True,
+    #           "volume_id": 1
+    #           }
 
     model.properties._set_property("surface_velocity", data_Vn, surface=1)
     model.properties._set_property("specific_impedance", data_Z, surface=1)

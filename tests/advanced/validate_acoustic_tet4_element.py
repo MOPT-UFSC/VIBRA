@@ -142,8 +142,6 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     data_Z = {  
               "real_values" : [Zo],
               "imag_values" : [0],
-              "nodal_attribution" : False,
-              "averaged" : False
               }
 
     model.properties._set_property("specific_impedance", data_Z, surface=1)
@@ -154,8 +152,6 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     #     data_Zin = {  
     #                 "real_values" : [10],
     #                 "imag_values" : [0],
-    #                 "nodal_attribution" : False,
-    #                 "averaged" : False
     #                 }
 
     #     model.properties._set_property("specific_impedance", data_Zin, surface=3)
