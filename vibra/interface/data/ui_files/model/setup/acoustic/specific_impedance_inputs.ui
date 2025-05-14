@@ -901,7 +901,7 @@
             </column>
             <column>
              <property name="text">
-              <string>DOFs</string>
+              <string>Values</string>
              </property>
              <property name="textAlignment">
               <set>AlignCenter</set>
