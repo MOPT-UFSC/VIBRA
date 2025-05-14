@@ -121,8 +121,6 @@ class Ui_Dialog(object):
         self.lineEdit_center_coordinates.setMinimumSize(QSize(200, 28))
         self.lineEdit_center_coordinates.setMaximumSize(QSize(200, 28))
         self.lineEdit_center_coordinates.setFont(font2)
-        self.lineEdit_center_coordinates.setStyleSheet(u"color: rgb(0, 0, 255);\n"
-"background-color: rgb(255, 255, 255);")
         self.lineEdit_center_coordinates.setAlignment(Qt.AlignCenter)
 
         self.gridLayout_8.addWidget(self.lineEdit_center_coordinates, 3, 2, 1, 1)
@@ -175,8 +173,6 @@ class Ui_Dialog(object):
         self.lineEdit_selection_id.setMaximumSize(QSize(200, 28))
         self.lineEdit_selection_id.setFont(font1)
         self.lineEdit_selection_id.setFocusPolicy(Qt.ClickFocus)
-        self.lineEdit_selection_id.setStyleSheet(u"QLineEdit{background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)}\n"
-"QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 120)}")
         self.lineEdit_selection_id.setAlignment(Qt.AlignCenter)
 
         self.gridLayout_8.addWidget(self.lineEdit_selection_id, 0, 2, 1, 1)
@@ -602,8 +598,6 @@ class Ui_Dialog(object):
         self.lineEdit_fluid_density.setMaximumSize(QSize(100, 28))
         self.lineEdit_fluid_density.setFont(font1)
         self.lineEdit_fluid_density.setFocusPolicy(Qt.ClickFocus)
-        self.lineEdit_fluid_density.setStyleSheet(u"QLineEdit{background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)}\n"
-"QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 120)}")
         self.lineEdit_fluid_density.setAlignment(Qt.AlignCenter)
 
         self.gridLayout_18.addWidget(self.lineEdit_fluid_density, 1, 2, 1, 1)
@@ -615,8 +609,6 @@ class Ui_Dialog(object):
         self.lineEdit_selected_fluid.setMaximumSize(QSize(100, 28))
         self.lineEdit_selected_fluid.setFont(font1)
         self.lineEdit_selected_fluid.setFocusPolicy(Qt.ClickFocus)
-        self.lineEdit_selected_fluid.setStyleSheet(u"QLineEdit{background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)}\n"
-"QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 120)}")
         self.lineEdit_selected_fluid.setAlignment(Qt.AlignCenter)
 
         self.gridLayout_18.addWidget(self.lineEdit_selected_fluid, 0, 2, 1, 1)
@@ -628,8 +620,6 @@ class Ui_Dialog(object):
         self.lineEdit_speed_of_sound.setMaximumSize(QSize(100, 28))
         self.lineEdit_speed_of_sound.setFont(font1)
         self.lineEdit_speed_of_sound.setFocusPolicy(Qt.ClickFocus)
-        self.lineEdit_speed_of_sound.setStyleSheet(u"QLineEdit{background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)}\n"
-"QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 120)}")
         self.lineEdit_speed_of_sound.setAlignment(Qt.AlignCenter)
 
         self.gridLayout_18.addWidget(self.lineEdit_speed_of_sound, 2, 2, 1, 1)

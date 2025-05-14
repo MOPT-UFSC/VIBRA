@@ -243,10 +243,6 @@
            <property name="focusPolicy">
             <enum>Qt::ClickFocus</enum>
            </property>
-           <property name="styleSheet">
-            <string notr="true">QLineEdit{background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)}
-QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 120)}</string>
-           </property>
            <property name="text">
             <string/>
            </property>
@@ -306,10 +302,6 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
            </property>
            <property name="focusPolicy">
             <enum>Qt::ClickFocus</enum>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">QLineEdit{background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)}
-QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 120)}</string>
            </property>
            <property name="text">
             <string/>
@@ -463,10 +455,6 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
            <property name="focusPolicy">
             <enum>Qt::ClickFocus</enum>
            </property>
-           <property name="styleSheet">
-            <string notr="true">QLineEdit{background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)}
-QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 120)}</string>
-           </property>
            <property name="text">
             <string/>
            </property>
@@ -530,10 +518,6 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
            <property name="focusPolicy">
             <enum>Qt::ClickFocus</enum>
            </property>
-           <property name="styleSheet">
-            <string notr="true">QLineEdit{background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)}
-QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 120)}</string>
-           </property>
            <property name="text">
             <string/>
            </property>
@@ -589,7 +573,7 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
          </font>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>2</number>
         </property>
         <widget class="QWidget" name="tab_Delany_Bazley">
          <attribute name="title">
@@ -1055,8 +1039,8 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                 <string/>
                </property>
                <property name="icon">
-                <iconset>
-                 <normaloff>../../../../icons/views/zoom_icon.png</normaloff>../../../../icons/views/zoom_icon.png</iconset>
+                <iconset resource="../../../../icons/resources.qrc">
+                 <normaloff>:/icons/views/zoom_icon.png</normaloff>:/icons/views/zoom_icon.png</iconset>
                </property>
                <property name="iconSize">
                 <size>
@@ -1652,8 +1636,8 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                 <string/>
                </property>
                <property name="icon">
-                <iconset>
-                 <normaloff>../../../../icons/views/zoom_icon.png</normaloff>../../../../icons/views/zoom_icon.png</iconset>
+                <iconset resource="../../../../icons/resources.qrc">
+                 <normaloff>:/icons/views/zoom_icon.png</normaloff>:/icons/views/zoom_icon.png</iconset>
                </property>
                <property name="iconSize">
                 <size>
@@ -2947,6 +2931,8 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
   <tabstop>pushButton_reset</tabstop>
   <tabstop>pushButton_remove</tabstop>
  </tabstops>
- <resources><include location="../../../../icons/resources.qrc" /></resources>
+ <resources>
+  <include location="../../../../icons/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

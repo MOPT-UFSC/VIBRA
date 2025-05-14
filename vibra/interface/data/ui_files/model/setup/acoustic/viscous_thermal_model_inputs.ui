@@ -290,10 +290,6 @@
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The average coordinates center of selected surfaces in meters.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
-               <property name="styleSheet">
-                <string notr="true">color: rgb(0, 0, 255);
-background-color: rgb(255, 255, 255);</string>
-               </property>
                <property name="text">
                 <string/>
                </property>
@@ -450,10 +446,6 @@ background-color: rgb(255, 255, 255);</string>
                </property>
                <property name="focusPolicy">
                 <enum>Qt::ClickFocus</enum>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">QLineEdit{background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)}
-QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 120)}</string>
                </property>
                <property name="text">
                 <string/>
@@ -1731,10 +1723,6 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                <property name="focusPolicy">
                 <enum>Qt::ClickFocus</enum>
                </property>
-               <property name="styleSheet">
-                <string notr="true">QLineEdit{background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)}
-QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 120)}</string>
-               </property>
                <property name="text">
                 <string/>
                </property>
@@ -1768,10 +1756,6 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                <property name="focusPolicy">
                 <enum>Qt::ClickFocus</enum>
                </property>
-               <property name="styleSheet">
-                <string notr="true">QLineEdit{background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)}
-QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 120)}</string>
-               </property>
                <property name="text">
                 <string/>
                </property>
@@ -1804,10 +1788,6 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
                </property>
                <property name="focusPolicy">
                 <enum>Qt::ClickFocus</enum>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">QLineEdit{background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)}
-QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 120)}</string>
                </property>
                <property name="text">
                 <string/>
@@ -2276,6 +2256,8 @@ QLineEdit:disabled {background-color: rgb(230, 230, 230); color: rgb(120, 120, 1
   <tabstop>pushButton_confirm</tabstop>
   <tabstop>pushButton_exit</tabstop>
  </tabstops>
- <resources><include location="../../../../icons/resources.qrc" /></resources>
+ <resources>
+  <include location="../../../../icons/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>
