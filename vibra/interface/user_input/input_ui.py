@@ -6,6 +6,7 @@ from vibra.interface.model_inputs.acoustic.acoustic_pressure_inputs import Acous
 from vibra.interface.model_inputs.acoustic.mass_flow_rate_inputs import MassFlowRateInputs
 from vibra.interface.model_inputs.acoustic.surface_velocity_inputs import SurfaceVelocityInputs
 from vibra.interface.model_inputs.acoustic.specific_impedance_inputs import SpecificImpedanceInputs
+from vibra.interface.model_inputs.acoustic.transfer_impedance_inputs import TransferImpedanceInputs
 from vibra.interface.model_inputs.acoustic.anechoic_termination_inputs import AnechoicTerminationInputs
 from vibra.interface.model_inputs.acoustic.dissipation_model_inputs import DissipationModelInput
 from vibra.interface.model_inputs.acoustic.porous_material_model_inputs import PorousMaterialModelInputs
@@ -118,6 +119,9 @@ class InputUi:
 
     def set_specific_impedance(self):
         self.process_input(SpecificImpedanceInputs)
+
+    def set_transfer_impedance(self):
+        self.process_input(TransferImpedanceInputs)
 
     def set_anechoic_termination(self):
         if not self.model_setup_items.item_child_anechoic_termination.isDisabled():

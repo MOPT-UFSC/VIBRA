@@ -277,7 +277,9 @@ class SetFluidInputs(QDialog):
                 self.properties._set_property("fluid", selected_fluid, surface=surface_id)
 
         self.actions_to_finalize()
-        self.close()
+
+        if attribution_type == 0:
+            self.close()
 
     def remove_callback(self):
 

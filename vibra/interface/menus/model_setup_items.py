@@ -49,6 +49,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_surface_velocity = self.add_item("Surface Velocity")
         self.item_child_anechoic_termination = self.add_item("Anechoic Termination")
         self.item_child_specific_impedance = self.add_item("Specific Impedance")
+        self.item_child_transfer_impedance = self.add_item("Transfer Impedance")
         self.item_child_dissipation_model = self.add_item("Dissipation Model")
         self.item_child_porous_material_model = self.add_item("Porous Material Model")
         self.item_child_viscous_thermal_model = self.add_item("Viscous-thermal Loss Model")
@@ -148,6 +149,9 @@ class ModelSetupItems(CommonMenuItems):
     
     def item_child_specific_impedance_callback(self):
         app().main_window.input_ui.set_specific_impedance()
+
+    def item_child_transfer_impedance_callback(self):
+        app().main_window.input_ui.set_transfer_impedance()
     
     def item_child_dissipation_model_callback(self):
         app().main_window.input_ui.set_dissipation_model()
@@ -190,6 +194,7 @@ class ModelSetupItems(CommonMenuItems):
         # self.item_child_mass_flow_rate.setDisabled(key)
         self.item_child_surface_velocity.setDisabled(key)
         self.item_child_specific_impedance.setDisabled(key)
+        self.item_child_transfer_impedance.setDisabled(key)
         self.item_child_anechoic_termination.setDisabled(key)
         self.item_child_dissipation_model.setDisabled(key)
         self.item_child_porous_material_model.setDisabled(key)
