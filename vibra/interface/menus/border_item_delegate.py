@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QStyledItemDelegate, QStyleOptionViewItem
-from PySide6.QtGui import QIcon, QFont, QPixmap, QColor, QLinearGradient, QBrush, QPen
+from PySide6.QtGui import QIcon, QFont, QPixmap, QColor, QLinearGradient, QBrush, QPen, QPainter
 from PySide6.QtCore import Qt, QSize, QRect
 
 class BorderItemDelegate(QStyledItemDelegate):
@@ -28,7 +28,7 @@ class BorderItemDelegate(QStyledItemDelegate):
         separator_size.setHeight(2)
         return item.setSizeHint(0, separator_size)
 
-    def paint(self, painter, option, index):
+    def paint(self, painter: QPainter, option, index):
         pen = index.data(self.borderRole)
         rect = QRect(option.rect)
 
@@ -37,17 +37,35 @@ class BorderItemDelegate(QStyledItemDelegate):
             # ...and remove the extra room we added in sizeHint...
             option.rect.adjust(width, width, -width, -width)      
 
+        icon = QIcon()
+        tree = index.model().parent()
+        if tree:
+            item = tree.itemFromIndex(index)
+            if item.parent():
+                icon = item.icon(0)
+                item.setIcon(0, QIcon())
+        
         super(BorderItemDelegate, self).paint(painter, option, index)
 
+        item.setIcon(0, icon)
+        
+        icon_size = option.decorationSize
+        pixmap = icon.pixmap(icon_size)
+        x = rect.x() + (rect.width() - pixmap.width()) - 3
+        y = rect.y() + (rect.height() - pixmap.height()) // 2
+        painter.drawPixmap(x, y, pixmap)    
+        
         if pen is not None:
             painter.save() # Saves previous status
             
             # Align rect 
-            painter.setClipRect(rect, Qt.ReplaceClip);          
+            painter.setClipRect(rect, Qt.ReplaceClip)       
             pen.setWidth(2 * width)
 
             # Paint the borders
             painter.setPen(pen)
-            painter.drawRect(rect)     
+            rect.adjust(0, 0, 0, 0)
+            painter.drawRoundedRect(rect, 7, 7)
+            painter.fillRect(rect, QBrush(QColor(10, 10, 10)))
             
             painter.restore() # Recovers previous status
