@@ -102,7 +102,7 @@ class PerforatedPlateModels:
         # end correction - equivalent piston
         delta = (8*a) / (3*np.pi)
 
-        # hole interation
+        # hole interation - Fok's function
         x = np.sqrt(sigma)
         Phi = 1 - 1.41*x + 0.34*(x**3) + 0.07*(x**5) - 0.02*(x**6) + 0.03*(x**7) - 0.016*(x**8)
         # Phi = 1 - 1.4092*x + 0.33818*(x**3) + 0.0679*(x**5) - 0.02287*(x**6) + 0.03015*(x**7) - 0.01641*(x**8)
