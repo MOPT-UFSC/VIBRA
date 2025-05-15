@@ -126,9 +126,9 @@ class AnalysisSetupInput(QDialog):
 
         analysis_setup = app().project.analysis_setup
         
-        f_min = analysis_setup.get("f_min", 2)
+        f_min = analysis_setup.get("f_min", 5)
         f_max = analysis_setup.get("f_max", 600)
-        f_step = analysis_setup.get("f_step", 2)
+        f_step = analysis_setup.get("f_step", 5)
         self.analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
         global_damping = analysis_setup.get("global_damping", (0., 0., 0., 0.))
 
