@@ -4,10 +4,7 @@ from PySide6.QtGui import QIcon, QFont, QPixmap, QColor, QLinearGradient, QBrush
 from PySide6.QtCore import Qt, QSize, QRect
 from pathlib import Path
 
-from vibra.interface.menus.tool_tips_model_setup_items import tool_tips
-
-
-from vibra import app, ICON_DIR
+from vibra import app
 
 from vibra.interface.menus.common_menu_items import ChildTreeWidgetItem, CommonMenuItems
 from vibra.interface.menus.border_item_delegate import BorderItemDelegate
