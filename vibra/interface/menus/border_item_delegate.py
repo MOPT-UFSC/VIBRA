@@ -62,11 +62,3 @@ class BorderItemDelegate(QStyledItemDelegate):
                 icon.paint(painter, icon_rect)
         else:
             super(BorderItemDelegate, self).paint(painter, option, index)
-
-        
-        if pen is not None:
-            painter.save() # Saves previous status
-            
-            painter.setClipRect(rect, Qt.ReplaceClip)
-            
-            painter.restore() # Recovers previous status
