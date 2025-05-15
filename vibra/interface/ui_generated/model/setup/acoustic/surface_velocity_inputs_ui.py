@@ -532,7 +532,7 @@ class Ui_Dialog(object):
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
         ___qtreewidgetitem = self.treeWidget_surface_velocity.headerItem()
-        ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"DOFs", None));
+        ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Values", None));
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Nodes", None));
 #if QT_CONFIG(tooltip)
         self.treeWidget_surface_velocity.setToolTip(QCoreApplication.translate("Dialog", u"Select a face to remove the previously attributed boundary condition.", None))

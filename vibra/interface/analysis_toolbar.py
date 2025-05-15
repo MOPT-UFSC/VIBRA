@@ -234,8 +234,8 @@ class AnalysisToolbar(QToolBar):
         if select.index == -1:
             return
  
-        analysis_data = {"analysis_id": select.index}
-        self.update_analysis_data(analysis_data)
+        analysis_setup = {"analysis_id": select.index}
+        self.update_analysis_setup(analysis_setup)
         harmonic = StructuralHarmonicAnalysisDirectMethodInput()
 
         if harmonic.setup_defined:
@@ -246,8 +246,8 @@ class AnalysisToolbar(QToolBar):
             app().main_window.update_symbols()
 
     def harmonic_acoustic(self):
-        analysis_data = {"analysis_id": AnalysisID.ACOUSTIC_HARMONIC}
-        self.update_analysis_data(analysis_data)
+        analysis_setup = {"analysis_id": AnalysisID.ACOUSTIC_HARMONIC}
+        self.update_analysis_setup(analysis_setup)
         harmonic = AcousticHarmonicAnalysisDirectMethodInput()
 
         if harmonic.setup_defined:

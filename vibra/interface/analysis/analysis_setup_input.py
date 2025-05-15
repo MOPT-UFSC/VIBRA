@@ -14,8 +14,8 @@ class AnalysisSetupInput():
 
         self.project = app().project
 
-        self.analysis_data = self.project.analysis_data
-        self.analysis_id = self.analysis_data["analysis_id"]
+        self.analysis_setup = self.project.analysis_setup
+        self.analysis_id = self.analysis_setup["analysis_id"]
         self.model = app().project.model
 
         """
@@ -63,8 +63,9 @@ class AnalysisSetupInput():
         df = self.lineEdit_fstep.text()
         self.lineEdit_fmin.setText(df)
 
-    def load_analysis_data(self):
-        analysis_setup = app().project.analysis_data
+    def load_analysis_setup(self):
+
+        analysis_setup = app().project.analysis_setup
         
         f_min = analysis_setup.get("f_min", 2)
         f_max = analysis_setup.get("f_max", 600)
