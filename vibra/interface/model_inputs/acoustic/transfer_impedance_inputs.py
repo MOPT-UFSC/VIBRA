@@ -1,5 +1,5 @@
-from PySide6.QtWidgets import QComboBox, QDialog, QFileDialog, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QComboBox, QDialog, QFileDialog, QLabel, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtCore import Qt, QEvent, QObject, Signal
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
@@ -62,11 +62,17 @@ class TransferImpedanceInputs(QDialog):
         # QComboBox
         self.comboBox_selection_type : QComboBox
 
+        # QLabel
+        self.label_selection_A: QLabel
+        self.label_selection_B: QLabel
+
         # QLineEdit
-        self.lineEdit_selection_id : QLineEdit
+        self.lineEdit_selection_id_A: QLineEdit
+        self.lineEdit_selection_id_B: QLineEdit
         self.lineEdit_real_value : QLineEdit
         self.lineEdit_imag_value : QLineEdit
         self.lineEdit_table_path : QLineEdit
+        self.current_lineEdit = self.lineEdit_selection_id_A
 
         # QPushButton
         self.pushButton_attribute : QPushButton
@@ -88,6 +94,8 @@ class TransferImpedanceInputs(QDialog):
 
     def _create_connections(self):
         #
+        self.comboBox_selection_type.currentIndexChanged.connect(self.selection_type_callback)
+        #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
@@ -100,6 +108,45 @@ class TransferImpedanceInputs(QDialog):
         self.treeWidget_transfer_impedance.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        #
+        self.clickable(self.lineEdit_selection_id_A).connect(self.lineEdit_selection_A_clicked)
+        self.clickable(self.lineEdit_selection_id_B).connect(self.lineEdit_selection_B_clicked)
+        #
+        self.geometry_selection_callback()
+        self.selection_type_callback()
+
+    def clickable(self, widget: QLineEdit):
+        class Filter(QObject):
+            clicked = Signal()
+
+            def eventFilter(self, obj, event):
+                if obj == widget and event.type() == QEvent.MouseButtonRelease and obj.rect().contains(event.pos()):
+                    self.clicked.emit()
+                    return True
+                else:
+                    return False
+
+        filter = Filter(widget)
+        widget.installEventFilter(filter)
+        return filter.clicked
+
+    def lineEdit_selection_A_clicked(self):
+        app().main_window.set_geometry_selection()
+        self.current_lineEdit = self.lineEdit_selection_id_A
+        self.highlight_line_edit()
+
+    def lineEdit_selection_B_clicked(self):
+        app().main_window.set_geometry_selection()
+        if self.lineEdit_selection_id_B.isEnabled():
+            self.current_lineEdit = self.lineEdit_selection_id_B
+            self.highlight_line_edit()
+
+    def highlight_line_edit(self):
+        self.current_lineEdit.setStyleSheet("border-color: rgb(255,0,0); border-width: 2px")
+        if self.current_lineEdit == self.lineEdit_selection_id_A:
+            self.lineEdit_selection_id_B.setStyleSheet("")
+        else:
+            self.lineEdit_selection_id_A.setStyleSheet("")
 
     def _config_widgets(self):
         for i, w in enumerate([120]):
@@ -108,18 +155,24 @@ class TransferImpedanceInputs(QDialog):
 
     def geometry_selection_callback(self):
 
-        surfaces = self.main_window.selected_geometry_surfaces
+        if self.tabWidget_main.currentIndex() == 1:
+            return
 
+        surfaces = self.main_window.selected_geometry_surfaces
         if surfaces:
 
             if len(surfaces) == 1:
-                surface_ids = int(list(surfaces)[0])
-            elif len(surfaces) == 2:
-                surface_ids = tuple(surfaces)
+                surface_ids = list(surfaces)[0]
+            elif len(surfaces) > 1:
+                surface_ids = list(surfaces)
+                surface_ids.sort()
+                surface_ids = tuple(surface_ids)
             else:
                 return
 
-            self.update_selection_type_based_on_surface_ids(surface_ids)
+            self.update_selected_ids(surface_ids)
+            # self.update_selection_type_based_on_surface_ids(surface_ids)
+
             pp_data = self.properties._get_property("transfer_impedance", surface=surface_ids)
             if pp_data is None:
                 return
@@ -150,41 +203,108 @@ class TransferImpedanceInputs(QDialog):
             surface_ids = [surface_ids]
 
         text = ", ".join([str(i) for i in surface_ids])
-        self.lineEdit_selection_id.setText(text)
+        self.current_lineEdit.setText(text)
+
+    def selection_type_callback(self):
+        if self.comboBox_selection_type.currentText() == "Inside surfaces":
+            self.label_selection_B.setEnabled(False)
+            self.lineEdit_selection_id_B.setEnabled(False)
+        else:
+            self.label_selection_B.setEnabled(True)
+            self.lineEdit_selection_id_B.setEnabled(True)
 
     def load_property_data(self, pp_data: dict):
 
         if self.tabWidget_main.currentIndex() == 2:
             return
+        
+        if not isinstance(pp_data, dict):
+            return
+        
+        surfaces_A = pp_data.get("surfaces_A")
+        if isinstance(surfaces_A, list):
+            self.current_lineEdit = self.lineEdit_selection_id_A
+            self.update_selected_ids(surfaces_A)
 
-        if isinstance(pp_data, dict):
-            if "table_paths" in pp_data.keys():
-                self.tabWidget_main.setCurrentIndex(1)
-                self.lineEdit_table_path.setText(pp_data["table_paths"][0])
-            else:
-                self.tabWidget_main.setCurrentIndex(0)
-                self.lineEdit_real_value.setText(str(pp_data["real_values"][0]))
-                self.lineEdit_imag_value.setText(str(pp_data["imag_values"][0]))
+        surfaces_B = pp_data.get("surfaces_B")
+        if isinstance(surfaces_B, list):
+            self.current_lineEdit = self.lineEdit_selection_id_B
+            self.update_selected_ids(surfaces_B)
+
+        if "table_paths" in pp_data.keys():
+            self.tabWidget_main.setCurrentIndex(1)
+            self.lineEdit_table_path.setText(pp_data["table_paths"][0])
+        else:
+            self.tabWidget_main.setCurrentIndex(0)
+            self.lineEdit_real_value.setText(str(pp_data["real_values"][0]))
+            self.lineEdit_imag_value.setText(str(pp_data["imag_values"][0]))
 
     def check_selected_surfaces(self):
-
-        input_ids = self.lineEdit_selection_id.text()
-        surface_ids = self.mesh.check_selected_ids(
-                                                    input_ids, 
-                                                    selection = "surfaces", 
-                                                    single_id = False,
-                                                    )
-
-        if surface_ids is None:
-            self.lineEdit_selection_id.setFocus()
-            return None
-
-        if self.check_selection_type(surface_ids):
-            return None
-
-        if not self.transfer_impedance_data:
-            return None
         
+        surface_ids = list()
+
+        if self.comboBox_selection_type.currentText() == "Inside surfaces":
+        
+            input_ids_A = self.lineEdit_selection_id_A.text()
+            surface_ids_A = self.mesh.check_selected_ids(
+                                                        input_ids_A, 
+                                                        selection = "surfaces", 
+                                                        single_id = False,
+                                                        )
+
+            if surface_ids_A is None:
+                self.lineEdit_selection_id_A.setFocus()
+                return list()
+
+            self.check_selection_type(surface_ids_A)
+            if not self.transfer_impedance_data:
+                return list()
+            
+            surface_ids_A.sort()
+            self.transfer_impedance_data["surfaces_A"] = surface_ids_A
+            surface_ids.extend(surface_ids_A)
+
+        else:
+
+            input_ids_A = self.lineEdit_selection_id_A.text()
+            surface_ids_A = self.mesh.check_selected_ids(
+                                                        input_ids_A, 
+                                                        selection = "surfaces", 
+                                                        single_id = False,
+                                                        )
+
+            if surface_ids_A is None:
+                self.lineEdit_selection_id_A.setFocus()
+                return list()
+
+            input_ids_B = self.lineEdit_selection_id_B.text()
+            surface_ids_B = self.mesh.check_selected_ids(
+                                                        input_ids_B, 
+                                                        selection = "surfaces", 
+                                                        single_id = False,
+                                                        )
+
+            if surface_ids_B is None:
+                self.lineEdit_selection_id_A.setFocus()
+                return list()
+
+            self.check_selection_type(surface_ids_A)
+            if not self.transfer_impedance_data:
+                return list()
+
+            self.check_selection_type(surface_ids_B)
+            if not self.transfer_impedance_data:
+                return list()
+
+            surface_ids_A.sort()
+            surface_ids_B.sort()
+            self.transfer_impedance_data["surfaces_A"] = surface_ids_A
+            self.transfer_impedance_data["surfaces_B"] = surface_ids_B
+            surface_ids.extend(surface_ids_A)
+            surface_ids.extend(surface_ids_B)
+
+        surface_ids.sort()
+
         return surface_ids
 
     def attribute_callback(self):
@@ -194,7 +314,7 @@ class TransferImpedanceInputs(QDialog):
             return
 
         surface_ids = self.check_selected_surfaces()
-        if surface_ids is None:
+        if not surface_ids:
             return
         
         self.remove_conflicting_excitations(surface_ids)
@@ -205,61 +325,27 @@ class TransferImpedanceInputs(QDialog):
         elif tab_index == 1:
             self.process_assignment_for_table_values(surface_ids)
 
-    def check_complex_entries(self, lineEdit_real, lineEdit_imag):
-        self.stop = False
-        title = "Invalid entry to the specific impedance"
-        if lineEdit_real.text() != "":
-            try:
-                real_F = float(lineEdit_real.text())
-            except Exception:
-                message = "Wrong input for real part of specific impedance."
-                PrintMessageInput([window_title_1, title, message])
-                self.lineEdit_real_value.setFocus()
-                self.stop = True
-                return
-        else:
-            real_F = 0
-
-        if lineEdit_imag.text() != "":
-            try:
-                imag_F = float(lineEdit_imag.text())
-            except Exception:
-                message = "Wrong input for imaginary part of specific impedance."
-                PrintMessageInput([window_title_1, title, message])
-                self.lineEdit_imag_value.setFocus()
-                self.stop = True
-                return
-        else:
-            imag_F = 0
-
-        if real_F == 0 and imag_F == 0:
-            return None
-        else:
-            return real_F + 1j * imag_F
-
     def process_assignment_for_constant_values(self, surface_ids: int | tuple[int]):
+        
+        real_value = self.check_inputs(self.lineEdit_real_value, "Real part of transfer impedance", only_positive=False)
+        imag_value = self.check_inputs(self.lineEdit_imag_value, "Imaginary part of transfer impedance", only_positive=False)
 
-        transfer_impedance = self.check_complex_entries(
-                                                        self.lineEdit_real_value, 
-                                                        self.lineEdit_imag_value
-                                                        )
+        if (real_value, imag_value).count(None):
+            return
 
-        if transfer_impedance is None:
+        if real_value + imag_value == 0:
             self.hide()
             title = "Additional inputs required"
-            message = "You must enter the transfer impedance to "
-            message += "proceed with the attribution."
+            message = "You must enter a non-null transfer impedance "
+            message += "to proceed with the assignment."
             PrintMessageInput([window_title_1, title, message])
             self.lineEdit_real_value.setFocus()
             return
 
-        real_values = [np.real(transfer_impedance)]
-        imag_values = [np.imag(transfer_impedance)]
-
         self.transfer_impedance_data.update({
-                                            "real_values" : real_values,
-                                            "imag_values" : imag_values,
-                                            })
+                                             "real_values" : [real_value],
+                                             "imag_values" : [imag_value],
+                                             })
 
         if self.transfer_impedance_data.get("coupling_type") == "inside_surfaces":
             for surface_id in surface_ids:
@@ -418,24 +504,32 @@ class TransferImpedanceInputs(QDialog):
         self.process_table_file_removal(table_names)
 
     def tabEvent_callback(self):
-        if self.tabWidget_main.currentIndex() == 2:
-            self.lineEdit_selection_id.setText("")
-            self.lineEdit_selection_id.setDisabled(True)
-            self.pushButton_attribute.setDisabled(True)
+
+        self.pushButton_remove.setDisabled(True)
+        if self.tabWidget_main.currentIndex() == 1:
+            self.lineEdit_selection_id_A.setText("")
+            self.lineEdit_selection_id_B.setText("")
+            self.lineEdit_selection_id_A.setDisabled(True)
+
         else:
-            self.lineEdit_selection_id.setDisabled(False)
-            self.pushButton_attribute.setEnabled(True)
+
+            if ("(" or ")") in self.lineEdit_selection_id_A.text():
+                self.lineEdit_selection_id_A.setText("")
+                self.lineEdit_selection_id_B.setText("")
+                app().main_window.set_geometry_selection()
+
+            self.lineEdit_selection_id_A.setDisabled(False)
 
     def on_click_item(self, item):
 
+        self.pushButton_remove.setEnabled(True)
+        self.lineEdit_selection_id_A.setText(item.text(0))
+
         text = item.text(0).replace("(", "").replace(")", "").replace(",", "")
         str_surface_ids = text.split()
-
         surface_ids = [int(surf_id) for surf_id in str_surface_ids]
-        app().main_window.set_geometry_selection(surfaces=surface_ids)
 
-        self.lineEdit_selection_id.setText(item.text(0))
-        self.pushButton_remove.setEnabled(True)
+        app().main_window.set_geometry_selection(surfaces=surface_ids)
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
@@ -454,30 +548,21 @@ class TransferImpedanceInputs(QDialog):
             for surface_id in surface_ids:
                 if len(self.mesh.volumes_from_surface[surface_id]) != 2:
                     self.hide()
-                    message = f"The selected surface ID #{surface_id} does not correspond to an inside surface. "
-                    message += "Inside surfaces are surfaces that connect two neighboohrs volumes. "
-                    message += "The perforated plate attribution will be ignored until all requirements are met."
+                    message = f"The selected surface ID #{surface_id} does not correspond to an inside surface "
+                    message += "(surfaces that connect two neighboohrs volumes). The transfer impedance "
+                    message += "assignment will be ignored until all requirements are met."
                     PrintMessageInput([window_title_1, title, message])
                     self.transfer_impedance_data.clear()
                     return True
 
         else:
 
-            if len(surface_ids) != 2:
-                self.hide()
-                message = f"An invalid number of selected surfaces has been detected. To proceed, you must "
-                message += "select a pair of outside surfaces. Outside surfaces are surfaces associated to only one volume. "
-                message += "The perforated plate attribution will be ignored until all requirements are met."
-                PrintMessageInput([window_title_1, title, message])
-                self.transfer_impedance_data.clear()
-                return True
-
             for surface_id in surface_ids:
                 if len(self.mesh.volumes_from_surface[surface_id]) != 1:
                     self.hide()
-                    message = f"The selected surface ID #{surface_id} does not correspond to an outside surface. "
-                    message += "Outside surfaces are surfaces associated to only one volume. The perforated plate "
-                    message += "attribution will be ignored until all requirements are met."
+                    message = f"The selected surface ID #{surface_id} does not correspond to an outside surface "
+                    message += "(surfaces associated to only one volume). The transfer impedance assignment "
+                    message += "will be ignored until all requirements are met."
                     PrintMessageInput([window_title_1, title, message])
                     self.transfer_impedance_data.clear()
                     return True
@@ -610,36 +695,6 @@ class TransferImpedanceInputs(QDialog):
         app().project.set_analysis_setup(analysis_setup)
         app().file.write_analysis_setup_in_file(analysis_setup)
 
-    # def attribute_callback(self):
-
-    #     input_ids = self.lineEdit_selection_id.text()
-    #     surface_ids = self.mesh.check_selected_ids(
-    #                                                 input_ids, 
-    #                                                 selection = "surfaces", 
-    #                                                 single_id = False,
-    #                                                 )
-
-    #     if surface_ids is None:
-    #         self.lineEdit_selection_id.setFocus()
-    #         return
-
-    #     self.check_selection_type(surface_ids)
-    #     if not self.transfer_impedance_data:
-    #         return
-
-    #     self.remove_conflicting_excitations(surface_ids)
-
-    #     if self.transfer_impedance_data.get("coupling_type") == "inside_surfaces":
-    #         for surface_id in surface_ids:
-    #             self.properties._set_property("transfer_impedance",self.transfer_impedance_data, surface=surface_id)
-    #             self.decouple_degrees_of_freedom(surface_id)
-
-    #     else:
-    #         self.properties._set_property("transfer_impedance",self.transfer_impedance_data, surface=tuple(surface_ids))
-
-    #     self.setup_complete = True
-    #     self.actions_to_finalize()
-
     def include_transfer_impedance_table_data(self, surface_id: int | list[int]):
 
         if isinstance(surface_id, int):
@@ -722,11 +777,12 @@ class TransferImpedanceInputs(QDialog):
                         self.properties._remove_line_property(property, line_id)
 
     def remove_callback(self):
-        if self.lineEdit_selection_id.text() != "":
+        
+        input_ids = self.lineEdit_selection_id_A.text()
 
-            input_ids = self.lineEdit_selection_id.text()
+        if input_ids != "":
+
             input_ids = input_ids.replace("(", "").replace(")", "")
-
             surface_ids = self.mesh.check_selected_ids(
                                                         input_ids, 
                                                         selection = "surfaces", 
@@ -735,12 +791,8 @@ class TransferImpedanceInputs(QDialog):
 
             if len(surface_ids) == 1:
                 surface_ids = surface_ids[0]
-
-            elif len(surface_ids) == 2:
-                surface_ids = tuple(surface_ids)
-
             else:
-                return
+                surface_ids = tuple(surface_ids)
 
             self.remove_table_files_from_surfaces(surface_ids)
             self.properties._remove_surface_property("transfer_impedance", surface_ids)
@@ -776,8 +828,8 @@ class TransferImpedanceInputs(QDialog):
 
         self.hide()
 
-        title = "Perforated plate model resetting"
-        message = "Would you like to remove the perforated plate from the acoustic model?"
+        title = "Transfer impedance resetting"
+        message = "Would you like to remove the transfer impedance from the acoustic model?"
 
         buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -838,41 +890,37 @@ class TransferImpedanceInputs(QDialog):
         app().main_window.mesh_widget.update_symbols()
         app().main_window.set_geometry_selection()
 
-    def check_inputs(self, lineEdit: QLineEdit, label, _float=True):
-
-        self.stop = False
-        message = ""
+    def check_inputs(self, line_edit: QLineEdit, label, only_positive=True):
 
         title = "Invalid value typed"
-        input_str = lineEdit.text()
+        message = ""
+        
+        input_str = line_edit.text()
 
-        if input_str != "":
+        if input_str == "":
+            return 0.
 
-            input_str = input_str.replace(",", ".")
+        input_str = input_str.replace(",", ".")
 
-            try:
-                if _float:
-                    out = float(input_str)
-                else:
-                    out = int(input_str)
+        try:
 
-                if out <= 0:
-                    message = f"Insert a positive value to the {label}."
-                    message += "\n\nNote: zero value is not allowed."
+            out = float(input_str)
 
-            except Exception as _err:
-                message = f"You have typed and invalid value at the {label} input field.\n\n"
-                message += str(_err)
+            if only_positive and out < 0:
+                message = f"Insert a positive value to the {label}."
+                message += "\n\nNote: zero value is not allowed."
 
-        else:
-            message = f"Insert some value at the {label} input field."
+        except Exception as error_log:
+            message = f"You have typed and invalid value at the {label} input field.\n\n"
+            message += str(error_log)
 
         if message != "":
             self.hide()
+            line_edit.setFocus()
             PrintMessageInput([window_title_1, title, message])
             return None
-        else:
-            return out
+
+        return out
    
     def process_degress_of_freedom_decoupling(self):
 

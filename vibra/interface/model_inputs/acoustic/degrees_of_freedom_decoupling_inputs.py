@@ -384,6 +384,8 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
         return False
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
+
+        self.hide()
         if self.process_degress_of_freedom_decoupling():
             return
 
