@@ -56,8 +56,9 @@ class PerforatedPlateModels:
         """
         """
 
+        # unpacking the parameters from perforate plate
         t_p = pp_data.get("plate_thickness", 0)
-        sigma = pp_data.get("porosity", 0)
+        sigma = pp_data.get("porosity", 1)
         a = pp_data.get("hole_diameter", 0) / 2
         Cd_lin = pp_data.get("linear_discharge_coefficient", 1)
         Cd_nl = pp_data.get("non_linear_discharge_coefficient", 0.76)
@@ -67,6 +68,7 @@ class PerforatedPlateModels:
         if not isinstance(pp_fluid, dict):
             return None
 
+        # unpacking the fluid properties
         rho_0 = pp_fluid.get("fluid_density")
         c_0 = pp_fluid.get("speed_of_sound")
         mu_0 = pp_fluid.get("dynamic_viscosity")
@@ -79,20 +81,20 @@ class PerforatedPlateModels:
 
         # viscous wave number
         k_v = a * np.sqrt(-1j * omega * rho_0 / mu_0)
-        
+
         # thermal wave number
         k_th = a * np.sqrt(-1j * omega * rho_0 * Pr / mu_0)
 
         # viscous function for circular holes
         Gamma_v = jv(2, k_v) / jv(0, k_v)
-        
+
         # thermal function for circular holes
         Gamma_th = jv(2, k_th) / jv(0, k_th)
 
         # complex wave number
         k_c = (omega / c_0) * ((gamma - (gamma-1)*Gamma_th) / Gamma_v)**(1/2)
 
-        # normalized transfer impedance
+        # characteristic normalized transfer impedance
         z_c = 1 / ((gamma - (gamma-1)*Gamma_th) * Gamma_v)**(1/2)
 
         # normalized orifice transfer impedance

@@ -242,7 +242,6 @@ class TransferImpedanceInputs(QDialog):
     def check_selected_surfaces(self):
         
         surface_ids = list()
-
         if self.comboBox_selection_type.currentText() == "Inside surfaces":
         
             input_ids_A = self.lineEdit_selection_id_A.text()
@@ -890,7 +889,7 @@ class TransferImpedanceInputs(QDialog):
         app().main_window.mesh_widget.update_symbols()
         app().main_window.set_geometry_selection()
 
-    def check_inputs(self, line_edit: QLineEdit, label, only_positive=True):
+    def check_inputs(self, line_edit: QLineEdit, label: str, only_positive: bool=True):
 
         title = "Invalid value typed"
         message = ""
@@ -921,7 +920,7 @@ class TransferImpedanceInputs(QDialog):
             return None
 
         return out
-   
+
     def process_degress_of_freedom_decoupling(self):
 
         if not self.setup_complete:
