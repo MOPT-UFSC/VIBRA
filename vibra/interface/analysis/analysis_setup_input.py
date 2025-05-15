@@ -38,7 +38,7 @@ class AnalysisSetupInput():
         self._config_window()
         self._create_connections()
 
-        self.load_analysis_data()
+        self.load_analysis_setup()
 
         while self.keep_window_open:
             self.exec()
@@ -193,7 +193,7 @@ class AnalysisSetupInput():
         if app().project.model.properties.check_if_there_are_tables_at_the_model():
             self.frequencies = self.model.frequencies
         else:
-            self.model.set_frequency_setup(analysis_setup)
+            self.model.set_analysis_setup(analysis_setup)
 
         if self.analysis_id in [
             AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
@@ -203,7 +203,7 @@ class AnalysisSetupInput():
 
         app().file.write_analysis_setup_in_file(analysis_setup)
 
-        self.project.set_analysis_data(analysis_setup)
+        self.project.set_analysis_setup(analysis_setup)
         self.project.create_solver()
 
         self.setup_defined = True

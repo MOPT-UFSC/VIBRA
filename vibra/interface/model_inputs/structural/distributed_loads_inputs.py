@@ -415,7 +415,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         analysis_setup["f_max"] = float(f_max)
         analysis_setup["f_step"] = float(f_step)
 
-        app().project.set_analysis_data(analysis_setup)
+        app().project.set_analysis_setup(analysis_setup)
         app().file.write_analysis_setup_in_file(analysis_setup)
 
     def save_table_files(self, load_label: str, selected_id: int, selection: str, values: np.ndarray):
@@ -808,10 +808,10 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 if "table_names" in data.keys():
                     return
 
-        if isinstance(app().project.analysis_data, dict):
-            analysis_data = app().project.analysis_data
-            app().project.set_analysis_data(analysis_data)
-            app().file.write_analysis_setup_in_file(analysis_data)
+        if isinstance(app().project.analysis_setup, dict):
+            analysis_setup = app().project.analysis_setup
+            app().project.set_analysis_setup(analysis_setup)
+            app().file.write_analysis_setup_in_file(analysis_setup)
 
     def reset_input_fields(self, reset_all=False):
 

@@ -91,10 +91,21 @@ class ModelProperties:
             factor = proportional_damping.get("speed_of_sound_factor", 0)
             return (1 + factor * 1j) * c_0
 
-    def _set_property(self, property: str, data: dict | Fluid | Material, node=None, element=None, point=None, line=None, surface=None, volume=None, group=None):
+    def _set_property(
+                      self, 
+                      property: str, 
+                      data: dict | Fluid | Material, 
+                      node: int | None = None, 
+                      element: int | None = None, 
+                      point: int | None = None, 
+                      line: int | None = None, 
+                      surface: int | tuple[int] | None = None, 
+                      volume: int | None = None, 
+                      group: int | None = None
+                      ):
         """
-        Sets a data to a property by node, element, line, surface or volume
-        if any of these exists. Otherwise sets the property as global.
+            This method sets a data to a property by node, element, line, surface or volume
+            if any of these exists. Otherwise sets the property as global.
 
         """
 
@@ -301,17 +312,19 @@ class ModelProperties:
             if table_name in self.structural_imported_tables.keys():
                 self.structural_imported_tables.pop(table_name)
 
-    def get_data_group_label(self, property : str):
+    def get_data_group_label(self, property : str) -> str:
 
         acoustic_labels = [ 
-                            "acoustic_pressure",
-                            "surface_velocity",
-                            "mass_flow_rate",
-                            "specific_impedance",
-                            "radiation_impedance",
-                            "reciprocating_compressor_excitation",
-                            "reciprocating_pump_excitation",
-                            "acoustic_transfer_element"
+                           "acoustic_pressure",
+                           "surface_velocity",
+                           "mass_flow_rate",
+                           "specific_impedance",
+                           "transfer_impedance",
+                           "radiation_impedance",
+                           "perforated_plate_model",
+                           "reciprocating_compressor_excitation",
+                           "reciprocating_pump_excitation",
+                           "acoustic_transfer_element",
                            ]
 
         if property in acoustic_labels:
@@ -319,19 +332,18 @@ class ModelProperties:
         else:
             return "structural"
 
-    def get_property_related_table_names(self, property : str, selected_ids : int | list, selection: str) -> list:
+    def get_property_related_table_names(self, property : str, selected_ids : int | list | tuple, selection: str) -> list:
         """
         """
         table_names = list()
         if isinstance(selected_ids, int):
             test_key = (property, selected_ids)
-
         elif isinstance(selected_ids, list) and len(selected_ids) == 1:
             test_key = (property, selected_ids[0])
-
         elif isinstance(selected_ids, list) and len(selected_ids) == 2:
             test_key = (property, selected_ids[0], selected_ids[1])
-
+        elif isinstance(selected_ids, tuple) and len(selected_ids) == 2:
+            test_key = (property, selected_ids)
         else:
             return table_names
 
@@ -346,9 +358,8 @@ class ModelProperties:
         else:
             return table_names
 
-        if test_key in _properties.keys():
-            data = _properties[test_key]
-
+        data = _properties.get(test_key)
+        if isinstance(data, dict):
             if "table_names" in data.keys():
                 for table_name in data["table_names"]:
                     if table_name is not None:

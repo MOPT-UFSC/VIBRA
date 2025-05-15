@@ -5,8 +5,6 @@ from pathlib import Path
 
 from vibra import app
 from vibra.interface.menus.common_menu_items import CommonMenuItems
-from vibra.interface.menus.border_item_delegate import BorderItemDelegate
-from vibra.interface.general.print_message_input import PrintMessageInput
 
 
 class ModelSetupItems(CommonMenuItems):
@@ -31,7 +29,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_material = self.add_item("Material")
         self.item_child_fluid = self.add_item('Fluid')
         self.item_child_mesh_setup = self.add_item("Mesh Setup")
-        self.item_child_degrees_of_freedom_decoupling = self.add_item("Degrees of Freedom Decoupling")
+        self.item_child_degrees_of_freedom_decoupling = self.add_item("DOFs Decoupling")
         #
         material_tool_tip = "Attribute material to selected bodies. \ndefault material: steel (E = 210 GPa; poisson = 0.30; density = 7860 kg/m³)"
         fluid_tool_tip = "Attribute fluid to selected bodies. \ndefault fluid: air (speed of sound 343.2021 m/s; fluid density = 1.215 kg/m³)"
@@ -51,6 +49,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_surface_velocity = self.add_item("Surface Velocity")
         self.item_child_anechoic_termination = self.add_item("Anechoic Termination")
         self.item_child_specific_impedance = self.add_item("Specific Impedance")
+        self.item_child_transfer_impedance = self.add_item("Transfer Impedance")
         self.item_child_dissipation_model = self.add_item("Dissipation Model")
         self.item_child_porous_material_model = self.add_item("Porous Material Model")
         self.item_child_viscous_thermal_model = self.add_item("Viscous-thermal Loss Model")
@@ -150,6 +149,9 @@ class ModelSetupItems(CommonMenuItems):
     
     def item_child_specific_impedance_callback(self):
         app().main_window.input_ui.set_specific_impedance()
+
+    def item_child_transfer_impedance_callback(self):
+        app().main_window.input_ui.set_transfer_impedance()
     
     def item_child_dissipation_model_callback(self):
         app().main_window.input_ui.set_dissipation_model()
@@ -158,7 +160,7 @@ class ModelSetupItems(CommonMenuItems):
         app().main_window.input_ui.set_porous_material_model()
 
     def item_child_degrees_of_freedom_decoupling_callback(self):
-        app().main_window.input_ui.set_acoustic_dofs_decoupling()
+        app().main_window.input_ui.set_degrees_of_freedom_decoupling()
     
     def item_child_viscous_thermal_model_callback(self):
         app().main_window.input_ui.set_viscous_thermal_model()
@@ -192,6 +194,7 @@ class ModelSetupItems(CommonMenuItems):
         # self.item_child_mass_flow_rate.setDisabled(key)
         self.item_child_surface_velocity.setDisabled(key)
         self.item_child_specific_impedance.setDisabled(key)
+        self.item_child_transfer_impedance.setDisabled(key)
         self.item_child_anechoic_termination.setDisabled(key)
         self.item_child_dissipation_model.setDisabled(key)
         self.item_child_porous_material_model.setDisabled(key)

@@ -304,7 +304,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         analysis_setup["f_max"] = float(f_max)
         analysis_setup["f_step"] = float(f_step)
 
-        app().project.set_analysis_data(analysis_setup)
+        app().project.set_analysis_setup(analysis_setup)
         app().file.write_analysis_setup_in_file(analysis_setup)
 
     def load_surface_velocity_table(self):
@@ -399,12 +399,12 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
         for surface_id in surface_ids:
             for label in labels:
-                table_names = self.properties.get_property_related_table_names(label, surface_id, "surface")
+                table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
                 self.properties._remove_surface_property(label, surface_id)
                 self.process_table_file_removal(table_names)
 
     def remove_table_files_from_surfaces(self, surface_id : int | list):
-        table_names = self.properties.get_property_related_table_names("surface_velocity", surface_id, "surface")
+        table_names = self.properties.get_property_related_table_names("surface_velocity", surface_id, "surfaces")
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
@@ -467,10 +467,10 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
                 if "table_names" in data.keys():
                     return
 
-        if isinstance(self.project.analysis_data, dict):
-            analysis_data = self.project.analysis_data
-            self.project.set_analysis_data(analysis_data)
-            app().file.write_analysis_setup_in_file(analysis_data)
+        if isinstance(self.project.analysis_setup, dict):
+            analysis_setup = self.project.analysis_setup
+            self.project.set_analysis_setup(analysis_setup)
+            app().file.write_analysis_setup_in_file(analysis_setup)
 
     def reset_input_fields(self):
         self.lineEdit_real_value.setText("")

@@ -6,6 +6,7 @@ from vibra.interface.model_inputs.acoustic.acoustic_pressure_inputs import Acous
 from vibra.interface.model_inputs.acoustic.mass_flow_rate_inputs import MassFlowRateInputs
 from vibra.interface.model_inputs.acoustic.surface_velocity_inputs import SurfaceVelocityInputs
 from vibra.interface.model_inputs.acoustic.specific_impedance_inputs import SpecificImpedanceInputs
+from vibra.interface.model_inputs.acoustic.transfer_impedance_inputs import TransferImpedanceInputs
 from vibra.interface.model_inputs.acoustic.anechoic_termination_inputs import AnechoicTerminationInputs
 from vibra.interface.model_inputs.acoustic.dissipation_model_inputs import DissipationModelInput
 from vibra.interface.model_inputs.acoustic.porous_material_model_inputs import PorousMaterialModelInputs
@@ -14,7 +15,7 @@ from vibra.interface.model_inputs.acoustic.perforated_plate_model_inputs import 
 from vibra.interface.model_inputs.acoustic.acoustic_properties_gradient_inputs import AcousticPropertiesGradientInputs
 from vibra.interface.model_inputs.acoustic.reciprocating_compressor_inputs import ReciprocatingCompressorInputs
 from vibra.interface.model_inputs.acoustic.acoustic_transfer_element_inputs import AcousticTransferElementInputs
-from vibra.interface.model_inputs.acoustic.dofs_decoupling_inputs import DegreesOfFreedomDecouplingInputs
+from vibra.interface.model_inputs.acoustic.degrees_of_freedom_decoupling_inputs import DegreesOfFreedomDecouplingInputs
 #
 from vibra.interface.model_inputs.structural.surface_thickness_inputs import SurfaceThicknessInputs
 from vibra.interface.model_inputs.structural.dofs_prescription_inputs import DofsPrescriptionInputs
@@ -119,6 +120,9 @@ class InputUi:
     def set_specific_impedance(self):
         self.process_input(SpecificImpedanceInputs)
 
+    def set_transfer_impedance(self):
+        self.process_input(TransferImpedanceInputs)
+
     def set_anechoic_termination(self):
         if not self.model_setup_items.item_child_anechoic_termination.isDisabled():
             self.process_input(AnechoicTerminationInputs)
@@ -139,7 +143,7 @@ class InputUi:
         if not self.model_setup_items.item_child_viscous_thermal_model.isDisabled():
             self.process_input(ViscousThermalLossModelInputs)
 
-    def set_acoustic_dofs_decoupling(self):
+    def set_degrees_of_freedom_decoupling(self):
         if not self.model_setup_items.item_child_degrees_of_freedom_decoupling.isDisabled():
             self.process_input(DegreesOfFreedomDecouplingInputs)
 

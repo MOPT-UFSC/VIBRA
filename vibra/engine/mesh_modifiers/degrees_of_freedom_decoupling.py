@@ -63,7 +63,7 @@ class DegreesOfFreedomDecoupling:
 
     def update_surface_property_with_new_surface_id(self):
         """ This method inserts the ID of the new surface into the
-            acoustic_dofs_decoupling surface property data.
+            degrees_of_freedom_decoupling surface property data.
         """
         property = "degrees_of_freedom_decoupling"
         for surface_id in self.decoupling_surfaces:
@@ -466,9 +466,11 @@ class DegreesOfFreedomDecoupling:
             new_surface_id = self.surfaces_mapping.get(surface_id)
 
             fluid = self.model.properties._get_property("fluid", surface=surface_id)
-            self.model.properties._set_property("fluid", fluid, surface=new_surface_id)
+            if fluid is None:
+                return
 
             fluid_id = self.model.properties._get_property("fluid_id", surface=surface_id)
+            self.model.properties._set_property("fluid", fluid, surface=new_surface_id)
             self.model.properties._set_property("fluid_id", fluid_id, surface=new_surface_id)
 
 

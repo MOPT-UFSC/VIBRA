@@ -687,7 +687,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         analysis_setup["f_max"] = float(f_max)
         analysis_setup["f_step"] = float(f_step)
 
-        app().project.set_analysis_data(analysis_setup)
+        app().project.set_analysis_setup(analysis_setup)
         app().file.write_analysis_setup_in_file(analysis_setup)
 
     def update_state_properties_at_discharge(self):
@@ -818,12 +818,12 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
     def remove_conflicting_excitations(self, surface_id: int):
         for label in ["acoustic_pressure", "surface_velocity", "mass_flow_rate", "reciprocating_compressor_excitation", "reciprocating_pump_excitation"]:
-            table_names = self.properties.get_property_related_table_names(label, surface_id, "surface")
+            table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
             self.properties._remove_surface_property(label, surface_id)
             self.process_table_file_removal(table_names)
 
     def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("reciprocating_compressor_excitation", surface_id, "surface")
+        table_names = self.properties.get_property_related_table_names("reciprocating_compressor_excitation", surface_id, "surfaces")
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):

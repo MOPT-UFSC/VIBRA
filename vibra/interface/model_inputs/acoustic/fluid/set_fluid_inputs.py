@@ -257,7 +257,9 @@ class SetFluidInputs(SetFluidInputs_UI):
                 self.properties._set_property("fluid", selected_fluid, surface=surface_id)
 
         self.actions_to_finalize()
-        self.close()
+
+        if attribution_type == 0:
+            self.close()
 
     def remove_callback(self):
 
@@ -324,8 +326,9 @@ class SetFluidInputs(SetFluidInputs_UI):
             for key, data in _property.items():
                 property, surface_id = key
                 if property == "fluid":
+                    if not isinstance(data, Fluid):
+                        continue
 
-                    data : Fluid
                     selection_id = f"{selection}-{surface_id}"
                     self.model_fluids[(data.identifier, selection_id)] = data
 

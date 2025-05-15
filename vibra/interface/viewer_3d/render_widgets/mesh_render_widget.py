@@ -162,9 +162,6 @@ class MeshRenderWidget(CommonRenderWidget):
         logging.info("Updating the mesh render... [95/100]")
         self.update()
 
-        if self.isVisible():
-            app().project.thumbnail = self.get_thumbnail()
-
     def visualization_changed_callback(self):
         if not self.actors_exists():
             return

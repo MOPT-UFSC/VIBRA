@@ -381,9 +381,18 @@ class ProjectFile:
                 "property id" = value
                 """
                 output = dict()
-                for (property, tag), data in prop.items():
+                for (property, tags), data in prop.items():
 
-                    key = f"{property} {tag}"
+                    if isinstance(tags, tuple):
+                        key = f"{property}"
+                        for tag in tags:
+                            key += f" {tag}"
+
+                    elif isinstance(tags, int):
+                        key = f"{property} {tags}"
+
+                    else:
+                        continue
 
                     aux = dict()
                     if isinstance(data, dict):
@@ -432,10 +441,18 @@ class ProjectFile:
         def denormalize(prop: dict):
             new_prop = dict()
             for key, val in prop.items():
-                p, i = key.split()
+
+                key: str
+                p, *_ids = key.split()
                 p = p.strip()
-                i = int(i)
-                new_prop[p, i] = val
+
+                if len(_ids) == 1:
+                    ids = int(_ids[0])
+                else:
+                    ids = tuple([int(_id) for _id in _ids])
+
+                new_prop[p, ids] = val
+
             return new_prop
 
         data = self.filebox.read(self.model_properties_filename)
@@ -552,7 +569,7 @@ class ProjectFile:
                 acoustic_harmonic_solver = app().project.acoustic_harmonic_solver
                 if acoustic_harmonic_solver is not None:
                     if acoustic_harmonic_solver.solution is not None:
-                        frequencies = acoustic_harmonic_solver.frequencies
+                        frequencies = app().project.model.frequencies
                         solution = acoustic_harmonic_solver.solution
                         f.create_dataset("harmonic_acoustic/frequencies", data=frequencies, dtype=float)
                         f.create_dataset("harmonic_acoustic/solution", data=solution, dtype=complex)
@@ -560,7 +577,7 @@ class ProjectFile:
                 structural_harmonic_solver = app().project.structural_harmonic_solver
                 if structural_harmonic_solver is not None:
                     if structural_harmonic_solver.solution is not None:
-                        frequencies = structural_harmonic_solver.frequencies
+                        frequencies = app().project.model.frequencies
                         solution = structural_harmonic_solver.solution
                         displacement_dofs = structural_harmonic_solver.displacement_dofs
                         f.create_dataset("harmonic_structural/frequencies", data=frequencies, dtype=float)

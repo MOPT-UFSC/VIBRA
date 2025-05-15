@@ -130,7 +130,7 @@ class ResultsViewerItems(CommonMenuItems):
         self.modify_acoustic_results_viewer_items(True)
         self.modify_structural_results_viewer_items(True)
 
-        if len(app().project.analysis_data) == 0:
+        if len(app().project.analysis_setup) == 0:
             return
 
         analysis_setup = app().file.read_analysis_setup_from_file()
@@ -138,7 +138,7 @@ class ResultsViewerItems(CommonMenuItems):
             return
 
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
-        # analysis_id = app().project.analysis_data.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        # analysis_id = app().project.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         if analysis_id in [
             AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
@@ -201,7 +201,7 @@ class ResultsViewerItems(CommonMenuItems):
         """ Expands and collapses the Top Level Items on 
             the menu after the solution is done.
         """
-        analysis_id = app().project.analysis_data.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        analysis_id = app().project.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         if analysis_id in [
             AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,

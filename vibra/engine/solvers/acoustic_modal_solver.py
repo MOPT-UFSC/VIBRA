@@ -14,40 +14,15 @@ from scipy.sparse.linalg import eigs, eigsh
 
 
 class AcousticModalSolver:
-    def __init__(self, assembler: "AcousticAssembler", analysis_data=None):
-
+    def __init__(self, assembler: "AcousticAssembler", **kwargs):
         self.assembler = assembler
-
         self.reset_variables()
-        self.load_analysis_data(analysis_data)
 
     def reset_variables(self):
-        self.modes = 40
-        self.sigma_factor = 0.01
-        self.analysis_type = None
-
         self.solution = None
         self.natural_frequencies = np.array([])
         self.complex_natural_frequencies = np.array([])
-
-    def load_analysis_data(self, analysis_data):
-        if analysis_data is not None:
-            if analysis_data["analysis_id"] in [
-                AnalysisID.STRUCTURAL_MODAL,
-                AnalysisID.ACOUSTIC_MODAL,
-            ]:
-                if "modes" in analysis_data.keys():
-                    self.modes = analysis_data["modes"]
-
-                if "sigma_factor" in analysis_data.keys():
-                    self.sigma_factor = analysis_data["sigma_factor"]
-
-                if analysis_data["analysis_id"] == AnalysisID.STRUCTURAL_MODAL:
-                    self.analysis_type = "structural"
-
-                else:
-                    self.analysis_type = "acoustic"
-
+        self.analysis_type = "acoustic"
 
     @cache
     def get_min_max_values_of_pressures(self, column: int, plot_type: str):
@@ -111,6 +86,8 @@ class AcousticModalSolver:
     def solve(self, K=[], M=[], which="LM"):
         """ This method solves the acoustic modal analysis for both damped and undamped problems.
         """
+
+        n_modes = self.assembler.model.analysis_setup.get("modes", 40)
         self.get_min_max_values_of_pressures.cache_clear()
 
         self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
@@ -123,7 +100,7 @@ class AcousticModalSolver:
         C_imp = self.assembler.damping_matrix
 
         logging.info("Solving the eigenproblem... [75/100]")
-        sigma = self.sigma_factor
+        sigma = self.assembler.model.analysis_setup.get("sigma_factor", 0.01)
 
         is_M_complex = np.any(np.imag(M.data))
         is_K_complex = np.any(np.imag(K.data))
@@ -142,7 +119,7 @@ class AcousticModalSolver:
             linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=False)
             opinv = linear_solver.build_linear_operator(A - sigma * B)
 
-            eigen_values, eigen_vectors = eigs(A, M=B, k=2*self.modes, sigma=sigma, which=which, OPinv=opinv)
+            eigen_values, eigen_vectors = eigs(A, M=B, k=2*n_modes, sigma=sigma, which=which, OPinv=opinv)
             linear_solver.clear_memory()
 
             logging.info("Post-processing the solution... [95/100]")
@@ -185,13 +162,13 @@ class AcousticModalSolver:
                 linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=True)
                 opinv = linear_solver.build_linear_operator(K - sigma * M)
 
-                eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
+                eigen_values, eigen_vectors = eigs(K, M=M, k=n_modes, sigma=sigma, which=which, OPinv=opinv)
                 linear_solver.clear_memory()
 
             except Exception as error_log:
                 from traceback import print_exception
                 print_exception(error_log)
-                eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which)
+                eigen_values, eigen_vectors = eigs(K, M=M, k=n_modes, sigma=sigma, which=which)
 
             logging.info("Post-processing the solution... [95/100]")
 

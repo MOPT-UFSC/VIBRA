@@ -31,17 +31,17 @@ class SpecificAcousticImpedanceInputs(SpecificAcousticImpedanceInputs_UI):
         self._reset_variables()
         self._create_connections()
 
-        self._load_analysis_data_and_solution()
+        self._load_analysis_setup_and_solution()
         self.geometry_selection_callback()
 
-    def _load_analysis_data_and_solution(self):
+    def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
-        analysis_data = self.project.analysis_data
-        if "analysis_id" in analysis_data.keys():
-            if analysis_data["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
+        analysis_setup = self.project.analysis_setup
+        if "analysis_id" in analysis_setup.keys():
+            if analysis_setup["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
                 self.analysis_method = "Direct method"
 
-        self.frequencies = self.project.acoustic_harmonic_solver.frequencies
+        self.frequencies = app().project.model.frequencies
         self.solution = self.project.acoustic_harmonic_solver.solution
 
     def _config_window(self):

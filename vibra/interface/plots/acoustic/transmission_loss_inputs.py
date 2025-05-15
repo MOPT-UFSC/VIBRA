@@ -37,7 +37,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         self._create_connections()
 
         self._config_widgets()
-        self._load_analysis_data()
+        self._load_analysis_setup()
 
         if self.load_input_surface_id():
             return
@@ -48,11 +48,11 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         super().showEvent(event)
         self.main_window.show_geometry_render_widget()
 
-    def _load_analysis_data(self):
+    def _load_analysis_setup(self):
         self.analysis_method = ""
-        analysis_data = self.project.analysis_data
-        if "analysis_id" in analysis_data.keys():
-            if analysis_data["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
+        analysis_setup = self.project.analysis_setup
+        if "analysis_id" in analysis_setup.keys():
+            if analysis_setup["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
                 self.analysis_method = "Direct method"
 
     def _initialize(self):
