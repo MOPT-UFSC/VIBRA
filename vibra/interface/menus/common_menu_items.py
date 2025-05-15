@@ -169,7 +169,6 @@ class ChildTreeWidgetItem(QTreeWidgetItem):
             
     def set_icon(self, visible: bool = True):
         if visible:
-            print(self.property_name)
             path_image = str(Path(ICON_DIR / "model_setup_items" / str(self.property_name + ".png")))
             self.setIcon(0, QIcon(path_image))
         else:

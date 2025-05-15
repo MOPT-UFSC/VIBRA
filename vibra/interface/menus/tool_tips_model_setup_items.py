@@ -104,7 +104,7 @@ tool_tips["porous_material_model"] = (
     "This model is used to simulate materials with a porous structure, where air or fluid can flow through the material, affecting its behavior."
     )
 
-tool_tips["viscous_thermal_model"] = (
+tool_tips["viscous-thermal_loss_model"] = (
     # "### Set Viscous-thermal Loss Model\n\n"
     "Define the viscous-thermal loss model for the simulation.\n\n"
     "This model is used to simulate heat loss due to viscous friction in the system."
