@@ -56,7 +56,7 @@ class BorderItemDelegate(QStyledItemDelegate):
             # draw icon
             icon = index.data(Qt.DecorationRole)
             if icon is not None:
-                icon_size = option.decorationSize.width() + 5
+                icon_size = option.decorationSize.width() + 2
                 spacing = 5
                 icon_rect = QRect(option.rect.right() - icon_size - spacing, option.rect.top() + (option.rect.height() - icon_size)//2, icon_size, icon_size)
                 icon.paint(painter, icon_rect)
