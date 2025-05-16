@@ -158,11 +158,11 @@ class ModelSetupItems(CommonMenuItems):
         if property_name == "fluid":
             return physical_domain == "acoustic"
         
-        if property_name == "nodal_loads":
-            return analysis_type == "harmonic" and physical_domain == "structural"
+        # if property_name == "nodal_loads":
+        #     return analysis_type == "harmonic" and physical_domain == "structural"
         
-        if property_name == "surface_velocity":
-            return analysis_type == "harmonic" and physical_domain == "acoustic"
+        # if property_name == "surface_velocity":
+        #     return analysis_type == "harmonic" and physical_domain == "acoustic"
         
         return False
     
