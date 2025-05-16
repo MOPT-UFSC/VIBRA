@@ -23,7 +23,6 @@
         <file>play.png</file>
         <file>create_video_icon.png</file>
         <file>copy_icon.png</file>
-        <file>ghost.png</file>
         <file>import.png</file>
         <file>pause.png</file>
         <file>user_preferences_icon.png</file>
@@ -48,6 +47,7 @@
         <file>visibility/lines.png</file>
         <file>visibility/faces.png</file>
         <file>visibility/section_plane_config.png</file>
+        <file>visibility/ghost.png</file>
         <file>visibility/hide_icon.png</file>
         <file>visibility/unhide_all_icon.png</file>
         <file>views/top.png</file>
@@ -66,6 +66,7 @@
         <file>model_setup_items/normal_pressure_load2.png</file>
         <file>model_setup_items/nodal_loads.png</file>
         <file>model_setup_items/anechoic_termination.png</file>
+        <file>model_setup_items/material.png</file>
         <file>model_setup_items/warning_yellow2.png</file>
         <file>model_setup_items/warning_yellow.png</file>
         <file>model_setup_items/specific_impedance.png</file>

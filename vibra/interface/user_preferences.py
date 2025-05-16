@@ -34,8 +34,9 @@ class UserPreferences:
         self.lines_color = color_names.BLACK
         self.edges_color = color_names.BLACK
         self.faces_color = color_names.WHITE
-        self.selection_faces_color: Color = Color("#146AF5")
-        self.selection_nodes_points_color: Color = Color("#F52A14")
+        self.selection_faces_color = Color("#146AF5")
+        self.selection_nodes_points_color = Color("#F52A14")
+        self.selection_lines_color = Color("#F52A14")
 
     def set_dark_theme(self):
         self.interface_theme = "dark"
@@ -48,6 +49,7 @@ class UserPreferences:
         self.faces_color = color_names.WHITE
         self.selection_faces_color: Color = Color("#146AF5")
         self.selection_nodes_points_color: Color = Color("#F52A14")
+        self.selection_lines_color = Color("#F52A14")
 
     def reset_attributes(self):
         theme = self.interface_theme
