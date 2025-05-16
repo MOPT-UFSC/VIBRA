@@ -692,7 +692,8 @@ class MainWindow(MainWindow_UI):
                 self,
                 "Save As",
                 path,
-                filter="Vibra File (*.vibra)",
+                filter="Vibra File (*.vibra)", 
+                options=QFileDialog.DontUseNativeDialog,
             )
 
             if not check:

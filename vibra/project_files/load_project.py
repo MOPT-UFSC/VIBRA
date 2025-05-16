@@ -199,8 +199,7 @@ class LoadProject:
                 data = geometry_data.get(key)
                 self.model.mesh.area_from_surfaces = {int(key) : value for key, value in data}
 
-            elif "volume_from" in key:
-                data = geometry_data.get(key)
+            elif "volume_from" in key and data.size > 0:
                 self.model.mesh.volume_from_bodies = {int(key) : value for key, value in data}
 
             elif "surfaces_from_volume" in key:
