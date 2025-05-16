@@ -811,7 +811,7 @@ class Mesh:
     def process_mesh_related_mappings(self):
         self.process_connectivities_from_lines_and_surfaces()
         self.map_elements_from_lines_surfaces_and_volumes()
-        self.map_face_elements_to_solid_elements_v4()
+        self.map_face_elements_to_solid_elements()
         self.get_principal_diagonal_structure_parallelepiped()
 
 
@@ -915,7 +915,7 @@ class Mesh:
         # dt = time() - t0
         # print(f"Elapsed '_process_solid_elements_connected_to_nodes': {dt} s")
 
-    def map_face_elements_to_solid_elements_v0(self):
+    def map_face_elements_to_solid_elements_reference(self):
         self.face_to_solid_element = dict()
         self.solid_to_face_elements = defaultdict(list)
 
@@ -934,230 +934,15 @@ class Mesh:
             self.face_to_solid_element[elf_id] = els_id
             self.solid_to_face_elements[els_id].append(elf_id)
 
+    def map_face_elements_to_solid_elements(self):
+        '''
+        This method implements a faster algorithm when compared with
+        the one implemented in map_face_elements_to_solid_elements_reference.
 
-    def map_face_elements_to_solid_elements_v1(self):
-        self.face_to_solid_element = dict()
-        self.solid_to_face_elements = defaultdict(list)
-
-        if len(self.solids_connectivity) == 0:
-            return
-
-        nodes_per_face_element = len(self.faces_connectivity[0, 4:])
-        all_face_nodes = np.unique(self.faces_connectivity[:, 4:])
-
-        mask_solid_nodes_touching_face = np.isin(self.solids_connectivity[:, 4:], all_face_nodes)
-        face_nodes_per_solid = np.sum(mask_solid_nodes_touching_face, axis=1)
-
-        # Be carefull with this number
-        # it makes the cache grow factorially
-        cache_range = 2
-        cache = dict()
-
-        mask_bruteforce = face_nodes_per_solid >= (nodes_per_face_element + cache_range)
-        mask_cache = (face_nodes_per_solid >= nodes_per_face_element) & ~mask_bruteforce
-
-        submasks = mask_solid_nodes_touching_face[mask_cache]
-        masked_connectivity = self.solids_connectivity[mask_cache]
-
-        # Populate the cache with all valid combinations of nodes_per_face_element
-        for submask, row in zip(submasks, masked_connectivity):
-            filtered_nodes = row[4:][submask]
-            for nodes in combinations(filtered_nodes, nodes_per_face_element):
-                key = tuple(sorted(nodes))
-                solid_id = row[0]
-                cache.setdefault(key, solid_id)
-
-        # Populates the dictionaries using the cache or bruteforce
-        for row in self.faces_connectivity:
-            key = tuple(sorted(row[4:]))
-            face_id = row[0]
-            face_nodes = row[4:]
-
-            if key in cache:
-                solid_id = cache[key]
-            else:
-                mask_1 = np.sum(np.isin(masked_connectivity[:, 4:], face_nodes), axis=1) >= nodes_per_face_element
-                if masked_connectivity[mask_1, 0].size == 0:
-                    continue
-                solid_id = masked_connectivity[mask_1, 0][0]
-
-            self.face_to_solid_element[face_id] = solid_id
-            self.solid_to_face_elements[solid_id].append(face_id)
-
-    def map_face_elements_to_solid_elements_v2(self):
-        # Get just the node indexes from faces connectivity
-        faces_nodal_connectivity = self.faces_connectivity[:, 4:]
-        nodes_per_face_element = len(self.faces_connectivity[0, 4:])
-
-        # Get the set of nodes that are part of a face
-        all_face_nodes = np.unique(faces_nodal_connectivity)
-
-        # Counts how many nodes of a solid are touching a face
-        face_nodes_per_solid = np.sum(
-            np.isin(
-                self.solids_connectivity[:, 4:],
-                all_face_nodes,
-            ),
-            axis=1,
-        )
-
-        # Filters all solids that contains a external face
-        external_solids = self.solids_connectivity[face_nodes_per_solid >= nodes_per_face_element]
-
-        # Get just the node indexes from solids connectivity
-        external_solid_nodal_connectivity = external_solids[:, 4:]
-
-        # Extends external_solid_nodal_connectivity shape to allow the comparison
-        comparison = faces_nodal_connectivity == external_solid_nodal_connectivity[..., None, None]
-
-        # The shape of comparison is (n_solids, n_faces_per_solid, n_faces, n_nodes_per_face)
-        # any(axis=-3) reduces the dimension testing if any solid node is equal to each face node
-        # all(axis=-1) reduces the dimensions testing if all nodes of a face are part of a solid.
-        # The resulting array is a mask of shape (n_solids, n_faces)
-        mask = comparison.any(axis=-3).all(axis=-1)
-
-        # Iterates the mask and connectivities while populating the correspondent dicts
-        self.face_to_solid_element = dict()
-        self.solid_to_face_elements = defaultdict(list)
-        for solid_id, faces_mask in zip(external_solids[:, 0], mask):
-            face_ids = self.faces_connectivity[faces_mask, 0]
-            self.solid_to_face_elements[solid_id] = face_ids
-            for face_id in face_ids:
-                self.face_to_solid_element[face_id] = solid_id
-
-    def map_face_elements_to_solid_elements_v3(self):
-        nodes_per_face = self.faces_connectivity[:, 4:].shape[1]
-        nodes_per_solid = self.solids_connectivity[:, 4:].shape[1]
-
-        # Get the set of nodes that are part of a face
-        all_face_nodes = np.unique(self.faces_connectivity[:, 4:])
-
-        # Counts how many nodes of a solid are touching a face
-        face_nodes_per_solid = np.sum(
-            np.isin(
-                self.solids_connectivity[:, 4:],
-                all_face_nodes,
-            ),
-            axis=1,
-        )
-
-        # Filters all solids that contains a external face
-        external_solids = self.solids_connectivity[face_nodes_per_solid >= nodes_per_face][:, 4:]
-        external_solids.sort(axis=1)
-
-        self.face_to_solid_element = dict()
-        self.solid_to_face_elements = defaultdict(list)
-
-        columns_to_sort = nodes_per_solid - nodes_per_face + 1
-        sorted_indexes = np.argsort(external_solids[:, :columns_to_sort], axis=0).T
+        If something goes wrong with this mapping compare the output of this
+        with the reference version.
+        '''
         
-        for row in self.faces_connectivity:
-            face_id = row[0]
-            face_nodes = row[4:]
-            solid_id = self._search_face_in_solid(face_nodes, external_solids, sorted_indexes)
-            if solid_id >= 0:
-                self.face_to_solid_element[face_id] = solid_id
-                self.solid_to_face_elements[solid_id].append(face_id)
-
-    def _search_face_in_solid(self, face_nodes: np.ndarray, solids_nodes: np.ndarray, sorted_indexes: np.ndarray):
-        first_node = face_nodes[0]
-
-        for col in range(sorted_indexes.shape[0]):
-            sorted_col = solids_nodes[sorted_indexes[col], col]
-
-            left = np.searchsorted(sorted_col, first_node, side="left")
-            right = np.searchsorted(sorted_col[left:], first_node, side="right")
-            solid_rows_containing_first_node = sorted_indexes[col, left:right]
-
-            for row in solid_rows_containing_first_node:
-                face_is_subset_of_solid = np.isin(face_nodes, solids_nodes[row]).all()
-                if face_is_subset_of_solid:
-                    return row
-
-        return -1
-
-    def map_face_elements_to_solid_elements_v4(self):
-        nodes_per_face = self.faces_connectivity[:, 4:].shape[1]
-        nodes_per_solid = self.solids_connectivity[:, 4:].shape[1]
-
-        # Get the set of nodes that are part of a face
-        all_face_nodes = np.unique(self.faces_connectivity[:, 4:])
-
-        # Counts how many nodes of a solid are touching a face
-        face_nodes_per_solid = np.sum(
-            np.isin(
-                self.solids_connectivity[:, 4:],
-                all_face_nodes,
-            ),
-            axis=1,
-        )
-
-        # Filters all solids that contains a external face
-        external_solids = self.solids_connectivity[face_nodes_per_solid >= nodes_per_face]
-        external_solids_connectivity = external_solids[:, 4:]
-        external_solids_connectivity.sort(axis=1)
-
-        # Sort only the needed columns to find efficiently the smallest node of a face.
-        # If the node was not found in the first N columns the solid is not valid a candidate.
-        columns_to_sort = nodes_per_solid - nodes_per_face + 1
-        sorted_indexes = np.argsort(external_solids_connectivity[:, :columns_to_sort], axis=0)
-        sorted_columns = np.take_along_axis(external_solids_connectivity[:, :columns_to_sort], sorted_indexes, axis=0)
-
-        # Create a dict containing the positions 
-        # of each node per column
-        intervals = dict()
-        true_line = np.full(sorted_columns.shape[1], True)
-        value_changes = np.vstack(
-            [
-                true_line, # Forcing the 0 index
-                sorted_columns[:-1] != sorted_columns[1:],
-                true_line, # Forcing the last index
-            ]
-        )
-        for col, mask in enumerate(value_changes.T):
-            change_indexes = np.where(mask)[0]
-            for left, right in pairwise(change_indexes):
-                node = sorted_columns[left, col]
-                intervals[col, node] = (left, right)
-
-        self.face_to_solid_element = dict()
-        self.solid_to_face_elements = defaultdict(list)
-
-        for face_row in self.faces_connectivity:
-            face_id = face_row[0]
-            face_nodes = face_row[4:]
-            first_node = min(face_nodes)
-
-            correspondent_solid_found = False
-
-            for col in range(sorted_indexes.shape[1]):
-                key = (col, first_node)
-
-                if key not in intervals:
-                    continue
-
-                left, right = intervals[key]
-
-                interval = intervals.get((col, first_node))
-                if interval is None:
-                    continue
-
-                solid_rows_containing_first_node = sorted_indexes[left:right, col]
-
-                for solid_row_number in solid_rows_containing_first_node:
-                    face_is_subset_of_solid = np.isin(face_nodes, external_solids_connectivity[solid_row_number]).all()
-
-                    if face_is_subset_of_solid:
-                        solid_id = external_solids[solid_row_number, 0]
-                        self.face_to_solid_element[face_id] = solid_id
-                        self.solid_to_face_elements[solid_id].append(face_id)
-                        correspondent_solid_found = True
-                        break
-
-                if correspondent_solid_found:
-                    break
-
-    def map_face_elements_to_solid_elements_v5(self):
         # Get the set of nodes that are part of a face
         all_face_nodes = np.unique(self.faces_connectivity[:, 4:])
 
