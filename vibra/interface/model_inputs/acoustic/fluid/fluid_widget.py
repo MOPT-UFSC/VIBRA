@@ -2,19 +2,19 @@ from PySide6.QtWidgets import QDialog, QHeaderView, QPushButton, QTableWidget, Q
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt
 
-from vibra import app, UI_DIR, TEMP_PROJECT_FILE
+from vibra import app, TEMP_PROJECT_FILE
+from vibra.interface.ui_generated.model.setup.fluid.fluid_widget_ui import FluidWidget_UI
 from vibra.interface.formatters.icons import *
 
 from vibra.interface.general.pick_color_input import PickColorInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.interface.model_inputs.acoustic.fluid.set_fluid_composition_input import SetFluidCompositionInput
+from vibra.interface.model_inputs.acoustic.fluid.set_fluid_composition_inputs import SetFluidCompositionInputs
 
 from vibra.engine.properties.fluid import Fluid
 from vibra.libraries.default_libraries import default_fluid_library
 
 from vibra.utils.utils import *
-from molde import load_ui
 
 from itertools import count
 
@@ -30,12 +30,9 @@ def get_color_rgb(color):
     tokens = color.split(',')
     return list(map(int, tokens))
 
-class FluidWidget(QWidget):
+class FluidWidget(FluidWidget_UI):
     def __init__(self, *argas, **kwargs):
         super().__init__()
-        
-        ui_path = UI_DIR  / "model/setup/fluid/fluid_widget.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         self.dialog = kwargs.get("dialog", None)
         self.state_properties = kwargs.get("state_properties", dict())
@@ -47,7 +44,7 @@ class FluidWidget(QWidget):
         self.properties = self.model.properties
 
         self._initialize()
-        self._define_qt_variables()
+        self._configure_qt_variables()
         self._create_connections()
         self._config_widgets()
         self.load_data_from_fluids_library()
@@ -78,18 +75,7 @@ class FluidWidget(QWidget):
                                 "color"
                                 ]
 
-    def _define_qt_variables(self):
-
-        # QPushButton
-        self.pushButton_add_column: QPushButton
-        self.pushButton_attribute: QPushButton
-        self.pushButton_exit: QPushButton
-        self.pushButton_refprop: QPushButton
-        self.pushButton_remove_column: QPushButton
-        self.pushButton_reset_library: QPushButton
-
-        # QTableWidget
-        self.tableWidget_fluid_data: QTableWidget
+    def _configure_qt_variables(self):
         self.tableWidget_fluid_data.setStyleSheet("")
 
     def _create_connections(self):
@@ -548,7 +534,7 @@ class FluidWidget(QWidget):
                 self.dialog.hide()
 
             selected_fluid = self.fluid_name_to_refprop_data[fluid_name]
-            self.refprop = SetFluidCompositionInput(selected_fluid_to_edit = selected_fluid, 
+            self.refprop = SetFluidCompositionInputs(selected_fluid_to_edit = selected_fluid, 
                                                     state_properties = self.state_properties)
 
             if not self.refprop.complete:
@@ -658,7 +644,7 @@ class FluidWidget(QWidget):
         if isinstance(self.dialog, QDialog):
             self.dialog.hide()
 
-        self.refprop = SetFluidCompositionInput(state_properties = self.state_properties)
+        self.refprop = SetFluidCompositionInputs(state_properties = self.state_properties)
         if not self.refprop.complete:
             self.refprop = None
             app().main_window.set_input_widget(self)

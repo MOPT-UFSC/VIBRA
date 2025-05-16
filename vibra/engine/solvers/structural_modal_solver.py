@@ -13,37 +13,14 @@ from scipy.sparse.linalg import eigs
 
 
 class StructuralModalSolver:
-    def __init__(self, assembler: "StructuralAssembler", analysis_data=None):
-
+    def __init__(self, assembler: "StructuralAssembler", **kwargs):
         self.assembler = assembler
-
         self.reset_variables()
-        self.load_analysis_data(analysis_data)
 
     def reset_variables(self):
-        self.modes = 20
-        self.sigma_factor = 0.01
-        self.analysis_type = None
-        self.natural_frequencies = None
         self.solution = None
-
-    def load_analysis_data(self, analysis_data):
-        if analysis_data is not None:
-            if analysis_data["analysis_id"] in [
-                AnalysisID.STRUCTURAL_MODAL,
-                AnalysisID.ACOUSTIC_MODAL,
-            ]:
-                if "modes" in analysis_data.keys():
-                    self.modes = analysis_data["modes"]
-
-                if "sigma_factor" in analysis_data.keys():
-                    self.sigma_factor = analysis_data["sigma_factor"]
-
-                if analysis_data["analysis_id"] == AnalysisID.STRUCTURAL_MODAL:
-                    self.analysis_type = "structural"
-
-                else:
-                    self.analysis_type = "acoustic"
+        self.natural_frequencies = None
+        self.analysis_type = "structural"
 
     @cache
     def get_max_min_values_of_displacements(self, column: int, disp_type: str):
@@ -107,13 +84,15 @@ class StructuralModalSolver:
     def solve(self, K=[], M=[], which="LM", harmonic_analysis=False):
         """ This method solves the structural modal analysis for undamped problems.
         """
+
+        n_modes = self.assembler.model.analysis_setup.get("modes", 40)
         self.get_max_min_values_of_displacements.cache_clear()
 
         if K == [] and M == []:
             K = self.assembler.stiffness_matrix
             M = self.assembler.mass_matrix
 
-        sigma = self.sigma_factor
+        sigma = self.assembler.model.analysis_setup.get("sigma_factor", 0.01)
         logging.info("Solving the eigenproblem... [75/100]")
 
         is_M_complex = np.any(np.imag(M.data))
@@ -127,7 +106,7 @@ class StructuralModalSolver:
         linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=True)
         opinv = linear_solver.build_linear_operator(K - sigma * M)
 
-        eigen_values, eigen_vectors = eigs(K, M=M, k=self.modes, sigma=sigma, which=which, OPinv=opinv)
+        eigen_values, eigen_vectors = eigs(K, M=M, k=n_modes, sigma=sigma, which=which, OPinv=opinv)
         linear_solver.clear_memory()
 
         logging.info("Post-processing the solution... [95/100]")

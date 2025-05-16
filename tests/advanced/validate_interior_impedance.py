@@ -128,10 +128,12 @@ def load_external_mesh_and_solve(mesh_size: str = "200mm", interior_impedance: b
         model.properties._set_property("fluid", fluid, surface=_surf_id)
 
     ## normal surface velocity data
-    data_Vn = { "real_values" : [1],
+    data_Vn = { 
+                "real_values" : [1],
                 "imag_values" : [0],
                 "nodal_attribution" : False,
-                "averaged" : False }
+                "averaged" : False 
+                }
 
     model.properties._set_property("surface_velocity", data_Vn, surface=1)
 
@@ -140,8 +142,6 @@ def load_external_mesh_and_solve(mesh_size: str = "200mm", interior_impedance: b
     data_Z = {  
               "real_values" : [Zo],
               "imag_values" : [0],
-              "nodal_attribution" : False,
-              "averaged" : False
               }
 
     model.properties._set_property("specific_impedance", data_Z, surface=1)
@@ -153,8 +153,6 @@ def load_external_mesh_and_solve(mesh_size: str = "200mm", interior_impedance: b
     #     data_Zin = {  
     #                 "real_values" : [2*10],
     #                 "imag_values" : [0],
-    #                 "nodal_attribution" : False,
-    #                 "averaged" : False
     #                 }
 
     #     model.properties._set_property("specific_impedance", data_Zin, surface=3)
@@ -166,14 +164,15 @@ def load_external_mesh_and_solve(mesh_size: str = "200mm", interior_impedance: b
     f_max = 1400
     frequencies = np.arange(f_min, f_max + df, df)
 
-    frequency_setup = {
-                        "f_min" : f_min,
-                        "f_max" : f_max,
-                        "f_step" : df,
-                        "frequencies" : frequencies
-                       }
-    
-    model.set_frequency_setup(frequency_setup)
+    analysis_setup = {  
+                      "analysis_id" : 3,
+                      "f_min" : f_min,
+                      "f_max" : f_max,
+                      "f_step" : df,
+                      "frequencies" : frequencies
+                      }
+
+    model.set_analysis_setup(analysis_setup)
 
     ## Define the perforated plate setup
 
@@ -205,8 +204,7 @@ def load_external_mesh_and_solve(mesh_size: str = "200mm", interior_impedance: b
     # return
 
     # Define the analysis type and load setup
-    analysis_data = {"analysis_id" : 3, "frequencies" : frequencies}
-    harmonic_solver = AcousticHarmonicSolver(assembler, analysis_data=analysis_data)
+    harmonic_solver = AcousticHarmonicSolver(assembler)
 
     # Run harmonic analysis
 
@@ -228,7 +226,8 @@ def load_external_mesh_and_solve(mesh_size: str = "200mm", interior_impedance: b
 
     list_nodes = list()
     for tag, surface_nodes in mesh.nodes_from_surfaces.items():
-        list_nodes.extend(surface_nodes)
+        if tag in [1, 2]:
+            list_nodes.extend(surface_nodes)
 
     rho_eff_v1 = model.get_fluid_density_for_particle_velocity_calculation(1, frequencies)
     rho_eff_v2 = model.get_fluid_density_for_particle_velocity_calculation(2, frequencies)
@@ -604,6 +603,6 @@ def get_external_results(path: str):
 if __name__ == "__main__":
 
     # valid mesh sizes: 10mm, 34mm, 200mm and 400mm.
-    mesh_size = "34mm"
+    mesh_size = "200mm"
 
-    load_external_mesh_and_solve(mesh_size=mesh_size, interior_impedance=True)
+    load_external_mesh_and_solve(mesh_size=mesh_size, interior_impedance=False)

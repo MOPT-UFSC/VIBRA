@@ -2,21 +2,16 @@ from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QApplication, QLabel, QProgressBar, QSplashScreen
 
-from vibra import ICON_DIR, UI_DIR
-
-from molde import load_ui
+from vibra.interface.ui_generated.project.splash_ui import Splash_UI
 
 from time import time
 
-class SplashScreen(QSplashScreen):
+
+class SplashScreen(Splash_UI):
     def __init__(self, parent):
         super().__init__()
 
-        ui_path = UI_DIR / "project/splash.ui"
-        load_ui(ui_path, self, ui_path.parent)
-
         self._config_widget()
-        self._define_qt_variables()
         self.update_position(parent)
         self.update_progress(5)
 
@@ -25,11 +20,6 @@ class SplashScreen(QSplashScreen):
         self.progressBar.setStyleSheet( """  QProgressBar{background-color : rgba(255, 255, 255, 0); border-radius: 6px; border-style: ridge; border-width: 0px;}
                                              QProgressBar::chunk {background-color : rgb(45, 110, 190); border-radius: 6px; border-style: ridge; border-width: 0px;}
                                         """)
-
-    def _define_qt_variables(self):
-        self.label_loading : QLabel
-        self.progressBar : QProgressBar
-        self.label: QLabel
 
     def update_position(self, app):
         desktop_geometry = app.primaryScreen().geometry()

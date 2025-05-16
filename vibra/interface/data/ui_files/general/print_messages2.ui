@@ -288,6 +288,6 @@ QPushButton:pressed{border-radius: 16px; border-color: rgb(0, 170, 255); border-
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources><include location="../../icons/resources.qrc" /></resources>
  <connections/>
 </ui>

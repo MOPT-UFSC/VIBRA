@@ -9,7 +9,7 @@ from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
 
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
-from data.validation.transmission_loss.load_external_data import *
+from data.validation.load_external_data import LoadExternalData
 
 import os
 # import pytest
@@ -114,14 +114,22 @@ def load_external_mesh_and_solve():
 
     model.properties._set_property("surface_thickness", data_st, surface=1)
 
-    assembler = StructuralAssembler(model)
-
-    # Set the analysis frequency setup
-    assembler.process_assemble()
+    # Define the analysis setup
+    analysis_setup = {
+                      "analysis_id" : 2, 
+                      "modes" : 40, 
+                      "sigma_factor" : 1e-2
+                      }
     
-    # Define the analysis type and load setup
-    analysis_data = {"analysis_id" : 2, "modes" : 40, "sigma_factor" : 1e-2}
-    modal_solver = StructuralModalSolver(assembler, analysis_data=analysis_data)
+    # Set the analysis setup
+    model.set_analysis_setup(analysis_setup)
+
+    # Define and process the assemble
+    assembler = StructuralAssembler(model)
+    assembler.process_assemble()
+
+    # Initialize the solver
+    modal_solver = StructuralModalSolver(assembler)
 
     # t0 = time()
     # # Run modal analysis

@@ -8,7 +8,8 @@ from vibra.engine import AnalysisID
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
 from vibra.interface.analysis.harmonic_analysis_method_selector_input import StructuralHarmonicAnalysisMethodSelecorInput
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
-from vibra.interface.analysis.analysis_setup_input import AnalysisSetupInput
+from vibra.interface.analysis.structural_harmonic_analysis_direct_method_input import StructuralHarmonicAnalysisDirectMethodInput
+from vibra.interface.analysis.acoustic_harmonic_analysis_direct_method_input import AcousticHarmonicAnalysisDirectMethodInput
 
 from typing import Literal
 
@@ -198,10 +199,17 @@ class AnalysisToolbar(QToolBar):
         self.set_pushbutton_run_analysis_enabled(valid_setup)
 
     def run_analysis(self):
+
         self.update_analysis_combo_boxes()
         if app().project.run_analysis():
             return
+
         self.set_pushbutton_reset_solution_enabled()
+
+        # This is needed specially when the geometry
+        # and mesh changes because of the analysis
+        app().main_window.update_plots(reset_camera=False)
+        app().file.write_results_data_in_file()
 
     def reset_solution(self):
         app().project.reset_solutions()
@@ -233,9 +241,9 @@ class AnalysisToolbar(QToolBar):
         if select.index == -1:
             return
  
-        analysis_data = {"analysis_id": select.index}
-        self.update_analysis_data(analysis_data)
-        harmonic = AnalysisSetupInput()
+        analysis_setup = {"analysis_id": select.index}
+        self.update_analysis_setup(analysis_setup)
+        harmonic = StructuralHarmonicAnalysisDirectMethodInput()
 
         if harmonic.setup_defined:
             self.final_actions()
@@ -245,10 +253,9 @@ class AnalysisToolbar(QToolBar):
             app().main_window.update_symbols()
 
     def harmonic_acoustic(self):
-
-        analysis_data = {"analysis_id": AnalysisID.ACOUSTIC_HARMONIC}
-        self.update_analysis_data(analysis_data)
-        harmonic = AnalysisSetupInput()
+        analysis_setup = {"analysis_id": AnalysisID.ACOUSTIC_HARMONIC}
+        self.update_analysis_setup(analysis_setup)
+        harmonic = AcousticHarmonicAnalysisDirectMethodInput()
 
         if harmonic.setup_defined:
             self.final_actions()
@@ -263,7 +270,7 @@ class AnalysisToolbar(QToolBar):
             return
 
         if modal.setup_defined:
-            self.update_analysis_data(modal.analysis_setup)
+            self.update_analysis_setup(modal.analysis_setup)
             self.final_actions()
 
         if modal.proceed_solution:
@@ -276,21 +283,21 @@ class AnalysisToolbar(QToolBar):
             return
 
         if modal.setup_defined:
-            self.update_analysis_data(modal.analysis_setup)
+            self.update_analysis_setup(modal.analysis_setup)
             self.final_actions()
 
         if modal.proceed_solution:
             self.run_analysis()
 
-    def update_analysis_data(self, analysis_data: dict):
-        if app().project.analysis_data is not None:
-            for key, value in app().project.analysis_data.items():
+    def update_analysis_setup(self, analysis_setup: dict):
+        if app().project.analysis_setup is not None:
+            for key, value in app().project.analysis_setup.items():
                 if key in ["f_min", "f_max", "f_step", "frequencies", "global_damping"]:
-                    analysis_data[key] = value
+                    analysis_setup[key] = value
 
-        app().project.set_analysis_data(analysis_data)
+        app().project.set_analysis_setup(analysis_setup)
 
     def final_actions(self):
         self.reset_solution()
         app().project.create_solver()
-        app().file.write_analysis_setup_in_file(app().project.analysis_data)
+        app().file.write_analysis_setup_in_file(app().project.analysis_setup)

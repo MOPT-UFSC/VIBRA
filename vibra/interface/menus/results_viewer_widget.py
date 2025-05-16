@@ -1,25 +1,22 @@
-from molde import load_ui
 from PySide6.QtWidgets import QFrame, QWidget
 
-from vibra import UI_DIR, app
+from vibra import app
+from vibra.interface.ui_generated.menu.left_menu_widget_ui import LeftMenuWidget_UI
 from vibra.interface.menus.results_viewer_items import ResultsViewerItems
-from vibra.interface.plots.acoustic.plot_acoustic_mode_shape import PlotAcousticModeShape
-from vibra.interface.plots.acoustic.plot_acoustic_pressure_field import PlotAcousticPressureField
-from vibra.interface.plots.structural.plot_displacement_field import PlotDisplacementField
-from vibra.interface.plots.structural.plot_structural_mode_shape import PlotStructuralModeShape
+from vibra.interface.plots.acoustic.acoustic_mode_shape_inputs import AcousticModeShapeInputs
+from vibra.interface.plots.acoustic.acoustic_pressure_field_inputs import AcousticPressureFieldInputs
+from vibra.interface.plots.structural.displacement_field_inputs import PlotDisplacementFieldInputs
+from vibra.interface.plots.structural.structural_mode_shape_inputs import PlotStructuralModeShapeInputs
 
 
-class ResultsViewerWidget(QWidget):
+class ResultsViewerWidget(LeftMenuWidget_UI):
     def __init__(self):
         super().__init__()
 
-        ui_path = UI_DIR / "menu/left_menu_widget.ui"
-        load_ui(ui_path, self, ui_path.parent)
-
-        self.plot_structural_modal = PlotStructuralModeShape()
-        self.plot_structural_harmonic = PlotDisplacementField()
-        self.plot_acoustic_modal = PlotAcousticModeShape()
-        self.plot_acoustic_harmonic = PlotAcousticPressureField()
+        self.plot_structural_modal = PlotStructuralModeShapeInputs()
+        self.plot_structural_harmonic = PlotDisplacementFieldInputs()
+        self.plot_acoustic_modal = AcousticModeShapeInputs()
+        self.plot_acoustic_harmonic = AcousticPressureFieldInputs()
 
         self._reset()
         self._define_qt_variables()
@@ -32,32 +29,27 @@ class ResultsViewerWidget(QWidget):
         self.bottom_widget.hide()
 
     def _define_qt_variables(self):
-
         self.main_frame = QFrame()
-
-        # QWidget
-        self.top_widget: QWidget
-        self.bottom_widget: QWidget
-
         self.results_viewer_items = ResultsViewerItems()
+        
         self.layout().replaceWidget(self.top_widget, self.results_viewer_items)
         self.adjustSize()
     
     def _create_connections(self):
 
         # Structural
-        self.results_viewer_items.item_child_plot_structural_mode_shapes.clicked.connect(self.add_structural_modal_widget)
-        self.results_viewer_items.item_child_plot_structural_frequency_response.clicked.connect(self.add_structural_frequency_response_widget)
-        self.results_viewer_items.item_child_plot_displacement_field.clicked.connect(self.add_structural_harmonic_widget)
+        self.results_viewer_items.item_child_structural_mode_shapes.clicked.connect(self.add_structural_modal_widget)
+        self.results_viewer_items.item_child_structural_frequency_response.clicked.connect(self.add_structural_frequency_response_widget)
+        self.results_viewer_items.item_child_displacement_field.clicked.connect(self.add_structural_harmonic_widget)
 
         # Acoustic
-        self.results_viewer_items.item_child_plot_acoustic_pressure_field.clicked.connect(self.add_acoustic_harmonic_widget)
-        self.results_viewer_items.item_child_plot_acoustic_pressure_frequency_response.clicked.connect(self.add_acoustic_pressure_frequency_response_widget)
-        self.results_viewer_items.item_child_plot_acoustic_pressure_frequency_response_function.clicked.connect(self.add_acoustic_pressure_frequency_response_function_widget)
-        self.results_viewer_items.item_child_plot_TL_NR.clicked.connect(self.add_TL_NR_widget)
-        self.results_viewer_items.item_child_plot_acoustic_mode_shapes.clicked.connect(self.add_acoustic_modal_widget)
-        self.results_viewer_items.item_child_plot_particle_velocity.clicked.connect(self.add_particle_velocity_plot_widget)
-        self.results_viewer_items.item_child_plot_acoustic_specific_impedance.clicked.connect(self.add_acoustic_specific_impedance_plot_widget)
+        self.results_viewer_items.item_child_acoustic_pressure_field.clicked.connect(self.add_acoustic_harmonic_widget)
+        self.results_viewer_items.item_child_acoustic_pressure_frequency_response.clicked.connect(self.add_acoustic_pressure_frequency_response_widget)
+        self.results_viewer_items.item_child_acoustic_pressure_frequency_response_function.clicked.connect(self.add_acoustic_pressure_frequency_response_function_widget)
+        self.results_viewer_items.item_child_TL_NR.clicked.connect(self.add_TL_NR_widget)
+        self.results_viewer_items.item_child_acoustic_mode_shapes.clicked.connect(self.add_acoustic_modal_widget)
+        self.results_viewer_items.item_child_particle_velocity.clicked.connect(self.add_particle_velocity_plot_widget)
+        self.results_viewer_items.item_child_acoustic_specific_impedance.clicked.connect(self.add_acoustic_specific_impedance_plot_widget)
 
     def get_item(self):
         return self.results_viewer_items

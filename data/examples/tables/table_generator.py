@@ -1,28 +1,44 @@
 import numpy as np
 
-f_min = 2
-f_max = 600
-df = 2
+def generate_table_of_constant_values(filename: str, value: float | complex, f_step: float=5, f_min: float=5, f_max: float=600):
+    """ 
+    This function create an array of constant complex values and save it in a text file.
 
-frequencies = np.arange(f_min, f_max+df, df)
-value = 2.037183e3
+    Parameters
+    ----------
 
-real = value * np.ones(len(frequencies), dtype=float)
-imag = np.zeros(len(frequencies), dtype=float)
+    filename : str
+        The complete filename including the file extension
 
-data = np.array([frequencies, real, imag], dtype=float)
+    value : float or complex
+        The constant value of table 
 
-unit = "N/m2"
-header = f"Frequency [Hz], real [{unit}], imaginary [{unit}]"
+    f_step : float, optional
+        The frequency step of frequency vector data
+    
+    f_min: float, optional
+        The minimum frequency of frequency vector data
+    
+    f_max: float, optional
+        The maximum frequency of frequency vector data
 
-filename = 'distributed_load_table_2037p183N_m2.dat'
-np.savetxt(filename, data.T, delimiter=",", header=header)
-teste = np.loadtxt(filename,delimiter=",")
+    """
 
-# f = open(filename)
-# header_r = f.readline()
-# last_col_name = header.split(',')[-1]
-# np.savetxt('load_Fx.dat', data, delimiter=",", header=header)
-# np.savetxt('acoustic_pressure_table.dat', data, delimiter=",", header=header)
-# np.savetxt('volume_velocity_table.dat', data, delimiter=",", header=header)
-# np.savetxt('specific_impedance_table.dat', data, delimiter=",", header=header)
+    f_step = 5
+    f_min = f_step
+    f_max = 600
+
+    freq = np.arange(f_min, f_max+f_step, f_step, dtype=int)
+    values = np.ones_like(freq, dtype=complex) * value
+
+    data = np.array([freq, np.real(values), np.imag(values)]).T
+    # data = np.round(data, 8)
+
+    path = f"data/examples/tables/{filename}"
+    np.savetxt(path, data, delimiter=",")
+
+if __name__ == "__main__":
+    filename = "transfer_impedance_Z0.dat"
+    value = 413.5379
+    f_step, f_min, f_max = 5, 5, 600
+    generate_table_of_constant_values(filename, value, f_step=f_step, f_min=f_min, f_max=f_max)

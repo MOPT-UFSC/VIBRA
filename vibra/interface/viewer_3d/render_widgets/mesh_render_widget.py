@@ -22,10 +22,12 @@ from .model_info_text import (
     nodes_info_text,
 )
 
+import logging
+import numpy as np
+from numbers import Number
+
 
 class MeshRenderWidget(CommonRenderWidget):
-    selection_changed = Signal(list, list, list)
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.set_interactor_style(BoxSelectionInteractorStyle())
@@ -111,6 +113,7 @@ class MeshRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
+        logging.info("Updating the mesh render... [25/100]")
         self.mesh_selection.precompute_data()
         self.remove_all_actors()
 
@@ -128,6 +131,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.plane_actor = SectionPlaneActor(self.faces_actor.GetBounds())
         self.plane_actor.VisibilityOff()
 
+        logging.info("Updating the mesh render... [75/100]")
         self.add_actors(
             self.nodes_actor,
             self.edges_actor,
@@ -145,6 +149,7 @@ class MeshRenderWidget(CommonRenderWidget):
         if reset_camera:
             self.renderer.ResetCamera()
 
+        logging.info("Updating the mesh render... [95/100]")
         self.update()
 
     def visualization_changed_callback(self):

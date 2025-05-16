@@ -6,7 +6,10 @@ from vibra import USER_PATH
 from vibra.interface.application import Application
 
 
+error_message = None
 def custom_exception_hooks(exc_type, exc_value, exc_traceback):
+    global error_message
+
     if issubclass(exc_type, KeyboardInterrupt):
         sys.exit()
 
@@ -17,8 +20,13 @@ def custom_exception_hooks(exc_type, exc_value, exc_traceback):
         from vibra.interface.general.print_message_input import PrintMessageInput
         window_title = "Unhandled error"
         title = str(exc_type.__name__)
-        message = str(exc_value) + "\n\n" + "\n".join(format_tb(exc_traceback, limit=-1)) 
-        PrintMessageInput([window_title, title, message])
+        message = str(exc_value) + "\n\n" + "\n".join(format_tb(exc_traceback, limit=-1))
+
+        if isinstance(error_message, PrintMessageInput):
+            error_message.close()
+
+        error_message = PrintMessageInput([window_title, title, message], exec=False)
+        error_message.show()
 
     except Exception as e:
         logging.exception(e)
@@ -70,7 +78,8 @@ def main():
         Todo:
             Fix the HighDPI part to not blurry the screen. See more by searching "PySide6 HighDPI".
     """
-    
+    # Import enabling compiled qt resources to be found from path `:/icons/{filepath_relative_to_qrc}`
+    import vibra.interface.data.icons.resources_rc
     configure_logs()
 
     # disables the terrible vtk error handler and its logs

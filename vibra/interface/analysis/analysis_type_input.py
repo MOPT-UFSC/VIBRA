@@ -2,27 +2,23 @@ from PySide6.QtWidgets import QDialog, QPushButton
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 
-from vibra import app, UI_DIR
 from vibra.engine import AnalysisID
 
+from vibra import app
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
 from vibra.interface.analysis.harmonic_analysis_method_selector_input import StructuralHarmonicAnalysisMethodSelecorInput
-from molde import load_ui
+from vibra.interface.ui_generated.analysis.general.analysis_type_input_ui import AnalysisTypeInput_UI
 
 
-class AnalysisTypeInput(QDialog):
+class AnalysisTypeInput(AnalysisTypeInput_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "analysis/general/analysis_type_input.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
 
         self._config_window()
         self._initialize()
-        self._define_qt_variables()
         self._create_connections()
 
         while self.keep_window_open:
@@ -33,6 +29,7 @@ class AnalysisTypeInput(QDialog):
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
+        self.pushButton_harmonic_coupled.setDisabled(True)
 
     def _initialize(self):
         #
@@ -44,7 +41,7 @@ class AnalysisTypeInput(QDialog):
         # Analysis ID 5 ==> Coupled Harmonic Analysis - Direct Method
         # Analysis ID 6 ==> Coupled Harmonic Analysis - Mode Superposition Method
         #
-        self.analysis_data = {}
+        self.analysis_setup = {}
         self.analysis_id = AnalysisID.NO_ANALYSIS
         self.analysis_type_label = None
         self.analysis_method_label = None
@@ -52,19 +49,7 @@ class AnalysisTypeInput(QDialog):
         self.modes = 0
         self.sigma_factor = 1e-4
         self.run_modal = False
-
         self.keep_window_open = True
-
-    def _define_qt_variables(self):
-
-        # QPushButton
-        self.pushButton_harmonic_structural : QPushButton
-        self.pushButton_harmonic_acoustic : QPushButton
-        self.pushButton_harmonic_coupled : QPushButton
-        self.pushButton_modal_structural : QPushButton
-        self.pushButton_modal_acoustic : QPushButton
-        # temporary
-        self.pushButton_harmonic_coupled.setDisabled(True)
 
     def _create_connections(self):
         self.pushButton_harmonic_structural.clicked.connect(self.harmonic_structural)
@@ -91,11 +76,11 @@ class AnalysisTypeInput(QDialog):
         else:
             analysis_id = AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION
 
-        self.analysis_data = {"analysis_id": analysis_id}
+        self.analysis_setup = {"analysis_id": analysis_id}
         self.finalize()
 
     def harmonic_acoustic(self):
-        self.analysis_data = {"analysis_id": AnalysisID.ACOUSTIC_HARMONIC}
+        self.analysis_setup = {"analysis_id": AnalysisID.ACOUSTIC_HARMONIC}
         self.finalize()
 
     def harmonic_coupled(self):
@@ -110,7 +95,7 @@ class AnalysisTypeInput(QDialog):
         else:
             analysis_id = AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION
 
-        self.analysis_data = {"analysis_id": analysis_id}
+        self.analysis_setup = {"analysis_id": analysis_id}
         self.finalize()
 
     def modal_structural(self):
@@ -120,7 +105,7 @@ class AnalysisTypeInput(QDialog):
         if not modal.setup_defined:
             return
 
-        self.analysis_data = modal.analysis_setup.copy()
+        self.analysis_setup = modal.analysis_setup.copy()
         self.run_modal = modal.proceed_solution
         self.finalize()
 
@@ -131,26 +116,26 @@ class AnalysisTypeInput(QDialog):
         if not modal.setup_defined:
             return
 
-        self.analysis_data = modal.analysis_setup.copy()
+        self.analysis_setup = modal.analysis_setup.copy()
         self.run_modal = modal.proceed_solution
         self.finalize()
 
     def finalize(self):
 
         self.complete = True
-        if len(app().project.analysis_data):
-            for key, value in app().project.analysis_data.items():
+        if len(app().project.analysis_setup):
+            for key, value in app().project.analysis_setup.items():
                 if key in ["f_min", "f_max", "f_step", "frequencies", "global_damping"]:
-                    self.analysis_data[key] = value
+                    self.analysis_setup[key] = value
 
-        app().project.set_analysis_data(self.analysis_data)
+        app().project.set_analysis_setup(self.analysis_setup)
         app().project.create_solver()
 
-        if self.analysis_data["analysis_id"] in [
+        if self.analysis_setup["analysis_id"] in [
             AnalysisID.STRUCTURAL_MODAL,
             AnalysisID.ACOUSTIC_MODAL,
         ]:
-            app().file.write_analysis_setup_in_file(self.analysis_data)
+            app().file.write_analysis_setup_in_file(self.analysis_setup)
 
         self.close()
 

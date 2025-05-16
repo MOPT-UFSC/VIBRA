@@ -279,6 +279,6 @@
    </widget>
   </widget>
  </widget>
- <resources/>
+ <resources><include location="../../../icons/resources.qrc" /></resources>
  <connections/>
 </ui>
