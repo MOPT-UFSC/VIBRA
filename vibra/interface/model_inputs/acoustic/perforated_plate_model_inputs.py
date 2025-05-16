@@ -558,6 +558,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
     def check_selected_surfaces(self):
 
+        surface_ids = list()
         if self.comboBox_selection_type.currentText() == "Inside surfaces":
         
             input_ids_A = self.lineEdit_selection_id_A.text()
@@ -566,18 +567,17 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                                                         selection = "surfaces", 
                                                         single_id = False,
                                                         )
-
             if surface_ids_A is None:
                 self.lineEdit_selection_id_A.setFocus()
                 return list()
-
 
             self.check_selection_type(surface_ids_A)
             if not self.pp_data:
                 return list()
             
-            surface_ids = surface_ids_A.sort()
-            self.pp_data["surfaces_A"] = surface_ids_A.sort()
+            surface_ids_A.sort()
+            self.pp_data["surfaces_A"] = surface_ids_A
+            surface_ids.extend(surface_ids_A)
 
         else:
 
@@ -615,11 +615,10 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             surface_ids_B.sort()
             self.pp_data["surfaces_A"] = surface_ids_A
             self.pp_data["surfaces_B"] = surface_ids_B
-
-            surface_ids = list()
             surface_ids.extend(surface_ids_A)
             surface_ids.extend(surface_ids_B)
-            surface_ids.sort()
+
+        surface_ids.sort()
 
         return surface_ids
 
