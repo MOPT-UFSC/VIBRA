@@ -9,7 +9,8 @@ from vibra import app
 from vibra.interface.ui_generated.project.render.renderer_user_preferences_ui import RendererUserPreferences_UI
 from molde.colors import Color
 
-from vibra.interface.user_input.model.color_selector import PickColorInput
+from vibra.interface.general.pick_color_input import PickColorInput
+
 
 class RendererUserPreferencesInput(RendererUserPreferences_UI):
     def __init__(self, *args, **kwargs):
