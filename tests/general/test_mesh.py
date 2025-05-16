@@ -25,7 +25,6 @@ def test_tetrahedron_4_mesh():
         "tests/general/mesh_info/cilinder_tet4/",
     )
 
-@pytest.mark.skip
 def test_tetrahedron_10_mesh():
     mesh = Mesh().load_cad(
         "data/examples/geometry_files/tetrahedron.step",
@@ -33,7 +32,6 @@ def test_tetrahedron_10_mesh():
         maximum_element_size=80,
         threads=1,
         element_type=TETRAHEDRON_10,
-        gmsh_gui=True
     )
 
     _compare_mesh(
