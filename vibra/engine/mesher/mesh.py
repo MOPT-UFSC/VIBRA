@@ -626,8 +626,8 @@ class Mesh:
                                                }
 
             if dim == 0:  # Points
-                node_id = int(element_nodes[0]) - 1
-                self.nodes_from_points[tag] = node_id
+                node_id = element_nodes[0][0] - 1
+                self.nodes_from_points[tag] = int(node_id)
                 self.points_from_nodes[node_id] = tag
 
             elif dim == 1:  # Lines
@@ -700,8 +700,7 @@ class Mesh:
                 else:
                     connect_data = self.solids_connectivity
 
-            tags = [*set(connect_data[:, 1])]
-            tags = [int(_tag) for _tag in tags]
+            tags = [int(entity_tag) for entity_tag in set(connect_data[:, 1])]
 
             for tag in tags:
 

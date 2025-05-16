@@ -32,6 +32,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
         self._initialize()
         self._config_window()
         self._define_qt_variables()
+        self._config_widgets()
         self._create_connections()
 
         self.load_info()
@@ -53,10 +54,6 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
 
     def _define_qt_variables(self):
 
-        # QComboBox
-        self.comboBox_volume_id : QComboBox
-        self.comboBox_volume_id.setDisabled(True)
-
         # QLineEdit
         self.lineEdit_selection_id : QLineEdit
         self.lineEdit_selection_id.setDisabled(True)
@@ -72,8 +69,14 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
 
         # QTreeWidget
         self.treeWidget_dofs_decoupling : QTreeWidget
-        self.treeWidget_dofs_decoupling.setColumnWidth(1, 40)
-        self.treeWidget_dofs_decoupling.setColumnWidth(2, 80)
+        self.treeWidget_selection_info : QTreeWidget
+
+    def _config_widgets(self):
+        for i, width in enumerate([140]):
+            self.treeWidget_selection_info.setColumnWidth(i, width)
+            self.treeWidget_dofs_decoupling.setColumnWidth(i, width)
+            self.treeWidget_selection_info.headerItem().setTextAlignment(i, Qt.AlignCenter)           
+            self.treeWidget_dofs_decoupling.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
         #
@@ -99,54 +102,32 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
 
     def geometry_selection_callback(self):
 
-        faces = app().main_window.selected_geometry_surfaces
+        surfaces = app().main_window.selected_geometry_surfaces
 
-        if len(faces) == 1:
-            text = ", ".join([str(i) for i in faces])
+        if surfaces:
+            text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
-            self.update_volumes_from_faces()  
 
-    def update_volumes_from_faces(self):
-
-        self.comboBox_volume_id.setDisabled(True)
-        input_ids = self.lineEdit_selection_id.text()
-        surface_ids = self.mesh.check_selected_ids(
-                                                   input_ids, 
-                                                   selection = "surfaces"
-                                                   )
-
-        if surface_ids is None:
+            surface_ids = [int(surf_id) for surf_id in surfaces]
+            surface_ids.sort()
+            self.update_volumes_from_faces(surface_ids)  
             return
 
-        self.comboBox_volume_id.clear()
-        volumes_from_surface = self.model.mesh.volumes_from_surface[surface_ids[0]]
+        self.lineEdit_selection_id.setText("")
 
-        if len(volumes_from_surface) != 2:
-            return
+    def update_volumes_from_faces(self, surface_ids: list[int]):
 
-        self.comboBox_volume_id.setEnabled(True)
-        for volume_id in volumes_from_surface:
-            self.comboBox_volume_id.addItem(str(volume_id))
+        self.treeWidget_selection_info.clear()
 
-        for volume_id in volumes_from_surface:
+        for surface_id in surface_ids:
+            volumes_from_surface = self.model.mesh.volumes_from_surface[surface_id]
+            item = QTreeWidgetItem([str(surface_id), str(volumes_from_surface)])
+            for i in range(2):
+                item.setTextAlignment(i, Qt.AlignCenter)
 
-            for surface_id in self.model.mesh.surfaces_from_volume[volume_id]:
-                if surface_id in surface_ids:
-                    continue
+            self.treeWidget_selection_info.addTopLevelItem(item)
 
-                for property in ["surface_velocity", "acoustic_pressure", "reciprocating_compressor"]:
-                    data = self.model.properties._get_property(property, surface=surface_id)
-                    if isinstance(data, dict):
-                        self.select_the_volume_to_preserve(volumes_from_surface, volume_id)
-                        return
-
-    def select_the_volume_to_preserve(self, volume_ids: list[int], volume_to_preserve: int):
-
-        if len(volume_ids) == 2:
-            for volume_id in volume_ids:
-                if volume_id != volume_to_preserve:
-                    self.comboBox_volume_id.setCurrentText(str(volume_id))
-                    return
+        return
 
     def attribute_callback(self):
 
@@ -155,33 +136,30 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
         if surface_ids is None:
             self.lineEdit_selection_id.setFocus()
             return
-        
-        surface_id = surface_ids[0]
+       
+        for surface_id in surface_ids:
 
-        if len(surface_ids) != 1:
-            return
+            message = ""
+            volumes_from_surface = self.model.mesh.volumes_from_surface.get(surface_id)
 
-        message = ""
-        volumes_from_surface = self.model.mesh.volumes_from_surface.get(surface_id)
+            if volumes_from_surface is None:
+                message = "The selected surface is not connected to any volume. "
+                message += "You must select an internal surface connected "
+                message += "with two volumes to proceed with dofs decoupling."
 
-        if volumes_from_surface is None:
-            message = "The selected surface is not connected to any volume. "
-            message += "You must select an internal surface connected "
-            message += "with two volumes to proceed with dofs decoupling."
+            elif len(volumes_from_surface) == 1:
+                message = "The selected surface is connected to one volume, this means that an external " 
+                message += "surface has been selected. You must select an internal surface connected "
+                message += "with two volumes to proceed with dofs decoupling."
 
-        elif len(volumes_from_surface) == 1:
-            message = "The selected surface is connected to one volume, this means that an external " 
-            message += "surface has been selected. You must select an internal surface connected "
-            message += "with two volumes to proceed with dofs decoupling."
+            if message != "":
+                self.hide()
+                title = "Invalid surface selected"
+                PrintMessageInput([window_title_2, title, message])
+                return
 
-        if message != "":
-            self.hide()
-            title = "Invalid surface selected"
-            PrintMessageInput([window_title_2, title, message])
-            return
-
-        data = {"volume_to_decouple" : int(self.comboBox_volume_id.currentText())}
-        self.properties._set_property("degrees_of_freedom_decoupling", data, surface=surface_id)
+            data = {"volume_to_decouple" : volumes_from_surface[0]}
+            self.properties._set_property("degrees_of_freedom_decoupling", data, surface=surface_id)
 
         self.setup_complete = True
         self.actions_to_finalize()
@@ -292,6 +270,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
         app().file.write_imported_table_data_in_file()
         app().main_window.update_info_text()
         app().main_window.mesh_widget.update_symbols()
+        app().main_window.set_geometry_selection()
 
     def on_click_item(self, item):
         if item.text(0) != "":

@@ -36,9 +36,9 @@ class Model:
         self.geometry_path = None
         self.initial_element_size = None
 
-        self.f_min = 2
+        self.f_min = 5
         self.f_max = 600
-        self.f_step = 2
+        self.f_step = 5
         self.frequencies = None
         self.list_frequencies = list()
 

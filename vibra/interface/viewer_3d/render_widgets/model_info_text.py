@@ -101,6 +101,12 @@ def faces_info_text():
         tree = TreeInfo(f"SURFACE {surface_ids[0]}")
         tree.add_item("Area", f"{area : .6e}", "m²")
 
+        # nodes_from_surface = app().project.model.mesh.nodes_from_surfaces.get(surface_ids[0])
+        # if nodes_from_surface is not None:
+        #     print(f"There are {len(nodes_from_surface)} nodes in surface {surface_ids[0]}")
+        #     print(f"Nodes: {nodes_from_surface}")
+        #     print()
+
         surface_data = app().project.model.properties._get_property("surface_thickness", surface=surface_ids[0])
         if isinstance(surface_data, dict):
             tree.add_item("Thickness", surface_data["surface_thickness"], "m")
