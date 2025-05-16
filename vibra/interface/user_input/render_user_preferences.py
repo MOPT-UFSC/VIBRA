@@ -42,6 +42,7 @@ class RendererUserPreferencesInput(RendererUserPreferences_UI):
         self.pushButton_faces_color.clicked.connect(self.update_faces_color)
         self.pushButton_selection_faces_color.clicked.connect(self.update_selection_faces_color)
         self.pushButton_selection_nodes_points_color.clicked.connect(self.update_selection_nodes_points_color)
+        self.pushButton_selection_lines_color.clicked.connect(self.update_selection_lines_color)
         self.pushButton_edges_color.clicked.connect(self.update_edges_color)
         self.pushButton_reset_to_default.clicked.connect(self.reset_to_default)
         self.pushButton_update_settings.clicked.connect(self.confirm_and_update_user_preferences)
@@ -169,6 +170,19 @@ class RendererUserPreferencesInput(RendererUserPreferences_UI):
         str_color = str(self.tmp_user_preferences.selection_nodes_points_color.to_rgb())[1:-1]
         self.lineEdit_selection_nodes_points_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
     
+    def update_selection_lines_color(self):
+        read = PickColorInput(title="Pick the selection nodes/points color")
+        if read.complete:
+            selection_lines_color = tuple(read.color)
+            str_color = str(selection_lines_color)[1:-1]
+            self.lineEdit_selection_lines_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+
+            self.tmp_user_preferences.selection_lines_color = Color(*selection_lines_color)
+
+    def update_line_edit_selection_lines_color(self):
+        str_color = str(self.tmp_user_preferences.selection_lines_color.to_rgb())[1:-1]
+        self.lineEdit_selection_lines_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+    
     def update_renderer_font_size(self):
         self.tmp_user_preferences.renderer_font_size = self.spinBox_renderer_font_size.value()
 
@@ -264,6 +278,7 @@ class RendererUserPreferencesInput(RendererUserPreferences_UI):
         self.update_line_edit_faces_color()
         self.update_line_edit_selection_faces_color()
         self.update_line_edit_selection_nodes_points_color()
+        self.update_line_edit_selection_lines_color()
         self.update_spin_box_renderer_font_size()
         self.update_spin_box_points_size()
         self.update_spin_box_nodes_size()
