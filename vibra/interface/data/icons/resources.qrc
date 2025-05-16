@@ -46,6 +46,7 @@
         <file>visibility/lines.png</file>
         <file>visibility/show_symbols.png</file>
         <file>visibility/section_plane_view.png</file>
+        <file>visibility/ghost.png</file>
         <file>visibility/section_plane_config.png</file>
         <file>visibility/unhide_all_icon.png</file>
         <file>visibility/hide_icon.png</file>
