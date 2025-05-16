@@ -52,6 +52,12 @@ If some package changed since the generation, the environment can be updated usi
 conda env update --f environment.yml --prune
 ```
 
+## Create QWidgets
+
+1. Create or update de .ui file
+2. Run CLI task: `invoke ui-compile` or `inv ui-compile`  (need to install the `invoke` library)
+3. Extend the widget class to implement the UI actions (all the UI elements will be available, we don't need to use `findChild` to catch them)
+
 ## Generate Installer
 ```
 poetry run pyinstaller vibra.spec --noconfirm
