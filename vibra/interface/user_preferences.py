@@ -14,6 +14,7 @@ class UserPreferences:
     selection_color: Color = Color("#146AF5")
     selection_faces_color: Color = Color("#146AF5")
     selection_nodes_points_color: Color = Color("#F52A14")
+    selection_lines_color: Color = Color("#F52A14")
     renderer_font_color: Color = color_names.BLACK
     renderer_font_size: int  = 11
     points_size: int = 15

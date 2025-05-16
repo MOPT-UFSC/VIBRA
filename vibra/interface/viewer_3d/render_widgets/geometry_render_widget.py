@@ -54,6 +54,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.selection_spheres_actor = None
         self.selection_faces_color = app().config.user_preferences.selection_faces_color.to_rgb()
         self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color.to_rgb()
+        self.selection_lines_color = app().config.user_preferences.selection_lines_color.to_rgb()
 
         # The fast area selection just works if it is on
         self.renderer.GetActiveCamera().ParallelProjectionOn()
@@ -334,11 +335,12 @@ class GeometryRenderWidget(CommonRenderWidget):
                 all_faces_elements.extend(indexes)
 
         self.points_actor.paint_cells(self.selection_nodes_points_color, points)
-        self.lines_actor.paint_lines(self.selection_nodes_points_color, lines)
+        self.lines_actor.paint_lines(self.selection_lines_color, lines)
         self.faces_actor.paint_cells(self.selection_faces_color, all_faces_elements)
         
         self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color.to_rgb()
         self.selection_faces_color = app().config.user_preferences.selection_faces_color.to_rgb()
+        self.selection_lines_color = app().config.user_preferences.selection_lines_color.to_rgb()
 
         self.update_info_text()
 
