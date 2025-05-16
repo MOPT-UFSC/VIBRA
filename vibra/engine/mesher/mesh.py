@@ -1157,6 +1157,48 @@ class Mesh:
                 if correspondent_solid_found:
                     break
 
+    def map_face_elements_to_solid_elements_v5(self):
+        # Get the set of nodes that are part of a face
+        all_face_nodes = np.unique(self.faces_connectivity[:, 4:])
+
+        # Counts how many nodes of a solid are touching a face
+        face_nodes_per_solid = np.sum(
+            np.isin(
+                self.solids_connectivity[:, 4:],
+                all_face_nodes,
+            ),
+            axis=1,
+        )
+
+        # Filters all solids that contains a complete external face
+        nodes_per_face = self.faces_connectivity[:, 4:].shape[1]
+        external_solids = self.solids_connectivity[face_nodes_per_solid >= nodes_per_face]
+
+        # Maps the nodes connected to each solid
+        node_to_solid_ids = defaultdict(set)
+        for solid_id, _, _, _, *solid_nodes in external_solids:
+            for node in solid_nodes:
+                node_to_solid_ids[node].add(solid_id)
+
+        self.face_to_solid_element = dict()
+        self.solid_to_face_elements = defaultdict(list)
+
+        for face_id, _, _, _, *face_nodes in self.faces_connectivity:
+            candidate_solids = list()
+            for node in face_nodes:
+                candidate = node_to_solid_ids[node]
+                candidate_solids.append(candidate)
+
+            # The correspondent element is the one that contains all nodes from this face. 
+            correspondent_solids = set.intersection(*candidate_solids)
+            if not correspondent_solids:
+                continue
+
+            # Populate the dicts using the first solid found.
+            solid_id, *_ = correspondent_solids
+            self.face_to_solid_element[face_id] = solid_id
+            self.solid_to_face_elements[solid_id].append(face_id)
+
     def get_face_elements_connected_to_nodes(self, node_ids, surface_id=None):
 
         # t0 = time()
