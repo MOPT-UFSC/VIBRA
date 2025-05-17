@@ -638,11 +638,13 @@ class MainWindow(QMainWindow):
         self.results_viewer_widget.hide_bottom_widget()
         self.welcome_widget.update_recent_projects()
 
+    def action_import_mesh_callback(self):
+        ext_filter = "Geometry Files (*.bdf *.BDF *.nas *.NAS)"
+        self.import_geometry_or_mesh_dialog(ext_filter=ext_filter)
+
     def action_import_geometry_callback(self):
-        # return
-        if self.import_geometry_dialog():
-            pass
-            # self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
+        ext_filter = "Geometry Files (*.stp *.step *.STEP  *.STP *.igs *.iges *.IGS *.IGES)"
+        self.import_geometry_or_mesh_dialog(ext_filter=ext_filter)
 
     def action_hide_selection_callback(self):
         mesh = app().project.model.mesh
@@ -726,7 +728,7 @@ class MainWindow(QMainWindow):
 
     def new_project_dialog(self):
         self.reset_temporary_vibra_folder()
-        self.import_geometry_dialog()
+        self.import_geometry_or_mesh_dialog()
 
     def save_project_dialog(self):
         if app().project.save_path is None:
@@ -815,26 +817,29 @@ class MainWindow(QMainWindow):
 
         self.open_project(project_path)
 
-    def import_geometry_dialog(self):
+    def import_geometry_or_mesh_dialog(self, ext_filter: str | None = None):
 
         self.close_dialogs()
-        last_path = app().config.get_last_folder_for("geometry_folder")
+        last_path = app().config.get_last_folder_for("geometry_mesh_folder")
         if last_path is None:
             path = os.path.expanduser("~")
         else:
             path = last_path
 
-        geometry_path, check = QFileDialog.getOpenFileName(
+        if ext_filter is None:
+            ext_filter = "Geometry Files (*.stp *.step *.STEP  *.STP *.igs *.iges *.IGS *.IGES *.bdf *.BDF *.nas *.NAS)"
+
+        load_path, check = QFileDialog.getOpenFileName(
             self,
-            "Select Geometry",
+            "Select a geometry or mesh file",
             path,
-            filter="Geometry Files (*.stp *.step *.STEP  *.STP *.igs *.iges *.IGS *.IGES *.bdf *.BDF *.nas *.NAS)",
+            filter=ext_filter,
         )
 
         if not check:
             return False
 
-        app().config.write_last_folder_path_in_file("geometry_folder", geometry_path)
+        app().config.write_last_folder_path_in_file("geometry_mesh_folder", load_path)
 
         app().project.reset_variables()
         app().project.reset_solutions()
@@ -845,7 +850,7 @@ class MainWindow(QMainWindow):
             return False
 
         app().file.write_geometry_in_file(
-                                          geometry_path, 
+                                          load_path, 
                                           app().project.model.length_unit, 
                                           app().project.model.geometry_qf
                                           )

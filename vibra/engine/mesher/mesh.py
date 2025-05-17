@@ -27,6 +27,7 @@ class Mesh:
 
         self.geometry_setup = None
         self.mesh_setup = None
+        self.geometry_imported = True
 
         self.reset_variables()
 
@@ -164,16 +165,14 @@ class Mesh:
 
         logging.info("Configuring mesh... [20/100]")
         self._configure_mesh(
-            element_type,
-            minimum_element_size,
-            maximum_element_size,
-            size_factor,
-            mesh_refinement_parameters,
-        )
+                            element_type,
+                            minimum_element_size,
+                            maximum_element_size,
+                            size_factor,
+                            mesh_refinement_parameters,
+                            )
 
-        # gmsh.model.occ.removeAllDuplicates()
         gmsh.model.occ.synchronize()
-        # self.dimension = min(dimension, gmsh.model.getDimension())
         self.element_type = element_type
 
         if self.mesh_connection:
@@ -182,7 +181,6 @@ class Mesh:
         try:
 
             logging.info("Generating mesh... [45/100]")
-            # gmsh.model.mesh.generate(dim=element_type.dimensions)
             gmsh.model.mesh.generate(dim=dimension)
 
             logging.info("Generating mesh... [60/100]")
@@ -204,8 +202,6 @@ class Mesh:
                 gmsh.fltk.run()
 
         gmsh.finalize()
-        # dt = time() - t0
-        # print(f"Elapsed time: {dt}")
 
         logging.info(   f"Mesh generated with {len(self.nodal_coordinates)} nodes"
                         f", {len(self.lines_connectivity)} dim 1"
@@ -220,6 +216,101 @@ class Mesh:
         # gmsh.model.occ.fragment(lines_list, lines_list)
         gmsh.model.occ.fragment(volumes_list, volumes_list)
         gmsh.model.occ.synchronize()
+
+    def load_mesh(  
+                    self, 
+                    path: Path | str,
+                    element_type: ElementType = DEFAULT_ELEMENT_TYPE,
+                    geometry_tolerance: float = 1e-8,
+                    threads: int = 0,
+                    gmsh_gui: bool = False
+                    ):
+
+        gmsh.initialize("", False)
+        gmsh.option.setNumber("General.Terminal", 0)
+        gmsh.option.setNumber("General.Verbosity", 0)
+        gmsh.option.setNumber("General.NumThreads", threads)
+        gmsh.option.setNumber("Geometry.Tolerance", geometry_tolerance)
+
+        logging.info("Loading mesh data... [15/100]")
+        gmsh.open(path)
+
+        logging.info("Loading mesh data... [80/100]")
+        gmsh.model.occ.synchronize()
+
+        logging.info("Loading mesh data... [95/100]")
+        self.process_geometry_information()
+
+        self.element_type = element_type
+
+        logging.info("Post-processing mesh... [50/100]")
+        self.post_process_mesh_data()
+
+        logging.info("Post-processing mesh... [80/100]")
+        self.process_downwards_adjacencies_from_mesh()
+
+        logging.info("Post-processing mesh... [90/100]")
+        self.process_upwards_adjacencies_from_entities()
+
+        if gmsh_gui:
+            if "-nopopup" not in sys.argv:
+                gmsh.fltk.run()
+
+        gmsh.finalize()
+
+        logging.info(   f"The mesh file contains {len(self.nodal_coordinates)} nodes"
+                        f", {len(self.lines_connectivity)} dim 1"
+                        f", {len(self.faces_connectivity)} dim 2"
+                        f"and {len(self.solids_connectivity)} dim 3 elements"   )
+
+    
+    def process_downwards_adjacencies_from_mesh(self):
+
+        for vol_id in self.geometry_information.get("volumes"):
+            rows = self.solids_connectivity[:, 1] == vol_id
+            nodes = list(set(self.solids_connectivity[rows, 4:].flatten()))
+            mask = np.sum(np.isin(self.faces_connectivity[:, 4:], nodes), axis=1) >= 1
+            self.surfaces_from_volume[vol_id] = list(set(self.faces_connectivity[mask, 1]))
+
+        for surf_id in self.geometry_information.get("surfaces"):
+            rows = self.faces_connectivity[:, 1] == surf_id
+            nodes = list(set(self.faces_connectivity[rows, 4:].flatten()))
+            mask = np.sum(np.isin(self.lines_connectivity[:, 4:], nodes), axis=1) >= 1
+            self.lines_from_surface[surf_id] = list(set(self.lines_connectivity[mask, 1]))
+
+        self.process_points_from_mesh()
+
+    def process_points_from_mesh(self):
+
+        if not self.lines_connectivity.size:
+            return
+
+        def get_unique_nodes(node_ids: list[int]):
+
+            unique = set()
+            duplicated = set()
+
+            for node_id in node_ids:
+                if node_id in unique:
+                    duplicated.add(node_id)
+                    unique.remove(node_id)
+                else:
+                    unique.add(node_id)
+
+            return list(unique)
+
+        self.points_from_line.clear()
+        for tag, connect in self.connectivity_from_lines.items():
+            corner_nodes = get_unique_nodes(connect.flatten())
+            self.points_from_line[tag] = [int(node_id + 1) for node_id in corner_nodes]
+
+            for node_id in corner_nodes:
+                point_id = int(node_id + 1)
+                self.nodes_from_points[point_id] = int(node_id)
+                self.points_from_nodes[int(node_id)] = point_id
+
+        self.geometry_information["points"] = list(self.nodes_from_points.keys())
+        print(self.geometry_information)
 
     def import_nodes_coordinates(self, filename):
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
@@ -612,7 +703,8 @@ class Mesh:
                 continue
 
             if dim == 2:
-                self.process_surface_normals_and_curvatures(tag)
+                if self.geometry_imported:
+                    self.process_surface_normals_and_curvatures(tag)
 
             for i, element_type in enumerate(element_types):
                 _, _, _, nodes_per_element, _, _ = gmsh.model.mesh.getElementProperties(element_type)
@@ -1097,7 +1189,7 @@ class Mesh:
 
                 elif dim == 3:
                     geometry_info["volumes"].append(value)
-
+    
             total_area = np.sum(geometry_info["areas"])
             if total_area <= 5e7:
                 number_of_elements = 4e4
@@ -1149,8 +1241,10 @@ class Mesh:
 
             if dim == 0:
                 continue
-
-            value = gmsh.model.occ.getMass(dim, tag)
+            
+            value = 0.
+            if self.geometry_imported:
+                value = gmsh.model.occ.getMass(dim, tag)
 
             if dim == 3:
                 self.volume_from_bodies[tag] = value * (unit_factor**3)

@@ -95,7 +95,7 @@ class ModelSetupItems(CommonMenuItems):
                     item_child.clicked.connect(function)
 
         app().main_window.theme_changed.connect(self.set_theme)
-    
+
     def _initial_configuration(self):
         self.item_top_structural_model_setup.setHidden(True)
         self.item_top_acoustic_model_setup.setHidden(True)
@@ -178,7 +178,8 @@ class ModelSetupItems(CommonMenuItems):
         app().main_window.input_ui.set_acoustic_transfer_element_setup()
     
     def modify_general_settings_items_access(self, key: bool):
-        self.item_child_mesh_setup.setDisabled(key)
+        imported_geometry = app().project.model.mesh.geometry_imported
+        self.item_child_mesh_setup.setDisabled(not imported_geometry)
         self.item_child_material.setDisabled(key)
         self.item_child_fluid.setDisabled(key)
 

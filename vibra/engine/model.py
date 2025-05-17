@@ -13,6 +13,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 import logging
 import numpy as np
 
+from pathlib import Path
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -76,16 +77,34 @@ class Model:
     def set_mesh_setup(self, mesh_setup):
         self.mesh_setup = mesh_setup
 
+    def is_there_a_geometry_file(self, path: Path | str):
+
+        if isinstance(path, Path):
+            path = str(path)
+
+        ext = path.split(".")[-1]
+        if ext in ["IGES", "iges", "IGS", "igs", "STEP", "step"]:
+            return True
+
+        return False
+
     def process_visual_geometry_mesh(self, path : str):
+
+        self.mesh = Mesh(
+                         length_unit = self.length_unit, 
+                         geometry_qf = self.geometry_qf
+                         )
 
         try:
 
-            try:
+            if not self.is_there_a_geometry_file(path):
+                self.mesh.geometry_imported = False
+                self.mesh.load_mesh(path)
+                self.generated_mesh = True
+                app().main_window.update_geometry_information()
+                return
 
-                self.mesh = Mesh(
-                                 length_unit = self.length_unit, 
-                                 geometry_qf = self.geometry_qf
-                                 )
+            try:
 
                 element_size = self.mesh.compute_initial_mesh_size(path)
                 self.mesh.load_cad(

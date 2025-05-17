@@ -290,21 +290,33 @@ class Project:
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD]:
+            if self.structural_harmonic_solver is None:
+                return
+
             solution  = self.structural_harmonic_solver.solution
             if solution is not None:
                 return True
 
         elif analysis_id == AnalysisID.STRUCTURAL_MODAL:
+            if self.structural_modal_solver is None:
+                return
+
             solution  = self.structural_modal_solver.solution
             if solution is not None:
                 return True
 
         elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
+            if self.acoustic_modal_solver is None:
+                return
+
             solution  = self.acoustic_modal_solver.solution
             if solution is not None:
                 return True
 
         elif analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            if self.acoustic_harmonic_solver is None:
+                return
+
             solution  = self.acoustic_harmonic_solver.solution
             if solution is not None:
                 return True
