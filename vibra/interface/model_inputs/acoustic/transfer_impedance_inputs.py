@@ -324,6 +324,9 @@ class TransferImpedanceInputs(QDialog):
         elif tab_index == 1:
             self.process_assignment_for_table_values(surface_ids)
 
+        self.lineEdit_selection_id_A.setText("")
+        self.lineEdit_selection_id_B.setText("")
+
     def process_assignment_for_constant_values(self, surface_ids: int | tuple[int]):
         
         real_value = self.check_inputs(self.lineEdit_real_value, "Real part of transfer impedance", only_positive=False)

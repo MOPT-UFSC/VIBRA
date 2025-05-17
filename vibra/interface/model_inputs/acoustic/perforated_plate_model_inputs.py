@@ -711,6 +711,9 @@ class PerforatedPlateModelInputs(QDialog):
             self.properties._set_property("perforated_plate_model", self.pp_data, surface=tuple(surface_ids))
 
         self.setup_complete = True
+        self.lineEdit_selection_id_A.setText("")
+        self.lineEdit_selection_id_B.setText("")
+
         self.actions_to_finalize()
 
     def include_user_defined_transfer_impedance(self, surface_id: int | list[int]):
