@@ -203,8 +203,6 @@ class AcousticPressureInputs(QDialog):
 
             self.actions_to_finalize()
 
-            print(f"[Set acoustic pressure] - defined at surface(s) {surface_ids}")
-
         else:
             title = "Additional inputs required"
             message = "You must inform at least one acoustic pressure\n"
@@ -353,8 +351,6 @@ class AcousticPressureInputs(QDialog):
                 self.properties._set_property("acoustic_pressure", data, surface=surface_id)
 
             self.actions_to_finalize()
-
-            print(f"[Set acoustic pressure] - defined at surface(s) {surface_ids}")
 
         else:
             title = "Additional inputs required"

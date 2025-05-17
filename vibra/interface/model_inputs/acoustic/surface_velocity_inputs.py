@@ -243,8 +243,6 @@ class SurfaceVelocityInputs(QDialog):
 
             self.actions_to_finalize()
 
-            print(f"[Set surface Velocity] - defined at surface(s) {surface_ids}")
-
         else:
             title = "Additional inputs required"
             message = "You must inform at least one surface velocity\n"
@@ -402,8 +400,6 @@ class SurfaceVelocityInputs(QDialog):
                 self.properties._set_property("surface_velocity", data, surface=surface_id)
 
             self.actions_to_finalize()
-
-            print(f"[Set surface Velocity] - defined at surface(s) {surface_ids}")
 
         else:
             title = "Additional inputs required"
