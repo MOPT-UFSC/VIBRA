@@ -828,7 +828,7 @@ class MainWindow(QMainWindow):
             self,
             "Select Geometry",
             path,
-            filter="Geometry Files (*.stp *.step *.igs *.iges)",
+            filter="Geometry Files (*.stp *.step *.STEP  *.STP *.igs *.iges *.IGS *.IGES *.bdf *.BDF *.nas *.NAS)",
         )
 
         if not check:
