@@ -13,10 +13,9 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 
 from molde import load_ui
-
 from copy import deepcopy
 
-import os, warnings
+import logging, os, warnings
 import numpy as np
 
 # fmt: off
@@ -721,6 +720,7 @@ class PerforatedPlateModelInputs(QDialog):
         self.lineEdit_selection_id_A.setText("")
         self.lineEdit_selection_id_B.setText("")
 
+        self.hide()
         self.actions_to_finalize()
 
     def include_user_defined_transfer_impedance(self, surface_id: int | list[int]):
@@ -857,6 +857,7 @@ class PerforatedPlateModelInputs(QDialog):
 
                 self.properties._remove_surface_property("degrees_of_freedom_decoupling", surface_ids)
 
+            self.hide()
             self.actions_to_finalize()
             self.restore_mesh_data_modified_by_decoupling()
             self.pushButton_remove.setDisabled(True)
@@ -908,29 +909,66 @@ class PerforatedPlateModelInputs(QDialog):
         self.restore_mesh_data_modified_by_decoupling()
 
     def actions_to_finalize(self):
-        self.load_model_info()
-        app().project.reset_solutions()
-        app().file.remove_mesh_data_from_project_file()
-        app().file.remove_results_data_from_project_file()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
-        app().main_window.recompute_hidden_volumes()
-        app().main_window.update_info_text()
-        app().main_window.mesh_widget.update_symbols()
-        app().main_window.set_geometry_selection()
-        app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
+
+        def callback():
+
+            logging.info("Processing assignment actions... [10/100]")
+            self.load_model_info()
+
+            logging.info("Processing assignment actions... [20/100]")
+            app().project.reset_solutions()
+
+            logging.info("Processing assignment actions... [30/100]")
+            app().file.remove_mesh_data_from_project_file()
+
+            logging.info("Processing assignment actions... [40/100]")
+            app().file.remove_results_data_from_project_file()
+
+            logging.info("Processing assignment actions... [50/100]")
+            app().file.write_model_properties_in_file()
+
+            logging.info("Processing assignment actions... [60/100]")
+            app().file.write_imported_table_data_in_file()
+
+            logging.info("Processing assignment actions... [70/100]")
+            app().main_window.recompute_hidden_volumes()
+
+            logging.info("Processing assignment actions... [80/100]")
+            app().main_window.update_info_text()
+
+            logging.info("Processing assignment actions... [90/100]")
+            app().main_window.mesh_widget.update_symbols()
+
+            logging.info("Processing assignment actions... [95/100]")
+            app().main_window.set_geometry_selection()
+
+            logging.info("Processing assignment actions... [100/100]")
+            app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
+
+        LoadingWindow(callback).run()
 
     def process_decoupling_actions(self):
 
-        def decoupling_callback():
+        def callback():
+            logging.info("Processing degress of freedom decoupling... [10/100]")
             self.model.process_degrees_of_freedom_decoupling()
+
+            logging.info("Processing degress of freedom decoupling... [50/100]")
             app().file.write_mesh_data_in_file()
+            
+            logging.info("Processing degress of freedom decoupling... [60/100]")
             app().file.write_geometry_data_in_file()
+
+            logging.info("Processing degress of freedom decoupling... [70/100]")
             app().main_window.update_mesh_information()
+
+            logging.info("Processing degress of freedom decoupling... [80/100]")
             app().main_window.update_geometry_information()
+        
+            logging.info("Processing degress of freedom decoupling... [95/100]")
             app().main_window.update_plots()
 
-        LoadingWindow(decoupling_callback).run()
+        LoadingWindow(callback).run()
 
     def restore_mesh_data_modified_by_decoupling(self):
 
