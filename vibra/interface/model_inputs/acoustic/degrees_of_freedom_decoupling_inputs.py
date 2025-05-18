@@ -249,37 +249,37 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
 
         def callback():
 
-            logging.info("Processing assignment actions... [10/100]")
+            logging.info("Processing the post-assignment actions... [10/100]")
             self.load_model_info()
 
-            logging.info("Processing assignment actions... [20/100]")
+            logging.info("Processing the post-assignment actions... [20/100]")
             app().project.reset_solutions()
 
-            logging.info("Processing assignment actions... [30/100]")
+            logging.info("Processing the post-assignment actions... [30/100]")
             app().file.remove_mesh_data_from_project_file()
 
-            logging.info("Processing assignment actions... [40/100]")
+            logging.info("Processing the post-assignment actions... [40/100]")
             app().file.remove_results_data_from_project_file()
 
-            logging.info("Processing assignment actions... [50/100]")
+            logging.info("Processing the post-assignment actions... [50/100]")
             app().file.write_model_properties_in_file()
 
-            logging.info("Processing assignment actions... [60/100]")
+            logging.info("Processing the post-assignment actions... [60/100]")
             app().file.write_imported_table_data_in_file()
 
-            logging.info("Processing assignment actions... [70/100]")
+            logging.info("Processing the post-assignment actions... [70/100]")
             app().main_window.recompute_hidden_volumes()
 
-            logging.info("Processing assignment actions... [80/100]")
+            logging.info("Processing the post-assignment actions... [80/100]")
             app().main_window.update_info_text()
 
-            logging.info("Processing assignment actions... [90/100]")
+            logging.info("Processing the post-assignment actions... [90/100]")
             app().main_window.mesh_widget.update_symbols()
 
-            logging.info("Processing assignment actions... [95/100]")
+            logging.info("Processing the post-assignment actions... [95/100]")
             app().main_window.set_geometry_selection()
 
-            logging.info("Processing assignment actions... [100/100]")
+            logging.info("Processing the post-assignment actions... [100/100]")
             app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
 
         LoadingWindow(callback).run()
