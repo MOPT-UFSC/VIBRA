@@ -51,7 +51,6 @@ class SymbolsActor(SymbolActorFixedSize):
 
                 surface_nodes = self.mesh.nodes_from_surfaces[surface_id]
                 nodal_coords = self.mesh.nodal_coordinates[surface_nodes, 1:]
-                # center = self.mesh.get_average_nodal_coordinates(surface_id)
 
                 for coords in nodal_coords:
                     shifted_coords = coords + (0/20) * orientation

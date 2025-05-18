@@ -614,13 +614,16 @@ class PerforatedPlateModelInputs(QDialog):
         if self.comboBox_selection_type.currentText() == "Inside surfaces":
         
             input_ids_A = self.lineEdit_selection_id_A.text()
-            surface_ids_A = self.mesh.check_selected_ids(
-                                                        input_ids_A, 
-                                                        selection = "surfaces", 
-                                                        single_id = False,
-                                                        )
-            if surface_ids_A is None:
+            surface_ids_A, error_data = self.mesh.check_selected_ids(
+                                                                     input_ids_A, 
+                                                                     selection = "surfaces", 
+                                                                     single_id = False,
+                                                                     )
+
+            if error_data is not None:
+                self.hide()
                 self.lineEdit_selection_id_A.setFocus()
+                PrintMessageInput(error_data)
                 return list()
 
             self.check_selection_type(surface_ids_A)
@@ -634,25 +637,29 @@ class PerforatedPlateModelInputs(QDialog):
         else:
 
             input_ids_A = self.lineEdit_selection_id_A.text()
-            surface_ids_A = self.mesh.check_selected_ids(
-                                                        input_ids_A, 
-                                                        selection = "surfaces", 
-                                                        single_id = False,
-                                                        )
+            surface_ids_A, error_data = self.mesh.check_selected_ids(
+                                                                     input_ids_A, 
+                                                                     selection = "surfaces", 
+                                                                     single_id = False,
+                                                                     )
 
-            if surface_ids_A is None:
+            if error_data is not None:
+                self.hide()
                 self.lineEdit_selection_id_A.setFocus()
+                PrintMessageInput(error_data)
                 return list()
 
             input_ids_B = self.lineEdit_selection_id_B.text()
-            surface_ids_B = self.mesh.check_selected_ids(
-                                                        input_ids_B, 
-                                                        selection = "surfaces", 
-                                                        single_id = False,
-                                                        )
+            surface_ids_B, error_data = self.mesh.check_selected_ids(
+                                                                     input_ids_B, 
+                                                                     selection = "surfaces", 
+                                                                     single_id = False,
+                                                                     )
 
-            if surface_ids_B is None:
-                self.lineEdit_selection_id_A.setFocus()
+            if error_data is not None:
+                self.hide()
+                self.lineEdit_selection_id_B.setFocus()
+                PrintMessageInput(error_data)
                 return list()
 
             self.check_selection_type(surface_ids_A)
@@ -820,15 +827,17 @@ class PerforatedPlateModelInputs(QDialog):
         input_ids = self.lineEdit_selection_id_A.text()
 
         if input_ids != "":
-
             input_ids = input_ids.replace("(", "").replace(")", "")
-            surface_ids = self.mesh.check_selected_ids(
-                                                        input_ids, 
-                                                        selection = "surfaces", 
-                                                        single_id = False,
-                                                        )
-            
-            if not surface_ids:
+            surface_ids, error_data = self.mesh.check_selected_ids(
+                                                                   input_ids, 
+                                                                   selection = "surfaces", 
+                                                                   single_id = False,
+                                                                   )
+
+            if error_data is not None:
+                self.hide()
+                self.lineEdit_selection_id_A.setFocus()
+                PrintMessageInput(error_data)
                 return
 
             if len(surface_ids) == 1:

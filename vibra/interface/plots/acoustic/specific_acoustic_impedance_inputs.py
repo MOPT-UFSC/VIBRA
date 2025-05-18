@@ -7,6 +7,7 @@ from vibra.engine import AnalysisID
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.general.print_message_input import PrintMessageInput
 
 from molde import load_ui
 
@@ -121,13 +122,15 @@ class SpecificAcousticImpedanceInputs(QWidget):
             selection = "nodes"
 
         input_ids = self.lineEdit_selection_id.text()
-        self.typed_ids = self.mesh.check_selected_ids(
-                                                      input_ids, 
-                                                      selection = selection
-                                                      )
+        self.selected_ids, error_data = self.mesh.check_selected_ids(
+                                                                     input_ids, 
+                                                                     selection = selection, 
+                                                                     single_id = False
+                                                                     )
 
-        if self.typed_ids is None:
+        if error_data is not None:
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return True
 
     def plot_data_callback(self):
@@ -238,7 +241,7 @@ class SpecificAcousticImpedanceInputs(QWidget):
         self.model_results = dict()
         title = f"Specific acoustic impedance - {self.analysis_method}"
 
-        for i, selected_id in enumerate(self.typed_ids):
+        for i, selected_id in enumerate(self.selected_ids):
 
             key = (selection_type, (selected_id))
             legend_label = f"Specific acoustic impedance at {selection_type} [{selected_id}]"

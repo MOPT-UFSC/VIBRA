@@ -131,12 +131,18 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
 
     def attribute_callback(self):
 
-        str_selection_ids = self.lineEdit_selection_id.text()
-        surface_ids = self.mesh.check_selected_ids(str_selection_ids, selection="surfaces")
-        if surface_ids is None:
+        input_ids = self.lineEdit_selection_id.text()
+        surface_ids, message_log = self.mesh.check_selected_ids(
+                                                                input_ids, 
+                                                                selection = "surfaces"
+                                                                )
+
+        if message_log is not None:
+            self.hide()
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(message_log)
             return
-       
+
         for surface_id in surface_ids:
 
             message = ""

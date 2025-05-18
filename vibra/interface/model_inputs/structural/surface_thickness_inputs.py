@@ -150,13 +150,15 @@ class SurfaceThicknessInputs(QDialog):
         
         else:
             input_ids = self.lineEdit_selection_id.text()
-            surface_ids = self.mesh.check_selected_ids(
-                                                       input_ids, 
-                                                       selection = "surfaces"
-                                                       )
+            surface_ids, error_data = self.mesh.check_selected_ids(
+                                                                input_ids, 
+                                                                selection = "surfaces"
+                                                                )
 
-            if surface_ids is None:
+            if error_data is not None:
+                self.hide()
                 self.lineEdit_selection_id.setFocus()
+                PrintMessageInput(error_data)
                 return
 
         surface_thickness = self.check_input_parameters(self.lineEdit_surface_thickness, "Surface thickness")

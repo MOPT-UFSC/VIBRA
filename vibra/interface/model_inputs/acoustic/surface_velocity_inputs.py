@@ -213,10 +213,17 @@ class SurfaceVelocityInputs(QDialog):
 
     def check_constant_values(self):
 
-        str_selection_ids = self.lineEdit_selection_id.text()
-        surface_ids = self.mesh.check_selected_ids(str_selection_ids, selection="surfaces")
-        if surface_ids is None:
+        input_ids = self.lineEdit_selection_id.text()
+        surface_ids, error_data = self.mesh.check_selected_ids(
+                                                               input_ids, 
+                                                               selection = "surfaces",
+                                                               single_id = False,
+                                                               )
+
+        if error_data is not None:
+            self.hide()
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
 
         self.remove_conflicting_excitations(surface_ids)
@@ -349,13 +356,16 @@ class SurfaceVelocityInputs(QDialog):
     def check_table_values(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids = self.mesh.check_selected_ids(
-                                                   input_ids, 
-                                                   selection = "surfaces"
-                                                   )
+        surface_ids, error_data = self.mesh.check_selected_ids(
+                                                               input_ids, 
+                                                               selection = "surfaces",
+                                                               single_id = False,
+                                                               )
 
-        if surface_ids is None:
+        if error_data is not None:
+            self.hide()
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
 
         self.remove_conflicting_excitations(surface_ids)

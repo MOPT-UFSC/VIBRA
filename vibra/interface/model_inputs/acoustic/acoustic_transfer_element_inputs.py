@@ -172,30 +172,34 @@ class AcousticTransferElementInputs(QDialog):
         app().config.write_last_folder_path_in_file("exported_data_folder", path)
 
     def check_typed_ids(self):
- 
-        input_selected_id = self.lineEdit_input_selected_id.text()
-        self.input_selection_id = self.mesh.check_selected_ids( 
-                                                               input_selected_id, 
-                                                               selection = "surfaces", 
-                                                               single_id = True
-                                                               )
 
-        if self.input_selection_id is None:
+        input_selected_id = self.lineEdit_input_selected_id.text()
+        self.input_selection_id, error_data = self.mesh.check_selected_ids(
+                                                                            input_selected_id, 
+                                                                            selection = "surfaces",
+                                                                            single_id = True,
+                                                                            )
+
+        if error_data is not None:
+            self.hide()
             self.lineEdit_input_selected_id.setFocus()
             self.lineEdit_input_selected_id.selectAll()
-            return True
+            PrintMessageInput(error_data)
+            return
 
         output_selected_id = self.lineEdit_output_selected_id.text()
-        self.output_selection_id = self.mesh.check_selected_ids(  
-                                                                output_selected_id, 
-                                                                selection = "surfaces", 
-                                                                single_id = True  
-                                                                )
+        self.output_selection_id, error_data = self.mesh.check_selected_ids(  
+                                                                            output_selected_id, 
+                                                                            selection = "surfaces", 
+                                                                            single_id = True  
+                                                                            )
 
-        if self.output_selection_id is None:
-            self.lineEdit_output_selected_id.setFocus()
-            self.lineEdit_output_selected_id.selectAll()
-            return True
+        if error_data is not None:
+            self.hide()
+            self.lineEdit_input_selected_id.setFocus()
+            self.lineEdit_input_selected_id.selectAll()
+            PrintMessageInput(error_data)
+            return
 
     def check_frequency_entries(self):
 

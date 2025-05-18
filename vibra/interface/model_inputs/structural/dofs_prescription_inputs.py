@@ -28,7 +28,8 @@ class DofsPrescriptionInputs(QDialog):
 
         self.main_window = app().main_window
         self.project = app().project
-        self.model = self.project.model
+        self.model = app().project.model
+        self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
         self.main_window.set_input_widget(self)
@@ -317,23 +318,23 @@ class DofsPrescriptionInputs(QDialog):
                 return
             
         if isinstance(line_id, int):
-            for node_id in app().project.model.mesh.nodes_from_lines[line_id]:
-                for surface_id in self.model.mesh.surfaces_from_node[node_id]:
+            for node_id in self.mesh.nodes_from_lines[line_id]:
+                for surface_id in self.mesh.surfaces_from_node[node_id]:
                     data = self.properties._get_property("surface_thickness", surface=surface_id)
                     if isinstance(data, dict):
                         self.comboBox_element_type.setCurrentIndex(0)
                         return
 
         if isinstance(point_id, int):
-            for node_id in app().project.model.mesh.nodes_from_points[line_id]:
-                for surface_id in self.model.mesh.surfaces_from_node[node_id]:
+            for node_id in self.mesh.nodes_from_points[line_id]:
+                for surface_id in self.mesh.surfaces_from_node[node_id]:
                     data = self.properties._get_property("surface_thickness", surface=surface_id)
                     if isinstance(data, dict):
                         self.comboBox_element_type.setCurrentIndex(0)
                         return
 
         if isinstance(node_id, int):
-            for surface_id in self.model.mesh.surfaces_from_node[node_id]:
+            for surface_id in self.mesh.surfaces_from_node[node_id]:
                     data = self.properties._get_property("surface_thickness", surface=surface_id)
                     if isinstance(data, dict):
                         self.comboBox_element_type.setCurrentIndex(0)
@@ -440,13 +441,16 @@ class DofsPrescriptionInputs(QDialog):
         else:
             selection = "nodes"
 
-        selected_ids = self.model.mesh.check_selected_ids(
-                                                         input_ids, 
-                                                         selection = selection
-                                                         )
+        selected_ids, error_data = self.mesh.check_selected_ids(
+                                                                input_ids, 
+                                                                selection = selection, 
+                                                                single_id = False
+                                                                )
 
-        if selected_ids is None:
+        if error_data is not None:
+            self.hide()
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
         
         self.remove_duplicated_attributions(selected_ids, selection)
@@ -696,13 +700,16 @@ class DofsPrescriptionInputs(QDialog):
         else:
             selection = "nodes"
 
-        selected_ids = self.model.mesh.check_selected_ids(
-                                                         input_ids, 
-                                                         selection = selection
-                                                         )
+        selected_ids, error_data = self.mesh.check_selected_ids(
+                                                                input_ids, 
+                                                                selection = selection, 
+                                                                single_id = False
+                                                                )
 
-        if selected_ids is None:
+        if error_data is not None:
+            self.hide()
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
 
         self.remove_duplicated_attributions(selected_ids, selection)
@@ -802,19 +809,19 @@ class DofsPrescriptionInputs(QDialog):
 
             if selection == "surfaces":
 
-                nodes_from_surface = self.model.mesh.nodes_from_surfaces[selected_id]
+                nodes_from_surface = self.mesh.nodes_from_surfaces[selected_id]
                 for (property, node_id) in self.properties.nodal_properties.keys():
                     if property == "prescribed_dofs" and node_id in nodes_from_surface:
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
-                for line_id in app().project.model.mesh.lines_from_surface[selected_id]:
+                for line_id in self.mesh.lines_from_surface[selected_id]:
                     data = self.properties._get_property("prescribed_dofs", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("prescribed_dofs", line_id)
                         table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", line_id, "lines"))
 
-                    for point_id in app().project.model.mesh.points_from_line[line_id]:
+                    for point_id in self.mesh.points_from_line[line_id]:
                         data = self.properties._get_property("prescribed_dofs", point=point_id)
                         if isinstance(data, dict):
                             self.properties._remove_point_property("prescribed_dofs", point_id)
@@ -822,19 +829,19 @@ class DofsPrescriptionInputs(QDialog):
 
             elif selection == "lines":
 
-                nodes_from_line = self.model.mesh.nodes_from_lines[selected_id]
+                nodes_from_line = self.mesh.nodes_from_lines[selected_id]
                 for (property, node_id) in self.properties.nodal_properties.keys():
                     if property == "prescribed_dofs" and node_id in nodes_from_line:
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
-                for surface_id in app().project.model.mesh.surfaces_from_line[selected_id]:
+                for surface_id in self.mesh.surfaces_from_line[selected_id]:
                     data = self.properties._get_property("prescribed_dofs", surface=surface_id)
                     if isinstance(data, dict):
                         self.properties._remove_surface_property("prescribed_dofs", surface_id)
                         table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", surface_id, "surfaces"))
 
-                for point_id in app().project.model.mesh.points_from_line[selected_id]:
+                for point_id in self.mesh.points_from_line[selected_id]:
                     data = self.properties._get_property("prescribed_dofs", point=point_id)
                     if isinstance(data, dict):
                         self.properties._remove_point_property("prescribed_dofs", point_id)
@@ -842,19 +849,19 @@ class DofsPrescriptionInputs(QDialog):
 
             elif selection == "points":
 
-                nodes_from_point = self.model.mesh.nodes_from_points[selected_id]
+                nodes_from_point = self.mesh.nodes_from_points[selected_id]
                 for (property, node_id) in self.properties.nodal_properties.keys():
                     if property == "prescribed_dofs" and node_id in nodes_from_point:
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
-                for line_id in app().project.model.mesh.lines_from_point[selected_id]:
+                for line_id in self.mesh.lines_from_point[selected_id]:
                     data = self.properties._get_property("prescribed_dofs", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("prescribed_dofs", line_id)
                         table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", line_id, "lines"))
 
-                    for surface_id in self.model.mesh.surfaces_from_line[line_id]:
+                    for surface_id in self.mesh.surfaces_from_line[line_id]:
                         data = self.properties._get_property("prescribed_dofs", surface=surface_id)
                         if isinstance(data, dict):
                             self.properties._remove_surface_property("prescribed_dofs", surface_id)
@@ -868,13 +875,13 @@ class DofsPrescriptionInputs(QDialog):
                     self.properties._remove_point_property("prescribed_dofs", point_id)
                     table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", point_id, "points"))
 
-                for line_id in app().project.model.mesh.lines_from_point[point_id]:
+                for line_id in self.mesh.lines_from_point[point_id]:
                     data = self.properties._get_property("prescribed_dofs", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("prescribed_dofs", line_id)
                         table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", line_id, "lines"))
 
-                    for surface_id in self.model.mesh.surfaces_from_line[line_id]:
+                    for surface_id in self.mesh.surfaces_from_line[line_id]:
                         data = self.properties._get_property("prescribed_dofs", surface=surface_id)
                         if isinstance(data, dict):
                             self.properties._remove_surface_property("prescribed_dofs", surface_id)

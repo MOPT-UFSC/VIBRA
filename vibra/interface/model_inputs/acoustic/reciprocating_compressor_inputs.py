@@ -34,6 +34,7 @@ class ReciprocatingCompressorInputs(QDialog):
         app().main_window.action_model_workspace_callback()
 
         self.model = app().project.model
+        self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
         self._config_window()
@@ -84,7 +85,7 @@ class ReciprocatingCompressorInputs(QDialog):
         self.label_discharge_temperature_unit: QLabel
         
         # QLineEdit
-        self.lineEdit_selected_surface_id: QLineEdit
+        self.lineEdit_selection_id: QLineEdit
         self.lineEdit_frequency_resolution: QLineEdit
         self.lineEdit_number_of_revolutions: QLineEdit
         self.lineEdit_bore_diameter: QLineEdit
@@ -220,17 +221,19 @@ class ReciprocatingCompressorInputs(QDialog):
         if selected_surfaces:
 
             surface_ids = [str(i) for i in selected_surfaces]
-            self.lineEdit_selected_surface_id.setText(surface_ids[0])
+            self.lineEdit_selection_id.setText(surface_ids[0])
 
-            input_ids = self.lineEdit_selected_surface_id.text()
-            surface_id = self.model.mesh.check_selected_ids(
-                                                            input_ids, 
-                                                            selection = "surfaces", 
-                                                            single_id = True
-                                                            )
+            input_ids = self.lineEdit_selection_id.text()
+            surface_id, error_data = self.mesh.check_selected_ids(
+                                                                   input_ids, 
+                                                                   selection = "surfaces",
+                                                                   single_id = True
+                                                                   )
 
-            if surface_id is None:
-                self.lineEdit_selected_surface_id.setFocus()
+            if error_data is not None:
+                self.hide()
+                self.lineEdit_selection_id.setFocus()
+                PrintMessageInput(error_data)
                 return True
 
             data = self.properties._get_property("reciprocating_compressor_excitation", surface=surface_id)
@@ -239,7 +242,7 @@ class ReciprocatingCompressorInputs(QDialog):
                 self.update_compressor_inputs(data)
 
     def tab_event_callback(self):
-        # self.lineEdit_selected_surface_id.setText("")
+        # self.lineEdit_selection_id.setText("")
         # self.lineEdit_connection_type.setText("")
         self.pushButton_remove.setDisabled(True)
         return
@@ -519,10 +522,10 @@ class ReciprocatingCompressorInputs(QDialog):
 
     def check_input_surfaces(self):
 
-        surface_id = self.check_surface_id(self.lineEdit_selected_surface_id)
+        surface_id = self.check_surface_id(self.lineEdit_selection_id)
 
         if surface_id is None:
-            self.lineEdit_selected_surface_id.setFocus()
+            self.lineEdit_selection_id.setFocus()
             return True
 
         if self.comboBox_connection_type.currentIndex() == 0:
@@ -913,9 +916,9 @@ class ReciprocatingCompressorInputs(QDialog):
 
     def remove_callback(self):
 
-        if self.lineEdit_selected_surface_id.text() != "":   
+        if self.lineEdit_selection_id.text() != "":   
 
-            surface_id = int(self.lineEdit_selected_surface_id.text())
+            surface_id = int(self.lineEdit_selection_id.text())
             self.remove_table_files_from_surfaces(surface_id)
 
             self.properties._remove_surface_property("reciprocating_compressor_excitation", surface_id)
@@ -969,14 +972,14 @@ class ReciprocatingCompressorInputs(QDialog):
     def on_click_item(self, item):
         if item.text(0) != "":
             surface_id = int(item.text(0))
-            self.lineEdit_selected_surface_id.setText(item.text(0))
+            self.lineEdit_selection_id.setText(item.text(0))
             self.lineEdit_connection_type.setText(item.text(1))
             app().main_window.set_geometry_selection(surfaces=[surface_id])
             self.pushButton_remove.setDisabled(False)
 
     def update_tabs_visibility(self):
 
-        self.lineEdit_selected_surface_id.setText("")
+        self.lineEdit_selection_id.setText("")
         self.lineEdit_connection_type.setText("")
         self.pushButton_remove.setDisabled(True)
         self.tabWidget_compressor.setTabVisible(2, False)

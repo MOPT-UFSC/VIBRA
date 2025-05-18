@@ -27,6 +27,7 @@ class NormalPressureLoadInputs(QDialog):
         load_ui(ui_path, self, ui_path.parent)
 
         self.model = app().project.model
+        self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
         app().main_window.set_input_widget(self)
@@ -226,24 +227,30 @@ class NormalPressureLoadInputs(QDialog):
     def constant_values_attribution(self):
 
         input_ids = self.lineEdit_selection_id.text()
+        surface_ids, error_data = self.mesh.check_selected_ids(
+                                                               input_ids, 
+                                                               selection = "surfaces"
+                                                               )
 
-        selected_ids = app().project.model.mesh.check_selected_ids(
-                                                                   input_ids, 
-                                                                   selection = "surfaces"
-                                                                   )
-
-        if selected_ids is None:
+        if error_data is not None:
+            self.hide()
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
 
-        self.remove_conflicting_excitations(selected_ids, "surfaces")
+        self.remove_conflicting_excitations(surface_ids, "surfaces")
 
         if self.comboBox_element_type.currentIndex() == 0:
             element_type = "2d_element"
         else:
             element_type = "3d_element"
 
-        stop, value = self.check_complex_entries(self.lineEdit_real_value.text(), self.lineEdit_imag_value.text(), "Pressure load")
+        stop, value = self.check_complex_entries(
+                                                 self.lineEdit_real_value.text(), 
+                                                 self.lineEdit_imag_value.text(), 
+                                                 "Pressure load"
+                                                 )
+
         if stop:
             return
 
@@ -263,7 +270,7 @@ class NormalPressureLoadInputs(QDialog):
         real_values = [value if value is None else np.real(value) for value in pressure_load]
         imag_values = [value if value is None else np.imag(value) for value in pressure_load]
 
-        for selected_id in selected_ids:
+        for surface_id in surface_ids:
 
             data = {
                     "element_type" : element_type,
@@ -272,7 +279,7 @@ class NormalPressureLoadInputs(QDialog):
                     "imag_values" : imag_values,
                     }
 
-            self.properties._set_property("normal_pressure_load", data, surface=selected_id)
+            self.properties._set_property("normal_pressure_load", data, surface=surface_id)
 
         self.actions_to_finalize()
 
@@ -394,17 +401,18 @@ class NormalPressureLoadInputs(QDialog):
     def table_values_attribution(self):
 
         input_ids = self.lineEdit_selection_id.text()
+        surface_ids, error_data = self.mesh.check_selected_ids(
+                                                               input_ids, 
+                                                               selection = "surfaces"
+                                                               )
 
-        selected_ids = app().project.model.mesh.check_selected_ids(
-                                                                   input_ids, 
-                                                                   selection = "surfaces"
-                                                                   )
-
-        if selected_ids is None:
+        if error_data is not None:
+            self.hide()
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
 
-        self.remove_conflicting_excitations(selected_ids, "surfaces")
+        self.remove_conflicting_excitations(surface_ids, "surfaces")
 
         if self.comboBox_element_type.currentIndex() == 0:
             element_type = "2d_element"
@@ -414,10 +422,10 @@ class NormalPressureLoadInputs(QDialog):
         if self.pressure_table_path is None:
             self.pressure_table_values, self.pressure_table_path = self.load_table(self.lineEdit_table_path, "Pressure load", direct_load = True)
 
-        for selected_id in selected_ids:
+        for surface_id in surface_ids:
             
             if self.pressure_table_values is not None:
-                self.pressure_table_name, self.pressure_array = self.save_table_files(selected_id, self.pressure_table_values, self.pressure_table_path)
+                self.pressure_table_name, self.pressure_array = self.save_table_files(surface_id, self.pressure_table_values, self.pressure_table_path)
                 if self.pressure_array is None:
                     return
 
@@ -443,7 +451,7 @@ class NormalPressureLoadInputs(QDialog):
                     "values" : pressure_load,
                     }
 
-            self.properties._set_property("normal_pressure_load", data, surface=selected_id)
+            self.properties._set_property("normal_pressure_load", data, surface=surface_id)
 
         self.reset_table_variables()
         self.actions_to_finalize()

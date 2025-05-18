@@ -4233,7 +4233,7 @@ at suction</string>
           </spacer>
          </item>
          <item row="0" column="2">
-          <widget class="QLineEdit" name="lineEdit_selected_surface_id">
+          <widget class="QLineEdit" name="lineEdit_selection_id">
            <property name="minimumSize">
             <size>
              <width>160</width>

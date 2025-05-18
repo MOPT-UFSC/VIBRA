@@ -109,12 +109,15 @@ class AnechoicTerminationInputs(QDialog):
     def update_volumes_from_faces(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids = self.mesh.check_selected_ids(
-                                                   input_ids, 
-                                                   selection = "surfaces"
-                                                   )
+        surface_ids, error_data = self.mesh.check_selected_ids(
+                                                                input_ids, 
+                                                                selection = "surfaces"
+                                                                )
 
-        if surface_ids is None:
+        if error_data is not None:
+            self.hide()
+            self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
 
         list_volumes = list()
@@ -138,12 +141,18 @@ class AnechoicTerminationInputs(QDialog):
 
     def attribute_callback(self):
 
-        str_selection_ids = self.lineEdit_selection_id.text()
-        surface_ids = self.mesh.check_selected_ids(str_selection_ids, selection="surfaces")
-        if surface_ids is None:
+        input_ids = self.lineEdit_selection_id.text()
+        surface_ids, error_data = self.mesh.check_selected_ids(
+                                                                input_ids, 
+                                                                selection = "surfaces"
+                                                                )
+
+        if error_data is not None:
+            self.hide()
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
-        
+
         self.remove_conflicting_excitations(surface_ids)
 
         for surface_id in surface_ids:
@@ -170,7 +179,6 @@ class AnechoicTerminationInputs(QDialog):
             data = {
                     "anechoic_termination" : True,
                     "volume_id" : volume_id,
-                    "nodal_attribution": False
                     }
 
             self.properties._set_property("specific_impedance", data, surface=surface_id)

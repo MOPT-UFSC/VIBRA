@@ -35,6 +35,7 @@ class SetFluidInputs(QDialog):
 
         self.project = app().project
         self.model = app().project.model
+        self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
         self._config_window()
@@ -226,16 +227,16 @@ class SetFluidInputs(QDialog):
 
             if attribution_type in [0, 1]:
                 volume_ids = list()
-                if "volumes" in self.model.mesh.geometry_information.keys():
-                    volume_ids = self.model.mesh.geometry_information["volumes"]
+                if "volumes" in self.mesh.geometry_information.keys():
+                    volume_ids = self.mesh.geometry_information["volumes"]
 
                 for volume_id in volume_ids:
                     self.properties._set_property("fluid", selected_fluid, volume=volume_id)
 
             if attribution_type in [0, 2]:
                 surface_ids = list()
-                if "surfaces" in self.model.mesh.geometry_information.keys():
-                    surface_ids = self.model.mesh.geometry_information["surfaces"]
+                if "surfaces" in self.mesh.geometry_information.keys():
+                    surface_ids = self.mesh.geometry_information["surfaces"]
 
                 for surface_id in surface_ids:
                     self.properties._set_property("fluid", selected_fluid, surface=surface_id)
@@ -243,35 +244,39 @@ class SetFluidInputs(QDialog):
         elif attribution_type in [3, 5]:
 
             input_ids = self.lineEdit_selection_id.text()
-            volume_ids = self.model.mesh.check_selected_ids(
-                                                            input_ids, 
-                                                            selection = "volumes", 
-                                                            single_id = False
-                                                            )
+            surface_ids, error_data = self.mesh.check_selected_ids(
+                                                                   input_ids, 
+                                                                   selection = "volumes", 
+                                                                   single_id = False,
+                                                                   )
 
-            if volume_ids is None:
+            if error_data is not None:
+                self.hide()
                 self.lineEdit_selection_id.setFocus()
-                return True
+                PrintMessageInput(error_data)
+                return
 
             for volume_id in volume_ids:
                 self.properties._set_property("fluid", selected_fluid, volume=volume_id)
 
                 if attribution_type == 5:
-                    for surface_id in self.model.mesh.surfaces_from_volume[volume_id]:
+                    for surface_id in self.mesh.surfaces_from_volume[volume_id]:
                         self.properties._set_property("fluid", selected_fluid, surface=surface_id)
 
         elif attribution_type == 4:
 
             input_ids = self.lineEdit_selection_id.text()
-            surface_ids = self.model.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = "surfaces", 
-                                                                single_id = False
-                                                                )
+            surface_ids, error_data = self.mesh.check_selected_ids(
+                                                                   input_ids, 
+                                                                   selection = "surfaces", 
+                                                                   single_id = False
+                                                                   )
 
-            if surface_ids is None:
+            if error_data is not None:
+                self.hide()
                 self.lineEdit_selection_id.setFocus()
-                return True
+                PrintMessageInput(error_data)
+                return
 
             for surface_id in surface_ids:
                 self.properties._set_property("fluid", selected_fluid, surface=surface_id)
