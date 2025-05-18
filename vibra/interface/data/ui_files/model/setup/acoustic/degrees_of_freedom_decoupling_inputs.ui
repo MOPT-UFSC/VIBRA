@@ -247,6 +247,9 @@
               <height>16777215</height>
              </size>
             </property>
+            <property name="indentation">
+             <number>0</number>
+            </property>
             <column>
              <property name="text">
               <string>Surface</string>
@@ -257,7 +260,7 @@
             </column>
             <column>
              <property name="text">
-              <string>Volumes connected to the surface</string>
+              <string>Volumes from surface</string>
              </property>
              <property name="textAlignment">
               <set>AlignCenter</set>

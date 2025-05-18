@@ -848,8 +848,6 @@ class PerforatedPlateModelInputs(QDialog):
             self.remove_table_files_from_surfaces(surface_ids)
             self.properties._remove_surface_property("perforated_plate_model", surface_ids)
 
-            app().project.reset_solutions()
-
             data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_ids)
             if isinstance(data, dict):
                 new_surface_id = data.get("new_surface_id")
@@ -859,11 +857,8 @@ class PerforatedPlateModelInputs(QDialog):
 
                 self.properties._remove_surface_property("degrees_of_freedom_decoupling", surface_ids)
 
-                app().file.remove_mesh_data_from_project_file()
-                app().file.remove_results_data_from_project_file()
-                self.restore_mesh_data_modified_by_decoupling()
-
             self.actions_to_finalize()
+            self.restore_mesh_data_modified_by_decoupling()
             self.pushButton_remove.setDisabled(True)
 
     def reset_callback(self):
@@ -902,44 +897,55 @@ class PerforatedPlateModelInputs(QDialog):
                     self.properties._remove_surface_property("degrees_of_freedom_decoupling", surf_id)
 
         self.properties._reset_property("perforated_plate_model")
-        app().project.reset_solutions()
 
-        if new_surface_ids:
-            self.remove_all_surface_properties_from_surface(new_surface_ids)
-            self.remove_all_line_properties_boundind_surface(new_surface_ids)
-            app().file.remove_mesh_data_from_project_file()
-            app().file.remove_results_data_from_project_file()
-            self.restore_mesh_data_modified_by_decoupling()
+        if not new_surface_ids:
+            return
+    
+        self.remove_all_surface_properties_from_surface(new_surface_ids)
+        self.remove_all_line_properties_boundind_surface(new_surface_ids)
 
         self.actions_to_finalize()
+        self.restore_mesh_data_modified_by_decoupling()
+
+    def actions_to_finalize(self):
+        self.load_model_info()
+        app().project.reset_solutions()
+        app().file.remove_mesh_data_from_project_file()
+        app().file.remove_results_data_from_project_file()
+        app().file.write_model_properties_in_file()
+        app().file.write_imported_table_data_in_file()
+        app().main_window.recompute_hidden_volumes()
+        app().main_window.update_info_text()
+        app().main_window.mesh_widget.update_symbols()
+        app().main_window.set_geometry_selection()
+        app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
+
+    def process_decoupling_actions(self):
+
+        def decoupling_callback():
+            self.model.process_degrees_of_freedom_decoupling()
+            app().file.write_mesh_data_in_file()
+            app().file.write_geometry_data_in_file()
+            app().project.reset_solutions()
+            app().main_window.recompute_hidden_volumes()
+            app().main_window.update_mesh_information()
+            app().main_window.update_geometry_information()
+            app().main_window.update_plots()
+
+        LoadingWindow(decoupling_callback).run()
 
     def restore_mesh_data_modified_by_decoupling(self):
 
-        app().project.model.generated_mesh = False
-        if self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
-            return
-        
         if self.mesh.cache_nodal_coordinates is None:
             return
 
         self.mesh.restore_data_from_cache()
         self.mesh.process_upwards_adjacencies_from_entities()
-        app().project.model.generated_mesh = True
 
-        app().file.write_mesh_data_in_file()
-        app().file.write_geometry_data_in_file()
-        app().main_window.update_mesh_information()
-        app().main_window.update_geometry_information()
-        app().main_window.update_plots()
-        app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
+        if self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
+            self.mesh.cache_mesh_information()
 
-    def actions_to_finalize(self):
-        self.load_model_info()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
-        app().main_window.update_info_text()
-        app().main_window.mesh_widget.update_symbols()
-        app().main_window.set_geometry_selection()
+        self.process_decoupling_actions()
 
     def check_inputs(self, lineEdit: QLineEdit, label, _float=True):
 
@@ -976,8 +982,6 @@ class PerforatedPlateModelInputs(QDialog):
             return None
         else:
             return out
-
-    # Plot viscous_thermal effective properties
 
     def get_fluid_callback(self):
         self.hide()
@@ -1112,24 +1116,15 @@ class PerforatedPlateModelInputs(QDialog):
             app().main_window.set_input_widget(self)
             return False
 
-            # if not app().project.model.generated_mesh:
-            #     return True
-            # else:
-            #     return False
-
         if self.mesh.cache_nodal_coordinates is None:
             self.mesh.cache_mesh_information()
+        else:
+            self.mesh.restore_data_from_cache()
+            self.mesh.process_upwards_adjacencies_from_entities()
+            self.mesh.cache_mesh_information()
 
-        def process_decoupling():
-            self.model.process_degrees_of_freedom_decoupling()
-            app().file.write_model_properties_in_file()
-            app().file.write_mesh_data_in_file()
-            app().file.write_geometry_data_in_file()
-            app().main_window.update_mesh_information()
-            app().main_window.update_geometry_information()
-            app().main_window.update_plots()
+        self.process_decoupling_actions()
 
-        LoadingWindow(process_decoupling).run()
         return False
 
     def keyPressEvent(self, event):
