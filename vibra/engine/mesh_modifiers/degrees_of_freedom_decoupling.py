@@ -575,12 +575,10 @@ class DegreesOfFreedomDecoupling:
             degrees of freedom of connected volumes.
         """
         t0 = time()
-
         self.update_nodal_coordinates()
         self.update_all_connectivity_related_attributes()
         self.update_geometry_related_information()
         self.mimetize_the_fluid_from_decoupling_surfaces()
-
         dt = time() - t0
         print(f"Elapsed time to process the degrees of freedom decoupling {dt : .6f} s")
 

@@ -1,5 +1,5 @@
+
 from vibra.engine.mesher.element_type import DEFAULT_ELEMENT_TYPE, TETRAHEDRON_4, ElementType
-from vibra.interface.general.print_message_input import PrintMessageInput
 
 from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
@@ -430,17 +430,25 @@ class Mesh:
 
             return list(non_repeated_nodes)
 
+        point_id = 0
         self.points_from_line.clear()
         for line_id, line_connect in self.connectivity_from_lines.items():
 
             points_from_line = list()
             corner_nodes = get_non_repeated_values(line_connect.flatten())
 
-            for node_id in corner_nodes:
-                point_id = int(node_id + 1)
+            for _node_id in corner_nodes:
+
+                node_id = int(_node_id)
+                if node_id in self.points_from_nodes.keys():
+                    point_from_node = self.points_from_nodes.get(node_id)
+                    points_from_line.append(point_from_node)
+                    continue
+
+                point_id += 1
                 points_from_line.append(point_id)
-                self.nodes_from_points[point_id] = int(node_id)
-                self.points_from_nodes[int(node_id)] = point_id
+                self.nodes_from_points[point_id] = node_id
+                self.points_from_nodes[node_id] = point_id
 
             self.points_from_line[line_id] = points_from_line
 
@@ -1522,13 +1530,9 @@ class Mesh:
 
         return solid_elements_center
 
-    def get_average_nodal_coordinates(self, surface_ids: list, averaged=False):
+    def get_average_nodal_coordinates(self, surface_ids: list[int], averaged=False):
 
         nodal_coordinates = self.nodal_coordinates
-        stop, surface_ids = self.check_selected_ids(surface_ids, selection="surfaces")
-
-        if stop:
-            return list()
 
         rows = list()
         for surface_id in surface_ids:
@@ -1595,7 +1599,8 @@ class Mesh:
     def get_elements_and_nodes_from_sphere(self, surface_ids, selection_radius, averaged=False, filter_type=0, export_data=False):
 
         list_center_coords = self.get_average_nodal_coordinates(surface_ids, averaged=averaged)
-        if len(list_center_coords) == 0:
+
+        if not list_center_coords:
             return list(), list()
 
         selected_elements = list()
@@ -1692,8 +1697,6 @@ class Mesh:
 
 
     def check_selected_ids(self, selected_ids: str |int | list[int] | np.ndarray, selection: str="nodes", single_id: bool=False):
-        # TODO: This function is doing interface stuff (with the PrintMessageInput),
-        # therefore it should not be implemented here.
 
         try:
 
@@ -1774,13 +1777,13 @@ class Mesh:
         if message != "":
             window_title = "Error"
             title = "Invalid entry to the Selection ID"
-            PrintMessageInput([window_title, title, message])
-            return None
+            error_data = [window_title, title, message]
+            return None, error_data
 
         if single_id:
-            return list_ids[0]
+            return list_ids[0], None
         else:
-            return list_ids
+            return list_ids, None
 
 
 if __name__ == "__main__":
