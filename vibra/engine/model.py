@@ -102,6 +102,7 @@ class Model:
                 self.mesh.load_mesh(path)
                 self.generated_mesh = True
                 app().main_window.update_geometry_information()
+                app().main_window.update_mesh_information()
                 return
 
             try:

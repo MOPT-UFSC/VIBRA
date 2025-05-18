@@ -543,18 +543,23 @@ class DegreesOfFreedomDecoupling:
             new_surf_id = self.surfaces_mapping.get(surf_id)
             surface_ids |= set({new_surf_id})
 
-            self.mesh.area_from_surfaces.update({new_surf_id : area_from_surfaces[surf_id]})
-
             new_line_ids = [self.lines_mapping[_line_id] for _line_id in lines_from_surface[surf_id]]
             self.mesh.lines_from_surface[new_surf_id] = new_line_ids
 
+            if area_from_surfaces:
+                self.mesh.area_from_surfaces.update({new_surf_id : area_from_surfaces[surf_id]})
+
             for i, line_id in enumerate(lines_from_surface[surf_id]):
+
                 new_line_id = int(new_line_ids[i])
-                line_ids |= set({new_line_id})
-                self.mesh.length_from_lines.update({new_line_id : length_from_lines[line_id]})
+                line_ids |= set({new_line_id})               
+
                 new_point_ids = [self.points_mapping[point_id] for point_id in points_from_line[line_id]]
                 self.mesh.points_from_line[new_line_id] = new_point_ids
                 point_ids |= set(new_point_ids)
+
+                if length_from_lines:
+                    self.mesh.length_from_lines.update({new_line_id : length_from_lines[line_id]})
 
         self.mesh.geometry_information["surfaces"] = list(surface_ids)
         self.mesh.geometry_information["lines"] = list(line_ids)
