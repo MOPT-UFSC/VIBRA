@@ -53,7 +53,7 @@ class TransferImpedanceInputs(QDialog):
 
     def _initialize(self):
         self.imported_values = None
-        self.setup_complete = False
+        self.assignment_complete = False
         self.keep_window_open = True
         self.transfer_impedance_data = dict()
 
@@ -363,7 +363,7 @@ class TransferImpedanceInputs(QDialog):
         else:
             self.properties._set_property("transfer_impedance",self.transfer_impedance_data, surface=tuple(surface_ids))
 
-        self.setup_complete = True
+        self.assignment_complete = True
         self.actions_to_finalize()
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
@@ -485,7 +485,7 @@ class TransferImpedanceInputs(QDialog):
             self.include_transfer_impedance_table_data(surface_ids)
             self.properties._set_property("transfer_impedance",self.transfer_impedance_data, surface=tuple(surface_ids))
 
-        self.setup_complete = True
+        self.assignment_complete = True
         self.actions_to_finalize()
 
     def process_table_file_removal(self, table_names: list):
@@ -892,8 +892,6 @@ class TransferImpedanceInputs(QDialog):
             self.model.process_degrees_of_freedom_decoupling()
             app().file.write_mesh_data_in_file()
             app().file.write_geometry_data_in_file()
-            app().project.reset_solutions()
-            app().main_window.recompute_hidden_volumes()
             app().main_window.update_mesh_information()
             app().main_window.update_geometry_information()
             app().main_window.update_plots()
@@ -947,9 +945,9 @@ class TransferImpedanceInputs(QDialog):
 
     def process_degress_of_freedom_decoupling(self):
 
-        if not self.setup_complete:
+        if not self.assignment_complete:
             return False
-        
+
         if not self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
             return False
 

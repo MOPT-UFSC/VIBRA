@@ -261,8 +261,6 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
             self.model.process_degrees_of_freedom_decoupling()
             app().file.write_mesh_data_in_file()
             app().file.write_geometry_data_in_file()
-            app().project.reset_solutions()
-            app().main_window.recompute_hidden_volumes()
             app().main_window.update_mesh_information()
             app().main_window.update_geometry_information()
             app().main_window.update_plots()
