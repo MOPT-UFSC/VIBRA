@@ -32,8 +32,8 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
         self._config_window()
         self._initialize()
-        self._configure_qt_variables()
         self._create_connections()
+        self._config_widgets()
 
         self.load_model_info()
         self.geometry_selection_callback()
@@ -51,11 +51,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.imported_values = None
         self.keep_window_open = True
 
-    def _configure_qt_variables(self):
-        self.pushButton_change_frequency_setup.setDisabled(True)
-        self.treeWidget_acoustic_pressure.setColumnWidth(1, 20)
-        self.treeWidget_acoustic_pressure.setColumnWidth(2, 80)
-
     def _create_connections(self):
         #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
@@ -64,12 +59,20 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
-        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         self.treeWidget_acoustic_pressure.itemClicked.connect(self.on_click_item)
         self.treeWidget_acoustic_pressure.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
     
+    def _config_widgets(self):
+        #
+        self.pushButton_change_frequency_setup.setDisabled(True)
+        #
+        for i, w in enumerate([120]):
+            self.treeWidget_acoustic_pressure.setColumnWidth(i, w)
+            self.treeWidget_acoustic_pressure.headerItem().setTextAlignment(i, Qt.AlignCenter)
+
     def geometry_selection_callback(self):
 
         faces = self.main_window.selected_geometry_surfaces
@@ -99,7 +102,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                 self.lineEdit_real_value.setText(str(data["real_values"][0]))
                 self.lineEdit_imag_value.setText(str(data["imag_values"][0]))
 
-    def tabEvent_callback(self):
+    def tab_event_callback(self):
         if self.tabWidget_main.currentIndex() == 2:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)

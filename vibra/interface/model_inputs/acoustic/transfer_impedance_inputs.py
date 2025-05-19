@@ -37,9 +37,8 @@ class TransferImpedanceInputs(QDialog):
 
         self._initialize()
         self._config_window()
-        self._configure_qt_variables()
-        self._create_connections()
         self._config_widgets()
+        self._create_connections()
         self._paint_icons()
 
         self.load_model_info()
@@ -59,14 +58,6 @@ class TransferImpedanceInputs(QDialog):
         self.keep_window_open = True
         self.transfer_impedance_data = dict()
 
-    def _configure_qt_variables(self):
-        self.current_lineEdit = self.lineEdit_selection_id_A
-
-        self.pushButton_change_frequency_setup.setDisabled(True)
-
-        self.treeWidget_transfer_impedance.setColumnWidth(1, 20)
-        self.treeWidget_transfer_impedance.setColumnWidth(2, 80)
-
     def _create_connections(self):
         #
         self.comboBox_selection_type.currentIndexChanged.connect(self.selection_type_callback)
@@ -77,7 +68,7 @@ class TransferImpedanceInputs(QDialog):
         self.pushButton_load_table.clicked.connect(self.load_transfer_impedance_table)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
-        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
         self.treeWidget_transfer_impedance.itemClicked.connect(self.on_click_item)
         self.treeWidget_transfer_impedance.itemDoubleClicked.connect(self.on_doubleclick_item)
@@ -137,6 +128,10 @@ class TransferImpedanceInputs(QDialog):
             self.lineEdit_selection_id_A.setStyleSheet("")
 
     def _config_widgets(self):
+        #
+        self.current_lineEdit = self.lineEdit_selection_id_A
+        self.pushButton_change_frequency_setup.setDisabled(True)
+        #
         for i, w in enumerate([120]):
             self.treeWidget_transfer_impedance.setColumnWidth(i, w)
             self.treeWidget_transfer_impedance.headerItem().setTextAlignment(i, Qt.AlignCenter)
@@ -507,7 +502,7 @@ class TransferImpedanceInputs(QDialog):
         table_names = self.properties.get_property_related_table_names("transfer_impedance", surface_id, "surfaces")
         self.process_table_file_removal(table_names)
 
-    def tabEvent_callback(self):
+    def tab_event_callback(self):
 
         self.pushButton_remove.setDisabled(True)
         if self.tabWidget_main.currentIndex() == 1:

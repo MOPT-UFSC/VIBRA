@@ -28,8 +28,8 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
         self._reset()
         self._config_window()
-        self._configure_qt_variables()
         self._create_connections()
+        self._config_widgets()
 
         self.load_model_info()
         self.geometry_selection_callback()
@@ -47,14 +47,6 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.keep_window_open = True
         self.anechoic_termination = None
 
-    def _configure_qt_variables(self):
-        self.comboBox_volume_id.setDisabled(True)
-
-        self.lineEdit_selection_id.setDisabled(True)
-
-        self.treeWidget_anechoic_termination.setColumnWidth(1, 20)
-        self.treeWidget_anechoic_termination.setColumnWidth(2, 80)
-
     def _create_connections(self):
         #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
@@ -62,13 +54,23 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
-        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         self.treeWidget_anechoic_termination.itemClicked.connect(self.on_click_item)
         self.treeWidget_anechoic_termination.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
 
-    def tabEvent_callback(self):
+    def _config_widgets(self):
+        #
+        self.comboBox_volume_id.setDisabled(True)
+        #
+        self.lineEdit_selection_id.setDisabled(True)
+        #
+        for i, w in enumerate([120]):
+            self.treeWidget_anechoic_termination.setColumnWidth(i, w)
+            self.treeWidget_anechoic_termination.headerItem().setTextAlignment(i, Qt.AlignCenter)
+
+    def tab_event_callback(self):
         if self.tabWidget_main.currentIndex() == 1:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)

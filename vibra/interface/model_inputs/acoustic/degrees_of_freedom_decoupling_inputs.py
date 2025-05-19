@@ -33,7 +33,6 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
 
         self._initialize()
         self._config_window()
-        self._configure_qt_variables()
         self._config_widgets()
         self._create_connections()
 
@@ -54,10 +53,10 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
         self.keep_window_open = True
         self.cache_surface_properties = deepcopy(self.properties.surface_properties)
 
-    def _configure_qt_variables(self):
-        self.lineEdit_selection_id.setDisabled(True)
-
     def _config_widgets(self):
+        #
+        self.lineEdit_selection_id.setDisabled(True)
+        #
         for i, width in enumerate([140]):
             self.treeWidget_selection_info.setColumnWidth(i, width)
             self.treeWidget_dofs_decoupling.setColumnWidth(i, width)

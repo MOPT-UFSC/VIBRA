@@ -32,7 +32,7 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
 
         self._initialize()
         self._config_window()
-        self._configure_qt_variables()
+        self._config_widgets()
         self._create_connections()
 
         self.load_model_info()
@@ -50,15 +50,6 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
     def _initialize(self):
         self.imported_values = None
         self.keep_window_open = True
-
-    def _configure_qt_variables(self):
-        self.pushButton_change_frequency_setup.setDisabled(True)
-        #
-        self.radioButton_element_integration_constant.setChecked(True)
-        self.radioButton_element_integration_table.setChecked(True)
-
-        self.treeWidget_mass_flow_rate.setColumnWidth(1, 20)
-        self.treeWidget_mass_flow_rate.setColumnWidth(2, 80)
 
     def _create_connections(self):
         #
@@ -81,6 +72,14 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
         #
         self.update_controls_for_constant_value()
         self.update_controls_for_table_of_values()
+
+    def _config_widgets(self):
+        #
+        self.pushButton_change_frequency_setup.setDisabled(True)
+        #
+        for i, w in enumerate([120]):
+            self.treeWidget_mass_flow_rate.setColumnWidth(i, w)
+            self.treeWidget_mass_flow_rate.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def tab_event_callback(self):
         if self.tabWidget_main.currentIndex() == 2:

@@ -39,8 +39,8 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         self._initialize()
         self._config_window()
-        self._create_connections()
         self._config_widgets()
+        self._create_connections()
         self._paint_icons()
 
         self.load_model_info()
@@ -76,7 +76,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         self.pushButton_clean_inputs.clicked.connect(self.clear_all_inputs)
         #
-        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
         self.treeWidget_perforated_plate_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_perforated_plate_model.itemDoubleClicked.connect(self.on_doubleclick_item)
@@ -219,8 +219,9 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.pushButton_load_path.setEnabled(True)
 
     def _config_widgets(self):
+        #
         self.current_line_edit = self.lineEdit_selection_id_A
-
+        #
         for i, w in enumerate([120, 130, 200]):
             self.treeWidget_perforated_plate_model.setColumnWidth(i, w)
             self.treeWidget_perforated_plate_model.headerItem().setTextAlignment(i, Qt.AlignCenter)
@@ -238,7 +239,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         change_icon_color_for_widgets(widgets, icon_color)
 
 
-    def tabEvent_callback(self):
+    def tab_event_callback(self):
 
         self.pushButton_remove.setDisabled(True)
         if self.tabWidget_main.currentIndex() == 1:

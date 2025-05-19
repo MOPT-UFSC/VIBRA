@@ -36,7 +36,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         self._initialize()
         self._config_window()
-        self._configure_qt_variables()
         self._create_connections()
         self._config_widgets()
 
@@ -55,9 +54,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.selected_fluid = None
         self.keep_window_open = True
         self.material_model_data = dict()
-
-    def _configure_qt_variables(self):
-        self.lineEdit_center_coordinates.setDisabled(True)
 
     def _create_connections(self):
         #
@@ -79,7 +75,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.pushButton_selection_info.clicked.connect(self.get_selection_information)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
-        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
         self.treeWidget_viscous_thermal_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_viscous_thermal_model.itemDoubleClicked.connect(self.on_doubleclick_item)
@@ -106,6 +102,9 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.doubleSpinBox_evaluated_depth.setDisabled(False)
 
     def _config_widgets(self):
+        #
+        self.lineEdit_center_coordinates.setDisabled(True)
+        #
         for i, w in enumerate([90, 60, 130, 120, 120]):
             self.treeWidget_viscous_thermal_model.setColumnWidth(i, w)
             self.treeWidget_viscous_thermal_model.headerItem().setTextAlignment(i, Qt.AlignCenter)
@@ -186,7 +185,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 self.load_info()
         self.actions_to_finalize()
 
-    def tabEvent_callback(self):
+    def tab_event_callback(self):
 
         self.pushButton_remove.setDisabled(True)
         if self.tabWidget_main.currentIndex() == 2:
