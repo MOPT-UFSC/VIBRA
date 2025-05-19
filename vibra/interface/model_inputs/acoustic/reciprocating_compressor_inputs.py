@@ -1,8 +1,9 @@
 from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
-from PySide6.QtGui import QCloseEvent
+from PySide6.QtGui import QCloseEvent, QColor
 from PySide6.QtCore import Qt
 
 from vibra import app
+from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.ui_generated.model.setup.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
 from vibra.interface.model_inputs.acoustic.fluid.set_fluid_inputs import SetFluidInputs
 from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
@@ -37,6 +38,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self._initialize()
         self._create_connections()
         self._config_widget()
+        self._paint_icons()
 
         self.load_compressor_excitation_info()
         self.selection_callback()
@@ -109,11 +111,24 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.treeWidget_compressor_excitation.itemClicked.connect(self.on_click_item)
         #
         app().main_window.selection_changed.connect(self.selection_callback)
+        app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.comboBox_event_stage()
         self.update_compressing_cylinders_setup()
         self.spinBox_event_number_of_cylinders()
         self.update_state_properties_at_discharge()
+    
+    def _paint_icons(self):
+        icon_color = None
+        theme = app().config.user_preferences.interface_theme
+        
+        if theme == "dark":
+            icon_color = QColor("#5f9af4")
+        else:
+            icon_color = QColor("#1a73e8")
+
+        widgets = [self.pushButton_reset_entries]
+        change_icon_color_for_widgets(widgets, icon_color)
 
     def fluid_data_source_callback(self):
 

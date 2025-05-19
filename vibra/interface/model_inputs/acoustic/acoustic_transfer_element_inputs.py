@@ -471,8 +471,8 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         else:
             icon_color = QColor("#1a73e8")
 
-        icons = [self.pushButton_invert_selection, self.pushButton_search]
-        change_icon_color_for_widgets(icons, icon_color)
+        widgets = [self.pushButton_invert_selection, self.pushButton_search]
+        change_icon_color_for_widgets(widgets, icon_color)
 
     def print_final_message(self):
 

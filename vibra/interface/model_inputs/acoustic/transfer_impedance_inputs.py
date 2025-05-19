@@ -1,8 +1,9 @@
-from PySide6.QtWidgets import QComboBox, QDialog, QFileDialog, QLabel, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QDialog, QFileDialog, QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt, QEvent, QObject, Signal
-from PySide6.QtGui import QCloseEvent
+from PySide6.QtGui import QCloseEvent, QColor
 
 from vibra import app, UI_DIR
+from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
@@ -36,9 +37,10 @@ class TransferImpedanceInputs(QDialog):
 
         self._initialize()
         self._config_window()
-        self._define_qt_variables()
+        self._configure_qt_variables()
         self._create_connections()
         self._config_widgets()
+        self._paint_icons()
 
         self.load_model_info()
 
@@ -57,38 +59,11 @@ class TransferImpedanceInputs(QDialog):
         self.keep_window_open = True
         self.transfer_impedance_data = dict()
 
-    def _define_qt_variables(self):
-
-        # QComboBox
-        self.comboBox_selection_type : QComboBox
-
-        # QLabel
-        self.label_selection_A: QLabel
-        self.label_selection_B: QLabel
-
-        # QLineEdit
-        self.lineEdit_selection_id_A: QLineEdit
-        self.lineEdit_selection_id_B: QLineEdit
-        self.lineEdit_real_value : QLineEdit
-        self.lineEdit_imag_value : QLineEdit
-        self.lineEdit_table_path : QLineEdit
+    def _configure_qt_variables(self):
         self.current_lineEdit = self.lineEdit_selection_id_A
 
-        # QPushButton
-        self.pushButton_attribute : QPushButton
-        self.pushButton_exit : QPushButton
-        self.pushButton_change_frequency_setup : QPushButton
-        self.pushButton_load_table : QPushButton
-        self.pushButton_remove : QPushButton
-        self.pushButton_reset : QPushButton
-        #
         self.pushButton_change_frequency_setup.setDisabled(True)
 
-        # QTabWidget
-        self.tabWidget_main : QTabWidget
-
-        # QTreeWidget
-        self.treeWidget_transfer_impedance : QTreeWidget
         self.treeWidget_transfer_impedance.setColumnWidth(1, 20)
         self.treeWidget_transfer_impedance.setColumnWidth(2, 80)
 
@@ -108,12 +83,25 @@ class TransferImpedanceInputs(QDialog):
         self.treeWidget_transfer_impedance.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        self.main_window.theme_changed.connect(self._paint_icons)
         #
         self.clickable(self.lineEdit_selection_id_A).connect(self.lineEdit_selection_A_clicked)
         self.clickable(self.lineEdit_selection_id_B).connect(self.lineEdit_selection_B_clicked)
         #
         self.geometry_selection_callback()
         self.selection_type_callback()
+    
+    def _paint_icons(self):
+        icon_color = None
+        theme = app().config.user_preferences.interface_theme
+        
+        if theme == "dark":
+            icon_color = QColor("#5f9af4")
+        else:
+            icon_color = QColor("#1a73e8")
+
+        widgets = [self.pushButton_load_table]
+        change_icon_color_for_widgets(widgets, icon_color)
 
     def clickable(self, widget: QLineEdit):
         class Filter(QObject):

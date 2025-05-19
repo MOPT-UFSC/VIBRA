@@ -1,8 +1,9 @@
-from PySide6.QtWidgets import QComboBox, QDialog, QFileDialog, QFrame, QLabel, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt, QEvent, QObject, Signal
-from PySide6.QtGui import QCloseEvent
+from PySide6.QtGui import QCloseEvent, QColor
 
 from vibra import app
+from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.ui_generated.model.setup.acoustic.perforated_plate_model_inputs_ui import PerforatedPlateModelInputs_UI
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
@@ -40,6 +41,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self._config_window()
         self._create_connections()
         self._config_widgets()
+        self._paint_icons()
 
         self.load_model_info()
 
@@ -80,6 +82,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.treeWidget_perforated_plate_model.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        self.main_window.theme_changed.connect(self._paint_icons)
         #
         self.clickable(self.lineEdit_selection_id_A).connect(self.lineEdit_selection_A_clicked)
         self.clickable(self.lineEdit_selection_id_B).connect(self.lineEdit_selection_B_clicked)
@@ -216,9 +219,24 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.pushButton_load_path.setEnabled(True)
 
     def _config_widgets(self):
+        self.current_line_edit = self.lineEdit_selection_id_A
+
         for i, w in enumerate([120, 130, 200]):
             self.treeWidget_perforated_plate_model.setColumnWidth(i, w)
             self.treeWidget_perforated_plate_model.headerItem().setTextAlignment(i, Qt.AlignCenter)
+        
+    def _paint_icons(self):
+        icon_color = None
+        theme = app().config.user_preferences.interface_theme
+        
+        if theme == "dark":
+            icon_color = QColor("#5f9af4")
+        else:
+            icon_color = QColor("#1a73e8")
+
+        widgets = [self.pushButton_clean_inputs, self.pushButton_load_path]
+        change_icon_color_for_widgets(widgets, icon_color)
+
 
     def tabEvent_callback(self):
 

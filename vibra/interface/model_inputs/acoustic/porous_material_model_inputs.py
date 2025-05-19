@@ -1,9 +1,10 @@
 # fmt: off
-from PySide6.QtWidgets import QComboBox, QDialog, QDoubleSpinBox, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QDialog, QTreeWidgetItem
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QCloseEvent
+from PySide6.QtGui import QCloseEvent, QColor
 
 from vibra import app
+from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.ui_generated.model.setup.acoustic.porous_material_model_inputs_ui import PorousMaterialModelInputs_UI
 
 from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
@@ -38,7 +39,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self._initialize()
         self._config_window()
         self._create_connections()
-
+        self._paint_icons()
         self.load_info()
         self.geometry_selection_callback()
 
@@ -78,9 +79,22 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.treeWidget_porous_material_model.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        self.main_window.theme_changed.connect(self._paint_icons)
         #
         self.update_attribution_type()
         self.update_plot_buttons_access()
+    
+    def _paint_icons(self):
+        icon_color = None
+        theme = app().config.user_preferences.interface_theme
+        
+        if theme == "dark":
+            icon_color = QColor("#5f9af4")
+        else:
+            icon_color = QColor("#1a73e8")
+
+        widgets = [self.pushButton_DB_equations, self.pushButton_DBM_equations]
+        change_icon_color_for_widgets(widgets, icon_color)
 
     def actions_to_finalize(self):
         app().main_window.update_symbols()
