@@ -129,7 +129,7 @@ class ViscousThermalLossModelInputs(QDialog):
         self.pushButton_selection_info.clicked.connect(self.get_selection_information)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
-        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
         self.treeWidget_viscous_thermal_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_viscous_thermal_model.itemDoubleClicked.connect(self.on_doubleclick_item)
@@ -231,7 +231,7 @@ class ViscousThermalLossModelInputs(QDialog):
                 app().file.write_model_properties_in_file()
                 self.load_info()
 
-    def tabEvent_callback(self):
+    def tab_event_callback(self):
 
         self.pushButton_remove.setDisabled(True)
         if self.tabWidget_main.currentIndex() == 2:

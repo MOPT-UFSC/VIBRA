@@ -102,7 +102,7 @@ class TransferImpedanceInputs(QDialog):
         self.pushButton_load_table.clicked.connect(self.load_transfer_impedance_table)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
-        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
         self.treeWidget_transfer_impedance.itemClicked.connect(self.on_click_item)
         self.treeWidget_transfer_impedance.itemDoubleClicked.connect(self.on_doubleclick_item)
@@ -519,7 +519,7 @@ class TransferImpedanceInputs(QDialog):
         table_names = self.properties.get_property_related_table_names("transfer_impedance", surface_id, "surfaces")
         self.process_table_file_removal(table_names)
 
-    def tabEvent_callback(self):
+    def tab_event_callback(self):
 
         self.pushButton_remove.setDisabled(True)
         if self.tabWidget_main.currentIndex() == 1:
