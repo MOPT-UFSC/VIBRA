@@ -22,6 +22,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         super().__init__(*args, **kwargs)
 
         self.model = app().project.model
+        self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
         app().main_window.set_input_widget(self)
@@ -181,8 +182,8 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 return
             
         if isinstance(line_id, int):
-            for node_id in app().project.model.mesh.nodes_from_lines[line_id]:
-                for surface_id in self.model.mesh.surfaces_from_node[node_id]:
+            for node_id in self.mesh.nodes_from_lines[line_id]:
+                for surface_id in self.mesh.surfaces_from_node[node_id]:
                     data = self.properties._get_property("surface_thickness", surface=surface_id)
                     if isinstance(data, dict):
                         self.comboBox_element_type.setCurrentIndex(0)
@@ -265,13 +266,16 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             selection = "lines"
             unit = "N/m"
 
-        selected_ids = app().project.model.mesh.check_selected_ids(
-                                                                   input_ids, 
-                                                                   selection = selection
-                                                                   )
+        selected_ids, error_data = self.mesh.check_selected_ids(
+                                                                input_ids, 
+                                                                selection = selection, 
+                                                                single_id = False
+                                                                )
 
-        if selected_ids is None:
+        if error_data is not None:
+            self.hide()
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
 
         self.remove_duplicated_attributions(selected_ids, selection)
@@ -426,7 +430,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         if self.frequencies[0] == float(1e-6):
             self.frequencies[0] = 0
 
-        if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
+        if self.model.change_analysis_frequency_setup(list(self.frequencies)):
 
             self.hide()
             lineEdit = self.table_lineEdits[load_label]
@@ -466,13 +470,16 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             selection = "lines"
             unit = "N/m"
 
-        selected_ids = app().project.model.mesh.check_selected_ids(
-                                                                   input_ids, 
-                                                                   selection = selection
-                                                                   )
+        selected_ids, error_data = self.mesh.check_selected_ids(
+                                                                input_ids, 
+                                                                selection = selection, 
+                                                                single_id = False
+                                                                )
 
-        if selected_ids is None:
+        if error_data is not None:
+            self.hide()
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
 
         self.remove_duplicated_attributions(selected_ids, selection)
@@ -547,14 +554,14 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         for selected_id in selected_ids:
 
             if selection == "surfaces":
-                for line_id in app().project.model.mesh.lines_from_surface[selected_id]:
+                for line_id in self.mesh.lines_from_surface[selected_id]:
                     data = self.properties._get_property("distributed_loads", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("distributed_loads", line_id)
                         table_names.extend(self.properties.get_property_related_table_names("distributed_loads", line_id, "lines"))
 
             elif selection == "lines":
-                for surface_id in app().project.model.mesh.surfaces_from_line[selected_id]:
+                for surface_id in self.mesh.surfaces_from_line[selected_id]:
                     data = self.properties._get_property("distributed_loads", surface=surface_id)
                     if isinstance(data, dict):
                         self.properties._remove_surface_property("distributed_loads", surface_id)

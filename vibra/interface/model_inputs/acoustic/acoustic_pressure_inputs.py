@@ -35,7 +35,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self._configure_qt_variables()
         self._create_connections()
 
-        self.load_info()
+        self.load_model_info()
         self.geometry_selection_callback()
 
         while self.keep_window_open:
@@ -150,13 +150,15 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
     def check_constant_values(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids = self.mesh.check_selected_ids(
-                                                   input_ids, 
-                                                   selection = "surfaces"
-                                                   )
+        surface_ids, error_data = self.mesh.check_selected_ids(
+                                                               input_ids, 
+                                                               selection = "surfaces"
+                                                               )
 
-        if surface_ids is None:
+        if error_data is not None:
+            self.hide()
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
 
         self.remove_conflicting_excitations(surface_ids)
@@ -177,8 +179,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                 self.properties._set_property("acoustic_pressure", data, surface=surface_id)
 
             self.actions_to_finalize()
-
-            print(f"[Set acoustic pressure] - defined at surface(s) {surface_ids}")
 
         else:
             title = "Additional inputs required"
@@ -282,13 +282,15 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
     def check_table_values(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids = self.mesh.check_selected_ids(
-                                                   input_ids, 
-                                                   selection = "surfaces"
-                                                   )
+        surface_ids, error_data = self.mesh.check_selected_ids(
+                                                                input_ids, 
+                                                                selection = "surfaces"
+                                                                )
 
-        if surface_ids is None:
+        if error_data is not None:
+            self.hide()
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
 
         self.remove_conflicting_excitations(surface_ids)
@@ -320,7 +322,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                 table_path = self.lineEdit_table_path.text()
 
                 data = {
-                        "table_names": [table_name],
+                        "table_names" : [table_name],
                         "table_paths" : [table_path],
                         "values" : [complex_values],
                         }
@@ -328,8 +330,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                 self.properties._set_property("acoustic_pressure", data, surface=surface_id)
 
             self.actions_to_finalize()
-
-            print(f"[Set acoustic pressure] - defined at surface(s) {surface_ids}")
 
         else:
             title = "Additional inputs required"
@@ -405,7 +405,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
-        self.load_info()
+        self.load_model_info()
         self.check_model_frequency_controls()
         self.main_window.update_info_text()
         app().file.write_model_properties_in_file()
@@ -438,16 +438,15 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.lineEdit_table_path.setText("")
 
     def update_tabs_visibility(self):
-        surface_ids = list()
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
-            if property == "acoustic_pressure":
-                surface_ids.append(surface_id)
 
-        if len(surface_ids) == 0:
-            self.tabWidget_main.setTabVisible(2, False)
-        else:
-            self.tabWidget_main.setTabVisible(2, True)
+        for key in self.properties.surface_properties.keys():
+            property, *args = key
+            if property == "acoustic_pressure":
+                self.tabWidget_main.setTabVisible(2, True)
+                return
+
+        self.tabWidget_main.setCurrentIndex(0)    
+        self.tabWidget_main.setTabVisible(2, False)
 
     def on_click_item(self, item):
         if item.text(0) != "":
@@ -458,7 +457,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
 
-    def load_info(self):
+    def load_model_info(self):
         self.treeWidget_acoustic_pressure.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key

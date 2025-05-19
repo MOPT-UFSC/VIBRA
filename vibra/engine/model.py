@@ -13,6 +13,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 import logging
 import numpy as np
 
+from pathlib import Path
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -36,9 +37,9 @@ class Model:
         self.geometry_path = None
         self.initial_element_size = None
 
-        self.f_min = 2
+        self.f_min = 5
         self.f_max = 600
-        self.f_step = 2
+        self.f_step = 5
         self.frequencies = None
         self.list_frequencies = list()
 
@@ -78,14 +79,14 @@ class Model:
 
     def process_visual_geometry_mesh(self, path : str):
 
+        self.mesh = Mesh(
+                         length_unit = self.length_unit, 
+                         geometry_qf = self.geometry_qf
+                         )
+
         try:
 
             try:
-
-                self.mesh = Mesh(
-                                 length_unit = self.length_unit, 
-                                 geometry_qf = self.geometry_qf
-                                 )
 
                 element_size = self.mesh.compute_initial_mesh_size(path)
                 self.mesh.load_cad(
@@ -115,8 +116,6 @@ class Model:
             self.generated_mesh = False
             self.initial_element_size = element_size
 
-            app().main_window.update_geometry_information()
-
         except Exception as error_log:
             from traceback import print_exception
             print_exception(error_log)
@@ -124,6 +123,29 @@ class Model:
             message = str(error_log)
             PrintMessageInput([window_title_1, title, message])
             return -1       
+
+    def process_mesh_data(self, path : str):
+
+        self.mesh = Mesh(
+                         length_unit = self.length_unit, 
+                         geometry_qf = self.geometry_qf
+                         )
+
+        try:
+
+            self.mesh.geometry_imported = False
+            self.mesh.load_mesh(path)
+            self.generated_mesh = True
+            app().main_window.update_geometry_information()
+            app().main_window.update_mesh_information()
+
+        except Exception as error_log:
+            from traceback import print_exception
+            print_exception(error_log)
+            title = "Error while processing geometry"
+            message = str(error_log)
+            PrintMessageInput([window_title_1, title, message])
+            return -1
 
     def process_mesh(self):
 

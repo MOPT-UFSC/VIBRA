@@ -22,6 +22,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         super().__init__(*args, **kwargs)
 
         self.model = app().project.model
+        self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
         app().main_window.set_input_widget(self)
@@ -232,7 +233,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 return
             
         if isinstance(line_id, int):
-            for node_id in app().project.model.mesh.nodes_from_lines[line_id]:
+            for node_id in self.mesh.nodes_from_lines[line_id]:
                 for surface_id in self.model.mesh.surfaces_from_node[node_id]:
                     data = self.properties._get_property("surface_thickness", surface=surface_id)
                     if isinstance(data, dict):
@@ -240,7 +241,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                         return
 
         if isinstance(point_id, int):
-            for node_id in app().project.model.mesh.nodes_from_points[line_id]:
+            for node_id in self.mesh.nodes_from_points[line_id]:
                 for surface_id in self.model.mesh.surfaces_from_node[node_id]:
                     data = self.properties._get_property("surface_thickness", surface=surface_id)
                     if isinstance(data, dict):
@@ -346,13 +347,16 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         else:
             selection = "nodes"
 
-        selected_ids = app().project.model.mesh.check_selected_ids(
-                                                                   input_ids, 
-                                                                   selection = selection
-                                                                   )
+        selected_ids, error_data = self.mesh.check_selected_ids(
+                                                                input_ids, 
+                                                                selection = selection, 
+                                                                single_id = False
+                                                                )
 
-        if selected_ids is None:
+        if error_data is not None:
+            self.hide()
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
 
         self.remove_duplicated_attributions(selected_ids, selection)
@@ -615,13 +619,16 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         else:
             selection = "nodes"
 
-        selected_ids = app().project.model.mesh.check_selected_ids(
-                                                                   input_ids, 
-                                                                   selection = selection
-                                                                   )
+        selected_ids, error_data = self.mesh.check_selected_ids(
+                                                                input_ids, 
+                                                                selection = selection, 
+                                                                single_id = False
+                                                                )
 
-        if selected_ids is None:
+        if error_data is not None:
+            self.hide()
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
 
         self.remove_duplicated_attributions(selected_ids, selection)
@@ -743,13 +750,13 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
-                for line_id in app().project.model.mesh.lines_from_surface[selected_id]:
+                for line_id in self.mesh.lines_from_surface[selected_id]:
                     data = self.properties._get_property("nodal_loads", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("nodal_loads", line_id)
                         table_names.extend(self.properties.get_property_related_table_names("nodal_loads", line_id, "lines"))
 
-                    for point_id in app().project.model.mesh.points_from_line[line_id]:
+                    for point_id in self.mesh.points_from_line[line_id]:
                         data = self.properties._get_property("nodal_loads", point=point_id)
                         if isinstance(data, dict):
                             self.properties._remove_point_property("nodal_loads", point_id)
@@ -763,13 +770,13 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
-                for surface_id in app().project.model.mesh.surfaces_from_line[selected_id]:
+                for surface_id in self.mesh.surfaces_from_line[selected_id]:
                     data = self.properties._get_property("nodal_loads", surface=surface_id)
                     if isinstance(data, dict):
                         self.properties._remove_surface_property("nodal_loads", surface_id)
                         table_names.extend(self.properties.get_property_related_table_names("nodal_loads", surface_id, "surfaces"))
 
-                for point_id in app().project.model.mesh.points_from_line[selected_id]:
+                for point_id in self.mesh.points_from_line[selected_id]:
                     data = self.properties._get_property("nodal_loads", point=point_id)
                     if isinstance(data, dict):
                         self.properties._remove_point_property("nodal_loads", point_id)
@@ -783,7 +790,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
-                for line_id in app().project.model.mesh.lines_from_point[selected_id]:
+                for line_id in self.mesh.lines_from_point[selected_id]:
                     data = self.properties._get_property("nodal_loads", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("nodal_loads", line_id)
@@ -803,7 +810,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                     self.properties._remove_point_property("nodal_loads", point_id)
                     table_names.extend(self.properties.get_property_related_table_names("nodal_loads", point_id, "points"))
 
-                for line_id in app().project.model.mesh.lines_from_point[point_id]:
+                for line_id in self.mesh.lines_from_point[point_id]:
                     data = self.properties._get_property("nodal_loads", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("nodal_loads", line_id)

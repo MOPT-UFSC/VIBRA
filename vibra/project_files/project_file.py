@@ -533,13 +533,7 @@ class ProjectFile:
     def read_thumbnail(self):
         return self.filebox.read(self.thumbnail_filename)
     
-    def write_results_data_in_file(self, save_mesh: bool =True, save_properties: bool =True):
-
-        if save_mesh:
-            app().file.write_mesh_data_in_file()
-
-        if save_properties:
-            app().file.write_model_properties_in_file()
+    def write_results_data_in_file(self):
 
         with self.filebox.open(self.results_data_filename, "w") as internal_file:
             with h5py.File(internal_file, "w") as f:
@@ -645,8 +639,8 @@ def convert_numeric_dictionary_in_array(input_data: dict, data_type: int | float
             the output array of two columns
 
     """
-    if len(input_data) == 0:
-        return np.array([[]])
+    if not input_data:
+        return np.array([])
 
     keys = list(input_data.keys())
     values = list(input_data.values())

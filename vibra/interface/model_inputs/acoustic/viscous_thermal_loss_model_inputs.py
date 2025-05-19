@@ -379,10 +379,21 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
     def get_center_coordinates(self):
 
-        selection_id = self.lineEdit_selection_id.text()
+        input_ids = self.lineEdit_selection_id.text()
+        surface_ids, error_data = self.mesh.check_selected_ids(
+                                                                input_ids, 
+                                                                selection = "surfaces"
+                                                                )
+
+        if error_data is not None:
+            self.hide()
+            self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
+            return
+        
         selection_index = self.comboBox_attribution_type.currentIndex()
 
-        if selection_id == "" or selection_index == 0:
+        if not surface_ids or selection_index == 0:
             self.lineEdit_center_coordinates.setText("")
             return list()
 
@@ -392,7 +403,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         elif index == 3:
             averaged_selection = True
 
-        center_coords = self.mesh.get_average_nodal_coordinates(selection_id, averaged=averaged_selection)
+        center_coords = self.mesh.get_average_nodal_coordinates(surface_ids, averaged=averaged_selection)
         if averaged_selection:
             try:
                 str_center_coords = f"{center_coords[0][0]: .4f}, {center_coords[0][1]: .4f}, {center_coords[0][2]: .4f}"
@@ -437,33 +448,41 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
     def get_selection_information(self):
 
-        selection_id = self.lineEdit_selection_id.text()
+        input_ids = self.lineEdit_selection_id.text()
+        surface_ids, error_data = self.mesh.check_selected_ids(
+                                                               input_ids, 
+                                                               selection = "surfaces"
+                                                               )
 
-        if selection_id != "":
+        if error_data is not None:
+            self.hide()
+            self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
+            return
 
-            index = self.comboBox_attribution_type.currentIndex()
-            if index >= 2:
+        index = self.comboBox_attribution_type.currentIndex()
+        if index >= 2:
 
-                selection_radius = self.doubleSpinBox_selection_radius.value()
-                
-                if index == 2:
-                    averaged_selection = False
-                elif index == 3:
-                    averaged_selection = True
+            selection_radius = self.doubleSpinBox_selection_radius.value()
+            
+            if index == 2:
+                averaged_selection = False
+            elif index == 3:
+                averaged_selection = True
 
-                if self.generate_mesh():
-                    return
-                
-                self.hide()
-                filter_type = self.comboBox_filter_type.currentIndex()
+            if self.generate_mesh():
+                return
+            
+            self.hide()
+            filter_type = self.comboBox_filter_type.currentIndex()
 
-                GetSphereSelectionInformation(  selection_id,
-                                                selection_radius,
-                                                averaged_selection,
-                                                filter_type  )
+            GetSphereSelectionInformation(  surface_ids,
+                                            selection_radius,
+                                            averaged_selection,
+                                            filter_type  )
 
-                self.main_window.set_input_widget(self)
-                self.main_window.action_model_workspace_callback()
+            self.main_window.set_input_widget(self)
+            self.main_window.action_model_workspace_callback()
 
     def generate_mesh(self):
         if not app().project.model.generated_mesh:
@@ -551,20 +570,20 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
                 elif attribute_type == 1:
                     input_ids = self.lineEdit_selection_id.text()
-                    volume_ids = self.mesh.check_selected_ids(
-                                                              input_ids, 
-                                                              selection = "volumes", 
-                                                              single_id = False
-                                                              )
+                    surface_ids, error_data = self.mesh.check_selected_ids(
+                                                                           input_ids, 
+                                                                           selection = "volumes", 
+                                                                           single_id = False,
+                                                                           )
 
-                    if volume_ids is None:
+                    if error_data is not None:
+                        self.hide()
                         self.lineEdit_selection_id.setFocus()
-                        return True
+                        PrintMessageInput(error_data)
+                        return
 
                 for volume_id in volume_ids:
                     self.properties._set_property("viscous_thermal_model", model_data, volume=volume_id)
-
-                print(f"The viscous_thermal {model_data['formulation']} model for '{model_data['section_type']}' has been attributed to the volumes {volume_ids}.")
 
             elif attribute_type in [2, 3]:
 
@@ -585,8 +604,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 model_data["filter_type"] = filter_type
 
                 self.properties._set_property("viscous_thermal_model", model_data, group=group_id)
-
-                print(f"The viscous_thermal {model_data['formulation']} model for '{model_data['section_type']}' has been attributed to the group {group_id}.")
 
             app().file.write_model_properties_in_file()
             self.actions_to_finalize()
@@ -644,33 +661,35 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
     def get_lrf_info(self):
 
-        selected_id = self.lineEdit_selection_id.text()
+        # TODO: review this method
 
-        if selected_id != "":
+        try:
+            input_id = self.lineEdit_selection_id.text()
+            selected_id = int(input_id)
+        except:
+            return
 
-            selected_id = int(selected_id)
+        self.hide()
+        def get_info(data: dict):
+            GetSphereSelectionInformation(  data["surface_ids"],
+                                            data["selection_radius"],
+                                            data["averaged"],
+                                            data["filter_type"]  )
 
-            self.hide()
-            def get_info(data):
-                GetSphereSelectionInformation(  data["surface_ids"],
-                                                data["selection_radius"],
-                                                data["averaged"],
-                                                data["filter_type"]  )
+            self.main_window.set_input_widget(self)
+            self.main_window.action_model_workspace_callback()
 
-                self.main_window.set_input_widget(self)
-                self.main_window.action_model_workspace_callback()
+        group_properties = self.properties.group_properties.copy()
+        for key, data in group_properties.items():
+            property, group_id = key
+            if property == "viscous_thermal_model" and int(selected_id) == group_id:
+                return get_info(data)
 
-            group_properties = self.properties.group_properties.copy()
-            for key, data in group_properties.items():
-                property, group_id = key
-                if property == "viscous_thermal_model" and int(selected_id) == group_id:
-                    return get_info(data)
-
-            # volume_properties = self.properties.volume_properties.copy()
-            # for key, data in volume_properties.items():
-            #     property, volume_id = key
-            #     if property == "viscous_thermal_model" and int(picked_id) == volume_id:
-            #         return get_info()
+        # volume_properties = self.properties.volume_properties.copy()
+        # for key, data in volume_properties.items():
+        #     property, volume_id = key
+        #     if property == "viscous_thermal_model" and int(picked_id) == volume_id:
+        #         return get_info()
 
     def hide_sphere(self):
         geometry_widget = self.main_window.geometry_widget
