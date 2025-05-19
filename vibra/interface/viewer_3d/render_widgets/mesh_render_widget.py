@@ -170,7 +170,7 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.update_selection()
         self.update()
-
+    
     def update_hidden_plot(self):
         self.update_plot(reset_camera=False)
 

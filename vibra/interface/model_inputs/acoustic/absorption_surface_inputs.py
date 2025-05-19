@@ -35,7 +35,7 @@ class AbsorptionSurfaceInputs(QDialog):
         
         self._config_window()
         self._initialize()
-        self._define_qt_variables()
+        self._configure_qt_variables()
         self._create_connections()
 
         self.load_model_info()
@@ -54,28 +54,9 @@ class AbsorptionSurfaceInputs(QDialog):
         self.imported_values = None
         self.keep_window_open = True
 
-    def _define_qt_variables(self):
-
-        # QLineEdit
-        self.lineEdit_selection_id : QLineEdit
-        self.lineEdit_real_value : QLineEdit
-        self.lineEdit_table_path : QLineEdit
-
-        # QPushButton
-        self.pushButton_attribute : QPushButton
-        self.pushButton_exit : QPushButton
-        self.pushButton_change_frequency_setup : QPushButton
-        self.pushButton_load_table : QPushButton
-        self.pushButton_remove : QPushButton
-        self.pushButton_reset : QPushButton
-        #
+    def _configure_qt_variables(self):
         self.pushButton_change_frequency_setup.setDisabled(True)
 
-        # QTabWidget
-        self.tabWidget_main : QTabWidget
-
-        # QTreeWidget
-        self.treeWidget_absorption_surface : QTreeWidget
         self.treeWidget_absorption_surface.setColumnWidth(1, 20)
         self.treeWidget_absorption_surface.setColumnWidth(2, 80)
 
@@ -451,7 +432,7 @@ class AbsorptionSurfaceInputs(QDialog):
         self.main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
-        app().main_window.mesh_widget.update_symbols()
+        # app().main_window.mesh_widget.update_symbols()
 
     def change_frequency_setup(self):
         if self.imported_values is not None:

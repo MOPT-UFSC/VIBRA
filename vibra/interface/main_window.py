@@ -241,7 +241,6 @@ class MainWindow(MainWindow_UI):
         change_icon_color_for_widgets(widgets, icon_color)
 
         self.theme_changed.emit(theme)
-
     def update_mesh_information(self):
         self.status_bar.update_mesh_information()
 
