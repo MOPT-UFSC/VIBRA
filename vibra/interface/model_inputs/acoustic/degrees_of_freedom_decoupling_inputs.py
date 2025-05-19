@@ -96,10 +96,12 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
 
     def tab_event_callback(self):
+
         if self.tabWidget_main.currentIndex() == 1:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
             self.pushButton_attribute.setDisabled(True)
+
         else:
             self.lineEdit_selection_id.setDisabled(False)
             self.pushButton_attribute.setEnabled(True)
@@ -292,16 +294,20 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
             logging.info("Processing degress of freedom decoupling... [10/100]")
             self.model.process_degrees_of_freedom_decoupling()
 
-            logging.info("Processing degress of freedom decoupling... [50/100]")
+            logging.info("Processing degress of freedom decoupling... [70/100]")
             app().file.write_mesh_data_in_file()
             
-            logging.info("Processing degress of freedom decoupling... [60/100]")
+            logging.info("Processing degress of freedom decoupling... [75/100]")
             app().file.write_geometry_data_in_file()
 
-            logging.info("Processing degress of freedom decoupling... [70/100]")
+            # the degrees of freedom modifies the surfaces properties
+            logging.info("Processing degress of freedom decoupling... [80/100]")
+            app().file.write_model_properties_in_file()
+
+            logging.info("Processing degress of freedom decoupling... [85/100]")
             app().main_window.update_mesh_information()
 
-            logging.info("Processing degress of freedom decoupling... [80/100]")
+            logging.info("Processing degress of freedom decoupling... [90/100]")
             app().main_window.update_geometry_information()
         
             logging.info("Processing degress of freedom decoupling... [95/100]")
