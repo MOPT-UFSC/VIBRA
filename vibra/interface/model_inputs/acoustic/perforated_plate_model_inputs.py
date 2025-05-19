@@ -42,8 +42,8 @@ class PerforatedPlateModelInputs(QDialog):
         self._initialize()
         self._config_window()
         self._define_qt_variables()
-        self._create_connections()
         self._config_widgets()
+        self._create_connections()
 
         self.load_model_info()
 
@@ -91,7 +91,6 @@ class PerforatedPlateModelInputs(QDialog):
         self.lineEdit_non_linear_discharge_coefficient: QLineEdit
         self.lineEdit_non_linear_correction_factor: QLineEdit
         self.lineEdit_user_defined_transfer_impedance_path: QLineEdit
-        self.current_line_edit = self.lineEdit_selection_id_A
 
         # QPushButton
         self.pushButton_exit: QPushButton
@@ -267,6 +266,9 @@ class PerforatedPlateModelInputs(QDialog):
             self.pushButton_load_path.setEnabled(True)
 
     def _config_widgets(self):
+        #
+        self.current_line_edit = self.lineEdit_selection_id_A
+        #
         for i, w in enumerate([120, 130, 200]):
             self.treeWidget_perforated_plate_model.setColumnWidth(i, w)
             self.treeWidget_perforated_plate_model.headerItem().setTextAlignment(i, Qt.AlignCenter)

@@ -89,7 +89,6 @@ class ViscousThermalLossModelInputs(QDialog):
         self.lineEdit_radius_circular: QLineEdit
         self.lineEdit_area_circular: QLineEdit
         self.lineEdit_center_coordinates: QLineEdit
-        self.lineEdit_center_coordinates.setDisabled(True)
 
         # QPushButton
         self.pushButton_exit: QPushButton
@@ -153,6 +152,9 @@ class ViscousThermalLossModelInputs(QDialog):
             self.doubleSpinBox_evaluated_depth.setDisabled(False)
 
     def _config_widgets(self):
+        #
+        self.lineEdit_center_coordinates.setDisabled(True)
+        #
         for i, w in enumerate([90, 60, 130, 120, 120]):
             self.treeWidget_viscous_thermal_model.setColumnWidth(i, w)
             self.treeWidget_viscous_thermal_model.headerItem().setTextAlignment(i, Qt.AlignCenter)

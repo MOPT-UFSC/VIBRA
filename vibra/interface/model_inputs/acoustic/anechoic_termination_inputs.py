@@ -34,6 +34,7 @@ class AnechoicTerminationInputs(QDialog):
         self._config_window()
         self._define_qt_variables()
         self._create_connections()
+        self._config_widgets()
 
         self.load_model_info()
         self.geometry_selection_callback()
@@ -55,11 +56,9 @@ class AnechoicTerminationInputs(QDialog):
 
         # QComboBox
         self.comboBox_volume_id : QComboBox
-        self.comboBox_volume_id.setDisabled(True)
 
         # QLineEdit
         self.lineEdit_selection_id : QLineEdit
-        self.lineEdit_selection_id.setDisabled(True)
 
         # QPushButton
         self.pushButton_attribute : QPushButton
@@ -87,6 +86,16 @@ class AnechoicTerminationInputs(QDialog):
         self.treeWidget_anechoic_termination.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
+
+    def _config_widgets(self):
+        #
+        self.comboBox_volume_id.setDisabled(True)
+        #
+        self.lineEdit_selection_id.setDisabled(True)
+        #
+        for i, w in enumerate([120]):
+            self.treeWidget_anechoic_termination.setColumnWidth(i, w)
+            self.treeWidget_anechoic_termination.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def tab_event_callback(self):
         if self.tabWidget_main.currentIndex() == 1:

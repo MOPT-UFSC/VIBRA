@@ -37,8 +37,8 @@ class TransferImpedanceInputs(QDialog):
         self._initialize()
         self._config_window()
         self._define_qt_variables()
-        self._create_connections()
         self._config_widgets()
+        self._create_connections()
 
         self.load_model_info()
 
@@ -72,7 +72,6 @@ class TransferImpedanceInputs(QDialog):
         self.lineEdit_real_value : QLineEdit
         self.lineEdit_imag_value : QLineEdit
         self.lineEdit_table_path : QLineEdit
-        self.current_lineEdit = self.lineEdit_selection_id_A
 
         # QPushButton
         self.pushButton_attribute : QPushButton
@@ -81,16 +80,12 @@ class TransferImpedanceInputs(QDialog):
         self.pushButton_load_table : QPushButton
         self.pushButton_remove : QPushButton
         self.pushButton_reset : QPushButton
-        #
-        self.pushButton_change_frequency_setup.setDisabled(True)
 
         # QTabWidget
         self.tabWidget_main : QTabWidget
 
         # QTreeWidget
         self.treeWidget_transfer_impedance : QTreeWidget
-        self.treeWidget_transfer_impedance.setColumnWidth(1, 20)
-        self.treeWidget_transfer_impedance.setColumnWidth(2, 80)
 
     def _create_connections(self):
         #
@@ -149,6 +144,10 @@ class TransferImpedanceInputs(QDialog):
             self.lineEdit_selection_id_A.setStyleSheet("")
 
     def _config_widgets(self):
+        #
+        self.current_lineEdit = self.lineEdit_selection_id_A
+        self.pushButton_change_frequency_setup.setDisabled(True)
+        #
         for i, w in enumerate([120]):
             self.treeWidget_transfer_impedance.setColumnWidth(i, w)
             self.treeWidget_transfer_impedance.headerItem().setTextAlignment(i, Qt.AlignCenter)

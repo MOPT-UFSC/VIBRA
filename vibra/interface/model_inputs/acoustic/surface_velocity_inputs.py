@@ -37,6 +37,7 @@ class SurfaceVelocityInputs(QDialog):
         self._config_window()
         self._initialize()
         self._define_qt_variables()
+        self._config_widgets()
         self._create_connections()
 
         self.load_model_info()
@@ -74,25 +75,18 @@ class SurfaceVelocityInputs(QDialog):
         self.pushButton_load_table : QPushButton
         self.pushButton_remove : QPushButton
         self.pushButton_reset : QPushButton
-        #
-        self.pushButton_change_frequency_setup.setDisabled(True)
 
         # QRadioButton
         self.radioButton_nodal_attribution_constant : QRadioButton
         self.radioButton_element_integration_constant : QRadioButton
         self.radioButton_element_integration_table : QRadioButton
         self.radioButton_nodal_attribution_table : QRadioButton
-        #
-        self.radioButton_element_integration_constant.setChecked(True)
-        self.radioButton_element_integration_table.setChecked(True)
 
         # QTabWidget
         self.tabWidget_main : QTabWidget
 
         # QTreeWidget
         self.treeWidget_surface_velocity : QTreeWidget
-        self.treeWidget_surface_velocity.setColumnWidth(1, 20)
-        self.treeWidget_surface_velocity.setColumnWidth(2, 80)
 
     def _create_connections(self):
         #
@@ -116,6 +110,14 @@ class SurfaceVelocityInputs(QDialog):
         #
         self.update_controls_for_constant_value()
         self.update_controls_for_table_of_values()
+
+    def _config_widgets(self):
+        #
+        self.pushButton_change_frequency_setup.setDisabled(True)
+        #
+        for i, w in enumerate([120]):
+            self.treeWidget_surface_velocity.setColumnWidth(i, w)
+            self.treeWidget_surface_velocity.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def geometry_selection_callback(self):
 

@@ -37,6 +37,7 @@ class AbsorptionSurfaceInputs(QDialog):
         self._initialize()
         self._define_qt_variables()
         self._create_connections()
+        self._config_widgets()
 
         self.load_model_info()
         self.geometry_selection_callback()
@@ -68,16 +69,12 @@ class AbsorptionSurfaceInputs(QDialog):
         self.pushButton_load_table : QPushButton
         self.pushButton_remove : QPushButton
         self.pushButton_reset : QPushButton
-        #
-        self.pushButton_change_frequency_setup.setDisabled(True)
 
         # QTabWidget
         self.tabWidget_main : QTabWidget
 
         # QTreeWidget
         self.treeWidget_absorption_surface : QTreeWidget
-        self.treeWidget_absorption_surface.setColumnWidth(1, 20)
-        self.treeWidget_absorption_surface.setColumnWidth(2, 80)
 
     def _create_connections(self):
         #
@@ -93,6 +90,14 @@ class AbsorptionSurfaceInputs(QDialog):
         self.treeWidget_absorption_surface.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
+
+    def _config_widgets(self):
+        #
+        self.pushButton_change_frequency_setup.setDisabled(True)
+        #
+        for i, w in enumerate([120]):
+            self.treeWidget_absorption_surface.setColumnWidth(i, w)
+            self.treeWidget_absorption_surface.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def tab_event_callback(self):
         self.pushButton_remove.setDisabled(True)

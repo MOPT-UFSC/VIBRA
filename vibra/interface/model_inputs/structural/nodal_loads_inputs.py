@@ -36,6 +36,7 @@ class NodalLoadsInputs(QDialog):
         self._config_window()
         self._initialize()
         self._define_qt_variables()
+        self._create_list_lineEdits()
         self._create_connections()
 
         self._config_widgets()
@@ -140,7 +141,6 @@ class NodalLoadsInputs(QDialog):
         self.lineEdit_path_table_My: QLineEdit
         self.lineEdit_path_table_Mz: QLineEdit
         #
-        self._create_list_lineEdits()
 
         # QPushButton
         self.pushButton_attribute: QPushButton

@@ -18,8 +18,6 @@ class ShowPorousMaterialModelEquations(QDialog):
         self._define_qt_variables()
         self._create_connections()
 
-        # self.exec()
-
     def _config_window(self):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)

@@ -58,7 +58,6 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
 
         # QLineEdit
         self.lineEdit_selection_id : QLineEdit
-        self.lineEdit_selection_id.setDisabled(True)
 
         # QPushButton
         self.pushButton_attribute : QPushButton
@@ -74,6 +73,9 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
         self.treeWidget_selection_info : QTreeWidget
 
     def _config_widgets(self):
+        #
+        self.lineEdit_selection_id.setDisabled(True)
+        #
         for i, width in enumerate([140]):
             self.treeWidget_selection_info.setColumnWidth(i, width)
             self.treeWidget_dofs_decoupling.setColumnWidth(i, width)
