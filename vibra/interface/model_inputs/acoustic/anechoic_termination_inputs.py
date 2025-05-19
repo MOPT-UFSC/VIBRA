@@ -145,7 +145,15 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             if self.comboBox_volume_id.currentText() == "multiple":
                 volume_id = volume_ids[0]
             else:
-                volume_id = int(self.comboBox_volume_id.currentText())
+                try:
+                    volume_id = int(self.comboBox_volume_id.currentText())
+                except Exception:
+                    window_title = "Error"
+                    title = "Error in the model setup"
+                    message = "You cannot set an anechoic termination for a shell element"
+
+                    PrintMessageInput([window_title, title, message])
+                    return
 
             data = {
                     "anechoic_termination" : True,
