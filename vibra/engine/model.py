@@ -77,17 +77,6 @@ class Model:
     def set_mesh_setup(self, mesh_setup):
         self.mesh_setup = mesh_setup
 
-    def is_there_a_geometry_file(self, path: Path | str):
-
-        if isinstance(path, Path):
-            path = str(path)
-
-        ext = path.split(".")[-1]
-        if ext in ["IGES", "iges", "IGS", "igs", "STEP", "step"]:
-            return True
-
-        return False
-
     def process_visual_geometry_mesh(self, path : str):
 
         self.mesh = Mesh(
@@ -96,14 +85,6 @@ class Model:
                          )
 
         try:
-
-            if not self.is_there_a_geometry_file(path):
-                self.mesh.geometry_imported = False
-                self.mesh.load_mesh(path)
-                self.generated_mesh = True
-                app().main_window.update_geometry_information()
-                app().main_window.update_mesh_information()
-                return
 
             try:
 
@@ -135,8 +116,6 @@ class Model:
             self.generated_mesh = False
             self.initial_element_size = element_size
 
-            app().main_window.update_geometry_information()
-
         except Exception as error_log:
             from traceback import print_exception
             print_exception(error_log)
@@ -144,6 +123,29 @@ class Model:
             message = str(error_log)
             PrintMessageInput([window_title_1, title, message])
             return -1       
+
+    def process_mesh_data(self, path : str):
+
+        self.mesh = Mesh(
+                         length_unit = self.length_unit, 
+                         geometry_qf = self.geometry_qf
+                         )
+
+        try:
+
+            self.mesh.geometry_imported = False
+            self.mesh.load_mesh(path)
+            self.generated_mesh = True
+            app().main_window.update_geometry_information()
+            app().main_window.update_mesh_information()
+
+        except Exception as error_log:
+            from traceback import print_exception
+            print_exception(error_log)
+            title = "Error while processing geometry"
+            message = str(error_log)
+            PrintMessageInput([window_title_1, title, message])
+            return -1
 
     def process_mesh(self):
 

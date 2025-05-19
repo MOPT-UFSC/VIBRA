@@ -45,11 +45,12 @@ class ModelSetupItems(CommonMenuItems):
         #
         self.item_top_acoustic_model_setup = self.add_top_item('Acoustic Model Setup')
         self.item_child_acoustic_pressure = self.add_item('Acoustic Pressure')
-        # self.item_child_mass_flow_rate = self.add_item("Mass Flow Rate")
+        self.item_child_mass_flow_rate = self.add_item("Mass Flow Rate")
         self.item_child_surface_velocity = self.add_item("Surface Velocity")
         self.item_child_anechoic_termination = self.add_item("Anechoic Termination")
         self.item_child_specific_impedance = self.add_item("Specific Impedance")
         self.item_child_transfer_impedance = self.add_item("Transfer Impedance")
+        self.item_child_absorption_surface = self.add_item("Absorption Surface")
         self.item_child_dissipation_model = self.add_item("Dissipation Model")
         self.item_child_porous_material_model = self.add_item("Porous Material Model")
         self.item_child_viscous_thermal_model = self.add_item("Viscous-thermal Loss Model")
@@ -138,7 +139,6 @@ class ModelSetupItems(CommonMenuItems):
         app().main_window.input_ui.set_acoustic_pressure()
     
     def item_child_mass_flow_rate_callback(self):
-        return
         app().main_window.input_ui.set_mass_flow_rate()
     
     def item_child_surface_velocity_callback(self):
@@ -152,7 +152,10 @@ class ModelSetupItems(CommonMenuItems):
 
     def item_child_transfer_impedance_callback(self):
         app().main_window.input_ui.set_transfer_impedance()
-    
+
+    def item_child_absorption_surface_callback(self):
+        app().main_window.input_ui.set_absorption_surface()
+
     def item_child_dissipation_model_callback(self):
         app().main_window.input_ui.set_dissipation_model()
     
@@ -192,11 +195,12 @@ class ModelSetupItems(CommonMenuItems):
 
     def modify_acoustic_model_setup_items_acces(self, key: bool):
         self.item_child_acoustic_pressure.setDisabled(key)
-        # self.item_child_mass_flow_rate.setDisabled(key)
+        self.item_child_mass_flow_rate.setDisabled(key)
         self.item_child_surface_velocity.setDisabled(key)
         self.item_child_specific_impedance.setDisabled(key)
         self.item_child_transfer_impedance.setDisabled(key)
         self.item_child_anechoic_termination.setDisabled(key)
+        self.item_child_absorption_surface.setDisabled(key)
         self.item_child_dissipation_model.setDisabled(key)
         self.item_child_porous_material_model.setDisabled(key)
         self.item_child_viscous_thermal_model.setDisabled(key)

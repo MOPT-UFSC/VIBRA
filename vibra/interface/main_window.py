@@ -639,12 +639,14 @@ class MainWindow(QMainWindow):
         self.welcome_widget.update_recent_projects()
 
     def action_import_mesh_callback(self):
+        caption = "Select a mesh file"
         ext_filter = "Geometry Files (*.bdf *.BDF *.nas *.NAS)"
-        self.import_geometry_or_mesh_dialog(ext_filter=ext_filter)
+        self.import_geometry_or_mesh_dialog(caption=caption, ext_filter=ext_filter)
 
     def action_import_geometry_callback(self):
+        caption = "Select a geometry file"
         ext_filter = "Geometry Files (*.stp *.step *.STEP  *.STP *.igs *.iges *.IGS *.IGES)"
-        self.import_geometry_or_mesh_dialog(ext_filter=ext_filter)
+        self.import_geometry_or_mesh_dialog(caption=caption, ext_filter=ext_filter)
 
     def action_hide_selection_callback(self):
         mesh = app().project.model.mesh
@@ -817,7 +819,7 @@ class MainWindow(QMainWindow):
 
         self.open_project(project_path)
 
-    def import_geometry_or_mesh_dialog(self, ext_filter: str | None = None):
+    def import_geometry_or_mesh_dialog(self, caption: str | None = None, ext_filter: str | None = None):
 
         self.close_dialogs()
         last_path = app().config.get_last_folder_for("geometry_mesh_folder")
@@ -826,12 +828,15 @@ class MainWindow(QMainWindow):
         else:
             path = last_path
 
+        if caption is None:
+            caption = "Select a geometry or mesh file"
+
         if ext_filter is None:
             ext_filter = "Geometry Files (*.stp *.step *.STEP  *.STP *.igs *.iges *.IGS *.IGES *.bdf *.BDF *.nas *.NAS)"
 
         load_path, check = QFileDialog.getOpenFileName(
             self,
-            "Select a geometry or mesh file",
+            caption,
             path,
             filter=ext_filter,
         )
@@ -868,7 +873,7 @@ class MainWindow(QMainWindow):
         LoadingWindow(remove_callback).run()
 
         _geometry_path = app().file.read_geometry_from_file()
-        self.import_geometry(_geometry_path)
+        self.import_geometry_or_mesh(_geometry_path)
 
         return True
 
@@ -922,9 +927,22 @@ class MainWindow(QMainWindow):
             self.welcome_widget.update_recent_projects()
             self.update_recents_menu()
 
-    def import_geometry(self, path: str, update_render: bool = True):
-        if LoadingWindow(app().project.import_geometry).run(path) == -1:
-            return
+    def import_geometry_or_mesh(self, path: str, update_render: bool = True):
+
+        if self.is_there_a_geometry_file(path):
+            if LoadingWindow(app().project.import_geometry).run(path) == -1:
+                return
+
+        else:
+            if LoadingWindow(app().project.import_mesh).run(path) == -1:
+                return
+
+            self.update_geometry_information()
+            app().file.write_geometry_data_in_file()
+            app().file.write_mesh_data_in_file()
+            app().main_window.project_data_modified = False
+
+        self.update_geometry_information()
 
         try:
 
@@ -950,6 +968,16 @@ class MainWindow(QMainWindow):
             message = str(error_log)
             PrintMessageInput([window_title, title, message])
 
+    def is_there_a_geometry_file(self, path: Path | str):
+
+        if isinstance(path, Path):
+            path = str(path)
+
+        ext = path.split(".")[-1]
+        if ext in ["IGES", "iges", "IGS", "igs", "STEP", "step"]:
+            return True
+
+        return False
 
     def action_save_as_callback(self):
         self.save_project_as_dialog()

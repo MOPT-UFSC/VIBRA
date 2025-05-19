@@ -615,8 +615,8 @@ class TransferImpedanceInputs(QDialog):
                 self.tabWidget_main.setTabVisible(2, True)
                 return
 
-        self.tabWidget_main.setTabVisible(2, False)
         self.tabWidget_main.setCurrentIndex(0)
+        self.tabWidget_main.setTabVisible(2, False)
 
     def load_table(self, lineEdit : QLineEdit, direct_load: bool=False):
 

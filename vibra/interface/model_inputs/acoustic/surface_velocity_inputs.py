@@ -39,7 +39,7 @@ class SurfaceVelocityInputs(QDialog):
         self._define_qt_variables()
         self._create_connections()
 
-        self.load_info()
+        self.load_model_info()
         self.geometry_selection_callback()
         
         while self.keep_window_open:
@@ -108,14 +108,14 @@ class SurfaceVelocityInputs(QDialog):
         self.radioButton_nodal_attribution_table.clicked.connect(self.update_controls_for_table_of_values)
         self.radioButton_element_integration_table.clicked.connect(self.update_controls_for_table_of_values)
         #
-        self.update_controls_for_constant_value()
-        self.update_controls_for_table_of_values()
-        #
-        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         self.treeWidget_surface_velocity.itemClicked.connect(self.on_click_item)
         self.treeWidget_surface_velocity.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        #
+        self.update_controls_for_constant_value()
+        self.update_controls_for_table_of_values()
 
     def geometry_selection_callback(self):
 
@@ -164,7 +164,7 @@ class SurfaceVelocityInputs(QDialog):
                 self.lineEdit_real_value.setText(str(data["real_values"][0]))
                 self.lineEdit_imag_value.setText(str(data["imag_values"][0]))
 
-    def tabEvent_callback(self):
+    def tab_event_callback(self):
         if self.tabWidget_main.currentIndex() == 2:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
@@ -485,7 +485,7 @@ class SurfaceVelocityInputs(QDialog):
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
-        self.load_info()
+        self.load_model_info()
         self.check_model_frequency_controls()
         self.main_window.update_info_text()
         app().file.write_model_properties_in_file()
@@ -528,20 +528,19 @@ class SurfaceVelocityInputs(QDialog):
         self.checkBox_averaged_table_values.setDisabled(_bool)
 
     def update_tabs_visibility(self):
-        surface_ids = list()
-        for key in self.properties.surface_properties.keys():
-            property, surface_id = key
-            if property == "surface_velocity":
-                surface_ids.append(surface_id)
 
-        if len(surface_ids) == 0:
-            self.tabWidget_main.setTabVisible(2, False)
-        else:
-            self.tabWidget_main.setTabVisible(2, True)
+        for key in self.properties.surface_properties.keys():
+            property, *args = key
+            if property == "surface_velocity":
+                self.tabWidget_main.setTabVisible(2, True)
+                return
+
+        self.tabWidget_main.setCurrentIndex(0)    
+        self.tabWidget_main.setTabVisible(2, False)
 
     def on_click_item(self, item):
-        self.pushButton_remove.setDisabled(False)
         if item.text(0) != "":
+            self.pushButton_remove.setDisabled(False)
             surface_id = int(item.text(0))
             self.lineEdit_selection_id.setText(item.text(0))
             app().main_window.set_geometry_selection(surfaces=[surface_id])
@@ -549,7 +548,7 @@ class SurfaceVelocityInputs(QDialog):
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
 
-    def load_info(self):
+    def load_model_info(self):
         self.treeWidget_surface_velocity.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key

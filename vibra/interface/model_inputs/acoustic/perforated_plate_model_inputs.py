@@ -369,8 +369,8 @@ class PerforatedPlateModelInputs(QDialog):
                 self.tabWidget_main.setTabVisible(1, True)
                 return
 
-        self.tabWidget_main.setTabVisible(1, False)
         self.tabWidget_main.setCurrentIndex(0)
+        self.tabWidget_main.setTabVisible(1, False)
 
     def load_perforated_plate_inputs(self, data: dict):
 

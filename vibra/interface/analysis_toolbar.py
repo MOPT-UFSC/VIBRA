@@ -202,6 +202,14 @@ class AnalysisToolbar(QToolBar):
         # This is needed specially when the geometry
         # and mesh changes because of the analysis
         app().main_window.update_plots(reset_camera=False)
+
+        if not app().file.read_geometry_data_from_file():
+            app().file.write_geometry_data_in_file()
+
+        if not app().file.read_mesh_data_from_file():
+            app().file.write_mesh_data_in_file()
+
+        app().file.write_model_properties_in_file()
         app().file.write_results_data_in_file()
 
     def reset_solution(self):

@@ -313,13 +313,27 @@ def acoustic_boundary_conditions_info_text():
     surface_velocity = app().project.model.properties._get_property(
         "surface_velocity",
         surface=selected_faces[0],
+    )   
+    mass_flow_rate = app().project.model.properties._get_property(
+        "mass_flow_rate",
+        surface=selected_faces[0],
+    )
+    absorption_surface = app().project.model.properties._get_property(
+        "absorption_surface",
+        surface=selected_faces[0],
     )
     specific_impedance = app().project.model.properties._get_property(
         "specific_impedance",
         surface=selected_faces[0],
     )
 
-    boundary_conditions_list = [acoustic_pressure, surface_velocity, specific_impedance]
+    boundary_conditions_list = [
+                                acoustic_pressure,
+                                surface_velocity,
+                                mass_flow_rate,
+                                absorption_surface,
+                                specific_impedance,
+                                ]
 
     if all(condition is None for condition in boundary_conditions_list):
         return text
@@ -331,6 +345,14 @@ def acoustic_boundary_conditions_info_text():
     if surface_velocity is not None:
         values = surface_velocity["values"][0]
         text += acoustic_format("Surface velocity", values, "Vn", "m/s")
+
+    if mass_flow_rate is not None:
+        values = mass_flow_rate["values"][0]
+        text += acoustic_format("Mass flow rate", values, "Q", "kg/s")
+
+    if absorption_surface is not None:
+        values = absorption_surface["values"][0]
+        text += acoustic_format("Absorption surface", values, "alpha", "--")
 
     if specific_impedance is not None:
         if "anechoic_termination" in specific_impedance.keys():

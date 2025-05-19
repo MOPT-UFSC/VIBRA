@@ -17,11 +17,11 @@ import numpy as np
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class SpecificImpedanceInputs(QDialog):
+class AbsorptionSurfaceInputs(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/setup/acoustic/specific_impedance_inputs.ui"
+        ui_path = UI_DIR / "model/setup/acoustic/absorption_surface_inputs.ui"
         load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
@@ -38,7 +38,7 @@ class SpecificImpedanceInputs(QDialog):
         self._define_qt_variables()
         self._create_connections()
 
-        self.load_info()
+        self.load_model_info()
         self.geometry_selection_callback()
 
         while self.keep_window_open:
@@ -59,7 +59,6 @@ class SpecificImpedanceInputs(QDialog):
         # QLineEdit
         self.lineEdit_selection_id : QLineEdit
         self.lineEdit_real_value : QLineEdit
-        self.lineEdit_imag_value : QLineEdit
         self.lineEdit_table_path : QLineEdit
 
         # QPushButton
@@ -76,9 +75,9 @@ class SpecificImpedanceInputs(QDialog):
         self.tabWidget_main : QTabWidget
 
         # QTreeWidget
-        self.treeWidget_specific_impedance : QTreeWidget
-        self.treeWidget_specific_impedance.setColumnWidth(1, 20)
-        self.treeWidget_specific_impedance.setColumnWidth(2, 80)
+        self.treeWidget_absorption_surface : QTreeWidget
+        self.treeWidget_absorption_surface.setColumnWidth(1, 20)
+        self.treeWidget_absorption_surface.setColumnWidth(2, 80)
 
     def _create_connections(self):
         #
@@ -88,10 +87,10 @@ class SpecificImpedanceInputs(QDialog):
         self.pushButton_load_table.clicked.connect(self.load_specific_impedance_table)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
-        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
-        self.treeWidget_specific_impedance.itemClicked.connect(self.on_click_item)
-        self.treeWidget_specific_impedance.itemDoubleClicked.connect(self.on_doubleclick_item)
+        self.treeWidget_absorption_surface.itemClicked.connect(self.on_click_item)
+        self.treeWidget_absorption_surface.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
 
@@ -115,27 +114,23 @@ class SpecificImpedanceInputs(QDialog):
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
 
-    def load_info(self):
-        self.treeWidget_specific_impedance.clear()
+    def load_model_info(self):
+
+        self.treeWidget_absorption_surface.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
-            if property == "specific_impedance":
-
-                if "anechoic_termination" in data.keys():
-                    continue
+            if property == "absorption_surface":
 
                 if "table_names" in data.keys():
                     str_value = "Table of values"
                 else:
-                    real_values = np.array(data["real_values"])
-                    imag_values = np.array(data["imag_values"])
-                    complex_values = real_values + 1j * imag_values
-                    str_value = str(complex_values)
+                    absorption_coefficient = np.array(data["real_values"])
+                    str_value = str(absorption_coefficient)
 
                 new = QTreeWidgetItem([str(surface_id), str_value])
                 new.setTextAlignment(0, Qt.AlignCenter)
                 new.setTextAlignment(1, Qt.AlignCenter)
-                self.treeWidget_specific_impedance.addTopLevelItem(new)
+                self.treeWidget_absorption_surface.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 
@@ -154,37 +149,43 @@ class SpecificImpedanceInputs(QDialog):
         elif tab_index == 1:
             self.check_table_values()
 
-    def check_complex_entries(self, lineEdit_real, lineEdit_imag):
+    def check_inputs(self, lineEdit: QLineEdit, label: str, zero_included: bool = True, only_positive: bool = True):
+
         self.stop = False
-        title = "Invalid entry to the specific impedance"
-        if lineEdit_real.text() != "":
-            try:
-                real_F = float(lineEdit_real.text())
-            except Exception:
-                message = "Wrong input for real part of specific impedance."
-                PrintMessageInput([window_title_1, title, message])
-                self.lineEdit_real_value.setFocus()
-                self.stop = True
-                return
-        else:
-            real_F = 0
+        message = ""
 
-        if lineEdit_imag.text() != "":
-            try:
-                imag_F = float(lineEdit_imag.text())
-            except Exception:
-                message = "Wrong input for imaginary part of specific impedance."
-                PrintMessageInput([window_title_1, title, message])
-                self.lineEdit_imag_value.setFocus()
-                self.stop = True
-                return
-        else:
-            imag_F = 0
+        title = "Invalid value typed"
+        input_str = lineEdit.text()
 
-        if real_F == 0 and imag_F == 0:
+        if input_str != "":
+
+            input_str = input_str.replace(",", ".")
+
+            try:
+
+                value = float(input_str)
+
+                if zero_included:
+                    if value < 0:
+                        message = f"Insert a positive or a zero value to the {label}."
+
+                else:
+                    if only_positive and value <= 0:
+                        message = f"Insert a non-zero positive value to the {label}."
+
+            except Exception as _err:
+                message = f"You have typed and invalid value at the {label} input field.\n\n"
+                message += str(_err)
+
+        else:
+            message = f"Insert some value at the {label} input field."
+
+        if message != "":
+            self.hide()
+            PrintMessageInput([window_title_1, title, message])
             return None
         else:
-            return real_F + 1j * imag_F
+            return value
 
     def check_constant_values(self):
 
@@ -203,36 +204,31 @@ class SpecificImpedanceInputs(QDialog):
 
         self.remove_conflicting_excitations(surface_ids)
 
-        specific_impedance = self.check_complex_entries(
-                                                        self.lineEdit_real_value, 
-                                                        self.lineEdit_imag_value
-                                                        )
+        absorption_coefficient = self.check_inputs(
+                                                   self.lineEdit_real_value, 
+                                                   "Absorption coefficient", 
+                                                   zero_included = False,
+                                                   )
 
-        if specific_impedance is not None:
+        if absorption_coefficient is None:
+            return
 
-            real_values = [np.real(specific_impedance)]
-            imag_values = [np.imag(specific_impedance)]
+        real_values = [absorption_coefficient]
+        imag_values = [None]
 
-            data = {
-                    "real_values" : real_values,
-                    "imag_values" : imag_values,
-                    }
+        data = {
+                "real_values" : real_values,
+                "imag_values" : imag_values,
+                }
 
-            for surface_id in surface_ids:
-                self.properties._set_property("specific_impedance", data, surface=surface_id)
+        for surface_id in surface_ids:
+            self.properties._set_property("absorption_surface", data, surface=surface_id)
 
-            self.actions_to_finalize()
-
-        else:
-            title = "Additional inputs required"
-            message = "You must enter the specific impedance to"
-            message += "proceed with the attribution."
-            PrintMessageInput([window_title_1, title, message])
-            self.lineEdit_real_value.setFocus()
+        self.actions_to_finalize()            
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
-        title = "Error reached while loading 'specific impedance' table"
+        title = "Error reached while loading 'absorption surface' table"
 
         try:
             if direct_load:
@@ -246,7 +242,7 @@ class SpecificImpedanceInputs(QDialog):
                 else:
                     path = last_path
 
-                caption = "Choose a table to import the specific impedance"
+                caption = "Choose a table to import the absorption surface"
                 imported_table_path, check = QFileDialog.getOpenFileName( 
                                                                         None, 
                                                                         caption, 
@@ -260,9 +256,9 @@ class SpecificImpedanceInputs(QDialog):
             lineEdit.setText(imported_table_path)
             imported_file = np.loadtxt(imported_table_path, delimiter=",")
 
-            if imported_file.shape[1] < 3:
-                message = "The imported table has insufficient number of columns. The spectrum"
-                message += " data must have three columns in the form: frequencies, real and imaginary values."
+            if imported_file.shape[1] < 2:
+                message = "The imported table has insufficient number of columns. The absorption coefficient"
+                message += " data must have two columns in the form: frequencies and real values."
                 PrintMessageInput([window_title_1, title, message])
                 return None
 
@@ -293,9 +289,10 @@ class SpecificImpedanceInputs(QDialog):
         self.update_analysis_setup_in_file(_frequencies)
 
         real_values = _imported_values[:, 1]
-        imag_values = _imported_values[:, 2]
+        # imag_values = _imported_values[:, 2]
 
-        data = np.array([_frequencies, real_values, imag_values], dtype=float).T
+        data = np.array([_frequencies, real_values], dtype=float).T
+        # data = np.array([_frequencies, real_values, imag_values], dtype=float).T
 
         self.properties.add_imported_tables("acoustic", table_name, data)
 
@@ -361,22 +358,22 @@ class SpecificImpedanceInputs(QDialog):
                 if self.imported_values is None:
                     return
 
-                complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
+                absorption_coefficient = list(self.imported_values[:, 1])
                 table_path = self.lineEdit_table_path.text()
 
                 data = {
-                        "table_names" : [table_name],
+                        "table_names": [table_name],
                         "table_paths" : [table_path],
-                        "values" : [complex_values],
+                        "values" : [absorption_coefficient]
                         }
 
-                self.properties._set_property("specific_impedance", data, surface=surface_id)
+                self.properties._set_property("absorption_surface", data, surface=surface_id)
 
             self.actions_to_finalize()
 
         else:
             title = "Additional inputs required"
-            message = "You must inform at least one specific impedance\n"
+            message = "You must inform at least one absorption surface\n"
             message += "table path before confirming the input!"
             PrintMessageInput([window_title_1, title, message])
             self.lineEdit_table_path.setFocus()
@@ -392,7 +389,7 @@ class SpecificImpedanceInputs(QDialog):
         if isinstance(surface_ids, int):
             surface_ids = [surface_ids]
 
-        labels = ["specific_impedance"]
+        labels = ["absorption_surface"]
 
         for surface_id in surface_ids:
             for label in labels:
@@ -401,28 +398,37 @@ class SpecificImpedanceInputs(QDialog):
                 self.process_table_file_removal(table_names)
 
     def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("specific_impedance", surface_id, "surfaces")
+        print("remove_table_files...")
+        table_names = self.properties.get_property_related_table_names("absorption_surface", surface_id, "surfaces")
+        print(table_names)
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
+        
+        str_selection_id = self.lineEdit_selection_id.text()
+        if str_selection_id == "":
+            return
 
-        if self.lineEdit_selection_id.text() != "":
-            surface_id = int(self.lineEdit_selection_id.text())
-            self.remove_table_files_from_surfaces(surface_id)
+        surface_id = int(str_selection_id)
+        self.remove_table_files_from_surfaces(surface_id)
 
-            data = self.properties._get_property("specific_impedance", surface=surface_id)
-            if "anechoic_termination" in data.keys():
-                return
-
-            self.properties._remove_surface_property("specific_impedance", surface_id)
-            self.actions_to_finalize()
+        self.properties._remove_surface_property("absorption_surface", surface_id)
+        self.actions_to_finalize()
 
     def reset_callback(self):
 
+        surface_ids = list()
+        for (property, *args) in self.properties.surface_properties.keys():
+            if property == "absorption_surface":
+                surface_ids.append(args[0])
+
+        if not surface_ids:
+            return
+
         self.hide()
 
-        title = "Specific impedance resetting"
-        message = "Would you like to remove the all applied specific impedances from model?"
+        title = "Absorption surface reset"
+        message = "Would you like to remove the all applied absorption surfaces from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -430,23 +436,17 @@ class SpecificImpedanceInputs(QDialog):
         if read._cancel:
             return
 
-        if read._continue:
+        if not read._continue:
+            return
 
-            surface_ids = list()
-            for (property, *args), data in self.properties.surface_properties.items():
-                if property == "specific_impedance":
-                    if "anechoic_termination" in data.keys():
-                        continue
-                    surface_ids.append(args[0])
+        self.remove_table_files_from_surfaces(surface_ids)
+        for surface_id in surface_ids:
+            self.properties._remove_surface_property("absorption_surface", surface_id)
 
-            self.remove_table_files_from_surfaces(surface_ids)
-            for surface_id in surface_ids:
-                self.properties._remove_surface_property("specific_impedance", surface_id)
-
-            self.actions_to_finalize()
+        self.actions_to_finalize()
 
     def actions_to_finalize(self):
-        self.load_info()
+        self.load_model_info()
         self.check_model_frequency_controls()
         self.main_window.update_info_text()
         app().file.write_model_properties_in_file()
@@ -462,9 +462,19 @@ class SpecificImpedanceInputs(QDialog):
 
     def check_model_frequency_controls(self):
 
+        properties = [
+                      "acoustic_pressure", 
+                      "surface_velocity", 
+                      "specific_impedance",
+                      "absorption_surface",
+                      "transfer_impedance",
+                      "perforated_plate", 
+                      "reciprocating_compressor_excitation",
+                      ]
+
         for key, data in self.properties.surface_properties.items():
             property, _ = key
-            if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
+            if property in properties:
                 if "table_names" in data.keys():
                     return
 
@@ -475,16 +485,13 @@ class SpecificImpedanceInputs(QDialog):
 
     def reset_input_fields(self):
         self.lineEdit_real_value.setText("")
-        self.lineEdit_imag_value.setText("")
         self.lineEdit_table_path.setText("")
 
     def update_tabs_visibility(self):
 
-        for key, data in self.properties.surface_properties.items():
+        for key in self.properties.surface_properties.keys():
             property, *args = key
-            if property == "specific_impedance":
-                if "anechoic_termination" in data.keys():
-                    continue
+            if property == "absorption_surface":
                 self.tabWidget_main.setTabVisible(2, True)
                 return
 

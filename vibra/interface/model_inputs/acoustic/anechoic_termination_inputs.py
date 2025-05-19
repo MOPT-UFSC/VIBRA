@@ -35,7 +35,7 @@ class AnechoicTerminationInputs(QDialog):
         self._define_qt_variables()
         self._create_connections()
 
-        self.load_info()
+        self.load_model_info()
         self.geometry_selection_callback()
 
         while self.keep_window_open:
@@ -246,7 +246,7 @@ class AnechoicTerminationInputs(QDialog):
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
-        self.load_info()
+        self.load_model_info()
         self.check_model_frequency_controls()
         self.main_window.update_info_text()
         app().file.write_model_properties_in_file()
@@ -267,13 +267,15 @@ class AnechoicTerminationInputs(QDialog):
             app().file.write_analysis_setup_in_file(analysis_setup)
 
     def update_tabs_visibility(self):
+
         for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
+            property, *args = key
             if property == "specific_impedance":
                 if "anechoic_termination" in data.keys():
                     self.tabWidget_main.setTabVisible(1, True)
                     return
 
+        self.tabWidget_main.setCurrentIndex(0)
         self.tabWidget_main.setTabVisible(1, False)
 
     def on_click_item(self, item):
@@ -285,7 +287,7 @@ class AnechoicTerminationInputs(QDialog):
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
 
-    def load_info(self):
+    def load_model_info(self):
         self.treeWidget_anechoic_termination.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key

@@ -39,7 +39,7 @@ class AcousticPressureInputs(QDialog):
         self._define_qt_variables()
         self._create_connections()
 
-        self.load_info()
+        self.load_model_info()
         self.geometry_selection_callback()
 
         while self.keep_window_open:
@@ -347,7 +347,7 @@ class AcousticPressureInputs(QDialog):
                 table_path = self.lineEdit_table_path.text()
 
                 data = {
-                        "table_names": [table_name],
+                        "table_names" : [table_name],
                         "table_paths" : [table_path],
                         "values" : [complex_values],
                         }
@@ -430,7 +430,7 @@ class AcousticPressureInputs(QDialog):
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
-        self.load_info()
+        self.load_model_info()
         self.check_model_frequency_controls()
         self.main_window.update_info_text()
         app().file.write_model_properties_in_file()
@@ -463,16 +463,15 @@ class AcousticPressureInputs(QDialog):
         self.lineEdit_table_path.setText("")
 
     def update_tabs_visibility(self):
-        surface_ids = list()
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
-            if property == "acoustic_pressure":
-                surface_ids.append(surface_id)
 
-        if len(surface_ids) == 0:
-            self.tabWidget_main.setTabVisible(2, False)
-        else:
-            self.tabWidget_main.setTabVisible(2, True)
+        for key in self.properties.surface_properties.keys():
+            property, *args = key
+            if property == "acoustic_pressure":
+                self.tabWidget_main.setTabVisible(2, True)
+                return
+
+        self.tabWidget_main.setCurrentIndex(0)    
+        self.tabWidget_main.setTabVisible(2, False)
 
     def on_click_item(self, item):
         if item.text(0) != "":
@@ -483,7 +482,7 @@ class AcousticPressureInputs(QDialog):
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
 
-    def load_info(self):
+    def load_model_info(self):
         self.treeWidget_acoustic_pressure.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key

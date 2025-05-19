@@ -38,7 +38,7 @@ class MassFlowRateInputs(QDialog):
         self._define_qt_variables()
         self._create_connections()
 
-        self.load_info()
+        self.load_model_info()
         self.geometry_selection_callback()
 
         while self.keep_window_open:
@@ -82,9 +82,9 @@ class MassFlowRateInputs(QDialog):
         self.radioButton_element_integration_table : QRadioButton
         self.radioButton_nodal_attribution_table : QRadioButton
         #
-        self.radioButton_element_integration_constant.setDisabled(True)
-        self.radioButton_element_integration_table.setDisabled(True)
-        
+        self.radioButton_element_integration_constant.setChecked(True)
+        self.radioButton_element_integration_table.setChecked(True)
+
         # QTabWidget
         self.tabWidget_main : QTabWidget
 
@@ -106,13 +106,16 @@ class MassFlowRateInputs(QDialog):
         self.radioButton_nodal_attribution_table.clicked.connect(self.update_controls_for_table_of_values)
         self.radioButton_element_integration_table.clicked.connect(self.update_controls_for_table_of_values)
         #
-        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         self.treeWidget_mass_flow_rate.itemClicked.connect(self.on_click_item)
         self.treeWidget_mass_flow_rate.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        #
+        self.update_controls_for_constant_value()
+        self.update_controls_for_table_of_values()
 
-    def tabEvent_callback(self):
+    def tab_event_callback(self):
         if self.tabWidget_main.currentIndex() == 2:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
@@ -135,7 +138,7 @@ class MassFlowRateInputs(QDialog):
         self.lineEdit_selection_id.setText(item.text(0))
         self.remove_callback()
 
-    def load_info(self):
+    def load_model_info(self):
         self.treeWidget_mass_flow_rate.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
@@ -363,19 +366,18 @@ class MassFlowRateInputs(QDialog):
                 if self.imported_values is None:
                     return
 
-                real_values = list(self.imported_values[:, 1])
-                imag_values = list(self.imported_values[:, 2])
-
                 nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
                 key_avg = self.checkBox_averaged_constant_values.isChecked()
+
+                complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
                 table_path = self.lineEdit_table_path.text()
 
                 data = {
-                        "real_values": real_values,
-                        "imag_values": imag_values,
+                        "table_paths" : [table_path],
+                        "table_names" : [table_name],
+                        "values" : [complex_values],
                         "nodal_attribution": nodal_attribution,
                         "averaged": key_avg,
-                        "table_names": os.path.basename(table_path),
                         }
 
                 self.properties._set_property("mass_flow_rate", data, surface=surface_id)
@@ -454,7 +456,7 @@ class MassFlowRateInputs(QDialog):
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
-        self.load_info()
+        self.load_model_info()
         self.check_model_frequency_controls()
         self.main_window.update_info_text()
         app().file.write_model_properties_in_file()
@@ -498,16 +500,14 @@ class MassFlowRateInputs(QDialog):
 
     def update_tabs_visibility(self):
 
-        surface_ids = list()
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
+        for key in self.properties.surface_properties.keys():
+            property, *args = key
             if property == "mass_flow_rate":
-                surface_ids.append(surface_id)
+                self.tabWidget_main.setTabVisible(2, True)
+                return
 
-        if len(surface_ids) == 0:
+            self.tabWidget_main.setCurrentIndex(0)
             self.tabWidget_main.setTabVisible(2, False)
-        else:
-            self.tabWidget_main.setTabVisible(2, True)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

@@ -73,6 +73,11 @@ class Project:
         logging.info("Importing geometry file...")
         return self.model.process_visual_geometry_mesh(path)
 
+    def import_mesh(self, path : str):
+        self.model.set_geometry_path(path)
+        logging.info("Importing mesh file...")
+        return self.model.process_mesh_data(path)
+
     def get_fluid_list_path(self):
         return self.fluid_list_path
 
