@@ -2,7 +2,11 @@
    <img src="https://github.com/MOPT-UFSC/VIBRA/blob/main/pics/Vibra_Logo.png?raw=true" alt="VIBRA logo" width="500"/>
 
 
-# Vibra
+# Vibra: Vibroacoustic Analysis using FEM
+
+*V0.0.1 May 20th 2025*
+
+Vibra is an open source software written in Python for numerical modeling of vibroacoustic systems...
 
 ## Poetry commands
 ```
