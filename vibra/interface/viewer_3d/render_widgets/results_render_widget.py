@@ -94,8 +94,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.plane_actor,
         )
 
-        has_hidden_part = bool(app().main_window.hidden_surfaces)
-        self.ghost_actor.SetVisibility(has_hidden_part)
+        visualization = app().main_window.visualization_filter
+        section_plane = app().main_window.section_plane
+        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
+        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
         self.plane_actor.VisibilityOff()
 
         with self.update_lock:
@@ -316,8 +318,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         section_plane = app().main_window.section_plane
 
         if not section_plane.cutting:
-            has_hidden_part = bool(app().main_window.hidden_surfaces)
-            self.ghost_actor.SetVisibility(has_hidden_part)
+            visualization = app().main_window.visualization_filter
+            section_plane = app().main_window.section_plane
+            has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
+            self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
             self.plane_actor.VisibilityOff()
             self.analysis_actor.disable_cut()
             self.edges_actor.disable_cut()
@@ -344,11 +348,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         visualization = app().main_window.visualization_filter
-        has_hidden_part = bool(app().main_window.hidden_surfaces)
+        section_plane = app().main_window.section_plane
+        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
 
         self.edges_actor.SetVisibility(visualization.lines)
         self.analysis_actor.SetVisibility(visualization.faces)
-        self.ghost_actor.SetVisibility(has_hidden_part)
+        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
 
         self.update()
 
@@ -395,7 +400,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.edges_actor.apply_cut(xyz, normal)
         self.update()
 
-        self.ghost_actor.VisibilityOn()
+        visualization = app().main_window.visualization_filter
+        self.ghost_actor.SetVisibility(visualization.ghost)
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)

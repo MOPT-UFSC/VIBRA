@@ -42,6 +42,9 @@ class FacesActor(vtkActor):
         self.configure_appearance()
 
     def create_geometry(self):
+        if self.mesh.nodal_coordinates.size == 0:
+            return
+
         number_of_nodes = self.mesh.nodal_coordinates.shape[0]
         number_of_elements = len(self.mesh.faces_connectivity)
         nodes_per_element = len(self.mesh.faces_connectivity[0, 4:])

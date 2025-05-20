@@ -1,57 +1,49 @@
+import logging
+import os
+import sys
 from functools import partial
+from pathlib import Path
+from shutil import copy, rmtree
+
+from molde import stylesheets
+from molde.render_widgets import CommonRenderWidget
+from PySide6.QtCore import QEvent, Qt, Signal
+from PySide6.QtGui import QAction, QColor
 from PySide6.QtWidgets import (
     QAbstractButton,
     QDialog,
     QFileDialog,
-    QMainWindow,
     QMenu,
     QMessageBox,
-    QSplitter,
-    QStackedWidget,
-    QToolBar,
     QWidget,
 )
-from PySide6.QtGui import QAction, QColor
-from PySide6.QtCore import Signal, QEvent, Qt
 
 from vibra import TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, app
 from vibra.interface.analysis_toolbar import AnalysisToolbar
 from vibra.interface.animation_toolbar import AnimationToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
-from vibra.interface.formatters.icons import get_vibra_icon, change_icon_color_for_widgets
+from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.help_widget import HelpWidget
 from vibra.interface.loading_window import LoadingWindow
-
-from vibra.interface.project.geometry_setup import GeometrySetup
-
 from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
-from vibra.interface.user_input.input_ui import InputUi
 from vibra.interface.plots.acoustic.export_element_transfer_data_inputs import ExportElementTransferDataInputs
+from vibra.interface.project.geometry_setup import GeometrySetup
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
-
 from vibra.interface.section_plane_widget import SectionPlaneWidget
 from vibra.interface.status_bar import StatusBar
+from vibra.interface.ui_generated.main_window_ui import MainWindow_UI
+from vibra.interface.user_input.input_ui import InputUi
+from vibra.interface.user_input.render_user_preferences import RendererUserPreferencesInput
 from vibra.interface.viewer_3d.render_widgets import (
     GeometryRenderWidget,
     MeshRenderWidget,
     ResultsRenderWidget,
 )
-from vibra.interface.ui_generated.main_window_ui import MainWindow_UI
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
-from vibra.utils.interface_utils import VisualizationFilter, ColorMode
-from vibra.interface.user_input.render_user_preferences import RendererUserPreferencesInput
-
-from molde.render_widgets import CommonRenderWidget
-from molde import stylesheets
-
-import logging
-import os
-import sys
-from pathlib import Path
-from shutil import copy, rmtree
+from vibra.utils.interface_utils import ColorMode, VisualizationFilter
 
 
 class MainWindow(MainWindow_UI):
@@ -383,7 +375,6 @@ class MainWindow(MainWindow_UI):
             import_action = QAction(str(path), self)
             import_action.triggered.connect(partial(self.open_project, path))
             self.recents_menu.addAction(import_action)
-
 
     def render_changed_callback(self, new_index):
         if self.last_render_index is None:
@@ -975,12 +966,17 @@ class MainWindow(MainWindow_UI):
     def action_node_view_callback(self, clicked: bool):
         self.visualization_filter.points = clicked
         self.visualization_changed.emit()
+    
+    def action_ghost_view_callback(self, clicked: bool):
+        self.visualization_filter.ghost = clicked
+        self.visualization_changed.emit()
 
     def update_visualization_filter(self):
         self.blockSignals(True)
         self.action_node_view.setChecked(self.visualization_filter.points)
         self.action_line_view.setChecked(self.visualization_filter.lines)
         self.action_face_view.setChecked(self.visualization_filter.faces and self.visualization_filter.solids)
+        self.action_ghost_view.setChecked(self.visualization_filter.ghost)
         self.blockSignals(False)
 
     def action_about_vibra_callback(self):

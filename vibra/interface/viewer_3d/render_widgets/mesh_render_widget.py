@@ -133,9 +133,11 @@ class MeshRenderWidget(CommonRenderWidget):
         self.symbols_actor = SymbolsActor(self.renderer)
         self.selection_spheres_actor = SelectionSpheres()
 
-        has_hidden_part = bool(app().main_window.hidden_surfaces)
+        visualization = app().main_window.visualization_filter
+        section_plane = app().main_window.section_plane
+        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
         self.ghost_actor = GhostActor(mesh)
-        self.ghost_actor.SetVisibility(has_hidden_part)
+        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
 
         self.plane_actor = SectionPlaneActor(self.faces_actor.GetBounds())
         self.plane_actor.VisibilityOff()
@@ -167,7 +169,8 @@ class MeshRenderWidget(CommonRenderWidget):
             return
 
         visualization = app().main_window.visualization_filter
-        has_hidden_part = bool(app().main_window.hidden_surfaces)
+        section_plane = app().main_window.section_plane
+        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
 
         # Nodes actor are always visible.
         # We hide them painting the cells as transparent.
@@ -176,7 +179,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor.SetVisibility(visualization.lines)
         self.faces_actor.SetVisibility(visualization.faces)
         self.solids_actor.SetVisibility(visualization.solids)
-        self.ghost_actor.SetVisibility(has_hidden_part)
+        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
 
         self.update_selection()
         self.update()
@@ -314,8 +317,10 @@ class MeshRenderWidget(CommonRenderWidget):
             self._apply_section_plane(position, rotation, inverted, show_plane)
 
     def _disable_section_plane(self):
-        has_hidden_part = bool(app().main_window.hidden_surfaces)
-        self.ghost_actor.SetVisibility(has_hidden_part)
+        visualization = app().main_window.visualization_filter
+        section_plane = app().main_window.section_plane
+        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
+        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
         self.plane_actor.VisibilityOff()
 
         self.faces_actor.disable_cut()
@@ -345,7 +350,8 @@ class MeshRenderWidget(CommonRenderWidget):
         self.solids_actor.apply_cut(xyz, normal)
         self.edges_actor.apply_cut(xyz, normal)
 
-        self.ghost_actor.VisibilityOn()
+        visualization = app().main_window.visualization_filter
+        self.ghost_actor.SetVisibility(visualization.ghost)
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)

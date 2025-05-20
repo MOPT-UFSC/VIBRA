@@ -1401,16 +1401,16 @@ class Ui_Dialog(object):
 
         self.gridLayout_6.addItem(self.horizontalSpacer_5, 0, 0, 1, 1)
 
-        self.lineEdit_selected_surface_id = QLineEdit(self.frame_selection_id)
-        self.lineEdit_selected_surface_id.setObjectName(u"lineEdit_selected_surface_id")
-        self.lineEdit_selected_surface_id.setMinimumSize(QSize(160, 26))
-        self.lineEdit_selected_surface_id.setMaximumSize(QSize(160, 26))
-        self.lineEdit_selected_surface_id.setFont(font4)
-        self.lineEdit_selected_surface_id.setFocusPolicy(Qt.ClickFocus)
-        self.lineEdit_selected_surface_id.setStyleSheet(u"")
-        self.lineEdit_selected_surface_id.setAlignment(Qt.AlignCenter)
+        self.lineEdit_selection_id = QLineEdit(self.frame_selection_id)
+        self.lineEdit_selection_id.setObjectName(u"lineEdit_selection_id")
+        self.lineEdit_selection_id.setMinimumSize(QSize(160, 26))
+        self.lineEdit_selection_id.setMaximumSize(QSize(160, 26))
+        self.lineEdit_selection_id.setFont(font4)
+        self.lineEdit_selection_id.setFocusPolicy(Qt.ClickFocus)
+        self.lineEdit_selection_id.setStyleSheet(u"")
+        self.lineEdit_selection_id.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_6.addWidget(self.lineEdit_selected_surface_id, 0, 2, 1, 1)
+        self.gridLayout_6.addWidget(self.lineEdit_selection_id, 0, 2, 1, 1)
 
         self.label_5 = QLabel(self.frame_selection_id)
         self.label_5.setObjectName(u"label_5")
@@ -1783,7 +1783,7 @@ class ReciprocatingCompressorInputs_UI(QDialog, Ui_Dialog):
                                                                     - pushButton_reset: QPushButton
                             - frame_selection_id: QFrame
                                 - (Layout): QGridLayout
-                                        - lineEdit_selected_surface_id: QLineEdit
+                                        - lineEdit_selection_id: QLineEdit
                                         - label_5: QLabel
     """
 
