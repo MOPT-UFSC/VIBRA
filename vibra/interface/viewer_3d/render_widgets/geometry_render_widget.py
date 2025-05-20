@@ -47,11 +47,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         app().main_window.theme_changed.connect(self.update_theme)
         app().main_window.visualization_changed.connect(self.visualization_changed_callback)
 
-        self.points_actor = None
-        self.lines_actor = None
-        self.faces_actor = None
-        self.ghost_actor = None
-        self.selection_spheres_actor = None
         self.selection_faces_color = app().config.user_preferences.selection_faces_color.to_rgb()
         self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color.to_rgb()
         self.selection_lines_color = app().config.user_preferences.selection_lines_color.to_rgb()
@@ -135,7 +130,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.selection_spheres_actor = SelectionSpheres()
         self.symbols_actor = SymbolsActor(self.renderer)
 
-        has_hidden_part = bool(app().main_window.hidden_surfaces)
+        section_plane = app().main_window.section_plane
+        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
         self.ghost_actor = GhostActor(mesh)
         self.ghost_actor.SetVisibility(has_hidden_part)
 
@@ -193,14 +189,16 @@ class GeometryRenderWidget(CommonRenderWidget):
             return
 
         visualization = app().main_window.visualization_filter
-        faces_opacity = 1 if visualization.faces else 0.1
+        section_plane = app().main_window.section_plane
+        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
 
         self.symbols_actor.SetVisibility(
             visualization.acoustic_symbols | visualization.structural_symbols
         )
         self.points_actor.SetVisibility(visualization.points)
         self.lines_actor.SetVisibility(visualization.lines)
-        self.faces_actor.GetProperty().SetOpacity(faces_opacity)
+        self.faces_actor.SetVisibility(visualization.faces)
+        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
 
         self.points_actor.SetPickable(visualization.faces)
         self.lines_actor.SetPickable(visualization.faces)
@@ -231,8 +229,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.faces_actor = FacesActor(mesh)
         self.add_actors(self.faces_actor)
 
-        has_hidden_part = bool(app().main_window.hidden_surfaces)
-        self.ghost_actor.SetVisibility(has_hidden_part)
+        section_plane = app().main_window.section_plane
+        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
+        visualization = app().main_window.visualization_filter
+        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
 
         self.update_section_plane()
         # self.update()
@@ -382,8 +382,10 @@ class GeometryRenderWidget(CommonRenderWidget):
             self._apply_section_plane(position, rotation, inverted, show_plane)
 
     def _disable_section_plane(self):
-        has_hidden_part = bool(app().main_window.hidden_surfaces)
-        self.ghost_actor.SetVisibility(has_hidden_part)
+        visualization = app().main_window.visualization_filter
+        section_plane = app().main_window.section_plane
+        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
+        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
         self.plane_actor.VisibilityOff()
         self.points_actor.disable_cut()
         self.lines_actor.disable_cut()
@@ -401,7 +403,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.faces_actor.apply_cut(xyz, normal)
         self.lines_actor.apply_cut(xyz, normal)
 
-        self.ghost_actor.VisibilityOn()
+        visualization = app().main_window.visualization_filter
+        self.ghost_actor.SetVisibility(visualization.ghost)
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
