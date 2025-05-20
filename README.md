@@ -41,4 +41,6 @@ The authors are members of MOPT - Multidisciplinary Modeling and Optimization, f
    - [Leornardo R. Galibern](https://www.linkedin.com/in/leonardo-rosa-galibern-04a1b2304/) - Plate Elements.
 
 
-![alt text](https://github.com/MOPT-UFSC/VIBRA/blob/main/pics/MOPT3.PNG?raw=true) 
+<p align="center">
+   <img src="https://github.com/MOPT-UFSC/VIBRA/blob/main/pics/MOPT3.PNG?raw=true" alt="MOPT logo" width="600"/>
+
