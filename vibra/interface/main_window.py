@@ -392,9 +392,14 @@ class MainWindow(MainWindow_UI):
     def selection_changed_callback(self, points, lines, faces, volumes):
         self.status_bar.set_selection(points, lines, faces, volumes)
 
-    def action_section_plane_callback(self):
-        self.section_plane.show()
-        self.action_section_plane.setChecked(True)
+    def action_section_plane_callback(self, condition: bool):
+        if condition:
+            self.section_plane.show()
+        else:
+            self.section_plane.cutting = False
+            self.section_plane.keep_section_plane = False
+            self.section_plane.close()
+            self.section_plane.value_changed.emit()
 
     def action_theme_callback(self):
         color = QColor("#448cff")
@@ -550,7 +555,9 @@ class MainWindow(MainWindow_UI):
         self.mesh_widget.remove_all_actors()
         self.geometry_widget.remove_all_actors()
 
-        # self.results_widget.configure_analysis("")
+        self.section_plane.cutting = False
+        self.section_plane.keep_section_plane = False
+        self.section_plane.closeEvent(None)
 
         self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)
@@ -1089,9 +1096,24 @@ class MainWindow(MainWindow_UI):
         self.action_export_element_transfer_data.setDisabled(disabled)
 
     def eventFilter(self, obj, event: QEvent):
+        modifiers = app().keyboardModifiers()
+        alt_pressed = modifiers & Qt.AltModifier
+
         if event.type() == QEvent.ShortcutOverride:
             if event.key() == Qt.Key_F5:
                 self.update_plots()
+            
+            elif alt_pressed and (event.key() == Qt.Key_P):
+                if self.section_plane.isVisible():
+                    return super(MainWindow, self).eventFilter(obj, event)
+                
+                active = self.action_section_plane.isChecked()
+                self.action_section_plane.blockSignals(True)
+                self.action_section_plane.setChecked(not active)
+                self.action_section_plane.blockSignals(False)
+                self.section_plane.cutting = not active
+                self.section_plane.value_changed.emit()
+        
         return super(MainWindow, self).eventFilter(obj, event)
 
     def closeEvent(self, event):
