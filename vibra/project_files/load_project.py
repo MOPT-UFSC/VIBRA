@@ -295,9 +295,10 @@ class LoadProject:
 
         self.model.mesh.process_upwards_adjacencies_from_entities()
 
-        logging.info("Loading mesh... [80/100]")
-
+        logging.info("Loading mesh... [65/100]")
         self.model.mesh.process_mesh_related_mappings()
+
+        logging.info("Loading mesh... [90/100]")
         self.model.mesh.process_connectivities_from_lines_and_surfaces(from_cache=True)
         self.model.generated_mesh = True
 

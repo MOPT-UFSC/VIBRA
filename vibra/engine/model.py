@@ -77,15 +77,17 @@ class Model:
     def set_mesh_setup(self, mesh_setup):
         self.mesh_setup = mesh_setup
 
-    def process_visual_geometry_mesh(self, path : str):
-
+    def initialize_mesh(self):
         self.mesh = Mesh(
                          length_unit = self.length_unit, 
                          geometry_qf = self.geometry_qf
                          )
 
-        try:
+    def process_visual_geometry_mesh(self, path : str):
 
+        self.initialize_mesh()
+
+        try:
             try:
 
                 element_size = self.mesh.compute_initial_mesh_size(path)
@@ -126,18 +128,13 @@ class Model:
 
     def process_mesh_data(self, path : str):
 
-        self.mesh = Mesh(
-                         length_unit = self.length_unit, 
-                         geometry_qf = self.geometry_qf
-                         )
+        self.initialize_mesh()
 
         try:
 
             self.mesh.geometry_imported = False
             self.mesh.load_mesh(path)
             self.generated_mesh = True
-            app().main_window.update_geometry_information()
-            app().main_window.update_mesh_information()
 
         except Exception as error_log:
             from traceback import print_exception

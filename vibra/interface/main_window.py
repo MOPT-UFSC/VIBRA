@@ -875,20 +875,27 @@ class MainWindow(MainWindow_UI):
 
     def import_geometry_or_mesh(self, path: str, update_render: bool = True):
 
-        if self.is_there_a_geometry_file(path):
-            if LoadingWindow(app().project.import_geometry).run(path) == -1:
-                return
+        geometry_file = self.check_path_for_geometry_file(path)
+
+        if app().file.read_mesh_data_from_file():
+            app().project.load_project_without_process_mesh(path, geometry_file)
 
         else:
-            if LoadingWindow(app().project.import_mesh).run(path) == -1:
-                return
+
+            if geometry_file:
+                if LoadingWindow(app().project.import_geometry).run(path) == -1:
+                    return
+
+            else:
+                if LoadingWindow(app().project.import_mesh).run(path) == -1:
+                    return
+
+                self.update_mesh_information()
+                app().file.write_geometry_data_in_file()
+                app().file.write_mesh_data_in_file()
+                app().main_window.project_data_modified = False
 
             self.update_geometry_information()
-            app().file.write_geometry_data_in_file()
-            app().file.write_mesh_data_in_file()
-            app().main_window.project_data_modified = False
-
-        self.update_geometry_information()
 
         try:
             self.renderer_toolbar.setDisabled(False)
@@ -913,7 +920,11 @@ class MainWindow(MainWindow_UI):
             message = str(error_log)
             PrintMessageInput([window_title, title, message])
 
-    def is_there_a_geometry_file(self, path: Path | str):
+    def check_path_for_geometry_file(self, path: Path | str):
+        """
+        This method returns True if a CAD extension file is detected 
+        in the input path, otherwise, it returns False.
+        """
 
         if isinstance(path, Path):
             path = str(path)
