@@ -28,7 +28,7 @@ ISCC.exe /O"dist" /F"vibra-setup" "vibra.iss"
 
 ## Authors
 
-The authors are members of MOPT - Multidisciplinary Optimization Group, from Federal University of Santa Catarina (Florianópolis, SC, Brazil).
+The authors are members of MOPT - Multidisciplinary Modeling and Optimization, from Federal University of Santa Catarina (Florianópolis, SC, Brazil).
 
    - [Andre F. Fernandes](https://www.linkedin.com/in/andrefpf/) - Computer Scientist; 
    - [Olavo M. Silva](https://www.linkedin.com/in/olavo-m-silva-5822a5151/) - Engineer;
