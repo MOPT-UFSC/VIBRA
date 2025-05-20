@@ -42,5 +42,5 @@ The authors are members of [MOPT - Multidisciplinary Modeling and Optimization](
 
 
 <p align="center">
-   <img src="https://github.com/MOPT-UFSC/VIBRA/blob/main/pics/MOPT4.PNG?raw=true" alt="MOPT logo" width="900"/>
+   <img src="https://github.com/MOPT-UFSC/VIBRA/blob/main/pics/MOPT4.PNG?raw=true" alt="MOPT logo" width="1100"/>
 
