@@ -24,9 +24,8 @@ class MassFlowRateInputs(QDialog):
         ui_path = UI_DIR / "model/setup/acoustic/mass_flow_rate_inputs.ui"
         load_ui(ui_path, self, ui_path.parent)
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
+        app().main_window.set_input_widget(self)
+        app().main_window.action_model_workspace_callback()
 
         self.project = app().project
         self.model = app().project.model
@@ -48,7 +47,7 @@ class MassFlowRateInputs(QDialog):
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(self.main_window.vibra_icon)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
@@ -104,12 +103,15 @@ class MassFlowRateInputs(QDialog):
         self.treeWidget_mass_flow_rate.itemClicked.connect(self.on_click_item)
         self.treeWidget_mass_flow_rate.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
         #
         self.update_controls_for_constant_value()
         self.update_controls_for_table_of_values()
 
     def _config_widgets(self):
+        #
+        self.radioButton_element_integration_constant.setChecked(True)
+        self.radioButton_element_integration_table.setChecked(True)
         #
         self.pushButton_change_frequency_setup.setDisabled(True)
         #
@@ -163,7 +165,7 @@ class MassFlowRateInputs(QDialog):
 
     def geometry_selection_callback(self):
 
-        faces = self.main_window.selected_geometry_surfaces
+        faces = app().main_window.selected_geometry_surfaces
 
         if faces:
             text = ", ".join([str(i) for i in faces])
@@ -460,9 +462,9 @@ class MassFlowRateInputs(QDialog):
     def actions_to_finalize(self):
         self.load_model_info()
         self.check_model_frequency_controls()
-        self.main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
+        app().main_window.update_info_text()
         app().main_window.mesh_widget.update_symbols()
 
     def change_frequency_setup(self):

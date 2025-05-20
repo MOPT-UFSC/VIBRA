@@ -48,13 +48,13 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_mass_flow_rate = self.add_item("Mass Flow Rate")
         self.item_child_surface_velocity = self.add_item("Surface Velocity")
         self.item_child_anechoic_termination = self.add_item("Anechoic Termination")
+        self.item_child_absorption_surface = self.add_item("Absorption Surface")
         self.item_child_specific_impedance = self.add_item("Specific Impedance")
         self.item_child_transfer_impedance = self.add_item("Transfer Impedance")
-        self.item_child_absorption_surface = self.add_item("Absorption Surface")
+        self.item_child_perforated_plate_model = self.add_item("Perforated Plate Model")
         self.item_child_dissipation_model = self.add_item("Dissipation Model")
         self.item_child_porous_material_model = self.add_item("Porous Material Model")
         self.item_child_viscous_thermal_model = self.add_item("Viscous-thermal Loss Model")
-        self.item_child_perforated_plate_model = self.add_item("Perforated Plate Model")
         self.item_child_acoustic_properties_gradient = self.add_item("Acoustic Properties Gradient")
         self.item_child_reciprocating_compressor_excitation = self.add_item("Reciprocating Compressor Excitation")
         self.item_child_acoustic_transfer_element_setup = self.add_item("Acoustic Transfer Element Data")
@@ -179,7 +179,7 @@ class ModelSetupItems(CommonMenuItems):
     
     def item_child_acoustic_transfer_element_setup_callback(self):
         app().main_window.input_ui.set_acoustic_transfer_element_setup()
-    
+
     def modify_general_settings_items_access(self, key: bool):
         imported_geometry = app().project.model.mesh.geometry_imported
         self.item_child_mesh_setup.setDisabled(not imported_geometry)

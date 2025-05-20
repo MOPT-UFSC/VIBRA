@@ -232,7 +232,7 @@ class Mesh:
         gmsh.option.setNumber("General.NumThreads", threads)
         gmsh.option.setNumber("Geometry.Tolerance", geometry_tolerance)
 
-        logging.info("Loading mesh data... [15/100]")
+        logging.info("Loading mesh data... [25/100]")
         gmsh.open(path)
 
         logging.info("Loading mesh data... [90/100]")

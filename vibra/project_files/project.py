@@ -68,6 +68,12 @@ class Project:
 
         self.create_solver()
 
+    def load_project_without_process_mesh(self, path: str, geometry_file: bool):
+        self.model.set_geometry_path(path)
+        self.model.initialize_mesh()
+        self.generated_mesh = True
+        self.model.mesh.geometry_imported = geometry_file
+
     def import_geometry(self, path : str):
         self.model.set_geometry_path(path)
         logging.info("Importing geometry file...")
