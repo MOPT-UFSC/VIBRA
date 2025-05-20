@@ -1042,9 +1042,16 @@ class Mesh:
 
 
     def process_mesh_related_mappings(self):
+        logging.info("Loading mesh... [70/100]")
         self.process_connectivities_from_lines_and_surfaces()
+
+        logging.info("Loading mesh... [75/100]")
         self.map_elements_from_lines_surfaces_and_volumes()
+
+        logging.info("Loading mesh... [80/100]")
         self.map_face_elements_to_solid_elements()
+
+        logging.info("Loading mesh... [85/100]")
         self.get_principal_diagonal_structure_parallelepiped()
 
 
