@@ -34,6 +34,9 @@ ISCC.exe /O"dist" /F"vibra-setup" "vibra.iss"
 - The theoretical background for the acoustic formulation implemented in Vibra is based on [Finite Element and Boundary Methods in Structural Acoustics and Vibration, by Noureddine Atalla and Franck Sgard (CRC Press, 2015)](https://www.taylorfrancis.com/books/mono/10.1201/b18366/finite-element-boundary-methods-structural-acoustics-vibration-noureddine-atalla-franck-sgard).
  
 - [Português] Demonstração rápida: [MOPT YouTube](https://youtu.be/xxx).
+  
+## Questions
+If you have any questions you can open a new issue with the tag 'question'.
 
 ## Authors
 
