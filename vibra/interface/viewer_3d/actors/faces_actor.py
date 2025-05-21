@@ -12,11 +12,13 @@ from vtkmodules.vtkCommonDataModel import (
     VTK_TRIANGLE,
     vtkPlane,
     vtkPolyData,
+    vtkUnstructuredGrid,
 )
 from vtkmodules.vtkFiltersCore import vtkPolyDataNormals
-from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
+from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper, vtkDataSetMapper
 
 from vibra import app
+from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 from vibra.utils.interface_utils import ColorMode
@@ -30,7 +32,7 @@ class FacesActor(vtkActor):
         8: VTK_QUADRATIC_QUAD,
     }
 
-    def __init__(self, mesh, allow_hidding=True, update_normals=True):
+    def __init__(self, mesh: Mesh, allow_hidding=True, update_normals=True):
         self.mesh = mesh
         self.data = None
         self.allow_hidding = allow_hidding
@@ -43,12 +45,23 @@ class FacesActor(vtkActor):
         number_of_nodes = self.mesh.nodal_coordinates.shape[0]
         number_of_elements = len(self.mesh.faces_connectivity)
         nodes_per_element = len(self.mesh.faces_connectivity[0, 4:])
-        #
-        data = vtkPolyData()
+
+        if nodes_per_element in [6, 8]:
+            data = vtkUnstructuredGrid()
+            mapper = vtkDataSetMapper()
+        else:
+            data = vtkPolyData()
+            mapper = vtkPolyDataMapper()
+
         points = vtkPoints()
-        mapper = vtkPolyDataMapper()
         point_colors = vtkUnsignedCharArray()
+        point_colors.SetNumberOfComponents(3)
+        point_colors.SetNumberOfTuples(number_of_nodes)
+        point_colors.Fill(0)
+
         cell_colors = vtkUnsignedCharArray()
+        cell_colors.SetNumberOfComponents(4)
+        cell_colors.SetNumberOfTuples(number_of_elements)
         cell_colors.Fill(0)
 
         face_indexes = vtkIntArray()
@@ -65,11 +78,6 @@ class FacesActor(vtkActor):
 
         cell_type = self.NODES_TO_VTK_CELL[nodes_per_element]
         data.Allocate(nodes_per_element * number_of_elements)
-
-        point_colors.SetNumberOfComponents(3)
-        point_colors.SetNumberOfTuples(number_of_nodes)
-        cell_colors.SetNumberOfComponents(4)
-        cell_colors.SetNumberOfTuples(number_of_elements)
 
         coordinates = self.mesh.nodal_coordinates[:, 1:]
         points.SetData(numpy_to_vtk(coordinates))
@@ -103,7 +111,7 @@ class FacesActor(vtkActor):
 
         # Updating normals messes with the colors
         # this is why this option exists.
-        if self.update_normals:
+        if self.update_normals and isinstance(data, vtkPolyData):
             normals_filter = vtkPolyDataNormals()
             normals_filter.AddInputData(data)
             normals_filter.Update()
