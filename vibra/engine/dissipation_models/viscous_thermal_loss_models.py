@@ -1,12 +1,14 @@
+# fmt: off
+
+from vibra.engine.properties.fluid import Fluid
+
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 import numpy as np
 from scipy.special import jv
-# import matplotlib.pyplot as plt
 
-# fmt: off
 
 class ViscousThermalLossModels:
 
@@ -27,6 +29,9 @@ class ViscousThermalLossModels:
             freq = frequencies
 
         omega = 2 * np.pi * freq
+
+        if not self.properties.is_the_volume_property_present_in_the_model("viscous_thermal_model"):
+            return
 
         for key, data in self.properties.volume_properties.items():
             property, volume_id = key
@@ -55,12 +60,8 @@ class ViscousThermalLossModels:
                                                        "rho_eff" : rho_eff,
                                                        "C_eff" : C_eff   
                                                        }
-                
-                # data = np.array([np.arange(len(C_eff)), C_eff])
-                # np.savetxt("complex_sound.dat", data.T, delimiter=";")
 
-
-    def get_rectangular_section_effective_properties(self, omega, fluid, data):
+    def get_rectangular_section_effective_properties(self, omega: np.ndarray, fluid: Fluid, data: dict):
 
         P_0 = fluid.pressure
         rho_0 = fluid.fluid_density
@@ -228,7 +229,7 @@ class ViscousThermalLossModels:
         rho_eff = - rho_0 * (jv(0, G_rho)) / (jv(2, G_rho))
 
         # Effective complex bulk modulus (viscous-thermal losses in duct)
-        K_eff = K_s / (gamma + (gamma - 1) * jv(2, G_bulk) / jv(0, G_bulk))
+        K_eff = K_s / (gamma - (gamma - 1) * jv(2, G_bulk) / jv(0, G_bulk))
 
         # Effective complex speed of sound
         C_eff = np.sqrt(K_eff / rho_eff)

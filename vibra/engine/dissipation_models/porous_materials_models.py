@@ -1,3 +1,5 @@
+# fmt: off
+
 from vibra.engine.properties.fluid import Fluid
 
 from typing import TYPE_CHECKING
@@ -5,9 +7,7 @@ if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 import numpy as np
-# import matplotlib.pyplot as plt
 
-# fmt: off
 
 class PorousMaterialModels:
 
@@ -31,6 +31,9 @@ class PorousMaterialModels:
             freq = frequencies
 
         omega = 2 * np.pi * freq
+
+        if not self.properties.is_the_volume_property_present_in_the_model("porous_material_model"):
+            return
 
         for key, data in self.properties.volume_properties.items():
             property, volume_id = key
@@ -56,9 +59,6 @@ class PorousMaterialModels:
                                                          "rho_eff" : rho_eff,
                                                          "C_eff" : C_eff   
                                                          }
-
-                # data = np.array([np.arange(len(C_eff)), C_eff])
-                # np.savetxt("complex_sound.dat", data.T, delimiter=";")
 
     def get_Delany_Bazley_Miki_effective_properties(self, omega: np.ndarray, fluid: Fluid, data: dict):
 

@@ -13,14 +13,15 @@ from numbers import Number
 
 # GEOMETRY RENDER WIDGET INFO TEXTS
 def points_info_text():
-    point_ids = list(app().main_window.selected_geometry_points)
 
-    if len(point_ids) == 0:
+    selected_points = app().main_window.selected_geometry_points
+    node_ids = [int(point_id)-1 for point_id in selected_points]
+    point_ids = list(selected_points)
+
+    if len(node_ids) == 0:
         return ""
-    
+
     text = ""
-    nodes_from_points = app().project.model.mesh.nodes_from_points
-    node_ids = [int(nodes_from_points[i]) for i in point_ids]
 
     if len(point_ids) == 1:
         coords = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:].round(6)
@@ -55,11 +56,13 @@ def lines_info_text():
 
     if len(line_ids) == 0:
         return ""
+    
+    length_from_lines = app().project.model.mesh.length_from_lines
 
     text = ""
     length = 0
     for line_id in line_ids:
-        length += app().project.model.mesh.length_from_curve[line_id]
+        length += length_from_lines.get(line_id, 0)
 
     if len(line_ids) == 1:
         tree = TreeInfo(f"LINE {line_ids[0]}")
@@ -82,16 +85,18 @@ def faces_info_text():
     if len(volumes) != 0:
         return ""
     
-    text = ""
     surface_ids = list(app().main_window.selected_geometry_surfaces)
 
     if len(surface_ids) == 0:
-        return text
+        return ""
 
+    area_from_surfaces = app().project.model.mesh.area_from_surfaces
+
+    text = ""
     area = 0
     for surface_id in surface_ids:
-        area += app().project.model.mesh.area_from_surface[surface_id]
-    
+        area += area_from_surfaces.get(surface_id, 0)
+
     if len(surface_ids) == 1:
         tree = TreeInfo(f"SURFACE {surface_ids[0]}")
         tree.add_item("Area", f"{area : .6e}", "m²")
@@ -147,8 +152,10 @@ def process_volumes_and_masses(volume_ids: list):
     material_mass = 0.
     volume_compound = 0.
 
+    volume_from_bodies = app().project.model.mesh.volume_from_bodies
+
     for volume_id in volume_ids:
-        volume = app().project.model.mesh.volume_from_body[volume_id]
+        volume = volume_from_bodies.get(volume_id, 0)
         volume_compound += volume
 
         fluid = app().project.model.properties._get_property("fluid", volume=volume_id)
@@ -246,26 +253,41 @@ def porous_material_info_text():
     return text
 
 def perforated_plate_info_text():
-    surfaces = list(app().main_window.selected_geometry_surfaces)
-    text = ""
 
-    if len(surfaces) != 1:
+    text = ""
+    surfaces = list(app().main_window.selected_geometry_surfaces)
+
+    if not surfaces:
         return text
 
-    pp_model = app().project.model.properties._get_property(
-        "perforated_plate_model", surface=surfaces[0]
-    )
-    if pp_model is None:
+    surfaces.sort()
+    surfaces = [int(surf_id) for surf_id in surfaces]
+
+    if len(surfaces) == 1:
+        pp_data = app().project.model.properties._get_property("perforated_plate_model", surface=surfaces[0])
+    else:
+        pp_data = app().project.model.properties._get_property("perforated_plate_model", surface=tuple(surfaces))
+
+    if not isinstance(pp_data, dict):
         return text
 
     tree = TreeInfo("Perforated plate")
- 
-    tree.add_item("Formulation", pp_model["formulation"].replace("_", " "))
-    if pp_model["formulation"] == "circular_hole":
-        tree.add_item("Plate thickness", pp_model["plate_thickness"], "m")
-        tree.add_item("Hole diameter", pp_model["hole_diameter"], "m")
-        tree.add_item("Porosity", pp_model["porosity"], "--")
-        tree.add_item("Discharge coefficient", pp_model["discharge_coefficient"], "--")
+
+    tree.add_item("Formulation", pp_data["formulation"].replace("_", " "))
+    if pp_data["formulation"] == "circular_hole":
+
+        tree.add_item("Coupling type", pp_data.get("coupling_type").replace("_", " "))
+        tree.add_item("Plate thickness", pp_data.get("plate_thickness"), "m")
+        tree.add_item("Hole diameter", pp_data.get("hole_diameter"), "m")
+        tree.add_item("Porosity", pp_data.get("porosity"), "--")
+        tree.add_item("Linear discharge coefficient", pp_data.get("linear_discharge_coefficient"), "--")
+
+        if "non_linear_discharge_coefficient" in pp_data.keys():
+            tree.add_item("Non-linear discharge coefficient", pp_data.get("non_linear_discharge_coefficient"), "--")
+            tree.add_item("Non-linear correction factor", pp_data.get("non_linear_correction_factor"), "--")
+
+        if "table_names" in pp_data.keys():
+            tree.add_item("User-defined transfer impedance", "active")
 
     text += str(tree)
 

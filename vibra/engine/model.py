@@ -1,11 +1,12 @@
 
 from vibra import app
-from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
-from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
-from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
+from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
+from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
+from vibra.engine.mesh_modifiers.degrees_of_freedom_decoupling import DegreesOfFreedomDecoupling
+from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
 from vibra.errors import IncompleteSetupError
 from vibra.interface.general.print_message_input import PrintMessageInput
 
@@ -39,10 +40,13 @@ class Model:
         self.f_max = 600
         self.f_step = 2
         self.frequencies = None
-        self.frequency_setup = dict()
         self.list_frequencies = list()
 
-        self.analysis_data = None
+        self.decouple_info = dict()
+        self.nodes_mapping = dict()
+        self.frequency_setup = dict()
+
+        self.analysis_setup = None
         self.solid_acoustic_element = None
         self.surface_acoustic_element = None
         self.solid_structural_element = None
@@ -85,34 +89,31 @@ class Model:
 
                 element_size = self.mesh.compute_initial_mesh_size(path)
                 self.mesh.load_cad(
-                                   path,
-                                   dimension = 2,
-                                   size_factor = 0.0,
-                                   minimum_element_size = element_size*0.4,
-                                   maximum_element_size = element_size
-                                   )
+                    path,
+                    dimension=2,
+                    minimum_element_size=element_size * 0.4,
+                    maximum_element_size=element_size,
+                )
 
             except:
-
-                self.mesh = Mesh(
-                                 length_unit = self.length_unit, 
-                                 geometry_qf = self.geometry_qf
-                                 )
+                self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
 
                 element_size = 10
                 self.mesh.load_cad(
-                                   path,
-                                   dimension = 2,
-                                   size_factor = 0.0,
-                                   minimum_element_size = element_size*0.5, 
-                                   maximum_element_size = element_size
-                                   )
+                    path,
+                    dimension=2,
+                    minimum_element_size=element_size * 0.5,
+                    maximum_element_size=element_size,
+                )
 
-            self.initial_element_size = element_size
             self.generated_mesh = False
-            app().main_window.update_geometry_information(self.mesh.geometry_information)
+            self.initial_element_size = element_size
+
+            app().main_window.update_geometry_information()
 
         except Exception as error_log:
+            from traceback import print_exception
+            print_exception(error_log)
             title = "Error while processing geometry"
             message = str(error_log)
             PrintMessageInput([window_title_1, title, message])
@@ -145,15 +146,16 @@ class Model:
         self.mesh = mesh
         self.generated_mesh = True
 
-    def set_frequency_setup(self, analysis_setup: dict):
-
-        self.frequency_setup.clear()
+    def set_analysis_setup(self, analysis_setup: dict):
 
         self.frequencies = None
         self.f_min = analysis_setup.get("f_min", None)
         self.f_max = analysis_setup.get("f_max", None)
         self.f_step = analysis_setup.get("f_step", None)
 
+        self.analysis_setup = analysis_setup
+
+        self.frequency_setup.clear()
         if "frequencies" in analysis_setup.keys():
             self.frequencies = analysis_setup.get("frequencies", None)
 
@@ -193,7 +195,7 @@ class Model:
             #                     "f_max" : float(f_max),
             #                     "f_step" : float(f_step) }
 
-            # self.set_frequency_setup(frequency_setup)
+            # self.set_analysis_setup(frequency_setup)
 
             self.list_frequencies = frequencies
 
@@ -382,3 +384,7 @@ class Model:
             property, surface_id = key
             if property == "surface_thickness":
                 self.mesh.set_face_element_thickness(surface_id, data)
+
+    def process_degrees_of_freedom_decoupling(self):
+        self.dofs_decoupling = DegreesOfFreedomDecoupling(self)
+        self.dofs_decoupling.process_degrees_of_freedom_decoupling()

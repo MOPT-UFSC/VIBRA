@@ -1,37 +1,39 @@
-from vibra.interface.model_inputs.structural.material.set_material_input import SetMaterialInput
-from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input import SetFluidInput
-from vibra.interface.mesh.mesher_inputs import MesherInputs
+from vibra.interface.model_inputs.structural.material.set_material_inputs import MaterialInputs
+from vibra.interface.model_inputs.acoustic.fluid.set_fluid_inputs import SetFluidInputs
+from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
 #
-from vibra.interface.model_inputs.acoustic.set_acoustic_pressure import AcousticPressureInput
-from vibra.interface.model_inputs.acoustic.set_mass_flow_rate_inputs import MassFlowRateInput
-from vibra.interface.model_inputs.acoustic.set_surface_velocity_inputs import SurfaceVelocityInput
-from vibra.interface.model_inputs.acoustic.set_specific_impedance_inputs import SpecificImpedanceInput
-from vibra.interface.model_inputs.acoustic.set_anechoic_termination_inputs import SetAnechoicTerminationInputs
-from vibra.interface.model_inputs.acoustic.set_dissipation_model_inputs import DissipationModelInput
-from vibra.interface.model_inputs.acoustic.set_porous_material_model_inputs import SetPorousMaterialModelInputs
-from vibra.interface.model_inputs.acoustic.set_viscous_thermal_loss_model import SetViscousThermalLossModel
-from vibra.interface.model_inputs.acoustic.set_perforated_plate_model_inputs import SetPerforatedPlateModelInputs
-from vibra.interface.model_inputs.acoustic.set_acoustic_properties_gradient_input import SetAcousticPropertiesGradientInputs
+from vibra.interface.model_inputs.acoustic.acoustic_pressure_inputs import AcousticPressureInputs
+from vibra.interface.model_inputs.acoustic.mass_flow_rate_inputs import MassFlowRateInputs
+from vibra.interface.model_inputs.acoustic.surface_velocity_inputs import SurfaceVelocityInputs
+from vibra.interface.model_inputs.acoustic.specific_impedance_inputs import SpecificImpedanceInputs
+from vibra.interface.model_inputs.acoustic.transfer_impedance_inputs import TransferImpedanceInputs
+from vibra.interface.model_inputs.acoustic.anechoic_termination_inputs import AnechoicTerminationInputs
+from vibra.interface.model_inputs.acoustic.dissipation_model_inputs import DissipationModelInput
+from vibra.interface.model_inputs.acoustic.porous_material_model_inputs import PorousMaterialModelInputs
+from vibra.interface.model_inputs.acoustic.viscous_thermal_loss_model_inputs import ViscousThermalLossModelInputs
+from vibra.interface.model_inputs.acoustic.perforated_plate_model_inputs import PerforatedPlateModelInputs
+from vibra.interface.model_inputs.acoustic.acoustic_properties_gradient_inputs import AcousticPropertiesGradientInputs
 from vibra.interface.model_inputs.acoustic.reciprocating_compressor_inputs import ReciprocatingCompressorInputs
-from vibra.interface.model_inputs.acoustic.process_acoustic_transfer_element_data import ProcessAcousticTransferElementData
+from vibra.interface.model_inputs.acoustic.acoustic_transfer_element_inputs import AcousticTransferElementInputs
+from vibra.interface.model_inputs.acoustic.degrees_of_freedom_decoupling_inputs import DegreesOfFreedomDecouplingInputs
 #
-from vibra.interface.model_inputs.structural.set_surface_thickness_inputs import SetSurfaceThicknessInput
-from vibra.interface.model_inputs.structural.set_prescribed_dofs_inputs import SetPrescribedDofsInputs
-from vibra.interface.model_inputs.structural.set_nodal_loads_inputs import SetNodalLoadsInputs
-from vibra.interface.model_inputs.structural.set_normal_pressure_load_inputs import SetNormalPressureLoadInputs
-from vibra.interface.model_inputs.structural.set_distributed_loads_inputs import SetDistributedLoadsInputs
-# #
-from vibra.interface.plots.acoustic.plot_acoustic_pressure_field import PlotAcousticPressureField
-from vibra.interface.plots.acoustic.plot_acoustic_pressure_frequency_response_input import PlotAcousticPressureFrequencyResponseInput
-from vibra.interface.plots.acoustic.plot_acoustic_frequency_response_function_input import PlotAcousticPressureFrequencyResponseFunctionInput
-from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
-from vibra.interface.plots.acoustic.plot_particle_velocity_frequency_response_input import PlotParticleVelocityFrequencyResponseInput
-from vibra.interface.plots.acoustic.plot_transmission_loss_input import PlotTransmissionLossInput
-from vibra.interface.plots.acoustic.plot_acoustic_mode_shape import PlotAcousticModeShape
+from vibra.interface.model_inputs.structural.surface_thickness_inputs import SurfaceThicknessInputs
+from vibra.interface.model_inputs.structural.dofs_prescription_inputs import DofsPrescriptionInputs
+from vibra.interface.model_inputs.structural.nodal_loads_inputs import NodalLoadsInputs
+from vibra.interface.model_inputs.structural.normal_pressure_load_inputs import NormalPressureLoadInputs
+from vibra.interface.model_inputs.structural.distributed_loads_inputs import DistributedLoadsInputs
 #
-from vibra.interface.plots.structural.plot_structural_frequency_response_input import PlotStructuralFrequencyResponseInput
-from vibra.interface.plots.structural.plot_structural_mode_shape import PlotStructuralModeShape
-from vibra.interface.plots.structural.plot_displacement_field import PlotDisplacementField
+from vibra.interface.plots.acoustic.acoustic_pressure_field_inputs import AcousticPressureFieldInputs
+from vibra.interface.plots.acoustic.acoustic_pressure_frequency_response_inputs import AcousticPressureFrequencyResponseInputs
+from vibra.interface.plots.acoustic.acoustic_frequency_response_function_inputs import AcousticPressureFrequencyResponseFunctionInputs
+from vibra.interface.plots.acoustic.specific_acoustic_impedance_inputs import SpecificAcousticImpedanceInputs
+from vibra.interface.plots.acoustic.particle_velocity_frequency_response_inputs import ParticleVelocityFrequencyResponseInputs
+from vibra.interface.plots.acoustic.transmission_loss_inputs import TransmissionLossInputs
+from vibra.interface.plots.acoustic.acoustic_mode_shape_inputs import AcousticModeShapeInputs
+#
+from vibra.interface.plots.structural.structural_frequency_response_inputs import PlotStructuralFrequencyResponseInputs
+from vibra.interface.plots.structural.structural_mode_shape_inputs import PlotStructuralModeShapeInputs
+from vibra.interface.plots.structural.displacement_field_inputs import PlotDisplacementFieldInputs
 #
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -66,7 +68,7 @@ class InputUi:
     def mesh_setup(self):
         if not self.model_setup_items.item_child_mesh_setup.isDisabled():
             self.main_window.action_model_workspace_callback()
-            obj = self.process_input(MesherInputs)
+            obj = self.process_input(MeshSetupInputs)
             if obj.complete:
                 self.model_setup_items.modify_items_access_after_geometry_importing()
  
@@ -76,75 +78,82 @@ class InputUi:
         self.model_setup_items.item_child_generate_mesh.setDisabled(True)
 
     def set_material(self):
-        if not self.model_setup_items.item_child_set_material.isDisabled():
-            self.process_input(SetMaterialInput)   
+        if not self.model_setup_items.item_child_material.isDisabled():
+            self.process_input(MaterialInputs)   
 
     def set_fluid(self):
-        if not self.model_setup_items.item_child_set_fluid.isDisabled():
-            self.process_input(SetFluidInput)
+        if not self.model_setup_items.item_child_fluid.isDisabled():
+            self.process_input(SetFluidInputs)
         
     def set_surface_thickness(self):
-        if not self.model_setup_items.item_child_set_surface_thickness.isDisabled():
-            self.process_input(SetSurfaceThicknessInput)
+        if not self.model_setup_items.item_child_surface_thickness.isDisabled():
+            self.process_input(SurfaceThicknessInputs)
         
-    def set_prescribed_dofs(self):
-        if not self.model_setup_items.item_child_set_prescribed_dofs.isDisabled():
-            self.process_input(SetPrescribedDofsInputs)
+    def prescribe_structural_dofs(self):
+        if not self.model_setup_items.item_child_prescribed_dofs.isDisabled():
+            self.process_input(DofsPrescriptionInputs)
         
     def set_nodal_loads(self):
-        if not self.model_setup_items.item_child_set_nodal_loads.isDisabled():
-            self.process_input(SetNodalLoadsInputs)
+        if not self.model_setup_items.item_child_nodal_loads.isDisabled():
+            self.process_input(NodalLoadsInputs)
         
     def set_distributed_loads(self):
-        if not self.model_setup_items.item_child_set_distributed_loads.isDisabled():
-            self.process_input(SetDistributedLoadsInputs)
+        if not self.model_setup_items.item_child_distributed_loads.isDisabled():
+            self.process_input(DistributedLoadsInputs)
     
     def set_normal_pressure_load(self):
-        if not self.model_setup_items.item_child_set_normal_pressure_load.isDisabled():
-            self.process_input(SetNormalPressureLoadInputs)
+        if not self.model_setup_items.item_child_normal_pressure_load.isDisabled():
+            self.process_input(NormalPressureLoadInputs)
 
     def set_acoustic_pressure(self):
-        if not self.model_setup_items.item_child_set_acoustic_pressure.isDisabled():
-            self.process_input(AcousticPressureInput)
+        if not self.model_setup_items.item_child_acoustic_pressure.isDisabled():
+            self.process_input(AcousticPressureInputs)
         
     def set_mass_flow_rate(self):
-        if not self.model_setup_items.item_child_set_mass_flow_rate.isDisabled():
-            self.process_input(MassFlowRateInput)
+        if not self.model_setup_items.item_child_mass_flow_rate.isDisabled():
+            self.process_input(MassFlowRateInputs)
         
     def set_surface_velocity(self):
-        if not self.model_setup_items.item_child_set_surface_velocity.isDisabled():
-            self.process_input(SurfaceVelocityInput)
-        
-    def set_anechoic_termination(self):
-        if not self.model_setup_items.item_child_set_anechoic_termination.isDisabled():
-            self.process_input(SetAnechoicTerminationInputs)
-        
-    def set_dissipation_model(self):
-        if not self.model_setup_items.item_child_set_dissipation_model.isDisabled():
-            self.process_input(DissipationModelInput)
-        
-    def set_porous_material_model(self):
-        if not self.model_setup_items.item_child_set_porous_material_model.isDisabled():
-            self.process_input(SetPorousMaterialModelInputs)
-        
-    def set_viscous_thermal_model(self):
-        if not self.model_setup_items.item_child_set_viscous_thermal_model.isDisabled():
-            self.process_input(SetViscousThermalLossModel)
-
-    def set_perforated_plate_model(self):
-        if not self.model_setup_items.item_child_set_perforated_plate_model.isDisabled():
-            self.process_input(SetPerforatedPlateModelInputs)
-
-    def set_acoustic_properties_grandient(self):
-        if not self.model_setup_items.item_child_set_acoustic_properties_gradient.isDisabled():
-            self.process_input(SetAcousticPropertiesGradientInputs)
-        
-    def set_acoustic_transfer_element_setup(self):
-        if not self.model_setup_items.item_child_set_acoustic_transfer_element_setup.isDisabled():
-            self.process_input(ProcessAcousticTransferElementData)
+        if not self.model_setup_items.item_child_surface_velocity.isDisabled():
+            self.process_input(SurfaceVelocityInputs)
 
     def set_specific_impedance(self):
-        self.process_input(SpecificImpedanceInput)
+        self.process_input(SpecificImpedanceInputs)
+
+    def set_transfer_impedance(self):
+        self.process_input(TransferImpedanceInputs)
+
+    def set_anechoic_termination(self):
+        if not self.model_setup_items.item_child_anechoic_termination.isDisabled():
+            self.process_input(AnechoicTerminationInputs)
+        
+    def set_dissipation_model(self):
+        if not self.model_setup_items.item_child_dissipation_model.isDisabled():
+            self.process_input(DissipationModelInput)
+
+    def set_perforated_plate_model(self):
+        if not self.model_setup_items.item_child_perforated_plate_model.isDisabled():
+            self.process_input(PerforatedPlateModelInputs)
+    
+    def set_porous_material_model(self):
+        if not self.model_setup_items.item_child_porous_material_model.isDisabled():
+            self.process_input(PorousMaterialModelInputs)
+        
+    def set_viscous_thermal_model(self):
+        if not self.model_setup_items.item_child_viscous_thermal_model.isDisabled():
+            self.process_input(ViscousThermalLossModelInputs)
+
+    def set_degrees_of_freedom_decoupling(self):
+        if not self.model_setup_items.item_child_degrees_of_freedom_decoupling.isDisabled():
+            self.process_input(DegreesOfFreedomDecouplingInputs)
+
+    def set_acoustic_properties_grandient(self):
+        if not self.model_setup_items.item_child_acoustic_properties_gradient.isDisabled():
+            self.process_input(AcousticPropertiesGradientInputs)
+        
+    def set_acoustic_transfer_element_setup(self):
+        if not self.model_setup_items.item_child_acoustic_transfer_element_setup.isDisabled():
+            self.process_input(AcousticTransferElementInputs)
 
     def add_reciprocating_compressor_excitation(self):
         self.process_input(ReciprocatingCompressorInputs)
@@ -154,64 +163,64 @@ class InputUi:
             AnalysisID.STRUCTURAL_MODAL,
             AnalysisID.ACOUSTIC_MODAL,
         ]:
-            return self.process_input(PlotStructuralModeShape)     
+            return self.process_input(PlotStructuralModeShapeInputs)     
 
     def plot_displacement_field(self):
         if self.project.analysis_id in [
             AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
             AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
         ]:
-            return self.process_input(PlotDisplacementField)
+            return self.process_input(PlotDisplacementFieldInputs)
 
     def plot_structural_frequency_response(self):
         if self.project.analysis_id in [
             AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
             AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
         ]:
-            return self.process_input(PlotStructuralFrequencyResponseInput)
+            return self.process_input(PlotStructuralFrequencyResponseInputs)
 
     def plot_reaction_frequency_response(self):
         if self.projct:
             self.main_window.show_geometry_render_widget()
 
     def plot_stress_field(self):
-        if not self.results_viewer_items.item_child_plot_stress_field.isDisabled():
+        if not self.results_viewer_items.item_child_stress_field.isDisabled():
             self.main_window.configure_results_render_widget()
 
     def plot_stress_frequency_response(self):
-        if not self.results_viewer_items.item_child_plot_stress_frequency_response.isDisabled():
+        if not self.results_viewer_items.item_child_stress_frequency_response.isDisabled():
             self.main_window.show_geometry_render_widget() 
 
     def plot_acoustic_mode_shapes(self):
         if self.project.analysis_id == AnalysisID.ACOUSTIC_MODAL:
-            return self.process_input(PlotAcousticModeShape)
+            return self.process_input(AcousticModeShapeInputs)
 
     def plot_acoustic_pressure_field(self):
         if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            return self.process_input(PlotAcousticPressureField)
+            return self.process_input(AcousticPressureFieldInputs)
 
     def plot_acoustic_pressure_frequency_response(self):
         if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            return self.process_input(PlotAcousticPressureFrequencyResponseInput)
+            return self.process_input(AcousticPressureFrequencyResponseInputs)
 
     def plot_acoustic_pressure_frequency_response_function(self):
         if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            return self.process_input(PlotAcousticPressureFrequencyResponseFunctionInput)
+            return self.process_input(AcousticPressureFrequencyResponseFunctionInputs)
 
     def plot_acoustic_delta_pressures(self):
         pass
 
     def plot_TL_NR(self):
        if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-           return self.process_input(PlotTransmissionLossInput)
+           return self.process_input(TransmissionLossInputs)
      
     def plot_particle_velocity(self):
        if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-           return self.process_input(PlotParticleVelocityFrequencyResponseInput)
+           return self.process_input(ParticleVelocityFrequencyResponseInputs)
                    
     def plot_acoustic_specific_impedance_from_surface(self):
        if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-           return self.process_input(PlotSpecificAcousticImpedanceInput)
+           return self.process_input(SpecificAcousticImpedanceInputs)
      
     def empty_project_action_message(self):
         title = 'EMPTY PROJECT'

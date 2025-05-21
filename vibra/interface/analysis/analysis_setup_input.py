@@ -14,8 +14,8 @@ class AnalysisSetupInput():
 
         self.project = app().project
 
-        self.analysis_data = self.project.analysis_data
-        self.analysis_id = self.analysis_data["analysis_id"]
+        self.analysis_setup = self.project.analysis_setup
+        self.analysis_id = self.analysis_setup["analysis_id"]
         self.model = app().project.model
 
         """
@@ -38,7 +38,7 @@ class AnalysisSetupInput():
         self._config_window()
         self._create_connections()
 
-        self.load_analysis_data()
+        self.load_analysis_setup()
 
         while self.keep_window_open:
             self.exec()
@@ -63,12 +63,13 @@ class AnalysisSetupInput():
         df = self.lineEdit_fstep.text()
         self.lineEdit_fmin.setText(df)
 
-    def load_analysis_data(self):
-        analysis_setup = app().project.analysis_data
+    def load_analysis_setup(self):
+
+        analysis_setup = app().project.analysis_setup
         
-        f_min = analysis_setup.get("f_min", 2)
+        f_min = analysis_setup.get("f_min", 5)
         f_max = analysis_setup.get("f_max", 600)
-        f_step = analysis_setup.get("f_step", 2)
+        f_step = analysis_setup.get("f_step", 5)
         self.analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
         global_damping = analysis_setup.get("global_damping", (0., 0., 0., 0.))
 
@@ -193,7 +194,7 @@ class AnalysisSetupInput():
         if app().project.model.properties.check_if_there_are_tables_at_the_model():
             self.frequencies = self.model.frequencies
         else:
-            self.model.set_frequency_setup(analysis_setup)
+            self.model.set_analysis_setup(analysis_setup)
 
         if self.analysis_id in [
             AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
@@ -203,7 +204,7 @@ class AnalysisSetupInput():
 
         app().file.write_analysis_setup_in_file(analysis_setup)
 
-        self.project.set_analysis_data(analysis_setup)
+        self.project.set_analysis_setup(analysis_setup)
         self.project.create_solver()
 
         self.setup_defined = True

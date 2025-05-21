@@ -24,7 +24,9 @@ class PrintMessageInput(PrintMessage_UI):
 
         self._config_widgets()
         self._set_texts()
-        self.exec()
+
+        if kwargs.get("exec", True):
+            self.exec()
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)

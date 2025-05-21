@@ -14,37 +14,17 @@ from functools import cache
 
 
 class StructuralHarmonicSolver:
-    def __init__(self, assembler: "StructuralAssembler", analysis_data=None):
+    def __init__(self, assembler: "StructuralAssembler", **kwargs):
 
         self.assembler = assembler
-
         self.reset_variables()
-        self.load_analysis_data(analysis_data)
 
     def reset_variables(self):
-        self.analysis_type = None
-        self.frequencies = None
         self.disp_dofs = None
         self.solution = None
         self.loads = None
-        self.global_damping = (0, 0, 0, 0)
 
-    def load_analysis_data(self, analysis_data):
-
-        if analysis_data is not None:
-            if analysis_data["analysis_id"] in [
-                AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-                AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-            ]:
-                self.analysis_type = "structural"
-
-                if "frequencies" in analysis_data.keys():
-                    self.frequencies = analysis_data["frequencies"]
-
-                else:
-                    self.frequencies = self.assembler.model.frequencies
-
-                self.global_damping = analysis_data.get("global_damping", (0, 0, 0, 0))
+        self.analysis_type = "structural"
 
     @cache
     def get_max_min_values_of_displacements(self, column: int, disp_type: str):
@@ -108,6 +88,7 @@ class StructuralHarmonicSolver:
     def solve_direct_method(self, print_log=False):
         """ This method solves the structural harmonic analysis for both damped and undamped problems.
         """
+        frequencies = self.assembler.model.frequencies
         self.get_max_min_values_of_displacements.cache_clear()
 
         self.unprescribed_dofs_indexes, self.prescribed_dofs_indexes = self.assembler.get_matrices_dropping_indexes()
@@ -116,17 +97,18 @@ class StructuralHarmonicSolver:
         M = self.assembler.mass_matrix
         K = self.assembler.stiffness_matrix
 
-        alpha_v, beta_v, alpha_h, beta_h = self.global_damping
+        global_damping = self.assembler.model.analysis_setup.get("global_damping", (0, 0, 0, 0))
+        alpha_v, beta_v, alpha_h, beta_h = global_damping
         F_combined = self.get_prescribed_dofs_model_excitation()
 
         rows = K.shape[0]
-        cols = len(self.frequencies)
+        cols = len(frequencies)
         solution = np.zeros((rows, cols), dtype=complex)
 
-        logging.info(f"Solving harmonic analysis... [0/{len(self.frequencies)}]")
+        logging.info(f"Solving harmonic analysis... [0/{len(frequencies)}]")
 
-        for i, freq in enumerate(self.frequencies):
-            logging.info(f"Solution step {i+1} and frequency {freq} Hz [{i}/{len(self.frequencies)}]")
+        for i, freq in enumerate(frequencies):
+            logging.info(f"Solution step {i+1} and frequency {freq} Hz [{i}/{len(frequencies)}]")
 
             if print_log:
                 print(f"Solution step {i} -> frequency {freq} Hz")
@@ -212,6 +194,7 @@ class StructuralHarmonicSolver:
             F_eq. Each column corresponds to a frequency of analysis.
         """
 
+        frequencies = self.assembler.model.frequencies
         structural_loads = self.assembler.structural_loads
 
         if np.sum(self.array_prescribed_dofs_values) == 0:
@@ -220,9 +203,10 @@ class StructuralHarmonicSolver:
         Kr = (self.assembler.stiffness_matrix_r.toarray())[self.unprescribed_dofs_indexes, :]
         Mr = (self.assembler.mass_matrix_r.toarray())[self.unprescribed_dofs_indexes, :]
 
-        alpha_v, beta_v, alpha_h, beta_h = self.global_damping
+        global_damping = self.assembler.model.analysis_setup.get("global_damping", (0, 0, 0, 0))
+        alpha_v, beta_v, alpha_h, beta_h = global_damping
 
-        logging.info(f"Processing prescribed dofs model excitation... [10/{len(self.frequencies)}]")
+        logging.info(f"Processing prescribed dofs model excitation... [10/{len(frequencies)}]")
 
         rows = Kr.shape[0]
         if freq_dependent:
@@ -230,14 +214,14 @@ class StructuralHarmonicSolver:
             F_eq = np.zeros(rows, dtype=complex)
 
         else:
-            cols = len(self.frequencies)
+            cols = len(frequencies)
             F_eq = np.zeros((rows, cols), dtype=complex)
 
         if len(self.prescribed_dofs_values):
 
-            for i, freq in enumerate(self.frequencies):
+            for i, freq in enumerate(frequencies):
                 #
-                logging.info(f"Processing prescribed dofs model excitation... [{i + 10}/{len(self.frequencies) + 10}]")
+                logging.info(f"Processing prescribed dofs model excitation... [{i + 10}/{len(frequencies) + 10}]")
                 #
                 Kr_add = np.sum((Kr * self.array_prescribed_dofs_values[:, i]), axis=1)
                 Mr_add = np.sum((Mr * self.array_prescribed_dofs_values[:, i]), axis=1)

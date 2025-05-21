@@ -24,7 +24,7 @@ class ExportModelResults(QFileDialog):
     def _initialize(self):
         self.data = dict()
 
-    def _set_data_to_export(self, data : dict, **kwargs):
+    def _set_data_to_export(self, data: dict, **kwargs):
         self.data = data
         if data:
             self.call_file_dialog_and_export_data(**kwargs)

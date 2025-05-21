@@ -5,29 +5,34 @@ from vtkmodules.vtkCommonDataModel import (
     VTK_QUADRATIC_EDGE,
     VTK_VERTEX,
     vtkPlane,
-    vtkPolyData,
+    vtkUnstructuredGrid,
 )
-from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
+from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
 
 from vibra import app
 from molde import Color
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from vibra.engine.mesher.mesh import Mesh
 
 
 class LinesActor(vtkActor):
     NODES_TO_VTK_CELL = {2: VTK_LINE, 3: VTK_QUADRATIC_EDGE}
 
-    def __init__(self, mesh):
+    def __init__(self, mesh: "Mesh"):
         self.mesh = mesh
         self.create_geometry()
         self.configure_appearance()
 
     def create_geometry(self):
-        nodes_per_line = self.mesh.lines_connectivity.shape[1] - 4
+        nodes_per_line = len(self.mesh.lines_connectivity[0, 4:])
         number_of_lines = self.mesh.lines_connectivity.shape[0]
 
-        data = vtkPolyData()
+        data = vtkUnstructuredGrid()
         points = vtkPoints()
-        mapper = vtkPolyDataMapper()
+        mapper = vtkDataSetMapper()
         data.Allocate(number_of_lines * 3)
 
         line_indexes = vtkIntArray()
@@ -35,7 +40,7 @@ class LinesActor(vtkActor):
         line_indexes.Allocate(number_of_lines)
 
         cell_colors = vtkUnsignedCharArray()
-        cell_colors.SetNumberOfComponents(3)
+        cell_colors.SetNumberOfComponents(4)
 
         coordinates = self.mesh.nodal_coordinates[:, 1:]
         points.SetData(numpy_to_vtk(coordinates))
@@ -44,17 +49,17 @@ class LinesActor(vtkActor):
         for _, line_id, _, _, *values in self.mesh.lines_connectivity:
             data.InsertNextCell(VTK_VERTEX, 1, [values[0]])
             line_indexes.InsertNextValue(line_id)
-            cell_colors.InsertNextTuple3(0, 0, 0)
+            cell_colors.InsertNextTuple4(0, 0, 0, 0)
 
-            data.InsertNextCell(VTK_VERTEX, 1, [values[-1]])
+            data.InsertNextCell(VTK_VERTEX, 1, [values[1]])
             line_indexes.InsertNextValue(line_id)
-            cell_colors.InsertNextTuple3(0, 0, 0)
+            cell_colors.InsertNextTuple4(0, 0, 0, 0)
 
         cell_type = self.NODES_TO_VTK_CELL[nodes_per_line]
         for _, line_id, _, _, *values in self.mesh.lines_connectivity:
             data.InsertNextCell(cell_type, nodes_per_line, values)
             line_indexes.InsertNextValue(line_id)
-            cell_colors.InsertNextTuple3(0, 0, 0)
+            cell_colors.InsertNextTuple4(0, 0, 0, 0)
 
         data.SetPoints(points)
         data.GetCellData().SetScalars(cell_colors)
@@ -77,16 +82,36 @@ class LinesActor(vtkActor):
     def clear_colors(self):
         color = app().config.user_preferences.lines_color
         self.set_color(color)
-    
+
+        # By default prints the decoupled lines as Transparent
+        self.paint_cells(
+            (0, 0, 0, 0),  # Transparent
+            self._get_decoupled_line_cells(),
+        )
+
+    def _get_decoupled_line_cells(self):
+        if self.mesh.cache_lines_connectivity is None:
+            return StopIteration()
+
+        number_of_lines = self.mesh.lines_connectivity.shape[0]
+        number_of_vertices = number_of_lines * 2
+        original_number_of_lines = self.mesh.cache_lines_connectivity.shape[0]
+
+        for line_element in range(original_number_of_lines, number_of_lines):
+            yield line_element * 2 + 0
+            yield line_element * 2 + 1
+            yield number_of_vertices + line_element
+
     def set_color(self, color: Color):
         data = self.GetMapper().GetInput()
         cell_colors: vtkUnsignedCharArray = data.GetCellData().GetScalars()
 
-        r, g, b = color.to_rgb()
+        r, g, b, a = color.to_rgba()
 
         cell_colors.FillComponent(0, r)
         cell_colors.FillComponent(1, g)
         cell_colors.FillComponent(2, b)
+        cell_colors.FillComponent(3, a)
 
         self.GetMapper().SetScalarModeToUseCellData()
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
@@ -112,6 +137,9 @@ class LinesActor(vtkActor):
     def paint_cells(self, color: tuple[3], cells: tuple[int]):
         data = self.GetMapper().GetInput()
         cell_colors: vtkUnsignedCharArray = data.GetCellData().GetScalars()
+
+        if len(color) == 3:
+            color = *color, 255
 
         for i in cells:
             cell_colors.SetTuple(i, color)

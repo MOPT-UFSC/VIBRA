@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from PySide6.QtGui import QAction, QColor
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Signal, QEvent, Qt
 
 from vibra import TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, app
 from vibra.interface.analysis_toolbar import AnalysisToolbar
@@ -28,7 +28,7 @@ from vibra.interface.project.geometry_setup import GeometrySetup
 from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
 from vibra.interface.user_input.input_ui import InputUi
-from vibra.interface.plots.acoustic.export_element_transfer_data_input import ExportElementTransferDataInput
+from vibra.interface.plots.acoustic.export_element_transfer_data_inputs import ExportElementTransferDataInputs
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
 
 from vibra.interface.section_plane_widget import SectionPlaneWidget
@@ -76,7 +76,6 @@ class MainWindow(MainWindow_UI):
 
         self.hidden_mesh_faces = set()
         self.hidden_mesh_solids = set()
-
         self.hidden_surfaces = set()
         self.hidden_volumes = set()
 
@@ -152,6 +151,7 @@ class MainWindow(MainWindow_UI):
         self.vibra_icon = get_vibra_icon()
         self.setWindowIcon(self.vibra_icon)
         self.setWindowTitle("Vibra")
+        self.installEventFilter(self)
 
         # for qdarktheme
         self.custom_colors = {
@@ -190,13 +190,32 @@ class MainWindow(MainWindow_UI):
 
         app().processEvents()
 
-        if len(sys.argv) > 1:
-            path = Path(sys.argv[1])
-            if path.exists():
-                self.open_project(path)
-
-        elif not self.is_temporary_vibra_folder_empty():
+        if not self.is_temporary_vibra_folder_empty():
             self.recovery_dialog()
+        
+        else:
+            self.try_to_open_argv_path()
+    
+    def try_to_open_argv_path(self):
+        '''
+        Check every argument passed in the command line and try to open it if it is a valid file.
+        '''
+
+        if len(sys.argv) <= 1:
+            return
+        
+        for arg in sys.argv[1:]:
+            path = Path(arg)
+            
+            if not path.is_file():
+                continue
+            
+            if not path.exists():
+                continue
+            
+            if path.suffix == ".vibra":
+                self.open_project(path)
+                break
 
     # External functions that may be usefull
     def set_theme(self, theme: str):
@@ -223,15 +242,11 @@ class MainWindow(MainWindow_UI):
 
         self.theme_changed.emit(theme)
 
-    def closeEvent(self, event):
-        self.close_app()
-        event.ignore()
+    def update_mesh_information(self):
+        self.status_bar.update_mesh_information()
 
-    def update_mesh_information(self, nodes, face_elements, solid_elements):
-        self.status_bar.update_mesh_information(nodes, face_elements, solid_elements)
-
-    def update_geometry_information(self, geometry_info: dict):
-        self.status_bar.update_geometry_information(geometry_info)
+    def update_geometry_information(self):
+        self.status_bar.update_geometry_information()
 
     def _configure_render_widgets_stack(self):
         self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
@@ -424,22 +439,16 @@ class MainWindow(MainWindow_UI):
         self.close_dialogs()
         self.render_user_preferences = RendererUserPreferencesInput()
 
-    def configure_mesh_information(self):
-        nodes, face_elements, solid_elements = app().project.model.mesh.get_mesh_info()
-        self.update_mesh_information(nodes, face_elements, solid_elements)
-
     def configure_results_render_widget(self):
         self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
         self.results_viewer_widget.hide_bottom_widget()
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
 
-        if not self.action_model_workspace.isEnabled():
-            self.action_model_workspace.setEnabled(True)
+        self.action_results_workspace.setEnabled(True)
+        self.action_results_workspace.setChecked(True)
+        self.action_mesh_workspace.setChecked(False)
+        self.action_model_workspace.setChecked(False)
 
-        if not self.action_mesh_workspace.isEnabled():
-            self.action_mesh_workspace.setEnabled(True)
-
-        self.action_results_workspace.setEnabled(False)
         self.animation_toolbar.setEnabled(False)
 
     def show_geometry_render_widget(self):
@@ -487,13 +496,14 @@ class MainWindow(MainWindow_UI):
 
     def action_model_workspace_callback(self):
         self.action_node_view.setToolTip("Points view")
-        self.action_model_workspace.setEnabled(False)
+        self.action_model_workspace.setChecked(True)
+        self.action_mesh_workspace.setChecked(False)
+        self.action_results_workspace.setChecked(False)
 
-        if not self.action_mesh_workspace.isEnabled():
-            self.action_mesh_workspace.setEnabled(True)
-
-        if not self.action_results_workspace.isEnabled():
+        if app().project.is_there_a_valid_solution():
             self.action_results_workspace.setEnabled(True)
+        else:
+            self.action_results_workspace.setEnabled(False)
 
         self.splitter.widget(0).setVisible(True)
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
@@ -505,15 +515,16 @@ class MainWindow(MainWindow_UI):
 
     def action_mesh_workspace_callback(self):
         self.action_node_view.setToolTip("Nodes view")
-        self.action_mesh_workspace.setEnabled(False)
+        self.action_mesh_workspace.setChecked(True)
+        self.action_model_workspace.setChecked(False)
+        self.action_results_workspace.setChecked(False)
 
-        if not self.action_model_workspace.isEnabled():
-            self.action_model_workspace.setEnabled(True)
-
-        if not self.action_results_workspace.isEnabled():
+        if app().project.is_there_a_valid_solution():
             self.action_results_workspace.setEnabled(True)
+        else:
+            self.action_results_workspace.setEnabled(False)
 
-        self.configure_mesh_information()
+        self.update_mesh_information()
         self.splitter.widget(0).setVisible(True)
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
@@ -523,19 +534,15 @@ class MainWindow(MainWindow_UI):
         self.animation_toolbar.pause_animation()
 
     def action_results_workspace_callback(self):
-
         if not app().project.is_there_a_valid_solution():
             return
-
-        self.action_results_workspace.setEnabled(False)
-
-        if not self.action_model_workspace.isEnabled():
-            self.action_model_workspace.setEnabled(True)
-        if not self.action_mesh_workspace.isEnabled():
-            self.action_mesh_workspace.setEnabled(True)
+        
+        self.action_results_workspace.setEnabled(True)
+        self.action_results_workspace.setChecked(True)
+        self.action_model_workspace.setChecked(False)
+        self.action_mesh_workspace.setChecked(False)
 
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-
         self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
         self.results_viewer_widget.results_viewer_items.update_items()
         self.analysis_toolbar.update_analysis_combo_boxes()
@@ -552,7 +559,7 @@ class MainWindow(MainWindow_UI):
         self.mesh_widget.remove_all_actors()
         self.geometry_widget.remove_all_actors()
 
-        self.results_widget.configure_analysis("")
+        # self.results_widget.configure_analysis("")
 
         self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)
@@ -584,22 +591,30 @@ class MainWindow(MainWindow_UI):
             for element in self.selected_mesh_solids:
                 volumes_to_hide.add(mesh.volume_from_element[element])
 
+        self.hide_volumes(volumes_to_hide)
+        self.clear_selection()
+
+    def recompute_hidden_volumes(self):
+        self.hidden_surfaces.clear()
+        self.hide_volumes(app().main_window.hidden_volumes)
+
+    def hide_volumes(self, volumes: set[int]):
+        mesh = app().project.model.mesh
+
+        volumes = set(volumes)
         selected_volume_surfaces = set()
         visible_volume_surfaces = set()
+
         for volume, surfaces in mesh.surfaces_from_volume.items():
-            if volume in volumes_to_hide:
+            if volume in volumes:
                 selected_volume_surfaces |= set(surfaces)
             elif volume not in self.hidden_volumes:
                 visible_volume_surfaces |= set(surfaces)
         surfaces_to_keep_visible = set.intersection(selected_volume_surfaces, visible_volume_surfaces)
 
-        self.hidden_volumes |= volumes_to_hide
+        self.hidden_volumes |= volumes
         self.hidden_surfaces |= selected_volume_surfaces - surfaces_to_keep_visible
         self.update_hidden_plots()
-
-        # Clear selection
-        self.set_mesh_selection()
-        self.set_geometry_selection()
 
     def action_unhide_all_callback(self):
         self.hidden_surfaces.clear()
@@ -641,6 +656,7 @@ class MainWindow(MainWindow_UI):
             self.open_project()
         else:
             self.reset_temporary_vibra_folder()
+            self.try_to_open_argv_path()
 
     def new_project_dialog(self):
         self.reset_temporary_vibra_folder()
@@ -685,18 +701,22 @@ class MainWindow(MainWindow_UI):
 
         return obj.complete
 
-    def save_project_as(self, path):
+    def save_project_as(self, path: str):
+
         def save_data(path):
+
             path = Path(path)
             app().project.name = path.stem
             app().project.save_path = path
+            logging.info("Saving project data... [10/100]")
+
             app().file.write_thumbnail()
             app().config.add_recent_file(path)
-            logging.info("Saving project data... [10/100]")
+            logging.info("Saving project data... [30/100]")
 
             app().config.write_last_folder_path_in_file("project_folder", path)
             self.update_recents_menu()
-            logging.info("Saving project data... [60/100]")
+            logging.info("Saving project data... [75/100]")
 
             copy(TEMP_PROJECT_FILE, path)
             self.update_window_title(path)
@@ -814,10 +834,13 @@ class MainWindow(MainWindow_UI):
 
             self.analysis_toolbar.check_analysis_setup_callback()
             self.status_bar.setVisible(True)
+            self.update_mesh_information()
 
-            self.configure_mesh_information()
             LoadingWindow(self.mesh_widget.update_plot).run()
-            LoadingWindow(self.geometry_widget.update_plot).run()
+            LoadingWindow(self.geometry_widget.update_plot).run()                
+
+            self.action_results_workspace.setDisabled(True)
+            self.action_model_workspace_callback()
             
         except Exception as error_log:
             from traceback import print_exception
@@ -836,9 +859,6 @@ class MainWindow(MainWindow_UI):
             return
 
         try:
-
-            self.action_model_workspace_callback()
-
             self.renderer_toolbar.setDisabled(False)
             self.analysis_toolbar.setDisabled(False)
             self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
@@ -850,11 +870,17 @@ class MainWindow(MainWindow_UI):
             if update_render:
                 LoadingWindow(self.update_plots).run()
 
+            self.action_model_workspace_callback()
+
         except Exception as error_log:
+            from traceback import print_exception
+            print_exception(error_log)
+            
             window_title = "Error"
             title = "Error while processing geometry"
             message = str(error_log)
             PrintMessageInput([window_title, title, message])
+
 
     def action_save_as_callback(self):
         self.save_project_as_dialog()
@@ -912,10 +938,6 @@ class MainWindow(MainWindow_UI):
 
     def action_about_vibra_callback(self):
         self.render_widgets_stack.setCurrentWidget(self.help_widget)
-
-        self.action_model_workspace.setDisabled(False)
-        self.action_mesh_workspace.setDisabled(False)
-        self.action_results_workspace.setDisabled(False)
 
     def action_top_view_callback(self):
         widget = self.render_widgets_stack.currentWidget()
@@ -1010,7 +1032,7 @@ class MainWindow(MainWindow_UI):
     def action_export_element_transfer_data_callback(self):
         if app().project.acoustic_harmonic_solver.solution is None:
             return
-        ExportElementTransferDataInput()
+        ExportElementTransferDataInputs()
 
     def update_hidden_plots(self):
         for i in range(self.render_widgets_stack.count()):
@@ -1022,3 +1044,13 @@ class MainWindow(MainWindow_UI):
         self.action_plot_specific_acoustic_impedance.setDisabled(disabled)
         self.action_plot_particle_velocity.setDisabled(disabled)
         self.action_export_element_transfer_data.setDisabled(disabled)
+
+    def eventFilter(self, obj, event: QEvent):
+        if event.type() == QEvent.ShortcutOverride:
+            if event.key() == Qt.Key_F5:
+                self.update_plots()
+        return super(MainWindow, self).eventFilter(obj, event)
+
+    def closeEvent(self, event):
+        self.close_app()
+        event.ignore()

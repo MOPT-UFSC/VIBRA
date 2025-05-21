@@ -1,11 +1,11 @@
-from PySide6.QtWidgets import QDialog, QComboBox, QLabel, QLineEdit, QPushButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
 
 from vibra import app
 from vibra.interface.ui_generated.model.setup.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
-from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input import SetFluidInput
-from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input_simplified import SetFluidInputSimplified
+from vibra.interface.model_inputs.acoustic.fluid.set_fluid_inputs import SetFluidInputs
+from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
@@ -251,7 +251,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         if state_properties:
             self.hide()
-            self.fluid_dialog = SetFluidInputSimplified(state_properties = state_properties)
+            self.fluid_dialog = SimplifiedFluidInputs(state_properties = state_properties)
             self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
             self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
             self.fluid_dialog.exec_and_keep_window_open()
@@ -687,7 +687,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         analysis_setup["f_max"] = float(f_max)
         analysis_setup["f_step"] = float(f_step)
 
-        app().project.set_analysis_data(analysis_setup)
+        app().project.set_analysis_setup(analysis_setup)
         app().file.write_analysis_setup_in_file(analysis_setup)
 
     def update_state_properties_at_discharge(self):
@@ -757,7 +757,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
                             }
 
         self.hide()
-        read = SetFluidInput(state_properties = compressor_info)
+        read = SetFluidInputs(state_properties = compressor_info)
         app().main_window.set_input_widget(self)
 
         if not read.complete:
@@ -818,12 +818,12 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
     def remove_conflicting_excitations(self, surface_id: int):
         for label in ["acoustic_pressure", "surface_velocity", "mass_flow_rate", "reciprocating_compressor_excitation", "reciprocating_pump_excitation"]:
-            table_names = self.properties.get_property_related_table_names(label, surface_id, "surface")
+            table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
             self.properties._remove_surface_property(label, surface_id)
             self.process_table_file_removal(table_names)
 
     def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("reciprocating_compressor_excitation", surface_id, "surface")
+        table_names = self.properties.get_property_related_table_names("reciprocating_compressor_excitation", surface_id, "surfaces")
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):

@@ -115,10 +115,10 @@ def load_external_mesh_and_solve():
 
     # Impedance data
     Zo = fluid.impedance
-    data_Z = {  "real_values" : [Zo],
-                "imag_values" : [0],
-                "nodal_attribution" : False,
-                "averaged" : False  }
+    data_Z = {  
+              "real_values" : [Zo],
+              "imag_values" : [0],
+              }
 
     model.properties._set_property("surface_velocity", data_Vn, surface=1)
     model.properties._set_property("specific_impedance", data_Z, surface=1)
@@ -130,14 +130,15 @@ def load_external_mesh_and_solve():
     f_max = 1400
     frequencies = np.arange(f_min, f_max + df, df)
 
-    frequency_setup = {
-                        "f_min" : f_min,
-                        "f_max" : f_max,
-                        "f_step" : df,
-                        "frequencies" : frequencies
-                       }
-    
-    model.set_frequency_setup(frequency_setup)
+    analysis_setup = {  
+                      "analysis_id" : 3,
+                      "f_min" : f_min,
+                      "f_max" : f_max,
+                      "f_step" : df,
+                      "frequencies" : frequencies
+                      }
+
+    model.set_analysis_setup(analysis_setup)
 
     # Configure porous material
     pm_data = get_porous_material_data(model=pm_model)
@@ -164,8 +165,7 @@ def load_external_mesh_and_solve():
     # return
     
     # Define the analysis type and load setup
-    analysis_data = {"analysis_id" : 3, "frequencies" : frequencies}
-    harmonic_solver = AcousticHarmonicSolver(assembler, analysis_data=analysis_data)
+    harmonic_solver = AcousticHarmonicSolver(assembler)
 
     # Run harmonic analysis
 

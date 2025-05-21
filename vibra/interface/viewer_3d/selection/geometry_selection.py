@@ -85,23 +85,25 @@ class GeometrySelection:
         cell_picker.Pick(x, y, 0, renderer)
 
         pick_position = np.array(cell_picker.GetPickPosition())
-        all_points = self._get_nodes_subset()  # The point id is 1-indexed
-        plane_mask = self._section_plane_mask(all_points[:, 1:])
-        all_points = all_points[plane_mask]
+        points_coords = self._get_points_coords()  # The point id is 1-indexed
+        plane_mask = self._section_plane_mask(points_coords[:, 1:])
+        points_coords = points_coords[plane_mask]
 
-        i = np.argmin(np.linalg.norm(all_points[:, 1:] - pick_position, axis=1))
+        i = np.argmin(np.linalg.norm(points_coords[:, 1:] - pick_position, axis=1))
         camera_position = np.array(renderer.GetActiveCamera().GetPosition())
         camera_distance = np.linalg.norm(camera_position - pick_position)
 
         coordinate = vtkCoordinate()
         coordinate.SetCoordinateSystemToWorld()
-        coordinate.SetValue(all_points[i, 1:])
+        coordinate.SetValue(points_coords[i, 1:])
         view_coords = coordinate.GetComputedViewportValue(renderer)
         click = np.array([x, y])
 
+
         node_size = 15
         if np.linalg.norm(click - view_coords) < node_size / 2:
-            return {1 + all_points[i, 0].astype(int)}, camera_distance
+            equivalent_node_index = points_coords[i, 0].astype(int)
+            return {mesh.points_from_nodes[equivalent_node_index]}, camera_distance
         else:
             return set(), float("inf")
 
@@ -157,15 +159,17 @@ class GeometrySelection:
             return set()
 
         renderer = self.geometry_render_widget.renderer
-        all_points = self._get_nodes_subset()
-        plane_mask = self._section_plane_mask(all_points[:, 1:])
+        points_coords = self._get_points_coords()
+        plane_mask = self._section_plane_mask(points_coords[:, 1:])
 
         mask = get_coordinates_inside_area(
-            all_points[:, 1:],
+            points_coords[:, 1:],
             (x0, y0, x1, y1),
             renderer,
         )
-        return set(all_points[mask & plane_mask, 0].astype(int) + 1)
+
+        equivalent_node_indexes = points_coords[mask & plane_mask, 0].astype(int)
+        return {mesh.points_from_nodes[i] for i in equivalent_node_indexes}
 
     def _pick_lines_from_indexes(self, internal_picked_nodes: list[int]) -> set[int]:
         mesh = app().project.model.mesh
@@ -217,13 +221,13 @@ class GeometrySelection:
 
         return set(mesh.solids_connectivity[mask_selected_elements, 1].astype(int))
 
-    def _get_nodes_subset(self):
+    def _get_points_coords(self):
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
 
         node_indexes = list()
-        for _, (node_id,) in mesh.nodes_from_points.items():
+        for _, node_id in mesh.nodes_from_points.items():
             node_indexes.append(node_id)
 
         return mesh.nodal_coordinates[node_indexes]
