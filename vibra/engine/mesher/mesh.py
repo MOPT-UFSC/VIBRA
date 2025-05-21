@@ -77,6 +77,9 @@ class Mesh:
         self.surface_from_element = dict()
         self.volume_from_element = dict()
 
+        self.face_to_solid_element = dict()
+        self.solid_to_face_elements = defaultdict(list)
+
         self.face_element_thickness = dict()
         self.surface_from_solid_element = defaultdict(list)
 
