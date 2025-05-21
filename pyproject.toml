@@ -20,8 +20,8 @@ h5py = "^3.12.1"
 moviepy = "^1.0.3"
 pypardiso-mopt = "^0.1.0"
 fileboxes = "^0.1.4"
-molde = { git = "https://github.com/andrefpf/molde.git", branch = "main", python = ">=3.10" }
 pyside6 = "^6.8.2.1"
+molde = "^0.1.8"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"

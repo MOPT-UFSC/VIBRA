@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'degrees_of_freedom_decoupling_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.8.2
+## Created by: Qt User Interface Compiler version 6.9.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
