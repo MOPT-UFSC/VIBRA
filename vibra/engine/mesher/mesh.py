@@ -268,7 +268,7 @@ class Mesh:
         """
 
         self.process_geometry_information()
-        
+
         e_nodes_2d = self.faces_connectivity[0, 4:].size
         for vol_id in self.geometry_information.get("volumes"):
             nodes_from_volume = self.nodes_from_volumes[vol_id]
@@ -306,28 +306,112 @@ class Mesh:
             nodes_fixed = self.nodes_from_surfaces[fixed_tag]
 
             for sweep_tag in surface_ids[index+1:]:
+
                 nodes_sweep = self.nodes_from_surfaces[sweep_tag]
                 intersect_nodes = np.intersect1d(nodes_fixed, nodes_sweep)
                 if intersect_nodes.size <= 1:
                     continue
-
+                
+                line_repeated = False
                 line_nodes = list(set(intersect_nodes))
-                if line_nodes in self.nodes_from_lines.values():
-                    continue
+                for _line_nodes in self.separate_nodes_from_disconnected_lines(line_nodes).values():
 
-                line_id += 1
-                self.nodes_from_lines[line_id] = line_nodes
+                    _line_nodes.sort()
+                    if _line_nodes in self.nodes_from_lines.values():
+                        continue
 
-                for tag in [fixed_tag, sweep_tag]:    
-                    if lines_from_surface.get(tag) is None:
-                        lines_from_surface[tag] = set({line_id})
-                    else:
-                        lines_from_surface[tag] |= set({line_id})
+                    for nodes_from_line in self.nodes_from_lines.values():
+                        if np.isin(_line_nodes, nodes_from_line).all():
+                            line_repeated = True
+                            break
+
+                    if line_repeated:
+                        line_repeated = False
+                        continue
+
+                    line_id += 1
+                    self.nodes_from_lines[line_id] = _line_nodes
+
+                    for tag in [fixed_tag, sweep_tag]:    
+                        if lines_from_surface.get(tag) is None:
+                            lines_from_surface[tag] = set({line_id})
+                        else:
+                            lines_from_surface[tag] |= set({line_id})
 
             index += 1
 
         self.lines_from_surface.clear()
         self.lines_from_surface = {surf_id : list(lines_set) for surf_id, lines_set in lines_from_surface.items()}
+
+    def separate_nodes_from_disconnected_lines(self, node_ids: list) -> dict:
+        """
+        This method group nodes from each line using a  
+        a recursive structure.
+
+        Parameters
+        ----------
+
+        node_ids: list
+            a list containing the intersection nodes from two neighboor surfaces.
+    
+        Returns
+        -------
+        group_of_connected_nodes: dict
+            a dictionary whose the keys are the group of nodes indexes and the
+            values are the 
+
+        """
+        # get the 2D element connectivities that contains two node_ids inside
+        filt_rows = np.sum(np.isin(self.faces_connectivity[:, 4:], node_ids), axis=1) == 2
+        filt_connectivities = deepcopy([list(nodes) for nodes in self.faces_connectivity[filt_rows, 4:]])
+
+        if not filt_connectivities:
+            return dict()
+
+        connectivities = list()
+        for connect in filt_connectivities:
+
+            # filter the 1D element connectivities from 2D connectivities
+            line_connect = [int(node) for node in connect if node in node_ids]
+            line_connect.sort()
+
+            # ignore the duplicate edge connectivities 
+            if line_connect in connectivities:
+                continue
+
+            connectivities.append(line_connect)
+
+        index = 0
+        iter_count = 0
+        group_of_connected_nodes = defaultdict(list)
+
+        do_not_update = False
+        while len(connectivities) > 0 and iter_count <= 1000:
+
+            non_mapped = list()
+
+            if not do_not_update:
+                index += 1
+                start_connect = connectivities[0]
+                connectivities.remove(start_connect)
+                group_of_connected_nodes[index] = [node for node in start_connect]
+
+            for connect in connectivities:
+                if not np.isin(group_of_connected_nodes[index], connect).any():
+                    non_mapped.append(connect)
+                    continue
+
+                for node_id in connect:
+                    if node_id in group_of_connected_nodes[index]:
+                        continue
+
+                    group_of_connected_nodes[index].append(node_id)
+
+            iter_count += 1
+            connectivities = non_mapped
+            do_not_update = np.isin(group_of_connected_nodes[index], non_mapped).any()
+
+        return group_of_connected_nodes
 
 
     def process_lines_connectivitiy_from_mesh_data(self):
