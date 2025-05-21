@@ -1,7 +1,7 @@
 
 from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import CommonRenderWidget
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 from vibra import app
@@ -24,7 +24,6 @@ from .model_info_text import (
 
 import logging
 import numpy as np
-from numbers import Number
 
 
 class MeshRenderWidget(CommonRenderWidget):
@@ -120,8 +119,8 @@ class MeshRenderWidget(CommonRenderWidget):
         # TODO: load the mesh directly inside the actors
         self.nodes_actor = NodesActor(mesh)
         self.faces_actor = FacesActor(mesh)
-        self.edges_actor = EdgesActor(self.faces_actor.data)
         self.solids_actor: SolidsActor | HollowSolidsActor = HollowSolidsActor(mesh)
+        self.edges_actor = EdgesActor(self.solids_actor.data)
         self.selection_spheres_actor = SelectionSpheres()
 
         visualization = app().main_window.visualization_filter
@@ -319,9 +318,10 @@ class MeshRenderWidget(CommonRenderWidget):
                 return
 
             if mesh.solids_connectivity.size > 0:
-                self.remove_actors(self.solids_actor)
+                self.remove_actors(self.solids_actor, self.edges_actor)
                 self.solids_actor = SolidsActor(mesh)
-                self.add_actors(self.solids_actor)
+                self.edges_actor = EdgesActor(self.solids_actor.data)
+                self.add_actors(self.solids_actor, self.edges_actor)
 
         self.plane_actor.configure_section_plane(position, rotation)
         xyz = self.plane_actor.calculate_xyz_position(position)
@@ -346,8 +346,6 @@ class MeshRenderWidget(CommonRenderWidget):
         text += nodes_info_text()
         text += mesh_faces_info_text()
         text += mesh_solids_info_text()
-        # text += mesh_material_info_text()
-        # text += mesh_fluid_info_text()
         text += mesh_structural_boundary_conditions_info_text()
 
         self.set_info_text(text)
