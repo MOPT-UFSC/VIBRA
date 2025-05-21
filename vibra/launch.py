@@ -1,23 +1,28 @@
-import logging, os, platform, sys
-from vtkmodules.vtkCommonCore import vtkObject, vtkLogger
+import logging
+import os
+import sys
 from traceback import format_tb
+
+from vtkmodules.vtkCommonCore import vtkLogger, vtkObject
 
 from vibra import USER_PATH
 from vibra.interface.application import Application
 
-
 error_message = None
+
+
 def custom_exception_hooks(exc_type, exc_value, exc_traceback):
     global error_message
 
     if issubclass(exc_type, KeyboardInterrupt):
         sys.exit()
 
-    # Logs unhandled errors for future checks 
+    # Logs unhandled errors for future checks
     logging.error("Unhandled error", exc_info=(exc_type, exc_value, exc_traceback))
-    
+
     try:
         from vibra.interface.general.print_message_input import PrintMessageInput
+
         window_title = "Unhandled error"
         title = str(exc_type.__name__)
         message = str(exc_value) + "\n\n" + "\n".join(format_tb(exc_traceback, limit=-1))
@@ -30,6 +35,7 @@ def custom_exception_hooks(exc_type, exc_value, exc_traceback):
 
     except Exception as e:
         logging.exception(e)
+
 
 sys.excepthook = custom_exception_hooks
 
@@ -60,26 +66,15 @@ def configure_logs():
     logger.addHandler(file_handler)
     logger.addHandler(stream_handler)
 
+
 def main():
-    """ Vibra main
-        The main function starts the Vibra software.
-        This will create the mainWindow and also pass the terminal arguments to it.
-
-        # If are using Windows with HighDPI active, this'll set the scale to 100%
-        # But the screen and text'll be blurry
-
-        Example:
-            To start the Vibra you must first install all requeriments and
-            tip this command in the terminal:
-            (Python3)
-
-                $ python pulse.py
-
-        Todo:
-            Fix the HighDPI part to not blurry the screen. See more by searching "PySide6 HighDPI".
+    """
+    The main function starts the Vibra software.
+    This will create the Application and also pass the terminal arguments to it.
     """
     # Import enabling compiled qt resources to be found from path `:/icons/{filepath_relative_to_qrc}`
-    import vibra.interface.data.icons.resources_rc
+    import vibra.interface.data.icons.resources_rc  # noqa: F401
+
     configure_logs()
 
     # disables the terrible vtk error handler and its logs
@@ -89,10 +84,6 @@ def main():
 
     # Make the window scale evenly for every monitor
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-
-    if platform.system() == "Windows":
-        sys.argv.append("--platform")
-        sys.argv.append("windows:dpiawareness=0")
 
     app = Application(sys.argv)
     sys.exit(app.exec_())

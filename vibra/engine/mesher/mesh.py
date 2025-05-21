@@ -13,11 +13,11 @@ import numpy as np
 
 from copy import deepcopy
 from collections import defaultdict
-from itertools import combinations
+from itertools import combinations, pairwise
 from pathlib import Path
 
 from traceback import print_exception
-
+from time import time
 
 class Mesh:
     def __init__(self, **kwargs):
@@ -76,6 +76,9 @@ class Mesh:
         self.line_from_element = dict()
         self.surface_from_element = dict()
         self.volume_from_element = dict()
+
+        self.face_to_solid_element = dict()
+        self.solid_to_face_elements = defaultdict(list)
 
         self.face_element_thickness = dict()
         self.surface_from_solid_element = defaultdict(list)
@@ -152,7 +155,7 @@ class Mesh:
 
         self.mesh_connection = mesh_connection
 
-        gmsh.initialize("", False)
+        gmsh.initialize("", False, interruptible=False)
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("General.NumThreads", threads)
@@ -915,80 +918,36 @@ class Mesh:
         # dt = time() - t0
         # print(f"Elapsed '_process_solid_elements_connected_to_nodes': {dt} s")
 
-    # def map_face_elements_to_solid_elements(self):
-    #     self.face_to_solid_element = dict()
-    #     self.solid_to_face_elements = defaultdict(list)
+    def map_face_elements_to_solid_elements_reference(self):
+        self.face_to_solid_element = dict()
+        self.solid_to_face_elements = defaultdict(list)
 
-    #     if len(self.solids_connectivity) == 0:
-    #         return
+        if len(self.solids_connectivity) == 0:
+            return
 
-    #     nodes_per_face_element = len(self.faces_connectivity[0, 4:])
-    #     node_ids = np.array([*set(self.faces_connectivity[:, 4:].flatten())], dtype=int)
+        nodes_per_face_element = len(self.faces_connectivity[0, 4:])
+        node_ids = np.array([*set(self.faces_connectivity[:, 4:].flatten())], dtype=int)
 
-    #     mask_0 = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= nodes_per_face_element
-    #     filtered_data = self.solids_connectivity[mask_0, :]
+        mask_0 = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= nodes_per_face_element
+        filtered_data = self.solids_connectivity[mask_0, :]
 
-    #     for elf_id, _, _, _, *face_nodes in self.faces_connectivity:
-    #         mask_1 = np.sum(np.isin(filtered_data[:, 4:], face_nodes), axis=1) == nodes_per_face_element
-    #         els_id = filtered_data[mask_1, 0][0]
-    #         self.face_to_solid_element[elf_id] = els_id
-    #         self.solid_to_face_elements[els_id].append(elf_id)
-
-
-    # def map_face_elements_to_solid_elements(self):
-    #     self.face_to_solid_element = dict()
-    #     self.solid_to_face_elements = defaultdict(list)
-
-    #     if len(self.solids_connectivity) == 0:
-    #         return
-
-    #     nodes_per_face_element = len(self.faces_connectivity[0, 4:])
-    #     all_face_nodes = np.unique(self.faces_connectivity[:, 4:])
-
-    #     mask_solid_nodes_touching_face = np.isin(self.solids_connectivity[:, 4:], all_face_nodes)
-    #     face_nodes_per_solid = np.sum(mask_solid_nodes_touching_face, axis=1)
-
-    #     # Be carefull with this number
-    #     # it makes the cache grow factorially
-    #     cache_range = 2
-    #     cache = dict()
-
-    #     mask_bruteforce = face_nodes_per_solid >= (nodes_per_face_element + cache_range)
-    #     mask_cache = (face_nodes_per_solid >= nodes_per_face_element) & ~mask_bruteforce
-
-    #     submasks = mask_solid_nodes_touching_face[mask_cache]
-    #     masked_connectivity = self.solids_connectivity[mask_cache]
-
-    #     # Populate the cache with all valid combinations of nodes_per_face_element
-    #     for submask, row in zip(submasks, masked_connectivity):
-    #         filtered_nodes = row[4:][submask]
-    #         for nodes in combinations(filtered_nodes, nodes_per_face_element):
-    #             key = tuple(sorted(nodes))
-    #             solid_id = row[0]
-    #             cache.setdefault(key, solid_id)
-
-    #     # Populates the dictionaries using the cache or bruteforce
-    #     for row in self.faces_connectivity:
-    #         key = tuple(sorted(row[4:]))
-    #         face_id = row[0]
-    #         face_nodes = row[4:]
-
-    #         if key in cache:
-    #             solid_id = cache[key]
-    #         else:
-    #             mask_1 = np.sum(np.isin(masked_connectivity[:, 4:], face_nodes), axis=1) == nodes_per_face_element
-    #             solid_id = masked_connectivity[mask_1, 0][0]
-
-    #         self.face_to_solid_element[face_id] = solid_id
-    #         self.solid_to_face_elements[solid_id].append(face_id)
+        for elf_id, _, _, _, *face_nodes in self.faces_connectivity:
+            mask_1 = np.sum(np.isin(filtered_data[:, 4:], face_nodes), axis=1) == nodes_per_face_element
+            els_id = filtered_data[mask_1, 0][0]
+            self.face_to_solid_element[elf_id] = els_id
+            self.solid_to_face_elements[els_id].append(elf_id)
 
     def map_face_elements_to_solid_elements(self):
-        # Get just the node indexes from faces connectivity
-        faces_nodal_connectivity = self.faces_connectivity[:, 4:]
-        nodes_per_face_element = len(self.faces_connectivity[0, 4:])
+        '''
+        This method implements a faster algorithm when compared with
+        the one implemented in map_face_elements_to_solid_elements_reference.
 
+        If something goes wrong with this mapping compare the output of this
+        with the reference version.
+        '''
+        
         # Get the set of nodes that are part of a face
-        all_face_nodes = np.unique(faces_nodal_connectivity)
+        all_face_nodes = np.unique(self.faces_connectivity[:, 4:])
 
         # Counts how many nodes of a solid are touching a face
         face_nodes_per_solid = np.sum(
@@ -999,29 +958,34 @@ class Mesh:
             axis=1,
         )
 
-        # Filters all solids that contains a external face
-        external_solids = self.solids_connectivity[face_nodes_per_solid >= nodes_per_face_element]
+        # Filters all solids that contains a complete external face
+        nodes_per_face = self.faces_connectivity[:, 4:].shape[1]
+        external_solids = self.solids_connectivity[face_nodes_per_solid >= nodes_per_face]
 
-        # Get just the node indexes from solids connectivity
-        external_solid_nodal_connectivity = external_solids[:, 4:]
+        # Maps the nodes connected to each solid
+        node_to_solid_ids = defaultdict(set)
+        for solid_id, _, _, _, *solid_nodes in external_solids:
+            for node in solid_nodes:
+                node_to_solid_ids[node].add(solid_id)
 
-        # Extends external_solid_nodal_connectivity shape to allow the comparison
-        comparison = faces_nodal_connectivity == external_solid_nodal_connectivity[..., None, None]
-
-        # The shape of comparison is (n_solids, n_faces_per_solid, n_faces, n_nodes_per_face)
-        # any(axis=-3) reduces the dimension testing if any solid node is equal to each face node
-        # all(axis=-1) reduces the dimensions testing if all nodes of a face are part of a solid.
-        # The resulting array is a mask of shape (n_solids, n_faces)
-        mask = comparison.any(axis=-3).all(axis=-1)
-
-        # Iterates the mask and connectivities while populating the correspondent dicts
         self.face_to_solid_element = dict()
         self.solid_to_face_elements = defaultdict(list)
-        for solid_id, faces_mask in zip(external_solids[:, 0], mask):
-            face_ids = self.faces_connectivity[faces_mask, 0]
-            self.solid_to_face_elements[solid_id] = face_ids
-            for face_id in face_ids:
-                self.face_to_solid_element[face_id] = solid_id
+
+        for face_id, _, _, _, *face_nodes in self.faces_connectivity:
+            candidate_solids = list()
+            for node in face_nodes:
+                candidate = node_to_solid_ids[node]
+                candidate_solids.append(candidate)
+
+            # The correspondent element is the one that contains all nodes from this face. 
+            correspondent_solids = set.intersection(*candidate_solids)
+            if not correspondent_solids:
+                continue
+
+            # Populate the dicts using the first solid found.
+            solid_id, *_ = correspondent_solids
+            self.face_to_solid_element[face_id] = solid_id
+            self.solid_to_face_elements[solid_id].append(face_id)
 
     def get_face_elements_connected_to_nodes(self, node_ids, surface_id=None):
 
@@ -1116,7 +1080,7 @@ class Mesh:
 
 
     def compute_initial_mesh_size(self, path, geometry_tolerance: float = 1e-10, threads: int = 0):
-        gmsh.initialize("", False)
+        gmsh.initialize("", False, interruptible=False)
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("General.NumThreads", threads)
