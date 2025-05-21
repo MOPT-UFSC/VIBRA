@@ -358,7 +358,7 @@ class Mesh:
         -------
         group_of_connected_nodes: dict
             a dictionary whose the keys are the group of nodes indexes and the
-            values are the 
+            values are the node IDs.
 
         """
         # get the 2D element connectivities that contains two node_ids inside
