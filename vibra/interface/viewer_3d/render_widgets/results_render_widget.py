@@ -321,6 +321,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             visualization = app().main_window.visualization_filter
             section_plane = app().main_window.section_plane
             has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
+
             self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
             self.plane_actor.VisibilityOff()
             self.analysis_actor.disable_cut()
@@ -387,9 +388,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.clear_cache()
 
         if actor_is_hollow and not mesh_is_hollow:
-            self.remove_actors(self.analysis_actor)
+            self.remove_actors(self.analysis_actor, self.edges_actor)
             self.analysis_actor = AnalysisActor(mesh)
-            self.add_actors(self.analysis_actor)
+            self.edges_actor = EdgesActor(self.analysis_actor.data)
+            self.add_actors(self.analysis_actor, self.edges_actor)
             self.update_color_and_deformation()
 
         xyz, normal = self.plane_actor.configure_section_plane(position, rotation)
