@@ -223,6 +223,18 @@ class DegreesOfFreedomDecoupling:
         self.mesh.nodal_coordinates = np.append(nodal_coordinates, coords_from_twin_nodes, axis=0)
 
 
+    def export_nodes_mapping(self):
+        """"
+        This method exports the nodes mapping in a text file format.
+        It is meant for decoupling validation purposes.
+        """
+        a = np.array(list(self.nodes_mapping.keys()))
+        b = np.array(list(self.nodes_mapping.values()))
+        ind = np.argsort(a)
+        array = np.array([a[ind], b[ind]], dtype=int).T
+        np.savetxt("nodes_mapping.dat", array, delimiter=",", fmt="%i")
+
+
     def get_surfaces_and_nodes_from_lines_that_bound_decoupling_surfaces(self):
         """ This method returns the lines that bound decoupling
             surfaces, and the nodes associated with these lines.
