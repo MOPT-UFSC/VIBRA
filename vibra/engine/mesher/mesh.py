@@ -58,6 +58,8 @@ class Mesh:
 
         self.geometry_information = defaultdict(list)
 
+        self.mesh_quality_parameters = dict()
+
         self.nodes_from_points = dict()
         self.points_from_nodes = dict()
         self.nodes_from_lines = dict()
@@ -191,6 +193,7 @@ class Mesh:
             self.process_geometry_information()
             self.process_downwards_adjacencies_from_entities()
             self.process_upwards_adjacencies_from_entities()
+            self.mesh_quality_parameters = self.get_mesh_quality_parameters()
 
             gmsh.model.mesh.removeDuplicateNodes()
 
@@ -1077,6 +1080,20 @@ class Mesh:
         n_face_elements = self.faces_connectivity.shape[0]
         n_solid_elements = self.solids_connectivity.shape[0]
         return n_nodes, n_face_elements, n_solid_elements
+    
+    
+    def get_mesh_quality_parameters(self):
+        parameters = [
+            "Gamma",
+            "Volume",
+            "minSJ",
+            "minSIGE",
+            "minSICN",
+        ]
+        for parameter in parameters:
+            for element in gmsh.model.mesh.getElements(3, -1):
+                min = min(gmsh.model.mesh.getElementQualities(element, parameter))
+                max = max(gmsh.model.mesh.getElementQualities(element, parameter))
 
 
     def compute_initial_mesh_size(self, path, geometry_tolerance: float = 1e-10, threads: int = 0):
